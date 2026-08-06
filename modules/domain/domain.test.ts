@@ -144,8 +144,8 @@ function makeState(opts: any = {}) {
         cellUsage,
         isPortalJump,
         intersections,
-        flipCount:             0,
-        crossedFlippingFilters: new Map(),
+        flipCount:             opts.flipCount ?? 0,
+        crossedFlippingFilters: new Map(opts.crossedFlippingFilters ?? []),
         armedFalseGoals:       new Set(opts.armedFalseGoals ?? [])
     } as unknown as any;
 }
@@ -318,6 +318,22 @@ test('flipping filter axis: entering on the declared axis (never yet crossed) is
     const level = makeLevel({ flippingFilters: [[PACK(3, 3), core.H]] });
     const state = makeState({ path: [PACK(2, 3)] });   // approaching from left (H axis)
     assert.ok(isValidMove(PACK(3, 3), state, level));
+});
+
+test('flipping filter single-use: re-entering an already-crossed flipping filter is blocked, even via the axis it just flipped to (regression)', () => {
+    // 2026-08-06 design ruling: a flipping filter may be crossed at most once, ever. Before this
+    // fix, isValidMove had no explicit rule for this -- only the axis-matching checks, which do
+    // NOT block a second crossing via the filter's newly-required (post-flip) axis: declared axis
+    // H, first crossing via H flips the requirement to V for the next crossing (flipCount: 1
+    // simulates that one global flip has already happened), and entering via V is a fresh axis at
+    // that cell (no edge-reuse conflict either -- only H was marked used there), so the axis and
+    // edge-reuse checks alone would have wrongly ACCEPTED this move. Path already crossed (3,3)
+    // once via H (from (2,3) to (4,3)), looped around to (3,2), and now approaches (3,3) again
+    // from above -- via V, exactly the now-"required" axis -- which must still be rejected outright
+    // by the single-use rule regardless.
+    const level = makeLevel({ flippingFilters: [[PACK(3, 3), core.H]] });
+    const state = makeState({ path: [PACK(2, 3), PACK(3, 3), PACK(4, 3), PACK(4, 2), PACK(3, 2)], flipCount: 1 });
+    assert.equal(isValidMove(PACK(3, 3), state, level), false);
 });
 
 test('must-cross lock: turning on a still-pending must-cross cell is blocked (regression)', () => {

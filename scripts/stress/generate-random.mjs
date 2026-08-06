@@ -52,7 +52,17 @@
  * Run via the esbuild wrapper (imports TS domain modules):
  *   node scripts/run-bundled.mjs scripts/stress/generate-random.mjs [--count=2000]
  *       [--master-seed=20260709] [--out=data/stress/stress-levels-random.json] [--verbose]
- *       [--append]
+ *       [--append] [--envelope-caps] [--id-prefix=R]
+ *
+ * --envelope-caps: generate the in-envelope stratum instead (object caps restored to CLAUDE.md's
+ * documented per-level maxima instead of raised +4 — see ENVELOPE_MECH below and
+ * reports/2026-08-06-game-rules-solver-alignment-plan.md Section 4). Typical invocation:
+ *   node scripts/run-bundled.mjs scripts/stress/generate-random.mjs --envelope-caps --id-prefix=E
+ *       --count=200 --out=data/stress/stress-levels-envelope.json
+ *
+ * --id-prefix=<letter> (default 'R'): the level id prefix (e.g. "E00001"). Lets a sibling corpus
+ * (like the in-envelope stratum) use its own id namespace at a glance, even though hint storage
+ * is keyed off the levels.json filename, not the id prefix (level-data-io.mjs's `hintsDirFor`).
  *
  * --append: top up an existing OUT_FILE with COUNT new levels rather than overwriting it.
  * Existing levels are preserved byte-for-byte (their objects pass through unchanged); new
@@ -90,6 +100,19 @@ const MASTER_SEED = Number(args.get('--master-seed') || 20260709);
 const OUT_FILE = args.get('--out') || 'data/stress/stress-levels-random.json';
 const VERBOSE = args.has('--verbose');
 const APPEND = args.has('--append');
+// 2026-08-06: reports/2026-08-06-game-rules-solver-alignment-plan.md Section 4 — corpus-2's
+// deliberately-raised (+4) caps make "solver solve rate on corpus-2" a statement about how far
+// outside the shipped game's own complexity envelope the corpus reaches, not about player-facing
+// capability. --envelope-caps generates a separate, smaller stratum with the SAME generator and
+// philosophy (zero scoring bias, uniform mechanic treatment) but the ceilings restored to
+// CLAUDE.md's documented per-level maxima instead of +4 — see ENVELOPE_MECH below. --id-prefix
+// lets that stratum use its own id namespace (e.g. "E") instead of colliding with corpus-2's "R"
+// numbering when the two live in sibling files (hintsDirFor's `hints-<suffix>/` convention already
+// keys hint storage off the levels.json filename, not the id prefix, but a distinct prefix still
+// makes ids unambiguous at a glance across corpora, matching corpus-1's precedent of a distinct
+// "S" prefix for its own non-migrated batches).
+const ENVELOPE_CAPS = args.has('--envelope-caps');
+const ID_PREFIX = args.get('--id-prefix') || 'R';
 
 const MIN_GRID = 11, MAX_GRID = 15;
 const MIN_NOVELTY = 0.08;   // lower bar than the hypothesis-driven corpus — duplicate REJECTION
@@ -102,7 +125,7 @@ const MAX_ATTEMPTS = 60;
  *  documented max is now 8 (+4 over 4); mechanics with no prior documented max (landmarks,
  *  geese, false goals) get the same 8, for equal representation — see the file header for
  *  why 8 is safe even for must-turn (which shares an array with must-pass). */
-const MECH = {
+const RAISED_MECH = {
     mustCross:    { max: 8, presence: 0.55, minFrac: 0.55 },
     mustPass:     { max: 8, presence: 0.55, minFrac: 0.55 },
     portalPairs:  { max: 7, presence: 0.55, minFrac: 0.55 },
@@ -114,6 +137,30 @@ const MECH = {
     geese:        { max: 8, presence: 0.55, minFrac: 0.55 },
     falseGoals:   { max: 8, presence: 0.55, minFrac: 0.55 },
 };
+
+/** --envelope-caps variant: the documented per-level maxima (CLAUDE.md "Level Stats") for the
+ *  four mechanics that have one (mustPass/mustCross/flippers 4, portal pairs 3), and the SAME
+ *  reduced value (4) for the mechanics with no prior documented max — mirroring RAISED_MECH's own
+ *  "no prior max → match the ones that do have one, for equal representation" logic, just in the
+ *  other direction. Not an attempt to hit the alignment report's envelope-scoring table's separate
+ *  "landmarks ≤5" threshold exactly (that number was a scoring heuristic over combined landmark
+ *  subtypes, not a per-mechanic design cap) — four independent per-subtype draws at max 4 already
+ *  land close to it in the common case while keeping this generator's "every mechanic treated
+ *  identically" property intact. */
+const ENVELOPE_MECH = {
+    mustCross:    { max: 4, presence: 0.55, minFrac: 0.55 },
+    mustPass:     { max: 4, presence: 0.55, minFrac: 0.55 },
+    portalPairs:  { max: 3, presence: 0.55, minFrac: 0.55 },
+    flippers:     { max: 4, presence: 0.55, minFrac: 0.55 },
+    mustTurn:     { max: 4, presence: 0.55, minFrac: 0.55 },
+    surround:     { max: 4, presence: 0.55, minFrac: 0.55 },
+    adjacentTurn: { max: 4, presence: 0.55, minFrac: 0.55 },
+    decorative:   { max: 4, presence: 0.55, minFrac: 0.55 },
+    geese:        { max: 4, presence: 0.55, minFrac: 0.55 },
+    falseGoals:   { max: 4, presence: 0.55, minFrac: 0.55 },
+};
+
+const MECH = ENVELOPE_CAPS ? ENVELOPE_MECH : RAISED_MECH;
 
 const LANDMARK_TYPES = ['park', 'market', 'library', 'fountain', 'lamppost', 'statue'];
 
@@ -544,7 +591,9 @@ function main() {
         generatedAt: existingWrapper?.generatedAt ?? new Date().toISOString(),
         generatorVersion: GENERATOR_VERSION,
         masterSeed: existingWrapper?.masterSeed ?? MASTER_SEED,
-        description: 'Uniform-random solver stress corpus. NOT hypothesis-driven (unlike stress-levels.json\'s batches A-F): witness paths are unbiased random walks and mechanic placement is uniform-random over legal cells, so this corpus was not shaped by any knowledge of the solver\'s current behavior. NOT player content; never loaded by the app. Object caps: mustPass/mustCross/flippingFilters/mustTurn/surround/adjacentTurn/geese/falseGoals up to 8, portal pairs up to 7; grids are 11x11-15x15 (square); no static filters (flipping filters only), no multi-gate levels. Every mechanic the game has (other than static filters) is represented with equal treatment (a presence check, then a favour-larger-numbers-when-present count) -- none are deliberately left out. Every level carries a hidden witness solution and was validated with the exact domain referee at generation time. The production solver did not participate in generation in any form (not even for archetype/challenge labeling) and has NOT been run against this corpus yet.',
+        description: ENVELOPE_CAPS
+            ? 'In-envelope solver stress stratum (reports/2026-08-06-game-rules-solver-alignment-plan.md Section 4). SAME generator/philosophy as stress-levels-random.json (witness paths are unbiased random walks, mechanic placement is uniform-random over legal cells, zero scoring bias) but with object caps restored to CLAUDE.md\'s documented per-level maxima instead of raised +4 -- see mechanicCaps below. NOT player content; never loaded by the app. Grids are 11x11-15x15 (square); no static filters (flipping filters only), no multi-gate levels. Exists to give a regression signal for "can the solver solve levels players will actually encounter," tracked independently from stress-levels-random.json\'s deliberately-hard-tail research population. Every level carries a hidden witness solution and was validated with the exact domain referee at generation time. The production solver did not participate in generation in any form.'
+            : 'Uniform-random solver stress corpus. NOT hypothesis-driven (unlike stress-levels.json\'s batches A-F): witness paths are unbiased random walks and mechanic placement is uniform-random over legal cells, so this corpus was not shaped by any knowledge of the solver\'s current behavior. NOT player content; never loaded by the app. Object caps: mustPass/mustCross/flippingFilters/mustTurn/surround/adjacentTurn/geese/falseGoals up to 8, portal pairs up to 7; grids are 11x11-15x15 (square); no static filters (flipping filters only), no multi-gate levels. Every mechanic the game has (other than static filters) is represented with equal treatment (a presence check, then a favour-larger-numbers-when-present count) -- none are deliberately left out. Every level carries a hidden witness solution and was validated with the exact domain referee at generation time. The production solver did not participate in generation in any form (not even for archetype/challenge labeling) and has NOT been run against this corpus yet.',
         gridSizeRange: [MIN_GRID, MAX_GRID],
         mechanicCaps: Object.fromEntries(Object.entries(MECH).map(([k, v]) => [k, v.max])),
         generationStats: stats,
@@ -569,20 +618,22 @@ function main() {
     }
 }
 
+const CORPUS_NAME = ENVELOPE_CAPS ? 'in-envelope-v1' : 'random-uniform-v1';
+
 function acceptLevel(i, candidate, accepted, noveltyPool, mechCounts, gridSizes, idCounter) {
-    const id = `R${String(idCounter.next++).padStart(5, '0')}`;
+    const id = `${ID_PREFIX}${String(idCounter.next++).padStart(5, '0')}`;
     const { raw, pairs, features, novelty, complexity, levelSeed, placed } = candidate;
     const level = {
         id,
         ...raw,
         provenance: makeLevelProvenance([makeProvenanceEntry('procedural', 'generated', {
             method: 'stress-corpus-random-generator',
-            detail: { corpusName: 'random-uniform-v1', generatorVersion: GENERATOR_VERSION, levelSeed },
+            detail: { corpusName: CORPUS_NAME, generatorVersion: GENERATOR_VERSION, levelSeed },
         })]),
         stressMeta: {
             generated: true,
             stressCorpus: true,
-            corpusName: 'random-uniform-v1',
+            corpusName: CORPUS_NAME,
             witnessSolution: pairs,
             featureTags: deriveTags(raw, features),
             generatorVersion: GENERATOR_VERSION,

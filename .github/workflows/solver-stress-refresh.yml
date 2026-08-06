@@ -21,38 +21,48 @@
 # 2026-08-06: added an opt-in `deterministic` mode, porting the core safety property (not the full
 # dynamic-sharding machinery) from solver-typical-budget-baseline.yml's own `deterministic: true`.
 # WHY: reports/2026-08-01-budget-vs-algorithm.md measured that this workflow's own default budgets
-# (8000ms/20M for corpus-2) are WALL-CLOCK BINDING -- removing the deadline alone (same node/work
+# (8000ms/20M for corpus-2) were WALL-CLOCK BINDING -- removing the deadline alone (same node/work
 # budget) found +32 corpus-2 solves, and raising the node budget 1.8x found +25 more, entirely from
-# configuration. But this workflow commits UNCONDITIONALLY (unlike the sibling, which already had a
-# separate commit_results gate for other reasons) and its coarser 20-shard split (85 corpus-2 levels
-# per shard, vs the sibling's ~7) means a non-binding run is both much slower per shard AND would,
-# if committed by default, silently break comparability with every prior "official" refresh's
-# numbers (which all share the same binding-budget shape) -- exactly the tradeoff the sibling
-# workflow's own header comment warns about. So: additive-only (every existing default is
-# byte-for-byte unchanged; `deterministic` defaults false), never commits when true (artifact-only,
-# matching the sibling's exact reasoning), and widens this run's own timeouts rather than
-# reproducing the sibling's separate dynamic-shard-count planner -- fewer, larger shards under a
-# non-binding deadline simply take longer per shard, they don't need more of them. Use this mode for
-# an occasional "how much more could we solve at a generous budget" check, or before deciding
-# whether to deliberately raise the ROUTINE defaults (a separate decision this flag does not make).
+# configuration. Originally shipped additive-only (existing routine defaults untouched, deterministic
+# defaulting false) specifically because raising the ROUTINE defaults was called out as "a separate
+# decision this flag does not make" -- deliberately deferred, not decided, pending explicit sign-off.
+#
+# 2026-08-06 (same day, follow-up): that sign-off was given. The ROUTINE defaults below now ARE the
+# report's measured OFF@36M configuration (91 corpus-1 / 562 corpus-2 solved, 0 clock-bound, 0
+# deadline-truncated on a full deterministic run) -- corpus2_budget_ms/corpus1_budget_ms both default
+# to a non-binding 24h value (matching what `deterministic=true` already forced), corpus2_node_budget
+# defaults to 36M (up from 20M), and corpus1 now always gets a real node ceiling
+# (corpus1_node_budget, previously deterministic-only). This intentionally breaks strict numeric
+# continuity with every prior refresh's 8000ms/20M-shaped history -- that history was never a
+# deliberate target, it was inherited from `solver-corpus2-batch-*.yml`'s original budget, carried
+# forward each time this workflow was rewritten. The per-sweep timeout wrappers (previously widened
+# only under deterministic=true) are widened unconditionally for the same reason: routine runs are
+# now shaped the same way. `deterministic=true` still means something distinct: it forces a truly
+# unbounded 24h deadline regardless of what a dispatch types into corpus*_budget_ms (belt-and-braces
+# for a precise A/B), and -- unchanged from before -- it NEVER commits, so an ablation-flag experiment
+# (`enable_flags`) can be run and compared without touching the persisted baseline series at all.
 name: Solver stress-corpus refresh (corpus-1 + corpus-2)
 
 on:
   workflow_dispatch:
     inputs:
       corpus2_budget_ms:
-        description: 'Corpus-2: per-level solve budget in milliseconds. Ignored when deterministic=true (forced to a non-binding value).'
+        description: 'Corpus-2: per-level solve budget in milliseconds. Defaults to a non-binding 24h value (2026-08-06: raised from the historical 8000ms, which was measured wall-clock-binding -- see reports/2026-08-01-budget-vs-algorithm.md). corpus2_node_budget is the real ceiling now, not this. deterministic=true forces 24h regardless of what you pass here.'
         required: false
-        default: '8000'
-      # 20M, not 8M: the early repair probe's own fixed internal worst case is ~8-10M nodes
-      # (REPAIR_PROBE_ORDINARY_NODE_BUDGET/_BIASED_NODE_BUDGET, orchestration.ts) -- at 8M a
-      # repair-gated level that needs the full probe has nothing left over for the main
-      # loop/fallback/attraction-diversity passes, silently defeating the point of the
-      # 2026-07-17 repair-probe budget fixes (see CLAUDE.md's budget-composition gotcha).
+        default: '86400000'
+      # 36M, not 20M: reports/2026-08-01-budget-vs-algorithm.md's OFF@36M row (91 corpus-1 / 562
+      # corpus-2 solved, 0 clock-bound, 0 deadline-truncated) is the measured, validated config this
+      # default now matches -- raised from 20M 2026-08-06 alongside removing the binding deadline
+      # above; the two changes were measured together and should be raised/lowered together, not
+      # independently. 20M, not 8M, was itself chosen because the early repair probe's own fixed
+      # internal worst case is ~8-10M nodes (REPAIR_PROBE_ORDINARY_NODE_BUDGET/_BIASED_NODE_BUDGET,
+      # orchestration.ts) -- at 8M a repair-gated level that needs the full probe has nothing left
+      # over for the main loop/fallback/attraction-diversity passes, silently defeating the point of
+      # the 2026-07-17 repair-probe budget fixes (see CLAUDE.md's budget-composition gotcha).
       corpus2_node_budget:
-        description: 'Corpus-2: per-level node-count ceiling (deterministic backstop alongside corpus2_budget_ms). This is the ceiling that actually stops a level once deterministic=true makes the ms deadline non-binding -- raise it (the 2026-08-01 report used 36M) to capture more of that lever, not just the deadline removal.'
+        description: 'Corpus-2: per-level node-count ceiling -- the real stopping point now that corpus2_budget_ms defaults to non-binding. 36000000 matches the 2026-08-01 report''s measured OFF@36M configuration (562/1700 solved).'
         required: false
-        default: '20000000'
+        default: '36000000'
       corpus2_workers:
         description: 'Corpus-2: cross-level worker processes per shard (GH-hosted ubuntu-latest runners have 2-4 cores)'
         required: false
@@ -62,11 +72,11 @@ on:
         required: false
         default: ''
       corpus1_budget_ms:
-        description: 'Corpus-1: per-level solve budget in milliseconds. Ignored when deterministic=true (forced to a non-binding value).'
+        description: 'Corpus-1: per-level solve budget in milliseconds. Defaults to a non-binding 24h value (2026-08-06: raised from the historical 20000ms alongside corpus2_budget_ms -- see corpus2_budget_ms''s own description). corpus1_node_budget is the real ceiling now. deterministic=true forces 24h regardless of what you pass here.'
         required: false
-        default: '20000'
+        default: '86400000'
       corpus1_node_budget:
-        description: 'Corpus-1: per-level node-count ceiling. UNUSED unless deterministic=true -- corpus-1''s sweep normally passes no node budget at all (wall-clock only, matching this workflow''s historical behavior), which is only safe because corpus1_budget_ms stays small; deterministic mode needs a real ceiling once the ms deadline stops binding. 50000000 is the sibling workflow''s own analog of this workflow''s 20000ms/(no cap) at corpus-2''s 8000ms/20M ratio.'
+        description: 'Corpus-1: per-level node-count ceiling -- now ALWAYS applied (2026-08-06: previously deterministic-only, back when corpus1_budget_ms stayed small enough that a real ceiling wasn''t needed; corpus-1''s sweep now always passes this via --node-budget). 50000000 is the sibling workflow''s own analog value for a corpus this size.'
         required: false
         default: '50000000'
       corpus1_workers:
@@ -74,7 +84,7 @@ on:
         required: false
         default: '2'
       deterministic:
-        description: 'true = A/B / capability-ceiling MODE. Forces both ms deadlines to a non-binding value (so corpus*_node_budget becomes the only real ceiling, exactly as reports/2026-08-01-budget-vs-algorithm.md measured) and NEVER commits -- results are combined and uploaded as an artifact only, so this can never overwrite the continuity baseline with numbers that are not comparable to its history. false (default) = byte-for-byte the existing behavior: your typed budgets, committed to main as always.'
+        description: 'true = strict A/B mode: forces both ms deadlines to a truly unbounded 24h value regardless of what corpus*_budget_ms is set to (belt-and-braces for a precise comparison), and NEVER commits -- results are combined and uploaded as an artifact only, so an enable_flags experiment can be run and compared without touching the persisted baseline series. false (default, 2026-08-06 routine defaults) commits to main as always, now at the non-binding budget shape described above rather than the old binding one.'
         required: false
         default: 'false'
 
@@ -175,22 +185,18 @@ jobs:
           set +e
           ENABLE_FLAGS_ARG=""
           if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
-          # deterministic=true: no real per-level node ceiling exists for corpus-1 otherwise (it has
-          # always been wall-clock-only -- see corpus1_node_budget's own description), and the
-          # timeout wrapper below is widened to give the removed ms deadline room to actually go
-          # non-binding instead of being replaced by an equally-binding wrapper cutoff.
-          NODE_BUDGET_ARG=""
-          TIMEOUT_C1="20m"
-          if [ "${{ inputs.deterministic }}" = "true" ]; then
-            NODE_BUDGET_ARG="--node-budget=${{ inputs.corpus1_node_budget }}"
-            TIMEOUT_C1="45m"
-          fi
-          timeout -k 30s --preserve-status "$TIMEOUT_C1" node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+          # 2026-08-06: corpus1_node_budget now ALWAYS applies (previously deterministic-only, back
+          # when the routine corpus1_budget_ms default stayed small enough that no real node ceiling
+          # was needed -- see corpus1_node_budget's own description). The 45m wrapper is likewise now
+          # unconditional: routine runs are shaped the same non-binding way deterministic runs always
+          # were, so both need the same room for the ms deadline to actually go non-binding instead
+          # of being replaced by an equally-binding wrapper cutoff.
+          timeout -k 30s --preserve-status 45m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels.json \
             --levels="pos:${{ steps.range.outputs.c1start }}-${{ steps.range.outputs.c1end }}" \
             --scheduler-mode=legacy \
             --budget-ms="${DEADLINE_C1}" \
-            $NODE_BUDGET_ARG \
+            --node-budget="${{ inputs.corpus1_node_budget }}" \
             --workers="${{ inputs.corpus1_workers }}" \
             --baseline=logs/stress-corpus1-baseline.json \
             --prime-winner \
@@ -215,14 +221,13 @@ jobs:
           set +e
           ENABLE_FLAGS_ARG=""
           if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
-          # deterministic=true: widen the wrapper so the removed ms deadline actually gets room to
-          # go non-binding against corpus2_node_budget instead of being replaced by an equally-
-          # binding wrapper cutoff (see corpus-1's identical comment above). Bounded by the job's own
-          # 360-minute timeout-minutes, itself already at GitHub-hosted runners' 6-hour hard job
-          # ceiling -- this cannot be raised further, only better-utilized.
-          TIMEOUT_C2="320m"
-          if [ "${{ inputs.deterministic }}" = "true" ]; then TIMEOUT_C2="300m"; fi
-          timeout -k 30s --preserve-status "$TIMEOUT_C2" node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+          # 2026-08-06: 300m (down slightly from the old 320m) to keep the two sweeps' combined
+          # worst case (45m + 300m = 345m) safely under the job's 360-minute timeout-minutes, itself
+          # already at GitHub-hosted runners' 6-hour hard per-job ceiling -- this cannot be raised
+          # further, only better-utilized. Both wrappers are unconditional now: routine runs are
+          # shaped the same non-binding way deterministic runs always were (see corpus-1's identical
+          # comment above).
+          timeout -k 30s --preserve-status 300m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels-random.json \
             --levels="pos:${{ steps.range.outputs.c2start }}-${{ steps.range.outputs.c2end }}" \
             --scheduler-mode=legacy \

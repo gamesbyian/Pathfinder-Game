@@ -9,7 +9,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { readLevelsWithHints, writeLevelsWithHints, hintKeyForLevel, hintFileName, parseLevelPositions, parseLevelSelector, selectLevelsBySpec, AmbiguousLevelSpecError } from './level-data-io.mjs';
+import { readLevelsWithHints, writeLevelsWithHints, hintKeyForLevel, hintFileName, hintsDirFor, parseLevelPositions, parseLevelSelector, selectLevelsBySpec, AmbiguousLevelSpecError } from './level-data-io.mjs';
 
 function makeLevel(overrides = {}) {
     return {
@@ -35,6 +35,15 @@ test('hintKeyForLevel prefers a level\'s own id over its array position', () => 
 test('hintFileName uses a string id verbatim, and zero-pads a bare position', () => {
     assert.equal(hintFileName('P00042'), 'P00042.json');
     assert.equal(hintFileName(7), '00007.json');
+});
+
+test('hintsDirFor derives a sibling hints-<suffix>/ for any stress-levels-<suffix>.json, and plain hints/ for the bare name', () => {
+    assert.equal(hintsDirFor('data/stress/stress-levels.json'), path.normalize('data/stress/hints'));
+    assert.equal(hintsDirFor('data/stress/stress-levels-random.json'), path.normalize('data/stress/hints-random'));
+    // A third (or later) sibling corpus must NOT collide with corpus 1's bare hints/ dir -- this is
+    // exactly the bug a hardcoded `=== 'stress-levels-random'` check would have reintroduced.
+    assert.equal(hintsDirFor('data/stress/stress-levels-envelope.json'), path.normalize('data/stress/hints-envelope'));
+    assert.equal(hintsDirFor('data/levels.json'), path.normalize('data/hints'));
 });
 
 test('a level with an id keeps its hints after being reordered in the corpus array', () => {

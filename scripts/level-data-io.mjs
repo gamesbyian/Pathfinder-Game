@@ -54,13 +54,19 @@ const UNTOUCHED_HINTS_STATE = new WeakMap();
 /**
  * The hints directory that accompanies a levels.json path: sibling `hints/` dir, keyed off the
  * levels file's own basename so every corpus follows the same `<dir-of-levels-json>/hints[-x]/`
- * convention. Corpus 1 (`stress-levels.json`) and corpus 2 (`stress-levels-random.json`) share a
- * parent directory (`data/stress/`) but both number levels 1..N independently, so corpus 2 gets
- * its own sibling `hints-random/` to avoid colliding with corpus 1's `hints/`.
+ * convention. Corpus 1 (`stress-levels.json`), corpus 2 (`stress-levels-random.json`), and any
+ * further `stress-levels-<suffix>.json` sibling (e.g. the in-envelope stratum,
+ * `stress-levels-envelope.json`) all share a parent directory (`data/stress/`) but number levels
+ * 1..N independently, so each `-<suffix>` variant gets its own sibling `hints-<suffix>/` to avoid
+ * colliding with the bare `stress-levels.json`'s plain `hints/`. Generalized 2026-08-06 from a
+ * hardcoded `=== 'stress-levels-random'` check (which would have silently pointed a third corpus
+ * at corpus 1's `hints/`, corrupting both) to this suffix-derivation so it extends to any future
+ * `stress-levels-*.json` sibling with zero code changes here.
  */
 export function hintsDirFor(levelsJsonPath) {
     const base = path.basename(levelsJsonPath, '.json');
-    const dirName = base === 'stress-levels-random' ? 'hints-random' : 'hints';
+    const suffixMatch = /^stress-levels-(.+)$/.exec(base);
+    const dirName = suffixMatch ? `hints-${suffixMatch[1]}` : 'hints';
     return path.join(path.dirname(levelsJsonPath), dirName);
 }
 

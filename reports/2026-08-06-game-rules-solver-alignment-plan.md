@@ -9,8 +9,7 @@ independent reference (`scripts/solver-oracle/oracle.mjs`) that exists to catch 
 by design, never checks the other three against each other. That structure was worth interrogating
 directly rather than assuming it was already consistent.
 
-**Sections 1, 1b, and 3 are fixes already made and verified on this branch.** Sections 2, 4, and 5
-are proposed work, ranked by payoff-per-risk, not yet implemented.
+**All sections (1, 1b, 2, 3, 4, and 5) are fixes already made and verified on this branch.**
 
 ---
 
@@ -169,11 +168,11 @@ referee automatically — no separate change needed there, unlike Section 1's fl
 
 ---
 
-## 2. Open question: are flipping filters actually single-use, or is that a solver-only restriction?
+## 2. Resolved: flipping filters are single-use by design
 
-Neither `isValidMove` nor `validateCandidatePath` blocks re-entering an already-crossed flipping
-filter — a second visit is legal move-generation-wise, and (per the working part of the axis logic)
-must use the *same* axis the first crossing established, since `crossedSet` only ever records a
+Neither `isValidMove` nor `validateCandidatePath` blocked re-entering an already-crossed flipping
+filter — a second visit was legal move-generation-wise, and (per the working part of the axis logic)
+had to use the *same* axis the first crossing established, since `crossedSet` only ever records a
 cell's *first* crossing. The solver, by contrast, treats every flipper as strictly single-use:
 
 ```js
@@ -186,26 +185,49 @@ if (fi !== -1) {
 
 CLAUDE.md's own wording — "flips to the other axis **each time the path uses it**" — reads more
 naturally as "this specific filter alternates on repeated crossings" than the implemented model
-("global crossing order determines each filter's *one* axis"). None of the three implementations
-actually do the former; the solver is simply the only one that also forecloses the question by
-banning re-entry outright.
+("global crossing order determines each filter's *one* axis"), and none of the three
+implementations actually did the former — the solver was simply the only one that also foreclosed
+the question by banning re-entry outright.
 
-**Why this matters for solve rate**: 957 of corpus-2's 1700 levels carry at least one flipping
-filter. If re-entry is intended to be legal (matching what live play and the referee already
-permit), the solver is discarding real solutions on every level where a re-entry is load-bearing —
-a self-inflicted incompleteness, not a hard combinatorial wall. If single-use is the actual design
-intent, the game-rule side should say so explicitly (and arguably enforce it, rather than leaving it
-merely unreachable-in-practice for other reasons).
+### The attempted existence check, and why it was inconclusive
 
-**Recommended next step**: resolve the intent question first (design decision, not a code change),
-then either (a) codify single-use explicitly in `isValidMove`/`validateCandidatePath` — cheap, no
-solver impact, purely clarifies the contract — or (b) relax `flipperUsedMask`'s blanket revisit-ban
-in the solver to match the permissive game rule, gated behind a differential-fuzz proof (Section 3)
-before touching production search. (b) is higher-risk (touches `applyMove`/`getNeighbors`, prep's
-`deadFlipperKeys`, and every existing flipper-bearing hint's assumptions) and should not be
-attempted without first checking whether any stress-corpus witness solution already re-enters a
-flipper — if some do, that's a straight existence proof the solver is under-searching, not a
-hypothesis.
+Before raising the design question, tried the "straightforward existence check" this section
+originally proposed: scanned every stored hint AND every generator witness solution (published +
+both stress corpora + the in-envelope stratum, 17,000+ hint paths and 1,111 flipper-bearing witness
+solutions) for a flipper re-entry. Zero found, everywhere — but this is **not** evidence either way:
+every stored hint is solver-produced (structurally cannot re-enter, `flipperUsedMask` already bans
+it), and `generate-random.mjs`'s `opFlippersUniform` only ever places flippers on singly-visited
+witness cells (`ctx.cell.straightThrough`), so a witness re-entry is generator-impossible by
+construction regardless of whether it would ever help solvability. No data source in this codebase
+could have produced the real answer; this had to be a design decision, not a measurement.
+
+### The design ruling
+
+**Single-use is the correct, intentional design.** Once the line has crossed a flipping filter, a
+second crossing is impossible in practice: (a) the filter's required axis has already flipped, so
+re-entering via the original axis is an axis mismatch, and (b) re-entering via the newly-required
+axis would require the line to travel along an edge it has already used at that cell, which it
+cannot do. This is an emergent consequence of the axis-flip rule and edge-reuse combined — not
+something either rule states on its own — so it is stated explicitly now rather than left as a
+coincidence three independent implementations would each need to separately re-derive correctly.
+
+### The fix
+
+`isValidMove`'s axis-matching and edge-reuse checks happened to combine into blocking most
+re-entry attempts, but not all of them: entering a second time via the filter's newly-required
+(post-flip) axis is a *fresh* axis at that cell (edge-reuse never fires) and matches what the axis
+check currently expects (post-flip) — so the old code would have wrongly **accepted** that specific
+re-entry shape. Fixed by adding an explicit `invalid-flipper-reentry` check ahead of the axis logic
+in `modules/domain/move-rules.ts`, mirroring the solver's `flipperUsedMask` outright rather than
+relying on two unrelated checks to coincidentally produce the right answer. No solver code
+changed — the solver already had this right.
+
+**Verification**: a new regression test (extending `domain.test.ts`'s `makeState` helper to support
+a non-zero `flipCount`, needed to isolate this from the axis check — confirmed the test fails
+without the fix and passes with it); all 12,612 stored hints remain valid (none were ever produced
+via a re-entry, since the solver already banned it); 0 oracle-fuzzer mismatches; `solver:bench
+--check` 160/160 with no regressions (this only tightens live play/the referee — no solver code
+touched).
 
 ---
 
@@ -251,7 +273,7 @@ of the safety benefit for a fraction of the cost and risk.
 
 ---
 
-## 4. The stress-corpus-2 population is mostly outside the shipped game's own complexity envelope
+## 4. Added an in-envelope stress stratum, separate from the stress-corpus-2 population
 
 `scripts/stress/generate-random.mjs` deliberately raises every object cap **+4 over the documented
 published maxima** (CLAUDE.md's "Level Stats") and draws counts from the upper half of the raised
@@ -279,20 +301,40 @@ across all 1700 is not). "The solver solves ~30% of corpus-2" is substantially a
 far outside the shipped game's own complexity range that corpus reaches, not a statement about
 player-facing solver capability.
 
-**Recommendation**: keep the uniform-random, unshaped corpus for its intended purpose (avoiding
-overfit), but add a separate, smaller stratum generated at or below the shipped-game caps —
-same generator, same "no theory, no scoring bias" philosophy, just with the object-count ceilings
-restored to CLAUDE.md's documented maxima instead of +4. That gives a regression signal for "can the
-solver solve levels players will actually encounter," tracked independently from the hard-tail
-research population. Low risk, pure measurement addition — no production or solver code changes.
+### The fix
+
+Kept the uniform-random, unshaped corpus for its intended purpose (avoiding overfit) and added a
+separate, smaller stratum instead: `data/stress/stress-levels-envelope.json`, 200 levels, same
+generator (`scripts/stress/generate-random.mjs`) and same "no theory, no scoring bias" philosophy,
+just with the object-count ceilings restored to CLAUDE.md's documented per-level maxima (new
+`--envelope-caps` flag) instead of the raised +4. Pure measurement addition — no production or
+solver code changed; the generator itself gained the flag (plus `--id-prefix` for the new
+stratum's own `E`-prefixed id namespace) and `level-data-io.mjs`'s `hintsDirFor` was generalized
+from a hardcoded two-corpus check to a suffix-derivation so a third `stress-levels-<suffix>.json`
+sibling gets its own hint directory automatically.
+
+**Initial solve pass** (`portfolio-solve-sweep.mjs`, legacy scheduler, 60s/20M per-level budget,
+one quick pass, not a high-budget campaign): **124/200 solved (62.0%)**, all 124 saved hints
+independently re-verified against `validateCandidatePath`. This confirms the hypothesis directly:
+62.0% at the shipped envelope vs. corpus-2's own 605/1700 = 35.6% (as of 2026-07-25, itself
+inflated well past a typical-budget number by two rounds of targeted high-budget sweeping) — a
+population generated at the shipped game's own caps solves at a markedly higher rate than one
+deliberately raised past them, even under much lighter effort. Full detail, regeneration command,
+and the file-table entries: `data/stress/README.md`'s "Third stratum: in-envelope" section.
+
+Deliberately **not** added to `check:corpus-level-formatting`/`check:level-provenance`'s hardcoded
+"3 real corpora" lists, or to CLAUDE.md's "3 real corpora" invariant language elsewhere — this
+stratum follows the same on-disk conventions (compact one-line-per-level format, stamped
+provenance, id-keyed hint storage) as good hygiene, without formally joining that specific,
+already-pervasively-documented invariant.
 
 ---
 
-## 5. Decouple offline/batch solve budgets from the interactive Solve button's constraints
+## 5. Decoupled offline/batch solve budgets from the interactive Solve button's constraints
 
 Not a game-rules issue, but squarely a "change something other than the solver's algorithms" lever,
-and currently the single largest measured one. `reports/2026-08-01-budget-vs-algorithm.md` (already
-in-repo) found, on a fully deterministic full-corpus A/B:
+and the single largest measured one. `reports/2026-08-01-budget-vs-algorithm.md` (already in-repo)
+found, on a fully deterministic full-corpus A/B:
 
 - Removing the 8-second wall-clock deadline alone (same node/work budget): **+32 corpus-2 solves**.
 - Raising the node budget 1.8× on top of that: **+25 more**.
@@ -301,17 +343,58 @@ in-repo) found, on a fully deterministic full-corpus A/B:
 
 The 8-second deadline exists because `solveLevel()` is also the live in-game hint generator, where
 latency genuinely matters. Offline corpus refreshes, batch tooling, and research sweeps have no such
-constraint and are currently inheriting it anyway.
+constraint but were inheriting it anyway.
 
-**Recommendation**: this is already exactly what `disableExtraBudgetPasses` and the three
-budget-fraction overrides in `SolveOpts` are for — the finding is that offline/CI batch tooling
-should default to *not* inheriting the interactive-latency-shaped deadline at all (large or absent
-wall-clock budget, generous node budget), reserving the tight deadline specifically for the
-in-browser hint path. Confirm which batch entrypoints (per `docs/solver-architecture.md`'s
-"Which tool for a corpus/large-batch solve" table) still default to the interactive shape and widen
-them. Pure configuration change; no solver logic or game rule touched; the report already supplies
-the before/after evidence, so this needs verification-at-scale (a full refresh with the new
-defaults) rather than new research.
+### Audit: which entrypoints actually inherit the interactive shape
+
+Traced every solver call site before touching anything:
+
+- `SolveOpts.disableExtraBudgetPasses` is already correctly scoped — only the interactive UI
+  (`solver-controller.ts`, `review-controller.ts`) and internal tight-iteration sub-passes
+  (`diversification.ts`, `hint-ablation-generator.ts`'s cascades) set it. No batch/CI script does.
+  This half of the decoupling was already correct; nothing to fix.
+- Ad-hoc debugging tools (`solver:direct`, `stress:solve-one`, `stress:smoke`, `solver:speed-probe`)
+  default to small (4–30s) budgets, but that's the right call for quick iteration (CLAUDE.md's
+  "iterate light, gate heavy") — a dev overrides `--budget-ms` explicitly when a real answer matters.
+  Not a bug.
+- `solver:bench` (the CI regression gate) defaults to a 120s deadline / 100M work budget matching
+  `logs/solver-baseline.json`'s own generation parameters — deliberate parity for the regression
+  check's purpose, not an oversight. Changing it requires a full rebaseline and is out of scope here.
+- **The actual match**: `.github/workflows/solver-stress-refresh.yml`, the workflow that commits the
+  persisted corpus/hint/baseline data to `main`, defaulted `corpus2_budget_ms=8000` /
+  `corpus1_budget_ms=20000` — traced to its own README, which says these values exist only because
+  they "match the historical corpus-1 baseline's own budget," a value inherited from the original
+  `solver-corpus2-batch-*.yml` scheme and carried forward through every rewrite since, never a
+  deliberate choice for what an offline refresh needs.
+
+### The fix
+
+Raising that one workflow's routine defaults is a different class of change from wiring an opt-in
+flag: it's what actually gets committed to `main`'s corpus/hint/baseline data going forward, and it
+breaks strict numeric continuity with every prior refresh's binding-budget-shaped history. Flagged
+for explicit sign-off rather than done unilaterally; sign-off given 2026-08-06.
+
+`solver-stress-refresh.yml`'s routine (non-`deterministic`) defaults now match this report's own
+measured OFF@36M configuration exactly (91 corpus-1 / 562 corpus-2 solved, 0 clock-bound, 0
+deadline-truncated): `corpus2_budget_ms`/`corpus1_budget_ms` default to a non-binding 24h value,
+`corpus2_node_budget` defaults to 36M (was 20M), and corpus-1 now always gets a real node ceiling
+via `corpus1_node_budget` (previously deterministic-only, since corpus-1's small deadline had made a
+node cap unnecessary). Both sweeps' per-shard timeout wrappers are widened unconditionally (45m/300m)
+to give the now-routine non-binding deadline room to actually not bind. `deterministic=true` keeps a
+narrower, distinct purpose: force a truly unbounded deadline regardless of what's typed into
+`corpus*_budget_ms`, and never commit — for an `enable_flags` A/B that must not touch the persisted
+baseline series.
+
+### Verified: the real dispatch
+
+Dispatched `solver-stress-refresh.yml` (run 31072921874) against `main` under the new defaults —
+completed in ~29 minutes (all 20 shards + combine succeeded), far faster than the report's own
+sequential 47,671s figure, since sharding already parallelizes the corpus across 20 runners.
+Result, committed to `main` (`94a3046`): **corpus-1 95/102, corpus-2 684/1700** — corpus-2 up from
+605/1700, **+79 solves**, even more than the report's own OFF@36M measurement (562/1700, +57 vs.
+the old binding baseline) predicted, likely because additional solver fixes (must-cross lock,
+flipping-filter entry axis, beam dedup) landed on `main` between the report's 2026-07-25 measurement
+and this refresh. This is now the corpus's real, current baseline — not an estimate.
 
 ---
 
@@ -339,13 +422,14 @@ owns level-mechanic design, not a ticket to pick up unprompted.
 
 ## Suggested order
 
-1. **Done.** Section 1 fix (flipping-filter entry axis), Section 1b fix (must-cross lock), and the
-   Section 3 oracle-fuzzer extension — all merged with this report. The fuzzer extension already
-   proved its worth in-session: it's what turned the must-cross-lock gap into a reproducible finding.
-2. Offline budget decoupling (Section 5) — pure configuration, largest measured lever, evidence
-   already exists.
-3. In-envelope stress stratum (Section 4) — measurement only, clarifies what "solve rate" means.
-4. Flipper single-use resolution (Section 2) — needs a design decision before any code change;
-   worth raising early given the size of the affected population (957 levels) even though the fix
-   itself would land later.
-5. Per-filter local flip (Section 6) — hold for a design conversation, not scheduled work.
+1. **Done.** Section 1 fix (flipping-filter entry axis), Section 1b fix (must-cross lock), the
+   Section 3 oracle-fuzzer extension, Section 5's offline budget decoupling, Section 4's
+   in-envelope stress stratum, and Section 2's flipper single-use resolution — all merged with this
+   report. The fuzzer extension already proved its worth in-session: it's what turned the
+   must-cross-lock gap into a reproducible finding. Section 5's dispatch under the new defaults
+   landed **corpus-1 95/102, corpus-2 684/1700** on `main` (+79 vs. the old baseline). Section 4's
+   initial solve pass (124/200, 62.0%) confirmed its underlying hypothesis. Section 2 resolved
+   toward single-use being correct, codified explicitly rather than left as an implementation
+   coincidence.
+2. Per-filter local flip (Section 6) — hold for a design conversation, not scheduled work. This is
+   the only remaining open item in this document.

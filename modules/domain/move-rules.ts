@@ -114,6 +114,19 @@ export function isValidMove(
         return setReason('invalid-must-cross-turn');
     }
 
+    // Flipping-filter single-use: a flipping filter may be crossed at most once, ever — not
+    // enforced by the axis-matching checks below on their own (2026-08-06 design ruling: once
+    // the line has crossed a flipping filter, a second crossing is impossible in practice anyway,
+    // since (a) the filter's required axis has flipped, so re-entering via the original axis is
+    // already an axis mismatch, and (b) re-entering via the new required axis would require the
+    // line to travel along an edge it has already used at that cell — but that's an emergent
+    // consequence of two separate rules, not an explicit one, so state it directly here rather
+    // than relying on the axis/edge-reuse checks to coincidentally combine into it). Mirrors the
+    // solver's `flipperUsedMask` (search-state.ts), which already bans this outright.
+    if (!isPortalJumpCandidate && level.flippingFilterMap.has(targetKey) && (counts.get(targetKey) || 0) > 0) {
+        return setReason('invalid-flipper-reentry');
+    }
+
     if (!isPortalJumpCandidate) {
         let filterLast = level.filterMap.get(lastK);
         if (filterLast === undefined && level.flippingFilterMap.has(lastK) && crossedSet.has(lastK)) {
