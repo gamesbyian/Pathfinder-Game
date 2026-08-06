@@ -446,6 +446,32 @@ tightened referee test, and — because this fix landed together with the fuzzer
 mismatches on 900+ freshly generated levels both before the fix (where the gap showed up as a real,
 reproducible divergence) and after.
 
+### Fixed: `isValidMove`'s own win-metrics check was missing must-turn
+
+Found while investigating a different item (tracing every real caller of `isValidMove` for the
+"shared compiled graph" question below): `move-rules.ts`'s `checkWinMetrics` block checks
+must-pass, must-cross, surround, and adjacent-turn when stepping onto the goal, but never
+must-turn — while `runtime/game-rules.ts`'s `areWinMetricsSatisfied`, a separate function that is
+the actual arbiter of live-play wins, correctly checks all five. The two had quietly drifted.
+
+**Not a live bug**, confirmed by tracing every real caller: the referee (`path-validator.ts`, the
+only caller with `checkWinMetrics` on) has its own independent, correct post-loop must-turn check
+and never passes a `turnsAtMap` into `isValidMove`'s state anyway — so even the pre-existing
+adjacent-turn check inside the same block already silently no-oped for this caller by design (an
+"omitted contexts skip conservatively" rule its own comment states). Every interactive play caller
+has `checkWinMetrics` off entirely, and the one preset that would use it with no compensating check
+(`MoveContext.SOLVER`) has zero production call sites — it's a domain-layer test preset only; the
+real solver never calls `isValidMove` at all. Fixed anyway: the referee's own checks *look*
+redundant with `isValidMove`'s block to a future reader who hasn't traced exactly what state each
+caller supplies, and a plausible "clean up the duplication" refactor could silently reintroduce a
+real must-turn bypass. Closed the drift at the root instead of leaving that trap in place.
+
+**Found a second, pre-existing bug while writing the regression test**: an existing `checkWinMetrics`
+test passed for the wrong reason — its `state.path` already ended at the goal before validating a
+move *to* the goal, so `isValidMove`'s unconditional `invalid-after-goal` rule fired first and the
+test never actually exercised the must-pass check it claimed to. Confirmed via direct diagnostics,
+then fixed the same way as the new tests (pass the pre-move path, not the post-move one).
+
 ### Fixed: extended the differential oracle fuzzer to catch this bug class in CI
 
 `scripts/solver-oracle/fuzz.mjs` cross-checks the solver's move generation against an independent

@@ -9,7 +9,7 @@ independent reference (`scripts/solver-oracle/oracle.mjs`) that exists to catch 
 by design, never checks the other three against each other. That structure was worth interrogating
 directly rather than assuming it was already consistent.
 
-**All sections (1, 1b, 2, 3, 4, 5, and 6) are resolved and verified on this branch.**
+**All sections (1, 1b, 1c, 2, 3, 4, 5, and 6) are resolved and verified on this branch.**
 
 ---
 
@@ -165,6 +165,84 @@ referee automatically — no separate change needed there, unlike Section 1's fl
   `logs/solver-baseline.json`. This fix only tightens live play/the referee — it does not touch
   solver code — but the check confirms it doesn't silently invalidate any existing accepted solution.
 - Full `modules/domain/domain.test.ts` + `modules/domain/path-validator.test.ts` suite: 184/184 pass.
+
+---
+
+## 1c. Fixed: `isValidMove`'s own win-metrics check was missing must-turn
+
+### How this was found
+
+Investigating "prototype a shared compiled graph" (a different ranked-programme item) required
+tracing every real caller of `isValidMove` to understand what `checkWinMetrics` actually gates.
+That trace turned up a genuine gap: `move-rules.ts`'s `checkWinMetrics` block (fired when stepping
+onto the goal) checks must-pass, must-cross, surround, and adjacent-turn — but never must-turn.
+`runtime/game-rules.ts`'s `areWinMetricsSatisfied` — a separate, independently-written function
+that is the actual arbiter of live-play wins — checks all five, correctly, and already has its own
+regression test for exactly this (`domain.test.ts`'s "checkWinConditionImpl: must-turn level needs
+turnsAtMap"). The two functions had quietly drifted: one complete, one not.
+
+### Why this is not a live bug
+
+Traced every real call site of `isValidMove` before concluding anything:
+
+- `MoveContext.PLAY` (`checkWinMetrics: true`) has exactly one live caller —
+  `path-validator.ts`'s referee. The referee builds its own `turnsAtCell` map during its per-step
+  loop and runs an independent, correct post-loop must-turn check (and adjacent-turn check) using
+  it — genuinely, not just apparently, redundant with what `isValidMove`'s block would do if fixed.
+  It also never passes a `turnsAtMap` into `isValidMove`'s own state, so even the *pre-existing*
+  adjacent-turn check inside `checkWinMetrics` already silently no-ops for this caller (a
+  deliberate "omitted contexts skip conservatively" design, per that check's own comment) — the
+  missing must-turn check was simply consistent with an already-inert sibling check for this one
+  caller, not a special new gap.
+- `MoveContext.TAP_ROUTE` (used by all live interactive path-drawing code —
+  `runtime/step-processor.ts`, `runtime/path-state.ts`, `input/pointer-input-controller.ts`) has
+  `checkWinMetrics: false`, so the block never fires at all for those callers.
+- `MoveContext.SOLVER` (`checkWinMetrics: true`) has **zero production call sites** — it exists only
+  as a domain-layer unit-test preset representing solver-equivalent semantics; the real solver uses
+  its own separate, independently-correct `search-state.ts`/`solution.ts` implementation, never
+  `isValidMove` at all.
+- Live play's actual win declaration goes through `runtime/game-rules.ts`'s
+  `checkWinConditionImpl`/`areWinMetricsSatisfied`, which was already correct.
+
+So no path in the running application was ever affected by this gap.
+
+### Why it was worth fixing anyway
+
+`path-validator.ts`'s post-loop must-turn/adjacent-turn checks *look* redundant with
+`isValidMove`'s `checkWinMetrics` block to a future reader who hasn't traced the exact state each
+caller supplies — a very plausible "clean up this apparent duplication" refactor would silently
+reintroduce a real must-turn bypass in the referee. Closing the drift at the root (making
+`isValidMove` correct and complete on its own terms, matching `game-rules.ts` exactly) removes that
+trap, at zero behavioral cost to any current caller.
+
+### The fix
+
+Added the same must-turn check `game-rules.ts` already has to `move-rules.ts`'s `checkWinMetrics`
+block, reading `state?.nav?.turnsAtMap ?? state?.turnsAtMap` the same conservative way the
+pre-existing adjacent-turn check already does (skip, don't false-reject, when absent).
+
+### Verification
+
+- Extended `domain.test.ts`'s shared `makeLevel`/`makeState` test helpers to support
+  `mustPassTurnDirs`/`surroundKeys`/`adjacentTurnKeys`/`adjacentTurnDirs` and a supplied
+  `turnsAtMap` — none of these were previously constructible via these helpers at all, so the
+  sibling surround/adjacent-turn checks were *also* untested by `domain.test.ts` before this (out
+  of scope to add here; noted for whoever picks that up next).
+- Three new regression tests (never-turned rejects, correctly-turned accepts, absent-`turnsAtMap`
+  conservatively accepts) — confirmed the never-turned test fails without the fix and passes with
+  it.
+- **Found and fixed a second, pre-existing bug while building the first test**: the existing
+  "mustPass key absent blocks reaching goal" test passed for the wrong reason — its `state.path`
+  already ended at `goalKey` before validating a move *to* `goalKey`, so `isValidMove`'s
+  unconditional `invalid-after-goal` rule fired first and the test never actually exercised
+  `checkWinMetrics`'s must-pass check at all. Confirmed via direct diagnostics before fixing. Fixed
+  by passing `path.slice(0, -1)` as the pre-move state, matching what `isValidMove`'s contract
+  actually expects.
+- All 170 `domain.test.ts` tests and all 188 combined `domain.test.ts` + `path-validator.test.ts`
+  tests pass. `check:hint-validity`: all 12,612 stored hints remain valid (expected — this only
+  adds a check that was silently inert for every real caller). `solver:bench -- --check`: 160/160
+  published levels solved, no regressions (no solver code touched; this only tightens a
+  domain-layer function).
 
 ---
 
@@ -452,10 +530,12 @@ levels that carry flipping filters.
 ## Suggested order
 
 **All sections are now resolved; nothing remains open in this document.** Section 1 fix
-(flipping-filter entry axis), Section 1b fix (must-cross lock), the Section 3 oracle-fuzzer
-extension, Section 5's offline budget decoupling, Section 4's in-envelope stress stratum, Section
-2's flipper single-use resolution, and Section 6's global-parity-flip design confirmation — all
-merged with this report. The fuzzer extension already proved its worth in-session: it's what turned
+(flipping-filter entry axis), Section 1b fix (must-cross lock), Section 1c fix (must-turn missing
+from `isValidMove`'s own win-metrics check — found while investigating a different ranked-programme
+item, not a live bug but a real drift-and-trap fix), the Section 3 oracle-fuzzer extension, Section
+5's offline budget decoupling, Section 4's in-envelope stress stratum, Section 2's flipper
+single-use resolution, and Section 6's global-parity-flip design confirmation — all merged with
+this report. The fuzzer extension already proved its worth in-session: it's what turned
 the must-cross-lock gap into a reproducible finding. Section 5's dispatch under the new defaults
 landed **corpus-1 95/102, corpus-2 684/1700** on `main` (+79 vs. the old baseline). Section 4's
 initial solve pass (124/200, 62.0%) confirmed its underlying hypothesis. Section 2 resolved toward
