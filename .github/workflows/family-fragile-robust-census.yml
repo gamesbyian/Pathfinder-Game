@@ -1,0 +1,257 @@
+# Corpus-wide fragile/robust family-variant census (docs/solver-development-roadmap.md's
+# "fragile/robust split is the single most decision-relevant diagnostic" -- previously only ever
+# applied ad hoc to 3-8 hand-picked representatives per campaign, most recently
+# reports/families/2026-07-29-turn-load-fragile-robust-split.md and its follow-up, which found
+# turn-load (mustTurn+adjacentTurn+surround) >= 8 predicts robust unsolvability on an 8-level
+# sample. This workflow runs the SAME diagnostic (15 local-mutant + 7 symmetry variants per level,
+# --scheduler-mode=legacy --budget-ms=8000 --node-budget=20000000 --save-hints, matching that
+# report's protocol) across every id in data/families/fragile-robust-census-manifest.json -- the
+# full currently-unsolved corpus-2 population (minus 16 ids already covered by a local session run
+# the same day), stratified turnLoad>=8 ("hi-turn", 647 ids) vs turnLoad<4 ("lo-turn", 312 ids).
+#
+# A level is FRAGILE if >=1 of its structural variants solves (heuristic/scoring gap -- a targeted
+# or diversity-style fix is plausible); ROBUST if 0/N solve (genuine combinatorial hardness --
+# needs new bounds/pruning/technique, not a scoring tweak). This turns a one-off campaign
+# diagnostic into a population-level map of where each kind of solver work would actually pay off.
+#
+# Modeled on .github/workflows/solver-stress-refresh.yml's shard/combine shape (20-shard matrix,
+# each shard uploads a staged artifact, one combine job downloads everything and commits once) --
+# but this workflow operates entirely on the RESEARCH BRANCH (claude/variant-levels-solver-
+# insights-tpk4qg), never main: family/cousin variants are solver-research artifacts (same status
+# as the stress corpora -- "NOT player content, never shipped"), not something this workflow has
+# any business landing on main unreviewed. Triggered by `on: push` (not workflow_dispatch alone)
+# specifically because workflow_dispatch only becomes dispatchable once a workflow file is merged
+# to the default branch -- push works immediately off a feature branch, which is what's needed here.
+name: Family fragile/robust census (research branch only)
+
+on:
+  push:
+    branches:
+      - claude/variant-levels-solver-insights-tpk4qg
+    paths:
+      - '.github/workflows/family-fragile-robust-census.yml'
+      - 'data/families/fragile-robust-census-manifest.json'
+  workflow_dispatch:
+    inputs:
+      budget_ms:
+        description: 'Per-variant solve budget in milliseconds (matches the 2026-07-29 report protocol)'
+        required: false
+        default: '8000'
+      node_budget:
+        description: 'Per-variant node-count ceiling'
+        required: false
+        default: '20000000'
+      workers:
+        description: 'Cross-level worker processes per shard'
+        required: false
+        default: '4'
+      shards:
+        description: 'Number of parallel shards'
+        required: false
+        default: '20'
+
+concurrency:
+  group: family-fragile-robust-census
+  cancel-in-progress: false
+
+env:
+  RESEARCH_BRANCH: claude/variant-levels-solver-insights-tpk4qg
+  BUDGET_MS: ${{ inputs.budget_ms || '8000' }}
+  NODE_BUDGET: ${{ inputs.node_budget || '20000000' }}
+  WORKERS: ${{ inputs.workers || '4' }}
+  SHARDS: ${{ inputs.shards || '20' }}
+
+jobs:
+  census-shards:
+    name: Census shard ${{ matrix.shard }}/${{ inputs.shards || '20' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    steps:
+      - name: Check out research branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESEARCH_BRANCH }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compute this shard's id list
+        id: ids
+        shell: bash
+        run: |
+          nn=$(printf '%02d' "${{ matrix.shard }}")
+          echo "nn=${nn}" >> "$GITHUB_OUTPUT"
+          node scripts/family-census-shard-ids.mjs --shard="${{ matrix.shard }}" --shards="${{ env.SHARDS }}" > shard-ids.txt
+          echo "count=$(wc -l < shard-ids.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Generate + solve variants for this shard's ids (persists results after every level)
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p data/families/hints logs/family-census
+          summary="logs/family-census/shard-${{ steps.ids.outputs.nn }}-summary.jsonl"
+          : > "$summary"
+          progress="logs/family-census/shard-${{ steps.ids.outputs.nn }}.log"
+          : > "$progress"
+
+          while IFS= read -r id; do
+            [ -z "$id" ] && continue
+            echo "[$(date -u +%H:%M:%S)] START $id" | tee -a "$progress"
+
+            lm_file="data/families/family-${id}-lm.json"
+            sym_file="data/families/family-${id}-sym.json"
+
+            timeout -k 10s --preserve-status 120 node scripts/run-bundled.mjs scripts/family-generate.mjs -- \
+              --parent-corpus=data/stress/stress-levels-random.json --parent="$id" --mode=local-mutant \
+              --count=15 --seed=20260806 --out="$lm_file" >> "$progress" 2>&1 || echo "  (local-mutant generation failed/timed out for $id)" >> "$progress"
+            timeout -k 10s --preserve-status 60 node scripts/run-bundled.mjs scripts/family-generate.mjs -- \
+              --parent-corpus=data/stress/stress-levels-random.json --parent="$id" --mode=symmetry \
+              --seed=20260806 --out="$sym_file" >> "$progress" 2>&1 || echo "  (symmetry generation failed/timed out for $id)" >> "$progress"
+
+            lm_out="logs/family-census/solve-${id}-lm.json"
+            sym_out="logs/family-census/solve-${id}-sym.json"
+
+            if [ -f "$lm_file" ]; then
+              timeout -k 10s --preserve-status 600 node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- \
+                --corpus="$lm_file" --scheduler-mode=legacy --budget-ms="${{ env.BUDGET_MS }}" \
+                --node-budget="${{ env.NODE_BUDGET }}" --workers="${{ env.WORKERS }}" --save-hints \
+                --out="$lm_out" >> "$progress" 2>&1 || echo "  (lm solve failed/timed out for $id)" >> "$progress"
+            fi
+            if [ -f "$sym_file" ]; then
+              timeout -k 10s --preserve-status 300 node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- \
+                --corpus="$sym_file" --scheduler-mode=legacy --budget-ms="${{ env.BUDGET_MS }}" \
+                --node-budget="${{ env.NODE_BUDGET }}" --workers="${{ env.WORKERS }}" --save-hints \
+                --out="$sym_out" >> "$progress" 2>&1 || echo "  (sym solve failed/timed out for $id)" >> "$progress"
+            fi
+
+            node -e '
+              const fs = require("node:fs");
+              const [id_, lmOut, symOut] = process.argv.slice(1);
+              const solved = (p) => {
+                try {
+                  const levels = JSON.parse(fs.readFileSync(p, "utf8")).levels || [];
+                  return [levels.filter((l) => l.ok).length, levels.length];
+                } catch { return [null, null]; }
+              };
+              const [lmS, lmT] = solved(lmOut);
+              const [symS, symT] = solved(symOut);
+              console.log(JSON.stringify({ id: id_, lmSolved: lmS, lmTotal: lmT, symSolved: symS, symTotal: symT }));
+            ' "$id" "$lm_out" "$sym_out" >> "$summary" 2>>"$progress" || true
+
+            echo "[$(date -u +%H:%M:%S)] DONE $id" | tee -a "$progress"
+          done < shard-ids.txt
+
+      - name: Stage this shard's outputs for upload
+        if: always()
+        shell: bash
+        run: |
+          stage="artifact-staging/census-shard-${{ steps.ids.outputs.nn }}"
+          mkdir -p "${stage}/logs/family-census" "${stage}/data/families/hints"
+          cp logs/family-census/shard-${{ steps.ids.outputs.nn }}-summary.jsonl "${stage}/logs/family-census/" 2>/dev/null || true
+          cp logs/family-census/shard-${{ steps.ids.outputs.nn }}.log "${stage}/logs/family-census/" 2>/dev/null || true
+          # Solve-result + generated-family + hint files this shard touched (disjoint id ranges
+          # across shards, so a status diff against the fresh checkout is precise).
+          git status --porcelain -- data/families/ logs/family-census/ | awk '{print $2}' | while read -r f; do
+            mkdir -p "artifact-staging/census-shard-${{ steps.ids.outputs.nn }}/$(dirname "$f")"
+            cp "$f" "artifact-staging/census-shard-${{ steps.ids.outputs.nn }}/${f}"
+          done
+
+      - name: Upload this shard's staged results as an artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: census-shard-${{ steps.ids.outputs.nn }}
+          path: artifact-staging/census-shard-${{ steps.ids.outputs.nn }}
+          if-no-files-found: warn
+          retention-days: 90
+
+  combine:
+    name: Combine census results and commit to research branch
+    needs: [census-shards]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - name: Check out research branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESEARCH_BRANCH }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download every shard's artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'census-shard-*'
+          path: artifact-staging/downloaded
+          merge-multiple: true
+
+      - name: Lay the downloaded shard results onto the working tree
+        shell: bash
+        run: cp -a artifact-staging/downloaded/. ./
+
+      - name: Aggregate into a fragile/robust summary report
+        shell: bash
+        run: |
+          mkdir -p reports/families
+          node scripts/family-census-combine.mjs --in-dir=logs/family-census
+
+      - name: Print headline numbers
+        shell: bash
+        run: head -40 reports/families/2026-08-06-fragile-robust-census-summary.md
+
+      - name: Upload the combined census as an artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: family-fragile-robust-census-combined
+          path: |
+            reports/families/2026-08-06-fragile-robust-census-summary.md
+            reports/families/2026-08-06-fragile-robust-census-data.json
+            logs/family-census/
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Commit and push the combined census to the research branch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/families/ logs/family-census/ reports/families/2026-08-06-fragile-robust-census-summary.md \
+                  reports/families/2026-08-06-fragile-robust-census-data.json
+          if git diff --cached --quiet; then
+            echo "Nothing changed -- not creating an empty commit."
+            exit 0
+          fi
+          git commit -m "Family fragile/robust census: combined shard results ($(date -u +%FT%TZ))"
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:${{ env.RESEARCH_BRANCH }}; then exit 0; fi
+            echo "Push attempt ${attempt} failed; retrying after a short wait..."
+            sleep $((attempt * 5))
+            git fetch origin ${{ env.RESEARCH_BRANCH }}
+            git rebase origin/${{ env.RESEARCH_BRANCH }} || { echo "Rebase failed -- leaving commit local for manual recovery."; exit 1; }
+          done
+          echo "All push attempts failed."
+          exit 1
