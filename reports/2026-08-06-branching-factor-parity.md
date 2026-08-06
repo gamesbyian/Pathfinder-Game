@@ -81,6 +81,13 @@ much larger sample or the real (non-greedy) backtrack-depth measurement. Recorde
 either a larger sample at the same (cheap, safe) greedy-survival proxy, or the real instrumented
 `dfsFromGate` backtrack-depth measurement this was standing in for.
 
+**Update (same day, `reports/2026-08-06-backtrack-depth-instrumentation.md`):** that real
+instrumentation was built and run. It gives the same shape of answer as this proxy did, more
+decisively — a clean null (mean delta +2.99, stdev 14.12, t≈0.67, not significant) — confirming DFS's
+real backtracking cost is not the differentiator either, with the important caveat that it only
+measures DFS's own behavior, not why the twins' actual winning technique (usually beam) solves them
+fast. See that report for the full result and what it leaves open.
+
 ## What this means for "pull the admissible-bound lever"
 
 A *new per-step* bound (one more `PRUNE_*` check added to `evaluatePrunedMove`'s existing list, in
