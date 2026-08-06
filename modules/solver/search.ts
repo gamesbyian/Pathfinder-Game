@@ -23,7 +23,7 @@ interface DfsFrame { key: number; children: number[]; childIdx: number; undoInfo
  *  siblings under their parent, giving a depth-first walk of the beam's parent-pointer tree, which
  *  is what makes repositioning the shared working state cheap. Keeping them separate is the point:
  *  walk order and cull order are decoupled. */
-interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: number; sc: string; insOrd: number; treeOrd: number; sk?: number; }
+interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: number; sc: string; insOrd: number; treeOrd: number; sk?: string; }
 
 // ─── Core DFS ─────────────────────────────────────────────────────────────────
 
@@ -310,9 +310,20 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
 // retains at least floor(beamWidth/numBuckets) candidates. The remaining slots
 // are filled from the global top of the score-sorted list.
 // `sorted` must already be sorted descending by score; each entry carries `.sk`
-// (stateKey = (flipperUsedMask << 4) | mustCrossMask, packed at candidate creation).
+// (stateKey = `${flipperUsedMask}|${mustCrossMask}`, built at candidate creation — a delimited
+// string, not a bit-packed integer, for the same reason `sc` is one: see sc's own comment.
+// Used to be `(flipperUsedMask << 4) | (mustCrossMask & 0xF)` — a narrower defect than sc's
+// (mustCrossMask's `&0xF` mask sits below flipperUsedMask's shifted range, so it can't corrupt
+// flipperUsedMask's bits the way sc's fields corrupted each other), but still the same root
+// cause: mustCrossMask silently ALIASES (bits above the 4th discarded, not shifted anywhere) on
+// any level with more than 4 must-cross cells (stress-corpus-2 raises the cap to 8) — e.g.
+// mustCrossMask=1 and mustCrossMask=17 (a 5th must-cross cell pending) both truncated to the same
+// bucket. Same class of bug as sc's, just feeding a soft diversity heuristic rather than a hard
+// merge/discard decision, so it degraded bucketing precision rather than
+// costing solves outright. Fixed alongside sc, 2026-08-06 — see
+// reports/2026-08-06-beam-state-dedup-sound-signature-audit.md.
 function _diverseSelect(sorted: BeamNode[], beamWidth: number): BeamNode[] {
-    const buckets = new Map<number | undefined, BeamNode[]>();
+    const buckets = new Map<string | undefined, BeamNode[]>();
     for (const c of sorted) {
         let b = buckets.get(c.sk);
         if (!b) { b = []; buckets.set(c.sk, b); }
@@ -601,21 +612,18 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     // the key itself collision-free regardless of any mechanic's cardinality.
                     const sc = `${ws.ints}|${ws.mpVisitedMask}|${ws.mustCrossMask}|${ws.flipperUsedMask}|${ws.surroundMask}|${ws.mustTurnMask}|${ws.adjTurnMask}`;
                     // Parent-pointer node — O(1) instead of O(depth) path copy.
-                    // sk = stateKey: (flipperUsedMask<<4)|mustCrossMask — used by _diverseSelect
+                    // sk = stateKey: `${flipperUsedMask}|${mustCrossMask}` — used by _diverseSelect
                     // to bucket candidates and prevent beam collapse to one constraint-state mode.
-                    // Has the SAME unmasked-4-bit-field shape as sc used to (see sc's own comment)
-                    // and hasn't been re-measured — but sk only feeds a soft diversity heuristic
-                    // (which of several already-valid candidates gets priority), never a hard
-                    // merge/discard decision, so an overflow here degrades bucketing precision
-                    // rather than silently dropping a candidate. Left alone pending its own
-                    // measurement; not touched by this fix.
+                    // See _diverseSelect's own comment: string, not bit-packed, for the same reason
+                    // sc is — the old `(flipperUsedMask<<4)|(mustCrossMask&0xF)` silently overflowed
+                    // on any level with >4 flippers/must-cross cells.
                     // <= 4 children per node (4-directional grid; a portal cell yields exactly 1),
                     // so scoreRank*4 + childIdx is a collision-free key for "the index this
                     // candidate would have had under a score-order walk".
                     const _ci = _childIdx++;
                     if (effectiveDiverseBeam) {
                         cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
-                                     sk: (ws.flipperUsedMask << 4) | (ws.mustCrossMask & 0xF), sc,
+                                     sk: `${ws.flipperUsedMask}|${ws.mustCrossMask}`, sc,
                                      insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci });
                     } else {
                         cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv, sc,
