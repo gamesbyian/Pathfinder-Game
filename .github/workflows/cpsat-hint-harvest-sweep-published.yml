@@ -1,0 +1,166 @@
+# Sharded runner for cpsat-hint-harvest-sweep.mjs targeting the published corpus (data/levels.json).
+# 107 CP-SAT-eligible levels, 0 currently harvested — all 107 are untapped targets.
+#
+# Similar design to cpsat-hint-harvest-sweep.yml but scaled for the smaller corpus:
+# - 15 shards (vs 60 for stress corpus) with 10 concurrent max (vs 20)
+# - Data written to data/hints/<id>.json (vs data/stress/hints-random/<id>.json)
+# - Concurrency group serialized: trial runs won't race with full runs
+#
+name: cpsat-hint-harvest-sweep-published (broaden CP-SAT hint coverage for published levels)
+
+on:
+  workflow_dispatch:
+    inputs:
+      time_limit:
+        description: 'Per-level baseline (unforced) CP-SAT time limit in seconds'
+        required: false
+        default: '120'
+      combo_time_limit:
+        description: 'Per-combo (forced-grid) CP-SAT time limit in seconds'
+        required: false
+        default: '40'
+      max_combos:
+        description: 'Cap on forced combos attempted per level (gate x direction first, portal combos filling the remainder)'
+        required: false
+        default: '16'
+      shard_count:
+        description: >-
+          How many of the 15 shards to actually run. Levels are assigned round-robin over the FULL
+          unharvested-eligible pool modulo 15, so running fewer shards just samples fewer buckets
+          rather than concentrating more work per shard -- safe for a cheap trial (e.g. shard_count=2).
+        required: false
+        default: '15'
+
+concurrency:
+  group: cpsat-hint-harvest-sweep-published
+  cancel-in-progress: false
+
+jobs:
+  sweep-shards:
+    name: cpsat-hint-harvest shard ${{ matrix.shard }}/15 (published)
+    runs-on: ubuntu-latest
+    timeout-minutes: 200
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    steps:
+      - name: Check out the dispatched ref
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup Node
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Setup Python
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        run: |
+          npm ci
+          pip install ortools
+
+      - name: Compute this shard's zero-padded number (for artifact/log naming only)
+        id: range
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        shell: bash
+        run: echo "nn=$(printf '%02d' "${{ matrix.shard }}")" >> "$GITHUB_OUTPUT"
+
+      - name: Run cpsat-hint-harvest-sweep on this shard's round-robin slice (published corpus)
+        id: sweep
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          mkdir -p logs/cpsat-hint-harvest-sweep-published
+          timeout -k 30s --preserve-status 180m node scripts/run-bundled.mjs scripts/stress/cpsat-hint-harvest-sweep.mjs -- \
+            --corpus=data/levels.json \
+            --shard-index="${{ matrix.shard }}" --shard-count=15 \
+            --time-limit="${{ inputs.time_limit }}" \
+            --combo-time-limit="${{ inputs.combo_time_limit }}" \
+            --max-combos="${{ inputs.max_combos }}" \
+            --summary-out="logs/cpsat-hint-harvest-sweep-published/shard-${{ steps.range.outputs.nn }}-summary.md" \
+            2>&1 | tee "logs/cpsat-hint-harvest-sweep-published/shard-${{ steps.range.outputs.nn }}.console.log"
+          status=${PIPESTATUS[0]}
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Stage this shard's new/changed hint files for upload
+        if: ${{ always() && matrix.shard <= fromJSON(inputs.shard_count) }}
+        shell: bash
+        run: |
+          stage="artifact-staging/cpsat-hint-harvest-published-shard-${{ steps.range.outputs.nn }}"
+          mkdir -p "${stage}/data/hints" "${stage}/logs"
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            mkdir -p "$(dirname "${stage}/${f}")"
+            cp "${f}" "${stage}/${f}"
+          done < <(git status --porcelain -- data/hints/ | awk '{print $2}')
+          cp -r logs/cpsat-hint-harvest-sweep-published "${stage}/logs/" 2>/dev/null || true
+
+      - name: Upload this shard's results
+        if: ${{ always() && matrix.shard <= fromJSON(inputs.shard_count) }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpsat-hint-harvest-published-shard-${{ steps.range.outputs.nn }}
+          path: artifact-staging/cpsat-hint-harvest-published-shard-${{ steps.range.outputs.nn }}/
+          retention-days: 30
+          if-no-files-found: warn
+
+  combine:
+    name: Combine shard results and commit (published)
+    needs: sweep-shards
+    if: ${{ always() && needs.sweep-shards.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the dispatched ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Download all shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cpsat-hint-harvest-published-shard-*
+          path: artifact-staging
+          merge-multiple: true
+
+      - name: Upload combined artifact (also kept regardless of the commit below)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpsat-hint-harvest-sweep-published-combined
+          path: artifact-staging/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Merge new/updated hint files into the working tree and commit
+        shell: bash
+        run: |
+          mkdir -p data/hints
+          find artifact-staging -path '*/data/hints/*.json' -exec cp {} data/hints/ \;
+          if git status --porcelain -- data/hints/ | grep -q .; then
+            git config user.name 'github-actions[bot]'
+            git config user.email 'github-actions[bot]@users.noreply.github.com'
+            git add data/hints/
+            git commit -m "cpsat-hint-harvest-sweep-published: broaden CP-SAT hint coverage for published corpus (run ${{ github.run_id }})"
+            git push origin HEAD:"${{ github.ref_name }}"
+          else
+            echo "No new/changed hint files -- nothing to commit."
+          fi

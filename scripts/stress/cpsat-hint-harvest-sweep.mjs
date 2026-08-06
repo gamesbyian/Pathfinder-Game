@@ -66,7 +66,7 @@ for (let i = 0; i < levels.length; i++) {
     try {
         const out = execFileSync('node', [
             path.join(root, 'scripts/run-bundled.mjs'), path.join(root, 'scripts/stress/cpsat-hint-harvest.mjs'), '--',
-            `--levels=${id}`, `--time-limit=${TIME_LIMIT}`, '--forced-grid',
+            `--corpus=${CORPUS_FILE}`, `--levels=${id}`, `--time-limit=${TIME_LIMIT}`, '--forced-grid',
             `--combo-time-limit=${COMBO_TIME_LIMIT}`, `--max-combos=${MAX_COMBOS}`, '--save-hints',
         ], { cwd: root, encoding: 'utf8', timeout: 60 * 60 * 1000 });
         process.stdout.write(out);
