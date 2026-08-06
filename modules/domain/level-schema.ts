@@ -247,6 +247,32 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
         }
     }
 
+    // Mechanic cardinality: solver/prep.ts builds each mechanic's initial bitmask as
+    // `(1 << n) - 1`, which is only correct for n <= 30 — `1 << 31` is JS's int32 sign bit
+    // (-2147483648), not +2^31, so the formula misfires one object earlier than the "31-bit mask"
+    // intuition suggests. mustPass/mustCross stay safe only because of the documented 4-object
+    // design maximum; surround/mustTurn/adjacentTurn have no such maximum, so nothing else stops a
+    // level from silently miscomputing its own win-condition bitmask. See
+    // docs/mechanic-state-contracts.md's "Cardinality risk" section for the full derivation.
+    const MAX_MECHANIC_CARDINALITY = 30;
+    const landmarkRoleCounts: Record<string, number> = { mustPass: 0, mustTurn: 0, surround: 0, adjacentTurn: 0 };
+    (raw.landmarks || []).forEach((lm: any) => {
+        if (!lm || !lm.role) return;
+        const role = baseLandmarkRole(String(lm.role));
+        if (role in landmarkRoleCounts) landmarkRoleCounts[role]++;
+    });
+    const checkCardinality = (label: string, count: number) => {
+        if (count > MAX_MECHANIC_CARDINALITY) {
+            errors.push(`${label} count (${count}) exceeds the maximum of ${MAX_MECHANIC_CARDINALITY} — its solver bitmask encoding is unsound beyond this bound (see docs/mechanic-state-contracts.md's "Cardinality risk")`);
+        }
+    };
+    checkCardinality('mustPass (including mustTurn-role landmarks, which are also must-pass cells)',
+        (Array.isArray(raw.mustPass) ? raw.mustPass.length : 0) + landmarkRoleCounts.mustPass + landmarkRoleCounts.mustTurn);
+    checkCardinality('mustCross', Array.isArray(raw.mustCross) ? raw.mustCross.length : 0);
+    checkCardinality('surround landmarks', landmarkRoleCounts.surround);
+    checkCardinality('mustTurn landmarks', landmarkRoleCounts.mustTurn);
+    checkCardinality('adjacentTurn landmarks', landmarkRoleCounts.adjacentTurn);
+
     // Optional scalar metadata (non-fatal format checks)
     if (raw.id !== undefined && (typeof raw.id !== 'string' || raw.id.length === 0)) {
         errors.push('id must be a non-empty string');

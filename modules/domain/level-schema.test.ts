@@ -326,6 +326,61 @@ test('still rejects a block at a mustPass-role landmark cell (mismatched role, n
     assert.ok(errors.some(e => /block at \(5,5\) overlaps existing landmark/.test(e)), errors.join('; '));
 });
 
+// Regression coverage for the (1<<n)-1 mechanic-cardinality gap documented in
+// docs/mechanic-state-contracts.md's "Cardinality risk" section: solver/prep.ts's initial bitmask
+// for must-pass/must-cross/surround/mustTurn/adjacentTurn is only correct for n <= 30 objects
+// (1 << 31 is JS's int32 sign bit, not +2^31). mustPass/mustCross were already safe via a
+// documented 4-object design maximum; these tests cover the previously-unguarded landmark roles.
+function manyCoords(n: number): { x: number; y: number }[] {
+    const coords: { x: number; y: number }[] = [];
+    for (let y = 1; y <= 9 && coords.length < n; y++) {
+        for (let x = 1; x <= 9 && coords.length < n; x++) {
+            if ((x === 5 && y === 1) || (x === 5 && y === 9)) continue; // skip gate/goal
+            coords.push({ x, y });
+        }
+    }
+    return coords;
+}
+
+test('accepts exactly 30 mustPass cells (the bitmask boundary)', () => {
+    const { ok, errors } = validateRawLevel({ ...VALID, mustPass: manyCoords(30) });
+    assert.equal(ok, true, errors.join('; '));
+});
+
+test('rejects 31 mustPass cells (exceeds the bitmask bound)', () => {
+    const { ok, errors } = validateRawLevel({ ...VALID, mustPass: manyCoords(31) });
+    assert.equal(ok, false);
+    assert.ok(errors.some(e => /mustPass.*exceeds the maximum of 30/.test(e)), errors.join('; '));
+});
+
+test('rejects 31 mustCross cells (exceeds the bitmask bound)', () => {
+    const { ok, errors } = validateRawLevel({ ...VALID, mustCross: manyCoords(31) });
+    assert.equal(ok, false);
+    assert.ok(errors.some(e => /mustCross.*exceeds the maximum of 30/.test(e)), errors.join('; '));
+});
+
+test('rejects 31 surround landmarks (exceeds the bitmask bound)', () => {
+    const landmarks = manyCoords(31).map(c => ({ ...c, objectType: 'park', role: 'surround' }));
+    const { ok, errors } = validateRawLevel({ ...VALID, landmarks });
+    assert.equal(ok, false);
+    assert.ok(errors.some(e => /surround landmarks.*exceeds the maximum of 30/.test(e)), errors.join('; '));
+});
+
+test('rejects 31 adjacentTurn landmarks (exceeds the bitmask bound)', () => {
+    const landmarks = manyCoords(31).map(c => ({ ...c, objectType: 'fountain', role: 'adjacentTurn' }));
+    const { ok, errors } = validateRawLevel({ ...VALID, landmarks });
+    assert.equal(ok, false);
+    assert.ok(errors.some(e => /adjacentTurn landmarks.*exceeds the maximum of 30/.test(e)), errors.join('; '));
+});
+
+test('counts mustTurn-role landmarks toward the mustPass bound too (they are also must-pass cells)', () => {
+    const landmarks = manyCoords(31).map(c => ({ ...c, objectType: 'library', role: 'mustTurn', turn: 'either' }));
+    const { ok, errors } = validateRawLevel({ ...VALID, landmarks });
+    assert.equal(ok, false);
+    assert.ok(errors.some(e => /mustPass.*exceeds the maximum of 30/.test(e)), errors.join('; '));
+    assert.ok(errors.some(e => /mustTurn landmarks.*exceeds the maximum of 30/.test(e)), errors.join('; '));
+});
+
 test('rejects two different portal pairs sharing a terminal', () => {
     const raw = { ...VALID, portals: [{ x1: 2, y1: 2, x2: 3, y2: 3 }, { x1: 3, y1: 3, x2: 4, y2: 4 }] };
     const { ok, errors } = validateRawLevel(raw);

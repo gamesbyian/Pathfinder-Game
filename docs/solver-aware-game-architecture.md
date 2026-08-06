@@ -236,13 +236,16 @@ must-pass, must-cross, regular filter, flipping filter, portal, gate, goose/fals
 must-turn, adjacent-turn, decorative) — documentation and a table, per the "need not become
 allocation-heavy runtime machinery" note below, not new types or code. It found one genuine latent
 gap while doing it: `prep.ts`'s `(1 << n) - 1` initial-mask pattern is shared by five mechanics
-(must-pass/must-cross/surround/must-turn/adjacent-turn), silently wrong past `n = 31`; must-pass
-and must-cross are safe only because their count is capped at a documented 4, but surround/
-must-turn/adjacent-turn have **no** documented count maximum anywhere, so nothing currently stops a
-level from exceeding the 31-cap and getting a silently-wrong initial bitmask — exactly the shape of
-gap that turned real once before (see the beam-dedup incident this section originally described,
-still below). See that doc's "Cardinality risk" section for the fix recommendation (not yet made —
-no current corpus or generator triggers it).
+(must-pass/must-cross/surround/must-turn/adjacent-turn), silently wrong starting at `n = 31`
+objects — one earlier than the "31-bit mask" intuition suggests, since `1 << 31` is JS's int32 sign
+bit rather than `+2^31` (verified directly: `(1 << 31) - 1 !== 2**31 - 1`). Must-pass and must-cross
+were safe only because their count is capped at a documented 4, but surround/must-turn/
+adjacent-turn had **no** documented count maximum anywhere, so nothing stopped a level from
+exceeding 30 and getting a silently-wrong initial bitmask — exactly the shape of gap that turned
+real once before (see the beam-dedup incident this section originally described, still below).
+**Fixed same day**: `validateRawLevel` now rejects any level exceeding 30 of one mechanic, at the
+same hard schema gate every level already passes through for the square-grid and cell-occupancy
+invariants — see that doc's "Cardinality risk" section.
 
 Even when exact state merging is not economically attractive, explicit mechanic state remains valuable for correctness and tooling — the beam-dedup bit-packing overflow above is a concrete example of what happens without one: a mechanic's assumed cardinality (≤4) was raised elsewhere in the codebase (to 8) with no single place recording that the raise invalidated a downstream assumption.
 
