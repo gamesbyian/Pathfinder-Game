@@ -90,8 +90,15 @@ deadlock checks that only run inside the real `dfsFromGate`/beam search loops). 
 discrepancy rules out "scoring order sabotages the search" but does not rule out "a dynamic prune
 falsely rejects continuing along this path at some intermediate state" (the shape of bug CLAUDE.md's
 `mustCrossForcedNeighborDeadlocked` and MST-scratch-buffer gotchas document elsewhere) — that would
-need the pruning gauntlet itself replayed against this witness, which no current tool does and which
-this diagnosis did not attempt.
+need the pruning gauntlet itself replayed against this witness.
+
+**Update (same day, `reports/2026-08-06-real-attempt-population-diagnosis.md`):** this gap was
+closed by directly replaying R02751's witness (and 35 siblings) through `evaluatePrunedMove` itself,
+with connectivity forced on at every step. No false rejection — the gauntlet never rejects a move
+that R02751's own verified solution actually takes. Combined with the low scoring discrepancy above,
+this rules out both candidate solver-bug mechanisms for R02751, leaving a genuine combinatorial
+search-space limit as the best-supported remaining explanation — see that report for the full
+population-wide result and a 5.5x-budget test that also failed to close the gap.
 
 ## Per CLAUDE.md's ablation-validation bar
 

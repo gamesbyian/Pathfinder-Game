@@ -69,6 +69,32 @@ R02548   200,000,165 nodes, 94.6s  -> still unsolved
 a bit more" — a modest budget increase would be expected to tip over at least some of a 10-level
 sample if the population were merely marginally under-provisioned. None did.
 
+## Part 4: the dynamic pruning gauntlet (closing the gap flagged below)
+
+Both the R02751 report and an earlier draft of this one flagged the same limitation:
+`witness-divergence.mjs`'s replay (like `hint-divergence.mjs`'s, by the same established
+convention) only exercises `getNeighbors`/`scoreAndSort`/`applyMove` — never the dynamic pruning
+gauntlet (`evaluatePrunedMove`, `prune-gauntlet.ts`) that the real `dfsFromGate`/beam/repair search
+loops actually run. A low scoring discrepancy rules out "the search's move-*ordering* sabotages
+itself" but says nothing about "a lower-bound/connectivity/deadlock check falsely rejects continuing
+along this exact path at some intermediate state" — the shape of bug CLAUDE.md's
+`mustCrossForcedNeighborDeadlocked` and MST-scratch-buffer gotchas document elsewhere in this
+codebase. This was closed directly: each of the 36 witnesses was replayed through
+`evaluatePrunedMove` itself at every step, checking the verdict against `'reject'` — with
+`runConnectivity: true` forced on **every** step (real DFS only checks connectivity on a throttled
+schedule; repair-search never does at all — forcing it on every step here is *more* thorough than
+either, since `isConnected` is documented as a sound prune regardless of how often it's actually
+invoked, so any misfire it produces here is a real bug, not a throttling artifact).
+
+```
+36/36 levels: invalidAtStep=null, falseRejectAt=none, finalIsSolution=true
+```
+
+**No false prune anywhere.** The gauntlet never rejects a move that a valid, verified solution
+actually takes, on any of the 36 witnesses, even under a stricter connectivity-check schedule than
+production ever runs. This rules out the pruning gauntlet as an explanation for this population too
+— the same clean, uniform negative result as the scoring-order check in Parts 1–2.
+
 ## Interpretation
 
 Combining all three parts: this is a population where (a) the solver's own greedy scoring is, at
@@ -90,13 +116,6 @@ constrained.
 
 ## What this does not test, and what would be the next real lever
 
-- **Not the dynamic pruning gauntlet.** Same limitation as the R02751 report: `evaluatePrunedMove`
-  (lower-bound/connectivity/deadlock checks, only invoked inside the real search loops) was never
-  replayed here. A false-reject in that gauntlet — the shape of bug CLAUDE.md's
-  `mustCrossForcedNeighborDeadlocked`/MST-scratch-buffer gotchas document — would be invisible to
-  both the scoring-discrepancy replay and a plain higher-budget re-run, since neither exercises it
-  differently. This is the most concrete remaining candidate mechanism this diagnosis has *not* ruled
-  out.
 - **Not an admissible-bound tightening.** If the population's real bottleneck is that DFS/beam wastes
   most of its budget re-exploring structurally-equivalent dead branches rather than lacking direction,
   a tighter/new admissible lower bound (in the spirit of the mustCross/mustPass bound work already in
