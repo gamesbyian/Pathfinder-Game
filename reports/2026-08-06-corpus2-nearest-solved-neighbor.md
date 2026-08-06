@@ -107,6 +107,12 @@ separate individual solved/unsolved pairs even where they cleanly separate the a
 
 ## Interpretation and recommendation
 
+**Follow-up done same day**: `reports/2026-08-06-near-twin-solver-response-comparison.md` did
+exactly the solver-response-vector comparison recommended below, corpus-wide (40 closest pairs, not
+just this report's 8-level sample). Headline: 77.5% of near-twin pairs are genuine
+same-technique-real-effort-still-fails cases, not routing gaps — a sharper, better-evidenced version
+of the finding below.
+
 This does not contradict Part 1 or the July 29 report — turn load and (now) portal load remain the
 right things to point a differential diagnosis at, in aggregate. What the nearest-neighbor pass adds
 is the concrete individual-level version of Part I item 6's own warning
