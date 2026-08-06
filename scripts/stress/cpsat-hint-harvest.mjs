@@ -76,7 +76,6 @@ const root = (() => {
     return dir;
 })();
 const PROBE = path.join(root, 'scripts/stress/cpsat-full-probe.py');
-const CORPUS = path.join(root, 'data/stress/stress-levels-random.json');
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const h = argv.find(a => a.startsWith(`--${n}=`)); return h === undefined ? d : h.slice(n.length + 3); };
@@ -88,6 +87,8 @@ const outFile = arg('out', null);
 const forcedGrid = argv.includes('--forced-grid');
 const comboTimeLimit = Number(arg('combo-time-limit', '40'));
 const maxCombos = Number(arg('max-combos', '16'));
+const corpusFile = arg('corpus', 'data/stress/stress-levels-random.json');
+const CORPUS = path.join(root, corpusFile);
 
 const levels = readLevelsWithHints(CORPUS);
 const byId = new Map(levels.map((l, i) => [l.id, { level: l, position: i + 1 }]));
