@@ -7,7 +7,11 @@
  * bare `.ts` specifiers and fails outside the bundle. Adding a new probe means adding it here.
  */
 import * as separatorResourceProbe from './separator-resource-probe.mjs';
+import * as obligationTourProbe from './obligation-tour-probe.mjs';
+import * as goalApproachEnvelopeProbe from './goal-approach-envelope-probe.mjs';
 
 export const PROBE_REGISTRY = new Map([
     [separatorResourceProbe.name, separatorResourceProbe],
+    [obligationTourProbe.name, obligationTourProbe],
+    [goalApproachEnvelopeProbe.name, goalApproachEnvelopeProbe],
 ]);

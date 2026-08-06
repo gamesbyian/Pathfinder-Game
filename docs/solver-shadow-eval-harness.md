@@ -1,7 +1,8 @@
 # Shadow-Mode Evaluation Harness for Middle-Layer Solver Reasoners
 
-**Status:** working infrastructure + one prototype result, not a solve-rate win yet
-**Date:** 2026-08-05
+**Status:** working infrastructure + three prototype results (Parts 4, 7, 8), all sound, none a
+solve-rate win — Tier 2's three named candidates are now all scored and closed
+**Date:** 2026-08-05, updated 2026-08-06
 **Relationship to other docs:** operationalizes [`solver-next-frontier-2026-08-02.md`](solver-next-frontier-2026-08-02.md)
 and [`solver-next-frontier-multilingual-research-update-2026-08-02.md`](solver-next-frontier-multilingual-research-update-2026-08-02.md)
 (the "unvalidated research brainstorm" pair indexed in `docs/README.md`) — specifically that
@@ -342,12 +343,106 @@ on its own: it means growing the atlas across the real 397-level eligible pool (
 is worth doing without any further encoding risk, which is the actionable next step this campaign
 should take instead.
 
+## Part 7: Bounded obligation-compatibility MDD probe (section 4)
+
+`scripts/stress/probes/obligation-tour-probe.mjs` (`obligation-tour-mutex`) is the deliberately
+narrow first cut of section 4's "bounded obligation-compatibility MDD" — not the full event/mode
+MDD with mutex propagation the section describes, but the single simplest instance of "two
+mandatory events' true joint cost exceeds what either's own bound predicts": a JOINT tour lower
+bound over every currently-outstanding must-pass AND must-cross obligation together, computed by
+exact branch-and-bound permutation search over the solver's own precomputed per-object distance
+arrays (the same admissible data `mustPassLowerBound`/`mustCrossLowerBound` themselves read).
+
+**Why this isn't redundant with production.** `mustPassLowerBound`/`mustCrossLowerBound`
+(`modules/solver/lower-bounds.ts`) each already build their own MST-based joint bound — but each
+MST is built ONLY over its own mechanic's remaining cells; `search.ts`'s hot loop checks the two
+resulting scalars independently against the same `rSteps` (see
+`docs/solver-aware-game-architecture.md`'s "What should the solver do with this session's
+game-rule-alignment work?" section, which first flagged this as an untested gap). Neither MST has a
+single cross-mechanic edge, so neither bound can discover that a must-pass cell and a must-cross
+cell are positioned such that visiting both costs strictly more than either bound alone predicts.
+This probe only activates when at least one of each is outstanding — the population where a
+per-mechanic bound is structurally blind to the interaction by construction, not by chance.
+
+**Soundness argument**: every leg is a plain BFS distance (filters, edge-reuse, and must-cross's own
+axis-lock nuance are all ignored — a relaxation, never an overestimate), so the minimum tour cost
+over all point orderings is a valid lower bound on the true cost of whichever order the real
+solution actually uses, exactly the same "permissive abstraction" pattern this harness's other
+probes and `oracle.mjs`'s own `bfsDistances` already rely on. Capped at 8 combined obligations for
+tractability (branch-and-bound prunes far below the full `n!` in practice); above the cap, abstain.
+
+**Results** (full grown atlas, 397 levels / 5,518 branches):
+
+```
+obligation-tour-mutex (sound prune (necessary-condition lower bound over a joint must-pass/must-cross tour)):
+  dead: 15/429 caught (3.5%), unique beyond gauntlet: 1, overlap: 14
+  alive: 230/230 correctly passed, FALSE REJECTS: 0
+  abstained: 4859/5518
+```
+
+**Reading this honestly.** Applicability is real and much higher than the separator probe's —
+659/5,518 branches (11.9%) have at least one outstanding must-pass AND must-cross obligation
+simultaneously, confirming corpus-2's actual mechanic co-occurrence (514/1700 levels carry both,
+per `mechanicCaps` — this is not a rare shape). But the catch itself is small: only **1** dead
+branch beyond what the existing gauntlet already catches, out of 429 dead branches at this decision
+point (0.23%) and out of the atlas's much larger total of provably-dead branches overall. The
+practical implication is the opposite of what the applicability number alone would suggest: when
+both mechanics are simultaneously outstanding, the EXISTING separate max-of-two-MSTs bound is
+already catching almost everything a true joint tour bound would — the theoretical gap this probe
+was built to test turns out to be real (1 confirmed instance) but small in practice on this corpus.
+Zero false rejects — sound at scale, same as the other two probes.
+
+**Verdict: not worth wiring into production as scoped.** One unique catch per several hundred dead
+branches, on a mechanic-combination population this common, is the same shape of result
+`docs/CLAUDE.md`'s dead-flipping-filter-connectivity precedent describes: technically correct,
+functionally negligible. The theoretical justification for combining these bounds was sound (see
+the "why this isn't redundant" argument above) — it just doesn't cash out in extra pruning power at
+the rate the gap's existence might suggest, because the two SEPARATE MST bounds were already doing
+most of the useful work independently.
+
+## Part 8: Backward compatibility envelope probe (section 13)
+
+`scripts/stress/probes/goal-approach-envelope-probe.mjs` (`goal-approach-envelope`) is the
+narrowest sound instance of section 13's B1/B2 envelope layers: when a level's goal has EXACTLY one
+structurally-viable grid-adjacent entry neighbor (not reachable via any other neighbor, and not
+also reachable by a portal jump), every real solution's second-to-last cell is forced to be that one
+neighbor. If the current partial path has already visited that neighbor (and isn't currently
+standing on it, and the neighbor isn't itself a gate, whose revisits are exempt from intersection
+counting), the path must return to it once more before finishing — an unconditionally forced future
+intersection the production solver's `PRUNE_INTERSECTION_DEFICIT` check (a coarse deficit-vs-steps
+comparison) has no way to know is coming from level topology specifically. A remaining intersection
+budget of 0 at that point is then a real, sound rejection.
+
+**Results** (same atlas):
+
+```
+goal-approach-envelope (sound prune (forced-revisit necessary condition from a single-neighbor goal approach)):
+  dead: 2/2 caught (100.0%), unique beyond gauntlet: 0, overlap: 2
+  alive: 0/0 correctly passed, FALSE REJECTS: 0
+  abstained: 5516/5518
+```
+
+**Reading this honestly.** This is the rarest population measured so far in this document — 2 of
+5,518 branches (0.036%), rarer even than the separator-resource-spectrum's already-rare 0.45%. Both
+applicable instances were already dead-branches the existing gauntlet caught by other means (0
+unique catches). Sound (0 false rejects on the 2 instances it actually fired on), but there is
+essentially no terrain on this corpus for the single-viable-goal-neighbor shape to matter: goals
+this structurally boxed-in, combined with the specific "already visited the one entry cell" history,
+almost never coincide with a decision point the CP-SAT oracle also flagged as worth labelling.
+
+**Verdict: closed, same reasoning as the pendant-chamber result.** A real, sound, if vanishingly
+rare phenomenon — not evidence against the broader backward-envelope family (the fuller B1/B3
+layers reason about joint length/intersection/axis reachability sets, genuinely different terrain
+from this single-neighbor special case), but this specific narrow cut isn't worth building further.
+
 ## Soundness classes and verification rules followed
 
 Per the multilingual doc's section 20: every probe declares one of the seven soundness classes up
-front (`separator-resource-spectrum` declares "sound prune (necessary-condition lower bound)"), and
-the harness enforces the zero-false-reject bar automatically (non-zero exit code, not just a
-console note, if any probe ever produces one) rather than trusting a probe author's self-report.
+front, and the harness enforces the zero-false-reject bar automatically (non-zero exit code, not
+just a console note, if any probe ever produces one) rather than trusting a probe author's
+self-report. All three probes registered as of 2026-08-06 — `separator-resource-spectrum`,
+`obligation-tour-mutex`, `goal-approach-envelope` — hold zero false rejects across the full
+5,518-branch atlas.
 
 ## How to add the next probe
 
@@ -356,17 +451,20 @@ console note, if any probe ever produces one) rather than trusting a probe autho
 3. `node scripts/run-bundled.mjs scripts/stress/interface-probe-harness.mjs -- --probes=<name>,<existing-name>` —
    running it alongside an existing probe gets the overlap/unique-catch comparison for free.
 
-Natural next candidates from the research docs, in the order Tier 2 of the multilingual doc's
-revised ranking suggests: a depth-limited future-cone MDD (section 4/idea C) and backward
-multi-resolution compatibility envelopes (section 13) — both should be scored against the same
-grown atlas from Part 5 before any of the three is prioritized for further investment.
+The three candidates Tier 2 of the multilingual doc's revised ranking named — separator-state
+resource DP, bounded obligation-compatibility MDD, backward compatibility envelopes — have now all
+been scored against the same grown atlas (Parts 4, 7, 8). All three closed the same way: real,
+sound, individually-verified-at-scale results with catch rates too low to justify production
+integration as scoped. The harness and atlas remain reusable for whichever candidate is investigated
+next (the research docs list ~14 more, e.g. CEGAR-driven propagator design, automatic pruning-rule
+synthesis) — there is no remaining "obvious next probe" queued from this specific ranking.
 
 ## Honest bottom line
 
-This is infrastructure plus one small, sound, positive-but-narrow result — not a solve-rate win.
+This is infrastructure plus three small, sound, positive-but-narrow results — not a solve-rate win.
 Per the research docs' own framing ("success without solve gain" is an explicit, accepted outcome
 for this stage of the campaign), the value delivered here is: a reusable way to score *any* future
-middle-layer reasoner against real oracle-labelled data, a real (not assumed) measurement of how
-rare this specific chamber shape is on corpus-2, and a documented, sound, if modest, first catch —
-plus the tooling to grow the evidence base past 16 levels without anyone burning a day of local CPU
-time to do it.
+middle-layer reasoner against real oracle-labelled data, real (not assumed) measurements of how rare
+each of three independently-proposed reasoning shapes is on corpus-2, and three documented, sound,
+if modest, catches — plus the tooling to grow the evidence base past 16 levels without anyone
+burning a day of local CPU time to do it.

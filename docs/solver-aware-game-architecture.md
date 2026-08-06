@@ -346,10 +346,13 @@ chambers), and actual numbers, not a proposal:
 2026-08-05, growing the atlas to 5,518 branches) and the probe was already re-scored against it
 (same verdict, confirmed at scale: 0.45% applicability, zero false rejects). The source doc itself
 had gone briefly self-contradictory (one section updated with the run's results, an older section
-below it still saying "not dispatched yet") — both now fixed. **What's actually still open**:
-scoring the two next candidate reasoners the doc names (a depth-limited future-cone MDD, backward
-multi-resolution compatibility envelopes) against the now-grown atlas, per the multilingual doc's
-Tier 2 ranking. Neither has been started as of this writing.
+below it still saying "not dispatched yet") — both now fixed. **Update (2026-08-06): both other
+Tier 2 candidates are now scored too** (`docs/solver-shadow-eval-harness.md`'s Parts 7-8) — a joint
+must-pass/must-cross tour bound (bounded obligation-compatibility MDD, narrowed) applies to 11.9% of
+branches but only uniquely catches 1 dead branch beyond the existing per-mechanic MST bounds; a
+single-viable-goal-neighbor forced-revisit check (backward compatibility envelope, narrowed) applies
+to just 0.036% of branches. Both sound (zero false rejects at full atlas scale), neither worth
+production integration as scoped. All three of Tier 2's named candidates are now closed.
 
 The remaining higher-level framing still holds: compile these facts once, expose them as advisory
 features, evaluate in shadow mode, never promote to a hard prune without proof — which is exactly
@@ -604,7 +607,7 @@ implementation was already correct and intentional.
 
 ## Consolidated ranked research programme
 
-Merges both investigations' priorities into one order. Items 1–13 below are done; everything after
+Merges both investigations' priorities into one order. Items 1–15 below are done; everything after
 is open, ranked by the same payoff-per-risk logic both source investigations used independently and
 arrived at similar conclusions from.
 
@@ -644,9 +647,10 @@ arrived at similar conclusions from.
     was not an unstarted item — a full campaign already exists (`docs/solver-shadow-eval-harness.md`),
     including the full-scale atlas run (397 levels, 5,518 branches) and a verdict already reached
     for the narrowest reasoner (do not wire into production, 0.45% applicability, confirmed at
-    scale). What's actually still open: scoring the two next candidate reasoners it names
-    (depth-limited future-cone MDD, backward compatibility envelopes) against the grown atlas —
-    neither started yet. See "Opportunity: region and separator facts as advisory signals" above.
+    scale). **Update, same day**: the two other Tier 2 candidates it names (depth-limited
+    future-cone MDD → bounded obligation-compatibility MDD; backward compatibility envelopes) are
+    now scored too (Parts 7-8 of that doc) — both sound, both closed, neither worth production
+    integration as scoped. See "Opportunity: region and separator facts as advisory signals" above.
 11. ~~Audit symmetry prevalence~~ — **measured and deprioritized**: reused the production 8-way
     dihedral transform (`geometry.ts`, the "Whoa" display-variant machinery) to check whole-level
     automorphisms across all four corpora. Exact symmetry is essentially published-corpus-only —
@@ -663,10 +667,22 @@ arrived at similar conclusions from.
     ~830 landmark-bearing generated levels. Decorative/plain-mustPass roles needed no new logic.
 13. ~~Write first-class dynamic mechanic contracts~~ — **done**: see "Done: first-class dynamic
     mechanic contracts" above and `docs/mechanic-state-contracts.md`.
+14. ~~Fix the `(1<<n)-1` mechanic-cardinality gap~~ — **done**: `validateRawLevel` now rejects any
+    level exceeding 30 mustPass/mustCross/surround/mustTurn/adjacentTurn objects, the point past
+    which `prep.ts`'s initial-bitmask pattern is unsound. See `docs/mechanic-state-contracts.md`'s
+    "Cardinality risk" section.
+15. ~~Score the bounded obligation-compatibility MDD and backward compatibility envelope probes~~
+    — **done**: see `docs/solver-shadow-eval-harness.md`'s Parts 7-8. Both sound at full-atlas
+    scale (zero false rejects), both closed as not worth production integration as scoped — the
+    joint must-pass/must-cross tour bound applies to 11.9% of branches but uniquely catches only 1
+    dead branch beyond the existing separate per-mechanic MST bounds; the single-goal-neighbor
+    forced-revisit check applies to just 0.036% of branches. All three of the multilingual doc's
+    Tier 2 candidates (separator-state resource DP, bounded obligation-compatibility MDD, backward
+    compatibility envelopes) are now scored and closed.
 
 ## Still open
 
-14. **Prototype a shared compiled graph with one additional consumer** — deprioritized in favor of
+16. **Prototype a shared compiled graph with one additional consumer** — deprioritized in favor of
     items 12–13 above, which turned out to be the more concrete, lower-risk way to spend the same
     "expose mechanic/graph semantics consistently" effort this item was chasing. The two most
     obvious candidate consumers both disqualify themselves on inspection: the reference oracle's
@@ -816,27 +832,31 @@ corpus, and rare even there (2.5% of published levels manifest the one concretel
 0% of 2,002 procedurally-generated levels have any symmetry at all). Deprioritized for the same
 reason as macro transitions: real, verified, too rare to be worth building for.
 
-The strongest remaining idea is:
-
-- score the next two region/separator candidate reasoners (depth-limited future-cone MDD, backward
-  compatibility envelopes) against the now-grown atlas, since the narrowest one already tried is
-  closed out.
+There is no single "strongest remaining idea" left from this document's own accumulated agenda —
+every concretely-scoped item from both source investigations (region/separator reasoners included)
+has now run to a real, verified conclusion. What remains is the research docs' own larger unscored
+menu (CEGAR-driven propagator design, automatic pruning-rule synthesis, ~14 other ideas in
+`solver-next-frontier-2026-08-02.md`/the multilingual update) — genuinely open territory, not a
+next step this document can responsibly rank without first doing the same "measure before build"
+work the closed items already received.
 
 "Expose mechanic and graph semantics consistently to solvers and oracles" — previously listed here
 as the top remaining idea — is now done two different ways rather than one: the oracle fuzzer's
 differential coverage was extended to must-turn/adjacent-turn/surround (item 12), and the mechanic
 semantics themselves were written down as explicit per-mechanic contracts, cardinality bounds
-included (item 13, `docs/mechanic-state-contracts.md`) — which is also where "a shared compiled
-graph" (previously listed as the other piece of open research territory) landed: not built, because
-its two plausible first consumers both disqualify themselves on inspection (see item 14).
+included (item 13, `docs/mechanic-state-contracts.md`, plus the cardinality gap it found actually
+fixed as item 14) — which is also where "a shared compiled graph" (previously listed as the other
+piece of open research territory) landed: not built, because its two plausible first consumers both
+disqualify themselves on inspection (see item 16).
 
-Ten independent threads have now run their full course in this document — seven landed real,
-shipped changes (two rule-drift fixes, a differential-fuzzer extension covering both the domain
-layer and, now, three more mechanics, a configuration fix with a verified +79-solve outcome, a new
-measurement corpus, and a written mechanic-contract reference), and three (macro transitions,
-per-filter local flip, symmetry prevalence) landed decisive negative/confirmatory results before
-any production code was risked or any player-facing rule was redesigned unilaterally. A separate,
-independently-run campaign (`docs/solver-shadow-eval-harness.md`) closed out the region/separator
-item the same way over the same period — this document just hadn't cross-referenced it until this
-correction. What's left is genuinely open research territory (the next region/separator reasoners)
-rather than a queue of already-scoped next steps.
+Every numbered item in the consolidated ranked programme above (1-15) has now run to a real,
+verified conclusion — most landed shipped changes (two live-play rule-drift fixes, a
+differential-fuzzer extension covering both the domain layer and, now, three more mechanics, a
+configuration fix with a verified +79-solve outcome, a new measurement corpus, a written
+mechanic-contract reference, and a schema fix closing the cardinality gap that reference found), a
+few (macro transitions, per-filter local flip, symmetry prevalence) landed decisive
+negative/confirmatory results before any production code was risked or any player-facing rule was
+redesigned unilaterally, and the region/separator family's three Tier 2 candidates
+(`docs/solver-shadow-eval-harness.md`'s Parts 4/7/8) were each independently scored and closed the
+same way. What's left is the research docs' own larger, not-yet-scored menu — genuinely open
+territory, not a queue of already-scoped next steps.
