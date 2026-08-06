@@ -116,33 +116,52 @@ least one of these mechanic counts, and **211** of those have a second, adjacent
 nonzero — a structurally guaranteed key collision, not a theoretical edge case. R00044 (a level that
 recurs elsewhere in this project's research, e.g. the MITM frontier sample) is one of them.
 
-**Finding 4 — the unsoundness (both forms) has not cost a single solve on the sample tested.**
-Turning `STRATEGY_STATE_DEDUP` off changed the solved/unsolved outcome on **zero** of 35 non-portal
-levels where beam actually ran, at a matched budget.
+**Finding 4, corrected same day (the original version of this finding — "zero cost to disable" —
+was retracted; see the cited report's own correction block for the full account): disabling
+`STRATEGY_STATE_DEDUP` costs real solves.** The original measurement used a wall-clock budget tight
+enough to be the actual binding constraint on both arms, making "zero divergence" an artifact of
+both arms failing equally fast rather than a genuine null result — exactly the "sequential/
+tight-budget A/B is untrustworthy" trap this project's own testing guidance warns about. A corrected
+re-test (non-binding wall clock, same node cap) found **19 of 75** non-portal stress-corpus-2 levels
+flip solved→unsolved when dedup is disabled, confirmed two independent ways (code swap and
+ablation-flag toggle, both giving the identical divergent set).
 
-**Decision: removed `useStateDedup` entirely, rather than rebuilding a sound replacement.**
-Reasoning: (a) Finding 1 means even a fully sound rebuild would almost never fire — the true
-duplicate rate is too small to repay the cost of computing a sound signature, which the DFS report
-separately measured at 5–6× per-node overhead; (b) any sound replacement would also need a
-width-safe (non-bit-packed) redesign to avoid inheriting Finding 3's overflow, adding real
-engineering/verification surface for a mechanism that, per (a), would then rarely do anything; (c)
-Finding 4 means removal costs nothing measured. This is the smallest-diff fix that closes both bugs
-completely and unambiguously, consistent with this repo's stated preference against building
-complexity "in case we need it." A side effect: removing the mechanism also removes the
-"disabled for portal levels" restriction's reason to exist (the restriction existed specifically
-*because* portal usage wasn't captured in `sc`) — there's nothing left to extend to portals, since
-there's nothing left.
+This does not contradict Findings 1–2 — it explains why the mechanism matters despite them. Its
+practical value was never about recognizing literally-identical futures (which are vanishingly rare,
+Finding 1). Beam keeps only the top-`beamWidth` candidates by score at each step; without dedup,
+many candidates that superficially converge on the same `(cell, mask-tuple)` — genuinely different
+underlying paths, per Finding 2 — can crowd that ranking simultaneously, consuming beam width that
+would otherwise go to candidates elsewhere. Dedup's real function is width management / implicit
+diversity, not correctness, and removing it lets the beam get crowded by redundant-looking-but-
+distinct candidates.
 
-**Verification**: `npm run ci`'s solver tests and full typecheck pass with the mechanism removed.
-[Cost verification against the published-corpus regression baseline and a matched-work-budget
-before/after sweep on the 671-level affected population — in progress; see this document's own
-citation of `reports/2026-08-06-beam-state-dedup-sound-signature-audit.md` for the final numbers
-once posted.]
+**Decision, corrected: kept the mechanism, fixed only the key's structural fragility (Finding 3).**
+The originally-shipped decision — remove `useStateDedup` entirely — was retracted once Finding 4's
+correction showed it cost 18 of those 19 divergent levels' solves. Rebuilding a *fully* sound key
+was also rejected (Finding 1's ceiling means a sound key would merge almost nothing, eliminating the
+same value). The actual fix: `sc` changed from a bit-packed `number` to a delimited **string** of
+the exact field values, preserving the identical `(cell, full mask-tuple)` merge granularity Finding
+4 shows has real value, while making the key itself collision-free regardless of any mechanic's
+cardinality — closing Finding 3 without touching the mechanism's demonstrated value or reopening
+Finding 2 (the key is still coarse by design, just no longer *additionally* broken by overflow).
 
-**What remains open from the original two "live opportunities":** nothing — both are closed. The
-"could a cheap incremental fingerprint approximate the exact key" question (former opportunity 2,
-item 5) is moot given Finding 1: there is no meaningful duplicate population left to approximate a
-key for.
+**Verification**: typecheck and the full `modules/solver/` vitest suite (284 tests) pass.
+`solver:bench --check` against the published-corpus baseline shows no regression (expected — no
+published level exceeds the caps that trigger the overflow). Comparing the fixed key against the
+original buggy key on the same 75-level sample: 71/75 identical (the fix preserves essentially all
+18 of the dedup-dependent solves), 3 levels newly solve (the overflow bug was costing them), 1 level
+flips the other way (a single-level sensitivity to the specific merge decision the bug happened to
+make — within the noise band this project's own research already treats corpus-2 solved-count
+deltas under, not a systematic regression).
+
+**What remains open from the original two "live opportunities":** nothing structurally — both
+questions (is the key sound; how many true duplicates exist) are answered. What changed since the
+original write-up is the *interpretation*: this isn't "close the mechanism out," it's "the mechanism
+earns its place for a different reason than a sound key would, so keep it and fix only what was
+actually broken." The "could a cheap incremental fingerprint approximate the exact key" question
+(former opportunity 2, item 5) is still moot given Finding 1 — but for a different reason than
+originally stated: there's no *sound-signature* population worth approximating a key for, though the
+current coarse key's *own* granularity is worth keeping exactly as coarse as it is.
 
 ## Live opportunity: certified forced-sequence macro transitions
 
@@ -435,8 +454,11 @@ Merges both investigations' priorities into one order. Items 1–2 below are don
 is open, ranked by the same payoff-per-risk logic both source investigations used independently and
 arrived at similar conclusions from.
 
-1. ~~Audit current beam dedup soundness~~ — **done**, see "Resolved" above.
-2. ~~Measure beam-specific exact duplication~~ — **done**, see "Resolved" above.
+1. ~~Audit current beam dedup soundness~~ — **done**: unsound as suspected, but the fix was to
+   correct the key's structural fragility, not remove the mechanism — see "Resolved" above.
+2. ~~Measure beam-specific exact duplication~~ — **done**: sound-duplicate ceiling 0.019% (rules
+   out building a fully sound key), but the *existing* coarse mechanism has separately measured
+   real value as a width/diversity heuristic — see "Resolved" above.
 3. **Extend the oracle fuzzer to cover `isValidMove`** — cheapest remaining item; prevents the
    exact bug class the flipping-filter fix closed from recurring undetected.
 4. **Decouple offline solve budgets from the interactive constraint** — pure configuration, largest
@@ -473,15 +495,25 @@ Based on evidence from both investigations, the plausible direct routes are:
    current features.
 5. **Optional generation provenance**, especially for generated corpora and portfolio selection.
 
-Two items that looked promising from first principles and are now settled negative results, not
-untested hypotheses: **general DFS transposition caching** (measured and found weak, 2026-07-17) and
-**beam-specific state deduplication** (measured and found weak, 2026-08-06 — see "Resolved" above).
-Neither should be re-proposed without materially new evidence.
+One item that looked promising from first principles and is now a settled negative result, not an
+untested hypothesis: **general, fully-sound transposition caching**, for both DFS (measured and
+found weak, 2026-07-17) and beam (measured and found weak the same way, 2026-08-06 — see "Resolved"
+above: beam's true-duplicate ceiling is 0.019%, smaller than DFS's, so a sound key would merge
+almost nothing). This should not be re-proposed without materially new evidence. **Beam's existing
+(unsound-by-design) dedup mechanism is a different matter, corrected same day as first reported
+here**: it was initially, wrongly, judged safe to remove outright; a corrected measurement found it
+costs real solves (25% divergence on a stress-corpus-2 sample) via width/diversity management, not
+correctness, so it was kept and only its structural bit-packing bug was fixed. Do not conflate "a
+fully sound key isn't worth building" with "the existing coarse mechanism isn't worth keeping" —
+this document's own history is the cautionary example of that exact conflation.
 
 ## Non-goals and cautions
 
-- Do not reopen general DFS or beam transposition/dedup caching without materially new evidence,
-  such as an incremental sound key with radically lower cost than either measurement found.
+- Do not reopen a general, *fully sound* DFS or beam transposition/dedup key without materially new
+  evidence, such as an incremental sound key with radically lower cost than either measurement
+  found. This is separate from beam's existing coarse dedup mechanism, which has measured value and
+  should be kept — only fix genuine structural bugs in it (as done 2026-08-06), don't remove it on
+  the assumption that "unsound" implies "worthless."
 - Do not derive a production key from an incomplete field list, and do not assume a field's
   intended bit-width is actually enforced — verify against the current, not the original, object
   caps (the beam-dedup overflow bug's root cause).
@@ -500,11 +532,17 @@ Neither should be re-proposed without materially new evidence.
 
 Pathfinder is already highly solver-conscious, and much of the obvious state-merging territory has
 been investigated and closed with real measurements rather than intuition. Both of this document's
-former top-priority items (beam dedup soundness and duplicate-rate) are now resolved: the duplicate
-ceiling is even smaller than DFS's, the shipped key was unsound almost every time it fired, a second
-independent bit-packing bug made it actively unsafe on a real, sizable population, and removing the
-whole mechanism cost nothing measured. The state-space-compression thesis that motivated this
-document's original framing has now been tested twice (DFS, beam) and found weak both times.
+former top-priority items (beam dedup soundness and duplicate-rate) are now resolved: the *sound*
+duplicate ceiling is even smaller than DFS's, and the shipped key is unsound almost every time it
+fires — but, corrected same day, disabling the mechanism entirely was measured to cost real solves,
+because its practical value was never about soundness in the first place, it was implicit beam-width
+management. A second, independent bit-packing bug made the *existing* key actively unsafe on a real,
+sizable population regardless; that bug is fixed, the mechanism is kept. The state-space-compression
+thesis that motivated this document's original framing (a *fully sound* key would meaningfully
+shrink the search) has now been tested twice (DFS, beam) and found weak both times — but "the sound
+version isn't worth building" and "the existing unsound version isn't worth keeping" turned out to
+be two different questions with two different answers, a distinction this document itself initially
+got wrong before correcting it the same day.
 
 The parallel rule-implementation-drift investigation found a genuinely different, complementary
 class of opportunity: not "can we compress the state space," but "do the game's own independent

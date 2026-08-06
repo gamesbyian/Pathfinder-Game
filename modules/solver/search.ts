@@ -1,5 +1,5 @@
 import { getDistanceFromArray } from './distance.js';
-import { KEY_SPACE, popcount } from './encoding.js';
+import { popcount } from './encoding.js';
 import { workMeter } from './work-meter.js';
 import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { STATE_BUF_BEAM, STATE_BUF_DFS, applyMove, createState, getNeighbors, undoMove } from './search-state.js';
@@ -23,7 +23,7 @@ interface DfsFrame { key: number; children: number[]; childIdx: number; undoInfo
  *  siblings under their parent, giving a depth-first walk of the beam's parent-pointer tree, which
  *  is what makes repositioning the shared working state cheap. Keeping them separate is the point:
  *  walk order and cull order are decoupled. */
-interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: number; sc: number; insOrd: number; treeOrd: number; sk?: number; }
+interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: number; sc: string; insOrd: number; treeOrd: number; sk?: number; }
 
 // ─── Core DFS ─────────────────────────────────────────────────────────────────
 
@@ -361,7 +361,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // Ablation: STRATEGY_DIVERSE_BEAM can disable diverse selection even when the config requests it.
     const effectiveDiverseBeam = diverseBeam && (!cfg || cfg.STRATEGY_DIVERSE_BEAM);
     // Root node: prev=null, key=startKey, depth=0
-    let frontier: BeamNode[] = [{ key: startKey, prev: null, depth: 0, score: 0, sc: 0, insOrd: 0, treeOrd: 0 }];
+    let frontier: BeamNode[] = [{ key: startKey, prev: null, depth: 0, score: 0, sc: '', insOrd: 0, treeOrd: 0 }];
     let lastYield = startTime;
     // Work-based budget: beam search terminates in at most reqLen + portal-pair phases.
     const maxPhases = level.reqLen + Math.floor(level.portalMap.size / 2);
@@ -574,15 +574,41 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 }
                 if (ok) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template, curCtx);
-                    // sc: 28-bit constraint-state key for beam dedup.
-                    // bits 0-3: ints&0xF, 4-7: mpVisitedMask&0xF, 8-11: mustCrossMask&0xF,
-                    // 12-15: flipperUsedMask&0xF, 16-19: surroundMask&0xF,
-                    // 20-23: mustTurnMask&0xF, 24-27: adjTurnMask&0xF
-                    const sc = (ws.flipperUsedMask << 12) | (ws.mustCrossMask << 8) | (ws.mpVisitedMask << 4) | (ws.ints & 0xF)
-                             | (ws.surroundMask << 16) | (ws.mustTurnMask << 20) | (ws.adjTurnMask << 24);
+                    // sc: constraint-state key for beam dedup, one delimited field per mask —
+                    // NOT a bit-packed integer. It used to pack each field into a fixed 4-bit slot
+                    // by shift amount alone, with nothing actually masking a field to 4 bits before
+                    // shifting it into place. That was silently unsound on any level with more than
+                    // 4 must-pass/must-cross/flipper cells (stress-corpus-2's generator deliberately
+                    // raises those caps to 8 — see generate-random.mjs's own header comment): a 5th–
+                    // 8th bit overflowed into the NEXT field's designated range and corrupted both.
+                    // Confirmed on real data, not just arithmetic: 671 non-portal stress-corpus-2
+                    // levels exceed 4 of at least one of these mechanic counts, 211 of those with a
+                    // second, adjacent field simultaneously nonzero — a structurally guaranteed key
+                    // collision, not a theoretical edge case. See
+                    // reports/2026-08-06-beam-state-dedup-sound-signature-audit.md.
+                    //
+                    // This is intentionally NOT a fully sound future-state signature either (it
+                    // omits visited-cell identity and per-cell edge-usage) — that was measured
+                    // separately (same report) to have a duplicate ceiling of ~0.019% of candidates,
+                    // and turning dedup off entirely was measured to cost real solves on a harder
+                    // stress-corpus-2 sample (19/75 divergent, non-portal, matched node budget) —
+                    // its practical value comes from culling many candidates that converge on the
+                    // same (cell, mask-tuple) down to the single best-scoring one, freeing beam
+                    // width for candidates elsewhere, not from recognizing literally-identical
+                    // futures. A fully sound key would eliminate that value along with the
+                    // unsoundness (true duplicates are too rare to cull anything). The fix here is
+                    // narrower: keep the exact same (cell, mask-tuple) merge granularity, just make
+                    // the key itself collision-free regardless of any mechanic's cardinality.
+                    const sc = `${ws.ints}|${ws.mpVisitedMask}|${ws.mustCrossMask}|${ws.flipperUsedMask}|${ws.surroundMask}|${ws.mustTurnMask}|${ws.adjTurnMask}`;
                     // Parent-pointer node — O(1) instead of O(depth) path copy.
                     // sk = stateKey: (flipperUsedMask<<4)|mustCrossMask — used by _diverseSelect
                     // to bucket candidates and prevent beam collapse to one constraint-state mode.
+                    // Has the SAME unmasked-4-bit-field shape as sc used to (see sc's own comment)
+                    // and hasn't been re-measured — but sk only feeds a soft diversity heuristic
+                    // (which of several already-valid candidates gets priority), never a hard
+                    // merge/discard decision, so an overflow here degrades bucketing precision
+                    // rather than silently dropping a candidate. Left alone pending its own
+                    // measurement; not touched by this fix.
                     // <= 4 children per node (4-directional grid; a portal cell yields exactly 1),
                     // so scoreRank*4 + childIdx is a collision-free key for "the index this
                     // candidate would have had under a score-order walk".
@@ -607,7 +633,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         if (cands.length > beamWidth) {
             // State-based deduplication: candidates sharing (position, constraint-state) are merged —
             // only the highest-scoring path to each (cell, flipper+MC+MP+ints) combo survives.
-            // Uses a single float64 Map key: key + sc * KEY_SPACE (exact for key<2^20, sc<2^16).
+            // String key (see sc's own comment for why NOT a bit-packed integer): `${key}|${sc}`
+            // is collision-free regardless of any mechanic's cardinality.
             // Disabled for portal levels — portal usage isn't captured in sc, so merging would be
             // incorrect (two paths at the same cell may have used different portals).
             // Undo the walk reordering: restore the exact order a score-order walk would have
@@ -616,9 +643,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             let pool = cands;
             const _t2 = _hrtNow();
             if (useStateDedup) {
-                const dm = new Map<number, BeamNode>();
+                const dm = new Map<string, BeamNode>();
                 for (const c of cands) {
-                    const dk = c.key + c.sc * KEY_SPACE;
+                    const dk = `${c.key}|${c.sc}`;
                     const p = dm.get(dk);
                     if (!p || c.score > p.score) dm.set(dk, c);
                 }
