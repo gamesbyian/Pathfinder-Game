@@ -59,6 +59,39 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
     let nodesExpanded = 0;
     let lastYield = levelStartTime;
 
+    // _DFS_DEBUG-only backtrack-depth tracking. `_dbgPushNodesAt[d]`/`_dbgPushDepthAt[d]` record,
+    // parallel to `stack` (index d = stack depth, kept in lockstep with push/pop), the nodesExpanded
+    // count and reqLen-relative depth at the moment a frame was pushed — so when it's later popped
+    // (every child exhausted, no solution beneath it), the difference is that frame's SUBTREE SIZE:
+    // how many nodes the search spent before recognizing this particular branch doesn't pan out.
+    // Kept entirely separate from the hot-path `DfsFrame`/`stack` shape (no new field on the frame
+    // object itself) specifically so there is zero allocation-shape/hidden-class risk on the
+    // production path when the flag is off — every access below is gated behind `if (_DFS_DEBUG)`.
+    const _dbgPushNodesAt: number[] = _DFS_DEBUG ? [nodesExpanded] : [];
+    const _dbgSubtreeSizes: number[] = [];
+    const _dbgSubtreeDepths: number[] = [];
+    let _dbgInstantRejects = 0;
+    // Log-scale histogram of subtree sizes (bucket i = [2^i, 2^(i+1))) — cheap to build
+    // incrementally per pop, avoids sorting a possibly multi-million-entry array just to report
+    // percentiles at the end of a debug run. Allocated only when the flag is on: dfsFromGate can
+    // be called many times per solve (once per gate x config), so an unconditional 32-element
+    // allocation+fill here — unlike the cheap primitive counters above — is real, avoidable waste
+    // on the production path.
+    const _dbgSizeBuckets: number[] = _DFS_DEBUG ? new Array(32).fill(0) : [];
+    const _dbgFlushDfs = (outcome: string) => {
+        if (!_DFS_DEBUG) return;
+        const n = _dbgSubtreeSizes.length;
+        const sum = _dbgSubtreeSizes.reduce((a, b) => a + b, 0);
+        const max = n ? Math.max(..._dbgSubtreeSizes) : 0;
+        const sumDepth = _dbgSubtreeDepths.reduce((a, b) => a + b, 0);
+        const buckets = _dbgSizeBuckets.map((c, i) => (c > 0 ? `${1 << i}:${c}` : null)).filter(Boolean).join(',');
+        console.error(`__DFS_BACKTRACK_STATS__ ${JSON.stringify({
+            gate: startKey, outcome, nodesExpanded, poppedFrames: n, instantRejects: _dbgInstantRejects,
+            meanSubtreeSize: n ? +(sum / n).toFixed(2) : 0, maxSubtreeSize: max,
+            meanSubtreeDepth: n ? +(sumDepth / n).toFixed(2) : 0, sizeHistogram: buckets,
+        })}`);
+    };
+
     while (stack.length > 0) {
         // Budget + yield check every 256 nodes.
         if ((++nodesExpanded & 255) === 0) {
@@ -81,6 +114,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
                 // bestBadness is; best-first ordering means it's usually a reasonable sample,
                 // not necessarily the best position this branch ever visited.
                 if (out) { out.timedOut = true; out.nodesExpanded = nodesExpanded; out.finalBadness = computeBadness(state, level); }
+                _dbgFlushDfs('timeout');
                 return null;
             }
             if (yieldFn && now - lastYield >= 16) {
@@ -91,6 +125,13 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 
         const top = stack[stack.length - 1];
         if (top.childIdx >= top.children.length) {
+            if (_DFS_DEBUG) {
+                const depth = stack.length - 1;
+                const size = nodesExpanded - _dbgPushNodesAt.pop()!;
+                _dbgSubtreeSizes.push(size);
+                _dbgSubtreeDepths.push(depth);
+                _dbgSizeBuckets[size > 0 ? Math.min(31, 31 - Math.clz32(size)) : 0]++;
+            }
             if (top.undoInfo) undoMove(top.undoInfo, state);
             stack.pop();
             continue;
@@ -120,18 +161,21 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         if (verdict === 'solution') {
             if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
             if (out) out.nodesExpanded = nodesExpanded;
+            _dbgFlushDfs('solution');
             return state.path.slice();
         }
-        if (verdict === 'reject') { undoMove(undo, state); continue; }
+        if (verdict === 'reject') { if (_DFS_DEBUG) _dbgInstantRejects++; undoMove(undo, state); continue; }
 
         // Expand next
         const nextNeighbors = getNeighbors(next, state, level, prep);
-        if (nextNeighbors.length === 0 && rSteps > 0) { undoMove(undo, state); continue; }
+        if (nextNeighbors.length === 0 && rSteps > 0) { if (_DFS_DEBUG) _dbgInstantRejects++; undoMove(undo, state); continue; }
         scoreAndSort(nextNeighbors, next, state, level, prep, profile, template);
+        if (_DFS_DEBUG) _dbgPushNodesAt.push(nodesExpanded);
         stack.push({ key: next, children: nextNeighbors, childIdx: 0, undoInfo: undo, disc: childDisc });
     }
     if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
     if (out) out.nodesExpanded = nodesExpanded;
+    _dbgFlushDfs('exhausted');
     return null;
 }
 
@@ -248,6 +292,15 @@ const _LDS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_LDS_DEBUG === '1');
 // Measures where beamSearchFromGate wall time actually goes: replaying reconstructed paths
 // vs. generating/pruning/scoring candidates vs. sorting/deduping the candidate pool.
 const _BEAM_DEBUG = !!(_proc && _proc.env && _proc.env.PF_BEAM_DEBUG === '1');
+// DFS backtrack-depth probe (audit/debug-only, env-gated — zero overhead when unset, same
+// shape as _BEAM_DEBUG/_LDS_DEBUG above). Referenced from dfsFromGate, which is declared
+// earlier in this file — safe: module-level consts are all initialized before any function
+// body actually runs, since dfsFromGate is only ever called after the module finishes
+// loading, never at module-evaluation time. Built for reports/2026-08-06-branching-factor-
+// parity.md's follow-up question ("does more search survive under a wrong branch on hard
+// levels than on their cheaply-solved near-twins, not just a witness-replay proxy for it") —
+// see reports/2026-08-06-backtrack-depth-instrumentation.md for what it found.
+const _DFS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_DFS_DEBUG === '1');
 // out (optional, last param): mirrors dfsFromGate's own out contract for external tooling (the
 // stress benchmark's per-attempt telemetry) — set to whether the OVERALL call's null return was
 // because levelBudgetMs ran out (true) vs. the search genuinely exhausted every avenue it tried
