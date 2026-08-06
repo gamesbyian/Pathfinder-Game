@@ -191,12 +191,33 @@ jobs:
           # unconditional: routine runs are shaped the same non-binding way deterministic runs always
           # were, so both need the same room for the ms deadline to actually go non-binding instead
           # of being replaced by an equally-binding wrapper cutoff.
+          #
+          # --work-budget, ADDED 2026-08-06 (see reports/2026-08-06-near-twin-starvation-fix.md):
+          # without it, portfolio-solve-sweep.mjs derives workBudget from --budget-ms alone (x
+          # DEFAULT_WORK_PER_MS, orchestration.ts) -- with DEADLINE_C1 at the non-binding 24h value
+          # this makes workBudget effectively infinite (~289 BILLION work units), so the ladder's own
+          # per-attempt WORK-based fair-division (attemptBudgetShare) never actually binds and the
+          # FIRST attempt tried (main-loop, repair fallback, or a --prime-winner miss) is free to run
+          # all the way to the much smaller --node-budget ceiling by itself, leaving every later
+          # attempt (including the level's real winning technique) exactly 0 nodes -- confirmed as the
+          # root cause of all 9 starvation/never-attempted cases in
+          # reports/2026-08-06-near-twin-solver-response-comparison.md (3 confirmed via exact
+          # repairPrimarySeed(gateKey,0) match to a --prime-winner miss; the other 6 via the identical
+          # "first attempt burns ~(nodeBudget x (1 - AO reserve)), everything else 0" shape). CLAUDE.md
+          # already documents "pass --work-budget with a generous --budget-ms" for exactly this
+          # reason. 1.34x node-budget matches this codebase's own established ratio (the
+          # --budget-ms=8000/--node-budget=20000000/--work-budget=26800000 recipe used throughout
+          # docs/solver-architecture.md and this session's A/B reports, itself DEFAULT_WORK_PER_MS x
+          # 8000ms) -- derived from node-budget rather than a second static input so a future
+          # node-budget override can't silently drift out of sync with it.
+          WORK_BUDGET_C1=$(( ${{ inputs.corpus1_node_budget }} * 134 / 100 ))
           timeout -k 30s --preserve-status 45m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels.json \
             --levels="pos:${{ steps.range.outputs.c1start }}-${{ steps.range.outputs.c1end }}" \
             --scheduler-mode=legacy \
             --budget-ms="${DEADLINE_C1}" \
             --node-budget="${{ inputs.corpus1_node_budget }}" \
+            --work-budget="${WORK_BUDGET_C1}" \
             --workers="${{ inputs.corpus1_workers }}" \
             --baseline=logs/stress-corpus1-baseline.json \
             --prime-winner \
@@ -227,12 +248,17 @@ jobs:
           # further, only better-utilized. Both wrappers are unconditional now: routine runs are
           # shaped the same non-binding way deterministic runs always were (see corpus-1's identical
           # comment above).
+          #
+          # --work-budget: see corpus-1's identical comment above (same starvation mechanism, same
+          # 1.34x-node-budget derivation).
+          WORK_BUDGET_C2=$(( ${{ inputs.corpus2_node_budget }} * 134 / 100 ))
           timeout -k 30s --preserve-status 300m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels-random.json \
             --levels="pos:${{ steps.range.outputs.c2start }}-${{ steps.range.outputs.c2end }}" \
             --scheduler-mode=legacy \
             --budget-ms="${DEADLINE_C2}" \
             --node-budget="${{ inputs.corpus2_node_budget }}" \
+            --work-budget="${WORK_BUDGET_C2}" \
             --workers="${{ inputs.corpus2_workers }}" \
             --baseline=logs/stress-corpus2-baseline.json \
             --prime-winner \
