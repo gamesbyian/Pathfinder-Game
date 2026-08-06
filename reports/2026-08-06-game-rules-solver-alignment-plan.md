@@ -9,8 +9,8 @@ independent reference (`scripts/solver-oracle/oracle.mjs`) that exists to catch 
 by design, never checks the other three against each other. That structure was worth interrogating
 directly rather than assuming it was already consistent.
 
-**Section 1 is a fix already made and verified on this branch.** Sections 2–5 are proposed work,
-ranked by payoff-per-risk, not yet implemented.
+**Sections 1, 1b, and 3 are fixes already made and verified on this branch.** Sections 2, 4, and 5
+are proposed work, ranked by payoff-per-risk, not yet implemented.
 
 ---
 
@@ -106,6 +106,69 @@ needing a separate turn-detection check in `isValidMove` — the two symptoms we
 
 ---
 
+## 1b. Fixed: the must-cross lock was unenforced in live play (and the referee's delegate)
+
+### The bug
+
+CLAUDE.md's "Must-cross lock" gotcha and the solver's own `_isMoveDynValid` both state the rule
+plainly: a must-cross cell must be crossed **straight through** (same entry and exit axis) while its
+2-visit requirement is still pending — turning there consumes both axis bits and makes the required
+second straight crossing permanently impossible. `search-state.ts` enforces exactly this. `isValidMove`
+enforced no such thing: a player could enter a still-pending must-cross cell on one axis and turn to
+exit on the other, something no solver-produced path could ever do.
+
+This was initially misdiagnosed (by the author of this report, mid-session) as an *intentional*
+solver-only pruning optimization analogous to the goose/false-goal exclusion — plausible-looking, and
+wrong. Corrected directly by the user: "the player must obey the must-cross lock: if the player draws
+a line vertically into a mustCross square, they must immediately edit vertically. they cannot turn
+inside the mustcross." Re-tracing the exact call sequence (`crossCounts`/`counts` increments on
+entry; the lock must fire on the very next move, the exit of that same visit) confirmed this is a
+real, always-enforced game rule with a genuine implementation gap — not a documented divergence.
+
+### The fix
+
+`modules/domain/move-rules.ts`: hoisted the already-computed `entryAxis` (axis used to enter the
+cell being left, previously scoped only to the edge-reuse-origin check) into a shared local, then
+added the lock check itself, keyed off the same axis comparison and the cell's own visit count:
+
+```js
+// Must-cross lock: a must-cross cell must be crossed straight through (entered and exited on
+// the same axis) while its requirement is still pending (fewer than 2 visits so far) — turning
+// there would consume both axis bits, making the required 2nd straight crossing permanently
+// impossible. Mirrors search-state.ts's isMoveDynamicallyValid (CLAUDE.md's "Must-cross lock"
+// gotcha) — that check was solver-only until this fix; live play enforced no such restriction.
+if (!isPortalJumpCandidate && entryAxis !== AXIS_NONE && axis !== entryAxis
+        && level.mustCrossKeys.includes(lastK) && (counts.get(lastK) || 0) === 1) {
+    return setReason('invalid-must-cross-turn');
+}
+```
+
+Because `validateCandidatePath` delegates every step to `isValidMove`, the fix propagates to the
+referee automatically — no separate change needed there, unlike Section 1's flipping-filter case
+(which the referee happened to catch by a different, independent path).
+
+### Verification
+
+- Two new regression tests in `modules/domain/domain.test.ts`: turning at a still-pending must-cross
+  cell is now rejected; continuing straight through the same cell remains valid. A third test
+  ("turning is allowed once the requirement is already satisfied") was written, found to be
+  untestable in isolation — by the time the must-cross requirement is satisfied, the *only* legal
+  continuation is already the edge-reuse-exempted straight one, so satisfaction status alone never
+  changes the verdict — and removed rather than kept as a misleading assertion.
+- Tightened the existing `path-validator.test.ts` "must-cross lock" regression test: the referee now
+  rejects the illegal path at the turn itself (step 5) instead of only catching it two steps later at
+  the now-impossible second entry attempt (step 8, via ordinary edge-reuse).
+- Extended `scripts/solver-oracle/fuzz.mjs`'s third arm (Section 3) to walk `isValidMove` against the
+  oracle+solver's agreed legal-move set: 0 mismatches across 900+ freshly generated levels both before
+  committing this fix (where the must-cross-lock gap showed up as real, expected divergences) and
+  after.
+- `npm run solver:bench -- --check`: 160/160 published levels solved, no regressions vs.
+  `logs/solver-baseline.json`. This fix only tightens live play/the referee — it does not touch
+  solver code — but the check confirms it doesn't silently invalidate any existing accepted solution.
+- Full `modules/domain/domain.test.ts` + `modules/domain/path-validator.test.ts` suite: 184/184 pass.
+
+---
+
 ## 2. Open question: are flipping filters actually single-use, or is that a solver-only restriction?
 
 Neither `isValidMove` nor `validateCandidatePath` blocks re-entering an already-crossed flipping
@@ -146,30 +209,45 @@ hypothesis.
 
 ---
 
-## 3. Extend the differential oracle fuzzer to cover `isValidMove`, not just the solver
+## 3. Fixed: extended the differential oracle fuzzer to cover `isValidMove`, not just the solver
 
 `scripts/solver-oracle/fuzz.mjs` cross-checks the solver's move generation against
 `oracle.mjs` (an independent, from-scratch reimplementation of the rules) via move-by-move random
 walks on small levels — exactly the mechanism that would have caught the MST-scratch-buffer bug
-per its own doc, and exactly the class of bug this report just found by hand. It does **not**
-import or exercise `move-rules.ts` at all, so it structurally cannot catch solver↔game drift — only
-solver↔oracle drift. That's why the bug in Section 1 survived despite this tooling already existing.
+per its own doc, and exactly the class of bug this report just found by hand. It previously did
+**not** import or exercise `move-rules.ts` at all, so it structurally could not catch solver↔game
+drift — only solver↔oracle drift. That's why the bug in Section 1 survived despite this tooling
+already existing.
 
-**Recommendation**: add a third arm to the same harness that walks `isValidMove` (in
-`MoveContext.PLAY`) in lockstep with the existing two, asserting three-way legal-move-set agreement
-at every step, not just win-condition agreement at the goal. This is the single highest-leverage,
-lowest-risk item here: it doesn't change any game behavior, it makes the *next* instance of this bug
-class (three rule copies silently diverging) a CI failure instead of a report someone has to notice
-by hand. Cost is small — the harness already generates levels and walks candidate sets; it needs one
-more move-generator function plugged into the existing comparison loop, plus wiring the `PLAY`
-context's state (`crossedFlippingFilters`, `armedFalseGoals`, etc.) alongside the two representations
-the harness already threads through.
+**Done**: added a third arm to the same harness that walks `isValidMove` in lockstep with the
+existing two, asserting three-way legal-move-set agreement at every step (not just win-condition
+agreement at the goal), plus win-condition agreement itself. Checked under `MoveContext.TAP_ROUTE`,
+not `PLAY` as originally proposed and not `SOLVER` either — both were tried and rejected:
+
+- `SOLVER`'s `checkWinMetrics: true` makes `isValidMove` refuse to step onto the goal at all unless
+  must-pass/must-cross are already satisfied, but move generation never asks that question (whether
+  arriving is a genuine win is a separate, later check, already compared independently at the goal) —
+  produced ~70% spurious mismatches, all "domain refuses the goal early, oracle+production allow it."
+- `PLAY` would produce spurious mismatches on any generated level with a goose/false-goal on the
+  walked path (legal-but-hazardous in play; structurally pruned from the solver/oracle search space
+  as an optimization — a correct, intentional scope difference, not a bug to flag).
+
+State for `isValidMove` is built via the real `runtime/path-state.js`'s `rebuildDerivedState`, not
+hand-rolled, so the harness doesn't risk a fourth independently-buggy state tracker. Movement
+comparison stops once any implementation reaches the goal (mirroring `isValidMove`'s unconditional
+"invalid-after-goal" rule, which move generation never needs since production search treats an
+unsuccessful goal arrival as a dead end and never continues past it).
+
+This is exactly the check that caught the must-cross-lock gap (Section 1b) as a real, reproducible
+divergence rather than requiring another by-hand report — verified at 0 mismatches across 900+
+generated levels once both fixes landed. **This class of bug is now a CI-catchable failure, not
+something that depends on a human noticing.**
 
 Longer-term, the same finding argues for collapsing to a single shared step-transition kernel that
 all three call sites consume (the solver's typed-array state as one *representation* of it, not a
 parallel reimplementation) rather than perpetually fuzzing three hand-synced copies. That's a much
-larger, riskier refactor and not recommended as a first move — the fuzzer extension gets most of the
-safety benefit for a fraction of the cost and risk.
+larger, riskier refactor and not recommended as a first move — the fuzzer extension already got most
+of the safety benefit for a fraction of the cost and risk.
 
 ---
 
@@ -261,12 +339,13 @@ owns level-mechanic design, not a ticket to pick up unprompted.
 
 ## Suggested order
 
-1. **Done.** Section 1 fix, merged with this report.
-2. Oracle-fuzzer extension (Section 3) — cheapest, prevents recurrence of exactly this bug class.
-3. Offline budget decoupling (Section 5) — pure configuration, largest measured lever, evidence
+1. **Done.** Section 1 fix (flipping-filter entry axis), Section 1b fix (must-cross lock), and the
+   Section 3 oracle-fuzzer extension — all merged with this report. The fuzzer extension already
+   proved its worth in-session: it's what turned the must-cross-lock gap into a reproducible finding.
+2. Offline budget decoupling (Section 5) — pure configuration, largest measured lever, evidence
    already exists.
-4. In-envelope stress stratum (Section 4) — measurement only, clarifies what "solve rate" means.
-5. Flipper single-use resolution (Section 2) — needs a design decision before any code change;
+3. In-envelope stress stratum (Section 4) — measurement only, clarifies what "solve rate" means.
+4. Flipper single-use resolution (Section 2) — needs a design decision before any code change;
    worth raising early given the size of the affected population (957 levels) even though the fix
    itself would land later.
-6. Per-filter local flip (Section 6) — hold for a design conversation, not scheduled work.
+5. Per-filter local flip (Section 6) — hold for a design conversation, not scheduled work.
