@@ -1,0 +1,187 @@
+# Sharded runner for scripts/stress/cpsat-hint-harvest-sweep.mjs, which drives
+# scripts/stress/cpsat-hint-harvest.mjs's --forced-grid mode across every eligible corpus-2 level
+# CP-SAT hasn't been run against yet (atlas-eligibility.mjs's selectUnharvestedCpsatLevels).
+#
+# Sharded wide (60 shards) with only 20 running at a time (`max-parallel`), not because there are
+# 60x more levels than atlas-sweep.yml's 20-shard runs -- CP-SAT's own per-level duration is highly
+# variable (a fast INFEASIBLE/timeout in seconds vs. a portal-heavy padded-horizon model that can
+# run to its full time budget on every combo), which is exactly what caused atlas-sweep's original
+# 1-to-23-minute shard spread. Rather than accept that spread, over-shard relative to the 20-way
+# concurrency limit: as a fast shard's small slice finishes, GitHub Actions pulls the next queued
+# matrix entry onto the freed runner, so slow shards' slack gets naturally backfilled by the queue
+# instead of sitting idle while the last slow shard finishes alone.
+#
+# Commit mechanics mirror atlas-sweep.yml: the combine job commits new/changed
+# data/stress/hints-random/*.json straight back to the dispatched branch from GitHub's own runner
+# network, not via an artifact download into a sandboxed dispatching session (see that workflow's
+# header for the proxy-block history this avoids). writeLevelsWithHints (scripts/level-data-io.mjs)
+# is explicitly designed for this: concurrent processes over DISJOINT level sets are safe regardless
+# of write-order, because a level untouched by a given process's run is skipped entirely rather than
+# rewritten from that process's stale corpus snapshot.
+name: cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)
+
+on:
+  workflow_dispatch:
+    inputs:
+      time_limit:
+        description: 'Per-level baseline (unforced) CP-SAT time limit in seconds'
+        required: false
+        default: '120'
+      combo_time_limit:
+        description: 'Per-combo (forced-grid) CP-SAT time limit in seconds'
+        required: false
+        default: '40'
+      max_combos:
+        description: 'Cap on forced combos attempted per level (gate x direction first, portal combos filling the remainder)'
+        required: false
+        default: '16'
+      shard_count:
+        description: >-
+          How many of the 60 shards to actually run. Levels are assigned round-robin over the FULL
+          unharvested-eligible pool modulo 60 (always, regardless of this value), so running fewer
+          shards just samples fewer of those 60 interleaved buckets rather than concentrating more
+          work per shard -- safe to use for a cheap trial (e.g. shard_count=2).
+        required: false
+        default: '60'
+
+concurrency:
+  group: cpsat-hint-harvest-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep-shards:
+    name: cpsat-hint-harvest shard ${{ matrix.shard }}/60
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+                21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+                41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60]
+    # job-level `if:` cannot reference `matrix` (see atlas-sweep.yml's own comment on this) -- the
+    # shard_count trial-slice gate is applied per-step below instead.
+    steps:
+      - name: Check out the dispatched ref
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup Node
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Setup Python
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        run: |
+          npm ci
+          pip install ortools
+
+      - name: Compute this shard's zero-padded number (for artifact/log naming only)
+        id: range
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        shell: bash
+        run: echo "nn=$(printf '%02d' "${{ matrix.shard }}")" >> "$GITHUB_OUTPUT"
+
+      - name: Run cpsat-hint-harvest-sweep on this shard's round-robin slice
+        id: sweep
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          mkdir -p logs/cpsat-hint-harvest-sweep
+          timeout -k 30s --preserve-status 340m node scripts/run-bundled.mjs scripts/stress/cpsat-hint-harvest-sweep.mjs -- \
+            --shard-index="${{ matrix.shard }}" --shard-count=60 \
+            --time-limit="${{ inputs.time_limit }}" \
+            --combo-time-limit="${{ inputs.combo_time_limit }}" \
+            --max-combos="${{ inputs.max_combos }}" \
+            --summary-out="logs/cpsat-hint-harvest-sweep/shard-${{ steps.range.outputs.nn }}-summary.md" \
+            2>&1 | tee "logs/cpsat-hint-harvest-sweep/shard-${{ steps.range.outputs.nn }}.console.log"
+          status=${PIPESTATUS[0]}
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Stage this shard's new/changed hint files for upload
+        if: ${{ always() && matrix.shard <= fromJSON(inputs.shard_count) }}
+        shell: bash
+        run: |
+          stage="artifact-staging/cpsat-hint-harvest-shard-${{ steps.range.outputs.nn }}"
+          mkdir -p "${stage}/data/stress/hints-random" "${stage}/logs"
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            mkdir -p "$(dirname "${stage}/${f}")"
+            cp "${f}" "${stage}/${f}"
+          done < <(git status --porcelain -- data/stress/hints-random/ data/stress/stress-levels-random.json | awk '{print $2}')
+          cp -r logs/cpsat-hint-harvest-sweep "${stage}/logs/" 2>/dev/null || true
+
+      - name: Upload this shard's results
+        if: ${{ always() && matrix.shard <= fromJSON(inputs.shard_count) }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpsat-hint-harvest-shard-${{ steps.range.outputs.nn }}
+          path: artifact-staging/cpsat-hint-harvest-shard-${{ steps.range.outputs.nn }}/
+          retention-days: 30
+          if-no-files-found: warn
+
+  combine:
+    name: Combine shard results and commit
+    needs: sweep-shards
+    if: ${{ always() && needs.sweep-shards.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the dispatched ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Download all shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cpsat-hint-harvest-shard-*
+          path: artifact-staging
+          merge-multiple: true
+
+      - name: Upload combined artifact (also kept regardless of the commit below)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpsat-hint-harvest-sweep-combined
+          path: artifact-staging/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Merge new/updated hint files into the working tree and commit
+        shell: bash
+        run: |
+          mkdir -p data/stress/hints-random
+          find artifact-staging -path '*/data/stress/hints-random/*.json' -exec cp {} data/stress/hints-random/ \;
+          # Virtually never fires (writeLevelsWithHints only rewrites the main corpus file if the
+          # STRIPPED level array changed, and hint harvesting never touches level data) but handled
+          # defensively rather than assumed away.
+          found_main=$(find artifact-staging -path '*/data/stress/stress-levels-random.json' | head -1)
+          if [ -n "$found_main" ]; then cp "$found_main" data/stress/stress-levels-random.json; fi
+          if git status --porcelain -- data/stress/hints-random/ data/stress/stress-levels-random.json | grep -q .; then
+            git config user.name 'github-actions[bot]'
+            git config user.email 'github-actions[bot]@users.noreply.github.com'
+            git add data/stress/hints-random/ data/stress/stress-levels-random.json
+            git commit -m "cpsat-hint-harvest-sweep: broaden CP-SAT hint coverage (run ${{ github.run_id }})"
+            git push origin HEAD:"${{ github.ref_name }}"
+          else
+            echo "No new/changed hint files -- nothing to commit."
+          fi
