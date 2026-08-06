@@ -33,7 +33,7 @@
  * Run via the esbuild wrapper (imports the TS solver):
  *   node scripts/run-bundled.mjs scripts/stress/reduce-level.mjs
  *       --corpus=data/stress/stress-levels-random.json --id=R0648
- *       [--node-budget=15000000] [--time-budget-ms=30000] [--max-iterations=500]
+ *       [--node-budget=15000000] [--time-budget-ms=30000] [--work-budget=<1.34x node-budget>] [--max-iterations=500]
  *       [--target-signature=timeout|failed|node-budget-reached|invalid-path|error]
  *       [--out=<file>]
  */
@@ -52,6 +52,20 @@ const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels-random.js
 const LEVEL_ID = args.get('--id');
 const NODE_BUDGET = Number(args.get('--node-budget') || 15_000_000);
 const TIME_BUDGET_MS = Number(args.get('--time-budget-ms') || 30000);
+// Without an explicit workBudget, Solver.solve() derives one from TIME_BUDGET_MS alone (x
+// DEFAULT_WORK_PER_MS, orchestration.ts) -- at this tool's defaults that's ~100.5M work units
+// against a 15M node ceiling, a 6.7x ratio loose enough that the ladder's own per-attempt
+// fair-division doesn't bind before a single early attempt does: confirmed directly (2026-08-06),
+// a level's first-tried config claimed 59-65% of the node budget with 14/17 later attempts getting
+// exactly 0 -- the same starvation shape (just milder) that motivated
+// ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION and the solver-stress-refresh.yml --work-budget fix (see
+// reports/2026-08-06-near-twin-starvation-fix.md). That under-tests most techniques before this
+// tool accepts a "still reproduces" verdict, which can shrink a level to something that merely
+// stayed unsolved because most of the ladder never got a turn, not because it's genuinely minimal.
+// 1.34x matches the same validated ratio used elsewhere (solver-typical-budget-baseline.yml's
+// 26,800,000/20,000,000 and 67,000,000/50,000,000, itself DEFAULT_WORK_PER_MS x 8000ms/20,000,000
+// nodes) rather than a new number invented for this tool.
+const WORK_BUDGET = args.has('--work-budget') ? Number(args.get('--work-budget')) : Math.round(NODE_BUDGET * 1.34);
 const MAX_ITERATIONS = Number(args.get('--max-iterations') || 500);
 const TARGET_SIGNATURE_OVERRIDE = args.get('--target-signature') || null;
 const OUT_FILE = args.get('--out') || null;
@@ -110,7 +124,7 @@ async function solveAndClassify(raw) {
     try { level = Solver.prepareLevelForSolver(raw, { source: 'raw' }); }
     catch (err) { return { signature: 'error', detail: `normalize: ${err?.message}` }; }
     let result;
-    try { result = await Solver.solve(level, { timeBudgetMs: TIME_BUDGET_MS, nodeBudget: NODE_BUDGET }); }
+    try { result = await Solver.solve(level, { timeBudgetMs: TIME_BUDGET_MS, nodeBudget: NODE_BUDGET, workBudget: WORK_BUDGET }); }
     catch (err) { return { signature: 'error', detail: `solve: ${err?.message}` }; }
     if (result.ok) {
         let check;
