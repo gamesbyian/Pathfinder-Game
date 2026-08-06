@@ -118,8 +118,14 @@ export function isValidMove(
         }
 
         let filterTarget = level.filterMap.get(targetKey);
-        if (filterTarget === undefined && level.flippingFilterMap.has(targetKey) && crossedSet.has(targetKey)) {
-            const relevantFlipCount = crossedSet.get(targetKey) ?? 0;
+        if (filterTarget === undefined && level.flippingFilterMap.has(targetKey)) {
+            // A flipping filter not yet in crossedSet is being entered for the first time in
+            // this path — crossedSet can never contain it yet (it's only recorded once the step
+            // onto it has already been committed), so its axis must come from the live global
+            // flip counter instead. A value already in crossedSet (re-entering the same cell) is
+            // authoritative and takes precedence, matching the fixed axis established on the
+            // cell's first crossing.
+            const relevantFlipCount = crossedSet.has(targetKey) ? (crossedSet.get(targetKey) ?? 0) : _flipCount;
             const baseAxis = level.flippingFilterMap.get(targetKey);
             filterTarget = (relevantFlipCount % 2 !== 0)
                 ? (baseAxis === AXIS_H ? AXIS_V : AXIS_H)

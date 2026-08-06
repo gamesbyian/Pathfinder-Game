@@ -298,6 +298,28 @@ test('filter axis: entering a horizontal-filter cell horizontally is valid', () 
     assert.ok(isValidMove(PACK(3, 3), state, level));
 });
 
+test('flipping filter axis: entering on the wrong axis (never yet crossed) is blocked (regression)', () => {
+    // Bug: the flipping-filter branch only computed an axis when crossedSet already had the
+    // target key — but crossedSet can never contain a cell before the step onto it commits, so
+    // the very first entry into any flipping filter skipped the axis check entirely (live play
+    // enforced no axis restriction at all on first use, and — since the correct exit-side check
+    // only ever compares exit axis to the filter's own designated axis, never to entry axis —
+    // could silently accept a turn on it too, whenever off-axis entry happened to line up with
+    // that designated exit axis). Declared axis H, zero flips so far (flipCount 0, even) →
+    // current axis is still H; approaching vertically must be rejected exactly like a plain
+    // filter would be. Blocking this transitively blocks the turn as well: entry and exit are
+    // now both pinned to the same designated axis, so they can never diverge.
+    const level = makeLevel({ flippingFilters: [[PACK(3, 3), core.H]] });
+    const state = makeState({ path: [PACK(3, 2)] });   // approaching from above (V axis)
+    assert.equal(isValidMove(PACK(3, 3), state, level), false);
+});
+
+test('flipping filter axis: entering on the declared axis (never yet crossed) is valid', () => {
+    const level = makeLevel({ flippingFilters: [[PACK(3, 3), core.H]] });
+    const state = makeState({ path: [PACK(2, 3)] });   // approaching from left (H axis)
+    assert.ok(isValidMove(PACK(3, 3), state, level));
+});
+
 test('portal legality: last cell is a portal entrance, next must be portal dest', () => {
     // Portal: PACK(2,2) ↔ PACK(6,6). Path is at the portal entrance PACK(2,2).
     // The only legal next step (with allowJump=true) is the portal dest PACK(6,6).
