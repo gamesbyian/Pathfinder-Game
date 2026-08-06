@@ -1,114 +1,170 @@
 # Solver-aware game architecture
 
-> **Status:** exploratory design note, not an implementation plan.
+> **Status:** exploratory design note, revised against the repository's existing solver research.
 >
-> This document asks a specific lateral question: now that substantial effort has gone into making the solver better at Pathfinder, are there changes to the **game's rule representation, domain model, compilation pipeline, or mechanic contracts** that could make the solver faster, safer to optimize, or capable of finding more solutions?
+> This document asks a lateral question: after extensive work improving Pathfinder's solver, are there changes to the **game's rule representation, domain model, compilation pipeline, or mechanic contracts** that could make the solver faster, safer to optimize, or capable of finding more solutions?
 >
-> The answer is yes, but the easy version of this idea has already been implemented. Pathfinder already has a pure domain/runtime layer, normalized levels, a substantial `prepLevel()` phase, reversible solver mutation, typed-array hot paths, topology analysis, final candidate validation, and differential/invariant testing. The remaining opportunities are not ordinary cleanup. They concern how completely the game exposes the mathematical state of the puzzle.
+> The answer remains yes, but several obvious versions of the idea have already been tested. In particular, exact transposition caching is not an unmeasured high-priority opportunity: a sound DFS signature was measured on 2026-07-17 and found to have modest duplicate rates with prohibitive per-node overhead. This revision treats that result as settled evidence rather than proposing the same experiment again.
 
 ## Current baseline
 
-The current architecture already gives the solver a strong foundation:
+Pathfinder already gives the solver a strong foundation:
 
-- `modules/Solver.ts` is a thin facade over the search implementation in `modules/solver/`.
+- `modules/Solver.ts` is a thin facade over `modules/solver/`.
 - `normalizeRawLevel()` converts wire-format levels into the solver's packed internal representation.
-- `prepLevel()` precomputes distances, static adjacency, masks, mechanic indexes, approach maps, pairwise objective distances, portal-parity guidance, and bit-parallel connectivity data.
-- DFS uses mutable state with `applyMove()` / `undoMove()` rather than cloning at every node.
-- Beam search uses parent-pointer nodes and replays into a reusable scratch state.
+- `prepLevel()` precomputes distances, adjacency, masks, mechanic indexes, approach maps, pairwise objective distances, portal-parity guidance, and bit-parallel connectivity data.
+- DFS uses mutable state with `applyMove()` / `undoMove()`.
+- Beam search uses parent-pointer nodes and a reusable replay state.
 - Returned candidates are checked by the domain-level `validateCandidatePath()` referee.
 - Runtime path derivation is centralized and cross-checked by invariant tests.
 - Solver policy is selected by level features rather than level identity.
 
-Accordingly, this note does **not** recommend simply sharing UI code with the solver, replacing the solver with the runtime engine, or moving all solver precomputation into the game. Those would either duplicate current work or risk slowing hot search paths.
+This note therefore does **not** recommend sharing UI code with the solver, replacing the solver with the runtime engine, or broadly rewriting existing hot paths for architectural neatness.
 
-## Central idea: make future-relevant state explicit
+## The semantic principle that still matters
 
-Pathfinder is history-sensitive. Two paths can end on the same cell with the same length and intersection count but have different legal futures because they used different axes at cells, satisfied different constraints, entered from different directions, used different portals or flippers, or left different local topology behind.
+Pathfinder is history-sensitive. Two paths can end on the same cell with the same length and intersection count while having different legal futures because they used different axes at cells, visited different cells, entered from different directions, used different portals or flippers, or satisfied different constraints.
 
-The most valuable game-side contribution would be a formal answer to:
+Any system that merges, caches, memoizes, or compares search states must answer:
 
-> What is the complete minimum state that determines every legal continuation from this point?
+> What information is sufficient to prove that two histories have the same relevant future?
 
-This is not necessarily the same as the solver's current state object, and it is certainly smaller than the entire path. It is a semantic contract: two path histories are equivalent exactly when every future move sequence is legal or illegal in the same way and produces the same win result.
+This principle is already supported by hard-won repository evidence:
 
-A canonical definition of that equivalence could support stronger and safer:
+- the must-cross lower-bound cache-key gotcha;
+- the MST scratch-buffer correctness bug;
+- the corrected `mitm-frontier-probe.mjs`, whose original key omitted future-relevant state;
+- the 2026-07-17 DFS transposition premise test, where a crude key reported 92–99% apparent duplication but the sound key found only 0.5–16%.
 
-- beam deduplication,
-- transposition tables,
-- memoization,
-- dominance relations,
-- meet-in-the-middle experiments,
-- frontier-size measurement,
-- cross-attempt state reuse,
-- external oracle encodings.
+The lesson is broader than transposition tables: a compact state summary is useful only after both its **soundness** and its **economic value** have been measured.
 
-Recent work on `mitm-frontier-probe.mjs` demonstrates how easy it is to under-key Pathfinder state. Its old key omitted general per-cell edge-axis usage, flipper state, turn and surround masks, portal state, and the incoming axis at the current position. That merged histories with different future legality. Any production state identity must therefore be derived from an explicit semantic specification, not assembled opportunistically around whichever fields a particular experiment happens to notice.
+## Existing negative result: exact DFS transposition caching
 
-## Opportunity 1: a canonical future-state schema
+The report `reports/2026-07-17-dfs-state-revisit-rate-transposition-premise.md` already tested the central transposition premise.
 
-Introduce a domain-level specification of future-relevant state, separate from any one optimized encoding.
+A crude signature appeared spectacular, reporting 92–99% duplicate visits. It omitted the actual visited-cell identity, per-cell edge-axis usage, and portal history. Once replaced by a sound signature containing the full visited-cell identity, `edgeUsage`, portal state, and constraint masks, duplicate rates fell to 0.5–16%, typically around 1–2%.
+
+Computing the sound signature was also expensive enough that the instrumented runs processed roughly five to six times fewer nodes in the same budget. The report correctly downgraded the idea from a leading priority to “checked and found weak.” `docs/future-work.md` likewise lists state-dominance/transposition caching as deprioritized because the correctness-risk/payoff trade is unfavorable.
+
+Consequences for this document:
+
+1. Do not propose a general DFS transposition table as fresh work.
+2. Do not assume canonical state merging substantially compresses Pathfinder's state space.
+3. Do not make exact future-state identity the top-ranked route to more solves.
+4. Retain the semantic inventory as a correctness reference for experiments that already merge states.
+
+The corrected MITM frontier work reinforces this conclusion from another direction: even with a sound key, realistic meet frontiers grow to hundreds of millions or billions of distinct states. Exact identity is necessary for trustworthy measurement, but it does not by itself make the search space small.
+
+## Live opportunity 1: audit beam deduplication for soundness
+
+Beam search currently applies state deduplication only on portal-free levels. Its key is built from the candidate cell and packed constraint code `sc`.
+
+The packed code includes constraint progress such as flipper, must-cross, must-pass, intersection, surround, must-turn, and adjacent-turn masks. It does not include the full visited-cell identity or general per-cell edge-axis usage. Those facts affect future legality in Pathfinder.
+
+That creates a live question more urgent than extending dedup to portals:
+
+> Can the current beam key merge candidates that share `(cell, sc)` but have different legal futures?
+
+The repository's prior under-keying incidents make this a correctness question, not merely an optimization question. The existing key may still be safe under some beam-specific invariant, but that safety needs an explicit argument or measurement. Absent such an argument, it should be treated as potentially under-keyed.
+
+### Recommended audit
+
+Instrument beam candidate pools before dedup and compare the current key against an exact reference signature containing all future-relevant state.
+
+Measure:
+
+- how often one current-key bucket contains multiple exact states;
+- whether those exact states have different legal-neighbour sets;
+- whether the candidate retained by current dedup is ever different from the only candidate that can complete a known solution;
+- whether disabling current dedup restores any failed beam attempts;
+- time and memory saved by the present optimization;
+- solve-count and stability effects across relevant corpora.
+
+This audit should precede any attempt to make portal-aware beam deduplication.
+
+## Live opportunity 2: measure exact duplicate rates inside beam frontiers
+
+The DFS transposition result does not automatically settle beam search.
+
+DFS explores one active path and revisits states over time. Beam search holds many candidates at the same depth concurrently, often produced from nearby parents. That population may contain substantially more exact duplicates than DFS's traversal history.
+
+The necessary infrastructure largely exists from the DFS and MITM investigations. Reuse the exact reference state signature offline or in diagnostic mode, without changing production selection.
+
+Questions to answer:
+
+1. What fraction of beam candidates are exact duplicates before culling?
+2. How does the rate vary by level family and mechanic mix?
+3. How much apparent duplication under `(cell, sc)` disappears under the sound key?
+4. Are portal levels especially duplicate-rich?
+5. Could a cheap incremental fingerprint approximate the exact key without unsound merging?
+6. Does exact dedup save enough frontier capacity to offset hashing and memory costs?
+
+A positive result would justify designing a cheaper sound beam key. A negative result would close this avenue without production risk.
+
+## Live opportunity 3: certified forced-sequence macro transitions
+
+This appears to be the freshest game-side opportunity in this note.
+
+The game/compiler can identify stretches where the path advances through several cells but no genuine decision exists. The solver could process such a stretch as one macro transition while still applying every underlying move through the real state machinery.
+
+Possible initial cases:
+
+- a static corridor whose interior cells each have one legal continuation;
+- a forced portal jump plus a forced exit sequence;
+- a fixed-axis filter passage with only one possible continuation;
+- a degree-one chain created by static obstacles;
+- a locally forced landmark approach that remains forced under a clearly stated precondition.
+
+### Why this is different from forced-structure bounds
+
+Existing forced-structure work derives mandatory cells or local facts for lower bounds and pruning. Macro transitions target a different cost:
+
+- repeated neighbour generation;
+- repeated scoring and sorting at non-decisions;
+- repeated search-loop bookkeeping;
+- effective search depth.
+
+A macro does not claim a branch is dead or alive. It merely skips presenting deterministic intermediate steps as separate branch points.
+
+### Safety design
+
+A macro must:
+
+1. execute each underlying move through the authoritative solver transition logic;
+2. stop before the first genuine choice;
+3. stop before any step whose forcedness depends on unmodelled dynamic state;
+4. return a composite undo token or a stack of ordinary undo tokens;
+5. preserve exact metrics, path reconstruction, intersection accounting, and referee validity;
+6. be disabled behind an ablation flag initially.
+
+### First experiment
+
+Begin only with statically forced chains certified from the compiled graph. Measure:
+
+- number of ordinary transitions collapsed;
+- nodes expanded;
+- wall time;
+- change in search order;
+- solve-count differences;
+- which level families contain enough forced-chain length to matter.
+
+If static chains show value, expand carefully to state-dependent macros.
+
+## Opportunity 4: first-class dynamic mechanic contracts
+
+Even when exact state merging is not economically attractive, explicit mechanic state remains valuable for correctness and tooling.
+
+Every mechanic whose history affects future legality should document:
+
+- its dynamic state;
+- whether state is per cell, per object, per pair, or global;
+- whether state is monotonic;
+- whether incoming direction matters;
+- whether it changes connectivity or only move legality;
+- what external models must encode to remain sound;
+- what must be included in any cache or dedup key.
 
 Conceptually:
-
-```ts
-interface FutureState {
-  position: CellId;
-  stepsUsed: number;
-  intersections: number;
-
-  // Per-cell path consequences
-  visitState: VisitState;
-  axisUsage: AxisUsageState;
-
-  // Constraint progress
-  mustPass: Mask;
-  mustCross: CrossState;
-  mustTurn: Mask;
-  adjacentTurn: Mask;
-  surround: SurroundState;
-
-  // Dynamic mechanics
-  portals: PortalState;
-  flippers: FlipperState;
-
-  // Local continuation context
-  incomingAxis: Axis | None;
-  lastTransitionKind: TransitionKind;
-}
-```
-
-This should be treated as a semantic inventory, not a proposed allocation-heavy runtime object. The solver may encode it into typed arrays, bitsets, integers, hashes, or multiple tiered keys.
-
-### Why this could produce more solves
-
-A complete state identity permits exact merging of equivalent histories. Search effort currently lost on duplicate futures can instead widen the frontier, deepen attempts, or fund additional strategies.
-
-The most obvious production target is beam deduplication. The current packed beam constraint code intentionally omits some history and therefore cannot be used universally. A richer key may allow safe deduplication on more mechanic combinations, including portal levels, provided the cost of computing and storing it does not erase the benefit.
-
-### Required validation
-
-A candidate key must be tested in both directions:
-
-1. **Soundness:** states sharing a key must have identical legal futures.
-2. **Usefulness:** the key must actually merge enough states to repay hashing, storage, and cache pressure.
-
-Differential tests should compare legal-neighbour sets and subsequent transition results for sampled same-key states. A naive exact reference key can be used in experiments even if it is too expensive for production.
-
-## Opportunity 2: first-class dynamic mechanic state
-
-Every mechanic whose history affects future legality should expose that history directly rather than requiring consumers to reconstruct it from the path.
-
-Portals are the clearest example. The domain model should specify precisely:
-
-- whether use is tracked per terminal, per pair, or per traversal,
-- whether entry and exit terminals have distinct future consequences,
-- whether portal jumps affect counted length,
-- what local direction context survives a jump,
-- what must be included in an exact future-state key.
-
-The same contract should exist for flipping filters and future dynamic mechanics.
-
-A mechanic definition could publish a compact semantic footprint:
 
 ```ts
 interface MechanicStateContract {
@@ -118,252 +174,178 @@ interface MechanicStateContract {
   affectsConnectivity: boolean;
   affectsWinState: boolean;
   requiresIncomingDirection: boolean;
-  supportsCanonicalEncoding: boolean;
+  externalModelSupport: 'exact' | 'relaxed' | 'unsupported';
 }
 ```
 
-This is useful before implementation as well as after it. A mechanic with rich behaviour but a few bounded state bits is solver-friendly. A superficially similar mechanic whose future depends on an arbitrary ordered history can multiply the search space dramatically.
+This need not become allocation-heavy runtime machinery. It can be documentation, types, tests, and compiler metadata.
 
-## Opportunity 3: a shared compiled puzzle graph
+Its main benefits are:
 
-`prepLevel()` already performs extensive solver-specific compilation. The game/domain layer could still own a smaller canonical compiled graph used by the editor, runtime validation, generator, solver preparation, and external oracles.
+- preventing future under-keyed experiments;
+- keeping CP-SAT and other oracles honest about unsupported mechanics;
+- guiding mechanic design toward bounded explicit state;
+- making provenance and telemetry comparable across solvers.
+
+## Opportunity 5: a shared compiled puzzle graph
+
+`prepLevel()` already performs extensive solver-specific compilation. A smaller domain-owned compiled graph could still reduce semantic drift among:
+
+- editor validation;
+- runtime replay;
+- procedural generation;
+- solver prep;
+- CP-SAT and other external models;
+- analysis scripts.
 
 Possible contents:
 
-- dense cell IDs from `0..N-1`,
-- packed-key to dense-ID conversion,
-- static geometric adjacency,
-- move axes,
-- static impassability,
-- portal transitions,
-- mechanic indexes,
-- connected components,
-- parity classes,
-- articulation cells and bridges,
-- corridor and separator structure,
+- dense cell IDs;
+- static geometric adjacency;
+- move axes;
+- static impassability;
+- portal transitions;
+- mechanic indexes;
+- connected components;
+- parity classes;
+- corridor and separator structure;
 - symmetry information.
 
-The solver would build its hot-path arrays and heuristic data on top of this artifact. It would not be required to use a domain object in inner loops.
+The solver would still construct specialized typed arrays on top of this graph. The goal is shared semantics, not forcing domain objects into hot loops.
 
-### Benefits
+The strongest practical use may be making external models consume the same compiled topology and mechanic declarations rather than independently interpreting raw level data.
 
-- All systems agree on the same logical topology.
-- CP-SAT and other oracle encodings consume the same compiled semantics rather than reinterpreting raw level JSON.
-- Structural features become available for portfolio selection and analysis.
-- Dense IDs may enable smaller experimental state encodings and bitsets.
-- New mechanics have one place to declare their graph effects.
+## Opportunity 6: region and separator facts as advisory signals
 
-### Important caution
+This overlaps with existing work on bounded global consistency, contradiction-only propagation, solver-response families, and structural analysis. It should not be presented as an unexplored new direction.
 
-The present packed-key / `KEY_SPACE` design exists because direct typed-array access has measured hot-loop advantages. A dense representation should be benchmarked as an additional compiled view, not adopted as an aesthetic rewrite. Conversion once per level is cheap; adding indirection to every move may not be.
+The remaining angle is narrower:
 
-## Opportunity 4: certified forced-sequence macro transitions
+- compile articulation, bridge, separator, corridor, and region-objective facts once;
+- expose them as features;
+- evaluate them in shadow mode for move ordering, diversity, strategy selection, and budget allocation;
+- do not promote them to hard prunes without proof.
 
-The game compiler can identify stretches where the player appears to make several moves but the logical continuation contains no branch.
-
-Examples may include:
-
-- a forced portal transition,
-- a corridor with one legal exit at each interior cell,
-- a filter passage with only one valid continuation,
-- a locally forced turn sequence,
-- a degree-one chain created by static obstacles.
-
-The solver could apply these as macro transitions while still updating every underlying visit, axis use, intersection, constraint, and length effect.
-
-### Potential gain
-
-Macro transitions reduce effective search depth and repeated neighbour-generation overhead. They are especially attractive when long deterministic stretches occur inside otherwise difficult levels.
-
-### Safety condition
-
-A macro must be certified by the canonical transition semantics. It must stop immediately before any genuine choice or any step whose legality depends on state not included in the macro precondition. This should begin as an experimental successor generator behind an ablation flag.
-
-## Opportunity 5: region and separator facts as guidance
-
-The domain compiler can expose structural graph facts that are useful even when they do not justify a sound prune:
-
-- articulation cells,
-- bridges,
-- biconnected components,
-- narrow separators,
-- objective distribution by region,
-- minimum region-entry counts,
-- regions requiring a return through the same boundary,
-- local capacity for revisits or intersections.
-
-The recent CP-SAT prune-atlas work suggests there may be little remaining easy territory for new hard prunes in the modelled subset. That does not imply structural analysis has no value. A branch can be viable but strategically poor under a finite node budget.
-
-Region facts can inform:
-
-- move ordering,
-- beam diversity buckets,
-- attempt selection,
-- repair strategy,
-- budget allocation,
-- level-family classification.
-
-The right initial use is advisory rather than pruning. Shadow evaluation can measure whether a reasoner ranks known-live and known-dead branches differently before it is allowed to affect search.
-
-## Opportunity 6: explicit symmetry support
-
-For levels with valid geometric and mechanic symmetry, the compiled puzzle could expose its automorphisms and state transforms.
-
-Possible uses:
-
-- skip symmetric root branches,
-- canonicalize symmetric states,
-- avoid duplicate template attempts,
-- transform solutions back into display coordinates,
-- classify generated level families without counting rotations/reflections as distinct.
-
-This is likely uneven in value. Hand-authored levels may have little exact symmetry, while procedural families may contain substantial duplication. The first experiment should measure symmetry prevalence and root-branch duplication across the real corpora before implementing canonicalization in hot search.
+The CP-SAT prune-atlas result suggests there may be little easy territory for additional binary prunes in the modelled subset. Advisory information could still help finite-budget search, but it must demonstrate predictive value beyond current scoring and family features.
 
 ## Opportunity 7: preserve generation history as optional evidence
 
-Procedural generation often knows facts that are discarded when only the final level is saved:
+Procedural generation often knows facts later discarded:
 
-- a construction or witness path,
-- the order in which constraints were imposed,
-- a solvable parent level,
-- mutations and symmetry transforms,
-- intended regions or intersection sites,
-- biasing or guidance used during generation.
+- construction or witness paths;
+- solvable parents;
+- mutation and symmetry history;
+- order of imposed constraints;
+- intended regions or intersection sites;
+- generation biases.
 
-This metadata should remain provenance, not privileged truth about all solutions. It can nevertheless help with:
+This metadata should remain provenance, not privileged truth about all solutions. It can support:
 
-- portfolio selection,
-- seed generation,
-- diagnostic comparison,
-- level-family analysis,
-- hint diversification,
-- training or evaluating guidance systems.
+- portfolio selection;
+- seed generation;
+- family analysis;
+- diagnostics;
+- hint diversification;
+- evaluation of learned guidance.
 
-The cold general solver must continue to work without it. Generated levels simply need not arrive with deliberate amnesia.
+The cold solver must continue to work without it, and hint-guided or construction-guided results must remain separately identified.
 
-## Opportunity 8: codify solver-compatible mechanic design
+## Opportunity 8: solver-compatible mechanic design
 
 Future mechanics should be reviewed partly in terms of their state-space footprint.
 
 Questions to answer before shipping a mechanic:
 
-1. How many bits or bounded counters of history does it add?
-2. Is the state local, global, or per cell?
-3. Is it monotonic?
+1. How much history does it add?
+2. Is that history bounded and explicit?
+3. Is the state local, global, or per object?
 4. Can different histories merge again?
-5. Does it alter static topology or only move legality?
-6. Does it require remembering incoming direction?
-7. Can it be represented in CP-SAT or another oracle without silently relaxing it?
-8. Does it preserve any symmetry?
-9. Can a sound relaxation provide distances or lower bounds?
-10. Must it be included in every transposition key?
+5. Does it alter topology or only transition legality?
+6. Does it require incoming direction or ordered history?
+7. Can external solvers encode it exactly?
+8. Can it be relaxed safely for distances or bounds?
+9. Does it preserve useful symmetry?
+10. Which caches, signatures, and telemetry records must include it?
 
-This is not an argument for simpler puzzles. Complexity placed in bounded geometry and finite-state mechanics is generally more tractable than complexity placed in arbitrary ordered history.
+This is not an argument for mechanically simple puzzles. Rich finite-state mechanics are friendlier than rules whose future behaviour depends on arbitrary ordered history, even when both feel equally complex to a player.
 
-## Opportunity 9: formal domain limits that enable compact encodings
+## Opportunity 9: explicit domain limits
 
-Pathfinder already has practical caps on board size and object counts. Promoting appropriate caps to explicit domain invariants could make fixed-width state representations provably complete.
+Formal caps on board dimensions, object counts, path length, and mechanic cardinalities can make fixed-width representations and external models provably complete.
 
-Candidates include:
+Potential benefits include:
 
-- maximum grid dimensions,
-- maximum must-pass / must-cross / flipper / portal counts,
-- maximum landmark counts,
-- maximum meaningful visit count per cell,
-- maximum counted path length.
+- compact worker messages;
+- bounded oracle models;
+- fixed-size bitsets;
+- cheaper snapshots;
+- simpler mechanic-state contracts.
 
-This could support:
+This should be pursued only where the limits already match the game's intended design. Existing packed-key and typed-array choices have measured performance advantages and should not be displaced for aesthetic reasons.
 
-- compact transposition keys,
-- fixed-size worker messages,
-- bitset operations,
-- bounded oracle models,
-- lower-allocation beam candidates.
+## Revised ranked research programme
 
-Limits should be justified by game design and existing content, not selected solely for an encoding trick. The payoff must also be measured: a smaller representation can still be slower if it requires expensive packing and unpacking in hot loops.
+### 1. Audit current beam dedup soundness
 
-## Ranked research programme
+Compare current `(cell, sc)` buckets with exact future-relevant state. Determine whether production beam search currently merges states with different legal futures and whether that affects solves.
 
-The strongest near-term experiments are:
+This is the highest priority because it concerns a live search optimization and possible correctness risk.
 
-### 1. Exact future-state key laboratory
+### 2. Measure beam-specific exact duplication
 
-Build a deliberately complete, possibly expensive reference key from the current solver state. Use it to measure:
+Before designing a new key, establish whether exact duplicate candidates occur often enough in beam frontiers to repay a sound implementation. Keep this diagnostic-only initially.
 
-- duplicate-state rates by level family,
-- how much the existing beam key over-splits or under-represents state,
-- portal-level dedup potential,
-- memory and hashing costs,
-- whether exact dedup converts any current failures into solves.
+### 3. Prototype static forced-sequence macros
 
-Do not begin by changing production beam search. First establish the ceiling.
+Collapse only easily certified non-branching chains, preserving every underlying transition and undo. Measure effective-depth and runtime gains.
 
-### 2. Portal-aware beam dedup experiment
+This is the most clearly novel route in this document.
 
-Extend the beam key only with the minimum portal and local-direction state shown necessary by the exact-key laboratory. Run as an isolated ablation on portal levels.
+### 4. Evaluate region/separator features in shadow mode
 
-Success criteria should include:
+Treat this as an extension of existing structural-analysis work, not a new campaign. Require out-of-sample predictive value before changing ordering or policy.
 
-- zero divergence from referee validity,
-- no loss of baseline solves,
-- meaningful candidate reduction,
-- at least one of lower nodes, lower runtime, or new solves.
+### 5. Prototype a shared compiled graph with one additional consumer
 
-### 3. Structural feature extraction in shadow mode
+The best first consumer is an external oracle or editor validator, where reducing semantic drift has clear value and hot-loop risk is low.
 
-Compile region/separator features and evaluate them against the CP-SAT-labelled branch atlas and known solution continuations. Determine whether they provide predictive information beyond current scores and prunes.
+### 6. Audit symmetry prevalence
 
-Only features with stable out-of-sample value should be allowed into move ordering or portfolio policy.
-
-### 4. Forced-sequence macro ablation
-
-Identify only the safest static forced chains first. Compare node count and wall time with search order otherwise held constant. Expand to state-dependent macros only if the static version demonstrates value.
-
-### 5. Symmetry prevalence audit
-
-Measure exact automorphisms across bundled and stress corpora, then estimate how many root branches and attempt templates are duplicated. Implement symmetry reduction only if the corpus contains enough exploitable structure.
-
-### 6. Shared compiled-graph feasibility
-
-Prototype a domain-level compiled graph used by one additional consumer, preferably the CP-SAT translator or editor validation, while leaving solver hot paths unchanged. This tests whether the shared artifact actually reduces semantic drift before broad adoption.
+Measure exact automorphisms and duplicated root branches before implementing canonicalization.
 
 ## What is most likely to find more solves?
 
-The ideas do not have equal expected value.
+Based on existing evidence, the plausible direct routes are now:
 
-Most plausible direct routes to additional solves:
+1. **Forced-sequence macro transitions**, if difficult levels contain long deterministic stretches that currently consume meaningful search overhead.
+2. **A sound and economical beam-specific dedup key**, but only if diagnostic measurement finds substantial exact duplication in concurrent frontiers.
+3. **Region/separator features used as guidance**, provided they add predictive information beyond current features.
+4. **Optional generation provenance**, especially for generated corpora and portfolio selection.
 
-1. **Exact state equivalence and safe transposition merging.** This can reduce the effective state space rather than merely make each node faster.
-2. **Portal-aware beam deduplication.** This is a concrete restricted case of the first item.
-3. **Region/separator features used for strategy and diversity.** The likely remaining deficit is often choosing and sustaining the right search mode, not discovering another obvious prune.
-4. **Certified macro transitions.** More nodes and greater effective depth can rescue budget-limited searches.
-5. **Optional generation provenance as guidance.** Valuable for generated corpora without weakening the cold-solve standard.
-
-More architectural or long-horizon benefits:
-
-- shared compiled puzzle graph,
-- mechanic semantic contracts,
-- explicit domain limits,
-- symmetry support.
+General DFS transposition caching is not on this list. It was measured and found weak with the known sound signature.
 
 ## Non-goals and cautions
 
-- **Do not make gameplay call the solver's hot transition code.** The domain referee and optimized search engine have different performance and ergonomics needs.
-- **Do not make the solver call DOM/controller/runtime machinery.** The existing pure-layer boundary is a strength.
-- **Do not assume a more compact representation is faster.** Benchmark against the current typed-array design.
-- **Do not derive transposition keys from an incomplete field list.** Recent MITM work demonstrated the risk directly.
-- **Do not convert advisory structural facts into prunes without proof.** Shadow evaluation and CP-SAT labelling are appropriate gates.
-- **Do not hand generated construction paths to the solver and then count the result as a cold solve.** Preserve provenance distinctions.
-- **Do not redesign mechanics merely to make the solver happy unless the player-facing formulations are genuinely equivalent.** Solver-aware design should prevent accidental computational explosions, not flatten the game.
+- Do not reopen general DFS transposition caching without materially new evidence, such as an incremental sound key with radically lower cost.
+- Do not assume beam inherits either the crude-signature optimism or the DFS sound-signature pessimism; measure its frontier directly.
+- Do not extend current beam dedup to portals before auditing the non-portal key's soundness.
+- Do not derive a production key from an incomplete field list.
+- Do not treat advisory region facts as prunes without proof.
+- Do not make gameplay call solver hot-path code or make the solver depend on browser/controller machinery.
+- Do not assume compact representation is faster; benchmark it.
+- Do not count construction-guided solving as cold solving.
+- Do not redesign player-facing rules solely for solver convenience unless the formulations are genuinely equivalent.
 
 ## Conclusion
 
-Pathfinder's present code is already unusually solver-conscious. The next frontier is not general refactoring. It is to make the game publish a more complete mathematical account of itself:
+Pathfinder is already highly solver-conscious, and much of the obvious state-merging territory has been investigated. The repository evidence specifically warns against assuming that many superficially similar paths have identical futures: once Pathfinder's full path consequences are included, exact duplication can be sparse and expensive to recognize.
 
-- which parts of history affect the future,
-- how each mechanic contributes state,
-- which histories are equivalent,
-- what static graph structure a level contains,
-- and which construction facts are known but optional.
+The strongest remaining game-side idea is therefore not “build a general canonical transposition system.” It is to use the game's formal structure more selectively:
 
-The highest-value first step is an **exact future-state identity laboratory**, grounded in the corrected MITM findings and validated against real transitions. If meaningful duplicate futures exist, safely merging them could buy something ordinary scoring and pruning work cannot: a smaller problem.
+- verify that existing beam merging is sound;
+- measure whether beam frontiers contain economically useful exact duplication;
+- collapse certified non-decisions into macro transitions;
+- expose mechanic and graph semantics consistently to solvers and oracles;
+- preserve optional construction evidence without weakening the cold-solve standard.
+
+The immediate next experiment should be a **beam dedup soundness and duplicate-rate audit**. The most novel implementation experiment should be **static forced-sequence macro transitions**.
