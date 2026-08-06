@@ -483,6 +483,12 @@ and corpus-1 now always carries a real node ceiling too. `deterministic=true` ke
 distinct purpose (a truly unbounded deadline for a precise A/B, never committing) rather than being
 the only way to reach this configuration.
 
+**Verified via a real dispatch**: run 31072921874 completed in ~29 minutes (sharding across 20
+runners already parallelizes what the report measured as a 47,671s sequential run) and committed
+**corpus-1 95/102, corpus-2 684/1700** to `main` — corpus-2 up from 605/1700, **+79 solves**, more
+than the report's own predicted +57, likely compounding with other solver fixes landed since the
+report's 2026-07-25 measurement. This is now the corpus's real baseline, not an estimate.
+
 ### Lower priority: per-filter local flip vs. global-parity flip
 
 Every flipping filter currently shares one global toggle: the *k*-th distinct flipper crossed
@@ -497,7 +503,7 @@ mechanic design, not a scheduled fix.
 
 ## Consolidated ranked research programme
 
-Merges both investigations' priorities into one order. Items 1–6 below are done; everything after
+Merges both investigations' priorities into one order. Items 1–7 below are done; everything after
 is open, ranked by the same payoff-per-risk logic both source investigations used independently and
 arrived at similar conclusions from.
 
@@ -514,16 +520,18 @@ arrived at similar conclusions from.
 5. ~~Decouple offline solve budgets from the interactive constraint~~ — **done**: audited every
    solver call site, found `disableExtraBudgetPasses` already correctly scoped, and traced the one
    real gap to `solver-stress-refresh.yml`'s routine defaults — raised to the report's own measured
-   OFF@36M configuration after explicit sign-off — see "Fixed" above. A real dispatch to regenerate
-   the persisted corpus/hint/baseline data under the new defaults is the live-CI follow-up.
+   OFF@36M configuration after explicit sign-off, then verified via a real dispatch: **corpus-1
+   95/102, corpus-2 684/1700** committed to `main` (+79 vs. the old 605/1700 baseline) — see "Fixed"
+   above.
 6. ~~Add an in-envelope stress corpus stratum~~ — **done**: 200 levels at the shipped game's
    documented caps, initial solve pass 124/200 (62.0%) vs. corpus-2's own 35.6% — confirming the
    underlying hypothesis — see "Fixed" above.
-7. **Prototype static forced-sequence macro transitions** — the most clearly novel implementation
+7. ~~Resolve the flipper single-use design question~~ — **done**: ruled single-use (a second
+   crossing is impossible in practice once the filter's required axis flips and the line can't
+   retravel its own edge), codified explicitly in `isValidMove`/the referee rather than relying on
+   axis-matching and edge-reuse to coincidentally combine into the same result — see "Fixed" above.
+8. **Prototype static forced-sequence macro transitions** — the most clearly novel implementation
    idea across both documents; begin with statically-certified chains only.
-8. **Resolve the flipper single-use design question** — needs a decision before code; worth raising
-   early given the size of the affected population (957 levels) even though any resulting fix would
-   land later.
 9. **Evaluate region/separator features in shadow mode** — extension of existing structural-analysis
    work, not a new campaign; require out-of-sample predictive value before changing ordering/policy.
 10. **Prototype a shared compiled graph with one additional consumer** — best first consumer is an
@@ -539,14 +547,15 @@ Based on evidence from both investigations, the plausible direct routes are:
 
 1. **Forced-sequence macro transitions**, if difficult levels contain long deterministic stretches
    that currently consume meaningful search overhead.
-2. **Offline solve-budget decoupling**, which already has direct measured evidence (+57 corpus-2
-   solves from configuration alone) rather than being a hypothesis.
-3. **Fixing the flipper single-use restriction**, *if* the design question above resolves toward
-   "re-entry should be legal" — potentially relevant to 957 corpus-2 levels, but gated on a decision
-   this document cannot make unilaterally.
-4. **Region/separator features used as guidance**, provided they add predictive information beyond
+2. **Offline solve-budget decoupling** — no longer a hypothesis: verified via a real dispatch at
+   **+79 corpus-2 solves** (605 → 684/1700) from configuration alone.
+3. **Region/separator features used as guidance**, provided they add predictive information beyond
    current features.
-5. **Optional generation provenance**, especially for generated corpora and portfolio selection.
+4. **Optional generation provenance**, especially for generated corpora and portfolio selection.
+
+The flipper single-use question (previously listed here as a conditional route) is now resolved
+the other direction: single-use is the correct, intentional design (see "Fixed" above), not a
+solver-side restriction to relax. It is no longer a candidate lever for more solves.
 
 One item that looked promising from first principles and is now a settled negative result, not an
 untested hypothesis: **general, fully-sound transposition caching**, for both DFS (measured and

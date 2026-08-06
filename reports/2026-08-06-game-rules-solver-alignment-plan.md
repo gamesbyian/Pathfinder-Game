@@ -9,8 +9,7 @@ independent reference (`scripts/solver-oracle/oracle.mjs`) that exists to catch 
 by design, never checks the other three against each other. That structure was worth interrogating
 directly rather than assuming it was already consistent.
 
-**Sections 1, 1b, 3, 4, and 5 are fixes already made and verified on this branch.** Section 2 is
-proposed work, needing a design decision before any code change.
+**All sections (1, 1b, 2, 3, 4, and 5) are fixes already made and verified on this branch.**
 
 ---
 
@@ -169,11 +168,11 @@ referee automatically — no separate change needed there, unlike Section 1's fl
 
 ---
 
-## 2. Open question: are flipping filters actually single-use, or is that a solver-only restriction?
+## 2. Resolved: flipping filters are single-use by design
 
-Neither `isValidMove` nor `validateCandidatePath` blocks re-entering an already-crossed flipping
-filter — a second visit is legal move-generation-wise, and (per the working part of the axis logic)
-must use the *same* axis the first crossing established, since `crossedSet` only ever records a
+Neither `isValidMove` nor `validateCandidatePath` blocked re-entering an already-crossed flipping
+filter — a second visit was legal move-generation-wise, and (per the working part of the axis logic)
+had to use the *same* axis the first crossing established, since `crossedSet` only ever records a
 cell's *first* crossing. The solver, by contrast, treats every flipper as strictly single-use:
 
 ```js
@@ -186,26 +185,49 @@ if (fi !== -1) {
 
 CLAUDE.md's own wording — "flips to the other axis **each time the path uses it**" — reads more
 naturally as "this specific filter alternates on repeated crossings" than the implemented model
-("global crossing order determines each filter's *one* axis"). None of the three implementations
-actually do the former; the solver is simply the only one that also forecloses the question by
-banning re-entry outright.
+("global crossing order determines each filter's *one* axis"), and none of the three
+implementations actually did the former — the solver was simply the only one that also foreclosed
+the question by banning re-entry outright.
 
-**Why this matters for solve rate**: 957 of corpus-2's 1700 levels carry at least one flipping
-filter. If re-entry is intended to be legal (matching what live play and the referee already
-permit), the solver is discarding real solutions on every level where a re-entry is load-bearing —
-a self-inflicted incompleteness, not a hard combinatorial wall. If single-use is the actual design
-intent, the game-rule side should say so explicitly (and arguably enforce it, rather than leaving it
-merely unreachable-in-practice for other reasons).
+### The attempted existence check, and why it was inconclusive
 
-**Recommended next step**: resolve the intent question first (design decision, not a code change),
-then either (a) codify single-use explicitly in `isValidMove`/`validateCandidatePath` — cheap, no
-solver impact, purely clarifies the contract — or (b) relax `flipperUsedMask`'s blanket revisit-ban
-in the solver to match the permissive game rule, gated behind a differential-fuzz proof (Section 3)
-before touching production search. (b) is higher-risk (touches `applyMove`/`getNeighbors`, prep's
-`deadFlipperKeys`, and every existing flipper-bearing hint's assumptions) and should not be
-attempted without first checking whether any stress-corpus witness solution already re-enters a
-flipper — if some do, that's a straight existence proof the solver is under-searching, not a
-hypothesis.
+Before raising the design question, tried the "straightforward existence check" this section
+originally proposed: scanned every stored hint AND every generator witness solution (published +
+both stress corpora + the in-envelope stratum, 17,000+ hint paths and 1,111 flipper-bearing witness
+solutions) for a flipper re-entry. Zero found, everywhere — but this is **not** evidence either way:
+every stored hint is solver-produced (structurally cannot re-enter, `flipperUsedMask` already bans
+it), and `generate-random.mjs`'s `opFlippersUniform` only ever places flippers on singly-visited
+witness cells (`ctx.cell.straightThrough`), so a witness re-entry is generator-impossible by
+construction regardless of whether it would ever help solvability. No data source in this codebase
+could have produced the real answer; this had to be a design decision, not a measurement.
+
+### The design ruling
+
+**Single-use is the correct, intentional design.** Once the line has crossed a flipping filter, a
+second crossing is impossible in practice: (a) the filter's required axis has already flipped, so
+re-entering via the original axis is an axis mismatch, and (b) re-entering via the newly-required
+axis would require the line to travel along an edge it has already used at that cell, which it
+cannot do. This is an emergent consequence of the axis-flip rule and edge-reuse combined — not
+something either rule states on its own — so it is stated explicitly now rather than left as a
+coincidence three independent implementations would each need to separately re-derive correctly.
+
+### The fix
+
+`isValidMove`'s axis-matching and edge-reuse checks happened to combine into blocking most
+re-entry attempts, but not all of them: entering a second time via the filter's newly-required
+(post-flip) axis is a *fresh* axis at that cell (edge-reuse never fires) and matches what the axis
+check currently expects (post-flip) — so the old code would have wrongly **accepted** that specific
+re-entry shape. Fixed by adding an explicit `invalid-flipper-reentry` check ahead of the axis logic
+in `modules/domain/move-rules.ts`, mirroring the solver's `flipperUsedMask` outright rather than
+relying on two unrelated checks to coincidentally produce the right answer. No solver code
+changed — the solver already had this right.
+
+**Verification**: a new regression test (extending `domain.test.ts`'s `makeState` helper to support
+a non-zero `flipCount`, needed to isolate this from the axis check — confirmed the test fails
+without the fix and passes with it); all 12,612 stored hints remain valid (none were ever produced
+via a re-entry, since the solver already banned it); 0 oracle-fuzzer mismatches; `solver:bench
+--check` 160/160 with no regressions (this only tightens live play/the referee — no solver code
+touched).
 
 ---
 
@@ -363,8 +385,16 @@ narrower, distinct purpose: force a truly unbounded deadline regardless of what'
 `corpus*_budget_ms`, and never commit — for an `enable_flags` A/B that must not touch the persisted
 baseline series.
 
-A real dispatch to actually regenerate the persisted corpus/hint/baseline data under the new defaults
-is the natural next step, tracked separately from this document (a live CI run, not a code change).
+### Verified: the real dispatch
+
+Dispatched `solver-stress-refresh.yml` (run 31072921874) against `main` under the new defaults —
+completed in ~29 minutes (all 20 shards + combine succeeded), far faster than the report's own
+sequential 47,671s figure, since sharding already parallelizes the corpus across 20 runners.
+Result, committed to `main` (`94a3046`): **corpus-1 95/102, corpus-2 684/1700** — corpus-2 up from
+605/1700, **+79 solves**, even more than the report's own OFF@36M measurement (562/1700, +57 vs.
+the old binding baseline) predicted, likely because additional solver fixes (must-cross lock,
+flipping-filter entry axis, beam dedup) landed on `main` between the report's 2026-07-25 measurement
+and this refresh. This is now the corpus's real, current baseline — not an estimate.
 
 ---
 
@@ -393,13 +423,13 @@ owns level-mechanic design, not a ticket to pick up unprompted.
 ## Suggested order
 
 1. **Done.** Section 1 fix (flipping-filter entry axis), Section 1b fix (must-cross lock), the
-   Section 3 oracle-fuzzer extension, Section 5's offline budget decoupling, and Section 4's
-   in-envelope stress stratum — all merged with this report. The fuzzer extension already proved
-   its worth in-session: it's what turned the must-cross-lock gap into a reproducible finding.
-   Section 5's actual corpus/baseline regeneration under the new defaults is a live CI dispatch,
-   tracked separately from code. Section 4's initial solve pass (124/200, 62.0%) already confirms
-   its underlying hypothesis.
-2. Flipper single-use resolution (Section 2) — needs a design decision before any code change;
-   worth raising early given the size of the affected population (957 levels) even though the fix
-   itself would land later.
-3. Per-filter local flip (Section 6) — hold for a design conversation, not scheduled work.
+   Section 3 oracle-fuzzer extension, Section 5's offline budget decoupling, Section 4's
+   in-envelope stress stratum, and Section 2's flipper single-use resolution — all merged with this
+   report. The fuzzer extension already proved its worth in-session: it's what turned the
+   must-cross-lock gap into a reproducible finding. Section 5's dispatch under the new defaults
+   landed **corpus-1 95/102, corpus-2 684/1700** on `main` (+79 vs. the old baseline). Section 4's
+   initial solve pass (124/200, 62.0%) confirmed its underlying hypothesis. Section 2 resolved
+   toward single-use being correct, codified explicitly rather than left as an implementation
+   coincidence.
+2. Per-filter local flip (Section 6) — hold for a design conversation, not scheduled work. This is
+   the only remaining open item in this document.
