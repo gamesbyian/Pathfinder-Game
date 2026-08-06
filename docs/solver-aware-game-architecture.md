@@ -297,18 +297,48 @@ The solver would still construct specialized typed arrays on top of this graph. 
 
 The strongest practical use may be making external models consume the same compiled topology and mechanic declarations rather than independently interpreting raw level data.
 
-## Opportunity: region and separator facts as advisory signals
+## Opportunity: region and separator facts as advisory signals (already substantially underway)
 
 This overlaps with existing work on bounded global consistency, contradiction-only propagation, solver-response families, and structural analysis. It should not be presented as an unexplored new direction.
 
-The remaining angle is narrower:
+**2026-08-06 correction**: this consolidated doc previously listed "evaluate region/separator
+features in shadow mode" as an open, unstarted item in its ranked programme. It isn't — a full
+campaign already exists, one day ahead of this doc: `docs/solver-shadow-eval-harness.md`
+(operationalizing `docs/solver-next-frontier-2026-08-02.md` and its multilingual-research-update
+sibling), with a working CP-SAT-labelled evaluation harness (`scripts/stress/
+interface-probe-harness.mjs`), a real prototype probe (`separator-resource-probe.mjs`, the
+narrowest member of the "separator-state resource DP" family — single-articulation pendant
+chambers), and actual numbers, not a proposal:
 
-- compile articulation, bridge, separator, corridor, and region-objective facts once;
-- expose them as features;
-- evaluate them in shadow mode for move ordering, diversity, strategy selection, and budget allocation;
-- do not promote them to hard prunes without proof.
+- **Applicability is genuinely rare**: 0.45% of labelled branches have an in-scope chamber at all
+  (25/5,518 branches across 397 CP-SAT-eligible levels — a census result, not a small-sample
+  artifact, confirmed at both 16 and 397 levels).
+- **The probe itself is sound** (zero false rejects across every branch tested) but catches only
+  0.4% of the atlas's total missed-dead branches — real, but too rare to matter at solver scale.
+- **Verdict already reached: do not wire this specific shape into the production solver.** The
+  soundness-verification and `solver:bench` A/B rigor any new prune requires costs real engineering
+  time regardless of yield, and a catch rate this low predicts the same "correct and worthless"
+  outcome the dead-flipping-filter-connectivity precedent already demonstrated.
+- **Generalizes to portal-bearing levels** (the gauntlet misses ~50-60% of provable dead branches
+  either way, mechanic-light or portal-bearing) but the CP-SAT oracle's own yield degrades on
+  portals (more `unknown` outcomes), predicting flipping filters would be worse on both axes —
+  closed without spending the encoding risk to find out empirically.
 
-The CP-SAT prune-atlas result suggests there may be little easy territory for additional binary prunes in the modelled subset. Advisory information could still help finite-budget search, but it must demonstrate predictive value beyond current scoring and family features.
+**What's actually still open, per that doc's own "actionable next step"**: growing the labelled
+atlas to the full 397-level CP-SAT-eligible pool (portal-inclusive) at real `--every`/
+`--oracle-limit` defaults via `.github/workflows/atlas-sweep.yml` — every mechanical piece
+(parallelism, eligibility filtering, portal support, commit-back) is validated working, but the
+full-scale dispatch itself "has not been dispatched yet... that's still a real CI-minutes decision
+to make deliberately" (that doc's own words) — and, once that larger sample exists, scoring the two
+next candidate reasoners it names (a depth-limited future-cone MDD, backward multi-resolution
+compatibility envelopes) against it, per the multilingual doc's Tier 2 ranking. Neither of those
+next steps is scheduled as of this writing.
+
+The remaining higher-level framing still holds: compile these facts once, expose them as advisory
+features, evaluate in shadow mode, never promote to a hard prune without proof — which is exactly
+the discipline the harness above already enforces mechanically (a probe declares its soundness
+class, and the harness itself exits non-zero on any false reject, rather than trusting a probe
+author's self-report).
 
 ## Opportunity: preserve generation history as optional evidence
 
@@ -567,8 +597,14 @@ arrived at similar conclusions from.
    the design owner that the global crossing-order coupling is the intentional puzzle mechanism
    (not a smell to engineer away), and that neither the solver nor the editor has a live pain point
    that would justify further work — closed with a documentation fix only, see "Resolved" above.
-10. **Evaluate region/separator features in shadow mode** — extension of existing structural-analysis
-    work, not a new campaign; require out-of-sample predictive value before changing ordering/policy.
+10. **Evaluate region/separator features in shadow mode** — corrected 2026-08-06: this is not an
+    unstarted item, a full campaign already exists (`docs/solver-shadow-eval-harness.md`) with a
+    verdict already reached for the narrowest reasoner (do not wire into production, 0.45%
+    applicability). What's actually still open, per that doc's own next step: dispatch
+    `atlas-sweep.yml` at the real defaults across all 397 CP-SAT-eligible levels (validated working,
+    not yet run at full scale — "a real CI-minutes decision to make deliberately"), then score the
+    two next candidate reasoners (depth-limited future-cone MDD, backward compatibility envelopes)
+    against the grown atlas. See "Opportunity: region and separator facts as advisory signals" above.
 11. **Prototype a shared compiled graph with one additional consumer** — best first consumer is an
     external oracle or the editor validator, where reducing semantic drift has clear value and
     hot-loop risk is low.
