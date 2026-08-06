@@ -296,10 +296,12 @@ runner network (see "commit mechanics" below for why that distinction mattered i
    Portal levels use a measurably larger model than portal-free ones, so expect more timeouts at the
    same `oracle_limit` for that subset — worth watching in sweep results, not assumed away.
 
-A full run at the real `every`/`oracle-limit` defaults across all 397 eligible levels has not been
-dispatched yet under the fixed scheme — that's still a real CI-minutes decision to make
-deliberately, now that every mechanical piece (parallelism, eligibility, portal support, commit) is
-known to work.
+**Done, 2026-08-05** (run `31042910431`, dispatched from `claude/solver-intermediate-representations-jtwu9u`):
+a full run at the real `every`/`oracle-limit` defaults across all 397 eligible levels, growing the
+atlas to 5,518 branches — see Part 4's "Re-run 2026-08-05" for the resulting numbers (soundness
+held, applicability/yield unchanged from the 16-level sample). This paragraph previously said the
+run "has not been dispatched yet" — stale the moment Part 4 was updated with its results; corrected
+here so the two don't contradict each other in the same document.
 
 ## Part 6: The flippers go/no-go check — generalization holds, cost doesn't
 

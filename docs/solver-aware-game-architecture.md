@@ -324,15 +324,15 @@ chambers), and actual numbers, not a proposal:
   portals (more `unknown` outcomes), predicting flipping filters would be worse on both axes —
   closed without spending the encoding risk to find out empirically.
 
-**What's actually still open, per that doc's own "actionable next step"**: growing the labelled
-atlas to the full 397-level CP-SAT-eligible pool (portal-inclusive) at real `--every`/
-`--oracle-limit` defaults via `.github/workflows/atlas-sweep.yml` — every mechanical piece
-(parallelism, eligibility filtering, portal support, commit-back) is validated working, but the
-full-scale dispatch itself "has not been dispatched yet... that's still a real CI-minutes decision
-to make deliberately" (that doc's own words) — and, once that larger sample exists, scoring the two
-next candidate reasoners it names (a depth-limited future-cone MDD, backward multi-resolution
-compatibility envelopes) against it, per the multilingual doc's Tier 2 ranking. Neither of those
-next steps is scheduled as of this writing.
+**Correction (same day)**: an earlier draft of this section said growing the atlas to the full
+397-level pool was still pending. It wasn't — that full run already happened (`31042910431`,
+2026-08-05, growing the atlas to 5,518 branches) and the probe was already re-scored against it
+(same verdict, confirmed at scale: 0.45% applicability, zero false rejects). The source doc itself
+had gone briefly self-contradictory (one section updated with the run's results, an older section
+below it still saying "not dispatched yet") — both now fixed. **What's actually still open**:
+scoring the two next candidate reasoners the doc names (a depth-limited future-cone MDD, backward
+multi-resolution compatibility envelopes) against the now-grown atlas, per the multilingual doc's
+Tier 2 ranking. Neither has been started as of this writing.
 
 The remaining higher-level framing still holds: compile these facts once, expose them as advisory
 features, evaluate in shadow mode, never promote to a hard prune without proof — which is exactly
@@ -561,7 +561,7 @@ implementation was already correct and intentional.
 
 ## Consolidated ranked research programme
 
-Merges both investigations' priorities into one order. Items 1–9 below are done; everything after
+Merges both investigations' priorities into one order. Items 1–10 below are done; everything after
 is open, ranked by the same payoff-per-risk logic both source investigations used independently and
 arrived at similar conclusions from.
 
@@ -597,14 +597,13 @@ arrived at similar conclusions from.
    the design owner that the global crossing-order coupling is the intentional puzzle mechanism
    (not a smell to engineer away), and that neither the solver nor the editor has a live pain point
    that would justify further work — closed with a documentation fix only, see "Resolved" above.
-10. **Evaluate region/separator features in shadow mode** — corrected 2026-08-06: this is not an
-    unstarted item, a full campaign already exists (`docs/solver-shadow-eval-harness.md`) with a
-    verdict already reached for the narrowest reasoner (do not wire into production, 0.45%
-    applicability). What's actually still open, per that doc's own next step: dispatch
-    `atlas-sweep.yml` at the real defaults across all 397 CP-SAT-eligible levels (validated working,
-    not yet run at full scale — "a real CI-minutes decision to make deliberately"), then score the
-    two next candidate reasoners (depth-limited future-cone MDD, backward compatibility envelopes)
-    against the grown atlas. See "Opportunity: region and separator facts as advisory signals" above.
+10. ~~Evaluate region/separator features in shadow mode~~ — **done**: corrected 2026-08-06, this
+    was not an unstarted item — a full campaign already exists (`docs/solver-shadow-eval-harness.md`),
+    including the full-scale atlas run (397 levels, 5,518 branches) and a verdict already reached
+    for the narrowest reasoner (do not wire into production, 0.45% applicability, confirmed at
+    scale). What's actually still open: scoring the two next candidate reasoners it names
+    (depth-limited future-cone MDD, backward compatibility envelopes) against the grown atlas —
+    neither started yet. See "Opportunity: region and separator facts as advisory signals" above.
 11. **Prototype a shared compiled graph with one additional consumer** — best first consumer is an
     external oracle or the editor validator, where reducing semantic drift has clear value and
     hot-loop risk is low.
@@ -705,16 +704,19 @@ The strongest remaining ideas, in order, are:
 
 - expose mechanic and graph semantics consistently to solvers and oracles, specifically including
   each mechanic's assumed cardinality bound and every place that bound is relied on;
-- evaluate region/separator features in shadow mode, given they'd need to add real predictive value
-  beyond current features to be worth acting on;
+- score the next two region/separator candidate reasoners (depth-limited future-cone MDD, backward
+  compatibility envelopes) against the now-grown atlas, since the narrowest one already tried is
+  closed out;
 - preserve optional construction evidence without weakening the cold-solve standard.
 
 Seven independent threads have now run their full course in this document — five landed real,
 shipped changes (two rule-drift fixes, a differential-fuzzer extension, a configuration fix with a
 verified +79-solve outcome, and a new measurement corpus), and two (macro transitions, per-filter
 local flip) landed decisive negative/confirmatory results before any production code was risked or
-any player-facing rule was redesigned unilaterally. What's left is genuinely open research territory
-(region/separator features, a shared compiled graph, symmetry auditing) rather than a queue of
-already-scoped next steps — the next move here should be picked based on which of these looks most
-promising once someone actually has fresh evidence to act on, not by working down this list
-mechanically.
+any player-facing rule was redesigned unilaterally. A separate, independently-run campaign
+(`docs/solver-shadow-eval-harness.md`) closed out the region/separator item the same way over the
+same period — this document just hadn't cross-referenced it until this correction. What's left is
+genuinely open research territory (the next region/separator reasoners, a shared compiled graph,
+symmetry auditing) rather than a queue of already-scoped next steps — the next move here should be
+picked based on which of these looks most promising once someone actually has fresh evidence to act
+on, not by working down this list mechanically.
