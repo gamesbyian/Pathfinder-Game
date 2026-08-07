@@ -11,7 +11,7 @@
  * Usage: node scripts/family-census-combine.mjs --in-dir=logs/family-census
  *   [--manifest=data/families/fragile-robust-census-manifest.json] [--out=<report.md>]
  */
-import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
