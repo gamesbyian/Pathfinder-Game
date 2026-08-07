@@ -1,0 +1,322 @@
+{
+  "familyId": "family-R03321-w0-swap",
+  "parentLevelId": "R03321",
+  "parentCorpus": "data/stress/stress-levels-random.json",
+  "parentContentHash": "v2:d1f7113fcf6594ff1a50b7f123df5ab0082a96f6a48652eeb27afd85bd21953b",
+  "selectedWitnessSource": "stressMeta.witnessSolution",
+  "selectedWitnessLength": 131,
+  "selectedWitnessIntersectionCount": 13,
+  "familyMode": "swap",
+  "generatorVersion": "0.1.0",
+  "randomSeed": 20260807,
+  "createdTimestamp": "2026-08-07T13:34:09.171Z",
+  "lastUpdatedTimestamp": "2026-08-07T13:34:09.171Z",
+  "requestedCount": 10,
+  "acceptedCount": 10,
+  "generationAttempts": 56,
+  "attemptBudget": 400,
+  "movableInstanceCount": 25,
+  "parentNavDensity": 0.6220095693779905,
+  "variants": [
+    {
+      "variantId": "F03321-swap-01",
+      "familyId": "family-R03321-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:d1f7113fcf6594ff1a50b7f123df5ab0082a96f6a48652eeb27afd85bd21953b",
+      "variantContentHash": "v2:9617d97e480513649afed886064feb3f9ef62e8ed2932a1db59f12c811458330",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "landmarks",
+          "from": {
+            "x": 6,
+            "y": 5
+          }
+        },
+        "b": {
+          "kind": "mustPass",
+          "from": {
+            "x": 13,
+            "y": 3
+          }
+        }
+      },
+      "generationAttempts": 1,
+      "navDensity": 0.6220095693779905
+    },
+    {
+      "variantId": "F03321-swap-02",
+      "familyId": "family-R03321-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:d1f7113fcf6594ff1a50b7f123df5ab0082a96f6a48652eeb27afd85bd21953b",
+      "variantContentHash": "v2:dd37c4233c8f76a99123ea48dfbd45ad3199d84e61008251b0d7223f87831d9b",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "landmarks",
+          "from": {
+            "x": 13,
+            "y": 12
+          }
+        },
+        "b": {
+          "kind": "landmarks",
+          "from": {
+            "x": 0,
+            "y": 6
+          }
+        }
+      },
+      "generationAttempts": 2,
+      "navDensity": 0.6220095693779905
+    },
+    {
+      "variantId": "F03321-swap-03",
+      "familyId": "family-R03321-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:d1f7113fcf6594ff1a50b7f123df5ab0082a96f6a48652eeb27afd85bd21953b",
+      "variantContentHash": "v2:54056ddfa953aab1a4d2be9ee144717e4fe05ce6c72436589b8df3201177a677",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "landmarks",
+          "from": {
+            "x": 4,
+            "y": 4
+          }
+        },
+        "b": {
+          "kind": "landmarks",
+          "from": {
+            "x": 0,
+            "y": 6
+          }
+        }
+      },
+      "generationAttempts": 3,
+      "navDensity": 0.6220095693779905
+    },
+    {
+      "variantId": "F03321-swap-04",
+      "familyId": "family-R03321-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:d1f7113fcf6594ff1a50b7f123df5ab0082a96f6a48652eeb27afd85bd21953b",
+      "variantContentHash": "v2:33ee3999e64920fa28441839f4ffb6e13f879f78cd39f4857a721e310bd20165",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "landmarks",
+          "from": {
+            "x": 13,
+            "y": 12
+          }
+        },
+        "b": {
+          "kind": "landmarks",
+          "from": {
+            "x": 8,
+            "y": 1
+          }
+        }
+      },
+      "generationAttempts": 8,
+      "navDensity": 0.6220095693779905
+    },
+    {
+      "variantId": "F03321-swap-05",
+      "familyId": "family-R03321-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:d1f7113fcf6594ff1a50b7f123df5ab0082a96f6a48652eeb27afd85bd21953b",
+      "variantContentHash": "v2:e4f500ab360fd8c632bc895e147d364691d9f95dd687e181a65775e30b4297bf",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "landmarks",
+          "from": {
+            "x": 1,
+            "y": 7
+          }
+        },
+        "b": {
+          "kind": "landmarks",
+          "from": {
+            "x": 13,
+            "y": 12
+          }
+        }
+      },
+      "generationAttempts": 10,
+      "navDensity": 0.6220095693779905
+    },
+    {
+      "variantId": "F03321-swap-06",
+      "familyId": "family-R03321-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:d1f7113fcf6594ff1a50b7f123df5ab0082a96f6a48652eeb27afd85bd21953b",
+      "variantContentHash": "v2:723786c2e81497ab3271af1f30675317ff0f2cceba6622666fc424bb696521ba",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "landmarks",
+          "from": {
+            "x": 1,
+            "y": 7
+          }
+        },
+        "b": {
+          "kind": "landmarks",
+          "from": {
+            "x": 5,
+            "y": 11
+          }
+        }
+      },
+      "generationAttempts": 16,
+      "navDensity": 0.6220095693779905
+    },
+    {
+      "variantId": "F03321-swap-07",
+      "familyId": "family-R03321-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:d1f7113fcf6594ff1a50b7f123df5ab0082a96f6a48652eeb27afd85bd21953b",
+      "variantContentHash": "v2:f269692d70deb275bc3d66672cdd38595f98fd52e6b3d0e70b38d6a9aa4a0e5f",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "landmarks",
+          "from": {
+            "x": 3,
+            "y": 3
+          }
+        },
+        "b": {
+          "kind": "landmarks",
+          "from": {
+            "x": 1,
+            "y": 7
+          }
+        }
+      },
+      "generationAttempts": 24,
+      "navDensity": 0.6220095693779905
+    },
+    {
+      "variantId": "F03321-swap-08",
+      "familyId": "family-R03321-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:d1f7113fcf6594ff1a50b7f123df5ab0082a96f6a48652eeb27afd85bd21953b",
+      "variantContentHash": "v2:2251581a14a5a09559042eed5b1ab8875ac23b06bca6a3e11976afe474cc6b26",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "landmarks",
+          "from": {
+            "x": 13,
+            "y": 8
+          }
+        },
+        "b": {
+          "kind": "mustPass",
+          "from": {
+            "x": 10,
+            "y": 6
+          }
+        }
+      },
+      "generationAttempts": 40,
+      "navDensity": 0.6220095693779905
+    },
+    {
+      "variantId": "F03321-swap-09",
+      "familyId": "family-R03321-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:d1f7113fcf6594ff1a50b7f123df5ab0082a96f6a48652eeb27afd85bd21953b",
+      "variantContentHash": "v2:101f3066a2e5f6109461b9d2852662f8d28bb34b36cf5ef9e0af20f6d82a0a69",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "landmarks",
+          "from": {
+            "x": 8,
+            "y": 1
+          }
+        },
+        "b": {
+          "kind": "landmarks",
+          "from": {
+            "x": 9,
+            "y": 6
+          }
+        }
+      },
+      "generationAttempts": 45,
+      "navDensity": 0.6220095693779905
+    },
+    {
+      "variantId": "F03321-swap-10",
+      "familyId": "family-R03321-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:d1f7113fcf6594ff1a50b7f123df5ab0082a96f6a48652eeb27afd85bd21953b",
+      "variantContentHash": "v2:8a72cc21d90254d68bb2dd004e2674609408230f551b51b6563fc63abf56ef72",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "landmarks",
+          "from": {
+            "x": 1,
+            "y": 13
+          }
+        },
+        "b": {
+          "kind": "landmarks",
+          "from": {
+            "x": 13,
+            "y": 12
+          }
+        }
+      },
+      "generationAttempts": 56,
+      "navDensity": 0.6220095693779905
+    }
+  ]
+}

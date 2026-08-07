@@ -1,0 +1,272 @@
+{
+  "familyId": "family-R02024-w0-constrained-shuffle",
+  "parentLevelId": "R02024",
+  "parentCorpus": "data/stress/stress-levels-random.json",
+  "parentContentHash": "v2:8ed9f795dc5e2b21e467eaf5ce3c2c1c06d5a4e71a1d27b954c945c8431443c5",
+  "selectedWitnessSource": "stressMeta.witnessSolution",
+  "selectedWitnessLength": 146,
+  "selectedWitnessIntersectionCount": 10,
+  "familyMode": "constrained-shuffle",
+  "generatorVersion": "0.1.0",
+  "randomSeed": 20260807,
+  "createdTimestamp": "2026-08-07T07:20:34.757Z",
+  "lastUpdatedTimestamp": "2026-08-07T07:20:34.757Z",
+  "requestedCount": 10,
+  "acceptedCount": 10,
+  "generationAttempts": 10,
+  "attemptBudget": 400,
+  "movableInstanceCount": 69,
+  "parentNavDensity": 0.8285714285714286,
+  "variants": [
+    {
+      "variantId": "F02024-cs-01",
+      "familyId": "family-R02024-w0-constrained-shuffle",
+      "relation": "constrained-shuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:8ed9f795dc5e2b21e467eaf5ce3c2c1c06d5a4e71a1d27b954c945c8431443c5",
+      "variantContentHash": "v2:285cd0a25cb24201145d11d3155fabc59c49322caca0533e690287f1d50a8ee0",
+      "mutationManifest": {
+        "objectType": "all-movable-types",
+        "operation": "constrained-shuffle",
+        "order": [
+          "mustCross",
+          "landmarks",
+          "mustPass",
+          "flippingFilters",
+          "blocks",
+          "geese",
+          "falseGoals"
+        ]
+      },
+      "generationAttempts": 1,
+      "navDensity": 0.8285714285714286
+    },
+    {
+      "variantId": "F02024-cs-02",
+      "familyId": "family-R02024-w0-constrained-shuffle",
+      "relation": "constrained-shuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:8ed9f795dc5e2b21e467eaf5ce3c2c1c06d5a4e71a1d27b954c945c8431443c5",
+      "variantContentHash": "v2:4c8947f08c0b48ae512785fb4d551b64b074b60a2205e8c3c4e25c635bfb0dce",
+      "mutationManifest": {
+        "objectType": "all-movable-types",
+        "operation": "constrained-shuffle",
+        "order": [
+          "mustCross",
+          "landmarks",
+          "mustPass",
+          "flippingFilters",
+          "blocks",
+          "geese",
+          "falseGoals"
+        ]
+      },
+      "generationAttempts": 2,
+      "navDensity": 0.8285714285714286
+    },
+    {
+      "variantId": "F02024-cs-03",
+      "familyId": "family-R02024-w0-constrained-shuffle",
+      "relation": "constrained-shuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:8ed9f795dc5e2b21e467eaf5ce3c2c1c06d5a4e71a1d27b954c945c8431443c5",
+      "variantContentHash": "v2:cccafabc35fb5d75b0c129b3b37c92a687037febd247ee3608d8c4ec11494752",
+      "mutationManifest": {
+        "objectType": "all-movable-types",
+        "operation": "constrained-shuffle",
+        "order": [
+          "mustCross",
+          "landmarks",
+          "mustPass",
+          "flippingFilters",
+          "blocks",
+          "geese",
+          "falseGoals"
+        ]
+      },
+      "generationAttempts": 3,
+      "navDensity": 0.8285714285714286
+    },
+    {
+      "variantId": "F02024-cs-04",
+      "familyId": "family-R02024-w0-constrained-shuffle",
+      "relation": "constrained-shuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:8ed9f795dc5e2b21e467eaf5ce3c2c1c06d5a4e71a1d27b954c945c8431443c5",
+      "variantContentHash": "v2:122c11a0ab0f8818d1f551b6e2fbdd041ebef4a739766be84278ae81b8552a9d",
+      "mutationManifest": {
+        "objectType": "all-movable-types",
+        "operation": "constrained-shuffle",
+        "order": [
+          "mustCross",
+          "landmarks",
+          "mustPass",
+          "flippingFilters",
+          "blocks",
+          "geese",
+          "falseGoals"
+        ]
+      },
+      "generationAttempts": 4,
+      "navDensity": 0.8285714285714286
+    },
+    {
+      "variantId": "F02024-cs-05",
+      "familyId": "family-R02024-w0-constrained-shuffle",
+      "relation": "constrained-shuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:8ed9f795dc5e2b21e467eaf5ce3c2c1c06d5a4e71a1d27b954c945c8431443c5",
+      "variantContentHash": "v2:3aad0b29382da4da8cb07c42534f8410e9eefe99f5f9f04c8d61acfd88d0566e",
+      "mutationManifest": {
+        "objectType": "all-movable-types",
+        "operation": "constrained-shuffle",
+        "order": [
+          "mustCross",
+          "landmarks",
+          "mustPass",
+          "flippingFilters",
+          "blocks",
+          "geese",
+          "falseGoals"
+        ]
+      },
+      "generationAttempts": 5,
+      "navDensity": 0.8285714285714286
+    },
+    {
+      "variantId": "F02024-cs-06",
+      "familyId": "family-R02024-w0-constrained-shuffle",
+      "relation": "constrained-shuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:8ed9f795dc5e2b21e467eaf5ce3c2c1c06d5a4e71a1d27b954c945c8431443c5",
+      "variantContentHash": "v2:87ea1dd18346f713058b5b8818924484e340c14a888af83da92a2a7b77b261b4",
+      "mutationManifest": {
+        "objectType": "all-movable-types",
+        "operation": "constrained-shuffle",
+        "order": [
+          "mustCross",
+          "landmarks",
+          "mustPass",
+          "flippingFilters",
+          "blocks",
+          "geese",
+          "falseGoals"
+        ]
+      },
+      "generationAttempts": 6,
+      "navDensity": 0.8285714285714286
+    },
+    {
+      "variantId": "F02024-cs-07",
+      "familyId": "family-R02024-w0-constrained-shuffle",
+      "relation": "constrained-shuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:8ed9f795dc5e2b21e467eaf5ce3c2c1c06d5a4e71a1d27b954c945c8431443c5",
+      "variantContentHash": "v2:549b19f583b5ec62000a75283e4ef82d83691f00134ab52cee65b2c83c79eb79",
+      "mutationManifest": {
+        "objectType": "all-movable-types",
+        "operation": "constrained-shuffle",
+        "order": [
+          "mustCross",
+          "landmarks",
+          "mustPass",
+          "flippingFilters",
+          "blocks",
+          "geese",
+          "falseGoals"
+        ]
+      },
+      "generationAttempts": 7,
+      "navDensity": 0.8285714285714286
+    },
+    {
+      "variantId": "F02024-cs-08",
+      "familyId": "family-R02024-w0-constrained-shuffle",
+      "relation": "constrained-shuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:8ed9f795dc5e2b21e467eaf5ce3c2c1c06d5a4e71a1d27b954c945c8431443c5",
+      "variantContentHash": "v2:dff7d79f9cf60844a219c343a1afbfae37ca74949518d3d5185c40b4953bb361",
+      "mutationManifest": {
+        "objectType": "all-movable-types",
+        "operation": "constrained-shuffle",
+        "order": [
+          "mustCross",
+          "landmarks",
+          "mustPass",
+          "flippingFilters",
+          "blocks",
+          "geese",
+          "falseGoals"
+        ]
+      },
+      "generationAttempts": 8,
+      "navDensity": 0.8285714285714286
+    },
+    {
+      "variantId": "F02024-cs-09",
+      "familyId": "family-R02024-w0-constrained-shuffle",
+      "relation": "constrained-shuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:8ed9f795dc5e2b21e467eaf5ce3c2c1c06d5a4e71a1d27b954c945c8431443c5",
+      "variantContentHash": "v2:75bd3a91596052ffd2df667e79c608a626581a626eb8d401ab6f80b8640b3621",
+      "mutationManifest": {
+        "objectType": "all-movable-types",
+        "operation": "constrained-shuffle",
+        "order": [
+          "mustCross",
+          "landmarks",
+          "mustPass",
+          "flippingFilters",
+          "blocks",
+          "geese",
+          "falseGoals"
+        ]
+      },
+      "generationAttempts": 9,
+      "navDensity": 0.8285714285714286
+    },
+    {
+      "variantId": "F02024-cs-10",
+      "familyId": "family-R02024-w0-constrained-shuffle",
+      "relation": "constrained-shuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:8ed9f795dc5e2b21e467eaf5ce3c2c1c06d5a4e71a1d27b954c945c8431443c5",
+      "variantContentHash": "v2:2a9e18c3eb3309ccd22d715e158d53d34074d58ebc5eb8b2cec8d9c00112e86b",
+      "mutationManifest": {
+        "objectType": "all-movable-types",
+        "operation": "constrained-shuffle",
+        "order": [
+          "mustCross",
+          "landmarks",
+          "mustPass",
+          "flippingFilters",
+          "blocks",
+          "geese",
+          "falseGoals"
+        ]
+      },
+      "generationAttempts": 10,
+      "navDensity": 0.8285714285714286
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "familyId": "family-P00079-w0-group-reshuffle",
+  "parentLevelId": "P00079",
+  "parentCorpus": "data/levels.json",
+  "parentContentHash": "v2:6a5cfe276990b3093c5f1298a759f5b315382a66faa3032052a98d77ffe5756b",
+  "selectedWitnessSource": "hint[0]",
+  "selectedWitnessLength": 51,
+  "selectedWitnessIntersectionCount": 2,
+  "familyMode": "group-reshuffle",
+  "generatorVersion": "0.1.0",
+  "randomSeed": 20260807,
+  "createdTimestamp": "2026-08-07T04:09:04.659Z",
+  "lastUpdatedTimestamp": "2026-08-07T04:09:04.659Z",
+  "requestedCount": 10,
+  "acceptedCount": 1,
+  "generationAttempts": 400,
+  "attemptBudget": 400,
+  "movableInstanceCount": 1,
+  "parentNavDensity": 0.352112676056338,
+  "variants": [
+    {
+      "variantId": "F00079-gr-01",
+      "familyId": "family-P00079-w0-group-reshuffle",
+      "relation": "group-reshuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:6a5cfe276990b3093c5f1298a759f5b315382a66faa3032052a98d77ffe5756b",
+      "variantContentHash": "v2:f51794cbb16561fb47dd29e425a262ad9223cf90b5fb3421971351f46f65bc0c",
+      "mutationManifest": {
+        "objectType": "mustCross",
+        "operation": "group-reshuffle",
+        "count": 1
+      },
+      "generationAttempts": 3,
+      "navDensity": 0.352112676056338
+    }
+  ]
+}

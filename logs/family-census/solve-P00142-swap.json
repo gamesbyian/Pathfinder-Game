@@ -1,0 +1,43 @@
+{
+  "summary": {
+    "generatedAt": "2026-08-07T10:23:49.805Z",
+    "commit": "2cae20063347c0cd2d80932553d5c9a7633e8825",
+    "corpus": "data/families/published/family-P00142-swap.json",
+    "schedulerMode": "legacy",
+    "budgetMs": 86400000,
+    "nodeBudget": 36000000,
+    "workBudget": 48240000,
+    "repairBudgetFraction": null,
+    "adaptiveBudget": null,
+    "primeWinner": null,
+    "workers": 4,
+    "resume": false,
+    "checkpointPath": null,
+    "resumedLevels": 0,
+    "featureFilter": null,
+    "baseline": null,
+    "priority": null,
+    "attemptCache": null,
+    "attemptCacheSkipped": 0,
+    "portfolioExperiment": null,
+    "levelsRun": 0,
+    "solvedCount": 0,
+    "solvedBeforeFallbackCount": 0,
+    "fallbackOnlyCount": 0,
+    "unsolvedCount": 0,
+    "passDistribution": {
+      "pass1": 0,
+      "pass2": 0,
+      "pass3": 0,
+      "conditional": 0,
+      "fallback": 0,
+      "legacy": 0,
+      "unsolved": 0
+    },
+    "newFinds": [],
+    "saveHints": true,
+    "hintsAppended": 0,
+    "hintFilesChanged": 0
+  },
+  "levels": []
+}

@@ -1,0 +1,72 @@
+{
+  "familyId": "family-P00149-w0-constrained-shuffle",
+  "parentLevelId": "P00149",
+  "parentCorpus": "data/levels.json",
+  "parentContentHash": "v2:8f4d2436516f4c185170d5d38b4a2e17a8ff287fa81a113c8404a007aa059836",
+  "selectedWitnessSource": "hint[0]",
+  "selectedWitnessLength": 9,
+  "selectedWitnessIntersectionCount": 0,
+  "familyMode": "constrained-shuffle",
+  "generatorVersion": "0.1.0",
+  "randomSeed": 20260807,
+  "createdTimestamp": "2026-08-07T08:22:21.565Z",
+  "lastUpdatedTimestamp": "2026-08-07T08:22:21.565Z",
+  "requestedCount": 10,
+  "acceptedCount": 2,
+  "generationAttempts": 400,
+  "attemptBudget": 400,
+  "movableInstanceCount": 1,
+  "parentNavDensity": 0.3333333333333333,
+  "variants": [
+    {
+      "variantId": "F00149-cs-01",
+      "familyId": "family-P00149-w0-constrained-shuffle",
+      "relation": "constrained-shuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:8f4d2436516f4c185170d5d38b4a2e17a8ff287fa81a113c8404a007aa059836",
+      "variantContentHash": "v2:7fb6ad85174560f31b3ba9778a518d100a569a61f7caa2ab121df2e437e10ca9",
+      "mutationManifest": {
+        "objectType": "all-movable-types",
+        "operation": "constrained-shuffle",
+        "order": [
+          "mustCross",
+          "landmarks",
+          "mustPass",
+          "flippingFilters",
+          "blocks",
+          "geese",
+          "falseGoals"
+        ]
+      },
+      "generationAttempts": 1,
+      "navDensity": 0.3333333333333333
+    },
+    {
+      "variantId": "F00149-cs-02",
+      "familyId": "family-P00149-w0-constrained-shuffle",
+      "relation": "constrained-shuffle",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:8f4d2436516f4c185170d5d38b4a2e17a8ff287fa81a113c8404a007aa059836",
+      "variantContentHash": "v2:b37b2a1d27c2baacc4eb29a7ab0e682a936920e5312eaff924dc1bac459f43cf",
+      "mutationManifest": {
+        "objectType": "all-movable-types",
+        "operation": "constrained-shuffle",
+        "order": [
+          "mustCross",
+          "landmarks",
+          "mustPass",
+          "flippingFilters",
+          "blocks",
+          "geese",
+          "falseGoals"
+        ]
+      },
+      "generationAttempts": 4,
+      "navDensity": 0.3333333333333333
+    }
+  ]
+}

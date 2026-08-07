@@ -1,0 +1,82 @@
+{
+  "familyId": "family-P00114-w0-swap",
+  "parentLevelId": "P00114",
+  "parentCorpus": "data/levels.json",
+  "parentContentHash": "v2:06d42cf04b766f67130498d573c342917882eb4a08a4585de8e0eb8196528d77",
+  "selectedWitnessSource": "hint[0]",
+  "selectedWitnessLength": 36,
+  "selectedWitnessIntersectionCount": 2,
+  "familyMode": "swap",
+  "generatorVersion": "0.1.0",
+  "randomSeed": 20260807,
+  "createdTimestamp": "2026-08-07T11:05:21.559Z",
+  "lastUpdatedTimestamp": "2026-08-07T11:05:21.559Z",
+  "requestedCount": 10,
+  "acceptedCount": 2,
+  "generationAttempts": 400,
+  "attemptBudget": 400,
+  "movableInstanceCount": 6,
+  "parentNavDensity": 0.45454545454545453,
+  "variants": [
+    {
+      "variantId": "F00114-swap-01",
+      "familyId": "family-P00114-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:06d42cf04b766f67130498d573c342917882eb4a08a4585de8e0eb8196528d77",
+      "variantContentHash": "v2:1bbd28140c9aa0fc3dcc652b6c3c01b4be14462d0748147f1b7eea1cd7e7ca66",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "blocks",
+          "from": {
+            "x": 6,
+            "y": 6
+          }
+        },
+        "b": {
+          "kind": "geese",
+          "from": {
+            "x": 2,
+            "y": 3
+          }
+        }
+      },
+      "generationAttempts": 1,
+      "navDensity": 0.45454545454545453
+    },
+    {
+      "variantId": "F00114-swap-02",
+      "familyId": "family-P00114-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:06d42cf04b766f67130498d573c342917882eb4a08a4585de8e0eb8196528d77",
+      "variantContentHash": "v2:0c4ec5dfb8c4f9f3592120214f668a916ee78091efa92f6d4bf508204076bbb2",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "blocks",
+          "from": {
+            "x": 2,
+            "y": 2
+          }
+        },
+        "b": {
+          "kind": "geese",
+          "from": {
+            "x": 2,
+            "y": 3
+          }
+        }
+      },
+      "generationAttempts": 12,
+      "navDensity": 0.45454545454545453
+    }
+  ]
+}

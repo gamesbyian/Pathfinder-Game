@@ -1,0 +1,82 @@
+{
+  "familyId": "family-P00160-w0-swap",
+  "parentLevelId": "P00160",
+  "parentCorpus": "data/levels.json",
+  "parentContentHash": "v2:9e52544a4761f5efd8e7e873b634856a59ea89d0e777e9db92e2fed94f68eb61",
+  "selectedWitnessSource": "hint[0]",
+  "selectedWitnessLength": 62,
+  "selectedWitnessIntersectionCount": 5,
+  "familyMode": "swap",
+  "generatorVersion": "0.1.0",
+  "randomSeed": 20260807,
+  "createdTimestamp": "2026-08-07T08:01:00.102Z",
+  "lastUpdatedTimestamp": "2026-08-07T08:01:00.102Z",
+  "requestedCount": 10,
+  "acceptedCount": 2,
+  "generationAttempts": 400,
+  "attemptBudget": 400,
+  "movableInstanceCount": 5,
+  "parentNavDensity": 0.648936170212766,
+  "variants": [
+    {
+      "variantId": "F00160-swap-01",
+      "familyId": "family-P00160-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:9e52544a4761f5efd8e7e873b634856a59ea89d0e777e9db92e2fed94f68eb61",
+      "variantContentHash": "v2:8ad5752950a6e3dbabe19810ab5e9afdbc8e21fc43bc4de759599dd7d8d0da88",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "landmarks",
+          "from": {
+            "x": 8,
+            "y": 5
+          }
+        },
+        "b": {
+          "kind": "landmarks",
+          "from": {
+            "x": 6,
+            "y": 2
+          }
+        }
+      },
+      "generationAttempts": 3,
+      "navDensity": 0.648936170212766
+    },
+    {
+      "variantId": "F00160-swap-02",
+      "familyId": "family-P00160-w0-swap",
+      "relation": "swap",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:9e52544a4761f5efd8e7e873b634856a59ea89d0e777e9db92e2fed94f68eb61",
+      "variantContentHash": "v2:abd9e4e53f0b80e2bc674c0390496bf0a97d6808a25b24b2deacc0e2d799bf31",
+      "mutationManifest": {
+        "objectType": "swap",
+        "operation": "swap",
+        "a": {
+          "kind": "landmarks",
+          "from": {
+            "x": 2,
+            "y": 6
+          }
+        },
+        "b": {
+          "kind": "landmarks",
+          "from": {
+            "x": 3,
+            "y": 1
+          }
+        }
+      },
+      "generationAttempts": 7,
+      "navDensity": 0.648936170212766
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "familyId": "family-P00115-w0-symmetry",
+  "parentLevelId": "P00115",
+  "parentCorpus": "data/levels.json",
+  "parentContentHash": "v2:6b6f131d8208bf0c318754f77983c8304b6c0ceae7e5c4e0db80e2eed2849aec",
+  "selectedWitnessSource": "hint[0]",
+  "selectedWitnessLength": 35,
+  "selectedWitnessIntersectionCount": 2,
+  "familyMode": "symmetry",
+  "generatorVersion": "0.1.0",
+  "randomSeed": 20260807,
+  "createdTimestamp": "2026-08-07T11:29:12.955Z",
+  "lastUpdatedTimestamp": "2026-08-07T11:29:12.955Z",
+  "requestedCount": 7,
+  "acceptedCount": 3,
+  "generationAttempts": 7,
+  "attemptBudget": 7,
+  "movableInstanceCount": 2,
+  "parentNavDensity": 0.2905982905982906,
+  "variants": [
+    {
+      "variantId": "F00115-sym-01",
+      "familyId": "family-P00115-w0-symmetry",
+      "relation": "symmetry",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:6b6f131d8208bf0c318754f77983c8304b6c0ceae7e5c4e0db80e2eed2849aec",
+      "variantContentHash": "v2:b66c9ac9469ff3b7446bfb0090a1021712b5f3424d62c2601ea7ad49fea4f699",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "transform",
+        "variant": 1,
+        "kind": "rotation"
+      },
+      "generationAttempts": 1,
+      "navDensity": 0.2905982905982906
+    },
+    {
+      "variantId": "F00115-sym-02",
+      "familyId": "family-P00115-w0-symmetry",
+      "relation": "symmetry",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:6b6f131d8208bf0c318754f77983c8304b6c0ceae7e5c4e0db80e2eed2849aec",
+      "variantContentHash": "v2:27c7e7b3ec3ca24804621ab935be10d9f15777a8eeb12df0f8e4b3ca6fc08693",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "transform",
+        "variant": 2,
+        "kind": "rotation"
+      },
+      "generationAttempts": 2,
+      "navDensity": 0.2905982905982906
+    },
+    {
+      "variantId": "F00115-sym-03",
+      "familyId": "family-P00115-w0-symmetry",
+      "relation": "symmetry",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260807,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:6b6f131d8208bf0c318754f77983c8304b6c0ceae7e5c4e0db80e2eed2849aec",
+      "variantContentHash": "v2:98ac453d3c16929fc88d0d7d6082a2d7bba8a7fe267ed4d15a9dfe0eaa52acba",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "transform",
+        "variant": 3,
+        "kind": "rotation"
+      },
+      "generationAttempts": 3,
+      "navDensity": 0.2905982905982906
+    }
+  ]
+}
