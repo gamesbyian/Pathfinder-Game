@@ -20,6 +20,15 @@ which typically states what it follows up on or supersedes.
 `CLAUDE.md`'s Solver Architecture gotchas section also cites several of these directly for
 specific, still-relevant lessons (not just narrative history).
 
+The cross-document synthesis
+[`2026-08-06-solver-blind-spot-cross-attempt-cooperation.md`](2026-08-06-solver-blind-spot-cross-attempt-cooperation.md)
+identifies a recurring assumption in that narrative: search techniques within one cold solve are
+usually treated as independent, all-or-nothing attempts, while known trajectories stand in for the
+harder-to-measure family of possible completions. It proposes evidence-first tests of typed
+within-solve handoffs between repair, beam/DFS, admissible-order search, and external oracles. It
+also explicitly excludes stored hints, witnesses, and solved-level paths from production search;
+those may be evaluation or separately-provenanced hint-guided inputs, never cold-solver inputs.
+
 ## Subdirectories
 
 - [`families/`](families/) — raw per-level backing data for the sibling/cousin research system
