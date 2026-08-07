@@ -1,0 +1,3148 @@
+[23:10:32] START R00073
+Parent R00073: witness stressMeta.witnessSolution (len 116, 6 jump(s)), 66 movable object instance(s) under strict inventory.
+  attempt 1: accepted F00073-lm-01 — moved blocks (3,13) -> (12,6)
+  attempt 2: accepted F00073-lm-02 — moved blocks (12,9) -> (7,10)
+  attempt 3: accepted F00073-lm-03 — moved statue (3,3) -> (7,6)
+  attempt 4: accepted F00073-lm-04 — moved geese (13,12) -> (9,9)
+  attempt 5: accepted F00073-lm-05 — moved market (6,11) -> (3,5)
+  attempt 6: accepted F00073-lm-06 — moved blocks (13,1) -> (12,2)
+  attempt 7: accepted F00073-lm-07 — moved geese (0,13) -> (5,5)
+  attempt 8: accepted F00073-lm-08 — moved market (4,5) -> (7,1)
+  attempt 9: accepted F00073-lm-09 — moved flippingFilters (12,11) -> (13,3)
+  attempt 10: accepted F00073-lm-10 — moved library (1,14) -> (2,10)
+  attempt 11: accepted F00073-lm-11 — moved blocks (8,12) -> (8,9)
+  attempt 12: accepted F00073-lm-12 — moved mustPass (6,3) -> (7,7)
+  attempt 13: accepted F00073-lm-13 — moved blocks (4,2) -> (1,13)
+  attempt 14: accepted F00073-lm-14 — moved mustPass (3,14) -> (0,8)
+  attempt 15: accepted F00073-lm-15 — moved flippingFilters (13,2) -> (13,3)
+
+15/15 new local-mutant sibling(s) generated for R00073 in 15 attempt(s) (budget 600); 15 total in data/families/family-R00073-lm.json.
+Wrote 15 level(s) total to data/families/family-R00073-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R00073-lm-manifest.json (15 variant(s) total).
+Parent R00073: witness stressMeta.witnessSolution (len 116, 6 jump(s)), 66 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F00073-sym-01
+  variant 2 (rotation): accepted F00073-sym-02
+  variant 3 (rotation): accepted F00073-sym-03
+  variant 4 (reflection): accepted F00073-sym-04
+  variant 5 (reflection): accepted F00073-sym-05
+  variant 6 (reflection): accepted F00073-sym-06
+  variant 7 (reflection): accepted F00073-sym-07
+
+7/7 new symmetry sibling(s) generated for R00073 in 7 attempt(s) (budget 7); 7 total in data/families/family-R00073-sym.json.
+Wrote 7 level(s) total to data/families/family-R00073-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R00073-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R00073-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F00073-lm-02) ok=✗
+  [2/15] L3 (F00073-lm-03) ok=✗
+  [3/15] L1 (F00073-lm-01) ok=✗
+  [4/15] L4 (F00073-lm-04) ok=✗
+  [5/15] L5 (F00073-lm-05) ok=✗
+  [6/15] L7 (F00073-lm-07) ok=✗
+  [7/15] L6 (F00073-lm-06) ok=✗
+  [8/15] L8 (F00073-lm-08) ok=✗
+  [9/15] L9 (F00073-lm-09) ok=✗
+  [10/15] L10 (F00073-lm-10) ok=✗
+  [11/15] L11 (F00073-lm-11) ok=✗
+  [12/15] L12 (F00073-lm-12) ok=✗
+  [13/15] L15 (F00073-lm-15) ok=✗
+  [14/15] L13 (F00073-lm-13) ok=✗
+  [15/15] L14 (F00073-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R00073-lm.json
+Wrote logs/family-census/solve-R00073-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R00073-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F00073-sym-04) ok=✗
+  [2/7] L1 (F00073-sym-01) ok=✗
+  [3/7] L2 (F00073-sym-02) ok=✗
+  [4/7] L3 (F00073-sym-03) ok=✗
+  [5/7] L7 (F00073-sym-07) ok=✗
+  [6/7] L5 (F00073-sym-05) ok=✗
+  [7/7] L6 (F00073-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R00073-sym.json
+Wrote logs/family-census/solve-R00073-sym-summary.md
+[23:15:25] DONE R00073
+[23:15:25] START R00320
+Parent R00320: witness hint[0] (len 147, 7 jump(s)), 28 movable object instance(s) under strict inventory.
+  attempt 1: accepted F00320-lm-01 — moved mustPass (3,9) -> (9,10)
+  attempt 2: accepted F00320-lm-02 — moved lamppost (2,12) -> (11,13)
+  attempt 3: accepted F00320-lm-03 — moved falseGoals (10,0) -> (12,6)
+  attempt 4: accepted F00320-lm-04 — moved flippingFilters (13,11) -> (12,12)
+  attempt 5: accepted F00320-lm-05 — moved fountain (3,7) -> (3,6)
+  attempt 6: accepted F00320-lm-06 — moved flippingFilters (3,2) -> (5,11)
+  attempt 7: accepted F00320-lm-07 — moved falseGoals (8,7) -> (0,14)
+  attempt 8: accepted F00320-lm-08 — moved flippingFilters (5,0) -> (12,1)
+  attempt 9: accepted F00320-lm-09 — moved lamppost (2,12) -> (2,10)
+  attempt 10: accepted F00320-lm-10 — moved falseGoals (13,7) -> (9,0)
+  attempt 11: accepted F00320-lm-11 — moved mustPass (4,11) -> (11,10)
+  attempt 12: accepted F00320-lm-12 — moved falseGoals (14,12) -> (10,3)
+  attempt 13: accepted F00320-lm-13 — moved mustPass (1,13) -> (12,9)
+  attempt 14: accepted F00320-lm-14 — moved mustPass (6,6) -> (11,13)
+  attempt 15: accepted F00320-lm-15 — moved fountain (3,7) -> (1,6)
+
+15/15 new local-mutant sibling(s) generated for R00320 in 15 attempt(s) (budget 600); 15 total in data/families/family-R00320-lm.json.
+Wrote 15 level(s) total to data/families/family-R00320-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R00320-lm-manifest.json (15 variant(s) total).
+Parent R00320: witness hint[0] (len 147, 7 jump(s)), 28 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F00320-sym-01
+  variant 2 (rotation): accepted F00320-sym-02
+  variant 3 (rotation): accepted F00320-sym-03
+  variant 4 (reflection): accepted F00320-sym-04
+  variant 5 (reflection): accepted F00320-sym-05
+  variant 6 (reflection): accepted F00320-sym-06
+  variant 7 (reflection): accepted F00320-sym-07
+
+7/7 new symmetry sibling(s) generated for R00320 in 7 attempt(s) (budget 7); 7 total in data/families/family-R00320-sym.json.
+Wrote 7 level(s) total to data/families/family-R00320-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R00320-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R00320-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F00320-lm-04) ok=✓ legacy [hint saved]
+  [2/15] L3 (F00320-lm-03) ok=✓ legacy [hint saved]
+  [3/15] L1 (F00320-lm-01) ok=✗
+  [4/15] L2 (F00320-lm-02) ok=✗
+  [5/15] L5 (F00320-lm-05) ok=✗
+  [6/15] L6 (F00320-lm-06) ok=✗
+  [7/15] L7 (F00320-lm-07) ok=✗
+  [8/15] L8 (F00320-lm-08) ok=✗
+  [9/15] L9 (F00320-lm-09) ok=✗
+  [10/15] L10 (F00320-lm-10) ok=✗
+  [11/15] L11 (F00320-lm-11) ok=✗
+  [12/15] L12 (F00320-lm-12) ok=✗
+  [13/15] L13 (F00320-lm-13) ok=✗
+  [14/15] L14 (F00320-lm-14) ok=✗
+  [15/15] L15 (F00320-lm-15) ok=✗
+Hints: appended to 2 level(s); 2 hint file(s) changed on disk.
+Result: solved=2/15, solvedBeforeFallback=0, fallbackOnly=2, unsolved=13
+Wrote logs/family-census/solve-R00320-lm.json
+Wrote logs/family-census/solve-R00320-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R00320-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L1 (F00320-sym-01) ok=✓ legacy [hint saved]
+  [2/7] L2 (F00320-sym-02) ok=✗
+  [3/7] L4 (F00320-sym-04) ok=✗
+  [4/7] L3 (F00320-sym-03) ok=✗
+  [5/7] L5 (F00320-sym-05) ok=✗
+  [6/7] L6 (F00320-sym-06) ok=✗
+  [7/7] L7 (F00320-sym-07) ok=✗
+Hints: appended to 1 level(s); 1 hint file(s) changed on disk.
+Result: solved=1/7, solvedBeforeFallback=0, fallbackOnly=1, unsolved=6
+Wrote logs/family-census/solve-R00320-sym.json
+Wrote logs/family-census/solve-R00320-sym-summary.md
+[23:20:50] DONE R00320
+[23:20:50] START R00507
+Parent R00507: witness stressMeta.witnessSolution (len 119, 5 jump(s)), 26 movable object instance(s) under strict inventory.
+  attempt 1: accepted F00507-lm-01 — moved market (0,6) -> (1,3)
+  attempt 2: accepted F00507-lm-02 — moved geese (2,13) -> (0,2)
+  attempt 3: accepted F00507-lm-03 — moved mustPass (2,7) -> (1,10)
+  attempt 4: accepted F00507-lm-04 — moved park (13,8) -> (0,13)
+  attempt 5: accepted F00507-lm-05 — moved mustPass (13,1) -> (9,8)
+  attempt 6: accepted F00507-lm-06 — moved park (5,10) -> (0,13)
+  attempt 7: accepted F00507-lm-07 — moved library (7,1) -> (1,3)
+  attempt 8: accepted F00507-lm-08 — moved geese (2,13) -> (12,12)
+  attempt 9: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 10: accepted F00507-lm-09 — moved geese (6,1) -> (3,11)
+  attempt 11: accepted F00507-lm-10 — moved mustPass (9,7) -> (10,10)
+  attempt 12: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 13: accepted F00507-lm-11 — moved geese (12,2) -> (12,5)
+  attempt 14: accepted F00507-lm-12 — moved mustPass (9,7) -> (13,13)
+  attempt 15: accepted F00507-lm-13 — moved mustPass (2,7) -> (10,10)
+  attempt 16: accepted F00507-lm-14 — moved geese (11,4) -> (12,12)
+  attempt 17: accepted F00507-lm-15 — moved geese (5,6) -> (8,13)
+
+15/15 new local-mutant sibling(s) generated for R00507 in 17 attempt(s) (budget 600); 15 total in data/families/family-R00507-lm.json.
+Wrote 15 level(s) total to data/families/family-R00507-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R00507-lm-manifest.json (15 variant(s) total).
+Parent R00507: witness stressMeta.witnessSolution (len 119, 5 jump(s)), 26 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F00507-sym-01
+  variant 2 (rotation): accepted F00507-sym-02
+  variant 3 (rotation): accepted F00507-sym-03
+  variant 4 (reflection): accepted F00507-sym-04
+  variant 5 (reflection): accepted F00507-sym-05
+  variant 6 (reflection): accepted F00507-sym-06
+  variant 7 (reflection): accepted F00507-sym-07
+
+7/7 new symmetry sibling(s) generated for R00507 in 7 attempt(s) (budget 7); 7 total in data/families/family-R00507-sym.json.
+Wrote 7 level(s) total to data/families/family-R00507-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R00507-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R00507-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F00507-lm-04) ok=✗
+  [2/15] L2 (F00507-lm-02) ok=✗
+  [3/15] L3 (F00507-lm-03) ok=✗
+  [4/15] L1 (F00507-lm-01) ok=✗
+  [5/15] L6 (F00507-lm-06) ok=✗
+  [6/15] L5 (F00507-lm-05) ok=✗
+  [7/15] L7 (F00507-lm-07) ok=✗
+  [8/15] L8 (F00507-lm-08) ok=✗
+  [9/15] L9 (F00507-lm-09) ok=✗
+  [10/15] L10 (F00507-lm-10) ok=✗
+  [11/15] L11 (F00507-lm-11) ok=✗
+  [12/15] L12 (F00507-lm-12) ok=✗
+  [13/15] L14 (F00507-lm-14) ok=✗
+  [14/15] L13 (F00507-lm-13) ok=✗
+  [15/15] L15 (F00507-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R00507-lm.json
+Wrote logs/family-census/solve-R00507-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R00507-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F00507-sym-02) ok=✗
+  [2/7] L1 (F00507-sym-01) ok=✗
+  [3/7] L4 (F00507-sym-04) ok=✗
+  [4/7] L3 (F00507-sym-03) ok=✗
+  [5/7] L5 (F00507-sym-05) ok=✗
+  [6/7] L6 (F00507-sym-06) ok=✗
+  [7/7] L7 (F00507-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R00507-sym.json
+Wrote logs/family-census/solve-R00507-sym-summary.md
+[23:25:16] DONE R00507
+[23:25:16] START R00639
+Parent R00639: witness stressMeta.witnessSolution (len 112, 0 jump(s)), 50 movable object instance(s) under strict inventory.
+  attempt 1: accepted F00639-lm-01 — moved blocks (11,2) -> (8,12)
+  attempt 2: accepted F00639-lm-02 — moved mustCross (10,11) -> (2,9)
+  attempt 3: accepted F00639-lm-03 — moved mustPass (9,9) -> (7,6)
+  attempt 4: accepted F00639-lm-04 — moved blocks (1,11) -> (4,3)
+  attempt 5: accepted F00639-lm-05 — moved park (7,8) -> (0,8)
+  attempt 6: accepted F00639-lm-06 — moved blocks (12,3) -> (13,10)
+  attempt 7: accepted F00639-lm-07 — moved mustCross (3,9) -> (2,9)
+  attempt 8: accepted F00639-lm-08 — moved mustPass (11,11) -> (11,10)
+  attempt 9: accepted F00639-lm-09 — moved lamppost (6,0) -> (11,1)
+  attempt 10: accepted F00639-lm-10 — moved mustPass (11,11) -> (6,5)
+  attempt 11: accepted F00639-lm-11 — moved park (0,9) -> (3,4)
+  attempt 12: accepted F00639-lm-12 — moved blocks (1,11) -> (12,6)
+  attempt 13: accepted F00639-lm-13 — moved blocks (1,0) -> (0,13)
+  attempt 14: accepted F00639-lm-14 — moved falseGoals (11,0) -> (0,13)
+  attempt 15: accepted F00639-lm-15 — moved geese (10,4) -> (4,6)
+
+15/15 new local-mutant sibling(s) generated for R00639 in 15 attempt(s) (budget 600); 15 total in data/families/family-R00639-lm.json.
+Wrote 15 level(s) total to data/families/family-R00639-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R00639-lm-manifest.json (15 variant(s) total).
+Parent R00639: witness stressMeta.witnessSolution (len 112, 0 jump(s)), 50 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F00639-sym-01
+  variant 2 (rotation): accepted F00639-sym-02
+  variant 3 (rotation): accepted F00639-sym-03
+  variant 4 (reflection): accepted F00639-sym-04
+  variant 5 (reflection): accepted F00639-sym-05
+  variant 6 (reflection): accepted F00639-sym-06
+  variant 7 (reflection): accepted F00639-sym-07
+
+7/7 new symmetry sibling(s) generated for R00639 in 7 attempt(s) (budget 7); 7 total in data/families/family-R00639-sym.json.
+Wrote 7 level(s) total to data/families/family-R00639-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R00639-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R00639-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F00639-lm-04) ok=✓ legacy [hint saved]
+  [2/15] L2 (F00639-lm-02) ok=✗
+  [3/15] L1 (F00639-lm-01) ok=✗
+  [4/15] L3 (F00639-lm-03) ok=✗
+  [5/15] L5 (F00639-lm-05) ok=✗
+  [6/15] L7 (F00639-lm-07) ok=✗
+  [7/15] L6 (F00639-lm-06) ok=✗
+  [8/15] L8 (F00639-lm-08) ok=✗
+  [9/15] L9 (F00639-lm-09) ok=✗
+  [10/15] L12 (F00639-lm-12) ok=✓ legacy [hint saved]
+  [11/15] L10 (F00639-lm-10) ok=✗
+  [12/15] L11 (F00639-lm-11) ok=✗
+  [13/15] L13 (F00639-lm-13) ok=✗
+  [14/15] L15 (F00639-lm-15) ok=✗
+  [15/15] L14 (F00639-lm-14) ok=✗
+Hints: appended to 2 level(s); 2 hint file(s) changed on disk.
+Result: solved=2/15, solvedBeforeFallback=0, fallbackOnly=2, unsolved=13
+Wrote logs/family-census/solve-R00639-lm.json
+Wrote logs/family-census/solve-R00639-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R00639-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L1 (F00639-sym-01) ok=✗
+  [2/7] L2 (F00639-sym-02) ok=✗
+  [3/7] L4 (F00639-sym-04) ok=✗
+  [4/7] L3 (F00639-sym-03) ok=✗
+  [5/7] L7 (F00639-sym-07) ok=✗
+  [6/7] L6 (F00639-sym-06) ok=✗
+  [7/7] L5 (F00639-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R00639-sym.json
+Wrote logs/family-census/solve-R00639-sym-summary.md
+[23:28:28] DONE R00639
+[23:28:28] START R00786
+Parent R00786: witness stressMeta.witnessSolution (len 93, 7 jump(s)), 35 movable object instance(s) under strict inventory.
+  attempt 1: accepted F00786-lm-01 — moved blocks (1,1) -> (3,3)
+  attempt 2: accepted F00786-lm-02 — moved blocks (8,3) -> (0,1)
+  attempt 3: accepted F00786-lm-03 — moved mustPass (6,5) -> (9,7)
+  attempt 4: accepted F00786-lm-04 — moved park (2,2) -> (6,10)
+  attempt 5: accepted F00786-lm-05 — moved market (9,2) -> (10,4)
+  attempt 6: accepted F00786-lm-06 — moved lamppost (3,2) -> (2,1)
+  attempt 7: accepted F00786-lm-07 — moved mustPass (0,6) -> (8,6)
+  attempt 8: accepted F00786-lm-08 — moved lamppost (3,2) -> (6,9)
+  attempt 9: accepted F00786-lm-09 — moved park (5,4) -> (4,3)
+  attempt 10: accepted F00786-lm-10 — moved park (1,10) -> (10,3)
+  attempt 11: accepted F00786-lm-11 — moved statue (8,0) -> (3,10)
+  attempt 12: accepted F00786-lm-12 — moved market (2,5) -> (10,7)
+  attempt 13: accepted F00786-lm-13 — moved park (1,10) -> (2,3)
+  attempt 14: accepted F00786-lm-14 — moved mustPass (0,7) -> (9,4)
+  attempt 15: accepted F00786-lm-15 — moved statue (8,0) -> (7,10)
+
+15/15 new local-mutant sibling(s) generated for R00786 in 15 attempt(s) (budget 600); 15 total in data/families/family-R00786-lm.json.
+Wrote 15 level(s) total to data/families/family-R00786-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R00786-lm-manifest.json (15 variant(s) total).
+Parent R00786: witness stressMeta.witnessSolution (len 93, 7 jump(s)), 35 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F00786-sym-01
+  variant 2 (rotation): accepted F00786-sym-02
+  variant 3 (rotation): accepted F00786-sym-03
+  variant 4 (reflection): accepted F00786-sym-04
+  variant 5 (reflection): accepted F00786-sym-05
+  variant 6 (reflection): accepted F00786-sym-06
+  variant 7 (reflection): accepted F00786-sym-07
+
+7/7 new symmetry sibling(s) generated for R00786 in 7 attempt(s) (budget 7); 7 total in data/families/family-R00786-sym.json.
+Wrote 7 level(s) total to data/families/family-R00786-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R00786-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R00786-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L3 (F00786-lm-03) ok=✗
+  [2/15] L1 (F00786-lm-01) ok=✗
+  [3/15] L2 (F00786-lm-02) ok=✗
+  [4/15] L4 (F00786-lm-04) ok=✗
+  [5/15] L6 (F00786-lm-06) ok=✗
+  [6/15] L5 (F00786-lm-05) ok=✗
+  [7/15] L7 (F00786-lm-07) ok=✗
+  [8/15] L8 (F00786-lm-08) ok=✗
+  [9/15] L9 (F00786-lm-09) ok=✗
+  [10/15] L10 (F00786-lm-10) ok=✗
+  [11/15] L12 (F00786-lm-12) ok=✗
+  [12/15] L11 (F00786-lm-11) ok=✗
+  [13/15] L14 (F00786-lm-14) ok=✗
+  [14/15] L13 (F00786-lm-13) ok=✗
+  [15/15] L15 (F00786-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R00786-lm.json
+Wrote logs/family-census/solve-R00786-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R00786-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F00786-sym-04) ok=✗
+  [2/7] L2 (F00786-sym-02) ok=✗
+  [3/7] L3 (F00786-sym-03) ok=✗
+  [4/7] L1 (F00786-sym-01) ok=✗
+  [5/7] L5 (F00786-sym-05) ok=✗
+  [6/7] L7 (F00786-sym-07) ok=✗
+  [7/7] L6 (F00786-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R00786-sym.json
+Wrote logs/family-census/solve-R00786-sym-summary.md
+[23:33:50] DONE R00786
+[23:33:50] START R01016
+Parent R01016: witness stressMeta.witnessSolution (len 113, 7 jump(s)), 44 movable object instance(s) under strict inventory.
+  attempt 1: accepted F01016-lm-01 — moved falseGoals (2,3) -> (13,11)
+  attempt 2: accepted F01016-lm-02 — moved library (3,10) -> (6,0)
+  attempt 3: accepted F01016-lm-03 — moved falseGoals (2,12) -> (10,4)
+  attempt 4: accepted F01016-lm-04 — moved geese (6,9) -> (13,10)
+  attempt 5: accepted F01016-lm-05 — moved blocks (12,11) -> (2,0)
+  attempt 6: accepted F01016-lm-06 — moved lamppost (11,7) -> (3,3)
+  attempt 7: accepted F01016-lm-07 — moved park (13,1) -> (12,10)
+  attempt 8: accepted F01016-lm-08 — moved park (10,1) -> (11,8)
+  attempt 9: accepted F01016-lm-09 — moved market (13,0) -> (4,10)
+  attempt 10: accepted F01016-lm-10 — moved geese (0,9) -> (13,11)
+  attempt 11: accepted F01016-lm-11 — moved geese (1,1) -> (3,3)
+  attempt 12: accepted F01016-lm-12 — moved market (9,9) -> (6,2)
+  attempt 13: accepted F01016-lm-13 — moved library (11,5) -> (6,0)
+  attempt 14: accepted F01016-lm-14 — moved blocks (5,13) -> (0,13)
+  attempt 15: accepted F01016-lm-15 — moved falseGoals (2,3) -> (2,13)
+
+15/15 new local-mutant sibling(s) generated for R01016 in 15 attempt(s) (budget 600); 15 total in data/families/family-R01016-lm.json.
+Wrote 15 level(s) total to data/families/family-R01016-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R01016-lm-manifest.json (15 variant(s) total).
+Parent R01016: witness stressMeta.witnessSolution (len 113, 7 jump(s)), 44 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F01016-sym-01
+  variant 2 (rotation): accepted F01016-sym-02
+  variant 3 (rotation): accepted F01016-sym-03
+  variant 4 (reflection): accepted F01016-sym-04
+  variant 5 (reflection): accepted F01016-sym-05
+  variant 6 (reflection): accepted F01016-sym-06
+  variant 7 (reflection): accepted F01016-sym-07
+
+7/7 new symmetry sibling(s) generated for R01016 in 7 attempt(s) (budget 7); 7 total in data/families/family-R01016-sym.json.
+Wrote 7 level(s) total to data/families/family-R01016-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R01016-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R01016-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F01016-lm-04) ok=✗
+  [2/15] L1 (F01016-lm-01) ok=✗
+  [3/15] L3 (F01016-lm-03) ok=✗
+  [4/15] L2 (F01016-lm-02) ok=✗
+  [5/15] L7 (F01016-lm-07) ok=✗
+  [6/15] L5 (F01016-lm-05) ok=✗
+  [7/15] L6 (F01016-lm-06) ok=✗
+  [8/15] L8 (F01016-lm-08) ok=✗
+  [9/15] L9 (F01016-lm-09) ok=✗
+  [10/15] L10 (F01016-lm-10) ok=✗
+  [11/15] L11 (F01016-lm-11) ok=✗
+  [12/15] L12 (F01016-lm-12) ok=✗
+  [13/15] L15 (F01016-lm-15) ok=✗
+  [14/15] L13 (F01016-lm-13) ok=✗
+  [15/15] L14 (F01016-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R01016-lm.json
+Wrote logs/family-census/solve-R01016-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R01016-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F01016-sym-02) ok=✗
+  [2/7] L1 (F01016-sym-01) ok=✗
+  [3/7] L3 (F01016-sym-03) ok=✗
+  [4/7] L4 (F01016-sym-04) ok=✗
+  [5/7] L5 (F01016-sym-05) ok=✗
+  [6/7] L6 (F01016-sym-06) ok=✗
+  [7/7] L7 (F01016-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R01016-sym.json
+Wrote logs/family-census/solve-R01016-sym-summary.md
+[23:36:12] DONE R01016
+[23:36:12] START R01208
+Parent R01208: witness stressMeta.witnessSolution (len 129, 7 jump(s)), 48 movable object instance(s) under strict inventory.
+  attempt 1: accepted F01208-lm-01 — moved blocks (10,6) -> (11,5)
+  attempt 2: accepted F01208-lm-02 — moved market (4,8) -> (9,8)
+  attempt 3: accepted F01208-lm-03 — moved statue (0,8) -> (7,3)
+  attempt 4: accepted F01208-lm-04 — moved mustPass (10,9) -> (6,7)
+  attempt 5: accepted F01208-lm-05 — moved library (7,1) -> (7,3)
+  attempt 6: accepted F01208-lm-06 — moved market (13,5) -> (4,7)
+  attempt 7: accepted F01208-lm-07 — moved geese (8,0) -> (9,8)
+  attempt 8: accepted F01208-lm-08 — moved geese (13,3) -> (9,13)
+  attempt 9: accepted F01208-lm-09 — moved fountain (2,10) -> (0,12)
+  attempt 10: accepted F01208-lm-10 — moved blocks (10,6) -> (12,1)
+  attempt 11: accepted F01208-lm-11 — moved market (6,12) -> (13,13)
+  attempt 12: accepted F01208-lm-12 — moved blocks (11,8) -> (2,9)
+  attempt 13: accepted F01208-lm-13 — moved market (13,5) -> (12,11)
+  attempt 14: accepted F01208-lm-14 — moved mustPass (3,7) -> (5,3)
+  attempt 15: accepted F01208-lm-15 — moved mustPass (7,10) -> (8,11)
+
+15/15 new local-mutant sibling(s) generated for R01208 in 15 attempt(s) (budget 600); 15 total in data/families/family-R01208-lm.json.
+Wrote 15 level(s) total to data/families/family-R01208-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R01208-lm-manifest.json (15 variant(s) total).
+Parent R01208: witness stressMeta.witnessSolution (len 129, 7 jump(s)), 48 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F01208-sym-01
+  variant 2 (rotation): accepted F01208-sym-02
+  variant 3 (rotation): accepted F01208-sym-03
+  variant 4 (reflection): accepted F01208-sym-04
+  variant 5 (reflection): accepted F01208-sym-05
+  variant 6 (reflection): accepted F01208-sym-06
+  variant 7 (reflection): accepted F01208-sym-07
+
+7/7 new symmetry sibling(s) generated for R01208 in 7 attempt(s) (budget 7); 7 total in data/families/family-R01208-sym.json.
+Wrote 7 level(s) total to data/families/family-R01208-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R01208-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R01208-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F01208-lm-02) ok=✗
+  [2/15] L3 (F01208-lm-03) ok=✗
+  [3/15] L1 (F01208-lm-01) ok=✗
+  [4/15] L4 (F01208-lm-04) ok=✗
+  [5/15] L5 (F01208-lm-05) ok=✗
+  [6/15] L8 (F01208-lm-08) ok=✗
+  [7/15] L7 (F01208-lm-07) ok=✗
+  [8/15] L6 (F01208-lm-06) ok=✗
+  [9/15] L9 (F01208-lm-09) ok=✗
+  [10/15] L12 (F01208-lm-12) ok=✗
+  [11/15] L11 (F01208-lm-11) ok=✗
+  [12/15] L10 (F01208-lm-10) ok=✗
+  [13/15] L15 (F01208-lm-15) ok=✗
+  [14/15] L13 (F01208-lm-13) ok=✗
+  [15/15] L14 (F01208-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R01208-lm.json
+Wrote logs/family-census/solve-R01208-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R01208-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F01208-sym-02) ok=✗
+  [2/7] L1 (F01208-sym-01) ok=✗
+  [3/7] L4 (F01208-sym-04) ok=✗
+  [4/7] L3 (F01208-sym-03) ok=✗
+  [5/7] L6 (F01208-sym-06) ok=✗
+  [6/7] L7 (F01208-sym-07) ok=✗
+  [7/7] L5 (F01208-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R01208-sym.json
+Wrote logs/family-census/solve-R01208-sym-summary.md
+[23:40:02] DONE R01208
+[23:40:02] START R01397
+Parent R01397: witness stressMeta.witnessSolution (len 102, 4 jump(s)), 41 movable object instance(s) under strict inventory.
+  attempt 1: accepted F01397-lm-01 — moved park (9,5) -> (1,8)
+  attempt 2: accepted F01397-lm-02 — moved falseGoals (2,10) -> (4,11)
+  attempt 3: accepted F01397-lm-03 — moved geese (10,6) -> (5,4)
+  attempt 4: accepted F01397-lm-04 — moved blocks (4,6) -> (5,6)
+  attempt 5: accepted F01397-lm-05 — moved falseGoals (2,10) -> (11,8)
+  attempt 6: accepted F01397-lm-06 — moved park (2,1) -> (6,6)
+  attempt 7: accepted F01397-lm-07 — moved park (2,1) -> (9,0)
+  attempt 8: accepted F01397-lm-08 — moved blocks (3,4) -> (11,8)
+  attempt 9: accepted F01397-lm-09 — moved lamppost (2,3) -> (5,10)
+  attempt 10: accepted F01397-lm-10 — moved fountain (8,2) -> (0,7)
+  attempt 11: accepted F01397-lm-11 — moved fountain (3,6) -> (3,7)
+  attempt 12: accepted F01397-lm-12 — moved statue (6,5) -> (7,8)
+  attempt 13: accepted F01397-lm-13 — moved statue (2,9) -> (9,3)
+  attempt 14: accepted F01397-lm-14 — moved falseGoals (2,11) -> (3,7)
+  attempt 15: accepted F01397-lm-15 — moved lamppost (0,1) -> (3,7)
+
+15/15 new local-mutant sibling(s) generated for R01397 in 15 attempt(s) (budget 600); 15 total in data/families/family-R01397-lm.json.
+Wrote 15 level(s) total to data/families/family-R01397-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R01397-lm-manifest.json (15 variant(s) total).
+Parent R01397: witness stressMeta.witnessSolution (len 102, 4 jump(s)), 41 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F01397-sym-01
+  variant 2 (rotation): accepted F01397-sym-02
+  variant 3 (rotation): accepted F01397-sym-03
+  variant 4 (reflection): accepted F01397-sym-04
+  variant 5 (reflection): accepted F01397-sym-05
+  variant 6 (reflection): accepted F01397-sym-06
+  variant 7 (reflection): accepted F01397-sym-07
+
+7/7 new symmetry sibling(s) generated for R01397 in 7 attempt(s) (budget 7); 7 total in data/families/family-R01397-sym.json.
+Wrote 7 level(s) total to data/families/family-R01397-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R01397-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R01397-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F01397-lm-04) ok=✗
+  [2/15] L3 (F01397-lm-03) ok=✗
+  [3/15] L2 (F01397-lm-02) ok=✗
+  [4/15] L1 (F01397-lm-01) ok=✗
+  [5/15] L5 (F01397-lm-05) ok=✗
+  [6/15] L6 (F01397-lm-06) ok=✗
+  [7/15] L7 (F01397-lm-07) ok=✗
+  [8/15] L8 (F01397-lm-08) ok=✗
+  [9/15] L9 (F01397-lm-09) ok=✗
+  [10/15] L10 (F01397-lm-10) ok=✗
+  [11/15] L12 (F01397-lm-12) ok=✗
+  [12/15] L11 (F01397-lm-11) ok=✗
+  [13/15] L15 (F01397-lm-15) ok=✗
+  [14/15] L13 (F01397-lm-13) ok=✗
+  [15/15] L14 (F01397-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R01397-lm.json
+Wrote logs/family-census/solve-R01397-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R01397-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F01397-sym-02) ok=✗
+  [2/7] L3 (F01397-sym-03) ok=✗
+  [3/7] L1 (F01397-sym-01) ok=✗
+  [4/7] L4 (F01397-sym-04) ok=✗
+  [5/7] L6 (F01397-sym-06) ok=✗
+  [6/7] L5 (F01397-sym-05) ok=✗
+  [7/7] L7 (F01397-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R01397-sym.json
+Wrote logs/family-census/solve-R01397-sym-summary.md
+[23:44:55] DONE R01397
+[23:44:55] START R01571
+Parent R01571: witness stressMeta.witnessSolution (len 98, 0 jump(s)), 52 movable object instance(s) under strict inventory.
+  attempt 1: accepted F01571-lm-01 — moved market (8,7) -> (7,7)
+  attempt 2: accepted F01571-lm-02 — moved mustPass (2,10) -> (9,11)
+  attempt 3: accepted F01571-lm-03 — moved blocks (2,6) -> (0,5)
+  attempt 4: accepted F01571-lm-04 — moved geese (10,7) -> (9,4)
+  attempt 5: accepted F01571-lm-05 — moved blocks (2,6) -> (4,10)
+  attempt 6: accepted F01571-lm-06 — moved fountain (9,0) -> (4,12)
+  attempt 7: accepted F01571-lm-07 — moved blocks (1,5) -> (3,0)
+  attempt 8: accepted F01571-lm-08 — moved geese (11,0) -> (11,7)
+  attempt 9: accepted F01571-lm-09 — moved library (10,2) -> (10,1)
+  attempt 10: accepted F01571-lm-10 — moved blocks (0,10) -> (10,0)
+  attempt 11: accepted F01571-lm-11 — moved geese (7,5) -> (1,1)
+  attempt 12: accepted F01571-lm-12 — moved fountain (9,0) -> (5,11)
+  attempt 13: accepted F01571-lm-13 — moved blocks (0,4) -> (10,6)
+  attempt 14: accepted F01571-lm-14 — moved blocks (0,12) -> (5,11)
+  attempt 15: accepted F01571-lm-15 — moved geese (8,0) -> (1,6)
+
+15/15 new local-mutant sibling(s) generated for R01571 in 15 attempt(s) (budget 600); 15 total in data/families/family-R01571-lm.json.
+Wrote 15 level(s) total to data/families/family-R01571-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R01571-lm-manifest.json (15 variant(s) total).
+Parent R01571: witness stressMeta.witnessSolution (len 98, 0 jump(s)), 52 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F01571-sym-01
+  variant 2 (rotation): accepted F01571-sym-02
+  variant 3 (rotation): accepted F01571-sym-03
+  variant 4 (reflection): accepted F01571-sym-04
+  variant 5 (reflection): accepted F01571-sym-05
+  variant 6 (reflection): accepted F01571-sym-06
+  variant 7 (reflection): accepted F01571-sym-07
+
+7/7 new symmetry sibling(s) generated for R01571 in 7 attempt(s) (budget 7); 7 total in data/families/family-R01571-sym.json.
+Wrote 7 level(s) total to data/families/family-R01571-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R01571-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R01571-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F01571-lm-02) ok=✗
+  [2/15] L3 (F01571-lm-03) ok=✗
+  [3/15] L4 (F01571-lm-04) ok=✗
+  [4/15] L1 (F01571-lm-01) ok=✗
+  [5/15] L6 (F01571-lm-06) ok=✗
+  [6/15] L8 (F01571-lm-08) ok=✗
+  [7/15] L7 (F01571-lm-07) ok=✗
+  [8/15] L5 (F01571-lm-05) ok=✗
+  [9/15] L10 (F01571-lm-10) ok=✗
+  [10/15] L9 (F01571-lm-09) ok=✗
+  [11/15] L12 (F01571-lm-12) ok=✗
+  [12/15] L11 (F01571-lm-11) ok=✗
+  [13/15] L13 (F01571-lm-13) ok=✗
+  [14/15] L15 (F01571-lm-15) ok=✗
+  [15/15] L14 (F01571-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R01571-lm.json
+Wrote logs/family-census/solve-R01571-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R01571-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F01571-sym-02) ok=✗
+  [2/7] L3 (F01571-sym-03) ok=✗
+  [3/7] L4 (F01571-sym-04) ok=✗
+  [4/7] L1 (F01571-sym-01) ok=✗
+  [5/7] L6 (F01571-sym-06) ok=✗
+  [6/7] L5 (F01571-sym-05) ok=✗
+  [7/7] L7 (F01571-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R01571-sym.json
+Wrote logs/family-census/solve-R01571-sym-summary.md
+[23:51:20] DONE R01571
+[23:51:20] START R01719
+Parent R01719: witness hint[0] (len 75, 5 jump(s)), 36 movable object instance(s) under strict inventory.
+  attempt 1: accepted F01719-lm-01 — moved mustPass (7,6) -> (6,7)
+  attempt 2: accepted F01719-lm-02 — moved falseGoals (7,3) -> (6,3)
+  attempt 3: accepted F01719-lm-03 — moved statue (5,10) -> (1,9)
+  attempt 4: accepted F01719-lm-04 — moved market (1,0) -> (4,4)
+  attempt 5: accepted F01719-lm-05 — moved geese (6,4) -> (5,5)
+  attempt 6: accepted F01719-lm-06 — moved flippingFilters (2,8) -> (3,5)
+  attempt 7: accepted F01719-lm-07 — moved market (7,9) -> (4,5)
+  attempt 8: accepted F01719-lm-08 — moved falseGoals (2,5) -> (2,9)
+  attempt 9: accepted F01719-lm-09 — moved geese (2,7) -> (6,3)
+  attempt 10: accepted F01719-lm-10 — moved falseGoals (2,5) -> (8,5)
+  attempt 11: accepted F01719-lm-11 — moved fountain (1,8) -> (9,5)
+  attempt 12: accepted F01719-lm-12 — moved mustPass (9,1) -> (0,6)
+  attempt 13: accepted F01719-lm-13 — moved fountain (1,8) -> (5,2)
+  attempt 14: accepted F01719-lm-14 — moved falseGoals (9,10) -> (5,2)
+  attempt 15: accepted F01719-lm-15 — moved falseGoals (7,5) -> (1,7)
+
+15/15 new local-mutant sibling(s) generated for R01719 in 15 attempt(s) (budget 600); 15 total in data/families/family-R01719-lm.json.
+Wrote 15 level(s) total to data/families/family-R01719-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R01719-lm-manifest.json (15 variant(s) total).
+Parent R01719: witness hint[0] (len 75, 5 jump(s)), 36 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F01719-sym-01
+  variant 2 (rotation): accepted F01719-sym-02
+  variant 3 (rotation): accepted F01719-sym-03
+  variant 4 (reflection): accepted F01719-sym-04
+  variant 5 (reflection): accepted F01719-sym-05
+  variant 6 (reflection): accepted F01719-sym-06
+  variant 7 (reflection): accepted F01719-sym-07
+
+7/7 new symmetry sibling(s) generated for R01719 in 7 attempt(s) (budget 7); 7 total in data/families/family-R01719-sym.json.
+Wrote 7 level(s) total to data/families/family-R01719-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R01719-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R01719-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F01719-lm-02) ok=✗
+  [2/15] L3 (F01719-lm-03) ok=✗
+  [3/15] L1 (F01719-lm-01) ok=✗
+  [4/15] L4 (F01719-lm-04) ok=✗
+  [5/15] L5 (F01719-lm-05) ok=✗
+  [6/15] L6 (F01719-lm-06) ok=✗
+  [7/15] L7 (F01719-lm-07) ok=✗
+  [8/15] L8 (F01719-lm-08) ok=✗
+  [9/15] L9 (F01719-lm-09) ok=✗
+  [10/15] L10 (F01719-lm-10) ok=✗
+  [11/15] L12 (F01719-lm-12) ok=✗
+  [12/15] L11 (F01719-lm-11) ok=✗
+  [13/15] L15 (F01719-lm-15) ok=✗
+  [14/15] L13 (F01719-lm-13) ok=✗
+  [15/15] L14 (F01719-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R01719-lm.json
+Wrote logs/family-census/solve-R01719-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R01719-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F01719-sym-02) ok=✗
+  [2/7] L4 (F01719-sym-04) ok=✗
+  [3/7] L3 (F01719-sym-03) ok=✗
+  [4/7] L1 (F01719-sym-01) ok=✗
+  [5/7] L6 (F01719-sym-06) ok=✗
+  [6/7] L7 (F01719-sym-07) ok=✗
+  [7/7] L5 (F01719-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R01719-sym.json
+Wrote logs/family-census/solve-R01719-sym-summary.md
+[23:51:59] DONE R01719
+[23:51:59] START R01905
+Parent R01905: witness stressMeta.witnessSolution (len 78, 7 jump(s)), 50 movable object instance(s) under strict inventory.
+  attempt 1: accepted F01905-lm-01 — moved blocks (11,9) -> (4,7)
+  attempt 2: accepted F01905-lm-02 — moved blocks (5,9) -> (11,11)
+  attempt 3: accepted F01905-lm-03 — moved blocks (5,7) -> (11,8)
+  attempt 4: accepted F01905-lm-04 — moved geese (0,8) -> (4,7)
+  attempt 5: accepted F01905-lm-05 — moved blocks (3,8) -> (1,6)
+  attempt 6: accepted F01905-lm-06 — moved blocks (6,0) -> (11,11)
+  attempt 7: accepted F01905-lm-07 — moved blocks (5,10) -> (5,11)
+  attempt 8: accepted F01905-lm-08 — moved blocks (11,5) -> (5,8)
+  attempt 9: accepted F01905-lm-09 — moved mustPass (7,10) -> (9,7)
+  attempt 10: accepted F01905-lm-10 — moved fountain (8,8) -> (2,4)
+  attempt 11: accepted F01905-lm-11 — moved mustPass (7,10) -> (9,5)
+  attempt 12: accepted F01905-lm-12 — moved market (8,5) -> (4,2)
+  attempt 13: accepted F01905-lm-13 — moved geese (4,9) -> (1,4)
+  attempt 14: accepted F01905-lm-14 — moved mustPass (2,0) -> (0,0)
+  attempt 15: accepted F01905-lm-15 — moved mustPass (7,10) -> (2,1)
+
+15/15 new local-mutant sibling(s) generated for R01905 in 15 attempt(s) (budget 600); 15 total in data/families/family-R01905-lm.json.
+Wrote 15 level(s) total to data/families/family-R01905-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R01905-lm-manifest.json (15 variant(s) total).
+Parent R01905: witness stressMeta.witnessSolution (len 78, 7 jump(s)), 50 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F01905-sym-01
+  variant 2 (rotation): accepted F01905-sym-02
+  variant 3 (rotation): accepted F01905-sym-03
+  variant 4 (reflection): accepted F01905-sym-04
+  variant 5 (reflection): accepted F01905-sym-05
+  variant 6 (reflection): accepted F01905-sym-06
+  variant 7 (reflection): accepted F01905-sym-07
+
+7/7 new symmetry sibling(s) generated for R01905 in 7 attempt(s) (budget 7); 7 total in data/families/family-R01905-sym.json.
+Wrote 7 level(s) total to data/families/family-R01905-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R01905-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R01905-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L3 (F01905-lm-03) ok=✗
+  [2/15] L4 (F01905-lm-04) ok=✗
+  [3/15] L2 (F01905-lm-02) ok=✗
+  [4/15] L1 (F01905-lm-01) ok=✗
+  [5/15] L5 (F01905-lm-05) ok=✓ legacy [hint saved]
+  [6/15] L6 (F01905-lm-06) ok=✗
+  [7/15] L7 (F01905-lm-07) ok=✗
+  [8/15] L9 (F01905-lm-09) ok=✗
+  [9/15] L8 (F01905-lm-08) ok=✗
+  [10/15] L10 (F01905-lm-10) ok=✗
+  [11/15] L11 (F01905-lm-11) ok=✗
+  [12/15] L12 (F01905-lm-12) ok=✗
+  [13/15] L13 (F01905-lm-13) ok=✗
+  [14/15] L14 (F01905-lm-14) ok=✗
+  [15/15] L15 (F01905-lm-15) ok=✗
+Hints: appended to 1 level(s); 1 hint file(s) changed on disk.
+Result: solved=1/15, solvedBeforeFallback=0, fallbackOnly=1, unsolved=14
+Wrote logs/family-census/solve-R01905-lm.json
+Wrote logs/family-census/solve-R01905-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R01905-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L3 (F01905-sym-03) ok=✗
+  [2/7] L1 (F01905-sym-01) ok=✗
+  [3/7] L4 (F01905-sym-04) ok=✗
+  [4/7] L2 (F01905-sym-02) ok=✗
+  [5/7] L7 (F01905-sym-07) ok=✗
+  [6/7] L5 (F01905-sym-05) ok=✗
+  [7/7] L6 (F01905-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R01905-sym.json
+Wrote logs/family-census/solve-R01905-sym-summary.md
+[23:53:44] DONE R01905
+[23:53:44] START R02026
+Parent R02026: witness stressMeta.witnessSolution (len 77, 6 jump(s)), 36 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02026-lm-01 — moved blocks (11,4) -> (11,2)
+  attempt 2: accepted F02026-lm-02 — moved blocks (11,4) -> (11,3)
+  attempt 3: accepted F02026-lm-03 — moved library (5,0) -> (11,0)
+  attempt 4: accepted F02026-lm-04 — moved library (7,2) -> (2,11)
+  attempt 5: accepted F02026-lm-05 — moved blocks (11,4) -> (3,2)
+  attempt 6: accepted F02026-lm-06 — moved blocks (8,7) -> (2,6)
+  attempt 7: accepted F02026-lm-07 — moved flippingFilters (3,8) -> (8,9)
+  attempt 8: accepted F02026-lm-08 — moved statue (2,0) -> (7,4)
+  attempt 9: accepted F02026-lm-09 — moved blocks (8,7) -> (10,10)
+  attempt 10: accepted F02026-lm-10 — moved market (4,1) -> (0,8)
+  attempt 11: accepted F02026-lm-11 — moved blocks (5,5) -> (8,1)
+  attempt 12: accepted F02026-lm-12 — moved blocks (6,4) -> (0,6)
+  attempt 13: accepted F02026-lm-13 — moved blocks (2,5) -> (2,9)
+  attempt 14: accepted F02026-lm-14 — moved blocks (4,4) -> (1,7)
+  attempt 15: accepted F02026-lm-15 — moved flippingFilters (4,11) -> (8,6)
+
+15/15 new local-mutant sibling(s) generated for R02026 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02026-lm.json.
+Wrote 15 level(s) total to data/families/family-R02026-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02026-lm-manifest.json (15 variant(s) total).
+Parent R02026: witness stressMeta.witnessSolution (len 77, 6 jump(s)), 36 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02026-sym-01
+  variant 2 (rotation): accepted F02026-sym-02
+  variant 3 (rotation): accepted F02026-sym-03
+  variant 4 (reflection): accepted F02026-sym-04
+  variant 5 (reflection): accepted F02026-sym-05
+  variant 6 (reflection): accepted F02026-sym-06
+  variant 7 (reflection): accepted F02026-sym-07
+
+7/7 new symmetry sibling(s) generated for R02026 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02026-sym.json.
+Wrote 7 level(s) total to data/families/family-R02026-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02026-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02026-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F02026-lm-04) ok=✗
+  [2/15] L3 (F02026-lm-03) ok=✗
+  [3/15] L2 (F02026-lm-02) ok=✗
+  [4/15] L1 (F02026-lm-01) ok=✗
+  [5/15] L5 (F02026-lm-05) ok=✗
+  [6/15] L7 (F02026-lm-07) ok=✗
+  [7/15] L6 (F02026-lm-06) ok=✗
+  [8/15] L8 (F02026-lm-08) ok=✗
+  [9/15] L9 (F02026-lm-09) ok=✗
+  [10/15] L11 (F02026-lm-11) ok=✗
+  [11/15] L10 (F02026-lm-10) ok=✗
+  [12/15] L12 (F02026-lm-12) ok=✗
+  [13/15] L15 (F02026-lm-15) ok=✗
+  [14/15] L13 (F02026-lm-13) ok=✗
+  [15/15] L14 (F02026-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02026-lm.json
+Wrote logs/family-census/solve-R02026-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02026-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F02026-sym-04) ok=✗
+  [2/7] L3 (F02026-sym-03) ok=✗
+  [3/7] L2 (F02026-sym-02) ok=✗
+  [4/7] L1 (F02026-sym-01) ok=✗
+  [5/7] L7 (F02026-sym-07) ok=✗
+  [6/7] L5 (F02026-sym-05) ok=✗
+  [7/7] L6 (F02026-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02026-sym.json
+Wrote logs/family-census/solve-R02026-sym-summary.md
+[23:55:48] DONE R02026
+[23:55:48] START R02063
+Parent R02063: witness hint[0] (len 84, 3 jump(s)), 32 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02063-lm-01 — moved blocks (8,5) -> (0,5)
+  attempt 2: accepted F02063-lm-02 — moved falseGoals (3,3) -> (11,2)
+  attempt 3: accepted F02063-lm-03 — moved falseGoals (1,10) -> (7,3)
+  attempt 4: accepted F02063-lm-04 — moved blocks (4,4) -> (6,3)
+  attempt 5: accepted F02063-lm-05 — moved flippingFilters (2,1) -> (2,3)
+  attempt 6: accepted F02063-lm-06 — moved blocks (2,0) -> (2,6)
+  attempt 7: accepted F02063-lm-07 — moved flippingFilters (2,1) -> (0,2)
+  attempt 8: accepted F02063-lm-08 — moved library (6,1) -> (8,0)
+  attempt 9: accepted F02063-lm-09 — moved flippingFilters (9,1) -> (8,1)
+  attempt 10: accepted F02063-lm-10 — moved flippingFilters (2,1) -> (7,3)
+  attempt 11: accepted F02063-lm-11 — moved flippingFilters (2,1) -> (4,8)
+  attempt 12: accepted F02063-lm-12 — moved falseGoals (10,4) -> (1,9)
+  attempt 13: accepted F02063-lm-13 — moved flippingFilters (2,11) -> (10,1)
+  attempt 14: accepted F02063-lm-14 — moved lamppost (8,8) -> (7,4)
+  attempt 15: accepted F02063-lm-15 — moved statue (8,6) -> (4,8)
+
+15/15 new local-mutant sibling(s) generated for R02063 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02063-lm.json.
+Wrote 15 level(s) total to data/families/family-R02063-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02063-lm-manifest.json (15 variant(s) total).
+Parent R02063: witness hint[0] (len 84, 3 jump(s)), 32 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02063-sym-01
+  variant 2 (rotation): accepted F02063-sym-02
+  variant 3 (rotation): accepted F02063-sym-03
+  variant 4 (reflection): accepted F02063-sym-04
+  variant 5 (reflection): accepted F02063-sym-05
+  variant 6 (reflection): accepted F02063-sym-06
+  variant 7 (reflection): accepted F02063-sym-07
+
+7/7 new symmetry sibling(s) generated for R02063 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02063-sym.json.
+Wrote 7 level(s) total to data/families/family-R02063-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02063-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02063-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F02063-lm-02) ok=✓ legacy [hint saved]
+  [2/15] L5 (F02063-lm-05) ok=✓ legacy [hint saved]
+  [3/15] L4 (F02063-lm-04) ok=✗
+  [4/15] L1 (F02063-lm-01) ok=✗
+  [5/15] L7 (F02063-lm-07) ok=✓ legacy [hint saved]
+  [6/15] L3 (F02063-lm-03) ok=✗
+  [7/15] L6 (F02063-lm-06) ok=✗
+  [8/15] L8 (F02063-lm-08) ok=✗
+  [9/15] L11 (F02063-lm-11) ok=✓ legacy [hint saved]
+  [10/15] L9 (F02063-lm-09) ok=✗
+  [11/15] L10 (F02063-lm-10) ok=✗
+  [12/15] L12 (F02063-lm-12) ok=✗
+  [13/15] L13 (F02063-lm-13) ok=✗
+  [14/15] L14 (F02063-lm-14) ok=✗
+  [15/15] L15 (F02063-lm-15) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/15, solvedBeforeFallback=0, fallbackOnly=4, unsolved=11
+Wrote logs/family-census/solve-R02063-lm.json
+Wrote logs/family-census/solve-R02063-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02063-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L1 (F02063-sym-01) ok=✗
+  [2/7] L3 (F02063-sym-03) ok=✗
+  [3/7] L4 (F02063-sym-04) ok=✗
+  [4/7] L2 (F02063-sym-02) ok=✗
+  [5/7] L6 (F02063-sym-06) ok=✗
+  [6/7] L7 (F02063-sym-07) ok=✗
+  [7/7] L5 (F02063-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02063-sym.json
+Wrote logs/family-census/solve-R02063-sym-summary.md
+[23:56:39] DONE R02063
+[23:56:39] START R02097
+Parent R02097: witness stressMeta.witnessSolution (len 102, 4 jump(s)), 47 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02097-lm-01 — moved blocks (8,5) -> (1,12)
+  attempt 2: accepted F02097-lm-02 — moved market (9,6) -> (0,7)
+  attempt 3: accepted F02097-lm-03 — moved blocks (8,5) -> (9,10)
+  attempt 4: accepted F02097-lm-04 — moved blocks (11,11) -> (7,7)
+  attempt 5: accepted F02097-lm-05 — moved blocks (11,11) -> (6,7)
+  attempt 6: accepted F02097-lm-06 — moved blocks (2,1) -> (9,0)
+  attempt 7: accepted F02097-lm-07 — moved flippingFilters (0,8) -> (11,8)
+  attempt 8: accepted F02097-lm-08 — moved blocks (4,1) -> (12,5)
+  attempt 9: accepted F02097-lm-09 — moved falseGoals (0,4) -> (0,11)
+  attempt 10: accepted F02097-lm-10 — moved flippingFilters (11,12) -> (4,0)
+  attempt 11: accepted F02097-lm-11 — moved blocks (4,1) -> (6,2)
+  attempt 12: accepted F02097-lm-12 — moved blocks (2,1) -> (12,5)
+  attempt 13: accepted F02097-lm-13 — moved flippingFilters (5,1) -> (8,7)
+  attempt 14: accepted F02097-lm-14 — moved fountain (3,10) -> (6,2)
+  attempt 15: accepted F02097-lm-15 — moved blocks (8,8) -> (0,7)
+
+15/15 new local-mutant sibling(s) generated for R02097 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02097-lm.json.
+Wrote 15 level(s) total to data/families/family-R02097-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02097-lm-manifest.json (15 variant(s) total).
+Parent R02097: witness stressMeta.witnessSolution (len 102, 4 jump(s)), 47 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02097-sym-01
+  variant 2 (rotation): accepted F02097-sym-02
+  variant 3 (rotation): accepted F02097-sym-03
+  variant 4 (reflection): accepted F02097-sym-04
+  variant 5 (reflection): accepted F02097-sym-05
+  variant 6 (reflection): accepted F02097-sym-06
+  variant 7 (reflection): accepted F02097-sym-07
+
+7/7 new symmetry sibling(s) generated for R02097 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02097-sym.json.
+Wrote 7 level(s) total to data/families/family-R02097-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02097-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02097-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L1 (F02097-lm-01) ok=✗
+  [2/15] L4 (F02097-lm-04) ok=✗
+  [3/15] L2 (F02097-lm-02) ok=✗
+  [4/15] L3 (F02097-lm-03) ok=✗
+  [5/15] L5 (F02097-lm-05) ok=✗
+  [6/15] L7 (F02097-lm-07) ok=✗
+  [7/15] L6 (F02097-lm-06) ok=✗
+  [8/15] L8 (F02097-lm-08) ok=✗
+  [9/15] L9 (F02097-lm-09) ok=✗
+  [10/15] L10 (F02097-lm-10) ok=✗
+  [11/15] L11 (F02097-lm-11) ok=✗
+  [12/15] L12 (F02097-lm-12) ok=✗
+  [13/15] L14 (F02097-lm-14) ok=✗
+  [14/15] L13 (F02097-lm-13) ok=✗
+  [15/15] L15 (F02097-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02097-lm.json
+Wrote logs/family-census/solve-R02097-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02097-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F02097-sym-02) ok=✗
+  [2/7] L1 (F02097-sym-01) ok=✗
+  [3/7] L3 (F02097-sym-03) ok=✗
+  [4/7] L4 (F02097-sym-04) ok=✗
+  [5/7] L7 (F02097-sym-07) ok=✗
+  [6/7] L6 (F02097-sym-06) ok=✗
+  [7/7] L5 (F02097-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02097-sym.json
+Wrote logs/family-census/solve-R02097-sym-summary.md
+[23:59:46] DONE R02097
+[23:59:46] START R02133
+Parent R02133: witness stressMeta.witnessSolution (len 90, 5 jump(s)), 14 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02133-lm-01 — moved mustPass (10,8) -> (10,1)
+  attempt 2: accepted F02133-lm-02 — moved mustPass (10,8) -> (5,6)
+  attempt 3: accepted F02133-lm-03 — moved mustPass (10,8) -> (4,4)
+  attempt 4: accepted F02133-lm-04 — moved library (9,6) -> (3,2)
+  attempt 5: accepted F02133-lm-05 — moved mustPass (7,9) -> (2,5)
+  attempt 6: accepted F02133-lm-06 — moved market (7,7) -> (5,3)
+  attempt 7: accepted F02133-lm-07 — moved market (6,0) -> (10,6)
+  attempt 8: accepted F02133-lm-08 — moved mustPass (5,11) -> (3,9)
+  attempt 9: accepted F02133-lm-09 — moved market (7,7) -> (1,1)
+  attempt 10: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 11: accepted F02133-lm-10 — moved mustPass (0,3) -> (9,5)
+  attempt 12: accepted F02133-lm-11 — moved mustPass (0,3) -> (8,9)
+  attempt 13: accepted F02133-lm-12 — moved library (10,3) -> (2,3)
+  attempt 14: accepted F02133-lm-13 — moved mustPass (10,8) -> (1,4)
+  attempt 15: accepted F02133-lm-14 — moved market (5,0) -> (9,10)
+  attempt 16: accepted F02133-lm-15 — moved mustPass (0,3) -> (1,6)
+
+15/15 new local-mutant sibling(s) generated for R02133 in 16 attempt(s) (budget 600); 15 total in data/families/family-R02133-lm.json.
+Wrote 15 level(s) total to data/families/family-R02133-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02133-lm-manifest.json (15 variant(s) total).
+Parent R02133: witness stressMeta.witnessSolution (len 90, 5 jump(s)), 14 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02133-sym-01
+  variant 2 (rotation): accepted F02133-sym-02
+  variant 3 (rotation): accepted F02133-sym-03
+  variant 4 (reflection): accepted F02133-sym-04
+  variant 5 (reflection): accepted F02133-sym-05
+  variant 6 (reflection): accepted F02133-sym-06
+  variant 7 (reflection): accepted F02133-sym-07
+
+7/7 new symmetry sibling(s) generated for R02133 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02133-sym.json.
+Wrote 7 level(s) total to data/families/family-R02133-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02133-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02133-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L1 (F02133-lm-01) ok=✗
+  [2/15] L3 (F02133-lm-03) ok=✗
+  [3/15] L2 (F02133-lm-02) ok=✗
+  [4/15] L4 (F02133-lm-04) ok=✗
+  [5/15] L5 (F02133-lm-05) ok=✗
+  [6/15] L8 (F02133-lm-08) ok=✗
+  [7/15] L7 (F02133-lm-07) ok=✗
+  [8/15] L6 (F02133-lm-06) ok=✗
+  [9/15] L10 (F02133-lm-10) ok=✗
+  [10/15] L9 (F02133-lm-09) ok=✗
+  [11/15] L12 (F02133-lm-12) ok=✗
+  [12/15] L11 (F02133-lm-11) ok=✗
+  [13/15] L14 (F02133-lm-14) ok=✗
+  [14/15] L13 (F02133-lm-13) ok=✗
+  [15/15] L15 (F02133-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02133-lm.json
+Wrote logs/family-census/solve-R02133-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02133-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L3 (F02133-sym-03) ok=✗
+  [2/7] L4 (F02133-sym-04) ok=✗
+  [3/7] L2 (F02133-sym-02) ok=✗
+  [4/7] L1 (F02133-sym-01) ok=✗
+  [5/7] L7 (F02133-sym-07) ok=✗
+  [6/7] L5 (F02133-sym-05) ok=✗
+  [7/7] L6 (F02133-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02133-sym.json
+Wrote logs/family-census/solve-R02133-sym-summary.md
+[00:02:24] DONE R02133
+[00:02:24] START R02171
+Parent R02171: witness stressMeta.witnessSolution (len 151, 6 jump(s)), 36 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02171-lm-01 — moved blocks (3,3) -> (14,3)
+  attempt 2: accepted F02171-lm-02 — moved park (1,10) -> (13,1)
+  attempt 3: accepted F02171-lm-03 — moved mustPass (12,5) -> (7,13)
+  attempt 4: accepted F02171-lm-04 — moved falseGoals (9,7) -> (2,11)
+  attempt 5: accepted F02171-lm-05 — moved mustPass (1,5) -> (11,0)
+  attempt 6: accepted F02171-lm-06 — moved library (12,14) -> (10,12)
+  attempt 7: accepted F02171-lm-07 — moved park (4,8) -> (10,12)
+  attempt 8: accepted F02171-lm-08 — moved mustPass (2,8) -> (1,1)
+  attempt 9: accepted F02171-lm-09 — moved mustPass (12,5) -> (11,10)
+  attempt 10: accepted F02171-lm-10 — moved park (1,10) -> (14,13)
+  attempt 11: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 12: accepted F02171-lm-11 — moved fountain (10,14) -> (1,12)
+  attempt 13: accepted F02171-lm-12 — moved fountain (10,14) -> (1,11)
+  attempt 14: accepted F02171-lm-13 — moved park (3,2) -> (5,7)
+  attempt 15: accepted F02171-lm-14 — moved mustPass (2,8) -> (8,10)
+  attempt 16: accepted F02171-lm-15 — moved statue (0,9) -> (10,12)
+
+15/15 new local-mutant sibling(s) generated for R02171 in 16 attempt(s) (budget 600); 15 total in data/families/family-R02171-lm.json.
+Wrote 15 level(s) total to data/families/family-R02171-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02171-lm-manifest.json (15 variant(s) total).
+Parent R02171: witness stressMeta.witnessSolution (len 151, 6 jump(s)), 36 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02171-sym-01
+  variant 2 (rotation): accepted F02171-sym-02
+  variant 3 (rotation): accepted F02171-sym-03
+  variant 4 (reflection): accepted F02171-sym-04
+  variant 5 (reflection): accepted F02171-sym-05
+  variant 6 (reflection): accepted F02171-sym-06
+  variant 7 (reflection): accepted F02171-sym-07
+
+7/7 new symmetry sibling(s) generated for R02171 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02171-sym.json.
+Wrote 7 level(s) total to data/families/family-R02171-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02171-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02171-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L3 (F02171-lm-03) ok=✗
+  [2/15] L4 (F02171-lm-04) ok=✗
+  [3/15] L1 (F02171-lm-01) ok=✗
+  [4/15] L2 (F02171-lm-02) ok=✗
+  [5/15] L7 (F02171-lm-07) ok=✗
+  [6/15] L5 (F02171-lm-05) ok=✗
+  [7/15] L8 (F02171-lm-08) ok=✗
+  [8/15] L6 (F02171-lm-06) ok=✗
+  [9/15] L9 (F02171-lm-09) ok=✗
+  [10/15] L10 (F02171-lm-10) ok=✗
+  [11/15] L11 (F02171-lm-11) ok=✗
+  [12/15] L12 (F02171-lm-12) ok=✗
+  [13/15] L15 (F02171-lm-15) ok=✗
+  [14/15] L13 (F02171-lm-13) ok=✗
+  [15/15] L14 (F02171-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02171-lm.json
+Wrote logs/family-census/solve-R02171-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02171-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F02171-sym-04) ok=✗
+  [2/7] L2 (F02171-sym-02) ok=✗
+  [3/7] L1 (F02171-sym-01) ok=✗
+  [4/7] L3 (F02171-sym-03) ok=✗
+  [5/7] L7 (F02171-sym-07) ok=✗
+  [6/7] L6 (F02171-sym-06) ok=✗
+  [7/7] L5 (F02171-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02171-sym.json
+Wrote logs/family-census/solve-R02171-sym-summary.md
+[00:06:52] DONE R02171
+[00:06:52] START R02203
+Parent R02203: witness stressMeta.witnessSolution (len 101, 0 jump(s)), 47 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02203-lm-01 — moved blocks (6,4) -> (2,10)
+  attempt 2: accepted F02203-lm-02 — moved mustCross (5,6) -> (7,1)
+  attempt 3: accepted F02203-lm-03 — moved flippingFilters (6,9) -> (5,0)
+  attempt 4: accepted F02203-lm-04 — moved falseGoals (3,0) -> (7,7)
+  attempt 5: accepted F02203-lm-05 — moved mustCross (5,6) -> (4,7)
+  attempt 6: accepted F02203-lm-06 — moved falseGoals (3,0) -> (2,3)
+  attempt 7: accepted F02203-lm-07 — moved blocks (2,1) -> (3,11)
+  attempt 8: accepted F02203-lm-08 — moved falseGoals (4,2) -> (6,5)
+  attempt 9: accepted F02203-lm-09 — moved blocks (0,11) -> (7,7)
+  attempt 10: accepted F02203-lm-10 — moved flippingFilters (7,8) -> (10,6)
+  attempt 11: accepted F02203-lm-11 — moved blocks (3,4) -> (2,4)
+  attempt 12: accepted F02203-lm-12 — moved market (3,2) -> (3,10)
+  attempt 13: accepted F02203-lm-13 — moved mustCross (4,6) -> (4,7)
+  attempt 14: accepted F02203-lm-14 — moved blocks (4,3) -> (2,4)
+  attempt 15: accepted F02203-lm-15 — moved lamppost (4,0) -> (6,2)
+
+15/15 new local-mutant sibling(s) generated for R02203 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02203-lm.json.
+Wrote 15 level(s) total to data/families/family-R02203-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02203-lm-manifest.json (15 variant(s) total).
+Parent R02203: witness stressMeta.witnessSolution (len 101, 0 jump(s)), 47 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02203-sym-01
+  variant 2 (rotation): accepted F02203-sym-02
+  variant 3 (rotation): accepted F02203-sym-03
+  variant 4 (reflection): accepted F02203-sym-04
+  variant 5 (reflection): accepted F02203-sym-05
+  variant 6 (reflection): accepted F02203-sym-06
+  variant 7 (reflection): accepted F02203-sym-07
+
+7/7 new symmetry sibling(s) generated for R02203 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02203-sym.json.
+Wrote 7 level(s) total to data/families/family-R02203-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02203-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02203-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F02203-lm-04) ok=✗
+  [2/15] L2 (F02203-lm-02) ok=✗
+  [3/15] L1 (F02203-lm-01) ok=✗
+  [4/15] L3 (F02203-lm-03) ok=✗
+  [5/15] L5 (F02203-lm-05) ok=✗
+  [6/15] L8 (F02203-lm-08) ok=✗
+  [7/15] L6 (F02203-lm-06) ok=✗
+  [8/15] L7 (F02203-lm-07) ok=✗
+  [9/15] L10 (F02203-lm-10) ok=✗
+  [10/15] L9 (F02203-lm-09) ok=✗
+  [11/15] L11 (F02203-lm-11) ok=✗
+  [12/15] L12 (F02203-lm-12) ok=✗
+  [13/15] L14 (F02203-lm-14) ok=✗
+  [14/15] L13 (F02203-lm-13) ok=✗
+  [15/15] L15 (F02203-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02203-lm.json
+Wrote logs/family-census/solve-R02203-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02203-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L3 (F02203-sym-03) ok=✗
+  [2/7] L1 (F02203-sym-01) ok=✗
+  [3/7] L4 (F02203-sym-04) ok=✗
+  [4/7] L2 (F02203-sym-02) ok=✗
+  [5/7] L7 (F02203-sym-07) ok=✗
+  [6/7] L5 (F02203-sym-05) ok=✗
+  [7/7] L6 (F02203-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02203-sym.json
+Wrote logs/family-census/solve-R02203-sym-summary.md
+[00:11:06] DONE R02203
+[00:11:06] START R02249
+Parent R02249: witness hint[0] (len 91, 0 jump(s)), 47 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02249-lm-01 — moved blocks (8,1) -> (5,2)
+  attempt 2: accepted F02249-lm-02 — moved fountain (4,8) -> (5,9)
+  attempt 3: accepted F02249-lm-03 — moved geese (3,1) -> (3,4)
+  attempt 4: accepted F02249-lm-04 — moved geese (3,1) -> (9,5)
+  attempt 5: accepted F02249-lm-05 — moved fountain (4,8) -> (7,3)
+  attempt 6: accepted F02249-lm-06 — moved flippingFilters (11,7) -> (3,4)
+  attempt 7: accepted F02249-lm-07 — moved blocks (10,4) -> (2,7)
+  attempt 8: accepted F02249-lm-08 — moved blocks (9,6) -> (5,4)
+  attempt 9: accepted F02249-lm-09 — moved blocks (0,10) -> (1,7)
+  attempt 10: accepted F02249-lm-10 — moved geese (3,1) -> (8,11)
+  attempt 11: accepted F02249-lm-11 — moved fountain (4,8) -> (9,11)
+  attempt 12: accepted F02249-lm-12 — moved blocks (10,2) -> (1,7)
+  attempt 13: accepted F02249-lm-13 — moved blocks (2,10) -> (1,7)
+  attempt 14: accepted F02249-lm-14 — moved blocks (7,7) -> (9,2)
+  attempt 15: accepted F02249-lm-15 — moved blocks (3,2) -> (8,11)
+
+15/15 new local-mutant sibling(s) generated for R02249 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02249-lm.json.
+Wrote 15 level(s) total to data/families/family-R02249-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02249-lm-manifest.json (15 variant(s) total).
+Parent R02249: witness hint[0] (len 91, 0 jump(s)), 47 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02249-sym-01
+  variant 2 (rotation): accepted F02249-sym-02
+  variant 3 (rotation): accepted F02249-sym-03
+  variant 4 (reflection): accepted F02249-sym-04
+  variant 5 (reflection): accepted F02249-sym-05
+  variant 6 (reflection): accepted F02249-sym-06
+  variant 7 (reflection): accepted F02249-sym-07
+
+7/7 new symmetry sibling(s) generated for R02249 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02249-sym.json.
+Wrote 7 level(s) total to data/families/family-R02249-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02249-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02249-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F02249-lm-02) ok=✗
+  [2/15] L4 (F02249-lm-04) ok=✗
+  [3/15] L3 (F02249-lm-03) ok=✗
+  [4/15] L6 (F02249-lm-06) ok=✓ legacy [hint saved]
+  [5/15] L1 (F02249-lm-01) ok=✗
+  [6/15] L5 (F02249-lm-05) ok=✗
+  [7/15] L7 (F02249-lm-07) ok=✗
+  [8/15] L8 (F02249-lm-08) ok=✗
+  [9/15] L11 (F02249-lm-11) ok=✓ legacy [hint saved]
+  [10/15] L9 (F02249-lm-09) ok=✗
+  [11/15] L10 (F02249-lm-10) ok=✗
+  [12/15] L12 (F02249-lm-12) ok=✗
+  [13/15] L13 (F02249-lm-13) ok=✗
+  [14/15] L14 (F02249-lm-14) ok=✗
+  [15/15] L15 (F02249-lm-15) ok=✗
+Hints: appended to 2 level(s); 2 hint file(s) changed on disk.
+Result: solved=2/15, solvedBeforeFallback=0, fallbackOnly=2, unsolved=13
+Wrote logs/family-census/solve-R02249-lm.json
+Wrote logs/family-census/solve-R02249-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02249-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F02249-sym-02) ok=✗
+  [2/7] L4 (F02249-sym-04) ok=✗
+  [3/7] L1 (F02249-sym-01) ok=✗
+  [4/7] L3 (F02249-sym-03) ok=✗
+  [5/7] L5 (F02249-sym-05) ok=✗
+  [6/7] L6 (F02249-sym-06) ok=✗
+  [7/7] L7 (F02249-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02249-sym.json
+Wrote logs/family-census/solve-R02249-sym-summary.md
+[00:12:42] DONE R02249
+[00:12:42] START R02286
+Parent R02286: witness stressMeta.witnessSolution (len 61, 6 jump(s)), 28 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02286-lm-01 — moved blocks (4,4) -> (5,5)
+  attempt 2: accepted F02286-lm-02 — moved falseGoals (4,10) -> (2,7)
+  attempt 3: accepted F02286-lm-03 — moved falseGoals (3,6) -> (0,9)
+  attempt 4: accepted F02286-lm-04 — moved blocks (0,6) -> (5,5)
+  attempt 5: accepted F02286-lm-05 — moved blocks (7,3) -> (1,8)
+  attempt 6: accepted F02286-lm-06 — moved falseGoals (5,6) -> (9,1)
+  attempt 7: accepted F02286-lm-07 — moved falseGoals (3,6) -> (6,4)
+  attempt 8: accepted F02286-lm-08 — moved library (7,2) -> (5,8)
+  attempt 9: accepted F02286-lm-09 — moved blocks (7,9) -> (3,8)
+  attempt 10: accepted F02286-lm-10 — moved falseGoals (4,10) -> (8,0)
+  attempt 11: accepted F02286-lm-11 — moved blocks (7,6) -> (2,9)
+  attempt 12: accepted F02286-lm-12 — moved library (7,2) -> (10,1)
+  attempt 13: accepted F02286-lm-13 — moved falseGoals (1,7) -> (4,7)
+  attempt 14: accepted F02286-lm-14 — moved library (7,2) -> (3,7)
+  attempt 15: accepted F02286-lm-15 — moved statue (6,6) -> (8,0)
+
+15/15 new local-mutant sibling(s) generated for R02286 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02286-lm.json.
+Wrote 15 level(s) total to data/families/family-R02286-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02286-lm-manifest.json (15 variant(s) total).
+Parent R02286: witness stressMeta.witnessSolution (len 61, 6 jump(s)), 28 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02286-sym-01
+  variant 2 (rotation): accepted F02286-sym-02
+  variant 3 (rotation): accepted F02286-sym-03
+  variant 4 (reflection): accepted F02286-sym-04
+  variant 5 (reflection): accepted F02286-sym-05
+  variant 6 (reflection): accepted F02286-sym-06
+  variant 7 (reflection): accepted F02286-sym-07
+
+7/7 new symmetry sibling(s) generated for R02286 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02286-sym.json.
+Wrote 7 level(s) total to data/families/family-R02286-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02286-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02286-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F02286-lm-02) ok=✗
+  [2/15] L4 (F02286-lm-04) ok=✗
+  [3/15] L3 (F02286-lm-03) ok=✗
+  [4/15] L1 (F02286-lm-01) ok=✗
+  [5/15] L5 (F02286-lm-05) ok=✗
+  [6/15] L6 (F02286-lm-06) ok=✗
+  [7/15] L7 (F02286-lm-07) ok=✗
+  [8/15] L8 (F02286-lm-08) ok=✗
+  [9/15] L9 (F02286-lm-09) ok=✗
+  [10/15] L10 (F02286-lm-10) ok=✗
+  [11/15] L11 (F02286-lm-11) ok=✗
+  [12/15] L12 (F02286-lm-12) ok=✗
+  [13/15] L14 (F02286-lm-14) ok=✗
+  [14/15] L15 (F02286-lm-15) ok=✗
+  [15/15] L13 (F02286-lm-13) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02286-lm.json
+Wrote logs/family-census/solve-R02286-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02286-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L1 (F02286-sym-01) ok=✗
+  [2/7] L3 (F02286-sym-03) ok=✗
+  [3/7] L2 (F02286-sym-02) ok=✗
+  [4/7] L4 (F02286-sym-04) ok=✗
+  [5/7] L6 (F02286-sym-06) ok=✗
+  [6/7] L5 (F02286-sym-05) ok=✗
+  [7/7] L7 (F02286-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02286-sym.json
+Wrote logs/family-census/solve-R02286-sym-summary.md
+[00:14:02] DONE R02286
+[00:14:02] START R02324
+Parent R02324: witness stressMeta.witnessSolution (len 126, 7 jump(s)), 71 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02324-lm-01 — moved mustCross (9,7) -> (7,12)
+  attempt 2: accepted F02324-lm-02 — moved falseGoals (12,1) -> (13,10)
+  attempt 3: accepted F02324-lm-03 — moved statue (10,0) -> (7,3)
+  attempt 4: accepted F02324-lm-04 — moved blocks (13,9) -> (7,3)
+  attempt 5: accepted F02324-lm-05 — moved fountain (8,1) -> (4,8)
+  attempt 6: accepted F02324-lm-06 — moved blocks (4,6) -> (9,0)
+  attempt 7: accepted F02324-lm-07 — moved blocks (0,12) -> (10,10)
+  attempt 8: accepted F02324-lm-08 — moved lamppost (9,1) -> (6,8)
+  attempt 9: accepted F02324-lm-09 — moved fountain (8,1) -> (0,0)
+  attempt 10: accepted F02324-lm-10 — moved park (8,13) -> (1,13)
+  attempt 11: accepted F02324-lm-11 — moved fountain (6,0) -> (3,11)
+  attempt 12: accepted F02324-lm-12 — moved library (3,7) -> (11,5)
+  attempt 13: accepted F02324-lm-13 — moved fountain (12,3) -> (3,11)
+  attempt 14: accepted F02324-lm-14 — moved falseGoals (10,3) -> (0,10)
+  attempt 15: accepted F02324-lm-15 — moved blocks (0,6) -> (9,0)
+
+15/15 new local-mutant sibling(s) generated for R02324 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02324-lm.json.
+Wrote 15 level(s) total to data/families/family-R02324-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02324-lm-manifest.json (15 variant(s) total).
+Parent R02324: witness stressMeta.witnessSolution (len 126, 7 jump(s)), 71 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02324-sym-01
+  variant 2 (rotation): accepted F02324-sym-02
+  variant 3 (rotation): accepted F02324-sym-03
+  variant 4 (reflection): accepted F02324-sym-04
+  variant 5 (reflection): accepted F02324-sym-05
+  variant 6 (reflection): accepted F02324-sym-06
+  variant 7 (reflection): accepted F02324-sym-07
+
+7/7 new symmetry sibling(s) generated for R02324 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02324-sym.json.
+Wrote 7 level(s) total to data/families/family-R02324-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02324-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02324-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F02324-lm-02) ok=✗
+  [2/15] L4 (F02324-lm-04) ok=✗
+  [3/15] L3 (F02324-lm-03) ok=✗
+  [4/15] L1 (F02324-lm-01) ok=✗
+  [5/15] L5 (F02324-lm-05) ok=✗
+  [6/15] L6 (F02324-lm-06) ok=✗
+  [7/15] L8 (F02324-lm-08) ok=✗
+  [8/15] L7 (F02324-lm-07) ok=✗
+  [9/15] L9 (F02324-lm-09) ok=✗
+  [10/15] L10 (F02324-lm-10) ok=✗
+  [11/15] L11 (F02324-lm-11) ok=✗
+  [12/15] L12 (F02324-lm-12) ok=✗
+  [13/15] L13 (F02324-lm-13) ok=✗
+  [14/15] L14 (F02324-lm-14) ok=✗
+  [15/15] L15 (F02324-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02324-lm.json
+Wrote logs/family-census/solve-R02324-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02324-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L1 (F02324-sym-01) ok=✗
+  [2/7] L4 (F02324-sym-04) ok=✗
+  [3/7] L2 (F02324-sym-02) ok=✗
+  [4/7] L3 (F02324-sym-03) ok=✗
+  [5/7] L5 (F02324-sym-05) ok=✗
+  [6/7] L7 (F02324-sym-07) ok=✗
+  [7/7] L6 (F02324-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02324-sym.json
+Wrote logs/family-census/solve-R02324-sym-summary.md
+[00:21:43] DONE R02324
+[00:21:43] START R02365
+Parent R02365: witness stressMeta.witnessSolution (len 95, 7 jump(s)), 50 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02365-lm-01 — moved blocks (9,7) -> (1,1)
+  attempt 2: accepted F02365-lm-02 — moved blocks (1,2) -> (6,3)
+  attempt 3: accepted F02365-lm-03 — moved mustPass (11,10) -> (1,12)
+  attempt 4: accepted F02365-lm-04 — moved flippingFilters (12,0) -> (0,3)
+  attempt 5: accepted F02365-lm-05 — moved blocks (2,4) -> (8,12)
+  attempt 6: accepted F02365-lm-06 — moved blocks (2,4) -> (11,0)
+  attempt 7: accepted F02365-lm-07 — moved blocks (11,8) -> (12,7)
+  attempt 8: accepted F02365-lm-08 — moved mustPass (4,8) -> (3,8)
+  attempt 9: accepted F02365-lm-09 — moved mustPass (6,5) -> (10,2)
+  attempt 10: accepted F02365-lm-10 — moved blocks (10,0) -> (6,3)
+  attempt 11: accepted F02365-lm-11 — moved flippingFilters (12,4) -> (11,12)
+  attempt 12: accepted F02365-lm-12 — moved blocks (0,0) -> (8,12)
+  attempt 13: accepted F02365-lm-13 — moved mustPass (12,3) -> (11,4)
+  attempt 14: accepted F02365-lm-14 — moved blocks (1,4) -> (7,1)
+  attempt 15: accepted F02365-lm-15 — moved mustPass (5,1) -> (12,10)
+
+15/15 new local-mutant sibling(s) generated for R02365 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02365-lm.json.
+Wrote 15 level(s) total to data/families/family-R02365-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02365-lm-manifest.json (15 variant(s) total).
+Parent R02365: witness stressMeta.witnessSolution (len 95, 7 jump(s)), 50 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02365-sym-01
+  variant 2 (rotation): accepted F02365-sym-02
+  variant 3 (rotation): accepted F02365-sym-03
+  variant 4 (reflection): accepted F02365-sym-04
+  variant 5 (reflection): accepted F02365-sym-05
+  variant 6 (reflection): accepted F02365-sym-06
+  variant 7 (reflection): accepted F02365-sym-07
+
+7/7 new symmetry sibling(s) generated for R02365 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02365-sym.json.
+Wrote 7 level(s) total to data/families/family-R02365-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02365-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02365-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L1 (F02365-lm-01) ok=✗
+  [2/15] L4 (F02365-lm-04) ok=✗
+  [3/15] L2 (F02365-lm-02) ok=✗
+  [4/15] L3 (F02365-lm-03) ok=✗
+  [5/15] L6 (F02365-lm-06) ok=✗
+  [6/15] L7 (F02365-lm-07) ok=✗
+  [7/15] L5 (F02365-lm-05) ok=✗
+  [8/15] L8 (F02365-lm-08) ok=✗
+  [9/15] L10 (F02365-lm-10) ok=✓ legacy [hint saved]
+  [10/15] L11 (F02365-lm-11) ok=✗
+  [11/15] L9 (F02365-lm-09) ok=✗
+  [12/15] L12 (F02365-lm-12) ok=✗
+  [13/15] L13 (F02365-lm-13) ok=✗
+  [14/15] L14 (F02365-lm-14) ok=✗
+  [15/15] L15 (F02365-lm-15) ok=✗
+Hints: appended to 1 level(s); 1 hint file(s) changed on disk.
+Result: solved=1/15, solvedBeforeFallback=0, fallbackOnly=1, unsolved=14
+Wrote logs/family-census/solve-R02365-lm.json
+Wrote logs/family-census/solve-R02365-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02365-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L3 (F02365-sym-03) ok=✓ legacy [hint saved]
+  [2/7] L5 (F02365-sym-05) ok=✗
+  [3/7] L2 (F02365-sym-02) ok=✗
+  [4/7] L1 (F02365-sym-01) ok=✗
+  [5/7] L4 (F02365-sym-04) ok=✗
+  [6/7] L6 (F02365-sym-06) ok=✗
+  [7/7] L7 (F02365-sym-07) ok=✗
+Hints: appended to 1 level(s); 1 hint file(s) changed on disk.
+Result: solved=1/7, solvedBeforeFallback=0, fallbackOnly=1, unsolved=6
+Wrote logs/family-census/solve-R02365-sym.json
+Wrote logs/family-census/solve-R02365-sym-summary.md
+[00:23:53] DONE R02365
+[00:23:53] START R02399
+Parent R02399: witness stressMeta.witnessSolution (len 119, 0 jump(s)), 68 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02399-lm-01 — moved library (10,4) -> (2,13)
+  attempt 2: accepted F02399-lm-02 — moved fountain (6,12) -> (6,7)
+  attempt 3: accepted F02399-lm-03 — moved mustCross (6,8) -> (5,8)
+  attempt 4: accepted F02399-lm-04 — moved blocks (13,8) -> (2,4)
+  attempt 5: accepted F02399-lm-05 — moved falseGoals (7,5) -> (13,7)
+  attempt 6: accepted F02399-lm-06 — moved falseGoals (12,2) -> (2,3)
+  attempt 7: accepted F02399-lm-07 — moved statue (9,6) -> (5,13)
+  attempt 8: accepted F02399-lm-08 — moved falseGoals (3,1) -> (9,2)
+  attempt 9: accepted F02399-lm-09 — moved falseGoals (3,1) -> (4,0)
+  attempt 10: accepted F02399-lm-10 — moved falseGoals (3,1) -> (9,3)
+  attempt 11: accepted F02399-lm-11 — moved blocks (13,13) -> (0,0)
+  attempt 12: accepted F02399-lm-12 — moved blocks (3,5) -> (1,2)
+  attempt 13: accepted F02399-lm-13 — moved falseGoals (0,5) -> (10,13)
+  attempt 14: accepted F02399-lm-14 — moved blocks (12,1) -> (0,0)
+  attempt 15: accepted F02399-lm-15 — moved mustCross (6,8) -> (2,9)
+
+15/15 new local-mutant sibling(s) generated for R02399 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02399-lm.json.
+Wrote 15 level(s) total to data/families/family-R02399-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02399-lm-manifest.json (15 variant(s) total).
+Parent R02399: witness stressMeta.witnessSolution (len 119, 0 jump(s)), 68 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02399-sym-01
+  variant 2 (rotation): accepted F02399-sym-02
+  variant 3 (rotation): accepted F02399-sym-03
+  variant 4 (reflection): accepted F02399-sym-04
+  variant 5 (reflection): accepted F02399-sym-05
+  variant 6 (reflection): accepted F02399-sym-06
+  variant 7 (reflection): accepted F02399-sym-07
+
+7/7 new symmetry sibling(s) generated for R02399 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02399-sym.json.
+Wrote 7 level(s) total to data/families/family-R02399-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02399-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02399-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F02399-lm-04) ok=✗
+  [2/15] L3 (F02399-lm-03) ok=✗
+  [3/15] L1 (F02399-lm-01) ok=✗
+  [4/15] L2 (F02399-lm-02) ok=✗
+  [5/15] L5 (F02399-lm-05) ok=✗
+  [6/15] L7 (F02399-lm-07) ok=✗
+  [7/15] L8 (F02399-lm-08) ok=✗
+  [8/15] L6 (F02399-lm-06) ok=✗
+  [9/15] L9 (F02399-lm-09) ok=✗
+  [10/15] L10 (F02399-lm-10) ok=✗
+  [11/15] L12 (F02399-lm-12) ok=✗
+  [12/15] L11 (F02399-lm-11) ok=✗
+  [13/15] L15 (F02399-lm-15) ok=✗
+  [14/15] L13 (F02399-lm-13) ok=✗
+  [15/15] L14 (F02399-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02399-lm.json
+Wrote logs/family-census/solve-R02399-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02399-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F02399-sym-02) ok=✗
+  [2/7] L4 (F02399-sym-04) ok=✗
+  [3/7] L1 (F02399-sym-01) ok=✗
+  [4/7] L3 (F02399-sym-03) ok=✗
+  [5/7] L7 (F02399-sym-07) ok=✗
+  [6/7] L6 (F02399-sym-06) ok=✗
+  [7/7] L5 (F02399-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02399-sym.json
+Wrote logs/family-census/solve-R02399-sym-summary.md
+[00:28:45] DONE R02399
+[00:28:45] START R02445
+Parent R02445: witness stressMeta.witnessSolution (len 118, 4 jump(s)), 76 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02445-lm-01 — moved mustPass (8,11) -> (8,2)
+  attempt 2: accepted F02445-lm-02 — moved falseGoals (14,6) -> (3,13)
+  attempt 3: accepted F02445-lm-03 — moved blocks (6,3) -> (12,5)
+  attempt 4: accepted F02445-lm-04 — moved falseGoals (12,13) -> (14,11)
+  attempt 5: accepted F02445-lm-05 — moved blocks (3,11) -> (2,0)
+  attempt 6: accepted F02445-lm-06 — moved library (2,13) -> (5,7)
+  attempt 7: accepted F02445-lm-07 — moved blocks (6,3) -> (2,0)
+  attempt 8: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 9: accepted F02445-lm-08 — moved blocks (14,14) -> (3,13)
+  attempt 10: accepted F02445-lm-09 — moved falseGoals (12,13) -> (7,3)
+  attempt 11: accepted F02445-lm-10 — moved park (14,9) -> (1,1)
+  attempt 12: accepted F02445-lm-11 — moved blocks (14,1) -> (11,11)
+  attempt 13: accepted F02445-lm-12 — moved falseGoals (3,12) -> (5,6)
+  attempt 14: accepted F02445-lm-13 — moved falseGoals (10,14) -> (7,7)
+  attempt 15: accepted F02445-lm-14 — moved blocks (2,10) -> (4,9)
+  attempt 16: accepted F02445-lm-15 — moved lamppost (8,0) -> (8,8)
+
+15/15 new local-mutant sibling(s) generated for R02445 in 16 attempt(s) (budget 600); 15 total in data/families/family-R02445-lm.json.
+Wrote 15 level(s) total to data/families/family-R02445-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02445-lm-manifest.json (15 variant(s) total).
+Parent R02445: witness stressMeta.witnessSolution (len 118, 4 jump(s)), 76 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02445-sym-01
+  variant 2 (rotation): accepted F02445-sym-02
+  variant 3 (rotation): accepted F02445-sym-03
+  variant 4 (reflection): accepted F02445-sym-04
+  variant 5 (reflection): accepted F02445-sym-05
+  variant 6 (reflection): accepted F02445-sym-06
+  variant 7 (reflection): accepted F02445-sym-07
+
+7/7 new symmetry sibling(s) generated for R02445 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02445-sym.json.
+Wrote 7 level(s) total to data/families/family-R02445-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02445-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02445-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F02445-lm-02) ok=✗
+  [2/15] L4 (F02445-lm-04) ok=✗
+  [3/15] L3 (F02445-lm-03) ok=✗
+  [4/15] L1 (F02445-lm-01) ok=✗
+  [5/15] L5 (F02445-lm-05) ok=✗
+  [6/15] L6 (F02445-lm-06) ok=✗
+  [7/15] L8 (F02445-lm-08) ok=✗
+  [8/15] L7 (F02445-lm-07) ok=✗
+  [9/15] L10 (F02445-lm-10) ok=✗
+  [10/15] L9 (F02445-lm-09) ok=✗
+  [11/15] L12 (F02445-lm-12) ok=✗
+  [12/15] L11 (F02445-lm-11) ok=✗
+  [13/15] L13 (F02445-lm-13) ok=✗
+  [14/15] L14 (F02445-lm-14) ok=✗
+  [15/15] L15 (F02445-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02445-lm.json
+Wrote logs/family-census/solve-R02445-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02445-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F02445-sym-04) ok=✗
+  [2/7] L2 (F02445-sym-02) ok=✗
+  [3/7] L3 (F02445-sym-03) ok=✗
+  [4/7] L1 (F02445-sym-01) ok=✗
+  [5/7] L7 (F02445-sym-07) ok=✗
+  [6/7] L5 (F02445-sym-05) ok=✗
+  [7/7] L6 (F02445-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02445-sym.json
+Wrote logs/family-census/solve-R02445-sym-summary.md
+[00:31:11] DONE R02445
+[00:31:11] START R02473
+Parent R02473: witness stressMeta.witnessSolution (len 125, 7 jump(s)), 55 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02473-lm-01 — moved fountain (8,10) -> (9,5)
+  attempt 2: accepted F02473-lm-02 — moved blocks (8,12) -> (11,11)
+  attempt 3: accepted F02473-lm-03 — moved blocks (10,11) -> (7,8)
+  attempt 4: accepted F02473-lm-04 — moved blocks (10,6) -> (4,4)
+  attempt 5: accepted F02473-lm-05 — moved park (9,7) -> (12,4)
+  attempt 6: accepted F02473-lm-06 — moved fountain (8,10) -> (9,6)
+  attempt 7: accepted F02473-lm-07 — moved library (8,9) -> (0,12)
+  attempt 8: accepted F02473-lm-08 — moved market (5,11) -> (10,1)
+  attempt 9: accepted F02473-lm-09 — moved falseGoals (0,11) -> (9,5)
+  attempt 10: accepted F02473-lm-10 — moved falseGoals (5,6) -> (10,10)
+  attempt 11: accepted F02473-lm-11 — moved blocks (8,1) -> (13,10)
+  attempt 12: accepted F02473-lm-12 — moved statue (13,7) -> (4,4)
+  attempt 13: accepted F02473-lm-13 — moved blocks (12,8) -> (9,12)
+  attempt 14: accepted F02473-lm-14 — moved lamppost (9,1) -> (9,10)
+  attempt 15: accepted F02473-lm-15 — moved mustPass (2,13) -> (10,0)
+
+15/15 new local-mutant sibling(s) generated for R02473 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02473-lm.json.
+Wrote 15 level(s) total to data/families/family-R02473-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02473-lm-manifest.json (15 variant(s) total).
+Parent R02473: witness stressMeta.witnessSolution (len 125, 7 jump(s)), 55 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02473-sym-01
+  variant 2 (rotation): accepted F02473-sym-02
+  variant 3 (rotation): accepted F02473-sym-03
+  variant 4 (reflection): accepted F02473-sym-04
+  variant 5 (reflection): accepted F02473-sym-05
+  variant 6 (reflection): accepted F02473-sym-06
+  variant 7 (reflection): accepted F02473-sym-07
+
+7/7 new symmetry sibling(s) generated for R02473 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02473-sym.json.
+Wrote 7 level(s) total to data/families/family-R02473-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02473-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02473-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L1 (F02473-lm-01) ok=✗
+  [2/15] L3 (F02473-lm-03) ok=✗
+  [3/15] L2 (F02473-lm-02) ok=✗
+  [4/15] L4 (F02473-lm-04) ok=✗
+  [5/15] L6 (F02473-lm-06) ok=✗
+  [6/15] L5 (F02473-lm-05) ok=✗
+  [7/15] L7 (F02473-lm-07) ok=✗
+  [8/15] L8 (F02473-lm-08) ok=✗
+  [9/15] L9 (F02473-lm-09) ok=✗
+  [10/15] L10 (F02473-lm-10) ok=✗
+  [11/15] L11 (F02473-lm-11) ok=✗
+  [12/15] L12 (F02473-lm-12) ok=✗
+  [13/15] L13 (F02473-lm-13) ok=✗
+  [14/15] L14 (F02473-lm-14) ok=✗
+  [15/15] L15 (F02473-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02473-lm.json
+Wrote logs/family-census/solve-R02473-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02473-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F02473-sym-04) ok=✗
+  [2/7] L3 (F02473-sym-03) ok=✗
+  [3/7] L2 (F02473-sym-02) ok=✗
+  [4/7] L1 (F02473-sym-01) ok=✗
+  [5/7] L7 (F02473-sym-07) ok=✗
+  [6/7] L5 (F02473-sym-05) ok=✗
+  [7/7] L6 (F02473-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02473-sym.json
+Wrote logs/family-census/solve-R02473-sym-summary.md
+[00:38:26] DONE R02473
+[00:38:26] START R02522
+Parent R02522: witness stressMeta.witnessSolution (len 83, 4 jump(s)), 55 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02522-lm-01 — moved statue (4,12) -> (0,6)
+  attempt 2: accepted F02522-lm-02 — moved blocks (11,1) -> (0,11)
+  attempt 3: accepted F02522-lm-03 — moved blocks (9,2) -> (5,9)
+  attempt 4: accepted F02522-lm-04 — moved blocks (7,0) -> (10,0)
+  attempt 5: accepted F02522-lm-05 — moved blocks (7,9) -> (1,1)
+  attempt 6: accepted F02522-lm-06 — moved blocks (4,10) -> (6,10)
+  attempt 7: accepted F02522-lm-07 — moved park (7,1) -> (7,8)
+  attempt 8: accepted F02522-lm-08 — moved market (3,0) -> (0,6)
+  attempt 9: accepted F02522-lm-09 — moved blocks (8,9) -> (12,0)
+  attempt 10: accepted F02522-lm-10 — moved blocks (8,3) -> (5,2)
+  attempt 11: accepted F02522-lm-11 — moved fountain (12,10) -> (7,8)
+  attempt 12: accepted F02522-lm-12 — moved mustPass (10,4) -> (6,3)
+  attempt 13: accepted F02522-lm-13 — moved mustPass (10,4) -> (12,8)
+  attempt 14: accepted F02522-lm-14 — moved market (4,3) -> (2,1)
+  attempt 15: accepted F02522-lm-15 — moved blocks (11,1) -> (5,9)
+
+15/15 new local-mutant sibling(s) generated for R02522 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02522-lm.json.
+Wrote 15 level(s) total to data/families/family-R02522-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02522-lm-manifest.json (15 variant(s) total).
+Parent R02522: witness stressMeta.witnessSolution (len 83, 4 jump(s)), 55 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02522-sym-01
+  variant 2 (rotation): accepted F02522-sym-02
+  variant 3 (rotation): accepted F02522-sym-03
+  variant 4 (reflection): accepted F02522-sym-04
+  variant 5 (reflection): accepted F02522-sym-05
+  variant 6 (reflection): accepted F02522-sym-06
+  variant 7 (reflection): accepted F02522-sym-07
+
+7/7 new symmetry sibling(s) generated for R02522 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02522-sym.json.
+Wrote 7 level(s) total to data/families/family-R02522-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02522-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02522-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F02522-lm-02) ok=✗
+  [2/15] L4 (F02522-lm-04) ok=✗
+  [3/15] L3 (F02522-lm-03) ok=✗
+  [4/15] L1 (F02522-lm-01) ok=✗
+  [5/15] L5 (F02522-lm-05) ok=✗
+  [6/15] L6 (F02522-lm-06) ok=✗
+  [7/15] L8 (F02522-lm-08) ok=✗
+  [8/15] L7 (F02522-lm-07) ok=✗
+  [9/15] L9 (F02522-lm-09) ok=✗
+  [10/15] L11 (F02522-lm-11) ok=✗
+  [11/15] L10 (F02522-lm-10) ok=✗
+  [12/15] L12 (F02522-lm-12) ok=✗
+  [13/15] L14 (F02522-lm-14) ok=✗
+  [14/15] L13 (F02522-lm-13) ok=✗
+  [15/15] L15 (F02522-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02522-lm.json
+Wrote logs/family-census/solve-R02522-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02522-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F02522-sym-02) ok=✗
+  [2/7] L3 (F02522-sym-03) ok=✗
+  [3/7] L4 (F02522-sym-04) ok=✗
+  [4/7] L1 (F02522-sym-01) ok=✗
+  [5/7] L7 (F02522-sym-07) ok=✗
+  [6/7] L6 (F02522-sym-06) ok=✗
+  [7/7] L5 (F02522-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02522-sym.json
+Wrote logs/family-census/solve-R02522-sym-summary.md
+[00:40:48] DONE R02522
+[00:40:48] START R02552
+Parent R02552: witness hint[0] (len 89, 0 jump(s)), 40 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02552-lm-01 — moved library (6,3) -> (0,10)
+  attempt 2: accepted F02552-lm-02 — moved falseGoals (0,3) -> (0,10)
+  attempt 3: accepted F02552-lm-03 — moved falseGoals (0,4) -> (0,10)
+  attempt 4: accepted F02552-lm-04 — moved blocks (3,4) -> (0,10)
+  attempt 5: accepted F02552-lm-05 — moved falseGoals (4,10) -> (10,10)
+  attempt 6: accepted F02552-lm-06 — moved blocks (1,10) -> (0,10)
+  attempt 7: accepted F02552-lm-07 — moved falseGoals (6,2) -> (10,10)
+  attempt 8: accepted F02552-lm-08 — moved market (9,9) -> (0,10)
+  attempt 9: accepted F02552-lm-09 — moved blocks (3,4) -> (0,2)
+  attempt 10: accepted F02552-lm-10 — moved fountain (0,7) -> (8,4)
+  attempt 11: accepted F02552-lm-11 — moved statue (9,10) -> (10,10)
+  attempt 12: accepted F02552-lm-12 — moved library (6,3) -> (0,2)
+  attempt 13: accepted F02552-lm-13 — moved fountain (3,10) -> (0,2)
+  attempt 14: accepted F02552-lm-14 — moved blocks (8,5) -> (10,10)
+  attempt 15: accepted F02552-lm-15 — moved falseGoals (4,10) -> (0,10)
+
+15/15 new local-mutant sibling(s) generated for R02552 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02552-lm.json.
+Wrote 15 level(s) total to data/families/family-R02552-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02552-lm-manifest.json (15 variant(s) total).
+Parent R02552: witness hint[0] (len 89, 0 jump(s)), 40 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02552-sym-01
+  variant 2 (rotation): accepted F02552-sym-02
+  variant 3 (rotation): accepted F02552-sym-03
+  variant 4 (reflection): accepted F02552-sym-04
+  variant 5 (reflection): accepted F02552-sym-05
+  variant 6 (reflection): accepted F02552-sym-06
+  variant 7 (reflection): accepted F02552-sym-07
+
+7/7 new symmetry sibling(s) generated for R02552 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02552-sym.json.
+Wrote 7 level(s) total to data/families/family-R02552-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02552-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02552-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F02552-lm-02) ok=✗
+  [2/15] L1 (F02552-lm-01) ok=✗
+  [3/15] L4 (F02552-lm-04) ok=✗
+  [4/15] L3 (F02552-lm-03) ok=✗
+  [5/15] L6 (F02552-lm-06) ok=✓ legacy [hint saved]
+  [6/15] L8 (F02552-lm-08) ok=✓ legacy [hint saved]
+  [7/15] L7 (F02552-lm-07) ok=✗
+  [8/15] L5 (F02552-lm-05) ok=✗
+  [9/15] L9 (F02552-lm-09) ok=✗
+  [10/15] L10 (F02552-lm-10) ok=✗
+  [11/15] L11 (F02552-lm-11) ok=✗
+  [12/15] L12 (F02552-lm-12) ok=✗
+  [13/15] L13 (F02552-lm-13) ok=✗
+  [14/15] L14 (F02552-lm-14) ok=✗
+  [15/15] L15 (F02552-lm-15) ok=✗
+Hints: appended to 2 level(s); 2 hint file(s) changed on disk.
+Result: solved=2/15, solvedBeforeFallback=0, fallbackOnly=2, unsolved=13
+Wrote logs/family-census/solve-R02552-lm.json
+Wrote logs/family-census/solve-R02552-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02552-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L1 (F02552-sym-01) ok=✓ legacy [hint saved]
+  [2/7] L2 (F02552-sym-02) ok=✓ legacy [hint saved]
+  [3/7] L4 (F02552-sym-04) ok=✗
+  [4/7] L5 (F02552-sym-05) ok=✗
+  [5/7] L3 (F02552-sym-03) ok=✗
+  [6/7] L6 (F02552-sym-06) ok=✓ legacy [hint saved]
+  [7/7] L7 (F02552-sym-07) ok=✗
+Hints: appended to 3 level(s); 3 hint file(s) changed on disk.
+Result: solved=3/7, solvedBeforeFallback=0, fallbackOnly=3, unsolved=4
+Wrote logs/family-census/solve-R02552-sym.json
+Wrote logs/family-census/solve-R02552-sym-summary.md
+[00:43:02] DONE R02552
+[00:43:02] START R02592
+Parent R02592: witness stressMeta.witnessSolution (len 139, 6 jump(s)), 53 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02592-lm-01 — moved park (7,11) -> (13,2)
+  attempt 2: accepted F02592-lm-02 — moved mustCross (12,10) -> (9,8)
+  attempt 3: accepted F02592-lm-03 — moved mustPass (0,13) -> (1,14)
+  attempt 4: accepted F02592-lm-04 — moved blocks (0,0) -> (4,14)
+  attempt 5: accepted F02592-lm-05 — moved mustCross (10,3) -> (9,8)
+  attempt 6: accepted F02592-lm-06 — moved park (7,11) -> (3,0)
+  attempt 7: accepted F02592-lm-07 — moved blocks (9,13) -> (6,4)
+  attempt 8: accepted F02592-lm-08 — moved flippingFilters (1,9) -> (11,13)
+  attempt 9: accepted F02592-lm-09 — moved mustCross (7,3) -> (9,8)
+  attempt 10: accepted F02592-lm-10 — moved market (14,12) -> (0,9)
+  attempt 11: accepted F02592-lm-11 — moved mustPass (5,6) -> (6,3)
+  attempt 12: accepted F02592-lm-12 — moved flippingFilters (5,11) -> (1,8)
+  attempt 13: accepted F02592-lm-13 — moved blocks (2,9) -> (13,14)
+  attempt 14: accepted F02592-lm-14 — moved blocks (2,9) -> (10,12)
+  attempt 15: accepted F02592-lm-15 — moved blocks (12,8) -> (12,5)
+
+15/15 new local-mutant sibling(s) generated for R02592 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02592-lm.json.
+Wrote 15 level(s) total to data/families/family-R02592-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02592-lm-manifest.json (15 variant(s) total).
+Parent R02592: witness stressMeta.witnessSolution (len 139, 6 jump(s)), 53 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02592-sym-01
+  variant 2 (rotation): accepted F02592-sym-02
+  variant 3 (rotation): accepted F02592-sym-03
+  variant 4 (reflection): accepted F02592-sym-04
+  variant 5 (reflection): accepted F02592-sym-05
+  variant 6 (reflection): accepted F02592-sym-06
+  variant 7 (reflection): accepted F02592-sym-07
+
+7/7 new symmetry sibling(s) generated for R02592 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02592-sym.json.
+Wrote 7 level(s) total to data/families/family-R02592-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02592-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02592-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F02592-lm-02) ok=✗
+  [2/15] L3 (F02592-lm-03) ok=✗
+  [3/15] L4 (F02592-lm-04) ok=✗
+  [4/15] L1 (F02592-lm-01) ok=✗
+  [5/15] L5 (F02592-lm-05) ok=✗
+  [6/15] L6 (F02592-lm-06) ok=✗
+  [7/15] L7 (F02592-lm-07) ok=✗
+  [8/15] L8 (F02592-lm-08) ok=✗
+  [9/15] L9 (F02592-lm-09) ok=✗
+  [10/15] L11 (F02592-lm-11) ok=✗
+  [11/15] L10 (F02592-lm-10) ok=✗
+  [12/15] L12 (F02592-lm-12) ok=✗
+  [13/15] L15 (F02592-lm-15) ok=✗
+  [14/15] L13 (F02592-lm-13) ok=✗
+  [15/15] L14 (F02592-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02592-lm.json
+Wrote logs/family-census/solve-R02592-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02592-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L3 (F02592-sym-03) ok=✗
+  [2/7] L2 (F02592-sym-02) ok=✗
+  [3/7] L4 (F02592-sym-04) ok=✗
+  [4/7] L1 (F02592-sym-01) ok=✗
+  [5/7] L7 (F02592-sym-07) ok=✗
+  [6/7] L5 (F02592-sym-05) ok=✗
+  [7/7] L6 (F02592-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02592-sym.json
+Wrote logs/family-census/solve-R02592-sym-summary.md
+[00:50:47] DONE R02592
+[00:50:47] START R02629
+Parent R02629: witness stressMeta.witnessSolution (len 121, 7 jump(s)), 73 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02629-lm-01 — moved mustCross (1,3) -> (1,6)
+  attempt 2: accepted F02629-lm-02 — moved blocks (14,11) -> (1,14)
+  attempt 3: accepted F02629-lm-03 — moved blocks (9,7) -> (8,13)
+  attempt 4: accepted F02629-lm-04 — moved blocks (14,7) -> (2,14)
+  attempt 5: accepted F02629-lm-05 — moved mustCross (2,9) -> (1,6)
+  attempt 6: accepted F02629-lm-06 — moved library (0,12) -> (7,8)
+  attempt 7: accepted F02629-lm-07 — moved park (12,8) -> (8,13)
+  attempt 8: accepted F02629-lm-08 — moved lamppost (12,4) -> (12,6)
+  attempt 9: accepted F02629-lm-09 — moved mustCross (10,5) -> (1,6)
+  attempt 10: accepted F02629-lm-10 — moved blocks (0,10) -> (4,12)
+  attempt 11: accepted F02629-lm-11 — moved blocks (0,10) -> (5,8)
+  attempt 12: accepted F02629-lm-12 — moved blocks (12,11) -> (3,13)
+  attempt 13: accepted F02629-lm-13 — moved blocks (14,7) -> (9,14)
+  attempt 14: accepted F02629-lm-14 — moved blocks (6,9) -> (5,9)
+  attempt 15: accepted F02629-lm-15 — moved blocks (5,10) -> (2,11)
+
+15/15 new local-mutant sibling(s) generated for R02629 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02629-lm.json.
+Wrote 15 level(s) total to data/families/family-R02629-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02629-lm-manifest.json (15 variant(s) total).
+Parent R02629: witness stressMeta.witnessSolution (len 121, 7 jump(s)), 73 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02629-sym-01
+  variant 2 (rotation): accepted F02629-sym-02
+  variant 3 (rotation): accepted F02629-sym-03
+  variant 4 (reflection): accepted F02629-sym-04
+  variant 5 (reflection): accepted F02629-sym-05
+  variant 6 (reflection): accepted F02629-sym-06
+  variant 7 (reflection): accepted F02629-sym-07
+
+7/7 new symmetry sibling(s) generated for R02629 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02629-sym.json.
+Wrote 7 level(s) total to data/families/family-R02629-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02629-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02629-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F02629-lm-04) ok=✗
+  [2/15] L2 (F02629-lm-02) ok=✗
+  [3/15] L3 (F02629-lm-03) ok=✗
+  [4/15] L1 (F02629-lm-01) ok=✗
+  [5/15] L6 (F02629-lm-06) ok=✗
+  [6/15] L5 (F02629-lm-05) ok=✗
+  [7/15] L8 (F02629-lm-08) ok=✗
+  [8/15] L7 (F02629-lm-07) ok=✗
+  [9/15] L11 (F02629-lm-11) ok=✗
+  [10/15] L9 (F02629-lm-09) ok=✗
+  [11/15] L10 (F02629-lm-10) ok=✗
+  [12/15] L12 (F02629-lm-12) ok=✗
+  [13/15] L14 (F02629-lm-14) ok=✗
+  [14/15] L15 (F02629-lm-15) ok=✗
+  [15/15] L13 (F02629-lm-13) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02629-lm.json
+Wrote logs/family-census/solve-R02629-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02629-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F02629-sym-04) ok=✗
+  [2/7] L3 (F02629-sym-03) ok=✗
+  [3/7] L2 (F02629-sym-02) ok=✗
+  [4/7] L1 (F02629-sym-01) ok=✗
+  [5/7] L5 (F02629-sym-05) ok=✗
+  [6/7] L7 (F02629-sym-07) ok=✗
+  [7/7] L6 (F02629-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02629-sym.json
+Wrote logs/family-census/solve-R02629-sym-summary.md
+[00:57:26] DONE R02629
+[00:57:26] START R02662
+Parent R02662: witness stressMeta.witnessSolution (len 115, 6 jump(s)), 63 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02662-lm-01 — moved blocks (5,10) -> (1,4)
+  attempt 2: accepted F02662-lm-02 — moved blocks (8,14) -> (5,11)
+  attempt 3: accepted F02662-lm-03 — moved blocks (0,6) -> (2,13)
+  attempt 4: accepted F02662-lm-04 — moved blocks (14,8) -> (2,6)
+  attempt 5: accepted F02662-lm-05 — moved mustPass (11,3) -> (2,4)
+  attempt 6: accepted F02662-lm-06 — moved mustPass (11,3) -> (9,7)
+  attempt 7: accepted F02662-lm-07 — moved park (10,6) -> (3,4)
+  attempt 8: accepted F02662-lm-08 — moved blocks (0,6) -> (4,10)
+  attempt 9: accepted F02662-lm-09 — moved blocks (4,0) -> (12,10)
+  attempt 10: accepted F02662-lm-10 — moved geese (3,13) -> (8,8)
+  attempt 11: accepted F02662-lm-11 — moved library (10,0) -> (0,7)
+  attempt 12: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 13: accepted F02662-lm-12 — moved park (6,10) -> (0,3)
+  attempt 14: accepted F02662-lm-13 — moved blocks (9,4) -> (7,10)
+  attempt 15: accepted F02662-lm-14 — moved geese (7,3) -> (7,14)
+  attempt 16: accepted F02662-lm-15 — moved mustPass (13,2) -> (2,3)
+
+15/15 new local-mutant sibling(s) generated for R02662 in 16 attempt(s) (budget 600); 15 total in data/families/family-R02662-lm.json.
+Wrote 15 level(s) total to data/families/family-R02662-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02662-lm-manifest.json (15 variant(s) total).
+Parent R02662: witness stressMeta.witnessSolution (len 115, 6 jump(s)), 63 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02662-sym-01
+  variant 2 (rotation): accepted F02662-sym-02
+  variant 3 (rotation): accepted F02662-sym-03
+  variant 4 (reflection): accepted F02662-sym-04
+  variant 5 (reflection): accepted F02662-sym-05
+  variant 6 (reflection): accepted F02662-sym-06
+  variant 7 (reflection): accepted F02662-sym-07
+
+7/7 new symmetry sibling(s) generated for R02662 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02662-sym.json.
+Wrote 7 level(s) total to data/families/family-R02662-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02662-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02662-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L1 (F02662-lm-01) ok=✗
+  [2/15] L2 (F02662-lm-02) ok=✗
+  [3/15] L4 (F02662-lm-04) ok=✗
+  [4/15] L3 (F02662-lm-03) ok=✗
+  [5/15] L5 (F02662-lm-05) ok=✗
+  [6/15] L6 (F02662-lm-06) ok=✗
+  [7/15] L8 (F02662-lm-08) ok=✗
+  [8/15] L7 (F02662-lm-07) ok=✗
+  [9/15] L9 (F02662-lm-09) ok=✗
+  [10/15] L10 (F02662-lm-10) ok=✗
+  [11/15] L11 (F02662-lm-11) ok=✗
+  [12/15] L12 (F02662-lm-12) ok=✗
+  [13/15] L15 (F02662-lm-15) ok=✗
+  [14/15] L13 (F02662-lm-13) ok=✗
+  [15/15] L14 (F02662-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02662-lm.json
+Wrote logs/family-census/solve-R02662-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02662-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L1 (F02662-sym-01) ok=✗
+  [2/7] L3 (F02662-sym-03) ok=✗
+  [3/7] L4 (F02662-sym-04) ok=✗
+  [4/7] L2 (F02662-sym-02) ok=✗
+  [5/7] L6 (F02662-sym-06) ok=✗
+  [6/7] L7 (F02662-sym-07) ok=✗
+  [7/7] L5 (F02662-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02662-sym.json
+Wrote logs/family-census/solve-R02662-sym-summary.md
+[01:00:39] DONE R02662
+[01:00:39] START R02716
+Parent R02716: witness hint[0] (len 91, 4 jump(s)), 27 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02716-lm-01 — moved park (2,7) -> (6,10)
+  attempt 2: accepted F02716-lm-02 — moved park (7,8) -> (9,8)
+  attempt 3: accepted F02716-lm-03 — moved fountain (9,10) -> (1,7)
+  attempt 4: accepted F02716-lm-04 — moved lamppost (7,2) -> (7,10)
+  attempt 5: accepted F02716-lm-05 — moved library (7,5) -> (0,2)
+  attempt 6: accepted F02716-lm-06 — moved falseGoals (4,0) -> (9,8)
+  attempt 7: accepted F02716-lm-07 — moved falseGoals (6,4) -> (6,5)
+  attempt 8: accepted F02716-lm-08 — moved mustPass (6,3) -> (7,7)
+  attempt 9: accepted F02716-lm-09 — moved mustPass (9,6) -> (10,9)
+  attempt 10: accepted F02716-lm-10 — moved mustPass (6,3) -> (3,1)
+  attempt 11: accepted F02716-lm-11 — moved falseGoals (6,4) -> (8,8)
+  attempt 12: accepted F02716-lm-12 — moved fountain (3,9) -> (3,5)
+  attempt 13: accepted F02716-lm-13 — moved park (2,7) -> (10,4)
+  attempt 14: accepted F02716-lm-14 — moved mustPass (10,7) -> (1,9)
+  attempt 15: accepted F02716-lm-15 — moved park (7,8) -> (1,0)
+
+15/15 new local-mutant sibling(s) generated for R02716 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02716-lm.json.
+Wrote 15 level(s) total to data/families/family-R02716-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02716-lm-manifest.json (15 variant(s) total).
+Parent R02716: witness hint[0] (len 91, 4 jump(s)), 27 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02716-sym-01
+  variant 2 (rotation): accepted F02716-sym-02
+  variant 3 (rotation): accepted F02716-sym-03
+  variant 4 (reflection): accepted F02716-sym-04
+  variant 5 (reflection): accepted F02716-sym-05
+  variant 6 (reflection): accepted F02716-sym-06
+  variant 7 (reflection): accepted F02716-sym-07
+
+7/7 new symmetry sibling(s) generated for R02716 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02716-sym.json.
+Wrote 7 level(s) total to data/families/family-R02716-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02716-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02716-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F02716-lm-02) ok=✗
+  [2/15] L3 (F02716-lm-03) ok=✗
+  [3/15] L4 (F02716-lm-04) ok=✗
+  [4/15] L1 (F02716-lm-01) ok=✗
+  [5/15] L6 (F02716-lm-06) ok=✗
+  [6/15] L5 (F02716-lm-05) ok=✗
+  [7/15] L7 (F02716-lm-07) ok=✗
+  [8/15] L8 (F02716-lm-08) ok=✗
+  [9/15] L9 (F02716-lm-09) ok=✗
+  [10/15] L10 (F02716-lm-10) ok=✗
+  [11/15] L11 (F02716-lm-11) ok=✗
+  [12/15] L12 (F02716-lm-12) ok=✗
+  [13/15] L14 (F02716-lm-14) ok=✗
+  [14/15] L13 (F02716-lm-13) ok=✗
+  [15/15] L15 (F02716-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02716-lm.json
+Wrote logs/family-census/solve-R02716-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02716-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F02716-sym-02) ok=✗
+  [2/7] L4 (F02716-sym-04) ok=✗
+  [3/7] L3 (F02716-sym-03) ok=✗
+  [4/7] L1 (F02716-sym-01) ok=✗
+  [5/7] L7 (F02716-sym-07) ok=✗
+  [6/7] L5 (F02716-sym-05) ok=✗
+  [7/7] L6 (F02716-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02716-sym.json
+Wrote logs/family-census/solve-R02716-sym-summary.md
+[01:01:32] DONE R02716
+[01:01:32] START R02755
+Parent R02755: witness hint[0] (len 70, 0 jump(s)), 48 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02755-lm-01 — moved blocks (10,3) -> (9,4)
+  attempt 2: accepted F02755-lm-02 — moved blocks (5,4) -> (7,4)
+  attempt 3: accepted F02755-lm-03 — moved blocks (10,3) -> (8,0)
+  attempt 4: accepted F02755-lm-04 — moved blocks (10,4) -> (9,2)
+  attempt 5: accepted F02755-lm-05 — moved park (8,9) -> (5,7)
+  attempt 6: accepted F02755-lm-06 — moved blocks (9,3) -> (8,0)
+  attempt 7: accepted F02755-lm-07 — moved blocks (8,5) -> (5,0)
+  attempt 8: accepted F02755-lm-08 — moved park (9,5) -> (4,3)
+  attempt 9: accepted F02755-lm-09 — moved blocks (4,4) -> (8,4)
+  attempt 10: accepted F02755-lm-10 — moved library (7,8) -> (10,10)
+  attempt 11: accepted F02755-lm-11 — moved library (7,10) -> (1,10)
+  attempt 12: accepted F02755-lm-12 — moved falseGoals (5,5) -> (7,5)
+  attempt 13: accepted F02755-lm-13 — moved falseGoals (4,2) -> (10,10)
+  attempt 14: accepted F02755-lm-14 — moved falseGoals (5,5) -> (9,2)
+  attempt 15: accepted F02755-lm-15 — moved park (8,9) -> (9,7)
+
+15/15 new local-mutant sibling(s) generated for R02755 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02755-lm.json.
+Wrote 15 level(s) total to data/families/family-R02755-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02755-lm-manifest.json (15 variant(s) total).
+Parent R02755: witness hint[0] (len 70, 0 jump(s)), 48 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02755-sym-01
+  variant 2 (rotation): accepted F02755-sym-02
+  variant 3 (rotation): accepted F02755-sym-03
+  variant 4 (reflection): accepted F02755-sym-04
+  variant 5 (reflection): accepted F02755-sym-05
+  variant 6 (reflection): accepted F02755-sym-06
+  variant 7 (reflection): accepted F02755-sym-07
+
+7/7 new symmetry sibling(s) generated for R02755 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02755-sym.json.
+Wrote 7 level(s) total to data/families/family-R02755-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02755-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02755-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F02755-lm-02) ok=✗
+  [2/15] L3 (F02755-lm-03) ok=✗
+  [3/15] L1 (F02755-lm-01) ok=✗
+  [4/15] L4 (F02755-lm-04) ok=✗
+  [5/15] L5 (F02755-lm-05) ok=✗
+  [6/15] L6 (F02755-lm-06) ok=✗
+  [7/15] L7 (F02755-lm-07) ok=✗
+  [8/15] L8 (F02755-lm-08) ok=✗
+  [9/15] L9 (F02755-lm-09) ok=✗
+  [10/15] L11 (F02755-lm-11) ok=✗
+  [11/15] L10 (F02755-lm-10) ok=✗
+  [12/15] L12 (F02755-lm-12) ok=✗
+  [13/15] L13 (F02755-lm-13) ok=✗
+  [14/15] L14 (F02755-lm-14) ok=✗
+  [15/15] L15 (F02755-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02755-lm.json
+Wrote logs/family-census/solve-R02755-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02755-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F02755-sym-02) ok=✗
+  [2/7] L1 (F02755-sym-01) ok=✗
+  [3/7] L4 (F02755-sym-04) ok=✗
+  [4/7] L3 (F02755-sym-03) ok=✗
+  [5/7] L7 (F02755-sym-07) ok=✗
+  [6/7] L5 (F02755-sym-05) ok=✗
+  [7/7] L6 (F02755-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02755-sym.json
+Wrote logs/family-census/solve-R02755-sym-summary.md
+[01:06:17] DONE R02755
+[01:06:17] START R02787
+Parent R02787: witness stressMeta.witnessSolution (len 110, 0 jump(s)), 46 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02787-lm-01 — moved falseGoals (7,7) -> (3,11)
+  attempt 2: accepted F02787-lm-02 — moved fountain (6,9) -> (3,5)
+  attempt 3: accepted F02787-lm-03 — moved fountain (12,3) -> (1,9)
+  attempt 4: accepted F02787-lm-04 — moved falseGoals (7,7) -> (12,6)
+  attempt 5: accepted F02787-lm-05 — moved blocks (11,6) -> (12,1)
+  attempt 6: accepted F02787-lm-06 — moved falseGoals (8,11) -> (11,5)
+  attempt 7: accepted F02787-lm-07 — moved falseGoals (1,4) -> (1,8)
+  attempt 8: accepted F02787-lm-08 — moved flippingFilters (6,11) -> (9,12)
+  attempt 9: accepted F02787-lm-09 — moved blocks (1,3) -> (1,9)
+  attempt 10: accepted F02787-lm-10 — moved falseGoals (1,7) -> (12,1)
+  attempt 11: accepted F02787-lm-11 — moved blocks (6,8) -> (9,7)
+  attempt 12: accepted F02787-lm-12 — moved falseGoals (1,7) -> (12,12)
+  attempt 13: accepted F02787-lm-13 — moved falseGoals (8,11) -> (2,8)
+  attempt 14: accepted F02787-lm-14 — moved falseGoals (1,7) -> (1,9)
+  attempt 15: accepted F02787-lm-15 — moved fountain (12,3) -> (1,8)
+
+15/15 new local-mutant sibling(s) generated for R02787 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02787-lm.json.
+Wrote 15 level(s) total to data/families/family-R02787-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02787-lm-manifest.json (15 variant(s) total).
+Parent R02787: witness stressMeta.witnessSolution (len 110, 0 jump(s)), 46 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02787-sym-01
+  variant 2 (rotation): accepted F02787-sym-02
+  variant 3 (rotation): accepted F02787-sym-03
+  variant 4 (reflection): accepted F02787-sym-04
+  variant 5 (reflection): accepted F02787-sym-05
+  variant 6 (reflection): accepted F02787-sym-06
+  variant 7 (reflection): accepted F02787-sym-07
+
+7/7 new symmetry sibling(s) generated for R02787 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02787-sym.json.
+Wrote 7 level(s) total to data/families/family-R02787-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02787-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02787-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L3 (F02787-lm-03) ok=✗
+  [2/15] L1 (F02787-lm-01) ok=✗
+  [3/15] L2 (F02787-lm-02) ok=✗
+  [4/15] L4 (F02787-lm-04) ok=✗
+  [5/15] L5 (F02787-lm-05) ok=✓ legacy [hint saved]
+  [6/15] L8 (F02787-lm-08) ok=✗
+  [7/15] L7 (F02787-lm-07) ok=✗
+  [8/15] L6 (F02787-lm-06) ok=✗
+  [9/15] L9 (F02787-lm-09) ok=✗
+  [10/15] L10 (F02787-lm-10) ok=✗
+  [11/15] L11 (F02787-lm-11) ok=✗
+  [12/15] L12 (F02787-lm-12) ok=✗
+  [13/15] L13 (F02787-lm-13) ok=✗
+  [14/15] L14 (F02787-lm-14) ok=✗
+  [15/15] L15 (F02787-lm-15) ok=✗
+Hints: appended to 1 level(s); 1 hint file(s) changed on disk.
+Result: solved=1/15, solvedBeforeFallback=0, fallbackOnly=1, unsolved=14
+Wrote logs/family-census/solve-R02787-lm.json
+Wrote logs/family-census/solve-R02787-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02787-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L3 (F02787-sym-03) ok=✗
+  [2/7] L2 (F02787-sym-02) ok=✗
+  [3/7] L1 (F02787-sym-01) ok=✗
+  [4/7] L4 (F02787-sym-04) ok=✗
+  [5/7] L6 (F02787-sym-06) ok=✗
+  [6/7] L5 (F02787-sym-05) ok=✗
+  [7/7] L7 (F02787-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02787-sym.json
+Wrote logs/family-census/solve-R02787-sym-summary.md
+[01:07:18] DONE R02787
+[01:07:18] START R02818
+Parent R02818: witness stressMeta.witnessSolution (len 112, 7 jump(s)), 52 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02818-lm-01 — moved fountain (0,12) -> (0,9)
+  attempt 2: accepted F02818-lm-02 — moved statue (10,10) -> (9,12)
+  attempt 3: accepted F02818-lm-03 — moved mustPass (4,7) -> (2,5)
+  attempt 4: accepted F02818-lm-04 — moved mustPass (4,7) -> (1,0)
+  attempt 5: accepted F02818-lm-05 — moved library (0,8) -> (8,12)
+  attempt 6: accepted F02818-lm-06 — moved mustPass (1,3) -> (6,5)
+  attempt 7: accepted F02818-lm-07 — moved statue (10,12) -> (8,1)
+  attempt 8: accepted F02818-lm-08 — moved park (7,7) -> (3,6)
+  attempt 9: accepted F02818-lm-09 — moved market (5,9) -> (11,0)
+  attempt 10: accepted F02818-lm-10 — moved blocks (11,4) -> (12,12)
+  attempt 11: accepted F02818-lm-11 — moved falseGoals (4,11) -> (8,0)
+  attempt 12: accepted F02818-lm-12 — moved geese (12,4) -> (7,9)
+  attempt 13: accepted F02818-lm-13 — moved lamppost (11,2) -> (3,4)
+  attempt 14: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 15: accepted F02818-lm-14 — moved statue (7,12) -> (6,11)
+  attempt 16: accepted F02818-lm-15 — moved geese (11,9) -> (12,12)
+
+15/15 new local-mutant sibling(s) generated for R02818 in 16 attempt(s) (budget 600); 15 total in data/families/family-R02818-lm.json.
+Wrote 15 level(s) total to data/families/family-R02818-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02818-lm-manifest.json (15 variant(s) total).
+Parent R02818: witness stressMeta.witnessSolution (len 112, 7 jump(s)), 52 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02818-sym-01
+  variant 2 (rotation): accepted F02818-sym-02
+  variant 3 (rotation): accepted F02818-sym-03
+  variant 4 (reflection): accepted F02818-sym-04
+  variant 5 (reflection): accepted F02818-sym-05
+  variant 6 (reflection): accepted F02818-sym-06
+  variant 7 (reflection): accepted F02818-sym-07
+
+7/7 new symmetry sibling(s) generated for R02818 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02818-sym.json.
+Wrote 7 level(s) total to data/families/family-R02818-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02818-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02818-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F02818-lm-04) ok=✗
+  [2/15] L3 (F02818-lm-03) ok=✗
+  [3/15] L2 (F02818-lm-02) ok=✗
+  [4/15] L1 (F02818-lm-01) ok=✗
+  [5/15] L7 (F02818-lm-07) ok=✗
+  [6/15] L6 (F02818-lm-06) ok=✗
+  [7/15] L5 (F02818-lm-05) ok=✗
+  [8/15] L8 (F02818-lm-08) ok=✗
+  [9/15] L9 (F02818-lm-09) ok=✗
+  [10/15] L10 (F02818-lm-10) ok=✗
+  [11/15] L12 (F02818-lm-12) ok=✗
+  [12/15] L11 (F02818-lm-11) ok=✗
+  [13/15] L15 (F02818-lm-15) ok=✗
+  [14/15] L13 (F02818-lm-13) ok=✗
+  [15/15] L14 (F02818-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02818-lm.json
+Wrote logs/family-census/solve-R02818-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02818-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L3 (F02818-sym-03) ok=✗
+  [2/7] L2 (F02818-sym-02) ok=✗
+  [3/7] L4 (F02818-sym-04) ok=✗
+  [4/7] L1 (F02818-sym-01) ok=✗
+  [5/7] L6 (F02818-sym-06) ok=✗
+  [6/7] L5 (F02818-sym-05) ok=✗
+  [7/7] L7 (F02818-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02818-sym.json
+Wrote logs/family-census/solve-R02818-sym-summary.md
+[01:09:07] DONE R02818
+[01:09:07] START R02858
+Parent R02858: witness stressMeta.witnessSolution (len 109, 5 jump(s)), 29 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02858-lm-01 — moved statue (4,0) -> (9,11)
+  attempt 2: accepted F02858-lm-02 — moved flippingFilters (8,8) -> (3,2)
+  attempt 3: accepted F02858-lm-03 — moved statue (4,0) -> (7,4)
+  attempt 4: accepted F02858-lm-04 — moved flippingFilters (6,11) -> (7,4)
+  attempt 5: accepted F02858-lm-05 — moved lamppost (10,1) -> (5,9)
+  attempt 6: accepted F02858-lm-06 — moved statue (4,11) -> (10,5)
+  attempt 7: accepted F02858-lm-07 — moved flippingFilters (11,9) -> (9,7)
+  attempt 8: accepted F02858-lm-08 — moved flippingFilters (3,0) -> (9,11)
+  attempt 9: accepted F02858-lm-09 — moved statue (4,11) -> (11,6)
+  attempt 10: accepted F02858-lm-10 — moved flippingFilters (8,8) -> (7,0)
+  attempt 11: accepted F02858-lm-11 — moved blocks (8,0) -> (5,9)
+  attempt 12: accepted F02858-lm-12 — moved fountain (7,5) -> (6,0)
+  attempt 13: accepted F02858-lm-13 — moved park (6,10) -> (7,4)
+  attempt 14: accepted F02858-lm-14 — moved market (6,7) -> (5,9)
+  attempt 15: accepted F02858-lm-15 — moved flippingFilters (8,8) -> (8,5)
+
+15/15 new local-mutant sibling(s) generated for R02858 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02858-lm.json.
+Wrote 15 level(s) total to data/families/family-R02858-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02858-lm-manifest.json (15 variant(s) total).
+Parent R02858: witness stressMeta.witnessSolution (len 109, 5 jump(s)), 29 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02858-sym-01
+  variant 2 (rotation): accepted F02858-sym-02
+  variant 3 (rotation): accepted F02858-sym-03
+  variant 4 (reflection): accepted F02858-sym-04
+  variant 5 (reflection): accepted F02858-sym-05
+  variant 6 (reflection): accepted F02858-sym-06
+  variant 7 (reflection): accepted F02858-sym-07
+
+7/7 new symmetry sibling(s) generated for R02858 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02858-sym.json.
+Wrote 7 level(s) total to data/families/family-R02858-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02858-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02858-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F02858-lm-02) ok=✗
+  [2/15] L3 (F02858-lm-03) ok=✗
+  [3/15] L1 (F02858-lm-01) ok=✗
+  [4/15] L4 (F02858-lm-04) ok=✗
+  [5/15] L5 (F02858-lm-05) ok=✗
+  [6/15] L6 (F02858-lm-06) ok=✗
+  [7/15] L7 (F02858-lm-07) ok=✗
+  [8/15] L8 (F02858-lm-08) ok=✗
+  [9/15] L9 (F02858-lm-09) ok=✗
+  [10/15] L10 (F02858-lm-10) ok=✗
+  [11/15] L11 (F02858-lm-11) ok=✗
+  [12/15] L12 (F02858-lm-12) ok=✗
+  [13/15] L15 (F02858-lm-15) ok=✗
+  [14/15] L14 (F02858-lm-14) ok=✗
+  [15/15] L13 (F02858-lm-13) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02858-lm.json
+Wrote logs/family-census/solve-R02858-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02858-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F02858-sym-04) ok=✗
+  [2/7] L2 (F02858-sym-02) ok=✗
+  [3/7] L3 (F02858-sym-03) ok=✗
+  [4/7] L1 (F02858-sym-01) ok=✗
+  [5/7] L5 (F02858-sym-05) ok=✗
+  [6/7] L6 (F02858-sym-06) ok=✗
+  [7/7] L7 (F02858-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02858-sym.json
+Wrote logs/family-census/solve-R02858-sym-summary.md
+[01:11:04] DONE R02858
+[01:11:04] START R02902
+Parent R02902: witness stressMeta.witnessSolution (len 83, 5 jump(s)), 45 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02902-lm-01 — moved blocks (5,2) -> (9,5)
+  attempt 2: accepted F02902-lm-02 — moved falseGoals (5,1) -> (2,7)
+  attempt 3: accepted F02902-lm-03 — moved falseGoals (5,1) -> (10,6)
+  attempt 4: accepted F02902-lm-04 — moved blocks (6,11) -> (11,0)
+  attempt 5: accepted F02902-lm-05 — moved blocks (5,0) -> (6,2)
+  attempt 6: accepted F02902-lm-06 — moved blocks (8,1) -> (7,5)
+  attempt 7: accepted F02902-lm-07 — moved lamppost (1,2) -> (5,10)
+  attempt 8: accepted F02902-lm-08 — moved lamppost (9,7) -> (5,10)
+  attempt 9: accepted F02902-lm-09 — moved blocks (11,3) -> (5,10)
+  attempt 10: accepted F02902-lm-10 — moved blocks (7,11) -> (7,12)
+  attempt 11: accepted F02902-lm-11 — moved blocks (4,4) -> (5,9)
+  attempt 12: accepted F02902-lm-12 — moved falseGoals (5,1) -> (7,9)
+  attempt 13: accepted F02902-lm-13 — moved blocks (4,8) -> (4,7)
+  attempt 14: accepted F02902-lm-14 — moved falseGoals (7,7) -> (7,5)
+  attempt 15: accepted F02902-lm-15 — moved blocks (5,3) -> (6,0)
+
+15/15 new local-mutant sibling(s) generated for R02902 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02902-lm.json.
+Wrote 15 level(s) total to data/families/family-R02902-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02902-lm-manifest.json (15 variant(s) total).
+Parent R02902: witness stressMeta.witnessSolution (len 83, 5 jump(s)), 45 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02902-sym-01
+  variant 2 (rotation): accepted F02902-sym-02
+  variant 3 (rotation): accepted F02902-sym-03
+  variant 4 (reflection): accepted F02902-sym-04
+  variant 5 (reflection): accepted F02902-sym-05
+  variant 6 (reflection): accepted F02902-sym-06
+  variant 7 (reflection): accepted F02902-sym-07
+
+7/7 new symmetry sibling(s) generated for R02902 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02902-sym.json.
+Wrote 7 level(s) total to data/families/family-R02902-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02902-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02902-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F02902-lm-02) ok=✗
+  [2/15] L4 (F02902-lm-04) ok=✗
+  [3/15] L3 (F02902-lm-03) ok=✗
+  [4/15] L1 (F02902-lm-01) ok=✗
+  [5/15] L5 (F02902-lm-05) ok=✗
+  [6/15] L7 (F02902-lm-07) ok=✗
+  [7/15] L6 (F02902-lm-06) ok=✗
+  [8/15] L8 (F02902-lm-08) ok=✗
+  [9/15] L9 (F02902-lm-09) ok=✗
+  [10/15] L11 (F02902-lm-11) ok=✗
+  [11/15] L12 (F02902-lm-12) ok=✗
+  [12/15] L10 (F02902-lm-10) ok=✗
+  [13/15] L14 (F02902-lm-14) ok=✗
+  [14/15] L15 (F02902-lm-15) ok=✗
+  [15/15] L13 (F02902-lm-13) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02902-lm.json
+Wrote logs/family-census/solve-R02902-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02902-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F02902-sym-02) ok=✗
+  [2/7] L4 (F02902-sym-04) ok=✗
+  [3/7] L1 (F02902-sym-01) ok=✗
+  [4/7] L3 (F02902-sym-03) ok=✗
+  [5/7] L5 (F02902-sym-05) ok=✗
+  [6/7] L7 (F02902-sym-07) ok=✗
+  [7/7] L6 (F02902-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02902-sym.json
+Wrote logs/family-census/solve-R02902-sym-summary.md
+[01:12:43] DONE R02902
+[01:12:43] START R02936
+Parent R02936: witness stressMeta.witnessSolution (len 126, 6 jump(s)), 40 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02936-lm-01 — moved market (8,8) -> (1,7)
+  attempt 2: accepted F02936-lm-02 — moved geese (9,9) -> (1,11)
+  attempt 3: accepted F02936-lm-03 — moved geese (6,2) -> (0,12)
+  attempt 4: accepted F02936-lm-04 — moved mustPass (4,8) -> (1,0)
+  attempt 5: accepted F02936-lm-05 — moved statue (4,4) -> (1,12)
+  attempt 6: accepted F02936-lm-06 — moved falseGoals (10,10) -> (0,11)
+  attempt 7: accepted F02936-lm-07 — moved market (8,8) -> (2,9)
+  attempt 8: accepted F02936-lm-08 — moved geese (5,3) -> (1,3)
+  attempt 9: accepted F02936-lm-09 — moved falseGoals (11,9) -> (10,9)
+  attempt 10: accepted F02936-lm-10 — moved mustCross (1,5) -> (6,4)
+  attempt 11: accepted F02936-lm-11 — moved market (8,8) -> (6,1)
+  attempt 12: accepted F02936-lm-12 — moved falseGoals (10,10) -> (8,0)
+  attempt 13: accepted F02936-lm-13 — moved geese (8,9) -> (9,8)
+  attempt 14: accepted F02936-lm-14 — moved library (0,6) -> (1,2)
+  attempt 15: accepted F02936-lm-15 — moved geese (5,3) -> (0,12)
+
+15/15 new local-mutant sibling(s) generated for R02936 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02936-lm.json.
+Wrote 15 level(s) total to data/families/family-R02936-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02936-lm-manifest.json (15 variant(s) total).
+Parent R02936: witness stressMeta.witnessSolution (len 126, 6 jump(s)), 40 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02936-sym-01
+  variant 2 (rotation): accepted F02936-sym-02
+  variant 3 (rotation): accepted F02936-sym-03
+  variant 4 (reflection): accepted F02936-sym-04
+  variant 5 (reflection): accepted F02936-sym-05
+  variant 6 (reflection): accepted F02936-sym-06
+  variant 7 (reflection): accepted F02936-sym-07
+
+7/7 new symmetry sibling(s) generated for R02936 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02936-sym.json.
+Wrote 7 level(s) total to data/families/family-R02936-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02936-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02936-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L1 (F02936-lm-01) ok=✗
+  [2/15] L3 (F02936-lm-03) ok=✗
+  [3/15] L4 (F02936-lm-04) ok=✗
+  [4/15] L2 (F02936-lm-02) ok=✗
+  [5/15] L5 (F02936-lm-05) ok=✗
+  [6/15] L8 (F02936-lm-08) ok=✗
+  [7/15] L7 (F02936-lm-07) ok=✗
+  [8/15] L6 (F02936-lm-06) ok=✗
+  [9/15] L9 (F02936-lm-09) ok=✗
+  [10/15] L10 (F02936-lm-10) ok=✗
+  [11/15] L11 (F02936-lm-11) ok=✗
+  [12/15] L12 (F02936-lm-12) ok=✗
+  [13/15] L13 (F02936-lm-13) ok=✗
+  [14/15] L15 (F02936-lm-15) ok=✗
+  [15/15] L14 (F02936-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02936-lm.json
+Wrote logs/family-census/solve-R02936-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02936-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F02936-sym-04) ok=✗
+  [2/7] L2 (F02936-sym-02) ok=✗
+  [3/7] L1 (F02936-sym-01) ok=✗
+  [4/7] L3 (F02936-sym-03) ok=✗
+  [5/7] L7 (F02936-sym-07) ok=✗
+  [6/7] L6 (F02936-sym-06) ok=✗
+  [7/7] L5 (F02936-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02936-sym.json
+Wrote logs/family-census/solve-R02936-sym-summary.md
+[01:16:34] DONE R02936
+[01:16:34] START R02987
+Parent R02987: witness stressMeta.witnessSolution (len 125, 5 jump(s)), 31 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02987-lm-01 — moved blocks (3,8) -> (8,13)
+  attempt 2: accepted F02987-lm-02 — moved blocks (14,8) -> (5,13)
+  attempt 3: accepted F02987-lm-03 — moved blocks (14,8) -> (11,10)
+  attempt 4: accepted F02987-lm-04 — moved lamppost (6,8) -> (7,3)
+  attempt 5: accepted F02987-lm-05 — moved blocks (7,12) -> (11,10)
+  attempt 6: accepted F02987-lm-06 — moved lamppost (6,8) -> (13,13)
+  attempt 7: accepted F02987-lm-07 — moved blocks (8,14) -> (14,6)
+  attempt 8: accepted F02987-lm-08 — moved blocks (2,13) -> (13,7)
+  attempt 9: accepted F02987-lm-09 — moved blocks (13,5) -> (4,8)
+  attempt 10: accepted F02987-lm-10 — moved library (5,7) -> (5,9)
+  attempt 11: accepted F02987-lm-11 — moved blocks (13,5) -> (11,9)
+  attempt 12: accepted F02987-lm-12 — moved blocks (8,12) -> (3,13)
+  attempt 13: accepted F02987-lm-13 — moved blocks (7,12) -> (5,0)
+  attempt 14: accepted F02987-lm-14 — moved statue (1,6) -> (7,11)
+  attempt 15: accepted F02987-lm-15 — moved library (5,7) -> (3,6)
+
+15/15 new local-mutant sibling(s) generated for R02987 in 15 attempt(s) (budget 600); 15 total in data/families/family-R02987-lm.json.
+Wrote 15 level(s) total to data/families/family-R02987-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02987-lm-manifest.json (15 variant(s) total).
+Parent R02987: witness stressMeta.witnessSolution (len 125, 5 jump(s)), 31 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02987-sym-01
+  variant 2 (rotation): accepted F02987-sym-02
+  variant 3 (rotation): accepted F02987-sym-03
+  variant 4 (reflection): accepted F02987-sym-04
+  variant 5 (reflection): accepted F02987-sym-05
+  variant 6 (reflection): accepted F02987-sym-06
+  variant 7 (reflection): accepted F02987-sym-07
+
+7/7 new symmetry sibling(s) generated for R02987 in 7 attempt(s) (budget 7); 7 total in data/families/family-R02987-sym.json.
+Wrote 7 level(s) total to data/families/family-R02987-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R02987-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R02987-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F02987-lm-04) ok=✗
+  [2/15] L2 (F02987-lm-02) ok=✗
+  [3/15] L1 (F02987-lm-01) ok=✗
+  [4/15] L3 (F02987-lm-03) ok=✗
+  [5/15] L6 (F02987-lm-06) ok=✗
+  [6/15] L7 (F02987-lm-07) ok=✗
+  [7/15] L5 (F02987-lm-05) ok=✗
+  [8/15] L8 (F02987-lm-08) ok=✗
+  [9/15] L9 (F02987-lm-09) ok=✗
+  [10/15] L10 (F02987-lm-10) ok=✗
+  [11/15] L11 (F02987-lm-11) ok=✗
+  [12/15] L12 (F02987-lm-12) ok=✗
+  [13/15] L15 (F02987-lm-15) ok=✗
+  [14/15] L14 (F02987-lm-14) ok=✗
+  [15/15] L13 (F02987-lm-13) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R02987-lm.json
+Wrote logs/family-census/solve-R02987-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R02987-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L1 (F02987-sym-01) ok=✗
+  [2/7] L3 (F02987-sym-03) ok=✗
+  [3/7] L2 (F02987-sym-02) ok=✗
+  [4/7] L4 (F02987-sym-04) ok=✗
+  [5/7] L6 (F02987-sym-06) ok=✗
+  [6/7] L5 (F02987-sym-05) ok=✗
+  [7/7] L7 (F02987-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R02987-sym.json
+Wrote logs/family-census/solve-R02987-sym-summary.md
+[01:19:08] DONE R02987
+[01:19:08] START R03022
+Parent R03022: witness stressMeta.witnessSolution (len 130, 0 jump(s)), 48 movable object instance(s) under strict inventory.
+  attempt 1: accepted F03022-lm-01 — moved blocks (8,12) -> (7,0)
+  attempt 2: accepted F03022-lm-02 — moved falseGoals (9,13) -> (4,12)
+  attempt 3: accepted F03022-lm-03 — moved flippingFilters (10,9) -> (3,5)
+  attempt 4: accepted F03022-lm-04 — moved falseGoals (9,13) -> (13,7)
+  attempt 5: accepted F03022-lm-05 — moved falseGoals (11,10) -> (1,12)
+  attempt 6: accepted F03022-lm-06 — moved blocks (2,9) -> (0,0)
+  attempt 7: accepted F03022-lm-07 — moved statue (9,5) -> (11,11)
+  attempt 8: accepted F03022-lm-08 — moved flippingFilters (10,12) -> (8,0)
+  attempt 9: accepted F03022-lm-09 — moved library (8,13) -> (11,1)
+  attempt 10: accepted F03022-lm-10 — moved blocks (10,5) -> (9,0)
+  attempt 11: accepted F03022-lm-11 — moved flippingFilters (10,12) -> (13,10)
+  attempt 12: accepted F03022-lm-12 — moved park (9,7) -> (13,10)
+  attempt 13: accepted F03022-lm-13 — moved lamppost (2,13) -> (0,0)
+  attempt 14: accepted F03022-lm-14 — moved flippingFilters (10,9) -> (2,8)
+  attempt 15: accepted F03022-lm-15 — moved blocks (3,2) -> (8,11)
+
+15/15 new local-mutant sibling(s) generated for R03022 in 15 attempt(s) (budget 600); 15 total in data/families/family-R03022-lm.json.
+Wrote 15 level(s) total to data/families/family-R03022-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03022-lm-manifest.json (15 variant(s) total).
+Parent R03022: witness stressMeta.witnessSolution (len 130, 0 jump(s)), 48 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F03022-sym-01
+  variant 2 (rotation): accepted F03022-sym-02
+  variant 3 (rotation): accepted F03022-sym-03
+  variant 4 (reflection): accepted F03022-sym-04
+  variant 5 (reflection): accepted F03022-sym-05
+  variant 6 (reflection): accepted F03022-sym-06
+  variant 7 (reflection): accepted F03022-sym-07
+
+7/7 new symmetry sibling(s) generated for R03022 in 7 attempt(s) (budget 7); 7 total in data/families/family-R03022-sym.json.
+Wrote 7 level(s) total to data/families/family-R03022-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03022-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R03022-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L1 (F03022-lm-01) ok=✗
+  [2/15] L2 (F03022-lm-02) ok=✗
+  [3/15] L4 (F03022-lm-04) ok=✗
+  [4/15] L3 (F03022-lm-03) ok=✗
+  [5/15] L5 (F03022-lm-05) ok=✗
+  [6/15] L6 (F03022-lm-06) ok=✗
+  [7/15] L7 (F03022-lm-07) ok=✗
+  [8/15] L8 (F03022-lm-08) ok=✗
+  [9/15] L9 (F03022-lm-09) ok=✗
+  [10/15] L11 (F03022-lm-11) ok=✗
+  [11/15] L10 (F03022-lm-10) ok=✗
+  [12/15] L12 (F03022-lm-12) ok=✗
+  [13/15] L15 (F03022-lm-15) ok=✗
+  [14/15] L13 (F03022-lm-13) ok=✗
+  [15/15] L14 (F03022-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R03022-lm.json
+Wrote logs/family-census/solve-R03022-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R03022-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F03022-sym-02) ok=✗
+  [2/7] L3 (F03022-sym-03) ok=✗
+  [3/7] L4 (F03022-sym-04) ok=✗
+  [4/7] L1 (F03022-sym-01) ok=✗
+  [5/7] L6 (F03022-sym-06) ok=✗
+  [6/7] L7 (F03022-sym-07) ok=✗
+  [7/7] L5 (F03022-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R03022-sym.json
+Wrote logs/family-census/solve-R03022-sym-summary.md
+[01:21:43] DONE R03022
+[01:21:43] START R03050
+Parent R03050: witness stressMeta.witnessSolution (len 86, 5 jump(s)), 33 movable object instance(s) under strict inventory.
+  attempt 1: accepted F03050-lm-01 — moved park (6,4) -> (3,1)
+  attempt 2: accepted F03050-lm-02 — moved mustPass (6,3) -> (12,3)
+  attempt 3: accepted F03050-lm-03 — moved mustPass (6,3) -> (10,2)
+  attempt 4: accepted F03050-lm-04 — moved statue (2,12) -> (5,0)
+  attempt 5: accepted F03050-lm-05 — moved mustPass (6,5) -> (5,3)
+  attempt 6: accepted F03050-lm-06 — moved lamppost (8,10) -> (4,6)
+  attempt 7: accepted F03050-lm-07 — moved lamppost (1,7) -> (3,8)
+  attempt 8: accepted F03050-lm-08 — moved statue (2,12) -> (4,0)
+  attempt 9: accepted F03050-lm-09 — moved lamppost (11,0) -> (1,8)
+  attempt 10: accepted F03050-lm-10 — moved statue (12,6) -> (2,6)
+  attempt 11: accepted F03050-lm-11 — moved statue (4,8) -> (7,6)
+  attempt 12: accepted F03050-lm-12 — moved park (6,4) -> (7,11)
+  attempt 13: accepted F03050-lm-13 — moved statue (4,8) -> (6,7)
+  attempt 14: accepted F03050-lm-14 — moved lamppost (12,8) -> (6,0)
+  attempt 15: accepted F03050-lm-15 — moved flippingFilters (7,9) -> (3,10)
+
+15/15 new local-mutant sibling(s) generated for R03050 in 15 attempt(s) (budget 600); 15 total in data/families/family-R03050-lm.json.
+Wrote 15 level(s) total to data/families/family-R03050-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03050-lm-manifest.json (15 variant(s) total).
+Parent R03050: witness stressMeta.witnessSolution (len 86, 5 jump(s)), 33 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F03050-sym-01
+  variant 2 (rotation): accepted F03050-sym-02
+  variant 3 (rotation): accepted F03050-sym-03
+  variant 4 (reflection): accepted F03050-sym-04
+  variant 5 (reflection): accepted F03050-sym-05
+  variant 6 (reflection): accepted F03050-sym-06
+  variant 7 (reflection): accepted F03050-sym-07
+
+7/7 new symmetry sibling(s) generated for R03050 in 7 attempt(s) (budget 7); 7 total in data/families/family-R03050-sym.json.
+Wrote 7 level(s) total to data/families/family-R03050-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03050-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R03050-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F03050-lm-04) ok=✗
+  [2/15] L3 (F03050-lm-03) ok=✗
+  [3/15] L2 (F03050-lm-02) ok=✗
+  [4/15] L1 (F03050-lm-01) ok=✗
+  [5/15] L5 (F03050-lm-05) ok=✗
+  [6/15] L7 (F03050-lm-07) ok=✗
+  [7/15] L6 (F03050-lm-06) ok=✗
+  [8/15] L8 (F03050-lm-08) ok=✗
+  [9/15] L10 (F03050-lm-10) ok=✗
+  [10/15] L9 (F03050-lm-09) ok=✗
+  [11/15] L11 (F03050-lm-11) ok=✗
+  [12/15] L12 (F03050-lm-12) ok=✗
+  [13/15] L13 (F03050-lm-13) ok=✗
+  [14/15] L14 (F03050-lm-14) ok=✗
+  [15/15] L15 (F03050-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R03050-lm.json
+Wrote logs/family-census/solve-R03050-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R03050-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F03050-sym-04) ok=✗
+  [2/7] L2 (F03050-sym-02) ok=✗
+  [3/7] L3 (F03050-sym-03) ok=✗
+  [4/7] L1 (F03050-sym-01) ok=✗
+  [5/7] L6 (F03050-sym-06) ok=✗
+  [6/7] L5 (F03050-sym-05) ok=✗
+  [7/7] L7 (F03050-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R03050-sym.json
+Wrote logs/family-census/solve-R03050-sym-summary.md
+[01:27:59] DONE R03050
+[01:27:59] START R03078
+Parent R03078: witness stressMeta.witnessSolution (len 96, 4 jump(s)), 47 movable object instance(s) under strict inventory.
+  attempt 1: accepted F03078-lm-01 — moved blocks (11,8) -> (10,0)
+  attempt 2: accepted F03078-lm-02 — moved blocks (9,10) -> (10,4)
+  attempt 3: accepted F03078-lm-03 — moved fountain (11,4) -> (10,10)
+  attempt 4: accepted F03078-lm-04 — moved blocks (1,0) -> (11,0)
+  attempt 5: accepted F03078-lm-05 — moved blocks (2,11) -> (10,0)
+  attempt 6: accepted F03078-lm-06 — moved blocks (8,9) -> (4,5)
+  attempt 7: accepted F03078-lm-07 — moved blocks (8,10) -> (11,1)
+  attempt 8: accepted F03078-lm-08 — moved blocks (2,11) -> (4,5)
+  attempt 9: accepted F03078-lm-09 — moved blocks (10,2) -> (6,3)
+  attempt 10: accepted F03078-lm-10 — moved library (3,11) -> (4,5)
+  attempt 11: accepted F03078-lm-11 — moved blocks (11,3) -> (4,5)
+  attempt 12: accepted F03078-lm-12 — moved falseGoals (11,5) -> (11,1)
+  attempt 13: accepted F03078-lm-13 — moved blocks (10,9) -> (10,10)
+  attempt 14: accepted F03078-lm-14 — moved blocks (8,8) -> (10,10)
+  attempt 15: accepted F03078-lm-15 — moved park (5,3) -> (10,0)
+
+15/15 new local-mutant sibling(s) generated for R03078 in 15 attempt(s) (budget 600); 15 total in data/families/family-R03078-lm.json.
+Wrote 15 level(s) total to data/families/family-R03078-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03078-lm-manifest.json (15 variant(s) total).
+Parent R03078: witness stressMeta.witnessSolution (len 96, 4 jump(s)), 47 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F03078-sym-01
+  variant 2 (rotation): accepted F03078-sym-02
+  variant 3 (rotation): accepted F03078-sym-03
+  variant 4 (reflection): accepted F03078-sym-04
+  variant 5 (reflection): accepted F03078-sym-05
+  variant 6 (reflection): accepted F03078-sym-06
+  variant 7 (reflection): accepted F03078-sym-07
+
+7/7 new symmetry sibling(s) generated for R03078 in 7 attempt(s) (budget 7); 7 total in data/families/family-R03078-sym.json.
+Wrote 7 level(s) total to data/families/family-R03078-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03078-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R03078-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L2 (F03078-lm-02) ok=✗
+  [2/15] L1 (F03078-lm-01) ok=✗
+  [3/15] L4 (F03078-lm-04) ok=✗
+  [4/15] L3 (F03078-lm-03) ok=✗
+  [5/15] L6 (F03078-lm-06) ok=✗
+  [6/15] L5 (F03078-lm-05) ok=✗
+  [7/15] L7 (F03078-lm-07) ok=✗
+  [8/15] L8 (F03078-lm-08) ok=✗
+  [9/15] L9 (F03078-lm-09) ok=✗
+  [10/15] L11 (F03078-lm-11) ok=✗
+  [11/15] L10 (F03078-lm-10) ok=✗
+  [12/15] L12 (F03078-lm-12) ok=✗
+  [13/15] L14 (F03078-lm-14) ok=✗
+  [14/15] L15 (F03078-lm-15) ok=✗
+  [15/15] L13 (F03078-lm-13) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R03078-lm.json
+Wrote logs/family-census/solve-R03078-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R03078-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F03078-sym-04) ok=✗
+  [2/7] L2 (F03078-sym-02) ok=✗
+  [3/7] L1 (F03078-sym-01) ok=✗
+  [4/7] L3 (F03078-sym-03) ok=✗
+  [5/7] L7 (F03078-sym-07) ok=✗
+  [6/7] L5 (F03078-sym-05) ok=✗
+  [7/7] L6 (F03078-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R03078-sym.json
+Wrote logs/family-census/solve-R03078-sym-summary.md
+[01:29:56] DONE R03078
+[01:29:56] START R03109
+Parent R03109: witness stressMeta.witnessSolution (len 121, 0 jump(s)), 63 movable object instance(s) under strict inventory.
+  attempt 1: accepted F03109-lm-01 — moved blocks (9,9) -> (6,0)
+  attempt 2: accepted F03109-lm-02 — moved fountain (12,2) -> (12,7)
+  attempt 3: accepted F03109-lm-03 — moved mustPass (5,12) -> (4,6)
+  attempt 4: accepted F03109-lm-04 — moved blocks (5,10) -> (0,5)
+  attempt 5: accepted F03109-lm-05 — moved blocks (6,1) -> (5,5)
+  attempt 6: accepted F03109-lm-06 — moved flippingFilters (8,11) -> (9,11)
+  attempt 7: accepted F03109-lm-07 — moved blocks (9,10) -> (5,0)
+  attempt 8: accepted F03109-lm-08 — moved flippingFilters (8,11) -> (11,11)
+  attempt 9: accepted F03109-lm-09 — moved falseGoals (9,0) -> (0,5)
+  attempt 10: accepted F03109-lm-10 — moved mustPass (6,9) -> (2,3)
+  attempt 11: accepted F03109-lm-11 — moved blocks (5,4) -> (0,3)
+  attempt 12: accepted F03109-lm-12 — moved blocks (10,12) -> (0,3)
+  attempt 13: accepted F03109-lm-13 — moved market (12,10) -> (7,6)
+  attempt 14: accepted F03109-lm-14 — moved mustPass (6,9) -> (3,6)
+  attempt 15: accepted F03109-lm-15 — moved blocks (8,1) -> (3,9)
+
+15/15 new local-mutant sibling(s) generated for R03109 in 15 attempt(s) (budget 600); 15 total in data/families/family-R03109-lm.json.
+Wrote 15 level(s) total to data/families/family-R03109-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03109-lm-manifest.json (15 variant(s) total).
+Parent R03109: witness stressMeta.witnessSolution (len 121, 0 jump(s)), 63 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F03109-sym-01
+  variant 2 (rotation): accepted F03109-sym-02
+  variant 3 (rotation): accepted F03109-sym-03
+  variant 4 (reflection): accepted F03109-sym-04
+  variant 5 (reflection): accepted F03109-sym-05
+  variant 6 (reflection): accepted F03109-sym-06
+  variant 7 (reflection): accepted F03109-sym-07
+
+7/7 new symmetry sibling(s) generated for R03109 in 7 attempt(s) (budget 7); 7 total in data/families/family-R03109-sym.json.
+Wrote 7 level(s) total to data/families/family-R03109-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03109-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R03109-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L1 (F03109-lm-01) ok=✗
+  [2/15] L2 (F03109-lm-02) ok=✗
+  [3/15] L3 (F03109-lm-03) ok=✗
+  [4/15] L4 (F03109-lm-04) ok=✗
+  [5/15] L5 (F03109-lm-05) ok=✗
+  [6/15] L6 (F03109-lm-06) ok=✗
+  [7/15] L7 (F03109-lm-07) ok=✗
+  [8/15] L8 (F03109-lm-08) ok=✗
+  [9/15] L9 (F03109-lm-09) ok=✗
+  [10/15] L10 (F03109-lm-10) ok=✗
+  [11/15] L11 (F03109-lm-11) ok=✗
+  [12/15] L12 (F03109-lm-12) ok=✗
+  [13/15] L13 (F03109-lm-13) ok=✗
+  [14/15] L14 (F03109-lm-14) ok=✗
+  [15/15] L15 (F03109-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R03109-lm.json
+Wrote logs/family-census/solve-R03109-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R03109-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F03109-sym-04) ok=✗
+  [2/7] L2 (F03109-sym-02) ok=✗
+  [3/7] L3 (F03109-sym-03) ok=✗
+  [4/7] L1 (F03109-sym-01) ok=✗
+  [5/7] L7 (F03109-sym-07) ok=✗
+  [6/7] L6 (F03109-sym-06) ok=✗
+  [7/7] L5 (F03109-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R03109-sym.json
+Wrote logs/family-census/solve-R03109-sym-summary.md
+[01:32:08] DONE R03109
+[01:32:08] START R03141
+Parent R03141: witness stressMeta.witnessSolution (len 121, 4 jump(s)), 61 movable object instance(s) under strict inventory.
+  attempt 1: accepted F03141-lm-01 — moved blocks (3,13) -> (14,0)
+  attempt 2: accepted F03141-lm-02 — moved market (11,4) -> (11,5)
+  attempt 3: accepted F03141-lm-03 — moved blocks (4,1) -> (10,13)
+  attempt 4: accepted F03141-lm-04 — moved blocks (13,12) -> (7,14)
+  attempt 5: accepted F03141-lm-05 — moved blocks (7,11) -> (8,3)
+  attempt 6: accepted F03141-lm-06 — moved blocks (3,13) -> (6,3)
+  attempt 7: accepted F03141-lm-07 — moved blocks (9,13) -> (3,7)
+  attempt 8: accepted F03141-lm-08 — moved blocks (11,13) -> (8,14)
+  attempt 9: accepted F03141-lm-09 — moved falseGoals (5,6) -> (6,13)
+  attempt 10: accepted F03141-lm-10 — moved blocks (14,7) -> (13,6)
+  attempt 11: accepted F03141-lm-11 — moved flippingFilters (2,13) -> (7,12)
+  attempt 12: accepted F03141-lm-12 — moved falseGoals (5,3) -> (14,12)
+  attempt 13: accepted F03141-lm-13 — moved blocks (13,14) -> (7,14)
+  attempt 14: accepted F03141-lm-14 — moved blocks (5,11) -> (2,7)
+  attempt 15: accepted F03141-lm-15 — moved flippingFilters (2,13) -> (11,6)
+
+15/15 new local-mutant sibling(s) generated for R03141 in 15 attempt(s) (budget 600); 15 total in data/families/family-R03141-lm.json.
+Wrote 15 level(s) total to data/families/family-R03141-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03141-lm-manifest.json (15 variant(s) total).
+Parent R03141: witness stressMeta.witnessSolution (len 121, 4 jump(s)), 61 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F03141-sym-01
+  variant 2 (rotation): accepted F03141-sym-02
+  variant 3 (rotation): accepted F03141-sym-03
+  variant 4 (reflection): accepted F03141-sym-04
+  variant 5 (reflection): accepted F03141-sym-05
+  variant 6 (reflection): accepted F03141-sym-06
+  variant 7 (reflection): accepted F03141-sym-07
+
+7/7 new symmetry sibling(s) generated for R03141 in 7 attempt(s) (budget 7); 7 total in data/families/family-R03141-sym.json.
+Wrote 7 level(s) total to data/families/family-R03141-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03141-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R03141-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L3 (F03141-lm-03) ok=✓ legacy [hint saved]
+  [2/15] L1 (F03141-lm-01) ok=✗
+  [3/15] L2 (F03141-lm-02) ok=✗
+  [4/15] L4 (F03141-lm-04) ok=✗
+  [5/15] L5 (F03141-lm-05) ok=✗
+  [6/15] L6 (F03141-lm-06) ok=✗
+  [7/15] L7 (F03141-lm-07) ok=✗
+  [8/15] L8 (F03141-lm-08) ok=✗
+  [9/15] L9 (F03141-lm-09) ok=✗
+  [10/15] L11 (F03141-lm-11) ok=✓ legacy [hint saved]
+  [11/15] L10 (F03141-lm-10) ok=✗
+  [12/15] L12 (F03141-lm-12) ok=✗
+  [13/15] L15 (F03141-lm-15) ok=✗
+  [14/15] L13 (F03141-lm-13) ok=✗
+  [15/15] L14 (F03141-lm-14) ok=✗
+Hints: appended to 2 level(s); 2 hint file(s) changed on disk.
+Result: solved=2/15, solvedBeforeFallback=0, fallbackOnly=2, unsolved=13
+Wrote logs/family-census/solve-R03141-lm.json
+Wrote logs/family-census/solve-R03141-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R03141-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F03141-sym-02) ok=✗
+  [2/7] L4 (F03141-sym-04) ok=✗
+  [3/7] L3 (F03141-sym-03) ok=✗
+  [4/7] L1 (F03141-sym-01) ok=✗
+  [5/7] L5 (F03141-sym-05) ok=✗
+  [6/7] L7 (F03141-sym-07) ok=✗
+  [7/7] L6 (F03141-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R03141-sym.json
+Wrote logs/family-census/solve-R03141-sym-summary.md
+[01:32:40] DONE R03141
+[01:32:40] START R03173
+Parent R03173: witness hint[0] (len 90, 0 jump(s)), 51 movable object instance(s) under strict inventory.
+  attempt 1: accepted F03173-lm-01 — moved statue (2,7) -> (7,11)
+  attempt 2: accepted F03173-lm-02 — moved lamppost (4,11) -> (7,11)
+  attempt 3: accepted F03173-lm-03 — moved market (3,2) -> (10,11)
+  attempt 4: accepted F03173-lm-04 — moved blocks (4,1) -> (7,11)
+  attempt 5: accepted F03173-lm-05 — moved blocks (11,6) -> (10,11)
+  attempt 6: accepted F03173-lm-06 — moved statue (2,7) -> (3,3)
+  attempt 7: accepted F03173-lm-07 — moved statue (0,0) -> (9,9)
+  attempt 8: accepted F03173-lm-08 — moved statue (6,5) -> (7,7)
+  attempt 9: accepted F03173-lm-09 — moved geese (5,0) -> (6,1)
+  attempt 10: accepted F03173-lm-10 — moved park (11,10) -> (7,7)
+  attempt 11: accepted F03173-lm-11 — moved fountain (11,0) -> (9,9)
+  attempt 12: accepted F03173-lm-12 — moved falseGoals (0,3) -> (1,7)
+  attempt 13: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 14: accepted F03173-lm-13 — moved blocks (4,2) -> (7,7)
+  attempt 15: accepted F03173-lm-14 — moved lamppost (9,8) -> (3,3)
+  attempt 16: accepted F03173-lm-15 — moved falseGoals (0,6) -> (9,9)
+
+15/15 new local-mutant sibling(s) generated for R03173 in 16 attempt(s) (budget 600); 15 total in data/families/family-R03173-lm.json.
+Wrote 15 level(s) total to data/families/family-R03173-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03173-lm-manifest.json (15 variant(s) total).
+Parent R03173: witness hint[0] (len 90, 0 jump(s)), 51 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F03173-sym-01
+  variant 2 (rotation): accepted F03173-sym-02
+  variant 3 (rotation): accepted F03173-sym-03
+  variant 4 (reflection): accepted F03173-sym-04
+  variant 5 (reflection): accepted F03173-sym-05
+  variant 6 (reflection): accepted F03173-sym-06
+  variant 7 (reflection): accepted F03173-sym-07
+
+7/7 new symmetry sibling(s) generated for R03173 in 7 attempt(s) (budget 7); 7 total in data/families/family-R03173-sym.json.
+Wrote 7 level(s) total to data/families/family-R03173-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03173-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R03173-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L3 (F03173-lm-03) ok=✗
+  [2/15] L2 (F03173-lm-02) ok=✗
+  [3/15] L1 (F03173-lm-01) ok=✗
+  [4/15] L4 (F03173-lm-04) ok=✗
+  [5/15] L5 (F03173-lm-05) ok=✗
+  [6/15] L7 (F03173-lm-07) ok=✗
+  [7/15] L6 (F03173-lm-06) ok=✗
+  [8/15] L8 (F03173-lm-08) ok=✗
+  [9/15] L9 (F03173-lm-09) ok=✗
+  [10/15] L10 (F03173-lm-10) ok=✗
+  [11/15] L11 (F03173-lm-11) ok=✗
+  [12/15] L12 (F03173-lm-12) ok=✗
+  [13/15] L13 (F03173-lm-13) ok=✗
+  [14/15] L14 (F03173-lm-14) ok=✗
+  [15/15] L15 (F03173-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R03173-lm.json
+Wrote logs/family-census/solve-R03173-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R03173-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F03173-sym-02) ok=✗
+  [2/7] L3 (F03173-sym-03) ok=✗
+  [3/7] L4 (F03173-sym-04) ok=✗
+  [4/7] L1 (F03173-sym-01) ok=✗
+  [5/7] L6 (F03173-sym-06) ok=✗
+  [6/7] L5 (F03173-sym-05) ok=✗
+  [7/7] L7 (F03173-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R03173-sym.json
+Wrote logs/family-census/solve-R03173-sym-summary.md
+[01:33:47] DONE R03173
+[01:33:47] START R03202
+Parent R03202: witness stressMeta.witnessSolution (len 122, 4 jump(s)), 54 movable object instance(s) under strict inventory.
+  attempt 1: accepted F03202-lm-01 — moved flippingFilters (9,8) -> (11,9)
+  attempt 2: accepted F03202-lm-02 — moved statue (7,5) -> (5,4)
+  attempt 3: accepted F03202-lm-03 — moved lamppost (13,4) -> (7,7)
+  attempt 4: accepted F03202-lm-04 — moved geese (8,5) -> (8,3)
+  attempt 5: accepted F03202-lm-05 — moved lamppost (11,7) -> (1,10)
+  attempt 6: accepted F03202-lm-06 — moved park (12,8) -> (8,6)
+  attempt 7: accepted F03202-lm-07 — moved flippingFilters (8,13) -> (8,7)
+  attempt 8: accepted F03202-lm-08 — moved mustPass (4,3) -> (5,2)
+  attempt 9: accepted F03202-lm-09 — moved statue (12,4) -> (3,11)
+  attempt 10: accepted F03202-lm-10 — moved flippingFilters (9,8) -> (5,12)
+  attempt 11: accepted F03202-lm-11 — moved mustPass (9,3) -> (6,11)
+  attempt 12: accepted F03202-lm-12 — moved fountain (1,8) -> (5,4)
+  attempt 13: accepted F03202-lm-13 — moved statue (4,5) -> (10,2)
+  attempt 14: accepted F03202-lm-14 — moved flippingFilters (13,10) -> (8,4)
+  attempt 15: accepted F03202-lm-15 — moved statue (9,10) -> (13,5)
+
+15/15 new local-mutant sibling(s) generated for R03202 in 15 attempt(s) (budget 600); 15 total in data/families/family-R03202-lm.json.
+Wrote 15 level(s) total to data/families/family-R03202-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03202-lm-manifest.json (15 variant(s) total).
+Parent R03202: witness stressMeta.witnessSolution (len 122, 4 jump(s)), 54 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F03202-sym-01
+  variant 2 (rotation): accepted F03202-sym-02
+  variant 3 (rotation): accepted F03202-sym-03
+  variant 4 (reflection): accepted F03202-sym-04
+  variant 5 (reflection): accepted F03202-sym-05
+  variant 6 (reflection): accepted F03202-sym-06
+  variant 7 (reflection): accepted F03202-sym-07
+
+7/7 new symmetry sibling(s) generated for R03202 in 7 attempt(s) (budget 7); 7 total in data/families/family-R03202-sym.json.
+Wrote 7 level(s) total to data/families/family-R03202-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03202-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R03202-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L1 (F03202-lm-01) ok=✗
+  [2/15] L4 (F03202-lm-04) ok=✗
+  [3/15] L2 (F03202-lm-02) ok=✗
+  [4/15] L3 (F03202-lm-03) ok=✗
+  [5/15] L7 (F03202-lm-07) ok=✗
+  [6/15] L5 (F03202-lm-05) ok=✗
+  [7/15] L6 (F03202-lm-06) ok=✗
+  [8/15] L8 (F03202-lm-08) ok=✗
+  [9/15] L9 (F03202-lm-09) ok=✗
+  [10/15] L10 (F03202-lm-10) ok=✗
+  [11/15] L11 (F03202-lm-11) ok=✗
+  [12/15] L12 (F03202-lm-12) ok=✗
+  [13/15] L13 (F03202-lm-13) ok=✗
+  [14/15] L14 (F03202-lm-14) ok=✗
+  [15/15] L15 (F03202-lm-15) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R03202-lm.json
+Wrote logs/family-census/solve-R03202-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R03202-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F03202-sym-04) ok=✗
+  [2/7] L2 (F03202-sym-02) ok=✗
+  [3/7] L1 (F03202-sym-01) ok=✗
+  [4/7] L3 (F03202-sym-03) ok=✗
+  [5/7] L5 (F03202-sym-05) ok=✗
+  [6/7] L7 (F03202-sym-07) ok=✗
+  [7/7] L6 (F03202-sym-06) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R03202-sym.json
+Wrote logs/family-census/solve-R03202-sym-summary.md
+[01:40:44] DONE R03202
+[01:40:44] START R03242
+Parent R03242: witness stressMeta.witnessSolution (len 113, 7 jump(s)), 46 movable object instance(s) under strict inventory.
+  attempt 1: accepted F03242-lm-01 — moved blocks (0,4) -> (11,11)
+  attempt 2: accepted F03242-lm-02 — moved blocks (13,6) -> (12,11)
+  attempt 3: accepted F03242-lm-03 — moved falseGoals (6,2) -> (6,5)
+  attempt 4: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 5: accepted F03242-lm-04 — moved blocks (12,6) -> (0,7)
+  attempt 6: accepted F03242-lm-05 — moved falseGoals (12,12) -> (0,5)
+  attempt 7: accepted F03242-lm-06 — moved blocks (13,13) -> (12,9)
+  attempt 8: accepted F03242-lm-07 — moved falseGoals (12,12) -> (10,8)
+  attempt 9: accepted F03242-lm-08 — moved blocks (12,10) -> (13,9)
+  attempt 10: accepted F03242-lm-09 — moved blocks (12,2) -> (9,9)
+  attempt 11: accepted F03242-lm-10 — moved mustCross (9,1) -> (2,7)
+  attempt 12: accepted F03242-lm-11 — moved falseGoals (12,12) -> (13,5)
+  attempt 13: accepted F03242-lm-12 — moved blocks (11,9) -> (4,1)
+  attempt 14: accepted F03242-lm-13 — moved flippingFilters (12,0) -> (11,3)
+  attempt 15: accepted F03242-lm-14 — moved flippingFilters (12,0) -> (4,7)
+  attempt 16: accepted F03242-lm-15 — moved blocks (0,4) -> (12,9)
+
+15/15 new local-mutant sibling(s) generated for R03242 in 16 attempt(s) (budget 600); 15 total in data/families/family-R03242-lm.json.
+Wrote 15 level(s) total to data/families/family-R03242-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03242-lm-manifest.json (15 variant(s) total).
+Parent R03242: witness stressMeta.witnessSolution (len 113, 7 jump(s)), 46 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F03242-sym-01
+  variant 2 (rotation): accepted F03242-sym-02
+  variant 3 (rotation): accepted F03242-sym-03
+  variant 4 (reflection): accepted F03242-sym-04
+  variant 5 (reflection): accepted F03242-sym-05
+  variant 6 (reflection): accepted F03242-sym-06
+  variant 7 (reflection): accepted F03242-sym-07
+
+7/7 new symmetry sibling(s) generated for R03242 in 7 attempt(s) (budget 7); 7 total in data/families/family-R03242-sym.json.
+Wrote 7 level(s) total to data/families/family-R03242-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03242-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R03242-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L4 (F03242-lm-04) ok=✓ legacy [hint saved]
+  [2/15] L1 (F03242-lm-01) ok=✗
+  [3/15] L3 (F03242-lm-03) ok=✗
+  [4/15] L2 (F03242-lm-02) ok=✗
+  [5/15] L5 (F03242-lm-05) ok=✗
+  [6/15] L9 (F03242-lm-09) ok=✓ legacy [hint saved]
+  [7/15] L10 (F03242-lm-10) ok=✓ legacy [hint saved]
+  [8/15] L7 (F03242-lm-07) ok=✗
+  [9/15] L6 (F03242-lm-06) ok=✗
+  [10/15] L8 (F03242-lm-08) ok=✗
+  [11/15] L11 (F03242-lm-11) ok=✗
+  [12/15] L12 (F03242-lm-12) ok=✗
+  [13/15] L14 (F03242-lm-14) ok=✗
+  [14/15] L13 (F03242-lm-13) ok=✗
+  [15/15] L15 (F03242-lm-15) ok=✗
+Hints: appended to 3 level(s); 3 hint file(s) changed on disk.
+Result: solved=3/15, solvedBeforeFallback=0, fallbackOnly=3, unsolved=12
+Wrote logs/family-census/solve-R03242-lm.json
+Wrote logs/family-census/solve-R03242-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R03242-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L3 (F03242-sym-03) ok=✓ legacy [hint saved]
+  [2/7] L4 (F03242-sym-04) ok=✗
+  [3/7] L1 (F03242-sym-01) ok=✗
+  [4/7] L5 (F03242-sym-05) ok=✗
+  [5/7] L2 (F03242-sym-02) ok=✗
+  [6/7] L7 (F03242-sym-07) ok=✗
+  [7/7] L6 (F03242-sym-06) ok=✗
+Hints: appended to 1 level(s); 1 hint file(s) changed on disk.
+Result: solved=1/7, solvedBeforeFallback=0, fallbackOnly=1, unsolved=6
+Wrote logs/family-census/solve-R03242-sym.json
+Wrote logs/family-census/solve-R03242-sym-summary.md
+[01:42:55] DONE R03242
+[01:42:55] START R03283
+Parent R03283: witness stressMeta.witnessSolution (len 132, 7 jump(s)), 57 movable object instance(s) under strict inventory.
+  attempt 1: accepted F03283-lm-01 — moved blocks (6,10) -> (11,14)
+  attempt 2: accepted F03283-lm-02 — moved blocks (4,10) -> (4,14)
+  attempt 3: accepted F03283-lm-03 — moved market (10,8) -> (1,10)
+  attempt 4: accepted F03283-lm-04 — moved blocks (12,5) -> (10,7)
+  attempt 5: accepted F03283-lm-05 — moved park (9,10) -> (5,5)
+  attempt 6: accepted F03283-lm-06 — moved fountain (11,6) -> (10,10)
+  attempt 7: accepted F03283-lm-07 — moved market (0,13) -> (4,14)
+  attempt 8: accepted F03283-lm-08 — moved park (3,8) -> (7,13)
+  attempt 9: accepted F03283-lm-09 — moved blocks (5,2) -> (0,5)
+  attempt 10: accepted F03283-lm-10 — moved blocks (8,0) -> (0,4)
+  attempt 11: accepted F03283-lm-11 — moved library (3,9) -> (12,14)
+  attempt 12: accepted F03283-lm-12 — moved blocks (3,14) -> (4,13)
+  attempt 13: accepted F03283-lm-13 — moved blocks (6,9) -> (11,12)
+  attempt 14: accepted F03283-lm-14 — moved lamppost (8,8) -> (14,5)
+  attempt 15: accepted F03283-lm-15 — moved blocks (0,7) -> (2,7)
+
+15/15 new local-mutant sibling(s) generated for R03283 in 15 attempt(s) (budget 600); 15 total in data/families/family-R03283-lm.json.
+Wrote 15 level(s) total to data/families/family-R03283-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03283-lm-manifest.json (15 variant(s) total).
+Parent R03283: witness stressMeta.witnessSolution (len 132, 7 jump(s)), 57 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F03283-sym-01
+  variant 2 (rotation): accepted F03283-sym-02
+  variant 3 (rotation): accepted F03283-sym-03
+  variant 4 (reflection): accepted F03283-sym-04
+  variant 5 (reflection): accepted F03283-sym-05
+  variant 6 (reflection): accepted F03283-sym-06
+  variant 7 (reflection): accepted F03283-sym-07
+
+7/7 new symmetry sibling(s) generated for R03283 in 7 attempt(s) (budget 7); 7 total in data/families/family-R03283-sym.json.
+Wrote 7 level(s) total to data/families/family-R03283-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03283-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R03283-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L1 (F03283-lm-01) ok=✗
+  [2/15] L2 (F03283-lm-02) ok=✗
+  [3/15] L3 (F03283-lm-03) ok=✗
+  [4/15] L4 (F03283-lm-04) ok=✗
+  [5/15] L6 (F03283-lm-06) ok=✗
+  [6/15] L7 (F03283-lm-07) ok=✗
+  [7/15] L5 (F03283-lm-05) ok=✗
+  [8/15] L8 (F03283-lm-08) ok=✗
+  [9/15] L9 (F03283-lm-09) ok=✗
+  [10/15] L11 (F03283-lm-11) ok=✗
+  [11/15] L10 (F03283-lm-10) ok=✗
+  [12/15] L12 (F03283-lm-12) ok=✗
+  [13/15] L15 (F03283-lm-15) ok=✗
+  [14/15] L13 (F03283-lm-13) ok=✗
+  [15/15] L14 (F03283-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R03283-lm.json
+Wrote logs/family-census/solve-R03283-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R03283-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L3 (F03283-sym-03) ok=✗
+  [2/7] L1 (F03283-sym-01) ok=✗
+  [3/7] L2 (F03283-sym-02) ok=✗
+  [4/7] L4 (F03283-sym-04) ok=✗
+  [5/7] L5 (F03283-sym-05) ok=✗
+  [6/7] L6 (F03283-sym-06) ok=✗
+  [7/7] L7 (F03283-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R03283-sym.json
+Wrote logs/family-census/solve-R03283-sym-summary.md
+[01:43:54] DONE R03283
+[01:43:54] START R03313
+Parent R03313: witness stressMeta.witnessSolution (len 128, 5 jump(s)), 78 movable object instance(s) under strict inventory.
+  attempt 1: accepted F03313-lm-01 — moved blocks (5,3) -> (7,6)
+  attempt 2: accepted F03313-lm-02 — moved blocks (12,6) -> (7,6)
+  attempt 3: accepted F03313-lm-03 — moved blocks (0,2) -> (0,1)
+  attempt 4: accepted F03313-lm-04 — moved blocks (2,10) -> (7,6)
+  attempt 5: accepted F03313-lm-05 — moved mustPass (3,6) -> (13,10)
+  attempt 6: accepted F03313-lm-06 — moved blocks (4,2) -> (2,1)
+  attempt 7: accepted F03313-lm-07 — moved mustPass (14,11) -> (6,14)
+  attempt 8: accepted F03313-lm-08 — moved blocks (9,7) -> (11,3)
+  attempt 9: accepted F03313-lm-09 — moved statue (14,7) -> (8,6)
+  attempt 10: accepted F03313-lm-10 — moved library (7,10) -> (6,8)
+  attempt 11: accepted F03313-lm-11 — moved blocks (13,14) -> (13,0)
+  attempt 12: accepted F03313-lm-12 — moved market (2,14) -> (5,6)
+  attempt 13: accepted F03313-lm-13 — moved blocks (6,9) -> (1,1)
+  attempt 14: accepted F03313-lm-14 — moved mustPass (12,3) -> (10,10)
+  attempt 15: accepted F03313-lm-15 — moved library (7,10) -> (0,8)
+
+15/15 new local-mutant sibling(s) generated for R03313 in 15 attempt(s) (budget 600); 15 total in data/families/family-R03313-lm.json.
+Wrote 15 level(s) total to data/families/family-R03313-lm.json (changed=true), 15 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03313-lm-manifest.json (15 variant(s) total).
+Parent R03313: witness stressMeta.witnessSolution (len 128, 5 jump(s)), 78 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F03313-sym-01
+  variant 2 (rotation): accepted F03313-sym-02
+  variant 3 (rotation): accepted F03313-sym-03
+  variant 4 (reflection): accepted F03313-sym-04
+  variant 5 (reflection): accepted F03313-sym-05
+  variant 6 (reflection): accepted F03313-sym-06
+  variant 7 (reflection): accepted F03313-sym-07
+
+7/7 new symmetry sibling(s) generated for R03313 in 7 attempt(s) (budget 7); 7 total in data/families/family-R03313-sym.json.
+Wrote 7 level(s) total to data/families/family-R03313-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03313-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R03313-lm.json levels=15 (15 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/15] L1 (F03313-lm-01) ok=✗
+  [2/15] L4 (F03313-lm-04) ok=✗
+  [3/15] L3 (F03313-lm-03) ok=✗
+  [4/15] L2 (F03313-lm-02) ok=✗
+  [5/15] L5 (F03313-lm-05) ok=✗
+  [6/15] L7 (F03313-lm-07) ok=✗
+  [7/15] L6 (F03313-lm-06) ok=✗
+  [8/15] L8 (F03313-lm-08) ok=✗
+  [9/15] L9 (F03313-lm-09) ok=✗
+  [10/15] L10 (F03313-lm-10) ok=✗
+  [11/15] L11 (F03313-lm-11) ok=✗
+  [12/15] L12 (F03313-lm-12) ok=✗
+  [13/15] L15 (F03313-lm-15) ok=✗
+  [14/15] L13 (F03313-lm-13) ok=✗
+  [15/15] L14 (F03313-lm-14) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/15, solvedBeforeFallback=0, fallbackOnly=0, unsolved=15
+Wrote logs/family-census/solve-R03313-lm.json
+Wrote logs/family-census/solve-R03313-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R03313-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L4 (F03313-sym-04) ok=✗
+  [2/7] L3 (F03313-sym-03) ok=✗
+  [3/7] L2 (F03313-sym-02) ok=✗
+  [4/7] L1 (F03313-sym-01) ok=✗
+  [5/7] L5 (F03313-sym-05) ok=✗
+  [6/7] L6 (F03313-sym-06) ok=✗
+  [7/7] L7 (F03313-sym-07) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R03313-sym.json
+Wrote logs/family-census/solve-R03313-sym-summary.md
+[01:49:28] DONE R03313
+[01:49:28] START R03346
+Parent R03346: witness stressMeta.witnessSolution (len 109, 4 jump(s)), 41 movable object instance(s) under strict inventory.
+
+0/15 new local-mutant sibling(s) generated for R03346 in 600 attempt(s) (budget 600); 0 total in data/families/family-R03346-lm.json.
+family capacity: 0 accepted this run — every movable instance had zero legal alternative placement, or every attempt degenerated to an already-seen fingerprint. See per-attempt log above.
+Wrote 0 level(s) total to data/families/family-R03346-lm.json (changed=true), 0 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03346-lm-manifest.json (0 variant(s) total).
+Parent R03346: witness stressMeta.witnessSolution (len 109, 4 jump(s)), 41 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F03346-sym-01
+  variant 2 (rotation): accepted F03346-sym-02
+  variant 3 (rotation): accepted F03346-sym-03
+  variant 4 (reflection): accepted F03346-sym-04
+  variant 5 (reflection): accepted F03346-sym-05
+  variant 6 (reflection): accepted F03346-sym-06
+  variant 7 (reflection): accepted F03346-sym-07
+
+7/7 new symmetry sibling(s) generated for R03346 in 7 attempt(s) (budget 7); 7 total in data/families/family-R03346-sym.json.
+Wrote 7 level(s) total to data/families/family-R03346-sym.json (changed=true), 7 hint file(s) written to data/families/hints/.
+Wrote family manifest to data/families/family-R03346-sym-manifest.json (7 variant(s) total).
+portfolio-solve-sweep: corpus=data/families/family-R03346-lm.json levels=0 (0 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/0, solvedBeforeFallback=0, fallbackOnly=0, unsolved=0
+Wrote logs/family-census/solve-R03346-lm.json
+Wrote logs/family-census/solve-R03346-lm-summary.md
+portfolio-solve-sweep: corpus=data/families/family-R03346-sym.json levels=7 (7 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=4 save-hints=true
+  [1/7] L2 (F03346-sym-02) ok=✗
+  [2/7] L1 (F03346-sym-01) ok=✗
+  [3/7] L3 (F03346-sym-03) ok=✗
+  [4/7] L4 (F03346-sym-04) ok=✗
+  [5/7] L6 (F03346-sym-06) ok=✗
+  [6/7] L7 (F03346-sym-07) ok=✗
+  [7/7] L5 (F03346-sym-05) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/7, solvedBeforeFallback=0, fallbackOnly=0, unsolved=7
+Wrote logs/family-census/solve-R03346-sym.json
+Wrote logs/family-census/solve-R03346-sym-summary.md
+[01:49:47] DONE R03346

@@ -1,0 +1,148 @@
+{
+  "familyId": "family-R01769-w0-symmetry",
+  "parentLevelId": "R01769",
+  "parentCorpus": "data/stress/stress-levels-random.json",
+  "parentContentHash": "v2:b706fec5ba8d09aeb307b783a59d9b3cb6f82917894cdd85cbf536d00f75e674",
+  "selectedWitnessSource": "stressMeta.witnessSolution",
+  "selectedWitnessLength": 82,
+  "selectedWitnessIntersectionCount": 7,
+  "familyMode": "symmetry",
+  "generatorVersion": "0.1.0",
+  "randomSeed": 20260806,
+  "createdTimestamp": "2026-08-06T23:53:39.817Z",
+  "lastUpdatedTimestamp": "2026-08-06T23:53:39.817Z",
+  "requestedCount": 7,
+  "acceptedCount": 7,
+  "generationAttempts": 7,
+  "attemptBudget": 7,
+  "movableInstanceCount": 57,
+  "parentNavDensity": 0.7714285714285715,
+  "variants": [
+    {
+      "variantId": "F01769-sym-01",
+      "familyId": "family-R01769-w0-symmetry",
+      "relation": "symmetry",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:b706fec5ba8d09aeb307b783a59d9b3cb6f82917894cdd85cbf536d00f75e674",
+      "variantContentHash": "v2:8da329634daabcd7bf3e59704f7e8a6bb4c7419a5b3ed5dbc5ed373217e00b3e",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "transform",
+        "variant": 1,
+        "kind": "rotation"
+      },
+      "generationAttempts": 1,
+      "navDensity": 0.7714285714285715
+    },
+    {
+      "variantId": "F01769-sym-02",
+      "familyId": "family-R01769-w0-symmetry",
+      "relation": "symmetry",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:b706fec5ba8d09aeb307b783a59d9b3cb6f82917894cdd85cbf536d00f75e674",
+      "variantContentHash": "v2:8b3aa1945309114f9176123854a2b0ecba92a53dec1f7c5c73021424950ea60b",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "transform",
+        "variant": 2,
+        "kind": "rotation"
+      },
+      "generationAttempts": 2,
+      "navDensity": 0.7714285714285715
+    },
+    {
+      "variantId": "F01769-sym-03",
+      "familyId": "family-R01769-w0-symmetry",
+      "relation": "symmetry",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:b706fec5ba8d09aeb307b783a59d9b3cb6f82917894cdd85cbf536d00f75e674",
+      "variantContentHash": "v2:74f192ba9b329abfa6ea4c2077c744327d9d05a0ab0d0037019dcdc1e6d20ffa",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "transform",
+        "variant": 3,
+        "kind": "rotation"
+      },
+      "generationAttempts": 3,
+      "navDensity": 0.7714285714285715
+    },
+    {
+      "variantId": "F01769-sym-04",
+      "familyId": "family-R01769-w0-symmetry",
+      "relation": "symmetry",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:b706fec5ba8d09aeb307b783a59d9b3cb6f82917894cdd85cbf536d00f75e674",
+      "variantContentHash": "v2:9923e7914c48af703c583eb7d3c30129da9a746447af308fb9fe36230ae2803f",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "transform",
+        "variant": 4,
+        "kind": "reflection"
+      },
+      "generationAttempts": 4,
+      "navDensity": 0.7714285714285715
+    },
+    {
+      "variantId": "F01769-sym-05",
+      "familyId": "family-R01769-w0-symmetry",
+      "relation": "symmetry",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:b706fec5ba8d09aeb307b783a59d9b3cb6f82917894cdd85cbf536d00f75e674",
+      "variantContentHash": "v2:0a00a458d79e1704728e073b59e5d02172b02ee7528e7715455a02b46a8ba698",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "transform",
+        "variant": 5,
+        "kind": "reflection"
+      },
+      "generationAttempts": 5,
+      "navDensity": 0.7714285714285715
+    },
+    {
+      "variantId": "F01769-sym-06",
+      "familyId": "family-R01769-w0-symmetry",
+      "relation": "symmetry",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:b706fec5ba8d09aeb307b783a59d9b3cb6f82917894cdd85cbf536d00f75e674",
+      "variantContentHash": "v2:78f86456ce18485d1d3402bba0a2e08f4f5e6f319427a67531ec481ff9d851ff",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "transform",
+        "variant": 6,
+        "kind": "reflection"
+      },
+      "generationAttempts": 6,
+      "navDensity": 0.7714285714285715
+    },
+    {
+      "variantId": "F01769-sym-07",
+      "familyId": "family-R01769-w0-symmetry",
+      "relation": "symmetry",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:b706fec5ba8d09aeb307b783a59d9b3cb6f82917894cdd85cbf536d00f75e674",
+      "variantContentHash": "v2:9d7f80f961926fae579d4039049e72c1cec5e643841db830d1940bac3f45afcb",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "transform",
+        "variant": 7,
+        "kind": "reflection"
+      },
+      "generationAttempts": 7,
+      "navDensity": 0.7714285714285715
+    }
+  ]
+}

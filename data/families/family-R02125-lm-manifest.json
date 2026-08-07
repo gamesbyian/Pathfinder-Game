@@ -1,0 +1,387 @@
+{
+  "familyId": "family-R02125-w0-local-mutant",
+  "parentLevelId": "R02125",
+  "parentCorpus": "data/stress/stress-levels-random.json",
+  "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+  "selectedWitnessSource": "stressMeta.witnessSolution",
+  "selectedWitnessLength": 93,
+  "selectedWitnessIntersectionCount": 6,
+  "familyMode": "local-mutant",
+  "generatorVersion": "0.1.0",
+  "randomSeed": 20260806,
+  "createdTimestamp": "2026-08-07T00:06:58.635Z",
+  "lastUpdatedTimestamp": "2026-08-07T00:06:58.635Z",
+  "requestedCount": 15,
+  "acceptedCount": 15,
+  "generationAttempts": 15,
+  "attemptBudget": 600,
+  "movableInstanceCount": 47,
+  "parentNavDensity": 0.875,
+  "variants": [
+    {
+      "variantId": "F02125-lm-01",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:8ad22856558f5ce2a72feed7a06420fd8afb28dd123cf452be9d6de6b3f3c139",
+      "mutationManifest": {
+        "objectType": "blocks",
+        "operation": "move",
+        "from": {
+          "x": 8,
+          "y": 4
+        },
+        "to": {
+          "x": 1,
+          "y": 9
+        }
+      },
+      "generationAttempts": 1,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-02",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:f35a53784c8811018ad6127921e27fe9dc634d37ca1707f1c2584fcf6af1adce",
+      "mutationManifest": {
+        "objectType": "blocks",
+        "operation": "move",
+        "from": {
+          "x": 3,
+          "y": 3
+        },
+        "to": {
+          "x": 10,
+          "y": 8
+        }
+      },
+      "generationAttempts": 2,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-03",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:52cfb3cddd770b35e08dd07a3157a855cf59314274a789d4a4510dbb1e3fb9b4",
+      "mutationManifest": {
+        "objectType": "blocks",
+        "operation": "move",
+        "from": {
+          "x": 3,
+          "y": 3
+        },
+        "to": {
+          "x": 7,
+          "y": 4
+        }
+      },
+      "generationAttempts": 3,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-04",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:09dcfff38a519b7d3ced9428bd169d380d294caf51766e615e248914ad82fe77",
+      "mutationManifest": {
+        "objectType": "blocks",
+        "operation": "move",
+        "from": {
+          "x": 7,
+          "y": 7
+        },
+        "to": {
+          "x": 5,
+          "y": 3
+        }
+      },
+      "generationAttempts": 4,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-05",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:dc776b7f4d40b271627e2c02d7cb20eba2dfa0bc0af18c342407de631a493942",
+      "mutationManifest": {
+        "objectType": "blocks",
+        "operation": "move",
+        "from": {
+          "x": 0,
+          "y": 4
+        },
+        "to": {
+          "x": 4,
+          "y": 3
+        }
+      },
+      "generationAttempts": 5,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-06",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:e9d7505bec89f4ae21acf92923ffba5b180d2bd6fdfa4ced4804324571f4249a",
+      "mutationManifest": {
+        "objectType": "blocks",
+        "operation": "move",
+        "from": {
+          "x": 8,
+          "y": 4
+        },
+        "to": {
+          "x": 6,
+          "y": 3
+        }
+      },
+      "generationAttempts": 6,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-07",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:f2ea06c6b3c3685c1467bd0fa18a5795e8bd2bae8fd31ab2f7ec8e1d3973071b",
+      "mutationManifest": {
+        "objectType": "market",
+        "operation": "move",
+        "from": {
+          "x": 6,
+          "y": 10
+        },
+        "to": {
+          "x": 6,
+          "y": 3
+        },
+        "role": "adjacentTurn"
+      },
+      "generationAttempts": 7,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-08",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:1eba348c79f20e27dc6a4d648cd43f14938c3e6b000548871a45b42116fdd0af",
+      "mutationManifest": {
+        "objectType": "blocks",
+        "operation": "move",
+        "from": {
+          "x": 11,
+          "y": 10
+        },
+        "to": {
+          "x": 1,
+          "y": 9
+        }
+      },
+      "generationAttempts": 8,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-09",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:d453f42db236bfc244892e9596c3c1a9e7b5ff39ed9810f3c03c6ee97b518042",
+      "mutationManifest": {
+        "objectType": "library",
+        "operation": "move",
+        "from": {
+          "x": 6,
+          "y": 9
+        },
+        "to": {
+          "x": 6,
+          "y": 3
+        },
+        "role": "adjacentTurn"
+      },
+      "generationAttempts": 9,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-10",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:2c90c652470744db4a10c27c05bfecb9f50e3ff565a9c1f4654ae51e57b7a9ea",
+      "mutationManifest": {
+        "objectType": "blocks",
+        "operation": "move",
+        "from": {
+          "x": 1,
+          "y": 10
+        },
+        "to": {
+          "x": 4,
+          "y": 3
+        }
+      },
+      "generationAttempts": 10,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-11",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:72c0e3615ac7c91f924c4136db7636e74feed3bda0cfeae6a669bebc1b2246e3",
+      "mutationManifest": {
+        "objectType": "park",
+        "operation": "move",
+        "from": {
+          "x": 6,
+          "y": 11
+        },
+        "to": {
+          "x": 4,
+          "y": 3
+        },
+        "role": "decorative"
+      },
+      "generationAttempts": 11,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-12",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:b5cfe8623396190b184320643de0a73c61abf7b973fcfd794dd69e42eccfe9a7",
+      "mutationManifest": {
+        "objectType": "park",
+        "operation": "move",
+        "from": {
+          "x": 6,
+          "y": 11
+        },
+        "to": {
+          "x": 6,
+          "y": 3
+        },
+        "role": "decorative"
+      },
+      "generationAttempts": 12,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-13",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:bf929f1bb9020db0be4af7ab42f83146a68ea4275404053f1500187d19f18a03",
+      "mutationManifest": {
+        "objectType": "blocks",
+        "operation": "move",
+        "from": {
+          "x": 0,
+          "y": 5
+        },
+        "to": {
+          "x": 5,
+          "y": 3
+        }
+      },
+      "generationAttempts": 13,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-14",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:2cbbc142614539253ee1483cc342f57219390bf3a8d577a674ef6202b90069b4",
+      "mutationManifest": {
+        "objectType": "blocks",
+        "operation": "move",
+        "from": {
+          "x": 4,
+          "y": 2
+        },
+        "to": {
+          "x": 6,
+          "y": 3
+        }
+      },
+      "generationAttempts": 14,
+      "navDensity": 0.875
+    },
+    {
+      "variantId": "F02125-lm-15",
+      "familyId": "family-R02125-w0-local-mutant",
+      "relation": "local-mutant",
+      "witnessRelation": "exact-coordinate",
+      "randomSeed": 20260806,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:fba2732b9a945bd7bf114c67aedee0b0adf15b168c1d259a15f6f136d160eefc",
+      "variantContentHash": "v2:7caec26bf184a13c4b093d5e4136ef76c6112972254553148a98b6f5dde2ab91",
+      "mutationManifest": {
+        "objectType": "park",
+        "operation": "move",
+        "from": {
+          "x": 1,
+          "y": 11
+        },
+        "to": {
+          "x": 7,
+          "y": 4
+        },
+        "role": "adjacentTurn"
+      },
+      "generationAttempts": 15,
+      "navDensity": 0.875
+    }
+  ]
+}
