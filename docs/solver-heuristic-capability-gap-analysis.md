@@ -63,7 +63,7 @@ An incomplete state signature may be safe for diversity but not for rejection.
 | Anti-dither / revisit penalty | Suppresses trivial reversal and gratuitous reuse | Productive versus destructive revisits and longer history motifs |
 | Obligation lower bounds | Prove insufficient length; provide scalar slack | Most cross-family conflict, exact interfaces/order, dynamic topology |
 | Deadlock / connectivity | Catch irreversible local failure and unreachable/undersized regions | Traversal feasibility through a region, separator allocation, combined interfaces |
-| Beam dedup/diversity | Avoids some duplicate work and flipper/must-cross mode collapse | Portal-complete identity, residual path topology, diversity for other mechanics |
+| Beam dedup/diversity | Frees beam width via aggressive (formally unsound) merging on `(cell, ints/mp/mc/flipper/surround/mustTurn/adjTurn-mask)`, all mechanics as of 2026-08-06 | Portal-complete identity; must-cross crossCounts/axis-lock sub-state was tried 2026-08-07 and found net-negative — more merge precision competes against, not adds to, the mechanism's actual width-management value (see `reports/2026-08-07-beam-dedup-mc-axis-granularity-net-negative.md`) |
 | Repair | Escapes deterministic commitment through restarts and elites | Ordinary interior edits, connectivity pruning, stable use of every shared score |
 | Attempt policy | Routes coarse feature regimes to methods | Online response to beam extinction, prune causes, or repair plateau shape |
 
