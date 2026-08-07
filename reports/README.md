@@ -10,8 +10,8 @@ Generated summaries are exempt; their embedded generator/run metadata is authori
 
 ## The solver research narrative (loose dated files at this level)
 
-For the completed repository-wide audit and disposition record for interrupted investigations,
-stale active statuses, and deliberately deferred work, see
+For a repository-wide inventory of investigations that still lack a conclusion, stale active
+statuses, and deliberately deferred work, see
 [`2026-08-06-documentation-loose-threads-audit.md`](2026-08-06-documentation-loose-threads-audit.md).
 
 The ~35 `YYYY-MM-DD-<topic>.md` files directly in this directory are individual investigation
@@ -28,6 +28,15 @@ which typically states what it follows up on or supersedes.
 
 `CLAUDE.md`'s Solver Architecture gotchas section also cites several of these directly for
 specific, still-relevant lessons (not just narrative history).
+
+The cross-document synthesis
+[`2026-08-06-solver-blind-spot-cross-attempt-cooperation.md`](2026-08-06-solver-blind-spot-cross-attempt-cooperation.md)
+identifies a recurring assumption in that narrative: search techniques within one cold solve are
+usually treated as independent, all-or-nothing attempts, while known trajectories stand in for the
+harder-to-measure family of possible completions. It proposes evidence-first tests of typed
+within-solve handoffs between repair, beam/DFS, admissible-order search, and external oracles. It
+also explicitly excludes stored hints, witnesses, and solved-level paths from production search;
+those may be evaluation or separately-provenanced hint-guided inputs, never cold-solver inputs.
 
 ## Subdirectories
 

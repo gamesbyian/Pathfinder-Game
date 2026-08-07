@@ -1,14 +1,5 @@
 # Documentation loose-threads audit (2026-08-06)
 
-> **Status:** concluded-positive
->
-> **Last evidence:** 2026-08-07 — cleanup follow-ups through the R00526 traversal diagnosis
->
-> **Decision:** the identified interrupted threads and stale status surfaces are resolved; remaining
-> work is explicitly active, deferred behind a trigger, retained, quarantined, or closed
->
-> **Remaining gate:** none for this audit; use `docs/future-work.md` for live project work
-
 ## Purpose and scope
 
 This is a repository-wide triage of plans, notes, reports, continuation prompts, and raw run
@@ -32,19 +23,36 @@ under `docs/archive/`, and honest null results are not counted as abandoned.
 
 ## Executive result
 
-The repository did not have a broad epidemic of half-finished experiments. Most dated reports
-contained a verdict or were absorbed into a later synthesis. The material problem was **status
-drift**: interrupted threads, stale “active” labels, and completed gates were mixed with the live
-queue. The two genuinely interrupted experiments identified below are now explicitly cancelled as
-superseded or no longer decision-relevant; all four stale status surfaces are reconciled; and the
-older backlog has an explicit disposition table.
+The repository does not have a broad epidemic of half-finished experiments. Most dated reports
+either contain a verdict or are explicitly absorbed into a later synthesis. The main problem is
+**status drift**: a handful of genuine loose threads are mixed with stale “active” labels and
+already-completed gates, making it hard to distinguish the current queue from history.
 
-The family fragile/robust census remains deliberately excluded: it is active work owned on another
-branch, so the absence of its eventual combined result on this branch is not evidence of abandonment.
+The highest-confidence unfinished item is the newly registered **family fragile/robust census**:
+the workflow and 1,700-level manifest exist, but no combined census result or interpretive report
+does. Two older experiments appear genuinely interrupted. Several other items remain legitimate
+backlog rather than abandoned work.
 
-## A. Formerly interrupted threads — now resolved
+## A. High-confidence interrupted or abandoned threads
 
-### A1. Must-turn-biased repair promotion sweep stopped at 9/30
+### A1. Family fragile/robust census: infrastructure landed, conclusion did not
+
+**Last activity:** 2026-08-06 (`7d641da`, `565fc60`, `08c1db3`; the first commit explicitly says
+“in progress”).
+
+The 2026-07-29 failure categorization made a turn-load-stratified family split its fourth
+recommended next step. A five-level first sample was confounded by archetype; a same-day
+disambiguation found turn load rather than archetype to be the stronger driver. The latest commits
+then generated additional families, added a 20-shard GitHub Actions census, and registered the
+workflow. There is now a census manifest, but no committed shard outputs, combined summary, or
+report that answers the question at corpus scale.
+
+**Conclusion still owed:** run the 20 shards, combine them with `family-census-combine.mjs`, report
+fragile/robust rates by turn-load stratum (including failed/missing shards), and decide whether the
+result changes solver priorities. This is active and very recent, not stale, but it is the clearest
+work presently stopped before a conclusion.
+
+### A2. Must-turn-biased repair promotion sweep stopped at 9/30
 
 **Last narrative activity:** 2026-07-23.
 
@@ -54,13 +62,11 @@ sample, and says the per-level output is resumable. No later report records 30/3
 decision. Later turn-bias A/B work concerns the different `repairTurnBiased` tier and does not close
 this `repairMustTurnBiasedAttempt` question.
 
-**Resolved 2026-08-07:** explicitly cancelled as superseded. A later 31-level cross-corpus predictor
-sample and full corpus-2 exclusive-selection A/B are stronger evidence against the decision the old
-sweep was meant to make. The current experiment is a different, weighted two-technique design, so
-finishing the remaining 21 stress-corpus-1 levels would not validate it. The source report now carries
-this resolution and points to the later evidence.
+**Conclusion still owed:** either resume the remaining 21 levels and state a promotion verdict, or
+close the experiment explicitly as superseded, naming the evidence that makes completion no longer
+decision-relevant.
 
-### A2. Fast-portfolio unsolved-corpus sweeps were never completed
+### A3. Fast-portfolio unsolved-corpus sweeps were never completed
 
 **Last narrative activity:** 2026-07-15 through the imported/updated report state on 2026-07-30.
 
@@ -71,25 +77,23 @@ this is **not** an open product decision. It is abandoned experimental coverage 
 be run if the scheduler is reconsidered or marked cancelled because the negative published/stress
 evidence already makes it immaterial.
 
-**Resolved 2026-08-07:** cancelled explicitly. The incomplete sweeps cannot change the already
-recorded not-production-ready decision, and later legacy-ladder changes make their old timing
-baseline stale. The portfolio README preserves the checkpoint command only as a restart recipe if a
-new decision deliberately reopens the experiment.
+**Conclusion still owed:** “completed results” or “cancelled as unnecessary”; leaving the section
+headed “not yet run to completion” indefinitely makes an intentionally concluded experiment look
+active.
 
-## B. Former stale status surfaces — now resolved
+## B. Stale status that hides what is actually open
 
 ### B1. The root continuation prompt is completed but still presents itself as the next session
 
-The archived
-[`corpus2-failure-categorization-handoff.md`](../docs/archive/corpus2-failure-categorization-handoff.md)
-asked for 20 categorized levels and a report at
+`CONTINUATION_PROMPT_CORPUS2_CATEGORIZATION.txt` asks for 20 categorized levels and a report at
 `reports/stress/corpus2-failure-categorization-2026-07-29.md`. That report exists, contains the
-requested categorization, and has later updates to its recommendations. It is now retained only as
-a completed handoff record rather than presented at the repository root as current work.
+requested categorization, and has later updates to its recommendations. The prompt is now an
+orphaned handoff artifact, not current work.
 
-**Resolved 2026-08-07:** archived with a completion notice and reciprocal links to the result.
+**Action:** archive/delete it or prepend a completion notice pointing to the report. Until then it
+can cause a future agent to repeat finished work.
 
-### B2. The solver roadmap was incorrectly presented as the live queue
+### B2. The active solver roadmap's baseline and campaign labels are stale
 
 **Last meaningful campaign-state baseline in the document:** 2026-07-18 (304/1700), despite many
 2026-07-23–08-06 refreshes and investigations.
@@ -100,49 +104,49 @@ a new lead. Its table also preserves an unverified +2 attribution that newer ref
 work has overtaken. Because `docs/README.md` calls this the active campaign source of truth, this is
 more than harmless history.
 
-**Resolved 2026-08-07:** the roadmap is now labelled as a historical campaign record, its baseline
-section is explicitly a snapshot with a pointer to generated current state, and `future-work.md` is
-the sole live status index. The docs and reports indexes use the same distinction.
+**Action:** refresh the headline baseline and replace old campaign statuses with a compact current
+frontier, or relabel the roadmap as a historical campaign record and make `future-work.md` the sole
+live queue.
 
-### B3. Turn-bias had a completed gate listed as remaining
+### B3. Turn-bias has a completed gate still listed as remaining
 
-Both `docs/future-work.md` and `docs/repair-search-stagnation-escape-plan.md` said the remaining gate
-was a pair of corpus-2 A/B refreshes plus timing comparison. The 2026-07-23 turn-bias A/B report did
-run the before/after refresh, discovered and fixed probe-budget stacking, reran post-fix, and revised
-the result to a wash (~+1 inside the noise floor). It explicitly says default-on promotion is not
-justified. A narrower latency/pick-one-design question remains.
+Both `docs/future-work.md` and `docs/repair-search-stagnation-escape-plan.md` still say the remaining
+gate is a pair of corpus-2 A/B refreshes plus timing comparison. The 2026-07-23 turn-bias A/B report
+did run the before/after refresh, discovered and fixed probe-budget stacking, reran post-fix, and
+revised the result to a wash (~+1 inside the noise floor). It explicitly says default-on promotion
+is not justified. A narrower latency/pick-one-design question remains, but the documented
+“remaining gate” is no longer accurate.
 
-**Resolved 2026-08-07:** both current documents now record the completed population verdict and the
-narrower feature-selection/three-tier-latency question.
+**Action:** replace that gate with the actual remaining decision: either close turn-bias as
+default-off, or investigate feature-based selection between the two biased tiers and measure the
+three-tier fallback latency before reconsidering promotion.
 
-### B4. The “proposed, not started” stagnation-plan index entry was obsolete
+### B4. The “proposed, not started” stagnation-plan index entry is obsolete
 
-`docs/README.md` described `repair-search-stagnation-escape-plan.md` as proposed/not started, while
-the plan and `future-work.md` record Stages 1–3 as built and tested, with Stage 4 rescoped. This did
-not leave code unfinished by itself, but it sent readers to the wrong starting point and obscured
+`docs/README.md` describes `repair-search-stagnation-escape-plan.md` as proposed/not started, while
+the plan and `future-work.md` record Stages 1–3 as built and tested, with Stage 4 rescoped. This does
+not leave code unfinished by itself, but it sends readers to the wrong starting point and obscures
 the genuinely open descent-aware-probing/extend-operator choice.
 
-**Resolved 2026-08-07:** the documentation index now states the measured verdict and next evidence
-step.
+**Action:** update the index description to the measured current verdict.
 
-## C. Older loose threads — triaged 2026-08-07
+## C. Genuine open backlog that has gone quiet
 
-These are not necessarily abandoned, but no closing artifact was found in the original audit. Each
-now has an explicit disposition in
-[`docs/future-work.md`](../docs/future-work.md#older-loose-thread-triage-2026-08-07), summarized here.
+These are not necessarily abandoned, but no closing artifact was found and newer campaigns have
+not touched them.
 
-| Thread | Disposition |
-|---|---|
-| AI-assisted manual-solving method | **Defer** until automated differential diagnosis yields a specific first-divergence question. |
-| Repair-probe budget scaling | **Defer** until a measured small-budget caller shows harm. |
-| Attraction-diversity sequential per-flag passes | **Close** on cost/evidence; reopen only with a cheap selector. |
-| Solver hot-path unexplained divergence | **Closed 2026-08-07**; score-order restoration recovers `R00526`, proving the mid-phase tree-walk/budget mechanism. The speed/solve trade remains deliberately accepted. |
-| Tier-2/Tier-3 memory-bandwidth work | **Defer** behind a fresh profile and staged lifetime audit. |
-| Persistent regression-set staleness | **Completed 2026-08-07**; restored three hard pins and added a guarded solved-baseline writer. |
-| Portfolio-learning classifier rerun | **Do (cheap measurement)** once, then build or drop. |
-| Broader family/scaling research | **Defer** until a concrete cutoff decision needs it. |
-| Hint-tool cleanup | **Keep** the standalone CLI pending parity; quarantine the untraced JSON snapshot. |
-| Firebase operational follow-ups | **Defer** behind the already-named ops/rules-change triggers. |
+| Thread | Last explicit activity | What remains |
+|---|---:|---|
+| AI-assisted manual-solving method | 2026-07-17 narrative / 2026-07-30 import | Run the recommended differential diagnosis on a genuinely unsolved level; the worked example was already solved. Newer R02751 work used a withheld witness, so it does not validate blind/manual construction. |
+| Repair-probe budget scaling | 2026-07-17 | The early probe's fixed node budget remains unscaled by `timeBudgetMs`; decide/fix after a production latency measurement. |
+| Attraction-diversity sequential per-flag passes | 2026-07-17 | Only the combined widening was tested; sequential isolated sub-passes were left untested because of their expected ~5× pass cost. Explicitly decide whether that cost closes the idea. |
+| Solver hot-path unexplained divergence | 2026-07-30 | `R01403` reportedly changed from a ~5.3M-node solve to failure near ~580× that work after a supposedly pure-speed change; the report says it was not run down. This deserves closure because behavioral drift under a behavior-identical optimization could indicate nondeterminism or hidden state. |
+| Tier-2/Tier-3 memory-bandwidth work | 2026-07-30 | Tier 2 is scoped but unimplemented; Tier 3 is named but unscoped. These are valid performance backlog, not an active correctness incident. |
+| Persistent regression-set staleness | 2026-07-30 | Rebaseline `data/stress/regression-set.json` and/or put `stress:regression` in CI so known-hard pins cannot silently age. |
+| Portfolio-learning classifier rerun | 2026-07-17 | Rerun the “will repair win?” classifier now that corpus-2 data greatly exceeds the original n=85, then build or drop it. Its stated prerequisite appears to have arrived. |
+| Broader family/scaling research | 2026-07-15 | Systematic solver-scaling analysis and recipe cousins remain unimplemented. Recipe cousins are explicitly deferred; scaling analysis is open research, not a promised near-term deliverable. |
+| Hint-tool cleanup | 2026-07-25 | Decide whether the standalone hint-candidate CLI should coexist with or be retired in favor of the workbench; also resolve the provenance of `reports/hint-selection.json`. |
+| Firebase operational follow-ups | 2026-06/07 planning, indexed 2026-08-05 | Admin custom-claim cutover and emulator-backed rules tests remain blocked/deferred by external operations/infra. They are intentionally open, not abandoned code work. |
 
 ## D. Recent, honest open research (do not misclassify as abandoned)
 
@@ -159,12 +163,18 @@ Likewise, negative reports, reverted experiments, and the archived modernization
 are concluded work. “Not implemented” in those documents often records an evidence-based rejection,
 not forgotten implementation.
 
-## Cleanup completion
+## Recommended cleanup order
 
-The audit's repository-organization work is complete. The prospective
-[`Status / Last evidence / Decision / Remaining gate` convention](../docs/investigation-report-conventions.md)
-now defines how new and materially revised reports avoid recreating the same drift. Remaining project
-work is intentionally tracked in `docs/future-work.md`, not here.
+1. **Finish the census already prepared in A1** and publish one synthesis report; it is the only
+   large current investment lacking results.
+2. **Resolve A2 explicitly** (finish or cancel the 30-level sweep).
+3. **Repair the four stale status surfaces in section B** so the indexes agree with later evidence.
+4. **Triage section C into `do / defer-until / close`**, assigning a prerequisite to every deferred
+   item. Start with the R01403 divergence and stale regression set because they affect trust in
+   measurements, not merely future solve rate.
+5. Add a small status convention to new investigation reports: `Status`, `Last evidence`,
+   `Decision`, and `Remaining gate`. This would make the next audit mechanical and prevent completed
+   prompts from competing with current plans.
 
 ## Reproduction notes
 
