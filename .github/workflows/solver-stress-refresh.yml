@@ -360,6 +360,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # 2026-08-07: snapshot the CURRENTLY-COMMITTED baseline's per-level solved IDs before
+      # anything below overwrites logs/stress-corpus{1,2}-baseline.json in the working tree (the
+      # compile-baseline.mjs step further down does exactly that, unconditionally, even under
+      # deterministic=true, which only skips the final git commit/push -- the working-tree files
+      # are rewritten regardless). Printed to the job log immediately, not just saved to disk:
+      # this run's own churn-report step (below) reads these files back, but they also let a
+      # human/agent diff two SEPARATE runs' logs against each other without needing either run's
+      # artifact -- added because the combined artifact lives on a blob-storage host some sandboxed
+      # agent environments cannot reach (an org egress policy denial, not a bug), while job logs are
+      # always fetchable via the GitHub API. See reports/2026-08-07-repair-nogood-cache.md and
+      # reports/2026-08-07-turnbias-corpus2-validation.md for the investigation this was built for.
+      - name: Snapshot the pre-run committed baseline (for the churn report below)
+        shell: bash
+        run: |
+          mkdir -p /tmp/pre-run-baseline
+          cp logs/stress-corpus1-baseline.json /tmp/pre-run-baseline/corpus1-before.json 2>/dev/null || echo '{"levels":[]}' > /tmp/pre-run-baseline/corpus1-before.json
+          cp logs/stress-corpus2-baseline.json /tmp/pre-run-baseline/corpus2-before.json 2>/dev/null || echo '{"levels":[]}' > /tmp/pre-run-baseline/corpus2-before.json
+
       - name: Download every shard's artifact
         uses: actions/download-artifact@v4
         with:
@@ -418,6 +436,39 @@ jobs:
           npm run stress:curate-dev-benchmark -- --benchmark=reports/stress/benchmark-latest-random.json || true
           node scripts/stress/compile-baseline.mjs --mode=corpus2 --official=reports/stress/benchmark-latest-random.json
           node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-parallel.json
+
+      # 2026-08-07: per-level churn vs. the pre-run committed baseline, printed directly to the
+      # job log -- gains and losses, not just the net delta the aggregate SOLVED line further down
+      # already prints. Answers CLAUDE.md's "net-monotonic-after-recovery, not zero-regression" bar
+      # (a net +3 could be +10/-7; only the per-level list says which) without ever needing the
+      # combined artifact. Capped at 40 IDs per direction in the printed log (the full lists are
+      # long on a big refresh) -- the underlying compiled baseline files (committed to main on a
+      # non-deterministic run, or present in the uploaded artifact on a deterministic run) still
+      # have the complete data if more than 40 is ever needed.
+      - name: Churn report vs. the pre-run committed baseline
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const { readFileSync, existsSync } = require('node:fs');
+          function solvedIds(f) {
+            if (!existsSync(f)) return new Set();
+            const levels = JSON.parse(readFileSync(f, 'utf8')).levels ?? [];
+            return new Set(levels.filter(l => l.ok).map(l => l.id ?? String(l.level)));
+          }
+          const pairs = [
+            ['corpus-1', '/tmp/pre-run-baseline/corpus1-before.json', 'logs/stress-corpus1-baseline.json'],
+            ['corpus-2', '/tmp/pre-run-baseline/corpus2-before.json', 'logs/stress-corpus2-baseline.json'],
+          ];
+          for (const [name, beforeFile, afterFile] of pairs) {
+            const before = solvedIds(beforeFile);
+            const after = solvedIds(afterFile);
+            const gained = [...after].filter(id => !before.has(id)).sort();
+            const lost = [...before].filter(id => !after.has(id)).sort();
+            console.log(`\n${name} churn: ${before.size} -> ${after.size} (net ${after.size - before.size >= 0 ? '+' : ''}${after.size - before.size}), ${gained.length} gained, ${lost.length} lost`);
+            if (gained.length > 0) console.log(`  gained: ${gained.slice(0, 40).join(',')}${gained.length > 40 ? ` (+${gained.length - 40} more)` : ''}`);
+            if (lost.length > 0) console.log(`  LOST: ${lost.slice(0, 40).join(',')}${lost.length > 40 ? ` (+${lost.length - 40} more)` : ''}`);
+          }
+          NODE
 
       # A truncated level is indeterminate, not unsolved -- and under deterministic=true the whole
       # point is reproducibility, so any clock-bound level here means the wrapper timeout (not the
