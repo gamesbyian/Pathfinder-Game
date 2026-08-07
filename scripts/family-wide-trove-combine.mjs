@@ -31,17 +31,30 @@ const OUT = args.get('--out') || 'reports/families/2026-08-07-wide-trove-summary
 const manifest = JSON.parse(readFileSync(path.resolve(process.cwd(), MANIFEST), 'utf8'));
 const idToCorpus = new Map(manifest.map((e) => [e.id, e.corpus]));
 
-const rows = [];
+// Deduped by (id, mode), keeping the LAST occurrence: family-wide-trove-shard-run.mjs's progress
+// files are append-only (appendFileSync), and a re-dispatch of an already-committed shard re-checks
+// out that shard's summary file WITH its prior committed lines already in it -- every task the
+// shard re-visits (even ones its own idempotency check skips regenerating) gets logged a second
+// time. Confirmed 2026-08-07: shard 1's summary file, re-touched by the shard-8/enrich-existing
+// backfill dispatch, had exactly 2x lines for every one of its 128 tasks. Without deduping here,
+// re-dispatching a partially-complete run silently inflates every solve-rate number in the report
+// (a task counted N times for N dispatches that ever touched its shard), even though the underlying
+// data files themselves stay correctly deduplicated by the idempotency check.
+const rowByKey = new Map();
 const inDirAbs = path.resolve(process.cwd(), IN_DIR);
 if (existsSync(inDirAbs)) {
     for (const file of readdirSync(inDirAbs).filter((f) => /^wide-shard-\d+-summary\.jsonl$/.test(f))) {
         const text = readFileSync(path.join(inDirAbs, file), 'utf8');
         for (const line of text.split('\n')) {
             if (!line.trim()) continue;
-            try { rows.push(JSON.parse(line)); } catch { /* partial last line from a killed shard */ }
+            try {
+                const row = JSON.parse(line);
+                rowByKey.set(`${row.id}|${row.mode}`, row);
+            } catch { /* partial last line from a killed shard */ }
         }
     }
 }
+const rows = [...rowByKey.values()];
 
 const expectedTasks = manifest.reduce((a, e) => a + e.modes.length, 0);
 console.log(`Parsed ${rows.length} (level,mode) result(s) against ${expectedTasks} expected tasks.`);
