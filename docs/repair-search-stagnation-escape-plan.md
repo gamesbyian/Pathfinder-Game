@@ -596,3 +596,21 @@ states often enough for a cache to matter, before investing in Stage 1's enginee
 5. Effectiveness measurement: solved-count delta on the same `repair-close` sample used for
    `closeLengthGap`'s own A/B tests.
 6. Full corpus-2 refresh (GitHub Actions) only after everything above passes locally.
+
+### Addendum (2026-08-07): a different bounded operator built and tested — net-negative, kept opt-in
+
+Before attempting the nogood-cache design above (a materially larger undertaking), built and
+tested the other half of the synthesis's "genuinely different reversible prefix edits" direction:
+`elitePrefixDfsRepair` (`modules/solver/repair-search.ts`) generalizes `closeLengthGap`'s proven
+bounded-deterministic-DFS technique from one point (the current restart's own dead end) to several
+points scattered across the top elite near-misses. Sound, mechanistically confirmed working (its
+badness-improvement feedback loop measurably improved a real gate's best-known state), but a
+20-level A/B against the repair-close/repair-far closest-miss population found a net-negative
+result (4/20 solved vs. 5/20 with it off, one confirmed node-budget displacement) — the same
+scarce-shared-budget zero-sum dynamic documented for turn bias's initial rollout. Shipped
+opt-in-only (`STRATEGY_REPAIR_ELITE_PREFIX_DFS`), not default-on. Full writeup:
+[`reports/2026-08-07-repair-elite-prefix-dfs.md`](../reports/2026-08-07-repair-elite-prefix-dfs.md).
+This doesn't close off the nogood-cache design above — they attack the same wall from different
+angles (this one widens *where* bounded search looks; the cache would stop *re-deriving* the same
+failure repeatedly) — but it does confirm the wall is real and that a shared, scarce node budget is
+now the binding constraint on any new repair operator, not search creativity alone.
