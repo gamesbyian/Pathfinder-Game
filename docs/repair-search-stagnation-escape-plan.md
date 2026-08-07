@@ -490,7 +490,22 @@ they're also a direct extension of CLAUDE.md's own memoization-soundness gotcha)
 
 ---
 
-## Appendix: original exact-state nogood-cache design (deprioritized, kept for reference)
+## Appendix: original exact-state nogood-cache design — REVISED 2026-08-07, built and shipped
+
+**Update (2026-08-07): the premise check below was actually run, and reversed this section's own
+"not recommended" verdict.** Stage 0's falsification criterion predicted the opposite of what the
+data showed: 7 real repair-close levels came back at 53.65%-98.09% exact dead-end repeat rates
+(both fresh AND elite-spliced restarts), decisively above the "proceed to Stage 1" bar, not the
+"<1%, stop here" one. Built as `modules/solver/nogood-cache.ts` with one deliberate simplification
+(a fresh-computed signature instead of an incrementally-maintained one — see the report below for
+why) and shipped **default-on** behind `STRATEGY_REPAIR_NOGOOD_CACHE`: a 20-level repair-close/
+repair-far A/B showed 5/20 solved vs. 4/20 with it off, zero regressions, and consistent node
+reductions (13.7%-40.9%) on every level that solved either way. Full writeup:
+[`reports/2026-08-07-repair-nogood-cache.md`](../reports/2026-08-07-repair-nogood-cache.md). The
+original deprioritization below was reasonable given the evidence available at the time (a
+differently-scoped prior investigation, and the premise check simply never having been run) — kept
+verbatim beneath this update per this repo's standing rule that superseded reasoning stays visible,
+not silently erased, even when the conclusion it reached turned out to be wrong.
 
 The following is the plan's original content, preserved verbatim from before the 2026-07-18
 research pass. **Not recommended given the research above** — kept in case circumstances change

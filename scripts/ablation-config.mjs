@@ -59,6 +59,7 @@ export const FEATURES = {
     STRATEGY_DIVERSE_BEAM:      'Diverse beam selection bucketed by (flipperUsedMask, mustCrossMask)',
     STRATEGY_STATE_DEDUP:       'Beam state deduplication: merge same (position + constraint-state)',
     STRATEGY_REPAIR_ELITE_PREFIX_DFS: 'Repair: on stagnation, bounded deterministic completion DFS from several points scattered across the elite pool (default-OFF — only added under an explicit true value; a 20-level A/B found a net-negative signal at current constants, see reports/2026-08-07-repair-elite-prefix-dfs.md)',
+    STRATEGY_REPAIR_NOGOOD_CACHE: 'Repair: per-call cache of exact dead-end states, short-circuiting a restart the moment it re-enters a state already proven fruitless earlier in the same call (see modules/solver/nogood-cache.ts)',
     STRATEGY_GATE_INTERLEAVING: 'Config-outer gate-inner scheduling for multi-gate levels',
     STRATEGY_PARITY_GATE_FILTER:'Pre-filter infeasible gates by parity (portal-free levels)',
     STRATEGY_REPAIR_FALLBACK:   'Iterated-local-search repair fallback attempts (extra budget, after the main loop)',

@@ -28,6 +28,7 @@ import { workMeter } from './work-meter.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, structuralDeficit } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
+import { createNogoodCache } from './nogood-cache.js';
 import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, PrepLevel, ScoringProfile, StructuralTemplate, SolverSearchState, UndoToken } from './types.js';
@@ -940,6 +941,13 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     // and only ever created/consumed when enableMustTurnBias is true (the biased attempt).
     const rand2 = enableMustTurnBias ? mulberry32(((startKey * 0x27220A95) ^ (seedSalt * 0x85EBCA77)) >>> 0) : null;
 
+    // Nogood cache (see nogood-cache.ts) — one instance per repairSearchFromGate call, per its own
+    // lifecycle rule. Ablation: STRATEGY_REPAIR_NOGOOD_CACHE, default-on (standard convention,
+    // unlike the Stage 2/3 prototypes above and elitePrefixDfsRepair): this mechanism can only
+    // ever SKIP already-proven-dead exploration, never add competing search effort, so it doesn't
+    // carry the same "extra technique competing for a shared node budget" risk those do.
+    const nogoodCache = (!cfg || cfg.STRATEGY_REPAIR_NOGOOD_CACHE) ? createNogoodCache() : null;
+
     // Elite pool, sorted ascending by badness (elites[0] is the best-ever near-miss). See
     // ELITE_POOL_SIZE. `cells`/`pend` (Stage 3): the path's visited-cell set and pending-objective
     // masks, built once at insert time only when recombination is enabled (null otherwise → zero cost
@@ -1042,12 +1050,20 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
             outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo, activePenalty, guideCells, turnBiasActive);
             if (prep._metrics) prep._metrics.nodesExpanded++;
             nodesExpandedLocal++;
+            // Nogood cache (see nogood-cache.ts): checked once per COMMITTED step, not once per
+            // candidate inside takePly — see that file's own header comment for why. A hit means
+            // this exact state already dead-ended earlier in THIS repairSearchFromGate call under
+            // takePly's own exploration — short-circuit immediately rather than re-walking the
+            // rest of an already-known-fruitless subtree. Only ever converts 'continue' to
+            // 'deadend', never touches 'solved' — cannot affect correctness, only speed.
+            if (outcome === 'continue' && nogoodCache && nogoodCache.has(ws)) outcome = 'deadend';
         }
 
         if (outcome === 'solved') {
             if (out) out.nodesExpanded = nodesExpandedLocal;
             return ws.path.slice();
         }
+        nogoodCache?.recordDead(ws);
 
         // Ablation: STRATEGY_REPAIR_LENGTH_GAP_CLOSE — see closeLengthGap's doc comment above.
         // Base trigger fires once every non-length/non-intersection objective is already
