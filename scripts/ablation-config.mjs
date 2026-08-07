@@ -77,7 +77,7 @@ export const FEATURES = {
     STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST: "Repair-search: bias the must-turn-biased attempt's exploratory branch toward the correct-direction turn exit",
     STRATEGY_REPAIR_LENGTH_GAP_CLOSE: 'Repair-search: on a dead end where every non-length/intersection objective is already satisfied, try a small bounded backtracking search to close the exact length/intersection gap instead of discarding the restart',
     STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS: 'Repair-search: additionally trigger closeLengthGap when at most LENGTH_GAP_CLOSE_STRUCTURAL_SLACK non-length objectives are still pending (not just exactly zero) — targets near-miss dead ends like "length off by 1, one pending mustTurn cell" that the strict base trigger never attempts',
-    STRATEGY_REPAIR_TURN_BIAS: 'Repair-search: append an experimental turn-aware selective-bias repair attempt on must-turn levels (default-OFF — only added under a non-null ablation config; pending corpus-2 validation before becoming a default attempt)',
+    STRATEGY_REPAIR_TURN_BIAS: 'Repair-search: append an experimental turn-aware selective-bias repair attempt on must-turn levels (default-OFF — only added under a non-null ablation config; a clean corpus-2 A/B against current defaults found net -7/1700, likely interacting badly with STRATEGY_REPAIR_NOGOOD_CACHE\'s dead-state short-circuiting -- see reports/2026-08-07-turnbias-corpus2-validation.md -- stays opt-in, not promoted)',
 
     // ── Templates ─────────────────────────────────────────────────────────────
     TEMPLATE_CORNER_HARVEST:    'cornerHarvest — pulls toward grid corners during harvest phase',
