@@ -16,8 +16,22 @@
  *
  * Usage: node scripts/family-wide-trove-shard-run.mjs --shard-file=<path to shard JSON slice>
  *   --nn=<01-60> --progress=<log file> --summary=<jsonl file>
- *   [--budget-ms=8000] [--node-budget=20000000] [--workers=4] [--seed=20260807]
- *   [--variant-count=10] [--max-wall-ms=16800000]
+ *   [--budget-ms=86400000] [--node-budget=36000000] [--workers=4] [--seed=20260807]
+ *   [--variant-count=10] [--max-wall-ms=20400000]
+ *
+ * Budget defaults (2026-08-07 update) match the CURRENT production corpus-2 routine baseline
+ * (.github/workflows/solver-stress-refresh.yml's corpus2_node_budget=36000000,
+ * corpus2_budget_ms=86400000/non-binding -- see reports/2026-08-01-budget-vs-algorithm.md for why
+ * the old 8000ms/20M protocol this script originally used was WALL-CLOCK BINDING, not just a
+ * lower ceiling: some of the 2026-08-06 fragile-robust census's "robust" (0/22) classifications
+ * may be under-resourced rather than genuinely combinatorially hard). --work-budget is REQUIRED
+ * alongside a non-binding --budget-ms, not optional: without it, portfolio-solve-sweep.mjs derives
+ * workBudget from budget-ms alone (x DEFAULT_WORK_PER_MS), which at a 24h deadline makes workBudget
+ * effectively infinite -- the ladder's own per-attempt fair-division never binds, so the FIRST
+ * attempt tried is free to run all the way to --node-budget by itself, leaving every later
+ * attempt (repair, diversity, admissible-order) exactly 0 nodes (CLAUDE.md's "near-twin
+ * starvation" gotcha). Derived as node-budget x 1.34, the same ratio
+ * solver-stress-refresh.yml/solver-highbudget-unsolved-sweep.yml already use.
  */
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -32,12 +46,13 @@ const SHARD_FILE = args.get('--shard-file');
 const NN = args.get('--nn') || '00';
 const PROGRESS = args.get('--progress') || `logs/family-census/wide-shard-${NN}.log`;
 const SUMMARY = args.get('--summary') || `logs/family-census/wide-shard-${NN}-summary.jsonl`;
-const BUDGET_MS = args.get('--budget-ms') || '8000';
-const NODE_BUDGET = args.get('--node-budget') || '20000000';
+const BUDGET_MS = args.get('--budget-ms') || '86400000';
+const NODE_BUDGET = args.get('--node-budget') || '36000000';
+const WORK_BUDGET = args.get('--work-budget') || String(Math.round(Number(NODE_BUDGET) * 1.34));
 const WORKERS = args.get('--workers') || '4';
 const SEED = args.get('--seed') || '20260807';
 const VARIANT_COUNT = args.get('--variant-count') || '10';
-const MAX_WALL_MS = Number(args.get('--max-wall-ms') || 16_800_000); // 280 min default
+const MAX_WALL_MS = Number(args.get('--max-wall-ms') || 20_400_000); // 340 min default
 
 mkdirSync(path.dirname(PROGRESS), { recursive: true });
 mkdirSync('data/families/hints', { recursive: true });
@@ -113,21 +128,25 @@ for (const entry of shard) {
             `--seed=${SEED}`, `--out=${familyFile}`];
         if (mode !== 'symmetry') genArgs.push(`--count=${VARIANT_COUNT}`);
         if (mode === 'group-reshuffle') genArgs.push(`--group=${group}`);
-        const gen = run('node', genArgs, 150_000);
+        const gen = run('node', genArgs, 300_000);
         if (!gen.ok) { log(`    generate failed: ${gen.error}`); log((gen.out || '').slice(-2000)); continue; }
         if (!existsSync(familyFile)) { log(`    generate produced 0 variants (no file written) -- skipping solve/hint-workbench`); summarize({ id, mode, solved: 0, total: 0 }); continue; }
 
         const solveOut = `logs/family-census/solve-${id}-${abbr}.json`;
+        // 3h hard ceiling per sweep call: generous headroom over the realistic case (node-budget
+        // is the real governing constraint now that budget-ms/work-budget are non-binding), but
+        // still a genuine finite backstop -- execFileSync's own timeout+SIGKILL, not an external
+        // `timeout` wrapper (the mechanism behind the census's still-undiagnosed shard-1 hang).
         const solve = run('node', ['scripts/run-bundled.mjs', 'scripts/portfolio-solve-sweep.mjs', '--',
             `--corpus=${familyFile}`, '--scheduler-mode=legacy', `--budget-ms=${BUDGET_MS}`,
-            `--node-budget=${NODE_BUDGET}`, `--workers=${WORKERS}`, '--save-hints',
-            `--out=${solveOut}`], 700_000);
+            `--node-budget=${NODE_BUDGET}`, `--work-budget=${WORK_BUDGET}`, `--workers=${WORKERS}`,
+            '--save-hints', `--out=${solveOut}`], 10_800_000);
         if (!solve.ok) log(`    solve failed/timed out: ${solve.error}`);
 
         const variantN = mode === 'symmetry' ? 7 : VARIANT_COUNT;
         const hw = run('node', ['scripts/run-bundled.mjs', 'scripts/hint-workbench.mjs', '--',
             `--levels-json=${familyFile}`, `--levels=pos:1-${variantN}`,
-            '--preset=enumerate-targeted', '--wall-ms=6000', '--write-levels', '--yes=true'], 60_000);
+            '--preset=enumerate-targeted', '--wall-ms=15000', '--write-levels', '--yes=true'], 120_000);
         if (!hw.ok) log(`    hint-workbench failed/timed out: ${hw.error}`);
 
         const { solved, total } = solvedCount(solveOut);
