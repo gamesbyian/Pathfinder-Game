@@ -190,6 +190,16 @@ Findings:
   premise. Re-run this exact script once Corpus-2's benchmark lands (~4x the data, and critically
   more positive examples) before deciding whether to build or drop it.
 
+**Corpus-2 rerun (2026-08-07) closes the data-volume gate: drop the classifier.** On 725 solved
+levels with 188 repair winners, the historical `navDensity <= 0.524` rule collapses to F1 0.010
+(1/188 repair winners caught). Deterministic five-fold threshold cross-validation finds
+`mustCross >= 2` as the best single feature (F1 0.471), only modestly above the always-repair
+prevalence baseline (F1 0.412), with 237 false positives and a direct policy-confounding problem:
+must-cross burden already helps decide whether repair is attempted. Do not build ML or promote repair
+from this rule. The separate attempt-ordering-cost observation remains valid and should be tested by
+direct A/B, not prediction. Full report:
+[`reports/2026-08-07-repair-winner-classifier-rerun.md`](../reports/2026-08-07-repair-winner-classifier-rerun.md).
+
 ### 4. Homotopy / topological path-class signatures — confirmed real (2026-07-11), second probe
 Genuinely new to us (doc 3, via Bhattacharya et al.). Our closest analogs are `portalSignature`'s
 directed-jump-set (a coarse topological invariant, but only for portal usage) and the solution-profile

@@ -1,5 +1,14 @@
 # Why the solve count stopped moving: four hypotheses tested, three killed (2026-07-30)
 
+> **Status:** superseded
+> **Last evidence:** 2026-07-31 — the corrected CP-SAT model and reserved-intersection wall
+> **Decision:** retain sections 1–3 as negative results; section 4 is retracted, and the surviving
+> must-cross lead was resolved by the
+> [corrected model](2026-07-31-cpsat-encoding-bug-and-external-hints.md),
+> [forced-structure derivation](2026-07-31-mustcross-forced-structure.md), and
+> [shipped reserved-intersection wall](2026-07-31-reserved-intersection-wall.md)
+> **Remaining gate:** none
+
 > **CORRECTION (2026-07-31): section 4 and the must-cross conclusion below are based on a CP-SAT
 > model that was under-constrained, and section 4's finding is retracted.**
 > `cpsat-full-probe.py` encoded the edge-axis rule as "at most one ENTRY per axis"; the game also
@@ -138,13 +147,21 @@ intersections and hold `intNeeded` above zero. The full argument sits above `isC
   it; CP-SAT output is evidence about difficulty, and any path it emits must pass
   `validateCandidatePath` before being believed at all.
 
-## Open
+## Historical open question — resolved 2026-07-31
 
 The fully-reserved must-cross regime is the one unexploited lead: roughly half the failures, and a
 structural property the solver counts but never reasons about *positionally*. A mechanism that
 reasons about **where** the reserved intersections must be spent — rather than how many remain —
 might pay. No sound one is known; the degree prune was the obvious candidate and it is dead. Prove
 the next one on paper before writing code.
+
+That paragraph records the state when this report was written; it is no longer an open queue item.
+The next report supplied the requested proof in
+[`2026-07-31-mustcross-forced-structure.md`](2026-07-31-mustcross-forced-structure.md), and the
+subsequent implementation shipped the positive part as `PRUNE_MC_RESERVED_WALL` in
+[`2026-07-31-reserved-intersection-wall.md`](2026-07-31-reserved-intersection-wall.md). The local
+straight-crossing and required-cell-budget follow-ups below remain useful negative evidence, not
+unfinished alternatives.
 
 ---
 

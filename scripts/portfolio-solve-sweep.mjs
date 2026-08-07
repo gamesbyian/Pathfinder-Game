@@ -28,7 +28,10 @@
  *                                nodesExpanded, since stress baselines do not carry workSpent yet.
  *   --node-budget=<n>            legacy per-technique cap (SolveOpts.nodeBudget),
  *                                 flat across every level.
- *   --baseline-budget            per-level ADAPTIVE node budgets in place of one flat --node-budget:
+ *   --baseline-budget            DEPRECATED experimental per-level node budgets. Kept only for
+ *                                 historical reproduction: repair winners are not reproducible from
+ *                                 recorded nodes alone, and "node" buys different work by technique.
+ *                                 Prefer an explicit --work-budget. If used despite this warning:
  *                                 each known-solved level (per --baseline) gets a budget scaled to
  *                                 its own recorded nodesExpanded, so fast levels stop fast and a
  *                                 regression fails at K x its old cost instead of the global ceiling.
@@ -211,15 +214,16 @@ const attractionDiversityBudgetFraction = argMap.has('--attraction-diversity-bud
 const admissibleOrderBudgetFraction = argMap.has('--admissible-order-budget-fraction') ? Number(argMap.get('--admissible-order-budget-fraction')) : undefined;
 const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction') ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
 const disableExtraBudgetPasses = flags.has('--disable-extra-budget-passes');
-// --baseline-budget: per-level adaptive node budgets scaled off --baseline's recorded per-level
+// DEPRECATED --baseline-budget: per-level adaptive node budgets scaled off recorded per-level
 // nodesExpanded, instead of one flat --node-budget on every level. Rationale (measured on
 // stress-corpus-2's baseline): the winning attempt is cheap (p50 68K, p90 9M nodes) but a flat
 // budget exists only to give the hardest levels room, so most levels get budget they never spend.
 // SolveOpts.nodeBudget is a CUMULATIVE cap across all attempts (orchestration.ts checks it against
 // the running prep._metrics.nodesExpanded), and the baseline's nodesExpanded is that same cumulative
-// total — so K x baseline-nodes gives a level K x its demonstrated need. A deterministic re-solve
-// hits exactly baseline-nodes and exits early (no change on a green run); a level that regressed
-// fails FAST at K x its old cost instead of burning the global ceiling. The extra-budget passes
+// total. The original implementation assumed K x baseline nodes represented demonstrated need;
+// corpus-scale use disproved that for stochastic repair winners and caused 45 apparent regressions.
+// This flag remains for historical experiments only, not as a supported regression workflow. The
+// extra-budget passes
 // (6x repair, attraction) are themselves gated on nodesExpanded < nodeBudget, so a tight per-level
 // cap also curtails those automatically. Known-failed / not-in-baseline levels get
 // --unsolved-node-budget (the discovery lever: leave it high to still find new solves, or drop it
@@ -292,6 +296,9 @@ if (Number.isFinite(admissibleOrderNodeReserveFraction) && !Number.isFinite(node
 }
 if (baselineBudget && !argMap.has('--baseline')) {
     console.error('--baseline-budget requires --baseline (it scales each level\'s node budget off the baseline\'s recorded per-level nodesExpanded). Ignoring --baseline-budget.');
+}
+if (baselineBudget) {
+    console.error('WARNING: --baseline-budget is deprecated and unsound for general regression use (repair winners are stochastic and raw nodes are technique-dependent). Prefer --work-budget; this mode is retained only for historical reproduction.');
 }
 if (baselineBudget && racePoolSize > 0) {
     console.error('--baseline-budget has no effect under --race-pool-size (the race pool has no node-budget concept — see the --node-budget warning above). Per-level budgets are ignored for raced solves.');
@@ -429,7 +436,7 @@ if ((priorityField || attemptCachePath) && !baselineMap) {
     console.error('--priority and --attempt-cache require --baseline; ignoring both.');
 }
 
-// Adaptive per-level node budgets are active only with both --baseline-budget and a loaded baseline,
+// Deprecated adaptive per-level node budgets are active only with both --baseline-budget and a loaded baseline,
 // and never under racing (the race pool ignores node budgets). When inactive, nodeBudgetFor() returns
 // the flat global nodeBudget so every code path can call it unconditionally.
 const adaptiveBudget = baselineBudget && !!baselineMap && racePoolSize === 0;

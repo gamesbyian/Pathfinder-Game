@@ -1167,10 +1167,10 @@ every section above in full.
   riskiest item surveyed; payoff can only be confirmed by measurement, not reasoning.
 
 **Housekeeping, not a solver-speed issue but affects verification hygiene:**
-- `data/stress/regression-set.json`'s pinned "known-hard" baseline is stale (many pinned levels
-  now solve, unrelated to any change made in this pass) and `stress:regression` isn't wired
-  into `npm run ci`, so staleness like this goes unnoticed until someone runs it by hand.
-  Re-baselining the pin file (and/or wiring the check into `ci`) is a separate task.
+- **Resolved 2026-08-07:** `data/stress/regression-set.json` now has five solved canaries and three
+  current known-hard targets, and `stress:regression -- --update-baselines` provides a guarded writer
+  for solved timings/strategies without changing expectations. The tier remains manual because its
+  repair-heavy known-hard entries make it minutes long; absence from `npm run ci` is intentional.
 
 **Not yet investigated at all** (no scoping work done, raised here only so it isn't lost):
 none identified beyond the above as of this session — the memory-bandwidth survey and the

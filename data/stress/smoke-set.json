@@ -1,5 +1,5 @@
 {
-  "description": "Tiny, deliberately-curated smoke suite (docs/solver-dev-tooling-plan.md Component A). Not a random sample — every entry was picked for a specific reason (see each level's own reasons/mechanic field). Run via npm run stress:smoke; should always solve (no known-hard entries) and finish in well under a minute.",
+  "description": "Tiny, deliberately-curated smoke suite (docs/solver-dev-tooling-plan.md Component A). Not a random sample \u2014 every entry was picked for a specific reason (see each level's own reasons/mechanic field). Run via npm run stress:smoke; should always solve (no known-hard entries) and finish in well under a minute.",
   "budgetMs": 20000,
   "levels": [
     {
@@ -123,49 +123,49 @@
       "baselineStrategy": "nearClosureRescue"
     },
     {
-      "id": "S00017",
+      "id": "R01189",
       "corpus": "stress1",
-      "mechanic": "bug-repro: HIGHINT_MC_DIVERSE reorder",
+      "mechanic": "high-intersection must-cross",
       "reasons": [
-        "historical fix canary — diverse-beam-first reorder for very-high-reqInt must-cross levels (data/stress/README.md Shipped)"
+        "structural replacement for the unresolvable historical HIGHINT_MC_DIVERSE canary: strongest current stress-suite combination of reqInt (10) and must-cross count (8); exact old-level bug provenance was not recoverable"
       ],
       "expected": "solved",
-      "baselineMs": 7084,
-      "baselineStrategy": "intersectionHarvest"
-    },
-    {
-      "id": "S00031",
-      "corpus": "stress1",
-      "mechanic": "repair-fallback",
-      "reasons": [
-        "fast, reliable repair-path canary from the batch-B cluster (needsRepairFallback feature gate)"
-      ],
-      "expected": "solved",
-      "baselineMs": 5660,
+      "baselineMs": 1397,
       "baselineStrategy": "repair"
     },
     {
-      "id": "S00036",
+      "id": "R00134",
       "corpus": "stress1",
       "mechanic": "repair-fallback",
       "reasons": [
-        "fast, reliable repair-path canary from the batch-B cluster (needsRepairFallback feature gate)"
+        "fast, current-corpus repair-path canary (measured repair winner)"
       ],
       "expected": "solved",
-      "baselineMs": 2861,
+      "baselineMs": 38,
       "baselineStrategy": "repair"
     },
     {
-      "id": "S00118",
+      "id": "R00087",
+      "corpus": "stress1",
+      "mechanic": "repair-fallback",
+      "reasons": [
+        "second fast, current-corpus repair-path canary (measured repair winner)"
+      ],
+      "expected": "solved",
+      "baselineMs": 262,
+      "baselineStrategy": "repair"
+    },
+    {
+      "id": "S00103",
       "corpus": "stress1",
       "mechanic": "bug-repro: adaptive gate-weighting (4-gate budget starvation)",
       "reasons": [
-        "historical fix canary — only stress-corpus level needing >=4 real gates (data/stress/README.md Shipped)"
+        "replacement canary preserving the original purpose: one of two current stress-corpus levels with 4 real gates"
       ],
       "expected": "solved",
-      "baselineMs": 14620,
-      "baselineStrategy": "knotBuilder"
+      "baselineMs": 140,
+      "baselineStrategy": "portalFirstTransfer"
     }
   ],
-  "pinnedAt": "2026-07-10T17:09:49.101Z"
+  "pinnedAt": "2026-08-07T00:00:00.000Z"
 }

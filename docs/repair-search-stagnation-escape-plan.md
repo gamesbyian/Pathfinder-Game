@@ -118,14 +118,16 @@ Eight experiments; all sound, tested, default-off, `solver:bench` 160/160.
   regression), not a "never displace a solve" veto; a displaced solve that ends up too slow is a
   regression to recover, which the corpus-2 timing A/B surfaces. Bench 160/160 (flag-gated ⇒ published
   corpus untouched).
-- **Remaining gate before promoting it to a default attempt:** the corpus-2 refresh run twice
-  (baseline vs flag-on, fallback enabled, default budget is fine now) + a full-corpus before/after
-  **timing** comparison (now the load-bearing check — the early-first scheduling's per-level latency
-  cost) — a GitHub-Actions batch job and the cost/benefit decision point. See the validation report.
-  A `corpus2_enable_flags`-toggled refresh did run once already (`2026-07-22T18:40Z` in
-  `logs/solver-corpus2-batches/`) but this doc doesn't yet record whether anyone closed the loop on
-  the timing-comparison half of this gate specifically — worth confirming before assuming it's
-  still open.
+- **Population gate closed; default-on promotion rejected (2026-07-23):** the paired corpus-2
+  refreshes ran, exposed a probe-budget-stacking bug, and were repeated after that fix. The corrected
+  attributable effect was approximately +1 solve, inside the corpus's measured noise floor, while
+  the two biased tiers competed for the same scarce budget. That does not justify default-on
+  promotion. Exclusive feature-based selection was later tried and rejected (net −2 attributable
+  solves on corpus 2). The current flag-gated experiment instead tries both biased tiers, orders them
+  with the measured predictor, and weights their shared probe budget 75/25. Its remaining gate is a
+  dedicated corpus-2 A/B of that weighted form plus worst-case three-tier fallback latency before
+  reconsidering promotion. See
+  [`reports/2026-07-23-turnbias-corpus2-ab-validation.md`](../reports/2026-07-23-turnbias-corpus2-ab-validation.md).
 - **Provenance can now help validate this gate too (2026-07-23,
   [`reports/2026-07-23-solver-batch-speed-and-hint-provenance.md`](../reports/2026-07-23-solver-batch-speed-and-hint-provenance.md)):**
   `HintSolverForcing.repairTurnBiased` is now captured on every newly-found/re-solved hint, so "how

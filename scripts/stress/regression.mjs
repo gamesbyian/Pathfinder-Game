@@ -12,7 +12,7 @@
  * Run via the esbuild wrapper:
  *   node scripts/run-bundled.mjs scripts/stress/regression.mjs
  *       [--set=data/stress/regression-set.json] [--corpus=data/stress/stress-levels.json]
- *       [--budget-ms=<pin file's budget>] [--no-retry]
+ *       [--budget-ms=<pin file's budget>] [--no-retry] [--update-baselines]
  *
  * A level that flips expected-solved -> unsolved is re-solved once in a FRESH child process
  * (retry-isolated.mjs) before being reported as a genuine regression — this repo's own history
@@ -22,9 +22,10 @@
  * FLAKY_PASS_AFTER_RETRY — not a regression, but not silently swept under the rug either. Disable
  * with --no-retry for a strict single-shot read (e.g. when hunting the flakiness itself).
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { execFileSync } from 'node:child_process';
 
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { retryLevelIsolated } from './retry-isolated.mjs';
@@ -37,6 +38,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 const SET_FILE = args.get('--set') || 'data/stress/regression-set.json';
 const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels.json';
 const RETRY_ON_FAILURE = !args.has('--no-retry');
+const UPDATE_BASELINES = args.has('--update-baselines');
 
 installBrowserStubs();
 const { createSolver } = await import('../../modules/Solver.js');
@@ -50,6 +52,7 @@ const budgetMs = Number(args.get('--budget-ms') || pin.budgetMs || 20000);
 console.log(`Stress regression set: ${pin.levels.length} levels (${pin.levels.filter(l => l.expected === 'unsolved').length} known-hard), budget ${budgetMs}ms.`);
 
 let regressions = 0, improvements = 0, held = 0, knownHard = 0, flakyPassedOnRetry = 0;
+const measurements = new Map();
 
 for (const entry of pin.levels) {
     const lvl = byId.get(entry.id);
@@ -65,6 +68,12 @@ for (const entry of pin.levels) {
     const result = await Solver.solve(level, { timeBudgetMs: budgetMs });
     const elapsed = Date.now() - t0;
     const solvedNow = !!result?.ok;
+    const winner = (result.attempts || []).find(a => a.ok);
+    measurements.set(entry.id, {
+        solvedNow,
+        elapsed,
+        strategy: winner ? (winner.template ? `${winner.profile}/${winner.template}` : winner.profile) : null,
+    });
 
     if (entry.expected === 'solved' && !solvedNow) {
         if (RETRY_ON_FAILURE) {
@@ -80,7 +89,6 @@ for (const entry of pin.levels) {
             (RETRY_ON_FAILURE ? ' (confirmed on fresh-process retry)' : ''));
     } else if (entry.expected === 'unsolved' && solvedNow) {
         improvements++;
-        const winner = (result.attempts || []).find(a => a.ok);
         console.log(`  ${entry.id} [${entry.batch}] ★ IMPROVEMENT — known-hard now solved in ${elapsed}ms (${winner?.profile ?? '?'}); update ${SET_FILE}`);
     } else if (entry.expected === 'solved') {
         held++;
@@ -96,4 +104,26 @@ console.log(`\nHeld: ${held}  known-hard: ${knownHard}  improvements: ${improvem
 if (regressions > 0) {
     console.error('Solver regression against the pinned stress set.');
     process.exit(1);
+}
+
+if (UPDATE_BASELINES) {
+    if (improvements > 0 || flakyPassedOnRetry > 0) {
+        console.error(`Refusing to update ${SET_FILE}: resolve expectation improvements/flaky retries explicitly first.`);
+        process.exit(1);
+    }
+    for (const entry of pin.levels) {
+        const measurement = measurements.get(entry.id);
+        if (!measurement || entry.expected !== 'solved' || !measurement.solvedNow) continue;
+        entry.baselineMs = measurement.elapsed;
+        entry.baselineStrategy = measurement.strategy;
+    }
+    pin.pinnedAt = new Date().toISOString();
+    pin.sourceBenchmark = {
+        timestamp: pin.pinnedAt,
+        commitSha: process.env.GITHUB_SHA || execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim(),
+        budgetMs,
+        command: `npm run stress:regression -- --update-baselines${args.has('--budget-ms') ? ` --budget-ms=${budgetMs}` : ''}`,
+    };
+    writeFileSync(path.resolve(ROOT, SET_FILE), `${JSON.stringify(pin)}\n`);
+    console.log(`Updated solved baselines in ${SET_FILE}; expectations and known-hard pins were left unchanged.`);
 }

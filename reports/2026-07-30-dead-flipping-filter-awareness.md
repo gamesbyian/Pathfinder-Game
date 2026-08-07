@@ -1,5 +1,11 @@
 # Dead flipping filters: connectivity awareness shipped, move-gen exclusion refuted (2026-07-30)
 
+> **Status:** concluded-positive
+> **Last evidence:** 2026-07-30 — published, corpus-1, and partial corpus-2 A/Bs
+> **Decision:** keep connectivity marking; do not exclude dead flippers from move generation or
+> tighten distance maps without new profiling evidence
+> **Remaining gate:** none
+
 A flipping filter with **neither axis geometrically traversable** can be entered but never left, so
 it can never appear in a valid solution. This writeup records the derivation, why it is
 orientation-independent (the non-obvious part), how common such cells are, and the measurement that
@@ -148,11 +154,12 @@ Verification: `npx tsc --noEmit` clean; `npx vitest run modules/solver/` 271 pas
 `npm run check:lint` clean; `npm run solver:bench -- --check` 160/160, no regressions, nodes +0.0%;
 plus the corpus-1 and corpus-2 A/Bs above.
 
-## Follow-ups, not done
+## Non-actions and reopening trigger
 
-- **Distance maps.** `buildDistMap` still routes *through* dead flippers, so BFS lower bounds can be
-  one or two steps optimistic near one. Tightening this needs `buildDistMap` to accept an augmented
-  block set. Untested — and given the connectivity half's ~0.00% effect, the expected payoff is
-  small; measure before building.
-- **R01478** stays solved on the shipped variant. It is only at risk if the move-gen half is ever
-  revived, which this report argues against.
+- **Distance maps are deliberately unchanged, not unfinished.** `buildDistMap` can still route
+  *through* dead flippers, leaving BFS lower bounds one or two steps optimistic nearby. The measured
+  connectivity effect was ~0.00%, while move-generation exclusion was net-negative; that evidence
+  does not justify another implementation or corpus sweep. Reopen only if a current profile shows
+  distance-bound looseness at dead flippers is material on a decision-bearing population.
+- **R01478 is a guard, not an open task.** It stays solved on the shipped variant. Re-run it only if
+  move-generation exclusion is revived under the profiling trigger above.

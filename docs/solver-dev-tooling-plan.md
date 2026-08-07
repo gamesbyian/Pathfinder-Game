@@ -73,7 +73,12 @@ The plan as a whole is satisfied when all of the following hold simultaneously:
 ## Component A — Curated smoke suite
 
 **Shipped 2026-07-10.** `data/stress/smoke-set.json` + `scripts/stress/smoke.mjs` +
-`npm run stress:smoke`. 14 levels (10 published, 4 stress-corpus), verified 14/14 pass in ~30s.
+`npm run stress:smoke`. Historically verified at 14/14 in ~30s (10 published, 4 stress-corpus).
+**Maintenance reconciliation (2026-08-07):** four legacy stress ids stopped resolving. They were
+replaced with current purpose-matched pins and the suite again holds 14/14 under 60 seconds. The old
+`S00017` identity could not be provenance-mapped, so `R01189` is honestly labelled as structural
+high-intersection/must-cross coverage rather than as the same historical bug canary. See the
+completed entry in [`future-work.md`](future-work.md#older-loose-thread-triage-2026-08-07).
 One real gotcha found during build: the original 10000ms smoke budget silently changed S118's
 winning strategy and made it fail outright — its historical bug (4-gate budget starvation) is
 specifically about budget dilution, so a shrunk "smoke" budget defeated the canary's purpose.

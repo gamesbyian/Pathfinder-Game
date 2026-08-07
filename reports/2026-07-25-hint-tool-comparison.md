@@ -1,5 +1,12 @@
 # Hint-discovery tool comparison (2026-07-25)
 
+> **Status:** concluded-positive
+> **Last evidence:** 2026-08-07 — standalone candidate-search retention reconciliation
+> **Decision:** use the workbench as the consolidated default while retaining purpose-built parallel
+> tools and the standalone candidate-search CLI until a parity/migration check supports removal
+> **Remaining gate:** none; current limitations live in
+> [`docs/hint-workbench.md`](../docs/hint-workbench.md#current-limitations)
+
 Investigation prompted by a request to verify all hint-discovery/enumeration/extraction/
 diversification tools are current with the solver's latest techniques, then compare their
 behavior head-to-head on a small sample of levels before eventually consolidating them into one
@@ -211,9 +218,11 @@ actual engines (below) found 2 of the 4 were based on an incomplete picture. Cor
      `npm run test:hint-workbench` pass, and a live run against P00105 reproduces the exact
      `hint-candidate-search.mjs` finding from earlier in this report (48 valid-but-already-known
      candidates) — confirming the ported logic is faithful to the original.
-   - Not yet done: `hint-candidate-search.mjs` itself was left in place (not deleted or marked
-     deprecated) — retiring it in favor of the new step is a follow-up decision once the new step
-     has some real production usage, not a same-session call.
+   - **Retention resolved 2026-08-07:** `hint-candidate-search.mjs` remains a supported standalone
+     entry point. The workbench port overlaps it but has not been proven equivalent for every
+     documented use, so deletion would be cleanup by assumption rather than evidence. The canonical
+     retention decision and reopening condition live in
+     [`docs/hint-workbench.md`](../docs/hint-workbench.md#current-limitations).
 
 ## Follow-up: optimization pass (same day)
 

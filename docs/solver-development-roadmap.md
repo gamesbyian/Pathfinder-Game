@@ -1,27 +1,32 @@
 # Solver Development Roadmap — Toward Full Stress-Corpus Solvability
 
-> **Status: active strategy document (written 2026-07-17).** This is the campaign-level plan for
-> expanding the solver until it solves every level in both stress corpora, preferably in under 30s
+> **Status: historical campaign record (written 2026-07-17; last campaign update 2026-08-05).**
+> This is the campaign-level plan that organized the effort to expand
+> the solver until it solves every level in both stress corpora, preferably in under 30s
 > per level. It sequences *existing* diagnostic machinery into a repeatable workflow — it proposes
 > no new tooling (the tooling investments are done; see
 > [`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md)) and no specific solver change (those
 > come out of the diagnosis loop below, one campaign at a time). Complementary docs:
 > [`solver-improvement-research-notes.md`](solver-improvement-research-notes.md) (technique-level
 > research ledger), [`../data/stress/README.md`](../data/stress/README.md) (the shipped/rejected
-> avenue ledger). Update the "Where things stand" numbers here after each full corpus refresh, or
-> retire sections into the current-state references as campaigns complete.
+> avenue ledger). The workflow and standing rules remain useful, but the dated counts and campaign
+> labels below are snapshots and must not be used as the live queue. Current priorities and blockers
+> live in [`future-work.md`](future-work.md); current generated corpus state lives in
+> `logs/stress-corpus{1,2}-baseline.json`.
 
-## Where things stand (as of 2026-07-18, first genuine solver-stress-refresh.yml run)
+## Historical baseline snapshot (2026-07-18, first genuine solver-stress-refresh.yml run)
 
-> **Current numbers superseded (2026-07-30).** The table below is the 2026-07-18 state and is kept
+> **Snapshot superseded.** The table below is the 2026-07-18 state and is kept
 > for its infrastructure narrative. The live figures come from
 > `.github/workflows/solver-typical-budget-baseline.yml`'s latest run
 > (`reports/stress/typical-budget-baseline-2026-07-30T114427Z.md`, 240 shards at pinned work
 > budgets): **corpus-1 97/102, corpus-2 434/1700**. Note the two distinct corpus-2 counts and don't
 > mix them: 434 is what a *typical budget* solves cold; `logs/stress-corpus2-baseline.json`'s 605 is
 > how many carry a valid hint from any source, including the 2026-07-24/25 high-budget sweeps and
-> hint-discovery tooling. 357 levels have a stored solution the typical-budget solver cannot
-> rediscover — that gap is the population every diagnosis below is really about.
+> hint-discovery tooling. Those figures were themselves superseded by later refreshes. As of the
+> 2026-08-06 work-budget-starvation fix, the generated known-solution ledgers contain **corpus-1
+> 96/102 and corpus-2 725/1700**; they are cumulative hint ledgers, not comparable cold typical-budget
+> measurements. See [`reports/2026-08-06-workbudget-starvation-audit.md`](../reports/2026-08-06-workbudget-starvation-audit.md).
 
 | Corpus | Solved | Source |
 |---|---|---|
@@ -725,7 +730,7 @@ applying to every level with a small remaining budget rather than only the reser
 > at `freeInt >= 1` a single paid hop reopens the far side almost everywhere, so the fill gets
 > cheaper without getting smaller in the way that prunes. Full writeup and the
 > do-not-rebuild-without-a-new-argument note:
-> [`reports/2026-07-31-reserved-intersection-wall.md`](../reports/2026-07-31-reserved-intersection-wall.md#the-follow-up-built-and-reverted-bounded-cost-reachability-at-freeint--0).
+> [`reports/2026-07-31-reserved-intersection-wall.md`](../reports/2026-07-31-reserved-intersection-wall.md#the-follow-up-built-and-reverted-bounded-cost-reachability-at-freeint--1).
 >
 > Steps 2 and 3 of `mustcross-forced-structure.md`'s own sequence shipped separately and did pay
 > off: **step 2** (`PRUNE_MC_FORCED_NEIGHBOR`, forced-cell availability as a dead-state test) —

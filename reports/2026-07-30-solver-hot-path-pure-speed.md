@@ -223,6 +223,27 @@ recorded rather than closed: either diagnose R00526 specifically, or let it re-s
 of later work. `data/stress/README.md`'s corpus-1 official count (85/102, measured under a different
 budget regime than the A/B above) should be expected to move by one at the next refresh.
 
+### Follow-up diagnosis (2026-08-07): the cull is restored, the mid-phase search is not
+
+The loss is now explained and is a direct consequence of the accepted speed/solvability trade, not
+hidden mutable state or generic wall-clock noise. `insOrd` restores candidate order only **after an
+entire phase has been walked**, immediately before dedup/cull. During the phase, however, terminal
+goal checks and budget checks execute in the new parent-tree walk order. If a large frontier reaches
+its budget mid-phase, a high-score node that score-order traversal would visit early can sit late in
+tree order and never be examined. No post-phase candidate sort can restore work that was skipped when
+the function already returned at its budget.
+
+A controlled one-line diagnostic replaced only the tree-order frontier sort with `insOrd` score
+order on current code and ran pinned `R00526` alone at the regression set's 20-second budget. Current
+tree order remains known-hard; restored score order solved via `intersectionHarvest` in about 26
+seconds total wall time (the repair-fallback multiplier permits total time beyond the nominal
+per-attempt budget). The edit was reverted after the probe.
+
+**Disposition:** closed as an understood, deliberately accepted trade-off. Fixing it means giving up
+some or all of the tree-walk speed win or designing a new partial-phase priority mechanism; it is not
+a correctness bug because both orders only return referee-valid solutions. `R00526` is now a pinned
+known-hard regression target, so any later mechanism that recovers it is reported as an improvement.
+
 The `insOrd`/`treeOrd` guard is the non-obvious part of this change and is what makes the corpus-2
 result neutral; without it the same reordering loses 3 of 47.
 
