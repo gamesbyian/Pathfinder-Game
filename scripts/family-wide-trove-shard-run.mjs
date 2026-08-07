@@ -91,7 +91,22 @@ for (const entry of shard) {
         // no change needed to the shared generator/hint-io tooling.
         mkdirSync(`data/families/${corpus}`, { recursive: true });
         const familyFile = `data/families/${corpus}/family-${id}-${abbr}.json`;
+        const solveOutExisting = `logs/family-census/solve-${id}-${abbr}.json`;
         log(`  [${nowStamp()}] mode=${mode}`);
+
+        // Idempotency: a re-dispatch of this workflow (e.g. a targeted backfill after a stuck
+        // shard) would otherwise regenerate on top of an already-committed family (family-
+        // generate.mjs APPENDS new siblings to an existing --out file rather than replacing it)
+        // and re-solve the whole thing from scratch -- wasted compute for a (level,mode) task this
+        // branch already has. Checked against the committed family file itself (not just the solve
+        // result), since a family file that exists with no matching solve result means generation
+        // succeeded but solving didn't finish -- worth actually retrying, not skipping.
+        if (existsSync(familyFile) && existsSync(solveOutExisting)) {
+            const { solved, total } = solvedCount(solveOutExisting);
+            log(`    already have this (family + solve result exist) -- skipping regeneration/re-solve`);
+            summarize({ id, mode, solved, total });
+            continue;
+        }
 
         const genArgs = ['scripts/run-bundled.mjs', 'scripts/family-generate.mjs', '--',
             `--parent-corpus=${corpusPath}`, `--parent=${id}`, `--mode=${mode}`,

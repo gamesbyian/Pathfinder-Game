@@ -86,5 +86,44 @@ lines.push(`${missingIds.size} manifest level(s) have zero completed tasks (shar
 lines.push('');
 lines.push([...missingIds].slice(0, 50).join(', ') || '(none)');
 
+// Failure provenance: solve-<id>-<abbr>.json (portfolio-solve-sweep's own --out format,
+// {summary, levels:[{...full per-attempt record: attempts, failedStrategies, nodesExpanded,
+// winningConfig, ...}]}) already carries the WHY behind every unsolved variant, not just pass/
+// fail -- it's just scattered across ~7800 small per-task files with no index. This merges every
+// one's single level entry (tagged with parentId/mode/corpus) into per-corpus combined files in
+// the SAME {levels:[...]} shape scripts/stress/rank-levels.mjs and
+// scripts/stress/cluster-unsolved-failures.mjs already know how to read, so this trove's failure
+// data is queryable with the existing corpus-analysis tooling, not just readable.
+const ABBR_TO_MODE = { sym: 'symmetry', lm: 'local-mutant', swap: 'swap', gr: 'group-reshuffle', cs: 'constrained-shuffle' };
+const solveFileRe = /^solve-([A-Za-z]\d+)-(sym|lm|swap|gr|cs)\.json$/;
+const attemptsByCorpus = {};
+if (existsSync(inDirAbs)) {
+    for (const file of readdirSync(inDirAbs)) {
+        const m = solveFileRe.exec(file);
+        if (!m) continue;
+        const [, parentId, abbr] = m;
+        const corpus = idToCorpus.get(parentId) || 'unknown';
+        let parsed;
+        try { parsed = JSON.parse(readFileSync(path.join(inDirAbs, file), 'utf8')); } catch { continue; }
+        for (const levelResult of parsed.levels || []) {
+            (attemptsByCorpus[corpus] ??= []).push({ ...levelResult, parentId, mode: ABBR_TO_MODE[abbr] });
+        }
+    }
+}
+let totalAttemptRecords = 0;
+for (const [corpus, levels] of Object.entries(attemptsByCorpus)) {
+    const outPath = path.resolve(process.cwd(), `reports/families/2026-08-07-wide-trove-attempts-${corpus}.json`);
+    writeFileSync(outPath, JSON.stringify({ levels }));
+    totalAttemptRecords += levels.length;
+    console.log(`Wrote ${levels.length} full attempt record(s) to ${outPath}.`);
+}
+lines.push('');
+lines.push('## Failure provenance');
+lines.push('');
+lines.push(`${totalAttemptRecords} full per-variant attempt records (attempts, failedStrategies, nodesExpanded,`);
+lines.push('winningConfig -- not just solved/total) consolidated into');
+lines.push('`reports/families/2026-08-07-wide-trove-attempts-<corpus>.json`, one file per corpus, in the same');
+lines.push('`{levels:[...]}` shape `scripts/stress/rank-levels.mjs` / `cluster-unsolved-failures.mjs` already read.');
+
 writeFileSync(path.resolve(process.cwd(), OUT), lines.join('\n') + '\n');
 console.log(`Wrote ${OUT}.`);
