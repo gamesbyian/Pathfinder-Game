@@ -1,0 +1,126 @@
+#!/usr/bin/env node
+/**
+ * Per-shard driver for family-wide-trove.yml. For each (level, mode) task in this shard's slice
+ * (from family-wide-trove-shard-slice.mjs): family-generate -> portfolio-solve-sweep --save-hints
+ * -> hint-workbench --write-levels (extra solution-diversity pass beyond the first solve). Persists
+ * progress after every task (never only at the end -- CLAUDE.md's batch-tool policy) via the same
+ * shard-NN.log / shard-NN-summary.jsonl shape family-census-parse-shard-logs.mjs already parses,
+ * extended with a `mode` field.
+ *
+ * Self-throttles against a wall-clock budget (--max-wall-ms) rather than relying solely on the
+ * job-level timeout-minutes backstop: the 2026-08-07 census run's shard 1 sat hung for hours past
+ * every per-command `timeout` wrapper for a reason never fully diagnosed (log content for a
+ * still-running job isn't retrievable via the GitHub API). Checking elapsed wall time before
+ * starting each new task and stopping early leaves time for staging/upload to run normally instead
+ * of depending entirely on the job timeout's post-cancellation grace period.
+ *
+ * Usage: node scripts/family-wide-trove-shard-run.mjs --shard-file=<path to shard JSON slice>
+ *   --nn=<01-60> --progress=<log file> --summary=<jsonl file>
+ *   [--budget-ms=8000] [--node-budget=20000000] [--workers=4] [--seed=20260807]
+ *   [--variant-count=10] [--max-wall-ms=16800000]
+ */
+import { execFileSync } from 'node:child_process';
+import { appendFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs';
+import path from 'node:path';
+import process from 'node:process';
+
+const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
+    const [k, ...v] = a.split('=');
+    return [k, v.join('=')];
+}));
+const SHARD_FILE = args.get('--shard-file');
+const NN = args.get('--nn') || '00';
+const PROGRESS = args.get('--progress') || `logs/family-census/wide-shard-${NN}.log`;
+const SUMMARY = args.get('--summary') || `logs/family-census/wide-shard-${NN}-summary.jsonl`;
+const BUDGET_MS = args.get('--budget-ms') || '8000';
+const NODE_BUDGET = args.get('--node-budget') || '20000000';
+const WORKERS = args.get('--workers') || '4';
+const SEED = args.get('--seed') || '20260807';
+const VARIANT_COUNT = args.get('--variant-count') || '10';
+const MAX_WALL_MS = Number(args.get('--max-wall-ms') || 16_800_000); // 280 min default
+
+mkdirSync(path.dirname(PROGRESS), { recursive: true });
+mkdirSync('data/families/hints', { recursive: true });
+
+const startedAt = Date.now();
+const nowStamp = () => new Date().toISOString().slice(11, 19);
+const log = (line) => { appendFileSync(PROGRESS, line + '\n'); };
+const summarize = (obj) => { appendFileSync(SUMMARY, JSON.stringify(obj) + '\n'); };
+
+function run(cmd, cmdArgs, timeoutMs) {
+    try {
+        const out = execFileSync(cmd, cmdArgs, {
+            timeout: timeoutMs, killSignal: 'SIGKILL', encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        return { ok: true, out };
+    } catch (err) {
+        return { ok: false, out: (err.stdout || '') + (err.stderr || ''), error: err.message };
+    }
+}
+
+const MODE_ABBR = { symmetry: 'sym', 'local-mutant': 'lm', swap: 'swap', 'group-reshuffle': 'gr', 'constrained-shuffle': 'cs' };
+
+function solvedCount(file) {
+    try {
+        const d = JSON.parse(readFileSync(file, 'utf8'));
+        const levels = d.levels || [];
+        return { solved: levels.filter((l) => l.ok).length, total: levels.length };
+    } catch {
+        return { solved: null, total: null };
+    }
+}
+
+const shard = JSON.parse(readFileSync(path.resolve(process.cwd(), SHARD_FILE), 'utf8'));
+log(`[${nowStamp()}] SHARD START ${shard.length} level(s)`);
+
+let stoppedEarly = false;
+for (const entry of shard) {
+    if (Date.now() - startedAt > MAX_WALL_MS) { stoppedEarly = true; break; }
+    const { id, corpus, corpusPath, modes, group } = entry;
+    log(`[${nowStamp()}] START ${id}`);
+    for (const mode of modes) {
+        if (Date.now() - startedAt > MAX_WALL_MS) { stoppedEarly = true; break; }
+        const abbr = MODE_ABBR[mode];
+        // Per-corpus subdirectory, NOT flat data/families/: family-generate.mjs's sibling-id
+        // scheme strips the parent id's leading letter (SIBLING_ID_PREFIX = F<digits>-<mode>-),
+        // so published P00001 / corpus-1 S00001 / corpus-2 R00001 all mint "F00001-<mode>-NN".
+        // hintsDirFor() (level-data-io.mjs) derives the hints directory from the --out file's own
+        // dirname, so separating corpora into their own subdirectory (each getting its own
+        // sibling hints/ dir) avoids three different levels' hints colliding in one shared file --
+        // no change needed to the shared generator/hint-io tooling.
+        mkdirSync(`data/families/${corpus}`, { recursive: true });
+        const familyFile = `data/families/${corpus}/family-${id}-${abbr}.json`;
+        log(`  [${nowStamp()}] mode=${mode}`);
+
+        const genArgs = ['scripts/run-bundled.mjs', 'scripts/family-generate.mjs', '--',
+            `--parent-corpus=${corpusPath}`, `--parent=${id}`, `--mode=${mode}`,
+            `--seed=${SEED}`, `--out=${familyFile}`];
+        if (mode !== 'symmetry') genArgs.push(`--count=${VARIANT_COUNT}`);
+        if (mode === 'group-reshuffle') genArgs.push(`--group=${group}`);
+        const gen = run('node', genArgs, 150_000);
+        if (!gen.ok) { log(`    generate failed: ${gen.error}`); log((gen.out || '').slice(-2000)); continue; }
+        if (!existsSync(familyFile)) { log(`    generate produced 0 variants (no file written) -- skipping solve/hint-workbench`); summarize({ id, mode, solved: 0, total: 0 }); continue; }
+
+        const solveOut = `logs/family-census/solve-${id}-${abbr}.json`;
+        const solve = run('node', ['scripts/run-bundled.mjs', 'scripts/portfolio-solve-sweep.mjs', '--',
+            `--corpus=${familyFile}`, '--scheduler-mode=legacy', `--budget-ms=${BUDGET_MS}`,
+            `--node-budget=${NODE_BUDGET}`, `--workers=${WORKERS}`, '--save-hints',
+            `--out=${solveOut}`], 700_000);
+        if (!solve.ok) log(`    solve failed/timed out: ${solve.error}`);
+
+        const variantN = mode === 'symmetry' ? 7 : VARIANT_COUNT;
+        const hw = run('node', ['scripts/run-bundled.mjs', 'scripts/hint-workbench.mjs', '--',
+            `--levels-json=${familyFile}`, `--levels=pos:1-${variantN}`,
+            '--preset=enumerate-targeted', '--wall-ms=6000', '--write-levels', '--yes=true'], 60_000);
+        if (!hw.ok) log(`    hint-workbench failed/timed out: ${hw.error}`);
+
+        const { solved, total } = solvedCount(solveOut);
+        summarize({ id, mode, solved, total });
+        log(`    ${mode}: solved=${solved}/${total}`);
+    }
+    log(`[${nowStamp()}] DONE ${id}`);
+}
+
+log(`[${nowStamp()}] SHARD END${stoppedEarly ? ' (stopped early: wall-clock budget reached)' : ''}`);
+console.log(`Shard ${NN} finished${stoppedEarly ? ' EARLY (budget)' : ''}: ${shard.length} level(s) in slice.`);
