@@ -1,0 +1,223 @@
+# Wide solver-research trove: generates + solves + hint-enumerates structural variants across
+# EVERY level in all 3 real corpora (published 160, corpus-1 102, corpus-2 1700 = 1962 total),
+# using 5 of family-generate.mjs's generation modes (symmetry, local-mutant, swap,
+# group-reshuffle, constrained-shuffle -- re-embed excluded, see
+# scripts/family-wide-trove-manifest.mjs's own comment for why). Corpus-2 levels already covered
+# by the 2026-08-06 fragile-robust census (symmetry + local-mutant already collected) get only the
+# 3 modes not yet run against them.
+#
+# Unlike family-fragile-robust-census.yml (which tested one specific hypothesis -- turn-load vs.
+# robustness -- on the unsolved corpus-2 population), this workflow's purpose is building a
+# general-purpose, reusable research trove: as much validated level/hint/telemetry data as
+# reasonably fits in one run, for whatever future solver-research question needs it. Every solve
+# also gets an extra hint-workbench.mjs enumeration pass (--preset=enumerate-targeted
+# --write-levels) beyond the single portfolio-solve-sweep pass, to find multiple distinct
+# solutions per variant where they exist -- "hint extraction in addition to standard solving".
+#
+# 60 shards (vs. the census's 20): smaller per-shard slices reduce the blast radius of a single
+# hung/slow shard (the census's shard 1 sat hung for hours, losing ~1/20 of that run's data; a
+# hang here loses ~1/60). Each shard also self-throttles against a wall-clock budget
+# (family-wide-trove-shard-run.mjs's --max-wall-ms) rather than relying solely on the job-level
+# timeout-minutes backstop, since that hang's root cause was never fully diagnosed (GitHub doesn't
+# serve full log content for a still-running job via the API).
+#
+# Same isolation as the census workflow: always checks out and commits back to the research
+# branch, never main. Registered here (a minimal presence on main) purely so workflow_dispatch can
+# target it at all -- GitHub requires a workflow file to exist on the default branch before it's
+# dispatchable, even against a different ref's own copy of the file.
+name: Family wide research trove (research branch only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      budget_ms:
+        description: 'Per-variant solve budget in milliseconds (matches the census run for comparability)'
+        required: false
+        default: '8000'
+      node_budget:
+        description: 'Per-variant node-count ceiling'
+        required: false
+        default: '20000000'
+      workers:
+        description: 'Cross-level worker processes per shard'
+        required: false
+        default: '4'
+      shards:
+        description: 'Number of parallel shards'
+        required: false
+        default: '60'
+      variant_count:
+        description: 'Variants per (level, mode) for local-mutant/swap/group-reshuffle/constrained-shuffle (symmetry is always exactly 7)'
+        required: false
+        default: '10'
+      max_wall_ms:
+        description: 'Per-shard self-throttle: stop starting new (level,mode) tasks after this many ms so staging/upload still runs normally'
+        required: false
+        default: '17400000'
+
+concurrency:
+  group: family-wide-trove
+  cancel-in-progress: false
+
+env:
+  RESEARCH_BRANCH: claude/variant-levels-solver-insights-tpk4qg
+  BUDGET_MS: ${{ inputs.budget_ms || '8000' }}
+  NODE_BUDGET: ${{ inputs.node_budget || '20000000' }}
+  WORKERS: ${{ inputs.workers || '4' }}
+  SHARDS: ${{ inputs.shards || '60' }}
+  VARIANT_COUNT: ${{ inputs.variant_count || '10' }}
+  MAX_WALL_MS: ${{ inputs.max_wall_ms || '17400000' }}
+
+jobs:
+  trove-shards:
+    name: Trove shard ${{ matrix.shard }}/${{ inputs.shards || '60' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+                21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+                41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60]
+    steps:
+      - name: Check out research branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESEARCH_BRANCH }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compute this shard's slice
+        id: ids
+        shell: bash
+        run: |
+          nn=$(printf '%02d' "${{ matrix.shard }}")
+          echo "nn=${nn}" >> "$GITHUB_OUTPUT"
+          mkdir -p logs/family-census
+          node scripts/family-wide-trove-shard-slice.mjs --shard="${{ matrix.shard }}" --shards="${{ env.SHARDS }}" \
+            > "logs/family-census/wide-shard-${nn}-slice.json"
+
+      - name: Generate + solve + hint-extract this shard's tasks (persists after every task)
+        shell: bash
+        run: |
+          nn="${{ steps.ids.outputs.nn }}"
+          node scripts/family-wide-trove-shard-run.mjs \
+            --shard-file="logs/family-census/wide-shard-${nn}-slice.json" \
+            --nn="${nn}" \
+            --progress="logs/family-census/wide-shard-${nn}.log" \
+            --summary="logs/family-census/wide-shard-${nn}-summary.jsonl" \
+            --budget-ms="${{ env.BUDGET_MS }}" --node-budget="${{ env.NODE_BUDGET }}" \
+            --workers="${{ env.WORKERS }}" --variant-count="${{ env.VARIANT_COUNT }}" \
+            --max-wall-ms="${{ env.MAX_WALL_MS }}" || true
+
+      - name: Stage this shard's outputs for upload
+        if: always()
+        shell: bash
+        run: |
+          nn="${{ steps.ids.outputs.nn }}"
+          stage="artifact-staging/trove-shard-${nn}"
+          mkdir -p "${stage}/logs/family-census"
+          cp "logs/family-census/wide-shard-${nn}"*.* "${stage}/logs/family-census/" 2>/dev/null || true
+          # --untracked-files=all: without it, a brand-new untracked directory (e.g. a
+          # corpus-specific data/families/<corpus>/ subdirectory appearing for the first time)
+          # collapses to a single line and a plain `cp` on it aborts the step under `set -e` --
+          # exactly what broke family-fragile-robust-census.yml's shard 6 (2026-08-07).
+          git status --porcelain --untracked-files=all -- data/families/ logs/family-census/ | awk '{print $2}' | while read -r f; do
+            mkdir -p "artifact-staging/trove-shard-${nn}/$(dirname "$f")"
+            cp "$f" "artifact-staging/trove-shard-${nn}/${f}"
+          done
+
+      - name: Upload this shard's staged results as an artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trove-shard-${{ steps.ids.outputs.nn }}
+          path: artifact-staging/trove-shard-${{ steps.ids.outputs.nn }}
+          if-no-files-found: warn
+          retention-days: 90
+
+  combine:
+    name: Combine trove results and commit to research branch
+    needs: [trove-shards]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - name: Check out research branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESEARCH_BRANCH }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download every shard's artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'trove-shard-*'
+          path: artifact-staging/downloaded
+          merge-multiple: true
+
+      - name: Lay the downloaded shard results onto the working tree
+        shell: bash
+        run: cp -a artifact-staging/downloaded/. ./
+
+      - name: Aggregate into a coverage report
+        shell: bash
+        run: |
+          mkdir -p reports/families
+          node scripts/family-wide-trove-combine.mjs --in-dir=logs/family-census
+
+      - name: Print headline numbers
+        shell: bash
+        run: head -30 reports/families/2026-08-07-wide-trove-summary.md
+
+      - name: Upload the combined trove as an artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: family-wide-trove-combined
+          path: |
+            reports/families/2026-08-07-wide-trove-summary.md
+            logs/family-census/
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Commit and push the combined trove to the research branch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/families/ logs/family-census/ reports/families/2026-08-07-wide-trove-summary.md
+          if git diff --cached --quiet; then
+            echo "Nothing changed -- not creating an empty commit."
+            exit 0
+          fi
+          git commit -m "Family wide trove: combined shard results ($(date -u +%FT%TZ))"
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:${{ env.RESEARCH_BRANCH }}; then exit 0; fi
+            echo "Push attempt ${attempt} failed; retrying after a short wait..."
+            sleep $((attempt * 5))
+            git fetch origin ${{ env.RESEARCH_BRANCH }}
+            git rebase origin/${{ env.RESEARCH_BRANCH }} || { echo "Rebase failed -- leaving commit local for manual recovery."; exit 1; }
+          done
+          echo "All push attempts failed."
+          exit 1
