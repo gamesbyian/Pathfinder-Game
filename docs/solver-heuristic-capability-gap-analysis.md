@@ -63,7 +63,7 @@ An incomplete state signature may be safe for diversity but not for rejection.
 | Anti-dither / revisit penalty | Suppresses trivial reversal and gratuitous reuse | Productive versus destructive revisits and longer history motifs |
 | Obligation lower bounds | Prove insufficient length; provide scalar slack | Most cross-family conflict, exact interfaces/order, dynamic topology |
 | Deadlock / connectivity | Catch irreversible local failure and unreachable/undersized regions | Traversal feasibility through a region, separator allocation, combined interfaces |
-| Beam dedup/diversity | Avoids some duplicate work and flipper/must-cross mode collapse | Portal-complete identity, residual path topology, diversity for other mechanics |
+| Beam dedup/diversity | Frees beam width via aggressive (formally unsound) merging on `(cell, ints/mp/mc/flipper/surround/mustTurn/adjTurn-mask)`, all mechanics as of 2026-08-06 | Portal-complete identity; must-cross crossCounts/axis-lock sub-state was tried 2026-08-07 and found net-negative — more merge precision competes against, not adds to, the mechanism's actual width-management value (see `reports/2026-08-07-beam-dedup-mc-axis-granularity-net-negative.md`) |
 | Repair | Escapes deterministic commitment through restarts and elites | Ordinary interior edits, connectivity pruning, stable use of every shared score |
 | Attempt policy | Routes coarse feature regimes to methods | Online response to beam extinction, prune causes, or repair plateau shape |
 
@@ -124,6 +124,18 @@ assumed without changing the game rule.
 cell, viable incoming axis, viable outgoing axis/chirality—and ask whether at least one remains.
 Before hot-path code, census these interfaces along stored solutions and dead labelled prefixes.
 This is genuinely different from the refuted adjacent-turn exit bonus and single-linkage MST.
+
+**A narrower version was tried and found null (2026-08-07)**: not the full entry/exit-axis
+interface above, but a plain dynamic reachability completion check — extending `isConnected`'s
+existing flood fill (which already asks "is `X` reached?" for goal/must-pass/must-cross) to also
+ask it about pending surround-neighbor and adjacent-turn candidate cells. Sound (0 false rejections
+across 151,414 replayed steps of 1,493 stored solutions) and far from rare (fired on 83% of a
+mixed-difficulty 100-level sample, ~17,800 times), but the aggregate effect on `nodesExpanded` was
+0.0008% with zero solved-count change — the states it catches were already about to be rejected by
+the rest of the gauntlet within a step or two. See
+[`reports/2026-08-07-surround-adjturn-reachability-null-result.md`](../reports/2026-08-07-surround-adjturn-reachability-null-result.md).
+This demotes "plain reachability, no interface/axis reasoning" as a productive shape for this gap
+without touching the entry/exit-axis interface idea itself, which remains untested.
 
 ### 3. Must-cross/intersection propagation: proven family, narrowed frontier
 

@@ -225,6 +225,24 @@ Not part of `ci`. Used when changing solver internals or level data:
 > leash on exploration — the project bar is net-monotonic-after-recovery (see "Evaluating a NEW solver
 > feature" below), which assumes you'll iterate boldly first and clean up regressions at the gate.
 
+**A solve found while exploring is real regardless of whether the code that found it ships.**
+Before reverting/discarding any A/B or ablation-flag experiment that ran real solve attempts
+(`runAttempt`/`solveLevel` against corpus levels), check every level that solved in *any* tested
+arm against its stored hints (`data/hints/<id>.json` published, `data/stress/hints/<id>.json`
+corpus-1, `data/stress/hints-random/<id>.json` corpus-2 — see CLAUDE.md's Provenance section for
+the join-key rule) — a quick existence/count check is enough, no need to diff paths. A level with
+zero stored hints that solved under your experiment is new information the corpus doesn't have yet,
+independent of whether you keep the mechanism: capture it via `scripts/hint-capture-lib.mjs`'s
+`createHintCapture` (the same machinery `audit-export.yml --save-hints` uses — never hand-roll
+provenance) *before* reverting the code, tagging `solverVersion`/provenance honestly as an
+experimental/ablation-flag find rather than a normal production run, so it's correctly excluded
+from any later "what does the solver find cold" analysis while still being available as a stored
+hint. A level that already has a stored hint needs no action — your experiment just rediscovered
+something the corpus already knows, which is useful signal for the experiment itself but not new
+corpus data. 2026-08-07 example (`reports/2026-08-07-beam-dedup-mc-axis-granularity-net-negative.md`):
+checked and found all 9 flip-levels already had stored hints, so nothing needed capturing — but the
+check itself is the required step, not the outcome.
+
 The stress corpora (`data/stress/README.md`) and their tooling (`scripts/stress/*.mjs`) sit
 outside `ci` — they're slow (the full 1700-level Corpus 2 or even the 102-level Corpus 1 can take
 minutes to hours depending on the environment; see that doc's timing caveats) and running the

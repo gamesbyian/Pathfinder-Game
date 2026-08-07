@@ -28,6 +28,7 @@ import { workMeter } from './work-meter.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, structuralDeficit } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
+import { createNogoodCache } from './nogood-cache.js';
 import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, PrepLevel, ScoringProfile, StructuralTemplate, SolverSearchState, UndoToken } from './types.js';
@@ -56,6 +57,9 @@ const _SIG_DEBUG = !!(_proc && _proc.env && _proc.env.PF_REPAIR_SIGNATURE_DEBUG 
 // Stage 3-real diagnostics (PF_RELINK_DEBUG=1) — per relink call: how many recombinations were
 // tried, the best intermediate's badness, and whether it beat the pool. Zero overhead when unset.
 const _RELINK_DEBUG = !!(_proc && _proc.env && _proc.env.PF_RELINK_DEBUG === '1');
+// Elite-prefix DFS repair diagnostics (PF_ELITE_PREFIX_DFS_DEBUG=1) — zero overhead when unset,
+// same convention as the debug flags above.
+const _ELITE_PREFIX_DFS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_ELITE_PREFIX_DFS_DEBUG === '1');
 
 // Deterministic PRNG (mulberry32) — reproducible given the same gate/level, matching this
 // codebase's existing seeded-LCG convention (attempts.ts's shuffleAttemptConfigs) rather than
@@ -551,6 +555,159 @@ function closeLengthGap(ws: SolverSearchState, level: NormalizedLevel, prep: Pre
     return { solved: false, nodes };
 }
 
+// ── Elite-prefix DFS repair: bounded deterministic completion search from MULTIPLE points ────────
+// scattered across the elite pool's best near-misses, not just the current restart's own dead end.
+// docs/repair-search-stagnation-escape-plan.md's synthesis (reports/2026-07-22-repair-stagnation-
+// investigation-synthesis.md) diagnosed the wall precisely: repair's search is append-only (extends
+// a spliced prefix, never edits it), and the terminal residual of a stuck plateau needs
+// prefix-level restructuring no bounded operator reaching only the CURRENT restart's own tip can
+// supply — closeLengthGap (above) proved bounded deterministic DFS-from-a-point is a real, working
+// technique (not just theory), but scoped it to exactly one point (this restart's own dead end);
+// its own follow-up report found that single point's neighborhood "just rarely contains a rescue"
+// (R02655: 6,727 triggers, 0 solves). This generalizes the SAME proven technique (deterministic,
+// score-ordered, admissibly-pruned backtracking DFS — not random epsilon-greedy walking) to MANY
+// points: several fractional depths along each of the top elite near-misses, hypothesizing that a
+// residual inherited from an elite's already-good PARTIAL structure is a smaller, more tractable
+// sub-problem for exhaustive best-first search than either (a) the full original problem (which is
+// exactly dfs-plain's own exhaustion population — fresh-from-gate DFS already fails there) or (b)
+// repair's randomized walk (which the synthesis found keeps re-deriving the same structural family
+// regardless of where it splices from, never "trying harder" once it lands somewhere).
+//
+// SOUNDNESS: identical argument to every other operator in this file — every move goes through the
+// same applyMove/evaluatePrunedMove/isSolutionState gate, so a returned path is solution-valid by
+// construction regardless of which points were tried or in what order.
+
+/** Deterministic, score-ordered, bounded backtracking DFS from ws's CURRENT state (already
+ *  positioned by the caller, e.g. via replayToPrefix) toward a solution, never backtracking below
+ *  `floor` (a liveUndo.length checkpoint). Shares its inner-loop shape with closeLengthGap's own
+ *  tail loop (same evaluatePrunedMove gauntlet, same scoreAndSort ordering, same connectivity
+ *  throttle) but starts completely fresh — no reconstruction of an already-taken suffix — since
+ *  every caller here is starting from a genuinely NEW position (an elite's own earlier prefix, not
+ *  this restart's own history), unlike closeLengthGap which resumes exactly where a restart's own
+ *  walk just dead-ended. On success, ws holds the solved path and liveUndo reflects it (caller
+ *  reads ws.path). On failure, ws/liveUndo end wherever the search's own backtracking left them —
+ *  at or above `floor`, never below — so a caller MUST NOT assume ws is back at any particular
+ *  state on failure; every caller here re-establishes its own position via replayToPrefix
+ *  immediately after (elitePrefixDfsRepair's next attempt, or its final restore-to-startKey once
+ *  every attempt is exhausted).
+ *
+ *  On failure, also reports the best (lowest-computeBadness) intermediate state reached along the
+ *  way — mirroring relinkPaths' own "feed the best recombined intermediate back as search
+ *  material" pattern, so a failed search's partial progress isn't simply discarded (this was a
+ *  real gap in the operator's first version: without it, every one of potentially dozens of
+ *  attempts per stagnation trigger threw away whatever partial progress it made, compounding
+ *  nothing across firings — see reports/2026-08-07-repair-elite-prefix-dfs.md). Only checked when
+ *  a NEW path-length record is set (not every node), since computeBadness isn't free and
+ *  backtracking revisits shallower depths far more often than it sets new depth records. */
+function boundedDfsFromHere(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], floor: number, nodeBudget: number): { solved: boolean; nodes: number; bestPath: number[] | null; bestBadness: number } {
+    const childLists: number[][] = [];
+    const childIdx: number[] = [];
+    let nodes = 0;
+    let deepestLen = ws.path.length;
+    let bestBadness = Infinity;
+    let bestPath: number[] | null = null;
+
+    const currentFrameChildren = (): number[] => {
+        const pos = ws.path[ws.path.length - 1];
+        const children = getNeighbors(pos, ws, level, prep);
+        scoreAndSort(children, pos, ws, level, prep, profile, template);
+        return children;
+    };
+    childLists.push(currentFrameChildren());
+    childIdx.push(0);
+
+    while (childLists.length > 0) {
+        if (nodes >= nodeBudget) break;
+        const d = childLists.length - 1;
+        if (childIdx[d] >= childLists[d].length) {
+            childLists.pop();
+            childIdx.pop();
+            if (liveUndo.length <= floor) break;
+            undoMove(liveUndo.pop() as UndoToken, ws);
+            continue;
+        }
+        nodes++;
+        const pos = ws.path[ws.path.length - 1];
+        const next = childLists[d][childIdx[d]++];
+        const portalAtPos = level.portalMap.get(pos);
+        const isJump = !!(portalAtPos && !ws.lastWasPortalJump && portalAtPos.dest === next);
+        const undo = applyMove(next, ws, level, prep, isJump);
+        const realLen = getRealLengthFromState(ws);
+        const rSteps = level.reqLen - realLen;
+        const runConnectivity = rSteps <= 10 || (nodes & 63) === 0;
+        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity);
+        if (verdict === 'solution') {
+            liveUndo.push(undo);
+            return { solved: true, nodes, bestPath: null, bestBadness: 0 };
+        }
+        if (verdict === 'pass') {
+            liveUndo.push(undo);
+            if (ws.path.length > deepestLen) {
+                deepestLen = ws.path.length;
+                const b = computeBadness(ws, level);
+                if (b < bestBadness) { bestBadness = b; bestPath = ws.path.slice(); }
+            }
+            childLists.push(currentFrameChildren());
+            childIdx.push(0);
+        } else {
+            undoMove(undo, ws);
+        }
+    }
+    return { solved: false, nodes, bestPath, bestBadness };
+}
+
+/** Top-N elites to try prefix-completion search from (see elitePrefixDfsRepair). */
+const ELITE_PREFIX_DFS_ELITE_COUNT = 3;
+/** Fractional destroy points along an elite's path to try. Deliberately back-half-and-later only:
+ *  an earlier destroy point leaves a residual close to the size of the ORIGINAL problem, which
+ *  fresh-from-gate DFS attempts already exhaust without success (this population overlaps
+ *  dfs-plain's own exhaustion set) — the hypothesis this operator tests is specifically that a
+ *  SMALLER residual, inherited from an elite's already-good partial structure, is more tractable
+ *  for deterministic best-first search than the full problem is. Unmeasured/uncalibrated starting
+ *  values, like every other constant in this file's Stage 2/3 prototypes — a hypothesis to
+ *  calibrate by A/B, not a tuned number. */
+const ELITE_PREFIX_DFS_FRACTIONS = [0.5, 0.65, 0.8, 0.9];
+/** Node budget per (elite, destroy point) attempt — many small shots, not one large one, mirroring
+ *  closeLengthGap's own "bounded, targeted look" philosophy. */
+const ELITE_PREFIX_DFS_NODE_BUDGET_PER_ATTEMPT = 15000;
+/** Total node budget across ALL (elite, destroy-point) attempts in one stagnation-triggered call —
+ *  a ceiling independent of ELITE_PREFIX_DFS_NODE_BUDGET_PER_ATTEMPT × the attempt count, so a
+ *  string of quick failures doesn't burn the full theoretical max every trigger. */
+const ELITE_PREFIX_DFS_TOTAL_BUDGET = 90000;
+
+/** Tries a bounded deterministic completion search from several points scattered across the top
+ *  elites' own paths (see this section's header comment). Ablation: STRATEGY_REPAIR_ELITE_PREFIX_DFS
+ *  (repairSearchFromGate's enableElitePrefixDfs param). On failure, ws/liveUndo are restored to
+ *  [startKey] so the caller's own next-restart logic (which always repositions ws itself) starts
+ *  from a known, documented state — matching relinkPaths' own end-of-call convention. Also returns
+ *  the single best (lowest-badness) intermediate found across every attempt in this call (see
+ *  boundedDfsFromHere) — the caller is expected to feed it back via considerElite, matching
+ *  relinkPaths' own "best recombined intermediate becomes new search material" pattern. */
+export function elitePrefixDfsRepair(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], elites: { path: number[]; badness: number }[], startKey: number, totalNodeBudget: number): { solved: boolean; nodes: number; bestPath: number[] | null; bestBadness: number } {
+    let totalNodes = 0;
+    let bestBadness = Infinity, bestPath: number[] | null = null;
+    const eliteCount = Math.min(elites.length, ELITE_PREFIX_DFS_ELITE_COUNT);
+    for (let e = 0; e < eliteCount; e++) {
+        const elitePath = elites[e].path;
+        for (const frac of ELITE_PREFIX_DFS_FRACTIONS) {
+            if (totalNodes >= totalNodeBudget) break;
+            const destroyIdx = Math.max(1, Math.min(elitePath.length - 1, Math.floor(elitePath.length * frac)));
+            const prefix = elitePath.slice(0, destroyIdx + 1);
+            replayToPrefix(ws, liveUndo, prefix, level, prep);
+            const floor = liveUndo.length;
+            const remaining = Math.min(ELITE_PREFIX_DFS_NODE_BUDGET_PER_ATTEMPT, totalNodeBudget - totalNodes);
+            if (remaining <= 0) break;
+            const result = boundedDfsFromHere(ws, level, prep, profile, template, cfg, liveUndo, floor, remaining);
+            totalNodes += result.nodes;
+            if (result.solved) return { solved: true, nodes: totalNodes, bestPath: null, bestBadness: 0 };
+            if (result.bestPath && result.bestBadness < bestBadness) { bestBadness = result.bestBadness; bestPath = result.bestPath; }
+        }
+        if (totalNodes >= totalNodeBudget) break;
+    }
+    replayToPrefix(ws, liveUndo, [startKey], level, prep);
+    return { solved: false, nodes: totalNodes, bestPath, bestBadness };
+}
+
 /** The pending-objective masks (see ElitePending) for a state — one source of truth for both the
  *  main elite insertion and relinkPaths' intermediate capture (Stage 3). */
 function elitePendFromState(ws: SolverSearchState, level: NormalizedLevel): ElitePending {
@@ -769,7 +926,7 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // when-off guarantee (gated, consumes no rand). ON arms, on a must-turn stagnation, a turn-aware bias
 // at the move out of a pending must-turn cell (reward the required-turn exit, penalize the others) —
 // the selective successor to Stage 2/3's flat-cell biases. No production caller passes true.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false): Promise<number[] | null> {
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false, enableElitePrefixDfs = false): Promise<number[] | null> {
     const cfg = prep._cfg;
     const ws = createState(startKey, level, prep, STATE_BUF_REPAIR);
     const liveUndo: UndoToken[] = [];
@@ -783,6 +940,13 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     // nudge below (see EXIT_GUIDANCE_EPSILON_BOOST) — deliberately never drawn from `rand` itself,
     // and only ever created/consumed when enableMustTurnBias is true (the biased attempt).
     const rand2 = enableMustTurnBias ? mulberry32(((startKey * 0x27220A95) ^ (seedSalt * 0x85EBCA77)) >>> 0) : null;
+
+    // Nogood cache (see nogood-cache.ts) — one instance per repairSearchFromGate call, per its own
+    // lifecycle rule. Ablation: STRATEGY_REPAIR_NOGOOD_CACHE, default-on (standard convention,
+    // unlike the Stage 2/3 prototypes above and elitePrefixDfsRepair): this mechanism can only
+    // ever SKIP already-proven-dead exploration, never add competing search effort, so it doesn't
+    // carry the same "extra technique competing for a shared node budget" risk those do.
+    const nogoodCache = (!cfg || cfg.STRATEGY_REPAIR_NOGOOD_CACHE) ? createNogoodCache() : null;
 
     // Elite pool, sorted ascending by badness (elites[0] is the best-ever near-miss). See
     // ELITE_POOL_SIZE. `cells`/`pend` (Stage 3): the path's visited-cell set and pending-objective
@@ -886,12 +1050,20 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
             outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo, activePenalty, guideCells, turnBiasActive);
             if (prep._metrics) prep._metrics.nodesExpanded++;
             nodesExpandedLocal++;
+            // Nogood cache (see nogood-cache.ts): checked once per COMMITTED step, not once per
+            // candidate inside takePly — see that file's own header comment for why. A hit means
+            // this exact state already dead-ended earlier in THIS repairSearchFromGate call under
+            // takePly's own exploration — short-circuit immediately rather than re-walking the
+            // rest of an already-known-fruitless subtree. Only ever converts 'continue' to
+            // 'deadend', never touches 'solved' — cannot affect correctness, only speed.
+            if (outcome === 'continue' && nogoodCache && nogoodCache.has(ws)) outcome = 'deadend';
         }
 
         if (outcome === 'solved') {
             if (out) out.nodesExpanded = nodesExpandedLocal;
             return ws.path.slice();
         }
+        nogoodCache?.recordDead(ws);
 
         // Ablation: STRATEGY_REPAIR_LENGTH_GAP_CLOSE — see closeLengthGap's doc comment above.
         // Base trigger fires once every non-length/non-intersection objective is already
@@ -1040,6 +1212,32 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
                             if (rl.bestBadness < bestBadnessEver) bestBadnessEver = rl.bestBadness;
                         }
                     }
+                }
+            }
+
+            // Elite-prefix DFS repair: stagnation is also the trigger for this operator (see its
+            // own header comment) — a bounded deterministic completion search from several points
+            // scattered across the top elites' own paths, not just this restart's own dead end.
+            if ((!cfg || cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS) && enableElitePrefixDfs && elites.length > 0 && nodesExpandedLocal < nodeBudget) {
+                const epdBudget = Math.min(ELITE_PREFIX_DFS_TOTAL_BUDGET, nodeBudget - nodesExpandedLocal);
+                const epd = elitePrefixDfsRepair(ws, level, prep, profile, template, cfg, liveUndo, elites, startKey, epdBudget);
+                nodesExpandedLocal += epd.nodes;
+                if (prep._metrics) prep._metrics.nodesExpanded += epd.nodes;
+                if (_ELITE_PREFIX_DFS_DEBUG) {
+                    console.error(`  [elite-prefix-dfs] gate=${startKey} nodes=${epd.nodes} solved=${epd.solved} bestFound=${epd.bestPath ? epd.bestBadness : 'none'} poolWorst=${elites.length > 0 ? elites[elites.length - 1].badness : Infinity} poolBest=${elites[0]?.badness}`);
+                }
+                if (epd.solved) { if (out) out.nodesExpanded = nodesExpandedLocal; return ws.path.slice(); }
+                // Feed the best intermediate found back as search material (mirrors relink's own
+                // pattern above) — and track it as a genuine best-ever if it beats it.
+                if (epd.bestPath) {
+                    // pend is always null here (unlike relink's rl.bestPend): ws no longer reflects
+                    // epd.bestPath's state by the time elitePrefixDfsRepair returns (it restores to
+                    // [startKey] before returning), so the pending-objective masks aren't available
+                    // to recompute at this call site. Only affects Stage 3 guide selection
+                    // (enableRecombination/enableRelink), neither of which any production caller
+                    // enables — a candidate for a follow-up if either is ever promoted alongside this.
+                    considerElite(epd.bestPath, epd.bestBadness, trackEliteStructure ? new Set(epd.bestPath) : null, null);
+                    if (epd.bestBadness < bestBadnessEver) bestBadnessEver = epd.bestBadness;
                 }
             }
         }
