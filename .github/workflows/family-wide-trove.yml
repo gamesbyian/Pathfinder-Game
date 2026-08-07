@@ -69,6 +69,64 @@ env:
   MAX_WALL_MS: ${{ inputs.max_wall_ms || '17400000' }}
 
 jobs:
+  # Retroactive hint-extraction pass over the 1854 family-<id>-{lm,sym}.json files the 2026-08-06
+  # fragile-robust census already generated + solved (927 corpus-2 ids) -- that census predates
+  # hint-workbench integration, so those families only ever got a single --save-hints pass. Runs
+  # independently of the shard matrix (not sharded: ~1854 files at ~1.5s each fits well inside one
+  # job) and commits its own additions directly, since it only ever touches pre-existing files the
+  # shard matrix's own commit never writes to.
+  enrich-existing:
+    name: Enrich pre-existing census families with hint-workbench
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    steps:
+      - name: Check out research branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESEARCH_BRANCH }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run hint-workbench over every pre-existing flat family file
+        shell: bash
+        run: |
+          mkdir -p logs/family-census
+          node scripts/family-enrich-existing.mjs \
+            --progress=logs/family-census/enrich-existing.log \
+            --summary=logs/family-census/enrich-existing-summary.jsonl \
+            --max-wall-ms=4800000
+
+      - name: Commit and push the enrichment to the research branch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/families/hints/ logs/family-census/enrich-existing.log logs/family-census/enrich-existing-summary.jsonl
+          if git diff --cached --quiet; then
+            echo "Nothing changed -- not creating an empty commit."
+            exit 0
+          fi
+          git commit -m "Family census enrichment: hint-workbench pass over pre-existing families ($(date -u +%FT%TZ))"
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:${{ env.RESEARCH_BRANCH }}; then exit 0; fi
+            echo "Push attempt ${attempt} failed; retrying after a short wait..."
+            sleep $((attempt * 5))
+            git fetch origin ${{ env.RESEARCH_BRANCH }}
+            git rebase origin/${{ env.RESEARCH_BRANCH }} || { echo "Rebase failed -- leaving commit local for manual recovery."; exit 1; }
+          done
+          echo "All push attempts failed."
+          exit 1
+
   trove-shards:
     name: Trove shard ${{ matrix.shard }}/${{ inputs.shards || '60' }}
     runs-on: ubuntu-latest
@@ -197,6 +255,7 @@ jobs:
           name: family-wide-trove-combined
           path: |
             reports/families/2026-08-07-wide-trove-summary.md
+            reports/families/2026-08-07-wide-trove-attempts-*.json
             logs/family-census/
           if-no-files-found: warn
           retention-days: 90
@@ -206,7 +265,8 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add data/families/ logs/family-census/ reports/families/2026-08-07-wide-trove-summary.md
+          git add data/families/ logs/family-census/ reports/families/2026-08-07-wide-trove-summary.md \
+                  reports/families/2026-08-07-wide-trove-attempts-*.json
           if git diff --cached --quiet; then
             echo "Nothing changed -- not creating an empty commit."
             exit 0
