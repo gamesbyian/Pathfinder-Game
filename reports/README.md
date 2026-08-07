@@ -6,6 +6,10 @@ this file exists to orient a reader (human or AI agent) who lands here without p
 
 ## The solver research narrative (loose dated files at this level)
 
+For a repository-wide inventory of investigations that still lack a conclusion, stale active
+statuses, and deliberately deferred work, see
+[`2026-08-06-documentation-loose-threads-audit.md`](2026-08-06-documentation-loose-threads-audit.md).
+
 The ~35 `YYYY-MM-DD-<topic>.md` files directly in this directory are individual investigation
 writeups from the ongoing push toward full stress-corpus solvability. **Don't try to reconstruct
 the story by reading filenames** — start at
