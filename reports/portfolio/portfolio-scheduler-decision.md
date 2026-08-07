@@ -6,6 +6,13 @@ Date: 2026-07-12
 
 The opt-in portfolio scheduler experiment is implemented and reportable. Legacy remains the default scheduler, and portfolio mode is used only when requested via `schedulerMode: "portfolio-experiment"`.
 
+> **Closure note (2026-08-07):** this decision is final for the measured experiment. The broader
+> stress validation proposed below was not completed and is now cancelled rather than left as an
+> active gate: every globally applicable measured variant was slower on the published corpus, the
+> feature-gated form never became a production candidate, and later legacy-ladder changes make these
+> historical timing comparisons stale. Reopen only with a new scheduler design and fresh baselines;
+> do not resume the old 4/17 checkpoint just to fill coverage.
+
 ## Published corpus findings
 
 | Variant | Portfolio before fallback | Portfolio + fallback | Fallback-only | Portfolio / legacy runtime | Read |
@@ -42,7 +49,7 @@ Choose **Option B: adjust tier config**. The next implementation step has been t
 3. Add a feature-gated repair-specialist tier only for levels that match the repair/must-turn feature cluster, not as a global default. This is now encoded as feature-gated Pass 4 repair specialists: ordinary repair for the high-flipper and high-reqInt ordinary-repair clusters, and must-turn-biased repair for the high-intersection/must-cross/must-pass/must-turn cluster.
 4. Validate the feature-gated candidate on a broader stress subset before considering any production scheduler change.
 
-## Next validation target
+## Historical validation target (cancelled with the experiment)
 
 Run a live comparison on an even larger stress subset (for example corpus1 levels 1-50 or a curated dev benchmark slice beyond the first 20 levels) with feature-gated specialist promotion. Acceptance for the next step should require:
 

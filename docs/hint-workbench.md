@@ -214,7 +214,10 @@ This is level-level parallelism only — it doesn't help a single slow level fin
 - `scripts/hint-diversification.mjs` (the standalone CLI) and `scripts/hint-workbench.mjs` both call the same `modules/solver/hint-ablation-generator.ts` engine, but there is no automated test proving byte-for-byte candidate parity between them beyond each independently testing correct behavior against the shared engine.
 - The default report output path (`reports/hint-workbench/latest.json`) has no timestamp/tag convention, so repeated local runs overwrite it unless you pass `--output` explicitly; it is gitignored (`reports/hint-workbench/`), so this is a local-workflow inconvenience, not an accidental-commit risk.
 - `hint-workbench.mjs` itself is intentionally **not** the home for worker-thread-parallel batch tooling: `scripts/hint-complete-enumeration-sharded.mjs` (sharded exhaustive enumeration *within* a level) needs a self-spawning `isMainThread`-gated worker-pool script structure that conflicts with the workbench's flat single-script step model — see that script's own header comment. This is a deliberate split, not a gap: use it directly for genuinely exhaustive/resumable/worker-parallel enumeration of one level; use the workbench's own sequential `enumerate-complete` step for a quick per-level check. Cross-*level* parallelism (many levels at once) is covered instead by `hint-workbench-parallel.mjs` above, which sidesteps the same constraint by using separate processes instead of in-process workers. See `reports/2026-07-25-hint-tool-comparison.md` for the investigation that found this split.
-- `scripts/hint-candidate-search.mjs` (the standalone CLI whose technique `candidate-grid` ports in) is still a separate, working tool — it was not deleted or deprecated when `candidate-grid` was added. Retiring it is a follow-up decision, not yet made.
+- `scripts/hint-candidate-search.mjs` (the standalone CLI whose technique `candidate-grid` ports in)
+  remains a separate, supported candidate-discovery entry point. **Retention decision (2026-08-07):
+  keep it** until a parity/migration check proves the workbench covers every documented use; the
+  presence of an overlapping technique is not by itself a reason to delete a working workflow.
 
 ## Admissible-slack ordering (`--enum-order=admissible-slack`)
 

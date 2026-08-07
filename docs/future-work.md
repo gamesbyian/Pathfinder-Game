@@ -1,19 +1,26 @@
 # Future Work
 
-A compiled index of genuinely open, non-stale work — pulled from active planning documents and recent campaign reports. This file serves as the index; detailed strategy documents are linked below. Updated 2026-08-05.
+A compiled index of genuinely open, non-stale work — pulled from active planning documents and recent campaign reports. This file is the **live queue and status source of truth**; detailed strategy documents are linked below. Updated 2026-08-07.
 
-> **Currently active:** Campaigns 1–3 of the solver-development roadmap, targeting stress-corpus-2 solvability — Campaign 2's must-cross forced-structure thread is now closed (steps 1–3 shipped, step 4 falsified; see `solver-development-roadmap.md`'s 2026-08-05 status update), so Campaign 3 needs a new lead — see "Solver rule-recognition gaps" below, portal parity is the strongest open candidate. See [`solver-development-roadmap.md`](solver-development-roadmap.md)'s campaign sections for live status — they update with each major measurement. Also active: the repair-search stagnation investigation ([`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md), Stages 1-3 prototyped with Stage 4 re-scoped based on Stage 1 findings).
+> **Current solver frontier:** the old numbered campaign sequence is retained as history in
+> [`solver-development-roadmap.md`](solver-development-roadmap.md), not maintained as the live queue.
+> The must-cross forced-structure sequence is closed (steps 1–3 shipped, step 4 falsified). The best
+> explicitly open rule-recognition leads are portal parity and structural derivation for must-turn,
+> adjacent-turn, and surround landmarks below. Repair stagnation remains an investigation record
+> with Stages 1–3 measured and Stage 4 re-scoped; descent-aware probing is its next evidence step.
 
 ---
 
 ## Solver development (active campaigns)
 
-**Master reference:** [`solver-development-roadmap.md`](solver-development-roadmap.md) — the campaign-level plan sequencing diagnosis → generalization → verify → refresh. Campaigns 0–3 documented there with concrete status as of 2026-07-18. Each campaign picks a failure cluster, diagnoses mechanism, proposes feature-keyed changes, verifies rigorously, and refreshes the corpus. This is the single source of truth for what's being worked on and what the blockers are.
+**Historical method reference:** [`solver-development-roadmap.md`](solver-development-roadmap.md) —
+the campaign plan sequencing diagnosis → generalization → verify → refresh. Its campaign labels and
+population counts are dated snapshots; this file is the current status index.
 
 - **Campaign 0** — close out pending follow-ups from 2026-07-16/17 reports. **Completed 2026-07-17.** Three independent issues fixed: attraction-diversity near-miss testing, budget-fraction evaluation, and repair-probe budget-override bug.
 - **Campaign 1** — `repair-close` rescue (139 levels as of latest re-cluster). **Completed 2026-07-18** with the `closeLengthGap` operator and its near-miss extension shipped (2026-07-17), plus infrastructure fixes to the repair probe (node-budget starvation). Net +28 genuine solves via `diff-baseline.mjs`. The deeper issue (repair-search's stagnation plateau converging to a frozen deficit signature and staying frozen) is addressed separately via [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md) — this campaign fixed a symptom and identified the core problem; that plan targets the core.
-- **Campaign 2** — `dfs-plain` exhaustion (843 levels; the bulk of the problem). **Active investigation** with many negative results documented: 8 scoring flags tested, 3 turn-constraint generalizations (MST bound, deadlock check, exit guidance) all tested to negative conclusions, state-revisit transposition premise invalidated on inspection, articulation-point technique out of scope. Revised conclusion: the harder ~93% majority resists the known fragile-scoring family and existing pruning/scoring machinery — needs a genuinely new technique (admissible bounds, move-ordering strategy, or constraint-propagation approach not yet tried). Level reduction established a new caveat for repair-gated levels. See [`solver-development-roadmap.md`](solver-development-roadmap.md) for the full differential-testing methodology and specific report links per sub-finding.
-- **Campaign 3** — `repair-far` (507 levels as of latest re-cluster) + robust hard cores. **Not yet started.** Will be armed with whatever Campaigns 1–2 teach; if nothing generalizes, genuinely-new techniques (transposition with provable sound keys, constraint propagation, or macro moves informed by solution-profile family resemblance) to be prototyped behind ablation flags.
+- **Campaign 2** — `dfs-plain` exhaustion. **Historical phase concluded:** the known fragile-scoring family and the tested pruning/scoring generalizations did not explain the harder majority. Later work moved to admissible-order search, reserved-intersection reasoning, rule-recognition, oracle-labelled shadow evaluation, and differential diagnosis; use the open sections below rather than this old population bucket.
+- **Campaign 3** — `repair-far` + robust hard cores. **Historical label retired:** subsequent work did attack the robust population through several new techniques, so “not yet started” is no longer accurate. No single replacement technique has closed the population; the concrete surviving leads are tracked below.
 
 ## Solver rule-recognition gaps (2026-08-05)
 
@@ -100,7 +107,7 @@ quickly.
 - **Stage 2** — Signature-conditioned soft feature memory (plateau-penalty prototype). **Built 2026-07-22**, `enablePlateauPenalty` opt-in in `repair-search.ts`. Verdict: sound and effective at reshaping search, but **no solved-count gain** and a double-edged bestBadness effect with one severe near-solved-level regression. Kept default-off. Two follow-ups tested (arming-time near-solved guard, equal-work A/B) — both confirmed the effect is real misdirection, not a confound.
 - **Stage 3 (soft)** — Scatter-search recombination via complementarity-guided guide selection. **Built 2026-07-22**, `enableRecombination` opt-in. **The only prototype to gain a solve** (R02239, 2/16 vs 1/16). Distance-only guide selection lost a solve (complementarity criterion load-bearing). Still net-mixed on near-miss quality with the same near-solved regression. Default-off.
 - **Stage 3 (real)** — Reversible-operator relinking via anchor-splice. **Built 2026-07-22**, `enableRelink` + `relinkPaths`. Verified sound (copies guide suffixes through real gauntlet). **Does not help — zero solves, zero cost change — and underperforms soft approximation.** Reason: exact segment copies collapse under append-only legality; soft randomness escapes this trap that rigid copying cannot. Reverted. Exact-copy relinking is a structural dead end.
-- **Turn-aware selective biasing** — Bias the one load-bearing move (exit from pending must-turn cell) only during detected must-turn plateau. **The best-performing mechanism** from the investigation. **Solves R02003** (via `TURNBIAS` attempt), drives several others to badness 2. On 40-level sample: +1 solve, net-positive badness (12 better, 8 worse), zero downside. Wired as a production repair attempt (`STRATEGY_REPAIR_TURN_BIAS`-gated, default-off in legacy mode; must-turn attempt first among repair configs). But: 10-strong-candidate production A/B found only 1 turn-bias-*attributable* solve — isolation A/B dramatic reductions (R01397 39→2, R02220 10→2) do **not** convert to production solves once the full fallback has access. Load-bearing lesson: turn bias needs the repair fallback; `disableExtraBudgetPasses` creates a false negative. **Remaining gate:** corpus-2 refresh run twice (baseline vs flag-on, fallback enabled) + full-corpus before/after **timing** comparison (GitHub Actions, now the load-bearing check) before promoting to default-on. See [`reports/2026-07-22-repair-stagnation-turnbias-production-wiring-validation.md`](../reports/2026-07-22-repair-stagnation-turnbias-production-wiring-validation.md).
+- **Turn-aware selective biasing** — Bias the one load-bearing move (exit from pending must-turn cell) only during detected must-turn plateau. It solves real isolated levels, including R02003, but the completed corpus-2 A/B and post-budget-fix rerun found an attributable effect of only about +1 solve, within the corpus noise floor; default-on promotion is **not justified**. An exclusive feature selector was also tested and rejected at net −2. The current flag-gated/default-off experiment tries both biased tiers, orders them with the `reqInt <= 3` predictor, and weights the shared probe budget 75/25. Remaining gate: a dedicated corpus-2 A/B of that implemented weighted form plus worst-case three-tier fallback latency. See [`reports/2026-07-23-turnbias-corpus2-ab-validation.md`](../reports/2026-07-23-turnbias-corpus2-ab-validation.md).
 - **Stage 4** — Strategic oscillation across exact-count boundary. **Re-scoped 2026-07-22** based on Stage 1 findings: all 15 measured plateaus are length-*short*, never long — repair deadends before `reqLen` and never overshoots. So "oscillate back from overshoot" has no overshoot to work with. If pursued: frame as "reach a length the random walk can't extend to" (an extend/detour operator), not oscillation. **Not yet started.** Append-only-construction prerequisite gap applies either way.
 
 **Standing conclusion from all stages (2026-07-22):** Soft mechanisms (randomized recombination, turn-aware biasing) move the needle; hard constant-tuning has failed three times; exact-copy relinking is a dead end; append-only prefix editing hits a wall on global length↔turn coupling. The one avenue not yet shown to hit the wall is **descent-aware probing** (shadow logging of what a mechanism would change on an otherwise-improving restart, per soundness rule 7). Pursue that over more bounded-operator variants before claiming exhaustion.
@@ -112,8 +119,14 @@ quickly.
 ### Confirmed real, highest priority for build:
 - **Homotopy-class path-signature metrics** (item #4). Real, measured, double-digit-percent effect on real data (16.6% of cross-homotopy-class hint pairs rated "similar" by current curation, using correct computation, not proxy). Strongest evidence-to-effort ratio. Targets must-cross-heavy levels specifically; should check whether it partitions the existing hint corpus into behaviorally-distinct clusters the current `featureDistance` metric (edge-Jaccard + crossing placement + must-cross order) misses.
 
-### Needs re-run once corpus-2 benchmark complete:
-- **Learned portfolio selection** (item #3), reframed as binary "will `repair` win" question. Real but moderate signal: `navDensity <= 0.524` catches 6/10 repair-winners at the cost of 8 false positives (F1 0.500); at n=85 with only 10 positives, signal is not yet strong enough to act on. Also found: 79.2% of total solve time on solved corpus-1 levels was spent on attempts *before* the actual winner — a separate, actionable finding regardless of any learning (re-examine `attempts.ts` ordering for `must-cross-heavy` and `high-intersection-burden` archetypes specifically). Re-run this exact binary classifier once corpus-2's benchmark (in progress) roughly quadruples the dataset before deciding to build or drop.
+### Classifier rerun complete — dropped:
+- **Learned portfolio selection** (item #3), reframed as binary “will `repair` win.” **Closed
+  2026-08-07:** the 725-level Corpus-2 rerun refutes the historical density rule (F1 0.010). The
+  best five-fold single-feature rule, `mustCross >= 2`, reaches only F1 0.471 versus an always-repair
+  F1 of 0.412, creates 237 false positives, and echoes the existing repair-eligibility policy.
+  Do not build the classifier. The separate attempt-ordering-cost finding remains open only as a
+  direct A/B question. See
+  [`reports/2026-08-07-repair-winner-classifier-rerun.md`](../reports/2026-08-07-repair-winner-classifier-rerun.md).
 
 ### Needs harder redesign before buildable:
 - **Nogood/dead-end learning** (item #2). Direct instrumented search found a real counterexample: a naive `(mpVisitedMask, mustCrossMask, remaining)` signature is provably unsound as a global nogood key in this codebase's actual state space. Any future attempt needs a richer signature (portal state, flipper state, edgeUsage per visited cell) or to restrict scope to what existing MST bounds already prove, which raises the bar from "mid-term, needs care" to "bigger design task." Probe the richer signature offline against corpus data before committing.
@@ -174,6 +187,27 @@ The current suite (`scripts/firestore-rules-test.mjs`) is source-level character
 All 3 corpora (published 156 + stress-corpus-1 102 + stress-corpus-2 1700) now carry permanent `id` fields (P00001..P00156 published, S00001..S00102 and R00001..R01700 stress). Local hint storage keyed by id, not array position. This was originally scoped as "key by `getLevelFingerprintSource()` instead," but a finding from that work showed fingerprint doesn't work as a persistent identity (it's a *content* hash — edit one block and it changes, silently orphaning ratings/hints). Real `id` is what the goal actually requires. Runtime hint-fetch path (`modules/data-asset-loaders.ts`, `data.ts`) is id-aware. `id`/`persistentId` passthrough audited across serialization boundaries (`buildWireLevelData`, level-submission-repository, review-repository) — all survive the editor → submission → review → publish pipeline untouched. Firestore's `published_levels` stays keyed by its own doc id + fingerprint (level only gets permanent `id` at import time, not draft time). **Complete.**
 
 ---
+## Older loose-thread triage (2026-08-07)
+
+This table makes an explicit `do / defer-until / close` decision for older report follow-ups that
+otherwise read like an undifferentiated backlog. “Close” means the proposed follow-up is not worth
+buying on current evidence; it can be reopened only with a new argument. “Defer” names the event
+that makes reconsideration useful.
+
+| Thread | Disposition | Revisit condition / next action |
+|---|---|---|
+| AI-assisted manual solving | **Defer** | Use only when automated differential diagnosis has isolated a first-divergence question it cannot answer. Do not schedule blind narrative solving as a campaign; the existing worked example did not validate it on a genuinely unsolved level. |
+| Fixed repair-probe node budgets vs. `timeBudgetMs` | **Defer** | Revisit if a real UI/tool call uses a materially sub-30s budget on a repair-gated level and measurement shows the fixed probe dominates latency. Current production-default evidence does not establish harm. |
+| Stress smoke-set id drift | **Completed 2026-08-07** | Replaced the four unresolvable ids with current pins: `R01189` (strongest current high-intersection/must-cross structural case), `R00134` and `R00087` (measured repair winners), and `S00103` (four real gates). The old `S00017` bug-specific identity could not be recovered, so its replacement is explicitly structural rather than falsely claiming provenance. `npm run stress:smoke` now holds 14/14 under 60 seconds. |
+| Attraction-diversity sequential per-flag passes | **Close** | The powered combined-widening test produced only +1/100 and the sequential form costs up to five extra full passes. Do not buy that cost without a new cheap predictor or isolation mechanism. |
+| Hot-path speed-change loss (`R00526`, not `R01403`) | **Closed 2026-08-07** | Root cause confirmed: `insOrd` restores cull order only after a complete phase, while goal and budget checks occur during the faster tree-order walk. A budget can end mid-phase before a high-score node is visited. Restoring score-order walk recovers R00526; the edit was reverted because the owner had explicitly accepted one lost solve for the measured speedup. R00526 remains a known-hard pin. |
+| Tier-2/Tier-3 memory-bandwidth work | **Defer** | Tier 2 waits for a measured profile showing allocation pressure is again dominant and requires reentrancy/lifetime audits; Tier 3 waits for Tier 2 results. This is performance backlog, not correctness debt. |
+| Pinned stress regression set | **Complete 2026-08-07** | Retained five solved canaries, added three structurally distinct current known-hard pins, and added `--update-baselines`. The writer refreshes only matching solved measurements and refuses improvements/flaky retries; expectations always require an explicit edit. Keep this minutes-long tier manual rather than adding it to CI. |
+| Learned “will repair win?” portfolio classifier | **Closed 2026-08-07** | Corpus-2 rerun complete: historical density rule refuted; best replacement is modest, policy-confounded, and too false-positive-heavy. Classifier dropped; direct ordering A/B remains separate. |
+| Systematic solver-scaling analysis | **Defer** | Revisit when a concrete solver change needs a scaling curve to choose a cutoff. Recipe cousins remain separately deferred until tighter family tiers yield a decision they could resolve. |
+| Standalone hint-candidate CLI | **Keep** | It remains a distinct candidate-discovery entry point while the workbench ports its technique. Retire only after a parity/migration check proves every documented use is covered; coexistence alone is not cleanup debt. |
+| `reports/hint-selection.json` | **Quarantine** | Git history traces it only to the 2026-07-30 bulk import; no current generator or consumer uses its schema. Do not treat it as authoritative. Delete or archive it only after comparison with current hint-curation output establishes whether it preserves unique evidence. |
+| Firebase custom-claim cutover and emulator rule tests | **Defer** | Custom-claim work waits on production operations; emulator-backed tests wait for the next Firestore-rules change, as already documented in the security section. |
 
 ## What's explicitly out of scope / deprioritized
 
@@ -398,7 +432,7 @@ by a level cap before calling it structural.
   there, net 0 at matched wall cost. The mechanism doesn't generalize past `freeInt == 0` because
   that's the only point where the wall changes the remaining problem's *topology*; at `freeInt >=
   1` a single paid hop reopens the far side almost everywhere. See
-  [`reports/2026-07-31-reserved-intersection-wall.md`](../reports/2026-07-31-reserved-intersection-wall.md#the-follow-up-built-and-reverted-bounded-cost-reachability-at-freeint--0).
+  [`reports/2026-07-31-reserved-intersection-wall.md`](../reports/2026-07-31-reserved-intersection-wall.md#the-follow-up-built-and-reverted-bounded-cost-reachability-at-freeint--1).
   Do not rebuild without a new argument — raising the cap targets a strictly smaller population at
   strictly higher cost, the wrong direction on both axes.
 - **Axis-aware connectivity** (a fixpoint over `(cell, entry-axis)` states instead of cells) —
@@ -440,10 +474,11 @@ by a level cap before calling it structural.
   exactly what it already was — an offline oracle and hint/insight source, hints tagged
   `EXTERNAL_SOLVER_ID` and excluded from any "what can our solver find" claim. The **live, still-open**
   half of this thread is using CP-SAT to inform a genuine internal (TypeScript, browser-safe)
-  solving mechanism — harvesting a much larger oracle-labelled dataset (currently ~623 branches
-  across 16 levels; only 45 of 328 in-scope corpus-2 levels have been solved by it at all) and
-  extending its mechanic scope to portals (flagged as the single biggest addressable-scope win,
-  roughly doubling the in-scope population) — neither of which has been started.
+  solving mechanism. The two former prerequisites are now **complete**: portal support grew the
+  eligible pool from 212 to 397 levels, and the sharded atlas sweep grew the labelled set from 623
+  branches/16 levels to 5,518 branches/397 levels. The remaining work is to propose and shadow-score
+  a new browser-safe deduction against that atlas; the three candidates scored so far were sound but
+  too narrow to integrate. See [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md).
 
 ---
 

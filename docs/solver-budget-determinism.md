@@ -424,6 +424,10 @@ Deliberately NOT migrated, and why: `portfolio-solve-sweep.mjs`'s adaptive `--ba
 machinery still scales off the baseline's recorded `nodesExpanded`, because the stress baselines do
 not carry `workSpent` yet. It becomes a one-line change once a corpus refresh has written work costs;
 until then the legacy `nodeBudget` path is untouched and still enforced, so nothing breaks.
+**Documentation reconciliation (2026-08-07):** the option is now explicitly deprecated for general
+regression use. A corpus-scale attempt already disproved its deterministic-replay premise on
+stochastic repair winners. Keep it only for historical reproduction; build any future adaptive mode
+from recorded `workSpent`, not another exception on top of raw node counts.
 
 The historical `nodeBudget` path is untouched and still enforced, so every existing caller keeps
 working while the migration proceeds.
