@@ -125,6 +125,18 @@ cell, viable incoming axis, viable outgoing axis/chirality—and ask whether at 
 Before hot-path code, census these interfaces along stored solutions and dead labelled prefixes.
 This is genuinely different from the refuted adjacent-turn exit bonus and single-linkage MST.
 
+**A narrower version was tried and found null (2026-08-07)**: not the full entry/exit-axis
+interface above, but a plain dynamic reachability completion check — extending `isConnected`'s
+existing flood fill (which already asks "is `X` reached?" for goal/must-pass/must-cross) to also
+ask it about pending surround-neighbor and adjacent-turn candidate cells. Sound (0 false rejections
+across 151,414 replayed steps of 1,493 stored solutions) and far from rare (fired on 83% of a
+mixed-difficulty 100-level sample, ~17,800 times), but the aggregate effect on `nodesExpanded` was
+0.0008% with zero solved-count change — the states it catches were already about to be rejected by
+the rest of the gauntlet within a step or two. See
+[`reports/2026-08-07-surround-adjturn-reachability-null-result.md`](../reports/2026-08-07-surround-adjturn-reachability-null-result.md).
+This demotes "plain reachability, no interface/axis reasoning" as a productive shape for this gap
+without touching the entry/exit-axis interface idea itself, which remains untested.
+
 ### 3. Must-cross/intersection propagation: proven family, narrowed frontier
 
 Must-cross combines reserved intersections, two straight passes, axis consumption, and forced
