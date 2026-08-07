@@ -163,7 +163,15 @@ jobs:
           cp logs/family-census/shard-${{ steps.ids.outputs.nn }}.log "${stage}/logs/family-census/" 2>/dev/null || true
           # Solve-result + generated-family + hint files this shard touched (disjoint id ranges
           # across shards, so a status diff against the fresh checkout is precise).
-          git status --porcelain -- data/families/ logs/family-census/ | awk '{print $2}' | while read -r f; do
+          # --untracked-files=all is required here: logs/family-census/ does not exist in any
+          # prior commit, so a brand-new, entirely-untracked directory is collapsed by git into a
+          # single "?? logs/family-census/" line by default -- the loop below then tried a plain
+          # `cp` (no -r) on that directory and aborted the whole step under `set -e`. This bit
+          # shard 6 of the first real run (2026-08-07) after successfully staging every
+          # data/families/ file (already individually tracked-adjacent, so unaffected) -- see
+          # scripts/family-census-combine.mjs's log-parsing fallback for how that run's data was
+          # recovered from shard-NN.log instead.
+          git status --porcelain --untracked-files=all -- data/families/ logs/family-census/ | awk '{print $2}' | while read -r f; do
             mkdir -p "artifact-staging/census-shard-${{ steps.ids.outputs.nn }}/$(dirname "$f")"
             cp "$f" "artifact-staging/census-shard-${{ steps.ids.outputs.nn }}/${f}"
           done
