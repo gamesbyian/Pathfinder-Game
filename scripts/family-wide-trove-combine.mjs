@@ -9,6 +9,12 @@
  *
  * Usage: node scripts/family-wide-trove-combine.mjs --in-dir=logs/family-census
  *   [--manifest=data/families/wide-trove-manifest.json] [--out=<report.md>]
+ *
+ * The failure-provenance attempts consolidation (below) is chunked at ~40MB/file
+ * (ATTEMPTS_CHUNK_BYTES) -- the 2026-08-07 first run's unchunked corpus2 file came out at 170.60MB,
+ * which GitHub's server-side pre-receive hook hard-rejects at 100MB/file (GH001), atomically
+ * failing the ENTIRE combine commit (including the other 59 shards' legitimate levels/hints data,
+ * not just the oversized file). 40MB leaves comfortable margin under that cap.
  */
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
@@ -110,19 +116,39 @@ if (existsSync(inDirAbs)) {
         }
     }
 }
+const ATTEMPTS_CHUNK_BYTES = 40 * 1024 * 1024; // ~40MB/file, well under GitHub's 100MB hard cap
 let totalAttemptRecords = 0;
+let totalAttemptFiles = 0;
 for (const [corpus, levels] of Object.entries(attemptsByCorpus)) {
-    const outPath = path.resolve(process.cwd(), `reports/families/2026-08-07-wide-trove-attempts-${corpus}.json`);
-    writeFileSync(outPath, JSON.stringify({ levels }));
+    let part = 1;
+    let buf = [];
+    let bufBytes = 0;
+    const flush = () => {
+        if (!buf.length) return;
+        const outPath = path.resolve(process.cwd(),
+            `reports/families/2026-08-07-wide-trove-attempts-${corpus}-part${String(part).padStart(2, '0')}.json`);
+        writeFileSync(outPath, JSON.stringify({ levels: buf }));
+        console.log(`Wrote ${buf.length} full attempt record(s) (~${(bufBytes / 1024 / 1024).toFixed(1)}MB) to ${outPath}.`);
+        totalAttemptFiles++;
+        part++; buf = []; bufBytes = 0;
+    };
+    for (const levelResult of levels) {
+        const recordBytes = Buffer.byteLength(JSON.stringify(levelResult), 'utf8');
+        if (bufBytes + recordBytes > ATTEMPTS_CHUNK_BYTES && buf.length) flush();
+        buf.push(levelResult);
+        bufBytes += recordBytes;
+    }
+    flush();
     totalAttemptRecords += levels.length;
-    console.log(`Wrote ${levels.length} full attempt record(s) to ${outPath}.`);
 }
 lines.push('');
 lines.push('## Failure provenance');
 lines.push('');
 lines.push(`${totalAttemptRecords} full per-variant attempt records (attempts, failedStrategies, nodesExpanded,`);
-lines.push('winningConfig -- not just solved/total) consolidated into');
-lines.push('`reports/families/2026-08-07-wide-trove-attempts-<corpus>.json`, one file per corpus, in the same');
+lines.push(`winningConfig -- not just solved/total) consolidated into ${totalAttemptFiles} file(s):`);
+lines.push('`reports/families/2026-08-07-wide-trove-attempts-<corpus>-part<NN>.json`, chunked at ~40MB/file');
+lines.push('(GitHub hard-rejects any single pushed file over 100MB) -- concatenate a corpus\'s parts\' `levels`');
+lines.push('arrays to reconstruct the full per-corpus set. Each part is independently in the same');
 lines.push('`{levels:[...]}` shape `scripts/stress/rank-levels.mjs` / `cluster-unsolved-failures.mjs` already read.');
 
 writeFileSync(path.resolve(process.cwd(), OUT), lines.join('\n') + '\n');
