@@ -1,5 +1,43 @@
 Pathfinder Sibling and Cousin Research System
 
+## Read-only boundary analysis
+
+`npm run family:boundary-report -- --manifests=<manifest.json[,manifest.json]> --canonical=<baseline.json> --variants=<wide-trove.json> [--parent-levels=<corpus.json>] [--profile-joins=<selected-profile-comparisons.json>] [--relation=<mode>] [--parent=<id>] [--archetype=<name>] [--mechanic=<name[:minCount]>] [--req-int-min=N] [--nav-density-min=N] [--portal-count-min=N] [--turn-load-min=N] [--out=<report.json>] [--markdown=<summary.md>] [--severe-work-ratio=10] [--config-concentration=.75] [--min-fragile-solve-rate=0]`
+joins existing family provenance and solve telemetry without invoking the solver. It emits a
+deterministically ordered machine-readable relational index plus a short triage summary. The
+index covers symmetry consistency/regret, continuous non-symmetry fragility evidence,
+mutation-conditioned summaries, bidirectional work cliffs, winner concentration/entropy, missing
+joins, and finding types suitable for the existing investigation workflow. The work-spread CLI
+value controls ranking only; it is not a universal definition of fragile or robust.
+The structural filters use the existing parent corpus metadata supplied through `--parent-levels`;
+corresponding `*-max` forms are available for each numeric `*-min` filter.
+
+Winning-attempt reports can add the same family lens with
+`npm run solver:winning-attempts -- --inputs=<trove.json> --group-by-family=parentId|mode|parentId+mode [--family-parent=<id>] [--family-mode=<mode>]`.
+Family summaries prefer `workSpent`, then `nodesExpanded`, and only then elapsed time. Winner
+frequencies are scheduler-censored observations: an earlier winner prevents later configurations
+from being observed, so they are not independent success probabilities or routing advice.
+
+The boundary tool deliberately does not replace existing instruments: use
+`stress:witness-divergence` / `hint-divergence.mjs` for real-state replay and causal `SCORE_*`
+ablation, the existing geometry tests and family generator for transform/referee guarantees,
+solution-profile compare for selected non-symmetry cases, and the failure inbox/regression tools
+for promotion. Symmetry solution-space profiling is unnecessary because those variants are
+isomorphic by construction.
+
+For a selected queue edge, run real-state differential replay with
+`npm run stress:family-pair-divergence -- --parent-levels=<corpus.json> --variant-levels=<family.json> --manifest=<manifest.json> --variant-id=<id> (--path=<packed-keys>|--result=<solve.json>) [--profile=default] [--out=<report.json>]`.
+It compares ranks, candidate counts, first meaningful divergence, canonical referee validity, and
+per-`SCORE_*` causal-ablation deltas. Symmetry paths are inverse-mapped with the shared geometry
+primitive; this is diagnosis only and never retries an orientation in production.
+
+To test whether a variant discovery adds parent-valid diagnostic knowledge, run
+`npm run family:parent-hint-replay -- --parent-levels=<corpus.json> --manifest=<manifest.json> --variant-id=<id> (--path=<packed-keys>|--result=<solve.json>)`.
+The default is dry-run. Add `--save-hints` only after reviewing the referee result; accepted paths
+are merged through the canonical hint model with `variant-parent-replay` provenance rather than
+overwriting or writing a bare path. Symmetry rejection is reported as an invariant failure;
+non-symmetry similarity never implies validity.
+
 Mission
 
 Implement a research system that can:

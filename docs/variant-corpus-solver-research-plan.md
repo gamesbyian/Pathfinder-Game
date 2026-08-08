@@ -1,9 +1,9 @@
 # Variant Corpus Solver Research Plan
 
-> **Status:** active
+> **Status:** tooling implemented; corpus research not yet run
 > **Last evidence:** 2026-08-07 — family-wide research trove, symmetry-family investigations, current solver-development ledgers
 > **Decision:** use the variant corpus to identify and diagnose solver competence boundaries that can yield more cold solves or less work without regression; treat symmetry disagreement primarily as evidence of representation-dependent solver failure, not as a production retry strategy
-> **Remaining gate:** build the analysis tooling described here and use it to produce the first corpus-wide ranked queue of symmetry pathologies, fragile boundaries, robust families, cost cliffs, and family-conditioned attempt evidence
+> **Remaining gate:** run the read-only boundary tooling on the existing wide trove and use its ranked queue for selected divergence/profile diagnosis; no corpus research was run as part of the tooling implementation
 
 ## Objective
 
