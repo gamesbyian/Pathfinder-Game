@@ -25,13 +25,13 @@ on a level with zero movable objects) -- expected, not a failure.
 
 ## Coverage gaps
 
-0 manifest level(s) have zero completed tasks (shard didn't reach them / stopped early on the wall-clock budget). First 50:
+1 manifest level(s) have zero completed tasks (shard didn't reach them / stopped early on the wall-clock budget). First 50:
 
-(none)
+S00141
 
 ## Failure provenance
 
-78399 full per-variant attempt records (attempts, failedStrategies, nodesExpanded,
+78429 full per-variant attempt records (attempts, failedStrategies, nodesExpanded,
 winningConfig -- not just solved/total) consolidated into 7 file(s):
 `reports/families/2026-08-07-wide-trove-attempts-<corpus>-part<NN>.json`, chunked at ~40MB/file
 (GitHub hard-rejects any single pushed file over 100MB) -- concatenate a corpus's parts' `levels`
