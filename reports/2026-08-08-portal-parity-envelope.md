@@ -72,8 +72,57 @@ expected for an opt-in mechanism.
 
 ## Validation: A/B against real search
 
-[TO FILL IN]
+`scripts/stress/portal-parity-envelope-ab.mjs`: full `Solver.solve()` ladder (not an isolated
+attempt config, since this prune is shared by both `dfsFromGate` and repair's `takePly`), node-
+budget-pinned at 6,000,000 nodes, non-binding wall clock, `disableExtraBudgetPasses: true`. Sample:
+25 currently-unsolved + 15 currently-solved corpus-2 twist-portal levels (stratified sample from
+the 417-level census population). **Caught and fixed a real methodology bug mid-run**: a sparse
+`{PRUNE_PORTAL_PARITY_ENVELOPE: true/false}` ablation object made `normalizeAblationConfig`'s Proxy
+read every *other* unset flag as `true` too — including the two other opt-in-only flags
+(`STRATEGY_REPAIR_TURN_BIAS`, `STRATEGY_REPAIR_ELITE_PREFIX_DFS`), silently activating both in
+every run regardless of their own default-off convention. Exactly the trap
+`turnbias-churn-check.mjs`'s own header comment already documents; caught only because a known-
+solved level (R02655) came back unsolved in both arms. Fixed by explicitly neutralizing both flags
+in the ablation object, then re-ran clean.
+
+**Result: 40/40 levels, zero flips, zero regressions — and zero node-count difference on every
+single level, not just zero solved-count change.** Solved ON 7/40, solved OFF 7/40 (the gap
+against the census's 15-solved stratification is a budget artifact: this A/B's 6,000,000-node
+budget is far below the committed baseline's production 36,000,000-node ceiling, so several
+levels that solve at the real budget don't at this one — expected and irrelevant to the A/B's own
+internal comparison, which stays apples-to-apples on the same budget in both arms).
+
+This is a stronger and cleaner null than the earlier surround/adjacent-turn reachability finding
+(`reports/2026-08-07-surround-adjturn-reachability-null-result.md`), which at least moved
+`nodesExpanded` by a tiny 0.0008%. Here, the prune's own reject condition (naive parity mismatch
+AND every twist portal pair already consumed) simply never arose anywhere in this sample's search
+trees — not on the 40 solution paths (expected, matches the census's 100% "twist portal always
+available on-solution" finding) and, more informatively, not on any of the dead/off-solution
+branches either, across roughly 240,000,000 total nodes searched (40 levels × 2 arms × up to
+6,000,000 nodes). The scenario this prune targets — a state deep enough into a portal level that
+every twist pair is already spent, with a parity mismatch still outstanding — is evidently rare
+enough at this corpus's typical twist-pair counts (1-3 per level) that a state usually resolves,
+gets pruned by an earlier check, or reaches the goal before ever exhausting every twist portal.
 
 ## Disposition
 
-[TO FILL IN]
+`PRUNE_PORTAL_PARITY_ENVELOPE` ships **opt-in, not promoted**. Sound (confirmed by both the
+census and the live-search A/B: zero regressions, zero mis-prunes) but negligible on this sample —
+consistent with this session's established discipline of measuring catch rate rather than assuming
+it from soundness alone (the CLAUDE.md gotcha this exact census methodology was built to satisfy).
+Left in the codebase as a documented, validated, available-if-needed mechanism rather than reverted
+outright, since — unlike the surround/adjturn finding, which touched a shared hot-path
+unconditionally — this one is fully opt-in and provably costs nothing when off.
+
+## What's still open
+
+- **This 40-level sample may simply be too shallow/too portal-sparse to exercise the prune.**
+  A level with more twist portal pairs (this corpus tops out at 3 per level) or run at a much
+  larger node budget (nearer the real 36,000,000-node production ceiling, where search goes far
+  deeper into each level) might show a different picture. Not chased further this session given
+  the A/B's own zero-difference-on-every-level result already meets the bar for a confident null
+  at this scale — see `docs/testing.md`'s "Iterating vs. gating" note on when a small sample is
+  sufficient.
+- The `firstStep || blockSet.size >= 10` gating is inherited unmodified from the portal-free
+  `PRUNE_PARITY` check's own measured threshold. Never independently validated for portal levels
+  specifically — if this mechanism is revisited, that gate is an obvious first thing to question.
