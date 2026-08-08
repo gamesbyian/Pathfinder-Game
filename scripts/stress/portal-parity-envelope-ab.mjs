@@ -39,7 +39,7 @@ const results = [];
 let i = 0;
 
 for (const entry of levels) {
-    const { id, stressMeta, ...raw } = entry;
+    const { id, stressMeta: _stressMeta, ...raw } = entry;
     if (!ONLY_IDS.has(id)) continue;
     i++;
     let level;

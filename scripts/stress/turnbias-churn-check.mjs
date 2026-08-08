@@ -61,7 +61,7 @@ let i = 0;
 
 for (const entry of candidates) {
     i++;
-    const { id, stressMeta, ...raw } = entry;
+    const { id, stressMeta: _stressMeta, ...raw } = entry;
     let level;
     try {
         level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
