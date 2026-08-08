@@ -39,8 +39,20 @@
 # only under deterministic=true) are widened unconditionally for the same reason: routine runs are
 # now shaped the same way. `deterministic=true` still means something distinct: it forces a truly
 # unbounded 24h deadline regardless of what a dispatch types into corpus*_budget_ms (belt-and-braces
-# for a precise A/B), and -- unchanged from before -- it NEVER commits, so an ablation-flag experiment
-# (`enable_flags`) can be run and compared without touching the persisted baseline series at all.
+# for a precise A/B), and it never commits the continuity-baseline/log/report files, so an
+# ablation-flag experiment (`enable_flags`) can be run and compared without touching the persisted
+# baseline series at all.
+#
+# 2026-08-08: split the commit step so hints/provenance (data/stress/hints*/) are ALWAYS persisted,
+# even under deterministic=true -- a hint is a valid, PLAY-checked solution regardless of which
+# budget config found it, so silently losing a deterministic A/B's discoveries to the 90-day
+# artifact retention window was a real, avoidable loss, not a feature of the "never commits"
+# design (that design was about not polluting the CONTINUITY BASELINE series specifically). Also
+# switched the push target from a hardcoded `HEAD:main` to `HEAD:${{ github.ref_name }}` (the
+# dispatched branch) -- both checkouts already follow the dispatch (see the fix above), so pushing
+# a hardcoded main would carry the entire dispatched branch's history, not just this step's result
+# commit. Pushing to the SAME branch that was checked out has no such risk and still gets results
+# to main once that branch merges, which is all the persistence goal actually needs.
 name: Solver stress-corpus refresh (corpus-1 + corpus-2)
 
 on:
@@ -88,7 +100,7 @@ on:
         required: false
         default: '2'
       deterministic:
-        description: 'true = strict A/B mode: forces both ms deadlines to a truly unbounded 24h value regardless of what corpus*_budget_ms is set to (belt-and-braces for a precise comparison), and NEVER commits -- results are combined and uploaded as an artifact only, so an enable_flags experiment can be run and compared without touching the persisted baseline series. false (default, 2026-08-06 routine defaults) commits to main as always, now at the non-binding budget shape described above rather than the old binding one.'
+        description: 'true = strict A/B mode: forces both ms deadlines to a truly unbounded 24h value regardless of what corpus*_budget_ms is set to (belt-and-braces for a precise comparison). Newly-discovered hints/provenance are still committed (pushed to the DISPATCHED branch/ref, not necessarily main) -- only the continuity-baseline/log/report files are skipped, so an enable_flags experiment can be run and compared without touching the persisted baseline series. false (default, 2026-08-06 routine defaults) commits everything, at the non-binding budget shape described above rather than the old binding one.'
         required: false
         default: 'false'
 
@@ -117,10 +129,14 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     steps:
-      - name: Check out main
+      - name: Check out the dispatched ref
+        # The DISPATCHED ref, not a hardcoded 'main' -- same fix as solver-typical-budget-
+        # baseline.yml's own checkout (see that file's comment): a hardcoded main here meant a run
+        # launched from a feature branch silently solved main's code instead of the branch's own,
+        # making it useless for A/B-testing a branch-local ablation flag or any other WIP change.
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.ref }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -355,10 +371,17 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Check out main
+      - name: Check out the dispatched ref
+        # Same fix as the solve-shards job's checkout above -- the combine job's own baseline-diff
+        # and (when it fires) commit steps need to see the DISPATCHED branch's code/results, not
+        # main's. The commit step below is separately gated to `github.ref == 'refs/heads/main'`
+        # (mirroring solver-typical-budget-baseline.yml's identical guard) so `git push
+        # origin HEAD:main` can only ever fire when this checkout WAS main to begin with -- without
+        # that guard, checking out a feature branch here and then pushing HEAD:main would push the
+        # ENTIRE feature branch history onto main, not just this workflow's own new commit.
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Setup Node
@@ -552,29 +575,48 @@ jobs:
           if-no-files-found: warn
           retention-days: 90
 
-      - name: Commit and push the combined refresh to main
-        # deterministic=true is a capability-ceiling/A-B mode whose numbers are not comparable with
-        # the committed continuity baseline's binding-budget history (see this file's top-of-file
-        # 2026-08-06 note) -- never commit those, only the artifact above.
-        if: ${{ inputs.deterministic != 'true' }}
+      - name: Persist hints/provenance (+ full refresh when not deterministic) to the dispatched branch
+        # Always runs, regardless of `deterministic` -- hints are valid PLAY-checked solutions
+        # (with provenance recording exactly which run/config found them) no matter what budget
+        # shape found them, so losing a deterministic A/B's newly-discovered hints to a 90-day
+        # artifact would be a real, avoidable loss (docs/README.md's hint-provenance philosophy:
+        # "valid solutions gathered by ANY means", never silently discarded). Only the
+        # continuity-baseline/log/report files stay gated to non-deterministic runs (below) --
+        # THOSE numbers really are incomparable with the committed baseline series (this file's
+        # top-of-file 2026-08-06 note), which hints have no such concern about.
+        #
+        # Pushes to the DISPATCHED branch (git push origin HEAD:${{ github.ref_name }}), not a
+        # hardcoded main. This checkout follows github.ref (see the fix above), so a hardcoded
+        # `HEAD:main` push here would carry the ENTIRE dispatched branch's history along with it --
+        # for a feature-branch dispatch, that means pushing unreviewed branch code onto main, not
+        # just this step's own result commit. Pushing to the SAME branch that was checked out is
+        # always just an ordinary "push my own new commit" with no such risk, and it satisfies the
+        # actual goal (results persisted, reachable from main once the branch merges) without ever
+        # needing this workflow to guess whether a push to main is safe.
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add data/stress/hints/ data/stress/hints-random/ data/stress/stress-levels.json data/stress/stress-levels-random.json \
-                  logs/solver-corpus2-batches/ logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json \
-                  reports/stress/
+          git add data/stress/hints/ data/stress/hints-random/ data/stress/stress-levels.json data/stress/stress-levels-random.json
+          if [ "${{ inputs.deterministic }}" != "true" ]; then
+            git add logs/solver-corpus2-batches/ logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json reports/stress/
+          fi
           if git diff --cached --quiet; then
             echo "Nothing changed -- not creating an empty commit."
             exit 0
           fi
-          git commit -m "Solver stress-corpus refresh: corpus-1 + corpus-2 ($(date -u +%FT%TZ))"
+          if [ "${{ inputs.deterministic }}" = "true" ]; then
+            MSG="Solver stress-corpus refresh: hints/provenance only (deterministic A/B, $(date -u +%FT%TZ))"
+          else
+            MSG="Solver stress-corpus refresh: corpus-1 + corpus-2 ($(date -u +%FT%TZ))"
+          fi
+          git commit -m "$MSG"
           for attempt in 1 2 3 4; do
-            if git push origin HEAD:main; then exit 0; fi
+            if git push origin HEAD:${{ github.ref_name }}; then exit 0; fi
             echo "Push attempt ${attempt} failed; retrying after a short wait..."
             sleep $((attempt * 5))
-            git fetch origin main
-            git rebase origin/main || { echo "Rebase failed -- leaving commit local for manual recovery."; exit 1; }
+            git fetch origin ${{ github.ref_name }}
+            git rebase origin/${{ github.ref_name }} || { echo "Rebase failed -- leaving commit local for manual recovery."; exit 1; }
           done
           echo "All push attempts failed."
           exit 1

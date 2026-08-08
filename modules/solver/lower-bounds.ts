@@ -1,5 +1,5 @@
 import { getDistanceFromArray } from './distance.js';
-import { AXIS_H, AXIS_V, NEIGHBOR_AXIS } from './encoding.js';
+import { AXIS_H, AXIS_V, NEIGHBOR_AXIS, popcount } from './encoding.js';
 import { IntHashMap } from './int-hash-map.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState, PrepLevel } from './types.js';
@@ -79,6 +79,77 @@ export function mustCrossForcedNeighborDeadlocked(pos: number, state: SolverSear
         }
     }
     return false;
+}
+
+// Must-cross NEIGHBOR-BUDGET deadlock (docs/solver-heuristic-capability-gap-analysis.md's item 3,
+// "bounded dynamic propagation over forced interfaces and remaining free intersection budget";
+// prototyped as a shadow probe first — scripts/stress/lib/mc-neighbor-budget.mjs — and validated
+// there against the oracle-labelled atlas plus a full-corpus stored-solution replay before this
+// port; see that file's own doc for the complete derivation and soundness argument). Extends
+// mustCrossForcedNeighborDeadlocked's HARD-wall-only case (above) to a SOFT case neither that
+// check nor the reserved-intersection wall (topology.ts's isConnected) reasons about: a still-
+// needed axis's required neighbor that is not a hard wall, but has already been visited. Its
+// future reappearance in the path is unavoidably an intersection (game rule: entering a
+// previously-visited cell, excluding gate/goal revisits — neither exemption can apply here,
+// since staticNeighborKeys excludes every gate cell as a target and the goal is never visited
+// before the path terminates there), and that intersection is NOT the one PRUNE_MC_CEILING
+// already reserves for the must-cross cell's OWN second entry.
+//
+// Sound because of what it does NOT count, not just what it does: collects the SET of distinct
+// already-visited required-neighbor cells across every pending must-cross cell's every still-open
+// axis (not a per-requirement sum) — a single cell contributes at most 1 to the bound regardless
+// of how many different must-cross cells would like to reuse the one future revisit it needs, so
+// there is no double-duty overcount. Also excludes: hard-wall neighbors (mustCrossForcedNeighborDeadlocked's
+// job already), flipper neighbors (dynamic axis state this derivation does not model — abstain,
+// don't guess), and a required neighbor that is ITSELF a pending must-cross cell (its own
+// eventual re-entry may be the SAME physical event PRUNE_MC_CEILING already reserves for it —
+// counting it again would double-count a single intersection against two different obligations).
+// Portal levels are out of scope entirely (portal forced-move semantics need separate validation,
+// same carve-out reports/2026-07-31-mustcross-forced-structure.md's own step-4 follow-up notes).
+//
+// Validated (2026-08-08): 0 false rejects across all 3 corpora' stored solutions (97,812 valid
+// paths, 8.5M replayed steps — scripts/stress/mc-neighbor-budget-soundness-check.mjs) and 0 false
+// rejects on the harness's 5,518-branch oracle-labelled atlas, catching 19 dead branches beyond
+// the existing gauntlet's own verdict (scripts/stress/probes/mc-neighbor-budget-probe.mjs) — see
+// reports/2026-08-08-mc-neighbor-budget-propagation.md for the full writeup. Opt-in
+// (PRUNE_MC_NEIGHBOR_BUDGET, default OFF) pending a matched-node A/B on the must-cross-heavy
+// unsolved population, per this codebase's standing rule that a catch-rate measurement alone
+// never substitutes for a live solve-count comparison before promotion.
+export function mustCrossNeighborBudgetDeadlocked(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
+    if (state.mustCrossMask === 0 || level.portalMap.size > 0) return false;
+    const mcKeys = level.mustCrossKeys;
+    const eu = state.edgeUsage;
+    const staticNeighborKeys = prep.staticNeighborKeys;
+    const flipperIndexMap = prep.flipperIndexMap;
+    const mustCrossIndex = prep.mustCrossIndex;
+
+    let extraNeeded = 0;
+    // Bitset of cells already counted, keyed by a small local dense index — at most 4 must-cross
+    // cells x 4 directions (CLAUDE.md), so a short linear scan for de-duplication is cheap and
+    // avoids allocating a Set on this hot path.
+    const seen: number[] = [];
+    for (let i = 0; i < mcKeys.length; i++) {
+        if ((state.mustCrossMask & (1 << i)) === 0) continue;
+        const mcKey = mcKeys[i];
+        const usedAxes = eu[mcKey];
+        const base = mcKey * 4;
+        for (let d = 0; d < 4; d++) {
+            if (usedAxes & NEIGHBOR_AXIS[d]) continue; // that pass is already satisfied
+            const nk = staticNeighborKeys[base + d] - 1; // undo the +1 "absent" bias
+            if (nk < 0 || nk === pos) continue; // absent, or exempt (may serve as this neighbor right now)
+            if (flipperIndexMap && flipperIndexMap[nk] !== 0) continue; // dynamic axis state — abstain
+            if (eu[nk] === (AXIS_H | AXIS_V)) continue; // hard wall — mustCrossForcedNeighborDeadlocked's job
+            if (mustCrossIndex[nk] !== 0 && (state.mustCrossMask & (1 << (mustCrossIndex[nk] - 1))) !== 0) continue; // pending-MC-adjacent-to-MC — avoid double-counting its own reservation
+            if (state.visited[nk] === 0) continue; // not yet visited — no forced revisit yet
+            if (seen.indexOf(nk) !== -1) continue; // already counted via a different must-cross cell/axis
+            seen.push(nk);
+            extraNeeded++;
+        }
+    }
+    if (extraNeeded === 0) return false;
+
+    const freeInt = level.reqInt - state.ints - popcount(state.mustCrossMask);
+    return freeInt < extraNeeded;
 }
 
 // Lower bound for surround constraints: for each unsatisfied surround cell,

@@ -161,6 +161,20 @@ propagation failed, preventing an easy extrapolation.
 intersection budget, only if it derives facts beyond the shipped checks. Prototype as a shadow
 propagator and compare unique catches; do not revive the falsified static spare-edge rule.
 
+**Built and tested (2026-08-08)**: a dynamic "neighbor-budget" propagator — a still-open must-cross
+axis's required neighbor that is already visited (soft, not a hard wall) needs an unreserved
+intersection to revisit; reject once the free budget can't cover every such distinct neighbor cell
+(deliberately counting distinct CELLS, not per-obligation requirements, which is exactly what
+avoids the double-counting that falsified the static forced-edge rule). Shadow-probe result against
+the oracle-labelled atlas: **19 unique catches beyond the existing gauntlet** (0 false rejects),
+the largest of any candidate scored through `docs/solver-shadow-eval-harness.md`'s infrastructure
+to date. Sound on a full-corpus stored-solution replay (97,812 valid paths, 8.5M steps, 0
+violations). Shipped opt-in (`PRUNE_MC_NEIGHBOR_BUDGET`, default OFF; `solver:bench --check`
+160/160, no regressions). A first live matched-node A/B on a 30-level unsolved sample: **+11/30 (11
+gained, 0 lost, all referee-valid)** — promising, but per this doc's own evidence-reconciliation
+standard a small sample is not a promotion verdict; a full-population A/B is in progress. See
+[`reports/2026-08-08-mc-neighbor-budget-propagation.md`](../reports/2026-08-08-mc-neighbor-budget-propagation.md).
+
 ### 4. Repair has diagnostics but limited conditional policy
 
 Repair tracks badness/elites and has plateau-signature instrumentation. Its shared score balance is

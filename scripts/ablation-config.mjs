@@ -55,6 +55,7 @@ export const FEATURES = {
     PRUNE_MUST_TURN_DEADLOCK:   'Prune once a pending must-turn cell has both axis bits used (provably unsatisfiable)',
     PRUNE_MC_FORCED_NEIGHBOR:   'Prune once a pending must-cross cell\'s still-needed straight pass has a neighbor that is now a hard wall (both axis bits used, or an already-used flipper)',
     PRUNE_MC_FORCED_FIRST_MOVE: 'Force the first move out of a gate that is orthogonally adjacent to exactly one must-cross cell onto that cell (the gate can never be re-entered, so this is its only chance to serve that cell\'s pass)',
+    PRUNE_MC_NEIGHBOR_BUDGET:   'Dynamic must-cross/intersection propagation (default-OFF -- only added under an explicit true value; shadow-probe prototype of docs/solver-heuristic-capability-gap-analysis.md item 3): reject once a pending must-cross cell\'s still-needed pass has an already-visited (soft, not hard-walled) required neighbor whose forced revisit the remaining free intersection budget cannot cover. Sound on the harness atlas (19 unique catches beyond the existing gauntlet, 0 false rejects) and on a full-corpus stored-solution replay (97,812 valid paths, 0 violations) -- see reports/2026-08-08-mc-neighbor-budget-propagation.md. Not yet promoted pending a matched-node live A/B.',
 
     // ── Search strategy ───────────────────────────────────────────────────────
     STRATEGY_LDS:               'Limited Discrepancy Search probe waves before full DFS',
@@ -110,6 +111,7 @@ export const FEATURES = {
  * sparse-config normalizer so the two paths cannot silently disagree. */
 export const OPT_IN_FEATURES = new Set([
     'PRUNE_PORTAL_PARITY_ENVELOPE',
+    'PRUNE_MC_NEIGHBOR_BUDGET',
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS',
     'STRATEGY_REPAIR_TURN_BIAS',
 ]);
