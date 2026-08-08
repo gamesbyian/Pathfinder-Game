@@ -64,6 +64,10 @@ on:
         description: 'Per-shard self-throttle: stop starting new (level,mode) tasks after this many ms so staging/upload still runs normally. Default (340min) leaves ~15min headroom inside the 355min job timeout, itself just under GitHub Actions'' hard 360min (6h) per-job ceiling -- a single job cannot exceed that regardless of this setting.'
         required: false
         default: '20400000'
+      recover_run_id:
+        description: 'Recovery mode: skip enrich-existing + the shard matrix entirely and re-run ONLY the combine step, downloading trove-shard-* artifacts from this specific prior run id instead of this run''s own. For recombining/repushing after a combine failure (e.g. the 2026-08-07 100MB-file push rejection) without re-running already-successful shards. Leave blank for a normal full run.'
+        required: false
+        default: ''
 
 concurrency:
   group: family-wide-trove
@@ -87,6 +91,7 @@ jobs:
   # shard matrix's own commit never writes to.
   enrich-existing:
     name: Enrich pre-existing census families with hint-workbench
+    if: ${{ inputs.recover_run_id == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
@@ -139,6 +144,7 @@ jobs:
 
   trove-shards:
     name: Trove shard ${{ matrix.shard }}/${{ inputs.shards || '60' }}
+    if: ${{ inputs.recover_run_id == '' }}
     runs-on: ubuntu-latest
     # 355min: just under GitHub Actions' hard 360min (6h) per-job ceiling for standard runners --
     # this cannot be raised further. max_wall_ms's self-throttle (default 340min) stops starting
@@ -224,6 +230,7 @@ jobs:
     timeout-minutes: 60
     permissions:
       contents: write
+      actions: read
     steps:
       - name: Check out research branch
         uses: actions/checkout@v4
@@ -246,6 +253,12 @@ jobs:
           pattern: 'trove-shard-*'
           path: artifact-staging/downloaded
           merge-multiple: true
+          # In recovery mode (recover_run_id set) this pulls shard artifacts from a DIFFERENT,
+          # already-completed run instead of this run's own trove-shards jobs (which are skipped
+          # entirely -- see the recover_run_id input) -- avoids re-running hours of already-
+          # successful shard work just to fix/retry the commit step.
+          run-id: ${{ inputs.recover_run_id || github.run_id }}
+          github-token: ${{ github.token }}
 
       - name: Lay the downloaded shard results onto the working tree
         shell: bash

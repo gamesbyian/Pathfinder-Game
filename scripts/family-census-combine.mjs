@@ -1,19 +1,31 @@
 #!/usr/bin/env node
 /**
- * Aggregates the family-fragile-robust-census.yml workflow's per-level solve results
- * (logs/family-census/solve-<id>-{lm,sym}.json, one pair per manifest id) into a fragile/robust
- * classification table, joined against data/families/fragile-robust-census-manifest.json for
- * group/archetype/turnLoad. A level is "fragile" if >=1 of its (local-mutant + symmetry) variants
- * solved; "robust" if 0/N solved. See docs/solver-development-roadmap.md's fragile/robust split
- * and reports/families/2026-07-29-turn-load-fragile-robust-split.md for the methodology this
- * extends corpus-wide.
+ * Aggregates the family-fragile-robust-census.yml workflow's per-level solve results into a
+ * fragile/robust classification table, joined against
+ * data/families/fragile-robust-census-manifest.json for group/archetype/turnLoad. A level is
+ * "fragile" if >=1 of its (local-mutant + symmetry) variants solved; "robust" if 0/N solved. See
+ * docs/solver-development-roadmap.md's fragile/robust split and
+ * reports/families/2026-07-29-turn-load-fragile-robust-split.md for the methodology this extends
+ * corpus-wide.
+ *
+ * Data source, in preference order:
+ *   1. logs/family-census/solve-<id>-{lm,sym}.json (per-variant JSON result files) when present.
+ *   2. logs/family-census/shard-*.log (plain-text progress logs, parsed via
+ *      family-census-parse-shard-logs.mjs's parseShardLog) as a fallback. Needed because the
+ *      2026-08-07 shard-6 staging bug (family-fragile-robust-census.yml: git status collapsed the
+ *      brand-new logs/family-census/ directory to a single untracked-dir line, and the staging
+ *      loop's `cp` without -r on that "file" aborted the step under `set -e`) dropped every
+ *      shard's individual solve-*.json files from its uploaded artifact -- but each shard's own
+ *      shard-NN.log survived (copied by an earlier, unaffected step) and contains every solve's
+ *      "Result: solved=X/Y" line, which is enough to reconstruct this table exactly.
  *
  * Usage: node scripts/family-census-combine.mjs --in-dir=logs/family-census
  *   [--manifest=data/families/fragile-robust-census-manifest.json] [--out=<report.md>]
  */
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { parseShardLog } from './family-census-parse-shard-logs.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [k, ...v] = a.split('=');
@@ -37,15 +49,30 @@ function solvedCount(file) {
     }
 }
 
+// Fallback map built from every shard-*.log found, keyed by id.
+const logFallback = new Map();
+const inDirAbs = path.resolve(process.cwd(), IN_DIR);
+if (existsSync(inDirAbs)) {
+    for (const file of readdirSync(inDirAbs).filter(f => /^shard-\d+\.log$/.test(f))) {
+        const text = readFileSync(path.join(inDirAbs, file), 'utf8');
+        for (const [id, row] of parseShardLog(text)) logFallback.set(id, row);
+    }
+}
+console.log(`Log fallback covers ${logFallback.size} level(s) across shard-*.log files found in ${IN_DIR}.`);
+
 const rows = [];
 for (const entry of manifest) {
-    const lm = solvedCount(path.join(IN_DIR, `solve-${entry.id}-lm.json`));
-    const sym = solvedCount(path.join(IN_DIR, `solve-${entry.id}-sym.json`));
-    if (!lm && !sym) continue; // not yet processed by any shard (partial run)
-    const solved = (lm?.solved || 0) + (sym?.solved || 0);
-    const total = (lm?.total || 0) + (sym?.total || 0);
-    rows.push({ ...entry, lmSolved: lm?.solved ?? null, lmTotal: lm?.total ?? null,
-        symSolved: sym?.solved ?? null, symTotal: sym?.total ?? null,
+    const lmJson = solvedCount(path.join(IN_DIR, `solve-${entry.id}-lm.json`));
+    const symJson = solvedCount(path.join(IN_DIR, `solve-${entry.id}-sym.json`));
+    const fallback = logFallback.get(entry.id);
+    const lmSolved = lmJson?.solved ?? fallback?.lmSolved ?? null;
+    const lmTotal = lmJson?.total ?? fallback?.lmTotal ?? null;
+    const symSolved = symJson?.solved ?? fallback?.symSolved ?? null;
+    const symTotal = symJson?.total ?? fallback?.symTotal ?? null;
+    if (lmTotal == null && symTotal == null) continue; // not yet processed by any shard (partial run)
+    const solved = (lmSolved || 0) + (symSolved || 0);
+    const total = (lmTotal || 0) + (symTotal || 0);
+    rows.push({ ...entry, lmSolved, lmTotal, symSolved, symTotal,
         solved, total, fragile: total > 0 ? solved > 0 : null,
         rate: total > 0 ? solved / total : null });
 }
