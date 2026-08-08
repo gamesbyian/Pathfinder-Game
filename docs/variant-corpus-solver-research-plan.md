@@ -1,9 +1,9 @@
 # Variant Corpus Solver Research Plan
 
-> **Status:** tooling implemented; corpus research not yet run
-> **Last evidence:** 2026-08-07 — family-wide research trove, symmetry-family investigations, current solver-development ledgers
+> **Status:** tooling implemented; historical selected-family research reconciled; wide-trove boundary run pending
+> **Last evidence:** 2026-08-08 — [`../reports/2026-08-08-symmetry-orientation-sensitivity-synthesis.md`](../reports/2026-08-08-symmetry-orientation-sensitivity-synthesis.md)
 > **Decision:** use the variant corpus to identify and diagnose solver competence boundaries that can yield more cold solves or less work without regression; treat symmetry disagreement primarily as evidence of representation-dependent solver failure, not as a production retry strategy
-> **Remaining gate:** run the read-only boundary tooling on the existing wide trove and use its ranked queue for selected divergence/profile diagnosis; no corpus research was run as part of the tooling implementation
+> **Remaining gate:** run the read-only boundary tooling on the existing wide trove and use its ranked queue for selected divergence/profile diagnosis; the earlier selected-family experiments are evidence, but are not a prevalence census of that trove
 
 ## Objective
 
@@ -147,6 +147,13 @@ For the highest-regret families:
 8. verify whether the symmetry spread collapses and whether canonical cold solves increase without regression.
 
 R02248 is the model case: an isomorphic orientation split was traced to a concrete scoring interaction rather than worked around by retrying the easy orientation.
+
+The current cross-report synthesis is
+[`reports/2026-08-08-symmetry-orientation-sensitivity-synthesis.md`](../reports/2026-08-08-symmetry-orientation-sensitivity-synthesis.md).
+It reconciles the repaired 38-family rerun with the R02248/R01465 and Phase D ablations. The
+durable result is a recurring failure *shape* across several position/attraction terms, not a
+universal bad transform index or one globally broken score term. Use that synthesis rather than
+the pre-fix headline in the original 2026-07-15 symmetry report.
 
 # 2. Build a corpus-wide boundary report
 

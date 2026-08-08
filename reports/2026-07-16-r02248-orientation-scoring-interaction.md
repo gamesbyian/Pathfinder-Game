@@ -1,5 +1,10 @@
 # R02248: why 4 of its 8 symmetry orientations resist the solver entirely
 
+> **Status:** concluded-positive
+> **Last evidence:** 2026-08-08 — reconciled by [`2026-08-08-symmetry-orientation-sensitivity-synthesis.md`](2026-08-08-symmetry-orientation-sensitivity-synthesis.md)
+> **Decision:** retain R02248 as a worked interaction diagnosis, not as evidence for a universal `SCORE_INTERSECTION_SETUP` fix
+> **Remaining gate:** none for this case study; broader prevalence and intervention selection belong to the synthesis and variant-corpus plan
+
 **Date**: 2026-07-16. **Data collection and diagnosis only — no solver code changed.** Follows
 directly from the Experiment 1 rerun (`reports/families/2026-07-15-symmetry-orientation-bias.md`'s
 2026-07-16 updates): across the full 38-family re-test, R02248 was the one family whose "some
@@ -163,11 +168,14 @@ absolute grid orientation in a way that has nothing to do with the puzzle's actu
 
 ## Caveats
 
-- **n=1 level.** Whether this specific interaction (`SCORE_INTERSECTION_SETUP` × orientation ×
-  near-Hamiltonian density) generalizes to other high-reqInt, high-navDensity levels is untested.
-  R02248 is the only family across all 38 tested in this investigation with any variant that fails
-  to solve at all, so there is no second data point to compare against from this session's own
-  corpus.
+- **Resolved follow-up to the original n=1 caveat.** The targeted pattern scan found R01465 with
+  the same high-level beam-collapse/repair-plateau signature, but its dominant ablation was
+  `SCORE_SURROUND_URGENCY`, not `SCORE_INTERSECTION_SETUP`. Phase D then found three more fragile
+  families implicating still other attraction/navigation terms. The recurring phenomenon is now
+  supported; this exact term-level mechanism remains specific to R02248. See
+  [`2026-07-16-r02248-pattern-scan.md`](2026-07-16-r02248-pattern-scan.md),
+  [`2026-07-16-phase-d-fragile-group-ablation-diagnosis.md`](2026-07-16-phase-d-fragile-group-ablation-diagnosis.md),
+  and the current synthesis linked above.
 - **Diagnostic only — no solver change proposed or made.** Disabling `SCORE_INTERSECTION_SETUP`
   unlocks this specific level in this specific orientation; it is very likely load-bearing for
   other levels that genuinely need the revisit-incentive to hit their `reqInt` at all (that's the
