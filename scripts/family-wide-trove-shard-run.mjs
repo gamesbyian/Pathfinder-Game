@@ -106,7 +106,15 @@ for (const entry of shard) {
         // no change needed to the shared generator/hint-io tooling.
         mkdirSync(`data/families/${corpus}`, { recursive: true });
         const familyFile = `data/families/${corpus}/family-${id}-${abbr}.json`;
-        const solveOutExisting = `logs/family-census/solve-${id}-${abbr}.json`;
+        // Per-corpus subdirectory, same reasoning as familyFile above: corpus-1's stress-levels.json
+        // and corpus-2's stress-levels-random.json can (and, confirmed 2026-08-08, do -- R02000)
+        // independently contain a level with the same bare id. A flat `solve-${id}-${abbr}.json`
+        // path let one corpus's real solve attempt silently overwrite the other's under the same
+        // filename -- both landed as "unsolved" so no solved data was lost, but one corpus's actual
+        // 36M-node attempt was discarded and never recorded. See
+        // reports/families/2026-08-08-r02000-id-collision-fix.md.
+        mkdirSync(`logs/family-census/${corpus}`, { recursive: true });
+        const solveOutExisting = `logs/family-census/${corpus}/solve-${id}-${abbr}.json`;
         log(`  [${nowStamp()}] mode=${mode}`);
 
         // Idempotency: a re-dispatch of this workflow (e.g. a targeted backfill after a stuck
@@ -132,7 +140,7 @@ for (const entry of shard) {
         if (!gen.ok) { log(`    generate failed: ${gen.error}`); log((gen.out || '').slice(-2000)); continue; }
         if (!existsSync(familyFile)) { log(`    generate produced 0 variants (no file written) -- skipping solve/hint-workbench`); summarize({ id, mode, solved: 0, total: 0 }); continue; }
 
-        const solveOut = `logs/family-census/solve-${id}-${abbr}.json`;
+        const solveOut = solveOutExisting;
         // 3h hard ceiling per sweep call: generous headroom over the realistic case (node-budget
         // is the real governing constraint now that budget-ms/work-budget are non-binding), but
         // still a genuine finite backstop -- execFileSync's own timeout+SIGKILL, not an external

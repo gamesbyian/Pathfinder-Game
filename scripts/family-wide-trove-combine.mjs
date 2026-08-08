@@ -115,17 +115,32 @@ lines.push([...missingIds].slice(0, 50).join(', ') || '(none)');
 // data is queryable with the existing corpus-analysis tooling, not just readable.
 const ABBR_TO_MODE = { sym: 'symmetry', lm: 'local-mutant', swap: 'swap', gr: 'group-reshuffle', cs: 'constrained-shuffle' };
 const solveFileRe = /^solve-([A-Za-z]\d+)-(sym|lm|swap|gr|cs)\.json$/;
+const KNOWN_CORPUS_DIRS = new Set(['published', 'corpus1', 'corpus2']);
 const attemptsByCorpus = {};
+function ingestSolveFile(filePath, file, corpusOverride) {
+    const m = solveFileRe.exec(file);
+    if (!m) return;
+    const [, parentId, abbr] = m;
+    // corpusOverride (the subdirectory a solve file lives in, e.g. logs/family-census/corpus2/)
+    // is authoritative and disambiguates same-id collisions across corpora (confirmed 2026-08-08:
+    // corpus-1's stress-levels.json and corpus-2's stress-levels-random.json both independently
+    // contain an id "R02000" -- a flat, non-namespaced solve path let one corpus's real solve
+    // attempt silently overwrite the other's). Falls back to the id->corpus manifest lookup only
+    // for the legacy flat files predating the per-corpus solve-output layout.
+    const corpus = corpusOverride ?? (idToCorpus.get(parentId) || 'unknown');
+    let parsed;
+    try { parsed = JSON.parse(readFileSync(filePath, 'utf8')); } catch { return; }
+    for (const levelResult of parsed.levels || []) {
+        (attemptsByCorpus[corpus] ??= []).push({ ...levelResult, parentId, mode: ABBR_TO_MODE[abbr] });
+    }
+}
 if (existsSync(inDirAbs)) {
-    for (const file of readdirSync(inDirAbs)) {
-        const m = solveFileRe.exec(file);
-        if (!m) continue;
-        const [, parentId, abbr] = m;
-        const corpus = idToCorpus.get(parentId) || 'unknown';
-        let parsed;
-        try { parsed = JSON.parse(readFileSync(path.join(inDirAbs, file), 'utf8')); } catch { continue; }
-        for (const levelResult of parsed.levels || []) {
-            (attemptsByCorpus[corpus] ??= []).push({ ...levelResult, parentId, mode: ABBR_TO_MODE[abbr] });
+    for (const entry of readdirSync(inDirAbs, { withFileTypes: true })) {
+        if (entry.isFile()) {
+            ingestSolveFile(path.join(inDirAbs, entry.name), entry.name, null);
+        } else if (entry.isDirectory() && KNOWN_CORPUS_DIRS.has(entry.name)) {
+            const subDir = path.join(inDirAbs, entry.name);
+            for (const file of readdirSync(subDir)) ingestSolveFile(path.join(subDir, file), file, entry.name);
         }
     }
 }
