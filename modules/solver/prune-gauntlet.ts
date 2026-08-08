@@ -38,6 +38,7 @@ export function evaluatePrunedMove(
     prep: PrepLevel,
     cfg: AblationConfig | null | undefined,
     runConnectivity: boolean,
+    allowNeighborBudgetPrune: boolean = true,
 ): PruneVerdict {
     // Over-length prune (fundamental — always on)
     if (realLen > level.reqLen) return 'reject';
@@ -164,7 +165,15 @@ export function evaluatePrunedMove(
     // required neighbor that is already visited (soft, budget-constrained — not a hard wall) needs
     // an unreserved intersection to revisit; reject once the free budget can't cover every such
     // neighbor. See lower-bounds.ts's mustCrossNeighborBudgetDeadlocked for the derivation.
-    if (cfg && cfg.PRUNE_MC_NEIGHBOR_BUDGET === true && state.mustCrossMask !== 0 && mustCrossNeighborBudgetDeadlocked(next, state, level, prep)) {
+    // allowNeighborBudgetPrune lets repair-search opt out (see repair-search.ts's call sites):
+    // repair picks its next move uniformly at random over this function's 'pass' survivors
+    // (`Math.floor(rand() * survivors.length)`), so shrinking that candidate list mid-walk
+    // reindexes the same rand() draw onto a different move — a sound-but-seed-diverging effect,
+    // not a soundness concern, but one that (2026-08-08 full-corpus A/B) measurably traded 28
+    // previously-repair-solved corpus-2 levels for a different 42, net +14. DFS/beam have no such
+    // index-reindexing exposure (a fixed, deterministic exploration order under a fixed node
+    // budget), so they keep this check unconditionally.
+    if (allowNeighborBudgetPrune && cfg && cfg.PRUNE_MC_NEIGHBOR_BUDGET === true && state.mustCrossMask !== 0 && mustCrossNeighborBudgetDeadlocked(next, state, level, prep)) {
         return 'reject';
     }
 
