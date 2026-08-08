@@ -1,5 +1,17 @@
 # Turn-bias corpus-2 validation: net-negative on current defaults, stays opt-in (2026-08-07)
 
+> **RETRACTED 2026-08-08.** This report's "-7/1700, confirmed net-negative" conclusion was itself
+> a measurement artifact: `enable_flags=STRATEGY_REPAIR_TURN_BIAS` was silently also running with
+> `STRATEGY_REPAIR_ELITE_PREFIX_DFS` enabled (independently net-negative), due to a real bug in
+> `normalizeAblationConfig` that a sparse ablation object could accidentally activate an unrelated
+> opt-in flag. The nogood-cache-interaction hypothesis below is **falsified**, not just unconfirmed
+> — disabling the cache gave -8, not a recovery. Fixed and re-investigated in
+> [`reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md`](2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md).
+> Turn bias's real disposition is undetermined pending a clean re-run against the fixed code. The
+> content below is preserved verbatim as the (incorrect) reasoning that led to the retraction, per
+> this repo's "superseded reasoning stays visible" convention — do not treat its conclusions as
+> current truth.
+
 ## Context
 
 `STRATEGY_REPAIR_TURN_BIAS` (append an experimental turn-aware selective-bias repair

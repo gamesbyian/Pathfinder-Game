@@ -128,21 +128,20 @@ Eight experiments; all sound, tested, default-off, `solver:bench` 160/160.
   dedicated corpus-2 A/B of that weighted form plus worst-case three-tier fallback latency before
   reconsidering promotion. See
   [`reports/2026-07-23-turnbias-corpus2-ab-validation.md`](../reports/2026-07-23-turnbias-corpus2-ab-validation.md).
-- **The dedicated corpus-2 A/B this gate was waiting on: run, and conclusively negative
-  (2026-08-07).** A clean matched pair (`solver-stress-refresh.yml`, `deterministic:true`, both
-  dispatches against the identical `main` commit) found turn bias nets **-7/1700** on corpus-2 against
-  current defaults (5 gained, 12 lost; 0/1802 deadline-truncated, 0/1802 clock-bound — not a budget
-  artifact). This reverses the earlier +3 reading, which turned out to have been measured against
-  now-superseded code (before `STRATEGY_REPAIR_NOGOOD_CACHE` shipped default-on the same day) — see
+- **The dedicated corpus-2 A/B this gate was waiting on: run — but the first two attempts
+  (2026-08-07) turned out to be measuring a bug, not turn bias.** A "-7/1700" reading, and a
+  nogood-cache-interaction hypothesis proposed to explain it, are both **retracted** — the real
+  cause was a `normalizeAblationConfig` bug where `enable_flags=STRATEGY_REPAIR_TURN_BIAS` silently
+  also activated `STRATEGY_REPAIR_ELITE_PREFIX_DFS` (independently net-negative) via the Proxy's
+  "unset opt-in flag reads as true" gap. Fixed 2026-08-08 (`ABLATION_OPT_IN_KEYS`,
+  `orchestration.ts`, with regression tests). See
+  [`reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md`](../reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md)
+  for the full retraction and root-cause writeup, and
   [`reports/2026-08-07-turnbias-corpus2-validation.md`](../reports/2026-08-07-turnbias-corpus2-validation.md)
-  for the full investigation, including a plausible-but-unconfirmed hypothesis that the nogood
-  cache's dead-state short-circuiting (shared across every restart in a call, regardless of which
-  attempt's move policy is active) specifically undermines turn bias's narrower, more repetitive
-  exploration more than it does baseline random-restart search — the same *shared-mechanism-silently-
-  defeats-a-caller-specific-technique* shape as this file's July 10 `evaluatePrunedMove`-consolidation
-  precedent (see CLAUDE.md's own gotcha on that incident). **`STRATEGY_REPAIR_TURN_BIAS` stays
-  opt-in; this gate is now closed, not just deferred** — promotion should not be reconsidered without
-  first re-testing after any change to nogood-cache's interaction with per-attempt move policies.
+  (now marked retracted at its own top) for the superseded reasoning. **`STRATEGY_REPAIR_TURN_BIAS`
+  stays opt-in and this gate stays OPEN** — turn bias's real corpus-2 disposition is genuinely
+  undetermined, not "conclusively negative"; a clean re-run against the fixed code is the natural
+  next step whenever this thread is picked back up.
 - **Provenance can now help validate this gate too (2026-07-23,
   [`reports/2026-07-23-solver-batch-speed-and-hint-provenance.md`](../reports/2026-07-23-solver-batch-speed-and-hint-provenance.md)):**
   `HintSolverForcing.repairTurnBiased` is now captured on every newly-found/re-solved hint, so "how
