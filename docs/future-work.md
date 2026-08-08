@@ -1,6 +1,6 @@
 # Future Work
 
-A compiled index of genuinely open, non-stale work — pulled from active planning documents and recent campaign reports. This file is the **live queue and status source of truth**; detailed strategy documents are linked below. Updated 2026-08-07.
+A compiled index of genuinely open, non-stale work — pulled from active planning documents and recent campaign reports. This file is the **live queue and status source of truth**; detailed strategy documents are linked below. Updated 2026-08-08.
 
 > **Current solver frontier:** the old numbered campaign sequence is retained as history in
 > [`solver-development-roadmap.md`](solver-development-roadmap.md), not maintained as the live queue.
@@ -140,6 +140,20 @@ quickly.
 ## Solution-space and level-family research
 
 **Master reference:** [`family-and-scaling-research-possibilities.md`](family-and-scaling-research-possibilities.md) (original research proposal) and [`sibling-cousin-system.md`](sibling-cousin-system.md) (implementation status). The level-family half was picked up and built (most of it); [`req-length-sweep.md`](req-length-sweep.md) now covers the first controlled win-metric experiment, while the broader solver-scaling analysis is not yet implemented as a systematic pass.
+
+### Open — ranked symmetry-cliff diagnosis
+
+The selected-family evidence has been reconciled in
+[`reports/2026-08-08-symmetry-orientation-sensitivity-synthesis.md`](../reports/2026-08-08-symmetry-orientation-sensitivity-synthesis.md).
+The old universal variant-1 claim is stale after the elite-splice fix, while five diagnosed fragile
+families now implicate different navigation/attraction score terms. **Next action:** run the
+implemented read-only boundary tooling on the wide family trove, then apply transform validation,
+equal-work attempt traces, first-divergence replay, and ablations to the highest-ranked independent
+symmetry solve-status cliffs. Stop after either one intervention mechanism recurs across independent
+families or the top five yield distinct signatures; that result decides whether to prototype a
+bounded diversity pass. A production eight-orientation retry remains deferred unless diagnosis
+shows a residual population dominated by irreducible tie/cutoff effects and a shared-budget race
+beats score diversity on canonical solves and total work.
 
 ### Shipped via sibling-cousin-system (2026-07-15):
 - Symmetry siblings (all 7 non-identity rotations/reflections)

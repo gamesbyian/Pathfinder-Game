@@ -1,5 +1,10 @@
 # Phase D: fragile-group ablation diagnosis (2026-07-16)
 
+> **Status:** concluded-positive
+> **Last evidence:** 2026-08-08 — incorporated into [`2026-08-08-symmetry-orientation-sensitivity-synthesis.md`](2026-08-08-symmetry-orientation-sensitivity-synthesis.md)
+> **Decision:** reject a universal score-term retune; use the repeatable failure shape to evaluate bounded, feature-gated diversity only after ranked family diagnosis
+> **Remaining gate:** run the wide-trove boundary ranking and diagnose the highest independent symmetry cliffs before selecting a diversity design
+
 ## Goal
 
 Phase C found that the `dfs-plain` cluster's "fragile" subgroup (levels where most structural
