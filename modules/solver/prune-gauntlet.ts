@@ -15,7 +15,7 @@
 // a speed/thoroughness tradeoff, never a soundness concern, since isConnected only ever prunes).
 import { getDistanceFromArray } from './distance.js';
 import { popcount } from './encoding.js';
-import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
+import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustCrossNeighborBudgetDeadlocked, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
@@ -157,6 +157,14 @@ export function evaluatePrunedMove(
     // hard wall (edgeUsage both bits spent, or an already-used flipper), that pass can never
     // happen. See lower-bounds.ts's mustCrossForcedNeighborDeadlocked for the derivation.
     if ((!cfg || cfg.PRUNE_MC_FORCED_NEIGHBOR) && state.mustCrossMask !== 0 && mustCrossForcedNeighborDeadlocked(next, state, level, prep)) {
+        return 'reject';
+    }
+
+    // Must-cross neighbor-budget deadlock (shadow-probe prototype, opt-in): a still-needed pass's
+    // required neighbor that is already visited (soft, budget-constrained — not a hard wall) needs
+    // an unreserved intersection to revisit; reject once the free budget can't cover every such
+    // neighbor. See lower-bounds.ts's mustCrossNeighborBudgetDeadlocked for the derivation.
+    if (cfg && cfg.PRUNE_MC_NEIGHBOR_BUDGET === true && state.mustCrossMask !== 0 && mustCrossNeighborBudgetDeadlocked(next, state, level, prep)) {
         return 'reject';
     }
 

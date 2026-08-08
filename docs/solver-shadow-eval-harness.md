@@ -1,8 +1,11 @@
 # Shadow-Mode Evaluation Harness for Middle-Layer Solver Reasoners
 
-**Status:** working infrastructure + three prototype results (Parts 4, 7, 8), all sound, none a
-solve-rate win — Tier 2's three named candidates are now all scored and closed
-**Date:** 2026-08-05, updated 2026-08-06
+**Status:** working infrastructure + four prototype results (Parts 4, 7, 8, 9), all sound — Tier
+2's three named candidates (Parts 4, 7, 8) are scored and closed with no solve-rate win; a 4th,
+differently-sourced candidate (Part 9, must-cross neighbor-budget propagation) is sound, shows the
+largest unique-catch count measured so far, and is pending a full-population live A/B — not yet
+closed.
+**Date:** 2026-08-05, updated 2026-08-06, 2026-08-08
 **Relationship to other docs:** operationalizes [`solver-next-frontier-2026-08-02.md`](solver-next-frontier-2026-08-02.md)
 and [`solver-next-frontier-multilingual-research-update-2026-08-02.md`](solver-next-frontier-multilingual-research-update-2026-08-02.md)
 (the "unvalidated research brainstorm" pair indexed in `docs/README.md`) — specifically that
@@ -443,6 +446,33 @@ just a console note, if any probe ever produces one) rather than trusting a prob
 self-report. All three probes registered as of 2026-08-06 — `separator-resource-spectrum`,
 `obligation-tour-mutex`, `goal-approach-envelope` — hold zero false rejects across the full
 5,518-branch atlas.
+
+## Part 9: Must-cross neighbor-budget propagation (a 4th, differently-sourced candidate)
+
+`scripts/stress/probes/mc-neighbor-budget-probe.mjs` (`mc-neighbor-budget-propagation`) is not from
+the multilingual doc's ~17-candidate list Parts 4/7/8 scored — it prototypes
+`docs/solver-heuristic-capability-gap-analysis.md`'s item 3 instead (a separate, later gap-analysis
+pass over the shipped must-cross machinery specifically). Extends the shipped
+`PRUNE_MC_FORCED_NEIGHBOR` hard-wall check to the soft case: a still-open must-cross axis's
+required neighbor that is already visited (not a hard wall) needs an unreserved intersection to
+revisit, checked against the free intersection budget `PRUNE_MC_RESERVED_WALL` already computes.
+
+```
+mc-neighbor-budget-propagation (sound prune (dynamic forced-neighbor revisit cost vs. remaining free intersection budget)):
+  dead: 33/549 caught (6.0%), unique beyond gauntlet: 19, overlap: 14
+  alive: 374/374 correctly passed, FALSE REJECTS: 0
+  abstained: 4595/5518
+```
+
+**19 unique catches is the largest of any of the four candidates measured through this harness** —
+more than double the separator-resource-spectrum's 7 and nearly 20x the obligation-tour-mutex's 1.
+Unlike the three Tier-2 candidates above, this one did not stop at the shadow-probe stage: it was
+also validated against a full-corpus stored-solution replay (97,812 valid paths across all three
+real corpora, 0 violations) and shipped opt-in (`PRUNE_MC_NEIGHBOR_BUDGET`, default off), then run
+through a first live matched-node A/B showing +11/30 on an unsolved sample (0 regressions, all
+referee-valid) — promising enough that, unlike Parts 4/7/8, this one is NOT yet closed. See
+[`reports/2026-08-08-mc-neighbor-budget-propagation.md`](../reports/2026-08-08-mc-neighbor-budget-propagation.md)
+for the full writeup and current status.
 
 ## How to add the next probe
 
