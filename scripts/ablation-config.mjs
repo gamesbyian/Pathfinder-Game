@@ -43,6 +43,7 @@ export const FEATURES = {
     PRUNE_MC_RESERVED_WALL:     'Reserved-intersection wall: once every remaining intersection is committed to a pending must-cross crossing, visited cells are walls in the connectivity fill (portal-free levels only)',
     PRUNE_DISTANCE_BOUND:       'Goal BFS distance exceeds remaining steps',
     PRUNE_PARITY:               'Manhattan parity mismatch (portal-free levels only)',
+    PRUNE_PORTAL_PARITY_ENVELOPE: 'Manhattan parity mismatch on portal levels with >=1 twist portal pair -- rejects only once every twist pair has actually been jumped, not merely visited (default-OFF -- only added under an explicit true value; stored-solution census clean (0 violations, ~15,600 checkpoints across all 3 corpora) but not yet A/B-validated in live search -- see reports/2026-08-08-portal-parity-envelope.md)',
     PRUNE_MUST_PASS_LB:         'MST lower bound on remaining must-pass visit distance',
     PRUNE_MUST_CROSS_LB:        'MST lower bound on remaining must-cross distance (with approach maps)',
     PRUNE_INTERSECTION_DEFICIT: 'Remaining steps < intersections still needed',

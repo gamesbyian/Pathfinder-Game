@@ -82,6 +82,46 @@ export function evaluatePrunedMove(
         }
     }
 
+    // Portal-parity envelope: extends the parity idea above to portal levels carrying >=1
+    // "twist" portal pair (prep.parityPortalDistMaps -- terminals of MISMATCHED cell parity; a
+    // same-parity "twist=0" portal can't fix a parity mismatch at all, see prep.ts's own comment,
+    // and isn't in this list). A twist portal's free jump injects exactly one extra parity flip,
+    // so as long as >=1 twist pair remains UNCONSUMED, both parities stay achievable and a naive
+    // mismatch must not be rejected -- only once every twist pair has actually been jumped does
+    // the plain portal-free invariant apply again. Existence-only (no reachability/budget check):
+    // this can only ever under-prune relative to a tighter version that also verified a pair
+    // fits in the remaining budget, never mis-prune, by construction.
+    //
+    // Skips entirely whenever `next` is itself ANY portal cell (about to be force-jumped, or just
+    // landed on one) -- both are transient snapshots where "already consumed" is ambiguous: a
+    // pair's flip is only actually consumed by the JUMP, not by merely standing on a terminal, so
+    // deriving "consumed" from raw state.visited right at that in-flight moment double-counts the
+    // about-to-happen jump as already-happened. Once `next` is a stable (non-portal) cell, by
+    // construction BOTH a pair's terminals are guaranteed visited if it was ever used (entering
+    // either one forces landing at the other), so raw visited counts are then a safe, sufficient
+    // "already consumed" signal. Same firstStep/blockSet.size gating as the plain-parity check
+    // above (first-step always, otherwise only for corridor-rich levels) -- no independent
+    // evidence yet that portal levels need a different search-order threshold, so reusing the
+    // one already measured is the conservative choice. Opt-in (STRATEGY convention for a new,
+    // not-yet-production-validated mechanism): see reports/2026-08-08-portal-parity-envelope.md
+    // for the stored-solution census (0 violations, ~15,600 checkpoints across all 3 corpora)
+    // this design is built from.
+    if (cfg && cfg.PRUNE_PORTAL_PARITY_ENVELOPE === true && level.portalMap.size > 0 && !level.portalMap.has(next)) {
+        const twistPairs = prep.parityPortalDistMaps;
+        if (twistPairs && twistPairs.length > 0) {
+            const posP  = keyParity(next);
+            const goalP = keyParity(level.goalKey);
+            const firstStep = (realLen === 1);
+            if ((firstStep || level.blockSet.size >= 10) && (posP ^ goalP ^ (rSteps & 1)) !== 0) {
+                let anyUnconsumed = false;
+                for (const tp of twistPairs) {
+                    if (state.visited[tp.a] === 0 || state.visited[tp.b] === 0) { anyUnconsumed = true; break; }
+                }
+                if (!anyUnconsumed) return 'reject';
+            }
+        }
+    }
+
     // Must-pass lower bound: dist(next→MP) + dist(MP→goal) ≤ rSteps
     if ((!cfg || cfg.PRUNE_MUST_PASS_LB) && level.mustPassKeys.length > 0) {
         const mpLB = mustPassLowerBound(next, state, level, prep);
