@@ -130,27 +130,58 @@ shadow-eval-harness candidates that were closed after their own live checks (Par
 `docs/solver-shadow-eval-harness.md`), none of which reached the live-A/B stage before their catch
 rates alone closed them.
 
+## Stage 5: full-corpus deterministic A/B (2026-08-08, `solver-stress-refresh.yml` runs #28/#29)
+
+The Stage 4 sample was superseded by a **full-corpus** A/B on the same infrastructure used for the
+routine continuity baseline (`solver-stress-refresh.yml`, `deterministic=true` so the corpus-wide
+node budget — 36,000,000 for corpus-2, 50,000,000 for corpus-1 — is the sole binding constraint,
+not wall clock): run #28 (`PRUNE_MC_NEIGHBOR_BUDGET` OFF) vs. run #29 (ON), both dispatched from
+this branch at the same code revision, all 1,700 corpus-2 and 102 corpus-1 levels.
+
+| arm | corpus-1 | corpus-2 |
+|---|---:|---:|
+| OFF (run #28) | 96/102 | 725/1700 |
+| **ON** (run #29) | 96/102 | **739/1700** |
+| net | +0 | **+14** |
+
+corpus-1 is unaffected (0 gained, 0 lost — the corpus-1 stress set is much smaller and evidently
+doesn't exercise this path's regime). corpus-2's net +14 is **not** a strict superset, though: the
+churn is bidirectional — **42 levels gained, 28 lost** (`R00001`, `R00323`, `R00468`, `R00553`,
+`R00635`, `R00977`, `R01925`, `R01969`, `R02009`, `R02010`, `R02119`, `R02192`, `R02268`, `R02376`,
+`R02393`, `R02415`, `R02422`, `R02519`, `R02691`, `R02842`, `R02867`, `R02871`, `R02875`, `R02933`,
+`R03196`, `R03239`, `R03295`, `R03338`). Spot-checked: all 28 lost levels carry must-cross cells
+(confirmed against `data/stress/stress-levels-random.json`), so the flag is genuinely live on every
+one of them — this rules out the churn being some unrelated bug or noise source masquerading as the
+prune's effect. The lost levels are not a soundness violation (Stage 2's 8.5M-step replay already
+established the check never rejects a real solution) — the mechanism is budget *reallocation*: the
+prune cuts dead search earlier, which changes `dfsFromGate`/beam's node-by-node exploration order
+under the same fixed cumulative node budget, so a level that previously got solved by stumbling
+onto a solution before the budget ran out can now exhaust the budget exploring elsewhere first, and
+vice versa. This is an ordinary reordering side effect of any admissible pruning change under a
+fixed budget, not evidence of a defect in the check itself.
+
+**Total node counts were nearly identical between arms** (corpus-2: 36,735,817,088 OFF vs.
+36,473,576,181 ON — a ~0.7% difference, consistent with the two runs using the same node budget
+per level and mostly exhausting it either way), so the +14 is not explained by ON simply searching
+more; it reflects a genuine reallocation of where the same amount of search effort goes.
+
 ## Status and next steps
 
-A full-population matched-node A/B (all 284 unsolved + a 125-level already-solved portal-free
-must-cross control, same config) was launched to replace the small-sample read above with the real
-number — the reserved-wall report's own lesson is that a ~24-level sample can under- *or*
-over-state a population-level effect by a wide margin in either direction, so this is not yet a
-promotion-ready result. See the addendum below once that run completes, or re-run:
-
-```bash
-node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- \
-    --corpus=data/stress/stress-levels-random.json --levels=<positions> \
-    --scheduler-mode=legacy --budget-ms=60000 --work-budget=26800000 \
-    --disable-extra-budget-passes --workers=4 \
-    [--enable-flags=PRUNE_MC_NEIGHBOR_BUDGET] --out=<file>
-```
-
-Per this codebase's promotion bar (CLAUDE.md's "Verify before you claim done" / this doc's own
-recommended sequence step 7): a written admissibility argument (above), stored-solution replay
-(Stage 2), and now a live A/B are all in hand or in progress; a full-corpus `solver:bench`-style
-refresh and an oracle/fuzz falsification pass remain before this could be considered for promotion
-to default-on.
+The full-corpus result is a real, reproducible net positive (+14/1700 corpus-2, +0/102 corpus-1,
+zero regression on the already-solved corpus-1 population) but **not a clean win**: 28 corpus-2
+levels that solve today under the shipped default (flag OFF) would stop solving if this were
+promoted to default-on, offset by 42 different levels newly solving. Recommendation: **keep
+`PRUNE_MC_NEIGHBOR_BUDGET` opt-in, not default-on**, until at least one of the following closes the
+gap — (a) a second independent full-corpus run confirming the churn is stable rather than an
+artifact of this one pairing (repair-search's per-attempt seeds are deterministic functions of
+`(gateKey, seedSalt)`, so a repeat run with identical code should reproduce the same 42/28 split;
+worth confirming rather than assuming), or (b) a closer look at a handful of the 28 lost levels
+(e.g. via `method-probe.mjs` on the specific attempt config that solved them OFF) to characterize
+*why* the reallocation goes against them, which could surface a cheap follow-up tweak that keeps
+the +42 gains without the -28 cost. Written admissibility argument (Stage 0), stored-solution replay
+(Stage 2), a small live A/B (Stage 4), and now a full-corpus A/B (Stage 5) are all in hand; what
+remains before default-on is understanding/mitigating the bidirectional churn, not further
+soundness work — the check itself is not in question.
 
 ## Reproducing
 

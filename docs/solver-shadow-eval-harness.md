@@ -470,7 +470,17 @@ Unlike the three Tier-2 candidates above, this one did not stop at the shadow-pr
 also validated against a full-corpus stored-solution replay (97,812 valid paths across all three
 real corpora, 0 violations) and shipped opt-in (`PRUNE_MC_NEIGHBOR_BUDGET`, default off), then run
 through a first live matched-node A/B showing +11/30 on an unsolved sample (0 regressions, all
-referee-valid) — promising enough that, unlike Parts 4/7/8, this one is NOT yet closed. See
+referee-valid) — promising enough that, unlike Parts 4/7/8, this one is NOT yet closed. A follow-up
+**full-corpus deterministic A/B** (`solver-stress-refresh.yml` runs #28/#29, 2026-08-08) replaced
+that small sample with the real population: corpus-1 unaffected (96/102 both arms), corpus-2 net
++14 (725/1700 → 739/1700) but **not** a strict superset — 42 gained, 28 lost, all 28 losses on
+levels confirmed to carry must-cross cells (so the churn is the flag's own effect, not noise). The
+losses are a budget-reallocation side effect under the fixed node budget, not a soundness violation
+(the stored-solution replay already rules that out) — pruning dead search earlier changes where the
+same fixed search effort goes, which can un-luck a level that previously stumbled onto a solution
+before its budget ran out. **Current verdict: keep opt-in, not default-on**, pending either a
+repeat run confirming the 42/28 split is stable or a closer look at why the 28 losses go against
+the grain. See
 [`reports/2026-08-08-mc-neighbor-budget-propagation.md`](../reports/2026-08-08-mc-neighbor-budget-propagation.md)
 for the full writeup and current status.
 

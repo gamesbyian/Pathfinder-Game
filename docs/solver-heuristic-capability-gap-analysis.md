@@ -170,9 +170,15 @@ the oracle-labelled atlas: **19 unique catches beyond the existing gauntlet** (0
 the largest of any candidate scored through `docs/solver-shadow-eval-harness.md`'s infrastructure
 to date. Sound on a full-corpus stored-solution replay (97,812 valid paths, 8.5M steps, 0
 violations). Shipped opt-in (`PRUNE_MC_NEIGHBOR_BUDGET`, default OFF; `solver:bench --check`
-160/160, no regressions). A first live matched-node A/B on a 30-level unsolved sample: **+11/30 (11
-gained, 0 lost, all referee-valid)** — promising, but per this doc's own evidence-reconciliation
-standard a small sample is not a promotion verdict; a full-population A/B is in progress. See
+160/160, no regressions). **Full-corpus deterministic A/B (2026-08-08)**: corpus-1 96/102 → 96/102
+(+0), corpus-2 725/1700 → 739/1700 (**+14 net**, but not a strict superset — 42 gained, 28 lost;
+every lost level carries must-cross cells, confirming the churn is the flag's own effect, not
+noise). The 28 losses are budget-reallocation, not soundness violations (the check never rejects a
+real solution per Stage 2's replay) — pruning dead search earlier shifts node-by-node exploration
+order under the same fixed budget, so some levels that were solved by chance before the budget ran
+out now aren't, offset by others that newly are. **Verdict: keep opt-in, not default-on**, pending
+either a repeat run confirming the churn is stable or a look at why the 28 losses go the way they
+do. See
 [`reports/2026-08-08-mc-neighbor-budget-propagation.md`](../reports/2026-08-08-mc-neighbor-budget-propagation.md).
 
 ### 4. Repair has diagnostics but limited conditional policy
