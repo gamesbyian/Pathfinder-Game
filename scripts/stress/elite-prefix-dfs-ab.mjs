@@ -36,7 +36,7 @@ const OFF_CFG = normalizeAblationConfig({ STRATEGY_REPAIR_ELITE_PREFIX_DFS: fals
 const candidates = [];
 for (const entry of levels) {
     if (!ONLY_IDS && candidates.length >= SAMPLE_SIZE) break;
-    const { id, stressMeta, ...raw } = entry;
+    const { id, stressMeta: _stressMeta, ...raw } = entry;
     if (ONLY_IDS && !ONLY_IDS.has(id)) continue;
     try {
         const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });

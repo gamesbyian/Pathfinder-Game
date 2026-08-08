@@ -2,26 +2,21 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { familyMetadataOf, summarizeFamilyWinningAttempts } from './winning-attempt-family-lib.mjs';
+import { attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
 const positional = args.filter(a => !a.startsWith('--'));
 const inputFiles = (argMap.get('--inputs') || '').split(',').map(s => s.trim()).filter(Boolean).concat(positional);
 const outputFile = argMap.get('--output') || 'reports/solver-winning-attempts.json';
+const groupByFamily = argMap.get('--group-by-family') || null;
+const familyParentFilter = argMap.get('--family-parent') || null;
+const familyModeFilter = argMap.get('--family-mode') || null;
 
 if (inputFiles.length === 0) {
   console.error('Usage: node scripts/analyze-solver-winning-attempts.mjs --inputs=path/a.json,path/b.json [--output=reports/solver-winning-attempts.json]');
   process.exit(1);
-}
-
-function fullConfig(attempt) {
-  const family = attempt?.repair ? 'repair' : (attempt?.beamWidth ? 'beam' : 'dfs');
-  const profile = attempt?.profile ?? 'unknown';
-  const template = attempt?.template ?? null;
-  const templatePart = template ? `/${template}` : '';
-  const beamPart = attempt?.beamWidth ? `@beam${attempt.beamWidth}` : '';
-  const flags = [attempt?.diverseBeam ? 'diverse' : null, attempt?.repairMustTurnBiased ? 'mustTurnBiased' : null].filter(Boolean);
-  return `${family}:${profile}${templatePart}${beamPart}${flags.length ? `(${flags.join('+')})` : ''}`;
 }
 
 function percentile(sorted, p) {
@@ -42,15 +37,23 @@ function round(value, places = 3) {
   return Math.round(value * m) / m;
 }
 
+function numericOrNull(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function fractionsAfter(wins) {
   return Object.fromEntries(lateThresholds.map(t => [`after${t}ms`, round(wins.filter(w => w.elapsedMs > t).length / wins.length)]));
 }
 
 const rows = [];
+const familyLevels = [];
 const sourceSummaries = [];
 for (const file of inputFiles) {
   const parsed = JSON.parse(await readFile(file, 'utf8'));
   const levels = Array.isArray(parsed?.levels) ? parsed.levels : Array.isArray(parsed?.data?.levels) ? parsed.data.levels : [];
+  familyLevels.push(...levels.filter(level => { const f=familyMetadataOf(level); return (!familyParentFilter||String(f.parentId)===familyParentFilter)&&(!familyModeFilter||String(f.mode)===familyModeFilter); }));
   let wins = 0;
   for (const level of levels) {
     if (!level?.ok && level?.status !== 'success') continue;
@@ -58,16 +61,16 @@ for (const file of inputFiles) {
     const attemptIndex = attempts.findIndex(a => a?.ok);
     if (attemptIndex < 0) continue;
     const attempt = attempts[attemptIndex];
-    const elapsedMs = Number(attempt?.elapsedMs);
-    if (!Number.isFinite(elapsedMs)) continue;
-    const allocatedBudgetMs = Number(attempt?.allocatedBudgetMs);
+    const elapsedMs = numericOrNull(attempt?.elapsedMs);
+    if (elapsedMs === null) continue;
+    const allocatedBudgetMs = numericOrNull(attempt?.allocatedBudgetMs);
     rows.push({
       source: file,
       level: level.level ?? level.id ?? null,
-      config: fullConfig(attempt),
+      config: attempt.configKey ?? attempt.config ?? attemptConfigKey(attempt),
       elapsedMs,
-      nodesExpanded: Number.isFinite(Number(attempt?.nodesExpanded)) ? Number(attempt.nodesExpanded) : null,
-      allocatedBudgetMs: Number.isFinite(allocatedBudgetMs) ? allocatedBudgetMs : null,
+      nodesExpanded: numericOrNull(attempt?.nodesExpanded),
+      allocatedBudgetMs,
       attemptIndex,
       cumulativeElapsedMs: Number.isFinite(Number(level?.elapsedMs)) ? Number(level.elapsedMs) : null,
       cumulativeNodesExpanded: Number.isFinite(Number(level?.nodesExpanded)) ? Number(level.nodesExpanded) : null,
@@ -152,6 +155,7 @@ const summary = {
   },
   lateBloomers,
   configs,
+  familyGroups: groupByFamily ? summarizeFamilyWinningAttempts(familyLevels, { groupBy: groupByFamily }) : null,
 };
 for (const t of thresholds) summary.overall[`fractionWithin${t}ms`] = rows.length ? round(rows.filter(r => r.elapsedMs <= t).length / rows.length) : null;
 

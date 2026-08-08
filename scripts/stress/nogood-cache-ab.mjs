@@ -33,7 +33,7 @@ let totalNodesOn = 0, totalNodesOff = 0;
 const results = [];
 
 for (const entry of levels) {
-    const { id, stressMeta, ...raw } = entry;
+    const { id, stressMeta: _stressMeta, ...raw } = entry;
     if (!ONLY_IDS.has(id)) continue;
     let level, prepOn, prepOff, repairConfig;
     try {
