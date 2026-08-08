@@ -44,6 +44,17 @@ export default defineConfig({
             // `node` under npm run test:hint-workbench / test:node) — vitest collection always fails
             // it with "No test suite found", independent of the file's own assertions passing.
             'scripts/hint-workbench-unit-tests.mjs',
+            // Same pre-existing-gap pattern once more (plain node:assert + a main().catch()/exit-code
+            // entrypoint, no vitest test()/describe()) — each already runs correctly via its own
+            // npm run test:family-boundary* / test:family-parent-hint-replay / test:divergence-lib /
+            // test:winning-attempt-family script, all part of test:node. Landed without these
+            // exclusions, so vitest's own collection failed on all 5 with "No test suite found" —
+            // a red `npm run ci` independent of any other branch's changes.
+            'scripts/family-boundary-lib-unit-tests.mjs',
+            'scripts/family-boundary-cli-unit-tests.mjs',
+            'scripts/family-parent-hint-replay-unit-tests.mjs',
+            'scripts/stress/divergence-lib-unit-tests.mjs',
+            'scripts/winning-attempt-family-lib-unit-tests.mjs',
             'node_modules/**',
             'dist/**',
         ],
