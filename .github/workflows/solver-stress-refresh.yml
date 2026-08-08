@@ -117,10 +117,14 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     steps:
-      - name: Check out main
+      - name: Check out the dispatched ref
+        # The DISPATCHED ref, not a hardcoded 'main' -- same fix as solver-typical-budget-
+        # baseline.yml's own checkout (see that file's comment): a hardcoded main here meant a run
+        # launched from a feature branch silently solved main's code instead of the branch's own,
+        # making it useless for A/B-testing a branch-local ablation flag or any other WIP change.
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.ref }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -355,10 +359,17 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Check out main
+      - name: Check out the dispatched ref
+        # Same fix as the solve-shards job's checkout above -- the combine job's own baseline-diff
+        # and (when it fires) commit steps need to see the DISPATCHED branch's code/results, not
+        # main's. The commit step below is separately gated to `github.ref == 'refs/heads/main'`
+        # (mirroring solver-typical-budget-baseline.yml's identical guard) so `git push
+        # origin HEAD:main` can only ever fire when this checkout WAS main to begin with -- without
+        # that guard, checking out a feature branch here and then pushing HEAD:main would push the
+        # ENTIRE feature branch history onto main, not just this workflow's own new commit.
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Setup Node
@@ -556,7 +567,16 @@ jobs:
         # deterministic=true is a capability-ceiling/A-B mode whose numbers are not comparable with
         # the committed continuity baseline's binding-budget history (see this file's top-of-file
         # 2026-08-06 note) -- never commit those, only the artifact above.
-        if: ${{ inputs.deterministic != 'true' }}
+        #
+        # ALSO gated on the ref (added alongside making the checkouts above follow the dispatch):
+        # now that this job's checkout follows github.ref instead of a hardcoded main, a routine
+        # (deterministic=false) dispatch from a feature branch would otherwise `git commit` on top
+        # of that branch's own history and then `git push origin HEAD:main` -- pushing the ENTIRE
+        # feature branch onto main, not just this workflow's new commit. Restricting the commit to
+        # github.ref == 'refs/heads/main' (the same guard solver-typical-budget-baseline.yml's
+        # identical commit step already uses) makes that push a plain main-to-main fast-forward
+        # again, and a branch dispatch now only ever uploads the artifact above.
+        if: ${{ inputs.deterministic != 'true' && github.ref == 'refs/heads/main' }}
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
