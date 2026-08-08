@@ -103,13 +103,68 @@ and current HEAD across `scoring.ts`/`search.ts`/`attempts.ts`/`policy.ts`/`prun
 `lower-bounds.ts`/`topology.ts` is 1,580 lines) — not a bug to chase, and specifically **not**
 fixable by any budget-allocation change, since the config already had more than enough budget.
 
+## Corpus-wide census (added same day, closes the "not yet measured at scale" gap below)
+
+`scripts/stress/main-loop-starvation-census.mjs` — pure read-only cross-reference between the
+already-committed `logs/stress-corpus{1,2}-baseline.json` attempt logs and the stored hint
+corpus's provenance, no new solving, no solver code imported. Defines an attempt as **starved**
+when `nodesExpanded === 0 && elapsedMs === 0` (the exact signature hand-validated above) and a
+level as **provably recoverable** only when it *also* carries a cold, trustworthy hint whose
+`(technique family, profile, template, beamWidth)` signature matches a starved attempt's config
+and whose own recorded `nodesExpanded` fits under the run's node budget.
+
+```
+=== corpus-2 (node budget 36,000,000) ===
+  unsolved: 975 levels, 11572 attempts, 3041 starved (26.3%)
+  unsolved: 849 levels (87.1%) have >=1 starved attempt
+  unsolved: starved attempts by family: {"dfs":2015,"beam":294,"repair":732}
+  unsolved: PROVABLY RECOVERABLE levels: 34 (by family: {"dfs":10,"repair":20,"beam":4})
+  unsolved: of those, dfs/beam (hard, deterministic match): 14; repair-only (soft, seed-dependent match): 20
+  solved (control): 725 levels, 6 (0.8%) have >=1 starved attempt, 0 recoverable
+
+=== corpus-1 (node budget 50,000,000) ===
+  unsolved: 6 levels, 53 attempts, 4 starved (7.5%)
+  unsolved: 3 levels (50.0%) have >=1 starved attempt
+  unsolved: PROVABLY RECOVERABLE levels: 0
+  solved (control): 96 levels, 0 (0.0%) have >=1 starved attempt, 0 recoverable
+```
+
+**Reading this honestly, in both directions.** The raw prevalence (87.1% of unsolved corpus-2
+levels have *some* zero-node attempt) is not itself evidence of a bug — it is what a fully
+budget-exhausted ladder looks like at its tail *by construction*: once the cumulative ceiling is
+gone, every attempt tried afterward is starved, whether or not it would ever have solved the
+level. The solved-population control confirms this framing rather than undermining it: only 0.8%
+of solved levels show any starved attempt at all, and **zero** show a recoverable one — exactly
+what you'd expect if starvation mostly means "genuinely out of budget," with the interesting
+exception being levels where the *specific* config that was starved is independently *known*, via
+its own stored provenance, to be capable.
+
+That narrower, decisive number is **34 of 975 unsolved corpus-2 levels (3.5%)** — real, validated,
+currently zero-allocated in the committed baseline. Split by match confidence: **14 have a
+dfs-or-beam match** (deterministic search, no randomness — an exact `(profile, template,
+beamWidth, gate)` match is as close to proof as this method gets) and **20 are repair-only**
+(structurally softer: repair uses a per-attempt randomized seed, so matching the *technique*
+doesn't guarantee the *same seed* would reproduce the *same* solution — see the script's own doc
+comment). Corpus-1 shows the same shape at its own much smaller scale (3 of 6 unsolved levels have
+a starved attempt) with 0 provably recoverable, consistent with corpus-1's near-saturated 96/102
+solved rate leaving little room for this pattern to matter there.
+
+**34 is a lower bound, not an upper bound**, for two structural reasons: (1) it only counts levels
+that happen to carry a *stored hint* recording the exact starved config — a level could show the
+identical starvation pattern and simply never have been solved by any other means, which this
+method cannot see; (2) the repair-family match is deliberately conservative (any repair vs. any
+repair), so tightening it to also match `seedSalt`/`randomSeed` would likely *increase*, not
+decrease, confidence in a subset of the 20.
+
 ## What this does and does not claim
 
-- **Not** a corpus-wide prevalence claim. 11 levels is the full `dfs`-attributed "under cap,
-  unforced" bucket as of this baseline — real, but small; whether the same ~36%-starved /
-  ~64%-drifted split holds at scale (e.g., across the wider corpus-2 population that doesn't
-  happen to carry a stored cheap `dfs` hint) is not measured here.
-- **Not** a claim that fixing Shape A would recover all 4 of those solves. Reallocation is
+- **Corpus-wide prevalence is now measured** (see above) — 34/975 (3.5%) of unsolved corpus-2
+  levels provably recoverable, split 14 hard (dfs/beam) + 20 soft (repair). The original 11-level
+  `dfs`-only sample's ~36% Shape-A rate does not directly generalize to "36% of all starvation is
+  recoverable" — the corpus-wide denominator (975 unsolved levels, not just the 11 carrying a
+  cheap `dfs` hint) puts the real, provable fraction much lower, which is the more honest number
+  to act on.
+- **Not** a claim that fixing the starved cases would recover all 34 of those solves. Reallocation is
   zero-sum against a fixed cap, and this codebase has measured reordering a budget-limited search
   to be a coin flip three times already (MST tightening −12, archetype routing −4/−8, dead-flipper
   move-gen exclusion −1) — the same caution `2026-07-31-admissible-order-tier-node-starvation.md`
@@ -125,24 +180,31 @@ fixable by any budget-allocation change, since the config already had more than 
 
 ## Recommended next steps, if pursued
 
-1. **Reproduce at scale first**, exactly as the admissible-order playbook did: measure how many
-   corpus-2 levels show Shape A specifically (winning `dfs` config present in the attempt list,
-   correct gate, exactly 0 nodes) — not gated on carrying a stored hint at all, since the
-   mechanism doesn't require one; a level could show this pattern and simply never have been found
-   any other way.
-2. **Do not conflate Shape A and Shape B.** Any future fix attempt or A/B must isolate Shape A's
-   population specifically (Shape B levels would be pure noise in that measurement — they were
-   never starved, so a starvation fix can't help them).
-3. **If Shape A reproduces at meaningful scale**, the admissible-order fix's own template applies
-   directly: a small *reserve*, not a *reorder* — e.g., guaranteeing the main loop's late
-   configs (or specifically the level's feature-appropriate profile/template, if that can be
-   identified before the fact) some non-zero floor of the node budget, the same shape as
+1. ~~Reproduce at scale first~~ **Done** (see the census above): 34/975 unsolved corpus-2 levels
+   provably recoverable, 14 of them by the hard dfs/beam signal.
+2. **Do not conflate the dfs/beam (hard) and repair (soft) matches**, and do not conflate either
+   with "any level with a starved attempt" (849 levels — mostly just genuinely exhausted, not a
+   bug). Any future fix attempt or A/B must be scoped to the 14-level hard-match population first;
+   the 20 repair-only levels need the seed-matching refinement noted above before they're trusted
+   at the same confidence.
+3. **If a fix is pursued**, the admissible-order fix's own template applies directly: a small
+   *reserve*, not a *reorder* — e.g., guaranteeing the main loop's late configs (or specifically
+   the level's feature-appropriate profile/template, if that can be identified before the fact)
+   some non-zero floor of the node budget, the same shape as
    `ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION`. A full reorder (trying feature-matched profiles
    first) is the higher-risk alternative this codebase has already measured to be unreliable.
+4. **14 (or even 34) is a small population to A/B on its own** — smaller than the admissible-order
+   fix's own 141-level target, which still needed the full population (not a 24-level sample) to
+   get a trustworthy number, and whose own 24-level pilot pointed the wrong way twice. Any fix
+   attempt here should expect the same and budget for a full-population A/B, not a spot check,
+   before drawing a conclusion.
 
 ## Reproducing
 
 ```bash
+# corpus-wide census (fast -- pure read-only JSON cross-reference, no solving)
+node scripts/stress/main-loop-starvation-census.mjs --out=reports/stress/main-loop-starvation-census.json
+
 # per-level starvation check (Shape A vs B classification)
 node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- \
     --corpus=data/stress/stress-levels-random.json \

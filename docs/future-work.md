@@ -22,25 +22,31 @@ population counts are dated snapshots; this file is the current status index.
 - **Campaign 2** — `dfs-plain` exhaustion. **Historical phase concluded:** the known fragile-scoring family and the tested pruning/scoring generalizations did not explain the harder majority. Later work moved to admissible-order search, reserved-intersection reasoning, rule-recognition, oracle-labelled shadow evaluation, and differential diagnosis; use the open sections below rather than this old population bucket.
 - **Campaign 3** — `repair-far` + robust hard cores. **Historical label retired:** subsequent work did attack the robust population through several new techniques, so “not yet started” is no longer accurate. No single replacement technique has closed the population; the concrete surviving leads are tracked below.
 
-## Main-loop attempt-ordering starvation (2026-08-08, open — sizing done, no fix yet)
+## Main-loop attempt-ordering starvation (2026-08-08, open — sized corpus-wide, no fix yet)
 
 A fresh re-run of `2026-07-31-admissible-order-tier-node-starvation.md`'s methodology against
 *current* hint provenance (not that report's stale 505/1700 baseline) found the same "earlier
 tiers eat the whole ceiling" bug family recurring **inside the ordinary main loop's own profile
-ordering**, not just in the isolated admissible-order tier. On a small (11-level) sample, 4 show a
-clean, directly-instrumented, zero-node starvation signature (a level's early generic profiles
-each cost ~5.1M nodes to fully *exhaust*, consuming the entire 36M cap before the ladder ever
-reaches the level-appropriate profile that would solve it cheaply); the other 7 are a *different*,
-non-budget phenomenon (the winning config runs with ample — sometimes 9x — budget and still fails,
-matching the same "solver code has evolved since this hint was found" pattern already accepted for
-the `beam`-attributed block). See
+ordering**, not just in the isolated admissible-order tier: an attempt config can end up with
+`nodesExpanded === 0, elapsedMs === 0` in the committed attempt log because earlier attempts in
+the ladder consumed the entire cumulative node budget first — hand-confirmed via temporary
+instrumentation on real levels. A corpus-wide, read-only census
+(`scripts/stress/main-loop-starvation-census.mjs`, pure JSON cross-reference against the already-
+committed baseline attempt logs and stored hint provenance, no new solving) then sized it: **34 of
+975 unsolved corpus-2 levels (3.5%) are provably recoverable** — carry a validated, budget-fitting
+hint whose exact config is currently zero-allocated — split into **14 with a hard, deterministic
+(dfs/beam) match** and 20 with a softer, seed-dependent repair match. The much larger raw number
+(87.1% of unsolved levels have *some* zero-node attempt) is mostly not a bug — it's what a fully
+budget-exhausted ladder's tail looks like by construction, confirmed by a clean control (only 0.8%
+of *solved* levels show any starved attempt, 0% recoverable). See
 [`reports/2026-08-08-main-loop-profile-order-starvation.md`](../reports/2026-08-08-main-loop-profile-order-starvation.md)
-for the full mechanism, the method, and why the two shapes must not be conflated in any future
-measurement. **Next step, not yet done:** reproduce Shape A at real scale (not gated on a stored
-hint existing) before considering a fix — the admissible-order tier's own reserve-not-reorder
-template is the natural candidate if it reproduces, but this codebase has measured reordering a
-budget-limited search to be a coin flip three separate times, so a 4-level sample is nowhere near
-enough to act on directly.
+for the full mechanism, the census, and why the hard/soft/not-recoverable populations must not be
+conflated in any future measurement. **Next step, not yet done:** if pursued, scope a fix
+candidate to the 14-level hard-match population first (the admissible-order tier's own
+reserve-not-reorder template is the natural candidate), and budget for a full-population A/B, not
+a spot check — this codebase has measured reordering a budget-limited search to be a coin flip
+three separate times, and the admissible-order fix's own 24-level pilot pointed the wrong way
+twice before the full 141-level population gave a trustworthy answer.
 
 ## Solver rule-recognition gaps (2026-08-05)
 
