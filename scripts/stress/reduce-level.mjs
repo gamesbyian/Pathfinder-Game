@@ -119,12 +119,19 @@ function validateWitnessAgainstRaw(raw, witnessPath) {
     } catch { return false; }
 }
 
-async function solveAndClassify(raw) {
+async function solveAndClassify(raw, { mainLoopOnly = false } = {}) {
     let level;
     try { level = Solver.prepareLevelForSolver(raw, { source: 'raw' }); }
     catch (err) { return { signature: 'error', detail: `normalize: ${err?.message}` }; }
     let result;
-    try { result = await Solver.solve(level, { timeBudgetMs: TIME_BUDGET_MS, nodeBudget: NODE_BUDGET, workBudget: WORK_BUDGET }); }
+    try {
+        result = await Solver.solve(level, {
+            timeBudgetMs: TIME_BUDGET_MS,
+            nodeBudget: NODE_BUDGET,
+            workBudget: WORK_BUDGET,
+            ...(mainLoopOnly ? { repairBudgetFractionOverride: 0 } : {}),
+        });
+    }
     catch (err) { return { signature: 'error', detail: `solve: ${err?.message}` }; }
     if (result.ok) {
         let check;
@@ -291,7 +298,7 @@ function* candidateSteps(raw) {
     }
 }
 
-async function phase2(raw, targetSignature, maxIterations) {
+async function phase2(raw, targetSignature, maxIterations, mainLoopSignature = null) {
     let current = deepClone(raw);
     const steps = [];
     let iterations = 0;
@@ -305,6 +312,14 @@ async function phase2(raw, targetSignature, maxIterations) {
             if (sizeMeasure(candidateRaw) >= sizeMeasure(current)) continue; // must strictly decrease
             const { signature } = await solveAndClassify(candidateRaw);
             if (signature === targetSignature) {
+                // Repair is incomplete: it can keep burning its budget after a reduction has
+                // collapsed the ordinary search into immediate complete exhaustion. Preserve the
+                // repair-disabled control signature as well, so that R00440-style false minima are
+                // rejected instead of merely carrying the same top-level timeout signature.
+                if (mainLoopSignature !== null) {
+                    const control = await solveAndClassify(candidateRaw, { mainLoopOnly: true });
+                    if (control.signature !== mainLoopSignature) continue;
+                }
                 current = candidateRaw;
                 steps.push(description);
                 acceptedThisPass = true;
@@ -336,12 +351,21 @@ const p1 = phase1(originalRaw, witnessRaw);
 console.log(`  ${p1.steps.length} step(s) applied, size now ${sizeMeasure(p1.raw)}.`);
 for (const s of p1.steps) console.log(`    - ${s}`);
 
-console.log(`\nPhase 2 (solver-in-the-loop, target signature=${targetSignature}):`);
-const p2 = await phase2(p1.raw, targetSignature, MAX_ITERATIONS);
+const repairParticipated = baseline.result?.attempts?.some(attempt => attempt.repair === true) === true;
+const mainLoopControl = repairParticipated
+    ? await solveAndClassify(p1.raw, { mainLoopOnly: true })
+    : null;
+if (mainLoopControl) console.log(`  Repair-gated control signature (repair disabled): ${mainLoopControl.signature}.`);
+
+console.log(`\nPhase 2 (solver-in-the-loop, target signature=${targetSignature}${mainLoopControl ? `, main-loop control=${mainLoopControl.signature}` : ''}):`);
+const p2 = await phase2(p1.raw, targetSignature, MAX_ITERATIONS, mainLoopControl?.signature ?? null);
 console.log(`  ${p2.steps.length} step(s) applied, ${p2.iterations} candidate solve(s), size now ${sizeMeasure(p2.raw)}.`);
 for (const s of p2.steps) console.log(`    - ${s}`);
 
 const finalCheck = await solveAndClassify(p2.raw);
+const finalMainLoopCheck = mainLoopControl
+    ? await solveAndClassify(p2.raw, { mainLoopOnly: true })
+    : null;
 console.log(`\nFinal candidate signature: ${finalCheck.signature} (target: ${targetSignature}) — ` +
     (finalCheck.signature === targetSignature ? 'MATCHES.' : '!! DOES NOT MATCH — reduction is unsound, investigate.'));
 console.log(p2.fixedPoint
@@ -349,6 +373,10 @@ console.log(p2.fixedPoint
     : `Phase 2 stopped at --max-iterations=${MAX_ITERATIONS} WITHOUT reaching a fixed point — this candidate is NOT proven minimal, only the best found within the iteration cap.`);
 
 if (finalCheck.signature !== targetSignature) process.exitCode = 1;
+if (finalMainLoopCheck && finalMainLoopCheck.signature !== mainLoopControl.signature) {
+    console.error(`Final repair-disabled signature ${finalMainLoopCheck.signature} does not match control ${mainLoopControl.signature}.`);
+    process.exitCode = 1;
+}
 
 if (OUT_FILE) {
     mkdirSync(path.dirname(path.resolve(ROOT, OUT_FILE)), { recursive: true });
@@ -359,6 +387,9 @@ if (OUT_FILE) {
         phase1Steps: p1.steps, phase2Steps: p2.steps,
         phase2FixedPoint: p2.fixedPoint, phase2Iterations: p2.iterations,
         finalSignatureMatches: finalCheck.signature === targetSignature,
+        mainLoopControlSignature: mainLoopControl?.signature ?? null,
+        finalMainLoopSignature: finalMainLoopCheck?.signature ?? null,
+        finalMainLoopSignatureMatches: finalMainLoopCheck ? finalMainLoopCheck.signature === mainLoopControl.signature : null,
         reducedLevel: p2.raw,
     }, null, 2) + '\n');
     console.log(`\nWrote ${OUT_FILE}`);

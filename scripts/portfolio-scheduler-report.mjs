@@ -12,6 +12,7 @@ import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { PORTFOLIO_EXPERIMENT } from '../data/config/portfolio-experiment.js';
 import { parseLevelPositions } from './level-data-io.mjs';
+import { attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
@@ -53,16 +54,6 @@ function round(value, places = 3) {
     if (!Number.isFinite(value)) return null;
     const m = 10 ** places;
     return Math.round(value * m) / m;
-}
-
-function attemptConfigKey(attempt) {
-    const family = attempt?.beamWidth ? 'beam' : 'dfs';
-    const template = attempt?.template ? `/${attempt.template}` : '';
-    const beam = attempt?.beamWidth ? `@beam${attempt.beamWidth}` : '';
-    const diverse = attempt?.diverseBeam ? '(diverse)' : '';
-    const repair = attempt?.repair ? ':repair' : '';
-    const biased = attempt?.repairMustTurnBiased ? '(mustTurnBiased)' : '';
-    return `${family}:${attempt?.profile ?? 'unknown'}${template}${beam}${diverse}${repair}${biased}`;
 }
 
 function winningAttempt(result, phase = null) {

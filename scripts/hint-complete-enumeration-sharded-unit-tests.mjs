@@ -101,6 +101,28 @@ async function main() {
         const completedJobsBefore = Object.keys(checkpointBefore.jobs).length;
         assert.equal(completedJobsBefore, 1, 'this gate has 2 total jobs; a 1ms wall-clock cap halts after exactly the first');
 
+        await assert.rejects(
+            runSharded([
+                `--levels-json=${fixturePath}`, '--levels=pos:1', '--shards-per-gate=1',
+                `--checkpoint=${checkpointPath}`, `--output=${path.join(tempDir, 'incompatible-report.json')}`,
+            ]),
+            /different commit or enumeration configuration/,
+            'a checkpoint from a different shard plan must not be mixed into this enumeration',
+        );
+
+        const changedFixture = tinyLevelFixture();
+        changedFixture[0].description = 'same path, changed level input';
+        await writeFile(fixturePath, `${JSON.stringify(changedFixture, null, 2)}\n`);
+        await assert.rejects(
+            runSharded([
+                `--levels-json=${fixturePath}`, '--levels=pos:1', '--shards-per-gate=3',
+                `--checkpoint=${checkpointPath}`, `--output=${path.join(tempDir, 'changed-input-report.json')}`,
+            ]),
+            /different commit or enumeration configuration/,
+            'a checkpoint must not survive changes to a custom levels file at the same path',
+        );
+        await writeFile(fixturePath, `${JSON.stringify(tinyLevelFixture(), null, 2)}\n`);
+
         const resumeOutput = path.join(tempDir, 'resume-report.json');
         const resumeResult = await runSharded([
             `--levels-json=${fixturePath}`, '--levels=pos:1', '--shards-per-gate=3',

@@ -8,7 +8,7 @@
  *
  * Read-only until --save-hints is passed (dry run reports counts without writing).
  *
- * Usage: node scripts/family-parent-hint-replay-batch.mjs [--save-hints]
+ * Usage: npx tsx scripts/family-parent-hint-replay-batch.mjs [--save-hints]
  *   [--corpora=published,corpus1,corpus2] [--out=<report.json>]
  */
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
@@ -38,25 +38,47 @@ const startedAt = Date.now();
 const perCorpus = {};
 const newlyRescued = []; // parents that went from 0 hints to >=1 hint via this pass
 
+function discoverFamilyManifests(dir) {
+    const found = [];
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name === 'hints') continue;
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) found.push(...discoverFamilyManifests(fullPath));
+        else if (entry.name.endsWith('-manifest.json')) {
+            const manifest = JSON.parse(readFileSync(fullPath, 'utf8'));
+            // `fragile-robust-census-manifest.json` is an array-shaped census, not a family.
+            if (manifest && !Array.isArray(manifest) && Array.isArray(manifest.variants)) {
+                found.push({ fullPath, manifest });
+            }
+        }
+    }
+    return found;
+}
+
+const allManifests = discoverFamilyManifests('data/families');
+
 for (const corpus of CORPORA) {
     const levelsFile = CORPUS_LEVELS_FILE[corpus];
     if (!levelsFile) throw new Error(`unknown corpus: ${corpus}`);
-    const familyDir = `data/families/${corpus}`;
-    if (!existsSync(familyDir)) { console.log(`No family dir for ${corpus}, skipping.`); continue; }
 
     const levels = readLevelsWithHints(levelsFile);
     const byId = new Map(levels.map(l => [String(l.id), l]));
     const preExistingHintCount = new Map(levels.map(l => [String(l.id), l.hints.length]));
     const normalizedCache = new Map();
 
-    const manifestFiles = readdirSync(familyDir).filter(f => f.endsWith('-manifest.json'));
+    const manifestFiles = allManifests.filter(({ manifest }) => manifest.parentCorpus === levelsFile);
     let variantsChecked = 0, variantsAccepted = 0, parentsTouched = new Set();
-    let manifestsSkippedNoParent = 0;
 
-    for (const mf of manifestFiles) {
-        const manifest = JSON.parse(readFileSync(path.join(familyDir, mf), 'utf8'));
+    for (const { fullPath: manifestPath, manifest } of manifestFiles) {
+        const mf = path.relative('data/families', manifestPath);
         const parent = byId.get(String(manifest.parentLevelId));
-        if (!parent) { manifestsSkippedNoParent++; continue; }
+        // A missing parent is corpus/manifest drift, not an ineligible replay. Silently skipping
+        // here previously omitted S00141's entire family after its manifest and level corpus used
+        // different ids, while the batch still looked successful. Fail with enough context to fix
+        // the data rather than publishing a knowingly incomplete report.
+        if (!parent) {
+            throw new Error(`${corpus}: ${mf} references missing parent level ${String(manifest.parentLevelId)}`);
+        }
         let normalized = normalizedCache.get(parent.id);
         if (!normalized) {
             normalized = normalizeRawLevel(parent, null);
@@ -64,10 +86,14 @@ for (const corpus of CORPORA) {
         }
 
         for (const edge of manifest.variants || []) {
-            const hintFile = path.join(familyDir, 'hints', `${edge.variantId}.json`);
+            const hintFile = path.join(path.dirname(manifestPath), 'hints', `${edge.variantId}.json`);
             if (!existsSync(hintFile)) continue;
             let hintDoc;
-            try { hintDoc = JSON.parse(readFileSync(hintFile, 'utf8')); } catch { continue; }
+            try {
+                hintDoc = JSON.parse(readFileSync(hintFile, 'utf8'));
+            } catch (error) {
+                throw new Error(`${corpus}: could not parse variant hint file ${hintFile}`, { cause: error });
+            }
             for (const hint of hintDoc.hints || []) {
                 variantsChecked++;
                 const result = replayVariantPath({
@@ -76,16 +102,17 @@ for (const corpus of CORPORA) {
                 if (!result.accepted) continue;
                 variantsAccepted++;
                 parentsTouched.add(parent.id);
-                if (SAVE) {
-                    parent.hintRecords = mergeVariantDerivedHint(parent.hintRecords, result.parentPath, {
-                        variantId: edge.variantId,
-                        parentId: manifest.parentLevelId,
-                        familyId: manifest.familyId,
-                        levelRevision: null, // filled in below, once per parent, not per hint
-                        foundAt: manifest.lastUpdatedTimestamp ?? manifest.createdTimestamp,
-                    });
-                    parent.hints = parent.hintRecords.map(h => h.path);
-                }
+                // Merge in memory even during a dry run. Otherwise `newlyRescued` below always
+                // reported zero without --save-hints because the parent's simulated after-count
+                // never changed, defeating the point of previewing the write.
+                parent.hintRecords = mergeVariantDerivedHint(parent.hintRecords, result.parentPath, {
+                    variantId: edge.variantId,
+                    parentId: manifest.parentLevelId,
+                    familyId: manifest.familyId,
+                    levelRevision: null, // filled in below, once per parent, not per hint
+                    foundAt: manifest.lastUpdatedTimestamp ?? manifest.createdTimestamp,
+                });
+                parent.hints = parent.hintRecords.map(h => h.path);
             }
         }
     }
@@ -116,8 +143,8 @@ for (const corpus of CORPORA) {
     }
 
     perCorpus[corpus] = {
-        manifestsProcessed: manifestFiles.length - manifestsSkippedNoParent,
-        manifestsSkippedNoParent,
+        manifestsProcessed: manifestFiles.length,
+        manifestsSkippedNoParent: 0,
         variantsChecked, variantsAccepted,
         parentsTouched: parentsTouched.size,
     };

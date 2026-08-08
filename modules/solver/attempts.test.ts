@@ -43,7 +43,7 @@ test('repairTurnBiased attempt is default-off; under STRATEGY_REPAIR_TURN_BIAS B
   // predictLikelyBiasedRepairTechnique) — BOTH techniques are still added, never just one; the
   // predicted one goes first (before ordinary repair), the other becomes a genuine fallback (after
   // ordinary repair) rather than being excluded outright.
-  const onLowReqInt = getAttemptConfigs(lowReqIntLevel, defaultConfig());
+  const onLowReqInt = getAttemptConfigs(lowReqIntLevel, { ...defaultConfig(), STRATEGY_REPAIR_TURN_BIAS: true });
   const lowRepairs = onLowReqInt.filter(c => c.repair);
   assert.equal(lowRepairs.length, 3, 'low reqInt: predicted + ordinary + fallback, all three present');
   assert.equal(lowRepairs[0].repairMustTurnBiased, true, 'low reqInt: predicted (mustTurnBiased) goes first');
@@ -57,7 +57,7 @@ test('repairTurnBiased attempt is default-off; under STRATEGY_REPAIR_TURN_BIAS B
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
     mustPassTurnDirs: new Map([[PACK(1, 1), 'either']]),
   });
-  const onHighReqInt = getAttemptConfigs(highReqIntLevel, defaultConfig());
+  const onHighReqInt = getAttemptConfigs(highReqIntLevel, { ...defaultConfig(), STRATEGY_REPAIR_TURN_BIAS: true });
   const highRepairs = onHighReqInt.filter(c => c.repair);
   assert.equal(highRepairs.length, 3, 'high reqInt: predicted + ordinary + fallback, all three present');
   assert.equal(highRepairs[0].repairTurnBiased, true, 'high reqInt: predicted (turnBiased) goes first (early-probe latency)');
@@ -136,6 +136,11 @@ test('applyAttemptConfigOptions filters disabled templates and profiles', () => 
   assert.equal(filtered.length < base.length, true);
 });
 
+test('applyAttemptConfigOptions does not restore the base ladder when every config is disabled', () => {
+  const base = [{ profileName: 'default', template: null }];
+  assert.deepEqual(applyAttemptConfigOptions(base, { PROFILE_default: false }), []);
+});
+
 test('applyAttemptConfigOptions supports reverse, random, and profile-grouped ordering', () => {
   const base = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] }));
   assert.deepEqual(applyAttemptConfigOptions(base, { ATTEMPT_ORDER: 'reverse' }), [...base].reverse());
@@ -144,6 +149,10 @@ test('applyAttemptConfigOptions supports reverse, random, and profile-grouped or
   const randomB = applyAttemptConfigOptions(base, { ATTEMPT_ORDER: 'random', _randomSeed: 123 });
   assert.deepEqual(randomA, randomB, 'same seed should produce stable order');
   assert.notDeepEqual(randomA.map(c => [c.profileName, c.template?.id ?? null]), base.map(c => [c.profileName, c.template?.id ?? null]));
+
+  const seedZero = applyAttemptConfigOptions(base, { ATTEMPT_ORDER: 'random', _randomSeed: 0 });
+  const seedFortyTwo = applyAttemptConfigOptions(base, { ATTEMPT_ORDER: 'random', _randomSeed: 42 });
+  assert.notDeepEqual(seedZero, seedFortyTwo, 'seed zero must not silently fall back to seed 42');
 
   const grouped = applyAttemptConfigOptions([
     { profileName: 'a', template: { id: 't' } },
@@ -158,13 +167,17 @@ test('getConfiguredAttemptConfigs combines base ordering with ablation options',
   const cfg = { TEMPLATE_CORNER_HARVEST: false };
   const configured = getConfiguredAttemptConfigs(level, { ...cfg, ATTEMPT_ORDER: 'reverse' });
   assert.equal(configured.some(c => c.template?.id === 'cornerHarvest'), false);
-  // getAttemptConfigs(level, cfg) here, NOT getAttemptConfigs(level) -- a raw (non-normalized) cfg
-  // object reads every STRATEGY_* flag it doesn't explicitly set as false (only a null/absent cfg
-  // defaults every flag to enabled; see attempts.ts's STRATEGY_ARCHETYPE_ROUTING/
-  // STRATEGY_ADMISSIBLE_ORDER checks), so the cross-check must pass the SAME cfg getConfiguredAttemptConfigs
-  // used internally, not omit it and fall back to the null default -- otherwise the two sides
-  // silently diverge on every cfg-gated (but not ATTEMPT_ORDER-scoped) behavior.
-  assert.deepEqual(configured, [...applyAttemptConfigOptions(getAttemptConfigs(level, cfg), cfg)].reverse());
+  const normalized = { ...defaultConfig(), ...cfg };
+  assert.deepEqual(configured, [...applyAttemptConfigOptions(getAttemptConfigs(level, normalized), normalized)].reverse());
+});
+
+test('getConfiguredAttemptConfigs normalizes sparse and undefined overrides at its public boundary', () => {
+  const level = makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] });
+  const baseline = getConfiguredAttemptConfigs(level, null);
+  const sparse = getConfiguredAttemptConfigs(level, { PRUNE_PARITY: false, PROFILE_default: undefined });
+  assert.equal(sparse.length, baseline.length, 'unrelated sparse flags must not collapse the attempt ladder');
+  assert.equal(sparse.some(c => c.profileName === 'default'), true, 'undefined profile flag means no override');
+  assert.equal(sparse.some(c => c.admissibleOrder), baseline.some(c => c.admissibleOrder), 'default-on tiers remain present');
 });
 
 test('SOLVER_TESTING_API exposes the extracted attempt-order helper', () => {

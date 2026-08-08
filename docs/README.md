@@ -22,8 +22,8 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
 | [`firestore-security-model.md`](firestore-security-model.md) | Rule-by-rule Firestore access model |
 | [`firebase-config-and-secret-hygiene.md`](firebase-config-and-secret-hygiene.md) | What may be committed vs. kept secret |
 | [`third-party-dependencies.md`](third-party-dependencies.md) | External CDN/asset allowlist + rationale |
-| [`ablation.md`](ablation.md) | Solver ablation lab — 63 feature flags, experiment runner, analysis |
-| [`mechanic-state-contracts.md`](mechanic-state-contracts.md) | Every dynamic mechanic's state shape, cardinality bound, monotonicity, and external-model-support level in one table — plus a documented-but-not-yet-fixed latent cardinality gap in `prep.ts`'s `(1 << n) - 1` mask pattern for surround/must-turn/adjacent-turn |
+| [`ablation.md`](ablation.md) | Solver ablation lab — 76 feature flags, experiment runner, analysis |
+| [`mechanic-state-contracts.md`](mechanic-state-contracts.md) | Every dynamic mechanic's state shape, cardinality bound, monotonicity, and external-model-support level in one table, including the schema-enforced cardinality bounds for solver bitmasks. |
 | [`solve-button-variety.md`](solve-button-variety.md) | Editor/Review "find N varied hints" search: tiers, save-everything policy, the enumeration + curation engine |
 | [`hint-workbench.md`](hint-workbench.md) | The unified hint-generation/diversification CLI (`hints:workbench`): generator presets, shared validation/dedupe/acceptance pipeline, report format |
 | [`future-work.md`](future-work.md) | Compiled index of genuinely open, non-stale future work (security, data layout, hint tooling, UI) |

@@ -6,6 +6,7 @@ import { getTrapSpotBudgetMs, solveLevel, attemptConfigKey, attemptBudgetShare, 
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
 import { workMeter } from './work-meter.js';
+import { buildExperimentList, defaultConfig, FEATURES, OPT_IN_FEATURES } from '../../scripts/ablation-config.mjs';
 
 function makeLineLevel() {
     return {
@@ -597,4 +598,45 @@ test('normalizeAblationConfig: opt-in flags stay off when a DIFFERENT flag is na
     assert.equal(cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS, false);
     assert.equal(cfg.PRUNE_PORTAL_PARITY_ENVELOPE, false);
     assert.equal(cfg.PRUNE_PARITY, true, 'a standard flag still defaults to true');
+});
+
+test('normalizeAblationConfig treats explicit undefined as no override', () => {
+    const cfg = normalizeAblationConfig({
+        STRATEGY_REPAIR_NOGOOD_CACHE: undefined,
+        STRATEGY_REPAIR_TURN_BIAS: undefined,
+        ATTEMPT_ORDER: undefined,
+    })!;
+    assert.equal(cfg.STRATEGY_REPAIR_NOGOOD_CACHE, true, 'default-on flag keeps its production default');
+    assert.equal(cfg.STRATEGY_REPAIR_TURN_BIAS, false, 'opt-in flag keeps its production default');
+    assert.equal(cfg.ATTEMPT_ORDER, undefined);
+    assert.equal('STRATEGY_REPAIR_NOGOOD_CACHE' in cfg, false, 'undefined is not an explicit filter override');
+});
+
+test('ablation experiment defaults match sparse solver defaults for every registered feature', () => {
+    const defaults = defaultConfig();
+    const normalized = normalizeAblationConfig({ _randomSeed: 1 })!;
+    for (const key of Object.keys(defaults)) {
+        assert.equal(defaults[key], normalized[key], `${key} default drifted between experiment tooling and solver`);
+    }
+    for (const key of OPT_IN_FEATURES) assert.equal(defaults[key], false, `${key} must remain opt-in`);
+});
+
+test('documented default-off features and the executable opt-in registry cannot drift', () => {
+    const documented = Object.entries(FEATURES)
+        .filter(([, description]) => /default-OFF/i.test(description))
+        .map(([key]) => key)
+        .sort();
+    assert.deepEqual(documented, [...OPT_IN_FEATURES].sort());
+});
+
+test('single-feature experiments enable opt-ins without activating unrelated opt-ins', () => {
+    const experiments = buildExperimentList('single-feature');
+    for (const key of OPT_IN_FEATURES) {
+        const experiment = experiments.find(item => item.name === `enable:${key}`);
+        assert.ok(experiment, `missing enable experiment for ${key}`);
+        assert.equal(experiment.config[key], true);
+        for (const other of OPT_IN_FEATURES) {
+            if (other !== key) assert.equal(experiment.config[other], false, `${key} also activated ${other}`);
+        }
+    }
 });

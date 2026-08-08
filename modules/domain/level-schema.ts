@@ -152,6 +152,11 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
     } else {
         if (!isPositiveInt(raw.grid.w)) errors.push('grid.w must be a positive integer');
         if (!isPositiveInt(raw.grid.h)) errors.push('grid.h must be a positive integer');
+        // The packed-key arrays reserve KEY_SPACE for at most rows 0..14: PACK(0, 16) already
+        // equals KEY_SPACE, and fixed solver queues are sized for the documented 15x15 envelope.
+        // A larger raw level would cause out-of-range typed-array access, not merely run slower.
+        if (isPositiveInt(raw.grid.w) && raw.grid.w > 15) errors.push('grid.w must not exceed 15');
+        if (isPositiveInt(raw.grid.h) && raw.grid.h > 15) errors.push('grid.h must not exceed 15');
         // Every real (human-authored, published) level is square — no rectangular level has ever
         // shipped. Not previously enforced here, which is how the stress generators' independent
         // w/h draws (scripts/stress/generate.mjs, generate-random.mjs) went unnoticed.
@@ -272,6 +277,15 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
     checkCardinality('surround landmarks', landmarkRoleCounts.surround);
     checkCardinality('mustTurn landmarks', landmarkRoleCounts.mustTurn);
     checkCardinality('adjacentTurn landmarks', landmarkRoleCounts.adjacentTurn);
+
+    // Flipping filters use one bit per object in flipperUsedMask. Unlike the initial-mask
+    // mechanics above there is no `(1 << n) - 1` constructor, so all 32 int32 bits are usable;
+    // the 33rd filter is not. JavaScript shifts mask their count to five bits (`1 << 32` is
+    // `1 << 0`), which would alias filters 0 and 32 and make using either one mark both as spent.
+    const flippingFilterCount = Array.isArray(raw.flippingFilters) ? raw.flippingFilters.length : 0;
+    if (flippingFilterCount > 32) {
+        errors.push(`flippingFilters count (${flippingFilterCount}) exceeds the maximum of 32 — its solver bitmask aliases object indices beyond this bound`);
+    }
 
     // Optional scalar metadata (non-fatal format checks)
     if (raw.id !== undefined && (typeof raw.id !== 'string' || raw.id.length === 0)) {

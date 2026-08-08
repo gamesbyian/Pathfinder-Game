@@ -84,7 +84,7 @@ const args = new Map(process.argv.slice(2).filter((a) => a.startsWith('--')).map
     return [k, v.join('=')];
 }));
 const COUNT = Number(args.get('--count') || 200);
-const SEED = Number(args.get('--seed') || 1);
+const SEED = Number(args.get('--seed') ?? 1);
 const MAX_STEPS = Number(args.get('--max-steps') || 60);
 const OUT_FILE = args.get('--out') || null;
 

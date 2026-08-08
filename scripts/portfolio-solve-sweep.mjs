@@ -110,7 +110,7 @@
  *                                 individual fraction still wins over it.
  *   --enable-flags=FLAG1,FLAG2   turn the named ablation flags ON for the whole run (via
  *                                 SolveOpts.ablation, a SPARSE object — normalizeAblationConfig's
- *                                 Proxy reads every unset flag as true, so nothing else is disabled).
+ *                                 normalizer restores each unset flag's production default).
  *                                 Names validated against ablation-config.mjs FEATURES. The A/B lever
  *                                 for an ablation-gated attempt like STRATEGY_REPAIR_TURN_BIAS:
  *                                 baseline run (omit) vs on run (--enable-flags=STRATEGY_REPAIR_TURN_BIAS).
@@ -125,7 +125,8 @@
  * Batch-scale knobs, for recurring solver-feature iteration against the unsolved corpora:
  *   --resume [--checkpoint=<path>]     append each level's result to a JSONL checkpoint as it
  *                                       completes (default <out>.checkpoint.jsonl); on the next
- *                                       run with --resume, already-checkpointed levels are loaded
+ *                                       identical commit/invocation with --resume, completed levels
+ *                                       are loaded; stale/legacy checkpoints are rejected
  *                                       from disk instead of re-solved. Survives Ctrl-C / kill.
  *   --feature-filter=<tokens>          only run levels whose features match, e.g.
  *                                       "mustCross>=2,mustPass>=3" (supported keys: reqLen,
@@ -184,6 +185,7 @@ import path from 'node:path';
 import process from 'node:process';
 import os from 'node:os';
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { PORTFOLIO_EXPERIMENT } from '../data/config/portfolio-experiment.js';
 import { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } from './level-data-io.mjs';
@@ -256,8 +258,8 @@ const workerCount = argMap.has('--workers') ? Math.max(1, Number(argMap.get('--w
 const attemptCachePath = argMap.get('--attempt-cache') || null;
 // --enable-flags=FLAG1,FLAG2 turns those ablation flags ON (via SolveOpts.ablation), all others left
 // at their default. The value is a SPARSE ablation object; orchestration.ts's normalizeAblationConfig
-// Proxy reads every unset flag as true, so this enables exactly the named flags without disabling
-// anything else (the sparse-config footgun that bit this codebase before). Primary use: the corpus-2
+// normalizer restores every unset flag's production default, so this enables exactly the named
+// flags without disabling anything else. Primary use: the corpus-2
 // refresh toggling STRATEGY_REPAIR_TURN_BIAS baseline-vs-on. Validated against FEATURES to catch typos.
 const enableFlags = argMap.has('--enable-flags')
     ? argMap.get('--enable-flags').split(',').map(s => s.trim()).filter(Boolean)
@@ -268,8 +270,8 @@ for (const f of enableFlags) {
 // --disable-flags=FLAG1,FLAG2 is the exact counterpart: it turns the named flags OFF, leaving every
 // other flag at its default. Needed because most flags DEFAULT to on, so --enable-flags cannot test
 // whether an existing mechanism is load-bearing — only --disable-flags can. Same sparse-object
-// safety as above (normalizeAblationConfig's Proxy reads unset flags as true, so naming one flag
-// here disables exactly that one). A flag named in both is rejected rather than silently resolved.
+// safety as above means naming one flag here disables exactly that one. A flag named in both is
+// rejected rather than silently resolved.
 const disableFlags = argMap.has('--disable-flags')
     ? argMap.get('--disable-flags').split(',').map(s => s.trim()).filter(Boolean)
     : [];
@@ -377,22 +379,31 @@ function priorityValue(record, field) {
     return Number.isFinite(v) ? v : Infinity;
 }
 
-function readCheckpoint(checkpointFile) {
+function readCheckpoint(checkpointFile, expectedSignature) {
     const rows = new Map();
     if (!existsSync(checkpointFile)) return rows;
     const text = readFileSync(checkpointFile, 'utf8');
+    let actualSignature = null;
     for (const line of text.split('\n')) {
         const t = line.trim();
         if (!t) continue;
         try {
             const row = JSON.parse(t);
+            if (row?._checkpointSignature) { actualSignature = row._checkpointSignature; continue; }
             if (Number.isFinite(row.level)) rows.set(row.level, row);
         } catch { /* skip a malformed/truncated last line from an interrupted run */ }
     }
+    if (actualSignature !== expectedSignature) {
+        const reason = actualSignature == null ? 'has no run signature (legacy checkpoint)' : 'belongs to a different commit or invocation';
+        throw new Error(`--resume refused ${checkpointFile}: checkpoint ${reason}. Remove it or choose a new --checkpoint path.`);
+    }
     return rows;
 }
-function appendCheckpoint(checkpointFile, row) {
+function appendCheckpoint(checkpointFile, row, signature) {
     mkdirSync(path.dirname(checkpointFile), { recursive: true });
+    if (!existsSync(checkpointFile) || readFileSync(checkpointFile, 'utf8').trim() === '') {
+        appendFileSync(checkpointFile, `${JSON.stringify({ _checkpointSignature: signature })}\n`);
+    }
     appendFileSync(checkpointFile, `${JSON.stringify(row)}\n`);
 }
 
@@ -414,6 +425,15 @@ let targets = levelFilter
 // match the format hint-workbench.mjs and every other corpus writer records, so version grouping
 // across the corpus stays exact rather than mixing 7-char and 40-char SHAs.
 const commit = (() => { try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
+// Resume is crash recovery for this exact run, not a cache across solver revisions or changed
+// flags. A previous corpus-2 refresh silently did zero work because old rows were trusted after
+// the code changed. Persist the commit plus behavior-affecting invocation as a checkpoint header;
+// omit only --resume itself, whose presence naturally differs between an initial run and recovery.
+const checkpointSignature = JSON.stringify({
+    commit,
+    corpusDigest: createHash('sha256').update(readFileSync(corpusPath)).digest('hex'),
+    args: args.filter(arg => arg !== '--resume' && arg !== '--').sort(),
+});
 const portfolioExperiment = experimentFromArgs();
 
 const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
@@ -569,7 +589,7 @@ if (featureFilterTokens.length > 0) {
 }
 
 // --resume: split into already-checkpointed (loaded, not re-solved) vs still to do.
-const checkpointRows = resume ? readCheckpoint(checkpointPath) : new Map();
+const checkpointRows = resume ? readCheckpoint(checkpointPath, checkpointSignature) : new Map();
 const toRun = targets.filter(n => !checkpointRows.has(n));
 const skippedByResume = targets.length - toRun.length;
 if (resume && skippedByResume > 0) console.log(`--resume: ${skippedByResume} level(s) already checkpointed in ${checkpointPath}, skipping.`);
@@ -651,7 +671,7 @@ function recordRow(row, { fromCheckpointOrCache = false } = {}) {
     if (row.solvedByPrime) primeHitCount += 1;
     if (!row.ok) unsolvedCount += 1;
     tallyPass(passCounts, row, schedulerMode);
-    if (!fromCheckpointOrCache && resume) appendCheckpoint(checkpointPath, row);
+    if (!fromCheckpointOrCache && resume) appendCheckpoint(checkpointPath, row, checkpointSignature);
 }
 // Pre-existing checkpoint/cache rows already reflect a completed (or safely-skipped) outcome —
 // tally them but never re-append to the checkpoint file (idempotent resume).

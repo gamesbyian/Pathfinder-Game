@@ -1,4 +1,5 @@
 import { PORTFOLIO_EXPERIMENT } from '../../data/config/portfolio-experiment.js';
+import { OPT_IN_FEATURES } from '../../scripts/ablation-config.mjs';
 import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } from './attempts.js';
 import { POLICY_PROFILES } from './policy.js';
 import { workMeter } from './work-meter.js';
@@ -900,7 +901,7 @@ function portfolioFeatureGateMatches(level: NormalizedLevel, gate: NonNullable<P
  * site can safely assume: either `null` (no ablation — the production/default fast path,
  * preserved byte-for-byte via `!cfg` checks throughout this file/repair-search.ts/scoring.ts/
  * prune-gauntlet.ts) or a fully-defaulted object where every flag not explicitly set by the
- * caller reads as enabled.
+ * caller reads at its production default (most enabled, registered opt-ins disabled).
  *
  * Every one of those `(!cfg || cfg.SOME_FLAG)` read sites treats "no ablation config at all" as
  * the ONLY way an unset flag defaults to `true` — so a caller-supplied PARTIAL object (e.g.
@@ -940,28 +941,28 @@ const ABLATION_NON_FLAG_KEYS = new Set(['ATTEMPT_ORDER', '_randomSeed']);
 
 // Flags whose real production default is OFF (opt-in-only, gated at their read site via
 // `cfg && cfg.FLAG === true` rather than the standard `!cfg || cfg.FLAG` convention). The
-// comment above explains why this file deliberately avoids duplicating scripts/ablation-
-// config.mjs's full FEATURES registry -- but an opt-in flag's default can't be derived from
-// "no entry in ABLATION_NON_FLAG_KEYS" the way a standard flag's can, so this second, short list
-// is unavoidable once ANY opt-in flag exists. Missing a flag here is a REAL bug, not a missed
-// optimization: an unset opt-in flag would fall through to this Proxy's generic `true` default
+// shared OPT_IN_FEATURES registry is also used by the experiment constructors. An opt-in flag's
+// default can't be derived from "no entry in ABLATION_NON_FLAG_KEYS" the way a standard flag's
+// can. Missing a flag from that registry is a REAL bug, not a missed optimization: an unset
+// opt-in flag would fall through to this Proxy's generic `true` default
 // below, silently turning it on for every caller that supplies ANY other non-null ablation
 // override -- confirmed as the actual (not hypothetical) root cause of a 2026-08-07/08 turn-bias
 // corpus-2 A/B reading net -7/-8 when disabling STRATEGY_REPAIR_NOGOOD_CACHE (a red herring) --
 // the real culprit was `enable_flags=STRATEGY_REPAIR_TURN_BIAS` silently also enabling
 // STRATEGY_REPAIR_ELITE_PREFIX_DFS (independently validated net-negative) via exactly this gap.
-// See reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md. Keep this set in sync
-// with every "default-OFF" flag in scripts/ablation-config.mjs's FEATURES descriptions.
-const ABLATION_OPT_IN_KEYS = new Set(['STRATEGY_REPAIR_TURN_BIAS', 'STRATEGY_REPAIR_ELITE_PREFIX_DFS', 'PRUNE_PORTAL_PARITY_ENVELOPE']);
+// See reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md.
 export function normalizeAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
     if (raw == null) return null;
-    const hasOwn = (prop: string) => Object.prototype.hasOwnProperty.call(raw, prop);
+    // Optional config properties commonly arrive as explicit `undefined` after object spreads.
+    // Treat that exactly like omission; otherwise `{ STRATEGY_X: undefined }` disables a
+    // default-on strategy while `{}` enables it, despite both representing "no override".
+    const hasOwn = (prop: string) => Object.prototype.hasOwnProperty.call(raw, prop) && raw[prop] !== undefined;
     return new Proxy({} as AblationConfig, {
         get(_target, prop) {
             if (typeof prop !== 'string') return undefined;
             if (hasOwn(prop)) return raw[prop];
             if (ABLATION_NON_FLAG_KEYS.has(prop)) return undefined;
-            return !ABLATION_OPT_IN_KEYS.has(prop);
+            return !OPT_IN_FEATURES.has(prop);
         },
         has(_target, prop) {
             return typeof prop === 'string' && hasOwn(prop);

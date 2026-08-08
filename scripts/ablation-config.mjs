@@ -2,8 +2,9 @@
  * ablation-config.mjs
  *
  * Central schema for Solver ablation experiments. Every major solver capability
- * has a corresponding boolean flag. The default config has all flags = true (all
- * features enabled). Setting a flag to false disables that feature for one run.
+ * has a corresponding boolean flag. Most features default on, while experimental
+ * opt-in features default off. Changing one flag preserves every other production
+ * default so experiments do not accidentally activate unrelated experiments.
  *
  * Usage:
  *   import { defaultConfig, withFeatureDisabled, FEATURES } from './ablation-config.mjs';
@@ -78,7 +79,7 @@ export const FEATURES = {
     STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST: "Repair-search: bias the must-turn-biased attempt's exploratory branch toward the correct-direction turn exit",
     STRATEGY_REPAIR_LENGTH_GAP_CLOSE: 'Repair-search: on a dead end where every non-length/intersection objective is already satisfied, try a small bounded backtracking search to close the exact length/intersection gap instead of discarding the restart',
     STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS: 'Repair-search: additionally trigger closeLengthGap when at most LENGTH_GAP_CLOSE_STRUCTURAL_SLACK non-length objectives are still pending (not just exactly zero) — targets near-miss dead ends like "length off by 1, one pending mustTurn cell" that the strict base trigger never attempts',
-    STRATEGY_REPAIR_TURN_BIAS: 'Repair-search: append an experimental turn-aware selective-bias repair attempt on must-turn levels (default-OFF — only added under a non-null ablation config; a clean corpus-2 A/B against current defaults found net -7/1700, likely interacting badly with STRATEGY_REPAIR_NOGOOD_CACHE\'s dead-state short-circuiting -- see reports/2026-08-07-turnbias-corpus2-validation.md -- stays opt-in, not promoted)',
+    STRATEGY_REPAIR_TURN_BIAS: 'Repair-search: append an experimental turn-aware selective-bias repair attempt on must-turn levels (default-OFF — only added when explicitly true; a clean corpus-2 A/B against current defaults reproduced net -7/1700 after the elite-prefix confound was fixed, while disabling STRATEGY_REPAIR_NOGOOD_CACHE produced -8 and falsified that proposed interaction -- see reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md -- stays opt-in, not promoted)',
 
     // ── Templates ─────────────────────────────────────────────────────────────
     TEMPLATE_CORNER_HARVEST:    'cornerHarvest — pulls toward grid corners during harvest phase',
@@ -104,6 +105,14 @@ export const FEATURES = {
     PROFILE_intersectionHarvest: 'intersectionHarvest — pure intersection farming (3.0×)',
     PROFILE_closureCommitment:   'closureCommitment — maximum finish + MP/MC urgency (2.0×)',
 };
+
+/** Features whose production default is off. Shared by experiment constructors and the solver's
+ * sparse-config normalizer so the two paths cannot silently disagree. */
+export const OPT_IN_FEATURES = new Set([
+    'PRUNE_PORTAL_PARITY_ENVELOPE',
+    'STRATEGY_REPAIR_ELITE_PREFIX_DFS',
+    'STRATEGY_REPAIR_TURN_BIAS',
+]);
 
 // ─── Template → config key mapping ───────────────────────────────────────────
 
@@ -148,12 +157,12 @@ export const FEATURE_GROUPS = {
 
 // ─── Config constructors ──────────────────────────────────────────────────────
 
-/** All features enabled — the reference configuration. @returns {Record<string, any>} */
+/** Production defaults — the reference configuration. @returns {Record<string, any>} */
 export function defaultConfig() {
-    return Object.fromEntries(Object.keys(FEATURES).map(k => [k, true]));
+    return Object.fromEntries(Object.keys(FEATURES).map(k => [k, !OPT_IN_FEATURES.has(k)]));
 }
 
-/** One feature disabled, all others enabled. @param {string} featureName @returns {Record<string, any>} */
+/** One feature disabled, all others at production defaults. @param {string} featureName @returns {Record<string, any>} */
 export function withFeatureDisabled(featureName) {
     if (!(featureName in FEATURES)) throw new Error(`Unknown feature: ${featureName}`);
     const cfg = defaultConfig();
@@ -161,7 +170,7 @@ export function withFeatureDisabled(featureName) {
     return cfg;
 }
 
-/** Multiple features disabled simultaneously. @param {string[]} featureNames @returns {Record<string, any>} */
+/** Multiple features disabled, all others at production defaults. @param {string[]} featureNames @returns {Record<string, any>} */
 export function withFeaturesDisabled(featureNames) {
     const cfg = defaultConfig();
     for (const f of featureNames) {
@@ -200,7 +209,7 @@ export function buildExperimentList(phase = 'full') {
     // ── Baseline ──────────────────────────────────────────────────────────────
     experiments.push({
         name: 'baseline',
-        label: 'Baseline (all features enabled)',
+        label: 'Baseline (production defaults)',
         config: null,
         tags: ['baseline'],
     });
@@ -210,10 +219,11 @@ export function buildExperimentList(phase = 'full') {
     // ── Single-feature ablations ──────────────────────────────────────────────
     if (phase === 'single-feature' || phase === 'full') {
         for (const [key, desc] of Object.entries(FEATURES)) {
+            const optIn = OPT_IN_FEATURES.has(key);
             experiments.push({
-                name: `disable:${key}`,
-                label: `Disable ${key} — ${desc}`,
-                config: withFeatureDisabled(key),
+                name: `${optIn ? 'enable' : 'disable'}:${key}`,
+                label: `${optIn ? 'Enable' : 'Disable'} ${key} — ${desc}`,
+                config: optIn ? { ...defaultConfig(), [key]: true } : withFeatureDisabled(key),
                 tags: [_groupOf(key), 'single-feature'],
             });
         }

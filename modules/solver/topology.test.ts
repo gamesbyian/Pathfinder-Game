@@ -8,7 +8,7 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { prepLevel } from './prep.js';
 import { createState, applyMove } from './search-state.js';
-import { isConnected, isConnectedForTrap } from './topology.js';
+import { __setReachGenerationForTests, isConnected, isConnectedForTrap } from './topology.js';
 
 const K = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 
@@ -233,6 +233,23 @@ test('portal edges carry reachability to the paired exit', () => {
     });
     const sPrep = prepLevel(sealed);
     assert.equal(isConnected(K(1, 1), stateAt(sealed, sPrep, [K(1, 1)]), sealed, sPrep), false);
+});
+
+test('BFS scratch generation rollover clears tags before reusing generation 1', () => {
+    const level = makeLevel({
+        grid: { w: 5, h: 3 },
+        blocks: [{ x: 4, y: 3 }, { x: 5, y: 2 }],
+        goal: { x: 5, y: 3 },
+        reqLen: 2,
+    });
+    const prep = prepLevel(level);
+    // Exercise the plain-BFS defensive fallback rather than the normal <=15-wide bitmap path.
+    prep.reachPassableRows = null;
+
+    // Simulate a tag left by the previous use of generation 1. On rollover, retaining this tag
+    // would make the sealed goal appear reachable even though this flood fill never visits it.
+    __setReachGenerationForTests(0xFFFFFFFF, level.goalKey);
+    assert.equal(isConnected(K(1, 1), stateAt(level, prep, [K(1, 1)]), level, prep), false);
 });
 
 test('isConnectedForTrap ignores the goal but still requires objectives to be reachable', () => {
