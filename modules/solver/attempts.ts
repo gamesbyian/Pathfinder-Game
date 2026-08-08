@@ -2,6 +2,7 @@ import { detectArchetype, getNavigableDensity } from './archetype.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER, TEMPLATE_CONFIG_KEYS, TEMPLATES } from './policy.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, AttemptConfig, StructuralTemplate } from './types.js';
+import { defaultConfig } from '../../scripts/ablation-config.mjs';
 
 /**
  * Attempt-policy selection is a **pure function of level features** — never of level identity.
@@ -413,9 +414,8 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     if (needsRepairFallback(f)) {
         // Experimental turn-aware bias attempt: default-OFF (production passes null cfg → not added),
         // so this is byte-identical to before unless a caller explicitly enables
-        // STRATEGY_REPAIR_TURN_BIAS. Any non-null ablation config activates it (the
-        // normalizeAblationConfig Proxy reads an unset flag as true) — that is the intended A/B lever
-        // (null baseline vs any config).
+        // STRATEGY_REPAIR_TURN_BIAS. The shared opt-in registry keeps it off in both production and
+        // ordinary ablation configs; an A/B arm must explicitly set it true.
         if (f.mustTurn > 0 && cfg && cfg.STRATEGY_REPAIR_TURN_BIAS === true) {
             // Both techniques are added (never excluded — see predictLikelyBiasedRepairTechnique's own
             // comment for why exclusive selection was tried and reverted), ordered by which one the
@@ -449,7 +449,10 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
 
 
 function shuffleAttemptConfigs(configs: AttemptConfig[], seed = 42): AttemptConfig[] {
-    let state = (Number(seed) >>> 0) || 42;
+    // Zero is a valid uint32 seed. Do not use `|| 42` here: that silently made an explicit
+    // `_randomSeed: 0` run the seed-42 ordering, corrupting experiment reproducibility metadata.
+    const numericSeed = Number(seed);
+    let state = Number.isFinite(numericSeed) ? numericSeed >>> 0 : 42;
     const out = [...configs];
     for (let i = out.length - 1; i > 0; i--) {
         state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
@@ -476,7 +479,10 @@ export function applyAttemptConfigOptions(baseConfigs: AttemptConfig[], cfg: Abl
         if (pKey in cfg && !cfg[pKey]) return false;
         return true;
     });
-    let configs = filtered.length > 0 ? filtered : baseConfigs;
+    // An empty result is meaningful: callers may deliberately disable every eligible profile.
+    // Falling back to baseConfigs here silently undid the ablation exactly when its filtering was
+    // comprehensive, making an "all profiles off" run execute the unmodified attempt ladder.
+    let configs = filtered;
     if (cfg.ATTEMPT_ORDER === 'reverse') {
         configs = [...configs].reverse();
     } else if (cfg.ATTEMPT_ORDER === 'random') {
@@ -492,5 +498,14 @@ export function applyAttemptConfigOptions(baseConfigs: AttemptConfig[], cfg: Abl
 }
 
 export function getConfiguredAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | null = null): AttemptConfig[] {
-    return applyAttemptConfigOptions(getAttemptConfigs(level, cfg), cfg);
+    // This helper is also a public testing/tooling boundary, so it cannot assume callers already
+    // passed through orchestration.ts's Proxy normalizer. Materialize production defaults here;
+    // otherwise a sparse or explicit-undefined config silently disables unrelated routing tiers.
+    const normalizedCfg = cfg == null
+        ? null
+        : {
+            ...defaultConfig(),
+            ...Object.fromEntries(Object.entries(cfg).filter(([, value]) => value !== undefined)),
+        };
+    return applyAttemptConfigOptions(getAttemptConfigs(level, normalizedCfg), normalizedCfg);
 }

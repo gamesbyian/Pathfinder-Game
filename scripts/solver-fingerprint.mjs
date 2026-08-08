@@ -27,6 +27,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { parseLevelPositions } from './level-data-io.mjs';
+import { attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -36,7 +37,8 @@ const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).m
 const flags = new Set(args.filter(a => a.startsWith('--') && !a.includes('=')));
 
 const orderMode = argMap.get('--order') || 'default';
-const seed = Number(argMap.get('--seed') || 42);
+// Zero is a valid deterministic seed; default only when the option is absent.
+const seed = Number(argMap.get('--seed') ?? 42);
 const budgetMs = Number(argMap.get('--budget-ms') || 30000);
 const workBudget = Number(argMap.get('--work-budget') || 100_000_000);
 const outFile = argMap.get('--out') || 'logs/solver-fingerprint/latest.json';
@@ -68,11 +70,10 @@ function applyOrder(levels) {
 
 const hashJson = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
-const attemptLabel = attempt => attempt
-    ? `${attempt.profile ?? '?'}${attempt.template ? `/${attempt.template}` : ''}${attempt.beamWidth ? `@beam${attempt.beamWidth}` : '@dfs'}`
-        + (attempt.diverseBeam ? '(diverse)' : '')
-        + (attempt.repair ? (attempt.repairMustTurnBiased ? '(repair-biased)' : '(repair)') : '')
-    : null;
+// Use the same canonical key as persisted sweep reports. Hand-maintained label copies previously
+// collapsed turn-biased repair and every admissible-order attempt onto unrelated configurations,
+// allowing a fingerprint comparison to miss a real attempt-ladder change.
+const attemptLabel = attempt => attempt ? attemptConfigKey(attempt) : null;
 
 function normalizeAttempt(attempt) {
     return {
@@ -87,6 +88,10 @@ function normalizeAttempt(attempt) {
         diverseBeam: !!attempt?.diverseBeam,
         repair: !!attempt?.repair,
         repairMustTurnBiased: !!attempt?.repairMustTurnBiased,
+        repairTurnBiased: !!attempt?.repairTurnBiased,
+        admissibleOrder: !!attempt?.admissibleOrder,
+        admissibleOrderNoTieBreak: !!attempt?.admissibleOrderNoTieBreak,
+        admissibleOrderLds: !!attempt?.admissibleOrderLds,
         label: attemptLabel(attempt),
     };
 }

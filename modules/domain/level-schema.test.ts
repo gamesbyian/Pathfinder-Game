@@ -54,6 +54,13 @@ test('rejects a non-square grid', () => {
     assert.ok(errors.some(e => e.includes('square')));
 });
 
+test('rejects square grids beyond the solver packed-key envelope', () => {
+    const { ok, errors } = validateRawLevel({ ...VALID, grid: { w: 16, h: 16 } });
+    assert.equal(ok, false);
+    assert.ok(errors.some(e => e === 'grid.w must not exceed 15'), errors.join('; '));
+    assert.ok(errors.some(e => e === 'grid.h must not exceed 15'), errors.join('; '));
+});
+
 test('rejects missing goal', () => {
     const { ok, errors } = validateRawLevel({ ...VALID, goal: undefined });
     assert.equal(ok, false);
@@ -345,6 +352,20 @@ function manyCoords(n: number): { x: number; y: number }[] {
 test('accepts exactly 30 mustPass cells (the bitmask boundary)', () => {
     const { ok, errors } = validateRawLevel({ ...VALID, mustPass: manyCoords(30) });
     assert.equal(ok, true, errors.join('; '));
+});
+
+test('accepts 32 flipping filters but rejects a 33rd that would alias bit zero', () => {
+    const flippingFilters = manyCoords(32).map(({ x, y }) => ({ x, y, axis: 1 }));
+    const boundary = validateRawLevel({ ...VALID, grid: { w: 15, h: 15 }, flippingFilters });
+    assert.equal(boundary.ok, true, boundary.errors.join('; '));
+
+    const overflow = validateRawLevel({
+        ...VALID,
+        grid: { w: 15, h: 15 },
+        flippingFilters: [...flippingFilters, { x: 9, y: 9, axis: 1 }],
+    });
+    assert.equal(overflow.ok, false);
+    assert.ok(overflow.errors.some(e => /flippingFilters count \(33\) exceeds the maximum of 32/.test(e)), overflow.errors.join('; '));
 });
 
 test('rejects 31 mustPass cells (exceeds the bitmask bound)', () => {

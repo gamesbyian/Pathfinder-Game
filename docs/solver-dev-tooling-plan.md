@@ -357,7 +357,7 @@ correctness oracle phase 1 needs.
   of iteration budget." If the iteration cap is hit before a fixed point, the tool must say so
   explicitly rather than silently reporting its last candidate as "minimal."
 
-**Known limitation found 2026-07-17, not yet fixed**: preserving the failure *signature* is
+**Known limitation found 2026-07-17; fixed 2026-08-08**: preserving the failure *signature* was
 provably insufficient for a repair-gated level's target signature — repair-search has no
 completeness guarantee, so a reduction step that shrinks a level past genuine solvability can
 still pass re-verification cleanly as long as repair's own randomized search keeps burning its
@@ -369,10 +369,12 @@ searched space") — strong evidence the reduced candidate is actually infeasibl
 hard-but-solvable reproduction, even though the reducer's own re-verification (which runs with
 repair enabled) reported the target `node-budget-reached` signature preserved throughout. See
 [`../reports/2026-07-17-r00440-reduction-infeasibility-finding.md`](../reports/2026-07-17-r00440-reduction-infeasibility-finding.md).
-Anyone reducing a repair-gated level's target signature should independently confirm the final
-candidate's main-loop-only (`repairBudgetFractionOverride: 0`) behavior still shows real search
-activity (large node counts, `timeout`) rather than instant complete exhaustion (`failed` at a
-tiny node count) before treating it as representative. Not yet fixed in the tool itself.
+The reducer now performs that check itself. When repair participated in the source failure, phase 2
+records the post-phase-1 repair-disabled (`repairBudgetFractionOverride: 0`) signature and accepts a
+candidate only when both the requested top-level signature and this main-loop control signature are
+preserved. The final report records both control and final signatures. This rejects the reproduced
+R00440 failure mode (`node-budget-reached` under repair but `failed` under the main-loop control)
+instead of publishing it as a minimal hard-search reproduction.
 
 ## Cheap-tail follow-ups — closing the rest of the original brainstorm
 

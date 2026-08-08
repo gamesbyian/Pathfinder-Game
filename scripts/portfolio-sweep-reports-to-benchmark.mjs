@@ -74,15 +74,18 @@ function main() {
     }
 
     const seenIds = new Map();
+    const seenPositions = new Map();
     const levels = [];
     for (const r of reports) {
         for (const lv of r.levels) {
             if (lv.id && seenIds.has(lv.id)) {
-                console.error(`Warning: duplicate level id ${lv.id} in both ${seenIds.get(lv.id)} and ${r.path} — keeping the later one.`);
-                const idx = levels.findIndex(l => l.id === lv.id);
-                if (idx >= 0) levels.splice(idx, 1);
+                throw new Error(`Duplicate level id ${lv.id} in both ${seenIds.get(lv.id)} and ${r.path}; batch ranges or inputs overlap.`);
+            }
+            if (Number.isFinite(lv.level) && seenPositions.has(lv.level)) {
+                throw new Error(`Duplicate level position ${lv.level} in both ${seenPositions.get(lv.level)} and ${r.path}; batch ranges or inputs overlap.`);
             }
             if (lv.id) seenIds.set(lv.id, r.path);
+            if (Number.isFinite(lv.level)) seenPositions.set(lv.level, r.path);
             levels.push(lv);
         }
     }

@@ -55,7 +55,8 @@ const budgetMs = Number(argMap.get('--budget-ms') || 30000);
 const workBudget = Number(argMap.get('--work-budget') || 100_000_000);
 const deadlineMs = Math.max(budgetMs, Math.floor(budgetMs * 4));
 const order = argMap.get('--order') || 'default';
-const seed = Number(argMap.get('--seed') || 42);
+// Zero is a valid deterministic seed; default only when the option is absent.
+const seed = Number(argMap.get('--seed') ?? 42);
 const updateBaseline = flags.has('--update-baseline');
 
 const levelFilter = parseLevelPositions(argMap.get('--levels'));

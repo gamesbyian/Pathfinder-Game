@@ -58,18 +58,21 @@ async function main() {
         await assert.rejects(() => run([`--in=${batch1},${batch3}`, `--out=${outFile}`]), /Mismatched budgetMs/);
         console.log('  ✓ rejects mismatched budgetMs across batches');
 
-        // Duplicate ids across batches (shouldn't happen for disjoint batch ranges, but a corrupted
-        // re-run could produce one) keep the later file's row rather than silently duplicating it.
+        // Duplicate ids across batches mean ranges/inputs overlap. Picking a winner would silently
+        // discard a real run (the same failure family as the cross-corpus R02000 collision).
         const batch1Again = path.join(tempDir, 'batch-01-again.json');
         await writeFile(batch1Again, JSON.stringify(batchReport({
             levels: [{ level: 1, id: 'R00001', ok: false, status: 'timeout', totalMs: 8000, elapsedMs: 8000, attempts: [], attemptCount: 0, failedStrategies: [] }],
         })));
-        const dupOut = path.join(tempDir, 'combined-dup.json');
-        await run([`--in=${batch1},${batch1Again}`, `--out=${dupOut}`]);
-        const dupCombined = JSON.parse(await readFile(dupOut, 'utf8'));
-        assert.equal(dupCombined.levels.length, 1, 'duplicate id collapses to one row');
-        assert.equal(dupCombined.levels[0].ok, false, 'later file wins on duplicate id');
-        console.log('  ✓ duplicate level id across batches keeps the later row, does not double-count');
+        await assert.rejects(() => run([`--in=${batch1},${batch1Again}`, `--out=${path.join(tempDir, 'combined-dup.json')}`]), /Duplicate level id R00001/);
+        console.log('  ✓ rejects duplicate level ids across overlapping batches');
+
+        const duplicatePosition = path.join(tempDir, 'batch-position-overlap.json');
+        await writeFile(duplicatePosition, JSON.stringify(batchReport({
+            levels: [{ level: 1, id: 'R99999', ok: false, status: 'timeout' }],
+        })));
+        await assert.rejects(() => run([`--in=${batch1},${duplicatePosition}`, `--out=${outFile}`]), /Duplicate level position 1/);
+        console.log('  ✓ rejects duplicate level positions even when ids differ');
 
         // The combined report is what becomes an official baseline `source`, and it used to keep
         // ONLY budgetMs -- dropping nodeBudget/repairBudgetFraction/adaptiveBudget entirely. That

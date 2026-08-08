@@ -249,7 +249,7 @@ const cfg = isMainThread
             enumOrder: argMap.get('--enum-order') === 'admissible-slack' ? 'admissible-slack' : 'random',
             enumTieBreak: argMap.get('--enum-tie-break') === 'true',
         },
-        seedBase: Number(argMap.get('--seed') || 20260703),
+        seedBase: Number(argMap.get('--seed') ?? 20260703),
     }
     : workerData;
 

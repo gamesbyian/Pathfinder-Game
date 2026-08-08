@@ -4,20 +4,20 @@
 > lives here rather than in CLAUDE.md. Entry points: `scripts/run-ablation.mjs`,
 > `scripts/analyze-ablation.mjs`, `scripts/ablation-config.mjs`; npm scripts `ablation:*`.
 
-The ablation framework measures what each solver feature actually contributes. Every major capability is independently togglable via an ablation config passed through `opts.ablation`. Defaults are all-enabled; the baseline behaviour is identical to the unmodified solver.
+The ablation framework measures what each solver feature actually contributes. Every major capability is independently togglable via an ablation config passed through `opts.ablation`. Most features default on; experimental opt-ins default off. The baseline uses those production defaults and is identical to the unmodified solver.
 
 The `ablation:*` npm scripts run through `scripts/run-bundled.mjs` (not `tsx`) for the same
 reason `solver:bench`/`stress:benchmark` do: the solver's hot path is ~5× slower under `tsx`'s
 per-module transform, which would make every wall-clock number the lab reports incomparable to
 production/benchmark timings.
 
-### Feature flags (65 total)
+### Feature flags (76 total)
 
 | Group | Flags | Controls |
 |---|---|---|
 | **scoring** (18) | `SCORE_GOAL_ATTRACTION`, `SCORE_FINISH_COMMITMENT`, `SCORE_OBJECTIVE_ATTRACTION`, `SCORE_MUST_PASS_URGENCY`, `SCORE_MUST_CROSS_URGENCY`, `SCORE_MC_APPROACH_GUIDANCE`, `SCORE_FLIPPER_URGENCY`, `SCORE_INTERSECTION_SETUP`, `SCORE_PERIMETER_BIAS`, `SCORE_PHASE_SCALING`, `SCORE_ANTI_DITHER`, `SCORE_REVISIT_PENALTY`, `SCORE_TEMPLATE_BONUS`, `SCORE_SURROUND_URGENCY`, `SCORE_ADJ_TURN_URGENCY`, `SCORE_MUST_TURN_URGENCY`, `SCORE_MUST_TURN_EXIT_GUIDANCE`, `SCORE_PORTAL_PARITY_GUIDANCE` | Move scoring terms in `scoreMove` |
-| **pruning** (10) | `PRUNE_MC_CEILING`, `PRUNE_DISTANCE_BOUND`, `PRUNE_PARITY`, `PRUNE_MUST_PASS_LB`, `PRUNE_MUST_CROSS_LB`, `PRUNE_INTERSECTION_DEFICIT`, `PRUNE_CONNECTIVITY`, `PRUNE_SURROUND_LB`, `PRUNE_ADJ_TURN_LB`, `PRUNE_MUST_TURN_DEADLOCK` | Dead-branch pruning in DFS + beam + repair |
-| **strategy** (17) | `STRATEGY_LDS`, `STRATEGY_DIVERSE_BEAM`, `STRATEGY_STATE_DEDUP`, `STRATEGY_GATE_INTERLEAVING`, `STRATEGY_PARITY_GATE_FILTER`, `STRATEGY_REPAIR_FALLBACK`, `STRATEGY_REPAIR_PROBE`, `STRATEGY_REPAIR_MUSTTURN_BIAS`, `STRATEGY_ADAPTIVE_GATE_BUDGET`, `STRATEGY_LOWER_BOUND_MEMO`, `STRATEGY_ARCHETYPE_ROUTING`, `STRATEGY_MIN_BUDGET_FLOOR`, `STRATEGY_REPAIR_ELITE_SPLICE`, `STRATEGY_REPAIR_STAGNATION_BURST`, `STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST`, `STRATEGY_REPAIR_LENGTH_GAP_CLOSE`, `STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS` | Search-level optimisations + orchestration machinery |
+| **pruning** (15) | Every `PRUNE_*` entry in `scripts/ablation-config.mjs` | Dead-branch pruning in DFS + beam + repair |
+| **strategy** (23) | Every `STRATEGY_*` entry in `scripts/ablation-config.mjs` | Search-level optimisations + orchestration machinery |
 | **templates** (8) | `TEMPLATE_CORNER_HARVEST`, `TEMPLATE_PERIMETER_CW`, `TEMPLATE_PERIMETER_CCW`, `TEMPLATE_SIDE_COMMITMENT`, `TEMPLATE_SIDE_X_LOW/HIGH`, `TEMPLATE_SIDE_Y_LOW/HIGH` | Structural traversal templates |
 | **profiles** (12) | `PROFILE_<name>` for every policy profile | Attempt config eligibility |
 
@@ -74,7 +74,7 @@ Additionally, `ATTEMPT_ORDER` can be set to `'reverse'`, `'random'` (with `_rand
 # One-shot baseline (fast — just measures solve rate + nodes at default settings)
 npm run ablation:baseline -- --budget-ms=15000 --output=logs/ablation/baseline.json
 
-# Single-feature ablations (one feature off per run, all 63 features)
+# Single-feature experiments (default-on features off; opt-in features on; all 76 features)
 npm run ablation:single -- --budget-ms=10000 --output=logs/ablation/single.json
 
 # Profile ablations (each profile off + solo)
@@ -89,7 +89,7 @@ npm run ablation:order -- --budget-ms=10000 --output=logs/ablation/order.json
 # Pairwise combination testing
 npm run ablation:pairs -- --budget-ms=10000 --output=logs/ablation/pairs.json
 
-# Full lab (all 119 experiments — runs in background, takes ~1-3h depending on budget)
+# Full lab (all 132 experiments — runs in background, takes ~1-3h depending on budget)
 npm run ablation:full -- --budget-ms=5000 --output=logs/ablation/lab-full.json
 
 # Analyse results and print ranked report
@@ -193,4 +193,3 @@ const noPrune = withFeaturesDisabled(['PRUNE_DISTANCE_BOUND', 'PRUNE_CONNECTIVIT
 // Only one profile active
 const singleProfile = soloConfig(['PROFILE_perimeterSweep']);
 ```
-

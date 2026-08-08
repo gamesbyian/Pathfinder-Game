@@ -22,7 +22,8 @@
  * (--parallel=1) and a parallel run, aside from the elapsedMs timing fields.
  *
  * Checkpoint/resume: pass --checkpoint=<path> to persist each job's result as it completes. A
- * re-run with the same --checkpoint skips already-completed (level, gate, shard) jobs and seeds
+ * re-run with the same --checkpoint and enumeration configuration skips already-completed
+ * (level, gate, shard) jobs and seeds; stale/incompatible/corrupt checkpoints are rejected
  * the merge from their already-recorded paths — an interrupted run is resumable without
  * re-computing finished work or duplicating candidates (a completed job's result is recorded
  * verbatim; the merge step's dedupe is on top of that, not a replacement for it).
@@ -50,6 +51,7 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { Worker, isMainThread, parentPort } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
@@ -90,22 +92,28 @@ async function atomicWriteJson(filePath, data) {
     await rename(tmp, abs);
 }
 
-async function loadCheckpoint(checkpointPath) {
+async function loadCheckpoint(checkpointPath, expectedSignature) {
     if (!checkpointPath) return new Map();
     try {
         const raw = JSON.parse(await readFile(resolveFromRoot(checkpointPath), 'utf8'));
+        if (raw.runSignature !== expectedSignature) {
+            const reason = raw.runSignature == null ? 'legacy checkpoint has no run signature' : 'checkpoint belongs to a different commit or enumeration configuration';
+            throw new Error(reason);
+        }
         return new Map(Object.entries(raw.jobs || {}));
-    } catch {
-        return new Map(); // missing/corrupt checkpoint = start fresh, never a fatal error
+    } catch (error) {
+        if (error?.code === 'ENOENT') return new Map();
+        throw new Error(`Cannot resume from ${checkpointPath}: ${error?.message ?? error}`, { cause: error });
     }
 }
 
-async function saveCheckpoint(checkpointPath, jobResults, parallel) {
+async function saveCheckpoint(checkpointPath, jobResults, parallel, runSignature) {
     if (!checkpointPath) return;
     await atomicWriteJson(resolveFromRoot(checkpointPath), {
         schemaVersion: 1,
         generatedAt: new Date().toISOString(),
         parallel,
+        runSignature,
         jobs: Object.fromEntries(jobResults),
     });
 }
@@ -174,6 +182,21 @@ async function main() {
     const parallelArg = argMap.has('--parallel')
         ? (argMap.get('--parallel') === '' ? Math.max(1, (os.availableParallelism?.() ?? os.cpus().length) - 1) : Number(argMap.get('--parallel')))
         : 1;
+    // A checkpoint is a crash-recovery artifact for this exact enumeration, not a result cache.
+    // Reusing job keys after changing shard count/order, budgets, selected levels, or solver code
+    // can combine results from different search spaces and falsely report exhaustive coverage.
+    const runSignature = JSON.stringify({
+        commit: getCommitSha(),
+        levelsJsonPath,
+        levelNumbers,
+        levelsDigest: createHash('sha256')
+            .update(JSON.stringify(levelNumbers.map(levelNumber => rawLevels[levelNumber - 1])))
+            .digest('hex'),
+        shardsPerGate,
+        nodeBudget,
+        enumOrder,
+        enumTieBreak,
+    });
 
     // ─── build the full, deterministic job list ────────────────────────────────────────────────
     const jobs = []; // { levelNumber, raw, gateKey, shardIndex, shard }
@@ -191,7 +214,7 @@ async function main() {
     jobs.sort((a, b) => a.levelNumber - b.levelNumber || a.gateKey - b.gateKey || a.shardIndex - b.shardIndex);
 
     // ─── resume: skip jobs the checkpoint already recorded a result for ────────────────────────
-    const jobResults = await loadCheckpoint(checkpointPath); // jobKey -> { paths, exhausted, nodes }
+    const jobResults = await loadCheckpoint(checkpointPath, runSignature); // jobKey -> { paths, exhausted, nodes }
     const pending = jobs.filter(j => !jobResults.has(jobKey(j.levelNumber, j.gateKey, j.shardIndex)));
     const skippedFromCheckpoint = jobs.length - pending.length;
 
@@ -205,7 +228,7 @@ async function main() {
     const parallel = Math.max(1, Math.min(parallelArg, pending.length || 1));
     const recordAndCheckpoint = async (job, result) => {
         jobResults.set(jobKey(job.levelNumber, job.gateKey, job.shardIndex), result);
-        await saveCheckpoint(checkpointPath, jobResults, parallelArg);
+        await saveCheckpoint(checkpointPath, jobResults, parallelArg, runSignature);
     };
 
     // Forward-progress guarantee: the deadline is only honored AFTER at least one job has run

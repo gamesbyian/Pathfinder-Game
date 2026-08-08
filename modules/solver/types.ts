@@ -41,7 +41,8 @@ export interface SolverSearchState {
 }
 
 /**
- * Ablation config (null/absent = all features enabled). Primarily a bag of boolean feature flags
+ * Ablation config (null/absent = production defaults; most features on, experimental opt-ins off).
+ * Primarily a bag of boolean feature flags
  * (`SCORE_*`/`PRUNE_*`/`STRATEGY_*`/`PROFILE_*`/`TEMPLATE_*`), plus two special non-boolean controls
  * read by `attempts.ts` ordering: `ATTEMPT_ORDER` and `_randomSeed`.
  */

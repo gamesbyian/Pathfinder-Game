@@ -103,6 +103,25 @@ function ensureWorkerBundle() {
     return WORKER_BUNDLE;
 }
 
+/** Materialize the dispatched configuration on a worker result without maintaining separate,
+ * drifting record shapes for the ordinary and attraction-diversity phases. */
+export function racedAttemptRecord(job, msg, extra = {}) {
+    const cfg = job?.attemptConfig;
+    return {
+        gateKey: job?.gateKey, profile: cfg?.profileName, template: cfg?.template?.id ?? null,
+        beamWidth: cfg?.beamWidth ?? null,
+        ...(cfg?.diverseBeam ? { diverseBeam: true } : {}),
+        ...(cfg?.repair ? { repair: true } : {}),
+        ...(cfg?.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
+        ...(cfg?.repairTurnBiased ? { repairTurnBiased: true } : {}),
+        ...(cfg?.admissibleOrder ? { admissibleOrder: true } : {}),
+        ...(cfg?.admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
+        ...(cfg?.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
+        ...extra,
+        ok: msg.ok, elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
+    };
+}
+
 /**
  * Create a persistent worker-thread pool for racing many levels' attempt ladders across a whole
  * batch run. Spin-up (Node runtime/V8 isolate startup per worker) happens once, here — every
@@ -179,7 +198,16 @@ export function createRacePool(opts = {}) {
         const Solver = createSolver();
 
         const timeBudgetMs = Number(levelOpts.timeBudgetMs) > 0 ? Number(levelOpts.timeBudgetMs) : 20000;
-        const ablationCfg = levelOpts.ablation ?? null;
+        // Workers need a structured-cloneable plain object, so the sequential engine's Proxy
+        // normalizer cannot cross this boundary. Materialize production defaults first: passing a
+        // sparse `{FLAG:false}` object directly used to make every other `cfg.STRATEGY_*` read
+        // undefined/falsy, silently disabling unrelated raced phases and attempt tiers.
+        const ablationCfg = levelOpts.ablation == null
+            ? null
+            : {
+                ...defaultConfig(),
+                ...Object.fromEntries(Object.entries(levelOpts.ablation).filter(([, value]) => value !== undefined)),
+            };
         // levelOpts.repairBudgetFractionOverride (orchestration.ts's SolveOpts field, added for
         // offline batch-tooling cost control — see docs/solver-architecture.md's cost-gotcha
         // note): read here too so a caller's --repair-budget-fraction keeps working when composed
@@ -395,15 +423,7 @@ export function createRacePool(opts = {}) {
                 const onMessage = (msg) => {
                     if (msg?.type !== 'result') return;
                     const job = jobById.get(msg.jobId);
-                    const cfg = job?.attemptConfig;
-                    attempts.push({
-                        gateKey: job?.gateKey, profile: cfg?.profileName, template: cfg?.template?.id ?? null,
-                        beamWidth: cfg?.beamWidth ?? null,
-                        ...(cfg?.diverseBeam ? { diverseBeam: true } : {}),
-                        ...(cfg?.repair ? { repair: true } : {}),
-                        ...(cfg?.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
-                        ok: msg.ok, elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
-                    });
+                    attempts.push(racedAttemptRecord(job, msg));
                     slot.busy = false;
                     if (msg.ok && !settled) {
                         finish({ ok: true, status: 'success', solution: msg.path, solutions: [msg.path], attempts, totalMs: Date.now() - startTime, nodesExpanded: totalNodes() });
@@ -553,14 +573,7 @@ export function createRacePool(opts = {}) {
                 const onMessage = (msg) => {
                     if (msg?.type !== 'result') return;
                     const job = jobById.get(msg.jobId);
-                    const cfg = job?.attemptConfig;
-                    attempts.push({
-                        gateKey: job?.gateKey, profile: cfg?.profileName, template: cfg?.template?.id ?? null,
-                        beamWidth: cfg?.beamWidth ?? null,
-                        ...(cfg?.diverseBeam ? { diverseBeam: true } : {}),
-                        attractionDiversity: true,
-                        ok: msg.ok, elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
-                    });
+                    attempts.push(racedAttemptRecord(job, msg, { attractionDiversity: true }));
                     slot.busy = false;
                     if (msg.ok && !settled) {
                         finish({ ok: true, status: 'success', solution: msg.path, solutions: [msg.path], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
