@@ -113,6 +113,19 @@ crossings. It must replay real portal state—coordinate paths alone are ambiguo
 endpoints are adjacent—and incorporate reachability conservatively. Start with stored-solution
 census, then a shadow necessary-condition probe; do not begin with a hard prune.
 
+**Built and A/B-tested (2026-08-08)**: an existence-only envelope (reject a naive mismatch only
+once every twist portal pair has actually been jumped, not merely visited — ignoring reachability
+entirely, so it can only ever under-prune, never mis-prune). Stored-solution census across all
+three real corpora: 0 violations across ~15,600 mismatch checkpoints — decisive. A live-search A/B
+against 40 twist-portal corpus-2 levels (25 unsolved + 15 solved, node-budget-pinned) confirmed
+soundness (0 regressions) but found **zero node-count difference on every single level** — the
+prune's own reject condition never actually arose across ~240M searched nodes. Sound but negligible
+at this corpus's typical twist-pair density (1-3 per level); shipped opt-in
+(`PRUNE_PORTAL_PARITY_ENVELOPE`), not promoted. See
+[`reports/2026-08-08-portal-parity-envelope.md`](../reports/2026-08-08-portal-parity-envelope.md).
+This demotes the existence-only shape specifically for this corpus's portal density — a
+reachability-bounded, tighter version, or a denser/larger sample, remain untested.
+
 ### 2. Landmark feasibility: attraction without completion interfaces
 
 Must-turn has point urgency plus exact local exit guidance. Adjacent-turn and surround have

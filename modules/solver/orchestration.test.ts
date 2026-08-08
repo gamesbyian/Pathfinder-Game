@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, normalizeAblationConfig } from './orchestration.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
 import { workMeter } from './work-meter.js';
@@ -576,4 +576,25 @@ test('timeBudgetMs alone still solves, via a workBudget derived from it', async 
     const level = makeLineLevel();
     const res = await solveLevel(level as unknown as NormalizedLevel, { timeBudgetMs: 2000 });
     assert.equal(res.ok, true);
+});
+
+/* Regression for a real confound (2026-08-07/08): a sparse ablation object naming ONE opt-in
+ * flag must not silently flip on any OTHER opt-in flag via normalizeAblationConfig's Proxy --
+ * that gap is what made a GHA STRATEGY_REPAIR_TURN_BIAS corpus-2 A/B secretly also run with
+ * STRATEGY_REPAIR_ELITE_PREFIX_DFS enabled (independently validated net-negative), producing a
+ * confounded -7/1700 reading. See reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md. */
+test('normalizeAblationConfig defaults every OTHER opt-in-only flag to false, not true', () => {
+    const cfg = normalizeAblationConfig({ STRATEGY_REPAIR_TURN_BIAS: true })!;
+    assert.equal(cfg.STRATEGY_REPAIR_TURN_BIAS, true, 'the flag actually named stays as set');
+    assert.equal(cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS, false, 'an unrelated opt-in flag must NOT be silently activated');
+    assert.equal(cfg.PRUNE_PORTAL_PARITY_ENVELOPE, false, 'nor this one');
+    assert.equal(cfg.STRATEGY_REPAIR_NOGOOD_CACHE, true, 'a standard default-on flag is unaffected');
+});
+
+test('normalizeAblationConfig: opt-in flags stay off when a DIFFERENT flag is named', () => {
+    const cfg = normalizeAblationConfig({ STRATEGY_REPAIR_NOGOOD_CACHE: false })!;
+    assert.equal(cfg.STRATEGY_REPAIR_TURN_BIAS, false);
+    assert.equal(cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS, false);
+    assert.equal(cfg.PRUNE_PORTAL_PARITY_ENVELOPE, false);
+    assert.equal(cfg.PRUNE_PARITY, true, 'a standard flag still defaults to true');
 });

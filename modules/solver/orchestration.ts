@@ -937,6 +937,22 @@ function portfolioFeatureGateMatches(level: NormalizedLevel, gate: NonNullable<P
  * in any new tooling.
  */
 const ABLATION_NON_FLAG_KEYS = new Set(['ATTEMPT_ORDER', '_randomSeed']);
+
+// Flags whose real production default is OFF (opt-in-only, gated at their read site via
+// `cfg && cfg.FLAG === true` rather than the standard `!cfg || cfg.FLAG` convention). The
+// comment above explains why this file deliberately avoids duplicating scripts/ablation-
+// config.mjs's full FEATURES registry -- but an opt-in flag's default can't be derived from
+// "no entry in ABLATION_NON_FLAG_KEYS" the way a standard flag's can, so this second, short list
+// is unavoidable once ANY opt-in flag exists. Missing a flag here is a REAL bug, not a missed
+// optimization: an unset opt-in flag would fall through to this Proxy's generic `true` default
+// below, silently turning it on for every caller that supplies ANY other non-null ablation
+// override -- confirmed as the actual (not hypothetical) root cause of a 2026-08-07/08 turn-bias
+// corpus-2 A/B reading net -7/-8 when disabling STRATEGY_REPAIR_NOGOOD_CACHE (a red herring) --
+// the real culprit was `enable_flags=STRATEGY_REPAIR_TURN_BIAS` silently also enabling
+// STRATEGY_REPAIR_ELITE_PREFIX_DFS (independently validated net-negative) via exactly this gap.
+// See reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md. Keep this set in sync
+// with every "default-OFF" flag in scripts/ablation-config.mjs's FEATURES descriptions.
+const ABLATION_OPT_IN_KEYS = new Set(['STRATEGY_REPAIR_TURN_BIAS', 'STRATEGY_REPAIR_ELITE_PREFIX_DFS', 'PRUNE_PORTAL_PARITY_ENVELOPE']);
 export function normalizeAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
     if (raw == null) return null;
     const hasOwn = (prop: string) => Object.prototype.hasOwnProperty.call(raw, prop);
@@ -944,7 +960,8 @@ export function normalizeAblationConfig(raw: AblationConfig | null | undefined):
         get(_target, prop) {
             if (typeof prop !== 'string') return undefined;
             if (hasOwn(prop)) return raw[prop];
-            return ABLATION_NON_FLAG_KEYS.has(prop) ? undefined : true;
+            if (ABLATION_NON_FLAG_KEYS.has(prop)) return undefined;
+            return !ABLATION_OPT_IN_KEYS.has(prop);
         },
         has(_target, prop) {
             return typeof prop === 'string' && hasOwn(prop);

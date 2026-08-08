@@ -71,6 +71,10 @@ on:
         description: 'Comma-separated ablation flags to turn ON (portfolio-solve-sweep --enable-flags), applied to BOTH corpora, e.g. STRATEGY_REPAIR_TURN_BIAS. Blank = baseline. Run the refresh twice (blank vs flag) to A/B; keep the repair fallback on (do NOT pass a repair-budget-fraction of 0). The default budget is fine — turn bias solves early now (its attempt runs first).'
         required: false
         default: ''
+      disable_flags:
+        description: 'Comma-separated ablation flags to turn OFF (portfolio-solve-sweep --disable-flags), applied to BOTH corpora, e.g. STRATEGY_REPAIR_NOGOOD_CACHE. Blank = leave default-on flags at their default. Needed to isolate one default-on mechanism''s interaction with an enable_flags experiment (2026-08-07: added to test whether STRATEGY_REPAIR_NOGOOD_CACHE specifically undermines STRATEGY_REPAIR_TURN_BIAS -- see reports/2026-08-07-turnbias-corpus2-validation.md).'
+        required: false
+        default: ''
       corpus1_budget_ms:
         description: 'Corpus-1: per-level solve budget in milliseconds. Defaults to a non-binding 24h value (2026-08-06: raised from the historical 20000ms alongside corpus2_budget_ms -- see corpus2_budget_ms''s own description). corpus1_node_budget is the real ceiling now. deterministic=true forces 24h regardless of what you pass here.'
         required: false
@@ -185,6 +189,8 @@ jobs:
           set +e
           ENABLE_FLAGS_ARG=""
           if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
+          DISABLE_FLAGS_ARG=""
+          if [ -n "${{ inputs.disable_flags }}" ]; then DISABLE_FLAGS_ARG="--disable-flags=${{ inputs.disable_flags }}"; fi
           # 2026-08-06: corpus1_node_budget now ALWAYS applies (previously deterministic-only, back
           # when the routine corpus1_budget_ms default stayed small enough that no real node ceiling
           # was needed -- see corpus1_node_budget's own description). The 45m wrapper is likewise now
@@ -222,6 +228,7 @@ jobs:
             --baseline=logs/stress-corpus1-baseline.json \
             --prime-winner \
             $ENABLE_FLAGS_ARG \
+            $DISABLE_FLAGS_ARG \
             --save-hints \
             --out="logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.json" \
             --summary-out="logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}-summary.md" \
@@ -242,6 +249,8 @@ jobs:
           set +e
           ENABLE_FLAGS_ARG=""
           if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
+          DISABLE_FLAGS_ARG=""
+          if [ -n "${{ inputs.disable_flags }}" ]; then DISABLE_FLAGS_ARG="--disable-flags=${{ inputs.disable_flags }}"; fi
           # 2026-08-06: 300m (down slightly from the old 320m) to keep the two sweeps' combined
           # worst case (45m + 300m = 345m) safely under the job's 360-minute timeout-minutes, itself
           # already at GitHub-hosted runners' 6-hour hard per-job ceiling -- this cannot be raised
@@ -263,6 +272,7 @@ jobs:
             --baseline=logs/stress-corpus2-baseline.json \
             --prime-winner \
             $ENABLE_FLAGS_ARG \
+            $DISABLE_FLAGS_ARG \
             --save-hints \
             --out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" \
             --summary-out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}-summary.md" \
@@ -516,7 +526,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "flags: enable='${{ inputs.enable_flags }}' deterministic='${{ inputs.deterministic }}'"
+          echo "flags: enable='${{ inputs.enable_flags }}' disable='${{ inputs.disable_flags }}' deterministic='${{ inputs.deterministic }}'"
           node - <<'NODE'
           const { readFileSync, existsSync } = require('node:fs');
           for (const [name, f] of [['corpus-1', 'reports/stress/benchmark-parallel.json'],

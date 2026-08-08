@@ -125,12 +125,23 @@ instrumentation (`stage0Signature`, the debug counters, `PF_NOGOOD_STAGE0_DEBUG`
 answering the premise check — its numbers are preserved here and in `nogood-cache.ts`'s own header
 comment, not lost.
 
+## Full corpus-2 refresh, 2026-08-07: zero solved-count change
+
+A `deterministic:true` run against current `main` with no ablation flags (so the cache runs at
+its shipped default-on setting, at this workflow's real 36,000,000-node budget) solved
+**725/1700 — a byte-identical solved-ID set to the pre-nogood-cache committed baseline (0 gained,
+0 lost)**. This is the natural next-scale validation the 20-level sample called for, and the
+result is a clean, expected null on solved-count at full scale: the mechanism only ever *skips*
+already-proven-dead work, so at a budget this generous almost nothing that solves at all needs
+the last few million nodes the cache reclaims to cross the finish line (the 20-level sample's one
+flip, R02239, needed exactly that kind of budget-margin rescue, at a much tighter budget). This
+doesn't retract the mechanism's validated node-cost savings — see the still-open items below —
+just confirms it isn't (and at this budget shouldn't be expected to be) moving the solved count
+either direction on its own. Investigated as part of resolving an unrelated turn-bias discrepancy;
+see `reports/2026-08-07-turnbias-corpus2-validation.md`.
+
 ## What's still open
 
-- **20 levels is a real but bounded sample.** A full corpus-2 refresh (GitHub Actions
-  `solver-stress-refresh.yml`, no `enable_flags` needed since this ships default-on — the refresh's
-  own routine run now exercises it) is the natural next-scale validation, same as every other
-  mechanism in this file's history.
 - **The fresh-signature cost is unmeasured in isolation** — the 2.57% aggregate node reduction
   bundles the cache's savings with its own per-check overhead. A level that solves quickly (few
   dead-ends, few cache checks) pays a small fixed cost for no benefit; the data above shows this

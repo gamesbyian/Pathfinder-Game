@@ -128,6 +128,24 @@ Eight experiments; all sound, tested, default-off, `solver:bench` 160/160.
   dedicated corpus-2 A/B of that weighted form plus worst-case three-tier fallback latency before
   reconsidering promotion. See
   [`reports/2026-07-23-turnbias-corpus2-ab-validation.md`](../reports/2026-07-23-turnbias-corpus2-ab-validation.md).
+- **The dedicated corpus-2 A/B this gate was waiting on: run, and conclusively negative
+  (2026-08-07/08, confirmed via two independent byte-identical measurements).** The first
+  measurement's own explanation (a `STRATEGY_REPAIR_NOGOOD_CACHE` interaction) was falsified, and
+  chasing an alternative explanation surfaced a real, separate bug: `normalizeAblationConfig`
+  let `enable_flags=STRATEGY_REPAIR_TURN_BIAS` silently also activate
+  `STRATEGY_REPAIR_ELITE_PREFIX_DFS` (independently net-negative) via the Proxy's "unset opt-in
+  flag reads as true" gap. Fixed (`ABLATION_OPT_IN_KEYS`, `orchestration.ts`, with regression
+  tests) — but a clean re-run against the fix reproduced the **exact same -7/1700**, byte-for-byte
+  (same gained/lost level sets): elite-prefix-dfs's accidental presence had flipped zero levels on
+  this population. Turn bias's net -7/1700 against current defaults is now confirmed via two
+  independent, byte-identical measurements. See
+  [`reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md`](../reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md)
+  for the full investigation (including the fixed bug, which is real and worth keeping regardless
+  of not being the explanation here) and
+  [`reports/2026-08-07-turnbias-corpus2-validation.md`](../reports/2026-08-07-turnbias-corpus2-validation.md)
+  for the original (partially-superseded, partially-confirmed) reasoning. **`STRATEGY_REPAIR_TURN_BIAS`
+  stays opt-in; this gate is now closed, confirmed net-negative** — promotion should not be
+  reconsidered without new evidence.
 - **Provenance can now help validate this gate too (2026-07-23,
   [`reports/2026-07-23-solver-batch-speed-and-hint-provenance.md`](../reports/2026-07-23-solver-batch-speed-and-hint-provenance.md)):**
   `HintSolverForcing.repairTurnBiased` is now captured on every newly-found/re-solved hint, so "how
