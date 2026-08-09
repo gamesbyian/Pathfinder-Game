@@ -213,7 +213,8 @@ export function adjTurnLowerBound(pos: number, state: SolverSearchState, level: 
 // mustPassLowerBound/mustCrossLowerBound (skip MST tightening, keep the already-computed
 // max-of-individual bound, which stays valid on its own) if a future level's count ever
 // exceeds it, so this can never silently corrupt again regardless of the exact bound chosen.
-const MAX_MST_K = 16;
+/** Public so capacity-boundary tests and audits cannot drift from the actual allocation. */
+export const MAX_MST_K = 16;
 
 // Union-find backing store for Kruskal's MST (up to MAX_MST_K remaining objectives + `pos`).
 const _ufPar = new Int32Array(MAX_MST_K + 1);
@@ -552,4 +553,3 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
     if (cache) cache.set(cacheKey, lb);
     return lb;
 }
-

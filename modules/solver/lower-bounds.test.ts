@@ -2,8 +2,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { AXIS_H, KEY_SPACE, PACK } from './encoding.js';
+import { getDistanceFromArray } from './distance.js';
 import { IntHashMap } from './int-hash-map.js';
-import { mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
+import { MAX_MST_K, mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
 import { prepLevel } from './prep.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState } from './types.js';
@@ -447,4 +448,49 @@ test('STRATEGY_LOWER_BOUND_MEMO=false bypasses the caches with identical values'
     mustCrossLowerBound(PACK(0, 1), mcState, level, cached));
   assert.equal(uncached._mcLowerBoundCache, undefined, 'memo disabled — mc cache never created');
   assert.equal(cached._mcLowerBoundCache instanceof IntHashMap && cached._mcLowerBoundCache.size > 0, true);
+});
+
+test('MST scratch is sequence-independent across large, tiny, shifted, and original objective sets', () => {
+  const sets = [
+    Array.from({ length: MAX_MST_K }, (_, i) => PACK(i % 5, (i / 5) | 0)),
+    [],
+    [PACK(2, 1)],
+    [PACK(4, 0), PACK(0, 2), PACK(3, 2), PACK(1, 0)],
+  ];
+  const run = (keys: number[], cross: boolean) => {
+    const level = makeLevel({ grid: { w: 5, h: 4 }, goalKey: PACK(4, 3),
+      mustPassKeys: cross ? [] : keys, mustCrossKeys: cross ? keys : [] });
+    const prep = prepLevel(level);
+    prep._cfg = { STRATEGY_LOWER_BOUND_MEMO: false };
+    const state = makeState(cross ? {
+      mustCrossMask: (1 << keys.length) - 1, crossCounts: new Uint8Array(keys.length),
+    } : {});
+    return cross ? mustCrossLowerBound(PACK(0, 3), state, level, prep)
+      : mustPassLowerBound(PACK(0, 3), state, level, prep);
+  };
+  const baseline = sets.map(keys => [run(keys, false), run(keys, true)]);
+  for (const index of [0, 1, 2, 3, 0, 3, 2, 1, 0]) {
+    // Alternate owners as well as sizes: both remaining-index buffers feed the shared
+    // edge/union-find scratch, so this catches contamination at either layer.
+    assert.equal(run(sets[index], true), baseline[index][1]);
+    assert.equal(run(sets[index], false), baseline[index][0]);
+  }
+});
+
+test('MST declared capacity is accepted and capacity+1 uses the safe individual-bound fallback', () => {
+  const keys = Array.from({ length: MAX_MST_K + 1 }, (_, i) => PACK(i % 5, (i / 5) | 0));
+  const evaluate = (n: number) => {
+    const level = makeLevel({ grid: { w: 5, h: 4 }, goalKey: PACK(4, 3), mustPassKeys: keys.slice(0, n) });
+    const prep = prepLevel(level); prep._cfg = { STRATEGY_LOWER_BOUND_MEMO: false };
+    const pos = PACK(0, 3);
+    const actual = mustPassLowerBound(pos, makeState(), level, prep);
+    const individual = Math.max(...prep.mpDistArrs.map((dist, i) =>
+      getDistanceFromArray(dist, pos, prep.gridW) + prep.mustPassToGoalDist[i]));
+    return { actual, individual };
+  };
+  assert.ok(Number.isFinite(evaluate(MAX_MST_K).actual), 'capacity boundary enters MST safely');
+  const overflow = evaluate(MAX_MST_K + 1);
+  assert.ok(Number.isFinite(overflow.actual), 'overflow skips MST instead of overrunning fixed scratch');
+  assert.equal(overflow.actual, overflow.individual, 'overflow returns exactly the documented max-of-individual fallback');
+  assert.equal(overflow.actual, evaluate(MAX_MST_K + 1).actual, 'fallback is stable after the boundary call');
 });
