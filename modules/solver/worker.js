@@ -22,7 +22,8 @@
 //   { type: 'CANCEL',    id }                       — abort an in-flight search
 //
 // Outbound message types:
-//   { type: 'RESULT',            id, ok, solution, elapsedMs, nodesExpanded, attempts, cancelled? }
+//   { type: 'RESULT',            id, ok, status, solution, elapsedMs, nodesExpanded, attempts,
+//                                deadlineTruncated?, cancelled? }
 //   { type: 'TRAP_PROGRESS',     id, newSpots: number[], gatesProcessed?, gatesCompleted?, totalGates? }
 //                                — streamed while the trap search runs: newly-found spot keys
 //                                  (flushed at most every ~100ms) and per-gate sweep progress
@@ -165,10 +166,12 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
             type: 'RESULT',
             id,
             ok:            result.ok,
+            status:        result.status,
             solution:      result.solution,
             elapsedMs:     result.totalMs,
             nodesExpanded: result.nodesExpanded,
             attempts:      result.attempts,
+            deadlineTruncated: result.deadlineTruncated,
         });
     } catch (err) {
         cancelledIds.delete(id);

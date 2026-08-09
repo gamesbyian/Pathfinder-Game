@@ -151,4 +151,21 @@ test('attemptRecord omits absent optional fields rather than emitting undefined'
     }
 });
 
+test('attempt errors and their aggregate signal survive report projection', () => {
+    const error = { name: 'TypeError', message: 'dispatch failed', gateKey: 9, configKey: 'dfs:x', profile: 'x', template: null, stack: 'must not persist' };
+    const row = buildRow(4, 'R00004', {
+        ok: false, status: 'attempt-error', attempts: [{
+            gateKey: 9, profile: 'x', template: null, beamWidth: null, ok: false,
+            outcome: 'error', error, elapsedMs: 2, allocatedBudgetMs: 10,
+        }],
+    }, 'legacy');
+    assert.equal(row.status, 'attempt-error');
+    assert.equal(row.hadAttemptError, true);
+    assert.equal(row.attempts[0].outcome, 'error');
+    assert.deepEqual(row.attempts[0].error, {
+        name: 'TypeError', message: 'dispatch failed', gateKey: 9,
+        configKey: 'dfs:x', profile: 'x', template: null,
+    });
+});
+
 console.log(`\nportfolio-solve-sweep-lib tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);

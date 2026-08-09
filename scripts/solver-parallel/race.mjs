@@ -74,6 +74,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { buildSync } from 'esbuild';
+import { attemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
 
 // process.cwd(), not import.meta.url-relative math: this module is usually loaded as a
 // dependency of some OTHER entry that scripts/run-bundled.mjs esbuild-bundles, which flattens
@@ -118,7 +119,21 @@ export function racedAttemptRecord(job, msg, extra = {}) {
         ...(cfg?.admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
         ...(cfg?.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
         ...extra,
-        ok: msg.ok, elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
+        ok: msg.ok, outcome: msg.outcome ?? (msg.ok ? 'success' : 'budget-starved'),
+        ...(msg.error ? { error: {
+            name: msg.error.name, message: msg.error.message, gateKey: job?.gateKey,
+            configKey: attemptConfigKey({
+                ...cfg,
+                profile: cfg?.profileName,
+                // attemptConfigKey consumes a persisted-attempt shape, where template is its ID;
+                // race jobs carry the live AttemptConfig object instead.
+                template: cfg?.template?.id ?? null,
+            }),
+            profile: cfg?.profileName ?? 'unknown',
+            template: cfg?.template?.id ?? null,
+        } } : {}),
+        ...(msg.allocatedBudgetMs !== undefined ? { allocatedBudgetMs: msg.allocatedBudgetMs } : {}),
+        elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
     };
 }
 
@@ -400,7 +415,7 @@ export function createRacePool(opts = {}) {
                     slot.busy = false;
                     inFlight--;
                     if (inFlight === 0 && queuesExhausted()) {
-                        finish({ ok: false, status: 'exhausted', solution: null, solutions: [], attempts, totalMs: Date.now() - startTime, nodesExpanded: totalNodes() });
+                        finish({ ok: false, status: attempts.some(a => a.outcome === 'error') ? 'attempt-error' : 'exhausted', solution: null, solutions: [], attempts, totalMs: Date.now() - startTime, nodesExpanded: totalNodes() });
                     }
                     return;
                 }
@@ -445,7 +460,7 @@ export function createRacePool(opts = {}) {
             }
 
             overallTimer = setTimeout(() => {
-                finish({ ok: false, status: 'timeout', solution: null, solutions: [], attempts, totalMs: Date.now() - startTime, nodesExpanded: totalNodes() });
+                finish({ ok: false, status: attempts.some(a => a.outcome === 'error') ? 'attempt-error' : 'timeout', solution: null, solutions: [], attempts, totalMs: Date.now() - startTime, nodesExpanded: totalNodes() });
             }, overallBudgetMs);
         });
 
@@ -550,7 +565,7 @@ export function createRacePool(opts = {}) {
                     slot.busy = false;
                     inFlight--;
                     if (inFlight === 0 && queueExhausted()) {
-                        finish({ ok: false, status: 'exhausted', solution: null, solutions: [], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
+                        finish({ ok: false, status: attempts.some(a => a.outcome === 'error') ? 'attempt-error' : 'exhausted', solution: null, solutions: [], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
                     }
                     return;
                 }
@@ -595,13 +610,15 @@ export function createRacePool(opts = {}) {
             }
 
             overallTimer = setTimeout(() => {
-                finish({ ok: false, status: 'timeout', solution: null, solutions: [], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
+                finish({ ok: false, status: attempts.some(a => a.outcome === 'error') ? 'attempt-error' : 'timeout', solution: null, solutions: [], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
             }, Math.ceil(diversityBudgetMs));
         });
 
+        const combinedAttempts = [...phase1Result.attempts, ...phase2Result.attempts];
         return {
             ...phase2Result,
-            attempts: [...phase1Result.attempts, ...phase2Result.attempts],
+            status: !phase2Result.ok && combinedAttempts.some(a => a.outcome === 'error') ? 'attempt-error' : phase2Result.status,
+            attempts: combinedAttempts,
             totalMs: phase1Result.totalMs + phase2Result.totalMs,
             nodesExpanded: phase1Result.nodesExpanded + phase2Result.nodesExpanded,
         };

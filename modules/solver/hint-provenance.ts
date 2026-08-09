@@ -27,6 +27,7 @@ interface AttemptLike {
      *  repair winner can equally have this true. */
     attractionDiversity?: boolean;
     ok: boolean;
+    outcome?: 'success' | 'exhausted' | 'timed-out' | 'budget-starved' | 'error';
     elapsedMs?: number | null;
     nodesExpanded?: number | null;
     allocatedBudgetMs?: number | null;
@@ -104,7 +105,7 @@ interface SolveAttemptInfo {
  *  happen for a caller that only asks for provenance on ok:true results, but never throws). */
 export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): SolveAttemptInfo {
     const list = attempts || [];
-    const winner = list.find(a => a.ok);
+    const winner = list.find(a => a.outcome === 'success' || (a.outcome === undefined && a.ok));
     if (!winner) {
         return {
             technique: 'solve-unknown', profile: null, template: null, beamWidth: null, diverseBeam: null,

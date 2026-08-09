@@ -30,6 +30,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { levelFeatures } from './features.mjs';
+import { attemptRecord } from '../portfolio-solve-sweep-lib.mjs';
 
 const ROOT = process.cwd();
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -102,10 +103,14 @@ for (const { unsolved, solved, distance } of nearestPairs) {
     const uBase = unsolved.base, sBase = solved.base;
     const winningTechnique = sBase.winningConfig;
     const winningProfile = extractProfile(winningTechnique);
-    const attempts = (uBase.attempts || []).map(a => ({
-        profile: a.profile, template: a.template, beamWidth: a.beamWidth,
-        finalBadness: a.finalBadness ?? null, timedOut: !!a.timedOut, nodesExpanded: a.nodesExpanded,
-    }));
+    const attempts = (uBase.attempts || []).map(a => {
+        const projected = attemptRecord(a);
+        return {
+            profile: a.profile, template: a.template, beamWidth: a.beamWidth,
+            finalBadness: a.finalBadness ?? null, timedOut: !!a.timedOut, nodesExpanded: a.nodesExpanded,
+            outcome: projected.outcome ?? null, error: projected.error ?? null,
+        };
+    });
     const bestBadness = Math.min(...attempts.map(a => Number.isFinite(a.finalBadness) ? a.finalBadness : Infinity), Infinity);
     const matchingAttempts = attempts.filter(a => winningProfile && a.profile === winningProfile);
     // A "matching" attempt with zero nodesExpanded got no real budget at all -- present in the

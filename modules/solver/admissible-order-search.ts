@@ -253,7 +253,7 @@ export async function admissibleOrderSearch(
         stack.push({ key: next, children: ranked, childIdx: 0, undoInfo: undo, disc: childDisc });
     }
     if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
-    if (out) out.nodesExpanded = nodesExpanded;
+    if (out) { out.nodesExpanded = nodesExpanded; out.timedOut = false; }
     return null;
 }
 
