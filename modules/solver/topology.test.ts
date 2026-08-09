@@ -205,10 +205,13 @@ test('a used flipper stays a hard wall even with intersection budget (unlike an 
     // now-used flipper — genuinely unreachable, so this must fire even though the
     // intersection budget would let the flood fill cross an *ordinary* visited cell.
     assert.equal(isConnected(K(4, 1), state, level, prep), false);
+    assert.equal(referenceIsConnected(K(4, 1), state, level, prep), false,
+        'independent reference must decode the +1-biased flipper index before testing used-mask bits');
 
     // Sanity: the same must-pass is reachable if the flipper hasn't been used yet.
     const freshState = stateAt(level, prep, [K(1, 1), K(2, 1)]);
     assert.equal(isConnected(K(2, 1), freshState, level, prep), true);
+    assert.equal(referenceIsConnected(K(2, 1), freshState, level, prep), true);
 });
 
 test('portal edges carry reachability to the paired exit', () => {
@@ -297,7 +300,7 @@ function referenceIsConnected(pos: number, state: any, level: any, prep: any): b
     const intNeeded = level.reqInt - state.ints;
     const maxVisit = intNeeded > 0 ? 2 : 0;
     const canEnter = (k: number) => {
-        const fi = prep.flipperIndexMap[k];
+        const fi = prep.flipperIndexMap[k] - 1;
         if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) return false;
         if (prep.reachBlockedArr[k] !== 0) return false;
         // Both axis bits spent => the cell can never be entered again (entering along H needs H
