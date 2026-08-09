@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { AXIS_H, AXIS_NONE, AXIS_V, PACK } from './encoding.js';
 import { prepLevel } from './prep.js';
-import { applyMove, createState, getNeighbors, isMoveDynamicallyValid, undoMove } from './search-state.js';
+import { STATE_BUF_BEAM, applyMove, createState, getNeighbors, isMoveDynamicallyValid, undoMove } from './search-state.js';
 import type { NormalizedLevel } from '../domain/types.js';
 
 
@@ -155,4 +155,39 @@ test('isMoveDynamicallyValid enforces flipping filter entry orientation', () => 
   const state = createState(start, level, prep);
   assert.equal(isMoveDynamicallyValid(start, flipper, state, level, prep, AXIS_NONE, AXIS_H), true);
   assert.equal(isMoveDynamicallyValid(PACK(1, 1), flipper, state, level, prep, AXIS_NONE, AXIS_V), false);
+});
+
+test('createState resets every semantic field when a pooled slot is reused across levels', () => {
+  const large = makeLevel({ grid: { w: 5, h: 5 }, gateKeys: [PACK(0, 2)],
+    mustPassKeys: [PACK(1, 2)], mustCrossKeys: [PACK(2, 2)] });
+  const largePrep = prepLevel(large);
+  const dirty = createState(PACK(0, 2), large, largePrep, STATE_BUF_BEAM);
+  applyMove(PACK(1, 2), dirty, large, largePrep, false);
+  applyMove(PACK(2, 2), dirty, large, largePrep, false);
+  dirty.ints = 9; dirty.portalJumps = 4; dirty.lastWasPortalJump = true;
+  dirty.flipperUsedMask = 7; dirty.mustTurnMask = 7; dirty.adjTurnMask = 7;
+
+  const tinyStart = PACK(1, 1);
+  const tiny = makeLevel({ grid: { w: 2, h: 2 }, gateKeys: [tinyStart], goalKey: PACK(0, 0), reqInt: 0 });
+  const tinyPrep = prepLevel(tiny);
+  const reset = createState(tinyStart, tiny, tinyPrep, STATE_BUF_BEAM);
+  assert.deepEqual(reset.path, [tinyStart]);
+  for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) {
+    const key = PACK(x, y);
+    assert.equal(reset.visited[key], key === tinyStart ? 1 : 0, `visited ${x},${y}`);
+    assert.equal(reset.edgeUsage[key], 0, `edgeUsage ${x},${y}`);
+  }
+  assert.equal(reset.ints, 0); assert.equal(reset.portalJumps, 0);
+  assert.equal(reset.mpVisitedMask, 0); assert.equal(reset.mustCrossMask, 0);
+  assert.equal(reset.flipperUsedMask, 0); assert.equal(reset.lastWasPortalJump, false);
+  assert.equal(reset.mustTurnMask, 0); assert.equal(reset.adjTurnMask, 0);
+  assert.equal(reset.crossCounts.length, 0);
+
+  // Re-expand to the original dimensions: cells outside the intervening tiny grid must be
+  // cleared now too, proving reset follows the current level rather than the previous one.
+  const again = createState(PACK(0, 2), large, largePrep, STATE_BUF_BEAM);
+  assert.equal(again.visited[PACK(1, 2)], 0);
+  assert.equal(again.visited[PACK(2, 2)], 0);
+  assert.equal(again.edgeUsage[PACK(1, 2)], 0);
+  assert.equal(again.edgeUsage[PACK(2, 2)], 0);
 });

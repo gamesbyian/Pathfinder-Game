@@ -4,7 +4,7 @@ import { test } from 'vitest';
 import { PACK } from './encoding.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { beamSearchFromGate, dfsFromGateLDS, getLdsProbeNodeBudget } from './search.js';
+import { __reconstructBeamPathForTests, beamSearchFromGate, dfsFromGateLDS, getLdsProbeNodeBudget } from './search.js';
 import { createState } from './search-state.js';
 import { findTrapSpots, classifyFalseGoals, isParityReachableEndpoint } from './trap-search.js';
 import { isConnected } from './topology.js';
@@ -72,6 +72,39 @@ test('beamSearchFromGate solves a simple line level through the extracted search
   prep._metrics = { nodesExpanded: 0 };
   const path = await beamSearchFromGate(PACK(0, 0), level, prep, POLICY_PROFILES.default, 1000, Date.now(), null, 8, null, false);
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
+});
+
+test('beam reconstruction scratch handles long, tiny, shifted, then long paths like fresh invariants', async () => {
+  type N = { key: number; prev: N | null; depth: number };
+  const chain = (keys: number[]): N => keys.reduce<N | null>((prev, key, depth) => ({ key, prev, depth }), null)!;
+  const scratch: number[] = [];
+  const sequences = [
+    Array.from({ length: 15 }, (_, i) => PACK(i, 0)),
+    [PACK(4, 2)],
+    [PACK(3, 1), PACK(2, 1), PACK(1, 1)],
+    Array.from({ length: 15 }, (_, i) => PACK(i, 0)),
+  ];
+  for (const expected of sequences) {
+    assert.equal(__reconstructBeamPathForTests(chain(expected), scratch), scratch);
+    assert.deepEqual(scratch, expected, 'reused reconstruction buffer must exactly match a fresh path');
+  }
+
+  const line = (length: number, reversed = false) => {
+    const start = PACK(reversed ? length - 1 : 0, 0);
+    const goal = PACK(reversed ? 0 : length - 1, 0);
+    return makeLevel({ grid: { w: length, h: 1 }, gateKeys: [start], goalKey: goal, reqLen: length - 1 });
+  };
+  for (const [length, reversed] of [[15, false], [2, false], [7, true], [15, false]] as const) {
+    const level = line(length, reversed);
+    const prep = prepLevel(level); prep._cfg = null;
+    const start = level.gateKeys[0];
+    const path = await beamSearchFromGate(start, level, prep, POLICY_PROFILES.default, 2000, Date.now(), null, 8, null, false);
+    assert.ok(path, `${length}-cell beam must solve`);
+    assert.equal(path.length, length, 'reconstruction length must not retain a prior longer tail');
+    assert.equal(path[0], start); assert.equal(path.at(-1), level.goalKey);
+    assert.equal(new Set(path).size, path.length, 'line reference has no revisits');
+    for (let i = 1; i < path.length; i++) assert.equal(Math.abs(path[i] - path[i - 1]), 1);
+  }
 });
 
 // Regression test for the 2026-07-16 nodesExpanded instrumentation gap (reports/

@@ -23,7 +23,26 @@ interface DfsFrame { key: number; children: number[]; childIdx: number; undoInfo
  *  siblings under their parent, giving a depth-first walk of the beam's parent-pointer tree, which
  *  is what makes repositioning the shared working state cheap. Keeping them separate is the point:
  *  walk order and cull order are decoupled. */
-interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: number; sc: string; insOrd: number; treeOrd: number; sk?: string; }
+interface BeamPathNode { key: number; prev: BeamPathNode | null; depth: number }
+interface BeamNode extends BeamPathNode { prev: BeamNode | null; score: number; sc: string; insOrd: number; treeOrd: number; sk?: string; }
+
+/** Reconstruct a parent-pointer path into caller-owned scratch. */
+function _reconstructBeamPath(node: BeamPathNode, scratch: number[]): number[] {
+    const len = node.depth + 1;
+    scratch.length = len;
+    let cur: BeamPathNode | null = node;
+    for (let i = len - 1; i >= 0; i--) {
+        if (!cur) throw new Error('beam parent chain shorter than declared depth');
+        scratch[i] = cur.key;
+        cur = cur.prev;
+    }
+    return scratch;
+}
+
+/** Test seam for the production reconstruction routine's exact-length reuse contract. */
+export function __reconstructBeamPathForTests(node: BeamPathNode, scratch: number[]): number[] {
+    return _reconstructBeamPath(node, scratch);
+}
 
 // ─── Core DFS ─────────────────────────────────────────────────────────────────
 
@@ -528,9 +547,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             // Reconstruct path from parent-pointer chain into _scratch.
             // node.depth stores path length-1, so one traversal suffices (no length-count pass).
             const len = node.depth + 1;
-            _scratch.length = len;
-            let cur: BeamNode = node;
-            for (let i = len - 1; i >= 0; i--) { _scratch[i] = cur.key; cur = cur.prev as BeamNode; }
+            _reconstructBeamPath(node, _scratch);
 
             // Diff ws's current live path against the reconstructed target path: undo the
             // divergent suffix of what's currently loaded, then apply only the new suffix.
@@ -728,4 +745,3 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     if (out) out.timedOut = false;
     return null;
 }
-

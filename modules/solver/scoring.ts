@@ -166,11 +166,12 @@ function resolveWeightsInto(profile: ScoringProfile, into: ResolvedWeights): Res
  *  fallback. Sized well above the corpus-wide observed maxima (6 must-pass once must-turn
  *  landmarks fold in, 4 must-cross — see lower-bounds.ts's MAX_MST_K note); a level past it
  *  falls back to fresh allocations rather than writing out of bounds. */
-const _MAX_POOLED_OBJECTIVES = 32;
-const _pooledMpCur        = new Float64Array(_MAX_POOLED_OBJECTIVES);
-const _pooledMcCur        = new Float64Array(_MAX_POOLED_OBJECTIVES);
-const _pooledMcIsApproach = new Uint8Array(_MAX_POOLED_OBJECTIVES);
-const _pooledMcTargetArr: Uint16Array[] = new Array(_MAX_POOLED_OBJECTIVES);
+/** Public audit/test contract for the allocation-fresh fallback boundary. */
+export const MAX_POOLED_OBJECTIVES = 32;
+const _pooledMpCur        = new Float64Array(MAX_POOLED_OBJECTIVES);
+const _pooledMcCur        = new Float64Array(MAX_POOLED_OBJECTIVES);
+const _pooledMcIsApproach = new Uint8Array(MAX_POOLED_OBJECTIVES);
+const _pooledMcTargetArr: Uint16Array[] = new Array(MAX_POOLED_OBJECTIVES);
 const _pooledWeights: ResolvedWeights = {
     w: 1, wo: 1, wf: 1, wp: 1, wmp: 1, wmc: 1, wmt: 1, wmte: 1, wpp: 1, wi: 1, wdt: 1, wrv: 1,
 };
@@ -199,7 +200,7 @@ const _pooledCtx: CurUrgencyContext = {
  *  fragile level) must-cross computation, while DFS and beam — whose deterministic, non-restart
  *  search is not documented as sensitive this way, and which don't touch S043's winning path at
  *  all — get the correctness fix at full strength. mpCur (must-pass) is unaffected either way. */
-export function buildCurUrgencyContext(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, includeMcAxisFix = true, profile?: ScoringProfile): CurUrgencyContext {
+export function buildCurUrgencyContext(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, includeMcAxisFix = true, profile?: ScoringProfile, forceFreshForTests = false): CurUrgencyContext {
     const mpN = level.mustPassKeys.length;
     const mcN = level.mustCrossKeys.length;
 
@@ -221,7 +222,7 @@ export function buildCurUrgencyContext(pos: number, state: SolverSearchState, le
     // (evaluatePrunedMove reaches only lower-bounds/solution/topology), and no call site nests
     // another. scoring.test.ts likewise never holds two at once. Module state is per-worker under
     // worker_threads, same as the _sas scratch below.
-    const pooled = mpN <= _MAX_POOLED_OBJECTIVES && mcN <= _MAX_POOLED_OBJECTIVES;
+    const pooled = !forceFreshForTests && mpN <= MAX_POOLED_OBJECTIVES && mcN <= MAX_POOLED_OBJECTIVES;
     const ctx = pooled ? _pooledCtx : ({
         mpCur: new Float64Array(mpN), mcCur: null, mcTargetArr: null, mcIsApproach: null, weights: null,
     } as CurUrgencyContext);
@@ -269,6 +270,11 @@ export function buildCurUrgencyContext(pos: number, state: SolverSearchState, le
         mcIsApproach[i] = 0;
     }
     return ctx;
+}
+
+/** Allocation-fresh differential oracle for pooled-context tests. */
+export function __buildFreshCurUrgencyContextForTests(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, includeMcAxisFix = true, profile?: ScoringProfile): CurUrgencyContext {
+    return buildCurUrgencyContext(pos, state, level, prep, includeMcAxisFix, profile, true);
 }
 
 // Score a candidate move `target` from `pos` in `state`.
