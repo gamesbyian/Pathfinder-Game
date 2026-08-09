@@ -11,6 +11,14 @@ import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit } from './types.js';
 
 type YieldFn = (() => Promise<void>) | null;
+type AttemptSearchDispatch = typeof runAttemptSearch;
+// Fault injection is associated with one prepared solve, never global process state. This keeps
+// concurrent solves isolated while allowing orchestration tests to deterministically fail dispatch.
+const testAttemptDispatches = new WeakMap<PrepLevel, AttemptSearchDispatch>();
+function isSolverCancellation(value: unknown): boolean {
+    try { return (value as { message?: unknown } | null)?.message === 'Solver:cancelled'; }
+    catch { return false; }
+}
 interface PortfolioExperimentDefinition {
     pass1Ms: number;
     pass2Ms: number;
@@ -35,6 +43,11 @@ interface PortfolioExperimentDefinition {
 interface Attempt {
     gateKey: number; profile: string; template: string | null; beamWidth: number | null;
     ok: boolean; elapsedMs: number; allocatedBudgetMs: number;
+    /** Explicit termination reason. Unlike `ok`/`timedOut`, this also distinguishes a technique
+     *  crash from an ordinary negative search result. */
+    outcome: 'success' | 'exhausted' | 'timed-out' | 'budget-starved' | 'error';
+    /** Bounded, JSON-safe description only; arbitrary thrown values and stacks are never retained. */
+    error?: { name: string; message: string; gateKey: number; configKey: string; profile: string; template: string | null };
     passNumber?: number; configKey?: string; restart?: boolean; schedulerPhase?: 'portfolio' | 'fallback';
     /** Diagnostic-only passthrough of the originating AttemptConfig's dispatch flags — not read
      *  by any solving logic, purely so external tooling (stress benchmark, audits) can tell a
@@ -127,6 +140,8 @@ interface SolveOpts {
      *  A/B) to pin the result exactly regardless of what the clock does. */
     workBudget?: number;
     schedulerMode?: 'legacy' | 'portfolio-experiment';
+    /** Unit-test-only per-solve dispatch override. Never persisted or exposed by Solver's facade. */
+    attemptSearchForTesting?: AttemptSearchDispatch;
     portfolioExperiment?: PortfolioExperimentDefinition;
     /** Overrides REPAIR_EXTRA_BUDGET_FRACTION for this solve only — offline batch tooling's cost
      *  control (see docs/solver-architecture.md's cost-gotcha note). A DEDICATED top-level option,
@@ -221,6 +236,10 @@ interface SolveResult { ok: boolean; status: string; solution: number[] | null; 
      *  INDETERMINATE, not a reproducible negative. Never record such a run as "unsolved". */
     deadlineTruncated?: boolean; solvedByPrime?: boolean; schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
 
+function hasAttemptError(attempts: readonly Attempt[]): boolean {
+    return attempts.some(attempt => attempt.outcome === 'error');
+}
+
 export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
     const area = (level.grid?.w || 0) * (level.grid?.h || 0);
     const special = (level.mustPassKeys?.length || 0) + (level.mustCrossKeys?.length || 0) +
@@ -276,10 +295,30 @@ export async function runAttempt(
     const searchOut = nodesOut ?? {};
     const nodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
     let path: number[] | null = null;
+    let attemptError: Attempt['error'] | undefined;
     try {
-        path = await runAttemptSearch(attemptConfig, gateKey, level, prep, profile, attBudget, attStart, yieldFn, nodeBudget, searchOut, seedSalt);
+        const dispatch = testAttemptDispatches.get(prep) ?? runAttemptSearch;
+        path = await dispatch(attemptConfig, gateKey, level, prep, profile, attBudget, attStart, yieldFn, nodeBudget, searchOut, seedSalt);
     } catch (err) {
-        if ((err as { message?: string })?.message === 'Solver:cancelled') throw err;
+        if (isSolverCancellation(err)) throw err;
+        const thrown = err as { name?: unknown; message?: unknown } | null;
+        const bounded = (value: unknown, fallback: string, max: number) => {
+            let text: string;
+            try { text = typeof value === 'string' ? value : value == null ? fallback : String(value); }
+            catch { text = fallback; }
+            return text.slice(0, max);
+        };
+        const safeField = (key: 'name' | 'message') => {
+            try { return thrown?.[key]; } catch { return undefined; }
+        };
+        attemptError = {
+            name: bounded(safeField('name'), 'Error', 120),
+            message: bounded(safeField('message') ?? err, 'Unknown attempt error', 500),
+            gateKey,
+            configKey: bounded(attemptConfigKey(attemptConfig), 'unknown', 240),
+            profile: bounded(profileName, 'unknown', 120),
+            template: template?.id == null ? null : bounded(template.id, 'unknown', 120),
+        };
     }
     const attMs = Date.now() - attStart;
     const nodesAfter = prep._metrics ? prep._metrics.nodesExpanded : 0;
@@ -291,14 +330,16 @@ export async function runAttempt(
             template: template?.id ?? null,
             beamWidth: beamWidth ?? null,
             ok: !!path,
+            outcome: path ? 'success' : attemptError ? 'error' : searchOut.timedOut === true ? 'timed-out' : searchOut.timedOut === false ? 'exhausted' : 'budget-starved',
+            ...(attemptError ? { error: attemptError } : {}),
             elapsedMs: attMs,
             allocatedBudgetMs: attBudget,
             nodesExpanded: nodesAfter - nodesBefore,
             ...(repair && seedSalt ? { seedSalt } : {}),
             ...(repair ? { randomSeed: repairPrimarySeed(gateKey, seedSalt) } : {}),
-            ...(!path && searchOut.timedOut !== undefined ? { timedOut: searchOut.timedOut } : {}),
-            ...(!path && Number.isFinite(searchOut.bestBadness) ? { bestBadness: searchOut.bestBadness } : {}),
-            ...(!path && Number.isFinite(searchOut.finalBadness) ? { finalBadness: searchOut.finalBadness } : {}),
+            ...(!path && !attemptError && searchOut.timedOut !== undefined ? { timedOut: searchOut.timedOut } : {}),
+            ...(!path && !attemptError && Number.isFinite(searchOut.bestBadness) ? { bestBadness: searchOut.bestBadness } : {}),
+            ...(!path && !attemptError && Number.isFinite(searchOut.finalBadness) ? { finalBadness: searchOut.finalBadness } : {}),
             ...(diverseBeam ? { diverseBeam: true } : {}),
             ...(repair ? { repair: true } : {}),
             ...(repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
@@ -994,6 +1035,7 @@ async function runPortfolioExperiment(
     const portfolioStart = Date.now();
     const prepStart = Date.now();
     const prep = prepLevel(level);
+    if (opts.attemptSearchForTesting) testAttemptDispatches.set(prep, opts.attemptSearchForTesting);
     const prepMs = Date.now() - prepStart;
     const cfg = normalizeAblationConfig(opts.ablation);
     prep._cfg = cfg;
@@ -1069,10 +1111,14 @@ async function runPortfolioExperiment(
 
     const fallback = await solveLevel(level, { ...opts, schedulerMode: 'legacy', timeBudgetMs });
     const fallbackAttempts = fallback.attempts.map(attempt => ({ ...attempt, schedulerPhase: 'fallback' as const }));
+    const combinedAttempts = [...attempts, ...fallbackAttempts];
     const totalMs = Date.now() - portfolioStart;
     return {
         ...fallback,
-        attempts: [...attempts, ...fallbackAttempts],
+        // The fallback owns the usual budget/deadline status, except that an error in an earlier
+        // portfolio pass still makes an unsuccessful combined solve indeterminate.
+        status: !fallback.ok && hasAttemptError(combinedAttempts) ? 'attempt-error' : fallback.status,
+        attempts: combinedAttempts,
         totalMs,
         nodesExpanded: prep._metrics.nodesExpanded + fallback.nodesExpanded,
         schedulerMode: 'portfolio-experiment',
@@ -1102,6 +1148,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const levelStartTime = Date.now();
     const workStart = workMeter.units;
     const prep = prepLevel(level);
+    if (opts.attemptSearchForTesting) testAttemptDispatches.set(prep, opts.attemptSearchForTesting);
     const gateKeys = Array.isArray(level.gateKeys) ? level.gateKeys : [];
 
     // Ablation config: attach to prep so all inner functions can read it. Normalized (see
@@ -1257,7 +1304,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // spent no extra nodes.
         if (prep._metrics.nodesExpanded >= earlyTierNodeBudget && admissibleOrderNodeReserve === 0) {
             const totalMs = Date.now() - levelStartTime;
-            return { ok: false, status: 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true, workSpent: workMeter.units - workStart, workBudget };
+            return { ok: false, status: hasAttemptError(probeAttempts) ? 'attempt-error' : 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true, workSpent: workMeter.units - workStart, workBudget };
         }
     }
 
@@ -1466,7 +1513,12 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // See docs/solver-budget-determinism.md.
     const workSpent = workMeter.units - workStart;
     const deadlineTruncated = totalMs >= timeBudgetMs && workSpent < workBudget && !nodeBudgetReached;
-    const status = nodeBudgetReached ? 'node-budget-reached'
+    // A technique exception is not evidence that the level exhausted, timed out, or consumed its
+    // node allowance. Attempts after it still run, but an unsuccessful aggregate remains visibly
+    // indeterminate even when a separate budget boundary was also reached later.
+    const hadAttemptError = hasAttemptError(result.attempts);
+    const status = hadAttemptError ? 'attempt-error'
+        : nodeBudgetReached ? 'node-budget-reached'
         : deadlineTruncated ? 'deadline-truncated'
         : (workSpent >= workBudget ? 'work-budget-reached' : 'failed');
     return { ok: false, status, solution: null, solutions: [], attempts: result.attempts, totalMs, nodesExpanded, nodeBudgetReached, deadlineTruncated, workSpent, workBudget };
