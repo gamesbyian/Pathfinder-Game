@@ -293,7 +293,13 @@ test('isConnectedForTrap ignores the goal but still requires objectives to be re
  * prune too permissive (a stale bit reads as "reachable", so a legitimate prune is skipped), which
  * never rejects a reachable solution but does change search order.
  */
-function referenceIsConnected(pos: number, state: any, level: any, prep: any): boolean {
+function referenceIsConnected(
+    pos: number,
+    state: any,
+    level: any,
+    prep: any,
+    coverage?: { rejectedUsedFlipper: boolean },
+): boolean {
     // Deliberately naive: a plain Set-based BFS re-derived from the game rules, sharing no code
     // (and no scratch buffers) with topology.ts.
     const { w, h } = level.grid;
@@ -301,7 +307,10 @@ function referenceIsConnected(pos: number, state: any, level: any, prep: any): b
     const maxVisit = intNeeded > 0 ? 2 : 0;
     const canEnter = (k: number) => {
         const fi = prep.flipperIndexMap[k] - 1;
-        if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) return false;
+        if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) {
+            if (coverage) coverage.rejectedUsedFlipper = true;
+            return false;
+        }
         if (prep.reachBlockedArr[k] !== 0) return false;
         // Both axis bits spent => the cell can never be entered again (entering along H needs H
         // free, along V needs V free -- move-rules.ts's invalid-edge-reuse-target). Re-derived here
@@ -360,17 +369,38 @@ test('isConnected matches an independent BFS across a randomized sequence of sta
     const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
 
     let checks = 0;
+    let flipperTrials = 0;
+    let callsWithUsedFlippers = 0;
+    let comparisonsRejectingUsedFlippers = 0;
+    let freshFlipperMoves = 0;
+    let usedFlipperMoves = 0;
     for (let trial = 0; trial < 60; trial++) {
         const w = 5 + ((rnd() * 8) | 0), h = w;
         const blocks: { x: number; y: number }[] = [];
         const taken = new Set<string>(['1,1', `${w},${h}`]);
+        const flippingFilters: { x: number; y: number; axis: number }[] = [];
+        const forcedMoves: number[] = [];
+        // Every third trial gets a horizontal flipper and a short prefix that first enters it,
+        // leaves it, then enters it again. Reserve both prefix cells before placing blocks so the
+        // generated feature never overlaps a gate, goal, or block. axis=1 is AXIS_H, matching the
+        // initial entry and therefore representing a valid initial filter orientation.
+        if (trial % 3 === 0) {
+            taken.add('2,1');
+            taken.add('3,1');
+            flippingFilters.push({ x: 2, y: 1, axis: 1 });
+            forcedMoves.push(K(2, 1), K(3, 1), K(2, 1));
+            flipperTrials++;
+        }
         for (let b = 0; b < ((rnd() * w * h) | 0) / 4; b++) {
             const x = 1 + ((rnd() * w) | 0), y = 1 + ((rnd() * h) | 0);
             if (taken.has(`${x},${y}`)) continue;
             taken.add(`${x},${y}`);
             blocks.push({ x, y });
         }
-        const level = makeLevel({ grid: { w, h }, blocks, reqLen: 4 + ((rnd() * w * 2) | 0), reqInt: (rnd() * 3) | 0 });
+        const level = makeLevel({
+            grid: { w, h }, blocks, flippingFilters,
+            reqLen: 4 + ((rnd() * w * 2) | 0), reqInt: (rnd() * 3) | 0,
+        });
         const prep = prepLevel(level);
 
         // Walk a random path, checking isConnected against the reference after every step. Cells
@@ -379,12 +409,16 @@ test('isConnected matches an independent BFS across a randomized sequence of sta
         const state = createState(K(1, 1), level, prep);
         for (let step = 0; step < 40; step++) {
             const pos = state.path[state.path.length - 1];
+            const coverage = { rejectedUsedFlipper: false };
+            const expected = referenceIsConnected(pos, state, level, prep, coverage);
             assert.equal(
                 isConnected(pos, state, level, prep),
-                referenceIsConnected(pos, state, level, prep),
+                expected,
                 `trial ${trial} step ${step}: isConnected disagreed with the reference BFS`,
             );
             checks++;
+            if (state.flipperUsedMask !== 0) callsWithUsedFlippers++;
+            if (coverage.rejectedUsedFlipper) comparisonsRejectingUsedFlippers++;
             const x = pos & 0xFFFF, y = (pos >>> 16) & 0xFFFF;
             const cands: number[] = [];
             if (x + 1 < w) cands.push(PACK(x + 1, y));
@@ -393,8 +427,20 @@ test('isConnected matches an independent BFS across a randomized sequence of sta
             if (y > 0) cands.push(PACK(x, y - 1));
             const legal = cands.filter(k => prep.reachBlockedArr[k] === 0);
             if (legal.length === 0) break;
-            applyMove(legal[(rnd() * legal.length) | 0], state, level, prep, false);
+            const target = forcedMoves[step] ?? legal[(rnd() * legal.length) | 0];
+            const flipperIndex = prep.flipperIndexMap[target] - 1;
+            if (flipperIndex !== -1) {
+                if ((state.flipperUsedMask & (1 << flipperIndex)) !== 0) usedFlipperMoves++;
+                else freshFlipperMoves++;
+            }
+            applyMove(target, state, level, prep, false);
         }
     }
     assert.ok(checks > 1000, `expected a broad sample, only ran ${checks} comparisons`);
+    assert.ok(flipperTrials > 0, 'expected randomized trials containing flipping filters');
+    assert.ok(callsWithUsedFlippers > 0, 'expected connectivity calls with used-flipper bits set');
+    assert.ok(comparisonsRejectingUsedFlippers > 0,
+        'expected reference comparisons to reject traversal through a used flipper');
+    assert.ok(freshFlipperMoves > 0, 'expected generated moves through fresh flippers');
+    assert.ok(usedFlipperMoves > 0, 'expected generated moves through already-used flippers');
 });
