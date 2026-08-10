@@ -106,9 +106,11 @@ for (const { unsolved, solved, distance } of nearestPairs) {
     const attempts = (uBase.attempts || []).map(a => {
         const projected = attemptRecord(a);
         return {
-            profile: a.profile, template: a.template, beamWidth: a.beamWidth,
-            finalBadness: a.finalBadness ?? null, timedOut: !!a.timedOut, nodesExpanded: a.nodesExpanded,
-            outcome: projected.outcome ?? null, error: projected.error ?? null,
+            // Retain the canonical persisted Attempt shape instead of rebuilding a smaller
+            // whitelist here. These two normalized defaults are this report's only specialization.
+            ...projected,
+            finalBadness: projected.finalBadness ?? null,
+            timedOut: !!projected.timedOut,
         };
     });
     const bestBadness = Math.min(...attempts.map(a => Number.isFinite(a.finalBadness) ? a.finalBadness : Infinity), Infinity);

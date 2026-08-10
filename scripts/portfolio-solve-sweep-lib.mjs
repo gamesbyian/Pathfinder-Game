@@ -78,6 +78,10 @@ export function attemptRecord(a) {
         // Re-project an explicit whitelist instead of retaining an arbitrary thrown object or a
         // future accidental `stack` field from an upstream transport.
         ...(a.error !== undefined ? { error: projectedAttemptError(a.error) } : {}),
+        ...(a.passNumber !== undefined ? { passNumber: a.passNumber } : {}),
+        ...(a.configKey !== undefined ? { configKey: a.configKey } : {}),
+        ...(a.restart !== undefined ? { restart: a.restart } : {}),
+        ...(a.schedulerPhase !== undefined ? { schedulerPhase: a.schedulerPhase } : {}),
         // How much budget this attempt was actually GIVEN. Without it, an attempt that exhausted its
         // search and one that got a sliver of a divided budget are indistinguishable in a report --
         // which is exactly the question "did the last-resort tier get room to run?" needs answered.
