@@ -1,5 +1,11 @@
 # Main-loop profile-order starvation: a real but smaller instance of the admissible-order bug shape (2026-08-08)
 
+> **2026-08-10 terminology correction:** the census's “provably recoverable” label was too strong.
+> It proves that a zero-allocated attempt matches a budget-fitting *historical* witness, not that the
+> current solver revision will reproduce that witness. A clean same-revision reserve pilot recovered
+> only 1 of the 14 deterministic matches. See
+> [`2026-08-10-main-loop-late-reserve-mechanism-pilot.md`](2026-08-10-main-loop-late-reserve-mechanism-pilot.md).
+
 Read-only measurement, following a fresh "size the prize" pass over current hint provenance
 (see the parallel investigation in this session's conversation — no separate report for that yet).
 No solver code changed here; all instrumentation used to derive this was added temporarily and

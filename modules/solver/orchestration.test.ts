@@ -612,6 +612,123 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
     assert.equal(on.nodeBudgetReached, true);
 });
 
+test('opt-in main-loop reserve preserves order and gives a late suffix nonzero nodes', async () => {
+    const seenConfigs: string[] = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , , , , nodeBudget, out] = args;
+        seenConfigs.push(attemptConfigKey(config));
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) { out.nodesExpanded = spent; out.timedOut = true; }
+        return null;
+    };
+    const level = makeAttractionDiversityGatedInfeasibleLevel();
+    const mainConfigs = getConfiguredAttemptConfigs(level, null)
+        .filter(config => !config.repair && !config.admissibleOrder);
+    const result = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        workBudget: 1_000_000,
+        nodeBudget: 100,
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        mainLoopLateReserveFractionOverride: 0.2,
+        mainLoopLateReserveConfigCountOverride: 2,
+        attemptSearchForTesting: dispatch,
+    });
+
+    assert.equal(result.nodesExpanded, 100);
+    assert.equal(result.nodeBudgetReached, true);
+    assert.deepEqual(seenConfigs, [
+        attemptConfigKey(mainConfigs[0]),
+        attemptConfigKey(mainConfigs.at(-2)!),
+        attemptConfigKey(mainConfigs.at(-1)!),
+    ]);
+    assert.equal(result.attempts[0].mainLoopLateReserve, undefined);
+    assert.equal(result.attempts[1].mainLoopLateReserve, true);
+    assert.equal(result.attempts[2].mainLoopLateReserve, true);
+    assert.equal(result.attempts[0].nodesExpanded, 80);
+    assert.equal(result.attempts[1].nodesExpanded, 10);
+    assert.equal(result.attempts[2].nodesExpanded, 10);
+});
+
+test('interleaved main-loop reserve gives every late config/gate pair its own slice', async () => {
+    const level = { ...makeAttractionDiversityGatedInfeasibleLevel(), gateKeys: [PACK(0, 0), PACK(0, 2)] };
+    const attemptsSeen: Array<{ config: string; gate: number; budget: number }> = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, gate, , prep, , , , , nodeBudget, out] = args;
+        const spent = Number(nodeBudget);
+        attemptsSeen.push({ config: attemptConfigKey(config), gate, budget: spent });
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) { out.nodesExpanded = spent; out.timedOut = true; }
+        return null;
+    };
+    const mainConfigs = getConfiguredAttemptConfigs(level, null).filter(config => !config.repair && !config.admissibleOrder);
+    const result = await solveLevel(level, {
+        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 100,
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        mainLoopLateReserveFractionOverride: 0.2,
+        mainLoopLateReserveConfigCountOverride: 2,
+        attemptSearchForTesting: dispatch,
+    });
+
+    assert.deepEqual(attemptsSeen, [
+        { config: attemptConfigKey(mainConfigs[0]), gate: level.gateKeys[0], budget: 80 },
+        { config: attemptConfigKey(mainConfigs.at(-2)!), gate: level.gateKeys[0], budget: 5 },
+        { config: attemptConfigKey(mainConfigs.at(-2)!), gate: level.gateKeys[1], budget: 5 },
+        { config: attemptConfigKey(mainConfigs.at(-1)!), gate: level.gateKeys[0], budget: 5 },
+        { config: attemptConfigKey(mainConfigs.at(-1)!), gate: level.gateKeys[1], budget: 5 },
+    ]);
+    assert.equal(result.attempts.filter(a => a.mainLoopLateReserve).length, 4);
+    assert.equal(result.nodeBudgetReached, true);
+});
+
+test('main-loop reserve is inert without its opt-in flag or a finite node ceiling', async () => {
+    const level = makeAttractionDiversityGatedInfeasibleLevel();
+    const off = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        nodeBudget: 400,
+        disableExtraBudgetPasses: true,
+        mainLoopLateReserveFractionOverride: 0.9,
+        mainLoopLateReserveConfigCountOverride: 1,
+    });
+    const infinite = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        mainLoopLateReserveFractionOverride: 0.9,
+        mainLoopLateReserveConfigCountOverride: 1,
+    });
+    assert.equal(off.attempts.some(a => a.mainLoopLateReserve), false);
+    assert.equal(infinite.attempts.some(a => a.mainLoopLateReserve), false);
+});
+
+test('zero fraction or zero suffix count disables the main-loop reserve', async () => {
+    const level = makeAttractionDiversityGatedInfeasibleLevel();
+    for (const overrides of [
+        { mainLoopLateReserveFractionOverride: 0, mainLoopLateReserveConfigCountOverride: 2 },
+        { mainLoopLateReserveFractionOverride: 0.2, mainLoopLateReserveConfigCountOverride: 0 },
+    ]) {
+        const result = await solveLevel(level, {
+            timeBudgetMs: 1000, nodeBudget: 400, disableExtraBudgetPasses: true,
+            ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true }, ...overrides,
+        });
+        assert.equal(result.attempts.some(a => a.mainLoopLateReserve), false);
+    }
+});
+
+test('a reserve fraction that rounds to zero is fully inert', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        nodeBudget: 1,
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        mainLoopLateReserveFractionOverride: 0.01,
+        mainLoopLateReserveConfigCountOverride: 4,
+    });
+    assert.equal(result.attempts.some(a => a.mainLoopLateReserve), false);
+});
+
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {
     const legacy = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000 });
     assert.equal(legacy.schedulerMode, undefined);

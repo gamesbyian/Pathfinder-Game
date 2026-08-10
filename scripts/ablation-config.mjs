@@ -81,6 +81,7 @@ export const FEATURES = {
     STRATEGY_REPAIR_LENGTH_GAP_CLOSE: 'Repair-search: on a dead end where every non-length/intersection objective is already satisfied, try a small bounded backtracking search to close the exact length/intersection gap instead of discarding the restart',
     STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS: 'Repair-search: additionally trigger closeLengthGap when at most LENGTH_GAP_CLOSE_STRUCTURAL_SLACK non-length objectives are still pending (not just exactly zero) — targets near-miss dead ends like "length off by 1, one pending mustTurn cell" that the strict base trigger never attempts',
     STRATEGY_REPAIR_TURN_BIAS: 'Repair-search: append an experimental turn-aware selective-bias repair attempt on must-turn levels (default-OFF — only added when explicitly true; a clean corpus-2 A/B against current defaults reproduced net -7/1700 after the elite-prefix confound was fixed, while disabling STRATEGY_REPAIR_NOGOOD_CACHE produced -8 and falsified that proposed interaction -- see reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md -- stays opt-in, not promoted)',
+    STRATEGY_MAIN_LOOP_LATE_RESERVE: 'Experimental reserve-not-reorder treatment for main-loop attempt starvation: withhold a bounded node slice from the repair probe and early ordinary configs, then divide it cumulatively across a fixed late config suffix so every config/gate beneficiary has a nonzero opportunity. Default-OFF pending a deterministic matched-budget full-corpus A/B.',
 
     // ── Templates ─────────────────────────────────────────────────────────────
     TEMPLATE_CORNER_HARVEST:    'cornerHarvest — pulls toward grid corners during harvest phase',
@@ -114,6 +115,7 @@ export const OPT_IN_FEATURES = new Set([
     'PRUNE_MC_NEIGHBOR_BUDGET',
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS',
     'STRATEGY_REPAIR_TURN_BIAS',
+    'STRATEGY_MAIN_LOOP_LATE_RESERVE',
 ]);
 
 // ─── Template → config key mapping ───────────────────────────────────────────

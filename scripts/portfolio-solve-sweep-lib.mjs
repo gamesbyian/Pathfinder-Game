@@ -105,6 +105,7 @@ export function attemptRecord(a) {
         ...(a.admissibleOrder ? { admissibleOrder: true } : {}),
         ...(a.admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
         ...(a.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
+        ...(a.mainLoopLateReserve ? { mainLoopLateReserve: true } : {}),
         ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
         ...(a.randomSeed !== undefined ? { randomSeed: a.randomSeed } : {}),
         // seedSalt is the value to REPLAY a repair winner directly (repairPrimarySeed(gateKey,

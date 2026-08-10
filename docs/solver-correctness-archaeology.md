@@ -1,6 +1,6 @@
 # Solver Correctness Archaeology
 
-**Status:** current hardening reference, reconciled through 2026-08-09.
+**Status:** current hardening reference, reconciled through 2026-08-10.
 
 This document turns Pathfinder's known fixed correctness failures into reusable failure classes and applies those classes back to the current codebase. Its purpose is not to retell the development history. It is to prevent the same structural mistakes from returning under new names.
 
@@ -8,17 +8,33 @@ Use `future-work.md` for the live solver-improvement queue. Use this document wh
 
 ## Executive disposition
 
-The archaeology found no newly demonstrated production hard prune that rejects a valid solution. It did identify the following current correctness or correctness-adjacent work:
+The archaeology found no newly demonstrated production hard prune that rejects a valid solution.
+The bounded correctness-hardening package identified by the original review is complete:
 
-1. **Main-loop attempt-ordering starvation remains a known live solver defect.** Some late techniques receive zero allocation despite known budget-fitting solves. `future-work.md` remains the source of truth for its measured population and proposed reserve-not-reorder repair.
-2. **`runAttempt()` silently converts non-cancellation search exceptions into ordinary failed attempts.** A DFS/beam/repair/admissible-order implementation error can therefore masquerade as “this technique found no solution.” This is the same epistemic failure class previously seen when child-process/model failures were swallowed by research tooling. The eventual fix should preserve technique/config/gate identity and expose an explicit error outcome while still allowing the ladder to continue if desired.
-3. **Final-win differential coverage is incomplete.** The oracle fuzzer compares oracle, production solver, and domain/live-play move legality, but final acceptance is not yet checked across all independent arbiters. Add a four-way goal-state comparison: oracle `isOracleSolution`, solver `isSolutionState`, runtime win metrics, and `validateCandidatePath`/referee acceptance.
-4. **Representation contracts still need cleanup.** `prep.ts` uses `index+1 / 0=absent` for index arrays and `neighborKey+1 / 0=absent` for `staticNeighborKeys`. The dedicated `representation-contracts.test.ts` now pins those conventions as executable truth. Stale type comments and any reference/test consumer that reads these arrays raw should be corrected rather than trusted.
-5. **`topology.test.ts` contains a latent flipper-index reference-oracle bug.** Its independent `referenceIsConnected()` reads `prep.flipperIndexMap[k]` as though it were a raw index with `-1` absent. The real encoding is `index+1`, zero absent. The randomized sequence test currently creates no flippers, so its present scratch-reuse comparisons are not invalidated, but broadening that generator to flipper levels without fixing the decode would make the reference wrong.
-6. **Reusable scratch state deserves sequence-based differential coverage.** The historical bit-parallel connectivity bug only appeared across heterogeneous call sequences; clean single-call comparison was insufficient. Inventory reusable typed arrays, generation-tag tables, pools, and workspaces and ensure each has lifecycle/sequence coverage where stale contents could affect semantics.
-7. **Attempt/report/provenance projection completeness should be mechanically tested.** Historical fields repeatedly stopped at an intermediate object or disappeared in a hand-maintained projection. Add a maximally populated synthetic `Attempt` round trip through persistence/report/provenance paths with an explicit list of persistent versus intentionally transient fields.
-8. **Soundness tests should prove activation, not merely zero violations.** The must-cross forced-first-move sentinel bug and an old win-metric test both passed for reasons unrelated to the condition supposedly under test. Hard-prune tests should report/verify candidate-rule activations and include a positive control that deliberately trips the detector.
-9. **Approximation direction must be explicit.** Every lower bound, relaxed reachability model, deadness proof, or external model used for a hard conclusion should state which direction of error is permitted and test that contract.
+1. Search-technique exceptions now remain distinct from exhaustion, timeout, and budget starvation
+   through `Attempt`, `SolveResult`, worker transport, and batch telemetry.
+2. The oracle fuzzer compares final acceptance across the independent oracle, solver solution state,
+   runtime win metrics, and referee/path validation.
+3. Encoded-array contracts are documented and executable; the flipper reference decode is corrected,
+   and heterogeneous connectivity sequences include flipper-bearing levels.
+4. Reusable solver scratch and pools have an ownership/lifecycle inventory plus heterogeneous,
+   boundary, and rollover coverage where stale contents could affect semantics.
+5. A maximally populated synthetic `Attempt` mechanically covers report, worker, and provenance
+   projections, with persistent and intentionally transient fields classified explicitly.
+6. Hard-prune soundness harnesses verify rule activation and deliberate positive controls rather than
+   accepting zero observed violations as sufficient evidence.
+7. Lower-bound, relaxed-reachability, and deadness helpers have explicit permitted-error directions
+   backed by admissibility/property tests.
+
+One separate solver-development issue remains open: **main-loop attempt-ordering starvation**. A
+default-off reserve-not-reorder treatment and a 14-level mechanism pilot now exist, but the pilot
+recovered only 1 of 14 historically matched deterministic cases. The treatment is not promoted;
+`future-work.md` and `main-loop-late-reserve-experiment.md` are the sources of truth for the pending
+full-population decision. This is allocation-policy research, not unfinished correctness hardening.
+
+The taxonomy below is therefore a set of historical failure classes and standing review invariants,
+not a list of currently open defects. Apply it whenever new caches, prunes, representations,
+scratch storage, rule implementations, schedulers, experiments, or telemetry fields are introduced.
 
 ## Failure taxonomy
 
@@ -38,7 +54,10 @@ Historical manifestations include the beam packed-key overflow and the must-cros
 
 The beam incident already triggered a systematic audit of composite bit-shift keys; that specific search found and fixed the diversity-bucket sibling and checked the remaining relevant mask composites. Do not repeat that work without new evidence.
 
-The broader representation-contract risk remains. `modules/solver/representation-contracts.test.ts` now pins the current `prepLevel` encoding conventions. Future consumers should decode through the documented convention exactly once.
+`modules/solver/representation-contracts.test.ts` pins the current `prepLevel` encoding conventions,
+the stale type comments and flipper reference consumer have been corrected, and the randomized
+connectivity sequence now exercises flipper-bearing levels. The ongoing risk applies to future raw
+consumers: decode through the documented convention exactly once rather than inferring a sentinel.
 
 ### 3. Reusable scratch lifecycle leakage
 
@@ -46,11 +65,20 @@ Historical manifestations include undersized/stale MST scratch and stale rows in
 
 **Standing invariant:** reusable work memory must be tested as a sequence. Prefer adversarial call patterns such as large-region -> tiny-region -> shifted-region -> original-region, plus generation-counter rollover where applicable.
 
+**Current disposition:** `solver-mutable-storage-inventory.md` records ownership, capacity, reset,
+and nesting assumptions for the known reusable buffers and pools. Existing semantic scratch has
+heterogeneous sequence/boundary coverage; any newly pooled or reusable state must extend that
+inventory and add lifecycle tests before relying on clean single-call comparisons.
+
 ### 4. Approximation in the wrong mathematical direction
 
 Historical lower-bound/reachability defects repeatedly came from a supposedly optimistic model becoming pessimistic. Examples include distance treatments that could overestimate a real route and attempted additive combinations of lower bounds that could be satisfied by the same path segment.
 
 **Standing invariant:** every approximation used in a hard prune declares its permitted error direction. A lower bound may be too low, never too high. A reachability over-approximation may admit impossible cells, never exclude possible ones. A deadness test may miss dead states, never invent one.
+
+**Current disposition:** the production lower-bound, connectivity, and deadness helpers are covered
+by explicit admissibility-direction/property tests. New approximations must add themselves to that
+contract; the completed baseline is not permission to infer direction from a helper's name.
 
 ### 5. Heuristic evidence promoted into hard proof
 
@@ -65,6 +93,10 @@ Pathfinder intentionally has multiple semantic arbiters: runtime/live play, doma
 Historical manifestations include flipping-filter entry-axis drift, flipper single-use drift, and `checkWinMetrics` omitting must-turn while the runtime win check included it.
 
 **Standing invariant:** keep implementations independent where they provide real cross-check value, but differential-test both move legality and final acceptance across them. Avoid “cleanup” that removes independent referee checks merely because another layer appears redundant.
+
+**Current disposition:** the oracle fuzzer now checks both move legality and four-way final
+acceptance. Independence remains deliberate; future mechanics must be added to every arbiter and to
+the differential fixtures rather than collapsing implementations into one shared result.
 
 ### 7. Pre-move versus post-move state confusion
 
@@ -82,7 +114,7 @@ Historical code has converted missing/incorrect API values into `NaN`, `Infinity
 
 Sparse ablation objects historically disabled unrelated default-on features; a later inverse bug silently enabled unrelated default-off opt-ins. These produced confident but confounded A/B results.
 
-**Current disposition:** `normalizeAblationConfig()` centralizes sparse-override semantics and uses the opt-in registry for default-off features. Do not rebuild this machinery. The ongoing invariant is that every new default-off feature must be registered in the canonical opt-in set and covered by normalization tests.
+**Current disposition:** `normalizeAblationConfig()` centralizes sparse-override semantics and uses the opt-in registry for default-off features. Do not rebuild this machinery. The ongoing invariant is that every new default-off feature must be registered in the canonical opt-in set and covered by normalization tests; the late-reserve experiment follows this contract.
 
 ### 10. Nested budget/resource semantics
 
@@ -96,9 +128,16 @@ Historical reports silently lost admissible-order markers, repair seed/salt, all
 
 **Standing invariant:** persisted telemetry is part of the scientific correctness contract. Central shared projections are preferable to hand-maintained copies; a schema/round-trip test should fail when a newly persistent field is accidentally dropped.
 
+**Current disposition:** a maximally populated `Attempt` fixture now checks report, worker transport,
+and provenance projections against explicit persistent/transient field sets. New fields must update
+that contract in the same patch rather than relying on scattered spot tests.
+
 ### 12. Exceptions/errors converted into ordinary null results
 
-The CP-SAT corpus-plumbing incident and current `runAttempt()` catch behavior share the same structure: execution failed, but the caller received “no solution.”
+The historical CP-SAT corpus-plumbing incident and the former `runAttempt()` catch behavior shared
+the same structure: execution failed, but the caller received “no solution.” `runAttempt()` now
+records an explicit bounded error outcome while preserving technique/config/gate identity, and an
+unsuccessful solve containing such a failure reports `attempt-error` rather than exhaustion.
 
 **Standing invariant:** null scientific result, timeout/truncation, unsupported input, and execution error are distinct states all the way to persisted output.
 
@@ -148,18 +187,22 @@ Several real bugs were caused or invited by comments/docs that described an obso
 - The repair-scoped exact-state nogood cache already exists and shipped default-on; the old naive three-field global key remains only a soundness counterexample.
 - Portal-parity hard pruning was implemented soundly as an opt-in experiment and measured effectively inert; it is not an uninvestigated solver opportunity.
 
-## Recommended implementation handoff
+## Completed hardening handoff and remaining solver experiment
 
-These items need a patch-capable local development/test loop and should be handled as one bounded correctness-hardening package rather than speculative solver redesign:
+The bounded correctness-hardening package was completed on 2026-08-09:
 
-1. Make search-technique exceptions observable through `Attempt`/`SolveResult`/batch telemetry without conflating them with timeout or exhaustion.
-2. Extend the oracle fuzzer to four-way final acceptance.
-3. Correct the stale encoded-array comments and the flipper decode in `topology.test.ts`'s reference BFS; then broaden the sequence test to include flipper-bearing levels.
-4. Add the synthetic Attempt/report/provenance projection round-trip contract.
-5. Inventory reusable scratch/workspaces and add heterogeneous sequence tests where lifecycle coverage is absent.
-6. Strengthen hard-prune soundness harnesses with activation counts and deliberate positive controls.
-7. Add explicit admissibility-direction/property tests to hard-prune approximation helpers where they are not already covered.
+1. Search-technique exceptions are observable through `Attempt`/`SolveResult`/batch telemetry.
+2. The oracle fuzzer performs four-way final acceptance.
+3. Encoded-array comments/reference decoding are corrected and sequence tests include flippers.
+4. A maximal synthetic Attempt projection contract covers report/provenance paths.
+5. Reusable scratch/workspaces have documented lifecycle and heterogeneous sequence coverage.
+6. Hard-prune soundness harnesses verify activation and positive controls.
+7. Hard-prune approximation helpers have explicit admissibility-direction property tests.
 
-Keep this hardening package behavior-preserving except where an existing error is being surfaced. Do not combine it with main-loop attempt-allocation policy changes.
+The hardening package was behavior-preserving except for making existing execution errors
+observable. Its tests and contracts are now the baseline that future changes must extend.
 
-The main-loop starvation repair should be a separate solver-development change with its own deterministic matched-budget A/B, beginning with the already identified deterministic recoverable population in `future-work.md`.
+The main-loop starvation treatment remains a separate, default-off solver-development experiment.
+Its frozen protocol, completed mechanism pilot, and promotion gate are recorded in
+`main-loop-late-reserve-experiment.md`,
+`../reports/2026-08-10-main-loop-late-reserve-mechanism-pilot.md`, and `future-work.md`.

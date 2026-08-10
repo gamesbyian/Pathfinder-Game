@@ -43,7 +43,7 @@
 # ablation-flag experiment (`enable_flags`) can be run and compared without touching the persisted
 # baseline series at all.
 #
-# 2026-08-08: split the commit step so hints/provenance (data/stress/hints*/) are ALWAYS persisted,
+# 2026-08-08: split the commit step so hints/provenance (data/stress/hints*/) are normally persisted,
 # even under deterministic=true -- a hint is a valid, PLAY-checked solution regardless of which
 # budget config found it, so silently losing a deterministic A/B's discoveries to the 90-day
 # artifact retention window was a real, avoidable loss, not a feature of the "never commits"
@@ -87,6 +87,22 @@ on:
         description: 'Comma-separated ablation flags to turn OFF (portfolio-solve-sweep --disable-flags), applied to BOTH corpora, e.g. STRATEGY_REPAIR_NOGOOD_CACHE. Blank = leave default-on flags at their default. Needed to isolate one default-on mechanism''s interaction with an enable_flags experiment (2026-08-07: added to test whether STRATEGY_REPAIR_NOGOOD_CACHE specifically undermines STRATEGY_REPAIR_TURN_BIAS -- see reports/2026-08-07-turnbias-corpus2-validation.md).'
         required: false
         default: ''
+      main_loop_late_reserve_fraction:
+        description: 'Optional STRATEGY_MAIN_LOOP_LATE_RESERVE fraction passed to both corpora (blank = no override/control arm). Enable the flag separately with enable_flags.'
+        required: false
+        default: ''
+      main_loop_late_reserve_config_count:
+        description: 'Optional number of final ordinary configs sharing the main-loop reserve (blank = solver default; frozen experiment uses 4).'
+        required: false
+        default: ''
+      prime_winner:
+        description: 'true = preserve routine warm re-solve behavior. false = cold-search ordering A/B; required for the main-loop starvation experiment.'
+        required: false
+        default: 'true'
+      persist_hints:
+        description: 'true = save and push new hints as usual. false + deterministic=true = artifact-only run with no branch mutation; required when multiple A/B arms must measure the exact same SHA.'
+        required: false
+        default: 'true'
       corpus1_budget_ms:
         description: 'Corpus-1: per-level solve budget in milliseconds. Defaults to a non-binding 24h value (2026-08-06: raised from the historical 20000ms alongside corpus2_budget_ms -- see corpus2_budget_ms''s own description). corpus1_node_budget is the real ceiling now. deterministic=true forces 24h regardless of what you pass here.'
         required: false
@@ -100,7 +116,7 @@ on:
         required: false
         default: '2'
       deterministic:
-        description: 'true = strict A/B mode: forces both ms deadlines to a truly unbounded 24h value regardless of what corpus*_budget_ms is set to (belt-and-braces for a precise comparison). Newly-discovered hints/provenance are still committed (pushed to the DISPATCHED branch/ref, not necessarily main) -- only the continuity-baseline/log/report files are skipped, so an enable_flags experiment can be run and compared without touching the persisted baseline series. false (default, 2026-08-06 routine defaults) commits everything, at the non-binding budget shape described above rather than the old binding one.'
+        description: 'true = strict A/B mode: forces both ms deadlines to a truly unbounded 24h value regardless of what corpus*_budget_ms is set to (belt-and-braces for a precise comparison). Baseline/log/report files are never committed; hints are committed only when persist_hints=true. false (default, 2026-08-06 routine defaults) commits everything at the non-binding budget shape described above.'
         required: false
         default: 'false'
 
@@ -207,6 +223,13 @@ jobs:
           if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
           DISABLE_FLAGS_ARG=""
           if [ -n "${{ inputs.disable_flags }}" ]; then DISABLE_FLAGS_ARG="--disable-flags=${{ inputs.disable_flags }}"; fi
+          RESERVE_ARGS=""
+          if [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ]; then RESERVE_ARGS="$RESERVE_ARGS --main-loop-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}"; fi
+          if [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ]; then RESERVE_ARGS="$RESERVE_ARGS --main-loop-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}"; fi
+          PRIME_ARG=""
+          if [ "${{ inputs.prime_winner }}" = "true" ]; then PRIME_ARG="--prime-winner"; fi
+          SAVE_HINTS_ARG=""
+          if [ "${{ inputs.persist_hints }}" = "true" ]; then SAVE_HINTS_ARG="--save-hints"; fi
           # 2026-08-06: corpus1_node_budget now ALWAYS applies (previously deterministic-only, back
           # when the routine corpus1_budget_ms default stayed small enough that no real node ceiling
           # was needed -- see corpus1_node_budget's own description). The 45m wrapper is likewise now
@@ -242,10 +265,11 @@ jobs:
             --work-budget="${WORK_BUDGET_C1}" \
             --workers="${{ inputs.corpus1_workers }}" \
             --baseline=logs/stress-corpus1-baseline.json \
-            --prime-winner \
+            $PRIME_ARG \
             $ENABLE_FLAGS_ARG \
             $DISABLE_FLAGS_ARG \
-            --save-hints \
+            $RESERVE_ARGS \
+            $SAVE_HINTS_ARG \
             --out="logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.json" \
             --summary-out="logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}-summary.md" \
             2>&1 | tee -a "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.console.log"
@@ -267,6 +291,13 @@ jobs:
           if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
           DISABLE_FLAGS_ARG=""
           if [ -n "${{ inputs.disable_flags }}" ]; then DISABLE_FLAGS_ARG="--disable-flags=${{ inputs.disable_flags }}"; fi
+          RESERVE_ARGS=""
+          if [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ]; then RESERVE_ARGS="$RESERVE_ARGS --main-loop-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}"; fi
+          if [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ]; then RESERVE_ARGS="$RESERVE_ARGS --main-loop-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}"; fi
+          PRIME_ARG=""
+          if [ "${{ inputs.prime_winner }}" = "true" ]; then PRIME_ARG="--prime-winner"; fi
+          SAVE_HINTS_ARG=""
+          if [ "${{ inputs.persist_hints }}" = "true" ]; then SAVE_HINTS_ARG="--save-hints"; fi
           # 2026-08-06: 300m (down slightly from the old 320m) to keep the two sweeps' combined
           # worst case (45m + 300m = 345m) safely under the job's 360-minute timeout-minutes, itself
           # already at GitHub-hosted runners' 6-hour hard per-job ceiling -- this cannot be raised
@@ -286,10 +317,11 @@ jobs:
             --work-budget="${WORK_BUDGET_C2}" \
             --workers="${{ inputs.corpus2_workers }}" \
             --baseline=logs/stress-corpus2-baseline.json \
-            --prime-winner \
+            $PRIME_ARG \
             $ENABLE_FLAGS_ARG \
             $DISABLE_FLAGS_ARG \
-            --save-hints \
+            $RESERVE_ARGS \
+            $SAVE_HINTS_ARG \
             --out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" \
             --summary-out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}-summary.md" \
             2>&1 | tee -a "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.console.log"
@@ -549,7 +581,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "flags: enable='${{ inputs.enable_flags }}' disable='${{ inputs.disable_flags }}' deterministic='${{ inputs.deterministic }}'"
+          echo "flags: enable='${{ inputs.enable_flags }}' disable='${{ inputs.disable_flags }}' deterministic='${{ inputs.deterministic }}' reserve_fraction='${{ inputs.main_loop_late_reserve_fraction }}' reserve_count='${{ inputs.main_loop_late_reserve_config_count }}' prime_winner='${{ inputs.prime_winner }}' persist_hints='${{ inputs.persist_hints }}'"
           node - <<'NODE'
           const { readFileSync, existsSync } = require('node:fs');
           for (const [name, f] of [['corpus-1', 'reports/stress/benchmark-parallel.json'],
@@ -576,7 +608,8 @@ jobs:
           retention-days: 90
 
       - name: Persist hints/provenance (+ full refresh when not deterministic) to the dispatched branch
-        # Always runs, regardless of `deterministic` -- hints are valid PLAY-checked solutions
+        if: inputs.persist_hints == 'true' || inputs.deterministic != 'true'
+        # Normally runs regardless of `deterministic` -- hints are valid PLAY-checked solutions
         # (with provenance recording exactly which run/config found them) no matter what budget
         # shape found them, so losing a deterministic A/B's newly-discovered hints to a 90-day
         # artifact would be a real, avoidable loss (docs/README.md's hint-provenance philosophy:
@@ -584,6 +617,8 @@ jobs:
         # continuity-baseline/log/report files stay gated to non-deterministic runs (below) --
         # THOSE numbers really are incomparable with the committed baseline series (this file's
         # top-of-file 2026-08-06 note), which hints have no such concern about.
+        # `persist_hints=false` is the deliberate exception for multi-arm cold A/Bs: it prevents an
+        # earlier arm from changing the branch SHA before the next queued arm starts.
         #
         # Pushes to the DISPATCHED branch (git push origin HEAD:${{ github.ref_name }}), not a
         # hardcoded main. This checkout follows github.ref (see the fix above), so a hardcoded

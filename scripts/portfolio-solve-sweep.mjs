@@ -104,6 +104,13 @@
  *                                 reserve). Pass 0 for the pre-reserve behaviour — that is the
  *                                 baseline arm of an A/B on the reserve itself. Also not honored
  *                                 under --race-pool-size (race.mjs has no nodeBudget handling).
+ *   --main-loop-late-reserve-fraction=<f>
+ *   --main-loop-late-reserve-config-count=<n>
+ *                                 opt-in main-loop starvation experiment knobs. Enable with
+ *                                 --enable-flags=STRATEGY_MAIN_LOOP_LATE_RESERVE; the final n
+ *                                 ordinary configs may consume fraction f of the ordinary node
+ *                                 envelope withheld from the probe/early prefix. Requires a finite
+ *                                 --node-budget and is not supported by --race-pool-size.
  *   --disable-extra-budget-passes  sets all three fractions above to 0 at once
  *                                 (SolveOpts.disableExtraBudgetPasses). Prefer this over remembering
  *                                 each flag when a sweep just wants no extra-pass cost; an explicit
@@ -215,6 +222,8 @@ const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(arg
 const attractionDiversityBudgetFraction = argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined;
 const admissibleOrderBudgetFraction = argMap.has('--admissible-order-budget-fraction') ? Number(argMap.get('--admissible-order-budget-fraction')) : undefined;
 const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction') ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
+const mainLoopLateReserveFraction = argMap.has('--main-loop-late-reserve-fraction') ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
+const mainLoopLateReserveConfigCount = argMap.has('--main-loop-late-reserve-config-count') ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
 const disableExtraBudgetPasses = flags.has('--disable-extra-budget-passes');
 // DEPRECATED --baseline-budget: per-level adaptive node budgets scaled off recorded per-level
 // nodesExpanded, instead of one flat --node-budget on every level. Rationale (measured on
@@ -444,6 +453,8 @@ if (Number.isFinite(repairBudgetFraction)) solveOpts.repairBudgetFractionOverrid
 if (Number.isFinite(attractionDiversityBudgetFraction)) solveOpts.attractionDiversityBudgetFractionOverride = attractionDiversityBudgetFraction;
 if (Number.isFinite(admissibleOrderBudgetFraction)) solveOpts.admissibleOrderBudgetFractionOverride = admissibleOrderBudgetFraction;
 if (Number.isFinite(admissibleOrderNodeReserveFraction)) solveOpts.admissibleOrderNodeReserveFractionOverride = admissibleOrderNodeReserveFraction;
+if (Number.isFinite(mainLoopLateReserveFraction)) solveOpts.mainLoopLateReserveFractionOverride = mainLoopLateReserveFraction;
+if (Number.isFinite(mainLoopLateReserveConfigCount)) solveOpts.mainLoopLateReserveConfigCountOverride = mainLoopLateReserveConfigCount;
 // Set LAST of the fraction group on purpose: orchestration.ts resolves each individual override with
 // `?? (disableExtraBudgetPasses ? 0 : undefined)`, so an explicit --repair-budget-fraction etc. still
 // wins over this flag — the additive semantics its own SolveOpts comment promises.
@@ -680,7 +691,7 @@ for (const row of cachedSkipRows) recordRow(row, { fromCheckpointOrCache: true }
 
 const effectiveParallelism = workerCount * Math.max(1, racePoolSize);
 const cpuCount = os.cpus().length;
-console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(attractionDiversityBudgetFraction) ? ` attraction-diversity-budget-fraction=${attractionDiversityBudgetFraction}` : ''}${Number.isFinite(admissibleOrderBudgetFraction) ? ` admissible-order-budget-fraction=${admissibleOrderBudgetFraction}` : ''}${Number.isFinite(admissibleOrderNodeReserveFraction) ? ` admissible-order-node-reserve-fraction=${admissibleOrderNodeReserveFraction}` : ''}${disableExtraBudgetPasses ? ' disable-extra-budget-passes' : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
+console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(attractionDiversityBudgetFraction) ? ` attraction-diversity-budget-fraction=${attractionDiversityBudgetFraction}` : ''}${Number.isFinite(admissibleOrderBudgetFraction) ? ` admissible-order-budget-fraction=${admissibleOrderBudgetFraction}` : ''}${Number.isFinite(admissibleOrderNodeReserveFraction) ? ` admissible-order-node-reserve-fraction=${admissibleOrderNodeReserveFraction}` : ''}${Number.isFinite(mainLoopLateReserveFraction) ? ` main-loop-late-reserve-fraction=${mainLoopLateReserveFraction}` : ''}${Number.isFinite(mainLoopLateReserveConfigCount) ? ` main-loop-late-reserve-config-count=${mainLoopLateReserveConfigCount}` : ''}${disableExtraBudgetPasses ? ' disable-extra-budget-passes' : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
 if (adaptiveBudget) {
     const assigned = toActuallyRun.map(n => nodeBudgetFor(rawLevels[n - 1]?.id));
     const capped = assigned.filter(b => b !== undefined).sort((a, b) => a - b);
