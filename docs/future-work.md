@@ -23,7 +23,7 @@ population counts are dated snapshots; this file is the current status index.
 - **Campaign 2** — `dfs-plain` exhaustion. **Historical phase concluded:** the known fragile-scoring family and the tested pruning/scoring generalizations did not explain the harder majority. Later work moved to admissible-order search, reserved-intersection reasoning, rule-recognition, oracle-labelled shadow evaluation, and differential diagnosis; use the open sections below rather than this old population bucket.
 - **Campaign 3** — `repair-far` + robust hard cores. **Historical label retired:** subsequent work did attack the robust population through several new techniques, so “not yet started” is no longer accurate. No single replacement technique has closed the population; the concrete surviving leads are tracked below.
 
-## Main-loop attempt-ordering starvation (2026-08-08, open — sized corpus-wide, no fix yet)
+## Main-loop attempt-ordering starvation (2026-08-10, experiment implemented — A/B pending)
 
 A fresh re-run of `2026-07-31-admissible-order-tier-node-starvation.md`'s methodology against
 *current* hint provenance (not that report's stale 505/1700 baseline) found the same "earlier
@@ -34,20 +34,27 @@ the ladder consumed the entire cumulative node budget first — hand-confirmed v
 instrumentation on real levels. A corpus-wide, read-only census
 (`scripts/stress/main-loop-starvation-census.mjs`, pure JSON cross-reference against the already-
 committed baseline attempt logs and stored hint provenance, no new solving) then sized it: **34 of
-975 unsolved corpus-2 levels (3.5%) are provably recoverable** — carry a validated, budget-fitting
-hint whose exact config is currently zero-allocated — split into **14 with a hard, deterministic
+975 unsolved corpus-2 levels (3.5%) have a historically matched, budget-fitting witness** — carry
+a validated hint whose exact config is currently zero-allocated — split into **14 with a hard, deterministic
 (dfs/beam) match** and 20 with a softer, seed-dependent repair match. The much larger raw number
 (87.1% of unsolved levels have *some* zero-node attempt) is mostly not a bug — it's what a fully
 budget-exhausted ladder's tail looks like by construction, confirmed by a clean control (only 0.8%
-of *solved* levels show any starved attempt, 0% recoverable). See
+of *solved* levels show any starved attempt, 0% historically matched). See
 [`reports/2026-08-08-main-loop-profile-order-starvation.md`](../reports/2026-08-08-main-loop-profile-order-starvation.md)
 for the full mechanism, the census, and why the hard/soft/not-recoverable populations must not be
-conflated in any future measurement. **Next step, not yet done:** if pursued, scope a fix
-candidate to the 14-level hard-match population first (the admissible-order tier's own
-reserve-not-reorder template is the natural candidate), and budget for a full-population A/B, not
-a spot check — this codebase has measured reordering a budget-limited search to be a coin flip
-three separate times, and the admissible-order fix's own 24-level pilot pointed the wrong way
-twice before the full 141-level population gave a trustworthy answer.
+conflated in any future measurement. A default-off reserve-not-reorder treatment is now implemented
+for the final four ordinary configurations, with frozen 5%/10%/15% arms. A clean 15% mechanism
+pilot recovered 1/14 historical hard matches (all 56 config/gate beneficiaries activated, zero
+attempt errors); see the
+[`mechanism-pilot report`](../reports/2026-08-10-main-loop-late-reserve-mechanism-pilot.md). That
+result also proves the historical match is not a guarantee of reproduction on the current solver
+revision. **Next step, if the small measured upside still justifies the run:** execute the
+fresh-control, full-population matched-budget A/B in
+[`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md). The 14 hard matches
+are a mechanism cohort, not the acceptance population — this codebase has measured reordering a
+budget-limited search to be a coin flip three separate times, and the admissible-order fix's own
+24-level pilot pointed the wrong way twice before the full 141-level population gave a trustworthy
+answer.
 
 ## Solver rule-recognition gaps (2026-08-05, reconciled 2026-08-09)
 

@@ -111,4 +111,5 @@ export const MAXIMALLY_POPULATED_SOLVER_ATTEMPT = Object.freeze({
   admissibleOrder: true,
   admissibleOrderNoTieBreak: true,
   admissibleOrderLds: true,
+  mainLoopLateReserve: true,
 });

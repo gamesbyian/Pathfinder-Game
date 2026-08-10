@@ -106,9 +106,12 @@ interface Attempt {
      *  LDS-wrapped admissible-order winner apart from the plain unbounded search. Not read by any
      *  solving logic. */
     admissibleOrderLds?: boolean;
+    /** Diagnostic-only: this ordinary main-loop attempt belongs to the late suffix allowed to
+     *  consume the experimental reserved node slice. Never set when the experiment is disabled. */
+    mainLoopLateReserve?: boolean;
 }
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
-interface SearchResult { solution: number[] | null; attempts: Attempt[]; }
+interface SearchResult { solution: number[] | null; attempts: Attempt[]; earlyNodeBudgetReached?: boolean; }
 interface SolveOpts {
     timeBudgetMs?: number | string;
     yieldFn?: (() => Promise<void>);
@@ -187,6 +190,14 @@ interface SolveOpts {
      *  tier shares one undivided cumulative ceiling), which is what a before/after sweep sets on its
      *  baseline arm. Undefined (production default) preserves the constant exactly. */
     admissibleOrderNodeReserveFractionOverride?: number;
+    /** Experimental, offline-only A/B knob for the ordinary main-loop late-suffix reserve.
+     *  Effective only with STRATEGY_MAIN_LOOP_LATE_RESERVE explicitly enabled. The fraction is
+     *  withheld from the repair probe and the main loop's early config prefix, then becomes
+     *  available to the final N ordinary configs without reordering them. */
+    mainLoopLateReserveFractionOverride?: number;
+    /** Number of final ordinary configs eligible for the experimental reserve. See the fraction
+     *  override above. Values are clamped to the main config count; 0 disables the reserve. */
+    mainLoopLateReserveConfigCountOverride?: number;
     /** Convenience for offline batch tooling: sets repairBudgetFractionOverride,
      *  attractionDiversityBudgetFractionOverride, AND admissibleOrderBudgetFractionOverride all to 0
      *  (purely additive — an explicit value on any individual override still wins over this, so a
@@ -420,9 +431,13 @@ async function runInterleavedAttempts(
     activeGates: number[], baseConfigs: AttemptConfig[], level: NormalizedLevel,
     prep: PrepLevel, timeBudgetMs: number, levelStartTime: number, yieldFn: YieldFn,
     nodeBudget = Infinity, workBudget = Infinity, workStart = 0,
+    earlyConfigNodeBudget = nodeBudget, lateConfigStart = baseConfigs.length,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     let pairsLeft = baseConfigs.length * activeGates.length;
+    let earlyNodeBudgetReached = false;
+    const lateConfigCount = baseConfigs.length - lateConfigStart;
+    const latePairCount = lateConfigCount * activeGates.length;
 
     // Adaptive gate weighting only engages on genuinely dilution-prone levels, and only
     // from the second full config round onward — round 0 always runs at the flat even
@@ -432,13 +447,31 @@ async function runInterleavedAttempts(
     const adaptive = (!cfg || cfg.STRATEGY_ADAPTIVE_GATE_BUDGET) && activeGates.length >= ADAPTIVE_GATE_THRESHOLD;
     const gateProgress = adaptive ? new Map(activeGates.map(g => [g, 0])) : null;
 
-    for (let ci = 0; ci < baseConfigs.length; ci++) {
+    configLoop: for (let ci = 0; ci < baseConfigs.length; ci++) {
         for (let gi = 0; gi < activeGates.length; gi++) {
             const gateKey = activeGates[gi];
             const elapsed = Date.now() - levelStartTime;
+            const latePairIndex = ci >= lateConfigStart
+                ? (ci - lateConfigStart) * activeGates.length + gi
+                : -1;
+            // Give every beneficiary pair its own cumulative slice. Merely exposing the whole
+            // reserve to the suffix would let its first config/gate consume everything and recreate
+            // the same starvation one position later.
+            const configNodeBudget = latePairIndex >= 0
+                ? earlyConfigNodeBudget + Math.floor((nodeBudget - earlyConfigNodeBudget) * (latePairIndex + 1) / latePairCount)
+                : earlyConfigNodeBudget;
             const nodesSpent = prep._metrics ? prep._metrics.nodesExpanded : 0;
             if (elapsed >= timeBudgetMs) return { solution: null, attempts };
-            if (nodesSpent >= nodeBudget) return { solution: null, attempts };
+            if (nodesSpent >= configNodeBudget) {
+                if (earlyConfigNodeBudget < nodeBudget && ci < lateConfigStart) {
+                    earlyNodeBudgetReached = true;
+                    pairsLeft = (baseConfigs.length - lateConfigStart) * activeGates.length;
+                    ci = lateConfigStart - 1;
+                    continue configLoop;
+                }
+                if (latePairIndex + 1 < latePairCount) { pairsLeft--; continue; }
+                return { solution: null, attempts, earlyNodeBudgetReached };
+            }
             // Ablation: STRATEGY_MIN_BUDGET_FLOOR gates the per-attempt-config minimum
             // budget-share floor (long-multigate perimeter beams, must-cross diverse-beam
             // threads) — disabling it falls back to the flat even split for every config.
@@ -459,28 +492,36 @@ async function runInterleavedAttempts(
             // repair fallback below): beam/DFS count nodes LOCAL to the call, so the remainder makes a
             // single attempt stop mid-search when the cumulative budget is hit, instead of only being
             // caught by the between-attempts check above after it has already run its full time slice.
-            const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
+            const remainingNodeBudget = configNodeBudget === Infinity ? Infinity : Math.max(0, configNodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
             // The attempt's ms figure is the DEADLINE's remainder, not a share — it can truncate
             // the attempt but never sized it. prep._workCap (above) is what actually bounds it.
             const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], timeBudgetMs - elapsed, Date.now(), yieldFn, remainingNodeBudget);
+            if (ci >= lateConfigStart) result.attempt.mainLoopLateReserve = true;
+            if (ci < lateConfigStart && (prep._metrics ? prep._metrics.nodesExpanded : 0) >= earlyConfigNodeBudget) {
+                earlyNodeBudgetReached = earlyConfigNodeBudget < nodeBudget;
+            }
             if (gateProgress) {
                 gateProgress.set(gateKey, (gateProgress.get(gateKey) ?? 0) + (result.attempt.nodesExpanded ?? 0));
             }
             attempts.push(result.attempt);
             pairsLeft--;
-            if (result.path) return { solution: result.path, attempts };
+            if (result.path) return { solution: result.path, attempts, earlyNodeBudgetReached };
         }
     }
-    return { solution: null, attempts };
+    return { solution: null, attempts, earlyNodeBudgetReached };
 }
 
 async function runGateSerialAttempts(
     activeGates: number[], baseConfigs: AttemptConfig[], level: NormalizedLevel,
     prep: PrepLevel, timeBudgetMs: number, levelStartTime: number, yieldFn: YieldFn,
     nodeBudget = Infinity, workBudget = Infinity, workStart = 0,
+    earlyConfigNodeBudget = nodeBudget, lateConfigStart = baseConfigs.length,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     const cfg = prep._cfg;
+    let earlyNodeBudgetReached = false;
+    const lateConfigCount = baseConfigs.length - lateConfigStart;
+    const latePairCount = lateConfigCount * activeGates.length;
 
     for (let gi = 0; gi < activeGates.length; gi++) {
         const gateKey = activeGates[gi];
@@ -496,6 +537,17 @@ async function runGateSerialAttempts(
         const gateBudget = Math.floor((workBudget - workSpent) / gatesLeft);
 
         for (let ci = 0; ci < baseConfigs.length; ci++) {
+            const latePairIndex = ci >= lateConfigStart
+                ? gi * lateConfigCount + (ci - lateConfigStart)
+                : -1;
+            const configNodeBudget = latePairIndex >= 0
+                ? earlyConfigNodeBudget + Math.floor((nodeBudget - earlyConfigNodeBudget) * (latePairIndex + 1) / latePairCount)
+                : earlyConfigNodeBudget;
+            if (earlyConfigNodeBudget < nodeBudget && (prep._metrics ? prep._metrics.nodesExpanded : 0) >= configNodeBudget) {
+                if (ci < lateConfigStart) { earlyNodeBudgetReached = true; continue; }
+                if (latePairIndex + 1 < latePairCount) continue;
+                return { solution: null, attempts, earlyNodeBudgetReached };
+            }
             const elapsed = workMeter.units - gateStartUnits;
             if (elapsed >= gateBudget) break;
 
@@ -508,13 +560,17 @@ async function runGateSerialAttempts(
             prep._workCap = workMeter.units + attBudget;
 
             // Remaining GLOBAL node budget — see runInterleavedAttempts's identical recompute.
-            const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
+            const remainingNodeBudget = configNodeBudget === Infinity ? Infinity : Math.max(0, configNodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
             const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], timeBudgetMs - (Date.now() - levelStartTime), Date.now(), yieldFn, remainingNodeBudget);
+            if (ci >= lateConfigStart) result.attempt.mainLoopLateReserve = true;
+            if (ci < lateConfigStart && (prep._metrics ? prep._metrics.nodesExpanded : 0) >= earlyConfigNodeBudget) {
+                earlyNodeBudgetReached = earlyConfigNodeBudget < nodeBudget;
+            }
             attempts.push(result.attempt);
-            if (result.path) return { solution: result.path, attempts };
+            if (result.path) return { solution: result.path, attempts, earlyNodeBudgetReached };
         }
     }
-    return { solution: null, attempts };
+    return { solution: null, attempts, earlyNodeBudgetReached };
 }
 
 /** Extra wall-clock budget granted to the repair fallback (see attempts.ts's
@@ -653,6 +709,10 @@ export const ADMISSIBLE_ORDER_BUDGET_FRACTION = 1.0;
  *  must be 0 whenever the tier is suppressed, or an exhausted early tier would start reporting
  *  status 'failed' where it used to report 'node-budget-reached'. */
 export const ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION = 0.25;
+/** Default treatment values for the opt-in main-loop starvation experiment. Production never
+ *  observes these constants unless STRATEGY_MAIN_LOOP_LATE_RESERVE is explicitly enabled. */
+export const MAIN_LOOP_LATE_RESERVE_FRACTION = 0.10;
+export const MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT = 4;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
@@ -1251,6 +1311,38 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : 0;
     const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve;
 
+    // Ordinary main-loop late-suffix reserve (default OFF). Unlike a reorder, this retains the
+    // exact config/gate iteration order: the repair probe and early config prefix see a reduced
+    // absolute ceiling, while the final N ordinary configs see the ordinary tier's whole envelope
+    // (`earlyTierNodeBudget`, which already excludes the independent admissible-order reserve).
+    // After the ordinary main loop has offered that suffix its slice, repair/diversity may use any
+    // remainder, so an inexpensive/exhausted suffix never strands budget.
+    const mainLoopLateReserveEnabled = !!(cfg && cfg.STRATEGY_MAIN_LOOP_LATE_RESERVE === true);
+    const mainLoopLateReserveFractionRaw = Number(opts.mainLoopLateReserveFractionOverride);
+    const mainLoopLateReserveFraction = Number.isFinite(mainLoopLateReserveFractionRaw) && mainLoopLateReserveFractionRaw >= 0
+        ? Math.min(1, mainLoopLateReserveFractionRaw)
+        : MAIN_LOOP_LATE_RESERVE_FRACTION;
+    const mainLoopLateReserveCountRaw = Number(opts.mainLoopLateReserveConfigCountOverride);
+    const mainLoopLateReserveConfigCount = Number.isFinite(mainLoopLateReserveCountRaw) && mainLoopLateReserveCountRaw >= 0
+        ? Math.min(mainConfigs.length, Math.floor(mainLoopLateReserveCountRaw))
+        : Math.min(mainConfigs.length, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT);
+    const mainLoopLateReserveEligible = mainLoopLateReserveEnabled
+        && mainLoopLateReserveFraction > 0
+        && mainLoopLateReserveConfigCount > 0
+        && earlyTierNodeBudget !== Infinity;
+    const mainLoopLateReserve = mainLoopLateReserveEligible
+        ? Math.floor(earlyTierNodeBudget * mainLoopLateReserveFraction)
+        : 0;
+    // A tiny finite ceiling can round the requested fraction to zero. Treat that as fully inert:
+    // no telemetry marker, no altered status, and no pretend beneficiary with a zero-node slice.
+    const mainLoopLateReserveWillRun = mainLoopLateReserve > 0;
+    const mainLoopEarlyNodeBudget = earlyTierNodeBudget === Infinity
+        ? Infinity
+        : earlyTierNodeBudget - mainLoopLateReserve;
+    const mainLoopLateConfigStart = mainLoopLateReserveWillRun
+        ? mainConfigs.length - mainLoopLateReserveConfigCount
+        : mainConfigs.length;
+
     // Early, strictly-additive probe of the repair fallback — see REPAIR_PROBE_ORDINARY_NODE_BUDGET
     // / REPAIR_PROBE_BIASED_NODE_BUDGET. Absent (and free) on every level outside the repair
     // feature gate, since repairConfigs is empty there. Also skipped when the caller has explicitly
@@ -1283,7 +1375,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // still runs), isolating the probe's own scheduling contribution from repair-search itself.
     const probeAttempts: Attempt[] = primeMissAttempt ? [primeMissAttempt] : [];
     if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
-        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, earlyTierNodeBudget);
+        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, mainLoopEarlyNodeBudget);
         probeAttempts.push(...probe.attempts);
         if (probe.solution) {
             const totalMs = Date.now() - levelStartTime;
@@ -1302,7 +1394,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // further guards: the main loop's runners, the repair loop and the diversity pass each
         // re-check `earlyTierNodeBudget` themselves and no-op, so control reaches the tier having
         // spent no extra nodes.
-        if (prep._metrics.nodesExpanded >= earlyTierNodeBudget && admissibleOrderNodeReserve === 0) {
+        if (prep._metrics.nodesExpanded >= mainLoopEarlyNodeBudget && admissibleOrderNodeReserve === 0 && mainLoopLateReserve === 0) {
             const totalMs = Date.now() - levelStartTime;
             return { ok: false, status: hasAttemptError(probeAttempts) ? 'attempt-error' : 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true, workSpent: workMeter.units - workStart, workBudget };
         }
@@ -1326,9 +1418,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const useInterleaving = (!cfg || cfg.STRATEGY_GATE_INTERLEAVING);
     const mainLoopStartTime = Date.now();
     const result = useInterleaving && activeGates.length > 1
-        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, earlyTierNodeBudget, workBudget, workStart)
-        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, earlyTierNodeBudget, workBudget, workStart);
+        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, earlyTierNodeBudget, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart)
+        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, earlyTierNodeBudget, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart);
     result.attempts = [...probeAttempts, ...result.attempts];
+    const mainLoopEarlyTiersHitNodeCeiling = result.earlyNodeBudgetReached === true;
 
     // repairBudgetFraction was already resolved above (before the early probe) — reused here
     // unchanged for the full-budget fallback loop, same as before this fix.
@@ -1498,7 +1591,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // truncated at the reduced ceiling to fund the reserve (see earlyTiersHitNodeCeiling). With no
     // reserve (every production caller, and any run with an infinite nodeBudget) the second term is
     // always false and this is bit-identical to the original `nodesExpanded >= nodeBudget`.
-    const nodeBudgetReached = nodeBudget !== Infinity && (nodesExpanded >= nodeBudget || earlyTiersHitNodeCeiling);
+    const nodeBudgetReached = nodeBudget !== Infinity && (nodesExpanded >= nodeBudget || earlyTiersHitNodeCeiling || mainLoopEarlyTiersHitNodeCeiling);
     if (result.solution) {
         return { ok: true, status: 'success', solution: result.solution, solutions: [result.solution], attempts: result.attempts, totalMs, nodesExpanded, workSpent: workMeter.units - workStart, workBudget };
     }

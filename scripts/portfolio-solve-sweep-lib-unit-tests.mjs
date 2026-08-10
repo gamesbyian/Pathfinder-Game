@@ -19,6 +19,7 @@ const PERSISTENT_ATTEMPT_FIELDS = new Set([
     'repair', 'repairMustTurnBiased', 'repairTurnBiased', 'seedSalt', 'randomSeed',
     'nodesExpanded', 'timedOut', 'bestBadness', 'finalBadness', 'attractionDiversity',
     'admissibleOrder', 'admissibleOrderNoTieBreak', 'admissibleOrderLds',
+    'mainLoopLateReserve',
 ]);
 const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([]);
 

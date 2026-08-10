@@ -23,14 +23,16 @@
 // hand-tracing in the report above: this signature means the search primitive bailed before doing
 // any work at all, distinct from a small-but-nonzero count, which is genuine fast exhaustion).
 //
-// A starved attempt is a PROVABLY RECOVERABLE loss only if the level ALSO carries a cold
+// A starved attempt is a HISTORICALLY MATCHED, BUDGET-FITTING loss only if the level ALSO carries a cold
 // (non-hint-guided), trustworthy (nodesExpanded >= 100 -- excludes a documented batch of ~1,100
 // stale/buggy near-zero beam provenance entries from an old instrumentation era, see the
 // mc-neighbor-budget-propagation report's own note on this) hint whose (technique-family, profile,
 // template, beamWidth) signature matches a STARVED attempt's config AND whose own recorded
 // nodesExpanded fits under this run's node budget (36M for corpus-2, 50M for corpus-1). That is a
-// real, validated solution that the CURRENT routine run's own attempt log shows getting zero
-// nodes -- not a guess.
+// real, validated historical solution whose matching config the current routine run gave zero
+// nodes. It is evidence of allocation opportunity, not proof the current solver revision will
+// reproduce that old witness (the 2026-08-10 reserve pilot recovered only 1/14 deterministic
+// matches; code/search evolution can invalidate that inference).
 //
 // SCOPE LIMITS, HONEST. `repair`'s match is COARSE (any repair-flagged attempt matches any
 // repair-flagged hint) -- repair uses a per-attempt randomized seed
@@ -151,11 +153,11 @@ for (const c of CORPORA) {
     console.log(`  unsolved: ${un.levels} levels, ${un.totalAttempts} attempts, ${un.starvedAttempts} starved (${(100 * un.starvedAttemptRate).toFixed(1)}%)`);
     console.log(`  unsolved: ${un.levelsWithStarved} levels (${(100 * un.levelsWithStarvedRate).toFixed(1)}%) have >=1 starved attempt`);
     console.log(`  unsolved: starved attempts by family: ${JSON.stringify(un.starvedByFamily)}`);
-    console.log(`  unsolved: PROVABLY RECOVERABLE levels: ${un.levelsRecoverable} (by family: ${JSON.stringify(un.recoverableByFamily)})`);
+    console.log(`  unsolved: HISTORICALLY MATCHED budget-fitting levels: ${un.levelsRecoverable} (by family: ${JSON.stringify(un.recoverableByFamily)})`);
     console.log(`  unsolved: of those, dfs/beam (hard, deterministic match): ${un.recoverableDfsOrBeam}; repair-only (soft, seed-dependent match): ${un.recoverableRepairOnly}`);
 
     const sol = analyzePopulation(solved, c.hintsDir, c.nodeBudget);
-    console.log(`  solved (control): ${sol.levels} levels, ${sol.levelsWithStarved} (${(100 * sol.levelsWithStarvedRate).toFixed(1)}%) have >=1 starved attempt, ${sol.levelsRecoverable} recoverable`);
+    console.log(`  solved (control): ${sol.levels} levels, ${sol.levelsWithStarved} (${(100 * sol.levelsWithStarvedRate).toFixed(1)}%) have >=1 starved attempt, ${sol.levelsRecoverable} historically matched`);
 
     results[c.name] = { unsolved: un, solvedControl: sol };
 }
