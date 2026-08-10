@@ -1,4 +1,5 @@
 // Pathfinder solver Web Worker.
+import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 // Loaded as a module worker: new Worker(url, { type: 'module' })
 //
 // Inbound message types:
@@ -162,17 +163,7 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
         };
         const result = await solveLevel(level, { timeBudgetMs: budgetMs, yieldFn });
         cancelledIds.delete(id);
-        postBack({
-            type: 'RESULT',
-            id,
-            ok:            result.ok,
-            status:        result.status,
-            solution:      result.solution,
-            elapsedMs:     result.totalMs,
-            nodesExpanded: result.nodesExpanded,
-            attempts:      result.attempts,
-            deadlineTruncated: result.deadlineTruncated,
-        });
+        postBack(buildSolveWorkerResult(id, result));
     } catch (err) {
         cancelledIds.delete(id);
         if (err?.message === 'Solver:cancelled') {
