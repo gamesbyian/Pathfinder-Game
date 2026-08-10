@@ -9,6 +9,8 @@ import { normalizeRawLevel } from './normalization.js';
 import { prepLevel } from './prep.js';
 import { createState, applyMove } from './search-state.js';
 import { __setReachGenerationForTests, isConnected, isConnectedForTrap } from './topology.js';
+import { evaluatePrunedMove } from './prune-gauntlet.js';
+import type { PruneDiagnostics } from './prune-gauntlet.js';
 
 const K = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 
@@ -29,15 +31,32 @@ function stateAt(level: any, prep: any, walkKeys: number[]) {
     return state;
 }
 
+function connectivityDiagnostic(next: number, state: any, level: any, prep: any) {
+    const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+    const verdict = evaluatePrunedMove(next, state.path.length - 1, state, level, prep,
+        { PRUNE_CONNECTIVITY: true }, true, diagnostics);
+    return {
+        verdict,
+        reached: diagnostics.reached.PRUNE_CONNECTIVITY ?? 0,
+        rejected: diagnostics.rejected.PRUNE_CONNECTIVITY ?? 0,
+    };
+}
+
 test('fires when the goal is walled off; passes when it is reachable', () => {
     const open = makeLevel();
     const openPrep = prepLevel(open);
-    assert.equal(isConnected(K(1, 1), stateAt(open, openPrep, [K(1, 1)]), open, openPrep), true);
+    const openState = stateAt(open, openPrep, [K(1, 1)]);
+    assert.equal(isConnected(K(1, 1), openState, open, openPrep), true);
+    assert.deepEqual(connectivityDiagnostic(K(1, 1), openState, open, openPrep),
+        { verdict: 'pass', reached: 1, rejected: 0 }, 'feasible control reaches connectivity and survives');
 
     // Vertical wall of blocks isolates the goal column.
     const walled = makeLevel({ blocks: [{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }], reqLen: 6 });
     const wPrep = prepLevel(walled);
-    assert.equal(isConnected(K(1, 1), stateAt(walled, wPrep, [K(1, 1)]), walled, wPrep), false);
+    const walledState = stateAt(walled, wPrep, [K(1, 1)]);
+    assert.equal(isConnected(K(1, 1), walledState, walled, wPrep), false);
+    assert.deepEqual(connectivityDiagnostic(K(1, 1), walledState, walled, wPrep),
+        { verdict: 'reject', reached: 1, rejected: 1 }, 'connectivity is the isolated first firing rule');
 });
 
 test('fires when an unvisited must-pass is unreachable; not once it has been visited', () => {

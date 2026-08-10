@@ -103,6 +103,8 @@ import { createState, applyMove, getNeighbors, undoMove } from './search-state.j
 import { getRealLengthFromState } from './solution.js';
 import { validateCandidatePath } from '../domain/path-validator.js';
 import { isConnected } from './topology.js';
+import { evaluatePrunedMove } from './prune-gauntlet.js';
+import type { PruneDiagnostics, PruneId } from './prune-gauntlet.js';
 import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, mustCrossForcedNeighborDeadlocked, mustCrossNeighborBudgetDeadlocked } from './lower-bounds.js';
 
 const W = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
@@ -118,6 +120,13 @@ function wireLevel(overrides: any = {}) {
   });
 }
 
+/** Run exactly one configurable gauntlet rule against an already-reached test state. */
+function diagnoseRule(id: PruneId, next: number, state: SolverSearchState, level: NormalizedLevel, prep: ReturnType<typeof prepLevel>) {
+  const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+  const verdict = evaluatePrunedMove(next, getRealLengthFromState(state), state, level, prep, { [id]: true }, false, diagnostics);
+  return { verdict, reached: diagnostics.reached[id] ?? 0, rejected: diagnostics.rejected[id] ?? 0 };
+}
+
 test('mustPassLowerBound is Infinity (prune fires) when the objective is sealed off', () => {
   const sealed = wireLevel({
     gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },
@@ -127,6 +136,13 @@ test('mustPassLowerBound is Infinity (prune fires) when the objective is sealed 
   const prep = prepLevel(sealed);
   const st = createState(W(1, 1), sealed, prep);
   assert.equal(mustPassLowerBound(W(1, 1), st, sealed, prep), Infinity);
+  assert.deepEqual(diagnoseRule('PRUNE_MUST_PASS_LB', W(1, 1), st, sealed, prep),
+    { verdict: 'reject', reached: 1, rejected: 1 });
+
+  const open = wireLevel({ goal: { x: 5, y: 1 }, mustPass: [{ x: 3, y: 1 }], reqLen: 4 });
+  const openPrep = prepLevel(open), openState = createState(W(1, 1), open, openPrep);
+  assert.deepEqual(diagnoseRule('PRUNE_MUST_PASS_LB', W(1, 1), openState, open, openPrep),
+    { verdict: 'pass', reached: 1, rejected: 0 }, 'feasible exact path is not removed');
 });
 
 test('mustCrossLowerBound is Infinity (prune fires) when the objective is sealed off', () => {
@@ -138,6 +154,13 @@ test('mustCrossLowerBound is Infinity (prune fires) when the objective is sealed
   const prep = prepLevel(sealed);
   const st = createState(W(1, 1), sealed, prep);
   assert.equal(mustCrossLowerBound(W(1, 1), st, sealed, prep), Infinity);
+  assert.deepEqual(diagnoseRule('PRUNE_MUST_CROSS_LB', W(1, 1), st, sealed, prep),
+    { verdict: 'reject', reached: 1, rejected: 1 });
+
+  const open = wireLevel({ goal: { x: 5, y: 1 }, mustCross: [{ x: 3, y: 2 }], reqLen: 8, reqInt: 1 });
+  const openPrep = prepLevel(open), openState = createState(W(1, 1), open, openPrep);
+  assert.deepEqual(diagnoseRule('PRUNE_MUST_CROSS_LB', W(1, 1), openState, open, openPrep),
+    { verdict: 'pass', reached: 1, rejected: 0 }, 'ample-budget control reaches and passes the rule');
 });
 
 test('MST joint bounds are tighter than the max single-objective bound when cells spread out', () => {
@@ -260,9 +283,13 @@ test('surroundLowerBound: zero when satisfied, positive when work remains, Infin
   const sPrep = prepLevel(sealed);
   const sSt = createState(W(1, 1), sealed, sPrep);
   assert.equal(surroundLowerBound(W(1, 1), sSt, sealed, sPrep), Infinity);
+  assert.deepEqual(diagnoseRule('PRUNE_SURROUND_LB', W(1, 1), sSt, sealed, sPrep),
+    { verdict: 'reject', reached: 1, rejected: 1 });
+  assert.deepEqual(diagnoseRule('PRUNE_SURROUND_LB', W(1, 1), st, l, prep),
+    { verdict: 'pass', reached: 1, rejected: 0 }, 'reachable surround work is a feasible negative control');
 });
 
-test('adjTurnLowerBound: zero when satisfied, positive when remaining, Infinity when unreachable', () => {
+test('adjTurnLowerBound: zero when satisfied, positive when remaining, and rejects when over budget', () => {
   const l = wireLevel({
     grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },
     landmarks: [{ x: 3, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'either' }],
@@ -275,6 +302,19 @@ test('adjTurnLowerBound: zero when satisfied, positive when remaining, Infinity 
   const satisfied = createState(W(1, 1), l, prep);
   satisfied.adjTurnMask = 0;
   assert.equal(adjTurnLowerBound(W(1, 1), satisfied, l, prep), 0);
+
+  const sealed = wireLevel({
+    grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },
+    blocks: [{ x: 4, y: 3 }, { x: 5, y: 2 }],
+    landmarks: [{ x: 5, y: 3, objectType: 'fountain', role: 'adjacentTurn', turn: 'either' }],
+    reqLen: 5,
+  });
+  const sealedPrep = prepLevel(sealed), sealedState = createState(W(1, 1), sealed, sealedPrep);
+  assert.ok(adjTurnLowerBound(W(1, 1), sealedState, sealed, sealedPrep) > sealed.reqLen);
+  assert.deepEqual(diagnoseRule('PRUNE_ADJ_TURN_LB', W(1, 1), sealedState, sealed, sealedPrep),
+    { verdict: 'reject', reached: 1, rejected: 1 });
+  assert.deepEqual(diagnoseRule('PRUNE_ADJ_TURN_LB', W(1, 1), st, l, prep),
+    { verdict: 'pass', reached: 1, rejected: 0 }, 'reachable adjacent-turn work survives');
 });
 
 // mustTurnDeadlocked: a still-pending must-turn cell whose edgeUsage already has both axis
@@ -293,6 +333,8 @@ test('mustTurnDeadlocked: false on a fresh, untouched must-turn cell', () => {
   const prep = prepLevel(l);
   const st = createState(W(2, 1), l, prep);
   assert.equal(mustTurnDeadlocked(st, prep), false);
+  assert.deepEqual(diagnoseRule('PRUNE_MUST_TURN_DEADLOCK', W(2, 1), st, l, prep),
+    { verdict: 'pass', reached: 1, rejected: 0 });
 });
 
 test('mustTurnDeadlocked: false after a straight pass-through (only one axis used)', () => {
@@ -313,6 +355,8 @@ test('mustTurnDeadlocked: true after a wrong-direction turn (both axes now used)
   applyMove(W(3, 2), st, l, prep, false); // exit east — ccw, not the required cw
   assert.equal(st.mustTurnMask, 1, 'wrong direction — still unsatisfied');
   assert.equal(mustTurnDeadlocked(st, prep), true, 'both axes now used — provably unsatisfiable');
+  assert.deepEqual(diagnoseRule('PRUNE_MUST_TURN_DEADLOCK', W(3, 2), st, l, prep),
+    { verdict: 'reject', reached: 1, rejected: 1 });
 });
 
 test('mustTurnDeadlocked: false after a correct-direction turn (requirement satisfied, not checked)', () => {
@@ -347,6 +391,8 @@ test('mustCrossForcedNeighborDeadlocked: false on a fresh, untouched must-cross 
   const prep = prepLevel(l);
   const st = createState(W(1, 1), l, prep);
   assert.equal(mustCrossForcedNeighborDeadlocked(W(1, 1), st, l, prep), false);
+  assert.deepEqual(diagnoseRule('PRUNE_MC_FORCED_NEIGHBOR', W(1, 1), st, l, prep),
+    { verdict: 'pass', reached: 1, rejected: 0 });
 });
 
 test('mustCrossForcedNeighborDeadlocked: false right after the first (V-axis) pass — both H neighbors still open', () => {
@@ -380,6 +426,8 @@ test('mustCrossForcedNeighborDeadlocked: true once a still-needed neighbor becom
   assert.equal(st.edgeUsage[W(2, 3)], 3, 'W neighbor now a hard wall — both axes spent');
   assert.equal(mustCrossForcedNeighborDeadlocked(W(1, 3), st, l, prep), true,
     'W was required for MCs still-pending H-pass and can never be entered again');
+  assert.deepEqual(diagnoseRule('PRUNE_MC_FORCED_NEIGHBOR', W(1, 3), st, l, prep),
+    { verdict: 'reject', reached: 1, rejected: 1 });
 });
 
 // This is the exact bug caught by replaying real solutions through search state (see the
@@ -623,7 +671,7 @@ test('property: every lower bound underestimates the exact legal completion cost
     const prep = prepLevel(level);
     const state = createState(level.gateKeys[0], level, prep);
     const visit = () => {
-      const exact = checkAllBounds(level, prep, state);
+      const _exact = checkAllBounds(level, prep, state);
       checked++;
       if (level.mustPassKeys.length > 0 && state.mpVisitedMask !== 0) satisfiedMpStates++;
       if (level.mustCrossKeys.length > 0 && state.mustCrossMask === 0) satisfiedMcStates++;
@@ -707,16 +755,33 @@ test('property: topology connectivity over-approximates every truly reachable re
 test('property: deadlock helpers only report independently unsatisfiable reachable states', () => {
   const levels = [mustTurnLevel('cw'), mcForcedNeighborLevel()];
   const reportedDeadStates = [0, 0, 0];
+  const diagnosedDeadStates = [0, 0, 0];
+  const feasibleControls = [0, 0, 0];
+  const ids: PruneId[] = ['PRUNE_MUST_TURN_DEADLOCK', 'PRUNE_MC_FORCED_NEIGHBOR', 'PRUNE_MC_NEIGHBOR_BUDGET'];
   for (const level of levels) {
     const prep = prepLevel(level), state = createState(level.gateKeys[0], level, prep);
+    for (let i = 0; i < ids.length; i++) {
+      const applicable = i === 0 ? state.mustTurnMask !== 0 : state.mustCrossMask !== 0;
+      if (!applicable || feasibleControls[i]) continue;
+      assert.deepEqual(diagnoseRule(ids[i], level.gateKeys[0], state, level, prep),
+        { verdict: 'pass', reached: 1, rejected: 0 }, `${ids[i]} fresh feasible control must survive`);
+      feasibleControls[i]++;
+    }
     const walk = () => {
       const pos = state.path[state.path.length - 1];
       const reports = [mustTurnDeadlocked(state, prep), mustCrossForcedNeighborDeadlocked(pos, state, level, prep),
         mustCrossNeighborBudgetDeadlocked(pos, state, level, prep)];
       for (let i = 0; i < reports.length; i++) {
-        if (!reports[i]) continue;
-        reportedDeadStates[i]++;
-        assert.equal(exactRemainingCost(pos, state, level, prep), Infinity, `deadlock helper ${i} false positive`);
+        if (reports[i]) {
+          reportedDeadStates[i]++;
+          assert.equal(exactRemainingCost(pos, state, level, prep), Infinity, `deadlock helper ${i} false positive`);
+          const diagnostic = diagnoseRule(ids[i], pos, state, level, prep);
+          if (diagnostic.reached) {
+            assert.deepEqual(diagnostic, { verdict: 'reject', reached: 1, rejected: 1 },
+              `${ids[i]} must be the isolated firing rule once its branch is reached`);
+            diagnosedDeadStates[i]++;
+          }
+        }
       }
       if (pos === level.goalKey) return;
       for (const next of getNeighbors(pos, state, level, prep)) {
@@ -729,4 +794,8 @@ test('property: deadlock helpers only report independently unsatisfiable reachab
   }
   assert.ok(reportedDeadStates.every(n => n > 0),
     `property must exercise every deadlock helper; reports=${reportedDeadStates.join(',')}`);
+  assert.ok(diagnosedDeadStates.every(n => n > 0),
+    `property must reach every gauntlet branch before it fires; diagnostics=${diagnosedDeadStates.join(',')}`);
+  assert.ok(feasibleControls.every(n => n > 0),
+    `property must find an oracle-feasible negative control for every helper; controls=${feasibleControls.join(',')}`);
 });
