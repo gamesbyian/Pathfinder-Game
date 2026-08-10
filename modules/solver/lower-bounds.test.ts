@@ -99,8 +99,11 @@ test('prepLevel output can feed extracted lower-bound helpers', () => {
 
 // ── Hardening plan §1 additions: prune-fires / prune-does-not-fire behavior ──────
 import { normalizeRawLevel } from './normalization.js';
-import { createState, applyMove } from './search-state.js';
-import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, mustCrossForcedNeighborDeadlocked } from './lower-bounds.js';
+import { createState, applyMove, getNeighbors, undoMove } from './search-state.js';
+import { getRealLengthFromState } from './solution.js';
+import { validateCandidatePath } from '../domain/path-validator.js';
+import { isConnected } from './topology.js';
+import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, mustCrossForcedNeighborDeadlocked, mustCrossNeighborBudgetDeadlocked } from './lower-bounds.js';
 
 const W = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 
@@ -493,4 +496,237 @@ test('MST declared capacity is accepted and capacity+1 uses the safe individual-
   assert.ok(Number.isFinite(overflow.actual), 'overflow skips MST instead of overrunning fixed scratch');
   assert.equal(overflow.actual, overflow.individual, 'overflow returns exactly the documented max-of-individual fallback');
   assert.equal(overflow.actual, evaluate(MAX_MST_K + 1).actual, 'fallback is stable after the boundary call');
+});
+
+function referencePathStats(path: number[], level: NormalizedLevel) {
+  const counts = new Map<number, number>();
+  counts.set(path[0], 1);
+  let cost = 0, ints = 0, lastWasJump = false;
+  for (let i = 1; i < path.length; i++) {
+    const from = path[i - 1], to = path[i];
+    const jump: boolean = !lastWasJump && level.portalMap.get(from)?.dest === to;
+    if (!jump) cost++;
+    const seen = counts.get(to) ?? 0;
+    if (seen > 0 && to !== level.goalKey && !level.gateKeys.includes(to)) ints++;
+    counts.set(to, seen + 1);
+    lastWasJump = jump;
+  }
+  return { cost, ints, lastWasJump };
+}
+
+function referenceCandidates(path: number[], level: NormalizedLevel): number[] {
+  const pos = path[path.length - 1];
+  const { lastWasJump } = referencePathStats(path, level);
+  const portal = level.portalMap.get(pos);
+  if (portal && !lastWasJump) return [portal.dest];
+  const x = pos & 0xFFFF, y = (pos >>> 16) & 0xFFFF;
+  const out: number[] = [];
+  if (x > 0) out.push(pos - 1);
+  if (x + 1 < level.grid.w) out.push(pos + 1);
+  if (y > 0) out.push(pos - 0x10000);
+  if (y + 1 < level.grid.h) out.push(pos + 0x10000);
+  return out;
+}
+
+/** Independent reference search: candidate generation and accounting above do not use solver
+ * transitions. The domain referee independently accepts or rejects every prefix and completion.
+ * A legal path has at most `area - 1` first-time ordinary arrivals plus `reqInt` revisits, so the
+ * derived bound is complete; exhausting it is an independent proof of unreachability. */
+function referenceSearch(state: SolverSearchState, level: NormalizedLevel, targetOnly?: number): number {
+  const path = state.path.slice();
+  const prefixCost = referencePathStats(path, level).cost;
+  const maxCost = level.grid.w * level.grid.h - 1 + level.reqInt;
+  let best = Infinity;
+  const walk = () => {
+    const pos = path[path.length - 1];
+    const stats = referencePathStats(path, level);
+    if (stats.ints > level.reqInt || stats.cost > maxCost || stats.cost - prefixCost >= best) return;
+    if (targetOnly !== undefined && pos === targetOnly) { best = stats.cost - prefixCost; return; }
+    if (pos === level.goalKey) {
+      if (targetOnly !== undefined) return;
+      const candidateLevel = { ...level, reqLen: stats.cost, reqInt: stats.ints } as NormalizedLevel;
+      if (validateCandidatePath(candidateLevel, path).ok) best = stats.cost - prefixCost;
+      return;
+    }
+    for (const next of referenceCandidates(path, level)) {
+      path.push(next);
+      const nextStats = referencePathStats(path, level);
+      // With objectives removed and this endpoint terminal, the independent referee checks the
+      // entire prefix's move legality. Reference accounting separately enforces the real budget.
+      const probeStats = referencePathStats(path, { ...level, goalKey: next } as NormalizedLevel);
+      const prefixLevel = { ...level, goalKey: next, mustPassKeys: [], mustCrossKeys: [],
+        surroundKeys: [], mustPassTurnDirs: new Map(), adjacentTurnKeys: [],
+        reqLen: nextStats.cost, reqInt: probeStats.ints } as unknown as NormalizedLevel;
+      if (validateCandidatePath(prefixLevel, path).ok) walk();
+      path.pop();
+    }
+  };
+  walk();
+  return best;
+}
+
+function exactRemainingCost(_pos: number, state: SolverSearchState, level: NormalizedLevel, _prep: ReturnType<typeof prepLevel>): number {
+  return referenceSearch(state, level);
+}
+
+function exactCostToRequiredCell(target: number, state: SolverSearchState, level: NormalizedLevel, _prep: ReturnType<typeof prepLevel>): number {
+  return referenceSearch(state, level, target);
+}
+
+let hardConclusionsChecked = 0;
+function assertPermittedLowerBoundDirection(label: string, bound: number, exact: number) {
+  if (bound === Infinity) {
+    hardConclusionsChecked++;
+    assert.equal(exact, Infinity, `${label}: hard conclusion needs an independently unreachable state`);
+  }
+  else assert.ok(bound <= exact, `${label}: ${bound} must not exceed exact remaining cost ${exact}`);
+}
+
+function checkAllBounds(level: NormalizedLevel, prep: ReturnType<typeof prepLevel>, state: SolverSearchState) {
+  const pos = state.path[state.path.length - 1];
+  const exact = exactRemainingCost(pos, state, level, prep);
+  const mp: number[] = [], mc: number[] = [];
+  for (let i = 0; i < level.mustPassKeys.length; i++) if (!(state.mpVisitedMask & (1 << i))) mp.push(i);
+  for (let i = 0; i < level.mustCrossKeys.length; i++) if (state.mustCrossMask & (1 << i)) mc.push(i);
+  const values = [
+    ['mustPassLowerBound', mustPassLowerBound(pos, state, level, prep)],
+    ['mustCrossLowerBound', mustCrossLowerBound(pos, state, level, prep)],
+    // Production only invokes the MST helpers for two or more remaining objectives; their
+    // documented precondition is k >= 2. The capacity fixture below exercises both directly.
+    ['mpMSTLowerBound', mp.length >= 2 ? mpMSTLowerBound(pos, mp, mp.length, level, prep) : 0],
+    ['mcMSTLowerBound', mc.length >= 2 ? mcMSTLowerBound(pos, mc, mc.length, state, level, prep) : 0],
+    ['surroundLowerBound', surroundLowerBound(pos, state, level, prep)],
+    ['adjTurnLowerBound', adjTurnLowerBound(pos, state, level, prep)],
+  ] as const;
+  for (const [name, bound] of values) assertPermittedLowerBoundDirection(name, bound, exact);
+  return exact;
+}
+
+test('property: every lower bound underestimates the exact legal completion cost on exhaustive small reachable states', () => {
+  hardConclusionsChecked = 0;
+  const levels = [
+    wireLevel({ grid: { w: 3, h: 3 }, goal: { x: 3, y: 3 }, reqLen: 12, reqInt: 1,
+      mustPass: [{ x: 2, y: 1 }, { x: 1, y: 3 }], mustCross: [{ x: 2, y: 2 }] }),
+    wireLevel({ grid: { w: 4, h: 2 }, goal: { x: 4, y: 2 }, reqLen: 10, reqInt: 1,
+      portals: [{ a: { x: 2, y: 1 }, b: { x: 3, y: 2 } }], mustPass: [{ x: 1, y: 2 }] }),
+    wireLevel({ grid: { w: 3, h: 3 }, goal: { x: 3, y: 1 }, reqLen: 12, reqInt: 1,
+      landmarks: [
+        { x: 2, y: 2, objectType: 'park', role: 'surround' },
+        { x: 3, y: 3, objectType: 'fountain', role: 'adjacentTurn', turn: 'either' },
+      ] }),
+    wireLevel({ grid: { w: 3, h: 3 }, goal: { x: 3, y: 1 }, reqLen: 6, reqInt: 0,
+      blocks: [{ x: 2, y: 3 }, { x: 3, y: 2 }], mustPass: [{ x: 3, y: 3 }] }),
+  ];
+  let checked = 0, satisfiedMpStates = 0, satisfiedMcStates = 0;
+  let directionalCrossStates = 0, portalStates = 0, intersectionStates = 0;
+  for (const level of levels) {
+    const prep = prepLevel(level);
+    const state = createState(level.gateKeys[0], level, prep);
+    const visit = () => {
+      const exact = checkAllBounds(level, prep, state);
+      checked++;
+      if (level.mustPassKeys.length > 0 && state.mpVisitedMask !== 0) satisfiedMpStates++;
+      if (level.mustCrossKeys.length > 0 && state.mustCrossMask === 0) satisfiedMcStates++;
+      if (state.crossCounts.some(n => n === 1)) directionalCrossStates++;
+      if (state.portalJumps) portalStates++;
+      if (state.ints > 0) intersectionStates++;
+      const pos = state.path[state.path.length - 1];
+      if (pos === level.goalKey) return;
+      for (const next of getNeighbors(pos, state, level, prep)) {
+        const p = level.portalMap.get(pos);
+        const jump = !!(p && !state.lastWasPortalJump && p.dest === next);
+        const undo = applyMove(next, state, level, prep, jump);
+        if (state.ints <= level.reqInt) visit();
+        undoMove(undo, state);
+      }
+    };
+    visit();
+  }
+  assert.ok(checked > 20 && satisfiedMpStates > 0 && satisfiedMcStates > 0);
+  assert.ok(directionalCrossStates > 0 && portalStates > 0 && intersectionStates > 0);
+  assert.ok(hardConclusionsChecked > 0, 'Infinity conclusions were independently checked');
+});
+
+test('property: lower-bound MST scratch maximum objective counts stay admissible', () => {
+  const objectiveCells = [
+    ...Array.from({ length: 8 }, (_, i) => ({ x: i + 2, y: 1 })),
+    ...Array.from({ length: 8 }, (_, i) => ({ x: 9 - i, y: 3 })),
+  ];
+  for (const kind of ['mustPassKeys', 'mustCrossKeys'] as const) {
+    assert.equal(objectiveCells.length, MAX_MST_K);
+    const level = wireLevel({ grid: { w: 9, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 1, y: 3 },
+      blocks: Array.from({ length: 7 }, (_, i) => ({ x: i + 2, y: 2 })),
+      reqInt: kind === 'mustCrossKeys' ? MAX_MST_K : 0,
+      [kind === 'mustPassKeys' ? 'mustPass' : 'mustCross']: objectiveCells });
+    const prep = prepLevel(level);
+    const state = createState(W(1, 1), level, prep);
+    const exact = checkAllBounds(level, prep, state);
+    if (kind === 'mustPassKeys') assert.equal(exact, MAX_MST_K + 2);
+    else assert.equal(exact, Infinity, 'the one-cell-wide corridor cannot provide perpendicular second crossings');
+  }
+});
+
+test('property: topology connectivity over-approximates every truly reachable required cell', () => {
+  const level = wireLevel({ grid: { w: 4, h: 3 }, goal: { x: 4, y: 3 }, reqLen: 10, reqInt: 1,
+    mustPass: [{ x: 2, y: 1 }, { x: 1, y: 3 }], mustCross: [{ x: 3, y: 2 }],
+    portals: [{ a: { x: 3, y: 1 }, b: { x: 2, y: 3 } }] });
+  const prep = prepLevel(level);
+  const state = createState(level.gateKeys[0], level, prep);
+  let reachableRequiredCells = 0;
+  const walk = () => {
+    const pos = state.path[state.path.length - 1];
+    const required = [level.goalKey];
+    for (let i = 0; i < level.mustPassKeys.length; i++)
+      if (!(state.mpVisitedMask & (1 << i))) required.push(level.mustPassKeys[i]);
+    for (let i = 0; i < level.mustCrossKeys.length; i++)
+      if (state.mustCrossMask & (1 << i)) required.push(level.mustCrossKeys[i]);
+    for (const target of required) {
+      const exact = exactCostToRequiredCell(target, state, level, prep);
+      if (!Number.isFinite(exact)) continue;
+      reachableRequiredCells++;
+      // Ask the connectivity model about this cell alone, avoiding unrelated objectives and
+      // making its volume condition exactly fit the independently found witness length.
+      const probeLevel = { ...level, goalKey: target, mustPassKeys: [], mustCrossKeys: [],
+        reqLen: getRealLengthFromState(state) + exact } as NormalizedLevel;
+      const probePrep = prepLevel(probeLevel);
+      assert.equal(isConnected(pos, state, probeLevel, probePrep), true,
+        `connectivity model omitted truly reachable required cell ${target}`);
+    }
+    if (pos === level.goalKey) return;
+    for (const next of getNeighbors(pos, state, level, prep)) {
+      const p = level.portalMap.get(pos), jump = !!(p && !state.lastWasPortalJump && p.dest === next);
+      const undo = applyMove(next, state, level, prep, jump);
+      if (state.ints <= level.reqInt) walk();
+      undoMove(undo, state);
+    }
+  };
+  walk();
+  assert.ok(reachableRequiredCells > 0, 'property exercised truly reachable required cells');
+});
+
+test('property: deadlock helpers only report independently unsatisfiable reachable states', () => {
+  const levels = [mustTurnLevel('cw'), mcForcedNeighborLevel()];
+  const reportedDeadStates = [0, 0, 0];
+  for (const level of levels) {
+    const prep = prepLevel(level), state = createState(level.gateKeys[0], level, prep);
+    const walk = () => {
+      const pos = state.path[state.path.length - 1];
+      const reports = [mustTurnDeadlocked(state, prep), mustCrossForcedNeighborDeadlocked(pos, state, level, prep),
+        mustCrossNeighborBudgetDeadlocked(pos, state, level, prep)];
+      for (let i = 0; i < reports.length; i++) {
+        if (!reports[i]) continue;
+        reportedDeadStates[i]++;
+        assert.equal(exactRemainingCost(pos, state, level, prep), Infinity, `deadlock helper ${i} false positive`);
+      }
+      if (pos === level.goalKey) return;
+      for (const next of getNeighbors(pos, state, level, prep)) {
+        const undo = applyMove(next, state, level, prep, false);
+        if (state.ints <= level.reqInt) walk();
+        undoMove(undo, state);
+      }
+    };
+    walk();
+  }
+  assert.ok(reportedDeadStates.every(n => n > 0),
+    `property must exercise every deadlock helper; reports=${reportedDeadStates.join(',')}`);
 });

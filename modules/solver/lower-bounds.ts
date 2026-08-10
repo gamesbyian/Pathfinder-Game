@@ -17,6 +17,7 @@ import type { SolverSearchState, PrepLevel } from './types.js';
 // O(1) per pending cell (a single typed-array read), no BFS — cheap enough to run every node,
 // unlike the connectivity prune it complements (isConnected checks must-pass/must-cross
 // reachability but not must-turn; this catches the narrower "provably too late" case directly).
+// Permitted error: false negatives only; see property: deadlock helpers only report independently unsatisfiable reachable states.
 export function mustTurnDeadlocked(state: SolverSearchState, prep: PrepLevel): boolean {
     if (state.mustTurnMask === 0 || !prep.mustTurnKeys) return false;
     for (let i = 0; i < prep.mustTurnKeys.length; i++) {
@@ -58,6 +59,7 @@ export function mustTurnDeadlocked(state: SolverSearchState, prep: PrepLevel): b
 // not about the move currently being evaluated. Missing this exemption was caught by replaying
 // every stored solution in the published corpus through real search state (261 false rejections
 // on live, referee-accepted paths) before this ever reached an ablation flag's default-on state.
+// Permitted error: false negatives only; see property: deadlock helpers only report independently unsatisfiable reachable states.
 export function mustCrossForcedNeighborDeadlocked(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     if (state.mustCrossMask === 0) return false;
     const mcKeys = level.mustCrossKeys;
@@ -115,6 +117,7 @@ export function mustCrossForcedNeighborDeadlocked(pos: number, state: SolverSear
 // (PRUNE_MC_NEIGHBOR_BUDGET, default OFF) pending a matched-node A/B on the must-cross-heavy
 // unsolved population, per this codebase's standing rule that a catch-rate measurement alone
 // never substitutes for a live solve-count comparison before promotion.
+// Permitted error: false negatives only; see property: deadlock helpers only report independently unsatisfiable reachable states.
 export function mustCrossNeighborBudgetDeadlocked(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     if (state.mustCrossMask === 0 || level.portalMap.size > 0) return false;
     const mcKeys = level.mustCrossKeys;
@@ -155,6 +158,7 @@ export function mustCrossNeighborBudgetDeadlocked(pos: number, state: SolverSear
 // Lower bound for surround constraints: for each unsatisfied surround cell,
 // the path must still reach every unvisited valid neighbor and then the goal.
 // Uses max(dist_to_neighbor + dist_neighbor_to_goal) over unvisited neighbors.
+// Permitted error: underestimate only; see property: every lower bound underestimates the exact legal completion cost on exhaustive small reachable states.
 export function surroundLowerBound(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): number {
     const { surroundNeighborDistMaps, surroundNeighborKeys, surroundNeighborGoalDist } = prep;
     if (state.surroundMask === 0 || !surroundNeighborDistMaps || !surroundNeighborKeys || !surroundNeighborGoalDist) return 0;
@@ -182,6 +186,7 @@ export function surroundLowerBound(pos: number, state: SolverSearchState, level:
 // Lower bound for adjacent-turn constraints: the path must still reach an
 // adjacent cell of each unsatisfied adj-turn object (and turn there + reach goal).
 // Uses the precomputed multi-source approach dist map per adj-turn object.
+// Permitted error: underestimate only; see property: every lower bound underestimates the exact legal completion cost on exhaustive small reachable states.
 export function adjTurnLowerBound(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): number {
     const { adjTurnDistMaps, adjTurnGoalDist } = prep;
     if (state.adjTurnMask === 0 || !adjTurnDistMaps || !adjTurnGoalDist) return 0;
@@ -262,6 +267,7 @@ function _mcApproachAwareDist(from: number, to: number, state: SolverSearchState
 // to be sized well above the naive "max 4-6 objectives" assumption.
 const _MAX_MST_EDGES = MAX_MST_K + (MAX_MST_K * (MAX_MST_K - 1)) / 2;
 const _mstEdges = new Float64Array(_MAX_MST_EDGES * 3);
+// Permitted error: underestimate only; see property: every lower bound underestimates the exact legal completion cost on exhaustive small reachable states.
 export function mcMSTLowerBound(pos: number, remain: ArrayLike<number>, remainLen: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): number {
     const k = remainLen; // k >= 2
     const nodeCount = k + 1; // 0=pos, 1..k = MC[remain[...]]
@@ -349,6 +355,7 @@ export function mcMSTLowerBound(pos: number, remain: ArrayLike<number>, remainLe
 // MST lower bound for must-pass: MST({pos, MP1, MP2, ...}) + minGoalDist.
 // Mirrors mcMSTLowerBound — uses shared _mstEdges/_ufPar globals. `remain`/`remainLen`: see
 // mcMSTLowerBound's comment (same ArrayLike + explicit-count pattern, same reason).
+// Permitted error: underestimate only; see property: every lower bound underestimates the exact legal completion cost on exhaustive small reachable states.
 export function mpMSTLowerBound(pos: number, remain: ArrayLike<number>, remainLen: number, level: NormalizedLevel, prep: PrepLevel): number {
     const k = remainLen; // k >= 2
     const nodeCount = k + 1; // 0=pos, 1..k = MP[remain[...]]
@@ -421,6 +428,7 @@ const _MP_LB_CACHE_MASK_BITS = 0x1000000;
 // PrepLevel._mpLowerBoundCache's comment for why sharing one cache across every attempt/gate in
 // a solveLevel() call is safe), and the cache can only ever return the exact value a fresh
 // computation would — this is pure memoization, not an approximation.
+// Permitted error: underestimate only; see property: every lower bound underestimates the exact legal completion cost on exhaustive small reachable states.
 export function mustPassLowerBound(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): number {
     const n = level.mustPassKeys.length;
     if (n === 0) return 0;
@@ -487,6 +495,7 @@ const _MC_LB_CACHE_MASK_MULT = 1 << 17;
 // is within MAX_MC_CACHE_N — same rationale and safety argument as mustPassLowerBound's cache
 // (profiling: mcMSTLowerBound + mustCrossLowerBound together were ~28% of repair-search CPU
 // time on a must-cross-heavy stress level, S046). Exact memoization, not an approximation.
+// Permitted error: underestimate only; see property: every lower bound underestimates the exact legal completion cost on exhaustive small reachable states.
 export function mustCrossLowerBound(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): number {
     if (state.mustCrossMask === 0) return 0;
     const n = level.mustCrossKeys.length;
