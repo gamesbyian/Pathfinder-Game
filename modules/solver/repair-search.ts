@@ -362,7 +362,15 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
 
         // runConnectivity=false: repair-search deliberately omits the isConnected prune — see
         // this file's top-of-file SOUNDNESS comment on why that's a pure speed tradeoff.
-        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, false);
+        // allowNeighborBudgetPrune=false: this loop picks its next move uniformly at random over
+        // the surviving candidates below (`Math.floor(rand() * survivors.length)`) — shrinking
+        // that candidate list here reindexes the same rand() draw onto a different move, silently
+        // diverging the entire rest of this seeded walk (see prune-gauntlet.ts's own comment on
+        // this parameter for the 2026-08-08 full-corpus evidence: 28 previously-repair-solved
+        // levels lost). closeLengthGap/boundedDfsFromHere/relinkPaths below are all deterministic
+        // (no rand()) and keep this check at its default (true) — pruning dead branches there can
+        // only free more budget for live ones, same as dfsFromGate/beam.
+        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, false, false);
 
         if (verdict === 'solution') {
             liveUndo.push(undo);
