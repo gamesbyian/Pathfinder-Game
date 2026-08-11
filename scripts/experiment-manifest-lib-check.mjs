@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { compareExperimentArms, levelSelectionHash, validateExperimentManifest } from './experiment-manifest-lib.mjs';
 
 const workflowInputs = {
@@ -62,5 +66,24 @@ assert.throws(() => compareExperimentArms(reserveControl, {
 assert.throws(() => compareExperimentArms(reserveControl, {
     ...reserveTreatment, workflowInputs: Object.fromEntries(Object.entries(reserveTreatment.workflowInputs).filter(([key]) => key !== 'main_loop_late_reserve_fraction')),
 }, 'TARGET', { allowedWorkflowInputDifferences: ['enable_flags', 'main_loop_late_reserve_fraction'] }), /missing for solver-stress-refresh|declared treatment dimension missing/);
+
+// The CLI also verifies that solverFlags and the stress workflow's enable/disable strings describe
+// the same effective config. This closes the hole where enable_flags could be an allowed treatment
+// difference while silently containing an extra flag not represented by the manifest's solver map.
+const temp = mkdtempSync(path.join(tmpdir(), 'pathfinder-preflight-'));
+const corpus = path.join(temp, 'corpus.json');
+writeFileSync(corpus, JSON.stringify([{ id: 'L1' }]));
+const workflowInputString = inputs => Object.entries(inputs).map(([key, value]) => `${key}=${value}`).join(',');
+const runPreflight = ({ runId, flagValue, inputs }) => spawnSync(process.execPath, [
+    'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-test', `--run-id=${runId}`, `--corpus=${corpus}`,
+    '--arm=control', `--flags=PRUNE_MC_NEIGHBOR_BUDGET=${flagValue}`, '--workflow=solver-stress-refresh',
+    `--workflow-inputs=${workflowInputString(inputs)}`, '--seeds=', '--work-budget=10', '--wall-deadline-ms=100',
+    '--profile=default', '--instrumentation=off', `--output=${path.join(temp, `${runId}.json`)}`, '--allow-dirty',
+], { encoding: 'utf8' });
+assert.equal(runPreflight({ runId: 'off', flagValue: 'false', inputs: workflowInputs }).status, 0);
+const inconsistent = runPreflight({ runId: 'bad-on', flagValue: 'true', inputs: workflowInputs });
+assert.notEqual(inconsistent.status, 0);
+assert.match(`${inconsistent.stdout}${inconsistent.stderr}`, /solverFlags disagree/);
+assert.equal(runPreflight({ runId: 'on', flagValue: 'true', inputs: { ...workflowInputs, enable_flags: 'PRUNE_MC_NEIGHBOR_BUDGET' } }).status, 0);
 
 console.log('experiment manifest unit tests passed');
