@@ -1,16 +1,21 @@
 # Future Work
 
-A compiled index of genuinely open, non-stale work — pulled from active planning documents and recent campaign reports. This file is the **live queue and status source of truth**; detailed strategy documents are linked below. Updated 2026-08-10.
+A compiled index of genuinely open, non-stale work — pulled from active planning documents and recent campaign reports. This file is the **live queue and status source of truth**; detailed strategy documents are linked below. Updated 2026-08-11.
 
 > **Current solver frontier:** the old numbered campaign sequence is retained as history in
 > [`solver-development-roadmap.md`](solver-development-roadmap.md), not maintained as the live queue.
-> The must-cross forced-structure sequence is closed (steps 1–3 shipped, step 4 falsified), and the
-> portal-parity follow-up is also closed after a sound-but-negligible live A/B. The best explicitly
-> open rule-recognition lead is now structural derivation for must-turn, adjacent-turn, and surround
-> landmarks below. Repair stagnation remains an investigation record with Stages 1–3 measured and
-> Stage 4 re-scoped; descent-aware probing is its next evidence step. A separate solver-
-> interoperability track is now queued below at an instrumentation-only first gate; it does not
-> change production scheduling or search behavior yet.
+> The strongest current mechanic-derived lead is now **dynamic must-cross resource/interface
+> reasoning**: the sound opt-in neighbor-budget prune changed the full Corpus-2 solve set from
+> 725/1700 to 739/1700 (+14 net), but with 42 gained / 28 lost under the fixed budget, so the next
+> gate is churn diagnosis rather than promotion. See
+> [`../reports/2026-08-11-dynamic-resource-frontier-synthesis.md`](../reports/2026-08-11-dynamic-resource-frontier-synthesis.md).
+> The older must-cross forced-structure sequence remains closed (steps 1–3 shipped, step 4
+> falsified), and the portal-parity follow-up is closed after a sound-but-negligible live A/B.
+> Structural derivation for must-turn, adjacent-turn, and surround remains a parallel open
+> rule-recognition lead. Repair stagnation remains an investigation record with Stages 1–3 measured
+> and Stage 4 re-scoped; descent-aware probing is its next evidence step. A separate solver-
+> interoperability track is queued below at an instrumentation-only first gate; it does not change
+> production scheduling or search behavior yet.
 
 ---
 
@@ -24,6 +29,52 @@ population counts are dated snapshots; this file is the current status index.
 - **Campaign 1** — `repair-close` rescue (139 levels as of latest re-cluster). **Completed 2026-07-18** with the `closeLengthGap` operator and its near-miss extension shipped (2026-07-17), plus infrastructure fixes to the repair probe (node-budget starvation). Net +28 genuine solves via `diff-baseline.mjs`. The deeper issue (repair-search's stagnation plateau converging to a frozen deficit signature and staying frozen) is addressed separately via [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md) — this campaign fixed a symptom and identified the core problem; that plan targets the core.
 - **Campaign 2** — `dfs-plain` exhaustion. **Historical phase concluded:** the known fragile-scoring family and the tested pruning/scoring generalizations did not explain the harder majority. Later work moved to admissible-order search, reserved-intersection reasoning, rule-recognition, oracle-labelled shadow evaluation, and differential diagnosis; use the open sections below rather than this old population bucket.
 - **Campaign 3** — `repair-far` + robust hard cores. **Historical label retired:** subsequent work did attack the robust population through several new techniques, so “not yet started” is no longer accurate. No single replacement technique has closed the population; the concrete surviving leads are tracked below.
+
+## Dynamic must-cross resource/interface frontier (2026-08-11, active)
+
+**Evidence synthesis:**
+[`../reports/2026-08-11-dynamic-resource-frontier-synthesis.md`](../reports/2026-08-11-dynamic-resource-frontier-synthesis.md).
+**Specific prune report:**
+[`../reports/2026-08-08-mc-neighbor-budget-propagation.md`](../reports/2026-08-08-mc-neighbor-budget-propagation.md).
+**Capability map:** [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md).
+
+This is now the highest-evidence open mechanic-derived thread. `PRUNE_MC_NEIGHBOR_BUDGET` is a
+sound dynamic consequence of must-cross geometry and remaining free intersection budget. It found
+19 unique dead branches beyond the existing gauntlet in the oracle-labelled atlas, survived 97,812
+known-valid path replays with zero violations, and changed the full deterministic Corpus-2 result
+from 725/1700 to 739/1700. The full A/B is **not** a clean promotion result: 42 levels were gained
+and 28 lost under the same fixed node budget. The losses are finite-budget search reallocation, not
+known soundness failures. The flag therefore remains opt-in/default-off.
+
+The 2026-08-11 follow-up also found that simple static must-cross geometry descriptors add essentially
+no predictive information beyond the existing feature set, and that root
+`reqInt - mustCrossCount == 0` is not the hard group. That redirects the frontier toward **dynamic
+loss of future completion opportunity**, not more root-layout characterization.
+
+**Ordered next gates:**
+
+1. **Neighbor-budget churn:** repeat the deterministic full-population A/B and/or probe a
+   representative set of the 28 lost levels to identify how search allocation moves. Promotion is
+   blocked on this, not on more basic soundness replay.
+2. **Crossing-slack instrumentation:** shadow-log
+   `crossingSlack = freeInt - forcedFutureNeighbourRevisits` on oracle-labelled branches and known
+   solution prefixes, controlled by depth/remaining must-cross count. Treat it as a diagnostic
+   representation first, not a score.
+3. **Locally-abstaining portal extension:** the current helper abstains on an entire level when any
+   portal exists. Re-derive a narrower variant that preserves all existing exclusions and applies
+   the ordinary-cell revisit proof only where the particular required neighbour is not
+   portal-affected. Do not simply delete the portal guard. Stored-solution replay → shadow harness →
+   live A/B if it earns one.
+4. **Bounded joint must-cross interface compatibility:** only after the cheaper measurements above,
+   enumerate conservative local completion patterns for interacting pending crossings and ask
+   whether any mutually compatible combination remains. This is the principled successor to the
+   July static forced-edge rule, whose failure came precisely from multiple valid completion
+   patterns sharing cells.
+
+Do not turn the current high-success solver envelope into editor restrictions. The latest corpus
+analysis is a **moving benchmark frontier**: generate levels just outside the present comfort band,
+improve the solver, then move the frontier outward while retaining mixed-interaction regression
+coverage.
 
 ## Solver interoperability and cooperative-search groundwork (2026-08-10, design complete — shadow instrumentation not started)
 
@@ -70,16 +121,16 @@ budget-limited search to be a coin flip three separate times, and the admissible
 24-level pilot pointed the wrong way twice before the full 141-level population gave a trustworthy
 answer.
 
-## Solver rule-recognition gaps (2026-08-05, reconciled 2026-08-09)
+## Solver rule-recognition gaps (2026-08-05, reconciled 2026-08-11)
 
 Prompted by a direct question — does the solver understand not just the hard move-legality rules
 but their *implications and interactions*, the way an experienced human player does — answered by
 the actual level designer/player, not guessed. Six questions originally produced three real
-findings and three immediate closures. One of those real findings, portal parity, has since gone
-through the full replay → implementation → live-A/B loop and is now closed below. The must-cross
-forced-structure work (steps 1–3 shipped, step 4 falsified) remains the model: derive on paper,
-falsify against every stored solution *before* writing solver code, and record a negative result
-as rigorously as a positive one.
+findings and three immediate closures. Portal parity subsequently went through the full replay →
+implementation → live-A/B loop and closed as negligible. Must-cross then produced a separate,
+stronger dynamic result in the neighbor-budget work above. The general method remains the same:
+derive on paper, falsify against stored solutions / independent truth **before** production code,
+and record a negative result as rigorously as a positive one.
 
 ### Closed 2026-08-08 — portal parity: sound rule, negligible solver value
 
@@ -101,8 +152,10 @@ node-count difference on every level across roughly 240M searched nodes**. The i
 but the condition is too rare in live search to matter at solver scale. It remains available
 opt-in/documented rather than promoted. This thread is closed unless new evidence identifies a
 materially stronger parity envelope; do not repeat the old “replay the hints, then propose a prune”
-next step. See the 2026-08-08 portal-parity commits/reports and the corresponding closed item in
-`solver-heuristic-capability-gap-analysis.md`.
+next step. See
+[`../reports/2026-08-08-portal-parity-envelope.md`](../reports/2026-08-08-portal-parity-envelope.md)
+and the corresponding closed item in
+[`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md).
 
 ### Open — surround-landmark "clean orbit" rule change (needs a product decision, not just engineering)
 
@@ -122,15 +175,17 @@ any implementation work, and a feasibility/regeneration-cost study either way.
 
 ### Open — must-turn / adjacent-turn / surround structural derivation (not started)
 
-Must-cross got the full paper-derivation-then-falsify treatment (this doc's "must-cross" campaign
-above) and it paid off. Must-turn, adjacent-turn, and surround landmarks have never gotten the
-same treatment — there may be analogous forced-structure facts (e.g. a must-turn or adjacent-turn
-landmark whose required chirality admits only one realistic approach cell in a given local
-geometry) sitting undiscovered the same way must-cross's forced-neighbor fact was. Worth the same
-census-first approach before assuming there's nothing there — must-cross's own "nothing found"
-false start (this doc's must-cross step-4 entry, and the freeInt-dilation/axis-aware entries
-below) shows the census can just as easily come back negative, which is itself valuable to know
-quickly.
+Must-cross got the full paper-derivation-then-falsify treatment and it paid off, both in the shipped
+July deductions and the later neighbor-budget result. Must-turn, adjacent-turn, and surround
+landmarks have never gotten the same **interface-aware** treatment — there may be analogous
+forced-structure facts (for example, a must-turn or adjacent-turn landmark whose required chirality
+retains only one viable entry/exit interface after the path consumes nearby axes).
+
+Do not repeat the already-measured plain reachability or copied-MST counterparts. The open form is
+**state-conditioned completion-interface reasoning**: candidate satisfaction cell, incoming axis,
+outgoing axis/chirality, and whatever local state is needed to preserve soundness. Use the same
+census-first approach before assuming there's nothing there. The current dynamic-resource synthesis
+explains how this parallels, but does not duplicate, the must-cross frontier.
 
 ### Closed, no gap found
 
@@ -322,7 +377,7 @@ flipping filters" is published-corpus-only, same pattern as the portal cap; stre
 8), to check whether the "fully dynamic" mechanic changes the answer.
 
 | level | reqLen | flippers | meet depth | reached | final count | 2nd-to-last ratio |
-|---|---:|---:|---:|---:|---:|---:|
+|---|---:|---:|---:|---:|---:|
 | R00044 | 91 | 0 | 46 | 25 | 1,500,002 (cap) | 1.48 |
 | R02704 | 65 | 0 | 33 | 32 | 1,500,002 (cap) | 1.42 |
 | R03196 | 59 | 0 | 30 | 22 | 1,500,001 (cap) | 2.05 |
@@ -536,7 +591,10 @@ by a level cap before calling it structural.
   its own visit count, so no fact about its "spare" edges survives every valid completion beyond
   what the shipped step-2 check already covers. A genuinely correct version would need real
   constraint propagation (enumerate and check compatible local patterns), not a static edge
-  exclusion — see `mustcross-forced-structure.md`'s own step-4 callout for the full derivation.
+  exclusion. See
+  [`../reports/2026-07-31-mustcross-forced-structure.md`](../reports/2026-07-31-mustcross-forced-structure.md)
+  for the full derivation, and the active dynamic successor in
+  [`../reports/2026-08-11-dynamic-resource-frontier-synthesis.md`](../reports/2026-08-11-dynamic-resource-frontier-synthesis.md).
 - **CP-SAT (or any external constraint solver) as a production solving TIER, credited as "our
   solver solved it"** — considered and explicitly rejected 2026-08-05, not merely deprioritized.
   CP-SAT is correct, validated, and demonstrably solves levels the heuristic solver can't (22/45
@@ -548,13 +606,18 @@ by a level cap before calling it structural.
   offline-only technique can solve but a real player's browser cannot is not a solve *by our
   solver* in the sense that matters, regardless of how the code is organized. CP-SAT remains
   exactly what it already was — an offline oracle and hint/insight source, hints tagged
-  `EXTERNAL_SOLVER_ID` and excluded from any "what can our solver find" claim. The **live, still-open**
-  half of this thread is using CP-SAT to inform a genuine internal (TypeScript, browser-safe)
-  solving mechanism. The two former prerequisites are now **complete**: portal support grew the
-  eligible pool from 212 to 397 levels, and the sharded atlas sweep grew the labelled set from 623
-  branches/16 levels to 5,518 branches/397 levels. The remaining work is to propose and shadow-score
-  a new browser-safe deduction against that atlas; the three candidates scored so far were sound but
-  too narrow to integrate. See [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md).
+  `EXTERNAL_SOLVER_ID` and excluded from any "what can our solver find" claim. The two former
+  prerequisites are complete: portal support grew the eligible pool from 212 to 397 levels, and
+  the sharded atlas sweep grew the labelled set from 623 branches/16 levels to 5,518
+  branches/397 levels. Three original Tier-2 shadow candidates were sound but too narrow to
+  integrate; the later, separately-sourced `mc-neighbor-budget-propagation` candidate **did** cross
+  the shadow threshold and changed full-corpus solves (+14 net), but remains opt-in because of its
+  42-gained/28-lost fixed-budget churn. The live oracle-informed work is therefore no longer
+  "propose any new browser-safe deduction". It is the narrower dynamic-resource queue documented
+  above: diagnose neighbor-budget churn, measure crossing slack, test conservative portal coverage,
+  then consider bounded joint-interface compatibility. See
+  [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) and
+  [`../reports/2026-08-11-dynamic-resource-frontier-synthesis.md`](../reports/2026-08-11-dynamic-resource-frontier-synthesis.md).
 
 ---
 
@@ -568,3 +631,4 @@ These apply to any future solver work before reporting complete:
 4. **Memoization soundness is non-negotiable.** Any cache key must capture every state variable the cached value depends on. CLAUDE.md's own MST-scratch-buffer bug is the standing precedent — verify with differential testing (solver finds a solution, cache would have wrongly rejected it).
 5. **Temporal clause:** distinguish "solved within X seconds" (uninterrupted attempt runtime) from "total wall time including restarts" in all timing reports.
 6. **Cross-technique artifacts are evidence by default.** Imported candidate witnesses must reconstruct through the real solver state machinery; incomplete state signatures, population summaries, plateau shapes, and correlations may guide ranking/retention/allocation but may not become hard rejection. A shared hard fact must carry an independent proof or exact state-equivalence contract. See [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md).
+7. **Dynamic-resource correlations remain guidance until proved.** A useful slack/interface signal may justify instrumentation, retention, or a shadow probe, but only a rule-derived necessary condition plus replay/oracle/property validation may become a hard prune. See [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md).
