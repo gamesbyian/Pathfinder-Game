@@ -27,6 +27,8 @@ export function validateExperimentManifest(manifest) {
     if (!manifest.workflowInputs || typeof manifest.workflowInputs !== 'object' || Array.isArray(manifest.workflowInputs)) {
         throw new Error('workflowInputs must be an object');
     }
+    const invalidWorkflowInputs = Object.entries(manifest.workflowInputs).filter(([, value]) => typeof value !== 'string');
+    if (invalidWorkflowInputs.length) throw new Error(`workflowInputs values must be strings: ${invalidWorkflowInputs.map(([key]) => key).join(', ')}`);
     const requiredWorkflowInputs = WORKFLOW_REQUIRED_INPUTS[manifest.workflow] ?? [];
     const missingWorkflowInputs = requiredWorkflowInputs.filter(key => !(key in manifest.workflowInputs));
     if (missingWorkflowInputs.length) throw new Error(`workflowInputs missing for ${manifest.workflow}: ${missingWorkflowInputs.join(', ')}`);
