@@ -42,7 +42,7 @@ Accept artifacts only after confirming complete 1,700-level coverage, matching m
 
 Use `.github/workflows/cpsat-explicit-prefix-oracle.yml`, which is the narrow execution seam for exact `{levelId,prefix,child}` questions. It reuses `scripts/stress/cpsat-full-probe.py`; it is **not** a new oracle. Do not use `cpsat-hint-harvest-sweep.yml` for this job because that workflow chooses its own unharvested levels/forced-grid combinations rather than accepting an explicit case list.
 
-First dispatch the workflow with its defaults. `cases_file=reports/stress/winning-prefix-atlas-pilot-2026-08-11.json` and `case_format=atlas-abstain` select exactly the existing 12 `oracle-abstain` rows. The runner appends each row's child to its prefix, passes that explicit prefix to `cpsat-full-probe.py`, referee-checks every SAT witness, and preserves **live**, **dead**, and **timeout/abstain** distinctly.
+First dispatch the workflow with its defaults. `cases_file=reports/stress/winning-prefix-atlas-pilot-2026-08-11.json` and `case_format=atlas-abstain` select exactly the existing 12 `oracle-abstain` rows. The runner appends each row's child to its prefix, converts the atlas's packed zero-based solver keys to raw one-based coordinates, passes that exact prefix to `cpsat-full-probe.py`, replays it through the native solver for legality, referee-checks every SAT witness, and preserves **live**, **dead**, and **timeout/abstain** distinctly.
 
 After those 12 are recorded, prepare a bounded committed generic case file for informative same-parent siblings at/near score/width extinctions. Generic schema:
 
@@ -56,7 +56,7 @@ After those 12 are recorded, prepare a bounded committed generic case file for i
 }
 ```
 
-Cells may be packed solver keys as above or `[x,y]` coordinate pairs. Dispatch the same workflow with `case_format=cases` and that committed `cases_file`. Do not coerce timeouts, unsupported mechanics, model errors, or referee-rejected SAT witnesses into dead/live evidence. Stop expansion if labels remain mostly abstentions or cases cannot be tied to an exact solver SHA/prefix.
+Numeric cells are packed internal solver keys and will be converted from zero-based internal coordinates. Explicit `[x,y]` pairs or `{x,y}` objects must already use the raw level/witness **one-based** coordinate convention. The runner rejects illegal native prefixes as input alarms rather than mislabelling them dead. Dispatch the same workflow with `case_format=cases` and that committed `cases_file`. Do not coerce timeouts, unsupported mechanics, model errors, input alarms, or referee-rejected SAT witnesses into dead/live evidence. Stop expansion if labels remain mostly abstentions or cases cannot be tied to an exact solver SHA/prefix.
 
 ## C. Exact repair retreat / causal window
 
