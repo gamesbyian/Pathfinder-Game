@@ -59,11 +59,16 @@ const prepareReplay = (corpus, levelId) => {
 const packRaw = ([x, y]) => (((x - 1) & 0xffff) | (((y - 1) & 0xffff) << 16));
 const replayPrefix = item => {
     const { level, prep } = prepareReplay(item.corpus, item.levelId);
+    for (let i = 0; i < item.prefix.length; i++) {
+        const [x, y] = item.prefix[i];
+        if (x < 1 || x > level.grid.w || y < 1 || y > level.grid.h) return { ok: false, reason: 'out-of-grid', invalidAt: i };
+    }
     const keys = item.prefix.map(packRaw);
+    if (!prep.gateFlags[keys[0]]) return { ok: false, reason: 'prefix-does-not-start-at-gate', invalidAt: 0, next: keys[0] };
     const state = api.createState(keys[0], level, prep);
     for (let i = 1; i < keys.length; i++) {
         const from = state.path.at(-1), next = keys[i];
-        if (!api.getNeighbors(from, state, level, prep).includes(next)) return { ok: false, invalidAt: i, from, next };
+        if (!api.getNeighbors(from, state, level, prep).includes(next)) return { ok: false, reason: 'illegal-native-step', invalidAt: i, from, next };
         const portal = level.portalMap.get(from);
         api.applyMove(next, state, level, prep, !!(portal && portal.dest === next));
     }
@@ -79,9 +84,10 @@ for (const item of cases) {
         rows.push({
             schemaVersion: 1, caseId: item.id, levelId: item.levelId, corpus: item.corpus, prefix: item.prefix,
             depth: item.depth, sourceLabel: item.sourceLabel, oracleLabel: 'timeout/abstain', oracleReason: 'native-prefix-illegal',
-            inputAlarm: true, invalidAt: legality.invalidAt, from: legality.from, next: legality.next, timeLimitSec: timeLimit,
+            inputAlarm: true, inputReason: legality.reason, invalidAt: legality.invalidAt, from: legality.from, next: legality.next,
+            timeLimitSec: timeLimit,
         });
-        console.log(`${item.id}: timeout/abstain (native-prefix-illegal)`);
+        console.log(`${item.id}: timeout/abstain (native-prefix-illegal:${legality.reason})`);
         continue;
     }
 
