@@ -538,3 +538,11 @@ it remains an active opt-in experiment rather than a default prune. The durable 
 harness, the grown 5,518-branch oracle-labelled atlas, and a record that separates bootstrap
 measurements, at-scale shadow verdicts, and live finite-budget behavior instead of letting one
 stage stand in for another.
+
+## Contrastive winning-prefix atlas update (2026-08-11)
+
+Authoritative prefix reconstruction and sibling enumeration are implemented, with shared-prefix
+coalescing, child-state neutral facts, known-continuation labels, and explicit oracle abstention. The
+first 3-level smoke produced 19 prefixes / 31 siblings; exact labelling remains pending through this
+document's existing CP-SAT workflow. See
+[`reports/2026-08-11-contrastive-winning-prefix-atlas-pilot.md`](../reports/2026-08-11-contrastive-winning-prefix-atlas-pilot.md).

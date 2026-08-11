@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "familyId": "family-R02248-w0-symmetry",
+  "parentId": "R02248",
+  "variantId": "F02248-sym-02",
+  "transform": 2,
+  "researchSeed": 12345,
+  "nodeBudget": 100000,
+  "recordedVariantWasRepairSolve": true,
+  "parent": {
+    "solved": false,
+    "nodesExpanded": 100000,
+    "choicesRecorded": 2000
+  },
+  "variant": {
+    "solved": false,
+    "nodesExpanded": 100000,
+    "choicesRecorded": 2000
+  },
+  "firstDrawDivergence": {
+    "choice": 15,
+    "left": [],
+    "right": [
+      0.8651748767588288
+    ]
+  },
+  "firstSurvivorOrderDivergence": {
+    "choice": 0,
+    "mappedLeft": [
+      458753,
+      393216,
+      524288
+    ],
+    "right": [
+      458753,
+      524288,
+      393216
+    ]
+  },
+  "firstSameDrawDifferentChoice": {
+    "choice": 14,
+    "draws": [
+      0.30504514812491834,
+      0.772419034736231
+    ],
+    "mappedLeftChosen": 327687,
+    "rightChosen": 196615,
+    "survivorSetsEqual": true,
+    "survivorOrderEqual": false
+  },
+  "interpretation": "Matched seed normalizes initial streams; survivor cardinality/order may subsequently change draw consumption or abstract choice."
+}

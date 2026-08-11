@@ -42,7 +42,7 @@ The current census found 34/975 unsolved Corpus-2 levels with a historically mat
 
 These are deliberately diagnostic first. They should inform several research tracks before any new production policy is chosen.
 
-### 1. Crossing-slack measurement — analyzer implemented, run pending
+### 1. Crossing-slack measurement — analyzer implemented; 10-level smoke complete, intended population run pending
 
 `scripts/stress/mc-crossing-slack-analysis.mjs` reuses the exact `computeMcNeighborBudget` derivation without changing solver behavior. It measures `crossingSlack = freeInt - forcedFutureNeighbourRevisits` on the oracle-labelled atlas and unique known-valid solution prefixes, buckets by depth and remaining must-cross count, separates dead residual branches from already-gauntlet-pruned branches, and reports both sample-weighted and level-balanced solution-prefix summaries. Negative slack on an oracle-alive branch or known-valid prefix is a soundness alarm.
 
@@ -250,3 +250,27 @@ These apply to future solver work before reporting complete:
 9. **Known solutions used in diagnostics are labels, not guidance.** Observation-only lineage/contrastive experiments must not alter candidate generation, ranking, retention, budgets, or random streams.
 10. **Control symmetry confounds before heuristic conclusions.** Separate semantic mismatch, intentional directional policy, fixed tie order, and stochastic trajectory before calling an orientation cliff a heuristic gap.
 11. **Prefer shared evidence.** A new measurement is especially valuable when it can route several programmes at once rather than answer one narrow tuning question.
+
+### Research observation tooling checkpoint (2026-08-11)
+
+Core default-OFF lineage and symmetry observation seams plus cheap atlas/producer/interface/rollback helpers are implemented and unit-validated. The first lineage run, 4+4 stratified control, producer comparison, contrastive-atlas smoke, residual-interface miner, and rollback proxy pilots are complete; CP-SAT atlas labelling and larger stratified populations remain pending. Do not treat the preliminary sample as policy evidence. See [`reports/2026-08-11-solver-research-observation-tooling-pilot.md`](../reports/2026-08-11-solver-research-observation-tooling-pilot.md).
+
+### Residual-interface premise checkpoint (2026-08-11)
+
+The cheap offline premise check is positive but highly correlated: exact represented-state-preserving
+alternate segments exist in a small solution-rich sample. Next reduce to unique signatures and test
+cross-family support; do not build a repair substitution operator yet. See
+[`reports/2026-08-11-residual-interface-segment-mining-pilot.md`](../reports/2026-08-11-residual-interface-segment-mining-pilot.md).
+
+## Older loose-thread triage (2026-08-07)
+
+Compatibility anchor for historical reports and the completed dev-tooling plan. The former loose
+threads have been reconciled into the ranked queue, explicit closed-results section, and dated
+2026-08-11 checkpoints above; this heading does not reopen them.
+
+### Research tooling handoff matrix (2026-08-11)
+
+Before adding another diagnostic seam, consult
+[`reports/2026-08-11-solver-research-tooling-completion-matrix.md`](../reports/2026-08-11-solver-research-tooling-completion-matrix.md),
+which distinguishes completed small pilots, remaining evidence runs, unavailable local oracle work,
+and production experiments deliberately not run.

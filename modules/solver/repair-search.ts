@@ -83,6 +83,14 @@ export function repairPrimarySeed(startKey: number, seedSalt = 0): number {
     return ((startKey * 2654435761) ^ (seedSalt * 0x9E3779B1)) >>> 0;
 }
 
+/** Research/test-only seed derivation for both independently consumed repair streams. */
+export function repairStreamSeeds(startKey: number, seedSalt = 0, researchSeed?: number | null): { primary: number; mustTurn: number } {
+    return researchSeed == null ? {
+        primary: repairPrimarySeed(startKey, seedSalt),
+        mustTurn: ((startKey * 0x27220A95) ^ (seedSalt * 0x85EBCA77)) >>> 0,
+    } : { primary: researchSeed >>> 0, mustTurn: ((researchSeed >>> 0) ^ 0xA511E9B3) >>> 0 };
+}
+
 // Debug-only breakdown of computeBadness's terms (see _REPAIR_DEBUG) — never called on the
 // hot path, only when a restart's badness beats the previous best.
 function debugBadnessBreakdown(state: SolverSearchState, level: NormalizedLevel): string {
@@ -370,7 +378,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
         // levels lost). closeLengthGap/boundedDfsFromHere/relinkPaths below are all deterministic
         // (no rand()) and keep this check at its default (true) — pruning dead branches there can
         // only free more budget for live ones, same as dfsFromGate/beam.
-        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, false, false);
+        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, false);
 
         if (verdict === 'solution') {
             liveUndo.push(undo);
@@ -397,16 +405,39 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     // bit-for-bit unaffected by whether the exit-guidance nudge below ever fires. Only the
     // independent `rand2` stream (see repairSearchFromGate) decides the nudge itself.
     let chosenIdx: number;
-    if (survivors.length === 1) {
-        chosenIdx = bestIdx;
-    } else if (rand() >= epsilon) {
+    const choiceResearch = prep._repairChoiceResearchObserver;
+    let mode: 'only' | 'greedy' | 'explore' | 'must-turn-override' = 'only';
+    let primaryDraws: number[] | null = null;
+    let biasDraw: number | null = null;
+    if (!choiceResearch) {
+        if (survivors.length === 1) {
+            chosenIdx = bestIdx;
+        } else if (rand() >= epsilon) {
+            chosenIdx = bestIdx;
+        } else {
+            chosenIdx = Math.floor(rand() * survivors.length);
+            const preferredSurvivorIdx = preferredTurnTarget !== null ? survivors.indexOf(preferredTurnTarget) : -1;
+            if ((!cfg || cfg.STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST) && rand2 !== null && preferredSurvivorIdx !== -1 && rand2() < EXIT_GUIDANCE_EPSILON_BOOST) chosenIdx = preferredSurvivorIdx;
+        }
+    } else if (survivors.length === 1) {
         chosenIdx = bestIdx;
     } else {
-        chosenIdx = Math.floor(rand() * survivors.length);
+        primaryDraws = [];
+        const branchDraw = rand(); primaryDraws.push(branchDraw);
+        if (branchDraw >= epsilon) { chosenIdx = bestIdx; mode = 'greedy'; }
+        else {
+            const indexDraw = rand(); primaryDraws.push(indexDraw); mode = 'explore';
+            chosenIdx = Math.floor(indexDraw * survivors.length);
+        }
         const preferredSurvivorIdx = preferredTurnTarget !== null ? survivors.indexOf(preferredTurnTarget) : -1;
-        if ((!cfg || cfg.STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST) && rand2 !== null && preferredSurvivorIdx !== -1 && rand2() < EXIT_GUIDANCE_EPSILON_BOOST) chosenIdx = preferredSurvivorIdx;
+        if (mode === 'explore' && (!cfg || cfg.STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST) && rand2 !== null && preferredSurvivorIdx !== -1) {
+            biasDraw = rand2();
+            if (biasDraw < EXIT_GUIDANCE_EPSILON_BOOST) { chosenIdx = preferredSurvivorIdx; mode = 'must-turn-override'; }
+        }
     }
     const chosen = survivors[chosenIdx];
+    if (choiceResearch) choiceResearch.observe({ prefix: [...ws.path], survivors: [...survivors], chosenIndex: chosenIdx,
+        chosen, mode, primaryDraws: primaryDraws ?? [], biasDraw });
     const isJump = !!(portalAtPos && !ws.lastWasPortalJump && portalAtPos.dest === chosen);
     liveUndo.push(applyMove(chosen, ws, level, prep, isJump));
     // `chosen === level.goalKey` is unreachable today: evaluatePrunedMove rejects a non-winning
@@ -936,6 +967,7 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // the selective successor to Stage 2/3's flat-cell biases. No production caller passes true.
 export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false, enableElitePrefixDfs = false): Promise<number[] | null> {
     const cfg = prep._cfg;
+    const eliteResearch = prep._repairEliteResearchObserver;
     const ws = createState(startKey, level, prep, STATE_BUF_REPAIR);
     const liveUndo: UndoToken[] = [];
     // Seeded from startKey alone: deterministic per gate, varies naturally across gates/levels.
@@ -943,11 +975,13 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     // direct-probe.mjs's --races) is the only caller that ever passes a nonzero value, to run
     // several genuinely independent deterministic trajectories from the same gate in parallel.
     // No production/live caller passes this argument, so every existing call site is unaffected.
-    const rand = mulberry32(repairPrimarySeed(startKey, seedSalt));
+    const researchSeed = prep._repairResearchSeed;
+    const streamSeeds = repairStreamSeeds(startKey, seedSalt, researchSeed);
+    const rand = mulberry32(streamSeeds.primary);
     // A SECOND, independent stream (different constant) dedicated to the must-turn exit-guidance
     // nudge below (see EXIT_GUIDANCE_EPSILON_BOOST) — deliberately never drawn from `rand` itself,
     // and only ever created/consumed when enableMustTurnBias is true (the biased attempt).
-    const rand2 = enableMustTurnBias ? mulberry32(((startKey * 0x27220A95) ^ (seedSalt * 0x85EBCA77)) >>> 0) : null;
+    const rand2 = enableMustTurnBias ? mulberry32(streamSeeds.mustTurn) : null;
 
     // Nogood cache (see nogood-cache.ts) — one instance per repairSearchFromGate call, per its own
     // lifecycle rule. Ablation: STRATEGY_REPAIR_NOGOOD_CACHE, default-on (standard convention,
@@ -972,6 +1006,8 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         if (elites.length >= ELITE_POOL_SIZE) elites.pop();
         elites.push({ path: candidatePath, badness: bad, cells, pend });
         elites.sort((x, y) => x.badness - y.badness);
+        if (eliteResearch) eliteResearch.observe({ producer: 'repair', path: [...candidatePath], badness: bad,
+            arrivalNodes: nodesExpandedLocal, restart: restartCount });
     };
     let bestBadnessEver = Infinity;
     let restartsSinceImprovement = 0;

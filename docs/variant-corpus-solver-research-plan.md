@@ -634,3 +634,13 @@ The governing question is:
 For symmetry families, an even sharper version applies:
 
 > Why does the solver distinguish two representations of the same abstract puzzle, and can that representation dependence be removed in a way that increases ordinary cold solves or reduces work across unrelated levels?
+
+## Symmetry-control instrumentation update (2026-08-11)
+
+The family-pair divergence path now compares mapped legal sets, mechanic substate, lower bounds,
+prune verdicts, neutral metrics, and total candidate scores at corresponding prefixes. The first
+R02248 pilot found zero semantic mismatches across 202 prefixes and localized mapped ranking
+divergences to steps 7 and 81. A matched repair-seed control then demonstrated the same exploratory
+draw selecting different mapped moves from equal survivor sets in different production order. This
+is a controlled taxonomy C→D interaction, not a production policy proposal. See
+[`reports/2026-08-11-symmetry-equivariance-prefix-pilot.md`](../reports/2026-08-11-symmetry-equivariance-prefix-pilot.md).

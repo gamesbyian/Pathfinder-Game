@@ -1,6 +1,6 @@
 # Winning-lineage survival analysis
 
-> **Status:** pending diagnostic instrumentation; no production solver behavior is proposed here
+> **Status:** core diagnostic instrumentation implemented and unit-validated 2026-08-11; first bounded 8-level real-beam pilot and 4+4 stratified solved-control follow-up complete; larger population run pending; no production solver behavior is proposed here
 > **Written:** 2026-08-11
 > **Purpose:** measure where known-valid solution families disappear from the solver's real search, especially beam search, without allowing those solutions to guide the search.
 >
@@ -276,3 +276,20 @@ A completed survival report may justify a **specific** next experiment such as:
 - a targeted correctness investigation.
 
 It should not automatically produce a new production score term. The point is to identify the actual failure stage before engineering the remedy.
+
+## 15. Implementation update (2026-08-11)
+
+The default-OFF real-beam observer, compact prefix index, provenance/family support accounting, and loss/cull/dedup context are implemented. See [`reports/2026-08-11-solver-research-observation-tooling-pilot.md`](../reports/2026-08-11-solver-research-observation-tooling-pilot.md). The report now includes both tooling validation and the completed first 8-level plus 4+4 stratified real-beam pilots; a larger population run remains an evidence-lane follow-up.
+
+## 16. Label aggregation hardening (2026-08-11)
+
+Exact duplicate paths now retain the union of every provenance and solution-family label rather than
+silently keeping only the first family. This matters when canonical hints and variant-parent replay
+produce the same canonical path through independent sources.
+
+## 17. Bounded removal-context retention (2026-08-11)
+
+The observer keeps complete stage counts but, by default, retains detailed hard-prune/dedup/cull rows
+only for candidates that carry known-winning support. This keeps larger evidence runs bounded without
+losing the rank, cutoff, competitor, or prune context needed to explain known-support extinction.
+Callers may explicitly request all removal details for a small diagnostic fixture.

@@ -4,9 +4,9 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { FEATURES } from '../ablation-config.mjs';
-import { inverseTransformPoint } from '../../modules/domain/geometry.ts';
+import { inverseTransformPoint, transformPoint } from '../../modules/domain/geometry.ts';
 import { PACK, UNPACK } from '../../modules/domain/cell-key.ts';
-import { compareAblations, comparePathTraces, scoreFlagAblation, tracePathRanks } from './divergence-lib.mjs';
+import { compareAblations, comparePathTraces, compareSemanticSnapshots, scoreFlagAblation, tracePathRanks } from './divergence-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--')).map(arg => {
     const [key, ...value] = arg.split('=');
@@ -86,6 +86,58 @@ const validation = {
     parent: Solver.validateCandidatePath(parent, parentPath),
     variant: Solver.validateCandidatePath(variant, variantPath),
 };
+
+const mapParentKey = key => {
+    if (transform === null) return key;
+    const { x, y } = UNPACK(key);
+    const point = transformPoint(x, y, transform, parentRaw.grid.w, parentRaw.grid.h);
+    return PACK(point.tx, point.ty);
+};
+const replayPrefix = (level, prep, selectedPath, depth) => {
+    const state = api.createState(selectedPath[0], level, prep);
+    for (let i = 1; i <= depth; i++) {
+        const from = state.path.at(-1), to = selectedPath[i];
+        const portal = level.portalMap.get(from);
+        api.applyMove(to, state, level, prep, !!(portal && !state.lastWasPortalJump && portal.dest === to));
+    }
+    return state;
+};
+const semanticAt = (level, prep, selectedPath, depth, keyMap = key => key) => {
+    const state = replayPrefix(level, prep, selectedPath, depth);
+    const pos = state.path.at(-1);
+    const legal = api.getNeighbors(pos, state, level, prep);
+    const pruneVerdicts = {};
+    const scores = {};
+    const curCtx = api.buildCurUrgencyContext(pos, state, level, prep, true, profile);
+    for (const child of legal) {
+        const candidateState = replayPrefix(level, prep, selectedPath, depth);
+        const portal = level.portalMap.get(pos);
+        api.applyMove(child, candidateState, level, prep, !!(portal && !candidateState.lastWasPortalJump && portal.dest === child));
+        pruneVerdicts[keyMap(child)] = api.evaluatePrunedMove(child, api.getRealLengthFromState(candidateState), candidateState,
+            level, prep, prep._cfg, false);
+        scores[keyMap(child)] = api.scoreMove(child, pos, candidateState, level, prep, profile,
+            level.reqLen - api.getRealLengthFromState(candidateState), template, curCtx);
+    }
+    const goalDistance = prep.distMap.get(pos) ?? null;
+    const orderedPruneVerdicts = Object.fromEntries(Object.entries(pruneVerdicts).sort(([a], [b]) => Number(a) - Number(b)));
+    const orderedScores = Object.fromEntries(Object.entries(scores).sort(([a], [b]) => Number(a) - Number(b)));
+    return { legalCandidates: legal, mechanicMask: { mustMask: state.mustMask, mpVisitedMask: state.mpVisitedMask,
+        mustCrossMask: state.mustCrossMask, flipperUsedMask: state.flipperUsedMask, surroundMask: state.surroundMask,
+        mustTurnMask: state.mustTurnMask, adjTurnMask: state.adjTurnMask, lastWasPortalJump: state.lastWasPortalJump },
+        lowerBounds: { goalDistance, mustPass: level.mustPassKeys.length ? api.mustPassLowerBound(pos, state, level, prep) : 0,
+            mustCross: state.mustCrossMask ? api.mustCrossLowerBound(pos, state, level, prep) : 0 },
+        pruneVerdicts: orderedPruneVerdicts, scoreComponents: { totalByCandidate: orderedScores },
+        neutralMetrics: { intersections: state.ints, realLength: api.getRealLengthFromState(state), portalJumps: state.portalJumps },
+        directionalPolicies: [template?.perimeterDir ? `perimeter:${template.perimeterDir}` : null,
+            template?.sideAxis ? `side-axis:${template.sideAxis}` : null].filter(Boolean) };
+};
+const semanticSteps = [];
+if (transform !== null && !leftTrace.error && !rightTrace.error) for (let depth = 0; depth < Math.min(parentPath.length, variantPath.length) - 1; depth++) {
+    const left = semanticAt(parent, parentPrep, parentPath, depth, mapParentKey);
+    const right = semanticAt(variant, variantPrep, variantPath, depth);
+    const comparison = compareSemanticSnapshots(left, right, mapParentKey);
+    if (!comparison.equivariant || comparison.intentionalDirectionalPolicies.length) semanticSteps.push({ depth, comparison });
+}
 const output = {
     schemaVersion: 1,
     parentId: manifest.parentLevelId,
@@ -102,6 +154,10 @@ const output = {
     validation,
     comparison: comparePathTraces(leftTrace, rightTrace, { meaningfulRankDelta: Number(args.get('--meaningful-rank-delta') || 1) }),
     ablationDifferential: compareAblations(leftAblations, rightAblations),
+    semanticEquivariance: { checkedPrefixes: transform === null ? 0 : Math.min(parentPath.length, variantPath.length) - 1,
+        mismatchCount: semanticSteps.filter(step => !step.comparison.equivariant).length,
+        firstMismatch: semanticSteps.find(step => !step.comparison.equivariant) ?? null,
+        observations: semanticSteps },
 };
 const outputFile = args.get('--out');
 if (outputFile) {

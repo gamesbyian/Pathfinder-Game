@@ -107,3 +107,24 @@ export function compareAblations(left, right) {
         return bMagnitude - aMagnitude || a.flag.localeCompare(b.flag);
     });
 }
+
+/** Compare symmetry-mapped semantic snapshots. Directional template fields are annotations, not
+ * invariant claims. Callers build snapshots through SOLVER_TESTING_API and canonical geometry. */
+export function compareSemanticSnapshots(left, right, mapKey = key => key) {
+    const normalize = values => [...new Set((values ?? []).map(mapKey))].sort((a, b) => a - b);
+    const fields = ['mechanicMask', 'lowerBounds', 'pruneVerdicts', 'neutralMetrics', 'scoreComponents'];
+    const differences = [];
+    const leftLegal = normalize(left.legalCandidates);
+    const rightLegal = [...new Set(right.legalCandidates ?? [])].sort((a, b) => a - b);
+    if (JSON.stringify(leftLegal) !== JSON.stringify(rightLegal)) differences.push({ field: 'legalCandidates', left: leftLegal, right: rightLegal });
+    for (const field of fields) if (JSON.stringify(left[field] ?? null) !== JSON.stringify(right[field] ?? null)) {
+        differences.push({ field, left: left[field] ?? null, right: right[field] ?? null });
+    }
+    const directional = [...new Set([...(left.directionalPolicies ?? []), ...(right.directionalPolicies ?? [])])];
+    return {
+        schemaVersion: 1, equivariant: differences.length === 0, differences,
+        intentionalDirectionalPolicies: directional,
+        classification: differences.length ? 'semantic-equivariance-violation'
+            : directional.length ? 'intentional-directional-strategy-asymmetry' : 'semantically-equivariant',
+    };
+}

@@ -450,6 +450,12 @@ function _diverseSelect(sorted: BeamNode[], beamWidth: number): BeamNode[] {
 export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, beamWidth: number, yieldFn: YieldFn, diverseBeam?: boolean, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
     const ws = createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
+    const research = prep._beamResearchObserver;
+    const emit = (stage: import('./types.js').BeamResearchStage, nodes: BeamNode[], details?: Record<string, unknown>): void => {
+        if (!research) return;
+        research.observe({ stage, depth: nodes[0]?.depth ?? phasesCompleted, work: nodesExpandedTotal + frontierIndex,
+            paths: nodes.map(node => [..._reconstructBeamPath(node, [])]), ...(details ? { details } : {}) });
+    };
     // State dedup: safe when there are no portals (portals aren't captured in sc).
     // Ablation: STRATEGY_STATE_DEDUP can disable this optimisation independently.
     const useStateDedup = level.portalMap.size === 0 && (!cfg || cfg.STRATEGY_STATE_DEDUP);
@@ -525,6 +531,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         }
 
         const cands: BeamNode[] = [];
+        const generatedForResearch: BeamNode[] | null = research ? [] : null;
+        const hardPrunedForResearch: BeamNode[] | null = research ? [] : null;
+        const hardPruneContexts: Record<string, unknown>[] | null = research ? [] : null;
+        if (research) emit('incoming-frontier', frontier);
         if (_BEAM_DEBUG) _dbgPhases++;
 
         // `frontier` arrives in cull (score) order. Record that as each node's score rank, then
@@ -591,7 +601,19 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
 
             const _t1 = _hrtNow();
             let neighbors = getNeighbors(pos, ws, level, prep);
-            if (pos === startKey) neighbors = pruneFirstStepNeighbors(startKey, neighbors, prep);
+            if (pos === startKey) {
+                const beforeForced = research ? [...neighbors] : null;
+                const diagnostics: PruneDiagnostics | undefined = research ? { reached: {}, rejected: {} } : undefined;
+                neighbors = pruneFirstStepNeighbors(startKey, neighbors, prep, diagnostics);
+                if (beforeForced && beforeForced.length !== neighbors.length) for (const removed of beforeForced) {
+                    if (neighbors.includes(removed)) continue;
+                    const diagnosticNode: BeamNode = { key: removed, prev: node, depth: node.depth + 1, score: node.score,
+                        sc: '', insOrd: 0, treeOrd: 0 };
+                    hardPrunedForResearch!.push(diagnosticNode);
+                    hardPruneContexts!.push({ path: [..._reconstructBeamPath(diagnosticNode, [])],
+                        cause: '_forced-first-step', diagnostics });
+                }
+            }
             const _beamNeighborCount = neighbors.length;
             // ws is fixed for this node's whole candidate batch — none of these siblings has
             // been tentatively applied yet (that happens per-candidate below, then gets undone).
@@ -607,7 +629,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // ordering and verdicts come from the shared gauntlet so it cannot drift from DFS.
                 const runConnectivity = rSteps <= 20 || (realLen & 7) === 0;
                 const _tc = _BEAM_DEBUG && runConnectivity ? _hrtNow() : 0n;
-                const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity);
+                const pruneDiagnostics: PruneDiagnostics | undefined = research ? { reached: {}, rejected: {} } : undefined;
+                const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity, pruneDiagnostics);
                 if (_BEAM_DEBUG && runConnectivity) { _dbgConnNs += _hrtNow() - _tc; _dbgConnCalls++; }
                 if (verdict === 'solution') {
                     // ws.path is already [startKey, ..., pos, next] — return it
@@ -619,6 +642,17 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     return sol;
                 }
                 const ok = verdict === 'pass';
+                if (research) {
+                    const diagnosticNode: BeamNode = { key: next, prev: node, depth: node.depth + 1, score: node.score,
+                        sc: '', insOrd: 0, treeOrd: 0 };
+                    generatedForResearch!.push(diagnosticNode);
+                    if (!ok) {
+                        hardPrunedForResearch!.push(diagnosticNode);
+                        hardPruneContexts!.push({ path: [..._reconstructBeamPath(diagnosticNode, [])], verdict,
+                            cause: Object.keys(pruneDiagnostics!.rejected)[0] ?? (next === level.goalKey ? '_invalid-goal' : '_fundamental'),
+                            diagnostics: pruneDiagnostics });
+                    }
+                }
                 if (ok) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template, curCtx);
                     // sc: constraint-state key for beam dedup, one delimited field per mask —
@@ -671,6 +705,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             if (_BEAM_DEBUG) _dbgCandGenNs += _hrtNow() - _t1;
         }
         if (_BEAM_DEBUG) _dbgCandCount += cands.length;
+        if (generatedForResearch) emit('generated', generatedForResearch);
+        if (hardPrunedForResearch) emit('hard-pruned', hardPrunedForResearch, { rejections: hardPruneContexts });
+        if (research) emit('post-hard-prune', cands);
 
         if (cands.length === 0) break;
         await yieldIfNeeded();
@@ -688,21 +725,48 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             const _t2 = _hrtNow();
             if (useStateDedup) {
                 const dm = new Map<string, BeamNode>();
+                const dedupRemoved: BeamNode[] | null = research ? [] : null;
+                const dedupContexts: Record<string, unknown>[] | null = research ? [] : null;
                 for (const c of cands) {
                     const dk = `${c.key}|${c.sc}`;
                     const p = dm.get(dk);
-                    if (!p || c.score > p.score) dm.set(dk, c);
+                    if (!p || c.score > p.score) {
+                        if (p && research) { dedupRemoved!.push(p); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(p, [])], competitorPath: [..._reconstructBeamPath(c, [])], removedScore: p.score, keptScore: c.score, key: dk }); }
+                        dm.set(dk, c);
+                    } else if (research) { dedupRemoved!.push(c); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(c, [])], competitorPath: [..._reconstructBeamPath(p, [])], removedScore: c.score, keptScore: p.score, key: dk }); }
                 }
+                if (dedupRemoved) emit('dedup-removed', dedupRemoved, { removals: dedupContexts });
                 if (dm.size < cands.length) pool = [...dm.values()];
             }
+            if (research) emit('post-production-dedup', pool);
             if (_BEAM_DEBUG) { _dbgDedupNs += _hrtNow() - _t2; }
             const _t3 = _hrtNow();
             pool.sort((a, b) => b.score - a.score);
             if (_BEAM_DEBUG) { _dbgSortNs += _hrtNow() - _t3; }
             await yieldIfNeeded();
-            frontier = effectiveDiverseBeam ? _diverseSelect(pool, beamWidth) : pool.slice(0, beamWidth);
+            const widthSelected = pool.slice(0, beamWidth);
+            frontier = effectiveDiverseBeam ? _diverseSelect(pool, beamWidth) : widthSelected;
+            // Diverse selection is the production retention decision, not a score-width cull
+            // followed by a second chance. Report only candidates absent from the actual result;
+            // otherwise support would falsely disappear at the provisional slice and reappear.
+            const retained = research && effectiveDiverseBeam ? new Set(frontier) : null;
+            const actuallyCulled = research && pool.length > beamWidth
+                ? (retained ? pool.filter(c => !retained.has(c)) : pool.slice(beamWidth)) : null;
+            if (actuallyCulled) emit(effectiveDiverseBeam ? 'diversity-culled' : 'score-width-culled', actuallyCulled, {
+                beamWidth, cutoffScore: pool[beamWidth - 1]?.score ?? null,
+                firstCulledScore: pool[beamWidth]?.score ?? null,
+                equalScoreAtCutoff: pool.filter(c => c.score === pool[beamWidth - 1]?.score).length,
+                stableOrderAdmission: pool[beamWidth - 1]?.score === pool[beamWidth]?.score,
+                culled: actuallyCulled.map(c => ({ path: [..._reconstructBeamPath(c, [])], rank: pool.indexOf(c) + 1,
+                    score: c.score, scoreMarginToCutoff: (pool[beamWidth - 1]?.score ?? c.score) - c.score })),
+            });
+            if (research) emit(effectiveDiverseBeam ? 'post-diversity-selection' : 'post-score-width-cull', frontier);
         } else {
             frontier = cands;
+            if (research) {
+                emit('post-production-dedup', frontier);
+                emit('post-score-width-cull', frontier);
+            }
         }
     }
     _dbgFlush('exhausted');
