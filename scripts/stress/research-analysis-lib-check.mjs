@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { classifyProbeProcess, extractExplicitPrefixCases, parseEmittedPath } from './cpsat-explicit-prefix-oracle-lib.mjs';
 import { classifyScoreWidthExtinction, compareProducerPopulations, enumerateKnownPrefixBranches, mineResidualInterfaces, rollbackCensus } from './research-analysis-lib.mjs';
 
 assert.equal(compareProducerPopulations([{ path: [1, 2], metrics: { x: 1 } }], [{ path: [1, 2], metrics: { x: 1 } }]).exactPrefixOverlap, 1);
@@ -33,4 +34,18 @@ const atlas = enumerateKnownPrefixBranches({ api, level: { portalMap: new Map(),
 assert.equal(atlas.length, 2, 'shared known prefixes are enumerated once, not once per solution');
 assert.equal(atlas.find(row => row.child === 3).label, 'known-valid-continuation');
 assert.equal(atlas.find(row => row.child === 4).neutral.intersections, 1, 'neutral facts describe the child state');
+
+// Explicit-prefix CP-SAT seam: packed solver cells are converted to the 1-indexed coordinate
+// prefix expected by cpsat-full-probe.py, and UNKNOWN/unsupported remain abstentions.
+const K = (x, y) => x | (y << 16);
+const explicit = extractExplicitPrefixCases({ levelsFile: 'c.json', levels: [{ levelId: 'R1', branches: [
+    { depth: 1, prefix: [K(1, 1), K(2, 1)], child: K(2, 2), label: 'oracle-abstain' },
+    { depth: 1, prefix: [K(1, 1), K(2, 1)], child: K(3, 1), label: 'known-valid-continuation' },
+] }] }, { format: 'atlas-abstain' });
+assert.equal(explicit.length, 1);
+assert.deepEqual(explicit[0].prefix, [[1, 1], [2, 1], [2, 2]]);
+assert.equal(classifyProbeProcess({ stdout: 'R1: x -> INFEASIBLE in 1.0s', exitCode: 0 }).label, 'dead');
+assert.equal(classifyProbeProcess({ stdout: 'R1: x -> UNKNOWN in 60.0s', exitCode: 0 }).label, 'timeout/abstain');
+assert.deepEqual(parseEmittedPath('PATH [[1,1],[2,1]]\n'), [[1, 1], [2, 1]]);
+
 console.log('research-analysis-lib unit tests passed');
