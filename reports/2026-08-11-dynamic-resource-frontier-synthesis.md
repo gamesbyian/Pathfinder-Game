@@ -1,7 +1,7 @@
 # Dynamic resource frontier synthesis (2026-08-11)
 
 > **Status:** active
-> **Last evidence:** 2026-08-11 — latest Corpus-1/Corpus-2 sweep reconciliation, must-cross feature analysis, repository review, and post-A/B neighbor-budget wiring change in `a113d47`
+> **Last evidence:** 2026-08-11 — latest Corpus-1/Corpus-2 sweep reconciliation, must-cross feature analysis, post-A/B neighbor-budget wiring change in `a113d47`, and implementation of read-only crossing-slack instrumentation
 > **Decision:** prioritize dynamic future-opportunity/resource reasoning over new static level-shape descriptors; treat current solver limits as a benchmark frontier, not authoring restrictions
 > **Remaining gate:** fresh full-population A/B of the revised post-`a113d47` `PRUNE_MC_NEIGHBOR_BUDGET` wiring before using its historical +14 result as a promotion basis
 
@@ -255,21 +255,25 @@ remaining portal could rescue exact-length parity and found its reject condition
 proposal asks whether an already-proven must-cross resource deduction can safely recover coverage
 on portal-bearing levels.
 
-### C. Instrument `crossingSlack` before turning it into policy
+### C. Crossing-slack instrumentation implemented; measurement pending
 
 The neighbor-budget rule currently turns one resource expression into a boolean deadlock:
 
 `crossingSlack = freeInt - forcedFutureNeighbourRevisits`
 
-Instrument that scalar (and its components) on:
+The read-only analyzer now exists at `scripts/stress/mc-crossing-slack-analysis.mjs`. It reuses the
+exact shared `computeMcNeighborBudget` derivation and does **not** alter production search. It records:
 
-- oracle-labelled alive/dead branches;
-- known-solution prefixes; and
-- optionally the gained/lost populations from the original neighbor-budget A/B.
+- oracle-labelled `dead-residual`, `dead-pruned`, and `alive` branch distributions;
+- unique known-valid solution-prefix distributions across the three corpora;
+- depth-decile and remaining-must-cross buckets;
+- low-slack threshold contrasts (`<= 0` through `<= 5`) between dead residual and alive branches;
+- both sample-weighted and level-balanced solution-prefix summaries; and
+- a soundness alarm if negative slack appears on an oracle-alive branch or known-valid prefix.
 
-Measure its distribution by depth and remaining must-cross count. The key question is whether dead
-branches tend to erode toward low slack substantially earlier than live/winning prefixes after
-controlling for search depth.
+The remaining action is measurement, not tooling: run the analyzer and ask whether dead residual
+branches erode toward low-but-nonnegative slack substantially earlier than live/winning prefixes
+after controlling for depth and remaining must-cross count.
 
 If it discriminates, it becomes a candidate **state representation / retention diagnostic**. Do not
 immediately add another scoring weight. This codebase already has strong evidence that plausible
