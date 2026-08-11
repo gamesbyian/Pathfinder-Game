@@ -14,6 +14,15 @@ campaign, Stage 3. This doc is the concrete engineering counterpart: code, data 
 and the first real (non-hypothetical) numbers. It does not re-litigate the research case for any
 technique — read the two docs above for that.
 
+[`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md)
+reuses the same shadow-first philosophy for a different question: whether failed DFS, beam,
+admissible-order, repair, and future attempts emit typed artifacts that are non-redundant and useful
+to another technique. That plan should extend or reuse this harness's evaluation conventions where
+they fit rather than creating a parallel "shadow mode" stack. Its artifact contract is broader than
+the current reject/pass probe contract, however, so do not force replayable candidates, population
+summaries, or soft failure signatures into `verdict: reject|pass` merely to reuse this API. Share the
+replay/oracle/reporting infrastructure; keep the semantic contracts distinct where necessary.
+
 ## Why this exists
 
 Those two research docs list ~17 candidate "middle-layer" solver reasoners (separator-state
@@ -30,6 +39,13 @@ work:
    before investing in building the technique itself.
 
 This doc covers both, plus the first prototype reasoner run through them.
+
+The interoperability plan adds a third reuse case: **score information exchange before enabling
+information exchange**. When artifact emission exists, the first cooperative-search experiment
+should leave solver behavior unchanged and measure artifact frequency, redundancy, diversity,
+winning-prefix proximity where ground truth exists, and hypothetical producer→consumer handoff
+coverage at equal canonical work. Only evidence that survives that shadow stage should graduate to
+a live handoff or scheduling experiment.
 
 ## Part 1: The shared evaluation harness
 
