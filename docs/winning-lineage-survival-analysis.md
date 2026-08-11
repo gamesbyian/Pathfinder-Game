@@ -293,3 +293,9 @@ The observer keeps complete stage counts but, by default, retains detailed hard-
 only for candidates that carry known-winning support. This keeps larger evidence runs bounded without
 losing the rank, cutoff, competitor, or prune context needed to explain known-support extinction.
 Callers may explicitly request all removal details for a small diagnostic fixture.
+
+## 2026-08-11 review follow-up: structural families and same-config control
+
+The pilot's accidental raw-path `family` identity is fixed. Lineage schema v2 uses the established hint-diversity structural axes (directed portal usage, crossing placement, and must-cross first-entry/completion order), while exact paths and provenance remain separate. This equivalence intentionally ignores local edge detours and is not a homotopy proof.
+
+A 30-level, identical width-100/default-profile/100,000-node Corpus-1 cohort yielded 13 solves and 17 failures with observation OFF/ON parity on all runs. Mean normalized last-known-support depth was 0.505 for solves versus 0.239 for failures. Final observed failure losses were score/width on 15/17 and dedup on 2/17; solved runs had seven dedup, four score/width, and two with no observed extinction. See [`../reports/2026-08-11-pr1356-review-follow-up.md`](../reports/2026-08-11-pr1356-review-follow-up.md). This strengthens the retention-stage diagnosis but still does not prove true solution extinction or justify a score/width change.

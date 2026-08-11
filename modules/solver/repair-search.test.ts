@@ -5,9 +5,11 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { repairSearchFromGate, repairStreamSeeds, computePlateauPenaltyCells, selectGuideCells, relinkPaths, preferredTurnExit } from './repair-search.js';
+import { repairSearchFromGate, repairStreamSeeds, computePlateauPenaltyCells, selectGuideCells, relinkPaths, preferredTurnExit, __takePlyForTests } from './repair-search.js';
 import { createState, applyMove } from './search-state.js';
-import { isSolutionState } from './solution.js';
+import { getRealLengthFromState, isSolutionState } from './solution.js';
+import { evaluatePrunedMove } from './prune-gauntlet.js';
+import type { PruneDiagnostics } from './prune-gauntlet.js';
 import { withFeatureDisabled } from '../../scripts/ablation-config.mjs';
 
 const K = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
@@ -60,6 +62,34 @@ test('repairSearchFromGate finds a valid path requiring an intersection and a mu
     const path = await repairSearchFromGate(K(2, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null);
     assert.ok(path, 'expected a solution within budget on this small grid');
     assert.equal(replayAndValidate(path as number[], level, prep), true);
+});
+
+test('stochastic takePly retains a candidate that deterministic neighbor-budget rejects', () => {
+    const level = makeLevel({
+        grid: { w: 5, h: 5 }, goal: { x: 5, y: 5 }, mustCross: [{ x: 3, y: 3 }],
+        reqLen: 20, reqInt: 0,
+    });
+    const prep = prepLevel(level);
+    prep._cfg = { PRUNE_MC_NEIGHBOR_BUDGET: true };
+    const prefix = [K(1, 1), K(2, 1), K(3, 1), K(4, 1), K(5, 1), K(5, 2), K(4, 2), K(3, 2)];
+    const candidate = K(2, 2);
+    const state = createState(prefix[0], level, prep);
+    for (const next of prefix.slice(1)) applyMove(next, state, level, prep, false);
+
+    const choices: Array<{ survivors: number[] }> = [];
+    prep._repairChoiceResearchObserver = { observe: record => choices.push(record) };
+    __takePlyForTests(state, level, prep, POLICY_PROFILES.repair, null, () => 0, null, 0, []);
+    assert.ok(choices[0]?.survivors.includes(candidate),
+        'the exact stochastic survivor-selection loop must retain the neighbor-budget candidate');
+
+    const deterministicState = createState(prefix[0], level, prep);
+    for (const next of prefix.slice(1)) applyMove(next, deterministicState, level, prep, false);
+    applyMove(candidate, deterministicState, level, prep, false);
+    const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+    assert.equal(evaluatePrunedMove(candidate, getRealLengthFromState(deterministicState), deterministicState,
+        level, prep, prep._cfg, false, { diagnostics }), 'reject');
+    assert.equal(diagnostics.rejected.PRUNE_MC_NEIGHBOR_BUDGET, 1,
+        'the equivalent deterministic shared-gauntlet use still rejects and names the rule');
 });
 
 test('repairSearchFromGate is deterministic: identical inputs produce identical output', async () => {

@@ -1,5 +1,21 @@
 const pathKey = path => path.join(',');
 
+const normalizedSegmentShape = path => {
+    const x0 = path[0] & 0xffff, y0 = path[0] >>> 16;
+    return path.map(key => `${(key & 0xffff) - x0}:${(key >>> 16) - y0}`).join(';');
+};
+
+/** Translation-invariant but direction-preserving substitution signature. It remains conservative:
+ * both complete local segment shapes, resource deltas, and obligation sequences must match. */
+function exactSubstitutionSignature(a, b) {
+    const shapes = [normalizedSegmentShape(a.path), normalizedSegmentShape(b.path)].sort();
+    const effects = [
+        `${a.length}:${a.intersectionDelta}:${a.obligations.join('>')}`,
+        `${b.length}:${b.intersectionDelta}:${b.obligations.join('>')}`,
+    ].sort();
+    return JSON.stringify({ displacement: shapes[0].split(';').at(-1), shapes, effects });
+}
+
 export function compareProducerPopulations(beam, repair) {
     const repairByPath = new Map(repair.map(x => [pathKey(x.path), x]));
     const exact = beam.filter(x => repairByPath.has(pathKey(x.path)));
@@ -20,7 +36,7 @@ export function mineResidualInterfaces(solutionRecords, { maxSpan = 12 } = {}) {
     for (const record of solutionRecords) for (let a = 0; a < record.path.length - 2; a++) {
         for (let b = a + 2; b < Math.min(record.path.length, a + maxSpan + 1); b++) {
             const key = `${record.path[a]}>${record.path[b]}`;
-            const segment = { solution: record.id, from: a, to: b, length: b - a, path: record.path.slice(a, b + 1),
+            const segment = { solution: record.id, family: record.family ?? null, from: a, to: b, length: b - a, path: record.path.slice(a, b + 1),
                 futureState: record.futureStates?.[b] ?? null, intersectionDelta: record.intersections?.[b] == null ? null : record.intersections[b] - record.intersections[a],
                 obligations: record.obligations?.slice(a + 1, b + 1).filter(Boolean) ?? [] };
             const list = buckets.get(key) ?? []; list.push(segment); buckets.set(key, list);
@@ -33,18 +49,32 @@ export function mineResidualInterfaces(solutionRecords, { maxSpan = 12 } = {}) {
             if (pathKey(a.path) === pathKey(b.path)) continue;
             const sameObligationMultiset = [...a.obligations].sort().join('|') === [...b.obligations].sort().join('|');
             const commutingCandidate = sameObligationMultiset && a.obligations.join('|') !== b.obligations.join('|');
+            const exactStatePreserving = a.futureState != null && a.futureState === b.futureState;
             pairs.push({ a, b, detourLike: a.length !== b.length || a.intersectionDelta !== b.intersectionDelta,
                 commutingCandidate,
-                exactStatePreserving: a.futureState != null && a.futureState === b.futureState,
-                equivalence: a.futureState != null && a.futureState === b.futureState ? 'exact-future-state' : 'approximate-interface' });
+                exactStatePreserving,
+                ...(exactStatePreserving ? { substitutionSignature: exactSubstitutionSignature(a, b) } : {}),
+                equivalence: exactStatePreserving ? 'exact-future-state' : 'approximate-interface' });
         }
         return { interfaceKey, pairs };
     }).filter(x => x.pairs.length);
     const pairs = repeated.flatMap(x => x.pairs);
+    const signatureMap = new Map();
+    for (const pair of pairs.filter(x => x.exactStatePreserving)) {
+        let support = signatureMap.get(pair.substitutionSignature);
+        if (!support) signatureMap.set(pair.substitutionSignature, support = { signature: pair.substitutionSignature,
+            multiplicity: 0, solutions: new Set(), families: new Set() });
+        support.multiplicity++;
+        support.solutions.add(pair.a.solution); support.solutions.add(pair.b.solution);
+        if (pair.a.family) support.families.add(pair.a.family);
+        if (pair.b.family) support.families.add(pair.b.family);
+    }
+    const exactSignatures = [...signatureMap.values()].map(x => ({ ...x, solutions: [...x.solutions], families: [...x.families] }));
     return { repeatedInterfaces: repeated.length, candidatePairs: pairs.length,
         detourLikePairs: pairs.filter(x => x.detourLike).length,
         commutingCandidates: pairs.filter(x => x.commutingCandidate).length,
-        exactStatePreservingSubstitutions: pairs.filter(x => x.exactStatePreserving).length, interfaces: repeated };
+        exactStatePreservingSubstitutions: pairs.filter(x => x.exactStatePreserving).length,
+        uniqueExactSubstitutionSignatures: exactSignatures.length, exactSignatures, interfaces: repeated };
 }
 
 /** Conservative known-trajectory rollback proxy: longest common prefix to any valid label. It

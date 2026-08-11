@@ -44,3 +44,16 @@ The next justified experiment is to reduce exact pairs to unique interface/state
 support across independent levels/families, and test whether a compact interface predicts the exact
 label out of sample. Do not implement state-preserving repair substitution, separator DP, or a new
 search algorithm from this pilot alone.
+
+## Unique-signature follow-up census
+
+The miner now separates raw pair multiplicity from a conservative, translation-invariant substitution signature. A signature requires both complete directed local segment shapes, their length/intersection deltas, and ordered obligation effects to match; exact represented-state equality is still required before a pair contributes. Level identity is support metadata, not part of the signature, so cross-level recurrence remains detectable. Structural solution-family support uses the same portal/crossing/must-cross-order identity as winning lineage.
+
+```text
+npm run solver:residual-interface-pilot -- --limit-levels=20 --limit-solutions=20 \
+  --max-span=12 --out=reports/stress/residual-interface-signature-census-2026-08-11.json
+```
+
+The bounded census covered 288 canonical-valid solutions across 20 solution-rich Corpus-2 levels. It reduced 31,351 exact represented-state-preserving pair occurrences to **845 unique signatures**. Of these, 459 had support from multiple solutions, 201 crossed structural solution families, but only **14 recurred across multiple levels**. Thus most of the earlier thousands-of-pairs signal is correlated within-level multiplicity, while a small but real reusable cross-level residue survives the stricter definition.
+
+Detour-like raw pairs remain abundant (277,445/364,578 candidates), but this raw frequency is not itself evidence that a reusable detour operator will help. Commuting candidates also remain present (4,310 raw pairs), but were not promoted to a separate algorithm because ordered-obligation equality is only one conservative aspect of commutation. The next justified work is forensic inspection and held-out validation of the 14 cross-level signatures, not repair substitution, separator DP, partial-order search, or CEGAR.

@@ -24,9 +24,9 @@ A read-only correlation remains evidence, not permission to create a score or ha
 
 `PRUNE_MC_NEIGHBOR_BUDGET` is sound on the existing evidence and the original wiring moved deterministic Corpus-2 from 725/1700 to 739/1700, with 42 gained and 28 lost. That run is **not the promotion verdict for the current implementation**.
 
-After that A/B, commit `a113d47` identified a specific churn mechanism: repair's seeded-random `takePly` chooses an index into the surviving candidate array, so pruning one dead candidate can reindex the same random draw onto a different move. The current implementation therefore skips neighbor-budget only for that random candidate-selection path while retaining it for DFS, beam, and deterministic repair sub-searches.
+After that A/B, commit `a113d47` identified a specific churn mechanism: repair's seeded-random `takePly` chooses an index into the surviving candidate array, so pruning one dead candidate can reindex the same random draw onto a different move. Review found that the diagnostics refactor had accidentally erased this skip despite the retained comment. The caller policy is now restored with an independent named option: stochastic `takePly` suppresses neighbor-budget, while DFS, beam, and deterministic repair sub-searches retain it.
 
-**Next action:** run a fresh deterministic full Corpus-2 ON/OFF A/B of the revised wiring. The old +14 result remains evidence for the rule and the pre-`a113d47` implementation, not a substitute for this run.
+**Next action:** generate and compare control/treatment sidecars with `solver:experiment-preflight`, then dispatch the fresh deterministic full Corpus-2 ON/OFF A/B of the repaired revised wiring from one exact remote SHA (local environment lacked authenticated Actions access). The old +14 result remains evidence for the rule and the pre-`a113d47` implementation, not a substitute for this run.
 
 ### 2. Main-loop late reserve: frozen full-population A/B
 

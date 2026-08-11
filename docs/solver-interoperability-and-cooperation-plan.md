@@ -1317,3 +1317,5 @@ overlap. This is preliminary non-redundancy, not receptor evidence; no live cons
 The next bounded experiment should add region/interface descriptors and counterfactual repair
 receptor evaluation. See
 [`reports/2026-08-11-beam-repair-producer-population-pilot.md`](../reports/2026-08-11-beam-repair-producer-population-pilot.md).
+
+> **2026-08-11 review status:** No production policy from this track was changed in the PR #1356 follow-up. Completed lineage/correctness evidence and the explicitly uncompleted oracle/receptor work are recorded in [the review follow-up report](../reports/2026-08-11-pr1356-review-follow-up.md); oracle abstentions remain abstentions.

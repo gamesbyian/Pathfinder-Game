@@ -136,7 +136,7 @@ test('infeasible level: solver reports failure rather than a bogus path', async 
     applyMove(K(2, 1), state, level, prep, false);
     const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
     assert.equal(evaluatePrunedMove(K(2, 1), 1, state, level, prep,
-        { PRUNE_PARITY: true }, false, diagnostics), 'reject');
+        { PRUNE_PARITY: true }, false, { diagnostics }), 'reject');
     assert.equal(diagnostics.reached.PRUNE_PARITY, 1, 'integration fixture reaches the parity branch');
     assert.equal(diagnostics.rejected.PRUNE_PARITY, 1, 'parity is the isolated first firing rule');
 
@@ -145,7 +145,7 @@ test('infeasible level: solver reports failure rather than a bogus path', async 
     applyMove(K(2, 1), feasibleState, feasible, feasiblePrep, false);
     const feasibleDiagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
     assert.equal(evaluatePrunedMove(K(2, 1), 1, feasibleState, feasible, feasiblePrep,
-        { PRUNE_PARITY: true }, false, feasibleDiagnostics), 'pass');
+        { PRUNE_PARITY: true }, false, { diagnostics: feasibleDiagnostics }), 'pass');
     assert.equal(feasibleDiagnostics.reached.PRUNE_PARITY, 1);
     assert.equal(feasibleDiagnostics.rejected.PRUNE_PARITY, undefined,
         'the exact four-edge oracle path remains available');

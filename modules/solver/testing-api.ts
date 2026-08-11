@@ -14,6 +14,7 @@ import { beamSearchFromGate } from './search.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import { getRealLengthFromState } from './solution.js';
 import { mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
+import { structuralSolutionFamilySignature } from '../domain/path-features.js';
 
 /** The canonical solver analysis/debug surface (also a named Solver export). */
 export function createSolverTestingApi() {
@@ -56,6 +57,7 @@ export function createSolverTestingApi() {
         getRealLengthFromState,
         mustCrossLowerBound,
         mustPassLowerBound,
+        structuralSolutionFamilySignature,
     });
 }
 

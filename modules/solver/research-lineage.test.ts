@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { WinningLineageObserver, WinningPrefixIndex } from './research-lineage.js';
+import { structuralSolutionFamilySignature } from '../domain/path-features.js';
+import { PACK } from './encoding.js';
 
 describe('winning lineage research instrumentation', () => {
     test('deduplicates labels and retains family support', () => {
@@ -13,6 +15,28 @@ describe('winning lineage research instrumentation', () => {
         expect(index.support([1, 2])).toMatchObject({ paths: 2, families: 3 });
         expect(index.support([1, 2, 3]).provenances).toEqual(['canonical', 'other-family', 'variant-replay']);
         expect(index.support([1, 9]).paths).toBe(0);
+    });
+
+    test('keeps exact paths separate from established structural solution families', () => {
+        const p = PACK, mc = p(2, 1);
+        const localDetourA = [p(0, 0), p(1, 0), p(2, 0), mc, p(3, 1), mc, p(2, 2)];
+        const localDetourB = [p(0, 0), p(0, 1), p(1, 1), mc, p(3, 1), mc, p(2, 2)];
+        const differentCrossing = [p(0, 0), p(0, 1), p(1, 1), p(1, 2), p(1, 1), mc,
+            p(3, 1), mc, p(2, 2)];
+        const familyA = structuralSolutionFamilySignature(localDetourA, [mc]);
+        const familyB = structuralSolutionFamilySignature(localDetourB, [mc]);
+        const familyC = structuralSolutionFamilySignature(differentCrossing, [mc]);
+        expect(familyA).toBe(familyB);
+        expect(familyC).not.toBe(familyA);
+        const index = new WinningPrefixIndex([
+            { path: localDetourA, provenance: 'solver-a', family: familyA },
+            { path: localDetourA, provenance: 'solver-b', family: familyA },
+            { path: localDetourB, provenance: 'solver-c', family: familyB },
+            { path: differentCrossing, provenance: 'solver-d', family: familyC },
+        ]);
+        expect(index.solutions).toHaveLength(3);
+        expect(index.solutions[0].provenances).toEqual(['solver-a', 'solver-b']);
+        expect(index.support([p(0, 0)])).toMatchObject({ paths: 3, families: 2 });
     });
 
     test('accounts for support loss and canonical work after loss', () => {

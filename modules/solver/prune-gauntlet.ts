@@ -47,6 +47,13 @@ export interface PruneDiagnostics {
     rejected: Partial<Record<PruneId, number>>;
 }
 
+/** Per-call policy for the shared gauntlet. Keeping caller participation separate from
+ * diagnostics prevents observation-only refactors from silently changing pruning semantics. */
+export interface PruneEvaluationOptions {
+    allowNeighborBudgetPrune?: boolean;
+    diagnostics?: PruneDiagnostics;
+}
+
 function reached(diagnostics: PruneDiagnostics | undefined, id: PruneId): void {
     if (diagnostics) diagnostics.reached[id] = (diagnostics.reached[id] ?? 0) + 1;
 }
@@ -64,8 +71,9 @@ export function evaluatePrunedMove(
     prep: PrepLevel,
     cfg: AblationConfig | null | undefined,
     runConnectivity: boolean,
-    diagnostics?: PruneDiagnostics,
+    options: PruneEvaluationOptions = {},
 ): PruneVerdict {
+    const diagnostics = options.diagnostics;
     // Over-length prune (fundamental — always on)
     if (realLen > level.reqLen) return 'reject';
 
@@ -201,7 +209,10 @@ export function evaluatePrunedMove(
     // required neighbor that is already visited (soft, budget-constrained — not a hard wall) needs
     // an unreserved intersection to revisit; reject once the free budget can't cover every such
     // neighbor. See lower-bounds.ts's mustCrossNeighborBudgetDeadlocked for the derivation.
-    if (cfg && cfg.PRUNE_MC_NEIGHBOR_BUDGET === true && state.mustCrossMask !== 0) {
+    // The stochastic repair survivor-selection loop deliberately opts out because removing a
+    // candidate reindexes its seeded random draw. Deterministic DFS, beam, and repair subsearches
+    // retain the default participation. This is independent of optional diagnostics.
+    if (options.allowNeighborBudgetPrune !== false && cfg && cfg.PRUNE_MC_NEIGHBOR_BUDGET === true && state.mustCrossMask !== 0) {
         reached(diagnostics, 'PRUNE_MC_NEIGHBOR_BUDGET');
         if (mustCrossNeighborBudgetDeadlocked(next, state, level, prep)) return reject(diagnostics, 'PRUNE_MC_NEIGHBOR_BUDGET');
     }

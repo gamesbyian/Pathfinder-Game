@@ -37,7 +37,7 @@ function diagnoseCandidate(level: NormalizedLevel, id: PruneId) {
   const state = createState(PACK(0, 0), level, prep);
   applyMove(PACK(1, 0), state, level, prep, false);
   const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
-  const verdict = evaluatePrunedMove(PACK(1, 0), 1, state, level, prep, { [id]: true }, false, diagnostics);
+  const verdict = evaluatePrunedMove(PACK(1, 0), 1, state, level, prep, { [id]: true }, false, { diagnostics });
   return { verdict, reached: diagnostics.reached[id] ?? 0, rejected: diagnostics.rejected[id] ?? 0 };
 }
 
@@ -89,7 +89,7 @@ test('portal-parity envelope only fires after every parity-twisting portal is co
   const run = () => {
     const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
     const verdict = evaluatePrunedMove(PACK(0, 0), 1, state, level, prep,
-      { PRUNE_PORTAL_PARITY_ENVELOPE: true }, false, diagnostics);
+      { PRUNE_PORTAL_PARITY_ENVELOPE: true }, false, { diagnostics });
     return { verdict, reached: diagnostics.reached.PRUNE_PORTAL_PARITY_ENVELOPE ?? 0,
       rejected: diagnostics.rejected.PRUNE_PORTAL_PARITY_ENVELOPE ?? 0 };
   };

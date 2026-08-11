@@ -34,7 +34,7 @@ function stateAt(level: any, prep: any, walkKeys: number[]) {
 function connectivityDiagnostic(next: number, state: any, level: any, prep: any) {
     const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
     const verdict = evaluatePrunedMove(next, state.path.length - 1, state, level, prep,
-        { PRUNE_CONNECTIVITY: true }, true, diagnostics);
+        { PRUNE_CONNECTIVITY: true }, true, { diagnostics });
     return {
         verdict,
         reached: diagnostics.reached.PRUNE_CONNECTIVITY ?? 0,

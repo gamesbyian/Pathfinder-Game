@@ -52,3 +52,7 @@ The canonical historical synthesis for these repair mechanisms is [`repair-searc
 4. **Preserved prototype code is not a queue.** `enablePlateauPenalty`, `enableRecombination`, `enableRelink`, and admissible-order LDS are kept because their negative/mechanistic findings are useful and rebuilding them would waste time.
 5. **When a gate closes, update both the dated report and this ledger, plus `future-work.md` if it is queued there.** When a materially revised implementation reopens a gate, record why the previous evidence no longer directly decides promotion.
 6. Before creating another solver-wide experiment, check this ledger, [`future-work.md`](future-work.md), and the relevant dated report so completed work is not repeated under a new name.
+
+### 2026-08-11 wiring audit note — `PRUNE_MC_NEIGHBOR_BUDGET`
+
+The post-`a113d47` stochastic-repair exclusion had been accidentally erased when prune diagnostics replaced its positional argument. It is restored through independent named `allowNeighborBudgetPrune` and `diagnostics` options, with targeted deadlock/diagnostic/default-OFF tests. This is a correctness restoration, **not promotion evidence**. The required revised full Corpus-2 A/B was not dispatchable from the unauthenticated local environment and remains the promotion gate; see [`../reports/2026-08-11-pr1356-review-follow-up.md`](../reports/2026-08-11-pr1356-review-follow-up.md).

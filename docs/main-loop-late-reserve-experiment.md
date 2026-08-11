@@ -1,5 +1,10 @@
 # Main-loop late-suffix reserve experiment
 
+> **Preflight note (2026-08-11):** generate control and treatment manifests with
+> `npm run solver:experiment-preflight` before dispatching this frozen A/B, then validate them with
+> `compareExperimentArms(..., 'STRATEGY_MAIN_LOOP_LATE_RESERVE')`. This does not change the frozen
+> protocol or intermingle it with the neighbor-budget experiment.
+
 **Status:** opt-in treatment implemented; 14-level mechanism pilot completed; full-population
 matched-budget A/B not yet run. See the
 [`mechanism pilot`](../reports/2026-08-10-main-loop-late-reserve-mechanism-pilot.md).

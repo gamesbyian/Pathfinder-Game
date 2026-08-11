@@ -644,3 +644,5 @@ divergences to steps 7 and 81. A matched repair-seed control then demonstrated t
 draw selecting different mapped moves from equal survivor sets in different production order. This
 is a controlled taxonomy C→D interaction, not a production policy proposal. See
 [`reports/2026-08-11-symmetry-equivariance-prefix-pilot.md`](../reports/2026-08-11-symmetry-equivariance-prefix-pilot.md).
+
+> **2026-08-11 review status:** No production policy from this track was changed in the PR #1356 follow-up. Completed lineage/correctness evidence and the explicitly uncompleted oracle/receptor work are recorded in [the review follow-up report](../reports/2026-08-11-pr1356-review-follow-up.md); oracle abstentions remain abstentions.

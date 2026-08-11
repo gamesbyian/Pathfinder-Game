@@ -123,7 +123,7 @@ function wireLevel(overrides: any = {}) {
 /** Run exactly one configurable gauntlet rule against an already-reached test state. */
 function diagnoseRule(id: PruneId, next: number, state: SolverSearchState, level: NormalizedLevel, prep: ReturnType<typeof prepLevel>) {
   const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
-  const verdict = evaluatePrunedMove(next, getRealLengthFromState(state), state, level, prep, { [id]: true }, false, diagnostics);
+  const verdict = evaluatePrunedMove(next, getRealLengthFromState(state), state, level, prep, { [id]: true }, false, { diagnostics });
   return { verdict, reached: diagnostics.reached[id] ?? 0, rejected: diagnostics.rejected[id] ?? 0 };
 }
 
@@ -779,6 +779,18 @@ test('property: deadlock helpers only report independently unsatisfiable reachab
           if (diagnostic.reached) {
             assert.deepEqual(diagnostic, { verdict: 'reject', reached: 1, rejected: 1 },
               `${ids[i]} must be the isolated firing rule once its branch is reached`);
+            if (i === 2 && diagnosedDeadStates[i] === 0) {
+              const suppressedDiagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+              assert.equal(evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
+                { PRUNE_MC_NEIGHBOR_BUDGET: true }, false,
+                { allowNeighborBudgetPrune: false, diagnostics: suppressedDiagnostics }), 'pass',
+              'stochastic-repair participation policy keeps this otherwise rejected candidate alive');
+              assert.equal(suppressedDiagnostics.reached.PRUNE_MC_NEIGHBOR_BUDGET, undefined,
+                'diagnostics remain independent and do not claim a suppressed rule was reached');
+              assert.equal(evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
+                { PRUNE_MC_NEIGHBOR_BUDGET: false }, false), 'pass',
+              'production default-OFF behavior remains unchanged');
+            }
             diagnosedDeadStates[i]++;
           }
         }
