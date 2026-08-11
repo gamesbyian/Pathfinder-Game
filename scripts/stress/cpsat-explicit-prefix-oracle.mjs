@@ -55,10 +55,11 @@ const prepareReplay = (corpus, levelId) => {
     if (!prepCache.has(key)) { const prep = api.prepLevel(level); prep._cfg = null; prepCache.set(key, prep); }
     return { level, prep: prepCache.get(key) };
 };
-const pack = ([x, y]) => (x & 0xffff) | ((y & 0xffff) << 16);
+// The case/CP-SAT representation is raw level coordinates (1-based); native solver keys are 0-based.
+const packRaw = ([x, y]) => (((x - 1) & 0xffff) | (((y - 1) & 0xffff) << 16));
 const replayPrefix = item => {
     const { level, prep } = prepareReplay(item.corpus, item.levelId);
-    const keys = item.prefix.map(pack);
+    const keys = item.prefix.map(packRaw);
     const state = api.createState(keys[0], level, prep);
     for (let i = 1; i < keys.length; i++) {
         const from = state.path.at(-1), next = keys[i];
@@ -103,7 +104,7 @@ for (const item of cases) {
             row.correctnessAlarm = true;
         } else {
             const level = prepareLevel(item.corpus, item.levelId);
-            const verdict = Solver.validateCandidatePath(level, emitted.map(pack));
+            const verdict = Solver.validateCandidatePath(level, emitted.map(packRaw));
             row.refereeValid = verdict.ok;
             row.refereeReason = verdict.ok ? null : verdict.reason;
             row.emittedPath = emitted;
@@ -122,7 +123,7 @@ for (const item of cases) {
 const count = label => rows.filter(row => row.oracleLabel === label).length;
 const document = {
     schemaVersion: 1, generatedAt: new Date().toISOString(), solverRef, technique: 'cpsat-full-probe-explicit-prefix',
-    sourceCases: casesFile, sourceFormat: format, requestedTimeLimitSec: timeLimit,
+    sourceCases: casesFile, sourceFormat: format, coordinateConvention: 'raw-level-1-based', requestedTimeLimitSec: timeLimit,
     summary: { cases: rows.length, live: count('live'), dead: count('dead'), abstain: count('timeout/abstain'), correctnessAlarms, inputAlarms },
     rows,
     caution: 'CP-SAT labels are oracle/reference evidence, not native-solver solves. Illegal prefixes, timeouts, unsupported mechanics, model errors, and referee-rejected SAT witnesses remain abstentions.',
