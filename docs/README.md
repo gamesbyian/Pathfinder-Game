@@ -9,6 +9,7 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
 |---|---|
 | [`architecture.md`](architecture.md) | Layered model, composition root, state/runtime, engine facade, solver, where to put new code |
 | [`solver-architecture.md`](solver-architecture.md) | Deep hint-solver reference: core flow, feature-keyed attempt policy, DFS/beam, pruning, `prepLevel` data, encodings, CLI/batch-tool selection (which of `stress:benchmark`/`solver:direct`/`portfolio-solve-sweep.mjs`/`repair-direct-probe.mjs` to reach for) |
+| [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md) | Design/research plan for making DFS, beam, admissible-order, repair, and future techniques exchange typed artifacts safely: common artifact envelopes, replay-complete witnesses, neutral derived metrics, proof-strength classes, shadow-mode evaluation, bounded blackboard exchange, pairwise handoffs, and failure-conditioned scheduling. This is a plan, not current production behavior. |
 | [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md) | Code-level inventory of hard bounds, soft scores, templates, and search-control heuristics; compares what each represents, identifies capability gaps, and prioritizes testable new heuristic families without presenting hypotheses as shipped findings |
 | [`solver-budget-determinism.md`](solver-budget-determinism.md) | Current solver-budget model and its history: the attempt ladder and hint-discovery paths now allocate in canonical work units, while `timeBudgetMs` is an outer truncation deadline rather than an allocation currency. Also documents the measured deadline-driven corpus noise floor, deterministic-run recipe, and the known limitation that the fixed connectivity-work charge does not measure optimizations that change flood-fill size accurately. |
 | [`hint-curation.md`](hint-curation.md) | Which stored hints the player cycles through: distinctiveness metric, gate/portal-usage coverage guarantee, must-cross-order variety, cap + message |
@@ -74,8 +75,8 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
   as historical records; every load-bearing fact they contained has been folded into the
   current-state references above. Includes the original modernization roadmap and its
   offshoots (codebase hardening/strengthening/quality-review/quality-followup), the landmark
-  submission-serialization fix, the styling migration, the hint-corpus-expansion plan, the
-  hint-discovery design prototype, and the level-id-unification plan (shipped for all 3 corpora
+  submission-serialization fix, the styling migration, the hint-corpus-expansion plan,
+  the hint-discovery design prototype, and the level-id-unification plan (shipped for all 3 corpora
   2026-07-12/07-15 — see CLAUDE.md's "Level Stats"/"Provenance" sections for what it left behind
   in the current-state references). See a doc's own git history for its full original text.
 - [`history/development-journal.md`](history/development-journal.md) — the dated build narrative
