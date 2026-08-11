@@ -1,9 +1,9 @@
 # Dynamic resource frontier synthesis (2026-08-11)
 
 > **Status:** active
-> **Last evidence:** 2026-08-11 — latest Corpus-1/Corpus-2 sweep reconciliation, must-cross feature analysis, and repository review
+> **Last evidence:** 2026-08-11 — latest Corpus-1/Corpus-2 sweep reconciliation, must-cross feature analysis, repository review, and post-A/B neighbor-budget wiring change in `a113d47`
 > **Decision:** prioritize dynamic future-opportunity/resource reasoning over new static level-shape descriptors; treat current solver limits as a benchmark frontier, not authoring restrictions
-> **Remaining gate:** repeat/diagnose the full-population `PRUNE_MC_NEIGHBOR_BUDGET` churn before promoting it or building policy on top of its solve-count gain
+> **Remaining gate:** fresh full-population A/B of the revised post-`a113d47` `PRUNE_MC_NEIGHBOR_BUDGET` wiring before using its historical +14 result as a promotion basis
 
 ## Why this synthesis exists
 
@@ -21,7 +21,10 @@ Read this together with:
 - [`../docs/solver-heuristic-capability-gap-analysis.md`](../docs/solver-heuristic-capability-gap-analysis.md)
   for the current capability inventory and research priorities;
 - [`2026-08-08-mc-neighbor-budget-propagation.md`](2026-08-08-mc-neighbor-budget-propagation.md)
-  for the neighbor-budget derivation, soundness replay, and full A/B;
+  for the neighbor-budget derivation, soundness replay, original full A/B, and the later
+  repair-random-selection wiring change;
+- [`../docs/solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md) for the
+  exact current promotion disposition of retained default-off features;
 - [`../docs/solver-shadow-eval-harness.md`](../docs/solver-shadow-eval-harness.md) for the shared
   oracle-labelled probe infrastructure;
 - [`2026-07-31-mustcross-forced-structure.md`](2026-07-31-mustcross-forced-structure.md) and
@@ -151,22 +154,29 @@ visited, completing the crossing later requires revisiting that neighbour and th
 additional, previously-unreserved intersection. The rule compares those distinct forced revisits to
 the remaining free intersection budget.
 
-Its evidence chain is unusually strong:
+Its original evidence chain is unusually strong:
 
 - 19 unique dead-branch catches beyond the shipped gauntlet in the 5,518-branch oracle-labelled
   atlas, with zero false rejects on applicable alive branches;
 - 97,812 known-valid paths replayed, 8.5M steps, zero violations;
 - first live sample: +11 / 30, 0 losses;
-- full deterministic Corpus-2 A/B: 725 → 739, **+14 net**, consisting of 42 gained and 28 lost;
+- original full deterministic Corpus-2 A/B: 725 → 739, **+14 net**, consisting of 42 gained and 28 lost;
 - Corpus 1 unchanged at 96 / 102.
 
 See [`2026-08-08-mc-neighbor-budget-propagation.md`](2026-08-08-mc-neighbor-budget-propagation.md)
 for the derivation and exact run details.
 
-The 42/28 churn is not a soundness failure. The prune changes which dead search is removed first,
-which changes where a fixed node budget is spent. The result is therefore simultaneously a positive
-capability signal and a warning against treating "sound prune" as synonymous with "strict solve-set
-superset under a finite budget".
+The 42/28 churn is not a soundness failure. The original wiring changed which dead search was removed
+first, which changed where a fixed node budget was spent. Later investigation identified a more
+specific source of some of that sensitivity in repair: its seeded-random `takePly` selects an index
+into the surviving candidate array, so removing one dead candidate can map the same random draw to a
+different move and change the whole repair trajectory.
+
+Commit `a113d47ab33a8856a1a8fcd327f28379ff65e0e2` therefore revised the participation policy: the
+neighbor-budget prune is skipped for repair's random `takePly` survivor selection while remaining
+active in DFS, beam, and deterministic repair sub-searches. This means the historical 725→739 A/B
+remains strong evidence for the **rule and original wiring**, but it is not the promotion verdict for
+the **current implementation**. A fresh full-population A/B is required before promotion.
 
 ## 5. Revised interpretation of the solver's broad gap
 
@@ -202,20 +212,26 @@ one large constraint solver inside the hot path.
 
 ## 6. Recommended experiments, in order
 
-### A. Close the neighbor-budget churn question before building on its solve gain
+### A. Finish the promotion question for the **revised** neighbor-budget wiring
 
-The current flag is sound and net-positive but not promotion-ready because 28 currently solved
-Corpus-2 levels are lost under the matched fixed budget.
+The original flag was sound and net-positive, but the 42-gained/28-lost A/B predates the repair
+random-selection exclusion in `a113d47`. The original churn therefore no longer needs to be
+re-diagnosed as though its mechanism were unknown, and simply repeating the old implementation would
+not answer the current promotion question.
 
-The first gate is deliberately narrow:
+The decision-bearing gate is now one thing:
 
-1. repeat the deterministic full-population A/B to confirm the 42 gained / 28 lost identity split is
-   stable on identical code/configuration; and/or
-2. use existing attempt/method probes on a representative handful of lost levels to identify where
-   search effort moves when the prune is enabled.
+1. run a fresh deterministic full Corpus-2 ON/OFF A/B on the current post-`a113d47` wiring.
+
+The old 725→739 result remains load-bearing historical evidence that the deduction has power. The new
+run asks whether narrowing participation preserves enough of that upside while reducing the loss set
+enough to justify promotion. A local 68-affected-level follow-up was mentioned as in progress in the
+`a113d47` commit message, but no committed result/report was found during the 2026-08-11 status
+reconciliation, so it must not be treated as completed repository truth.
 
 Do not spend more soundness effort first. The existing replay evidence already addresses that
-question. The unresolved issue is finite-budget search allocation.
+question. Do not build descendants on an assumption that the revised wiring is promoted until this
+population gate lands.
 
 ### B. Test a *locally abstaining* portal extension of neighbor-budget reasoning
 
@@ -249,7 +265,7 @@ Instrument that scalar (and its components) on:
 
 - oracle-labelled alive/dead branches;
 - known-solution prefixes; and
-- optionally the gained/lost populations from the full neighbor-budget A/B.
+- optionally the gained/lost populations from the original neighbor-budget A/B.
 
 Measure its distribution by depth and remaining must-cross count. The key question is whether dead
 branches tend to erode toward low slack substantially earlier than live/winning prefixes after
@@ -334,6 +350,7 @@ To prevent this thread from fragmenting again:
 |---|---|
 | What does the solver currently understand / omit? | [`../docs/solver-heuristic-capability-gap-analysis.md`](../docs/solver-heuristic-capability-gap-analysis.md) |
 | What work is actually open now? | [`../docs/future-work.md`](../docs/future-work.md) |
+| Which retained opt-ins still have a promotion decision open? | [`../docs/solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md) |
 | How do we score sound candidate reasoners before production integration? | [`../docs/solver-shadow-eval-harness.md`](../docs/solver-shadow-eval-harness.md) |
 | What exactly did neighbor-budget prove and measure? | [`2026-08-08-mc-neighbor-budget-propagation.md`](2026-08-08-mc-neighbor-budget-propagation.md) |
 | Why is static must-cross forced-edge reasoning unsafe? | [`2026-07-31-mustcross-forced-structure.md`](2026-07-31-mustcross-forced-structure.md) |
