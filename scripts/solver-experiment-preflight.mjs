@@ -37,13 +37,14 @@ const flags = parseAssignments(args.get('--flags'), { coerceBooleans: true });
 const productionFlags = defaultConfig();
 const unknownFlags = Object.keys(flags).filter(key => !(key in productionFlags));
 if (unknownFlags.length) throw new Error(`unknown solver flags: ${unknownFlags.join(',')}`);
+const workflow = args.get('--workflow') ?? 'direct';
 const workflowInputs = parseAssignments(args.get('--workflow-inputs'));
 const git = (...gitArgs) => execFileSync('git', gitArgs, { encoding: 'utf8' }).trim();
 if (git('status', '--porcelain') && !args.has('--allow-dirty')) throw new Error('refusing experiment preflight from a dirty worktree');
 const manifest = validateExperimentManifest({
     schemaVersion: 2, experimentId: required('--experiment-id'), runId: required('--run-id'),
     solverRef: git('rev-parse', 'HEAD'), corpus, levelIds: requested, levelSelectionHash: levelSelectionHash(requested),
-    arm, solverFlags: { ...productionFlags, ...flags }, workflowInputs,
+    arm, solverFlags: { ...productionFlags, ...flags }, workflow, workflowInputs,
     seeds: (args.get('--seeds') ?? '').split(',').filter(Boolean).map(Number),
     canonicalWorkBudget: Number(required('--work-budget')), wallDeadlineMs: Number(required('--wall-deadline-ms')),
     profile: required('--profile'), instrumentation: args.get('--instrumentation') ?? 'off', output,
@@ -51,4 +52,4 @@ const manifest = validateExperimentManifest({
 });
 mkdirSync(path.dirname(output), { recursive: true });
 writeFileSync(output, `${JSON.stringify(manifest, null, 2)}\n`);
-console.log(`Preflight OK: ${arm}, ${requested.length} levels, ${manifest.solverRef}, ${output}`);
+console.log(`Preflight OK: ${arm}, ${requested.length} levels, ${manifest.solverRef}, workflow=${workflow}, ${output}`);
