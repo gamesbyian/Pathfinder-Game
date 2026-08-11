@@ -2,197 +2,432 @@
 
 > **Status:** design and research plan, not production solver behavior
 > **Written:** 2026-08-10
-> **Revised:** 2026-08-10 to make documentation ownership and prior evidence explicit
-> **Decision:** build a common artifact contract and shadow-mode exchange layer before allowing techniques to influence one another. Standardize evidence, replayability, provenance, and neutral derived metrics; do not force techniques into one shared notion of state quality.
-> **First gate:** demonstrate, on unchanged solver runs, that different techniques emit non-redundant artifacts that have measurable predictive or handoff value at equal canonical work.
+> **Decision:** Pathfinder has enough technique-specific evidence to treat cross-attempt information sharing as a concrete solver-improvement hypothesis rather than a generic portfolio idea. Build a common, replay-safe artifact substrate and use it to test specific **producer -> receptor** pairings in shadow mode before any information changes live search.
+> **First decision gate:** show that an earlier technique produces bounded information that (a) is not already available to the later technique, (b) addresses a measured sensitivity or failure mode of that later technique, (c) arrives early enough to matter, and (d) would be cheap enough to consume that a matched-work experiment has a realistic chance of net gain.
 
 ## Executive summary
 
-Pathfinder's solver already has multiple techniques with genuinely different search behavior: DFS and its variants, beam search and diversity mechanisms, admissible-order search, randomized repair and its elite/plateau machinery, plus a feature-keyed attempt policy that decides which configurations receive work. The existing architecture is therefore already a portfolio. What it mostly lacks is a durable way for one technique to leave behind useful information that another technique can understand and safely exploit.
+Pathfinder's solver is already a portfolio of genuinely different search processes: score-ordered DFS/LDS, width-limited beam search, admissible-slack-ordered deterministic search, randomized repair with elite splicing and restart memory, plus a feature-keyed attempt policy that allocates work among them. The important new conclusion is that these techniques are not merely different ways to search. They have different **information sensitivities**.
 
-The proposed direction is to make failed and partial search produce **typed, standardized artifacts** and expose those artifacts through a bounded per-solve exchange layer, or "blackboard". Techniques remain independent algorithms. They do not need to agree on a universal score, universal partial-state representation, or universal definition of progress. Instead, they agree on:
+The repository now contains enough direct evidence to identify several such sensitivities with confidence:
 
-- how an artifact identifies its producer and the exact solve context;
-- how replayable path/state witnesses are represented;
-- which neutral state/resource measurements have common meanings;
-- how proof-strength is distinguished from heuristic evidence;
-- how technique-specific payloads are carried without being flattened into fake commonality;
-- how much artifact data may be emitted and retained;
-- how later experiments can measure whether a proposed handoff would have helped.
+- **Repair benefits from memory and alternative starting material.** It already keeps an eight-member elite pool, usually restarts from elite splices once that pool exists, forces fresh bursts when those elites converge, and now ships a repair-scoped exact-state nogood cache because hard levels were measured to rediscover the same dead states at very high rates. [`2026-08-07-repair-nogood-cache.md`](../reports/2026-08-07-repair-nogood-cache.md) showed repeat rates of roughly 54-98% on the measured hard repair population and a directional node-saving A/B.
+- **DFS/LDS is highly sensitive to branch ordering.** Its cheap LDS waves succeed when the winning path stays near the scorer's preferred ordering and become expensive when early ranking mistakes accumulate. This is not abstract: the repair technique itself was introduced after witness traces showed deterministic score ordering accumulating 22-59 discrepancies on a hard cluster. [`solver-architecture.md`](solver-architecture.md) and [`repair-search.ts`](../modules/solver/repair-search.ts) document that diagnosis.
+- **Admissible-order search is also highly sensitive to ordering information, specifically where its hard information ties.** Changing only the child ordering while preserving the same legal state space and admissible pruning found 71 solutions in an initially 1,266-level population that the full production ladder had failed; soft tie-breaking and additional tie-break profiles raised the distinct total to 115. [`2026-07-24-admissible-order-search-corpus2-validation.md`](../reports/2026-07-24-admissible-order-search-corpus2-validation.md) also records that a meaningful population depended on the no-tie-break ordering, proving that apparently small ordering decisions can change reachability within budget.
+- **Beam is highly sensitive to diversity and retention.** Its coarse state-dedup mechanism turned out not to be exact duplicate elimination: true exact-future duplicates were only about 0.019% of candidates in the measured sample. Yet disabling the coarse merge caused 18 of 75 tested levels to lose a beam solve and only one to gain one. [`2026-08-06-beam-state-dedup-sound-signature-audit.md`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md) concluded that the mechanism's practical value is width/diversity management: it prevents superficially similar candidates from crowding out structurally different opportunities.
+- **The outer ladder is sensitive to allocation and starvation.** A technique can be capable of solving a level and still contribute nothing if it receives too little or zero meaningful work. [`2026-07-31-admissible-order-tier-node-starvation.md`](../reports/2026-07-31-admissible-order-tier-node-starvation.md), [`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md), and [`future-work.md`](future-work.md) own the current evidence here.
 
-This creates two capabilities at once.
+These are not yet proofs that **cross-technique** information transfer improves the full solver. They are stronger and more useful than a vague cooperation premise, however: they establish that the solver contains identifiable **receptors** for information.
 
-First, it creates a **research instrument**. A failed run stops being only `solved=false`; it can become a small structured account of the best, strangest, deepest, most diverse, most constrained, or most informative states each technique discovered and of the shape of its failure. That lets the project test whether techniques actually possess complementary information before spending solver budget on cooperation.
+At the same time, the techniques naturally produce potentially relevant information:
 
-Second, if the evidence supports it, the same contract becomes the substrate for **live cooperation**. Beam survivors can seed repair. Repair elites can become replayed prefixes for bounded deterministic completion. Failure signatures can choose which complementary technique receives the next work slice. Exact proved facts can eventually be shared across techniques, while soft evidence remains guidance only.
+- beam produces a diverse population of viable prefixes and evidence about frontier collapse;
+- repair produces elites, signed residual/plateau signatures, repeated-basin evidence, and exact repair-scoped dead-state memory;
+- DFS/LDS produces deep productive prefixes, expensive failed subtrees, contradiction depth, discrepancy context, and prune/failure distributions;
+- admissible-order produces highly constrained prefixes, equal-slack decision points, discrepancy/order context, and evidence about where hard bounds cease to discriminate;
+- attempt orchestration produces timing, budget, starvation, technique-outcome, and arrival-order context.
 
-The important architectural principle is:
+The central research question is therefore no longer:
+
+> Could solver techniques conceivably help one another?
+
+It is:
+
+> **Which producer -> receptor pairing transfers enough genuinely new information, early and cheaply enough, to improve solves or reduce work at equal canonical budget without erasing the recipient's independent search?**
+
+That framing changes the plan. A generic artifact blackboard is still the right interoperability substrate, but **artifact non-redundancy alone is no longer sufficient evidence to proceed**. An artifact must have a plausible receptor whose measured failure mode it addresses. Likewise, a later technique being information-sensitive is not enough: the earlier technique must actually produce the right information before the recipient would otherwise spend the work rediscovering it.
+
+The architectural principle remains:
 
 > **Standardize the language in which techniques exchange evidence, not the search philosophy that produces the evidence.**
 
-A universal `bestState` or universal scalar score would likely destroy useful diversity. A common envelope plus common derived measurements plus typed technique-specific payloads preserves it.
+But the experimental principle is now sharper:
 
-## Documentation ownership map
+> **Measure the producer, the receptor, and the cost of the handoff separately before asking whether the combined mechanism wins.**
 
-This plan is the canonical home for **interoperability and cooperation design**, but it intentionally does not duplicate the documents that own current solver behavior, current experiment status, mechanic state, or prior results. When this plan and another document overlap, use the following ownership rules.
+## 1. What is already known, and what is not
 
-| Topic | Canonical reference | How this plan uses it |
-|---|---|---|
-| Where to find current docs and which docs are authoritative | [`README.md`](README.md) | Start here before adding a new artifact tool or document so an existing owner is not accidentally duplicated. |
-| Live solver queue and current verdicts | [`future-work.md`](future-work.md) | Determines what is actually open now. This plan may propose later stages that are not yet live work. |
-| Current solver architecture, techniques, attempt policy, search state, replay semantics | [`solver-architecture.md`](solver-architecture.md) | Controls how witnesses are reconstructed and what current production behavior actually is. |
-| Dynamic mechanic state and state-cardinality contracts | [`mechanic-state-contracts.md`](mechanic-state-contracts.md) | Mandatory audit checklist for any replay-complete witness or exact shared state identity. |
-| Canonical work accounting and deterministic-budget comparisons | [`solver-budget-determinism.md`](solver-budget-determinism.md) | Controls all equal-work handoff and scheduling experiments. |
-| Current correctness lessons, unsafe state abstractions, and hardening precedent | [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md) | Controls proof-quality artifact and state-equivalence claims. |
-| Shared shadow-mode reasoning evaluation | [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) | Existing model to reuse for observe-only evaluation rather than creating another generic shadow framework. |
-| Current heuristic/inference capability gaps | [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md) | Supplies the open failure-conditioned-control and residual-resource motivations that artifacts may expose. |
-| Repair stagnation, elites, plateau signatures, recombination, relinking, and later corrections | [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md) | Source of repair-specific artifact semantics and several important negative-result boundaries. |
-| Broad cold-start portfolio scheduler experiment | [`fast-portfolio-scheduler-plan.md`](fast-portfolio-scheduler-plan.md) and its [`decision report`](../reports/portfolio/portfolio-scheduler-decision.md) | Establishes that merely reordering/restarting techniques faster did not help. It does not test artifact-driven cooperation. |
-| Variant/family boundary research and symmetry diagnosis | [`variant-corpus-solver-research-plan.md`](variant-corpus-solver-research-plan.md) | Owns family-specific conclusions; later artifact studies should feed it rather than form a parallel family-analysis stack. |
-| Solution-space fingerprints and existing path-distance machinery | [`solution-profile.md`](solution-profile.md) | Reuse for candidate novelty/structural comparisons where its semantics fit. |
-| Historical solver research ledger, including homotopy and transposition/classifier work | [`solver-improvement-research-notes.md`](solver-improvement-research-notes.md) | Prevents old ideas from being rediscovered as new artifact features. |
-| Literature-informed activity, hazard, and adaptive-search hypotheses | [`solver-next-frontier-multilingual-research-update-2026-08-02.md`](solver-next-frontier-multilingual-research-update-2026-08-02.md) | Source for search-activity and conditional-hazard ideas used here as hypotheses, not findings. |
-| Investigation status/decision/gate conventions | [`investigation-report-conventions.md`](investigation-report-conventions.md) | Any live handoff or scheduler experiment promoted from this plan should follow these conventions. |
-| Existing reducer/benchmark/failure-inbox development tooling | [`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) | Reuse these tools for artifact-caused regressions and minimal repros instead of building a second diagnostics stack. |
+A useful way to prevent both overclaiming and excessive caution is to distinguish three levels of evidence.
 
-### Implementation precedent: the canonical `Attempt` contract
+### 1.1 Receptor evidence
 
-There is not currently a separate design document whose sole job is to describe the 2026-08-09 `Attempt` projection/transport cleanup. The durable implementation precedent is therefore the code and tests themselves. The maximally populated fixture in [`scripts/test-lib/fixtures.mjs`](../scripts/test-lib/fixtures.mjs), provenance contract tests in [`modules/solver/hint-provenance.test.ts`](../modules/solver/hint-provenance.test.ts), raw structured-clone worker transport in [`modules/solver/worker-result-serialization.mjs`](../modules/solver/worker-result-serialization.mjs), and canonical report projection in [`scripts/portfolio-solve-sweep-lib.mjs`](../scripts/portfolio-solve-sweep-lib.mjs) collectively establish the pattern this plan wants to reuse: define the field contract once, classify what persists, and make tests fail when a new field silently disappears. The originating merge was commit `1d98ef2763a041b751536b1e6ee873d5da5f729f`.
+A **receptor** is a measured property of a technique that can plausibly be improved by additional information.
 
-### Prior evidence that must not be accidentally repeated under new names
+Examples already supported by Pathfinder evidence:
 
-Several experiments sit unusually close to proposed cooperation mechanisms. Read the exact result before implementing a superficially similar handoff:
+- repair wastes work revisiting known dead states and can benefit from memory;
+- repair depends on diverse starting material and explicitly combats elite-pool convergence with fresh bursts;
+- DFS/LDS success cost depends strongly on branch rank/discrepancy;
+- admissible-order search depends materially on tie-breaking among equally constrained branches;
+- beam loses solves when structurally different frontier capacity is allowed to collapse into superficially similar candidates;
+- the attempt ladder loses capability when later techniques are starved.
 
-- **Broad fast portfolio / cold-start tier rotation:** [`fast-portfolio-scheduler-plan.md`](fast-portfolio-scheduler-plan.md) and [`portfolio-scheduler-decision.md`](../reports/portfolio/portfolio-scheduler-decision.md). Result: slower than legacy in every measured variant. New cooperation must exchange information, not merely restart/reorder attempts.
-- **Exact repair path relinking:** [`2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md`](../reports/2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md). Result: built and sound, but exact suffix transplantation collapses under prefix-dependent legality.
-- **Elite-prefix deterministic repair:** [`2026-08-07-repair-elite-prefix-dfs.md`](../reports/2026-08-07-repair-elite-prefix-dfs.md). Result: real mechanism, net-negative under the shared budget. A later repair-to-DFS handoff must be materially different in selection/evidence or it is a rerun.
-- **Repair exact-state memory:** [`2026-08-07-repair-nogood-cache.md`](../reports/2026-08-07-repair-nogood-cache.md). Result: a complete repair-scoped exact-state key actually found substantial repeated dead states and shipped default-on. This is positive evidence for exact local memory, not permission to use incomplete cross-technique signatures as hard facts.
-- **Admissible-order budget starvation:** [`2026-07-31-admissible-order-tier-node-starvation.md`](../reports/2026-07-31-admissible-order-tier-node-starvation.md), the current main-loop treatment in [`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md), and the live status in [`future-work.md`](future-work.md). A zero-work technique did not fail; it was never given a meaningful attempt.
-- **Learned repair-winner routing:** [`2026-08-07-repair-winner-classifier-rerun.md`](../reports/2026-08-07-repair-winner-classifier-rerun.md). Result: concluded negative. Failure-conditioned scheduling here must use genuinely new online evidence, not quietly rebuild the same static classifier.
+For these, we do **not** need another experiment to establish that the technique is information-sensitive in principle. The repo already did that work.
 
-This evidence map is intentionally redundant with some later inline links. For this document, easy navigation is more valuable than making readers remember where an earlier footnote lived.
+### 1.2 Producer evidence
 
-## Reuse existing infrastructure rather than rebuilding it
-
-This plan depends on existing systems and should extend them only where the artifact use case exposes a real missing seam:
-
-- [`solver-budget-determinism.md`](solver-budget-determinism.md) already provides the canonical cross-technique work currency needed for fair effort accounting.
-- [`solver-architecture.md`](solver-architecture.md) already owns the real state transition machinery and the feature-keyed attempt policy.
-- [`mechanic-state-contracts.md`](mechanic-state-contracts.md) already inventories dynamic state that can make two superficially similar path prefixes semantically different.
-- the canonical `Attempt` fixture/projection/transport implementation described above already provides a model for field-contract tripwires.
-- [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) already provides the project's pattern for observing candidate reasoning without changing solver behavior.
-- [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md) already provides repair elites, badness, signed plateau information, and multiple measured attempts to exploit them.
-- [`variant-corpus-solver-research-plan.md`](variant-corpus-solver-research-plan.md) already provides the family-conditioned evaluation discipline needed later.
-- [`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) already provides reducer, ranking, diff, regression, and failure-inbox infrastructure.
-
-Do not create a second provenance system, second work currency, second family database, second reducer, second generic shadow harness, or second generic benchmark/report stack just to make artifact work feel self-contained.
-
-## 1. What "interoperability" should mean
-
-Interoperability should be broader than "technique A can pass a path to technique B". There are at least four useful layers.
-
-### 1.1 Observational interoperability
-
-Every technique can describe what happened using a shared outer contract. Reports can compare attempts without knowing the internals of each technique.
+A **producer** is a technique that naturally creates potentially useful information while doing work it already performs.
 
 Examples:
 
-- how much canonical work was spent before an artifact appeared;
-- how deep a replayable prefix is;
-- which obligations remain;
-- which residual resources are scarce;
-- whether the search population has collapsed into one structural family;
-- whether progress has plateaued;
-- which prune/failure classes dominate.
+- a beam frontier is already a collection of surviving alternative prefixes;
+- repair already maintains elites, best badness, residual signatures in research modes, stagnation history, and exact repair-scoped nogoods;
+- DFS already has the stack structure needed to identify deep/productive prefixes and, under existing debug instrumentation, expensive failed subtrees;
+- admissible-order already computes admissible slack for every sibling it ranks;
+- orchestration already records technique, config, gate, budget, outcome, nodes/work, and starvation-relevant attempt metadata.
 
-This layer is useful even if no technique ever consumes another technique's artifacts.
+Some producer evidence is strong because the data structure already exists. Other proposed artifacts, such as a cross-technique structural novelty score, are only hypotheses until measured.
 
-### 1.2 Candidate interoperability
+### 1.3 Handoff evidence
 
-A technique can emit one or more replayable candidate witnesses, and another technique can reconstruct them through the real solver transition machinery defined by [`solver-architecture.md`](solver-architecture.md).
+A **handoff** is the actual use of producer information by a receptor technique.
 
-This enables handoffs such as beam-to-repair or repair-to-DFS without sharing mutable internal solver objects.
+This is the layer that remains mostly untested.
 
-### 1.3 Diagnostic interoperability
+Pathfinder currently has **no general result** showing that beam information improves repair, repair information improves DFS, DFS information improves beam, or online failure evidence improves the outer scheduler at equal total canonical work.
 
-A technique can emit a failure or search-condition signature that a scheduler or another technique can use as soft evidence.
+The closest local precedent is deliberately cautionary: [`2026-08-07-repair-elite-prefix-dfs.md`](../reports/2026-08-07-repair-elite-prefix-dfs.md) proved that deterministic search from selected repair elite prefixes can genuinely improve intermediate state quality, yet the mechanism lost 4/20 versus 5/20 at the shared budget because its extra work displaced ordinary repair work needed by a real solution. This is proof that **useful information can still reduce solver success when consumption cost is wrong**.
 
-Examples include beam extinction, repair plateau shape, repeated contradiction classes, lack of improvement for a measured work interval, or population diversity collapse.
+The plan must therefore treat handoff value as:
 
-### 1.4 Proof interoperability
+**new information delivered to a known receptor, minus the work and independence lost by consuming it.**
 
-A technique can emit an independently justified fact that is safe for another technique to rely on as a hard constraint.
+Do not collapse that into one universal numeric score in code. It is a decision model for experiments, not a new solver heuristic.
 
-This is the most powerful and most dangerous layer. It must be opt-in by artifact kind and must never arise merely because a heuristic signal is strong. Pathfinder's history-sensitive state makes lossy shared-state nogoods especially risky. The state-key warnings in [`solver-architecture.md`](solver-architecture.md), the corrected/superseded cases collected in [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md), and the contrast between the sound repair-scoped cache in [`2026-08-07-repair-nogood-cache.md`](../reports/2026-08-07-repair-nogood-cache.md) and older incomplete transposition ideas all remain controlling: an incomplete state identity may guide diversity or retention, but it cannot silently become a sound global dead-state key.
+## 2. Technique map: producers and receptors
 
-## 2. Non-goals and traps to avoid
+The table below is the current mechanistic hypothesis map. “Receptor evidence” describes what Pathfinder has already measured. “Potential producer” describes information another technique could supply. “Handoff status” is intentionally conservative.
 
-### 2.1 Do not invent one universal solver state
+| Receptor | Measured sensitivity | Potential external information | Natural producers | Handoff status |
+|---|---|---|---|---|
+| Repair | repeated dead-state work; elite convergence; starting-point dependence | replayable structurally distinct prefixes; basin/region novelty; exact compatible facts | beam, DFS, admissible-order | cross-technique untested; intra-repair memory positive |
+| DFS/LDS | cumulative discrepancy; expensive consequences of early rank errors | soft ordering preference; evidence that an early branch survives independent search; expensive-failure avoidance | beam, repair, admissible-order | untested |
+| Admissible-order | equal/near-equal slack ties; tie-break choice changes solved population | external tie-break preference; independent survival/obligation evidence | beam, repair, DFS | untested |
+| Beam | frontier-width crowding; diversity preservation strongly affects solves | structural novelty buckets; protected candidate families; external “keep one of these” signal | repair, DFS, admissible-order | untested |
+| Attempt scheduler | static pre-search features cannot see collapse, plateau, deep contradiction, or starvation as they happen | typed failure/activity signatures; artifact arrival/improvement hazard | every technique | untested online; cold-start portfolio negative |
+| Any technique | repeated exact work when state identity is truly complete | exact dead fact / sound bound / forced fact | technique-specific proof producer | repair-scoped exact memory positive; cross-technique proof sharing later |
 
-The techniques have different internal data structures for good reasons. The exchange layer should not require beam, DFS, repair, and admissible-order search to serialize their private working representation into one giant `UniversalState`.
+This map should evolve only from measured results. If a proposed artifact has no named receptor, it is logging, not interoperability work.
 
-For transferable candidates, the authoritative representation should be a **replayable witness** plus centrally derived measurements. The recipient reconstructs its own native state by replaying that witness through the real transition machinery.
+## 3. Technique-specific reasoning
 
-This also avoids coupling every future mechanic addition to every technique's serializer. Any witness design must be checked against [`mechanic-state-contracts.md`](mechanic-state-contracts.md) so a new or history-sensitive mechanic cannot silently disappear from the exchange boundary.
+### 3.1 Repair: strongest immediate receptor for candidate information
 
-### 2.2 Do not invent one universal score
+Repair is already an information-reuse algorithm.
 
-There should not be a mandatory `quality: number` with the implication that higher means closer to a solution.
+[`modules/solver/repair-search.ts`](../modules/solver/repair-search.ts) uses randomized epsilon-greedy construction plus restart/splice repair. Its elite pool is deliberately not a single best path: it keeps several distinct near-misses because a single best-so-far path was measured to produce premature convergence. Once elites exist, most restarts splice from them, while stagnation-triggered fresh bursts restore independence when the elite family collapses.
 
-Repair's badness, beam's score/frontier rank, DFS depth, LDS discrepancy, admissible-order progress, residual resource margins, and structural novelty answer different questions. They can all be retained, but their semantics should stay explicit.
+This gives repair two clearly distinct external receptors.
 
-A common scalar would make the system easier to code and harder to reason about. It would also encourage the coordinator to erase the independence that makes a multi-technique solver valuable.
+#### Candidate receptor
 
-### 2.3 Do not turn correlations into prunes
+A replayed external prefix can serve as starting material analogous to an elite, provided it is validated through the real state transition machinery.
 
-Artifact consumers must know whether a claim is:
+The strongest first producer is beam because beam naturally pays to maintain multiple simultaneously viable prefixes. If those prefixes are structurally different from repair's own elites, they may bypass the cost of repair randomly rediscovering those basins.
 
-- a replayable observation;
-- a diagnostic summary;
-- heuristic guidance;
-- an exact proved fact;
-- an admissible bound with stated preconditions.
+The key premise is **not** “beam's top state is good.” It is:
 
-A beam population concentrating on one topology is evidence about beam search. It is not a theorem about the level. A repair elite with badness 2 is a promising repair state, not proof that states with badness 8 are inferior. A useful approximate state signature may drive novelty retention while remaining forbidden as a dead-state key.
+> beam may cheaply expose viable structural families that repair's own stochastic trajectories have not yet sampled.
 
-The project's existing soundness boundary is documented repeatedly in [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md), [`solver-architecture.md`](solver-architecture.md), and the soundness rules in [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md). Artifact code should make that boundary structural rather than relying on comments or author discipline.
+The handoff should therefore preserve several diverse beam survivors, not one nominal `best` prefix.
 
-### 2.4 Do not let imported artifacts replace native search by default
+#### Memory receptor
 
-Every live handoff should initially be **additive**. A technique keeps a protected slice for its ordinary starting behavior and may spend a bounded additional slice on imported candidates.
+[`2026-08-07-repair-nogood-cache.md`](../reports/2026-08-07-repair-nogood-cache.md) already demonstrated that repair revisits exact dead states often enough for memory to matter. That mechanism is intra-technique and carefully scoped, but it proves the underlying receptor: repair can waste enormous work rediscovering facts known earlier in the same solve.
 
-Otherwise one technique's bias can propagate through the whole portfolio and destroy the independent rescue paths that justified having multiple techniques in the first place.
+This makes exact cross-technique proof/fact sharing conceptually valid if a future producer can supply truly equivalent semantic facts. It does **not** justify treating approximate signatures as proof.
 
-### 2.5 Do not create another scheduler before proving complementarity
+#### Important negative boundary
 
-The failed fast-portfolio experiment is important evidence. [`fast-portfolio-scheduler-plan.md`](fast-portfolio-scheduler-plan.md) and its [`decision report`](../reports/portfolio/portfolio-scheduler-decision.md) show that a broad timed portfolio placed ahead of the legacy ladder was slower in every measured form. A sophisticated adaptive scheduler with no genuinely useful cross-technique signal is still only an expensive way to reorder attempts.
+Do not interpret the above as permission to rerun repair-elite -> DFS anchoring under a new name. [`2026-08-07-repair-elite-prefix-dfs.md`](../reports/2026-08-07-repair-elite-prefix-dfs.md) already implemented a real bounded deterministic search from multiple elite prefixes. It improved some intermediates but was net-negative at the tested shared budget. Any later repair -> deterministic handoff needs a materially new selection premise, a lower consumption cost, or both.
 
-Artifact instrumentation should establish what information is complementary before live scheduling responds to it.
+### 3.2 DFS/LDS: strongest receptor for cheap ordering information
 
-### 2.6 Do not persist huge search traces
+DFS's legal search space is not its main limitation. The order in which it traverses that space is.
 
-The goal is not a debugger recording every expanded node. Artifact production must be aggressively bounded and purposeful. A solve should leave a small set of selected evidence, not a compressed duplicate of the whole search tree.
+[`solver-architecture.md`](solver-architecture.md) describes score-ordered iterative DFS wrapped in LDS probes. Cheap waves test low cumulative discrepancy from the scorer's preferred branch ordering before an unbounded fallback. The repair technique's own origin story is direct evidence that local scores can be individually sensible while accumulating 22-59 discrepancies from the winning path on hard levels.
 
-## 3. The common artifact envelope
+That makes DFS a high-leverage receptor for **soft early-decision guidance**.
 
-A shared TypeScript contract should define the fields that every artifact carries, with technique-specific payloads behind a typed discriminant. The exact names can change during implementation; the semantic responsibilities should not.
+A useful cross-technique signal need not provide a full prefix. It may simply change the order among currently legal siblings. Examples worth measuring in shadow mode:
+
+- another technique independently retained a prefix whose next move matches this sibling;
+- several external artifacts share this early decision despite differing later structure;
+- a previous technique spent unusually large work beneath this early choice and ended in repeated deep contradiction;
+- an external candidate satisfies a scarce obligation/interface unusually early through this branch.
+
+The recipient must retain ordinary DFS/LDS as a protected path. Cross-technique guidance should initially affect only order or discrepancy cost, never legality.
+
+The reason this is attractive is leverage: changing one early rank can alter millions of downstream expansions without itself requiring a second search.
+
+### 3.3 Admissible-order search: a particularly clean tie-break receptor
+
+Admissible-order search already asks the sound lower bounds to rank siblings by remaining slack. That provides a strong primary signal, but integer slack naturally produces ties.
+
+[`2026-07-24-admissible-order-search-corpus2-validation.md`](../reports/2026-07-24-admissible-order-search-corpus2-validation.md) established both sides of the opportunity:
+
+- changing the primary ordering away from ordinary soft DFS exposed a large new solved population;
+- changing only the tie-break rule exposed additional solutions and also made some earlier solutions disappear until the original no-tie-break regime was restored.
+
+This means there are real decision points where admissible information says “these branches are equally constrained enough that ordering policy decides what gets explored within budget.”
+
+That is almost an ideal place for **external soft evidence**, because it does not have to fight a stronger local theorem. A shadow consumer can first ask:
+
+- how often does an external artifact distinguish siblings that have equal admissible slack?
+- how often do different producer techniques agree on one of those siblings?
+- does that agreement correlate with eventual winning paths or lower work on held-out levels?
+
+If a live experiment follows, external information should be a tertiary/secondary ordering signal only. It must never change the admissible pass/reject boundary.
+
+### 3.4 Beam: strongest receptor for retention/diversity information
+
+Beam search's essential scarcity is frontier capacity.
+
+At each phase it generates a candidate population and keeps only a bounded frontier. Every cull is permanent. A path that leaves the frontier does not later get ordinary DFS-style backtracking recovery.
+
+[`2026-08-06-beam-state-dedup-sound-signature-audit.md`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md) provides unusually strong evidence about what matters. Exact duplicate states were nearly nonexistent, yet the coarse `(cell, constraint-state)` merge materially improved solve outcomes because it prevented many similar-looking candidates from consuming the width needed by other structural opportunities.
+
+So the most interesting imported information for beam is not “a state has high global quality.” It is **“this candidate represents an opportunity class worth preserving.”**
+
+Potential soft uses:
+
+- reserve a tiny number of slots for candidates structurally distant from external elites/prefixes;
+- reserve one representative matching an external obligation-order or approach pattern;
+- protect candidates that enter a region another technique reached productively but beam's own score under-ranks;
+- increase novelty pressure when another technique's failure artifacts indicate repeated convergence on the same basin.
+
+These should be tested as retention rules, not hard filters. Beam already demonstrates that heuristic culling can help and hurt specific levels in both directions.
+
+### 3.5 The outer scheduler: receptor for online failure evidence
+
+The current attempt policy is feature-keyed before search. That is a deliberate strength for generalization and reproducibility, but it cannot use facts that do not exist until an attempt runs.
+
+Examples:
+
+- beam frontier diversity collapsed early versus remained broad until late;
+- repair improved rapidly then froze versus never found a close basin at all;
+- DFS repeatedly dies shallowly versus spends huge subtrees beneath deep prefixes;
+- admissible-order is genuinely exhausting a region versus simply starved before its characteristic behavior appears;
+- one technique emitted several promising artifacts early versus emitted nothing useful after substantial work.
+
+A later scheduler can use these as **failure-conditioned allocation evidence**. This is not the failed fast-portfolio scheduler in [`fast-portfolio-scheduler-plan.md`](fast-portfolio-scheduler-plan.md). That experiment reordered cold starts. The proposed scheduler would respond to information generated by the current level's actual search.
+
+The static repair-winner classifier is also a boundary, not a model to revive. [`2026-08-07-repair-winner-classifier-rerun.md`](../reports/2026-08-07-repair-winner-classifier-rerun.md) concluded negative. A future adaptive allocator must demonstrate that **online search evidence** adds predictive value beyond static level features.
+
+## 4. Interoperability layers
+
+Interoperability should support several kinds of exchange without pretending they are equivalent.
+
+### 4.1 Observational interoperability
+
+Every technique describes what happened using a shared outer contract.
+
+Examples:
+
+- canonical work when an artifact appeared;
+- attempt/gate/config identity;
+- deepest/productive progress;
+- residual obligations/resources;
+- frontier or elite diversity;
+- plateau duration;
+- contradiction/prune distribution;
+- timeout, exhaustion, or starvation.
+
+This layer alone is valuable because it makes producer/receptor premise tests possible.
+
+### 4.2 Candidate interoperability
+
+A technique emits a replayable path or prefix. Another technique reconstructs the exact semantic state through the real transition machinery.
+
+Candidate exchange is appropriate when the recipient genuinely has a starting-state receptor, especially repair and bounded seeded searches.
+
+### 4.3 Guidance interoperability
+
+A technique emits information used only to rank, retain, diversify, or allocate.
+
+Examples:
+
+- sibling ordering preference;
+- structural bucket preference;
+- “preserve one candidate with this obligation order”;
+- “this failure basin has already consumed large work”;
+- “another technique's conditional hazard is now historically higher.”
+
+Guidance may change search order. It may not change legality.
+
+### 4.4 Diagnostic interoperability
+
+A technique emits a typed description of its own search dynamics or failure shape.
+
+Diagnostics are especially relevant to scheduling and to deciding whether a candidate handoff should even be attempted.
+
+### 4.5 Proof interoperability
+
+A technique emits an independently justified fact safe for hard consumption by another technique.
+
+This is deliberately last. Pathfinder's state is history-sensitive. [`mechanic-state-contracts.md`](mechanic-state-contracts.md), [`solver-architecture.md`](solver-architecture.md), and [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md) control what semantic identity must include.
+
+Approximate signatures, population summaries, repair badness, beam buckets, and empirical correlations are never promoted to proof merely because they predict well.
+
+## 5. Non-goals and architectural constraints
+
+### 5.1 No universal `bestState`
+
+There is no reason to expect repair badness, beam score, DFS depth, admissible slack, and structural novelty to collapse into one meaningful global ordering.
+
+The exchange layer should preserve why a producer selected an artifact rather than flattening everything into `quality: number`.
+
+### 5.2 No universal mutable solver state
+
+Do not serialize each technique's private mutable state into a giant cross-technique object.
+
+Transferable candidates should cross the boundary as replayable witnesses. Recipients reconstruct their own native state.
+
+### 5.3 No imported heuristic information in hard-prune APIs
+
+Guidance can affect:
+
+- ordering;
+- retention;
+- seeding;
+- restart choice;
+- bounded work allocation.
+
+Only proof/bound artifacts with explicit soundness contracts may affect hard rejection.
+
+### 5.4 Preserve native search
+
+Every first live handoff must be additive or budget-partitioned with an explicit protected native share.
+
+The elite-prefix DFS result proves why. A useful mechanism can consume enough budget to displace the recipient's own eventual win.
+
+### 5.5 Do not rebuild existing infrastructure
+
+Do not create a second:
+
+- work currency;
+- provenance system;
+- level-family database;
+- reducer;
+- generic shadow framework;
+- benchmark harness;
+- attempt serialization stack.
+
+Reuse the canonical owners listed below.
+
+### 5.6 Do not store raw search traces by default
+
+Artifacts must be selected and bounded. The project needs evidence, not a second copy of the search tree.
+
+## 6. Documentation ownership map
+
+This document is the canonical home for interoperability/cooperation design. It does not override the documents that own current behavior or measured verdicts.
+
+| Topic | Canonical reference | Role here |
+|---|---|---|
+| Documentation authority/index | [`README.md`](README.md) | Check before creating new tooling/docs. |
+| Live solver queue/status | [`future-work.md`](future-work.md) | Determines what is actually open now. |
+| Production solver architecture and replay semantics | [`solver-architecture.md`](solver-architecture.md) | Controls real search behavior and witness reconstruction. |
+| Dynamic mechanic state contracts | [`mechanic-state-contracts.md`](mechanic-state-contracts.md) | Audit checklist for replay/exact identity. |
+| Canonical work and deterministic comparison | [`solver-budget-determinism.md`](solver-budget-determinism.md) | Controls equal-work experiments. |
+| Correctness/state-identity archaeology | [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md) | Controls proof-quality claims. |
+| Shadow evaluation infrastructure | [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) | Reuse observe-only evaluation patterns. |
+| Heuristic capability gaps | [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md) | Owns broader representation/control gaps. |
+| Repair stagnation and elite/plateau work | [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md) | Repair-specific evidence and negative boundaries. |
+| Cold-start portfolio experiment | [`fast-portfolio-scheduler-plan.md`](fast-portfolio-scheduler-plan.md) + [`decision report`](../reports/portfolio/portfolio-scheduler-decision.md) | Closes blind fast portfolio rotation, not evidence-conditioned cooperation. |
+| Variant/family research | [`variant-corpus-solver-research-plan.md`](variant-corpus-solver-research-plan.md) | Owns symmetry/family conclusions. |
+| Solution/path fingerprints | [`solution-profile.md`](solution-profile.md) | Reuse path-distance machinery where semantically appropriate. |
+| Historical research ledger | [`solver-improvement-research-notes.md`](solver-improvement-research-notes.md) | Prevent rediscovery of closed ideas. |
+| Literature-informed hazard/activity hypotheses | [`solver-next-frontier-multilingual-research-update-2026-08-02.md`](solver-next-frontier-multilingual-research-update-2026-08-02.md) | Hypothesis source, not Pathfinder evidence. |
+| Investigation conventions | [`investigation-report-conventions.md`](investigation-report-conventions.md) | Use for promoted experiments. |
+| Existing dev/reducer/failure tooling | [`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) | Reuse diagnostics infrastructure. |
+
+### 6.1 Canonical `Attempt` contract precedent
+
+There is no dedicated design document for the 2026-08-09 `Attempt` projection/transport cleanup. Its durable precedent is the implementation and tests:
+
+- [`scripts/test-lib/fixtures.mjs`](../scripts/test-lib/fixtures.mjs) contains the maximally populated attempt fixture;
+- [`modules/solver/hint-provenance.test.ts`](../modules/solver/hint-provenance.test.ts) classifies persistent versus transient provenance fields;
+- [`modules/solver/worker-result-serialization.mjs`](../modules/solver/worker-result-serialization.mjs) preserves raw attempts across structured-clone worker transport;
+- [`scripts/portfolio-solve-sweep-lib.mjs`](../scripts/portfolio-solve-sweep-lib.mjs) owns canonical report projection.
+
+The originating merge is `1d98ef2763a041b751536b1e6ee873d5da5f729f`.
+
+Artifact serialization should copy this **contract-tripwire pattern**, not its exact field list.
+
+## 7. Prior evidence that constrains this plan
+
+These results are close enough to proposed cooperation mechanisms that they must be read before implementing anything similar.
+
+### 7.1 Cold-start fast portfolio: negative
+
+[`fast-portfolio-scheduler-plan.md`](fast-portfolio-scheduler-plan.md) and [`portfolio-scheduler-decision.md`](../reports/portfolio/portfolio-scheduler-decision.md): every measured broad fast-portfolio variant was slower than legacy.
+
+Interpretation: more frequent technique rotation without information exchange is not cooperation and is closed as a production direction.
+
+### 7.2 Exact repair path relinking: negative
+
+[`2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md`](../reports/2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md): exact suffix transplantation through the real legality machinery was sound but failed because a guide suffix is often illegal under another prefix's history-dependent state.
+
+Interpretation: transfer replayable starting state, not blindly copied future moves.
+
+### 7.3 Repair elite-prefix DFS: mechanistically real, net-negative
+
+[`2026-08-07-repair-elite-prefix-dfs.md`](../reports/2026-08-07-repair-elite-prefix-dfs.md): bounded deterministic completion from selected repair elite prefixes improved an intermediate on traced runs but solved 4/20 versus 5/20 with the mechanism off at the shared budget.
+
+Interpretation: useful intermediate progress is insufficient. Consumption cost and displacement must be measured.
+
+### 7.4 Repair exact-state memory: positive efficiency result
+
+[`2026-08-07-repair-nogood-cache.md`](../reports/2026-08-07-repair-nogood-cache.md): exact repair-scoped dead-state repetition was far higher than prior intuition suggested. The cache saved nodes directionally and flipped one tight-budget failure to a solve in the 20-level A/B, with no solved-count change at the later generous full-corpus budget.
+
+Interpretation: “previous search already learned this” is a real efficiency lever when semantic identity and consumption cost are controlled.
+
+### 7.5 Admissible-order: ordering alone can expose large new solved populations
+
+[`2026-07-24-admissible-order-search-corpus2-validation.md`](../reports/2026-07-24-admissible-order-search-corpus2-validation.md): changing exploration order while preserving sound pruning produced a large set of previously unreachable solves; tie-breaking itself materially changed which levels solved.
+
+Interpretation: cheap external information that improves ordering can have far greater leverage than its own computational cost.
+
+### 7.6 Beam coarse dedup: diversity management materially affects solves
+
+[`2026-08-06-beam-state-dedup-sound-signature-audit.md`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md): exact duplicates were nearly absent, but the coarse grouping still materially improved results because it preserved frontier capacity for different-looking candidates.
+
+Interpretation: beam has a measured receptor for structural-retention information.
+
+### 7.7 Admissible-order/main-loop starvation: capability is not outcome
+
+[`2026-07-31-admissible-order-tier-node-starvation.md`](../reports/2026-07-31-admissible-order-tier-node-starvation.md), [`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md), and [`future-work.md`](future-work.md): later techniques may have known fitting witnesses but receive too little work in the real ladder.
+
+Interpretation: a failure artifact must distinguish “searched and failed” from “never meaningfully ran.”
+
+### 7.8 Static repair-winner classifier: negative
+
+[`2026-08-07-repair-winner-classifier-rerun.md`](../reports/2026-08-07-repair-winner-classifier-rerun.md): the larger deterministic validation closed the static learned repair-winner classifier.
+
+Interpretation: failure-conditioned allocation must earn its value from **new online evidence**, not rename a weak static feature classifier.
+
+## 8. The common artifact contract
+
+The common contract should standardize identity, replayability, neutral measurements, soundness class, and provenance while retaining technique-specific payloads.
 
 Conceptually:
 
 ```ts
 type SolverArtifact = {
   schemaVersion: number;
+  id: string;
   kind: ArtifactKind;
   claimClass: ClaimClass;
 
   context: {
-    levelId?: string;
     levelHash: string;
+    levelId?: string;
     solverVersion: string;
     gateKey: number;
     attemptId: string;
-    technique: string;
     configKey: string;
+    technique: TechniqueId;
     profile?: string;
     template?: string;
     seed?: number;
@@ -200,7 +435,7 @@ type SolverArtifact = {
 
   timing: {
     workAtEmission: number;
-    attemptWork: number;
+    attemptWorkAtEmission: number;
     ordinal: number;
   };
 
@@ -210,545 +445,542 @@ type SolverArtifact = {
 };
 ```
 
-### 3.1 Context identity
+### 8.1 Claim class
 
-Artifacts need enough identity to answer both live and retrospective questions:
+A small explicit taxonomy should separate epistemic status:
 
-- exact level identity or stable content hash;
+- `witness`: exact replayable path/prefix/population member;
+- `diagnostic`: measured property of the producer's search;
+- `guidance`: intentionally heuristic information safe for ordering/retention/seeding/allocation;
+- `bound`: sound bound with explicit preconditions;
+- `proof`: exact proved fact/nogood within an explicit semantic identity contract.
+
+Make illegal consumption difficult to express. A hard-prune API should not accept a generic artifact.
+
+### 8.2 Context identity
+
+Reuse existing attempt/provenance identity wherever possible:
+
+- level stable identity/content hash;
 - gate;
-- solver version/commit or provenance version already used by hints;
-- attempt identity and config identity;
 - technique;
-- profile/template where meaningful;
-- deterministic seed/salt where meaningful;
-- canonical work consumed when the artifact was created.
+- config/profile/template;
+- deterministic seed/salt where applicable;
+- attempt and solver version;
+- canonical work at emission.
 
-This should reuse existing `Attempt` and hint-provenance identities rather than introduce parallel names for the same concepts. The canonical `Attempt` fixture in [`scripts/test-lib/fixtures.mjs`](../scripts/test-lib/fixtures.mjs) should be inspected before creating any duplicated context fields.
+Do not invent parallel aliases for fields already owned by `Attempt` or hint provenance.
 
-### 3.2 Claim class
+### 8.3 Schema tripwires
 
-Use an explicit field, not comments, to separate epistemic categories. A possible small enum is:
+Follow the canonical `Attempt` precedent:
 
-- `witness`: an exact replayable path/prefix/population member;
-- `diagnostic`: a measured property of this search process;
-- `guidance`: intentionally heuristic information safe only for ordering/retention/allocation;
-- `bound`: a sound bound with declared preconditions;
-- `proof`: a proved fact or exact nogood safe for hard consumption within its stated identity contract.
+- maximally populated fixtures;
+- explicit persistent/derived/transient classification;
+- worker/report round-trip tests;
+- schema versioning;
+- tests that fail when a field is silently omitted.
 
-The artifact type should make illegal consumers difficult to write. A pruning API, for example, should accept only proof/bound artifacts, never a generic `SolverArtifact`.
+## 9. Replayable witnesses
 
-### 3.3 Schema versioning and projection tripwires
+A path/prefix must cross technique boundaries as a replayable witness, not copied mutable state.
 
-Artifacts are likely to outlive individual experiments in stored reports. Give the contract an explicit `schemaVersion` from the beginning.
+A coordinate sequence alone must not automatically be assumed sufficient. Portal transitions are the clearest ambiguity: adjacent portal endpoints can make a coordinate-to-coordinate transition ambiguous between ordinary movement and a forced jump. Any future mechanic with history-dependent transition semantics creates the same class of issue.
 
-Do not silently reinterpret an old field after its meaning changes. Migrate reports when worthwhile or keep a compatibility reader. Mirror the current `Attempt` pattern: a maximally populated artifact fixture, explicit persistent/derived/transient classifications, worker/report round-trip tests, and failures when a new field has no declared destination. The concrete precedent lives in [`scripts/test-lib/fixtures.mjs`](../scripts/test-lib/fixtures.mjs), [`modules/solver/hint-provenance.test.ts`](../modules/solver/hint-provenance.test.ts), [`modules/solver/worker-result-serialization.mjs`](../modules/solver/worker-result-serialization.mjs), and [`scripts/portfolio-solve-sweep-lib.mjs`](../scripts/portfolio-solve-sweep-lib.mjs).
+The witness must contain enough transition information for one canonical replay entrypoint to reconstruct the semantic state through production `applyMove`/transition logic.
 
-## 4. Replayable witnesses: the safest shared state boundary
+Audit the witness against [`mechanic-state-contracts.md`](mechanic-state-contracts.md). At minimum, replay must reproduce everything that affects future legality or pruning, including:
 
-The exchange layer should prefer **replayable witnesses** over copied mutable solver state.
-
-A witness must contain enough information to reconstruct the exact semantic state through the production transition code. A coordinate sequence alone must not be assumed sufficient. Portal behavior is the obvious caution: when endpoints are adjacent, coordinate history can be ambiguous about whether a transition was an ordinary move or a forced portal jump. The portal-parity investigation had to move from coordinate-only reasoning to real solver-state replay for exactly this class of ambiguity; see the portal-parity closure summarized in [`future-work.md`](future-work.md) and the state model in [`solver-architecture.md`](solver-architecture.md).
-
-More generally, [`mechanic-state-contracts.md`](mechanic-state-contracts.md) is the checklist for replay completeness. Any mechanic state listed there that can affect future legality, pruning, scoring semantics, or exact identity must either be reconstructed from the witness or explicitly shown to be derivable.
-
-The exact witness format should therefore be whatever minimal move/transition trace allows a single canonical replay function to reproduce:
-
-- current cell;
-- real path length;
+- current cell/path;
+- real path length and portal-jump accounting;
 - visit counts;
-- edge usage/axis history;
+- edge/axis usage;
 - intersection count;
-- must-pass and must-cross state including cross counts/axis usage;
-- portal jumps and portal-use state;
+- must-pass state;
+- must-cross masks, counts, and relevant axis state;
+- portal-use state and `lastWasPortalJump`;
 - flipper state;
-- must-turn, adjacent-turn, and surround state;
-- incoming-direction/history fields where future legality depends on them;
-- any future mechanic state that [`mechanic-state-contracts.md`](mechanic-state-contracts.md) adds to the solver's semantic contract.
+- surround state and remaining-neighbor masks;
+- must-turn state;
+- adjacent-turn state;
+- any future dynamic mechanic state.
 
-### 4.1 One canonical replay entrypoint
+### 9.1 One canonical replay validator
 
-Create or expose one reusable function that accepts a level, gate, and replay witness and returns either:
+Expose one reusable function:
 
-- the reconstructed native solver state plus derived common metrics; or
-- a precise replay failure describing why the witness no longer applies.
+```ts
+replayArtifactWitness(level, gate, witness)
+  -> { state, commonMetrics, fingerprint }
+  | { replayError }
+```
 
-Do not let each consumer write its own partial replay logic. Reuse the same `createState`/`applyMove` semantics that [`solver-architecture.md`](solver-architecture.md) documents and that [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) already relies on when reconstructing labelled branch states.
+Recipients must not implement their own reduced replay logic.
 
-### 4.2 Imported candidates are untrusted until replayed
+### 9.2 Imported candidates are untrusted until replayed
 
-Even artifacts produced by the same solver process should pass through replay before another technique consumes them. This provides:
+Even same-process artifacts should be replayed before another technique consumes them. This centralizes mechanic correctness, schema drift handling, common metric computation, and failure diagnostics.
 
-- mechanic-state correctness;
-- protection against stale schema or future refactors;
-- a clear failure mode instead of corrupting a recipient technique;
-- a natural place to compute common metrics consistently.
+### 9.3 Approximate fingerprints stay approximate
 
-### 4.3 State fingerprints after replay
+A replayed artifact may have coarse fingerprints for dedupe or novelty. Those fingerprints may not silently become hard state identity.
 
-A replayed candidate may receive a canonical fingerprint for dedupe/diversity purposes. That fingerprint can be lossy if its declared use is lossy, such as artifact pool deduplication or novelty bucketing.
+## 10. Common derived metrics
 
-Do not reuse a lossy artifact fingerprint as a sound transposition/nogood key merely because it already exists. [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md) and the exact-state discussion in [`2026-08-07-repair-nogood-cache.md`](../reports/2026-08-07-repair-nogood-cache.md) are the governing precedent for what a hard identity has to capture.
+Common metrics should describe a state in producer-neutral terms. They should not declare universal quality.
 
-## 5. Common derived candidate metrics
+### 10.1 Progress and residuals
 
-A major benefit of replay is that neutral measurements can be computed centrally and identically for artifacts from every technique.
+Potential initial fields:
 
-These metrics should describe the state, not declare its quality.
+- replay depth / decision count;
+- real length used and remaining;
+- intersection count and deficit/slack;
+- goal distance;
+- pending must-pass/must-cross/must-turn/adjacent-turn/surround masks/counts;
+- portal/flipper resource state where meaningful;
+- existing admissible lower-bound slack values;
+- reachable fresh volume where already available cheaply;
+- goal/interface flexibility where a current sound calculation already exists.
 
-A useful initial vocabulary includes:
+This builds on the richer residual-resource direction in [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md) without prematurely turning that vector into a production score.
 
-### 5.1 Basic progress
+### 10.2 Structural descriptors
 
-- replay depth / number of decisions;
-- real length used;
-- remaining exact length;
-- current intersection count;
-- remaining required intersections;
-- current cell and goal distance;
-- whether direct goal completion is currently legal/relevant.
+Where useful and cheap:
 
-### 5.2 Obligation state
-
-- pending must-pass count/mask;
-- pending must-cross count/mask;
-- must-cross axis/completion summary;
-- pending must-turn count/mask;
-- pending adjacent-turn count/mask;
-- pending surround count/mask;
-- remaining portal/flipper obligations or useful resources where defined.
-
-The exact dynamic fields and cardinalities should come from [`mechanic-state-contracts.md`](mechanic-state-contracts.md), not from a second hand-maintained artifact inventory.
-
-### 5.3 Residual resource vector
-
-This should build on the open research direction already described in [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md), without prematurely turning it into a production ordering rule.
-
-Possible components:
-
-- length slack above current admissible lower bound;
-- intersection slack / free intersection budget;
-- residual reachable fresh volume;
-- available approach/interface counts for pending landmarks when cheaply measurable;
-- portal parity/resource availability;
-- remaining reusable cells/axes relevant to crossing obligations;
-- goal-approach flexibility;
-- any existing sound bound residuals that are already computed cheaply.
-
-The purpose is to make statements such as "these two prefixes have equal length slack but radically different intersection and approach resources" visible across techniques.
-
-### 5.4 Structural descriptors
-
-Useful for diversity and retrospective analysis:
-
-- coarse topology/homotopy signature where the existing research supports one;
 - path cell/edge footprint hashes;
-- approach-side or region occupancy summaries;
+- obligation-order prefix;
 - revisit distribution;
-- turn/intersection placement summaries;
-- obligation order prefix;
-- beam-style state bucket identity when meaningful.
+- turn/intersection placement summary;
+- approach-side or coarse region occupancy;
+- existing solution-profile path distances;
+- existing homotopy/topology descriptors if and when a canonical implementation exists.
 
-Do not invent a new generic path-distance system before checking [`solution-profile.md`](solution-profile.md), which already owns cell/edge/turn/portal/must-cross solution fingerprints and distance comparisons, and [`solver-improvement-research-notes.md`](solver-improvement-research-notes.md), which owns the still-relevant homotopy-class research thread. If those representations are insufficient for partial prefixes, extend their underlying primitives or document exactly why a new prefix-specific descriptor is required.
+Use [`solution-profile.md`](solution-profile.md) and [`solver-improvement-research-notes.md`](solver-improvement-research-notes.md) rather than inventing a parallel path-comparison subsystem.
 
-These descriptors should remain explicitly approximate where they are approximate.
+### 10.3 Novelty must name its comparison set
 
-### 5.5 Novelty
+“Novelty = 0.7” is meaningless without knowing relative to what.
 
-Novelty should be relative to a declared comparison set, not a mysterious scalar.
+If novelty is computed, preserve:
 
-Examples:
+- distance definition;
+- comparison population;
+- structural dimensions included;
+- schema/version.
 
-- distance from other artifacts in the same producer's elite/frontier set;
-- distance from artifacts already admitted to the blackboard;
-- whether it occupies a previously absent structural bucket;
-- edge/cell Jaccard distance using [`solution-profile.md`](solution-profile.md)'s existing machinery where appropriate.
+A useful artifact may be novel relative to the producer, the blackboard, the recipient's private population, or known validated solutions. Those are different claims.
 
-If a single novelty score is computed for retention, preserve the underlying distance definition and comparison set in the payload or schema version.
+## 11. Artifact kinds
 
-## 6. Artifact kinds worth standardizing
+Keep the first taxonomy small and explicitly tied to receptors.
 
-The initial type system should be small enough to remain comprehensible but broad enough to cover the genuinely different outputs already available from the solver.
+### 11.1 `candidate-prefix`
 
-### 6.1 `candidate-prefix`
+Replayable partial path plus selection reason.
 
-A replayable partial path selected because the producer considers it useful.
+Possible reasons:
 
-Sub-reasons should be explicit, for example:
-
-- deepest productive prefix;
-- best producer-local score;
-- best resource margin;
-- most obligation-complete;
-- most structurally novel;
+- beam survivor from a distinct frontier bucket;
+- deepest productive deterministic prefix;
+- highly constrained admissible-order prefix;
+- repair elite;
 - pre-plateau best;
-- surviving frontier representative;
-- near-miss anchor.
+- rare obligation-order representative;
+- structurally novel candidate.
 
-A producer may emit several candidates with different reasons. This is preferable to pretending there is one `bestPrefix`.
+Do not require one `bestPrefix`.
 
-### 6.2 `candidate-complete-nearmiss`
+### 11.2 `candidate-complete-nearmiss`
 
-A replayable complete or terminal path that fails one or more exact objectives but may be especially useful to repair or diagnosis.
+Replayable terminal/complete near-miss with an exact residual vector.
 
-Repair naturally produces these. Deterministic techniques may occasionally produce meaningful terminal near-misses too.
+Most naturally produced by repair, but not repair-exclusive.
 
-Include an exact failure/residual vector rather than only a scalar badness. Repair's existing signed-residual and plateau work is documented in [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md).
+### 11.3 `population-sample`
 
-### 6.3 `elite-set-sample`
+A bounded representative set from a frontier/elite population, with why each member was retained.
 
-A bounded sample of a technique's internally retained high-value population, with membership reason and diversity metadata.
+Natural for beam and repair.
 
-This is especially natural for repair and beam.
+### 11.4 `population-summary`
 
-Do not dump the whole population. Select a few representatives.
+Fixed-size summary such as:
 
-### 6.4 `frontier-summary`
-
-A population-level diagnostic such as:
-
-- frontier size;
-- number of occupied diversity buckets;
-- concentration ratio in the largest bucket;
-- resource-vector spread;
+- population size;
+- structural bucket count;
+- concentration ratio;
+- residual-resource spread;
 - obligation-state spread;
-- recent extinction/repopulation events;
-- fraction of candidates sharing the same structural signature.
+- elite turnover;
+- extinction/repopulation events.
 
-This can tell the scheduler that a beam is nominally large but behaviorally collapsed.
+Primary receptors: scheduler and diversity-aware consumers.
 
-### 6.5 `failure-signature`
+### 11.5 `failure-signature`
 
-A typed summary of why productive progress stopped or why the attempt terminated.
+Typed description of why productive progress stopped or the attempt ended:
 
-Potential dimensions:
-
-- exhausted versus budget-truncated;
-- dominant prune/failure categories;
-- contradiction depth distribution;
-- last-improvement work offset;
+- exhausted / timed-out / budget-starved / error;
+- contradiction-depth distribution;
+- dominant prune classes;
 - deepest useful depth;
-- length-short versus other residual direction;
-- repeated obligation/resource bottleneck;
-- beam extinction;
-- repair plateau signature/shape;
-- seed convergence/repeated-basin evidence;
-- no viable candidate surviving a specific interface condition.
+- work since last improvement;
+- beam extinction/collapse;
+- repair plateau shape;
+- repeated-basin evidence;
+- persistent residual/obligation bottleneck.
 
-These are diagnostics, not proofs unless a separate proof artifact exists. Repair plateau semantics should reuse [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md), while deadline/budget interpretation must follow [`solver-budget-determinism.md`](solver-budget-determinism.md).
+Diagnostics are not proofs.
 
-### 6.6 `search-activity-summary`
+### 11.6 `search-activity-summary`
 
-A compact time/work-series summary of the attempt's dynamics:
+Coarse fixed-size dynamics over canonical work buckets:
 
-- work between meaningful improvements;
-- branch factor or survivor count over coarse work buckets;
+- improvement intervals;
+- productive depth progression;
+- survivor/population count;
 - contradiction rate;
-- improvement hazard;
-- depth progression;
-- beam population entropy/bucket count;
+- diversity/entropy/bucket count;
 - repair elite turnover;
-- repeated-return rate to the same coarse basin.
+- repeated-return rate.
 
-These ideas come from the failure-directed activity and adaptive/hazard proposals in [`solver-next-frontier-multilingual-research-update-2026-08-02.md`](solver-next-frontier-multilingual-research-update-2026-08-02.md). That document is research, not evidence that these metrics will pay. The artifact layer is a cheap way to measure them before they become policy.
+The activity/hazard framing is related to the hypotheses in [`solver-next-frontier-multilingual-research-update-2026-08-02.md`](solver-next-frontier-multilingual-research-update-2026-08-02.md), but any Pathfinder use must be validated from Pathfinder data.
 
-The key is coarse fixed-size summaries, not raw event logs.
+### 11.7 `proof-fact`
 
-### 6.7 `proof-fact`
+Reserved for exact, independently justified transferable facts.
 
-Reserved for genuinely sound transferable facts. Examples may eventually include:
+Examples might eventually include:
 
-- exact semantic state proven dead;
+- exact semantic state proved dead within an exact scope;
 - mechanic-derived forced fact;
-- admissible lower bound result with exact preconditions;
-- exact impossibility of satisfying an obligation interface.
+- admissible lower-bound result with declared preconditions;
+- exact impossibility of an obligation interface.
 
-This kind should require stronger construction APIs/tests than heuristic artifacts. The proof boundary should be reconciled with [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md), current mechanic state in [`mechanic-state-contracts.md`](mechanic-state-contracts.md), and any corresponding measured rule in [`future-work.md`](future-work.md) before a new hard consumer is written.
+Construction APIs and tests should be stricter than for heuristic artifacts.
 
-## 7. Technique-specific emissions
+## 12. Technique-specific emitters
 
-A common envelope should not imply identical artifact production.
+Emitters should expose information the technique already computes or can select cheaply. Do not turn instrumentation into a second search algorithm.
 
-### 7.1 DFS / LDS / deterministic search
+### 12.1 Beam
 
-Potential useful emissions:
+Priority artifacts:
 
-- deepest prefixes that remained feasible for unusually long subtrees;
-- prefixes immediately before high-cost contradictions;
-- best prefixes under neutral resource vectors, not only local score;
-- contradiction-depth histogram;
-- dominant prune-reason histogram;
-- productive-depth progression by work interval;
-- discrepancy count and ordering-policy context for LDS-derived artifacts;
-- exact exhausted-state facts only where the full semantic key is already sound.
+- 2-4 structurally/resource-distinct survivors at selected phases;
+- representative from each already-existing diversity bucket where bounded;
+- frontier concentration/collapse summary;
+- extinction depth/work;
+- candidates with mediocre native score but unique structural bucket;
+- common-metric spread over retained frontier.
 
-A particularly interesting diagnostic is whether DFS repeatedly spends large subtrees beneath a small number of early choices before learning they fail. That can support later bounded divergence or alternate-technique handoffs without introducing an unsound prune. The measured finding that simple move ordering was not the general bottleneck is already reconciled in [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md); do not interpret deep failures as automatic evidence for yet another score term.
+Beam should be treated primarily as a **reconnaissance producer**.
 
-### 7.2 Beam search
+### 12.2 Repair
 
-Potential useful emissions:
-
-- a small Pareto/diverse sample of surviving prefixes;
-- best representative from each occupied diversity bucket;
-- frontier collapse/concentration summary;
-- extinction depth and work;
-- frontier resource-vector spread;
-- states that are mediocre by beam score but uniquely occupy a structural/resource bucket;
-- bucket transitions over coarse work intervals.
-
-Beam is probably the most natural producer of **reconnaissance artifacts**. Its value to cooperation may be less "beam almost solved this" and more "beam cheaply surveyed several qualitatively different viable regions of search space". Existing beam dedup/diversity behavior is described in [`solver-architecture.md`](solver-architecture.md) and its current limitations/evidence in [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md).
-
-### 7.3 Repair
-
-Reuse its existing machinery instead of inventing parallel notions:
+Reuse existing machinery:
 
 - elites;
-- best/final badness;
-- signed residual/failure signature;
-- plateau shape;
-- restart ancestry where useful;
+- best/final badness where already tracked;
+- exact residual vector;
+- signed plateau/failure shape where instrumentation already exists or can be reused;
 - best pre-plateau candidate;
-- structurally complementary elites;
-- elite turnover and convergence rate;
-- work since last meaningful improvement.
+- elite diversity/turnover;
+- fresh-vs-spliced ancestry;
+- work since last improvement;
+- exact repair-scoped repeat/dead facts only with their existing semantic scope.
 
-[`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md) is the semantic owner for these signals. It records that plateaus are often length-short, complementarity-guided soft recombination can matter, exact relinking fails under prefix-dependent legality, turn-bias promotion is net-negative, and the repair-scoped exact-state nogood cache later shipped. Use those existing meanings and results rather than adding a second set of nearly identical artifact concepts.
+Repair is both a strong candidate consumer and a rich diagnostic producer.
 
-### 7.4 Admissible-order search
+### 12.3 DFS/LDS
 
-Potential emissions:
+Priority artifacts:
 
-- best prefix under admissible-order objective progress;
-- discrepancy/order-deviation metadata;
-- whether the ordering regime is being starved before meaningful work;
-- prefixes where the ordering constraints remain satisfiable but ordinary search did not reach deeply;
-- exhaustion versus allocation-starvation distinction.
+- deepest/productive prefixes;
+- prefixes above unusually expensive failed subtrees;
+- contradiction-depth histogram;
+- dominant prune/failure histogram;
+- discrepancy level/context;
+- productive-depth progression by work bucket;
+- early decisions associated with very large exhausted subtrees.
 
-Budget/participation metadata is mandatory here. [`2026-07-31-admissible-order-tier-node-starvation.md`](../reports/2026-07-31-admissible-order-tier-node-starvation.md) demonstrated that many historically solvable configurations could receive zero current work because earlier tiers consumed the cumulative budget. The analogous main-loop issue and current reserve-not-reorder experiment are tracked in [`future-work.md`](future-work.md) and [`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md). An artifact record must distinguish "technique exhausted/faltered" from "technique never really entered."
+Existing `_DFS_DEBUG` backtrack/subtree instrumentation in [`modules/solver/search.ts`](../modules/solver/search.ts) is an important precedent. Reuse or adapt it rather than adding parallel subtree accounting.
 
-## 8. The per-solve blackboard
+### 12.4 Admissible-order
 
-Once artifact emission exists, add a bounded in-memory `SolveArtifactBoard` owned by the solve session or orchestrator, not by any individual technique.
+Priority artifacts:
 
-Its responsibilities should be deliberately boring:
+- deep prefixes with low remaining admissible slack;
+- equal-slack sibling decision events;
+- tie-break winner and margin where applicable;
+- discrepancy/order-deviation context;
+- exhausted versus budget-starved distinction;
+- prefixes where hard bounds remained feasible unusually deep.
 
-- accept validated artifacts;
-- enforce type/schema and size limits;
-- replay/validate candidate witnesses before indexing them for consumption;
-- deduplicate exact duplicates;
+A particularly valuable artifact may be **decision ambiguity**, not candidate quality: “the admissible signal tied here, so an external discriminator could have mattered.”
+
+## 13. The per-solve artifact board
+
+The `SolveArtifactBoard` should be a bounded session-owned exchange substrate, not an intelligent scheduler in its first form.
+
+Responsibilities:
+
+- validate schema and size;
+- replay candidate witnesses;
 - compute common metrics centrally;
-- retain a bounded diverse subset according to declared retention rules;
-- expose read-only queries to techniques and scheduler experiments;
-- record every proposed and actual consumption for later attribution.
+- deduplicate exact artifact duplicates;
+- retain bounded diversity by declared rules;
+- preserve per-producer participation;
+- expose read-only queries;
+- record hypothetical and actual consumption;
+- track lineage from producer artifact through consumer result.
 
-It should **not** decide the solver's global strategy in its first implementation. The current attempt-policy/orchestration boundary is described in [`solver-architecture.md`](solver-architecture.md); the board should start as data infrastructure underneath that boundary, not an implicit replacement for it.
+It should not initially decide which technique runs next.
 
-### 8.1 Bounded retention
+### 13.1 Retention
 
-Use separate quotas by artifact class so one noisy technique cannot fill the board.
+Use class- and producer-specific quotas so one noisy technique cannot occupy the board.
 
-An illustrative shape, to be measured rather than copied literally:
+Illustrative starting shape, subject to measurement:
 
-- 8-16 replayable candidate prefixes total;
+- 8-16 replayable candidates total;
 - 2-4 candidates per technique;
-- 1 latest frontier/population summary per technique;
-- a small rolling set of failure/activity summaries;
-- all sound proof facts subject to their own safe bounded cache policy.
+- latest population/failure summary per technique;
+- small rolling activity history;
+- separately bounded proof-fact cache.
 
-Candidate retention should preserve different reasons for interest, not just top-N by one score.
+### 13.2 Preserve different reasons for interest
 
-### 8.2 Pareto-style candidate preservation
+Do not keep top-N by one score.
 
-A candidate pool becomes much more useful if it keeps states that are good in different dimensions.
+Reserve capacity for candidates that are extreme or distinct along different axes:
 
-Possible retention axes:
-
-- remaining length slack;
-- intersection slack;
-- pending obligation count/type;
+- depth;
+- remaining length/intersection slack;
+- obligation progress;
 - residual volume;
-- interface flexibility;
-- producer-local quality;
-- structural novelty;
-- depth.
+- topology/footprint novelty;
+- producer-local relevance;
+- rare structural bucket.
 
-A full Pareto frontier may be unnecessarily expensive or large. A practical bounded approximation is enough: reserve slots for extremes and structurally distinct buckets, then fill remaining slots by producer-local relevance. The resource-vector motivation comes from [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md); this section proposes using it for retention research, not promoting it to a universal solver score.
+### 13.3 Lineage
 
-### 8.3 Technique participation protection
-
-Give each technique either a small artifact quota or a protected chance to contribute before global retention can evict all of its outputs. Otherwise the blackboard can become another hidden universal scorer.
-
-The same principle should later apply to live work allocation: imported information must not erase the independent rescue behavior of the recipient's native search.
-
-### 8.4 Artifact lineage
-
-When an imported candidate produces another artifact, record lineage:
+Every consumed artifact should record:
 
 - source artifact ID;
-- consuming technique;
+- producer technique;
+- consumer technique;
+- action type;
 - work spent after import;
-- whether the descendant improved neutral metrics, producer-local score, or solved;
-- whether the imported prefix was modified immediately or preserved deeply.
+- whether the imported structure survived;
+- whether neutral metrics improved;
+- whether the solve was attributable to the imported lineage.
 
-This makes cooperation measurable rather than anecdotal and lets later reports separate "recipient solved after seeing artifact X" from "artifact X causally supplied the starting state that led to the solve."
+Without lineage, cooperation results become anecdotes.
 
-## 9. Shadow-mode first: prove the substrate contains information
+## 14. Shadow evaluation: test producer and receptor before live handoff
 
-The first production-quality implementation should leave solver behavior unchanged.
+The existing [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) supplies the project's precedent for observe-only evidence. Artifact work should extend or sit beside that machinery without distorting its branch-reasoner API.
 
-The project already has a model for this discipline in [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md): measure a candidate signal against common data before wiring it into production behavior. Artifact consumers are richer than the harness's current reject/pass probe API, so extend that harness only where the abstraction remains clean. Do not contort arbitrary artifact policies into `verdict: reject|pass`, but also do not create a second generic shadow framework if a small sibling consumer contract can share its runner/report infrastructure.
+### 14.1 Producer tests
 
-### 9.1 Shadow artifact emission
+For each artifact class, measure:
 
-During ordinary deterministic corpus runs, allow each technique to emit a tiny bounded artifact set. Persist it only in dedicated experiment reports or env-gated logs, not normal player provenance until its value/size is known.
+- emission frequency;
+- canonical work at first emission;
+- bytes/count per attempt;
+- replay success;
+- within-technique redundancy;
+- cross-technique redundancy;
+- structural/resource novelty;
+- how long the information remains relevant before the recipient would run.
 
-Measure:
+A producer that emits useful-looking information only after the solve budget is essentially gone is a poor handoff source.
 
-- artifact count and bytes per attempt/level;
-- emission overhead in canonical work and wall time;
-- replay success rate;
-- redundancy within and across techniques;
-- structural diversity;
-- how early useful artifacts appear.
+### 14.2 Receptor tests
 
-All work comparisons should follow [`solver-budget-determinism.md`](solver-budget-determinism.md). Deadline-truncated attempts are censored/indeterminate where that document says they are, not silently treated as deterministic failures.
-
-### 9.2 Shadow handoff simulation
-
-For every candidate consumer pair, ask "would this consumer have selected this artifact?" without actually changing its search.
-
-Examples:
-
-- would repair have accepted these beam survivors as seeds?
-- would bounded DFS completion have selected this repair elite?
-- would the scheduler have switched technique after this failure signature?
-
-Record the hypothetical decision and compare it with what eventually happened in the unchanged baseline.
-
-### 9.3 Known-solution prefix survival analysis
-
-Where a validated known solution exists, compare emitted candidates against winning-prefix structure without treating the known hint as unique truth.
-
-Questions:
-
-- does one technique emit candidates closer to at least one known winning path than another?
-- does a technique emit winning-like states that its own retention later loses?
-- would cross-technique candidate pooling preserve known-winning prefixes longer at equal work?
-- are useful candidates structurally complementary even when they are not geometrically close to one stored hint?
-
-Use multiple known solutions where available and treat them as positive examples, not exhaustive ground truth. [`solution-profile.md`](solution-profile.md) already documents the saturated-versus-complete caution for solution corpora and should govern any claim that a known-hint sample represents the solution space.
-
-The large variant/family corpus can make this analysis much stronger because many related levels have multiple solutions and provenance. [`variant-corpus-solver-research-plan.md`](variant-corpus-solver-research-plan.md) remains the owner of family-specific conclusions; this interoperability layer should provide standardized observations to it rather than grow a competing family-analysis subsystem.
-
-### 9.4 Artifact-to-outcome conditional analysis
-
-Build tables such as:
-
-- producer technique -> artifact kind -> later solver technique -> solve rate;
-- failure signature -> complementary technique success rate;
-- artifact age/work offset -> eventual usefulness;
-- candidate resource shape -> successful consumer;
-- beam-collapse class -> repair/DFS/admissible-order outcome;
-- repair plateau class -> deterministic-completion outcome.
-
-This is the evidence needed before an adaptive scheduler is allowed to respond live.
-
-Where dense variant rows are used, split evaluation by whole parent/family as required by [`variant-corpus-solver-research-plan.md`](variant-corpus-solver-research-plan.md). Random row splits would leak near-duplicate family information into both sides of the analysis.
-
-## 10. First live cooperation mechanisms worth testing
-
-The order below intentionally starts with mechanisms that preserve solver independence and have clear attribution.
-
-### 10.1 Beam survivors -> repair seeds
-
-This is the cleanest initial live handoff if Stage 3 evidence does not identify a stronger pair.
-
-Beam naturally creates multiple viable, structurally varied prefixes. Repair naturally consumes starting points and explores stochastic perturbations. The techniques are complementary in shape: reconnaissance versus local/randomized exploration.
-
-Experiment design:
-
-- select only 2-4 beam artifacts using structural/resource diversity, not simply top score;
-- replay them through the canonical witness path;
-- give imported-seed repair a tiny fixed canonical-work reservation;
-- keep ordinary repair unchanged and separately budgeted;
-- compare against a matched-work baseline that gives the same extra work to ordinary repair or beam, so a gain cannot be explained by "more work";
-- attribute any solve to the imported artifact lineage.
-
-Acceptance should require net solve gain or substantial equal-work cost reduction without regression on existing solved levels. Use the corpus/report discipline in [`future-work.md`](future-work.md), [`solver-budget-determinism.md`](solver-budget-determinism.md), and [`investigation-report-conventions.md`](investigation-report-conventions.md).
-
-### 10.2 Repair elites -> bounded deterministic completion
-
-Repair often finds near-misses and plateaus. A deterministic technique may be better at completing a constrained suffix once repair has discovered a globally promising prefix.
-
-This area already has two especially relevant negative experiments and must not be approached as untouched ground:
-
-- [`2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md`](../reports/2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md) showed that copying exact guide suffixes through a different prefix collapses quickly under prefix-dependent legality.
-- [`2026-08-07-repair-elite-prefix-dfs.md`](../reports/2026-08-07-repair-elite-prefix-dfs.md) generalized bounded deterministic completion to points across repair elites, worked mechanically, but was net-negative under the shared budget.
-
-Therefore a new cross-technique version is justified only if Stage 3 artifacts supply **materially new selection evidence** that those experiments lacked. The useful shape is:
-
-- choose a replayable repair prefix/anchor based on measured cross-technique opportunity, not merely "one of the best elites";
-- reconstruct native DFS/beam state at that prefix;
-- allow the recipient to search freely from there rather than transplanting a guide suffix;
-- keep prefix length/selection variable and evidence-driven;
-- prefer several structurally different anchors only if the shadow data says diversity predicts recipient success;
-- compare against an equal-work native deterministic completion baseline and against the already-measured elite-prefix operator where relevant.
-
-If the only novelty is a renamed selection rule with no evidence that it separates the old wins/losses, stop rather than rerun the negative experiment.
-
-### 10.3 Shared candidate pool -> independent consumers
-
-After pairwise handoffs are understood, allow techniques to query the common pool by declared needs:
-
-- "give me two candidates with smallest intersection slack but different topology";
-- "give me a deep candidate not produced by my technique";
-- "give me a candidate with this obligation already satisfied";
-- "give me the most structurally novel replayable candidate under a minimum residual-volume threshold".
-
-The board answers with artifacts; the recipient still decides how to use them.
-
-Do not make the board infer one universal best candidate. Producer quotas, query semantics, and native-search floors are the protection against turning interoperability into an implicit monoculture.
-
-### 10.4 Soft cross-technique guidance
-
-A technique can consume another's artifact without starting from its path.
+Before changing behavior, measure whether the artifact would touch a **real decision surface** in the recipient.
 
 Examples:
 
-- use frequently successful approach regions as a temporary ordering preference;
-- encourage structural buckets absent from another technique's frontier;
-- discourage, softly, a basin repeatedly explored by repair;
-- prefer early decisions that diverge from several expensive deterministic failures.
+#### Repair receptor probe
 
-These must remain soft and bounded. They are potentially cheaper than replay-seeded search, but also easier to overgeneralize. [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md) is a strong caution here: multiple sensible-looking soft biases materially reshaped search yet failed to improve solves or regressed them. A signal being real is not the same as its policy being useful.
+- Would this external prefix be accepted as legal/replayable?
+- Is it structurally different from repair's current elites?
+- Does it satisfy obligations or occupy regions absent from repair's population?
+- Would importing it merely duplicate an elite repair already found earlier?
 
-### 10.5 Proof/fact sharing
+#### DFS/LDS receptor probe
 
-Only after the artifact contract has a strong proof class and exact state identity rules should techniques share hard facts.
+- Does external information distinguish siblings whose native scores are close enough that rank could change?
+- How early do such decision points occur?
+- Would the hint reduce discrepancy of known validated winning prefixes, where multiple hints exist?
 
-A useful eventual pattern is a session-scoped proof cache where a sound fact discovered by any technique becomes available to all. Examples might include exact dead semantic states or mechanic-derived impossibilities.
+#### Admissible-order receptor probe
 
-Do not start here. The soundness burden is much higher than for candidate handoffs. [`2026-08-07-repair-nogood-cache.md`](../reports/2026-08-07-repair-nogood-cache.md) is useful precedent because it demonstrates that exact dead-state reuse can pay when the state key is complete and scoped to the mechanism that proves the dead state. [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md) and [`mechanic-state-contracts.md`](mechanic-state-contracts.md) are the mandatory references before attempting to broaden that idea across techniques.
+- Does external information distinguish equal-slack siblings?
+- How frequently does that happen before the winning path diverges?
+- Is the producer signal stable across different validated solutions or families?
 
-A cross-technique `proof-fact` must carry its proof preconditions and exact identity scope. "The producer tried this and failed" is never a proof artifact.
+#### Beam receptor probe
 
-## 11. Failure-conditioned scheduling
+- Would external information preserve a candidate the native cull would discard?
+- Is that candidate genuinely structurally different from the retained frontier?
+- Does the imported retention rule create diversity rather than merely protect another high-score clone?
 
-The most ambitious cooperation layer is not candidate exchange but **adaptive allocation based on evidence arriving during the solve**.
+#### Scheduler receptor probe
 
-The current attempt policy is feature-keyed before search, as documented in [`solver-architecture.md`](solver-architecture.md). Yet some of the most relevant information appears only after work begins:
+- Conditional on this failure/activity signature, does another technique's success probability or solve cost differ materially from its unconditional rate?
+- Does the signal add information beyond static level features and already-known starvation state?
 
-- beam collapses or preserves diversity;
-- repair rapidly improves and then plateaus;
-- deterministic search reaches deep contradictions or dies shallowly;
-- one obligation/resource repeatedly dominates failures;
-- a technique produces several promising candidates early or none at all;
-- a specialist's historical conditional solve hazard remains high after the observed failure class.
+### 14.3 Counterfactual consumer records
 
-This is exactly the search-control gap identified in [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md), but the failed broad portfolio experiment means the project should demand evidence that online signals actually identify complementary future work before changing allocation.
+A shadow consumer should emit something like:
 
-### 11.1 Scheduler input should be standardized evidence
+```ts
+{
+  sourceArtifactId,
+  consumerTechnique,
+  proposedAction,
+  reason,
+  estimatedExtraWork,
+  nativeAlternative,
+}
+```
 
-The scheduler should consume artifact summaries, not technique internals. For example:
+No search changes yet. This creates an auditable opportunity population before live experimentation.
+
+## 15. Known-solution and family analysis
+
+Validated known solutions are useful positive examples, not exhaustive ground truth.
+
+Where multiple solutions exist, ask:
+
+- did an emitted artifact share a prefix/structure with any known winning path?
+- did a producer discover winning-like structure that its own retention later lost?
+- would a cross-technique board preserve winning structure longer at equal capacity?
+- does external guidance reduce the recipient's discrepancy/rank cost to at least one known solution?
+- are useful artifacts structurally complementary even when not close to stored hints?
+
+The variant/family corpus in [`variant-corpus-solver-research-plan.md`](variant-corpus-solver-research-plan.md) is a later high-value validation layer because it can test whether signals generalize across related puzzles rather than memorizing level identity.
+
+Useful family questions include:
+
+- does an artifact transform coherently under rotation/mirroring?
+- when one sibling solves and another fails, which technique's artifact population diverges first?
+- does a successful sibling expose an artifact class missing from the canonical failure?
+- does a handoff predictor generalize across held-out parent families?
+- are orientation-sensitive failures accompanied by beam/ordering/population collapse that points to a deeper search-control asymmetry?
+
+Do not make family identity a production policy feature.
+
+## 16. Priority handoff experiments
+
+The order below reflects both receptor evidence and the risk of repeating known negative work.
+
+### Priority 1: beam diverse survivors -> repair external seeds
+
+**Why it is first:**
+
+- beam already pays to maintain multiple viable alternatives;
+- repair already consumes multiple starting structures;
+- the two techniques fail for different reasons;
+- candidate transfer can be replayed exactly;
+- the hypothesis is materially different from repair's own elite-prefix DFS experiment because the producer is an independent search population, not repair's existing elite family.
+
+#### Shadow premise gate
+
+Before a live A/B, show that on a meaningful unsolved population:
+
+- beam emits candidates early enough to precede repair;
+- at least some are not near-duplicates of repair's own eventual elite population;
+- they occupy distinct obligation/resource/topology buckets;
+- a non-trivial number pass the repair-seed eligibility rule;
+- the seed pool can be limited to 2-4 candidates.
+
+#### Live design if the gate passes
+
+- replay 2-4 selected beam prefixes;
+- give imported-seed repair a tiny fixed canonical-work slice;
+- preserve ordinary repair unchanged with a protected budget;
+- compare against a control that gives the same extra work to ordinary repair/fresh repair seeds;
+- attribute wins through artifact lineage.
+
+A gain must beat “repair simply got more work.”
+
+### Priority 2: external soft guidance at deterministic ordering ambiguities
+
+This combines the strong DFS/admissible-order receptor evidence with a lower expected consumption cost than seeded secondary searches.
+
+Begin with **shadow rank analysis**, not live guidance.
+
+Potential producer signals:
+
+- multiple independent artifacts share an early next move;
+- an external candidate survives deeply with a particular early decision;
+- a previous technique spent large canonical work beneath the opposite decision and repeatedly contradicted;
+- an external candidate clears a scarce obligation/interface through one branch.
+
+Potential recipients:
+
+1. admissible-order equal-slack ties;
+2. DFS siblings with near-equal native score;
+3. LDS discrepancy accounting for externally supported branches.
+
+The first live version, if justified, should only reorder siblings. It should never delete them.
+
+### Priority 3: failure-conditioned bounded allocation
+
+Use standardized failure/activity summaries to decide whether another **small** slice is worth buying.
+
+The first model should be an interpretable empirical handoff table, not a learned black box:
+
+`producer failure/artifact class -> proposed recipient -> conditional success/cost`
+
+Examples worth testing:
+
+- early beam diversity collapse -> repair value;
+- repair plateau with continuing elite turnover versus frozen elite family -> beam/deterministic value;
+- deep expensive DFS contradiction -> alternative-order technique value;
+- admissible-order starvation -> reserve rather than true failure;
+- no useful artifact after substantial work -> retire technique earlier.
+
+Only after explicit rules show a stable signal should a hazard model be considered.
+
+### Priority 4: external evidence -> beam retention
+
+This is mechanistically promising because beam already has strong retention sensitivity, but producer-to-retention semantics are less obvious than beam -> repair.
+
+Start in shadow mode:
+
+- identify candidates native beam would cull;
+- mark which ones external artifacts would have protected;
+- measure whether they occupy genuinely missing structural buckets;
+- track their descendants hypothetically where feasible.
+
+A live rule should reserve only a tiny number of frontier slots so native beam ranking remains dominant.
+
+### Priority 5: repair -> deterministic seeded completion
+
+Demoted relative to the original intuition because Pathfinder has already tested a close cousin and measured a net-negative result.
+
+Reconsider only if shadow evidence identifies a **new selector** that sharply reduces the opportunity population and work cost, for example a specific residual class where deterministic completion historically has high conditional success.
+
+Do not repeat a fixed grid of repair elites × fractional destroy points.
+
+### Priority 6: cross-technique proof/fact sharing
+
+Potentially powerful but highest soundness burden and uncertain opportunity rate.
+
+Only pursue after exact proof classes and semantic identity rules are independently justified. Candidate/guidance interoperability may deliver most of the value without this layer.
+
+## 17. Failure-conditioned scheduling design
+
+If the earlier pairwise work succeeds, the scheduler can consume standardized evidence rather than technique internals.
+
+Conceptually:
 
 ```ts
 nextSlice({
@@ -761,360 +993,314 @@ nextSlice({
 })
 ```
 
-This keeps the decision surface observable and testable.
+### 17.1 Start with conditional tables
 
-### 11.2 Complementarity table before learned policy
+For each meaningful signal:
 
-Before fitting any learned scheduler, measure a simple empirical handoff matrix:
+- eligible level count;
+- recipient success rate;
+- recipient work-to-solve distribution;
+- static-feature baseline rate;
+- incremental predictive value of the online signal;
+- artifact arrival work;
+- likely cost of acting.
 
-`producer failure/artifact class -> recipient technique -> conditional success/cost`
+This directly tests whether online evidence contributes something the failed static classifier did not.
 
-This can reveal rules such as:
+### 17.2 Hazard framing later
 
-- repair plateau class X is unusually often rescued by beam;
-- beam extinction with low topology diversity predicts repair value;
-- deep deterministic contradiction after high productive depth predicts a different action than shallow exhaustion;
-- a particular residual resource shape predicts admissible-order value.
+A later model may estimate probability of success in the **next canonical-work slice** given:
 
-Start with explicit bounded rules whose evidence can be inspected. The static learned "will repair win?" classifier was rerun and closed as weak in [`2026-08-07-repair-winner-classifier-rerun.md`](../reports/2026-08-07-repair-winner-classifier-rerun.md). Do not smuggle that same model back in under the label "adaptive cooperation." A new policy must be based on genuinely new online artifact/failure evidence or a new action space.
+- coarse level features;
+- technique work already spent;
+- failure/activity class;
+- artifact improvement rate;
+- population diversity trend;
+- starvation status.
 
-### 11.3 Hazard-based continuation/retirement
+Use it to continue, retire, or introduce a specialist only after the empirical conditioning is stable.
 
-The hazard framing in [`solver-next-frontier-multilingual-research-update-2026-08-02.md`](solver-next-frontier-multilingual-research-update-2026-08-02.md) remains useful here if applied narrowly and empirically.
+### 17.3 Participation floors remain mandatory
 
-For each attempt family, estimate the probability of solving in the **next** canonical-work interval given:
+A learned or explicit scheduler must not suppress independent rescue techniques to zero merely because another producer's correlated evidence looks persuasive.
 
-- the level's coarse features;
-- how much work this technique has already consumed;
-- observed artifact/failure class;
-- whether useful candidates are still improving;
-- whether population diversity is collapsing.
+## 18. Evaluation standards
 
-This can support:
+### 18.1 Instrumentation acceptance
 
-- granting another bounded slice when conditional hazard remains high;
-- retiring an attempt when hazard collapses;
-- reserving entry for a specialist with high early hazard on the observed failure class;
-- extending a technique that historically solves late in this specific regime.
+The substrate ships only if:
 
-The scheduler should preserve participation floors and evaluate at equal deterministic work under [`solver-budget-determinism.md`](solver-budget-determinism.md).
-
-Budget starvation is not theoretical in this solver. [`2026-07-31-admissible-order-tier-node-starvation.md`](../reports/2026-07-31-admissible-order-tier-node-starvation.md) and the later main-loop starvation work in [`future-work.md`](future-work.md) show that a finite cumulative budget can prevent a technique from entering at all. Any adaptive policy must report participation and cannot label an unallocated technique a negative observation.
-
-### 11.4 Do not conflate scheduling and scoring experiments
-
-If a scheduler experiment changes which technique runs **and** changes that technique's score/seed/retention policy, attribution becomes muddy. Test scheduling using frozen technique behavior first.
-
-The fast portfolio result, repair turn-bias history, and multiple budget-sensitive reordering results documented in [`future-work.md`](future-work.md) all reinforce the need to separate "better technique behavior" from "different finite-budget allocation."
-
-## 12. Tooling that would make the artifact layer useful
-
-Build only pieces not already supplied by existing tools. Before adding a new CLI, check [`README.md`](README.md), [`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md), and the command-selection guidance in [`solver-architecture.md`](solver-architecture.md).
-
-### 12.1 Artifact schema/fixture tripwire
-
-Mirror the canonical `Attempt` strategy:
-
-- one maximally populated fixture per artifact discriminant or one fixture generator covering all fields;
-- tests that every field is explicitly persistent, derived, transient, or technique-private;
-- worker/report serialization round-trip tests;
-- schema version tests;
-- no hand-maintained partial projection in individual reports.
-
-The concrete precedent is [`scripts/test-lib/fixtures.mjs`](../scripts/test-lib/fixtures.mjs), [`modules/solver/hint-provenance.test.ts`](../modules/solver/hint-provenance.test.ts), [`modules/solver/worker-result-serialization.mjs`](../modules/solver/worker-result-serialization.mjs), and [`scripts/portfolio-solve-sweep-lib.mjs`](../scripts/portfolio-solve-sweep-lib.mjs).
-
-### 12.2 Artifact inspector
-
-A CLI/report view for one level showing:
-
-- attempt timeline in canonical work;
-- artifacts emitted by each technique;
-- candidate metrics;
-- lineage/hypothetical handoffs;
-- population/failure summaries;
-- eventual solve/hint provenance when present.
-
-This should be built as a consumer of the canonical artifact report format, not embedded into search code. If an existing report can be extended cleanly, extend it rather than creating another top-level inspection ecosystem.
-
-### 12.3 Cross-technique redundancy report
-
-For a corpus run, quantify how much each technique contributes that was not already represented:
-
-- duplicate/near-duplicate candidate rate;
-- unique topology/resource buckets;
-- unique obligation-progress states;
-- earliest discovery of useful candidate classes;
-- unique failure evidence.
-
-This answers the foundational question: are multiple techniques actually seeing different things?
-
-Use existing structural-distance primitives from [`solution-profile.md`](solution-profile.md) where their semantics fit. If a partial-prefix-specific distance is needed, document why the full-solution metric cannot be reused before adding another representation.
-
-### 12.4 Handoff matrix report
-
-Given baseline artifact logs and outcomes, produce candidate pairwise experiments ranked by evidence:
-
-- producer technique/artifact class;
-- proposed consumer;
-- number of eligible levels;
-- baseline consumer success rate;
-- estimated opportunity population;
-- known-winning-prefix affinity where available;
-- typical artifact emission work offset.
-
-Use it to choose experiments rather than inventing handoffs by intuition.
-
-The report should link or carry enough identifiers to inspect prior nearby experiments such as [`2026-08-07-repair-elite-prefix-dfs.md`](../reports/2026-08-07-repair-elite-prefix-dfs.md), so a high-ranked handoff is not mistaken for an untested mechanism when only its selection rule is new.
-
-### 12.5 Artifact reducer / minimal witness fixture
-
-When an artifact or handoff causes a surprising solve, regression, or replay disagreement, feed its level and witness into the existing level-reduction/testing ecosystem documented in [`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) rather than create a separate reducer.
-
-The only new helper should be enough to export an artifact as a stable test fixture or feed its replay witness into an existing reducer/diagnostic seam.
-
-### 12.6 Shadow consumer harness
-
-Extend or parallel the existing shadow reasoner harness only where needed so a consumer can declare:
-
-- which artifacts it would accept;
-- what action it would take;
-- how much work it would request;
-- why.
-
-Run that decision without changing live search and log the hypothetical action.
-
-[`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) is the canonical existing infrastructure. Its current probe contract is oriented around reasoner verdicts on labelled branches, so a consumer policy may need a sibling interface. Share its replay, corpus, report, soundness-class, and execution infrastructure where possible rather than duplicating the whole harness.
-
-## 13. Evaluation standards
-
-### 13.1 Groundwork acceptance
-
-The instrumentation layer should ship only if:
-
-- behavior is bit-identical with artifact emission disabled;
-- shadow emission does not change search decisions;
-- overhead is negligible or explicitly env-gated for research runs;
-- replay success is effectively 100% for artifacts produced by the same solver revision;
-- serialization tests prevent silent field loss;
+- artifact emission disabled is behavior-identical;
+- shadow emission does not affect search decisions;
+- overhead is negligible or explicitly research-gated;
+- same-revision replay success is effectively 100%;
 - artifact volume is tightly bounded;
-- no heuristic artifact can enter a hard-prune API by accident.
+- serialization tests prevent field loss;
+- heuristic artifacts cannot enter hard-prune APIs;
+- canonical work accounting remains authoritative.
 
-Witness completeness must be audited against [`mechanic-state-contracts.md`](mechanic-state-contracts.md), and projection completeness should use the same tripwire philosophy as the current `Attempt` fixture/tests.
+### 18.2 Producer acceptance
 
-### 13.2 Evidence of useful complementarity
+An artifact class is worth retaining only if it has at least one named receptor and demonstrates some combination of:
 
-Before live cooperation, require at least one of:
+- non-trivial opportunity frequency;
+- cross-technique novelty;
+- early enough arrival;
+- stable replay;
+- useful structural/resource diversity;
+- predictive relation to a recipient decision surface.
 
-- one technique consistently emits structurally/resource-distinct candidates absent from another;
-- an emitted artifact is measurably closer to known winning prefixes than the recipient's own candidates at equal work, across a meaningful population;
-- a failure signature materially changes another technique's conditional solve probability;
-- shadow handoff selection identifies a non-trivial opportunity population with plausible budget fit;
-- artifact pooling improves winning-prefix survival/diversity at fixed retention size.
+“Looks interesting in an inspector” is not acceptance.
 
-Known solutions are evidence, not complete truth. Use [`solution-profile.md`](solution-profile.md)'s provenance/saturation cautions, and use whole-family holdouts when dense variants are involved as required by [`variant-corpus-solver-research-plan.md`](variant-corpus-solver-research-plan.md).
+### 18.3 Receptor acceptance
 
-### 13.3 Live handoff acceptance
+Before live use, show that the information could actually alter a meaningful decision:
 
-Every live handoff experiment should compare at **equal canonical work** and report:
+- different seed than native population;
+- different sibling rank;
+- different beam retention outcome;
+- different bounded allocation decision.
+
+If an artifact is usually redundant with what the consumer already knows, do not spend live budget on it.
+
+### 18.4 Live handoff acceptance
+
+Every live A/B must compare at equal canonical work and report:
 
 - solved count gained/lost;
-- existing solved-level regressions;
+- solved-ID set changes;
 - work-to-solve distribution;
+- native recipient wins displaced;
 - artifact production overhead;
-- imported-candidate replay cost;
-- fraction of eligible handoffs actually consumed;
-- solves causally attributable to imported lineage;
-- whether ordinary/native technique wins were displaced;
-- deadline truncation separately from deterministic negative results.
+- replay/consumption cost;
+- eligible versus consumed handoffs;
+- lineage-attributable solves;
+- deadline truncation separately from deterministic failure;
+- matched-work control where the same work is given without imported information.
 
-A handoff that wins only because it adds extra work is not evidence for cooperation. Use [`solver-budget-determinism.md`](solver-budget-determinism.md) for the work model and [`investigation-report-conventions.md`](investigation-report-conventions.md) for the final decision/gate write-up.
+### 18.5 Scheduler acceptance
 
-### 13.4 Scheduler acceptance
+Additionally report:
 
-For adaptive scheduling, additionally report:
-
-- technique participation by level class;
-- how often a decision differs from the static policy;
-- which artifact/failure signal caused each difference;
+- how often policy differs from static baseline;
+- exact signal causing each difference;
 - gains/losses by decision rule;
-- counterfactual matched-work static schedule;
+- technique participation by level class;
 - starvation introduced or repaired;
-- stability across seeds where stochastic techniques are involved.
+- counterfactual matched-work static schedule;
+- stochastic stability where relevant.
 
-The current starvation and budget-sensitive reordering history in [`future-work.md`](future-work.md) is part of the acceptance context, not merely background.
+## 19. Tooling
 
-## 14. Staged implementation roadmap
+Build only missing seams.
 
-### Stage 0: reconcile and inventory
+### 19.1 Artifact schema/fixture tripwire
 
-Before writing new runtime structures:
+Mirror the `Attempt` contract discipline:
 
-1. read [`README.md`](README.md) and [`future-work.md`](future-work.md) so the implementation starts from current canonical ownership and current verdicts rather than a dated plan;
-2. inventory every useful artifact-like value already emitted or retained by DFS, beam, repair, admissible-order, attempt orchestration, provenance, and research tooling;
-3. map each to one of: common context, replay witness, common derived metric, technique payload, diagnostic summary, proof fact;
-4. audit candidate replay fields against [`mechanic-state-contracts.md`](mechanic-state-contracts.md);
-5. identify existing duplicate serialization/projection paths and choose one canonical home, using the current `Attempt` fixture/projection implementation as precedent;
-6. explicitly list prior experiments that superficially resemble proposed handoffs so they are not accidentally rerun under new names, starting with the evidence map near the top of this document;
-7. check [`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) and [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) before adding any new generic CLI/harness/reducer.
+- maximal fixtures;
+- exhaustive field classification;
+- serialization round trips;
+- schema version tests.
 
-Output: a small schema inventory and reuse map, not solver behavior changes.
+### 19.2 Canonical replay/metric evaluator
+
+One reusable artifact witness validator and common-metric projector.
+
+### 19.3 Artifact inspector
+
+For one level, show:
+
+- attempt timeline in canonical work;
+- emitted artifacts;
+- common metrics;
+- producer-local reasons;
+- hypothetical receptor actions;
+- lineage;
+- eventual solve/provenance when present.
+
+### 19.4 Producer-receptor matrix report
+
+This supersedes a generic “artifact diversity” report as the main decision tool.
+
+For each pairing, report:
+
+- producer;
+- artifact kind;
+- recipient/receptor;
+- eligible level count;
+- artifact arrival work;
+- redundancy with recipient-native information;
+- hypothetical action frequency;
+- known-winning affinity where valid;
+- conditional recipient success/cost;
+- estimated consumption work.
+
+The report should rank **testable handoffs**, not artifacts in isolation.
+
+### 19.5 Cross-technique redundancy report
+
+Still useful as a supporting diagnostic:
+
+- exact/near duplicate candidate rates;
+- unique topology/resource buckets;
+- unique obligation-order states;
+- earliest discovery of candidate classes;
+- unique failure evidence.
+
+### 19.6 Artifact fixture export
+
+Export a surprising artifact/handoff as a stable test fixture and feed the level into the existing reducer/testing ecosystem. Do not build a second reducer.
+
+### 19.7 Shadow consumer hooks
+
+A consumer declares:
+
+- artifact eligibility;
+- hypothetical action;
+- required work;
+- reason;
+- native alternative.
+
+Run the decision without altering live search.
+
+## 20. Staged implementation roadmap
+
+### Stage 0: inventory both producers and receptors
+
+Do not inventory artifact-like outputs alone. For each technique, record:
+
+1. what useful data it already creates;
+2. what measured sensitivity could consume external information;
+3. current instrumentation exposing that sensitivity;
+4. prior experiments that already tested a similar mechanism;
+5. cheapest shadow probe connecting producer and receptor.
+
+Read [`README.md`](README.md) and [`future-work.md`](future-work.md) before creating any new tool or doc.
+
+Output: a producer/receptor inventory and mapping to existing code, not solver changes.
 
 ### Stage 1: common contract and replay boundary
 
 Implement:
 
 - artifact discriminated union;
-- claim-class/soundness separation;
+- claim classes;
 - context identity reusing `Attempt` fields;
-- replay witness contract;
-- canonical replay/validation entrypoint;
-- centrally computed common metrics;
-- maximal fixtures and serialization tripwire tests.
+- replay-complete witness;
+- canonical replay validator;
+- modest common metric vector using existing calculations;
+- maximal fixtures and serialization tripwires.
 
-No technique consumes artifacts. No schedule changes.
+No live consumption.
 
-The replay contract is not complete until it has been checked against [`mechanic-state-contracts.md`](mechanic-state-contracts.md), and any hard identity must satisfy the correctness constraints in [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md).
+### Stage 2: bounded cheap emitters
 
-### Stage 2: bounded shadow emitters
+Priority:
 
-Add env/option-gated emitters to each technique using data it already computes where possible.
+1. repair elites + failure/plateau summaries already supported by existing machinery;
+2. beam diverse survivor sample + frontier concentration summary;
+3. DFS productive/deep-prefix + expensive-subtree summary using existing debug concepts;
+4. admissible-order equal-slack decision + constrained-prefix summary.
 
-Priority order:
+Avoid expensive new structural calculations until cheap signals are characterized.
 
-1. repair elites + plateau/failure summaries, reusing [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md)'s existing concepts;
-2. beam survivor sample + frontier diversity/collapse summary;
-3. DFS deep/productive prefix + contradiction/prune summaries;
-4. admissible-order progress/starvation summaries, explicitly separating zero allocation from exhaustion using [`2026-07-31-admissible-order-tier-node-starvation.md`](../reports/2026-07-31-admissible-order-tier-node-starvation.md)'s lesson.
+### Stage 3: receptor probes and shadow board
 
-Avoid adding expensive new metric computation until the cheap existing signals are characterized.
+Instantiate the bounded board and run shadow consumers for at least:
 
-### Stage 3: blackboard in shadow mode
+- beam survivor -> repair seed eligibility/novelty;
+- external signal -> admissible-order tie-break opportunity;
+- external signal -> DFS rank/discrepancy opportunity;
+- failure signature -> next-technique conditional outcome.
 
-Instantiate the per-solve board, validate/dedupe/retain artifacts, and log:
+This is the first real decision gate.
 
-- cross-technique redundancy;
-- neutral metric diversity;
-- artifact arrival time;
-- hypothetical consumer eligibility;
-- lineage IDs even though no live consumption occurs.
+**Stop** if artifacts are redundant, arrive too late, rarely touch recipient decisions, or would require too much work to consume.
 
-Run deterministic corpus studies and variant/family studies where useful. Use [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) infrastructure where it fits, [`solver-budget-determinism.md`](solver-budget-determinism.md) for work comparisons, and [`variant-corpus-solver-research-plan.md`](variant-corpus-solver-research-plan.md) for family split/interpretation rules.
+### Stage 4: first live pairwise handoff
 
-Decision gate: if artifacts are overwhelmingly redundant or appear too late to matter, stop and record that result rather than proceeding because the architecture is attractive.
+Choose the pair with the strongest Stage 3 producer/receptor evidence.
 
-### Stage 4: first pairwise live handoff
+Beam -> repair is the default candidate only if evidence is roughly tied, not a commitment.
 
-Choose the pair with the strongest Stage 3 evidence, not a predetermined favorite.
+Use a tiny fixed work slice, protected native recipient budget, lineage, and matched-work control.
 
-Default candidate if evidence is roughly tied: beam diverse survivors -> repair imported seeds.
+### Stage 5: cheap guidance experiment
 
-Use a tiny fixed work slice, preserve ordinary repair, and run a matched-work full-population A/B after the mechanism pilot.
+If ordering-receptor evidence is strong, test one soft reordering mechanism separately from seeded search.
 
-Before implementation, check the evidence map near the top of this doc and search [`future-work.md`](future-work.md) for any newer experiment that has functionally tested the same handoff since this plan was written.
+Prefer a minimal perturbation such as admissible-order tie-breaking or DFS sibling ordering at explicitly eligible nodes.
 
-### Stage 5: second independent handoff
+### Stage 6: second independent handoff shape
 
-Only after one pairwise mechanism proves that the substrate can create value, test a handoff of a different shape, likely repair elite/prefix -> free deterministic completion.
+Only after one mechanism wins, test a qualitatively different exchange mode, such as retention guidance or failure-conditioned allocation.
 
-This stage has a higher anti-duplication burden because [`2026-08-07-repair-elite-prefix-dfs.md`](../reports/2026-08-07-repair-elite-prefix-dfs.md) already tested a broad elite-prefix deterministic operator and found it net-negative. Proceed only if the interoperability data identifies a selection/recipient condition that materially distinguishes the proposed population from that experiment.
+The purpose is to determine whether the substrate generalizes or merely supports one special-case trick.
 
-The goal is to determine whether the framework generalizes or only one special pairing works.
+### Stage 7: bounded adaptive allocation
 
-### Stage 6: shared pool consumers
+Use measured online evidence to grant/deny small future work slices. Start with explicit rules.
 
-Allow multiple techniques to query a common bounded candidate pool. Keep imports additive and trace lineage.
+### Stage 8: proof sharing, optional
 
-At this stage, measure whether pool-wide retention itself becomes a hidden bias. Preserve producer quotas and native-search floors.
+Only for exact fact classes with full identity/soundness tests.
 
-### Stage 7: failure-conditioned allocation
+## 21. Questions this groundwork must answer
 
-Use measured artifact/failure classes to grant or deny small future work slices. Begin with explicit rules supported by the handoff matrix, not a learned black box.
+The completed substrate should make these questions answerable directly from data:
 
-Re-read [`2026-08-07-repair-winner-classifier-rerun.md`](../reports/2026-08-07-repair-winner-classifier-rerun.md), [`fast-portfolio-scheduler-plan.md`](fast-portfolio-scheduler-plan.md), and current starvation status in [`future-work.md`](future-work.md) before building the first rule. Those negative results define what counts as genuinely new evidence.
+- Which technique first discovers candidate structure another technique later needs?
+- Which technique pairs mostly rediscover the same prefixes despite different algorithms?
+- Are beam survivors genuinely different from repair elites on the same level?
+- Does repair ever spend substantial work rediscovering a structural family beam had already exposed?
+- At DFS decision points with high downstream cost, did another technique already prefer the winning branch?
+- At admissible-order equal-slack ties, does independent search provide a useful discriminator?
+- Which external signals would actually protect beam candidates the native cull removes?
+- When beam collapses structurally, which later technique has the highest conditional rescue rate?
+- Which repair plateau shapes predict value from deterministic or beam search?
+- Are late attempts failing, or simply being starved before their characteristic artifacts appear?
+- How early does a useful handoff artifact exist relative to the recipient's start time?
+- How often does a proposed consumer request information it already has independently?
+- Can a tiny imported-work slice outperform giving the same work to the recipient's ordinary search?
+- Do cross-technique gains survive held-out family/variant splits?
+- Are orientation-sensitive failures accompanied by systematic artifact/population asymmetries?
+- Which apparent insights are attractive diagnostics but have no measurable receptor value?
 
-Only after explicit rules have a stable signal should a learned hazard model be considered, using the hazard hypothesis in [`solver-next-frontier-multilingual-research-update-2026-08-02.md`](solver-next-frontier-multilingual-research-update-2026-08-02.md) as research inspiration rather than a production prescription.
+If the system cannot answer questions at this level, it has become logging for logging's sake.
 
-### Stage 8: hard fact sharing, only if justified
+## 22. Recommended first implementation scope
 
-Introduce a proof-artifact cache only for fact classes with exact identity and soundness tests. This stage is optional. Candidate/diagnostic interoperability may deliver most of the value without it.
+The first coding task should implement and test the **interoperability research substrate**, not cooperation policy.
 
-Use [`2026-08-07-repair-nogood-cache.md`](../reports/2026-08-07-repair-nogood-cache.md) as positive precedent for a complete scoped exact-state cache, and [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md) plus [`mechanic-state-contracts.md`](mechanic-state-contracts.md) as the boundary for any attempt to broaden proof reuse.
+It should:
 
-## 15. Relationship to variants and solution provenance
+1. inventory existing producer data **and measured receptors** before adding fields;
+2. define the typed common envelope and claim classes;
+3. define the replay-complete witness and canonical replay validator;
+4. compute a modest neutral common metric vector from replayed state;
+5. add bounded opt-in shadow emitters using values each technique already possesses;
+6. add an observe-only per-solve artifact board;
+7. add canonical serialization/fixture tests modeled on the `Attempt` contract;
+8. add shadow consumer hooks capable of expressing candidate-seed, ordering, retention, and allocation proposals without changing search;
+9. add a producer-receptor report measuring novelty, redundancy, arrival work, receptor eligibility, and hypothetical action frequency;
+10. prove observe-only mode does not alter deterministic results;
+11. stop before any artifact changes a move order, frontier, seed, prune, or budget allocation.
 
-The family/variant corpus is unusually valuable for this work because it can distinguish algorithmic information from level identity memorization.
-
-[`variant-corpus-solver-research-plan.md`](variant-corpus-solver-research-plan.md) remains the canonical owner of family-boundary methodology, symmetry interpretation, family leakage rules, and the current wide-trove gate. Interoperability should add new observable quantities to that framework, not create a separate family-research campaign.
-
-Potential uses:
-
-- compare artifacts from siblings where one orientation/variant solves and another does not;
-- determine the earliest point their artifact populations diverge;
-- test whether a candidate class transfers structurally across family members even when exact paths do not;
-- see whether the same failure signature predicts the same successful complementary technique across variants;
-- test whether orientation-sensitive failures correspond to frontier/tie/cutoff collapse visible in standardized artifacts;
-- use multiple known family solutions to reduce dependence on a single hint when evaluating winning-prefix affinity;
-- test whether an artifact is invariant under symmetry when the underlying abstract puzzle is invariant;
-- test whether handoff predictors survive whole-family holdout rather than exploiting near-duplicate sibling leakage.
-
-Do not let variant identity become a production lookup key unless separately justified. The immediate value is diagnostic: variants provide controlled counterfactuals for testing whether artifact signals reflect genuine search structure.
-
-Where solution-space distance is needed, reuse [`solution-profile.md`](solution-profile.md). Where homotopy-class structure is relevant, check the open historical item in [`solver-improvement-research-notes.md`](solver-improvement-research-notes.md) before inventing a new topological signature.
-
-The existing wide-trove boundary run remains a nearer-term task in [`variant-corpus-solver-research-plan.md`](variant-corpus-solver-research-plan.md); interoperability groundwork should not block or silently replace it.
-
-## 16. Questions the completed groundwork should let us answer
-
-The project should be able to ask these directly from recorded data:
-
-- Which technique most often discovers a promising state first?
-- Which techniques discover essentially the same states despite different algorithms?
-- What useful states does beam find that repair never reaches independently, and vice versa?
-- Does repair plateau because its elite population loses structural diversity, because it exhausts a resource, or because its operator cannot revise the required earlier decision?
-- Do deterministic searches repeatedly encounter the same coarse failure basin even when their exact states differ?
-- When a technique eventually solves, was a recognizable precursor artifact already present much earlier?
-- Which artifact kinds are merely visually compelling but statistically unrelated to success?
-- Which failure signatures predict that another technique has high conditional solve probability?
-- Are late attempts starved before they can produce their characteristic artifacts?
-- Are orientation/mirroring-sensitive family failures accompanied by artifact-population collapse that points to a deeper search-control asymmetry?
-- Does a shared diverse candidate pool retain known-winning structure longer than each technique's private retention at the same total capacity?
-- Do imported candidates create genuinely new solves, or merely reproduce solves the recipient would have found with the same extra work?
-- Which technique contributes unique proof-quality facts, if any?
-- Which apparent handoff opportunities disappear when evaluated on whole-family holdouts?
-- Which artifact signals remain useful after conditioning on work already spent and on whether the producer was actually allocated meaningful work?
-
-If the artifact layer cannot answer questions of this kind, it has probably become logging for logging's sake.
-
-## 17. Recommended first implementation scope
-
-The first coding task should be deliberately narrower than this document.
-
-Implement and test only the **interoperability substrate**, not cooperation policy:
-
-1. reconcile current ownership via [`README.md`](README.md) and current status via [`future-work.md`](future-work.md);
-2. inventory existing artifact-like outputs and reuse them;
-3. define the typed common envelope and claim classes;
-4. define a replay-complete witness and canonical replay validator, audited against [`mechanic-state-contracts.md`](mechanic-state-contracts.md);
-5. compute a modest initial common metric vector from replayed state using existing calculations;
-6. add bounded, opt-in shadow emitters for repair, beam, DFS, and admissible-order using values they already possess;
-7. add the per-solve board in observe-only mode;
-8. add canonical serialization/fixture tests modeled directly on the current `Attempt` contract implementation;
-9. add one report/inspector that measures cross-technique artifact diversity, redundancy, arrival work, and hypothetical handoff eligibility, reusing [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) and existing report infrastructure where practical;
-10. prove that enabling the observe-only layer does not alter solver decisions or deterministic results;
-11. stop before any imported artifact changes search.
-
-Before calling that implementation complete, explicitly check that it has **not** rebuilt a reducer, family-analysis database, provenance system, work-budget model, generic shadow harness, or path-distance framework already owned elsewhere in the repo.
-
-That produces the dataset needed to choose the first real handoff scientifically.
+The first research runs should then decide **which handoff deserves implementation**, rather than implementing several cooperation mechanisms at once.
 
 ## Bottom line
 
-Pathfinder already spends substantial computation generating information that is mostly discarded when an attempt fails. The various techniques are different enough that this discarded information may itself be one of the strongest remaining resources in the solver. The right response is not to merge the techniques into one algorithm or to build a more elaborate blind portfolio. It is to give them a safe common language for leaving evidence behind.
+Pathfinder no longer has to justify interoperability with the generic claim that “search algorithms sometimes benefit from sharing information.” The solver's own history gives a more specific foundation.
 
-The foundation should therefore be:
+Repair has measured memory and diversity receptors. DFS/LDS has a measured ordering/discrepancy receptor. Admissible-order has a measured tie-break receptor. Beam has a measured retention/diversity receptor. The outer ladder has a measured allocation/starvation problem and currently lacks online search evidence.
 
-**common identity + replay-complete witnesses + neutral derived metrics + typed technique payloads + explicit soundness class + bounded blackboard + complete lineage/provenance.**
+At the same time, each technique already generates information that another technique might use. The missing fact is not whether the algorithms are information-sensitive. **They are.** The missing fact is whether one technique produces the right information for another **soon enough and cheaply enough** to beat the cost of consumption at fixed total work.
 
-Build that first in shadow mode. If the data shows real complementarity, progressively activate pairwise handoffs, shared candidate pools, and finally failure-conditioned scheduling. If the artifacts turn out to be redundant or non-predictive, the project still gains a substantially better diagnostic instrument and avoids paying the complexity cost of a cooperative solver that has no useful information to exchange.
+That makes interoperability a serious, evidence-backed research direction, but not yet a production feature.
 
-The documentation rule for this work is equally important: **when an idea inherits a premise, warning, negative result, or implementation contract from elsewhere in the repository, link the owning document or report at the point where the idea depends on it.** This plan should be a map into the repo's accumulated evidence, not a new island that requires future agents to repeat the archaeology.
+The right foundation is:
+
+**typed producer artifacts + named recipient receptors + replay-complete witnesses + neutral common metrics + explicit soundness classes + bounded retention + lineage + canonical-work accounting + shadow counterfactuals.**
+
+Build that foundation first. Then promote only the producer -> receptor pairing that earns its way into the live solver.
