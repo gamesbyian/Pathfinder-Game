@@ -20,7 +20,8 @@ One workflow, `solver-stress-refresh.yml`, that solves **both** stress corpora i
 - **`solve-shards`**: a 20-way GitHub Actions *matrix* (not 20 separate workflow files) — each
   matrix leg solves 85 of stress-corpus-2's 1700 levels (`data/stress/stress-levels-random.json`)
   **and** ~5-6 of stress-corpus-1's 102 levels (`data/stress/stress-levels.json`), both via
-  `portfolio-solve-sweep.mjs --scheduler-mode=legacy --save-hints`, in two separate steps within
+  `portfolio-solve-sweep.mjs --scheduler-mode=legacy` (plus `--save-hints` unless an artifact-only
+  A/B explicitly sets `persist_hints=false`), in two separate steps within
   the same shard job. **Uploads its results as a workflow artifact instead of committing to a
   branch** — no git writes at all in this job (`permissions: contents: read`).
 - **`combine`**: runs after `solve-shards` (`if: always()`, so a partial refresh — some shards
@@ -38,6 +39,36 @@ One workflow, `solver-stress-refresh.yml`, that solves **both** stress corpora i
   run's archive, skipping every downstream step (lay-down/combine/commit) for the rest of the job —
   no data was lost (the failure is before anything gets overwritten), but the refresh silently
   produced no commit. Fixed the same day.
+
+## Cold, non-mutating 20-job A/B dispatches
+
+The same 20-shard matrix can run attempt-ordering experiments without priming from the committed
+winner, saving hints, or mutating the dispatched branch. Those three properties matter for the
+main-loop late-reserve experiment: `--prime-winner` changes the cold order being measured, and a
+hint commit between arms would make them measure different SHAs.
+
+For every arm, dispatch the same branch with `deterministic=true`, `prime_winner=false`, and
+`persist_hints=false`. The control leaves `enable_flags` and both reserve inputs blank. Treatments
+set `enable_flags=STRATEGY_MAIN_LOOP_LATE_RESERVE`, `main_loop_late_reserve_config_count=4`, and one
+of the frozen fractions (`0.05`, `0.10`, or `0.15`). Example commands:
+
+```bash
+REF=<branch-containing-the-experiment>
+COMMON=(-f deterministic=true -f prime_winner=false -f persist_hints=false)
+
+gh workflow run solver-stress-refresh.yml --ref "$REF" "${COMMON[@]}"
+for FRACTION in 0.05 0.10 0.15; do
+  gh workflow run solver-stress-refresh.yml --ref "$REF" "${COMMON[@]}" \
+    -f enable_flags=STRATEGY_MAIN_LOOP_LATE_RESERVE \
+    -f main_loop_late_reserve_fraction="$FRACTION" \
+    -f main_loop_late_reserve_config_count=4
+done
+```
+
+The workflow concurrency group serializes these dispatches rather than cancelling an earlier arm.
+Each run uploads its combined reports as a run-scoped artifact and prints solved counts directly in
+the combine log. Because `persist_hints=false` and deterministic mode already suppresses baseline
+commits, no arm pushes anything; every queued run continues to measure the exact dispatched SHA.
 
 ### Sharding corpus-1 into the matrix (2026-07-23)
 

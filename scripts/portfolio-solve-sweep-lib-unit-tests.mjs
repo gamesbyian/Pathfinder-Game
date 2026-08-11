@@ -10,6 +10,18 @@
  */
 import assert from 'node:assert/strict';
 import { buildRow, attemptConfigKey, attemptRecord } from './portfolio-solve-sweep-lib.mjs';
+import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from './test-lib/fixtures.mjs';
+import { buildSolveWorkerResult } from '../modules/solver/worker-result-serialization.mjs';
+
+const PERSISTENT_ATTEMPT_FIELDS = new Set([
+    'gateKey', 'profile', 'template', 'beamWidth', 'ok', 'elapsedMs', 'allocatedBudgetMs',
+    'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'diverseBeam',
+    'repair', 'repairMustTurnBiased', 'repairTurnBiased', 'seedSalt', 'randomSeed',
+    'nodesExpanded', 'timedOut', 'bestBadness', 'finalBadness', 'attractionDiversity',
+    'admissibleOrder', 'admissibleOrderNoTieBreak', 'admissibleOrderLds',
+    'mainLoopLateReserve',
+]);
+const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([]);
 
 let passed = 0;
 function test(name, fn) {
@@ -148,6 +160,61 @@ test('attemptRecord omits absent optional fields rather than emitting undefined'
     const rec = attemptRecord({ gateKey: 1, profile: 'default', template: null, beamWidth: null, ok: true, elapsedMs: 5 });
     for (const k of ['allocatedBudgetMs', 'admissibleOrder', 'randomSeed', 'seedSalt', 'repair', 'timedOut']) {
         assert.ok(!(k in rec), `${k} should be absent, not undefined`);
+    }
+});
+
+test('attempt errors and their aggregate signal survive report projection', () => {
+    const error = { name: 'TypeError', message: 'dispatch failed', gateKey: 9, configKey: 'dfs:x', profile: 'x', template: null, stack: 'must not persist' };
+    const row = buildRow(4, 'R00004', {
+        ok: false, status: 'attempt-error', attempts: [{
+            gateKey: 9, profile: 'x', template: null, beamWidth: null, ok: false,
+            outcome: 'error', error, elapsedMs: 2, allocatedBudgetMs: 10,
+        }],
+    }, 'legacy');
+    assert.equal(row.status, 'attempt-error');
+    assert.equal(row.hadAttemptError, true);
+    assert.equal(row.attempts[0].outcome, 'error');
+    assert.deepEqual(row.attempts[0].error, {
+        name: 'TypeError', message: 'dispatch failed', gateKey: 9,
+        configKey: 'dfs:x', profile: 'x', template: null,
+    });
+});
+
+test('maximal Attempt round-trips completely through attemptRecord and buildRow', () => {
+    const fixtureFields = Object.keys(MAXIMALLY_POPULATED_SOLVER_ATTEMPT);
+    assert.equal(PERSISTENT_ATTEMPT_FIELDS.size + INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS.size, fixtureFields.length,
+        'field expectations must have neither stale entries nor omissions');
+    for (const field of fixtureFields) {
+        const memberships = Number(PERSISTENT_ATTEMPT_FIELDS.has(field)) + Number(INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS.has(field));
+        assert.equal(memberships, 1, `${field} must belong to exactly one projection set`);
+    }
+
+    const direct = attemptRecord(MAXIMALLY_POPULATED_SOLVER_ATTEMPT);
+    const row = buildRow(99, 'fixture', {
+        ok: false, status: 'attempt-error', attempts: [MAXIMALLY_POPULATED_SOLVER_ATTEMPT],
+    }, 'portfolio');
+    for (const projected of [direct, row.attempts[0]]) {
+        for (const field of PERSISTENT_ATTEMPT_FIELDS) {
+            assert.deepEqual(projected[field], MAXIMALLY_POPULATED_SOLVER_ATTEMPT[field], `${field} changed during projection`);
+        }
+        for (const field of INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS) {
+            assert.ok(!(field in projected), `${field} is intentionally transient`);
+        }
+    }
+    assert.equal(row.hadAttemptError, true);
+});
+
+test('worker result structured-clone preserves the complete raw Attempt contract', () => {
+    const message = buildSolveWorkerResult('fixture-job', {
+        ok: false, status: 'attempt-error', solution: null, totalMs: 321, nodesExpanded: 4567,
+        attempts: [MAXIMALLY_POPULATED_SOLVER_ATTEMPT], deadlineTruncated: false,
+    });
+    const [transported] = globalThis.structuredClone(message).attempts;
+    for (const field of PERSISTENT_ATTEMPT_FIELDS) {
+        assert.deepEqual(transported[field], MAXIMALLY_POPULATED_SOLVER_ATTEMPT[field], `${field} changed across worker serialization`);
+    }
+    for (const field of INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS) {
+        assert.ok(!(field in transported), `${field} is intentionally transient in worker results`);
     }
 });
 

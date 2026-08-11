@@ -1,17 +1,12 @@
 # Solver improvement research notes
 
-> **Status: 4 of 5 items probed against real data (2026-07-11), zero shipped to solver code.**
-> This is a research-inspiration doc, not a committed plan — it exists to record what survived
-> contact with the actual codebase after reading three external research surveys, so neither the
-> ideas nor the probe results need re-deriving from scratch when someone picks one up. Every item
-> below has a concrete verdict (refuted, confirmed-real, needs-harder-redesign, or not-yet-probed)
-> — see "Suggested order" for the current priority read. **No solver/domain code has changed as a
-> result of any of this** — the probes are read-only analysis scripts in a scratchpad, not
-> committed here; only this doc's findings persist. When an item below moves from "probed" to "in
-> progress" (i.e. someone starts actually implementing it), pull it into its own dated plan doc
-> (see `solver-dev-tooling-plan.md` for the shape) and link it from
-> [`future-work.md`](future-work.md); fold what ships into
-> [`solver-architecture.md`](solver-architecture.md) the way every other completed plan does.
+> **Status: historical research ledger, reconciled through 2026-08-09.** Four of the five original
+> items were probed against real data in the 2026-07-11 pass. Later work has since implemented one
+> of them in a narrower sound form (repair-scoped nogood caching) and closed the learned repair-winner
+> classifier after the larger Corpus-2 rerun. This is still a research-inspiration doc, not the live
+> queue: use [`future-work.md`](future-work.md) for current priorities. The original experiments and
+> reasoning are retained below, with later status blocks where subsequent work superseded an old
+> “next step.”
 
 ## Context
 
@@ -61,7 +56,7 @@ in a more rigorous form than proposed.
 | Paper idea | Where it already lives | Note |
 |---|---|---|
 | Landmark/MST hybrid lower bound (both docs' top near-term pick) | `modules/solver/lower-bounds.ts`'s `mpMSTLowerBound`/`mcMSTLowerBound` | Exact Kruskal MST over `{pos} ∪ remaining objectives`, with must-cross's perpendicular-2nd-visit-approach distance tightening on top, soundly memoized per `(pos, mask, [per-cell axis state])`. Stronger than the "greedy connecting order" the docs suggest as a first cut. |
-| Portfolio/algorithm selection by instance features (SUNNY/SATzilla-style) | `modules/solver/attempts.ts`'s `getAttemptConfigs`, gated on `archetype.ts`'s `detectArchetype`/`getNavigableDensity` | The *architecture* (declarative, feature-keyed attempt ladder) exists; the *classifier* is 5 hand-tuned threshold rules, not learned — see gap #3 below. |
+| Portfolio/algorithm selection by instance features (SUNNY/SATzilla-style) | `modules/solver/attempts.ts`'s `getAttemptConfigs`, gated on `archetype.ts`'s `detectArchetype`/`getNavigableDensity` | The *architecture* (declarative, feature-keyed attempt ladder) exists; the *classifier* is hand-tuned rather than learned — see gap #3 below and its 2026-08-07 closure. |
 | Quality-Diversity / solution-family diversity search | `modules/solver/variety-search.ts` (exhaustive/saturated/target/budget/capped outcomes) + `domain/hint-selection.ts`'s coverage-guaranteed farthest-point selection over `domain/path-features.ts`'s `featureDistance` | A bespoke QD system in all but name: behavioral descriptors (edge-Jaccard, crossing placement, must-cross order), diversity floor, coverage guarantee. Doc 3's "occupancy-measure diversity" (Ghasemi et al.) is the same idea in RL vocabulary. |
 | Delta-debugging / instance minimization | `scripts/stress/reduce-level.mjs` | Object removal, grid-shift, portal-pair-drop, re-validated against the referee at each step. |
 | Learned difficulty prediction from solved instances | `scripts/stress/features.mjs`'s `fitRidge`/`predictRidge`/`buildChallengeModel` | Ridge regression trained on audit history, currently used only for generation-time level labeling — never wired into runtime strategy selection. See gap #3. |
@@ -95,20 +90,27 @@ achievable near objectives behind it. That's much closer to doc 2's separate "ex
 feasibility check" idea (bound `reqInt` via cycle-space/corridor capacity) than to a length bound.
 **Redirect this item to that hypothesis, not distance pruning, before trying again.**
 
-### 2. Nogood / dead-end learning
+### 2. Nogood / dead-end learning — original global key refuted; narrower sound form shipped 2026-08-07
+
+> **Later status:** the original three-field global key remains provably unsound and the experiment
+> below remains the reason not to build it. Subsequent repair-search work found a much stronger
+> within-call exact dead-state repetition signal (53.65–98.09% on seven repair-close levels) and
+> implemented a deliberately narrower solution: `modules/solver/nogood-cache.ts`, using a freshly
+> computed exact state signature rather than an incremental/under-keyed hash. It shipped default-on
+> as `STRATEGY_REPAIR_NOGOOD_CACHE`. A 20-level A/B was 5/20 vs 4/20, zero regressions, with
+> 13.7–40.9% node reductions on every level solved by either arm; a later full Corpus-2 refresh at
+> the current 36M-node budget produced a byte-identical solved-ID set. So there is **no remaining
+> “design and build a nogood cache” task** here. The historical global-key result below is retained
+> as the soundness lesson and as evidence against broadening the cache without a proof-quality key.
+
 Doc 2's top "high-impact if it works, moderate risk of bug" pick. The correctness bar is real —
 CLAUDE.md's own MST-scratch-buffer bug (`docs/solver-architecture.md`'s "History: the MST bound
 scratch buffer bug") is a direct instance of the exact caution doc 2 raises: *"learned nogoods must
 be sound regardless of solution length, not episodic."* Don't underestimate that bar.
 
-But the mining corpus already exists: `benchmark.mjs`'s `failedStrategies` + `attempts[].finalBadness`
-across the stress corpora (now fresh for Corpus 1's 102 levels, and Corpus 2 shortly) is thousands
-of recorded dead-ends with their exact `(mpVisitedMask, mustCrossMask, remaining length)` context.
-Mining "combinations that never once succeeded across N independent attempts" *offline* from data
-we already have is much safer than deriving nogoods live during search. Validate against the full
-corpus first; promote to a live prune only once a candidate rule survives cross-validation against
-a held-out slice — the exact leakage discipline doc 3 spends most of its "Bias, Leakage, and Corpus
-Construction" section on.
+The original mining idea used `benchmark.mjs`'s `failedStrategies` + `attempts[].finalBadness`
+and proposed recurring `(mpVisitedMask, mustCrossMask, remaining length)` contexts. The direct probe
+below was deliberately run before any production implementation.
 
 **Probed directly (2026-07-11) via a budget-capped exploratory search, not just corpus data —
 and found a real counterexample confirming the correctness risk is immediate, not theoretical.**
@@ -130,65 +132,28 @@ for each state whose subtree contained a solution, marked that same signature as
   cache on this signature alone would have wrongly pruned a real solution — a concrete instance of
   doc 2's own caution, found in this codebase's actual state space on the very first try.
 
-**Conclusion: the plain 3-field signature is not sound as a global nogood key.** Any real
-implementation needs either a richer signature (portal/flipper state, or something capturing
-*how* the remaining objectives are reachable, not just *how many*), or to restrict nogood scope to
-what's already provably sound (which mostly collapses back to the existing `mustPassLowerBound`/
-`mustCrossLowerBound` machinery — a new nogood rule only adds value where it catches something
-those bounds provably miss). This raises, not lowers, the bar from the original "mid-term, needs
-care" assessment — prototype the richer signature offline against corpus data (as originally
-planned) only after deciding what additional state the signature needs to regain soundness.
+**Historical conclusion, still valid for this key:** the plain 3-field signature is not sound as a
+global nogood key. Any broader future implementation needs a richer signature capturing every
+future-relevant state variable, or a proof that its scope is conservative. The repair-scoped cache
+that later shipped satisfies that requirement by using exact state identity rather than attempting
+to rehabilitate this three-field approximation.
 
-### 3. Learned portfolio selection, done properly — probed (2026-07-11), two distinct findings
-The highest-leverage near-term item, because every piece of the pipeline already exists for an
-unrelated reason. Extend the existing ridge-regression challenge model from "predict difficulty"
-to "predict which `ATTEMPT_CONFIGS` profile wins" — a classification/ranking task over the same
-feature vectors `features.mjs`'s `levelFeatures` already computes. Training data: every
-`benchmark.mjs` run's `winningStrategy` field (fresh for corpus-1 now, corpus-2 soon). This is a
-small, well-scoped experiment reusing existing code, not a new subsystem — feature extraction,
-historical-outcome logging, and even the regression-fitting code are all already written.
+### 3. Learned portfolio selection — probed 2026-07-11; larger rerun closed it 2026-08-07
+The original near-term idea was to extend the existing ridge-regression challenge model from
+"predict difficulty" to "predict which `ATTEMPT_CONFIGS` profile wins". The architecture and data
+made that cheap to test, but the later Corpus-2 rerun closed the classifier path.
 
-**Probed against the fresh Corpus-1 benchmark (85 solved levels) before building anything, same
-discipline as item #1.** Two findings, one strongly actionable without any learning at all, one a
-genuine negative result:
+**Initial Corpus-1 probe (85 solved levels).** Two findings, one actionable without learning and one
+a genuine negative result:
 
 - **79.2% of total solve time on solved levels was spent on attempts BEFORE the actual winner**
-  (516.6s of 652.0s). Per archetype: `must-cross-heavy` and `high-intersection-burden` waste
-  75-86% of their time this way and have 5-8 *distinct* winning profiles within the same archetype
-  bucket (vs. `portal-heavy`'s 6/8 dominated by one profile, still wasting 86% — an ordering
-  problem even where the profile set is right). Worst individual cases burn 8-9 failed attempts
-  and 20-26s before `repair` (the fallback-of-last-resort, deliberately tried last) turns out to be
-  the actual winner. **This is real, actionable headroom independent of any ML** — re-examining
-  `attempts.ts`'s declarative ordering for these two archetypes specifically, informed by this
-  breakdown, could pay off before any learned component exists.
-- **A naive leave-one-out 1-NN classifier (12 raw numeric features, z-scored, unweighted Euclidean)
-  scored 30.6% winning-profile accuracy — *worse* than the current archetype's own dominant-winner
-  baseline (35.3%).** Honest negative result on this attempt, not evidence the idea is dead: 85
-  labeled examples across up to 8 classes per archetype bucket is a small, high-variance dataset
-  (Corpus-2's benchmark, once it finishes, roughly quadruples it); the feature/distance choice was
-  a first cut, not engineered; and "predict the exact winning profile" (a hard multi-class problem)
-  is probably the wrong framing — "predict whether `repair` will be needed at all" (a binary
-  classifier, since `repair` accounts for a disproportionate share of the wasted-time cases above)
-  is a much easier, more directly useful target. Re-run once Corpus-2's benchmark data exists,
-  reframed as the binary question, before drawing a final conclusion.
-
-**Follow-up probe, same dataset, reframed as binary "will `repair` win":** only 10/85 (11.8%)
-levels won on repair — a genuinely rare-positive, high-variance problem at this sample size.
-Findings:
-- **Best single-feature rule** (searched over 17 raw features × every threshold): `navDensity <=
-  0.524` — precision 0.429, recall 0.600, F1 0.500. Catches 6/10 repair-winners at the cost of 8
-  false positives. Intuitively sensible (repair is a fallback that's good at sparse/twisty
-  problems where the beam/DFS profiles' typical heuristics get stuck) and — this is the point —
-  *interpretable and cheaply deployable* if it ever clears a higher bar: a one-line density check,
-  not a model to ship.
-- **5-NN over all 17 features did *worse*** (F1 0.267, recall only 0.2 — catches 2/10) than the
-  single-feature rule. Confirms item #3's first finding: more features actively hurt at n=85 with
-  only 10 positives (classic small-data curse-of-dimensionality — irrelevant dimensions drown out
-  `navDensity`'s real signal in the distance metric).
-- **Conclusion: a real but moderate signal exists (`navDensity`), not yet strong enough to act on.**
-  Both probes on this item now point the same direction — the dataset is the limiter, not the
-  premise. Re-run this exact script once Corpus-2's benchmark lands (~4x the data, and critically
-  more positive examples) before deciding whether to build or drop it.
+  (516.6s of 652.0s). Per archetype, `must-cross-heavy` and `high-intersection-burden` wasted
+  75–86% of their time this way and had 5–8 distinct winning profiles within the same archetype
+  bucket. This remains useful evidence that attempt ordering can waste substantial work.
+- A naive leave-one-out 1-NN classifier scored 30.6% winning-profile accuracy, worse than the
+  current archetype's dominant-winner baseline (35.3%). The binary “will repair win?” reframing
+  looked more promising on the small sample: `navDensity <= 0.524` reached F1 0.500, but with only
+  10 repair winners it was explicitly left pending a larger dataset.
 
 **Corpus-2 rerun (2026-08-07) closes the data-volume gate: drop the classifier.** On 725 solved
 levels with 188 repair winners, the historical `navDensity <= 0.524` rule collapses to F1 0.010
@@ -251,44 +216,40 @@ not a rigorous interior-point computation — fine for the common roughly-convex
 this corpus, but could misplace the puncture point for a highly concave obstacle shape. Worth
 spot-checking a few of the flagged levels by eye before trusting the exact numbers, but the
 overall signal (double-digit-percent blind spot on a filtered, real subset of the corpus) is
-unlikely to be an artifact of that alone. **This is now the strongest-evidence item in this whole
-doc** — real effect, real size, on real data, using a correct (not approximated) computation of
-the thing doc 3 actually proposed.
+unlikely to be an artifact of that alone. **This is now the strongest-evidence still-open item in
+this research ledger** — real effect, real size, on real data, using a correct computation of the
+thing doc 3 actually proposed.
 
 ### 5. State dominance / transposition pruning — flagged as *not* worth pursuing soon
 No cross-state dedup exists beyond lower-bound memoization (which memoizes a *bound computation*,
 not a *search decision*). Doc 2's own assessment is right that soundness here is "nontrivial to
 implement and verify" given portals, flippers, and must-turn axis-state all needing to enter the
 dominance test correctly — exactly the failure-mode class CLAUDE.md already spent a real debugging
-cycle on. Revisit only if a much stronger case emerges (e.g. profiling shows repeated re-exploration
-of provably-dominated states costing real search time on the current corpus).
+cycle on. Later direct DFS measurement strengthened the economic case against it: the crude
+signature's apparent 92–99% duplication collapsed to 0.5–16%, typically ~1–2%, under an actually
+sound signature, with substantial signature-computation overhead. Do not revive this as fresh work
+without materially new evidence.
 
-## Suggested order, if any of this gets picked up
+## Suggested order, reconciled 2026-08-09
 
-**Revised (2026-07-11) after probing all four items against real data.** Every item now has at
-least one experimental result behind it — none of this is untested speculation anymore.
+This section supersedes the original 2026-07-11 ranking. Current live priority still belongs in
+`future-work.md`; this is only the status ordering of the five research ideas in this document.
 
-1. **Strongest evidence, build first: homotopy-class curation axis (item #4).** Real, measured,
+1. **Still-open strongest evidence: homotopy-class curation axis (item #4).** Real, measured,
    double-digit-percent effect on real data (16.6% of cross-homotopy-class hint pairs rated
-   "similar" by current curation) using a correct computation, not a proxy. The clearest
-   evidence-to-effort ratio of anything in this doc.
-2. **Second: learned portfolio selection (item #3), reframed as the binary `repair`-needed
-   question.** Real, actionable 79%-wasted-time finding stands regardless of any learning; the
-   binary classifier itself found a moderate, interpretable signal (`navDensity`) not yet strong
-   enough to act on at n=85 — re-run once Corpus-2's benchmark (in progress) roughly quadruples
-   the dataset before deciding to build or drop it.
-3. **Needs a harder redesign before it's buildable: nogood mining (item #2).** Direct
-   instrumented search found a real counterexample — a naive `(mpVisitedMask, mustCrossMask,
-   remaining length)` signature is provably unsound as a global nogood key in this codebase's own
-   state space, not just in theory. Any future attempt needs a richer signature (or to fall back
-   to what the existing MST lower bounds already prove) before it can be trusted, which is a
-   bigger design task than originally scoped, not a "mid-term, needs care" item anymore.
-4. **Refuted, redirected, not yet re-tested: articulation-point pruning (item #1).** The original
-   distance-vs-discrepancy premise is dead (negative correlation, explained). The redirected form
-   (corridor-capacity bound on `reqInt`) hasn't been probed yet — do that before implementing it.
-5. **Not now:** state-dominance/transposition caching — correctness risk too high relative to
-   current payoff evidence, and now also relative to every other item on this list having actual
-   supporting data.
+   "similar" by current curation). This remains the clearest unclosed item here.
+2. **Implemented, no build task: nogood learning (item #2).** The naive global key is unsound;
+   the viable repair-scoped exact-state cache has shipped default-on. Only revisit with evidence
+   for a broader or cheaper sound form.
+3. **Closed: learned portfolio classifier (item #3).** The larger Corpus-2 rerun refuted the
+   historical density rule and did not produce a sufficiently useful replacement. Keep the
+   separate attempt-ordering-cost finding, but test ordering directly rather than rebuilding the
+   classifier.
+4. **Refuted, redirected: articulation-point pruning (item #1).** The original
+   distance-vs-discrepancy premise is dead. The redirected corridor-capacity form remains a
+   different hypothesis and must be re-probed before implementation.
+5. **Deprioritized: state-dominance/transposition caching (item #5).** Sound duplicates are too
+   sparse and expensive to identify for the measured payoff.
 
 ## Where solution-space fingerprinting fits
 
@@ -321,18 +282,16 @@ rather than reading about any one tool in isolation.
    the section above exists to operationalize.
 3. **Turn a provenance-corroborated fact into an attempt-config bias**, e.g. try attempt profiles
    that respect a corroborated must-cross order first, rather than the default ladder order — a
-   per-level, manual application of what item #3 above aims to make automatic corpus-wide.
+   per-level, manual application of the attempt-ordering question without pretending the closed
+   learned classifier solved it.
 4. **If the level has no mined hints yet**, `hint-corpus-expand.mjs`'s prefix-anchored completion
    (System B) can bootstrap from a partial known-good path — including, after this session's
    `human-solved` addition, a path a human found manually — rather than starting blind search over.
-5. **For the ladder-level fix, not just this one level**: item #3's portfolio-selection finding is
-   the direct line to solving *more* levels at once, not just this one — re-run the binary
-   `repair`-needed reframing described there (a throwaway scratchpad probe, not a committed script;
-   see item #3 for the exact method: single-feature-threshold search over `features.mjs`'s
-   `levelFeatures`, labeled by `benchmark.mjs`'s `winningStrategy`) once corpus-2's benchmark (in
-   progress as of this doc's last update) has quadrupled the evidence pool, and fold a strong-enough
-   signal into `ATTEMPT_POLICY`/`detectArchetype` (`solver/policy.ts`, `solver/archetype.ts`)
-   instead of applying it level-by-level.
+5. **For ladder-level changes, use direct evidence rather than the closed classifier.** The old
+   “rerun repair-needed prediction once Corpus-2 lands” step is complete and negative. Current
+   ordering work should use attempt telemetry, known winning configurations, starvation/cutoff
+   evidence, and direct matched-budget A/Bs. `future-work.md` is the source of truth for whichever
+   ordering or allocation question remains open.
 6. **Don't spend more mining budget on a level that's already maximally explored.** Check
    `provablyExhaustive` (from `search.termination === 'exhaustive'`) before investing in a deeper
    pass — a plateaued-but-not-exhaustive level is a better target for a dedicated

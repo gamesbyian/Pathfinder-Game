@@ -1,15 +1,10 @@
 # Solver-aware game architecture and rules
 
 > **Status:** living plan/reference document, consolidated 2026-08-06 from two parallel
-> investigations — the state-representation/architecture questions below, and a separate pass over
-> where the **game's own rule implementations** (not just its architecture) diverge from what the
-> solver assumes. Two of this document's own previously-open items (the beam dedup soundness audit
-> and duplicate-rate measurement) are resolved below with real numbers, plus a second, more severe
-> bug the audit surfaced along the way. One rule-correctness bug found during the parallel
-> investigation has already been fixed and shipped on this branch. Point-in-time evidence for
-> everything here lives in dated reports (cited inline); this document is the living, reprioritized
-> summary — when the two disagree, the dated report is the primary source and this file should be
-> corrected to match, not the other way around.
+> investigations and reconciled through 2026-08-09. Point-in-time evidence for everything here
+> lives in dated reports (cited inline); this document is the living, reprioritized summary — when
+> the two disagree, the dated report is the primary source and this file should be corrected to
+> match, not the other way around.
 >
 > This document asks two related lateral questions: (1) are there changes to the **game's rule
 > representation, domain model, compilation pipeline, or mechanic contracts** that could make the
@@ -18,12 +13,10 @@
 > solver's own move-generation — silently disagree with each other in ways that cost solvability or
 > correctness?
 >
-> The answer to both is yes, but several obvious versions of the first question have already been
-> tested and found weak. In particular, exact transposition caching is not an unmeasured
-> high-priority opportunity: a sound DFS signature was measured on 2026-07-17 and found to have
-> modest duplicate rates with prohibitive per-node overhead, and the equivalent beam-specific
-> measurement (this document's own former top priority) is now done too, with an even smaller
-> ceiling — see "Resolved" below.
+> Several once-open findings in this document have since been resolved: the beam-dedup audit and
+> duplicate-rate measurement, the fixed-width beam-key overflow, the mechanic-cardinality schema
+> gap, the live-play rule drifts, and the flipper single-use design question. Historical reasoning
+> is retained below, but resolved items are labelled as such rather than left looking actionable.
 
 ## Current baseline
 
@@ -54,7 +47,7 @@ This principle is already supported by hard-won repository evidence:
 - the MST scratch-buffer correctness bug;
 - the corrected `mitm-frontier-probe.mjs`, whose original key omitted future-relevant state;
 - the 2026-07-17 DFS transposition premise test, where a crude key reported 92–99% apparent duplication but the sound key found only 0.5–16%;
-- **the beam dedup key's fixed-width bit-packing overflow, below** — a *new* instance of the same family of bug, found by applying this exact principle to a mechanism nobody had re-checked since the per-mechanic object caps were raised.
+- **the beam dedup key's fixed-width bit-packing overflow, below** — another instance of the same family of bug, found by applying this exact principle to a mechanism nobody had re-checked since the per-mechanic object caps were raised.
 
 The lesson is broader than transposition tables: a compact state summary is useful only after both its **soundness** and its **economic value** have been measured — and re-measured whenever an assumption it was built under (like "at most 4 of any mechanic") quietly changes elsewhere in the codebase.
 
@@ -420,7 +413,7 @@ This should be pursued only where the limits already match the game's intended d
 A separate investigation, run in parallel with the beam-dedup work, asked a different question:
 not "is the solver's internal state representation sound," but "do the game's own **three
 independent implementations** of move legality and the win condition actually agree with each
-other?" Full findings and the fix: `reports/2026-08-06-game-rules-solver-alignment-plan.md`.
+other?" Full findings and the fixes: `reports/2026-08-06-game-rules-solver-alignment-plan.md`.
 
 Pathfinder's move-legality/win-condition logic is implemented independently in (at least) three
 places — `domain/move-rules.ts`'s `isValidMove` (live play), `domain/path-validator.ts`'s
@@ -511,19 +504,20 @@ lowest-risk item from that investigation, now shipped: it changes no game behavi
 the must-cross-lock gap above into an automatic, reproducible CI-style finding instead of another
 by-hand report.
 
-### Open design question: are flipping filters actually single-use?
+### Resolved: flipping filters are single-use
 
-Neither `isValidMove` nor `validateCandidatePath` blocks re-entering an already-crossed flipping
-filter, while the solver's `search-state.ts` treats every flipper as strictly single-use
-(`flipperUsedMask` permanently blocks re-entry once set). CLAUDE.md's own wording — "flips to the
-other axis **each time the path uses it**" — reads more naturally as "this filter alternates on
-repeated crossings" than the implemented global-parity model, and none of the three
-implementations actually do that literal reading. 957 of corpus-2's 1700 levels carry at least one
-flipping filter, so if re-entry is intended to be legal (matching what live play and the referee
-already permit), the solver is discarding real solutions on a sizable population — a
-self-inflicted incompleteness, not a hard combinatorial wall. Needs a design decision before any
-code change: check whether any stored stress-corpus witness solution already re-enters a flipper
-(a straightforward existence check) before assuming this is worth solver engineering effort.
+This question was initially open because live play/the referee did not explicitly reject re-entry
+while `search-state.ts` did. The design and implementation audit subsequently resolved it in favor
+of the solver's existing restriction: a flipping filter is single-use. The rule is now codified
+explicitly in `isValidMove`/the referee rather than relying on axis matching and edge reuse to
+coincidentally make a second crossing impossible. This also resolves the apparent “per-filter local
+flip” alternative below: with only one use per filter, a local successive-use toggle would never
+actually toggle, so the level-wide crossing-order parity is the meaningful flipping mechanic.
+
+Do not treat the older “check whether witnesses re-enter a flipper before deciding” wording from
+this investigation as an outstanding task. The design owner confirmed the global crossing-order
+coupling is intentional, and the corresponding documentation was corrected to describe the actual
+single-use/global-parity rule.
 
 ### Fixed: added an in-envelope stress stratum, separate from corpus-2's complexity envelope
 
@@ -578,7 +572,9 @@ the only way to reach this configuration.
 runners already parallelizes what the report measured as a 47,671s sequential run) and committed
 **corpus-1 95/102, corpus-2 684/1700** to `main` — corpus-2 up from 605/1700, **+79 solves**, more
 than the report's own predicted +57, likely compounding with other solver fixes landed since the
-report's 2026-07-25 measurement. This is now the corpus's real baseline, not an estimate.
+report's 2026-07-25 measurement. This is a dated result of that budget change, not the current
+Corpus-2 solved-count source of truth; use the current baselines/future-work ledger for current
+counts.
 
 ### Resolved: the global-parity flip is intentional design, not a smell
 
@@ -588,10 +584,10 @@ axis to traversal history elsewhere on the grid — originally flagged as global
 defeats local/regional reasoning about "sets of possible completions," with a per-filter local flip
 (each filter alternates only on its own successive uses) proposed as a possible fix.
 
-**That alternative isn't actually available**: flipping filters are single-use (see "Fixed" above),
-so "its own successive uses" can never exceed one — a strictly local model collapses to "always the
-declared axis," making a flipping filter indistinguishable from a plain one. The global coupling is
-the *only* thing currently giving "flipping" any meaning at all.
+**That alternative isn't actually available**: flipping filters are single-use (see "Resolved"
+above), so "its own successive uses" can never exceed one — a strictly local model collapses to
+"always the declared axis," making a flipping filter indistinguishable from a plain one. The global
+coupling is the *only* thing currently giving "flipping" any meaning at all.
 
 **Confirmed with the design owner (2026-08-06)**: this interactivity is deliberate — a level
 designer can force a specific flipper-crossing order using other board constraints (blocks,
@@ -607,9 +603,9 @@ implementation was already correct and intentional.
 
 ## Consolidated ranked research programme
 
-Merges both investigations' priorities into one order. Items 1–15 below are done; everything after
-is open, ranked by the same payoff-per-risk logic both source investigations used independently and
-arrived at similar conclusions from.
+Merges both investigations' priorities into one order. Items 1–15 below are done; item 16 is
+explicitly deprioritized and item 17 is also done. The larger Tiers 3–5 research menu is triaged
+separately below rather than being implicitly labelled open merely because its numbers are higher.
 
 1. ~~Audit current beam dedup soundness~~ — **done**: unsound as suspected, but the fix was to
    correct the key's structural fragility, not remove the mechanism — see "Resolved" above.
@@ -626,14 +622,13 @@ arrived at similar conclusions from.
    real gap to `solver-stress-refresh.yml`'s routine defaults — raised to the report's own measured
    OFF@36M configuration after explicit sign-off, then verified via a real dispatch: **corpus-1
    95/102, corpus-2 684/1700** committed to `main` (+79 vs. the old 605/1700 baseline) — see "Fixed"
-   above.
+   above. These are dated campaign counts, not current live totals.
 6. ~~Add an in-envelope stress corpus stratum~~ — **done**: 200 levels at the shipped game's
-   documented caps, initial solve pass 124/200 (62.0%) vs. corpus-2's own 35.6% — confirming the
-   underlying hypothesis — see "Fixed" above.
-7. ~~Resolve the flipper single-use design question~~ — **done**: ruled single-use (a second
-   crossing is impossible in practice once the filter's required axis flips and the line can't
-   retravel its own edge), codified explicitly in `isValidMove`/the referee rather than relying on
-   axis-matching and edge-reuse to coincidentally combine into the same result — see "Fixed" above.
+   documented caps, initial solve pass 124/200 (62.0%) vs. corpus-2's own then-current 35.6% —
+   confirming the underlying hypothesis — see "Fixed" above.
+7. ~~Resolve the flipper single-use design question~~ — **done**: ruled single-use, codified
+   explicitly in `isValidMove`/the referee rather than relying on axis-matching and edge-reuse to
+   coincidentally combine into the same result — see "Resolved" above.
 8. ~~Prototype static forced-sequence macro transitions~~ — **measured and deprioritized**: the
    "First experiment" this item called for was run — median forced-chain length 1, p90 2, across
    280,000+ live cells in all four corpora — the "long deterministic stretches" premise doesn't
@@ -679,254 +674,132 @@ arrived at similar conclusions from.
     forced-revisit check applies to just 0.036% of branches. All three of the multilingual doc's
     Tier 2 candidates (separator-state resource DP, bounded obligation-compatibility MDD, backward
     compatibility envelopes) are now scored and closed.
-
-## Still open
-
-16. **Prototype a shared compiled graph with one additional consumer** — deprioritized in favor of
-    items 12–13 above, which turned out to be the more concrete, lower-risk way to spend the same
-    "expose mechanic/graph semantics consistently" effort this item was chasing. The two most
-    obvious candidate consumers both disqualify themselves on inspection: the reference oracle's
-    entire value is sharing **zero** implementation with the solver (see `oracle.mjs`'s own file
-    doc) — wiring it to a shared compiled graph would undermine the exact property that makes its
-    differential-testing results meaningful; the editor validator (`level-validation.ts`) has no
-    general adjacency table at all (its checks are ad-hoc small-radius inline loops), so there's no
-    low-risk extraction point without a larger, unscoped refactor. Not re-proposed without a
-    genuinely new candidate consumer.
+16. **Prototype a shared compiled graph with one additional consumer** — **deprioritized** in favor
+    of items 12–13 above. The two obvious consumers disqualify themselves: the reference oracle's
+    value depends on sharing zero implementation with the solver, and the editor validator has no
+    low-risk general-adjacency extraction point. Revisit only with a genuinely new consumer.
 17. ~~Winning-path archaeology (Tier 1, item 2 of the multilingual doc's section 16 ranking)~~ —
     **done**: see `reports/2026-08-06-winning-path-archaeology.md`. Replayed 40 sampled corpus-2
     winning paths through the real `getNeighbors`/`scoreMove` primitives; the heuristic ranks the
     known-correct move 1st among legal candidates ~70% of the time and averages a mean rank of
-    1.3-1.4, in BOTH cold-solved (72.3%) and cold-unsolved (69.5%) buckets — a small gap on a
+    1.3-1.4, in both cold-solved (72.3%) and cold-unsolved (69.5%) buckets — a small gap on a
     40-level sample. "Early ordering failure" does not look like a dominant driver of corpus-2's
-    unsolved levels. This closes out all three Tier 1 "evidence engine" items. **Consequence for
-    Tier 2 item 7** (depth-reservoir beam / Rectangle Search, which explicitly gates on this
-    result): inconclusive, leaning away from urgency — see the report's own verdict for why local
-    child-rank data can't settle the GLOBAL beam-frontier-crowding question Rectangle Search
-    actually depends on.
+    unsolved levels. This closes out all three Tier 1 "evidence engine" items.
 
 ### Triage of the remaining research menu (Tiers 3-5)
 
-With Tier 1 (all 3 items) and Tier 2 (all 4 items, including item 7 above) now addressed, here is
-where the multilingual doc's section 16 ranking's remaining 10 items (Tiers 3-5) stand, evaluated
-against evidence already gathered this session rather than left as an undifferentiated backlog:
+With Tier 1 and Tier 2 now addressed, here is where the multilingual doc's section 16 ranking's
+remaining items stand, evaluated against evidence already gathered rather than left as an
+undifferentiated backlog:
 
 - **Tier 3 item 8 (contrastive failure-directed activity)**: no cheap kill-criterion check exists
-  from current telemetry — its premise ("the solver repeatedly discovers the same shape of failure
-  but doesn't remember it") would need new per-branch sibling-outcome instrumentation during search
-  that doesn't exist yet. Not started; no evidence yet either way.
+  from current telemetry — its premise would need new per-branch sibling-outcome instrumentation
+  during search that doesn't exist yet. Not started; no evidence yet either way.
 - **Tier 3 item 9 (hazard-based adaptive capping / participation floors)**: partially already
-  validated by precedent, not merely hypothetical — "specialist starvation is real" was the exact
-  finding behind the already-shipped `ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION` fix (2026-07-30, see
-  `docs/solver-architecture.md`). A fully general survival-model version would need new
-  censored-observation hazard-curve telemetry per attempt family, not yet built.
-- **Tier 3 item 10 (bidirectional multi-abstraction CEGAR)**: explicitly needs "the atlas" as an
-  input — now exists (5,518 branches). Real candidate for future investment, but a full CEGAR
-  refinement loop is a substantial offline research machine in its own right (idea D's own
-  framing), not a single-probe-sized task — should be raised and scoped as its own effort, not
-  started opportunistically alongside other work.
-- **Tier 4 item 11 (detour-gadget discovery + slack allocation)**: "newly elevated," ranks highly
-  per the doc. Its own "safe first experiment" (section 10.4) is genuinely cheap — mining EXISTING
-  stored solutions for interface-equivalent subpaths with different length/intersection deltas,
-  no new solver internals required. **The single most actionable not-yet-done item in the whole
-  remaining menu** — comparable in cost to the Tier 2 probes already built. Recommended as the next
-  concrete candidate if this line of work continues.
-- **Tier 4 item 12 (interface-preserving repair surgery)**: explicitly gated ("build only after
-  residual interfaces and causal windows have evidence") — residual interfaces are measured
-  (separator census), but "causal windows" (repair intervention-window score, section 11.1) are
-  not. Not ready.
-- **Tier 4 item 13 (partial-order / commuting-segment analysis)**: the doc's own "Priority" note
-  ranks this "below separator DP and backward envelopes, but above topology-first skeleton
-  compilation" — since both separator DP and backward envelopes are now closed, this becomes the
-  next-ranked Tier 4 item by the doc's own stated ordering. Its "safer first step" (section 7.2) is
-  again a cheap offline mining exercise over stored solutions — a second legitimately cheap
-  candidate alongside item 11.
-- **Tier 4 item 14 (Eulerian/local-transition relaxation ladder)**: "begin with E0 parity and
-  transition-domain propagation" — E0 alone (endpoint parity, incident-edge capacity, mandatory
-  crossing modes) is a bounded, cheap check, closest in shape to the Tier 2 probes already built.
-  A real, comparably-cheap candidate; not started.
-- **Tier 4 item 15 (topology-signature diversity)**: confirmed not started anywhere in this
-  codebase — grepped `docs/hint-curation.md` and `modules/domain/hint-selection.ts` for
-  homotopy/topology, zero hits, consistent with Part I item 3's own framing (today's path-distance
-  metric conflates homotopy classes). The diagnostics-first scope (12.1-12.3) is itself an 8-part
-  layered signature — a bigger build than a single probe, not started.
-- **Tier 5 items 16-17 (topology-first skeleton compilation; automatic rule synthesis)**: correctly
-  remain moonshots. Item 16 needs real new technology (ZDDs / frontier-based enumeration) this
-  session found no reason to second-guess. Item 17 is explicitly gated on "the atlas, counterexample
-  machinery [item 10/CEGAR], and proof-certificate conventions" — the atlas exists, CEGAR doesn't;
-  correctly stays deferred.
+  validated by precedent — "specialist starvation is real" was the exact finding behind the
+  already-shipped `ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION` fix. A fully general survival-model
+  version would need new censored-observation hazard-curve telemetry per attempt family.
+- **Tier 3 item 10 (bidirectional multi-abstraction CEGAR)**: explicitly needs the atlas as an
+  input — now exists (5,518 branches). A full CEGAR refinement loop is a substantial offline
+  research machine, not a single-probe-sized task; scope it as its own effort if pursued.
+- **Tier 4 item 11 (detour-gadget discovery + slack allocation)**: its safe first experiment is a
+  cheap mining pass over existing stored solutions for interface-equivalent subpaths with different
+  length/intersection deltas. One of the most actionable not-yet-done items in the remaining menu.
+- **Tier 4 item 12 (interface-preserving repair surgery)**: gated on residual interfaces and causal
+  windows. Residual interfaces are measured; causal windows are not. Not ready.
+- **Tier 4 item 13 (partial-order / commuting-segment analysis)**: the safer first step is another
+  cheap offline mining exercise over stored solutions. A plausible next measurement, not built.
+- **Tier 4 item 14 (Eulerian/local-transition relaxation ladder)**: E0 alone is a bounded, cheap
+  check close in shape to the Tier 2 probes. Not started.
+- **Tier 4 item 15 (topology-signature diversity)**: not started; diagnostics-first scope is a
+  larger build than a single probe.
+- **Tier 5 items 16-17 (topology-first skeleton compilation; automatic rule synthesis)**: remain
+  moonshots. Item 17 is gated on the atlas, CEGAR/counterexample machinery, and proof-certificate
+  conventions; the atlas exists, CEGAR doesn't.
 
-**Bottom line**: this triage does not recommend building all ten remaining items, or picking one
-unprompted. Two (Tier 4 items 11 and 13) stand out as genuinely cheap, well-scoped "mine existing
-stored solutions" measurements comparable in cost to the Tier 2 probes already shipped — the
-natural next candidates if this research line continues. The rest either need real new
-instrumentation (items 8, 9's general form, 14, 15), a substantial standalone build (item 10's
-CEGAR loop, item 12 once its own prerequisite exists), or stay correctly deferred as moonshots
-(items 16-17).
+**Bottom line**: this triage does not recommend building all remaining items. Tier 4 items 11 and
+13 stand out as cheap, well-scoped “mine existing stored solutions” measurements comparable in cost
+to the Tier 2 probes; the rest need new instrumentation, a substantial standalone build, or remain
+correctly deferred.
 
 ## What is most likely to find more solves?
 
 Based on evidence from both investigations, the plausible direct routes are:
 
 1. **Offline solve-budget decoupling** — no longer a hypothesis: verified via a real dispatch at
-   **+79 corpus-2 solves** (605 → 684/1700) from configuration alone.
+   **+79 corpus-2 solves** (605 → 684/1700) from configuration alone. Treat those counts as the
+   dated experiment result, not the current live corpus total.
 2. **Region/separator features used as guidance**, provided they add predictive information beyond
-   current features.
+   current features; the three narrow hard-prune probes already scored are closed.
 3. **Optional generation provenance**, especially for generated corpora and portfolio selection.
 
-The flipper single-use question (previously listed here as a conditional route) is now resolved
-the other direction: single-use is the correct, intentional design (see "Fixed" above), not a
+The flipper single-use question is resolved: single-use is the correct, intentional design, not a
 solver-side restriction to relax. It is no longer a candidate lever for more solves.
 
 ## What should the solver do with this session's game-rule-alignment work?
 
-Worth being explicit about what this session's fixes (must-cross lock, flipper single-use, the
-`isValidMove` must-turn gap) actually were: in every case, `modules/solver/*.ts` was **already
-correct** — these were live-play/referee catch-up fixes, found precisely *because* comparing the
-solver's own behavior against `move-rules.ts` exposed the drift (the third fuzzer arm, item 4
-above). So "take advantage of the alignment work" is not "the solver needs new mechanic support" —
-it already had it. Three things a solver-improvement effort actually gets from this work:
+Worth being explicit about what this session's fixes actually were: in every case,
+`modules/solver/*.ts` was **already correct** — these were live-play/referee catch-up fixes, found
+because comparing the solver's behavior against `move-rules.ts` exposed drift. Three things a
+solver-improvement effort actually gets from this work:
 
-1. **The hint corpus is now safe to trust without a landmark-drift caveat.** Before these fixes, a
-   solver-found path satisfying must-cross/must-turn could in principle have been rejected by the
-   live referee (or vice versa) on the narrow cases the drift covered. `npm run test:hint-path-oracle`
-   already confirms 160/160 published levels' stored hints are still PLAY-valid post-fix (checked
-   2026-08-06) — a real, if narrow, regression check that this alignment work didn't retroactively
-   invalidate anything already shipped.
-2. **The in-envelope stratum (item 6) is the concrete next corpus to point solver-improvement work
-   at.** It's the only corpus built at the game's actual documented object-count maxima
-   (4 must-pass, 4 must-cross, 4 flippers, 3 portal pairs) rather than at whatever a generator
-   happens to produce; its initial 62.0% solve rate vs. corpus-2's 35.6% (opposite of what "more
-   constraints" would naively predict — see item 6) means it stresses a different failure mode than
-   either existing stress corpus. Any future scoring/pruning/attempt-policy tuning should be
-   validated against it alongside corpus-1/2, not just the two pre-existing corpora.
-3. **A measured, not yet built, pruning opportunity**: `search.ts`'s hot loop checks
-   `mustPassLowerBound`/`mustCrossLowerBound`/`surroundLowerBound`/`adjTurnLowerBound` as four
-   **independent** comparisons against the same `rSteps` budget (each rejects a move if *that one*
-   bound alone exceeds the remaining steps) rather than as a single combined bound. This is sound
-   as written — no correctness risk — but a level with several simultaneously-outstanding
-   obligations (exactly the shape the in-envelope stratum was built to contain) gets no benefit from
-   their combination. **Do not naively sum them** — CLAUDE.md's own memoization gotcha explains why
-   independently-derived remaining-distance bounds are not generally additive along one shared path
-   (the same steps can serve two obligations at once), and a naive sum could push an admissible
-   bound past correctness into a false "unsolvable," the exact failure class the MST-bound
-   scratch-buffer bug already produced once. Before building anything, measure whether pruning is
-   actually the bottleneck on in-envelope failures (vs. scoring or attempt-ladder exhaustion) —
-   per this document's own repeated "measure before build" outcome (macro transitions, symmetry).
-   If it is, any combined bound needs the same differential-testing rigor `mustCrossLowerBound`'s
-   own cache key already required, not just "tests still pass."
-4. **Fix the cardinality gap in `docs/mechanic-state-contracts.md`'s "Cardinality risk" section**
-   before any future stress generator is extended to place more surround/must-turn/adjacent-turn
-   landmarks — a small, targeted assertion, not urgent today since no current generator triggers it,
-   but exactly the kind of gap that turns real the next time someone raises a generator's cap
-   without checking every place the old cap was assumed (the beam-dedup incident this document
-   opened with, again).
+1. **The hint corpus is safe to trust without a landmark-drift caveat.** `npm run
+   test:hint-path-oracle` confirmed published stored hints remain PLAY-valid after the alignment
+   fixes.
+2. **The in-envelope stratum is a useful player-envelope validation corpus.** Its initial 62.0%
+   solve rate was materially different from the then-current Corpus-2 result. Validate future
+   shared solver changes against it alongside corpus-1/2 where relevant.
+3. **A measured combined-obligation question remains conceptually interesting, but the first joint
+   must-pass/must-cross tour probe has already been scored and closed as too weak.** Do not naively
+   sum independent lower bounds; any stronger combined bound still needs an admissibility proof and
+   differential testing.
+4. ~~**Fix the cardinality gap before raising landmark caps.**~~ **Done 2026-08-06.**
+   `validateRawLevel` now rejects more than 30 mustPass/mustCross/surround/mustTurn/adjacentTurn
+   objects, matching the safe range of `prep.ts`'s `(1 << n) - 1` masks. The mechanic-contract
+   document records the bound. This is a historical lesson about enforcing representation limits,
+   not an outstanding action item.
 
 One item that looked promising from first principles and is now a settled negative result, not an
-untested hypothesis: **general, fully-sound transposition caching**, for both DFS (measured and
-found weak, 2026-07-17) and beam (measured and found weak the same way, 2026-08-06 — see "Resolved"
-above: beam's true-duplicate ceiling is 0.019%, smaller than DFS's, so a sound key would merge
-almost nothing). This should not be re-proposed without materially new evidence. **Beam's existing
-(unsound-by-design) dedup mechanism is a different matter, corrected same day as first reported
-here**: it was initially, wrongly, judged safe to remove outright; a corrected measurement found it
-costs real solves (25% divergence on a stress-corpus-2 sample) via width/diversity management, not
-correctness, so it was kept and only its structural bit-packing bug was fixed. Do not conflate "a
-fully sound key isn't worth building" with "the existing coarse mechanism isn't worth keeping" —
-this document's own history is the cautionary example of that exact conflation.
+untested hypothesis: **general, fully-sound transposition caching**, for both DFS and beam. Beam's
+existing coarse dedup mechanism is different: it has measured value as width/diversity management
+and should be kept, while its former structural bit-packing bug is fixed.
 
 ## Non-goals and cautions
 
 - Do not reopen a general, *fully sound* DFS or beam transposition/dedup key without materially new
   evidence, such as an incremental sound key with radically lower cost than either measurement
-  found. This is separate from beam's existing coarse dedup mechanism, which has measured value and
-  should be kept — only fix genuine structural bugs in it (as done 2026-08-06), don't remove it on
-  the assumption that "unsound" implies "worthless."
+  found. This is separate from beam's existing coarse dedup mechanism, which has measured value.
 - Do not derive a production key from an incomplete field list, and do not assume a field's
-  intended bit-width is actually enforced — verify against the current, not the original, object
-  caps (the beam-dedup overflow bug's root cause).
+  intended bit-width is actually enforced — verify against the current object caps.
 - Do not treat advisory region facts as prunes without proof.
 - Do not make gameplay call solver hot-path code, or make the solver depend on browser/controller
   machinery.
 - Do not assume a more compact representation is faster; benchmark it.
 - Do not count construction-guided or hint-guided solving as cold solving.
 - Do not redesign player-facing rules solely for solver convenience unless the formulations are
-  genuinely equivalent — the per-filter local-flip question was exactly this kind of decision, and
-  it was raised with the design owner rather than made unilaterally (resolved: the global coupling
-  is intentional, see "Resolved" above).
-- Do not assume the three independent rule implementations (live play, referee, solver) agree just
-  because each one individually looks correct — verify with a differential check, not a read-through.
+  genuinely equivalent.
+- Do not assume the independent rule implementations agree just because each one individually
+  looks correct — verify with a differential check, not a read-through.
 
 ## Conclusion
 
 Pathfinder is already highly solver-conscious, and much of the obvious state-merging territory has
-been investigated and closed with real measurements rather than intuition. Both of this document's
-former top-priority items (beam dedup soundness and duplicate-rate) are now resolved: the *sound*
-duplicate ceiling is even smaller than DFS's, and the shipped key is unsound almost every time it
-fires — but, corrected same day, disabling the mechanism entirely was measured to cost real solves,
-because its practical value was never about soundness in the first place, it was implicit beam-width
-management. A second, independent bit-packing bug made the *existing* key actively unsafe on a real,
-sizable population regardless; that bug is fixed, the mechanism is kept. The state-space-compression
-thesis that motivated this document's original framing (a *fully sound* key would meaningfully
-shrink the search) has now been tested twice (DFS, beam) and found weak both times — but "the sound
-version isn't worth building" and "the existing unsound version isn't worth keeping" turned out to
-be two different questions with two different answers, a distinction this document itself initially
-got wrong before correcting it the same day.
+been investigated and closed with real measurements rather than intuition. The beam-dedup work is
+the clearest cautionary example: the fully sound duplicate population is tiny, the production key
+is deliberately coarse, disabling that coarse mechanism costs solves because it manages beam width,
+and the genuinely broken fixed-width encoding underneath it was fixed without removing the useful
+heuristic behavior.
 
-The parallel rule-implementation-drift investigation found a genuinely different, complementary
-class of opportunity: not "can we compress the state space," but "do the game's own independent
-rule implementations actually agree with each other" — and the answer was no, twice, in ways that
-had already silently reached live gameplay (the flipping-filter entry-axis gap, then the
-must-cross-lock gap, the second found only because the first prompted extending the differential
-fuzzer to actually check `isValidMove` against the other two implementations). Both fixes and the
-fuzzer extension are shipped, and a third rule question — whether flipping filters are meant to be
-single-use — resolved toward keeping the solver's existing restriction, now codified explicitly in
-live play too. A fourth, independent thread — offline solve-budget decoupling — found that the
-largest measured lever in either investigation required no algorithm at all, only recognizing that
-`solver-stress-refresh.yml`'s routine defaults had silently inherited a latency constraint meant for
-a different calling context; verified via a real dispatch at **+79 corpus-2 solves** (605 → 684/1700).
-A fifth, measurement-only addition — the in-envelope stress stratum — confirmed directly (124/200 =
-62.0% solved vs. corpus-2's own 35.6%) that corpus-2's raised object caps were indeed measuring reach
-beyond the shipped game's envelope rather than player-facing capability. A sixth thread — the most
-novel implementation idea in this whole document, static forced-sequence macro transitions — was
-measured before being built, per its own stated first experiment, and the premise didn't hold:
-forced chains in this game's levels are short (median 1, p90 2) and rare, not the long deterministic
-stretches the mechanism needs to pay for its own complexity. Deprioritized as a settled negative
-result, not because it was never tried. A seventh thread — whether the flipping filter's global
-crossing-order coupling should be decomposed into a per-filter local flip — turned out not to be a
-live alternative at all once single-use was confirmed (a strictly local model collapses to "no flip
-ever," since a filter can't have a second use to flip on); raised with the design owner directly,
-who confirmed the coupling is the intended puzzle mechanism, with neither the solver nor the editor
-showing any live need to change it. An eighth thread — auditing exact level automorphisms before
-ever considering canonicalization — reused the production 8-way display-variant transform to check
-whole-level symmetry across all four corpora and found it essentially confined to the published
-corpus, and rare even there (2.5% of published levels manifest the one concretely-actionable shape,
-0% of 2,002 procedurally-generated levels have any symmetry at all). Deprioritized for the same
-reason as macro transitions: real, verified, too rare to be worth building for.
+The parallel rule-alignment investigation found a complementary class of issues: independent rule
+implementations had drifted. The flipping-filter entry-axis gap, must-cross lock gap, must-turn
+win-metric drift, and corresponding differential-fuzzer coverage were all corrected; the flipper
+single-use/global-parity design questions were resolved rather than left open. Offline budget
+separation, the in-envelope corpus, mechanic contracts, schema cardinality enforcement, symmetry
+measurement, forced-chain measurement, and the three Tier-2 shadow reasoners likewise all reached
+explicit outcomes.
 
-There is no single "strongest remaining idea" left from this document's own accumulated agenda —
-every concretely-scoped item from both source investigations (region/separator reasoners included)
-has now run to a real, verified conclusion. What remains is the research docs' own larger unscored
-menu (CEGAR-driven propagator design, automatic pruning-rule synthesis, ~14 other ideas in
-`solver-next-frontier-2026-08-02.md`/the multilingual update) — genuinely open territory, not a
-next step this document can responsibly rank without first doing the same "measure before build"
-work the closed items already received.
-
-"Expose mechanic and graph semantics consistently to solvers and oracles" — previously listed here
-as the top remaining idea — is now done two different ways rather than one: the oracle fuzzer's
-differential coverage was extended to must-turn/adjacent-turn/surround (item 12), and the mechanic
-semantics themselves were written down as explicit per-mechanic contracts, cardinality bounds
-included (item 13, `docs/mechanic-state-contracts.md`, plus the cardinality gap it found actually
-fixed as item 14) — which is also where "a shared compiled graph" (previously listed as the other
-piece of open research territory) landed: not built, because its two plausible first consumers both
-disqualify themselves on inspection (see item 16).
-
-Every numbered item in the consolidated ranked programme above (1-15) has now run to a real,
-verified conclusion — most landed shipped changes (two live-play rule-drift fixes, a
-differential-fuzzer extension covering both the domain layer and, now, three more mechanics, a
-configuration fix with a verified +79-solve outcome, a new measurement corpus, a written
-mechanic-contract reference, and a schema fix closing the cardinality gap that reference found), a
-few (macro transitions, per-filter local flip, symmetry prevalence) landed decisive
-negative/confirmatory results before any production code was risked or any player-facing rule was
-redesigned unilaterally, and the region/separator family's three Tier 2 candidates
-(`docs/solver-shadow-eval-harness.md`'s Parts 4/7/8) were each independently scored and closed the
-same way. What's left is the research docs' own larger, not-yet-scored menu — genuinely open
-territory, not a queue of already-scoped next steps.
+The remaining territory is therefore not a pile of unfinished items from this document's original
+numbering. It is the separately triaged research menu above plus concrete live items in
+`future-work.md`. Historical results remain here because they explain why apparently-obvious ideas
+should not be rebuilt; their status labels should not be read as invitations to repeat work that has
+already run to conclusion.

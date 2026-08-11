@@ -1,4 +1,5 @@
 // Pathfinder solver Web Worker.
+import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 // Loaded as a module worker: new Worker(url, { type: 'module' })
 //
 // Inbound message types:
@@ -22,7 +23,8 @@
 //   { type: 'CANCEL',    id }                       — abort an in-flight search
 //
 // Outbound message types:
-//   { type: 'RESULT',            id, ok, solution, elapsedMs, nodesExpanded, attempts, cancelled? }
+//   { type: 'RESULT',            id, ok, status, solution, elapsedMs, nodesExpanded, attempts,
+//                                deadlineTruncated?, cancelled? }
 //   { type: 'TRAP_PROGRESS',     id, newSpots: number[], gatesProcessed?, gatesCompleted?, totalGates? }
 //                                — streamed while the trap search runs: newly-found spot keys
 //                                  (flushed at most every ~100ms) and per-gate sweep progress
@@ -161,15 +163,7 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
         };
         const result = await solveLevel(level, { timeBudgetMs: budgetMs, yieldFn });
         cancelledIds.delete(id);
-        postBack({
-            type: 'RESULT',
-            id,
-            ok:            result.ok,
-            solution:      result.solution,
-            elapsedMs:     result.totalMs,
-            nodesExpanded: result.nodesExpanded,
-            attempts:      result.attempts,
-        });
+        postBack(buildSolveWorkerResult(id, result));
     } catch (err) {
         cancelledIds.delete(id);
         if (err?.message === 'Solver:cancelled') {

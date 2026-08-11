@@ -339,6 +339,7 @@ const EMPTY_KEYS: ArrayLike<number> = [];
  *  The only sound corner is intNeeded === 0, where the return trip's intersection is unaffordable —
  *  but that never coincides with the must-cross-heavy regime the prune was aimed at, since pending
  *  must-cross cells reserve intersections and keep intNeeded above zero. Not worth the code. */
+// Permitted error: reachable-set over-approximation only; see property: topology connectivity over-approximates every truly reachable required cell.
 export function isConnected(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     workMeter.units += CONNECTIVITY_WORK_UNITS;  // see work-meter.ts
     const intNeeded = level.reqInt - state.ints;

@@ -44,22 +44,39 @@ parentPort.on('message', async (msg) => {
     if (msg?.type !== 'job') return;
     const { jobId, levelKey, rawLevel, gateKey, attemptConfig, budgetMs, ablationCfg } = msg;
     const t0 = Date.now();
+    let prep;
     try {
-        const { level, prep } = getPrepped(levelKey, rawLevel, ablationCfg);
+        const prepared = getPrepped(levelKey, rawLevel, ablationCfg);
+        const level = prepared.level;
+        prep = prepared.prep;
         const profile = POLICY_PROFILES[attemptConfig.profileName] ?? POLICY_PROFILES.default;
         // yieldFn: null — no cooperative-yield/cancellation needed inside a worker (blocking the
         // worker's own event loop doesn't block anything else); the race orchestrator cancels
         // losers via Worker.terminate() instead. nodeBudget/out/seedSalt left at defaults: the
         // race path is wall-clock-budgeted and reads nodesExpanded back off prep._metrics below.
-        const solved = await runAttemptSearch(attemptConfig, gateKey, level, prep, profile, budgetMs, Date.now(), null);
+        const out = {};
+        const solved = await runAttemptSearch(attemptConfig, gateKey, level, prep, profile, budgetMs, Date.now(), null, Infinity, out);
         parentPort.postMessage({
             type: 'result', jobId, ok: !!solved, path: solved ?? null,
-            elapsedMs: Date.now() - t0, nodesExpanded: prep._metrics.nodesExpanded,
+            outcome: solved ? 'success' : out.timedOut === true ? 'timed-out' : out.timedOut === false ? 'exhausted' : 'budget-starved',
+            allocatedBudgetMs: budgetMs, elapsedMs: Date.now() - t0, nodesExpanded: prep._metrics.nodesExpanded,
         });
     } catch (err) {
+        const bounded = (value, fallback, max) => {
+            let string;
+            try { string = typeof value === 'string' ? value : value == null ? fallback : String(value); }
+            catch { string = fallback; }
+            return string.slice(0, max);
+        };
+        const safeField = (key) => { try { return err?.[key]; } catch { return undefined; } };
         parentPort.postMessage({
             type: 'result', jobId, ok: false, path: null,
-            elapsedMs: Date.now() - t0, nodesExpanded: 0, error: err?.message ?? String(err),
+            outcome: 'error', allocatedBudgetMs: budgetMs, elapsedMs: Date.now() - t0,
+            nodesExpanded: prep?._metrics?.nodesExpanded ?? 0,
+            error: {
+                name: bounded(safeField('name'), 'Error', 120),
+                message: bounded(safeField('message') ?? err, 'Unknown attempt error', 500),
+            },
         });
     }
 });

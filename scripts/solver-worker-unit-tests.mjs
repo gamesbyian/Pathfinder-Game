@@ -89,6 +89,8 @@ test('SOLVE result has attempts array', async () => {
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     assert.ok(Array.isArray(posts[0].attempts));
+    assert.equal(posts[0].status, 'success');
+    assert.equal(posts[0].attempts.every(a => typeof a.outcome === 'string'), true);
 });
 
 test('SOLVE with pre-cancelled id posts RESULT with cancelled:true', async () => {

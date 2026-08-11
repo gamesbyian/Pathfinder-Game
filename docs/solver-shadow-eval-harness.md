@@ -14,6 +14,15 @@ campaign, Stage 3. This doc is the concrete engineering counterpart: code, data 
 and the first real (non-hypothetical) numbers. It does not re-litigate the research case for any
 technique — read the two docs above for that.
 
+[`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md)
+reuses the same shadow-first philosophy for a different question: whether failed DFS, beam,
+admissible-order, repair, and future attempts emit typed artifacts that are non-redundant and useful
+to another technique. That plan should extend or reuse this harness's evaluation conventions where
+they fit rather than creating a parallel "shadow mode" stack. Its artifact contract is broader than
+the current reject/pass probe contract, however, so do not force replayable candidates, population
+summaries, or soft failure signatures into `verdict: reject|pass` merely to reuse this API. Share the
+replay/oracle/reporting infrastructure; keep the semantic contracts distinct where necessary.
+
 ## Why this exists
 
 Those two research docs list ~17 candidate "middle-layer" solver reasoners (separator-state
@@ -31,6 +40,13 @@ work:
 
 This doc covers both, plus the first prototype reasoner run through them.
 
+The interoperability plan adds a third reuse case: **score information exchange before enabling
+information exchange**. When artifact emission exists, the first cooperative-search experiment
+should leave solver behavior unchanged and measure artifact frequency, redundancy, diversity,
+winning-prefix proximity where ground truth exists, and hypothetical producer→consumer handoff
+coverage at equal canonical work. Only evidence that survives that shadow stage should graduate to
+a live handoff or scheduling experiment.
+
 ## Part 1: The shared evaluation harness
 
 `scripts/stress/interface-probe-harness.mjs` implements section 18's spec.
@@ -38,11 +54,13 @@ This doc covers both, plus the first prototype reasoner run through them.
 ### Data source — no new CP-SAT calls
 
 The harness does **not** call CP-SAT itself. It consumes the labelled-branch atlas already
-produced by `scripts/stress/prune-gap-probe.mjs` (`reports/stress/prune-gap-*.json` — 16 levels,
-623 CP-SAT-labelled branches as of this writing). That script walks a level's stored solution and,
-at sampled decision points, asks CP-SAT whether each sibling move (the moves the solution *didn't*
-take) is still completable — giving a `dead`/`alive` ground-truth label per branch, plus whether
-the existing gauntlet (`evaluatePrunedMove`) already rejects it (`pruned`).
+produced by `scripts/stress/prune-gap-probe.mjs` (`reports/stress/prune-gap-*.json`). The atlas
+started as a 16-level / 623-branch bootstrap sample and was subsequently expanded by the completed
+full sweep to **397 eligible levels / 5,518 CP-SAT-labelled branches**; Parts 4, 7, 8, and 9 below
+use that grown atlas for their current verdicts. The upstream probe walks a level's stored solution
+and, at sampled decision points, asks CP-SAT whether each sibling move (the moves the solution
+*didn't* take) is still completable — giving a `dead`/`alive` ground-truth label per branch, plus
+whether the existing gauntlet (`evaluatePrunedMove`) already rejects it (`pruned`).
 
 The harness replays each labelled branch through the **real** solver-state primitives
 (`createState`/`applyMove`/`getNeighbors`/`undoMove` — the same functions `dfsFromGate` itself
@@ -181,7 +199,7 @@ positive infeasibility claim from the excursions it actually enumerated.
 
 ### Results
 
-Run against the full existing atlas (16 levels, 623 branches):
+Initial prototype run against the then-current bootstrap atlas (16 levels, 623 branches):
 
 ```
 separator-resource-spectrum (sound prune (necessary-condition lower bound over pendant-chamber excursions)):
@@ -195,8 +213,8 @@ Read together with Part 3's census: only ~0.4% of branches even have an applicab
 probe's catch rate is meaningful — 2 of the atlas's 16 total dead branches (12.5% of *all* labelled
 dead branches, not just the applicable subset) were previously invisible to the existing gauntlet
 and are now caught by a demonstrably sound rule. Zero false rejects across the whole 623-branch
-set. This is a real, if narrow, positive result — and also small enough that no solve-rate claim
-should be made from it without a much larger labelled sample (see Next steps).
+set. This was a real, if narrow, positive result, but the sample was intentionally treated as
+provisional until the larger sweep below removed the sampling uncertainty.
 
 **Re-run 2026-08-05 against the grown atlas (397 levels, 5,518 branches, Part 5)** — the "much
 larger labelled sample" the note above called for:
@@ -226,17 +244,18 @@ size, predicts the same outcome without needing to run the experiment to find ou
 **What this does settle, honestly**: the single-articulation pendant-chamber shape — the
 narrowest, cheapest, most tractable member of the "separator-state resource DP" family the research
 docs proposed — is closed. It is not evidence against the *family* (bounded obligation-compatibility
-MDDs and backward compatibility envelopes reason about different terrain and haven't been probed
-yet), but it does mean the harness's first real answer to "does this specific idea pay for itself"
-is no, on real data, for less cost than building it into the solver would have taken to find out the
-same thing the hard way. That is the harness doing its job.
+MDDs and backward compatibility envelopes reason about different terrain and are evaluated
+separately in Parts 7 and 8), but it does mean the harness's first real answer to "does this
+specific idea pay for itself" is no, on real data, for less cost than building it into the solver
+would have taken to find out the same thing the hard way. That is the harness doing its job.
 
 ## Part 5: Growing the labelled atlas (the part that needs GitHub Actions)
 
-16 levels is not enough to trust a catch-rate estimate. `scripts/stress/prune-gap-probe.mjs`
-already produces the labelled atlas one level at a time via CP-SAT, and each level's oracle calls
-can take tens of seconds to minutes — covering a meaningful slice of the ~2000-level corpus this
-way is exactly the ">15-20 minutes locally, offload to GitHub Actions" case.
+The original 16-level bootstrap sample was not enough to trust a catch-rate estimate.
+`scripts/stress/prune-gap-probe.mjs` already produces the labelled atlas one level at a time via
+CP-SAT, and each level's oracle calls can take tens of seconds to minutes — covering a meaningful
+slice of the ~2000-level corpus this way is exactly the ">15-20 minutes locally, offload to GitHub
+Actions" case.
 
 `scripts/stress/atlas-sweep.mjs` is a thin multi-level driver — deliberately **not** a refactor of
 `prune-gap-probe.mjs` (that script stays exactly as-is, independently runnable, no regression
@@ -317,7 +336,7 @@ minority before ever spending effort on flipping filters. That measurement now e
 levels (one per pair-count 4/5/6/7, all genuinely eligible per `atlas-eligibility.mjs`):
 
 | Level | pairs | dead | gap (missed by gauntlet) | oracle unknown |
-|---|---|---|---|---|
+|---|---:|---:|---:|---:|
 | R00314 | 4 | 5 | 3 (60%) | 3 |
 | R00349 | 5 | 10 | 6 (60%) | 7 |
 | R00059 | 6 | 10 | 6 (60%) | 4 |
@@ -342,9 +361,9 @@ built, not a better one.
 **Verdict: still no on flipping filters**, now for an evidence-backed reason rather than a
 difficulty estimate — the oracle's yield is already degrading as mechanic complexity rises, and
 flippers would push further in exactly that direction. The generalization result is still valuable
-on its own: it means growing the atlas across the real 397-level eligible pool (portal-inclusive)
-is worth doing without any further encoding risk, which is the actionable next step this campaign
-should take instead.
+on its own: it justified growing the atlas across the real 397-level eligible pool
+(portal-inclusive), which was subsequently completed in Part 5; no further flipper encoding is
+needed to establish that the prune-gap phenomenon generalizes beyond mechanic-light levels.
 
 ## Part 7: Bounded obligation-compatibility MDD probe (section 4)
 
@@ -443,9 +462,10 @@ from this single-neighbor special case), but this specific narrow cut isn't wort
 Per the multilingual doc's section 20: every probe declares one of the seven soundness classes up
 front, and the harness enforces the zero-false-reject bar automatically (non-zero exit code, not
 just a console note, if any probe ever produces one) rather than trusting a probe author's
-self-report. All three probes registered as of 2026-08-06 — `separator-resource-spectrum`,
-`obligation-tour-mutex`, `goal-approach-envelope` — hold zero false rejects across the full
-5,518-branch atlas.
+self-report. The three Tier-2 probes (`separator-resource-spectrum`, `obligation-tour-mutex`,
+`goal-approach-envelope`) all hold zero false rejects across the full 5,518-branch atlas; Part 9's
+separately-sourced `mc-neighbor-budget-propagation` probe does as well and has additional stored-
+solution soundness replay evidence described below.
 
 ## Part 9: Must-cross neighbor-budget propagation (a 4th, differently-sourced candidate)
 
@@ -501,10 +521,10 @@ synthesis) — there is no remaining "obvious next probe" queued from this speci
 
 ## Honest bottom line
 
-This is infrastructure plus three small, sound, positive-but-narrow results — not a solve-rate win.
-Per the research docs' own framing ("success without solve gain" is an explicit, accepted outcome
-for this stage of the campaign), the value delivered here is: a reusable way to score *any* future
-middle-layer reasoner against real oracle-labelled data, real (not assumed) measurements of how rare
-each of three independently-proposed reasoning shapes is on corpus-2, and three documented, sound,
-if modest, catches — plus the tooling to grow the evidence base past 16 levels without anyone
-burning a day of local CPU time to do it.
+This is reusable evaluation infrastructure plus four sound measured candidates. Three Tier-2
+candidates are closed as positive-but-too-narrow results with no solve-rate case for production
+integration; the fourth, must-cross neighbor-budget propagation, is materially stronger in the
+shadow data and remains an active opt-in experiment pending a full-population live A/B. The durable
+value is the shared harness, the grown 5,518-branch oracle-labelled atlas, and a record that clearly
+separates bootstrap measurements from the later at-scale verdicts instead of leaving old sample
+sizes or already-completed sweep steps looking current.

@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, normalizeAblationConfig } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, normalizeAblationConfig } from './orchestration.js';
+import { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
 import { workMeter } from './work-meter.js';
+import { prepLevel } from './prep.js';
 import { buildExperimentList, defaultConfig, FEATURES, OPT_IN_FEATURES } from '../../scripts/ablation-config.mjs';
 
 function makeLineLevel() {
@@ -93,6 +95,133 @@ test('solveLevel honors cancellation from yieldFn', async () => {
         }),
         /Solver:cancelled/,
     );
+});
+
+test('attempt exceptions are recorded and the ladder continues to a later success', async () => {
+    let calls = 0;
+    const dispatch = ((...args: Parameters<typeof runAttemptSearch>) => {
+        if (++calls === 1) throw new TypeError('deterministic dispatch failure');
+        return runAttemptSearch(...args);
+    });
+    const result = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000, attemptSearchForTesting: dispatch });
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'success');
+    assert.equal(result.attempts[0].outcome, 'error');
+    assert.deepEqual(result.attempts[0].error, {
+        name: 'TypeError', message: 'deterministic dispatch failure',
+        gateKey: result.attempts[0].gateKey,
+        configKey: attemptConfigKey(getConfiguredAttemptConfigs(makeLineLevel(), null)[0]),
+        profile: result.attempts[0].profile, template: result.attempts[0].template,
+    });
+    assert.equal(result.attempts.some(a => a.outcome === 'success'), true);
+});
+
+test('an unsuccessful solve with a failed technique reports attempt-error, not exhaustion', async () => {
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const searchOut = args[9];
+        if (searchOut) {
+            searchOut.timedOut = true;
+            searchOut.bestBadness = 7;
+            searchOut.finalBadness = 8;
+        }
+        throw new Error('broken technique');
+    };
+    const result = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000, attemptSearchForTesting: dispatch });
+    assert.equal(result.ok, false);
+    assert.equal(result.status, 'attempt-error');
+    assert.equal(result.attempts.every(a => a.outcome === 'error'), true);
+    assert.equal(result.attempts.every(a => a.timedOut === undefined), true);
+    assert.equal(result.attempts.every(a => a.bestBadness === undefined && a.finalBadness === undefined), true,
+        'partial diagnostic output from a crashing technique must not classify its error as a search result');
+});
+
+test('an error attempt preserves repair identity, allocation, node usage, and seed fields', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const repairConfig = getConfiguredAttemptConfigs(level, null).find(config => config.repair)!;
+    const gateKey = level.gateKeys[0];
+    const seedSalt = 3;
+    const result = await solveLevel(level, {
+        timeBudgetMs: 50,
+        disableExtraBudgetPasses: true,
+        primeAttempt: { gateKey, configKey: attemptConfigKey(repairConfig), nodeBudget: 123, seedSalt },
+        attemptSearchForTesting: async (...args) => {
+            const prep = args[3];
+            if (prep._metrics) prep._metrics.nodesExpanded += 7;
+            throw new Error('repair dispatch failed');
+        },
+    });
+    const attempt = result.attempts[0];
+    assert.equal(attempt.outcome, 'error');
+    assert.equal(attempt.gateKey, gateKey);
+    assert.equal(attempt.profile, repairConfig.profileName);
+    assert.equal(attempt.template, repairConfig.template?.id ?? null);
+    assert.equal(attempt.repair, true);
+    assert.equal(attempt.allocatedBudgetMs, 50);
+    assert.equal(attempt.nodesExpanded, 7);
+    assert.equal(attempt.seedSalt, seedSalt);
+    assert.equal(attempt.randomSeed, repairPrimarySeed(gateKey, seedSalt));
+});
+
+test('canonical cancellation still escapes a fault-injected dispatch', async () => {
+    const dispatch = async () => { throw new Error('Solver:cancelled'); };
+    await assert.rejects(() => solveLevel(makeLineLevel(), { timeBudgetMs: 1000, attemptSearchForTesting: dispatch }), /Solver:cancelled/);
+});
+
+test('fault injection is scoped to one solve and cannot contaminate a concurrent solve', async () => {
+    const failingDispatch = async () => { throw new Error('scoped failure'); };
+    const [faulted, normal] = await Promise.all([
+        solveLevel(makeLineLevel(), { timeBudgetMs: 100, disableExtraBudgetPasses: true, attemptSearchForTesting: failingDispatch }),
+        solveLevel(makeLineLevel(), { timeBudgetMs: 100 }),
+    ]);
+    assert.equal(faulted.status, 'attempt-error');
+    assert.equal(normal.status, 'success');
+    assert.equal(normal.attempts.some(a => a.outcome === 'error'), false);
+});
+
+test('an admissible-order search that drains its space is marked exhausted, not budget-starved', async () => {
+    const level = { ...makeLineLevel(), reqLen: 4 } as NormalizedLevel;
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    const config = { profileName: 'default', template: null, admissibleOrder: true };
+    const result = await runAttempt(level.gateKeys[0], level, prep, config, 1000, Date.now(), null);
+    assert.equal(result.path, null);
+    assert.equal(result.attempt.outcome, 'exhausted');
+    assert.equal(result.attempt.timedOut, false);
+});
+
+test('a hostile non-Error throw is safely recorded instead of escaping error serialization', async () => {
+    const hostile = Object.create(null, {
+        name: { get() { throw new Error('name getter'); } },
+        message: { get() { throw new Error('message getter'); } },
+    });
+    const dispatch = async () => { throw hostile; };
+    const result = await solveLevel(makeLineLevel(), { timeBudgetMs: 50, disableExtraBudgetPasses: true, attemptSearchForTesting: dispatch });
+    assert.equal(result.status, 'attempt-error');
+    assert.equal(result.attempts[0].error?.name, 'Error');
+    assert.equal(result.attempts[0].error?.message, 'Unknown attempt error');
+    assert.doesNotThrow(() => JSON.stringify(result.attempts));
+});
+
+test('portfolio errors remain visible when its ordinary fallback is also unsuccessful', async () => {
+    const level = { ...makeLineLevel(), reqLen: 4 } as NormalizedLevel;
+    let calls = 0;
+    const dispatch = ((...args: Parameters<typeof runAttemptSearch>) => {
+        if (++calls === 1) throw new Error('portfolio technique failed');
+        return runAttemptSearch(...args);
+    });
+    const result = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        schedulerMode: 'portfolio-experiment',
+        portfolioExperiment: {
+            pass1Ms: 10, pass2Ms: 10, pass3Ms: 10,
+            pass2Configs: new Set(), pass3Configs: new Set(),
+        },
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.status, 'attempt-error');
+    assert.equal(result.attempts[0].outcome, 'error');
+    assert.equal(result.attempts.some(a => a.schedulerPhase === 'fallback' && a.outcome !== 'error'), true);
 });
 
 function makePortalBranchLevel() {
@@ -481,6 +610,123 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
     // Both are still reported as budget-limited: the ceiling stopped a tier in each case.
     assert.equal(off.nodeBudgetReached, true);
     assert.equal(on.nodeBudgetReached, true);
+});
+
+test('opt-in main-loop reserve preserves order and gives a late suffix nonzero nodes', async () => {
+    const seenConfigs: string[] = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , , , , nodeBudget, out] = args;
+        seenConfigs.push(attemptConfigKey(config));
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) { out.nodesExpanded = spent; out.timedOut = true; }
+        return null;
+    };
+    const level = makeAttractionDiversityGatedInfeasibleLevel();
+    const mainConfigs = getConfiguredAttemptConfigs(level, null)
+        .filter(config => !config.repair && !config.admissibleOrder);
+    const result = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        workBudget: 1_000_000,
+        nodeBudget: 100,
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        mainLoopLateReserveFractionOverride: 0.2,
+        mainLoopLateReserveConfigCountOverride: 2,
+        attemptSearchForTesting: dispatch,
+    });
+
+    assert.equal(result.nodesExpanded, 100);
+    assert.equal(result.nodeBudgetReached, true);
+    assert.deepEqual(seenConfigs, [
+        attemptConfigKey(mainConfigs[0]),
+        attemptConfigKey(mainConfigs.at(-2)!),
+        attemptConfigKey(mainConfigs.at(-1)!),
+    ]);
+    assert.equal(result.attempts[0].mainLoopLateReserve, undefined);
+    assert.equal(result.attempts[1].mainLoopLateReserve, true);
+    assert.equal(result.attempts[2].mainLoopLateReserve, true);
+    assert.equal(result.attempts[0].nodesExpanded, 80);
+    assert.equal(result.attempts[1].nodesExpanded, 10);
+    assert.equal(result.attempts[2].nodesExpanded, 10);
+});
+
+test('interleaved main-loop reserve gives every late config/gate pair its own slice', async () => {
+    const level = { ...makeAttractionDiversityGatedInfeasibleLevel(), gateKeys: [PACK(0, 0), PACK(0, 2)] };
+    const attemptsSeen: Array<{ config: string; gate: number; budget: number }> = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, gate, , prep, , , , , nodeBudget, out] = args;
+        const spent = Number(nodeBudget);
+        attemptsSeen.push({ config: attemptConfigKey(config), gate, budget: spent });
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) { out.nodesExpanded = spent; out.timedOut = true; }
+        return null;
+    };
+    const mainConfigs = getConfiguredAttemptConfigs(level, null).filter(config => !config.repair && !config.admissibleOrder);
+    const result = await solveLevel(level, {
+        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 100,
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        mainLoopLateReserveFractionOverride: 0.2,
+        mainLoopLateReserveConfigCountOverride: 2,
+        attemptSearchForTesting: dispatch,
+    });
+
+    assert.deepEqual(attemptsSeen, [
+        { config: attemptConfigKey(mainConfigs[0]), gate: level.gateKeys[0], budget: 80 },
+        { config: attemptConfigKey(mainConfigs.at(-2)!), gate: level.gateKeys[0], budget: 5 },
+        { config: attemptConfigKey(mainConfigs.at(-2)!), gate: level.gateKeys[1], budget: 5 },
+        { config: attemptConfigKey(mainConfigs.at(-1)!), gate: level.gateKeys[0], budget: 5 },
+        { config: attemptConfigKey(mainConfigs.at(-1)!), gate: level.gateKeys[1], budget: 5 },
+    ]);
+    assert.equal(result.attempts.filter(a => a.mainLoopLateReserve).length, 4);
+    assert.equal(result.nodeBudgetReached, true);
+});
+
+test('main-loop reserve is inert without its opt-in flag or a finite node ceiling', async () => {
+    const level = makeAttractionDiversityGatedInfeasibleLevel();
+    const off = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        nodeBudget: 400,
+        disableExtraBudgetPasses: true,
+        mainLoopLateReserveFractionOverride: 0.9,
+        mainLoopLateReserveConfigCountOverride: 1,
+    });
+    const infinite = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        mainLoopLateReserveFractionOverride: 0.9,
+        mainLoopLateReserveConfigCountOverride: 1,
+    });
+    assert.equal(off.attempts.some(a => a.mainLoopLateReserve), false);
+    assert.equal(infinite.attempts.some(a => a.mainLoopLateReserve), false);
+});
+
+test('zero fraction or zero suffix count disables the main-loop reserve', async () => {
+    const level = makeAttractionDiversityGatedInfeasibleLevel();
+    for (const overrides of [
+        { mainLoopLateReserveFractionOverride: 0, mainLoopLateReserveConfigCountOverride: 2 },
+        { mainLoopLateReserveFractionOverride: 0.2, mainLoopLateReserveConfigCountOverride: 0 },
+    ]) {
+        const result = await solveLevel(level, {
+            timeBudgetMs: 1000, nodeBudget: 400, disableExtraBudgetPasses: true,
+            ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true }, ...overrides,
+        });
+        assert.equal(result.attempts.some(a => a.mainLoopLateReserve), false);
+    }
+});
+
+test('a reserve fraction that rounds to zero is fully inert', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        nodeBudget: 1,
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        mainLoopLateReserveFractionOverride: 0.01,
+        mainLoopLateReserveConfigCountOverride: 4,
+    });
+    assert.equal(result.attempts.some(a => a.mainLoopLateReserve), false);
 });
 
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {

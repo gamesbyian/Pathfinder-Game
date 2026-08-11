@@ -1,13 +1,16 @@
 # Future Work
 
-A compiled index of genuinely open, non-stale work — pulled from active planning documents and recent campaign reports. This file is the **live queue and status source of truth**; detailed strategy documents are linked below. Updated 2026-08-08.
+A compiled index of genuinely open, non-stale work — pulled from active planning documents and recent campaign reports. This file is the **live queue and status source of truth**; detailed strategy documents are linked below. Updated 2026-08-10.
 
 > **Current solver frontier:** the old numbered campaign sequence is retained as history in
 > [`solver-development-roadmap.md`](solver-development-roadmap.md), not maintained as the live queue.
-> The must-cross forced-structure sequence is closed (steps 1–3 shipped, step 4 falsified). The best
-> explicitly open rule-recognition leads are portal parity and structural derivation for must-turn,
-> adjacent-turn, and surround landmarks below. Repair stagnation remains an investigation record
-> with Stages 1–3 measured and Stage 4 re-scoped; descent-aware probing is its next evidence step.
+> The must-cross forced-structure sequence is closed (steps 1–3 shipped, step 4 falsified), and the
+> portal-parity follow-up is also closed after a sound-but-negligible live A/B. The best explicitly
+> open rule-recognition lead is now structural derivation for must-turn, adjacent-turn, and surround
+> landmarks below. Repair stagnation remains an investigation record with Stages 1–3 measured and
+> Stage 4 re-scoped; descent-aware probing is its next evidence step. A separate solver-
+> interoperability track is now queued below at an instrumentation-only first gate; it does not
+> change production scheduling or search behavior yet.
 
 ---
 
@@ -22,7 +25,19 @@ population counts are dated snapshots; this file is the current status index.
 - **Campaign 2** — `dfs-plain` exhaustion. **Historical phase concluded:** the known fragile-scoring family and the tested pruning/scoring generalizations did not explain the harder majority. Later work moved to admissible-order search, reserved-intersection reasoning, rule-recognition, oracle-labelled shadow evaluation, and differential diagnosis; use the open sections below rather than this old population bucket.
 - **Campaign 3** — `repair-far` + robust hard cores. **Historical label retired:** subsequent work did attack the robust population through several new techniques, so “not yet started” is no longer accurate. No single replacement technique has closed the population; the concrete surviving leads are tracked below.
 
-## Main-loop attempt-ordering starvation (2026-08-08, open — sized corpus-wide, no fix yet)
+## Solver interoperability and cooperative-search groundwork (2026-08-10, design complete — shadow instrumentation not started)
+
+**Master reference:** [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md) — the canonical plan for standardizing what DFS, beam, admissible-order, repair, and future techniques can leave behind and exchange without forcing them onto one universal `bestState` or score.
+
+This is deliberately an instrumentation-first research item, not a production scheduler or a new solver technique. It reuses the canonical `Attempt` transport/projection contract, canonical work accounting, real-state replay, the shadow-evaluation harness, repair plateau/elites, and variant-family tooling rather than rebuilding those systems.
+
+**First decision-bearing gate:** unchanged solver runs must show that techniques emit bounded, typed artifacts that are materially non-redundant and have predictive or handoff value at equal canonical work. Build only the common envelope, replay-complete witness representation, neutral metric evaluator, producer adapters, bounded retention/reporting, and shadow analysis needed for that gate. Do **not** yet let imported artifacts alter search or allocation.
+
+If the gate is positive, promote one pairwise handoff at a time, preserving the receiving technique's native/fresh starts and a participation floor so informational coupling cannot erase independent rescue behavior. Leading low-coupling candidates include beam-survivor → repair seed and failure-conditioned bounded work allocation. Repair → deterministic completion must respect the already-measured append-only/exact-copy failures rather than relabeling those negative experiments as cooperation. Hard cross-technique facts remain a later layer and require exact state/proof equivalence; incomplete signatures stay guidance-only.
+
+The variant corpus is a later validation layer, not a prerequisite: after shared artifacts exist, use symmetry/cousins to test artifact invariance, family leakage, and whether handoff predictors generalize across held-out families. The existing wide-trove boundary run remains its own nearer-term gate.
+
+## Main-loop attempt-ordering starvation (2026-08-10, experiment implemented — A/B pending)
 
 A fresh re-run of `2026-07-31-admissible-order-tier-node-starvation.md`'s methodology against
 *current* hint provenance (not that report's stale 505/1700 baseline) found the same "earlier
@@ -33,53 +48,61 @@ the ladder consumed the entire cumulative node budget first — hand-confirmed v
 instrumentation on real levels. A corpus-wide, read-only census
 (`scripts/stress/main-loop-starvation-census.mjs`, pure JSON cross-reference against the already-
 committed baseline attempt logs and stored hint provenance, no new solving) then sized it: **34 of
-975 unsolved corpus-2 levels (3.5%) are provably recoverable** — carry a validated, budget-fitting
-hint whose exact config is currently zero-allocated — split into **14 with a hard, deterministic
+975 unsolved corpus-2 levels (3.5%) have a historically matched, budget-fitting witness** — carry
+a validated hint whose exact config is currently zero-allocated — split into **14 with a hard, deterministic
 (dfs/beam) match** and 20 with a softer, seed-dependent repair match. The much larger raw number
 (87.1% of unsolved levels have *some* zero-node attempt) is mostly not a bug — it's what a fully
 budget-exhausted ladder's tail looks like by construction, confirmed by a clean control (only 0.8%
-of *solved* levels show any starved attempt, 0% recoverable). See
+of *solved* levels show any starved attempt, 0% historically matched). See
 [`reports/2026-08-08-main-loop-profile-order-starvation.md`](../reports/2026-08-08-main-loop-profile-order-starvation.md)
 for the full mechanism, the census, and why the hard/soft/not-recoverable populations must not be
-conflated in any future measurement. **Next step, not yet done:** if pursued, scope a fix
-candidate to the 14-level hard-match population first (the admissible-order tier's own
-reserve-not-reorder template is the natural candidate), and budget for a full-population A/B, not
-a spot check — this codebase has measured reordering a budget-limited search to be a coin flip
-three separate times, and the admissible-order fix's own 24-level pilot pointed the wrong way
-twice before the full 141-level population gave a trustworthy answer.
+conflated in any future measurement. A default-off reserve-not-reorder treatment is now implemented
+for the final four ordinary configurations, with frozen 5%/10%/15% arms. A clean 15% mechanism
+pilot recovered 1/14 historical hard matches (all 56 config/gate beneficiaries activated, zero
+attempt errors); see the
+[`mechanism-pilot report`](../reports/2026-08-10-main-loop-late-reserve-mechanism-pilot.md). That
+result also proves the historical match is not a guarantee of reproduction on the current solver
+revision. **Next step, if the small measured upside still justifies the run:** execute the
+fresh-control, full-population matched-budget A/B in
+[`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md). The 14 hard matches
+are a mechanism cohort, not the acceptance population — this codebase has measured reordering a
+budget-limited search to be a coin flip three separate times, and the admissible-order fix's own
+24-level pilot pointed the wrong way twice before the full 141-level population gave a trustworthy
+answer.
 
-## Solver rule-recognition gaps (2026-08-05)
+## Solver rule-recognition gaps (2026-08-05, reconciled 2026-08-09)
 
 Prompted by a direct question — does the solver understand not just the hard move-legality rules
 but their *implications and interactions*, the way an experienced human player does — answered by
-the actual level designer/player, not guessed. Six questions, three real findings, three closed.
-The must-cross forced-structure work above (steps 1–3 shipped, step 4 falsified) is the model for
-how to carry any of these to completion: derive on paper, falsify against every stored solution
-*before* writing solver code, and record a negative result as rigorously as a positive one.
+the actual level designer/player, not guessed. Six questions originally produced three real
+findings and three immediate closures. One of those real findings, portal parity, has since gone
+through the full replay → implementation → live-A/B loop and is now closed below. The must-cross
+forced-structure work (steps 1–3 shipped, step 4 falsified) remains the model: derive on paper,
+falsify against every stored solution *before* writing solver code, and record a negative result
+as rigorously as a positive one.
 
-### Open — portal parity (most promising, not yet properly investigated)
+### Closed 2026-08-08 — portal parity: sound rule, negligible solver value
 
-**The claim, confirmed by the designer:** "portal use may or may not be required to achieve
-`reqLen`, based on parity — this is a key, but unspoken, aspect of levels which use portals."
+**Original finding:** portal use can change achievable `reqLen` parity because every ordinary move
+flips `(x+y) % 2`, while a zero-length portal jump may preserve or flip cell parity depending on the
+pair. The existing `PRUNE_PARITY` handled only portal-free levels, so this was a genuine missing
+inference rather than a mistaken rule premise.
 
-**The mechanism, derived and partially checked:** every ordinary move flips a cell's `(x+y) % 2`
-parity; a portal jump does too, or doesn't, depending on whether the two portal cells share
-parity — for zero length cost either way. `PRUNE_PARITY` (`prune-gauntlet.ts`) already encodes
-exactly this reasoning for portal-*free* levels, but is unconditionally disabled the moment a
-level has any portal at all (`level.portalMap.size === 0` gates it) rather than adapted. A
-level's overall achievable-length parity may therefore hinge on whether the path uses a specific
-"parity-flipping" portal pair — a real, currently-unexploited constraint.
+**The original methodology gap is resolved.** The first coordinate-only census could not distinguish
+an ordinary move from a jump between adjacent portal endpoints. The follow-up replayed stored
+solutions through the real solver state (`applyMove` / `lastWasPortalJump`), caught and corrected a
+second subtlety around the transient state of standing on a portal terminal immediately before its
+forced jump, and produced a clean three-corpus census: zero violations across roughly 15,600
+mismatch checkpoints.
 
-**Why this isn't shovel-ready yet:** a first attempt to census this against stored solutions had
-a real methodology gap — portal pairs whose two endpoints are *adjacent grid cells* (96 of ~2,750
-flip-parity pairs found in the corpus) are indistinguishable from an ordinary move using
-coordinates alone, since stored hint files only record path coordinates, not per-step jump
-flags. The resulting census (`~93-95%` directional match, not the required 100%) is inconclusive
-in the "wrong for a boring reason" direction, not a real falsification. **Next step:** replay
-every portal-bearing level's stored solutions through the real solver state
-(`search-state.ts`'s `applyMove`/`lastWasPortalJump`, the same way
-`mc-prune-soundness-check.mjs` replays must-cross solutions) to get the true per-step jump
-determination, then re-run the same census with exact ground truth before proposing a prune.
+That became the opt-in `PRUNE_PORTAL_PARITY_ENVELOPE`. A node-budget-pinned live A/B on 40
+portal-parity-relevant Corpus-2 levels then found **0 regressions but also 0 actual rejects and 0
+node-count difference on every level across roughly 240M searched nodes**. The inference is sound,
+but the condition is too rare in live search to matter at solver scale. It remains available
+opt-in/documented rather than promoted. This thread is closed unless new evidence identifies a
+materially stronger parity envelope; do not repeat the old “replay the hints, then propose a prune”
+next step. See the 2026-08-08 portal-parity commits/reports and the corresponding closed item in
+`solver-heuristic-capability-gap-analysis.md`.
 
 ### Open — surround-landmark "clean orbit" rule change (needs a product decision, not just engineering)
 
@@ -117,8 +140,8 @@ quickly.
 - **Filters (fixed-axis) adjacent to a must-cross cell** — already statically prevented by
   `domain/level-validation.ts`'s authoring-time check; this configuration can never reach a
   corpus.
-- **Gate choice on multi-gate levels** — the designer's own read: "subject to many factors...
-  it's unpredictable why someone would choose which gate to try." Not a minable heuristic.
+- **Gate choice on multi-gate levels** — the designer's own read: "subject to many factors..."
+  it's unpredictable why someone would choose which gate to try. Not a minable heuristic.
 - **Deliberate self-crossing placement ("look for a visually empty space")** — a soft
   scoring/ordering preference, not a provable hard rule; folds into existing scoring intuition
   (`scoring.ts`'s intersection-placement terms) rather than motivating a new mechanism, especially
@@ -133,14 +156,18 @@ quickly.
 - **Stage 2** — Signature-conditioned soft feature memory (plateau-penalty prototype). **Built 2026-07-22**, `enablePlateauPenalty` opt-in in `repair-search.ts`. Verdict: sound and effective at reshaping search, but **no solved-count gain** and a double-edged bestBadness effect with one severe near-solved-level regression. Kept default-off. Two follow-ups tested (arming-time near-solved guard, equal-work A/B) — both confirmed the effect is real misdirection, not a confound.
 - **Stage 3 (soft)** — Scatter-search recombination via complementarity-guided guide selection. **Built 2026-07-22**, `enableRecombination` opt-in. **The only prototype to gain a solve** (R02239, 2/16 vs 1/16). Distance-only guide selection lost a solve (complementarity criterion load-bearing). Still net-mixed on near-miss quality with the same near-solved regression. Default-off.
 - **Stage 3 (real)** — Reversible-operator relinking via anchor-splice. **Built 2026-07-22**, `enableRelink` + `relinkPaths`. Verified sound (copies guide suffixes through real gauntlet). **Does not help — zero solves, zero cost change — and underperforms soft approximation.** Reason: exact segment copies collapse under append-only legality; soft randomness escapes this trap that rigid copying cannot. Reverted. Exact-copy relinking is a structural dead end.
-- **Turn-aware selective biasing** — Bias the one load-bearing move (exit from pending must-turn cell) only during detected must-turn plateau. It solves real isolated levels, including R02003, but the completed corpus-2 A/B and post-budget-fix rerun found an attributable effect of only about +1 solve, within the corpus noise floor; default-on promotion is **not justified**. An exclusive feature selector was also tested and rejected at net −2. The current flag-gated/default-off experiment tries both biased tiers, orders them with the `reqInt <= 3` predictor, and weights the shared probe budget 75/25. Remaining gate: a dedicated corpus-2 A/B of that implemented weighted form plus worst-case three-tier fallback latency. See [`reports/2026-07-23-turnbias-corpus2-ab-validation.md`](../reports/2026-07-23-turnbias-corpus2-ab-validation.md).
+- **Turn-aware selective biasing** — The earlier isolated samples were promising, but the promotion gate is now **closed, confirmed net-negative**. A sparse-ablation bug discovered during the investigation really did silently activate other opt-in flags and was fixed, but a clean deterministic rerun after that fix reproduced the same Corpus-2 result byte-for-byte: baseline 725/1700 versus turn bias 718/1700, **net −7 (5 gained, 12 lost)**. `STRATEGY_REPAIR_TURN_BIAS` remains opt-in/default-off. Do not treat the old weighted-form corpus A/B as still pending; reconsider promotion only with materially new evidence. See [`reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md`](../reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md) and the corrected/reconciled turn-bias reports.
 - **Stage 4** — Strategic oscillation across exact-count boundary. **Re-scoped 2026-07-22** based on Stage 1 findings: all 15 measured plateaus are length-*short*, never long — repair deadends before `reqLen` and never overshoots. So "oscillate back from overshoot" has no overshoot to work with. If pursued: frame as "reach a length the random walk can't extend to" (an extend/detour operator), not oscillation. **Not yet started.** Append-only-construction prerequisite gap applies either way.
 
-**Standing conclusion from all stages (2026-07-22):** Soft mechanisms (randomized recombination, turn-aware biasing) move the needle; hard constant-tuning has failed three times; exact-copy relinking is a dead end; append-only prefix editing hits a wall on global length↔turn coupling. The one avenue not yet shown to hit the wall is **descent-aware probing** (shadow logging of what a mechanism would change on an otherwise-improving restart, per soundness rule 7). Pursue that over more bounded-operator variants before claiming exhaustion.
+**Standing conclusion from all stages:** Flat-cell penalties, exact-copy relinking, and turn-bias
+promotion are all closed on current evidence; append-only prefix editing still hits a wall on global
+length↔turn coupling. The one avenue not yet shown to hit that wall is **descent-aware probing**
+(shadow logging of what a mechanism would change on an otherwise-improving restart, per soundness
+rule 7). Pursue that over more bounded-operator variants before claiming exhaustion.
 
 ## Solver improvement research items
 
-**Master reference:** [`solver-improvement-research-notes.md`](solver-improvement-research-notes.md) — items 1–5 probed against real data (2026-07-11), each with concrete verdict and priority. This is the research-inspiration ledger; nothing from here has shipped to solver code yet.
+**Master reference:** [`solver-improvement-research-notes.md`](solver-improvement-research-notes.md) — the original 2026-07-11 research-inspiration ledger. Its initial probe results remain useful, but later work has now implemented or closed some items; the statuses below supersede its old “nothing shipped” framing.
 
 ### Confirmed real, highest priority for build:
 - **Homotopy-class path-signature metrics** (item #4). Real, measured, double-digit-percent effect on real data (16.6% of cross-homotopy-class hint pairs rated "similar" by current curation, using correct computation, not proxy). Strongest evidence-to-effort ratio. Targets must-cross-heavy levels specifically; should check whether it partitions the existing hint corpus into behaviorally-distinct clusters the current `featureDistance` metric (edge-Jaccard + crossing placement + must-cross order) misses.
@@ -154,8 +181,17 @@ quickly.
   direct A/B question. See
   [`reports/2026-08-07-repair-winner-classifier-rerun.md`](../reports/2026-08-07-repair-winner-classifier-rerun.md).
 
-### Needs harder redesign before buildable:
-- **Nogood/dead-end learning** (item #2). Direct instrumented search found a real counterexample: a naive `(mpVisitedMask, mustCrossMask, remaining)` signature is provably unsound as a global nogood key in this codebase's actual state space. Any future attempt needs a richer signature (portal state, flipper state, edgeUsage per visited cell) or to restrict scope to what existing MST bounds already prove, which raises the bar from "mid-term, needs care" to "bigger design task." Probe the richer signature offline against corpus data before committing.
+### Implemented in a narrower sound form — no open “build a nogood cache” task:
+- **Nogood/dead-end learning** (item #2). The original three-field global key
+  `(mpVisitedMask, mustCrossMask, remaining)` remains **provably unsound** and is retained as a
+  caution, not a design to revive. The viable redesign was instead an exact-state,
+  **repair-search-scoped** nogood cache using a freshly computed signature that captures the
+  future-relevant state rather than an under-keyed approximation. It shipped default-on as
+  `STRATEGY_REPAIR_NOGOOD_CACHE` on 2026-08-07. The first 20-level A/B was +1 solve with zero
+  regressions and consistent 13.7–40.9% node reductions on levels solving either way; the later
+  full Corpus-2 refresh at the current 36M-node budget produced a byte-identical solved-ID set.
+  That is an implemented optimization with modest measured value, not an outstanding redesign
+  task. Revisit only if a cheaper sound signature or a broader scope has new evidence behind it.
 
 ### Refuted, redirected:
 - **Articulation-point pruning** (item #1). Original distance-vs-discrepancy premise refuted (negative correlation, explained). Redirected form (corridor-capacity bound on `reqInt`, different mechanism) not yet re-probed. Do that before implementing.
@@ -286,7 +322,7 @@ flipping filters" is published-corpus-only, same pattern as the portal cap; stre
 8), to check whether the "fully dynamic" mechanic changes the answer.
 
 | level | reqLen | flippers | meet depth | reached | final count | 2nd-to-last ratio |
-|---|---|---|---|---|---|---|
+|---|---:|---:|---:|---:|---:|---:|
 | R00044 | 91 | 0 | 46 | 25 | 1,500,002 (cap) | 1.48 |
 | R02704 | 65 | 0 | 33 | 32 | 1,500,002 (cap) | 1.42 |
 | R03196 | 59 | 0 | 30 | 22 | 1,500,001 (cap) | 2.05 |
@@ -463,7 +499,7 @@ by a level cap before calling it structural.
 
 
 
-- **Portfolio scheduler production deployment** — the `fast-portfolio-scheduler-plan.md` experiment ran to completion; verdict: **not production-ready** ([`reports/portfolio/portfolio-scheduler-decision.md`](../reports/portfolio/portfolio-scheduler-decision.md)). Every measured variant was slower than legacy on the published corpus. `schedulerMode: 'portfolio-experiment'` remains opt-in, offline-only CLI tooling for dev-time batch runs; this is not a future-work item, just a historical record of the decision.
+- **Portfolio scheduler production deployment** — the `fast-portfolio-scheduler-plan.md` experiment ran to completion; verdict: **not production-ready** ([`reports/portfolio/portfolio-scheduler-decision.md`](../reports/portfolio/portfolio-scheduler-decision.md)). Every measured variant was slower than legacy on the published corpus. `schedulerMode: 'portfolio-experiment'` remains opt-in, offline-only CLI tooling for dev-time batch runs; this is not a future-work item, just a historical record of the decision. This closes broad cold-start tier rotation, not artifact-driven cooperation; the latter has its own shadow-first gate in [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md).
 - **Recipe cousins** (family generation) — intentionally deferred until sibling/cousin findings mature.
 - **State-dominance/transposition caching** — correctness risk / payoff tradeoff unfavorable vs. other research.
 - **Constant-tuning for repair-search mechanisms** — three independent well-motivated fixes for the stagnation plateau (burst length, elite-pool diversification, stagnation threshold) all failed empirically; this avenue is exhausted. Future work here should target the append-only wall or descent-aware probing, not more parameter tweaks.
@@ -531,3 +567,4 @@ These apply to any future solver work before reporting complete:
 3. **Negative results are first-class.** Every disproven idea gets written up in `reports/` like positive ones (see this doc for examples); no work is quietly abandoned.
 4. **Memoization soundness is non-negotiable.** Any cache key must capture every state variable the cached value depends on. CLAUDE.md's own MST-scratch-buffer bug is the standing precedent — verify with differential testing (solver finds a solution, cache would have wrongly rejected it).
 5. **Temporal clause:** distinguish "solved within X seconds" (uninterrupted attempt runtime) from "total wall time including restarts" in all timing reports.
+6. **Cross-technique artifacts are evidence by default.** Imported candidate witnesses must reconstruct through the real solver state machinery; incomplete state signatures, population summaries, plateau shapes, and correlations may guide ranking/retention/allocation but may not become hard rejection. A shared hard fact must carry an independent proof or exact state-equivalence contract. See [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md).

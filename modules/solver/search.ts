@@ -1,13 +1,9 @@
-import { getDistanceFromArray } from './distance.js';
-import { popcount } from './encoding.js';
 import { workMeter } from './work-meter.js';
-import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustCrossNeighborBudgetDeadlocked, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { STATE_BUF_BEAM, STATE_BUF_DFS, applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
-import { isConnected } from './topology.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
-import { keyParity } from '../domain/cell-key.js';
+import type { PruneDiagnostics } from './prune-gauntlet.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, UndoToken, ScoringProfile, StructuralTemplate } from './types.js';
 
@@ -23,7 +19,48 @@ interface DfsFrame { key: number; children: number[]; childIdx: number; undoInfo
  *  siblings under their parent, giving a depth-first walk of the beam's parent-pointer tree, which
  *  is what makes repositioning the shared working state cheap. Keeping them separate is the point:
  *  walk order and cull order are decoupled. */
-interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: number; sc: string; insOrd: number; treeOrd: number; sk?: string; }
+interface BeamPathNode { key: number; prev: BeamPathNode | null; depth: number }
+interface BeamNode extends BeamPathNode { prev: BeamNode | null; score: number; sc: string; insOrd: number; treeOrd: number; sk?: string; }
+
+/** Single implementation of the pre-move forced-first-step prune shared by DFS and beam. */
+function pruneFirstStepNeighbors(startKey: number, neighbors: number[], prep: PrepLevel, diagnostics?: PruneDiagnostics): number[] {
+    if (prep._forcedFirstStepKey != null) return neighbors.filter(k => k === prep._forcedFirstStepKey);
+    const cfg = prep._cfg;
+    if ((!cfg || cfg.PRUNE_MC_FORCED_FIRST_MOVE) && prep.gateForcedFirstStepKey.has(startKey)) {
+        const forced = prep.gateForcedFirstStepKey.get(startKey);
+        if (diagnostics) diagnostics.reached.PRUNE_MC_FORCED_FIRST_MOVE =
+            (diagnostics.reached.PRUNE_MC_FORCED_FIRST_MOVE ?? 0) + 1;
+        const filtered = neighbors.filter(k => k === forced);
+        if (diagnostics && filtered.length < neighbors.length) diagnostics.rejected.PRUNE_MC_FORCED_FIRST_MOVE =
+            (diagnostics.rejected.PRUNE_MC_FORCED_FIRST_MOVE ?? 0) + neighbors.length - filtered.length;
+        return filtered;
+    }
+    return neighbors;
+}
+
+/** Test seam for the pre-candidate prune that necessarily runs before evaluatePrunedMove. */
+export function __pruneFirstStepNeighborsForTests(startKey: number, neighbors: number[], prep: PrepLevel,
+    diagnostics: PruneDiagnostics): number[] {
+    return pruneFirstStepNeighbors(startKey, neighbors, prep, diagnostics);
+}
+
+/** Reconstruct a parent-pointer path into caller-owned scratch. */
+function _reconstructBeamPath(node: BeamPathNode, scratch: number[]): number[] {
+    const len = node.depth + 1;
+    scratch.length = len;
+    let cur: BeamPathNode | null = node;
+    for (let i = len - 1; i >= 0; i--) {
+        if (!cur) throw new Error('beam parent chain shorter than declared depth');
+        scratch[i] = cur.key;
+        cur = cur.prev;
+    }
+    return scratch;
+}
+
+/** Test seam for the production reconstruction routine's exact-length reuse contract. */
+export function __reconstructBeamPathForTests(node: BeamPathNode, scratch: number[]): number[] {
+    return _reconstructBeamPath(node, scratch);
+}
 
 // ─── Core DFS ─────────────────────────────────────────────────────────────────
 
@@ -46,13 +83,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 
     // Stack entry: { key, children, childIdx, undoInfo, disc } where disc = cumulative
     // discrepancy to REACH this node (sum of chosen child-indices along the path).
-    let children0 = getNeighbors(startKey, state, level, prep);
-    if (prep._forcedFirstStepKey != null) {
-        children0 = children0.filter(k => k === prep._forcedFirstStepKey);
-    } else if ((!cfg || cfg.PRUNE_MC_FORCED_FIRST_MOVE) && prep.gateForcedFirstStepKey.has(startKey)) {
-        const forced = prep.gateForcedFirstStepKey.get(startKey);
-        children0 = children0.filter(k => k === forced);
-    }
+    const children0 = pruneFirstStepNeighbors(startKey, getNeighbors(startKey, state, level, prep), prep);
     scoreAndSort(children0, startKey, state, level, prep, profile, template);
     const stack: DfsFrame[] = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null, disc: 0 }];
 
@@ -528,9 +559,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             // Reconstruct path from parent-pointer chain into _scratch.
             // node.depth stores path length-1, so one traversal suffices (no length-count pass).
             const len = node.depth + 1;
-            _scratch.length = len;
-            let cur: BeamNode = node;
-            for (let i = len - 1; i >= 0; i--) { _scratch[i] = cur.key; cur = cur.prev as BeamNode; }
+            _reconstructBeamPath(node, _scratch);
 
             // Diff ws's current live path against the reconstructed target path: undo the
             // divergent suffix of what's currently loaded, then apply only the new suffix.
@@ -562,12 +591,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
 
             const _t1 = _hrtNow();
             let neighbors = getNeighbors(pos, ws, level, prep);
-            if (pos === startKey && prep._forcedFirstStepKey != null) {
-                neighbors = neighbors.filter(k => k === prep._forcedFirstStepKey);
-            } else if (pos === startKey && (!cfg || cfg.PRUNE_MC_FORCED_FIRST_MOVE) && prep.gateForcedFirstStepKey.has(startKey)) {
-                const forced = prep.gateForcedFirstStepKey.get(startKey);
-                neighbors = neighbors.filter(k => k === forced);
-            }
+            if (pos === startKey) neighbors = pruneFirstStepNeighbors(startKey, neighbors, prep);
             const _beamNeighborCount = neighbors.length;
             // ws is fixed for this node's whole candidate batch — none of these siblings has
             // been tentatively applied yet (that happens per-candidate below, then gets undone).
@@ -579,64 +603,22 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 const undo = applyMove(next, ws, level, prep, isJump);
                 const realLen = getRealLengthFromState(ws);
                 const rSteps  = level.reqLen - realLen;
-                let ok = realLen <= level.reqLen && ws.ints <= level.reqInt; // fundamental, always on
-
-                if (ok && (!cfg || cfg.PRUNE_MC_CEILING) && ws.mustCrossMask !== 0) {
-                    if (ws.ints + popcount(ws.mustCrossMask) > level.reqInt) ok = false;
+                // Beam keeps its deliberately wider connectivity schedule, but all rule
+                // ordering and verdicts come from the shared gauntlet so it cannot drift from DFS.
+                const runConnectivity = rSteps <= 20 || (realLen & 7) === 0;
+                const _tc = _BEAM_DEBUG && runConnectivity ? _hrtNow() : 0n;
+                const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity);
+                if (_BEAM_DEBUG && runConnectivity) { _dbgConnNs += _hrtNow() - _tc; _dbgConnCalls++; }
+                if (verdict === 'solution') {
+                    // ws.path is already [startKey, ..., pos, next] — return it
+                    const sol = ws.path.slice();
+                    undoMove(undo, ws);
+                    if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex + _beamNeighborCount;
+                    if (_BEAM_DEBUG) _dbgCandGenNs += _hrtNow() - _t1;
+                    _dbgFlush('solved-candidate');
+                    return sol;
                 }
-                if (ok && next === level.goalKey) {
-                    if (isSolutionState(ws, level)) {
-                        // ws.path is already [startKey, ..., pos, next] — return it
-                        const sol = ws.path.slice();
-                        undoMove(undo, ws);
-                        if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex + _beamNeighborCount;
-                        if (_BEAM_DEBUG) _dbgCandGenNs += _hrtNow() - _t1;
-                        _dbgFlush('solved-candidate');
-                        return sol;
-                    }
-                    ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_DISTANCE_BOUND)) {
-                    const gd = getDistanceFromArray(prep.goalDistArr, next, prep.gridW);
-                    if (!Number.isFinite(gd) || gd > rSteps) ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_PARITY) && level.portalMap.size === 0) {
-                    const pp = keyParity(next);
-                    const gp = keyParity(level.goalKey);
-                    if ((realLen === 1 || level.blockSet.size >= 10) && ((pp ^ gp ^ (rSteps & 1)) !== 0)) ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_MUST_PASS_LB) && level.mustPassKeys.length > 0) {
-                    const lb = mustPassLowerBound(next, ws, level, prep);
-                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_MUST_CROSS_LB) && ws.mustCrossMask !== 0) {
-                    const lb = mustCrossLowerBound(next, ws, level, prep);
-                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_SURROUND_LB) && ws.surroundMask !== 0) {
-                    const lb = surroundLowerBound(next, ws, level, prep);
-                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_ADJ_TURN_LB) && ws.adjTurnMask !== 0) {
-                    const lb = adjTurnLowerBound(next, ws, level, prep);
-                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
-                if (ok && (!cfg || cfg.PRUNE_MC_FORCED_NEIGHBOR) && ws.mustCrossMask !== 0 && mustCrossForcedNeighborDeadlocked(next, ws, level, prep)) ok = false;
-                if (ok && cfg && cfg.PRUNE_MC_NEIGHBOR_BUDGET === true && ws.mustCrossMask !== 0 && mustCrossNeighborBudgetDeadlocked(next, ws, level, prep)) ok = false;
-                if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
-                // Connectivity: check near end and every 8 path steps. rSteps<=20 is intentionally
-                // wider than dfsFromGate's/repair-search's rSteps<=10 -- tried narrowing it to 10
-                // (2026-07-23, commit eadfadc) to cut isConnected's ~20%-of-CPU cost, but a clean
-                // uncontended stress-corpus-1 before/after run found it cost 2 additional unsolved
-                // levels (R01014, R01271) with no offsetting speed win, so it was reverted. See
-                // reports/2026-07-23-solver-batch-speed-and-hint-provenance.md.
-                if (ok && (!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 20 || (realLen & 7) === 0)) {
-                    const _tc = _BEAM_DEBUG ? _hrtNow() : 0n;
-                    const _connOk = isConnected(next, ws, level, prep);
-                    if (_BEAM_DEBUG) { _dbgConnNs += _hrtNow() - _tc; _dbgConnCalls++; }
-                    if (!_connOk) ok = false;
-                }
+                const ok = verdict === 'pass';
                 if (ok) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template, curCtx);
                     // sc: constraint-state key for beam dedup, one delimited field per mask —
@@ -728,4 +710,3 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     if (out) out.timedOut = false;
     return null;
 }
-

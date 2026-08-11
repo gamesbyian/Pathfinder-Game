@@ -32,6 +32,24 @@ export function winningAttempt(result, phase = null) {
     return (Array.isArray(result?.attempts) ? result.attempts : []).find(a => a?.ok && (!phase || a.schedulerPhase === phase)) ?? null;
 }
 
+function projectedAttemptError(error) {
+    const bounded = (value, fallback, max) => {
+        let string;
+        try { string = typeof value === 'string' ? value : value == null ? fallback : String(value); }
+        catch { string = fallback; }
+        return string.slice(0, max);
+    };
+    const field = (key) => { try { return error?.[key]; } catch { return undefined; } };
+    return {
+        name: bounded(field('name'), 'Error', 120),
+        message: bounded(field('message'), 'Unknown attempt error', 500),
+        gateKey: Number.isFinite(field('gateKey')) ? field('gateKey') : null,
+        configKey: bounded(field('configKey'), 'unknown', 240),
+        profile: bounded(field('profile'), 'unknown', 120),
+        template: field('template') == null ? null : bounded(field('template'), 'unknown', 120),
+    };
+}
+
 /** Portfolio-experiment attempts carry schedulerPhase ('portfolio'/'fallback'); plain legacy-mode
  *  attempts and race.mjs's raced attempts never do (confirmed: scripts/solver-parallel/
  *  benchmark.mjs finds its own winner the same phase-free way, `attempts.find(a => a.ok)`) — so a
@@ -56,6 +74,14 @@ export function attemptRecord(a) {
     return {
         gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
         ok: a.ok, elapsedMs: a.elapsedMs,
+        ...(a.outcome !== undefined ? { outcome: a.outcome } : {}),
+        // Re-project an explicit whitelist instead of retaining an arbitrary thrown object or a
+        // future accidental `stack` field from an upstream transport.
+        ...(a.error !== undefined ? { error: projectedAttemptError(a.error) } : {}),
+        ...(a.passNumber !== undefined ? { passNumber: a.passNumber } : {}),
+        ...(a.configKey !== undefined ? { configKey: a.configKey } : {}),
+        ...(a.restart !== undefined ? { restart: a.restart } : {}),
+        ...(a.schedulerPhase !== undefined ? { schedulerPhase: a.schedulerPhase } : {}),
         // How much budget this attempt was actually GIVEN. Without it, an attempt that exhausted its
         // search and one that got a sliver of a divided budget are indistinguishable in a report --
         // which is exactly the question "did the last-resort tier get room to run?" needs answered.
@@ -79,6 +105,7 @@ export function attemptRecord(a) {
         ...(a.admissibleOrder ? { admissibleOrder: true } : {}),
         ...(a.admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
         ...(a.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
+        ...(a.mainLoopLateReserve ? { mainLoopLateReserve: true } : {}),
         ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
         ...(a.randomSeed !== undefined ? { randomSeed: a.randomSeed } : {}),
         // seedSalt is the value to REPLAY a repair winner directly (repairPrimarySeed(gateKey,
@@ -108,6 +135,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         id: id ?? null,
         ok: !!result?.ok,
         status: result?.status ?? 'unknown',
+        hadAttemptError: attempts.some(a => a.outcome === 'error'),
         error: result?.error ?? null,
         totalMs: result?.totalMs ?? null,
         elapsedMs: result?.totalMs ?? null,

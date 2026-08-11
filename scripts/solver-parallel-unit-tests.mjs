@@ -35,11 +35,25 @@ test('racedAttemptRecord preserves every dispatch-identity flag in every race ph
       admissibleOrder: true, admissibleOrderNoTieBreak: true, admissibleOrderLds: true,
     },
   };
-  assert.deepEqual(racedAttemptRecord(job, { ok: false, elapsedMs: 12 }, { attractionDiversity: true }), {
+  assert.deepEqual(racedAttemptRecord(job, { ok: false, outcome: 'exhausted', elapsedMs: 12 }, { attractionDiversity: true }), {
     gateKey: 7, profile: 'none', template: null, beamWidth: null,
     repair: true, repairTurnBiased: true,
     admissibleOrder: true, admissibleOrderNoTieBreak: true, admissibleOrderLds: true,
-    attractionDiversity: true, ok: false, elapsedMs: 12, nodesExpanded: 0,
+    attractionDiversity: true, ok: false, outcome: 'exhausted', elapsedMs: 12, nodesExpanded: 0,
+  });
+});
+
+test('racedAttemptRecord expands bounded worker errors with attempt identity', () => {
+  const job = { gateKey: 7, attemptConfig: { profileName: 'default', template: { id: 'portal' }, beamWidth: 500 } };
+  const record = racedAttemptRecord(job, {
+    ok: false, outcome: 'error', allocatedBudgetMs: 50, elapsedMs: 3,
+    error: { name: 'TypeError', message: 'dispatch failed' },
+  });
+  assert.equal(record.outcome, 'error');
+  assert.equal(record.allocatedBudgetMs, 50);
+  assert.deepEqual(record.error, {
+    name: 'TypeError', message: 'dispatch failed', gateKey: 7,
+    configKey: 'beam:default/portal@beam500', profile: 'default', template: 'portal',
   });
 });
 

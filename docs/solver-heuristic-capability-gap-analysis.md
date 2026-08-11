@@ -211,6 +211,16 @@ observed failure evidence. Evaluate scheduling separately from scoring at equal 
 This is plausible, but lower priority than mechanic-derived facts because portfolio reordering has
 already underperformed when it lacked a genuinely complementary technique.
 
+The common engineering substrate for gaps 4–6 is now specified in
+[`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md).
+That plan does **not** promote any of these hypotheses to production policy. It standardizes typed
+artifacts, replay-complete candidate witnesses, neutral resource measurements, proof-strength
+classes, and shadow-mode exchange so the project can first measure whether repair, beam, DFS, and
+admissible-order search actually leave complementary information behind. If they do, the same
+contract can support bounded pairwise handoffs or failure-conditioned work allocation without
+recreating the failed broad fast-portfolio experiment or collapsing every technique onto one
+universal score.
+
 ## What is not implied
 
 - Another global weight profile; it cannot see missing state information.
@@ -233,9 +243,13 @@ already underperformed when it lacked a genuinely complementary technique.
 4. Evaluate any must-cross propagator by unique catches beyond the current gauntlet before hot-path
    integration.
 5. Use existing plateau signatures to test failure-conditioned repair actions/allocation while
-   preserving ordinary repair separately.
+   preserving ordinary repair separately. If this work crosses technique boundaries, use the
+   artifact/replay contract in `solver-interoperability-and-cooperation-plan.md` rather than adding
+   another bespoke telemetry channel.
 6. Keep resource vectors and topology novelty in retention/order experiments; demand better known-
-   winning-prefix survival at equal work.
+   winning-prefix survival at equal work. Shared versions of these measurements should use the
+   neutral metric vocabulary defined by the interoperability plan, while technique-specific scores
+   remain technique-specific.
 7. Promote a signal to pruning only after a written admissibility argument, stored-solution replay,
    oracle/fuzz falsification, and deterministic full-corpus cost/solve A/B.
 
