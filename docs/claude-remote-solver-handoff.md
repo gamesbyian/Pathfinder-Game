@@ -13,14 +13,14 @@ COMMON_INPUTS='corpus2_budget_ms=86400000,corpus2_node_budget=36000000,corpus2_w
 
 npm run solver:experiment-preflight -- --experiment-id=neighbor-budget-c2-full-$SHA \
   --run-id=neighbor-off-$SHA --corpus=data/stress/stress-levels-random.json --arm=control \
-  --flags=PRUNE_MC_NEIGHBOR_BUDGET=false \
+  --flags=PRUNE_MC_NEIGHBOR_BUDGET=false --workflow=solver-stress-refresh \
   --workflow-inputs="$COMMON_INPUTS,enable_flags=" --seeds= --work-budget=48240000 \
   --wall-deadline-ms=86400000 --profile=default --instrumentation=off \
   --output=/tmp/neighbor-off.manifest.json
 
 npm run solver:experiment-preflight -- --experiment-id=neighbor-budget-c2-full-$SHA \
   --run-id=neighbor-on-$SHA --corpus=data/stress/stress-levels-random.json --arm=treatment \
-  --flags=PRUNE_MC_NEIGHBOR_BUDGET=true \
+  --flags=PRUNE_MC_NEIGHBOR_BUDGET=true --workflow=solver-stress-refresh \
   --workflow-inputs="$COMMON_INPUTS,enable_flags=PRUNE_MC_NEIGHBOR_BUDGET" --seeds= --work-budget=48240000 \
   --wall-deadline-ms=86400000 --profile=default --instrumentation=off \
   --output=/tmp/neighbor-on.manifest.json
@@ -30,7 +30,7 @@ npm run solver:experiment-preflight -- --compare-control=/tmp/neighbor-off.manif
   --allow-workflow-input-differences=enable_flags
 ```
 
-The 48,240,000 manifest work envelope is the workflow's canonical accounting envelope for a 36,000,000 per-level node ceiling. Confirm both manifests contain exactly 1,700 unique Corpus-2 IDs in corpus order. Before accepting results, inspect each GitHub workflow run's actual dispatch inputs and verify they match its manifest. Stop if SHA, selection hash, corpus, budget, deadline, profile, seeds, instrumentation, or any non-declared workflow/solver setting differs.
+Using `--workflow=solver-stress-refresh` makes the preflight reject a manifest that omits any dispatch input belonging to that workflow. The 48,240,000 manifest work envelope is the workflow's canonical accounting envelope for a 36,000,000 per-level node ceiling. Confirm both manifests contain exactly 1,700 unique Corpus-2 IDs in corpus order. Before accepting results, inspect each GitHub workflow run's actual dispatch inputs and verify they match its manifest. Stop if SHA, selection hash, corpus, budget, deadline, profile, seeds, instrumentation, or any non-declared workflow/solver setting differs.
 
 ## A. Revised neighbor-budget full C2 A/B — run first
 
@@ -51,12 +51,12 @@ After those 12 are recorded, prepare a bounded committed generic case file for i
   "schemaVersion": 1,
   "corpus": "data/stress/stress-levels.json",
   "cases": [
-    { "id": "descriptive-id", "levelId": "S00001", "prefix": ["packed solver cell keys or [x,y] coordinates"], "child": "optional packed key or [x,y]" }
+    { "id": "example", "levelId": "S00001", "prefix": [65537, 65538], "child": 131074 }
   ]
 }
 ```
 
-Dispatch the same workflow with `case_format=cases` and that committed `cases_file`. Do not coerce timeouts, unsupported mechanics, model errors, or referee-rejected SAT witnesses into dead/live evidence. Stop expansion if labels remain mostly abstentions or cases cannot be tied to an exact solver SHA/prefix.
+Cells may be packed solver keys as above or `[x,y]` coordinate pairs. Dispatch the same workflow with `case_format=cases` and that committed `cases_file`. Do not coerce timeouts, unsupported mechanics, model errors, or referee-rejected SAT witnesses into dead/live evidence. Stop expansion if labels remain mostly abstentions or cases cannot be tied to an exact solver SHA/prefix.
 
 ## C. Exact repair retreat / causal window
 
@@ -68,7 +68,7 @@ Record the latest retreat with a referee-valid demonstrated continuation, the ti
 
 Run only after A is complete and recorded, unless Actions capacity is demonstrably independent and result directories/manifests cannot be confused. Follow [`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md): fresh control plus 0.05/0.10/0.15 treatments, 36M node ceiling, 48.24M work envelope, 86,400,000 ms deadline, deterministic cold mode, one worker, four suffix configs, no prime winner/baseline budget.
 
-For each fraction, generate a fresh schema-v2 control/treatment manifest pair. Record the actual workflow inputs including `enable_flags`, `main_loop_late_reserve_fraction`, `main_loop_late_reserve_config_count=4`, `prime_winner=false`, `persist_hints=false`, `deterministic=true`, and worker/budget inputs. Set the inert control's config count to `4` as well, so only `enable_flags` and `main_loop_late_reserve_fraction` are declared treatment dimensions. Compare with:
+For each fraction, generate a fresh schema-v2 control/treatment manifest pair with `--workflow=solver-stress-refresh`. Record the actual workflow inputs including `enable_flags`, `main_loop_late_reserve_fraction`, `main_loop_late_reserve_config_count=4`, `prime_winner=false`, `persist_hints=false`, `deterministic=true`, and worker/budget inputs. Set the inert control's config count to `4` as well, so only `enable_flags` and `main_loop_late_reserve_fraction` are declared treatment dimensions. Compare with:
 
 ```text
 --target-flag=STRATEGY_MAIN_LOOP_LATE_RESERVE \
