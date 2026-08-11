@@ -35,15 +35,20 @@ assert.equal(atlas.length, 2, 'shared known prefixes are enumerated once, not on
 assert.equal(atlas.find(row => row.child === 3).label, 'known-valid-continuation');
 assert.equal(atlas.find(row => row.child === 4).neutral.intersections, 1, 'neutral facts describe the child state');
 
-// Explicit-prefix CP-SAT seam: packed solver cells are converted to the 1-indexed coordinate
-// prefix expected by cpsat-full-probe.py, and UNKNOWN/unsupported remain abstentions.
+// Explicit-prefix CP-SAT seam: packed solver cells are 0-based internally and MUST be shifted to
+// raw/witness 1-based coordinates before cpsat-full-probe.py sees them. Explicit coordinate pairs
+// are already in that raw convention.
 const K = (x, y) => x | (y << 16);
 const explicit = extractExplicitPrefixCases({ levelsFile: 'c.json', levels: [{ levelId: 'R1', branches: [
     { depth: 1, prefix: [K(1, 1), K(2, 1)], child: K(2, 2), label: 'oracle-abstain' },
     { depth: 1, prefix: [K(1, 1), K(2, 1)], child: K(3, 1), label: 'known-valid-continuation' },
 ] }] }, { format: 'atlas-abstain' });
 assert.equal(explicit.length, 1);
-assert.deepEqual(explicit[0].prefix, [[1, 1], [2, 1], [2, 2]]);
+assert.deepEqual(explicit[0].prefix, [[2, 2], [3, 2], [3, 3]], 'packed 0-based cells become raw 1-based coordinates');
+const rawCoordinates = extractExplicitPrefixCases({ corpus: 'c.json', cases: [
+    { levelId: 'R1', prefix: [[1, 1], [2, 1]], child: [2, 2] },
+] });
+assert.deepEqual(rawCoordinates[0].prefix, [[1, 1], [2, 1], [2, 2]], 'explicit coordinate pairs remain raw/1-based');
 assert.equal(classifyProbeProcess({ stdout: 'R1: x -> INFEASIBLE in 1.0s', exitCode: 0 }).label, 'dead');
 assert.equal(classifyProbeProcess({ stdout: 'R1: x -> UNKNOWN in 60.0s', exitCode: 0 }).label, 'timeout/abstain');
 assert.deepEqual(parseEmittedPath('PATH [[1,1],[2,1]]\n'), [[1, 1], [2, 1]]);
