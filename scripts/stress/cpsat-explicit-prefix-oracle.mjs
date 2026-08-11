@@ -26,13 +26,14 @@ const cases = extractExplicitPrefixCases(sourceDocument, { format, corpus: cliCo
 if (!cases.length) throw new Error(`no explicit prefix cases selected from ${casesFile}`);
 
 installBrowserStubs();
-const { createSolver } = await import('../../modules/Solver.ts');
+const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.ts');
 const Solver = createSolver();
 const probePath = 'scripts/stress/cpsat-full-probe.py';
 const git = (...gitArgs) => execFileSync('git', gitArgs, { encoding: 'utf8' }).trim();
 const solverRef = git('rev-parse', 'HEAD');
 const corpusCache = new Map();
 const levelCache = new Map();
+const prepCache = new Map();
 const loadRawLevel = (corpus, levelId) => {
     if (!corpusCache.has(corpus)) {
         const document = JSON.parse(readFileSync(corpus, 'utf8'));
@@ -48,11 +49,41 @@ const prepareLevel = (corpus, levelId) => {
     if (!levelCache.has(key)) levelCache.set(key, Solver.prepareLevelForSolver(loadRawLevel(corpus, levelId), { source: 'raw' }));
     return levelCache.get(key);
 };
+const prepareReplay = (corpus, levelId) => {
+    const key = `${corpus}\0${levelId}`;
+    const level = prepareLevel(corpus, levelId);
+    if (!prepCache.has(key)) { const prep = api.prepLevel(level); prep._cfg = null; prepCache.set(key, prep); }
+    return { level, prep: prepCache.get(key) };
+};
 const pack = ([x, y]) => (x & 0xffff) | ((y & 0xffff) << 16);
+const replayPrefix = item => {
+    const { level, prep } = prepareReplay(item.corpus, item.levelId);
+    const keys = item.prefix.map(pack);
+    const state = api.createState(keys[0], level, prep);
+    for (let i = 1; i < keys.length; i++) {
+        const from = state.path.at(-1), next = keys[i];
+        if (!api.getNeighbors(from, state, level, prep).includes(next)) return { ok: false, invalidAt: i, from, next };
+        const portal = level.portalMap.get(from);
+        api.applyMove(next, state, level, prep, !!(portal && portal.dest === next));
+    }
+    return { ok: true };
+};
 
 const rows = [];
-let correctnessAlarms = 0;
+let correctnessAlarms = 0, inputAlarms = 0;
 for (const item of cases) {
+    const legality = replayPrefix(item);
+    if (!legality.ok) {
+        inputAlarms++;
+        rows.push({
+            schemaVersion: 1, caseId: item.id, levelId: item.levelId, corpus: item.corpus, prefix: item.prefix,
+            depth: item.depth, sourceLabel: item.sourceLabel, oracleLabel: 'timeout/abstain', oracleReason: 'native-prefix-illegal',
+            inputAlarm: true, invalidAt: legality.invalidAt, from: legality.from, next: legality.next, timeLimitSec: timeLimit,
+        });
+        console.log(`${item.id}: timeout/abstain (native-prefix-illegal)`);
+        continue;
+    }
+
     const prefixJson = JSON.stringify(item.prefix);
     const result = spawnSync('python3', [probePath, item.levelId, String(timeLimit), '--emit-path', `--corpus=${item.corpus}`, `--prefix=${prefixJson}`], {
         encoding: 'utf8', maxBuffer: 16 * 1024 * 1024,
@@ -92,11 +123,11 @@ const count = label => rows.filter(row => row.oracleLabel === label).length;
 const document = {
     schemaVersion: 1, generatedAt: new Date().toISOString(), solverRef, technique: 'cpsat-full-probe-explicit-prefix',
     sourceCases: casesFile, sourceFormat: format, requestedTimeLimitSec: timeLimit,
-    summary: { cases: rows.length, live: count('live'), dead: count('dead'), abstain: count('timeout/abstain'), correctnessAlarms },
+    summary: { cases: rows.length, live: count('live'), dead: count('dead'), abstain: count('timeout/abstain'), correctnessAlarms, inputAlarms },
     rows,
-    caution: 'CP-SAT labels are oracle/reference evidence, not native-solver solves. Timeout/unsupported/model errors remain abstentions.',
+    caution: 'CP-SAT labels are oracle/reference evidence, not native-solver solves. Illegal prefixes, timeouts, unsupported mechanics, model errors, and referee-rejected SAT witnesses remain abstentions.',
 };
 mkdirSync(path.dirname(outFile), { recursive: true });
 writeFileSync(outFile, `${JSON.stringify(document, null, 2)}\n`);
 console.log(`Wrote ${outFile}: ${document.summary.live} live / ${document.summary.dead} dead / ${document.summary.abstain} abstain`);
-if (correctnessAlarms) process.exitCode = 2;
+if (correctnessAlarms || inputAlarms) process.exitCode = 2;
