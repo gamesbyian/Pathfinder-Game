@@ -1,0 +1,91 @@
+# Executes a bounded, explicit list of prefix-feasibility questions through the EXISTING
+# cpsat-full-probe.py model. This is intentionally separate from cpsat-hint-harvest-sweep.yml
+# (which chooses unharvested levels/forced-grid combinations) and atlas-sweep.yml (which chooses
+# its own sampled decision points). It exists so research can ask exact {level,prefix,child} cases
+# without pretending those broader workflows accept an arbitrary case list.
+name: cpsat-explicit-prefix-oracle
+
+on:
+  workflow_dispatch:
+    inputs:
+      cases_file:
+        description: 'Committed JSON input. atlas-abstain format can directly read winning-prefix-atlas artifacts; cases format expects {corpus,cases:[{id?,levelId,prefix,child?}]}'
+        required: false
+        default: 'reports/stress/winning-prefix-atlas-pilot-2026-08-11.json'
+      case_format:
+        description: 'atlas-abstain or cases'
+        required: false
+        default: 'atlas-abstain'
+      corpus:
+        description: 'Optional corpus override. Blank uses the input document levelsFile/corpus field.'
+        required: false
+        default: ''
+      time_limit:
+        description: 'Per-case CP-SAT time limit in seconds. UNKNOWN remains timeout/abstain.'
+        required: false
+        default: '60'
+      max_cases:
+        description: 'Bound the number of selected cases for a pilot. Use a high value to process the whole committed list.'
+        required: false
+        default: '1000'
+
+concurrency:
+  group: cpsat-explicit-prefix-oracle
+  cancel-in-progress: false
+
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: read
+    steps:
+      - name: Check out dispatched ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          pip install ortools
+
+      - name: Verify explicit-prefix parsing/classification helpers
+        run: npm run test:research-analysis-lib
+
+      - name: Run explicit prefix oracle cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/stress
+          corpus_arg=()
+          if [ -n "${{ inputs.corpus }}" ]; then
+            corpus_arg+=("--corpus=${{ inputs.corpus }}")
+          fi
+          node scripts/run-bundled.mjs scripts/stress/cpsat-explicit-prefix-oracle.mjs -- \
+            "--cases=${{ inputs.cases_file }}" \
+            "--format=${{ inputs.case_format }}" \
+            "--time-limit=${{ inputs.time_limit }}" \
+            "--max-cases=${{ inputs.max_cases }}" \
+            "--out=reports/stress/cpsat-explicit-prefix-oracle-${{ github.run_id }}.json" \
+            "${corpus_arg[@]}"
+
+      - name: Upload oracle result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpsat-explicit-prefix-oracle-${{ github.run_id }}
+          path: reports/stress/cpsat-explicit-prefix-oracle-${{ github.run_id }}.json
+          retention-days: 30
+          if-no-files-found: error

@@ -1,9 +1,12 @@
 # Main-loop late-suffix reserve experiment
 
-> **Preflight note (2026-08-11):** generate control and treatment manifests with
-> `npm run solver:experiment-preflight` before dispatching this frozen A/B, then validate them with
-> `compareExperimentArms(..., 'STRATEGY_MAIN_LOOP_LATE_RESERVE')`. This does not change the frozen
-> protocol or intermingle it with the neighbor-budget experiment.
+> **Preflight note (2026-08-11):** generate schema-v2 control/treatment manifests with
+> `npm run solver:experiment-preflight` before dispatching this frozen A/B. Record the actual GitHub
+> workflow inputs as well as solver flags. For each fraction, compare with target
+> `STRATEGY_MAIN_LOOP_LATE_RESERVE` and explicitly allow only `enable_flags` and
+> `main_loop_late_reserve_fraction` to differ. `main_loop_late_reserve_config_count=4`, workers,
+> prime-winner state, budgets, deadlines, deterministic mode, and every other dispatch setting must
+> match. This does not change the frozen protocol or intermingle it with the neighbor-budget experiment.
 
 **Status:** opt-in treatment implemented; 14-level mechanism pilot completed; full-population
 matched-budget A/B not yet run. See the
@@ -53,6 +56,13 @@ done
 Use one worker for the frozen reference protocol. Parallel sharding is acceptable only if every
 arm uses the identical shard layout and combined reports assert complete coverage before analysis.
 The sweep checkpoint signature records commit, corpus digest, and sorted invocation arguments.
+
+When this protocol is dispatched through `solver-stress-refresh.yml`, set the inert control's
+`main_loop_late_reserve_config_count` to `4` as well. That makes the declared treatment dimensions
+unambiguous: the treatment changes only the feature enablement and the tested fraction. Generate a
+fresh manifest pair for **each** of 0.05, 0.10, and 0.15 rather than comparing all treatments to an
+under-specified generic manifest. After dispatch, verify the workflow run's actual inputs against the
+manifest before accepting the arm.
 
 ## Required analysis
 
