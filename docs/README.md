@@ -117,3 +117,4 @@ detail lives in the linked current-state doc, not repeated here:
 | 5 | Static typing | Done, and superseded by more — ADR 0011 took this further than originally scoped: every `modules/` file is now `.ts` under `strict` `tsc` (not the originally-planned check-only JSDoc allowlist). See `typing.md`. |
 | 6 | Rationalize tests into tiers | Done — migrated to Vitest (59 suites / ~700 tests), colocated as type-checked `modules/**/*.test.ts`; `ci = check && test:coverage && test:node`. See `testing.md`. |
 | 7 | Docs into authoritative docs + ADRs | Done (foundation) — this index, the current-state references above, ADRs, and `refactor-notes/` are in place. |
+- [Claude remote solver handoff](claude-remote-solver-handoff.md) — exact remote-only experiment order, inputs, dependencies, and stop conditions following the PR #1357 local evidence cleanup.

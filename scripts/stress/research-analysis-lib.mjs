@@ -1,5 +1,17 @@
 const pathKey = path => path.join(',');
 
+/** Level-balanced score/width extinction taxonomy. Saturation is intentionally narrow so a
+ * crowded pool cannot disguise a candidate that is materially below the scoring boundary. */
+export function classifyScoreWidthExtinction({ margin, tied, stableOrderAdmission, poolSize, beamWidth, bestRank }) {
+    if (tied && stableOrderAdmission) return 'C-exact-score-tie-stable-order';
+    if (margin != null && margin <= 1) return 'B-near-cutoff-weak-margin';
+    if (poolSize >= beamWidth * 2 && bestRank <= Math.ceil(beamWidth * 1.25) && margin != null && margin <= 5) {
+        return 'D-diversity-width-saturation';
+    }
+    if (margin != null && margin > 1) return 'A-clearly-mis-ranked';
+    return 'E-other-ambiguous';
+}
+
 const normalizedSegmentShape = path => {
     const x0 = path[0] & 0xffff, y0 = path[0] >>> 16;
     return path.map(key => `${(key & 0xffff) - x0}:${(key >>> 16) - y0}`).join(';');

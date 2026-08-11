@@ -5,6 +5,7 @@ import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { readLevelsWithHints } from '../level-data-io.mjs';
+import { classifyScoreWidthExtinction } from './research-analysis-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => {
     const [key, ...rest] = x.split('='); return [key, rest.join('=')];
@@ -19,6 +20,7 @@ const metadataFile = args.get('--metadata');
 const retainAllRemovalDetails = args.has('--retain-all-removal-details');
 const runId = args.get('--run-id') ?? `winning-lineage-${new Date().toISOString()}`;
 const solverRef = process.env.GITHUB_SHA ?? execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+const familyDefinitionVersion = 'structural-solution-family-v1';
 if (![limit, beamWidth, nodeBudget].every(Number.isFinite) || limit < 1 || beamWidth < 1 || nodeBudget < 1) {
     throw new Error('limits, beam width, and node budget must be positive numbers');
 }
@@ -71,16 +73,49 @@ for (const raw of selected) {
     const behaviorIdentical = JSON.stringify(offPath) === JSON.stringify(onPath) && offPrep._metrics.nodesExpanded === onPrep._metrics.nodesExpanded;
     if (!behaviorIdentical) throw new Error(`${raw.id}: observer changed path or nodes`);
     const lineage = observer.summary(level.reqLen);
-    if (!includeStages) delete lineage.stages;
     rows.push({ runId, solverRef, levelId: raw.id, coldSolved: metadataColdById?.get(String(raw.id)) ?? null,
-        gateKey, validLabels: labels.length, beamWidth, nodeBudget,
+        gateKey, validLabels: labels.length, reqLen: level.reqLen, beamWidth, nodeBudget,
         producer: 'beam', profile: 'default', seed: null, controlTreatment: 'observation-on',
         solved: !!onPath, nodesExpanded: onPrep._metrics.nodesExpanded, behaviorIdentical, lineage });
     console.error(`${raw.id}: labels=${labels.length} solved=${!!onPath} nodes=${onPrep._metrics.nodesExpanded}`);
 }
-const document = { schemaVersion: 2, runId, solverRef, generatedAt: new Date().toISOString(), levelsFile, selection, retainAllRemovalDetails,
+const forensic = rows.map(row => {
+    const loss = row.lineage.finalSupportLoss;
+    if (!loss || loss.lossCause !== 'score-width-culled') return null;
+    const removal = [...(row.lineage.stages ?? [])].reverse().find(stage => stage.depth === loss.depth && stage.stage === 'score-width-culled');
+    const supported = removal?.details?.supportedPool ?? [];
+    const ranks = supported.map(x => x.rank), scores = supported.map(x => x.score);
+    const margin = scores.length ? Math.min(...scores.map(score => removal.details.cutoffScore - score)) : null;
+    const tied = margin === 0;
+    // D is deliberately narrow: saturation alone must not hide a materially mis-ranked path.
+    // Require a >2x pool, a best rank still close to the boundary, and a modest (but not B-small)
+    // score miss. Far-below-cutoff candidates remain A even when the pool is crowded.
+    const widthSaturated = removal?.details?.poolCandidateCount >= beamWidth * 2;
+    const classification = classifyScoreWidthExtinction({ margin, tied,
+        stableOrderAdmission: removal.details.stableOrderAdmission,
+        poolSize: removal?.details?.poolCandidateCount ?? 0, beamWidth,
+        bestRank: ranks.length ? Math.min(...ranks) : Number.POSITIVE_INFINITY });
+    return { levelId: row.levelId, solved: row.solved, depth: loss.depth,
+        normalizedDepth: loss.depth / Math.max(1, row.reqLen),
+        beamWidth, candidatePoolSize: removal?.details?.poolCandidateCount ?? null,
+        knownSupportedCandidates: supported.length,
+        structuralWinningFamilies: removal?.details?.supportedPoolFamilies ?? 0,
+        bestKnownRank: ranks.length ? Math.min(...ranks) : null, worstKnownRank: ranks.length ? Math.max(...ranks) : null,
+        cutoffScore: removal?.details?.cutoffScore ?? null, knownSupportedScores: [...new Set(scores)], scoreMarginToCutoff: margin,
+        firstCulledScore: removal?.details?.firstCulledScore ?? null,
+        candidatesTiedAtCutoff: removal?.details?.equalScoreAtCutoff ?? null,
+        knownSupportTiedAtCutoff: tied, stableOrderAdmission: removal?.details?.stableOrderAdmission ?? null,
+        supportedInsertionOrders: supported.map(x => x.insertionOrder),
+        directionalOrderInvolvement: 'not determinable from the production cull record', widthSaturated,
+        structuralFamiliesAroundCutoff: removal?.details?.supportedPoolFamilies ?? 0,
+        canonicalWorkAfterExtinction: row.lineage.workAfterFinalKnownSupport, classification };
+}).filter(Boolean);
+for (const row of rows) if (!includeStages && row.lineage.stages) delete row.lineage.stages;
+const document = { schemaVersion: 3, runId, solverRef, generatedAt: new Date().toISOString(), levelsFile,
+    corpus: levelsFile, selection, retainAllRemovalDetails,
     familyDefinition: 'portal usage + crossing placement + must-cross first-entry/completion order; local edge detours ignored',
-    limitLevels: limit, beamWidth, nodeBudget, levels: rows,
+    familyDefinitionVersion, technique: 'beam winning-lineage observation', profile: 'default', seed: null,
+    workBudget: nodeBudget, limitLevels: limit, beamWidth, nodeBudget, levels: rows, scoreWidthForensics: forensic,
     summary: { levels: rows.length, solved: rows.filter(x => x.solved).length,
         behaviorIdentical: rows.filter(x => x.behaviorIdentical).length,
         correctnessAlarms: rows.reduce((n, x) => n + x.lineage.correctnessAlarms.length, 0) } };

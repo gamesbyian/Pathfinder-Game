@@ -69,6 +69,16 @@ export class WinningLineageObserver implements BeamResearchObserver {
         const familyIds = new Set(supports.flatMap(s => s.familyIds));
         const correctnessAlarm = record.stage === 'hard-pruned' && solutionIds.size > 0;
         let details = record.details;
+        if (details && Array.isArray(details.rankedPool)) {
+            const rankedPool = details.rankedPool as { path: number[]; rank: number; score: number; insertionOrder: number }[];
+            const supportedPool = rankedPool.map(row => ({ ...row, match: this.index.match(row.path) }))
+                .filter(row => row.match.paths > 0).map(row => ({ rank: row.rank, score: row.score,
+                    insertionOrder: row.insertionOrder, paths: row.match.paths, families: row.match.familyIds }));
+            const poolFamilies = new Set(supportedPool.flatMap(row => row.families));
+            details = { ...details, poolCandidateCount: rankedPool.length, supportedPool,
+                supportedPoolCandidates: supportedPool.length, supportedPoolFamilies: poolFamilies.size };
+            delete details.rankedPool;
+        }
         if (details && !this.options.retainAllRemovalDetails) {
             const supportedKeys = new Set(record.paths.filter((_, i) => supports[i].paths > 0).map(keyOf));
             const filter = (values: unknown, pathField: string): unknown => Array.isArray(values)

@@ -154,3 +154,10 @@ existing drift test; no flag default changed. `npm run test:unit` subsequently p
 while preserving aggregate candidate/support counts and cutoff metadata. An explicit
 `retainAllRemovalDetails` option remains for tiny forensic runs. The 4+4 pilot rerun retained identical
 outcomes, nodes, loss stages, and alarms, and its compact artifact remains approximately 12 KiB.
+
+## Supersession note (2026-08-11 follow-up)
+
+The 8-level lineage pilot remains a historical instrumentation check. Active status now lives in the
+30-level same-configuration cohort and score/width forensic report linked from
+[`../docs/future-work.md`](../docs/future-work.md); do not treat “run a bounded 8–15-level sample” as
+the current next action.

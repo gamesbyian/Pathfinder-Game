@@ -18,6 +18,7 @@ const outFile = args.get('--out') ?? 'reports/stress/residual-interface-mining-p
 const includePairs = args.has('--include-pairs');
 const runId = args.get('--run-id') ?? `residual-interface-${new Date().toISOString()}`;
 const solverRef = process.env.GITHUB_SHA ?? execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+const familyDefinitionVersion = 'structural-solution-family-v1';
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.ts');
@@ -55,7 +56,7 @@ for (const raw of selected) {
         records.push({ id: `${raw.id}:${i}`, family: api.structuralSolutionFamilySignature(candidate, level.mustCrossKeys),
             path: candidate, futureStates, intersections, obligations });
     }
-    rows.push({ runId, solverRef, levelId: raw.id, producer: 'known-valid-solutions',
+    rows.push({ runId, solverRef, levelId: raw.id, producer: 'known-valid-solutions', provenance: raw.provenance ?? null,
         profile: null, seed: null, maxSpan, solutions: records.length, result: mineResidualInterfaces(records, { maxSpan }) });
     console.error(`${raw.id}: repeated=${rows.at(-1).result.repeatedInterfaces} pairs=${rows.at(-1).result.candidatePairs}`);
 }
@@ -69,7 +70,10 @@ for (const row of rows) for (const signature of row.result.exactSignatures) {
 }
 const signatureRows = [...globalSignatures.values()].map(x => ({ ...x, levels: [...x.levels],
     solutions: [...x.solutions], families: [...x.families] }));
-const document = { schemaVersion: 2, runId, solverRef, generatedAt: new Date().toISOString(), levelsFile, maxSpan, levels: rows,
+const document = { schemaVersion: 3, runId, solverRef, generatedAt: new Date().toISOString(), levelsFile,
+    corpus: levelsFile, selection: 'first solution-rich levels in corpus order',
+    producer: 'known-valid-solutions', technique: 'offline residual-interface signature census', profile: null,
+    workBudget: null, beamWidth: null, seed: null, familyDefinitionVersion, maxSpan, levels: rows,
     substitutionSignatureDefinition: 'translation-invariant directed segment shapes + length/intersection deltas + obligation sequences',
     exactSubstitutionSignatures: signatureRows,
     summary: { levels: rows.length, solutions: rows.reduce((n, x) => n + x.solutions, 0),

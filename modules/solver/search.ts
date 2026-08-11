@@ -758,6 +758,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 firstCulledScore: pool[beamWidth]?.score ?? null,
                 equalScoreAtCutoff: pool.filter(c => c.score === pool[beamWidth - 1]?.score).length,
                 stableOrderAdmission: pool[beamWidth - 1]?.score === pool[beamWidth]?.score,
+                // Observation-only forensic context. The lineage observer immediately reduces this
+                // to supported ranks/families, so compact artifacts do not retain the whole pool.
+                rankedPool: pool.map((c, rank) => ({ path: [..._reconstructBeamPath(c, [])],
+                    rank: rank + 1, score: c.score, insertionOrder: c.insOrd })),
                 culled: actuallyCulled.map(c => ({ path: [..._reconstructBeamPath(c, [])], rank: pool.indexOf(c) + 1,
                     score: c.score, scoreMarginToCutoff: (pool[beamWidth - 1]?.score ?? c.score) - c.score })),
             });

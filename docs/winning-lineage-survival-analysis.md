@@ -279,7 +279,7 @@ It should not automatically produce a new production score term. The point is to
 
 ## 15. Implementation update (2026-08-11)
 
-The default-OFF real-beam observer, compact prefix index, provenance/family support accounting, and loss/cull/dedup context are implemented. See [`reports/2026-08-11-solver-research-observation-tooling-pilot.md`](../reports/2026-08-11-solver-research-observation-tooling-pilot.md). The report now includes both tooling validation and the completed first 8-level plus 4+4 stratified real-beam pilots; a larger population run remains an evidence-lane follow-up.
+The default-OFF real-beam observer, compact prefix index, provenance/family support accounting, and loss/cull/dedup context are implemented. See [`reports/2026-08-11-solver-research-observation-tooling-pilot.md`](../reports/2026-08-11-solver-research-observation-tooling-pilot.md). The original small pilots are historical; the 30-level same-configuration cohort supersedes them for active routing.
 
 ## 16. Label aggregation hardening (2026-08-11)
 
@@ -299,3 +299,8 @@ Callers may explicitly request all removal details for a small diagnostic fixtur
 The pilot's accidental raw-path `family` identity is fixed. Lineage schema v2 uses the established hint-diversity structural axes (directed portal usage, crossing placement, and must-cross first-entry/completion order), while exact paths and provenance remain separate. This equivalence intentionally ignores local edge detours and is not a homotopy proof.
 
 A 30-level, identical width-100/default-profile/100,000-node Corpus-1 cohort yielded 13 solves and 17 failures with observation OFF/ON parity on all runs. Mean normalized last-known-support depth was 0.505 for solves versus 0.239 for failures. Final observed failure losses were score/width on 15/17 and dedup on 2/17; solved runs had seven dedup, four score/width, and two with no observed extinction. See [`../reports/2026-08-11-pr1356-review-follow-up.md`](../reports/2026-08-11-pr1356-review-follow-up.md). This strengthens the retention-stage diagnosis but still does not prove true solution extinction or justify a score/width change.
+
+
+## 2026-08-11 score/width forensic follow-up
+
+The clean-commit rerun reproduced every headline result and recorded ranked pre-cull context. The 15 failed final score/width losses classify as ten clearly mis-ranked, three weak-margin, two narrowly width-saturated, zero exact-score-tie/stable-order, and zero ambiguous. Four solved controls also finally lost stored-label support at score/width with material margins and nevertheless solved, emphasizing label incompleteness. The strongest explanation is score representation under frontier saturation, not stable tie asymmetry. Remote contrastive labels are required before freezing a narrow family-reservoir counterfactual; production score, width, and dedup remain unchanged. See [`../reports/2026-08-11-winning-lineage-score-width-forensics.md`](../reports/2026-08-11-winning-lineage-score-width-forensics.md).

@@ -1,75 +1,37 @@
 # Solver-research tooling completion matrix
 
-> **Status:** active  
-> **Scope:** handoff/status synthesis; pilot evidence only, not production policy  
+> **Status:** active handoff reference (reconciled after PR #1357)
+> **Scope:** observation/tooling evidence, not production promotion
 > **Date:** 2026-08-11
 
-## Implemented and validated
+## Current completion state
 
-| Research objective | Reused foundation | Added observation/tooling | Small validation | Current evidence status |
-|---|---|---|---|---|
-| Symmetry controls | family manifests, canonical transforms, `family-pair-divergence`, real prune/lower-bound/scoring primitives | mapped semantic-prefix comparison, dual-stream research seed, survivor-order/draw records | 202 mapped R02248 prefixes plus 100k-node matched-seed repair pair | no semantic alarm; controlled deterministic-order → stochastic-trajectory interaction |
-| Winning-lineage survival | real production beam, stored canonical/variant-replayed hints, canonical referee | provenance/family prefix index; incoming/generated/prune/dedup/width/diversity boundaries; bounded supported-removal context | first 8-level smoke and 4 cold-solved + 4 cold-unsolved controls | controls retained known support deeper (mean 0.212 vs 0.068); five width and three dedup final losses; zero hard-prune alarms |
-| Contrastive branch atlas | `SOLVER_TESTING_API`, authoritative state replay/neighbors, existing CP-SAT atlas workflow | coalesced known prefixes, known continuation children, child-state neutral facts, explicit abstention | 3 levels / 19 prefixes / 31 siblings | 19 known continuations, 12 oracle abstentions; local `ortools` unavailable |
-| Beam/repair producer premise | real beam boundaries and real repair elite pool | bounded replay-complete population samples, arrival work, shared neutral projection | 3 hard levels; 107 beam / 191 repair artifacts | zero exact/full-projection overlap; preliminary non-redundancy, no receptor verdict |
-| Residual interfaces | canonical-valid solution corpus and real state transitions | endpoint interface miner, detour/commuting labels, exact represented-state equality | 45 solutions / 5 levels, span ≤12 | 2,825 exact-state substitutions among correlated pairs; signature reduction warranted, no online operator |
-| Repair causal window | real retained repair elites and known-valid trajectories | conservative longest-known-prefix rollback witness | 15 elites / 3 levels | median demonstrated rollback 63 steps / 0.815 `reqLen`; suffix-local premise weakened, exact retreat oracle pending |
-| Existing read-only tools | existing crossing-slack analyzer and family-boundary library/CLI | no duplicate implementation | 10-level crossing smoke; family-boundary tests/CLI smoke | 7,957 valid prefixes, zero negative-slack alarms; wide runs deliberately not performed |
-| Differential reducer | existing single-level reducer/predicate seam | none | limitation inspected | trigger not met; do not build relational reducer yet |
+| Objective | Implemented/current evidence | Next valid action |
+|---|---|---|
+| Neighbor-budget caller policy | Corrected independent caller participation: stochastic repair `takePly` suppresses the prune; DFS, beam, and deterministic repair sub-searches retain it. | Remote-only fresh full 1,700-level corrected-wiring A/B; do not reuse the old +14 verdict. |
+| Winning lineage | Real beam boundaries; OFF/ON parity; structural family v1 (portal use, crossing placement, must-cross first-entry/completion order). Same-config Corpus-1 width-100/default/100k cohort: 13 solved, 17 failed; mean normalized last support 0.505 vs 0.239; failed final loss 15 score/width, 2 dedup; zero hard-prune alarms. | Local cutoff forensics are complete in the companion report. Obtain remote contrastive labels before freezing a retention counterfactual. |
+| Score/width forensics | Cull artifacts now record candidate pool, supported ranks/scores/families, cutoff/first-culled score, tie population, insertion order, margin, and post-extinction work. Level-balanced failure/control classification is published. | Test only a narrow retention counterfactual after CP-SAT labels; no production score/width/dedup change now. |
+| Contrastive branch atlas | Existing known-prefix sibling enumeration preserves explicit abstention; initial 12 abstentions remain unlabelled. | Remote-only existing CP-SAT/reference workflow: 12 first, then bounded same-parent siblings near extinctions; keep live/dead/timeout distinct. |
+| Residual interfaces | 20 levels / 288 canonical-valid solutions: 31,351 exact occurrences → 845 translation-invariant signatures; 459 multi-solution, 201 cross-structural-family, 14 cross-level. The 14 are inspectable with provenance and held-out classification. | Continue only motifs surviving independent held-out scrutiny; no substitution machinery. |
+| Repair causal window | Existing conservative rollback census over retained elites shows a large retreat proxy, not exact edit distance. | Remote-only exact/reference bounded retreat to latest demonstrated continuation; no new repair operator. |
+| Experiment preflight | Clean-SHA manifest records corpus, ordered IDs/hash, complete flag map, seeds, work/deadline, profile, instrumentation, and output. Arm comparison permits only named false→true target polarity plus run/output identity. Tests cover corpus/order/budget/deadline/profile/seeds/instrumentation/non-target drift/polarity/duplicate/missing IDs and dirty-tree CLI refusal. | Generate fresh pairs on remote `main` immediately before each decision A/B; reject mismatches before accepting results. |
+| Main-loop late reserve | Default-off reserve-not-reorder mechanism and 14-level activation pilot complete; frozen protocol unchanged. | Remote-only full A/B after neighbor-budget is recorded, with a fresh preflight pair. |
+| Beam/repair producer premise | Bounded real-population observation found preliminary non-redundancy; no live receptor verdict. | Optional bounded counterfactual after oracle/lineage work clarifies the receptor. |
+| Differential reducer / blackboard | Existing single-level reducer and interoperability seams inspected; trigger not met. | Conditional only; do not build without recurring independent evidence. |
 
-## Normal-behavior evidence
+## Normal-behavior and correctness evidence
 
-Observation fields are absent by default. Focused OFF/ON fixtures assert identical returned solution or
-failure and identical canonical nodes for beam and repair. `npm run solver:bench -- --check` solved
-160/160 at 51,959,647 canonical nodes, and `npm run test:unit` passed 82 files / 1,091 tests. Wall time
-is not used as behavior evidence.
+Observation fields remain absent by default. Focused OFF/ON fixtures assert identical solution/failure and canonical nodes. The published benchmark remains 160/160 at 51,959,647 canonical nodes. No valid known prefix in the bounded lineage cohort hit a hard prune; this is sample evidence, not a global proof.
 
-## Correctness alarms
+## Exact remote-only queue
 
-No valid known prefix was observed failing a hard prune in the bounded lineage runs. No mapped semantic
-mismatch was observed in the 202-prefix symmetry pilot. The crossing-slack valid-path smoke reported
-zero negative-slack alarms. These are sample statements, not global proofs.
+1. Corrected `PRUNE_MC_NEIGHBOR_BUDGET` deterministic full Corpus-2 OFF/ON A/B.
+2. Existing CP-SAT/reference contrastive labels (12 abstentions, then bounded extinction-adjacent siblings).
+3. Existing CP-SAT/reference exact repair-retreat census.
+4. Frozen `STRATEGY_MAIN_LOOP_LATE_RESERVE` full A/B, separate and normally after item 1.
 
-## Exact larger workflows now enabled but not run
+See [`../docs/claude-remote-solver-handoff.md`](../docs/claude-remote-solver-handoff.md) for exact dispatch inputs and stop conditions. None of these remote jobs was run or approximated locally during this cleanup.
 
-These remain evidence-lane commands, not production experiments:
+## Supersession note
 
-```text
-# Larger stratified lineage sample; retain all removal rows only for a deliberately small forensic run.
-npm run solver:winning-lineage-pilot -- \
-  --metadata=logs/winning-path-archaeology/corpus2-sample.json \
-  --limit-levels=40 --beam-width=100 --node-budget=50000 \
-  --out=reports/stress/winning-lineage-expanded.json
-
-# For a tiny forensic subset only, add --include-stages --retain-all-removal-details.
-
-# Persist complete producer witnesses for offline receptor work (still no consumption).
-npm run solver:producer-population-pilot -- \
-  --limit-levels=20 --node-budget=30000 --beam-width=100 --include-artifacts \
-  --out=reports/stress/producer-population-expanded.json
-
-# Emit exact residual-interface pairs for unique-signature reduction.
-npm run solver:residual-interface-pilot -- \
-  --limit-levels=20 --limit-solutions=20 --max-span=12 --include-pairs \
-  --out=reports/stress/residual-interface-expanded.json
-
-# Grow contrastive rows. After installing the repository's CP-SAT dependency, send only
-# `oracle-abstain` prefix+child rows through the existing bounded cpsat-full-probe/atlas workflow.
-npm run solver:winning-prefix-atlas-pilot -- \
-  --limit-levels=10 --limit-solutions=5 \
-  --out=reports/stress/winning-prefix-atlas-expanded.json
-```
-
-Not run and not authorized by this tooling evidence: the full-population
-`PRUNE_MC_NEIGHBOR_BUDGET` A/B, main-loop late-reserve A/B, wide family-trove sweep, any opt-in
-promotion, live cross-technique handoff, rotate/mirror retry, differential reducer, or new search
-algorithm.
-
-## Queue implications
-
-The full interoperability blackboard remains lower priority than a bounded counterfactual receptor
-probe. Another suffix-local repair operator is lower priority until exact retreat checks contradict the
-large rollback proxy. Generic differential reduction remains unnecessary until several independent
-families share one relational signature. Winning-lineage expansion and CP-SAT labelling are the most
-direct next evidence purchases; none imply a production score, prune, width, dedup, seed, scheduler,
-or budget change.
+The first 8-level lineage smoke and 5-level interface pilot remain historical tooling checks. They are superseded for active routing by the 30-level same-config cohort, score/width forensics, and 20-level unique-signature census above. Future agents should not rebuild lineage instrumentation or repeat raw-pair signature reduction.
