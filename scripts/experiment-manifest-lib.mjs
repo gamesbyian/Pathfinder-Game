@@ -1,8 +1,16 @@
 import { createHash } from 'node:crypto';
 
 const REQUIRED = ['schemaVersion', 'experimentId', 'runId', 'solverRef', 'corpus', 'levelIds',
-    'arm', 'solverFlags', 'workflowInputs', 'seeds', 'canonicalWorkBudget', 'wallDeadlineMs', 'profile',
+    'arm', 'solverFlags', 'workflow', 'workflowInputs', 'seeds', 'canonicalWorkBudget', 'wallDeadlineMs', 'profile',
     'instrumentation', 'output'];
+
+const WORKFLOW_REQUIRED_INPUTS = {
+    'solver-stress-refresh': [
+        'corpus2_budget_ms', 'corpus2_node_budget', 'corpus2_workers', 'enable_flags', 'disable_flags',
+        'main_loop_late_reserve_fraction', 'main_loop_late_reserve_config_count', 'prime_winner', 'persist_hints',
+        'corpus1_budget_ms', 'corpus1_node_budget', 'corpus1_workers', 'deterministic',
+    ],
+};
 
 export const levelSelectionHash = levelIds => createHash('sha256').update(levelIds.join('\n')).digest('hex');
 const stableObject = value => JSON.stringify(Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b))));
@@ -19,6 +27,9 @@ export function validateExperimentManifest(manifest) {
     if (!manifest.workflowInputs || typeof manifest.workflowInputs !== 'object' || Array.isArray(manifest.workflowInputs)) {
         throw new Error('workflowInputs must be an object');
     }
+    const requiredWorkflowInputs = WORKFLOW_REQUIRED_INPUTS[manifest.workflow] ?? [];
+    const missingWorkflowInputs = requiredWorkflowInputs.filter(key => !(key in manifest.workflowInputs));
+    if (missingWorkflowInputs.length) throw new Error(`workflowInputs missing for ${manifest.workflow}: ${missingWorkflowInputs.join(', ')}`);
     return manifest;
 }
 
