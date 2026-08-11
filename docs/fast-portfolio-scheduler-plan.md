@@ -9,6 +9,14 @@ Plan: Fast Portfolio Scheduler Experiment
 > still exists in `modules/solver/orchestration.ts` as opt-in, offline-only CLI tooling — this
 > document remains the design record for its non-negotiable definitions and phased build, kept in
 > case of a future re-attempt rather than folded into the archive.
+>
+> **Related but distinct follow-up:** [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md)
+> deliberately does **not** revive this broad fast-portfolio hypothesis. This experiment asked
+> whether many techniques should receive earlier cold-start slices. The interoperability plan asks
+> first whether techniques leave behind complementary typed artifacts, replayable candidates, or
+> failure evidence that another technique can exploit. Any later failure-conditioned scheduling in
+> that plan should therefore be read as evidence-driven cooperation under the canonical work budget,
+> not as a reason to repeat the tier rotation measured negative here.
 
 Purpose
 Test one narrow hypothesis:
