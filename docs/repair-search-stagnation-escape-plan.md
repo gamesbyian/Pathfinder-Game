@@ -672,3 +672,5 @@ A conservative 15-elite / three-level known-trajectory census found a median dem
 assuming the measured near-misses are suffix-local. Next use bounded exact continuation checks while
 retreating through the same elites; do not build another suffix operator yet. See
 [`reports/2026-08-11-repair-rollback-causal-window-pilot.md`](../reports/2026-08-11-repair-rollback-causal-window-pilot.md).
+
+> **2026-08-11 review status:** No production policy from this track was changed in the PR #1356 follow-up. Completed lineage/correctness evidence and the explicitly uncompleted oracle/receptor work are recorded in [the review follow-up report](../reports/2026-08-11-pr1356-review-follow-up.md); oracle abstentions remain abstentions.

@@ -446,3 +446,15 @@ candidates. This supports deeper signature reduction, not an online substitution
 The objective-by-objective implementation, pilot, correctness-alarm, and deliberately-not-run matrix
 is [`reports/2026-08-11-solver-research-tooling-completion-matrix.md`](../reports/2026-08-11-solver-research-tooling-completion-matrix.md).
 Use it before inventing adjacent telemetry or scheduling a larger evidence run.
+
+## 2026-08-11 PR #1356 review reconciliation
+
+The neighbor-budget caller-policy regression is repaired with independent named participation and diagnostics options; the fresh full-population verdict remains pending rather than being inferred from a partial run. Winning-lineage family semantics now separate exact paths from the existing structural hint-diversity axes, and a 13-solved/17-failed same-configuration beam cohort confirms earlier known-support loss in failures, most often at score/width retention. Route the next lineage work to cutoff-margin/equal-score diagnosis, not directly to a score or width change. Full details and explicit infrastructure blockers are in [`../reports/2026-08-11-pr1356-review-follow-up.md`](../reports/2026-08-11-pr1356-review-follow-up.md).
+
+### Residual-interface signature reduction (2026-08-11)
+
+The 20-level/288-solution follow-up reduced 31,351 exact-state-preserving pair occurrences to 845 translation-invariant local substitution signatures. Although 459 signatures span multiple solutions and 201 span structural solution families, only 14 recur across levels. This resolves the main methodological ambiguity: the phenomenon is predominantly correlated within-level multiplicity, with a small reusable residue worth held-out inspection. Do not build substitution or partial-order machinery yet; validate the 14 cross-level signatures first. See [`../reports/2026-08-11-residual-interface-segment-mining-pilot.md`](../reports/2026-08-11-residual-interface-segment-mining-pilot.md).
+
+### Decision-experiment preflight manifests (2026-08-11)
+
+Use `npm run solver:experiment-preflight -- ...` before an expensive decision run. The command refuses a dirty worktree by default and records the exact commit, corpus path, ordered level IDs plus SHA-256 selection hash, arm, full solver flag map, seeds, canonical work budget, wall deadline, profile, instrumentation state, and output destination. `compareExperimentArms` rejects every control/treatment mismatch except run/output identity and the explicitly named target flag. This is an audit sidecar, not a new experiment scheduler or source of truth.

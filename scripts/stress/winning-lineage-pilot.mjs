@@ -2,6 +2,7 @@
 /** Bounded real-beam winning-lineage pilot. Known solutions label observation only. */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { readLevelsWithHints } from '../level-data-io.mjs';
 
@@ -16,6 +17,8 @@ const outFile = args.get('--out') ?? 'reports/stress/winning-lineage-pilot.json'
 const includeStages = args.has('--include-stages');
 const metadataFile = args.get('--metadata');
 const retainAllRemovalDetails = args.has('--retain-all-removal-details');
+const runId = args.get('--run-id') ?? `winning-lineage-${new Date().toISOString()}`;
+const solverRef = process.env.GITHUB_SHA ?? execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
 if (![limit, beamWidth, nodeBudget].every(Number.isFinite) || limit < 1 || beamWidth < 1 || nodeBudget < 1) {
     throw new Error('limits, beam width, and node budget must be positive numbers');
 }
@@ -48,7 +51,8 @@ for (const raw of selected) {
         const candidate = raw.hints[i];
         const verdict = Solver.validateCandidatePath(level, candidate);
         if (!verdict.ok) throw new Error(`${raw.id}: stored hint ${i} failed canonical referee: ${verdict.reason}`);
-        valid.push({ path: candidate, provenance: JSON.stringify(raw.hintRecords?.[i]?.provenance ?? []), family: candidate.join(',') });
+        valid.push({ path: candidate, provenance: JSON.stringify(raw.hintRecords?.[i]?.provenance ?? []),
+            family: api.structuralSolutionFamilySignature(candidate, level.mustCrossKeys) });
     }
     const byGate = new Map();
     for (const label of valid) {
@@ -68,12 +72,14 @@ for (const raw of selected) {
     if (!behaviorIdentical) throw new Error(`${raw.id}: observer changed path or nodes`);
     const lineage = observer.summary(level.reqLen);
     if (!includeStages) delete lineage.stages;
-    rows.push({ levelId: raw.id, coldSolved: metadataColdById?.get(String(raw.id)) ?? null,
+    rows.push({ runId, solverRef, levelId: raw.id, coldSolved: metadataColdById?.get(String(raw.id)) ?? null,
         gateKey, validLabels: labels.length, beamWidth, nodeBudget,
+        producer: 'beam', profile: 'default', seed: null, controlTreatment: 'observation-on',
         solved: !!onPath, nodesExpanded: onPrep._metrics.nodesExpanded, behaviorIdentical, lineage });
     console.error(`${raw.id}: labels=${labels.length} solved=${!!onPath} nodes=${onPrep._metrics.nodesExpanded}`);
 }
-const document = { schemaVersion: 1, generatedAt: new Date().toISOString(), levelsFile, selection, retainAllRemovalDetails,
+const document = { schemaVersion: 2, runId, solverRef, generatedAt: new Date().toISOString(), levelsFile, selection, retainAllRemovalDetails,
+    familyDefinition: 'portal usage + crossing placement + must-cross first-entry/completion order; local edge detours ignored',
     limitLevels: limit, beamWidth, nodeBudget, levels: rows,
     summary: { levels: rows.length, solved: rows.filter(x => x.solved).length,
         behaviorIdentical: rows.filter(x => x.behaviorIdentical).length,

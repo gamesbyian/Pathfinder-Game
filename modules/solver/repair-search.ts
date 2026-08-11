@@ -378,7 +378,8 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
         // levels lost). closeLengthGap/boundedDfsFromHere/relinkPaths below are all deterministic
         // (no rand()) and keep this check at its default (true) — pruning dead branches there can
         // only free more budget for live ones, same as dfsFromGate/beam.
-        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, false);
+        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, false,
+            { allowNeighborBudgetPrune: false });
 
         if (verdict === 'solution') {
             liveUndo.push(undo);
@@ -449,6 +450,9 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     // because the current callers already guarantee it holds elsewhere.
     return chosen === level.goalKey ? 'goalInvalid' : 'continue';
 }
+
+/** Direct seam for caller-policy regression tests. Production code uses the private function. */
+export const __takePlyForTests = takePly;
 
 // Diffs ws's current live path against `targetPrefix`, undoing the divergent suffix and
 // applying only the new prefix — same technique as beamSearchFromGate's `_liveUndo` diffing

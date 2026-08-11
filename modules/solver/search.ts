@@ -630,7 +630,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 const runConnectivity = rSteps <= 20 || (realLen & 7) === 0;
                 const _tc = _BEAM_DEBUG && runConnectivity ? _hrtNow() : 0n;
                 const pruneDiagnostics: PruneDiagnostics | undefined = research ? { reached: {}, rejected: {} } : undefined;
-                const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity, pruneDiagnostics);
+                const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity,
+                    { diagnostics: pruneDiagnostics });
                 if (_BEAM_DEBUG && runConnectivity) { _dbgConnNs += _hrtNow() - _tc; _dbgConnCalls++; }
                 if (verdict === 'solution') {
                     // ws.path is already [startKey, ..., pos, next] — return it

@@ -4,6 +4,11 @@ import { compareProducerPopulations, enumerateKnownPrefixBranches, mineResidualI
 assert.equal(compareProducerPopulations([{ path: [1, 2], metrics: { x: 1 } }], [{ path: [1, 2], metrics: { x: 1 } }]).exactPrefixOverlap, 1);
 const mined = mineResidualInterfaces([{ id: 'a', path: [1, 2, 4], futureStates: [null, null, 's'] }, { id: 'b', path: [1, 3, 4], futureStates: [null, null, 's'] }]);
 assert.equal(mined.candidatePairs, 1); assert.equal(mined.exactStatePreservingSubstitutions, 1);
+assert.equal(mined.uniqueExactSubstitutionSignatures, 1);
+const translated = mineResidualInterfaces([{ id: 'c', path: [10, 11, 13], futureStates: [null, null, 't'] },
+    { id: 'd', path: [10, 12, 13], futureStates: [null, null, 't'] }]);
+assert.equal(translated.exactSignatures[0].signature, mined.exactSignatures[0].signature,
+    'substitution signatures recur across translated local geometry');
 const commuting = mineResidualInterfaces([
     { id: 'a', path: [1, 2, 3, 4], obligations: [null, 'mp:0', 'mc:0', null] },
     { id: 'b', path: [1, 5, 6, 4], obligations: [null, 'mc:0', 'mp:0', null] },
