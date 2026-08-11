@@ -1,12 +1,22 @@
-# Must-cross neighbor-budget propagation: shadow probe → opt-in prune, +11/30 on first live sample (2026-08-08)
+# Must-cross neighbor-budget propagation: sound opt-in prune, +14 net full-corpus A/B (2026-08-08)
+
+> **Status:** inconclusive
+> **Last evidence:** 2026-08-11 — full A/B reconciliation plus follow-up dynamic-resource analysis
+> **Decision:** keep `PRUNE_MC_NEIGHBOR_BUDGET` opt-in/default-off; the rule is sound and net-positive but its 42-gained/28-lost finite-budget churn is not promotion-ready
+> **Remaining gate:** repeat or diagnose the full-population 42-gained/28-lost split before promotion
 
 `docs/solver-heuristic-capability-gap-analysis.md`'s item 3 ("Must-cross/intersection propagation:
 proven family, narrowed frontier") named the untried piece explicitly: **bounded dynamic
 propagation over forced interfaces and remaining free intersection budget, prototyped as a shadow
 propagator first, judged by unique catches beyond the shipped gauntlet** — and warned not to revive
 the falsified static forced-edge rule (`reports/2026-07-31-mustcross-forced-structure.md`'s step 4).
-This report is that sequence: derivation, shadow-probe measurement, full-corpus soundness replay,
-and a first live matched-node A/B.
+This report records the full sequence: derivation, shadow-probe measurement, full-corpus soundness
+replay, the first live matched-node sample, and the superseding full-corpus deterministic A/B.
+
+The broader 2026-08-11 interpretation and proposed descendants of this result live in
+[`2026-08-11-dynamic-resource-frontier-synthesis.md`](2026-08-11-dynamic-resource-frontier-synthesis.md).
+Use that synthesis for the current research direction; use this report for the evidence behind this
+specific prune.
 
 ## The gap between the two shipped must-cross checks
 
@@ -111,7 +121,7 @@ both pass.
 
 30-level sample of unsolved, portal-free, must-cross-bearing corpus-2 levels (first 30 by array
 position order among the typical-budget baseline's unsolved-with-must-cross-and-no-portals
-population, 284 total — see Limitations). `--work-budget=26800000 --budget-ms=60000
+population, 284 total). `--work-budget=26800000 --budget-ms=60000
 --disable-extra-budget-passes --workers=4` in both arms (extension tiers off in both, so the
 comparison isolates this one check; `--budget-ms` generous/non-binding per
 `docs/solver-budget-determinism.md`).
@@ -122,13 +132,9 @@ comparison isolates this one check; `--budget-ms` generous/non-binding per
 | **ON** (`PRUNE_MC_NEIGHBOR_BUDGET`) | **16/30** | 0 |
 
 **+11 (11 gained, 0 lost)** — every level OFF solves, ON also solves, plus 11 more. All 16 ON
-solutions came back `refereeValid: true`. This is a small sample and CLAUDE.md's own standing
-warning applies (a 24-level sample under-sold the reserved wall's true effect by roughly half in
-the opposite direction — small samples decide whether to spend more compute, never the rate) — but
-a clean, zero-regression, referee-valid +11/30 is a stronger first read than any of the three
-shadow-eval-harness candidates that were closed after their own live checks (Parts 4/7/8 of
-`docs/solver-shadow-eval-harness.md`), none of which reached the live-A/B stage before their catch
-rates alone closed them.
+solutions came back `refereeValid: true`. This sample correctly justified buying the full run but
+did **not** predict the final churn shape; it is retained as a methodological reminder that small
+samples are triage gates, not population-level effect estimates.
 
 ## Stage 5: full-corpus deterministic A/B (2026-08-08, `solver-stress-refresh.yml` runs #28/#29)
 
@@ -136,7 +142,7 @@ The Stage 4 sample was superseded by a **full-corpus** A/B on the same infrastru
 routine continuity baseline (`solver-stress-refresh.yml`, `deterministic=true` so the corpus-wide
 node budget — 36,000,000 for corpus-2, 50,000,000 for corpus-1 — is the sole binding constraint,
 not wall clock): run #28 (`PRUNE_MC_NEIGHBOR_BUDGET` OFF) vs. run #29 (ON), both dispatched from
-this branch at the same code revision, all 1,700 corpus-2 and 102 corpus-1 levels.
+the same code revision, all 1,700 corpus-2 and 102 corpus-1 levels.
 
 | arm | corpus-1 | corpus-2 |
 |---|---:|---:|
@@ -144,44 +150,68 @@ this branch at the same code revision, all 1,700 corpus-2 and 102 corpus-1 level
 | **ON** (run #29) | 96/102 | **739/1700** |
 | net | +0 | **+14** |
 
-corpus-1 is unaffected (0 gained, 0 lost — the corpus-1 stress set is much smaller and evidently
-doesn't exercise this path's regime). corpus-2's net +14 is **not** a strict superset, though: the
+Corpus-1 is unaffected (0 gained, 0 lost). Corpus-2's net +14 is **not** a strict superset: the
 churn is bidirectional — **42 levels gained, 28 lost** (`R00001`, `R00323`, `R00468`, `R00553`,
 `R00635`, `R00977`, `R01925`, `R01969`, `R02009`, `R02010`, `R02119`, `R02192`, `R02268`, `R02376`,
 `R02393`, `R02415`, `R02422`, `R02519`, `R02691`, `R02842`, `R02867`, `R02871`, `R02875`, `R02933`,
 `R03196`, `R03239`, `R03295`, `R03338`). Spot-checked: all 28 lost levels carry must-cross cells
 (confirmed against `data/stress/stress-levels-random.json`), so the flag is genuinely live on every
-one of them — this rules out the churn being some unrelated bug or noise source masquerading as the
-prune's effect. The lost levels are not a soundness violation (Stage 2's 8.5M-step replay already
-established the check never rejects a real solution) — the mechanism is budget *reallocation*: the
-prune cuts dead search earlier, which changes `dfsFromGate`/beam's node-by-node exploration order
-under the same fixed cumulative node budget, so a level that previously got solved by stumbling
-onto a solution before the budget ran out can now exhaust the budget exploring elsewhere first, and
-vice versa. This is an ordinary reordering side effect of any admissible pruning change under a
-fixed budget, not evidence of a defect in the check itself.
+one of them.
+
+The lost levels are not a soundness violation. Stage 2 established that the check does not reject a
+real stored solution. The mechanism is budget *reallocation*: pruning dead search earlier changes
+`dfsFromGate`/beam's node-by-node exploration order under the same fixed cumulative budget, so a
+level that previously reached one solution before exhaustion can now spend that finite budget in a
+different part of the tree, and vice versa.
 
 **Total node counts were nearly identical between arms** (corpus-2: 36,735,817,088 OFF vs.
-36,473,576,181 ON — a ~0.7% difference, consistent with the two runs using the same node budget
-per level and mostly exhausting it either way), so the +14 is not explained by ON simply searching
-more; it reflects a genuine reallocation of where the same amount of search effort goes.
+36,473,576,181 ON — about 0.7% lower ON), consistent with most levels exhausting the same per-level
+budget. The +14 therefore reflects altered allocation within the search, not ON simply receiving
+more work.
+
+## 2026-08-11 follow-up interpretation
+
+The later cross-corpus analysis in
+[`2026-08-11-dynamic-resource-frontier-synthesis.md`](2026-08-11-dynamic-resource-frontier-synthesis.md)
+strengthens the case that this result is pointing at a genuine missing representation rather than a
+one-off prune trick:
+
+- raw `reqInt` is almost flat between current Corpus-2 solves and failures;
+- root `freeInt = reqInt - mustCrossCount` does not predict the hard group (the `freeInt == 0`
+  population actually solves more often than the `freeInt > 0` population);
+- simple static must-cross layout descriptors add essentially no predictive value beyond the known
+  feature set; and
+- the strongest remaining signal is therefore **dynamic destruction of future completion
+  opportunity**, exactly what neighbor-budget detects in one narrow form.
+
+That synthesis records three concrete descendants worth testing without conflating them with this
+already-built rule:
+
+1. a portal-level version that preserves the current proof but abstains **locally** around
+   portal-affected required neighbours rather than globally because any portal exists anywhere;
+2. instrumentation of `crossingSlack = freeInt - forcedFutureNeighbourRevisits` as a diagnostic
+   state variable before using it for scoring/retention; and
+3. a bounded compatibility reasoner over multiple remaining must-cross completion interfaces,
+   explicitly avoiding the static forced-edge assumption already falsified in July.
+
+These are proposals, not claims that the current prune proves their soundness or value.
 
 ## Status and next steps
 
-The full-corpus result is a real, reproducible net positive (+14/1700 corpus-2, +0/102 corpus-1,
-zero regression on the already-solved corpus-1 population) but **not a clean win**: 28 corpus-2
-levels that solve today under the shipped default (flag OFF) would stop solving if this were
-promoted to default-on, offset by 42 different levels newly solving. Recommendation: **keep
-`PRUNE_MC_NEIGHBOR_BUDGET` opt-in, not default-on**, until at least one of the following closes the
-gap — (a) a second independent full-corpus run confirming the churn is stable rather than an
-artifact of this one pairing (repair-search's per-attempt seeds are deterministic functions of
-`(gateKey, seedSalt)`, so a repeat run with identical code should reproduce the same 42/28 split;
-worth confirming rather than assuming), or (b) a closer look at a handful of the 28 lost levels
-(e.g. via `method-probe.mjs` on the specific attempt config that solved them OFF) to characterize
-*why* the reallocation goes against them, which could surface a cheap follow-up tweak that keeps
-the +42 gains without the -28 cost. Written admissibility argument (Stage 0), stored-solution replay
-(Stage 2), a small live A/B (Stage 4), and now a full-corpus A/B (Stage 5) are all in hand; what
-remains before default-on is understanding/mitigating the bidirectional churn, not further
-soundness work — the check itself is not in question.
+The full-corpus result is a real net positive (+14/1700 corpus-2, +0/102 corpus-1), but **not a clean
+promotion win** because 28 Corpus-2 levels that solve with the shipped default OFF do not solve
+within the same fixed budget with the flag ON.
+
+Recommendation remains: **keep `PRUNE_MC_NEIGHBOR_BUDGET` opt-in, not default-on** until at least
+one of these decision-bearing checks is complete:
+
+- repeat the deterministic full-corpus A/B to confirm the same gained/lost identity split; or
+- inspect a representative subset of the 28 losses with existing method/attempt probes to
+  characterize the changed search allocation and identify whether a cheap policy treatment can
+  retain more of the +42 without sacrificing the -28.
+
+Further basic soundness replay is not the current blocker. The unresolved question is finite-budget
+search behavior.
 
 ## Reproducing
 
@@ -201,14 +231,14 @@ npm run solver:bench -- --check
 
 ## Limitations
 
-- **The 30-level sample is a convenience slice (array-order first 30), not a random sample** — no
-  reason to expect bias, but it wasn't drawn to guarantee representativeness the way a random draw
-  would.
-- **No already-solved control has been run yet at this writing** (launched, pending) — the reserved
-  wall's own history shows the solved-control population is what separates "safe" from "safe and
-  net-positive," and a small unsolved-only sample cannot substitute for it.
-- **Nothing here re-baselines `logs/solver-baseline.json`** — the flag is default-off, so no
-  baseline change is implied regardless of the A/B outcome.
-- **Portal levels and flipper-adjacent required neighbors are entirely out of scope** by
-  construction (see the derivation) — this result says nothing about whether either extension would
-  also be sound or valuable.
+- **The Stage-4 30-level sample was a convenience slice**, not a random sample, and its +11/30
+  clean-superset result was superseded by the Stage-5 full-population 42-gained/28-lost result.
+- **The full A/B includes already-solved controls by construction.** Older text in this report that
+  said an already-solved control was pending is obsolete; Stage 5 is the authoritative promotion
+  evidence.
+- **Nothing here re-baselines `logs/solver-baseline.json`** — the flag remains default-off, so no
+  baseline change is implied by the A/B.
+- **Portal levels and flipper-adjacent required neighbors are still out of scope** by construction.
+  The 2026-08-11 locally-abstaining portal extension is a proposal that requires a new derivation,
+  stored-solution replay, shadow score, and live A/B; it is not licensed by this report's existing
+  proof.
