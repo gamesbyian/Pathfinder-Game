@@ -1,11 +1,11 @@
 # Shadow-Mode Evaluation Harness for Middle-Layer Solver Reasoners
 
-**Status:** working infrastructure + four prototype results (Parts 4, 7, 8, 9), all sound — Tier
-2's three named candidates (Parts 4, 7, 8) are scored and closed with no solve-rate win; a 4th,
-differently-sourced candidate (Part 9, must-cross neighbor-budget propagation) is sound, shows the
-largest unique-catch count measured so far, and is pending a full-population live A/B — not yet
-closed.
-**Date:** 2026-08-05, updated 2026-08-06, 2026-08-08
+**Status:** working infrastructure + four prototype results (Parts 4, 7, 8, 9), all sound. Tier
+2's three named candidates (Parts 4, 7, 8) are scored and closed with no solve-rate win. The 4th,
+differently-sourced candidate (Part 9, must-cross neighbor-budget propagation) completed its
+full-population live A/B: Corpus-2 725/1700 → 739/1700 (+14 net), but with 42 gained / 28 lost under
+the fixed budget, so it remains opt-in/default-off pending churn diagnosis rather than soundness work.
+**Date:** 2026-08-05, updated 2026-08-06, 2026-08-08, 2026-08-11
 **Relationship to other docs:** operationalizes [`solver-next-frontier-2026-08-02.md`](solver-next-frontier-2026-08-02.md)
 and [`solver-next-frontier-multilingual-research-update-2026-08-02.md`](solver-next-frontier-multilingual-research-update-2026-08-02.md)
 (the "unvalidated research brainstorm" pair indexed in `docs/README.md`) — specifically that
@@ -22,6 +22,11 @@ they fit rather than creating a parallel "shadow mode" stack. Its artifact contr
 the current reject/pass probe contract, however, so do not force replayable candidates, population
 summaries, or soft failure signatures into `verdict: reject|pass` merely to reuse this API. Share the
 replay/oracle/reporting infrastructure; keep the semantic contracts distinct where necessary.
+
+The current interpretation of Part 9 and the next dynamic-resource probes is summarized in
+[`../reports/2026-08-11-dynamic-resource-frontier-synthesis.md`](../reports/2026-08-11-dynamic-resource-frontier-synthesis.md).
+That synthesis is the bridge from this harness's measured candidate results to the live queue in
+[`future-work.md`](future-work.md).
 
 ## Why this exists
 
@@ -490,19 +495,22 @@ Unlike the three Tier-2 candidates above, this one did not stop at the shadow-pr
 also validated against a full-corpus stored-solution replay (97,812 valid paths across all three
 real corpora, 0 violations) and shipped opt-in (`PRUNE_MC_NEIGHBOR_BUDGET`, default off), then run
 through a first live matched-node A/B showing +11/30 on an unsolved sample (0 regressions, all
-referee-valid) — promising enough that, unlike Parts 4/7/8, this one is NOT yet closed. A follow-up
-**full-corpus deterministic A/B** (`solver-stress-refresh.yml` runs #28/#29, 2026-08-08) replaced
-that small sample with the real population: corpus-1 unaffected (96/102 both arms), corpus-2 net
-+14 (725/1700 → 739/1700) but **not** a strict superset — 42 gained, 28 lost, all 28 losses on
-levels confirmed to carry must-cross cells (so the churn is the flag's own effect, not noise). The
-losses are a budget-reallocation side effect under the fixed node budget, not a soundness violation
-(the stored-solution replay already rules that out) — pruning dead search earlier changes where the
-same fixed search effort goes, which can un-luck a level that previously stumbled onto a solution
-before its budget ran out. **Current verdict: keep opt-in, not default-on**, pending either a
-repeat run confirming the 42/28 split is stable or a closer look at why the 28 losses go against
-the grain. See
-[`reports/2026-08-08-mc-neighbor-budget-propagation.md`](../reports/2026-08-08-mc-neighbor-budget-propagation.md)
-for the full writeup and current status.
+referee-valid).
+
+A follow-up **full-corpus deterministic A/B** (`solver-stress-refresh.yml` runs #28/#29,
+2026-08-08) replaced that sample with the real population: Corpus-1 unaffected (96/102 both arms),
+Corpus-2 net +14 (725/1700 → 739/1700) but **not** a strict superset — 42 gained, 28 lost, all 28
+losses on levels confirmed to carry must-cross cells. The losses are a budget-reallocation side
+effect under the fixed node budget, not a soundness violation. **Current verdict: keep opt-in, not
+default-on**, pending repeat/diagnosis of the 42/28 churn.
+
+See [`../reports/2026-08-08-mc-neighbor-budget-propagation.md`](../reports/2026-08-08-mc-neighbor-budget-propagation.md)
+for the full writeup. The broader follow-up analysis in
+[`../reports/2026-08-11-dynamic-resource-frontier-synthesis.md`](../reports/2026-08-11-dynamic-resource-frontier-synthesis.md)
+adds two important negative findings: root free-intersection budget and simple static must-cross
+geometry do not explain the hard population well. That strengthens the case for testing dynamic
+resource/interface descendants such as crossing-slack instrumentation, locally-abstaining portal
+coverage, and bounded joint-interface compatibility rather than another static edge rule.
 
 ## How to add the next probe
 
@@ -515,16 +523,18 @@ The three candidates Tier 2 of the multilingual doc's revised ranking named — 
 resource DP, bounded obligation-compatibility MDD, backward compatibility envelopes — have now all
 been scored against the same grown atlas (Parts 4, 7, 8). All three closed the same way: real,
 sound, individually-verified-at-scale results with catch rates too low to justify production
-integration as scoped. The harness and atlas remain reusable for whichever candidate is investigated
-next (the research docs list ~14 more, e.g. CEGAR-driven propagator design, automatic pruning-rule
-synthesis) — there is no remaining "obvious next probe" queued from this specific ranking.
+integration as scoped. Part 9 is different: it crossed the shadow threshold and showed a real
+full-corpus solve-set effect, but finite-budget churn prevents promotion. The harness and atlas
+remain reusable for the dynamic-resource follow-ups named above and for other candidates from the
+research ledger.
 
 ## Honest bottom line
 
 This is reusable evaluation infrastructure plus four sound measured candidates. Three Tier-2
 candidates are closed as positive-but-too-narrow results with no solve-rate case for production
-integration; the fourth, must-cross neighbor-budget propagation, is materially stronger in the
-shadow data and remains an active opt-in experiment pending a full-population live A/B. The durable
-value is the shared harness, the grown 5,518-branch oracle-labelled atlas, and a record that clearly
-separates bootstrap measurements from the later at-scale verdicts instead of leaving old sample
-sizes or already-completed sweep steps looking current.
+integration. The fourth, must-cross neighbor-budget propagation, is materially stronger: it
+completed the full live A/B at +14 net Corpus-2 solves, but with a 42-gained/28-lost reshuffle, so
+it remains an active opt-in experiment rather than a default prune. The durable value is the shared
+harness, the grown 5,518-branch oracle-labelled atlas, and a record that separates bootstrap
+measurements, at-scale shadow verdicts, and live finite-budget behavior instead of letting one
+stage stand in for another.
