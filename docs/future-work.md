@@ -1,6 +1,6 @@
 # Future Work
 
-A compiled index of genuinely open, non-stale work — pulled from active planning documents and recent campaign reports. This file is the **live queue and status source of truth**; detailed strategy documents are linked below. Updated 2026-08-09.
+A compiled index of genuinely open, non-stale work — pulled from active planning documents and recent campaign reports. This file is the **live queue and status source of truth**; detailed strategy documents are linked below. Updated 2026-08-10.
 
 > **Current solver frontier:** the old numbered campaign sequence is retained as history in
 > [`solver-development-roadmap.md`](solver-development-roadmap.md), not maintained as the live queue.
@@ -8,7 +8,9 @@ A compiled index of genuinely open, non-stale work — pulled from active planni
 > portal-parity follow-up is also closed after a sound-but-negligible live A/B. The best explicitly
 > open rule-recognition lead is now structural derivation for must-turn, adjacent-turn, and surround
 > landmarks below. Repair stagnation remains an investigation record with Stages 1–3 measured and
-> Stage 4 re-scoped; descent-aware probing is its next evidence step.
+> Stage 4 re-scoped; descent-aware probing is its next evidence step. A separate solver-
+> interoperability track is now queued below at an instrumentation-only first gate; it does not
+> change production scheduling or search behavior yet.
 
 ---
 
@@ -22,6 +24,18 @@ population counts are dated snapshots; this file is the current status index.
 - **Campaign 1** — `repair-close` rescue (139 levels as of latest re-cluster). **Completed 2026-07-18** with the `closeLengthGap` operator and its near-miss extension shipped (2026-07-17), plus infrastructure fixes to the repair probe (node-budget starvation). Net +28 genuine solves via `diff-baseline.mjs`. The deeper issue (repair-search's stagnation plateau converging to a frozen deficit signature and staying frozen) is addressed separately via [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md) — this campaign fixed a symptom and identified the core problem; that plan targets the core.
 - **Campaign 2** — `dfs-plain` exhaustion. **Historical phase concluded:** the known fragile-scoring family and the tested pruning/scoring generalizations did not explain the harder majority. Later work moved to admissible-order search, reserved-intersection reasoning, rule-recognition, oracle-labelled shadow evaluation, and differential diagnosis; use the open sections below rather than this old population bucket.
 - **Campaign 3** — `repair-far` + robust hard cores. **Historical label retired:** subsequent work did attack the robust population through several new techniques, so “not yet started” is no longer accurate. No single replacement technique has closed the population; the concrete surviving leads are tracked below.
+
+## Solver interoperability and cooperative-search groundwork (2026-08-10, design complete — shadow instrumentation not started)
+
+**Master reference:** [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md) — the canonical plan for standardizing what DFS, beam, admissible-order, repair, and future techniques can leave behind and exchange without forcing them onto one universal `bestState` or score.
+
+This is deliberately an instrumentation-first research item, not a production scheduler or a new solver technique. It reuses the canonical `Attempt` transport/projection contract, canonical work accounting, real-state replay, the shadow-evaluation harness, repair plateau/elites, and variant-family tooling rather than rebuilding those systems.
+
+**First decision-bearing gate:** unchanged solver runs must show that techniques emit bounded, typed artifacts that are materially non-redundant and have predictive or handoff value at equal canonical work. Build only the common envelope, replay-complete witness representation, neutral metric evaluator, producer adapters, bounded retention/reporting, and shadow analysis needed for that gate. Do **not** yet let imported artifacts alter search or allocation.
+
+If the gate is positive, promote one pairwise handoff at a time, preserving the receiving technique's native/fresh starts and a participation floor so informational coupling cannot erase independent rescue behavior. Leading low-coupling candidates include beam-survivor → repair seed and failure-conditioned bounded work allocation. Repair → deterministic completion must respect the already-measured append-only/exact-copy failures rather than relabeling those negative experiments as cooperation. Hard cross-technique facts remain a later layer and require exact state/proof equivalence; incomplete signatures stay guidance-only.
+
+The variant corpus is a later validation layer, not a prerequisite: after shared artifacts exist, use symmetry/cousins to test artifact invariance, family leakage, and whether handoff predictors generalize across held-out families. The existing wide-trove boundary run remains its own nearer-term gate.
 
 ## Main-loop attempt-ordering starvation (2026-08-10, experiment implemented — A/B pending)
 
@@ -308,7 +322,7 @@ flipping filters" is published-corpus-only, same pattern as the portal cap; stre
 8), to check whether the "fully dynamic" mechanic changes the answer.
 
 | level | reqLen | flippers | meet depth | reached | final count | 2nd-to-last ratio |
-|---|---|---|---|---|---|---|
+|---|---:|---:|---:|---:|---:|---:|
 | R00044 | 91 | 0 | 46 | 25 | 1,500,002 (cap) | 1.48 |
 | R02704 | 65 | 0 | 33 | 32 | 1,500,002 (cap) | 1.42 |
 | R03196 | 59 | 0 | 30 | 22 | 1,500,001 (cap) | 2.05 |
@@ -485,7 +499,7 @@ by a level cap before calling it structural.
 
 
 
-- **Portfolio scheduler production deployment** — the `fast-portfolio-scheduler-plan.md` experiment ran to completion; verdict: **not production-ready** ([`reports/portfolio/portfolio-scheduler-decision.md`](../reports/portfolio/portfolio-scheduler-decision.md)). Every measured variant was slower than legacy on the published corpus. `schedulerMode: 'portfolio-experiment'` remains opt-in, offline-only CLI tooling for dev-time batch runs; this is not a future-work item, just a historical record of the decision.
+- **Portfolio scheduler production deployment** — the `fast-portfolio-scheduler-plan.md` experiment ran to completion; verdict: **not production-ready** ([`reports/portfolio/portfolio-scheduler-decision.md`](../reports/portfolio/portfolio-scheduler-decision.md)). Every measured variant was slower than legacy on the published corpus. `schedulerMode: 'portfolio-experiment'` remains opt-in, offline-only CLI tooling for dev-time batch runs; this is not a future-work item, just a historical record of the decision. This closes broad cold-start tier rotation, not artifact-driven cooperation; the latter has its own shadow-first gate in [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md).
 - **Recipe cousins** (family generation) — intentionally deferred until sibling/cousin findings mature.
 - **State-dominance/transposition caching** — correctness risk / payoff tradeoff unfavorable vs. other research.
 - **Constant-tuning for repair-search mechanisms** — three independent well-motivated fixes for the stagnation plateau (burst length, elite-pool diversification, stagnation threshold) all failed empirically; this avenue is exhausted. Future work here should target the append-only wall or descent-aware probing, not more parameter tweaks.
@@ -553,3 +567,4 @@ These apply to any future solver work before reporting complete:
 3. **Negative results are first-class.** Every disproven idea gets written up in `reports/` like positive ones (see this doc for examples); no work is quietly abandoned.
 4. **Memoization soundness is non-negotiable.** Any cache key must capture every state variable the cached value depends on. CLAUDE.md's own MST-scratch-buffer bug is the standing precedent — verify with differential testing (solver finds a solution, cache would have wrongly rejected it).
 5. **Temporal clause:** distinguish "solved within X seconds" (uninterrupted attempt runtime) from "total wall time including restarts" in all timing reports.
+6. **Cross-technique artifacts are evidence by default.** Imported candidate witnesses must reconstruct through the real solver state machinery; incomplete state signatures, population summaries, plateau shapes, and correlations may guide ranking/retention/allocation but may not become hard rejection. A shared hard fact must carry an independent proof or exact state-equivalence contract. See [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md).
