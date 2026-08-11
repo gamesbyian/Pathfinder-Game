@@ -6,6 +6,11 @@
  * opt-in features default off. Changing one flag preserves every other production
  * default so experiments do not accidentally activate unrelated experiments.
  *
+ * IMPORTANT: OPT_IN_FEATURES records production DEFAULT POLARITY, not whether a
+ * feature still has an open promotion decision. Some retained opt-ins are closed
+ * negative/negligible experiments. Current dispositions and remaining gates live in
+ * docs/solver-opt-in-experiment-ledger.md; do not infer a queue from this set.
+ *
  * Usage:
  *   import { defaultConfig, withFeatureDisabled, FEATURES } from './ablation-config.mjs';
  *   const cfg = withFeatureDisabled('SCORE_GOAL_ATTRACTION');
@@ -44,7 +49,7 @@ export const FEATURES = {
     PRUNE_MC_RESERVED_WALL:     'Reserved-intersection wall: once every remaining intersection is committed to a pending must-cross crossing, visited cells are walls in the connectivity fill (portal-free levels only)',
     PRUNE_DISTANCE_BOUND:       'Goal BFS distance exceeds remaining steps',
     PRUNE_PARITY:               'Manhattan parity mismatch (portal-free levels only)',
-    PRUNE_PORTAL_PARITY_ENVELOPE: 'Manhattan parity mismatch on portal levels with >=1 twist portal pair -- rejects only once every twist pair has actually been jumped, not merely visited (default-OFF -- only added under an explicit true value; stored-solution census clean (0 violations, ~15,600 checkpoints across all 3 corpora) and sound in a live-search A/B, but the prune\'s own reject condition never actually arose across ~240M searched nodes on a 40-level twist-portal sample -- zero node-count difference on every level, not just zero solved-count change -- see reports/2026-08-08-portal-parity-envelope.md)',
+    PRUNE_PORTAL_PARITY_ENVELOPE: 'CLOSED/retained opt-in: Manhattan parity mismatch on portal levels with >=1 twist portal pair. Sound, but a live A/B saw zero rejects and zero node-count change across ~240M searched nodes on 40 relevant levels; no promotion gate remains without materially stronger new evidence. See reports/2026-08-08-portal-parity-envelope.md and docs/solver-opt-in-experiment-ledger.md.',
     PRUNE_MUST_PASS_LB:         'MST lower bound on remaining must-pass visit distance',
     PRUNE_MUST_CROSS_LB:        'MST lower bound on remaining must-cross distance (with approach maps)',
     PRUNE_INTERSECTION_DEFICIT: 'Remaining steps < intersections still needed',
@@ -55,13 +60,13 @@ export const FEATURES = {
     PRUNE_MUST_TURN_DEADLOCK:   'Prune once a pending must-turn cell has both axis bits used (provably unsatisfiable)',
     PRUNE_MC_FORCED_NEIGHBOR:   'Prune once a pending must-cross cell\'s still-needed straight pass has a neighbor that is now a hard wall (both axis bits used, or an already-used flipper)',
     PRUNE_MC_FORCED_FIRST_MOVE: 'Force the first move out of a gate that is orthogonally adjacent to exactly one must-cross cell onto that cell (the gate can never be re-entered, so this is its only chance to serve that cell\'s pass)',
-    PRUNE_MC_NEIGHBOR_BUDGET:   'Dynamic must-cross/intersection propagation (default-OFF -- only added under an explicit true value; shadow-probe prototype of docs/solver-heuristic-capability-gap-analysis.md item 3): reject once a pending must-cross cell\'s still-needed pass has an already-visited (soft, not hard-walled) required neighbor whose forced revisit the remaining free intersection budget cannot cover. Sound on the harness atlas (19 unique catches beyond the existing gauntlet, 0 false rejects) and on a full-corpus stored-solution replay (97,812 valid paths, 0 violations) -- see reports/2026-08-08-mc-neighbor-budget-propagation.md. Not yet promoted pending a matched-node live A/B.',
+    PRUNE_MC_NEIGHBOR_BUDGET:   'OPEN promotion gate, revised wiring: dynamic must-cross/intersection propagation. The original wiring was sound on 97,812 stored-valid paths, caught 19 oracle-atlas dead branches uniquely, and moved Corpus-2 725→739 (+14; 42 gained/28 lost). Commit a113d47 then excluded this prune from repair\'s seeded-random takePly survivor selection to remove that churn mechanism while retaining it for DFS/beam and deterministic repair sub-searches. The revised wiring therefore needs a fresh deterministic full-population A/B; the old A/B is not its promotion verdict. See reports/2026-08-08-mc-neighbor-budget-propagation.md and docs/solver-opt-in-experiment-ledger.md.',
 
     // ── Search strategy ───────────────────────────────────────────────────────
     STRATEGY_LDS:               'Limited Discrepancy Search probe waves before full DFS',
     STRATEGY_DIVERSE_BEAM:      'Diverse beam selection bucketed by (flipperUsedMask, mustCrossMask)',
     STRATEGY_STATE_DEDUP:       'Beam state deduplication: merge same (position + constraint-state)',
-    STRATEGY_REPAIR_ELITE_PREFIX_DFS: 'Repair: on stagnation, bounded deterministic completion DFS from several points scattered across the elite pool (default-OFF — only added under an explicit true value; a 20-level A/B found a net-negative signal at current constants, see reports/2026-08-07-repair-elite-prefix-dfs.md)',
+    STRATEGY_REPAIR_ELITE_PREFIX_DFS: 'CLOSED for promotion in its current form / retained opt-in negative: bounded deterministic completion DFS from elite prefixes is sound and mechanistically real, but the dedicated equal-budget test was ON 4/20 vs OFF 5/20 with a confirmed shared-budget displacement. Do not buy a full Corpus-2 A/B for unchanged constants merely because the historical report listed one; reopen only after a materially cheaper/more selective variant clears a small retest. See reports/2026-08-07-repair-elite-prefix-dfs.md and docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_REPAIR_NOGOOD_CACHE: 'Repair: per-call cache of exact dead-end states, short-circuiting a restart the moment it re-enters a state already proven fruitless earlier in the same call (see modules/solver/nogood-cache.ts)',
     STRATEGY_GATE_INTERLEAVING: 'Config-outer gate-inner scheduling for multi-gate levels',
     STRATEGY_PARITY_GATE_FILTER:'Pre-filter infeasible gates by parity (portal-free levels)',
@@ -80,10 +85,10 @@ export const FEATURES = {
     STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST: "Repair-search: bias the must-turn-biased attempt's exploratory branch toward the correct-direction turn exit",
     STRATEGY_REPAIR_LENGTH_GAP_CLOSE: 'Repair-search: on a dead end where every non-length/intersection objective is already satisfied, try a small bounded backtracking search to close the exact length/intersection gap instead of discarding the restart',
     STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS: 'Repair-search: additionally trigger closeLengthGap when at most LENGTH_GAP_CLOSE_STRUCTURAL_SLACK non-length objectives are still pending (not just exactly zero) — targets near-miss dead ends like "length off by 1, one pending mustTurn cell" that the strict base trigger never attempts',
-    STRATEGY_REPAIR_TURN_BIAS: 'Repair-search: append an experimental turn-aware selective-bias repair attempt on must-turn levels (default-OFF — only added when explicitly true; a clean corpus-2 A/B against current defaults reproduced net -7/1700 after the elite-prefix confound was fixed, while disabling STRATEGY_REPAIR_NOGOOD_CACHE produced -8 and falsified that proposed interaction -- see reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md -- stays opt-in, not promoted)',
-    STRATEGY_MAIN_LOOP_LATE_RESERVE: 'Experimental reserve-not-reorder treatment for main-loop attempt starvation: withhold a bounded node slice from the repair probe and early ordinary configs, then divide it cumulatively across a fixed late config suffix so every config/gate beneficiary has a nonzero opportunity. Default-OFF pending a deterministic matched-budget full-corpus A/B.',
+    STRATEGY_REPAIR_TURN_BIAS: 'CLOSED negative / retained opt-in: repair turn-aware selective-bias attempt. A clean deterministic Corpus-2 A/B after the sparse-ablation confound fix reproduced baseline 725/1700 vs ON 718/1700 (net −7; 5 gained/12 lost), byte-identical to the prior result; disabling the nogood cache gave −8 and falsified that proposed interaction. Do not promote or repeat without materially new evidence. See reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md and docs/solver-opt-in-experiment-ledger.md.',
+    STRATEGY_MAIN_LOOP_LATE_RESERVE: 'OPEN promotion gate: experimental reserve-not-reorder treatment for main-loop attempt starvation. The mechanism pilot activated all beneficiaries and recovered 1/14 historical hard matches at the tested arm; a deterministic matched-budget full-population A/B remains the decision-bearing gate. See docs/main-loop-late-reserve-experiment.md and docs/solver-opt-in-experiment-ledger.md.',
 
-    // ── Templates ─────────────────────────────────────────────────────────────
+    // ── Templates ──────────────────────────────────────────────────────────────
     TEMPLATE_CORNER_HARVEST:    'cornerHarvest — pulls toward grid corners during harvest phase',
     TEMPLATE_PERIMETER_CW:      'perimeterCW — clockwise perimeter traversal bias',
     TEMPLATE_PERIMETER_CCW:     'perimeterCCW — counter-clockwise perimeter traversal bias',
@@ -109,7 +114,10 @@ export const FEATURES = {
 };
 
 /** Features whose production default is off. Shared by experiment constructors and the solver's
- * sparse-config normalizer so the two paths cannot silently disagree. */
+ * sparse-config normalizer so the two paths cannot silently disagree.
+ *
+ * Membership here is NOT a promotion-status signal. See
+ * docs/solver-opt-in-experiment-ledger.md before deciding that an opt-in needs more testing. */
 export const OPT_IN_FEATURES = new Set([
     'PRUNE_PORTAL_PARITY_ENVELOPE',
     'PRUNE_MC_NEIGHBOR_BUDGET',
@@ -287,7 +295,7 @@ export function buildExperimentList(phase = 'full') {
         }
     }
 
-    // ── Template-only ablations ───────────────────────────────────────────────
+    // ── Template-only ablations ────────────────────────────────────────────────
     if (phase === 'templates' || phase === 'full') {
         for (const [templateName, key] of Object.entries(TEMPLATE_CONFIG_KEY)) {
             experiments.push({
