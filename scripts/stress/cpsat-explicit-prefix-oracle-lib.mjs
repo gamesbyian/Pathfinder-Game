@@ -1,13 +1,17 @@
+/** Convert an internal packed solver key (0-based x/y) to raw level coordinates (1-based x/y).
+ * cpsat-full-probe.py's --prefix explicitly consumes the raw/witness convention. */
 export function unpackPackedCell(key) {
     if (!Number.isInteger(key)) throw new Error(`packed cell must be an integer: ${key}`);
-    return [key & 0xffff, key >>> 16];
+    return [(key & 0xffff) + 1, (key >>> 16) + 1];
 }
 
+/** Normalize a case cell to raw 1-based [x,y]. Numeric values are internal packed keys; explicit
+ * arrays/objects are already raw-level coordinates, matching witness JSON and the CP-SAT CLI. */
 export function normalizeCoordinate(value) {
     if (Number.isInteger(value)) return unpackPackedCell(value);
     if (Array.isArray(value) && value.length === 2 && value.every(Number.isFinite)) return [Number(value[0]), Number(value[1])];
     if (value && Number.isFinite(value.x) && Number.isFinite(value.y)) return [Number(value.x), Number(value.y)];
-    throw new Error(`invalid coordinate/paked-cell value: ${JSON.stringify(value)}`);
+    throw new Error(`invalid coordinate/packed-cell value: ${JSON.stringify(value)}`);
 }
 
 const stableCaseId = ({ levelId, depth, prefix, child }, index) => {
@@ -17,8 +21,8 @@ const stableCaseId = ({ levelId, depth, prefix, child }, index) => {
 
 /** Accept either the committed winning-prefix atlas or a generic explicit case document:
  * { corpus, cases: [{ id?, levelId, prefix, child? }] }. Prefix/child cells may be packed solver
- * keys, [x,y] coordinate pairs, or {x,y}; emitted prefixes are always 1-indexed [x,y] pairs as
- * expected by cpsat-full-probe.py's --prefix argument. */
+ * keys (0-based internally), raw [x,y] coordinate pairs, or raw {x,y}; emitted prefixes are always
+ * 1-based [x,y] pairs as expected by cpsat-full-probe.py's --prefix argument. */
 export function extractExplicitPrefixCases(document, { format = 'cases', corpus = null } = {}) {
     const defaultCorpus = corpus ?? document.corpus ?? document.levelsFile ?? 'data/stress/stress-levels-random.json';
     let rawCases;
