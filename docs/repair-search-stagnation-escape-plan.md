@@ -1,5 +1,17 @@
 # Plan: escaping `repair-search.ts`'s stagnation plateau
 
+> **Related follow-up (2026-08-10):** this investigation produced several of the richest existing
+> examples of information a failed technique can leave behind: elite paths, signed residuals,
+> plateau shapes, badness histories, complementary-constraint guide evidence, and descent-phase
+> failure observations. [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md)
+> is now the canonical plan for standardizing those kinds of outputs across repair, DFS, beam,
+> admissible-order, and future techniques and testing whether another technique can exploit them.
+> Do not revive the negative exact-copy relinking or turn-bias experiments under a new
+> "cooperation" name. The new plan begins with shadow-mode artifact emission and replay-safe
+> handoff analysis, preserves ordinary repair as an independent fallback, and treats repair's
+> plateau/badness language as technique-specific payload rather than a universal cross-technique
+> score.
+
 > **Status: Stages 1-3 prototyped & measured (incl. Stage 3's real reversible-operator relinking)
 > plus the shared turn-aware selective biasing both reports pointed to (all 2026-07-22); Stage 4 not
 > started.** Written 2026-07-18, revised
