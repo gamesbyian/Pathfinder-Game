@@ -46,6 +46,22 @@ The repository already has:
 
 Do not add a second variant generator, hint enumerator, generic clusterer, generic profiler, generic benchmark runner, learned repair classifier, or research database unless a later concrete need cannot be satisfied by the existing artifacts.
 
+### Relationship to solver interoperability work
+
+[`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md)
+defines a separate but complementary research layer: typed artifacts emitted by DFS, beam,
+admissible-order, repair, and future techniques, with replay-complete witnesses, neutral derived
+metrics, proof-strength classes, and a bounded shadow-mode exchange contract. Do not duplicate that
+artifact schema or build variant-specific versions of the same measurements here.
+
+Once artifact instrumentation exists, controlled families become unusually strong evidence for
+judging those artifacts. In particular, symmetry siblings can test whether an artifact class is
+stable under an isomorphic presentation, while local mutants and other controlled cousins can show
+which artifacts track real puzzle changes versus accidental search history. Family pairs can also
+measure whether two techniques produce complementary artifacts on closely related puzzles before
+any live handoff is enabled. This is a later join between the two systems, not a reason to delay the
+current wide-trove boundary report or to turn the variant corpus into a production retry mechanism.
+
 ## Core scientific unit: relationships between levels
 
 Treat the corpus as a graph of controlled relationships, not as 96,000 independent benchmark rows.
@@ -548,6 +564,27 @@ Extend the existing tool rather than adding another scheduler-analysis stack.
 ## Phase E: selective profile coupling
 
 Add only lightweight wrappers or joins needed to connect existing solution-profile data to selected boundary cases.
+
+## Later join: artifact invariance and complementarity
+
+Only after the instrumentation gate in
+[`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md)
+has produced real standardized artifacts, extend family analysis by joining those artifacts to the
+already-recorded parent/variant relationships. Prefer joins in the boundary/reporting layer over a
+second artifact store. Candidate questions include:
+
+- does a typed artifact survive symmetry after transforming its replay witness back to canonical
+  coordinates;
+- which artifact fields are invariant, which vary harmlessly, and which correlate with a
+  solve-status cliff;
+- do different techniques emit complementary candidate/resource/failure artifacts across siblings;
+- does an artifact emitted on an easy sibling predict a useful handoff on the hard canonical
+  representation without encoding level identity;
+- are apparent handoff predictors stable across held-out parent families rather than memorizing
+  dense sibling data.
+
+This later join remains shadow/offline analysis until the interoperability plan's own promotion
+gates are satisfied.
 
 # 13. Success criterion for the tooling phase
 
