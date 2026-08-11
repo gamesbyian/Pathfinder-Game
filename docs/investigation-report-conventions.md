@@ -29,6 +29,14 @@ Rules:
   and the acceptance criterion where those are known.
 - When a later report closes a gate, update both ends: add a resolution note to the older report and
   link the older premise from the closing report.
+- **An A/B belongs to the exact implementation it tested.** If a later commit materially changes a
+  feature's participation, budget, ordering, applicability, random-candidate set, or interaction with
+  another technique, explicitly state whether the old A/B still answers the current promotion
+  question. Never silently carry a promotion verdict across materially different wiring. The
+  `PRUNE_MC_NEIGHBOR_BUDGET` post-A/B repair-random-selection change is the standing example.
+- **Retained opt-in code is not automatically active work.** For solver default-off mechanisms,
+  reconcile the dated report against [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md).
+  `OPT_IN_FEATURES` records production polarity, not whether a promotion decision remains open.
 
 ## Where information belongs
 
@@ -36,6 +44,7 @@ Rules:
 |---|---|
 | Current product or solver behavior | Topic reference under `docs/` |
 | Current open queue and deferral triggers | [`future-work.md`](future-work.md) |
+| Current disposition of retained/default-off solver experiments | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) |
 | One experiment's evidence and decision | Dated file under `reports/` |
 | Generated results | The relevant `reports/` collection, indexed by its synthesis/README |
 | Raw console/shard output | `logs/` |
@@ -49,9 +58,16 @@ Before calling an investigation complete:
 1. Update the status block and remove “in progress” language that is no longer historical context.
 2. Link the final evidence and distinguish measured facts from inference.
 3. Update `future-work.md` to remove, close, or narrow the old queue item.
-4. Update the authoritative topic doc if current behavior or guidance changed.
-5. Add reciprocal predecessor/successor links for a follow-up chain.
-6. Run `npm run check:documentation-links`; it validates both file targets and heading anchors.
+4. If the work concerns a retained/default-off solver mechanism, update
+   `solver-opt-in-experiment-ledger.md` and ensure the corresponding `FEATURES` description does not
+   advertise a stale gate.
+5. Update the authoritative topic doc if current behavior or guidance changed.
+6. Add reciprocal predecessor/successor links for a follow-up chain.
+7. If the implementation changed after the decisive A/B, explicitly decide whether that A/B is
+   still promotion-relevant; if not, record the new gate rather than pretending the old run tested
+   the new wiring.
+8. Run `npm run check:documentation-links`; it validates both file targets and heading anchors.
 
 This convention is prospective. Older reports need not be mechanically reformatted unless they are
-being revised, but stale status discovered in them must still be reconciled with the live queue.
+being revised, but stale status discovered in them must still be reconciled with the live queue and,
+for retained solver opt-ins, with the opt-in experiment ledger.
