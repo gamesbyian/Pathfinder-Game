@@ -1,40 +1,49 @@
 # Solver heuristic capability and gap analysis
 
-This is a code-and-evidence-level inventory of the production solver as of 2026-08-07. It asks:
-when the existing mechanisms are arranged by **what they know** and **which decisions they affect**,
-which empty cells imply useful new capabilities?
+This is a code-and-evidence-level inventory of the production solver, reconciled through
+**2026-08-11**. It asks: when the existing mechanisms are arranged by **what they know** and **which
+decisions they affect**, which missing representations still have evidence behind them?
 
-A visible code asymmetry is not automatically an open opportunity. This review reconciles the
-implementation with the repository's experiment and negative-result ledger. Proposals below are
-hypotheses, not shipped findings.
+A visible code asymmetry is not automatically an open opportunity. This document is a current-state
+reference, not a brainstorm: it reconciles implementation with the experiment/negative-result
+ledger. For the live queue use [`future-work.md`](future-work.md). For the latest cross-corpus
+interpretation of solver limits and the dynamic-resource research frontier, use
+[`../reports/2026-08-11-dynamic-resource-frontier-synthesis.md`](../reports/2026-08-11-dynamic-resource-frontier-synthesis.md).
 
 ## Executive answer
 
-Yes, new heuristic families are implied, but my evidence-adjusted answer is narrower than a
-source-only reading:
+The solver's broad representational hole is increasingly clear: it understands **local progress**
+far better than **future opportunity cost**.
 
-1. **Mechanic-derived propagation**, especially dynamic must-cross/intersection consequences. This
-   family has delivered production wins, although its obvious next forced-edge rule was falsified.
-2. **Portal-aware parity feasibility.** Soft scoring notices a likely need for a parity-twisting
-   portal, while hard parity inference is disabled on all portal levels. A conservative remaining-
-   parity envelope would add information rather than merely another preference.
-3. **State-conditioned landmark interfaces.** Model which entry/exit combinations remain capable of
-   satisfying turn and surround obligations. This is open only beyond several already-refuted
-   adjacent-turn counterparts.
-4. **Failure-conditioned repair control.** Use observed plateau shape to select actions or allocate
-   effort instead of globally retuning a scorer known to destabilize repair.
-5. **Residual-capacity and resource spectra as research instruments.** Rich topology/resource
-   signals belong in shadow probes or soft retention experiments first; the existing separator
-   spectrum found genuine but too-rare production value.
+The strongest evidence-adjusted opportunities are now:
 
-The solver's broad representational hole is that it understands **local progress** much better than
-**future opportunity cost**. However, measured failing levels often already rank winning moves near
-the top, so “add a better move score” is not the general answer.
+1. **Dynamic mechanic-resource propagation**, especially must-cross consequences that emerge only
+   after the path consumes cells, axes, and revisit budget. This family has produced the strongest
+   recent new rule: `PRUNE_MC_NEIGHBOR_BUDGET` is sound and gives +14 net Corpus-2 solves in a full
+   deterministic A/B, though 42 gained / 28 lost finite-budget churn keeps it default-off.
+2. **State-conditioned completion interfaces** for must-turn, adjacent-turn, and surround. Plain
+   reachability counterparts were already tested and were effectively redundant; the open gap is
+   entry/exit/axis/chirality compatibility, not "can I reach the landmark?"
+3. **Failure-conditioned search control / cooperation.** Search methods collect evidence while
+   running, but most allocation remains chosen before search starts. This is lower priority than a
+   new mechanic-derived fact, but the instrumentation path is now designed.
+4. **Residual-resource signals as research instruments.** Variables such as crossing slack can be
+   useful state descriptions even when they do not immediately justify a hard prune or score.
+
+Two previously prominent leads have been demoted or closed:
+
+- **Existence-only portal parity** is sound but negligible in live search.
+- **Simple static must-cross geometry and root free-intersection budget** do not explain the current
+  hard population better than the existing feature set. The next must-cross work should therefore
+  represent state evolution or joint compatibility, not another root-layout descriptor.
+
+Measured failing levels also often rank winning-path moves near the top, so "add a better move
+score" remains a poor generic diagnosis.
 
 ## Separate four meanings of “heuristic”
 
 - **Hard admissible checks** reject states proved unable to win: exact length/intersection limits,
-  goal distance and parity, obligation bounds, mechanic deadlocks, and residual connectivity/volume.
+  goal distance/parity, obligation bounds, mechanic deadlocks, and residual connectivity/volume.
 - **Soft move scores** rank children by progress signals. A bad score spends budget but cannot make
   an invalid path valid or reject a valid path.
 - **Profiles and templates** reweight that vocabulary or add geometric path shapes. They diversify
@@ -43,7 +52,7 @@ the top, so “add a better move score” is not the general answer.
   repair, gate/config ordering, and feature-keyed attempt policy.
 
 A new profile cannot fill an information gap. A new prune needs a proof plus oracle/fuzz validation.
-An incomplete state signature may be safe for diversity but not for rejection.
+An incomplete state signature may guide diversity or retention but may not become a hard rejection.
 
 ## Inventory: what each family does and omits
 
@@ -52,174 +61,182 @@ An incomplete state signature may be safe for diversity but not for rejection.
 | Goal attraction / finish commitment | Smooth phase-aware finish gradient | Necessary detours, consumed corridors, useful arrival resource mix |
 | Objective attraction | Cheap pull to nearest pending must-pass/must-cross | Objective order, incompatibility, approach side, cost of serving all objectives |
 | Must-pass urgency | Keeps every point obligation visible | Bottleneck access and joint order; same-family MST exists only as a hard bound |
-| Must-cross urgency / approach guidance | Separates first visit from perpendicular second approach | Future availability of both straight-pass neighbor pairs; competition among crossings |
-| Must-turn urgency / exit guidance | Covers “reach it” and “make the satisfying turn now” | Future interface availability; repair deliberately disables these shared terms |
-| Surround urgency | Pulls toward an unvisited neighbor | Route/interface feasibility through the whole remaining neighbor set |
-| Adjacent-turn urgency | Reaches an eligible region | Whether a candidate cell retains a feasible entry/exit of required chirality |
+| Must-cross urgency / approach guidance | Separates first visit from perpendicular second approach | Future availability/compatibility of all completion interfaces; competition among crossings |
+| Must-cross hard reasoning | Reserved-intersection ceiling/wall, forced-neighbour hard walls, optional neighbor-budget revisit propagation | General joint compatibility among multiple still-feasible local crossing patterns; portal coverage for neighbor-budget remains globally carved out |
+| Must-turn urgency / exit guidance | Covers “reach it” and “make the satisfying turn now” | Future interface availability after axes/corridors have been consumed |
+| Surround urgency | Pulls toward an unvisited neighbor | Joint route/interface feasibility through the whole remaining neighbor set |
+| Adjacent-turn urgency | Reaches an eligible region | Whether any candidate retains a feasible entry/exit of required chirality |
 | Flipper urgency | Tracks global used-count parity and current approach zones early | Downstream order opportunity, late scarcity, competition for approaches |
-| Portal parity guidance | Notices an unmet need for an odd parity twist | Hard feasibility after useful twist portals become unavailable; portal sequence/value |
+| Portal parity guidance | Notices an unmet need for an odd parity twist | Useful portal sequence/value and reachability-conditioned future interface effects; the tested existence-only hard envelope was inert |
 | Intersection setup | Rewards an immediately useful revisit | Scarcity of future crossing sites and opportunity cost of consuming an axis/cell |
 | Geometry templates | Cheap perimeter/corner/side path-shape diversity | Obstacles or dynamic residual topology |
 | Anti-dither / revisit penalty | Suppresses trivial reversal and gratuitous reuse | Productive versus destructive revisits and longer history motifs |
 | Obligation lower bounds | Prove insufficient length; provide scalar slack | Most cross-family conflict, exact interfaces/order, dynamic topology |
-| Deadlock / connectivity | Catch irreversible local failure and unreachable/undersized regions | Traversal feasibility through a region, separator allocation, combined interfaces |
-| Beam dedup/diversity | Frees beam width via aggressive (formally unsound) merging on `(cell, ints/mp/mc/flipper/surround/mustTurn/adjTurn-mask)`, all mechanics as of 2026-08-06 | Portal-complete identity; must-cross crossCounts/axis-lock sub-state was tried 2026-08-07 and found net-negative — more merge precision competes against, not adds to, the mechanism's actual width-management value (see `reports/2026-08-07-beam-dedup-mc-axis-granularity-net-negative.md`) |
+| Deadlock / connectivity | Catch irreversible local failure and unreachable/undersized regions | Traversal/interface feasibility through a reachable region; combined resource compatibility |
+| Beam dedup/diversity | Frees beam width via aggressive, formally non-equivalent merging | Exact future-state identity; making the key more precise can reduce its width-management value |
 | Repair | Escapes deterministic commitment through restarts and elites | Ordinary interior edits, connectivity pruning, stable use of every shared score |
-| Attempt policy | Routes coarse feature regimes to methods | Online response to beam extinction, prune causes, or repair plateau shape |
+| Attempt policy | Routes coarse feature regimes to methods | Online response to beam extinction, prune causes, resource collapse, or repair plateau shape |
 
-By information and decision type, the sparsest areas are **dynamic × relational × soft
-retention/control** and **dynamic × relational × sound propagation**. Those are real capability
-gaps; whether a particular implementation is economical remains empirical.
+By information and decision type, the sparsest useful areas remain **dynamic × relational × sound
+propagation** and **dynamic × relational × retention/control**.
 
 ## Evidence that changes a source-only answer
 
-The repository has already falsified many natural “missing counterpart” proposals:
+The repository has already falsified or demoted many natural "missing counterpart" proposals:
 
-- **Move ordering is not the measured bottleneck.** Winning-path moves were already near the top
-  under real profiles, and controlled comparisons did not expose an ordering deficit.
-- **Adjacent-turn symmetry was tested.** Adjacent-turn exit guidance solved 0/6 targeted levels. A
-  combined MST improved only 5/183 sampled witness states, by at most two steps. A sound deadlock
-  check fired zero times in roughly 88.7 million evaluations. The implication is not “copy the
-  must-turn mechanisms,” but “represent adjacent-turn's any-of-several-cells semantics differently.”
-- **Joint objective ordering is a measured small gap.** An exact joint must-pass/must-cross tour
-  applied to 659/5,518 labelled branches but uniquely caught only one dead branch. Its simplest
-  point-tour form is not a production priority.
-- **Separator capacity is real but sparse.** A sound separator resource spectrum uniquely caught
-  dead branches, but coverage was too low to justify hot-path integration.
-- **Naive transposition memory is weak.** A loose signature suggested 92–99% repeats; a sound key
-  reduced this to 0.5–16%, usually 1–2%, and was expensive. Approximate novelty may still guide
-  retention; incomplete-key dead-state pruning is unsafe.
-- **Bidirectional completeness is not an open capacity question.** Sound meet-in-the-middle
-  frontiers hit 1.5 million states well before required meet depth on every tested level. CP-SAT
-  also times out on the hard population, evidence against “just add global search.”
-- **Specific mechanic derivation has paid.** Reserved-intersection topology and must-cross forced-
-  neighbor reasoning produced wins. Broader bounded-cost dilation did not, and forced-edge
-  propagation was falsified. The lesson is derive–falsify–instrument, not generic “more topology.”
+- **Move ordering is not the measured general bottleneck.** Winning-path moves were already near the
+  top under real profiles, and controlled comparisons did not expose a broad ordering deficit.
+- **Adjacent-turn symmetry was tested.** Exit guidance solved 0/6 targeted levels; a combined MST
+  improved only 5/183 witness states by at most two steps; an all-candidates deadlock fired zero
+  times in roughly 88.7M evaluations.
+- **Plain surround/adjacent-turn reachability was tested.** It was sound and fired frequently, but
+  changed aggregate node count by only 0.0008% with zero solve-count change. The open landmark gap
+  is interface/axis compatibility, not reachability.
+- **Joint must-pass/must-cross point touring is a measured small gap.** It applied to 659/5,518
+  labelled branches but uniquely caught only one dead branch.
+- **Separator capacity is real but sparse.** The separator-resource spectrum uniquely caught dead
+  branches but coverage was too low to justify hot-path integration.
+- **Naive transposition memory is weak or unsafe.** A sound key made true repeats much rarer and more
+  expensive than a loose signature suggested. Approximate novelty may guide retention; incomplete
+  dead-state pruning is unsafe.
+- **Bidirectional completeness is closed for the tested regime.** Sound meet-in-the-middle frontiers
+  hit 1.5M states well before required meet depth on every tested level.
+- **Existence-only portal parity was built and measured.** Stored-solution replay was clean, but a
+  40-level live A/B produced zero reject events and zero node-count differences across roughly 240M
+  searched nodes. See
+  [`../reports/2026-08-08-portal-parity-envelope.md`](../reports/2026-08-08-portal-parity-envelope.md).
+- **Specific must-cross derivation has paid.** Reserved-intersection topology, forced-neighbour
+  reasoning, and now neighbor-budget propagation all find real consequences. Broader bounded-cost
+  dilation did not, and static forced-edge propagation was falsified. The lesson is
+  derive → falsify → instrument, not generic "more topology."
 
-This evidence demotes resource-slack ordering, plain obligation tours, generic transposition tables,
-and adjacent-turn scoring counterparts from the previous priority list.
+## The must-cross result that changes the frontier
+
+### What neighbor-budget added
+
+`PRUNE_MC_NEIGHBOR_BUDGET` extends the hard-wall forced-neighbour check to a soft resource case: if
+a still-needed must-cross neighbour has already been visited, satisfying that crossing later forces
+an additional revisit/intersection not already reserved by the must-cross cell's own second entry.
+It counts distinct forced-neighbour cells and rejects when the remaining free intersection budget
+cannot cover them.
+
+Evidence:
+
+- oracle-labelled shadow atlas: **19 unique catches** beyond the existing gauntlet, zero false
+  rejects on applicable alive branches;
+- 97,812 known-valid paths / 8.5M replayed steps: zero violations;
+- first live sample: +11/30, zero losses;
+- full deterministic Corpus-2 A/B: **725/1700 → 739/1700**, 42 gained / 28 lost;
+- Corpus 1: 96/102 in both arms.
+
+The losses are finite-budget search reallocation, not a soundness violation. That distinction is
+important: a sound prune can still change which levels are found before a fixed budget expires.
+The flag therefore remains opt-in/default-off. See
+[`../reports/2026-08-08-mc-neighbor-budget-propagation.md`](../reports/2026-08-08-mc-neighbor-budget-propagation.md).
+
+### New negative evidence: static root descriptors are not the missing must-cross model
+
+The 2026-08-11 follow-up joined current solve status to the 939 must-cross-bearing Corpus-2 levels.
+A baseline model using must-cross count, portals, turn load, navigation density, `reqLen/area`,
+`reqInt`, flippers, and must-pass achieved 10-fold ROC-AUC **0.7607**. Adding simple static
+must-cross geometry descriptors produced **0.7572**; replacing raw count with implied required-cell
+count produced **0.7612**. In practical terms, the extra static geometry added no useful predictive
+information.
+
+Root free-intersection budget also points away from a scalar explanation:
+
+- `reqInt - mustCrossCount == 0`: **279/656 = 42.5%** solved;
+- positive root free budget: **101/283 = 35.7%** solved.
+
+These are exploratory diagnostic statistics, not a regression benchmark, but they are sufficient to
+redirect the research question. The next useful representation is more likely **how the partial path
+spends/destroys future crossing opportunity** than how constrained the initial must-cross layout
+looks.
+
+Full context:
+[`../reports/2026-08-11-dynamic-resource-frontier-synthesis.md`](../reports/2026-08-11-dynamic-resource-frontier-synthesis.md).
 
 ## Gaps that remain after reconciliation
 
-### 1. Portal parity: guidance without inference
+### 1. Dynamic must-cross resource/interface reasoning
 
-The scorer derives whether the gate/goal/required-length relationship needs a parity twist and pulls
-toward a suitable unused portal. The sound parity prune, however, runs only on portal-free levels.
-The solver therefore recognizes a resource preference but cannot reject a state when all ways of
-supplying the required parity have become unavailable.
+This is now the strongest mechanic-derived frontier.
 
-**Implied research target:** an achievable-parity envelope over remaining single-use portal
-crossings. It must replay real portal state—coordinate paths alone are ambiguous when portal
-endpoints are adjacent—and incorporate reachability conservatively. Start with stored-solution
-census, then a shadow necessary-condition probe; do not begin with a hard prune.
+Three descendants are worth testing, in increasing ambition:
 
-**Built and A/B-tested (2026-08-08)**: an existence-only envelope (reject a naive mismatch only
-once every twist portal pair has actually been jumped, not merely visited — ignoring reachability
-entirely, so it can only ever under-prune, never mis-prune). Stored-solution census across all
-three real corpora: 0 violations across ~15,600 mismatch checkpoints — decisive. A live-search A/B
-against 40 twist-portal corpus-2 levels (25 unsolved + 15 solved, node-budget-pinned) confirmed
-soundness (0 regressions) but found **zero node-count difference on every single level** — the
-prune's own reject condition never actually arose across ~240M searched nodes. Sound but negligible
-at this corpus's typical twist-pair density (1-3 per level); shipped opt-in
-(`PRUNE_PORTAL_PARITY_ENVELOPE`), not promoted. See
-[`reports/2026-08-08-portal-parity-envelope.md`](../reports/2026-08-08-portal-parity-envelope.md).
-This demotes the existence-only shape specifically for this corpus's portal density — a
-reachability-bounded, tighter version, or a denser/larger sample, remain untested.
+1. **Diagnose the existing neighbor-budget churn first.** Repeat the full deterministic A/B or probe
+   representative lost levels. Do not promote the flag merely from +14 net.
+2. **Recover portal coverage conservatively.** The current helper abstains when *any portal exists
+   anywhere*. Test a shadow-only variant that preserves every current exclusion and abstains locally
+   around portal-affected required neighbours rather than deleting the global guard wholesale. This
+   is a new proof obligation, not an assumed-safe cleanup.
+3. **Joint crossing-interface compatibility.** Enumerate conservative local completion patterns for
+   interacting pending must-cross cells and ask whether any mutually compatible combination remains.
+   This is the principled successor to the falsified static forced-edge rule because it represents
+   the multiple valid patterns that killed that rule.
+
+Before adding policy, also instrument a neutral resource diagnostic:
+
+`crossingSlack = freeInt - forcedFutureNeighbourRevisits`
+
+Compare it on oracle-labelled alive/dead branches and known-solution prefixes by depth and remaining
+must-cross count. If it discriminates, it may become useful for retention/search control; do not
+jump directly to another score weight.
 
 ### 2. Landmark feasibility: attraction without completion interfaces
 
 Must-turn has point urgency plus exact local exit guidance. Adjacent-turn and surround have
-multi-cell satisfaction sets, for which copied point/MST/deadlock mechanisms have been weak.
-Scattered surround visits are valid and dominate stored solutions, so a “clean orbit” cannot be
+multi-cell satisfaction sets, and copied point/MST/reachability mechanisms have been weak or null.
+Scattered surround visits are valid and dominate stored solutions, so a "clean orbit" cannot be
 assumed without changing the game rule.
 
-**Implied research target:** enumerate conservative completion interfaces—candidate satisfaction
-cell, viable incoming axis, viable outgoing axis/chirality—and ask whether at least one remains.
-Before hot-path code, census these interfaces along stored solutions and dead labelled prefixes.
-This is genuinely different from the refuted adjacent-turn exit bonus and single-linkage MST.
+**Implied research target:** enumerate conservative completion interfaces: candidate satisfaction
+cell, viable incoming axis, viable outgoing axis/chirality, and any local state needed to preserve
+soundness. Ask whether at least one interface remains. Census stored solutions and dead labelled
+prefixes before hot-path code.
 
-**A narrower version was tried and found null (2026-08-07)**: not the full entry/exit-axis
-interface above, but a plain dynamic reachability completion check — extending `isConnected`'s
-existing flood fill (which already asks "is `X` reached?" for goal/must-pass/must-cross) to also
-ask it about pending surround-neighbor and adjacent-turn candidate cells. Sound (0 false rejections
-across 151,414 replayed steps of 1,493 stored solutions) and far from rare (fired on 83% of a
-mixed-difficulty 100-level sample, ~17,800 times), but the aggregate effect on `nodesExpanded` was
-0.0008% with zero solved-count change — the states it catches were already about to be rejected by
-the rest of the gauntlet within a step or two. See
-[`reports/2026-08-07-surround-adjturn-reachability-null-result.md`](../reports/2026-08-07-surround-adjturn-reachability-null-result.md).
-This demotes "plain reachability, no interface/axis reasoning" as a productive shape for this gap
-without touching the entry/exit-axis interface idea itself, which remains untested.
+This remains untested in its full interface-aware form. Do not relabel the already-null plain
+reachability check as this experiment.
 
-### 3. Must-cross/intersection propagation: proven family, narrowed frontier
+### 3. Repair/search cooperation has diagnostics but limited conditional policy
 
-Must-cross combines reserved intersections, two straight passes, axis consumption, and forced
-neighbors. Existing scoring and bounds see pieces of this, while shipped reserved-wall and forced-
-neighbor work proves that derived consequences can matter. Yet general dilation and forced-edge
-propagation failed, preventing an easy extrapolation.
+Repair tracks badness/elites and plateau signatures. Beam/DFS/admissible-order attempts also leave
+useful failure evidence, but strategy selection is still mostly static before search begins.
 
-**Implied next capability:** bounded dynamic propagation over forced interfaces and remaining free
-intersection budget, only if it derives facts beyond the shipped checks. Prototype as a shadow
-propagator and compare unique catches; do not revive the falsified static spare-edge rule.
-
-**Built and tested (2026-08-08)**: a dynamic "neighbor-budget" propagator — a still-open must-cross
-axis's required neighbor that is already visited (soft, not a hard wall) needs an unreserved
-intersection to revisit; reject once the free budget can't cover every such distinct neighbor cell
-(deliberately counting distinct CELLS, not per-obligation requirements, which is exactly what
-avoids the double-counting that falsified the static forced-edge rule). Shadow-probe result against
-the oracle-labelled atlas: **19 unique catches beyond the existing gauntlet** (0 false rejects),
-the largest of any candidate scored through `docs/solver-shadow-eval-harness.md`'s infrastructure
-to date. Sound on a full-corpus stored-solution replay (97,812 valid paths, 8.5M steps, 0
-violations). Shipped opt-in (`PRUNE_MC_NEIGHBOR_BUDGET`, default OFF; `solver:bench --check`
-160/160, no regressions). **Full-corpus deterministic A/B (2026-08-08)**: corpus-1 96/102 → 96/102
-(+0), corpus-2 725/1700 → 739/1700 (**+14 net**, but not a strict superset — 42 gained, 28 lost;
-every lost level carries must-cross cells, confirming the churn is the flag's own effect, not
-noise). The 28 losses are budget-reallocation, not soundness violations (the check never rejects a
-real solution per Stage 2's replay) — pruning dead search earlier shifts node-by-node exploration
-order under the same fixed budget, so some levels that were solved by chance before the budget ran
-out now aren't, offset by others that newly are. **Verdict: keep opt-in, not default-on**, pending
-either a repeat run confirming the churn is stable or a look at why the 28 losses go the way they
-do. See
-[`reports/2026-08-08-mc-neighbor-budget-propagation.md`](../reports/2026-08-08-mc-neighbor-budget-propagation.md).
-
-### 4. Repair has diagnostics but limited conditional policy
-
-Repair tracks badness/elites and has plateau-signature instrumentation. Its shared score balance is
-fragile, and its usual append/restart shape cannot freely revise early interior decisions.
-
-**Implied search-control heuristic:** condition the next repair operator, seed family, or effort
-slice on plateau shape. This is safer than globally changing shared weights and directly targets a
-known failure mode. Preserve ordinary repair as a separate fallback so a specialized policy cannot
-silently replace its existing wins.
-
-### 5. Residual resources are richer than scalar length slack
-
-Length bounds, intersection ceiling/deficit, reachable fresh volume, axes, portals, and flippers are
-separate resources. Equal length slack can hide different feasibility margins. But because local
-ordering is already strong, a Pareto vector is not a leading production hypothesis.
-
-**Implied diagnostic/retention experiment:** compare survivors using approach slack, intersection
-slack, volume slack, length slack, then soft score. Keep it ordering/retention-only. Require improved
-winning-prefix survival at equal work before interpreting solve-count changes.
-
-### 6. Strategy selection is static while evidence arrives online
-
-Feature-keyed policy selects attempts before search. Beam collapse, recurring prune reasons, and
-repair plateaus arrive later but seldom redirect the next allocation.
-
-**Implied scheduler heuristic:** grant a bounded next slice to a complementary method based on
-observed failure evidence. Evaluate scheduling separately from scoring at equal deterministic work.
-This is plausible, but lower priority than mechanic-derived facts because portfolio reordering has
-already underperformed when it lacked a genuinely complementary technique.
-
-The common engineering substrate for gaps 4–6 is now specified in
+The engineering substrate is specified in
 [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md).
-That plan does **not** promote any of these hypotheses to production policy. It standardizes typed
-artifacts, replay-complete candidate witnesses, neutral resource measurements, proof-strength
-classes, and shadow-mode exchange so the project can first measure whether repair, beam, DFS, and
-admissible-order search actually leave complementary information behind. If they do, the same
-contract can support bounded pairwise handoffs or failure-conditioned work allocation without
-recreating the failed broad fast-portfolio experiment or collapsing every technique onto one
-universal score.
+Its first gate is shadow-only: prove that typed artifacts are non-redundant/useful before any
+handoff changes production behavior. If positive, prefer bounded pairwise handoffs or
+failure-conditioned work slices over another broad cold-start portfolio reorder.
+
+### 4. Residual resources are richer than scalar length/intersection slack
+
+Length slack, intersection slack, reachable fresh volume, axes, portals, and flipper state are
+separate resources. Equal scalar slack can hide very different future feasibility.
+
+This is currently a **diagnostic/retention** direction, not a hard-prune claim. Candidate resource
+vectors should first show better separation of live/dead states or better survival of known winning
+prefixes at equal work.
+
+## What the latest corpus-limit analysis adds
+
+The latest sweeps make one product/research distinction especially important: current solver
+comfort limits should be treated as a **benchmark frontier, not level-design restrictions**.
+
+The six remaining Corpus-1 failures all stack the old high mechanic counts simultaneously and carry
+long exact paths. Corpus-2 difficulty is much more strongly associated with portals, turn-family
+load, navigation density, and path length/density than with raw `reqInt`. Artificially capping the
+interesting mechanics would therefore domesticate the level language instead of fixing the solver.
+
+A better use of the envelope is:
+
+1. identify a high-success region;
+2. generate controlled levels just beyond one boundary;
+3. improve the solver until that band becomes routine without regression;
+4. move the frontier outward; and
+5. retain mixed-interaction tests so single-axis improvements generalize.
+
+See the synthesis report above for the current measured frontier and caveats.
 
 ## What is not implied
 
@@ -227,39 +244,61 @@ universal score.
 - Unconditional beam widening; it adds capacity but no insight and has failed targeted regimes.
 - A monolithic learned score; it blurs soundness and risks corpus/generator identification.
 - Hard pruning from a useful correlation; guidance value is not an impossibility proof.
-- Adjacent-turn exit guidance, naive adjacent-turn MST, or all-candidates deadlock as “untested.”
-- A plain joint must-pass/must-cross point tour; its unique catch rate is already measured.
+- Adjacent-turn exit guidance, naive adjacent-turn MST, plain surround/adjacent-turn reachability, or
+  all-candidates deadlock as "untested."
+- A plain joint must-pass/must-cross point tour; its unique catch rate is measured.
 - Naive/full transposition pruning without a cheap sound key and new evidence.
-- Generic bidirectional search; sound frontier measurements already closed it for the tested regime.
+- Generic bidirectional search; the sound frontier measurement closed it for the tested regime.
+- Another static must-cross forced-edge rule without representing compatible alternative completion
+  patterns.
+- A low `reqInt` editor cap as a solver fix; current evidence does not support raw `reqInt` as a
+  dominant failure driver.
 
 ## Recommended next sequence
 
-1. Reconcile each idea with the roadmap, future-work ledger, shadow-harness results, and dated
-   reports before implementation.
-2. Finish the portal-parity replay census and test a conservative remaining-parity envelope in the
-   shared shadow harness.
-3. Derive and census landmark completion interfaces on paper and stored solutions, explicitly
-   excluding the adjacent-turn constructions already measured as null.
-4. Evaluate any must-cross propagator by unique catches beyond the current gauntlet before hot-path
-   integration.
-5. Use existing plateau signatures to test failure-conditioned repair actions/allocation while
-   preserving ordinary repair separately. If this work crosses technique boundaries, use the
-   artifact/replay contract in `solver-interoperability-and-cooperation-plan.md` rather than adding
-   another bespoke telemetry channel.
-6. Keep resource vectors and topology novelty in retention/order experiments; demand better known-
-   winning-prefix survival at equal work. Shared versions of these measurements should use the
-   neutral metric vocabulary defined by the interoperability plan, while technique-specific scores
-   remain technique-specific.
-7. Promote a signal to pruning only after a written admissibility argument, stored-solution replay,
-   oracle/fuzz falsification, and deterministic full-corpus cost/solve A/B.
+1. **Neighbor-budget decision gate:** repeat or diagnose the 42-gained/28-lost full-population churn.
+2. **Dynamic must-cross measurement:** instrument crossing slack on labelled branches and
+   known-solution prefixes using the existing replay/harness infrastructure.
+3. **Portal coverage probe:** derive and shadow-score a locally-abstaining portal extension of the
+   neighbor-budget rule. Never simply remove the existing portal guard.
+4. **Landmark interface census:** derive viable entry/exit/chirality interfaces for must-turn,
+   adjacent-turn, and surround, explicitly excluding already-null plain reachability counterparts.
+5. **Joint must-cross compatibility only if the cheaper probes justify it:** bounded local pattern
+   enumeration, unique-catch scoring against the existing gauntlet, strict abstention outside the
+   tractable cluster size.
+6. **Cooperative-search instrumentation:** pursue the shadow-only artifact gate in
+   `solver-interoperability-and-cooperation-plan.md`; do not change production allocation until the
+   artifacts prove complementary value.
+7. Promote any signal to pruning only after a written admissibility argument, stored-solution
+   replay, independent/oracle falsification, and deterministic full-corpus cost/solve A/B.
+
+## Cross-links for future agents
+
+- Live queue: [`future-work.md`](future-work.md)
+- Dynamic frontier synthesis:
+  [`../reports/2026-08-11-dynamic-resource-frontier-synthesis.md`](../reports/2026-08-11-dynamic-resource-frontier-synthesis.md)
+- Neighbor-budget evidence:
+  [`../reports/2026-08-08-mc-neighbor-budget-propagation.md`](../reports/2026-08-08-mc-neighbor-budget-propagation.md)
+- Static must-cross failure / successful earlier derivations:
+  [`../reports/2026-07-31-mustcross-forced-structure.md`](../reports/2026-07-31-mustcross-forced-structure.md)
+- Reserved-intersection topology:
+  [`../reports/2026-07-31-reserved-intersection-wall.md`](../reports/2026-07-31-reserved-intersection-wall.md)
+- Portal-parity closed experiment:
+  [`../reports/2026-08-08-portal-parity-envelope.md`](../reports/2026-08-08-portal-parity-envelope.md)
+- Shared candidate-reasoner harness: [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md)
+- Cooperative-search instrumentation plan:
+  [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md)
 
 ## Bottom line
 
-The original source-only analysis identified real representational gaps but over-promoted several
-obvious fillers that this repository had already tested. After reconciling the evidence, the best
-leads are narrower: portal parity feasibility, genuinely interface-aware landmark reasoning,
-further *new* must-cross propagation, and failure-conditioned repair control. Residual-capacity and
-multi-resource representations remain useful discovery instruments, not yet implied production
-heuristics. The range of existing heuristics does imply missing abilities—but experiment history is
-essential to distinguish a missing ability from an attractive implementation already shown not to
-pay.
+The best remaining leads are no longer "add another scorer" or "describe hard levels with more
+static counts." The evidence is converging on a more specific failure mode: the path gradually
+consumes future completion opportunities, while the solver only partially represents the cost of
+that consumption.
+
+Must-cross neighbor-budget propagation is the strongest concrete example so far. It is sound and
+material enough to change full-corpus solves, but its finite-budget churn warns that even correct
+new information has to cooperate with search allocation. The next work should therefore measure and
+reason about **dynamic resource/interface state**, use the existing shadow/oracle machinery to
+falsify aggressively, and keep level design expressive while moving the solver benchmark frontier
+outward.
