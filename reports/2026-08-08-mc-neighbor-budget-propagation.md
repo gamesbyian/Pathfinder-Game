@@ -1,9 +1,9 @@
 # Must-cross neighbor-budget propagation: sound opt-in prune, +14 net full-corpus A/B (2026-08-08)
 
 > **Status:** inconclusive
-> **Last evidence:** 2026-08-11 — full A/B reconciliation plus follow-up dynamic-resource analysis
-> **Decision:** keep `PRUNE_MC_NEIGHBOR_BUDGET` opt-in/default-off; the rule is sound and net-positive but its 42-gained/28-lost finite-budget churn is not promotion-ready
-> **Remaining gate:** repeat or diagnose the full-population 42-gained/28-lost split before promotion
+> **Last evidence:** 2026-08-11 — post-A/B repair-random-index diagnosis and revised wiring in `a113d47`
+> **Decision:** keep `PRUNE_MC_NEIGHBOR_BUDGET` opt-in/default-off; the original rule/wiring was sound and net-positive, but the current post-`a113d47` implementation has not yet received its own full-population promotion A/B
+> **Remaining gate:** fresh deterministic full Corpus-2 ON/OFF A/B of the revised post-`a113d47` wiring
 
 `docs/solver-heuristic-capability-gap-analysis.md`'s item 3 ("Must-cross/intersection propagation:
 proven family, narrowed frontier") named the untried piece explicitly: **bounded dynamic
@@ -11,12 +11,14 @@ propagation over forced interfaces and remaining free intersection budget, proto
 propagator first, judged by unique catches beyond the shipped gauntlet** — and warned not to revive
 the falsified static forced-edge rule (`reports/2026-07-31-mustcross-forced-structure.md`'s step 4).
 This report records the full sequence: derivation, shadow-probe measurement, full-corpus soundness
-replay, the first live matched-node sample, and the superseding full-corpus deterministic A/B.
+replay, the first live matched-node sample, the full-corpus deterministic A/B, and the later wiring
+change that reopened the promotion gate for the current implementation.
 
 The broader 2026-08-11 interpretation and proposed descendants of this result live in
 [`2026-08-11-dynamic-resource-frontier-synthesis.md`](2026-08-11-dynamic-resource-frontier-synthesis.md).
 Use that synthesis for the current research direction; use this report for the evidence behind this
-specific prune.
+specific prune. For the narrow current promotion status of every retained opt-in, see
+[`../docs/solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md).
 
 ## The gap between the two shipped must-cross checks
 
@@ -108,14 +110,19 @@ never rejects a state on a real, PLAY-valid path:
 
 ## Stage 3: wiring and production-safety check
 
-Wired in as an opt-in ablation flag (`PRUNE_MC_NEIGHBOR_BUDGET`, default OFF — `scripts/ablation-config.mjs`'s
-`OPT_IN_FEATURES`, same pattern as `PRUNE_PORTAL_PARITY_ENVELOPE`), at all three places a move is
-gauntlet-checked: `prune-gauntlet.ts` (covers `dfsFromGate` and repair-search's `takePly`) and
-`search.ts`'s beam loop (which inlines its own copy of the gauntlet rather than calling
-`evaluatePrunedMove`). Default-off means production behavior is provably unchanged when the flag is
-unset — confirmed by `npm run solver:bench -- --check`: **160/160, no regressions** on the published
-corpus. Full `npm run ci`-relevant unit suite (`modules/solver/**`, 299 tests) and `tsc --noEmit`
-both pass.
+The original A/B implementation was wired in as an opt-in ablation flag
+(`PRUNE_MC_NEIGHBOR_BUDGET`, default OFF — `scripts/ablation-config.mjs`'s `OPT_IN_FEATURES`), at
+all three places a move is gauntlet-checked: `prune-gauntlet.ts` (covering `dfsFromGate` and, at
+that time, repair-search's random `takePly` candidate selection) and `search.ts`'s beam loop (which
+inlines its own copy of the gauntlet rather than calling `evaluatePrunedMove`). Default-off means
+production behavior is unchanged when the flag is unset — confirmed by
+`npm run solver:bench -- --check`: **160/160, no regressions** on the published corpus. Full
+`npm run ci`-relevant unit suite (`modules/solver/**`, 299 tests) and `tsc --noEmit` both pass.
+
+**Historical-scope note:** this section describes the wiring that produced Stages 4–5. Commit
+`a113d47ab33a8856a1a8fcd327f28379ff65e0e2` later narrowed participation specifically for repair's
+seeded-random `takePly` candidate-selection path. The Stage-5 A/B must not be silently treated as an
+A/B of that revised wiring.
 
 ## Stage 4: first live matched-node A/B
 
@@ -169,6 +176,33 @@ different part of the tree, and vice versa.
 budget. The +14 therefore reflects altered allocation within the search, not ON simply receiving
 more work.
 
+## Stage 6: post-A/B churn diagnosis and revised wiring (2026-08-11)
+
+The original 42-gained/28-lost result motivated a direct investigation of whether some losses came
+from a mechanism more specific than generic DFS/beam search reallocation. Commit
+`a113d47ab33a8856a1a8fcd327f28379ff65e0e2` identified one.
+
+Repair's seeded-random `takePly` selection draws an index into the **surviving candidate array**. If a
+sound prune removes one dead candidate before that draw is interpreted, the same seeded random value
+can now index a different surviving move. That changes the entire subsequent repair trajectory even
+though the pruned candidate itself was genuinely dead. In other words, the original prune was
+sound, but its participation in this particular random-choice surface created a large butterfly
+effect unrelated to the quality of the remaining candidates.
+
+The implementation was therefore revised so `PRUNE_MC_NEIGHBOR_BUDGET` **does not participate in
+repair's random `takePly` survivor selection**, while remaining active in DFS, beam, and deterministic
+repair sub-searches where removing a proved-dead candidate has the intended semantics without
+reindexing a seeded random choice.
+
+This does **not** erase or invalidate Stage 5. Stage 5 remains the authoritative result for the
+original wiring and strong evidence that the rule itself has useful power. But the current code is a
+materially different participation policy, so Stage 5 is no longer the promotion verdict for what is
+currently behind the opt-in flag.
+
+The commit message mentioned a local 68-affected-level follow-up as in progress. No committed
+result/report for that follow-up was found in the 2026-08-11 reconciliation. Repository truth must
+therefore treat it as incomplete unless a later committed artifact appears.
+
 ## 2026-08-11 follow-up interpretation
 
 The later cross-corpus analysis in
@@ -198,20 +232,22 @@ These are proposals, not claims that the current prune proves their soundness or
 
 ## Status and next steps
 
-The full-corpus result is a real net positive (+14/1700 corpus-2, +0/102 corpus-1), but **not a clean
-promotion win** because 28 Corpus-2 levels that solve with the shipped default OFF do not solve
-within the same fixed budget with the flag ON.
+The original full-corpus result is a real net positive (+14/1700 corpus-2, +0/102 corpus-1), but it
+is **historical evidence for the original participation wiring**, not a promotion verdict for the
+current post-`a113d47` implementation.
 
-Recommendation remains: **keep `PRUNE_MC_NEIGHBOR_BUDGET` opt-in, not default-on** until at least
-one of these decision-bearing checks is complete:
+The current recommendation is therefore precise:
 
-- repeat the deterministic full-corpus A/B to confirm the same gained/lost identity split; or
-- inspect a representative subset of the 28 losses with existing method/attempt probes to
-  characterize the changed search allocation and identify whether a cheap policy treatment can
-  retain more of the +42 without sacrificing the -28.
+- keep `PRUNE_MC_NEIGHBOR_BUDGET` opt-in/default-off;
+- do **not** spend more time merely re-diagnosing the already-identified repair random-index churn
+  mechanism;
+- do **not** repeat Stage 5 and call that a test of current code; and
+- run a **fresh deterministic full Corpus-2 ON/OFF A/B of the revised wiring**. That is now the
+  decision-bearing promotion gate.
 
-Further basic soundness replay is not the current blocker. The unresolved question is finite-budget
-search behavior.
+Further basic soundness replay is not the current blocker. The unresolved question is whether the
+revised participation policy retains enough of the original +42 upside while removing enough of the
+28-loss churn to justify promotion.
 
 ## Reproducing
 
@@ -229,15 +265,22 @@ node scripts/run-bundled.mjs scripts/stress/mc-neighbor-budget-soundness-check.m
 npm run solver:bench -- --check
 ```
 
+For the **current** promotion experiment, use the exact deterministic full-population protocol
+recorded in [`../docs/future-work.md`](../docs/future-work.md) and
+[`../docs/solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md), not the
+historical Stage-5 command assumptions if later experiment infrastructure has changed.
+
 ## Limitations
 
 - **The Stage-4 30-level sample was a convenience slice**, not a random sample, and its +11/30
-  clean-superset result was superseded by the Stage-5 full-population 42-gained/28-lost result.
-- **The full A/B includes already-solved controls by construction.** Older text in this report that
-  said an already-solved control was pending is obsolete; Stage 5 is the authoritative promotion
-  evidence.
+  clean-superset result was superseded by the Stage-5 full-population 42-gained/28-lost result for
+  the original wiring.
+- **The Stage-5 full A/B includes already-solved controls by construction.** Older text in this
+  report that said an already-solved control was pending is obsolete.
+- **Stage 5 predates `a113d47`.** It must not be cited as though it directly measured the current
+  repair-random-selection exclusion.
 - **Nothing here re-baselines `logs/solver-baseline.json`** — the flag remains default-off, so no
-  baseline change is implied by the A/B.
+  baseline change is implied by either the old A/B or the revised wiring.
 - **Portal levels and flipper-adjacent required neighbors are still out of scope** by construction.
   The 2026-08-11 locally-abstaining portal extension is a proposal that requires a new derivation,
   stored-solution replay, shadow score, and live A/B; it is not licensed by this report's existing
