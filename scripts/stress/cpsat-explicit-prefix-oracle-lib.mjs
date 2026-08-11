@@ -1,16 +1,23 @@
 /** Convert an internal packed solver key (0-based x/y) to raw level coordinates (1-based x/y).
  * cpsat-full-probe.py's --prefix explicitly consumes the raw/witness convention. */
 export function unpackPackedCell(key) {
-    if (!Number.isInteger(key)) throw new Error(`packed cell must be an integer: ${key}`);
+    if (!Number.isInteger(key) || key < 0) throw new Error(`packed cell must be a non-negative integer: ${key}`);
     return [(key & 0xffff) + 1, (key >>> 16) + 1];
 }
+
+const validateRawCoordinate = coordinate => {
+    if (coordinate.length !== 2 || !coordinate.every(Number.isInteger) || coordinate.some(value => value < 1)) {
+        throw new Error(`raw coordinate must contain two positive 1-based integers: ${JSON.stringify(coordinate)}`);
+    }
+    return coordinate;
+};
 
 /** Normalize a case cell to raw 1-based [x,y]. Numeric values are internal packed keys; explicit
  * arrays/objects are already raw-level coordinates, matching witness JSON and the CP-SAT CLI. */
 export function normalizeCoordinate(value) {
     if (Number.isInteger(value)) return unpackPackedCell(value);
-    if (Array.isArray(value) && value.length === 2 && value.every(Number.isFinite)) return [Number(value[0]), Number(value[1])];
-    if (value && Number.isFinite(value.x) && Number.isFinite(value.y)) return [Number(value.x), Number(value.y)];
+    if (Array.isArray(value)) return validateRawCoordinate(value.map(Number));
+    if (value && 'x' in value && 'y' in value) return validateRawCoordinate([Number(value.x), Number(value.y)]);
     throw new Error(`invalid coordinate/packed-cell value: ${JSON.stringify(value)}`);
 }
 
@@ -71,8 +78,6 @@ export function parseEmittedPath(stdout) {
     const match = stdout.match(/^PATH\s+(.+)$/m);
     if (!match) return null;
     const path = JSON.parse(match[1]);
-    if (!Array.isArray(path) || !path.every(cell => Array.isArray(cell) && cell.length === 2 && cell.every(Number.isFinite))) {
-        throw new Error('probe PATH output was not an array of [x,y] coordinates');
-    }
-    return path.map(cell => [Number(cell[0]), Number(cell[1])]);
+    if (!Array.isArray(path)) throw new Error('probe PATH output was not an array');
+    return path.map(validateRawCoordinate);
 }
