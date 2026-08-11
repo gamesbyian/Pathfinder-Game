@@ -121,7 +121,7 @@
     "test:family-parent-hint-replay": "tsx scripts/family-parent-hint-replay-unit-tests.mjs",
     "test:divergence-lib": "node scripts/stress/divergence-lib-unit-tests.mjs",
     "test:research-analysis-lib": "node scripts/stress/research-analysis-lib-check.mjs",
-    "test:experiment-manifest": "node scripts/experiment-manifest-lib-unit-tests.mjs",
+    "test:experiment-manifest": "node scripts/experiment-manifest-lib-check.mjs",
     "solver:experiment-preflight": "node scripts/solver-experiment-preflight.mjs",
     "solver:winning-lineage-pilot": "node scripts/run-bundled.mjs scripts/stress/winning-lineage-pilot.mjs",
     "solver:winning-prefix-atlas-pilot": "node scripts/run-bundled.mjs scripts/stress/winning-prefix-atlas-pilot.mjs",

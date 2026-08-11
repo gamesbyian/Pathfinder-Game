@@ -57,3 +57,9 @@ npm run solver:residual-interface-pilot -- --limit-levels=20 --limit-solutions=2
 The bounded census covered 288 canonical-valid solutions across 20 solution-rich Corpus-2 levels. It reduced 31,351 exact represented-state-preserving pair occurrences to **845 unique signatures**. Of these, 459 had support from multiple solutions, 201 crossed structural solution families, but only **14 recurred across multiple levels**. Thus most of the earlier thousands-of-pairs signal is correlated within-level multiplicity, while a small but real reusable cross-level residue survives the stricter definition.
 
 Detour-like raw pairs remain abundant (277,445/364,578 candidates), but this raw frequency is not itself evidence that a reusable detour operator will help. Commuting candidates also remain present (4,310 raw pairs), but were not promoted to a separate algorithm because ordered-obligation equality is only one conservative aspect of commutation. The next justified work is forensic inspection and held-out validation of the 14 cross-level signatures, not repair substitution, separator DP, partial-order search, or CEGAR.
+
+## Supersession note (2026-08-11 follow-up)
+
+The raw-pair pilot is historical. The unique-signature census and subsequent 14-signature inspection
+have completed the reduction/inspection steps; active status is in [`../docs/future-work.md`](../docs/future-work.md).
+This note does not rewrite the dated pilot's original conclusion.

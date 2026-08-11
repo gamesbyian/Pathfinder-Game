@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
-import { compareProducerPopulations, enumerateKnownPrefixBranches, mineResidualInterfaces, rollbackCensus } from './research-analysis-lib.mjs';
+import { classifyScoreWidthExtinction, compareProducerPopulations, enumerateKnownPrefixBranches, mineResidualInterfaces, rollbackCensus } from './research-analysis-lib.mjs';
 
 assert.equal(compareProducerPopulations([{ path: [1, 2], metrics: { x: 1 } }], [{ path: [1, 2], metrics: { x: 1 } }]).exactPrefixOverlap, 1);
+assert.equal(classifyScoreWidthExtinction({ margin: 20, tied: false, stableOrderAdmission: false,
+    poolSize: 240, beamWidth: 100, bestRank: 160 }), 'A-clearly-mis-ranked', 'crowding must not hide material mis-ranking');
+assert.equal(classifyScoreWidthExtinction({ margin: 3, tied: false, stableOrderAdmission: false,
+    poolSize: 240, beamWidth: 100, bestRank: 109 }), 'D-diversity-width-saturation');
+assert.equal(classifyScoreWidthExtinction({ margin: 0, tied: true, stableOrderAdmission: true,
+    poolSize: 101, beamWidth: 100, bestRank: 101 }), 'C-exact-score-tie-stable-order');
 const mined = mineResidualInterfaces([{ id: 'a', path: [1, 2, 4], futureStates: [null, null, 's'] }, { id: 'b', path: [1, 3, 4], futureStates: [null, null, 's'] }]);
 assert.equal(mined.candidatePairs, 1); assert.equal(mined.exactStatePreservingSubstitutions, 1);
 assert.equal(mined.uniqueExactSubstitutionSignatures, 1);

@@ -1,16 +1,69 @@
 {
-  "schemaVersion": 2,
-  "runId": "residual-interface-signature-census-2026-08-11",
-  "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
-  "generatedAt": "2026-08-11T18:49:56.387Z",
+  "schemaVersion": 3,
+  "runId": "residual-interface-census-clean-7330f3ca",
+  "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
+  "generatedAt": "2026-08-11T19:14:44.661Z",
   "levelsFile": "data/stress/stress-levels-random.json",
+  "corpus": "data/stress/stress-levels-random.json",
+  "selection": "first solution-rich levels in corpus order",
+  "producer": "known-valid-solutions",
+  "technique": "offline residual-interface signature census",
+  "profile": null,
+  "workBudget": null,
+  "beamWidth": null,
+  "seed": null,
+  "familyDefinitionVersion": "structural-solution-family-v1",
   "maxSpan": 12,
   "levels": [
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00001",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustCross-6",
+                "blocked",
+                "mustTurn-8",
+                "surround-4",
+                "dense"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 779629226,
+              "structuralComplexity": 0.777,
+              "noveltyScore": 0.233,
+              "nearestNeighbor": "S001",
+              "navDensity": 0.8,
+              "mechanicCounts": {
+                "mustCross": 6,
+                "mustPass": 0,
+                "flippers": 0,
+                "mustTurn": 8,
+                "surround": 4,
+                "adjacentTurn": 0,
+                "decorative": 0,
+                "blocks": 11,
+                "geese": 0,
+                "falseGoals": 0,
+                "portalPairs": 0
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -25,10 +78,56 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00039",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustPass-6",
+                "flippers-5",
+                "blocked",
+                "mustTurn-8",
+                "surround-1",
+                "decorated",
+                "falseGoals-7"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 3046497482,
+              "structuralComplexity": 0.762,
+              "noveltyScore": 0.259,
+              "nearestNeighbor": "R0003",
+              "navDensity": 0.684,
+              "mechanicCounts": {
+                "mustCross": 0,
+                "mustPass": 6,
+                "flippers": 5,
+                "mustTurn": 8,
+                "surround": 1,
+                "adjacentTurn": 0,
+                "decorative": 8,
+                "blocks": 9,
+                "geese": 0,
+                "falseGoals": 7,
+                "portalPairs": 0
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -43,10 +142,56 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00044",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustCross-6",
+                "mustPass-5",
+                "blocked",
+                "surround-1",
+                "decorated",
+                "geese-7",
+                "very-dense"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 2039998064,
+              "structuralComplexity": 0.712,
+              "noveltyScore": 0.202,
+              "nearestNeighbor": "R0001",
+              "navDensity": 0.989,
+              "mechanicCounts": {
+                "mustCross": 6,
+                "mustPass": 5,
+                "flippers": 0,
+                "mustTurn": 0,
+                "surround": 1,
+                "adjacentTurn": 0,
+                "decorative": 7,
+                "blocks": 13,
+                "geese": 7,
+                "falseGoals": 0,
+                "portalPairs": 0
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -61,10 +206,57 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00046",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustCross-1",
+                "mustPass-7",
+                "portals-4",
+                "flippers-5",
+                "blocked",
+                "adjacentTurn-7",
+                "falseGoals-6",
+                "dense"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 2124871897,
+              "structuralComplexity": 0.85,
+              "noveltyScore": 0.333,
+              "nearestNeighbor": "R0042",
+              "navDensity": 0.769,
+              "mechanicCounts": {
+                "mustCross": 1,
+                "mustPass": 7,
+                "flippers": 5,
+                "mustTurn": 0,
+                "surround": 0,
+                "adjacentTurn": 7,
+                "decorative": 0,
+                "blocks": 16,
+                "geese": 0,
+                "falseGoals": 6,
+                "portalPairs": 4
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -79,10 +271,59 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00050",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "max-grid",
+                "mustPass-8",
+                "portals-7",
+                "flippers-6",
+                "blocked",
+                "decorated",
+                "geese-5",
+                "falseGoals-6",
+                "dense",
+                "high-reqInt"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 380691069,
+              "structuralComplexity": 0.835,
+              "noveltyScore": 0.252,
+              "nearestNeighbor": "R0020",
+              "navDensity": 0.737,
+              "mechanicCounts": {
+                "mustCross": 0,
+                "mustPass": 8,
+                "flippers": 6,
+                "mustTurn": 0,
+                "surround": 0,
+                "adjacentTurn": 0,
+                "decorative": 8,
+                "blocks": 34,
+                "geese": 5,
+                "falseGoals": 6,
+                "portalPairs": 7
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -97,10 +338,53 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00059",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "portals-6",
+                "blocked",
+                "mustTurn-6",
+                "decorated"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 2635842248,
+              "structuralComplexity": 0.761,
+              "noveltyScore": 0.227,
+              "nearestNeighbor": "R0029",
+              "navDensity": 0.683,
+              "mechanicCounts": {
+                "mustCross": 0,
+                "mustPass": 0,
+                "flippers": 0,
+                "mustTurn": 6,
+                "surround": 0,
+                "adjacentTurn": 0,
+                "decorative": 5,
+                "blocks": 18,
+                "geese": 0,
+                "falseGoals": 0,
+                "portalPairs": 6
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -115,10 +399,58 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00073",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "max-grid",
+                "mustCross-5",
+                "mustPass-5",
+                "portals-6",
+                "flippers-5",
+                "blocked",
+                "mustTurn-7",
+                "decorated",
+                "geese-5"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 4281439799,
+              "structuralComplexity": 0.893,
+              "noveltyScore": 0.22,
+              "nearestNeighbor": "R0072",
+              "navDensity": 0.639,
+              "mechanicCounts": {
+                "mustCross": 5,
+                "mustPass": 5,
+                "flippers": 5,
+                "mustTurn": 7,
+                "surround": 0,
+                "adjacentTurn": 0,
+                "decorative": 5,
+                "blocks": 34,
+                "geese": 5,
+                "falseGoals": 0,
+                "portalPairs": 6
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -133,10 +465,56 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00080",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "portals-6",
+                "blocked",
+                "mustTurn-5",
+                "decorated",
+                "geese-6",
+                "falseGoals-7",
+                "dense"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 5074503,
+              "structuralComplexity": 0.758,
+              "noveltyScore": 0.187,
+              "nearestNeighbor": "R0036",
+              "navDensity": 0.774,
+              "mechanicCounts": {
+                "mustCross": 0,
+                "mustPass": 0,
+                "flippers": 0,
+                "mustTurn": 5,
+                "surround": 0,
+                "adjacentTurn": 0,
+                "decorative": 5,
+                "blocks": 17,
+                "geese": 6,
+                "falseGoals": 7,
+                "portalPairs": 6
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -151,10 +529,59 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00082",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "max-grid",
+                "mustCross-7",
+                "mustPass-6",
+                "portals-5",
+                "flippers-8",
+                "blocked",
+                "adjacentTurn-8",
+                "geese-8",
+                "falseGoals-8",
+                "dense"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 399406630,
+              "structuralComplexity": 0.899,
+              "noveltyScore": 0.241,
+              "nearestNeighbor": "R0018",
+              "navDensity": 0.759,
+              "mechanicCounts": {
+                "mustCross": 7,
+                "mustPass": 6,
+                "flippers": 8,
+                "mustTurn": 0,
+                "surround": 0,
+                "adjacentTurn": 8,
+                "decorative": 0,
+                "blocks": 26,
+                "geese": 8,
+                "falseGoals": 8,
+                "portalPairs": 5
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -169,10 +596,60 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00088",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustPass-7",
+                "portals-5",
+                "flippers-6",
+                "blocked",
+                "mustTurn-7",
+                "surround-2",
+                "adjacentTurn-8",
+                "decorated",
+                "geese-7",
+                "falseGoals-8",
+                "dense"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 2512400886,
+              "structuralComplexity": 0.929,
+              "noveltyScore": 0.224,
+              "nearestNeighbor": "R0069",
+              "navDensity": 0.859,
+              "mechanicCounts": {
+                "mustCross": 0,
+                "mustPass": 7,
+                "flippers": 6,
+                "mustTurn": 7,
+                "surround": 2,
+                "adjacentTurn": 8,
+                "decorative": 6,
+                "blocks": 22,
+                "geese": 7,
+                "falseGoals": 8,
+                "portalPairs": 5
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -187,10 +664,59 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00093",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustCross-5",
+                "mustPass-7",
+                "flippers-8",
+                "blocked",
+                "mustTurn-8",
+                "adjacentTurn-7",
+                "decorated",
+                "falseGoals-8",
+                "very-dense",
+                "high-reqInt"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 725528982,
+              "structuralComplexity": 0.845,
+              "noveltyScore": 0.187,
+              "nearestNeighbor": "R0040",
+              "navDensity": 0.977,
+              "mechanicCounts": {
+                "mustCross": 5,
+                "mustPass": 7,
+                "flippers": 8,
+                "mustTurn": 8,
+                "surround": 0,
+                "adjacentTurn": 7,
+                "decorative": 8,
+                "blocks": 17,
+                "geese": 0,
+                "falseGoals": 8,
+                "portalPairs": 0
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -205,10 +731,56 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00094",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustCross-6",
+                "mustPass-5",
+                "flippers-7",
+                "blocked",
+                "mustTurn-5",
+                "geese-8",
+                "dense"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 826341791,
+              "structuralComplexity": 0.764,
+              "noveltyScore": 0.211,
+              "nearestNeighbor": "R0044",
+              "navDensity": 0.822,
+              "mechanicCounts": {
+                "mustCross": 6,
+                "mustPass": 5,
+                "flippers": 7,
+                "mustTurn": 5,
+                "surround": 0,
+                "adjacentTurn": 0,
+                "decorative": 0,
+                "blocks": 11,
+                "geese": 8,
+                "falseGoals": 0,
+                "portalPairs": 0
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -223,10 +795,58 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00108",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustCross-7",
+                "mustPass-7",
+                "blocked",
+                "mustTurn-6",
+                "surround-5",
+                "adjacentTurn-6",
+                "geese-6",
+                "falseGoals-7",
+                "very-dense"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 1289547288,
+              "structuralComplexity": 0.816,
+              "noveltyScore": 0.203,
+              "nearestNeighbor": "R0044",
+              "navDensity": 0.962,
+              "mechanicCounts": {
+                "mustCross": 7,
+                "mustPass": 7,
+                "flippers": 0,
+                "mustTurn": 6,
+                "surround": 5,
+                "adjacentTurn": 6,
+                "decorative": 0,
+                "blocks": 14,
+                "geese": 6,
+                "falseGoals": 7,
+                "portalPairs": 0
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -241,10 +861,57 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00112",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "portals-4",
+                "flippers-8",
+                "blocked",
+                "adjacentTurn-5",
+                "decorated",
+                "geese-8",
+                "falseGoals-2",
+                "very-dense"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 766648694,
+              "structuralComplexity": 0.814,
+              "noveltyScore": 0.262,
+              "nearestNeighbor": "R0036",
+              "navDensity": 0.962,
+              "mechanicCounts": {
+                "mustCross": 0,
+                "mustPass": 0,
+                "flippers": 8,
+                "mustTurn": 0,
+                "surround": 0,
+                "adjacentTurn": 5,
+                "decorative": 8,
+                "blocks": 18,
+                "geese": 8,
+                "falseGoals": 2,
+                "portalPairs": 4
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -259,10 +926,58 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00118",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustCross-6",
+                "mustPass-7",
+                "flippers-6",
+                "blocked",
+                "mustTurn-7",
+                "adjacentTurn-6",
+                "decorated",
+                "falseGoals-5",
+                "dense"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 715330099,
+              "structuralComplexity": 0.833,
+              "noveltyScore": 0.154,
+              "nearestNeighbor": "R0009",
+              "navDensity": 0.856,
+              "mechanicCounts": {
+                "mustCross": 6,
+                "mustPass": 7,
+                "flippers": 6,
+                "mustTurn": 7,
+                "surround": 0,
+                "adjacentTurn": 6,
+                "decorative": 8,
+                "blocks": 24,
+                "geese": 0,
+                "falseGoals": 5,
+                "portalPairs": 0
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -277,10 +992,55 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00137",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustPass-6",
+                "blocked",
+                "mustTurn-6",
+                "decorated",
+                "falseGoals-6",
+                "dense"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 81687395,
+              "structuralComplexity": 0.694,
+              "noveltyScore": 0.134,
+              "nearestNeighbor": "R0134",
+              "navDensity": 0.797,
+              "mechanicCounts": {
+                "mustCross": 0,
+                "mustPass": 6,
+                "flippers": 0,
+                "mustTurn": 6,
+                "surround": 0,
+                "adjacentTurn": 0,
+                "decorative": 6,
+                "blocks": 13,
+                "geese": 0,
+                "falseGoals": 6,
+                "portalPairs": 0
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -295,10 +1055,55 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00139",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustCross-5",
+                "portals-7",
+                "mustTurn-8",
+                "surround-4",
+                "decorated",
+                "geese-7"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 533697370,
+              "structuralComplexity": 0.855,
+              "noveltyScore": 0.201,
+              "nearestNeighbor": "R0020",
+              "navDensity": 0.648,
+              "mechanicCounts": {
+                "mustCross": 5,
+                "mustPass": 0,
+                "flippers": 0,
+                "mustTurn": 8,
+                "surround": 4,
+                "adjacentTurn": 0,
+                "decorative": 5,
+                "blocks": 0,
+                "geese": 7,
+                "falseGoals": 0,
+                "portalPairs": 7
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -313,10 +1118,57 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00142",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustPass-6",
+                "portals-6",
+                "flippers-8",
+                "blocked",
+                "surround-4",
+                "adjacentTurn-8",
+                "decorated",
+                "dense"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 2660682033,
+              "structuralComplexity": 0.871,
+              "noveltyScore": 0.222,
+              "nearestNeighbor": "R0022",
+              "navDensity": 0.788,
+              "mechanicCounts": {
+                "mustCross": 0,
+                "mustPass": 6,
+                "flippers": 8,
+                "mustTurn": 0,
+                "surround": 4,
+                "adjacentTurn": 8,
+                "decorative": 7,
+                "blocks": 25,
+                "geese": 0,
+                "falseGoals": 0,
+                "portalPairs": 6
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -331,10 +1183,58 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00143",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "max-grid",
+                "mustPass-6",
+                "flippers-8",
+                "blocked",
+                "surround-1",
+                "decorated",
+                "falseGoals-8",
+                "dense",
+                "high-reqInt"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 2778272461,
+              "structuralComplexity": 0.759,
+              "noveltyScore": 0.188,
+              "nearestNeighbor": "R0053",
+              "navDensity": 0.746,
+              "mechanicCounts": {
+                "mustCross": 0,
+                "mustPass": 6,
+                "flippers": 8,
+                "mustTurn": 0,
+                "surround": 1,
+                "adjacentTurn": 0,
+                "decorative": 8,
+                "blocks": 30,
+                "geese": 0,
+                "falseGoals": 8,
+                "portalPairs": 0
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
@@ -349,10 +1249,57 @@
       }
     },
     {
-      "runId": "residual-interface-signature-census-2026-08-11",
-      "solverRef": "228f265a509ebbf85b10a8dd97503593ec3058fe",
+      "runId": "residual-interface-census-clean-7330f3ca",
+      "solverRef": "7330f3ca411a9dce14b2c9c81965ee7800d51a27",
       "levelId": "R00153",
       "producer": "known-valid-solutions",
+      "provenance": {
+        "history": [
+          {
+            "actor": "procedural",
+            "action": "generated",
+            "method": "stress-corpus-random-generator",
+            "detail": {
+              "generated": true,
+              "stressCorpus": true,
+              "corpusName": "random-uniform-v1",
+              "featureTags": [
+                "mustCross-6",
+                "portals-5",
+                "flippers-7",
+                "blocked",
+                "mustTurn-8",
+                "decorated",
+                "geese-6",
+                "falseGoals-5"
+              ],
+              "generatorVersion": "1.1.0",
+              "levelSeed": 2334559681,
+              "structuralComplexity": 0.853,
+              "noveltyScore": 0.238,
+              "nearestNeighbor": "R0087",
+              "navDensity": 0.584,
+              "mechanicCounts": {
+                "mustCross": 6,
+                "mustPass": 0,
+                "flippers": 7,
+                "mustTurn": 8,
+                "surround": 0,
+                "adjacentTurn": 0,
+                "decorative": 8,
+                "blocks": 15,
+                "geese": 6,
+                "falseGoals": 5,
+                "portalPairs": 5
+              },
+              "backfilled": true
+            },
+            "timestamp": "2026-07-09T21:34:35.874Z"
+          }
+        ],
+        "origin": "procedural",
+        "confidence": "certain"
+      },
       "profile": null,
       "seed": null,
       "maxSpan": 12,
