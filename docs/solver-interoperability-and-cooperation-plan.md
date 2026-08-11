@@ -1304,3 +1304,16 @@ The right foundation is:
 **typed producer artifacts + named recipient receptors + replay-complete witnesses + neutral common metrics + explicit soundness classes + bounded retention + lineage + canonical-work accounting + shadow counterfactuals.**
 
 Build that foundation first. Then promote only the producer -> receptor pairing that earns its way into the live solver.
+
+## Observation-layer implementation update (2026-08-11)
+
+Bounded beam/repair population comparison is now available offline; there is still no live consumption or blackboard. The original synthetic check has been superseded by the three-level real producer pilot below; it remains observation-only and supplies no receptor verdict. See [`reports/2026-08-11-solver-research-observation-tooling-pilot.md`](../reports/2026-08-11-solver-research-observation-tooling-pilot.md).
+
+## Producer-premise pilot update (2026-08-11)
+
+The first observation-only comparison is complete on three hard Corpus-2 levels: 107 bounded beam
+survivors versus 191 repair-elite arrivals had zero exact-prefix and zero full metric-projection
+overlap. This is preliminary non-redundancy, not receptor evidence; no live consumption is justified.
+The next bounded experiment should add region/interface descriptors and counterfactual repair
+receptor evaluation. See
+[`reports/2026-08-11-beam-repair-producer-population-pilot.md`](../reports/2026-08-11-beam-repair-producer-population-pilot.md).

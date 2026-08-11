@@ -659,3 +659,16 @@ This doesn't close off the nogood-cache design above — they attack the same wa
 angles (this one widens *where* bounded search looks; the cache would stop *re-deriving* the same
 failure repeatedly) — but it does confirm the wall is real and that a shared, scarce node budget is
 now the binding constraint on any new repair operator, not search creativity alone.
+
+
+## Rollback-census tooling update (2026-08-11)
+
+A conservative known-trajectory divergence proxy is available for assembling a census, explicitly not a minimum-edit proof or repair operator. Exact continuation labelling remains required before causal interpretation. See [`reports/2026-08-11-solver-research-observation-tooling-pilot.md`](../reports/2026-08-11-solver-research-observation-tooling-pilot.md).
+
+## Rollback causal-window pilot result (2026-08-11)
+
+A conservative 15-elite / three-level known-trajectory census found a median demonstrated rollback of
+63 steps (0.815 `reqLen`, range 0.738–0.890). This is not a minimum edit distance, but it argues against
+assuming the measured near-misses are suffix-local. Next use bounded exact continuation checks while
+retreating through the same elites; do not build another suffix operator yet. See
+[`reports/2026-08-11-repair-rollback-causal-window-pilot.md`](../reports/2026-08-11-repair-rollback-causal-window-pilot.md).

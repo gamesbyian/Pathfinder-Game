@@ -263,3 +263,23 @@ Current code shows concrete, independent pathways through which it can arise:
 - and only then deeper semantic/frontier differences.
 
 Future family research should control these in that order so expensive heuristic work is aimed at the actual mechanism rather than at the word “rotation.”
+
+## 14. Tooling implementation cross-link
+
+The semantic snapshot comparator and coordinate-independent repair research-seed control described above are now implemented and unit-validated. The bounded R02248 semantic-prefix and matched-seed survivor-order pilots are now complete; they classify a controlled C→D interaction without population inference. See [`2026-08-11-solver-research-observation-tooling-pilot.md`](2026-08-11-solver-research-observation-tooling-pilot.md).
+
+## 15. First semantic-prefix pilot
+
+Two R02248 symmetry witnesses (beam/profile and repair/profile) produced zero semantic mismatches over
+202 corresponding prefixes; their first ranking divergences were steps 7 and 81 respectively. This
+rules out observed-path legality/lower-bound/prune drift in those cases but does not yet distinguish
+score tie order from retention or normalized-seed repair trajectory. See
+[`2026-08-11-symmetry-equivariance-prefix-pilot.md`](2026-08-11-symmetry-equivariance-prefix-pilot.md).
+
+## 16. Matched-seed survivor-order result
+
+On R02248/F02248-sym-02, a shared explicit repair research seed exposed equal mapped survivor sets in
+different production order at choice 0. At choice 14 identical exploratory draws selected different
+mapped moves solely through that order; stream consumption diverged at choice 15. Both matched
+100,000-node searches failed, which is mechanism validation rather than a historical-cliff verdict.
+See [`2026-08-11-symmetry-equivariance-prefix-pilot.md`](2026-08-11-symmetry-equivariance-prefix-pilot.md).

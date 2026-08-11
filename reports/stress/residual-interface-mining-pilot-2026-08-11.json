@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-11T14:11:00.054Z",
+  "levelsFile": "data/stress/stress-levels-random.json",
+  "maxSpan": 12,
+  "levels": [
+    {
+      "levelId": "R00001",
+      "solutions": 10,
+      "result": {
+        "repeatedInterfaces": 609,
+        "candidatePairs": 10112,
+        "detourLikePairs": 8552,
+        "commutingCandidates": 100,
+        "exactStatePreservingSubstitutions": 929
+      }
+    },
+    {
+      "levelId": "R00039",
+      "solutions": 10,
+      "result": {
+        "repeatedInterfaces": 521,
+        "candidatePairs": 5594,
+        "detourLikePairs": 4257,
+        "commutingCandidates": 0,
+        "exactStatePreservingSubstitutions": 384
+      }
+    },
+    {
+      "levelId": "R00044",
+      "solutions": 10,
+      "result": {
+        "repeatedInterfaces": 291,
+        "candidatePairs": 9244,
+        "detourLikePairs": 5444,
+        "commutingCandidates": 0,
+        "exactStatePreservingSubstitutions": 780
+      }
+    },
+    {
+      "levelId": "R00046",
+      "solutions": 10,
+      "result": {
+        "repeatedInterfaces": 321,
+        "candidatePairs": 5173,
+        "detourLikePairs": 3022,
+        "commutingCandidates": 0,
+        "exactStatePreservingSubstitutions": 0
+      }
+    },
+    {
+      "levelId": "R00050",
+      "solutions": 5,
+      "result": {
+        "repeatedInterfaces": 391,
+        "candidatePairs": 3141,
+        "detourLikePairs": 2661,
+        "commutingCandidates": 0,
+        "exactStatePreservingSubstitutions": 732
+      }
+    }
+  ],
+  "summary": {
+    "levels": 5,
+    "solutions": 45,
+    "repeatedInterfaces": 2133,
+    "candidatePairs": 33264,
+    "detourLikePairs": 23936,
+    "commutingCandidates": 100,
+    "exactStatePreservingSubstitutions": 2825
+  }
+}

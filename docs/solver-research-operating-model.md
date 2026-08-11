@@ -429,3 +429,20 @@ When directed to “improve the solver” or “pick up pending solver research,
 7. Record negative results and update the queue when a gate closes.
 
 The goal is not to keep every research alley busy. It is to make each new measurement eliminate multiple wrong turns and make each expensive population run answer a question that cheap evidence could not.
+
+### 2026-08-11 observation tooling update
+
+The default-OFF winning-lineage substrate, semantic symmetry comparator, bounded producer/interface/rollback helpers, and their limitations are recorded in [`reports/2026-08-11-solver-research-observation-tooling-pilot.md`](../reports/2026-08-11-solver-research-observation-tooling-pilot.md). The first lineage run, stratified controls, producer comparison, contrastive-atlas smoke, residual-interface miner, and rollback proxy are complete. CP-SAT labelling and larger stratified populations remain in the evidence lane.
+
+### Residual-interface mining pilot update (2026-08-11)
+
+A bounded five-level / 45-solution miner found 2,825 exact represented-state-preserving alternate
+segments among 33,264 endpoint-interface candidate pairs, plus 100 named-obligation ordering
+candidates. This supports deeper signature reduction, not an online substitution operator. See
+[`reports/2026-08-11-residual-interface-segment-mining-pilot.md`](../reports/2026-08-11-residual-interface-segment-mining-pilot.md).
+
+### Tooling completion handoff (2026-08-11)
+
+The objective-by-objective implementation, pilot, correctness-alarm, and deliberately-not-run matrix
+is [`reports/2026-08-11-solver-research-tooling-completion-matrix.md`](../reports/2026-08-11-solver-research-tooling-completion-matrix.md).
+Use it before inventing adjacent telemetry or scheduling a larger evidence run.

@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-11T10:22:18.568Z",
+  "levelsFile": "data/stress/stress-levels-random.json",
+  "meaning": "longest-common-prefix distance from observed elite to any known-valid trajectory; not minimum causal edit distance",
+  "summary": {
+    "levels": 3,
+    "elites": 15,
+    "medianRollbackSteps": 63,
+    "medianRollbackFractionReqLen": 0.8153846153846154,
+    "minRollbackFractionReqLen": 0.7380952380952381,
+    "maxRollbackFractionReqLen": 0.8901098901098901
+  },
+  "levels": [
+    {
+      "levelId": "R00001",
+      "reqLen": 84,
+      "nodeBudget": 30000,
+      "nodesExpanded": 30000,
+      "knownSolutions": 149,
+      "observedEliteArrivals": 55,
+      "selectedElites": 5,
+      "census": {
+        "rows": [
+          {
+            "id": "R00001:elite:0",
+            "matchedSolution": "R00001:known:3",
+            "commonPrefixSteps": 16,
+            "rollbackSteps": 65,
+            "rollbackFractionReqLen": 0.7738095238095238,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 5,
+            "arrivalNodes": 27938,
+            "eliteLength": 80
+          },
+          {
+            "id": "R00001:elite:1",
+            "matchedSolution": "R00001:known:3",
+            "commonPrefixSteps": 16,
+            "rollbackSteps": 65,
+            "rollbackFractionReqLen": 0.7738095238095238,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 5,
+            "arrivalNodes": 28660,
+            "eliteLength": 80
+          },
+          {
+            "id": "R00001:elite:2",
+            "matchedSolution": "R00001:known:3",
+            "commonPrefixSteps": 16,
+            "rollbackSteps": 63,
+            "rollbackFractionReqLen": 0.75,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 7,
+            "arrivalNodes": 15527,
+            "eliteLength": 78
+          },
+          {
+            "id": "R00001:elite:3",
+            "matchedSolution": "R00001:known:3",
+            "commonPrefixSteps": 16,
+            "rollbackSteps": 63,
+            "rollbackFractionReqLen": 0.75,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 7,
+            "arrivalNodes": 24257,
+            "eliteLength": 78
+          },
+          {
+            "id": "R00001:elite:4",
+            "matchedSolution": "R00001:known:3",
+            "commonPrefixSteps": 16,
+            "rollbackSteps": 62,
+            "rollbackFractionReqLen": 0.7380952380952381,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 10,
+            "arrivalNodes": 15531,
+            "eliteLength": 77
+          }
+        ],
+        "medianRollbackSteps": 63
+      }
+    },
+    {
+      "levelId": "R00039",
+      "reqLen": 65,
+      "nodeBudget": 30000,
+      "nodesExpanded": 30000,
+      "knownSolutions": 15,
+      "observedEliteArrivals": 60,
+      "selectedElites": 5,
+      "census": {
+        "rows": [
+          {
+            "id": "R00039:elite:0",
+            "matchedSolution": "R00039:known:0",
+            "commonPrefixSteps": 1,
+            "rollbackSteps": 53,
+            "rollbackFractionReqLen": 0.8153846153846154,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 16,
+            "arrivalNodes": 17990,
+            "eliteLength": 53
+          },
+          {
+            "id": "R00039:elite:1",
+            "matchedSolution": "R00039:known:0",
+            "commonPrefixSteps": 1,
+            "rollbackSteps": 53,
+            "rollbackFractionReqLen": 0.8153846153846154,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 16,
+            "arrivalNodes": 20593,
+            "eliteLength": 53
+          },
+          {
+            "id": "R00039:elite:2",
+            "matchedSolution": "R00039:known:0",
+            "commonPrefixSteps": 1,
+            "rollbackSteps": 53,
+            "rollbackFractionReqLen": 0.8153846153846154,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 16,
+            "arrivalNodes": 22261,
+            "eliteLength": 53
+          },
+          {
+            "id": "R00039:elite:3",
+            "matchedSolution": "R00039:known:0",
+            "commonPrefixSteps": 1,
+            "rollbackSteps": 53,
+            "rollbackFractionReqLen": 0.8153846153846154,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 16,
+            "arrivalNodes": 23888,
+            "eliteLength": 53
+          },
+          {
+            "id": "R00039:elite:4",
+            "matchedSolution": "R00039:known:0",
+            "commonPrefixSteps": 1,
+            "rollbackSteps": 53,
+            "rollbackFractionReqLen": 0.8153846153846154,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 16,
+            "arrivalNodes": 24201,
+            "eliteLength": 53
+          }
+        ],
+        "medianRollbackSteps": 53
+      }
+    },
+    {
+      "levelId": "R00044",
+      "reqLen": 91,
+      "nodeBudget": 30000,
+      "nodesExpanded": 30017,
+      "knownSolutions": 11,
+      "observedEliteArrivals": 76,
+      "selectedElites": 5,
+      "census": {
+        "rows": [
+          {
+            "id": "R00044:elite:0",
+            "matchedSolution": "R00044:known:0",
+            "commonPrefixSteps": 1,
+            "rollbackSteps": 81,
+            "rollbackFractionReqLen": 0.8901098901098901,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 14,
+            "arrivalNodes": 16355,
+            "eliteLength": 81
+          },
+          {
+            "id": "R00044:elite:1",
+            "matchedSolution": "R00044:known:0",
+            "commonPrefixSteps": 1,
+            "rollbackSteps": 81,
+            "rollbackFractionReqLen": 0.8901098901098901,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 14,
+            "arrivalNodes": 24004,
+            "eliteLength": 81
+          },
+          {
+            "id": "R00044:elite:2",
+            "matchedSolution": "R00044:known:0",
+            "commonPrefixSteps": 1,
+            "rollbackSteps": 80,
+            "rollbackFractionReqLen": 0.8791208791208791,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 15,
+            "arrivalNodes": 27080,
+            "eliteLength": 80
+          },
+          {
+            "id": "R00044:elite:3",
+            "matchedSolution": "R00044:known:0",
+            "commonPrefixSteps": 1,
+            "rollbackSteps": 80,
+            "rollbackFractionReqLen": 0.8791208791208791,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 15,
+            "arrivalNodes": 28253,
+            "eliteLength": 80
+          },
+          {
+            "id": "R00044:elite:4",
+            "matchedSolution": "R00044:known:0",
+            "commonPrefixSteps": 1,
+            "rollbackSteps": 80,
+            "rollbackFractionReqLen": 0.8791208791208791,
+            "meaning": "known-trajectory divergence proxy",
+            "badness": 15,
+            "arrivalNodes": 28694,
+            "eliteLength": 80
+          }
+        ],
+        "medianRollbackSteps": 80
+      }
+    }
+  ]
+}

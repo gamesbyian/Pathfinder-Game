@@ -1,0 +1,2721 @@
+{
+  "schemaVersion": 1,
+  "parentId": "R02248",
+  "variantId": "F02248-sym-01",
+  "familyId": "family-R02248-w0-symmetry",
+  "relation": "symmetry",
+  "mutation": {
+    "objectType": "whole-level",
+    "operation": "transform",
+    "variant": 1,
+    "kind": "rotation"
+  },
+  "attemptContext": {
+    "source": "specified",
+    "profile": "intersectionHarvest",
+    "template": null
+  },
+  "pathSource": "result",
+  "validation": {
+    "parent": {
+      "ok": true,
+      "path": [
+        262155,
+        327691,
+        393227,
+        458763,
+        458762,
+        524298,
+        524297,
+        524296,
+        524295,
+        524294,
+        524293,
+        458757,
+        458758,
+        524294,
+        589830,
+        655366,
+        720902,
+        720903,
+        720904,
+        655368,
+        589832,
+        524296,
+        458760,
+        458759,
+        524295,
+        589831,
+        589830,
+        589829,
+        589828,
+        589827,
+        589826,
+        524290,
+        524289,
+        524288,
+        589824,
+        655360,
+        720896,
+        720897,
+        655361,
+        655362,
+        655363,
+        655364,
+        589828,
+        524292,
+        458756,
+        458755,
+        458754,
+        393218,
+        393219,
+        327683,
+        262147,
+        262148,
+        262149,
+        262150,
+        196614,
+        196613,
+        196612,
+        262148,
+        327684,
+        393220,
+        393221,
+        393222,
+        327686,
+        327687,
+        327688,
+        327689,
+        262153,
+        262152,
+        327688,
+        393224,
+        393225,
+        393226,
+        327690,
+        262154,
+        196618,
+        196619,
+        131083,
+        131082,
+        131081,
+        196617,
+        196616,
+        131080,
+        65544,
+        65545,
+        9,
+        8,
+        7,
+        6,
+        5,
+        65541,
+        65540,
+        4,
+        3,
+        2,
+        65538,
+        131074,
+        131073,
+        196609,
+        262145,
+        262146,
+        196610,
+        196611
+      ]
+    },
+    "variant": {
+      "ok": true,
+      "path": [
+        720903,
+        720902,
+        720901,
+        720900,
+        655364,
+        655363,
+        589827,
+        524291,
+        458755,
+        393219,
+        327683,
+        327684,
+        393220,
+        393219,
+        393218,
+        393217,
+        393216,
+        458752,
+        524288,
+        524289,
+        524290,
+        524291,
+        524292,
+        458756,
+        458755,
+        458754,
+        393218,
+        327682,
+        262146,
+        196610,
+        131074,
+        131075,
+        65539,
+        3,
+        2,
+        1,
+        0,
+        65536,
+        65537,
+        131073,
+        196609,
+        262145,
+        262146,
+        262147,
+        262148,
+        196612,
+        131076,
+        131077,
+        196613,
+        196614,
+        196615,
+        262151,
+        327687,
+        393223,
+        393224,
+        327688,
+        262152,
+        262151,
+        262150,
+        262149,
+        327685,
+        393221,
+        393222,
+        458758,
+        524294,
+        589830,
+        589831,
+        524295,
+        524294,
+        524293,
+        589829,
+        655365,
+        655366,
+        655367,
+        655368,
+        720904,
+        720905,
+        655369,
+        589833,
+        589832,
+        524296,
+        524297,
+        524298,
+        589834,
+        589835,
+        524299,
+        458763,
+        393227,
+        327691,
+        327690,
+        262154,
+        262155,
+        196619,
+        131083,
+        131082,
+        131081,
+        65545,
+        65544,
+        65543,
+        131079,
+        131080,
+        196616
+      ]
+    }
+  },
+  "comparison": {
+    "valid": true,
+    "left": {
+      "error": null,
+      "invalidAtStep": null,
+      "cumulativeDiscrepancy": 34,
+      "maxStepRank": 2,
+      "worstRankedSteps": [
+        {
+          "step": 5,
+          "rank": 2,
+          "topChoice": 458761,
+          "nCandidates": 3
+        },
+        {
+          "step": 12,
+          "rank": 2,
+          "topChoice": 458756,
+          "nCandidates": 3
+        },
+        {
+          "step": 66,
+          "rank": 2,
+          "topChoice": 327690,
+          "nCandidates": 3
+        },
+        {
+          "step": 83,
+          "rank": 2,
+          "topChoice": 8,
+          "nCandidates": 3
+        },
+        {
+          "step": 2,
+          "rank": 1,
+          "topChoice": 327690,
+          "nCandidates": 2
+        },
+        {
+          "step": 3,
+          "rank": 1,
+          "topChoice": 393226,
+          "nCandidates": 2
+        },
+        {
+          "step": 11,
+          "rank": 1,
+          "topChoice": 524292,
+          "nCandidates": 3
+        },
+        {
+          "step": 15,
+          "rank": 1,
+          "topChoice": 589829,
+          "nCandidates": 3
+        },
+        {
+          "step": 18,
+          "rank": 1,
+          "topChoice": 655367,
+          "nCandidates": 2
+        },
+        {
+          "step": 20,
+          "rank": 1,
+          "topChoice": 655367,
+          "nCandidates": 3
+        }
+      ],
+      "perStep": [
+        {
+          "step": 1,
+          "rank": 0,
+          "topChoice": 327691,
+          "nCandidates": 3
+        },
+        {
+          "step": 2,
+          "rank": 1,
+          "topChoice": 327690,
+          "nCandidates": 2
+        },
+        {
+          "step": 3,
+          "rank": 1,
+          "topChoice": 393226,
+          "nCandidates": 2
+        },
+        {
+          "step": 4,
+          "rank": 0,
+          "topChoice": 458762,
+          "nCandidates": 1
+        },
+        {
+          "step": 5,
+          "rank": 2,
+          "topChoice": 458761,
+          "nCandidates": 3
+        },
+        {
+          "step": 6,
+          "rank": 0,
+          "topChoice": 524297,
+          "nCandidates": 2
+        },
+        {
+          "step": 7,
+          "rank": 0,
+          "topChoice": 524296,
+          "nCandidates": 2
+        },
+        {
+          "step": 8,
+          "rank": 0,
+          "topChoice": 524295,
+          "nCandidates": 3
+        },
+        {
+          "step": 9,
+          "rank": 0,
+          "topChoice": 524294,
+          "nCandidates": 3
+        },
+        {
+          "step": 10,
+          "rank": 0,
+          "topChoice": 524293,
+          "nCandidates": 3
+        },
+        {
+          "step": 11,
+          "rank": 1,
+          "topChoice": 524292,
+          "nCandidates": 3
+        },
+        {
+          "step": 12,
+          "rank": 2,
+          "topChoice": 458756,
+          "nCandidates": 3
+        },
+        {
+          "step": 13,
+          "rank": 0,
+          "topChoice": 524294,
+          "nCandidates": 3
+        },
+        {
+          "step": 14,
+          "rank": 0,
+          "topChoice": 589830,
+          "nCandidates": 1
+        },
+        {
+          "step": 15,
+          "rank": 1,
+          "topChoice": 589829,
+          "nCandidates": 3
+        },
+        {
+          "step": 16,
+          "rank": 0,
+          "topChoice": 720902,
+          "nCandidates": 2
+        },
+        {
+          "step": 17,
+          "rank": 0,
+          "topChoice": 720903,
+          "nCandidates": 1
+        },
+        {
+          "step": 18,
+          "rank": 1,
+          "topChoice": 655367,
+          "nCandidates": 2
+        },
+        {
+          "step": 19,
+          "rank": 0,
+          "topChoice": 655368,
+          "nCandidates": 2
+        },
+        {
+          "step": 20,
+          "rank": 1,
+          "topChoice": 655367,
+          "nCandidates": 3
+        },
+        {
+          "step": 21,
+          "rank": 0,
+          "topChoice": 524296,
+          "nCandidates": 2
+        },
+        {
+          "step": 22,
+          "rank": 0,
+          "topChoice": 458760,
+          "nCandidates": 1
+        },
+        {
+          "step": 23,
+          "rank": 0,
+          "topChoice": 458759,
+          "nCandidates": 3
+        },
+        {
+          "step": 24,
+          "rank": 0,
+          "topChoice": 524295,
+          "nCandidates": 2
+        },
+        {
+          "step": 25,
+          "rank": 0,
+          "topChoice": 589831,
+          "nCandidates": 1
+        },
+        {
+          "step": 26,
+          "rank": 0,
+          "topChoice": 589830,
+          "nCandidates": 3
+        },
+        {
+          "step": 27,
+          "rank": 0,
+          "topChoice": 589829,
+          "nCandidates": 1
+        },
+        {
+          "step": 28,
+          "rank": 0,
+          "topChoice": 589828,
+          "nCandidates": 1
+        },
+        {
+          "step": 29,
+          "rank": 1,
+          "topChoice": 524292,
+          "nCandidates": 3
+        },
+        {
+          "step": 30,
+          "rank": 0,
+          "topChoice": 589826,
+          "nCandidates": 2
+        },
+        {
+          "step": 31,
+          "rank": 0,
+          "topChoice": 524290,
+          "nCandidates": 2
+        },
+        {
+          "step": 32,
+          "rank": 1,
+          "topChoice": 458754,
+          "nCandidates": 2
+        },
+        {
+          "step": 33,
+          "rank": 1,
+          "topChoice": 458753,
+          "nCandidates": 2
+        },
+        {
+          "step": 34,
+          "rank": 1,
+          "topChoice": 458752,
+          "nCandidates": 2
+        },
+        {
+          "step": 35,
+          "rank": 0,
+          "topChoice": 655360,
+          "nCandidates": 1
+        },
+        {
+          "step": 36,
+          "rank": 1,
+          "topChoice": 655361,
+          "nCandidates": 2
+        },
+        {
+          "step": 37,
+          "rank": 0,
+          "topChoice": 720897,
+          "nCandidates": 1
+        },
+        {
+          "step": 38,
+          "rank": 0,
+          "topChoice": 655361,
+          "nCandidates": 1
+        },
+        {
+          "step": 39,
+          "rank": 1,
+          "topChoice": 655360,
+          "nCandidates": 2
+        },
+        {
+          "step": 40,
+          "rank": 0,
+          "topChoice": 655363,
+          "nCandidates": 1
+        },
+        {
+          "step": 41,
+          "rank": 1,
+          "topChoice": 589827,
+          "nCandidates": 2
+        },
+        {
+          "step": 42,
+          "rank": 0,
+          "topChoice": 589828,
+          "nCandidates": 2
+        },
+        {
+          "step": 43,
+          "rank": 0,
+          "topChoice": 524292,
+          "nCandidates": 1
+        },
+        {
+          "step": 44,
+          "rank": 0,
+          "topChoice": 458756,
+          "nCandidates": 1
+        },
+        {
+          "step": 45,
+          "rank": 0,
+          "topChoice": 458755,
+          "nCandidates": 2
+        },
+        {
+          "step": 46,
+          "rank": 1,
+          "topChoice": 393219,
+          "nCandidates": 2
+        },
+        {
+          "step": 47,
+          "rank": 0,
+          "topChoice": 393218,
+          "nCandidates": 2
+        },
+        {
+          "step": 48,
+          "rank": 0,
+          "topChoice": 393219,
+          "nCandidates": 2
+        },
+        {
+          "step": 49,
+          "rank": 1,
+          "topChoice": 458755,
+          "nCandidates": 3
+        },
+        {
+          "step": 50,
+          "rank": 0,
+          "topChoice": 262147,
+          "nCandidates": 2
+        },
+        {
+          "step": 51,
+          "rank": 1,
+          "topChoice": 196611,
+          "nCandidates": 3
+        },
+        {
+          "step": 52,
+          "rank": 1,
+          "topChoice": 196612,
+          "nCandidates": 3
+        },
+        {
+          "step": 53,
+          "rank": 1,
+          "topChoice": 196613,
+          "nCandidates": 2
+        },
+        {
+          "step": 54,
+          "rank": 0,
+          "topChoice": 196614,
+          "nCandidates": 2
+        },
+        {
+          "step": 55,
+          "rank": 0,
+          "topChoice": 196613,
+          "nCandidates": 1
+        },
+        {
+          "step": 56,
+          "rank": 1,
+          "topChoice": 262149,
+          "nCandidates": 3
+        },
+        {
+          "step": 57,
+          "rank": 0,
+          "topChoice": 262148,
+          "nCandidates": 2
+        },
+        {
+          "step": 58,
+          "rank": 0,
+          "topChoice": 327684,
+          "nCandidates": 1
+        },
+        {
+          "step": 59,
+          "rank": 1,
+          "topChoice": 327683,
+          "nCandidates": 2
+        },
+        {
+          "step": 60,
+          "rank": 0,
+          "topChoice": 393221,
+          "nCandidates": 1
+        },
+        {
+          "step": 61,
+          "rank": 0,
+          "topChoice": 393222,
+          "nCandidates": 1
+        },
+        {
+          "step": 62,
+          "rank": 0,
+          "topChoice": 327686,
+          "nCandidates": 2
+        },
+        {
+          "step": 63,
+          "rank": 0,
+          "topChoice": 327687,
+          "nCandidates": 1
+        },
+        {
+          "step": 64,
+          "rank": 0,
+          "topChoice": 327688,
+          "nCandidates": 2
+        },
+        {
+          "step": 65,
+          "rank": 0,
+          "topChoice": 327689,
+          "nCandidates": 3
+        },
+        {
+          "step": 66,
+          "rank": 2,
+          "topChoice": 327690,
+          "nCandidates": 3
+        },
+        {
+          "step": 67,
+          "rank": 0,
+          "topChoice": 262152,
+          "nCandidates": 3
+        },
+        {
+          "step": 68,
+          "rank": 0,
+          "topChoice": 327688,
+          "nCandidates": 2
+        },
+        {
+          "step": 69,
+          "rank": 0,
+          "topChoice": 393224,
+          "nCandidates": 1
+        },
+        {
+          "step": 70,
+          "rank": 1,
+          "topChoice": 393223,
+          "nCandidates": 2
+        },
+        {
+          "step": 71,
+          "rank": 0,
+          "topChoice": 393226,
+          "nCandidates": 2
+        },
+        {
+          "step": 72,
+          "rank": 0,
+          "topChoice": 327690,
+          "nCandidates": 2
+        },
+        {
+          "step": 73,
+          "rank": 0,
+          "topChoice": 262154,
+          "nCandidates": 2
+        },
+        {
+          "step": 74,
+          "rank": 0,
+          "topChoice": 196618,
+          "nCandidates": 1
+        },
+        {
+          "step": 75,
+          "rank": 1,
+          "topChoice": 196617,
+          "nCandidates": 3
+        },
+        {
+          "step": 76,
+          "rank": 0,
+          "topChoice": 131083,
+          "nCandidates": 1
+        },
+        {
+          "step": 77,
+          "rank": 0,
+          "topChoice": 131082,
+          "nCandidates": 1
+        },
+        {
+          "step": 78,
+          "rank": 0,
+          "topChoice": 131081,
+          "nCandidates": 2
+        },
+        {
+          "step": 79,
+          "rank": 1,
+          "topChoice": 131080,
+          "nCandidates": 3
+        },
+        {
+          "step": 80,
+          "rank": 0,
+          "topChoice": 196616,
+          "nCandidates": 1
+        },
+        {
+          "step": 81,
+          "rank": 0,
+          "topChoice": 131080,
+          "nCandidates": 1
+        },
+        {
+          "step": 82,
+          "rank": 0,
+          "topChoice": 65544,
+          "nCandidates": 1
+        },
+        {
+          "step": 83,
+          "rank": 2,
+          "topChoice": 8,
+          "nCandidates": 3
+        },
+        {
+          "step": 84,
+          "rank": 0,
+          "topChoice": 9,
+          "nCandidates": 2
+        },
+        {
+          "step": 85,
+          "rank": 0,
+          "topChoice": 8,
+          "nCandidates": 1
+        },
+        {
+          "step": 86,
+          "rank": 0,
+          "topChoice": 7,
+          "nCandidates": 1
+        },
+        {
+          "step": 87,
+          "rank": 0,
+          "topChoice": 6,
+          "nCandidates": 2
+        },
+        {
+          "step": 88,
+          "rank": 0,
+          "topChoice": 5,
+          "nCandidates": 1
+        },
+        {
+          "step": 89,
+          "rank": 0,
+          "topChoice": 65541,
+          "nCandidates": 2
+        },
+        {
+          "step": 90,
+          "rank": 1,
+          "topChoice": 131077,
+          "nCandidates": 2
+        },
+        {
+          "step": 91,
+          "rank": 0,
+          "topChoice": 4,
+          "nCandidates": 1
+        },
+        {
+          "step": 92,
+          "rank": 0,
+          "topChoice": 3,
+          "nCandidates": 1
+        },
+        {
+          "step": 93,
+          "rank": 0,
+          "topChoice": 2,
+          "nCandidates": 1
+        },
+        {
+          "step": 94,
+          "rank": 0,
+          "topChoice": 65538,
+          "nCandidates": 1
+        },
+        {
+          "step": 95,
+          "rank": 0,
+          "topChoice": 131074,
+          "nCandidates": 2
+        },
+        {
+          "step": 96,
+          "rank": 1,
+          "topChoice": 196610,
+          "nCandidates": 2
+        },
+        {
+          "step": 97,
+          "rank": 0,
+          "topChoice": 196609,
+          "nCandidates": 3
+        },
+        {
+          "step": 98,
+          "rank": 1,
+          "topChoice": 196610,
+          "nCandidates": 2
+        },
+        {
+          "step": 99,
+          "rank": 0,
+          "topChoice": 262146,
+          "nCandidates": 2
+        },
+        {
+          "step": 100,
+          "rank": 0,
+          "topChoice": 196610,
+          "nCandidates": 1
+        },
+        {
+          "step": 101,
+          "rank": 0,
+          "topChoice": 196611,
+          "nCandidates": 2
+        }
+      ],
+      "finalIsSolution": true
+    },
+    "right": {
+      "error": null,
+      "invalidAtStep": null,
+      "cumulativeDiscrepancy": 41,
+      "maxStepRank": 2,
+      "worstRankedSteps": [
+        {
+          "step": 5,
+          "rank": 2,
+          "topChoice": 589828,
+          "nCandidates": 3
+        },
+        {
+          "step": 12,
+          "rank": 2,
+          "topChoice": 262148,
+          "nCandidates": 3
+        },
+        {
+          "step": 52,
+          "rank": 2,
+          "topChoice": 262152,
+          "nCandidates": 3
+        },
+        {
+          "step": 65,
+          "rank": 2,
+          "topChoice": 524295,
+          "nCandidates": 3
+        },
+        {
+          "step": 83,
+          "rank": 2,
+          "topChoice": 524299,
+          "nCandidates": 3
+        },
+        {
+          "step": 2,
+          "rank": 1,
+          "topChoice": 655366,
+          "nCandidates": 2
+        },
+        {
+          "step": 3,
+          "rank": 1,
+          "topChoice": 655365,
+          "nCandidates": 2
+        },
+        {
+          "step": 7,
+          "rank": 1,
+          "topChoice": 589828,
+          "nCandidates": 2
+        },
+        {
+          "step": 8,
+          "rank": 1,
+          "topChoice": 524292,
+          "nCandidates": 3
+        },
+        {
+          "step": 9,
+          "rank": 1,
+          "topChoice": 458756,
+          "nCandidates": 3
+        }
+      ],
+      "perStep": [
+        {
+          "step": 1,
+          "rank": 0,
+          "topChoice": 720902,
+          "nCandidates": 3
+        },
+        {
+          "step": 2,
+          "rank": 1,
+          "topChoice": 655366,
+          "nCandidates": 2
+        },
+        {
+          "step": 3,
+          "rank": 1,
+          "topChoice": 655365,
+          "nCandidates": 2
+        },
+        {
+          "step": 4,
+          "rank": 0,
+          "topChoice": 655364,
+          "nCandidates": 1
+        },
+        {
+          "step": 5,
+          "rank": 2,
+          "topChoice": 589828,
+          "nCandidates": 3
+        },
+        {
+          "step": 6,
+          "rank": 0,
+          "topChoice": 589827,
+          "nCandidates": 2
+        },
+        {
+          "step": 7,
+          "rank": 1,
+          "topChoice": 589828,
+          "nCandidates": 2
+        },
+        {
+          "step": 8,
+          "rank": 1,
+          "topChoice": 524292,
+          "nCandidates": 3
+        },
+        {
+          "step": 9,
+          "rank": 1,
+          "topChoice": 458756,
+          "nCandidates": 3
+        },
+        {
+          "step": 10,
+          "rank": 1,
+          "topChoice": 393220,
+          "nCandidates": 3
+        },
+        {
+          "step": 11,
+          "rank": 0,
+          "topChoice": 327684,
+          "nCandidates": 3
+        },
+        {
+          "step": 12,
+          "rank": 2,
+          "topChoice": 262148,
+          "nCandidates": 3
+        },
+        {
+          "step": 13,
+          "rank": 0,
+          "topChoice": 393219,
+          "nCandidates": 3
+        },
+        {
+          "step": 14,
+          "rank": 0,
+          "topChoice": 393218,
+          "nCandidates": 1
+        },
+        {
+          "step": 15,
+          "rank": 1,
+          "topChoice": 327682,
+          "nCandidates": 3
+        },
+        {
+          "step": 16,
+          "rank": 0,
+          "topChoice": 393216,
+          "nCandidates": 2
+        },
+        {
+          "step": 17,
+          "rank": 0,
+          "topChoice": 458752,
+          "nCandidates": 1
+        },
+        {
+          "step": 18,
+          "rank": 1,
+          "topChoice": 458753,
+          "nCandidates": 2
+        },
+        {
+          "step": 19,
+          "rank": 0,
+          "topChoice": 524289,
+          "nCandidates": 2
+        },
+        {
+          "step": 20,
+          "rank": 0,
+          "topChoice": 524290,
+          "nCandidates": 3
+        },
+        {
+          "step": 21,
+          "rank": 0,
+          "topChoice": 524291,
+          "nCandidates": 2
+        },
+        {
+          "step": 22,
+          "rank": 0,
+          "topChoice": 524292,
+          "nCandidates": 1
+        },
+        {
+          "step": 23,
+          "rank": 0,
+          "topChoice": 458756,
+          "nCandidates": 3
+        },
+        {
+          "step": 24,
+          "rank": 0,
+          "topChoice": 458755,
+          "nCandidates": 2
+        },
+        {
+          "step": 25,
+          "rank": 0,
+          "topChoice": 458754,
+          "nCandidates": 1
+        },
+        {
+          "step": 26,
+          "rank": 0,
+          "topChoice": 393218,
+          "nCandidates": 3
+        },
+        {
+          "step": 27,
+          "rank": 0,
+          "topChoice": 327682,
+          "nCandidates": 1
+        },
+        {
+          "step": 28,
+          "rank": 0,
+          "topChoice": 262146,
+          "nCandidates": 1
+        },
+        {
+          "step": 29,
+          "rank": 1,
+          "topChoice": 262147,
+          "nCandidates": 3
+        },
+        {
+          "step": 30,
+          "rank": 0,
+          "topChoice": 131074,
+          "nCandidates": 2
+        },
+        {
+          "step": 31,
+          "rank": 0,
+          "topChoice": 131075,
+          "nCandidates": 2
+        },
+        {
+          "step": 32,
+          "rank": 1,
+          "topChoice": 131076,
+          "nCandidates": 2
+        },
+        {
+          "step": 33,
+          "rank": 1,
+          "topChoice": 65540,
+          "nCandidates": 2
+        },
+        {
+          "step": 34,
+          "rank": 1,
+          "topChoice": 4,
+          "nCandidates": 2
+        },
+        {
+          "step": 35,
+          "rank": 0,
+          "topChoice": 1,
+          "nCandidates": 1
+        },
+        {
+          "step": 36,
+          "rank": 1,
+          "topChoice": 65537,
+          "nCandidates": 2
+        },
+        {
+          "step": 37,
+          "rank": 0,
+          "topChoice": 65536,
+          "nCandidates": 1
+        },
+        {
+          "step": 38,
+          "rank": 0,
+          "topChoice": 65537,
+          "nCandidates": 1
+        },
+        {
+          "step": 39,
+          "rank": 1,
+          "topChoice": 1,
+          "nCandidates": 2
+        },
+        {
+          "step": 40,
+          "rank": 0,
+          "topChoice": 196609,
+          "nCandidates": 1
+        },
+        {
+          "step": 41,
+          "rank": 1,
+          "topChoice": 196610,
+          "nCandidates": 2
+        },
+        {
+          "step": 42,
+          "rank": 0,
+          "topChoice": 262146,
+          "nCandidates": 2
+        },
+        {
+          "step": 43,
+          "rank": 0,
+          "topChoice": 262147,
+          "nCandidates": 1
+        },
+        {
+          "step": 44,
+          "rank": 0,
+          "topChoice": 262148,
+          "nCandidates": 1
+        },
+        {
+          "step": 45,
+          "rank": 1,
+          "topChoice": 262149,
+          "nCandidates": 2
+        },
+        {
+          "step": 46,
+          "rank": 1,
+          "topChoice": 196613,
+          "nCandidates": 2
+        },
+        {
+          "step": 47,
+          "rank": 0,
+          "topChoice": 131077,
+          "nCandidates": 2
+        },
+        {
+          "step": 48,
+          "rank": 0,
+          "topChoice": 196613,
+          "nCandidates": 2
+        },
+        {
+          "step": 49,
+          "rank": 1,
+          "topChoice": 196612,
+          "nCandidates": 3
+        },
+        {
+          "step": 50,
+          "rank": 0,
+          "topChoice": 196615,
+          "nCandidates": 2
+        },
+        {
+          "step": 51,
+          "rank": 1,
+          "topChoice": 196616,
+          "nCandidates": 3
+        },
+        {
+          "step": 52,
+          "rank": 2,
+          "topChoice": 262152,
+          "nCandidates": 3
+        },
+        {
+          "step": 53,
+          "rank": 1,
+          "topChoice": 327688,
+          "nCandidates": 2
+        },
+        {
+          "step": 54,
+          "rank": 0,
+          "topChoice": 393224,
+          "nCandidates": 2
+        },
+        {
+          "step": 55,
+          "rank": 0,
+          "topChoice": 327688,
+          "nCandidates": 1
+        },
+        {
+          "step": 56,
+          "rank": 1,
+          "topChoice": 327687,
+          "nCandidates": 3
+        },
+        {
+          "step": 57,
+          "rank": 0,
+          "topChoice": 262151,
+          "nCandidates": 2
+        },
+        {
+          "step": 58,
+          "rank": 0,
+          "topChoice": 262150,
+          "nCandidates": 1
+        },
+        {
+          "step": 59,
+          "rank": 1,
+          "topChoice": 196614,
+          "nCandidates": 2
+        },
+        {
+          "step": 60,
+          "rank": 0,
+          "topChoice": 327685,
+          "nCandidates": 1
+        },
+        {
+          "step": 61,
+          "rank": 0,
+          "topChoice": 393221,
+          "nCandidates": 1
+        },
+        {
+          "step": 62,
+          "rank": 0,
+          "topChoice": 393222,
+          "nCandidates": 2
+        },
+        {
+          "step": 63,
+          "rank": 0,
+          "topChoice": 458758,
+          "nCandidates": 1
+        },
+        {
+          "step": 64,
+          "rank": 1,
+          "topChoice": 458757,
+          "nCandidates": 2
+        },
+        {
+          "step": 65,
+          "rank": 2,
+          "topChoice": 524295,
+          "nCandidates": 3
+        },
+        {
+          "step": 66,
+          "rank": 0,
+          "topChoice": 589831,
+          "nCandidates": 3
+        },
+        {
+          "step": 67,
+          "rank": 0,
+          "topChoice": 524295,
+          "nCandidates": 3
+        },
+        {
+          "step": 68,
+          "rank": 0,
+          "topChoice": 524294,
+          "nCandidates": 2
+        },
+        {
+          "step": 69,
+          "rank": 0,
+          "topChoice": 524293,
+          "nCandidates": 1
+        },
+        {
+          "step": 70,
+          "rank": 1,
+          "topChoice": 458757,
+          "nCandidates": 2
+        },
+        {
+          "step": 71,
+          "rank": 1,
+          "topChoice": 589828,
+          "nCandidates": 2
+        },
+        {
+          "step": 72,
+          "rank": 0,
+          "topChoice": 655366,
+          "nCandidates": 2
+        },
+        {
+          "step": 73,
+          "rank": 0,
+          "topChoice": 655367,
+          "nCandidates": 2
+        },
+        {
+          "step": 74,
+          "rank": 0,
+          "topChoice": 655368,
+          "nCandidates": 1
+        },
+        {
+          "step": 75,
+          "rank": 1,
+          "topChoice": 589832,
+          "nCandidates": 3
+        },
+        {
+          "step": 76,
+          "rank": 0,
+          "topChoice": 720905,
+          "nCandidates": 1
+        },
+        {
+          "step": 77,
+          "rank": 0,
+          "topChoice": 655369,
+          "nCandidates": 1
+        },
+        {
+          "step": 78,
+          "rank": 1,
+          "topChoice": 655370,
+          "nCandidates": 2
+        },
+        {
+          "step": 79,
+          "rank": 1,
+          "topChoice": 589834,
+          "nCandidates": 3
+        },
+        {
+          "step": 80,
+          "rank": 0,
+          "topChoice": 524296,
+          "nCandidates": 1
+        },
+        {
+          "step": 81,
+          "rank": 0,
+          "topChoice": 524297,
+          "nCandidates": 1
+        },
+        {
+          "step": 82,
+          "rank": 0,
+          "topChoice": 524298,
+          "nCandidates": 1
+        },
+        {
+          "step": 83,
+          "rank": 2,
+          "topChoice": 524299,
+          "nCandidates": 3
+        },
+        {
+          "step": 84,
+          "rank": 0,
+          "topChoice": 589835,
+          "nCandidates": 2
+        },
+        {
+          "step": 85,
+          "rank": 0,
+          "topChoice": 524299,
+          "nCandidates": 1
+        },
+        {
+          "step": 86,
+          "rank": 0,
+          "topChoice": 458763,
+          "nCandidates": 1
+        },
+        {
+          "step": 87,
+          "rank": 0,
+          "topChoice": 393227,
+          "nCandidates": 2
+        },
+        {
+          "step": 88,
+          "rank": 0,
+          "topChoice": 327691,
+          "nCandidates": 1
+        },
+        {
+          "step": 89,
+          "rank": 0,
+          "topChoice": 327690,
+          "nCandidates": 2
+        },
+        {
+          "step": 90,
+          "rank": 1,
+          "topChoice": 327689,
+          "nCandidates": 2
+        },
+        {
+          "step": 91,
+          "rank": 0,
+          "topChoice": 262155,
+          "nCandidates": 1
+        },
+        {
+          "step": 92,
+          "rank": 0,
+          "topChoice": 196619,
+          "nCandidates": 1
+        },
+        {
+          "step": 93,
+          "rank": 0,
+          "topChoice": 131083,
+          "nCandidates": 1
+        },
+        {
+          "step": 94,
+          "rank": 0,
+          "topChoice": 131082,
+          "nCandidates": 1
+        },
+        {
+          "step": 95,
+          "rank": 0,
+          "topChoice": 131081,
+          "nCandidates": 2
+        },
+        {
+          "step": 96,
+          "rank": 1,
+          "topChoice": 131080,
+          "nCandidates": 2
+        },
+        {
+          "step": 97,
+          "rank": 0,
+          "topChoice": 65544,
+          "nCandidates": 3
+        },
+        {
+          "step": 98,
+          "rank": 1,
+          "topChoice": 131080,
+          "nCandidates": 2
+        },
+        {
+          "step": 99,
+          "rank": 0,
+          "topChoice": 131079,
+          "nCandidates": 2
+        },
+        {
+          "step": 100,
+          "rank": 0,
+          "topChoice": 131080,
+          "nCandidates": 1
+        },
+        {
+          "step": 101,
+          "rank": 0,
+          "topChoice": 196616,
+          "nCandidates": 2
+        }
+      ],
+      "finalIsSolution": true
+    },
+    "cumulativeDiscrepancyDelta": 7,
+    "firstMeaningfulDivergence": {
+      "step": 7,
+      "leftRank": 0,
+      "rightRank": 1,
+      "rankDelta": 1,
+      "leftCandidates": 2,
+      "rightCandidates": 2,
+      "candidateDelta": 0
+    },
+    "worstDifferentials": [
+      {
+        "step": 65,
+        "leftRank": 0,
+        "rightRank": 2,
+        "rankDelta": 2,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 66,
+        "leftRank": 2,
+        "rightRank": 0,
+        "rankDelta": -2,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 7,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 8,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 9,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 10,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 11,
+        "leftRank": 1,
+        "rightRank": 0,
+        "rankDelta": -1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 20,
+        "leftRank": 1,
+        "rightRank": 0,
+        "rankDelta": -1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 45,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 52,
+        "leftRank": 1,
+        "rightRank": 2,
+        "rankDelta": 1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      }
+    ],
+    "byStep": [
+      {
+        "step": 1,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 2,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 3,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 4,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 5,
+        "leftRank": 2,
+        "rightRank": 2,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 6,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 7,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 8,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 9,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 10,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 11,
+        "leftRank": 1,
+        "rightRank": 0,
+        "rankDelta": -1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 12,
+        "leftRank": 2,
+        "rightRank": 2,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 13,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 14,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 15,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 16,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 17,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 18,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 19,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 20,
+        "leftRank": 1,
+        "rightRank": 0,
+        "rankDelta": -1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 21,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 22,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 23,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 24,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 25,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 26,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 27,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 28,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 29,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 30,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 31,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 32,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 33,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 34,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 35,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 36,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 37,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 38,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 39,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 40,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 41,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 42,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 43,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 44,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 45,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 46,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 47,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 48,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 49,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 50,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 51,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 52,
+        "leftRank": 1,
+        "rightRank": 2,
+        "rankDelta": 1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 53,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 54,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 55,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 56,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 57,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 58,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 59,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 60,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 61,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 62,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 63,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 64,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 65,
+        "leftRank": 0,
+        "rightRank": 2,
+        "rankDelta": 2,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 66,
+        "leftRank": 2,
+        "rightRank": 0,
+        "rankDelta": -2,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 67,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 68,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 69,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 70,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 71,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 72,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 73,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 74,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 75,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 76,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 77,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 78,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 79,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 80,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 81,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 82,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 83,
+        "leftRank": 2,
+        "rightRank": 2,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 84,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 85,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 86,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 87,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 88,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 89,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 90,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 91,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 92,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 93,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 94,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 95,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 96,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 97,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      },
+      {
+        "step": 98,
+        "leftRank": 1,
+        "rightRank": 1,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 99,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      },
+      {
+        "step": 100,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 1,
+        "rightCandidates": 1,
+        "candidateDelta": 0
+      },
+      {
+        "step": 101,
+        "leftRank": 0,
+        "rightRank": 0,
+        "rankDelta": 0,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      }
+    ]
+  },
+  "ablationDifferential": [
+    {
+      "flag": "SCORE_GOAL_ATTRACTION",
+      "leftDelta": -6,
+      "rightDelta": -2,
+      "differential": 4
+    },
+    {
+      "flag": "SCORE_PERIMETER_BIAS",
+      "leftDelta": 2,
+      "rightDelta": 1,
+      "differential": -1
+    },
+    {
+      "flag": "SCORE_SURROUND_URGENCY",
+      "leftDelta": 1,
+      "rightDelta": 2,
+      "differential": 1
+    },
+    {
+      "flag": "SCORE_ADJ_TURN_URGENCY",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_ANTI_DITHER",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_FINISH_COMMITMENT",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_FLIPPER_URGENCY",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_INTERSECTION_SETUP",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_MC_APPROACH_GUIDANCE",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_MUST_CROSS_URGENCY",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_MUST_PASS_URGENCY",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_MUST_TURN_EXIT_GUIDANCE",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_MUST_TURN_URGENCY",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_OBJECTIVE_ATTRACTION",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_PHASE_SCALING",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_PORTAL_PARITY_GUIDANCE",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_REVISIT_PENALTY",
+      "leftDelta": 1,
+      "rightDelta": 1,
+      "differential": 0
+    },
+    {
+      "flag": "SCORE_TEMPLATE_BONUS",
+      "leftDelta": 0,
+      "rightDelta": 0,
+      "differential": 0
+    }
+  ],
+  "semanticEquivariance": {
+    "checkedPrefixes": 101,
+    "mismatchCount": 0,
+    "firstMismatch": null,
+    "observations": []
+  }
+}

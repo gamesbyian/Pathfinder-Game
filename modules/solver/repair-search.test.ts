@@ -5,7 +5,7 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { repairSearchFromGate, computePlateauPenaltyCells, selectGuideCells, relinkPaths, preferredTurnExit } from './repair-search.js';
+import { repairSearchFromGate, repairStreamSeeds, computePlateauPenaltyCells, selectGuideCells, relinkPaths, preferredTurnExit } from './repair-search.js';
 import { createState, applyMove } from './search-state.js';
 import { isSolutionState } from './solution.js';
 import { withFeatureDisabled } from '../../scripts/ablation-config.mjs';
@@ -77,9 +77,26 @@ test('repairSearchFromGate is deterministic: identical inputs produce identical 
 
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
+    const eliteRecords: number[][] = [];
+    const choiceRecords: Array<{ survivors: number[]; chosenIndex: number }> = [];
+    prepB._repairEliteResearchObserver = { observe: record => eliteRecords.push(record.path) };
+    prepB._repairChoiceResearchObserver = { observe: record => choiceRecords.push(record) };
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 1500, Date.now(), null);
 
     assert.deepEqual(pathA, pathB);
+    assert.equal(prepA._metrics.nodesExpanded, prepB._metrics.nodesExpanded, 'elite observation must not change canonical work');
+    assert.ok(eliteRecords.every(path => path[0] === K(1, 1)), 'emitted elites are replay-complete from the gate');
+    assert.ok(choiceRecords.every(record => record.survivors[record.chosenIndex] !== undefined));
+});
+
+test('repair research seed normalizes both independent streams without changing production derivation', () => {
+    const production = repairStreamSeeds(K(1, 1), 7);
+    assert.notEqual(production.primary, production.mustTurn);
+    assert.deepEqual(repairStreamSeeds(K(1, 1), 7, null), production);
+    const normalizedA = repairStreamSeeds(K(1, 1), 7, 12345);
+    const normalizedB = repairStreamSeeds(K(4, 4), 99, 12345);
+    assert.deepEqual(normalizedA, normalizedB);
+    assert.notEqual(normalizedA.primary, normalizedA.mustTurn);
 });
 
 test('repairSearchFromGate returns null and respects its budget on a parity-impossible level', async () => {

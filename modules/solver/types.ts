@@ -255,6 +255,16 @@ export interface PrepLevel {
      *  checks its own budget, so all four stop on the same machine-independent quantity.
      *  Infinity/undefined = uncapped. See work-meter.ts. */
     _workCap?: number;
+    /** Research-only beam observer. Absent in every production call. The observer receives copied
+     * replay-complete paths and may label them, but cannot affect search decisions. */
+    _beamResearchObserver?: BeamResearchObserver | null;
+    /** Research/test-only repair seed control. When absent, the long-standing gate/salt-derived
+     * production seeds are used byte-for-byte. Both independent repair streams derive from it. */
+    _repairResearchSeed?: number | null;
+    /** Research-only repair elite sink. Receives copied paths after elite retention; never read by search. */
+    _repairEliteResearchObserver?: RepairEliteResearchObserver | null;
+    /** Research-only repair choice sink for diagnosing shared-draw/survivor-order interactions. */
+    _repairChoiceResearchObserver?: RepairChoiceResearchObserver | null;
     /** Memoization cache for mustPassLowerBound, lazily created — see lower-bounds.ts. Sound to
      *  share across every attempt/gate within one solveLevel() call (same prep instance for all
      *  of them): the bound is a pure function of (pos, state.mpVisitedMask) alone, nothing
@@ -313,6 +323,31 @@ export interface PrepLevel {
     /** per must-turn cell: single-source BFS distance-to-cell array (see prep.ts) */
     mustTurnDistMaps?: Uint16Array[];
 }
+
+export type BeamResearchStage = 'incoming-frontier' | 'generated' | 'hard-pruned'
+    | 'post-hard-prune' | 'dedup-removed' | 'post-production-dedup'
+    | 'score-width-culled' | 'diversity-culled' | 'post-score-width-cull' | 'post-diversity-selection';
+
+export interface BeamResearchRecord {
+    stage: BeamResearchStage;
+    depth: number;
+    work: number;
+    paths: number[][];
+    /** Present for removals/culls; indices refer to score-sorted pool order. */
+    details?: Record<string, unknown>;
+}
+
+export interface BeamResearchObserver { observe(record: BeamResearchRecord): void; }
+
+export interface RepairEliteResearchRecord {
+    producer: 'repair'; path: number[]; badness: number; arrivalNodes: number; restart: number;
+}
+export interface RepairEliteResearchObserver { observe(record: RepairEliteResearchRecord): void; }
+export interface RepairChoiceResearchRecord {
+    prefix: number[]; survivors: number[]; chosenIndex: number; chosen: number;
+    mode: 'only' | 'greedy' | 'explore' | 'must-turn-override'; primaryDraws: number[]; biasDraw: number | null;
+}
+export interface RepairChoiceResearchObserver { observe(record: RepairChoiceResearchRecord): void; }
 
 /** Undo token returned by `applyMove` (landmark fields present only when hasLandmarkConstraints). */
 export interface UndoToken {

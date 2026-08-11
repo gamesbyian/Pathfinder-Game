@@ -155,6 +155,21 @@ test('beamSearchFromGate solves a simple line level through the extracted search
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
 });
 
+test('beam research observation is behaviorally inert and sees real boundaries', async () => {
+  const level = makeLevel();
+  const off = prepLevel(level); off._cfg = null; off._metrics = { nodesExpanded: 0 };
+  const offPath = await beamSearchFromGate(PACK(0, 0), level, off, POLICY_PROFILES.default, 1000, Date.now(), null, 8, null, false);
+  const records: Array<{ stage: string; paths: number[][] }> = [];
+  const on = prepLevel(level); on._cfg = null; on._metrics = { nodesExpanded: 0 };
+  on._beamResearchObserver = { observe: record => records.push({ stage: record.stage, paths: record.paths }) };
+  const onPath = await beamSearchFromGate(PACK(0, 0), level, on, POLICY_PROFILES.default, 1000, Date.now(), null, 8, null, false);
+  assert.deepEqual(onPath, offPath);
+  assert.equal(on._metrics.nodesExpanded, off._metrics.nodesExpanded);
+  assert.ok(records.some(record => record.stage === 'incoming-frontier'));
+  assert.ok(records.some(record => record.stage === 'generated'));
+  assert.ok(records.every(record => record.paths.every(path => path[0] === PACK(0, 0))));
+});
+
 test('beam reconstruction scratch handles long, tiny, shifted, then long paths like fresh invariants', async () => {
   type N = { key: number; prev: N | null; depth: number };
   const chain = (keys: number[]): N => keys.reduce<N | null>((prev, key, depth) => ({ key, prev, depth }), null)!;

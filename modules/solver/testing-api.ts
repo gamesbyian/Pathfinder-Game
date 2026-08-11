@@ -4,11 +4,16 @@ import { buildDistMap } from './distance.js';
 import { normalizeRawLevel } from './normalization.js';
 import { prepLevel } from './prep.js';
 import { createState, getNeighbors, applyMove } from './search-state.js';
-import { scoreAndSort } from './scoring.js';
+import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { isSolutionState } from './solution.js';
 import { POLICY_PROFILES } from './policy.js';
 import { PACK } from './encoding.js';
 import { runAttempt, attemptConfigKey, normalizeAblationConfig } from './orchestration.js';
+import { WinningLineageObserver, WinningPrefixIndex } from './research-lineage.js';
+import { beamSearchFromGate } from './search.js';
+import { evaluatePrunedMove } from './prune-gauntlet.js';
+import { getRealLengthFromState } from './solution.js';
+import { mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
 
 /** The canonical solver analysis/debug surface (also a named Solver export). */
 export function createSolverTestingApi() {
@@ -25,6 +30,8 @@ export function createSolverTestingApi() {
         getNeighbors,
         applyMove,
         scoreAndSort,
+        scoreMove,
+        buildCurUrgencyContext,
         isSolutionState,
         POLICY_PROFILES,
         PACK,
@@ -42,6 +49,13 @@ export function createSolverTestingApi() {
         // earlier version of hint-divergence.mjs did, complete only for the flags its own call
         // path happened to read).
         normalizeAblationConfig,
+        WinningPrefixIndex,
+        WinningLineageObserver,
+        beamSearchFromGate,
+        evaluatePrunedMove,
+        getRealLengthFromState,
+        mustCrossLowerBound,
+        mustPassLowerBound,
     });
 }
 
