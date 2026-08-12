@@ -4,7 +4,7 @@
 > **Case file:** [`reports/stress/winning-lineage-extinction-adjacent-cases-2026-08-12.json`](stress/winning-lineage-extinction-adjacent-cases-2026-08-12.json) (32 cases, 15 decision points)
 > **Source data:** [`reports/2026-08-11-winning-lineage-score-width-forensics.md`](2026-08-11-winning-lineage-score-width-forensics.md) / [`reports/stress/winning-lineage-same-config-2026-08-11.json`](stress/winning-lineage-same-config-2026-08-11.json)
 > **Prior B1 run:** GitHub Actions `31537268571`, 12 atlas abstentions → 7 dead / 1 live / 4 abstain (not rerun here)
-> **B2 run(s):** GitHub Actions `31555961680` (pre-fix, completed, 30/32 clean + 2 correctness alarms) and `31560336475` (post-fix corroboration, dispatched — see Results for the authoritative local-run numbers this report is based on)
+> **B2 run(s):** GitHub Actions `31555961680` (pre-fix, completed, 30/32 clean + 2 correctness alarms). A post-fix CI corroboration run (`31560336475`) was dispatched but cancelled after queueing behind an unrelated corpus-sweep workflow for an estimated ~90 minutes on shared runner capacity; this report's numbers come from a local rerun on the same commit/case file instead (see Results).
 > **Tooling fix:** `scripts/stress/cpsat-full-probe.py` gate-visits under-constraint, commit `572f0e51`
 
 ## Goal
@@ -50,7 +50,7 @@ per-candidate data could not be pulled from history. Instead:
    location, not a task-scope change).
 5. Every prefix was replayed against the native solver (`getNeighbors`/`applyMove`, mirroring
    `cpsat-explicit-prefix-oracle.mjs`'s own `replayPrefix`) and confirmed legal before commit — 0
-   `native-prefix-illegal` input alarms in either CI run.
+   `native-prefix-illegal` input alarms in the completed CI run or either local run.
 
 **Dispatch.** `.github/workflows/cpsat-explicit-prefix-oracle.yml`, `case_format=cases`, `corpus=`
 blank (case file supplies it), `time_limit=60`, `max_cases=32`.
@@ -88,10 +88,11 @@ for g in gates:
 ```
 
 Verified locally: both affected S00108 cases now resolve to referee-valid `live` results with 0
-correctness alarms. A corroborating CI dispatch (`31560336475`, same commit, same case file) is queued
-as an independent record; this report's numbers come from the local run since CI queue times on this
-workflow have been highly variable (the first B2 dispatch queued ~42 minutes before starting). A
-**pre-existing**,
+correctness alarms. A corroborating CI dispatch (`31560336475`, same commit, same case file) was
+cancelled after queueing behind an unrelated corpus-sweep workflow for an estimated ~90 minutes on
+shared runner capacity (the first B2 dispatch alone had already queued ~42 minutes before starting) —
+not worth holding a runner slot for when local `ortools` execution gives the identical, deterministic
+answer. This report's numbers are the local rerun. A **pre-existing**,
 unrelated `--check-witness` failure on S00108 was confirmed present on the *unmodified* code too (via
 `git stash`) — almost certainly the model's own documented gap on portal-pair-count 1–3 levels (the
 file's header only validates 0/4/5/6/7 pairs; S00108 has 1) — left untouched, out of this task's scope.
@@ -106,7 +107,7 @@ encounter multi-gate elites.
 
 ## Results
 
-Final (post-fix) local run, same commit (`572f0e51`) and case file as the pending CI corroboration run:
+Final (post-fix) local run, commit `572f0e51`, same case file dispatched to CI:
 
 **32 cases: 9 live / 2 dead / 21 abstain. 0 correctness alarms. 0 input alarms.**
 
@@ -190,7 +191,15 @@ doc anticipated ("first expand the exact-label set... then test neutral descript
 
 - Case file: `reports/stress/winning-lineage-extinction-adjacent-cases-2026-08-12.json` (32 cases).
 - Tooling fix: `scripts/stress/cpsat-full-probe.py`, commit `572f0e51` (multi-gate visits constraint).
-- CI runs: `31555961680` (pre-fix, completed, surfaced the correctness alarm), `31560336475` (post-fix
-  corroboration, dispatched; check its artifact for independent confirmation of the local numbers
-  above).
+- CI runs: `31555961680` (pre-fix, completed, surfaced the correctness alarm). A post-fix corroboration
+  run (`31560336475`) was dispatched then cancelled while queued behind an unrelated corpus sweep
+  (~90 min estimated wait on shared runner capacity); this report's Results are the local rerun on the
+  same commit/case file instead — see the CP-SAT feasibility-determinism note below.
+- **Local vs. CI provenance:** `INFEASIBLE`/`OPTIMAL` verdicts from CP-SAT are deterministic answers
+  to a fixed model, independent of the machine that finds them (only a borderline `UNKNOWN`/timeout
+  call, like S00099's, could in principle differ under materially different CPU speed or contention).
+  A future session with CI headroom can re-dispatch `31560336475`'s exact inputs
+  (`reports/stress/winning-lineage-extinction-adjacent-cases-2026-08-12.json`, commit `572f0e51` or
+  later, `time_limit=60`, `max_cases=32`) to obtain an official artifact if one is wanted; it is not
+  expected to change any conclusion in this report.
 - No production solver, score, quota, or retention change made or proposed here, per task scope.
