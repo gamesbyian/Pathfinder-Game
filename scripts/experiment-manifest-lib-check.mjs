@@ -65,9 +65,14 @@ const temp = mkdtempSync(path.join(tmpdir(), 'pathfinder-preflight-'));
 const corpus = path.join(temp, 'corpus.json');
 writeFileSync(corpus, JSON.stringify([{ id: 'L1' }]));
 const workflowInputString = inputs => Object.entries(inputs).map(([key, value]) => `${key}=${value}`).join(',');
+// PRUNE_PORTAL_PARITY_ENVELOPE, not PRUNE_MC_NEIGHBOR_BUDGET: this fixture needs a flag that is
+// genuinely opt-in (production default OFF, per OPT_IN_FEATURES) so blank workflow inputs mean
+// "off" and an explicit enable_flags means "on" -- exactly what PRUNE_MC_NEIGHBOR_BUDGET stopped
+// being once it was promoted to default-on (2026-08-12). This test validates the preflight tool's
+// consistency-checking mechanism in general, not that specific flag's disposition.
 const runPreflight = ({ runId, flagValue, inputs }) => spawnSync(process.execPath, [
     'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-test', `--run-id=${runId}`, `--corpus=${corpus}`,
-    '--arm=control', `--flags=PRUNE_MC_NEIGHBOR_BUDGET=${flagValue}`, '--workflow=solver-stress-refresh',
+    '--arm=control', `--flags=PRUNE_PORTAL_PARITY_ENVELOPE=${flagValue}`, '--workflow=solver-stress-refresh',
     `--workflow-inputs=${workflowInputString(inputs)}`, '--seeds=', '--work-budget=10', '--wall-deadline-ms=100',
     '--profile=default', '--instrumentation=off', `--output=${path.join(temp, `${runId}.json`)}`, '--allow-dirty',
 ], { encoding: 'utf8' });
@@ -75,7 +80,7 @@ assert.equal(runPreflight({ runId: 'off', flagValue: 'false', inputs: workflowIn
 const inconsistent = runPreflight({ runId: 'bad-on', flagValue: 'true', inputs: workflowInputs });
 assert.notEqual(inconsistent.status, 0);
 assert.match(`${inconsistent.stdout}${inconsistent.stderr}`, /solverFlags disagree/);
-assert.equal(runPreflight({ runId: 'on', flagValue: 'true', inputs: { ...workflowInputs, enable_flags: 'PRUNE_MC_NEIGHBOR_BUDGET' } }).status, 0);
+assert.equal(runPreflight({ runId: 'on', flagValue: 'true', inputs: { ...workflowInputs, enable_flags: 'PRUNE_PORTAL_PARITY_ENVELOPE' } }).status, 0);
 
 // Capability boundary guard. This is intentionally static as well as runtime-enforced: a future
 // innocent-looking workflow optimization must fail CI if it reintroduces exact-level history.

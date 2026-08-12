@@ -105,6 +105,7 @@ import { validateCandidatePath } from '../domain/path-validator.js';
 import { isConnected } from './topology.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import type { PruneDiagnostics, PruneId } from './prune-gauntlet.js';
+import { normalizeAblationConfig } from './orchestration.js';
 import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, mustCrossForcedNeighborDeadlocked, mustCrossNeighborBudgetDeadlocked } from './lower-bounds.js';
 
 const W = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
@@ -789,7 +790,33 @@ test('property: deadlock helpers only report independently unsatisfiable reachab
                 'diagnostics remain independent and do not claim a suppressed rule was reached');
               assert.equal(evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
                 { PRUNE_MC_NEIGHBOR_BUDGET: false }, false), 'pass',
-              'production default-OFF behavior remains unchanged');
+              'explicit disable still suppresses the rule regardless of production default');
+              // Promoted to default-on 2026-08-12 (reports/2026-08-08-mc-neighbor-budget-propagation.md,
+              // reports/2026-08-12-worker-count-sensitivity-repair-probe-wallclock.md's "Corpus-scale
+              // directionality, resolved" section): an entirely omitted ablation config (cfg=null,
+              // exactly what every production caller and any CLI invocation without --enable-flags
+              // passes) must now activate this rule, not silently leave it inert. Uses REAL production
+              // resolution (normalizeAblationConfig), not a raw sparse object like diagnoseRule's --
+              // a raw object would leave every OTHER key `undefined` (falsy), silently disabling every
+              // other default-on rule instead of testing this one's real default. PRUNE_MC_CEILING
+              // happens to independently reject this same walked state (a legitimate, harmless
+              // overlap in production) and fires first in gauntlet order, so it's suppressed here to
+              // isolate PRUNE_MC_NEIGHBOR_BUDGET's own default alone, via diagnostics rather than the
+              // overall verdict -- trusting the verdict alone is exactly what made an earlier, cruder
+              // version of this check misleadingly pass for the wrong reason.
+              const isolatedCfg = normalizeAblationConfig({ PRUNE_MC_CEILING: false });
+              const isolatedDiagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+              const isolatedVerdict = evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
+                isolatedCfg, false, { diagnostics: isolatedDiagnostics });
+              assert.equal(isolatedDiagnostics.rejected.PRUNE_MC_NEIGHBOR_BUDGET, 1,
+                `production default-ON: an ablation config that leaves PRUNE_MC_NEIGHBOR_BUDGET ` +
+                `unset must still activate it (verdict=${isolatedVerdict} rejected=${JSON.stringify(isolatedDiagnostics.rejected)} reached=${JSON.stringify(isolatedDiagnostics.reached)})`);
+              // And the fully-omitted case (cfg=null, exactly what every production caller and any
+              // CLI invocation without --enable-flags passes) must still end in 'reject' overall --
+              // whichever rule fires, the candidate must not silently pass.
+              assert.equal(evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
+                null, false), 'reject',
+                'an omitted ablation config must not let this genuinely dead state pass');
             }
             diagnosedDeadStates[i]++;
           }

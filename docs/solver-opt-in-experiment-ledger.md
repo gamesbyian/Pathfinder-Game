@@ -4,13 +4,12 @@ This is the authoritative disposition ledger for solver mechanisms that remain p
 
 Capability decisions must obey [`solver-level-blindness.md`](solver-level-blindness.md). Exact-level history may be used for replay/research, but never to produce a headline capability verdict.
 
-Last reconciled: **2026-08-11**, after the revised neighbor-budget level-blind A/B and explicit-prefix CP-SAT run.
+Last reconciled: **2026-08-12**, after promoting `PRUNE_MC_NEIGHBOR_BUDGET` (see "Already promoted/default-on items" and the disposition note below).
 
 ## Current production-default-OFF ablation flags
 
 | Flag | Current disposition | Evidence complete | Decision-bearing next action |
 |---|---|---|---|
-| `PRUNE_MC_NEIGHBOR_BUDGET` | **OPEN FOR INTEGRATION/PROMOTION; population A/B itself COMPLETE** | Soundness: 97,812 stored-valid paths / 8.5M replay steps, zero violations; 19 unique oracle-atlas catches beyond the existing gauntlet. Original wiring historical A/B: +14 with 42 gained / 28 lost, but that workflow used exact-level winner priming and is not a capability baseline. Revised caller policy suppresses the prune only from stochastic repair `takePly`. **2026-08-11 level-blind full C2 A/B: 611→665 (+54 net, 59 gained / 5 lost); C1 94→94; C2 nodes -3.94%, canonical work -5.33%; zero attempt errors/deadline truncations.** | Do **not** repeat the population A/B unchanged. Diagnose the five losses (`R00635`, `R02119`, `R02422`, `R02823`, `R02867`) and test a generic equal-work integration that preserves the upside without capability regression if possible. Then decide default-on vs complementary lane vs remain opt-in. |
 | `STRATEGY_MAIN_LOOP_LATE_RESERVE` | **OPEN — promotion A/B pending** | Starvation census found 34/975 historically unsolved levels with a historically matched zero-node attempt, 14 hard deterministic matches. Mechanism pilot activated beneficiaries and recovered 1/14 hard matches. | Run the frozen full-population **level-blind** A/B after workflow hardening. Control + 5/10/15% treatments, config count 4 in every arm. Exact-level priming is forbidden and no longer a workflow input. |
 | `STRATEGY_REPAIR_ELITE_PREFIX_DFS` | **CLOSED FOR PROMOTION IN CURRENT FORM** | Equal-budget dedicated test: ON 4/20 vs OFF 5/20, with confirmed displacement from consuming repair's shared node budget. | None. Reopen only after a materially cheaper/more selective variant clears a small equal-work retest. |
 | `STRATEGY_REPAIR_TURN_BIAS` | **CLOSED NEGATIVE** | Historical matched C2 run reproduced 725→718 (-7, 5 gained / 12 lost) and disabling nogood cache did not rescue it. That historical population used the old re-verification harness, so do not quote 725 as capability; the negative is still enough to close the unchanged mechanism. | None unless materially new mechanism evidence appears. Do not rerun the unchanged flag merely to translate the old negative into the new capability harness. |
@@ -35,6 +34,20 @@ The remaining repair research direction is exact retreat/deep prefix editing, no
 - `STRATEGY_REPAIR_NOGOOD_CACHE`: shipped default-on after positive repair evidence and population compatibility.
 - Admissible-order node reserve (`0.25`): shipped/default behavior after its dedicated positive A/B.
 - Attraction-diversity, repair fallback/probe, admissible-order search, and the ordinary repair must-turn-biased attempt are production strategies with ablation controls; their flags are not dangling promotion tasks.
+- `PRUNE_MC_NEIGHBOR_BUDGET`: promoted to default-on 2026-08-12 after the population evidence below
+  and a five-loss diagnosis (4 of 5 losses share a diverse-beam bounded-width displacement
+  mechanism, mechanistically distinct from the already-fixed repair-seed issue; the fifth,
+  `R02823`, is separately tracked as a not-yet-understood local execution-context sensitivity —
+  see `reports/2026-08-12-worker-count-sensitivity-repair-probe-wallclock.md`). **The initial
+  promotion attempt (removing the flag from `OPT_IN_FEATURES` alone) was incomplete and had zero
+  runtime effect anywhere, including production**: `prune-gauntlet.ts`'s read site still used the
+  opt-in convention (`cfg && cfg.FLAG === true`, defaults OFF whenever no ablation object is
+  passed — which is what every production caller and any CLI run without `--enable-flags` does),
+  not the standard convention (`!cfg || cfg.FLAG`) every other promoted flag uses. Fixed alongside
+  the registry change this time, with a regression test
+  (`modules/solver/lower-bounds.test.ts`) verifying the rule fires under a genuinely-omitted
+  ablation config specifically, not just under an overall gauntlet verdict (which can be
+  misleadingly satisfied by an unrelated rule).
 
 ## Experiment interpretation rules
 
@@ -52,3 +65,24 @@ The remaining repair research direction is exact retreat/deep prefix editing, no
 The earlier stochastic-repair exclusion was accidentally erased during prune-diagnostics refactoring and restored through named `PruneEvaluationOptions`. The subsequent level-blind population A/B is now the decision-bearing evidence for that restored implementation.
 
 Result: **611/1700 OFF → 665/1700 ON**, 59 gains / 5 losses, with lower aggregate nodes and work. The old 42/28 churn diagnosis is therefore substantially validated: removing the prune from indexed random move selection eliminated most losses. The remaining five losses now define the integration problem; another identical 1700-level A/B would add no new information.
+
+## 2026-08-12 neighbor-budget promotion, and a wiring gap it exposed
+
+Promoted to default-on (see "Already promoted/default-on items"). While investigating an unrelated
+worker-count solve-outcome sensitivity report, a corpus-scale comparison between two CI runs that
+were believed to differ only by `--workers` turned out to actually differ by this flag: one run
+explicitly passed `--enable-flags=PRUNE_MC_NEIGHBOR_BUDGET`, the other left `enable_flags` blank
+and (incorrectly) assumed the recent registry-only promotion meant the flag would default on. It
+didn't — `normalizeAblationConfig(undefined)` returns `null` before ever consulting
+`OPT_IN_FEATURES`, and `prune-gauntlet.ts`'s read site was still gated the opt-in way. That run's
+617/1700 (vs. the other's 665/1700) is best read as a near-exact re-measurement of the 611→665 gap
+above, not a worker-count effect. Both interactive production callers (`solver-controller.ts`,
+`review-controller.ts`) also never set `.ablation`, so the promotion had zero real-world effect
+anywhere until the read-site convention was fixed alongside this note. Full account:
+`reports/2026-08-12-worker-count-sensitivity-repair-probe-wallclock.md`.
+
+**Lesson for any future promotion**: removing a flag from `OPT_IN_FEATURES` is necessary but not
+sufficient. The flag's own read site(s) must also be checked/changed from the opt-in convention
+(`cfg && cfg.FLAG === true`) to the standard convention (`!cfg || cfg.FLAG`) — search for the
+flag's name across `modules/solver/*.ts` and confirm every read site uses the convention matching
+its new `OPT_IN_FEATURES` membership before considering a promotion complete.
