@@ -55,7 +55,7 @@ on:
       shard_count:
         description: 'Number of even shards to split the sample into.'
         required: false
-        default: '10'
+        default: '20'
       enable_flags:
         description: 'Comma-separated ablation flags to turn ON. Leave blank for the control arm; set to STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET for the treatment arm.'
         required: false
@@ -116,7 +116,7 @@ jobs:
         run: |
           node - "${{ inputs.shard_count }}" <<'NODE'
           const fs = require('node:fs');
-          const shardCount = Math.max(1, Number(process.argv[2] || 10));
+          const shardCount = Math.max(1, Number(process.argv[2] || 20));
           const tokens = fs.readFileSync('logs/solver-repair-probe-adaptive-sample/sample.txt', 'utf8')
             .split('\n').map(s => s.trim()).filter(Boolean)
             .map(t => t.replace(/^pos:/, ''));
