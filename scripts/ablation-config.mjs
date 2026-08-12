@@ -60,7 +60,7 @@ export const FEATURES = {
     PRUNE_MUST_TURN_DEADLOCK:   'Prune once a pending must-turn cell has both axis bits used (provably unsatisfiable)',
     PRUNE_MC_FORCED_NEIGHBOR:   'Prune once a pending must-cross cell\'s still-needed straight pass has a neighbor that is now a hard wall (both axis bits used, or an already-used flipper)',
     PRUNE_MC_FORCED_FIRST_MOVE: 'Force the first move out of a gate that is orthogonally adjacent to exactly one must-cross cell onto that cell (the gate can never be re-entered, so this is its only chance to serve that cell\'s pass)',
-    PRUNE_MC_NEIGHBOR_BUDGET:   'production default-OFF; OPEN promotion gate, revised wiring: dynamic must-cross/intersection propagation. The original wiring was sound on 97,812 stored-valid paths, caught 19 oracle-atlas dead branches uniquely, and moved Corpus-2 725→739 (+14; 42 gained/28 lost). Commit a113d47 then excluded this prune from repair\'s seeded-random takePly survivor selection to remove that churn mechanism while retaining it for DFS/beam and deterministic repair sub-searches. The revised wiring therefore needs a fresh deterministic full-population A/B; the old A/B is not its promotion verdict. See reports/2026-08-08-mc-neighbor-budget-propagation.md and docs/solver-opt-in-experiment-ledger.md.',
+    PRUNE_MC_NEIGHBOR_BUDGET:   'production default-ON as of 2026-08-12: dynamic must-cross/intersection propagation. Sound on 97,812 stored-valid paths (0 violations) and 19 unique oracle-atlas catches beyond the existing gauntlet. Commit a113d47 excluded this prune from repair\'s seeded-random takePly survivor selection to remove a churn mechanism (candidate-list-size-sensitive random-index reselection) while retaining it for DFS/beam and deterministic repair sub-searches. The revised wiring\'s 2026-08-11 level-blind full-population A/B: Corpus-2 611->665 (+54 net, 59 gained/5 lost), Corpus-1 94->94, 0 regressions on the published corpus. The 2026-08-12 five-loss diagnosis found four of the five residual losses share a distinct, understood mechanism (a bounded-width diverse-beam retention effect, not repair-seed-related) -- see reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md and docs/solver-opt-in-experiment-ledger.md.',
 
     // ── Search strategy ───────────────────────────────────────────────────────
     STRATEGY_LDS:               'Limited Discrepancy Search probe waves before full DFS',
@@ -120,7 +120,6 @@ export const FEATURES = {
  * docs/solver-opt-in-experiment-ledger.md before deciding that an opt-in needs more testing. */
 export const OPT_IN_FEATURES = new Set([
     'PRUNE_PORTAL_PARITY_ENVELOPE',
-    'PRUNE_MC_NEIGHBOR_BUDGET',
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS',
     'STRATEGY_REPAIR_TURN_BIAS',
     'STRATEGY_MAIN_LOOP_LATE_RESERVE',

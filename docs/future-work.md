@@ -21,21 +21,17 @@ The historical `725/1700` figure is **not** the capability baseline. It used exa
 
 ## Ready / next
 
-### 1. Diagnose the five revised neighbor-budget losses and close the integration decision
+### 1. ~~Diagnose the five revised neighbor-budget losses and close the integration decision~~ — DONE, PROMOTED (2026-08-12)
 
-**Status: population A/B complete; do not rerun unchanged.**
+**Status: complete.** `PRUNE_MC_NEIGHBOR_BUDGET` is now default-on. See [`../reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md`](../reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md) for the full diagnosis and [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md)'s updated row.
 
-Lost IDs: `R00635`, `R02119`, `R02422`, `R02823`, `R02867`.
+Four of five losses (`R00635`, `R02119`, `R02422`, `R02867`) share a clean mechanism: the same deterministic diverse-beam attempt that wins under OFF is still tried under ON, runs to a comparable node count, and fails — plausibly a bounded-width top-K retention effect (removing a genuinely-dead candidate from a fixed-width beam bucket's competition can displace a different, non-provably-dead candidate that was actually on the path to the true solution), mechanistically distinct from the already-fixed repair-seed-reindexing issue. `R02823` could not be reliably reproduced locally (see item below) and remains undiagnosed.
 
-Goal: preserve as much of the 59-gain upside as possible without accepting a capability regression. Determine whether the five losses share one deterministic ordering/budget mechanism. Any recovery must be generic and level-blind. Do not use historical winner replay or per-ID exceptions.
+Promoted to default-on given: 0 regressions on the published 160-level corpus and corpus-1, a 7.4:1+ gained:lost ratio on corpus-2 (net +54/1700), and a residual cost that is now understood and bounded rather than open-ended. Optional, non-blocking follow-up: implement and validate a beam-width-scoped exclusion (analogous to the existing repair fix) to chase the remaining five losses — its own project with its own population A/B, not required for the promotion already made.
 
-A promising integration shape, if needed, is a complementary/fallback use of the prune rather than globally changing every search. It is only acceptable if evaluated under a matched **total work** envelope; simply adding a second full-budget solve would buy solves with extra compute and would not answer the promotion question.
+### 1b. Investigate the local run-to-run reproducibility gap found during the five-loss diagnosis
 
-Promotion options after this analysis:
-
-- default-on if the five-loss risk can be eliminated or accepted under the project's promotion bar;
-- a bounded complementary lane if it gives a strict or near-strict superset at equal work;
-- remain opt-in if neither integration clears the bar.
+`R02823` (one of the five neighbor-budget losses) failed to reproduce locally under both `--workers=4` and `--workers=1` (sequential, no sibling-level contention) — repeatedly hitting node-budget-reached and staying unsolved — yet solved cleanly and quickly (`dfs:repair:repair(mustTurnBiased)`, 9.3M nodes, well under the 36M cap) when run completely alone with nothing else active. Same code, same level, same canonical work/node budget, different outcome depending on execution context. `docs/solver-budget-determinism.md` documents the canonical WORK-budget model as host/load-independent by design; this is a real, if narrow, counterexample worth understanding, since it undermines confidence in any local diagnostic re-solve, not just this one. Not investigated further as part of the neighbor-budget diagnosis (out of scope there) — a fresh, focused investigation is needed: does it reproduce on other near-the-edge levels, is it timing-sensitive in some code path assumed to be pure node-count-based, does it correlate with wall-clock elapsed time or something else host-dependent leaking into a nominally-canonical decision.
 
 ### 2. Expand exact CP-SAT labels around real score/width extinctions
 
