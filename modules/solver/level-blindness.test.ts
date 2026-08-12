@@ -62,6 +62,7 @@ test('runtime solve is invariant to saved hints and non-mechanical exact-level m
     assert.equal(b.ok, true);
     assert.deepEqual(b.solution, a.solution);
     assert.equal(b.nodesExpanded, a.nodesExpanded);
-    assert.equal(b.workSpent, a.workSpent);
+    // workSpent is emitted runtime telemetry but is not currently part of SolveResult's public type.
+    assert.equal((b as any).workSpent, (a as any).workSpent);
     assert.deepEqual(stableAttemptShape(b), stableAttemptShape(a));
 });
