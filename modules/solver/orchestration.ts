@@ -949,7 +949,12 @@ async function runRepairProbe(
         // The turn-biased attempt, like the must-turn-biased one, is a heavier single-seed search
         // (see repair-search.ts) — give it the biased probe budget and a single seed salt.
         const isBiased = repairConfig.repairMustTurnBiased || repairConfig.repairTurnBiased;
-        const fixedProbeNodeBudget = isBiased ? biasedNodeBudgetForTier(biasedSeen++) : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
+        // TEMP DIAGNOSTIC (repair-probe-starvation hypothesis, 2026-08-12): scales the probe's own
+        // node budget down, emulating the pre-2bfefc660 wall-clock trip-wire's effective truncation
+        // under CPU contention, WITHOUT reverting the real fix. No-op unless the env var is set.
+        // Remove before merging.
+        const _debugScale = process.env.REPAIR_PROBE_NODE_SCALE_DEBUG ? Number(process.env.REPAIR_PROBE_NODE_SCALE_DEBUG) : 1;
+        const fixedProbeNodeBudget = Math.floor((isBiased ? biasedNodeBudgetForTier(biasedSeen++) : REPAIR_PROBE_ORDINARY_NODE_BUDGET) * _debugScale);
         const seedSalts = (!isBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_MULTI_SEED))
             ? REPAIR_PROBE_ORDINARY_SEED_SALTS : [0];
         for (const seedSalt of seedSalts) {
