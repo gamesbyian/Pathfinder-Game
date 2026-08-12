@@ -122,7 +122,8 @@ A bespoke ladder/scheduler should answer “given what this solve has already ob
 ## Infrastructure / hygiene
 
 - `.github/workflows/solver-stress-refresh.yml` is now the canonical **level-blind capability** workflow.
-- `scripts/level-blind-capability-sweep.mjs` structurally refuses exact-level historical inputs.
+- `scripts/level-blind-capability-sweep.mjs` projects source levels into a mechanics-only allowlist and structurally refuses exact-level historical inputs.
+- `scripts/level-blind-capability-worker.mjs` receives no permanent level ID, corpus position, hint artifact, baseline, or prior-result input.
 - Actions solve/combine jobs pin `github.sha`; never accept a mutable-branch checkout for a scientific A/B.
 - Schema-v2 experiment manifests still compare the full workflow input set, but `prime_winner` is no longer a workflow dimension because the capability workflow forbids it.
 - `persist_hints=false` + `deterministic=true` remains the correct matched-arm setting when multiple A/B arms must execute the same immutable SHA.
@@ -139,3 +140,7 @@ The expensive neighbor-budget gate is closed. The next remote work may therefore
 4. late-reserve full population A/B.
 
 Items 2 and 3 are observational/oracle work and can run alongside planning for 1 or 4. Population promotion experiments should still be serialized when one result changes the configuration against which the next should be interpreted.
+
+## Older loose-thread triage (2026-08-07)
+
+Compatibility anchor for historical documents that linked to this section before the 2026-08-11 queue rewrite. The old loose-thread list has been fully reconciled into the current sections above and the opt-in experiment ledger. **Do not treat this heading as an additional backlog.** Follow the current queue and closed/do-not-repeat list in this file instead.
