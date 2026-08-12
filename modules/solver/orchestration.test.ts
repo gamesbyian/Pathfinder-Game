@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, normalizeAblationConfig } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP } from './orchestration.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
@@ -323,7 +323,7 @@ test('repair probe retries the ordinary tier across REPAIR_PROBE_ORDINARY_SEED_S
     // probe's own (unavoidable) cost of exhausting 5 seeds x 2,000,000 nodes.
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 50 });
     assert.equal(result.ok, false);
-    const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === 30000);
+    const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === REPAIR_PROBE_ATTEMPT_MS_CAP);
     assert.equal(probeAttempts.length, 2);
     assert.deepEqual(probeAttempts.map(a => a.seedSalt ?? 0), [0, 1]);
     assert.equal(probeAttempts.every(a => a.nodesExpanded === 2_000_000), true);
@@ -339,9 +339,33 @@ test('STRATEGY_REPAIR_PROBE_MULTI_SEED: false restricts the probe to a single se
         ablation: { STRATEGY_REPAIR_PROBE: true, STRATEGY_REPAIR_PROBE_MULTI_SEED: false },
     });
     assert.equal(result.ok, false);
-    const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === 30000);
+    const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === REPAIR_PROBE_ATTEMPT_MS_CAP);
     assert.equal(probeAttempts.length, 1);
     assert.equal(probeAttempts[0].seedSalt ?? 0, 0);
+});
+
+// BUG FIXED 2026-08-12 (reports/2026-08-12-worker-count-sensitivity-repair-probe-wallclock.md):
+// runRepairProbe's per-attempt wall-clock cap was a flat 30 seconds, justified as "well above any
+// observed real-world cost ... contention-independent". Measured 4-way CPU contention on a 4-core
+// host (--workers=4, not even oversubscribed) reproducibly dropped one repair-probe attempt's real
+// throughput to ~37,000-43,000 nodes/sec — well under the old cap's implicit >=66,667 nodes/sec
+// floor (2,000,000 nodes / 30s) — silently truncating the attempt below its intended node budget
+// and changing solve outcomes purely as a function of host contention. This test encodes the fix's
+// safety margin directly rather than re-running real contention (which is inherently
+// host/load-dependent and unsuitable for a fast, deterministic unit test): the cap must still
+// cover the probe's worst-case node budget at a throughput conservatively BELOW the measured
+// contended rate, not just above nominal uncontended throughput — the exact assumption that broke.
+test('REPAIR_PROBE_ATTEMPT_MS_CAP survives real contention, not just an idle host', () => {
+    const CONSERVATIVE_CONTENDED_NODES_PER_SEC = 10_000; // well under the ~37k-43k measured contended rate
+    const WORST_CASE_NODE_BUDGET = 6_000_000; // REPAIR_PROBE_BIASED_NODE_BUDGET, a single un-split gate
+    const minimumSafeMs = (WORST_CASE_NODE_BUDGET / CONSERVATIVE_CONTENDED_NODES_PER_SEC) * 1000;
+    assert.ok(
+        REPAIR_PROBE_ATTEMPT_MS_CAP >= minimumSafeMs,
+        `REPAIR_PROBE_ATTEMPT_MS_CAP (${REPAIR_PROBE_ATTEMPT_MS_CAP}ms) must cover ${WORST_CASE_NODE_BUDGET} nodes at ${CONSERVATIVE_CONTENDED_NODES_PER_SEC} nodes/sec (${minimumSafeMs}ms), with margin`,
+    );
+    // The old, falsified assumption was a flat 30s cap — well under minimumSafeMs above, which is
+    // exactly why it broke under contention. Guards against silently reverting to it.
+    assert.ok(REPAIR_PROBE_ATTEMPT_MS_CAP > 30_000);
 });
 
 // BUG FIXED 2026-07-17 (reports/2026-07-17-attraction-diversity-dose-response.md's flagged
