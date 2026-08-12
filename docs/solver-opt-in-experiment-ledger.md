@@ -13,6 +13,7 @@ Last reconciled: **2026-08-12**, after promoting `PRUNE_MC_NEIGHBOR_BUDGET` and 
 | `STRATEGY_REPAIR_ELITE_PREFIX_DFS` | **CLOSED FOR PROMOTION IN CURRENT FORM** | Equal-budget dedicated test: ON 4/20 vs OFF 5/20, with confirmed displacement from consuming repair's shared node budget. | None. Reopen only after a materially cheaper/more selective variant clears a small equal-work retest. |
 | `STRATEGY_REPAIR_TURN_BIAS` | **CLOSED NEGATIVE** | Historical matched C2 run reproduced 725→718 (-7, 5 gained / 12 lost) and disabling nogood cache did not rescue it. That historical population used the old re-verification harness, so do not quote 725 as capability; the negative is still enough to close the unchanged mechanism. | None unless materially new mechanism evidence appears. Do not rerun the unchanged flag merely to translate the old negative into the new capability harness. |
 | `PRUNE_PORTAL_PARITY_ENVELOPE` | **CLOSED NEGLIGIBLE** | Sound stored-solution reasoning and live test; reject condition fired zero times across roughly 240M searched nodes on relevant portal levels. | None. Reopen only for a materially stronger formulation. |
+| `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` | **PILOT, evidence-gathering** (landed 2026-08-12) | A local n=12 repair-gated Corpus-2 sample (15M-node budget) found the repair probe and the early main-loop configs share one unprotected node pool, with a naive static probe-budget shrink being zero-sum (1 gain, 1 loss). This flag conditions the shrink on the ordinary tier's own live `bestBadness` evidence instead, and gets a clean +1 (1 gained, 0 lost) on the same sample. See `reports/2026-08-12-repair-probe-early-main-loop-starvation.md`. | Needs a dedicated level-blind Corpus-2 population A/B (matched `nodeBudget`, gains vs. losses not just net) before any promotion decision — same bar as every other flag here. `BADNESS_GATE`/`MIN_SCALE` are calibrated from n=12 (n=1 positive case) and should be re-derived, not assumed, before promotion. |
 
 ## Default-off repair parameters that are not promotion candidates
 
@@ -58,7 +59,13 @@ The remaining repair research direction is exact retreat/deep prefix editing, no
   **The frozen A/B's control-vs-treatment comparison was found confounded after the fact** — see
   the disposition note below for the mechanism. Kept promoted rather than reverted; a single full
   corpus-1+corpus-2 sweep with everything correctly default-on is the follow-up evidence (not a
-  matched-control A/B).
+  matched-control A/B). **That sweep came back at 635/1700, lower than expected; the mechanism
+  first suspected (the repair probe eating into this flag's own reserved slice) was traced against
+  the actual code and found FALSE — the reserve is carved out and protected before the probe ever
+  runs. A related but distinct real mechanism (the probe and the pre-reserve "early" main-loop
+  configs sharing one unprotected pool) was found and given a pilot fix,
+  `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` (own row above) — see
+  `reports/2026-08-12-repair-probe-early-main-loop-starvation.md`.**
 
 ## Experiment interpretation rules
 
