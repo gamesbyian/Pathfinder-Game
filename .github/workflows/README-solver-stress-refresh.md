@@ -41,7 +41,7 @@ This was hardened after the 2026-08-11 neighbor-budget A/B: run #32's dispatch m
 All are optional:
 
 - `corpus2_budget_ms` default `86400000`;
-- `corpus2_node_budget` default `36000000`;
+- `corpus2_node_budget` default `50000000` (unified with `corpus1_node_budget` 2026-08-12 — previously `36000000`, an asymmetry traced to a stale wall-clock ratio with no corpus-specific justification; see `corpus1_node_budget`'s own description in the workflow file);
 - `corpus2_workers` default `2`;
 - `enable_flags` default blank;
 - `disable_flags` default blank;

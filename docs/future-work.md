@@ -21,21 +21,23 @@ The historical `725/1700` figure is **not** the capability baseline. It used exa
 
 ## Ready / next
 
-### 1. Diagnose the five revised neighbor-budget losses and close the integration decision
+### 1. ~~Diagnose the five revised neighbor-budget losses and close the integration decision~~ — DONE, PROMOTED (2026-08-12)
 
-**Status: population A/B complete; do not rerun unchanged.**
+**Status: complete.** `PRUNE_MC_NEIGHBOR_BUDGET` is now default-on. See [`../reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md`](../reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md) for the full diagnosis and [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md)'s updated row.
 
-Lost IDs: `R00635`, `R02119`, `R02422`, `R02823`, `R02867`.
+Four of five losses (`R00635`, `R02119`, `R02422`, `R02867`) share a clean mechanism: the same deterministic diverse-beam attempt that wins under OFF is still tried under ON, runs to a comparable node count, and fails — plausibly a bounded-width top-K retention effect (removing a genuinely-dead candidate from a fixed-width beam bucket's competition can displace a different, non-provably-dead candidate that was actually on the path to the true solution), mechanistically distinct from the already-fixed repair-seed-reindexing issue. `R02823` could not be reliably reproduced locally (see item below) and remains undiagnosed.
 
-Goal: preserve as much of the 59-gain upside as possible without accepting a capability regression. Determine whether the five losses share one deterministic ordering/budget mechanism. Any recovery must be generic and level-blind. Do not use historical winner replay or per-ID exceptions.
+Promoted to default-on given: 0 regressions on the published 160-level corpus and corpus-1, a 7.4:1+ gained:lost ratio on corpus-2 (net +54/1700), and a residual cost that is now understood and bounded rather than open-ended. Optional, non-blocking follow-up: implement and validate a beam-width-scoped exclusion (analogous to the existing repair fix) to chase the remaining five losses — its own project with its own population A/B, not required for the promotion already made.
 
-A promising integration shape, if needed, is a complementary/fallback use of the prune rather than globally changing every search. It is only acceptable if evaluated under a matched **total work** envelope; simply adding a second full-budget solve would buy solves with extra compute and would not answer the promotion question.
+### 1b. Investigate worker-count solve-outcome sensitivity — ESCALATED (2026-08-12)
 
-Promotion options after this analysis:
+**Status: real, now confirmed at corpus scale; root cause still unknown.** See [`../reports/2026-08-12-worker-count-solve-outcome-sensitivity.md`](../reports/2026-08-12-worker-count-solve-outcome-sensitivity.md) for full evidence and candidate hypotheses.
 
-- default-on if the five-loss risk can be eliminated or accepted under the project's promotion bar;
-- a bounded complementary lane if it gives a strict or near-strict superset at equal work;
-- remain opt-in if neither integration clears the bar.
+Originally a single-level oddity: `R02823` (one of the five neighbor-budget losses) failed to reproduce locally under both `--workers=4` and `--workers=1` sequential, yet solved cleanly when run completely alone. That has now been confirmed as a **corpus-wide, directional effect, not a fluke**: the `STRATEGY_MAIN_LOOP_LATE_RESERVE` A/B's `workers=1` control run (91/102, 617/1700) came in 48 levels (2.8%) below a same-code, same-flags `workers=2` run (94/102, 665/1700) from the day before. `docs/solver-budget-determinism.md` documents the canonical WORK-budget model as host/load-independent by design; this is a real, large-magnitude counterexample.
+
+Ruled out: solver production-code drift between the compared commits; a wrapper-level wall-clock shard timeout silently truncating a shard (the workflow's own complete-coverage check — exact row count against the full 1700/102 total — would have caught this, and reported `complete=true`). Leading untested hypothesis: `scripts/solver-worker-pool.mjs` forks each worker **once** and dispatches many levels to it sequentially over its lifetime (not one process per level) — under `workers=1` every level in a shard shares one long-lived process with up to ~84 predecessors; under `workers=2`, roughly half as many. If any module-level mutable state doesn't fully reset between solves within one process, a level's outcome could depend on its queue position and predecessors — the same class of bug as a documented past incident (a reused typed-array scratch buffer in `topology.ts`'s flipper-aware connectivity work). Not yet tested. See the report for the full hypothesis list and suggested isolated local reproduction protocol.
+
+This matters beyond the two experiments that surfaced it: every solved-count figure in this codebase's solver research implicitly assumes worker count doesn't affect outcome once the wall deadline is non-binding and work/node budgets are pinned. That assumption is now demonstrably false. Any future population comparison should record and match worker count as carefully as commit/flags/budget.
 
 ### 2. Expand exact CP-SAT labels around real score/width extinctions
 
@@ -55,24 +57,15 @@ The rollback pilot showed long demonstrated differences between retained repair 
 
 Question: how far back must an elite be rolled before at least one exact valid continuation exists? This decides whether a genuinely different prefix-edit operator is warranted and how deep it must reach.
 
-### 4. Main-loop late-reserve full population A/B
+### 4. Main-loop late-reserve full population A/B — RUN, CONFOUNDED, promoted anyway; direct sweep came back lower than expected (2026-08-12)
 
-**Status: unblocked; full A/B still pending.**
+**Status: promoted to production default-ON at fraction 0.15. The A/B evidence was found confounded after the fact, and the direct full-corpus follow-up sweep came back lower than any individual reference point — plausible mechanism identified (a same-day repair-probe budget-timing fix interacting with node-budget-constrained batch solving), not yet confirmed.**
 
-The mechanism pilot already showed that reserve-not-reorder activates the starved late configs and recovered 1/14 hard historical matches. Acceptance still requires the frozen full-population experiment in [`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md).
+The frozen full-population level-blind A/B ran (all 4 arms `workers=1`, `deterministic=true`, full 1700/1700 C2 + 102/102 C1 coverage confirmed each arm): Corpus-2 solved control 617 → 0.05: 687 → 0.10: 692 → 0.15: 694. This initially looked like a clean win, but the control-vs-treatment comparison was later found confounded: the control arm's blank `enable_flags` left `PRUNE_MC_NEIGHBOR_BUDGET` OFF under its then-unfixed opt-in read site, while every treatment arm's non-null ablation object read it ON via the Proxy default-fallback — mixing a large share of that flag's own already-known +54 Corpus-2 effect into the gap. The unconfounded 687→692→694 treatment-vs-treatment trend still supports a real, smaller effect.
 
-Run through the hardened level-blind stress workflow. Control and treatment must differ only in:
+**Follow-up sweep (run #38, id `31630124558`, commit `ba5630978`), both flags genuinely default-on together**: Corpus-1 95/102, **Corpus-2 635/1700** — lower than the confounded 0.15 treatment (694) *and* the original neighbor-budget-only run (665, at `workers=2`), despite intending the same "both flags ON" configuration as the confounded 0.15 arm. The commit diff between that arm and this sweep isn't purely ablation bookkeeping — it also includes `2bfefc660` (a same-day repair-probe wall-clock fix, merged from `origin/main`) which lets a contended repair-probe attempt spend its full intended node budget instead of truncating early. Under the sweep tool's hard cumulative per-level `nodeBudget`, that plausibly leaves less shared budget for later tiers (including the late-reserve mechanism's own slice) — consistent with Corpus-1 (a more generous per-level budget) ticking up instead of down. Not confirmed as the actual cause. Full analysis: [`../reports/2026-08-12-main-loop-late-reserve-population-ab.md`](../reports/2026-08-12-main-loop-late-reserve-population-ab.md).
 
-- `enable_flags` (`STRATEGY_MAIN_LOOP_LATE_RESERVE` in treatment), and
-- `main_loop_late_reserve_fraction`.
-
-`main_loop_late_reserve_config_count=4` in every arm. Test 5%, 10%, and 15% treatments against a fresh control. No exact-level priming dimension exists in the capability workflow.
-
-Interpretation:
-
-- positive population result → participation floors/starvation are a real general lever;
-- target recoveries but negative population result → static reserve is too blunt; prefer online failure-conditioned allocation;
-- null → close the current static reserve mechanism and move on.
+`scripts/ablation-config.mjs` no longer lists `STRATEGY_MAIN_LOOP_LATE_RESERVE` in `OPT_IN_FEATURES`; `MAIN_LOOP_LATE_RESERVE_FRACTION` in `modules/solver/orchestration.ts` is `0.15`. The mechanism remains a strict no-op without a finite `nodeBudget`, so this only affects offline batch tooling, not interactive Play/Editor/Review solves. **Open**: whether 635 is a stable production-capability figure or a budget-allocation-timing artifact from three same-day changes landing together; no dedicated follow-up dispatched yet.
 
 ## Parallel observational work that remains valid
 
