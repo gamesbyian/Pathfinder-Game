@@ -790,6 +790,27 @@ export const MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT = 4;
 const REPAIR_PROBE_ORDINARY_NODE_BUDGET = 2_000_000;
 const REPAIR_PROBE_BIASED_NODE_BUDGET = 6_000_000;
 
+/** Per-attempt wall-clock trip-wire for `runRepairProbe` (see its own call site's comment): meant
+ *  to catch only a genuinely pathological per-node cost or host distress, never to be the actual
+ *  deciding factor — the node budgets above are. A flat 30-second value (this constant's value
+ *  until 2026-08-12) assumed >=66,667 nodes/sec was always achievable, which measured CPU
+ *  contention alone falsified: solving 5 levels at `--workers=4` on a 4-core host (not even
+ *  oversubscribed — 4 processes on 4 cores) reproducibly dropped one repair-probe attempt's
+ *  throughput to ~37,000-43,000 nodes/sec, well under the old cap's implicit floor, silently
+ *  truncating the attempt below its intended node budget and changing which levels solved purely
+ *  as a function of how contended the host happened to be — see
+ *  reports/2026-08-12-worker-count-sensitivity-repair-probe-wallclock.md. A flat constant (rather
+ *  than one derived per-attempt from `gateNodeBudget`) is sufficient here because `gateNodeBudget`
+ *  is always <= REPAIR_PROBE_BIASED_NODE_BUDGET (6,000,000): 20 minutes for that many nodes needs
+ *  only ~5,000 nodes/sec sustained, roughly 7-8x below the measured contended rate above and
+ *  >100x below nominal uncontended throughput (~650,000 nodes/sec, measured on the same host) —
+ *  generous enough to survive materially worse contention than what was measured, while staying a
+ *  genuinely bounded backstop. Safe for the ~30s interactive latency promise (Play's "Find a
+ *  Hint", Review's approval solve): both pass `repairBudgetFractionOverride: 0`, which skips the
+ *  probe outright (see its call site's own `repairBudgetFraction !== 0` gate) rather than relying
+ *  on this cap to bound it. */
+export const REPAIR_PROBE_ATTEMPT_MS_CAP = 1_200_000;
+
 /** How much of REPAIR_PROBE_BIASED_NODE_BUDGET the heuristically-PREDICTED technique gets when both
  *  biased tiers are present (attempts.ts's predictLikelyBiasedRepairTechnique, under
  *  STRATEGY_REPAIR_TURN_BIAS) — the other (fallback) tier gets the remainder. 0.75 chosen to keep
@@ -952,10 +973,12 @@ async function runRepairProbe(
                 if (gateNodeBudget < 50) break;
                 // attBudget (ms) is a generous safety-net trip-wire only, well above any observed
                 // real-world cost for a probe-worthy (node-budget-bounded) win — the node budget
-                // above is the actual, contention-independent decision; this only guards against
-                // a pathological per-node-cost level or a bug in the node-count mechanism itself.
+                // above is the actual decision; this only guards against a pathological
+                // per-node-cost level or a bug in the node-count mechanism itself. See
+                // REPAIR_PROBE_ATTEMPT_MS_CAP's own comment: it must be generous enough to survive
+                // real CPU contention too, not just a fast/idle host.
                 const nodesOut: { nodesExpanded?: number } = {};
-                const r = await runAttempt(gateKey, level, prep, repairConfig, 30000, Date.now(), yieldFn, gateNodeBudget, nodesOut, seedSalt);
+                const r = await runAttempt(gateKey, level, prep, repairConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, Date.now(), yieldFn, gateNodeBudget, nodesOut, seedSalt);
                 attempts.push(r.attempt);
                 nodesUsed += nodesOut.nodesExpanded ?? gateNodeBudget;
                 if (r.path) return { solution: r.path, attempts };

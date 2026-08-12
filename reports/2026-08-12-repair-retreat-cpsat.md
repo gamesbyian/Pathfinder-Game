@@ -2,7 +2,7 @@
 
 Date: 2026-08-12
 
-This is item C from [`docs/claude-remote-solver-handoff.md`](claude-remote-solver-handoff.md): does the
+This is item C from [`docs/claude-remote-solver-handoff.md`](../docs/claude-remote-solver-handoff.md): does the
 repair-rollback pilot's ~63-step / 0.815×`reqLen` **demonstrated** rollback (longest common prefix
 against a *known* solution) actually reflect the **minimum causal edit window**, or is it an
 overestimate because the known-solution set is incomplete? [`reports/2026-08-11-repair-rollback-causal-window-pilot.md`](2026-08-11-repair-rollback-causal-window-pilot.md)

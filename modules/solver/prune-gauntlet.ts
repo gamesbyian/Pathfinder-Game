@@ -205,14 +205,18 @@ export function evaluatePrunedMove(
         if (mustCrossForcedNeighborDeadlocked(next, state, level, prep)) return reject(diagnostics, 'PRUNE_MC_FORCED_NEIGHBOR');
     }
 
-    // Must-cross neighbor-budget deadlock (shadow-probe prototype, opt-in): a still-needed pass's
-    // required neighbor that is already visited (soft, budget-constrained — not a hard wall) needs
-    // an unreserved intersection to revisit; reject once the free budget can't cover every such
-    // neighbor. See lower-bounds.ts's mustCrossNeighborBudgetDeadlocked for the derivation.
+    // Must-cross neighbor-budget deadlock: a still-needed pass's required neighbor that is already
+    // visited (soft, budget-constrained — not a hard wall) needs an unreserved intersection to
+    // revisit; reject once the free budget can't cover every such neighbor. See lower-bounds.ts's
+    // mustCrossNeighborBudgetDeadlocked for the derivation. Promoted to default-on 2026-08-12
+    // (reports/2026-08-08-mc-neighbor-budget-propagation.md's population evidence: 0 regressions
+    // on the published corpus, 0 on corpus-1, 59 gained / 5 lost net +54/1700 on corpus-2) — uses
+    // the STANDARD `!cfg || cfg.FLAG` convention, matching every other non-opt-in rule in this
+    // gauntlet, not the opt-in `cfg && cfg.FLAG === true` convention it used before promotion.
     // The stochastic repair survivor-selection loop deliberately opts out because removing a
     // candidate reindexes its seeded random draw. Deterministic DFS, beam, and repair subsearches
     // retain the default participation. This is independent of optional diagnostics.
-    if (options.allowNeighborBudgetPrune !== false && cfg && cfg.PRUNE_MC_NEIGHBOR_BUDGET === true && state.mustCrossMask !== 0) {
+    if (options.allowNeighborBudgetPrune !== false && (!cfg || cfg.PRUNE_MC_NEIGHBOR_BUDGET) && state.mustCrossMask !== 0) {
         reached(diagnostics, 'PRUNE_MC_NEIGHBOR_BUDGET');
         if (mustCrossNeighborBudgetDeadlocked(next, state, level, prep)) return reject(diagnostics, 'PRUNE_MC_NEIGHBOR_BUDGET');
     }

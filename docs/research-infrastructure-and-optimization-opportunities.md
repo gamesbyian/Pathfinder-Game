@@ -43,12 +43,9 @@ At present, a new research question often leads to another purpose-built script 
 
 ### Recommendation
 
-Add a derived analytical layer using:
+Add a derived analytical layer using **DuckDB** as the analytical query engine.
 
-- **DuckDB** as the analytical query engine;
-- **Parquet** as the bulk columnar storage format where appropriate.
-
-Existing JSON should remain canonical where it already serves the game, solver, or provenance system well. The analytical layer should be rebuildable research infrastructure rather than a new source of truth.
+Existing JSON should remain canonical where it already serves the game, solver, or provenance system well. The analytical layer should be rebuildable research infrastructure rather than a new source of truth. Materialize it into a gitignored `research-db/` and commit only the builder and the queries, consistent with section 12's "Git stores the recipe" principle.
 
 A normalized representation might expose entities such as:
 
@@ -69,7 +66,67 @@ The practical goal is that questions such as:
 
 should increasingly become queries rather than new programs.
 
-This is likely the single strongest infrastructure investment because Pathfinder now generates more reusable evidence than its current collection of one-off analysis scripts can cheaply cross-examine.
+### The motivation is joins, not bulk — and that determines the design
+
+Measured on `main` (2026-08-12): the live corpus-2 evidence set is 1,700 level rows and 20,546 attempt rows across `logs/solver-corpus2-batches/*.jsonl`, totalling **5.0 MB, fully parsed by plain `JSON.parse` in ~133 ms**. The 249 MB in that directory is 244 MB of `archive/` holding 18 historical refreshes. DuckDB buys nothing here on throughput; it buys expressiveness across runs.
+
+Two consequences:
+
+- **Read the existing JSON/JSONL directly** (`read_ndjson_auto` / `read_json_auto`). At this size a Parquet materialization step adds a build stage, a staleness class, and a second representation for no measured benefit. Parquet becomes genuinely worthwhile only at the scale discussed in sections 6 and 12; see the note there.
+- **The DuckDB client is a native binary devDependency** installed by `npm ci` on every CI run, for a tool no CI job uses. Declare it as an optional dependency with a graceful skip, or shell out to the DuckDB CLI.
+
+### Build on the run-identity spine that already exists
+
+`scripts/experiment-manifest-lib.mjs` (schema v2) already requires `experimentId`, `runId`, `solverRef`, `corpus`, `levelIds`, `levelSelectionHash`, `arm`, `solverFlags`, `workflow`, `workflowInputs`, `seeds`, `canonicalWorkBudget`, `wallDeadlineMs`, `profile`, and `instrumentation`. That is already `solver_runs` and `experiment_arms`. The analytical layer should adopt it as the primary key rather than inventing parallel run identity, and should mark any row it cannot attribute to a manifest as unattributed rather than silently pooling it with attributed rows.
+
+### The layer's most valuable output is a comparability contract
+
+The archived refreshes are heterogeneous in ways that will produce confidently wrong answers if ingested naively. Measured across the 18 directories in `logs/solver-corpus2-batches/archive/`:
+
+| archive dir | run timestamp | commit | solved | `budgetMs` | levels |
+|---|---|---|---:|---:|---:|
+| `2026-07-18-refresh` | 2026-07-17 | `0fb6c752` | 302 | 8,000 | 1700 |
+| `2026-07-18T042622Z-refresh` | 2026-07-18 | `4a685cf` | 189 | 8,000 | **935** |
+| `2026-07-22T184005Z-refresh` | 2026-07-22 | `2000aac` | 490 | 30,000 | 1700 |
+| `2026-07-23T120439Z-refresh` | 2026-07-22 | `2f5dd12` | 503 | 60,000 | **1615** |
+| `2026-08-06T211236Z-refresh` | 2026-08-06 | `12b24ac8b3` | 684 | 86,400,000 | 1700 |
+| `2026-08-11T211744Z-refresh` | 2026-08-06 | `328fbc56fe` | 725 | 86,400,000 | 1700 |
+
+Four distinct traps appear in that one table:
+
+- `budgetMs` spans 8 s to 24 h, so a naive solved-count-over-time series reads as solver progress when most of the movement is budget change;
+- two runs are incomplete (935 and 1,615 of 1,700) and are not comparable to full runs at all; three further directories carry no combined file;
+- `commitSha` appears at 7, 10, and 40 hex characters, so any join on it silently misses;
+- **directory names are archival timestamps, not run timestamps** — `2026-08-06T053039Z-refresh` contains a run whose own `timestamp` is `2026-07-23`, so ingestion keyed on the folder date mislabels every row it touches.
+
+None of these snapshots record whether deterministic mode was set, which per [`solver-budget-determinism.md`](solver-budget-determinism.md) is exactly what separates a real corpus-2 delta from a ±5 noise band.
+
+Therefore every fact table should carry `budget_ms`, `node_budget`, `deterministic`, `completed`/`total`, and the resolved flag set; a `comparable_runs` view should define when two runs may legitimately be differenced; and aggregation across incomparable runs should be refused rather than silently averaged. This constraint, not the query engine, is what makes the layer trustworthy.
+
+### The layer must not become a level-blindness hole
+
+A conveniently indexed per-level history database is precisely the artifact that makes an accidental violation of [`solver-level-blindness.md`](solver-level-blindness.md) easy. State and enforce the invariant explicitly: the analytical database is offline, read-only, and never importable from `modules/**`. A scoped `no-restricted-imports` rule in the existing AST-rule style (see `eslint.config.mjs`) makes this machine-enforced rather than conventional.
+
+### Known coverage limits of the hint tables
+
+Measured 2026-08-12 across the three real corpora (253,491 hints, 477,925 provenance entries), cross-checked against `classifyProvenanceSource` in `scripts/stress/solution-profile-lib.mjs`:
+
+| corpus | hints | no provenance | hints touched by `prefix-anchored` | hints with ≥1 cold entry |
+|---|---:|---:|---:|---:|
+| published (`data/hints`) | 58,179 | 6,093 (10.5%) | 1,655 (2.8%) | 87.7% |
+| stress corpus 1 | 32,374 | 0 | 9,264 (28.6%) | 76.4% |
+| stress corpus 2 | 162,938 | 0 | 12,327 (7.6%) | 94.1% |
+
+Coverage is far better than older summaries suggest — both stress corpora are at 100%, not 0%. Two real caveats remain, and the schema should surface both rather than leave them to be rediscovered per query:
+
+- **The published gap is live, not historical.** It is dominated by imported and player-submitted hints that arrive without solver provenance (`P00158` alone contributes 999 of the 6,093, and its level provenance reads `unknown/imported-without-provenance`), so the gap grows with each import rather than shrinking. A `hints` table needs an explicit coverage flag, and published-corpus provenance queries must report their denominator.
+- **Hint-guided share differs by almost an order of magnitude across corpora** (28.6% in corpus 1 versus 2.8% in published). Cross-corpus statements about what the solver finds are therefore not comparable unless bucketed by provenance source. The `context.hintGuided` flag is applied to exactly the 61,770 `prefix-anchored` entries and nothing else, so the bucketing is reliable where provenance exists.
+
+### Acceptance gate before expanding the layer
+
+Port three existing one-off analyses onto the layer and check that they get materially shorter and cheaper: `scripts/stress/hint-cost-drift.mjs`'s cross-commit cost comparisons, the corpus-2 feature-solvability report, and the winning-lineage cohort table in [`../reports/2026-08-11-pr1356-review-follow-up.md`](../reports/2026-08-11-pr1356-review-follow-up.md). If those three do not shrink, the layer is an added abstraction rather than a replacement, and expansion should stop there.
+
+This remains the strongest single infrastructure investment, because Pathfinder now generates more reusable evidence than its current collection of one-off analysis scripts can cheaply cross-examine — but its value is concentrated in run identity, comparability, and provenance bucketing rather than in the query engine itself.
 
 ---
 
@@ -161,6 +218,14 @@ Do not use empirical optimization to decide semantic truth or soundness:
 - referee behavior;
 - whether correctness checks apply.
 
+Equally, an objective function that reads per-level history is a [level-blindness](solver-level-blindness.md) violation dressed as tuning. The optimizer may read aggregate outcomes over a level population; it may not condition a proposed configuration on a specific level's prior solved status, winning config, gate, seed, timing, or node count.
+
+### Toolchain cost, and what to try first
+
+Optuna is a Python tool in a repository with **zero Python** (2 runtime dependencies, 12 dev dependencies, Node 20 in CI). The realistic shape is Optuna in Python orchestrating Node solver subprocesses across Actions — a second toolchain and lockfile that section 4's sketch does not price.
+
+For the five-parameter space above, random or Sobol search over the existing 20-shard matrix captures most of the value at zero new toolchain cost. TPE's advantage over random search appears when the space passes roughly eight dimensions or trial counts pass a few hundred. Start with random search on infrastructure that already exists, and adopt Optuna at that threshold rather than before it.
+
 The useful division of labor is:
 
 > Agents derive mechanisms, representations, invariants, and hypotheses. Optuna searches the large space of reasonable ways to deploy them.
@@ -232,7 +297,9 @@ Fresh validation should ideally include multiple generation regimes, seeds, para
 
 ## 6. Exploit the ~96,000 Family/Variant Levels as Structured Experimental Data
 
-The research branch containing roughly 96,000 family/variant levels changes the optimization opportunity substantially.
+> **Prerequisite (measured 2026-08-12):** sections 6, 7, and 8 all depend on trove data that is **not on `main`**. On `main`, `data/families/` holds ~95 family files totalling roughly 800 variants (9.6 MB). The trove lives on the research branch `claude/variant-levels-solver-insights-tpk4qg`, where `data/families/` is **116,847 files and 1.68 GB** (whole tree 139,004 files / 2.69 GB, against `main`'s 7,980 files / 846 MB). `.github/workflows/family-wide-trove.yml` generates it across all 1,962 levels in the three real corpora and, by its own header, targets that research branch and "never main."
+>
+> Merging the raw trove into `main` is the wrong move — see section 12, which is a **precondition** for this section rather than a Tier 3 afterthought. What should reach `main` is the derived per-variant outcome table, which is megabytes rather than gigabytes, and which is the case where section 1's deferred Parquet recommendation finally earns its place.
 
 These are **not 96,000 independent levels**. They form controlled neighborhoods around roughly 1,700 underlying parent problems. That relationship is a feature, not a statistical inconvenience.
 
@@ -409,6 +476,8 @@ Strong Pathfinder properties include:
 - equivalent representations fingerprint identically;
 - symmetry-respecting mechanics remain equivariant under transformations.
 
+The sharpest single target is transform equivariance, because the repository has a documented bug class there: `TurnDir` chirality must flip under reflection and must not under rotation, and two independent transforms (the editor's Rotate/Mirror rewrite and play-mode's display variant) have to treat that asymmetry correctly. A generator over the 8 variants crossed with turn-bearing landmarks tests that far more thoroughly than fixtures do.
+
 A major benefit of tools such as **fast-check** is shrinking: when a generated case fails, the framework attempts to simplify it into a smaller counterexample.
 
 This does not replace the existing level reducer. Property-test shrinking minimizes a generated failing test case; the Pathfinder reducer minimizes a semantically interesting solver specimen.
@@ -436,7 +505,7 @@ true -> false
 
 and reruns tests. If the suite still passes, the mutation survived and exposed a weakness.
 
-This is unusually relevant to Pathfinder because several historical bug families have had exactly this shape: index offsets, sentinel decoding, omitted state/projection fields, slightly wrong inequalities, or incomplete cache keys.
+This is unusually relevant to Pathfinder because several historical bug families have had exactly this shape: index offsets, sentinel decoding, omitted state/projection fields, slightly wrong inequalities, or incomplete cache keys. Two documented cases make the argument better than the generic one does — the undersized MST scratch buffer that silently truncated a TypedArray and produced a bound tighter than mathematically valid, and the `mustCrossLowerBound` cache key that is unsound if simplified to `(pos, mask)`. Both are "would the tests notice if this were slightly wrong," and both sit in the pure components listed below.
 
 Do not begin by mutation-testing the entire solver. Start with smaller dangerous and largely pure components:
 
@@ -454,7 +523,15 @@ The whole-solver mutation space could be computationally enormous.
 
 ## 12. Move Very Large Generated Research Outputs Away From Ordinary Git History When Necessary
 
+> **This is a precondition for sections 6-8, not a Tier 3 cleanup.** Those sections cannot proceed without deciding where the trove lives, and the decision has already been made once in the right direction by `family-wide-trove.yml`, which keeps variants on the research branch deliberately.
+
 The family/variant research trove is already large enough that generated research data deserves separate consideration from source code.
+
+### File count is the dominant cost, ahead of bytes
+
+The research branch carries 116,847 files under `data/families/` alone. For coding agents working in the repository, that count — not the 1.68 GB — is what degrades ergonomics: repo-wide globs and greps return enormous result sets that consume context on every unrelated task, truncated tool output invites confidently wrong conclusions, `git status`/`git diff` slow down, and `git add -A` becomes a far more dangerous mistake. A fresh clone of a 2.69 GB tree also competes with the fixed writable-disk allowance in ephemeral agent environments.
+
+If any part of the trove must land on `main`, consolidate it into a few dozen files rather than tens of thousands, using the existing one-line-per-level convention (`stringifyCorpusJson` in `scripts/level-json-format.mjs`) so single-variant diffs stay one line. Prefer shipping the derived outcome table over the raw variant levels.
 
 Git is excellent for:
 
@@ -519,12 +596,14 @@ If the overriding goal remains more solves, faster solving, or faster progress t
 
 ### Tier 1 - strongest expected payoff
 
-1. **DuckDB + Parquet analytical research layer**
-2. **Optuna tuning harness**
-3. **GitHub Actions batch optimization for Optuna**
-4. **Reusable GitHub Actions experiment substrate**
+1. **Run-identity and comparability spine** — the manifest-keyed run table, the comparability contract, and provenance bucketing described in section 1. Shared by items 2 and 3 below, and the part that prevents wrong answers rather than merely enabling faster ones.
+2. **Reusable GitHub Actions experiment substrate**
+3. **DuckDB analytical views on top of the spine** (no Parquet at this stage)
+4. **Optuna tuning harness, and Actions batch optimization for it** — preceded by random search on the existing matrix
 
 These directly increase Pathfinder's ability to exploit existing data and compute.
+
+Item 2 is promoted above the query layer deliberately. Section 2's failure list is not hypothetical: wrong-ref measurements, stale checkpoints, omitted parameters, and combine failures after expensive compute had already succeeded. The canonical corpus-2 A/B is roughly 122.4 billion arm-level nodes per the [PR #1356 follow-up](../reports/2026-08-11-pr1356-review-follow-up.md); losing one arm of that to a combine bug costs more than any amount of awkward querying. Easier queries save analyst time, while a reliable substrate saves whole experiments.
 
 ### Tier 2 - expand automated optimization into solver policy research
 
@@ -555,7 +634,7 @@ Earlier, the difficult task was building a solver capable of attacking the puzzl
 The project now has:
 
 - thousands of difficult synthetic parent levels;
-- roughly 96,000 controlled family/variant cases;
+- roughly 96,000 controlled family/variant cases (on the research branch, not `main` — see section 6);
 - a very large corpus of known solutions and hints;
 - rich provenance;
 - per-attempt telemetry;

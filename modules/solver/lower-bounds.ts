@@ -113,10 +113,10 @@ export function mustCrossForcedNeighborDeadlocked(pos: number, state: SolverSear
 // paths, 8.5M replayed steps — scripts/stress/mc-neighbor-budget-soundness-check.mjs) and 0 false
 // rejects on the harness's 5,518-branch oracle-labelled atlas, catching 19 dead branches beyond
 // the existing gauntlet's own verdict (scripts/stress/probes/mc-neighbor-budget-probe.mjs) — see
-// reports/2026-08-08-mc-neighbor-budget-propagation.md for the full writeup. Opt-in
-// (PRUNE_MC_NEIGHBOR_BUDGET, default OFF) pending a matched-node A/B on the must-cross-heavy
-// unsolved population, per this codebase's standing rule that a catch-rate measurement alone
-// never substitutes for a live solve-count comparison before promotion.
+// reports/2026-08-08-mc-neighbor-budget-propagation.md for the full writeup. Promoted to
+// production default-on 2026-08-12 (PRUNE_MC_NEIGHBOR_BUDGET) after a matched-node, level-blind
+// full-population A/B on corpus-2 (611→665, +54 net, 59 gained / 5 lost) plus zero regressions on
+// the published corpus and corpus-1 — see docs/solver-opt-in-experiment-ledger.md.
 // Permitted error: false negatives only; see property: deadlock helpers only report independently unsatisfiable reachable states.
 export function mustCrossNeighborBudgetDeadlocked(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     if (state.mustCrossMask === 0 || level.portalMap.size > 0) return false;
