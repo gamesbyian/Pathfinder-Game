@@ -47,6 +47,8 @@ Next: build a bounded informative same-parent sibling set adjacent to actual win
 
 Do **not** rerun the original 12 unchanged.
 
+**Second batch complete (2026-08-12):** 15 real score/width extinction decision points (10 A / 3 B / 2 D class, all distinct from the first batch) → 32 cases, 9 live / 2 dead / 21 abstain, zero correctness/input alarms after fixing an under-constrained multi-gate CP-SAT encoding bug found along the way (`cpsat-full-probe.py`). The mis-ranking pattern reproduced independently at 2 more A-class parents (S00001, R00104); it did **not** reproduce at any of 3 usable B-class rows (both branches exact-feasible there — a different failure shape); D-class got zero usable data. Coverage is bottlenecked by flipping-filter support in the CP-SAT model (9/15 levels abstained solely for that reason). See [`reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md). Justifies starting neutral future-opportunity descriptor work scoped to the A-class regime; B/D classes need more exact labels first (which needs flipping-filter CP-SAT support, not more case construction against the current model).
+
 ### 3. Exact repair-retreat CP-SAT checks
 
 The rollback pilot showed long demonstrated differences between retained repair elites and known solutions, but that is not a minimum edit-distance result. Use the existing explicit-prefix CP-SAT workflow for bounded coarse-to-fine/binary retreat checks on retained elites.
