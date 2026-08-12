@@ -15,9 +15,9 @@ on:
         required: false
         default: '86400000'
       corpus2_node_budget:
-        description: 'Corpus-2 cumulative node ceiling per level.'
+        description: 'Corpus-2 cumulative node ceiling per level. Unified with corpus1_node_budget (2026-08-12) -- previously 36000000, a value with no corpus-2-specific justification beyond an old, since-drifted wall-clock ratio; the solver should treat levels identically regardless of which corpus they came from. See corpus1_node_budget''s description for the unification rationale.'
         required: false
-        default: '36000000'
+        default: '50000000'
       corpus2_workers:
         description: 'Cross-level worker processes per shard. Level-blindness is preserved even at 1 worker.'
         required: false
@@ -47,7 +47,7 @@ on:
         required: false
         default: '86400000'
       corpus1_node_budget:
-        description: 'Corpus-1 cumulative node ceiling per level.'
+        description: 'Corpus-1 cumulative node ceiling per level. Unified with corpus2_node_budget at 50000000 (2026-08-12): the two previously differed (corpus-1 50000000 vs corpus-2 36000000) purely because corpus-1''s number was mechanically derived from an old wall-clock ratio (20000ms corpus-1 : 8000ms corpus-2) applied to corpus-2''s node budget AT THE TIME (20000000) -- never independently justified, and never revisited when corpus-2''s own number was later raised to 36000000, leaving the two inconsistent with even their own original ratio. The solver should be corpus-agnostic: a level''s budget must not depend on which corpus it happens to live in. See reports/2026-08-12-main-loop-late-reserve-population-ab.md for the investigation that surfaced this.'
         required: false
         default: '50000000'
       corpus1_workers:
