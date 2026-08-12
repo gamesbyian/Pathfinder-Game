@@ -47,14 +47,18 @@ The remaining repair research direction is exact retreat/deep prefix editing, no
   (`modules/solver/lower-bounds.test.ts`) verifying the rule fires under a genuinely-omitted
   ablation config specifically, not just under an overall gauntlet verdict (which can be
   misleadingly satisfied by an unrelated rule).
-- `STRATEGY_MAIN_LOOP_LATE_RESERVE`: promoted to default-on at fraction `0.15` 2026-08-12 after the
-  frozen level-blind full-population A/B — see `reports/2026-08-12-main-loop-late-reserve-population-ab.md`
-  and the disposition note below. Learning directly from the neighbor-budget wiring gap above, the
-  registry change and the matching `orchestration.ts` read-site convention fix were made together
-  in the same commit, with a regression test confirming the rule activates under a genuinely-omitted
-  ablation config. The mechanism itself remains a strict no-op without a finite `nodeBudget`
+- `STRATEGY_MAIN_LOOP_LATE_RESERVE`: promoted to default-on at fraction `0.15` 2026-08-12 — see
+  `reports/2026-08-12-main-loop-late-reserve-population-ab.md` and the disposition note below.
+  Learning directly from the neighbor-budget wiring gap above, the registry change and the matching
+  `orchestration.ts` read-site convention fix were made together in the same commit, with a
+  regression test confirming the rule activates under a genuinely-omitted ablation config. The
+  mechanism itself remains a strict no-op without a finite `nodeBudget`
   (`mainLoopLateReserveEligible` requires `earlyTierNodeBudget !== Infinity`), so this changed no
   interactive Play/Editor/Review solve behavior — only offline batch tooling that sets a node budget.
+  **The frozen A/B's control-vs-treatment comparison was found confounded after the fact** — see
+  the disposition note below for the mechanism. Kept promoted rather than reverted; a single full
+  corpus-1+corpus-2 sweep with everything correctly default-on is the follow-up evidence (not a
+  matched-control A/B).
 
 ## Experiment interpretation rules
 
@@ -94,26 +98,45 @@ sufficient. The flag's own read site(s) must also be checked/changed from the op
 flag's name across `modules/solver/*.ts` and confirm every read site uses the convention matching
 its new `OPT_IN_FEATURES` membership before considering a promotion complete.
 
-## 2026-08-12 main-loop late-reserve full-population A/B and promotion
+## 2026-08-12 main-loop late-reserve full-population A/B: run, found confounded, promoted anyway pending a direct sweep
 
-Result: **frozen 4-arm level-blind A/B, all `workers=1`, `deterministic=true`**. Corpus-2 solved
+The frozen 4-arm level-blind A/B ran (all `workers=1`, `deterministic=true`): Corpus-2 solved
 control 617 → 0.05: 687 (+70) → 0.10: 692 (+5) → 0.15: 694 (+2); Corpus-1 saturating at 94/102 from
-0.05 onward. Aggregate nodes/work decreased monotonically across all four arms despite more levels
-solving — 0.15 is a strict win on every measured axis with no reversal. Full table and discussion:
-`reports/2026-08-12-main-loop-late-reserve-population-ab.md`.
+0.05 onward; aggregate nodes/work decreasing monotonically across all four arms despite more levels
+solving. `orchestration.ts`'s read site (`mainLoopLateReserveEnabled`) was converted from the
+opt-in convention to the standard convention in the same commit as the `OPT_IN_FEATURES` removal,
+learning directly from the neighbor-budget wiring-gap lesson above.
 
-This promotion was made **after** the neighbor-budget wiring-gap lesson above had already surfaced,
-so the `orchestration.ts` read site (`mainLoopLateReserveEnabled`) was converted from the opt-in
-convention to the standard convention in the same commit as the `OPT_IN_FEATURES` removal, with a
-regression test confirming the rule activates through the real `normalizeAblationConfig(undefined)`
-path (given a finite `nodeBudget`) rather than relying on a `solver:bench`-style check — `solver:bench`
-never sets a `nodeBudget`, so it cannot exercise this particular mechanism regardless of the read-site
-convention, and would have passed identically whether or not the wiring gap existed.
+**The control-vs-treatment comparison was found confounded**, discovered while merging this work
+with the neighbor-budget wiring-gap fix. The control arm left `enable_flags` blank, so
+`ablation=null` throughout — at that point in the branch's history, `PRUNE_MC_NEIGHBOR_BUDGET`'s
+own read site (in `prune-gauntlet.ts`) was *still* gated the opt-in way (unfixed on this branch
+until the same-day merge from `origin/main`), so `cfg=null` made it read OFF. Every treatment arm,
+by contrast, passed `enable_flags=STRATEGY_MAIN_LOOP_LATE_RESERVE`, producing a **non-null** sparse
+ablation object — and `normalizeAblationConfig`'s `Proxy` resolves any *unset* key to
+`!OPT_IN_FEATURES.has(key)`, which was already `true` for `PRUNE_MC_NEIGHBOR_BUDGET` (removed from
+that set earlier the same session). So the control arm had `PRUNE_MC_NEIGHBOR_BUDGET` off while
+every treatment arm had it on, purely as a side effect of passing any non-null ablation object —
+mixing a large, unknown-exact-size share of that flag's own already-known +54 Corpus-2 effect into
+the 617-vs-687/692/694 gap. Full mechanism: `reports/2026-08-12-main-loop-late-reserve-population-ab.md`.
 
-**Caveat carried over from the neighbor-budget investigation**: the A/B's control arm left
-`enable_flags` blank (so its ablation config was `null` throughout, correctly yielding the flag OFF
-by construction regardless of the read-site convention) while all three treatment arms explicitly
-passed `enable_flags=STRATEGY_MAIN_LOOP_LATE_RESERVE` (so the flag was genuinely ON in each,
-independent of the read-site bug). The A/B's own result is therefore unaffected by the wiring gap —
-only the *subsequent* promotion (making the flag apply to callers that omit `.ablation` entirely)
-depended on fixing the read site, which was done here rather than deferred.
+**What survives**: the 687→692→694 treatment-vs-treatment trend is *not* confounded
+(`PRUNE_MC_NEIGHBOR_BUDGET` was constant ON across all three treatment arms), so the monotonic,
+diminishing-returns shape as the reserve fraction grows is real evidence the mechanism has *some*
+positive effect. The earlier mechanism pilot's narrower finding (1/14 hard historical matches
+recovered) is unaffected.
+
+**Decision**: kept the flag promoted (did not revert to opt-in) — the read-site fix stands on its
+own merits regardless of the confound, and the treatment-vs-treatment trend plus the mechanism
+pilot still support a real effect. Rather than a matched-control re-run, the chosen follow-up is a
+**single full corpus-1+corpus-2 sweep with everything correctly default-on** (both flags' read
+sites now fixed, so a genuinely blank `enable_flags` run gives both `PRUNE_MC_NEIGHBOR_BUDGET` and
+`STRATEGY_MAIN_LOOP_LATE_RESERVE` their real production-default state simultaneously) to directly
+observe the achieved solved count — evidence about the combined production configuration, not an
+isolated-effect measurement.
+
+**Lesson, distinct from the read-site lesson above**: even after both halves of *one* flag's
+promotion are correctly wired, a batch tool that constructs a sparse `--enable-flags` ablation
+object can silently change *other* flags' effective state too, whenever those other flags' registry
+membership has changed but their own read sites haven't been fixed yet. Any A/B run during a window
+when another flag's promotion is only half-done is at risk of exactly this cross-contamination.

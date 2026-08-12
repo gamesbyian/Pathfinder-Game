@@ -1,6 +1,6 @@
 # Main-loop late-reserve experiment
 
-Status: **full-population level-blind A/B pending**. Mechanism pilot complete.
+Status: **full-population level-blind A/B run 2026-08-12, found CONFOUNDED (unrelated ablation-wiring interaction), promoted anyway pending a direct full-corpus sweep.** Mechanism pilot complete. See `reports/2026-08-12-main-loop-late-reserve-population-ab.md` and `docs/solver-opt-in-experiment-ledger.md` for the confound mechanism and the decision to keep the promotion while pursuing a direct sweep instead of a matched-control re-run.
 
 This experiment tests one narrow hypothesis: some ordinary attempt configs that are historically capable of solving a level receive zero work because earlier configs consume the shared main-loop envelope. The treatment reserves a small fraction of that same envelope for the final ordinary configs. It does **not** reorder configs and must not increase total canonical work.
 

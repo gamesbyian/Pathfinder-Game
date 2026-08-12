@@ -409,6 +409,9 @@ test('the repair probe caps itself to a small external nodeBudget instead of run
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 50,
         nodeBudget: 2_500_000, // < 4,000,000 (both ordinary seeds' combined worst case)
+        // Isolates repair-probe capping from the unrelated main-loop late-suffix reserve (production
+        // default-ON as of 2026-08-12), which would otherwise also shape node accounting here.
+        mainLoopLateReserveFractionOverride: 0,
     });
     assert.equal(result.ok, false);
     assert.equal(result.nodeBudgetReached, true);
@@ -707,12 +710,31 @@ test('interleaved main-loop reserve gives every late config/gate pair its own sl
     assert.equal(result.nodeBudgetReached, true);
 });
 
-test('main-loop reserve is inert without its opt-in flag or a finite node ceiling', async () => {
+test('main-loop reserve activates by default with an omitted ablation config and a finite node ceiling', async () => {
+    // Production default-ON as of 2026-08-12 (reports/2026-08-12-main-loop-late-reserve-population-ab.md).
+    // Mirrors lower-bounds.test.ts's PRUNE_MC_NEIGHBOR_BUDGET regression: an entirely omitted
+    // `ablation` option (cfg=null, exactly what every production caller and any CLI invocation
+    // without --enable-flags passes) must activate the rule, not silently leave it inert — the
+    // wiring gap the neighbor-budget promotion shipped with and had to fix separately. This test
+    // deliberately omits `ablation` entirely rather than passing `{ STRATEGY_MAIN_LOOP_LATE_RESERVE: true }`.
     const level = makeAttractionDiversityGatedInfeasibleLevel();
-    const off = await solveLevel(level, {
+    const defaulted = await solveLevel(level, {
         timeBudgetMs: 1000,
         nodeBudget: 400,
         disableExtraBudgetPasses: true,
+        mainLoopLateReserveFractionOverride: 0.9,
+        mainLoopLateReserveConfigCountOverride: 1,
+    });
+    assert.equal(defaulted.attempts.some(a => a.mainLoopLateReserve), true);
+});
+
+test('main-loop reserve is inert with an explicit disable or an infinite node ceiling', async () => {
+    const level = makeAttractionDiversityGatedInfeasibleLevel();
+    const explicitlyOff = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        nodeBudget: 400,
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: false },
         mainLoopLateReserveFractionOverride: 0.9,
         mainLoopLateReserveConfigCountOverride: 1,
     });
@@ -723,7 +745,7 @@ test('main-loop reserve is inert without its opt-in flag or a finite node ceilin
         mainLoopLateReserveFractionOverride: 0.9,
         mainLoopLateReserveConfigCountOverride: 1,
     });
-    assert.equal(off.attempts.some(a => a.mainLoopLateReserve), false);
+    assert.equal(explicitlyOff.attempts.some(a => a.mainLoopLateReserve), false);
     assert.equal(infinite.attempts.some(a => a.mainLoopLateReserve), false);
 });
 
