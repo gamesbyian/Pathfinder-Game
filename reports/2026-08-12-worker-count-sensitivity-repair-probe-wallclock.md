@@ -1,13 +1,22 @@
 # Worker-count solve-outcome sensitivity: follow-up investigation (2026-08-12)
 
-**Status: one confirmed, previously-unknown bug found, fixed, and validated; the two pieces of
-evidence in the originating report remain only partially explained.** This is a direct follow-up
-to `reports/2026-08-12-worker-count-solve-outcome-sensitivity.md` and
+**Status: TWO confirmed, previously-unknown bugs found. One (`runRepairProbe`'s wall-clock cap) is
+fixed and validated. The other — an incomplete ablation-flag promotion — is very likely the actual
+explanation for the corpus-scale directional gap (Evidence 2), which this report originally left
+unexplained; NOT fixed here (see "Why not fixed here" below), but demonstrated with a precise
+empirical isolation.** This is a direct follow-up to
+`reports/2026-08-12-worker-count-solve-outcome-sensitivity.md` and
 `reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md` — both currently only on branch
 `claude/must-cross-intersection-propagation-0t3ljg`, not yet merged to `main` (this report was
 written from that branch's copy, fetched via `git fetch`; not linked here since neither file exists
 on this branch yet, which `check:documentation-links` correctly flags). Read those first; this
 report does not restate their evidence.
+
+**Read order**: the original investigation (Summary through "Fix implemented" below) was written
+before the finding in "Corpus-scale directionality, resolved" further down — that later section
+supersedes the "does not match the corpus-scale gap's direction" caveat in the Summary immediately
+below. Kept in write-order rather than restructured, so the reasoning that led to the resolution is
+still visible.
 
 ## Summary
 
@@ -227,6 +236,157 @@ telemetry too, just not (as far as this data shows) the deciding factor in why i
 - **Solver code / corpus data drift between the two compared commits**: re-confirmed independently
   (see "Environment note" above) — zero diff in `modules/solver/` or either stress corpus JSON.
 
+## Corpus-scale directionality, resolved: run #33 and run #34 did NOT use "the same effective
+## solver flags" — the ablation-flag `PRUNE_MC_NEIGHBOR_BUDGET` differed between them
+
+**This is very likely THE explanation for Evidence 2's 48-level gap, and it is not a worker-count
+effect at all.** Found by re-reading the two runs' *actual invoked commands* via the GitHub Actions
+API — `mcp__github__get_job_logs` on one job from each run — rather than trusting the prior
+characterization (mine and the originating report's) that they were "same-code, same-effective-flags."
+They were not.
+
+### What each run actually ran
+
+**Run `#33`** (`31537474435`, id `c86ba8f86`, `workers=2`, 665/1700) predates the level-blind
+hardening (commit `0d560911`, landed ~2.75h *after* this run started) — it ran the *old* workflow,
+invoking `portfolio-solve-sweep.mjs` directly, not `level-blind-capability-sweep.mjs`. Its actual
+corpus-2 command (from job `93941178863`'s logs):
+
+```
+node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+  --corpus=data/stress/stress-levels-random.json --levels="pos:681-765" --scheduler-mode=legacy \
+  --node-budget=36000000 --work-budget=48240000 --workers=2 \
+  --baseline=logs/stress-corpus2-baseline.json \
+  --enable-flags=PRUNE_MC_NEIGHBOR_BUDGET \
+  --out=... --summary-out=...
+```
+
+`--enable-flags=PRUNE_MC_NEIGHBOR_BUDGET` is **explicit**. (`--baseline` is also passed, but without
+`--prime-winner`/`--priority`/`--attempt-cache`/`--baseline-budget` — the only flags that actually
+*read* `baselineMap` in `portfolio-solve-sweep.mjs` — loading it is otherwise inert for the solve
+itself; confirmed by reading the script, not just assumed.)
+
+**Run `#34`** (`31555042628`, id `b925d3f35e`, `workers=1`, 617/1700) ran the new
+`level-blind-capability-sweep.mjs`. Its actual corpus-2 command (job `93985608961`'s logs), reconstructed
+from the workflow's own templated shell:
+
+```
+extra=()
+[ -n "" ] && extra+=("--enable-flags=")        # enable_flags dispatch input was BLANK
+[ -n "" ] && extra+=("--disable-flags=")
+...
+node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+  --corpus=data/stress/stress-levels-random.json --levels="pos:86-170" \
+  --node-budget=36000000 --work-budget=48240000 --workers=1 \
+  "${extra[@]}" \
+  --out=... --summary-out=...
+```
+
+`[ -n "" ]` is false, so `--enable-flags` is **never added to the command at all** — the
+`STRATEGY_MAIN_LOOP_LATE_RESERVE` A/B's control arm (what run `#34` actually was — see the
+originating report's Evidence 2, which correctly identified this) legitimately declared no ablation
+flags for that experiment, on the reasonable assumption that "no flags declared" means "production
+defaults apply," and that `PRUNE_MC_NEIGHBOR_BUDGET` had been promoted to a production default
+eight hours earlier in the very commit this shard checked out (`b925d3f3`, "Promote
+PRUNE_MC_NEIGHBOR_BUDGET to default-on").
+
+### Why "no flags declared" did NOT mean "the promoted default applies"
+
+`b925d3f3`'s diff is exactly 3 lines: removing `PRUNE_MC_NEIGHBOR_BUDGET` from
+`scripts/ablation-config.mjs`'s `OPT_IN_FEATURES` set. That registry is **Node-tooling-only** —
+confirmed via `git diff --stat` between this session's branch and the one carrying that commit:
+zero changes anywhere under `modules/solver/`. The flag's actual runtime read site,
+`modules/solver/prune-gauntlet.ts:215`, is unchanged:
+
+```js
+if (options.allowNeighborBudgetPrune !== false && cfg && cfg.PRUNE_MC_NEIGHBOR_BUDGET === true && ...)
+```
+
+This is the codebase's documented **opt-in convention** (`cfg && cfg.FLAG === true`, vs. the
+standard `!cfg || cfg.FLAG`) — by design, an opt-in flag's "promoted" status can only be resolved
+through `normalizeAblationConfig`'s `Proxy`, which falls back to `OPT_IN_FEATURES` membership *only
+when consulted*. But `normalizeAblationConfig` has an earlier, unconditional short-circuit:
+
+```js
+// modules/solver/orchestration.ts:1078-1079
+export function normalizeAblationConfig(raw) {
+    if (raw == null) return null;   // <-- never reaches the Proxy / OPT_IN_FEATURES at all
+    ...
+```
+
+`level-blind-capability-sweep.mjs` only ever sets `solveOpts.ablation` when `enableFlags.length ||
+disableFlags.length` — with `--enable-flags` absent, that's `0 || 0`, so `ablation` stays `null` and
+`solveOpts.ablation` is **never set on the object at all**. `opts.ablation` reaches `solveLevel()` as
+`undefined`, `normalizeAblationConfig(undefined)` returns `null` at line 1079 before the Proxy (and
+therefore `OPT_IN_FEATURES`) is ever consulted, and `prune-gauntlet.ts`'s `cfg && cfg.PRUNE_MC_NEIGHBOR_BUDGET
+=== true` evaluates `null && ...` → **false**. The flag is OFF — identical to how it behaved before
+the promotion — for any caller that doesn't explicitly pass it.
+
+**This is not limited to CLI batch tooling.** Both interactive production callers omit `.ablation`
+entirely too:
+
+```
+modules/input/solver-controller.ts:108: solverApi.solve(level, { timeBudgetMs, yieldFn, disableExtraBudgetPasses: true })
+modules/input/review-controller.ts:143: solverApi.solve(solveLevel, { timeBudgetMs, yieldFn, disableExtraBudgetPasses: true })
+```
+
+So `PRUNE_MC_NEIGHBOR_BUDGET`'s promotion has had **zero effect anywhere** except the small number
+of CLI invocations that explicitly pass `--enable-flags=PRUNE_MC_NEIGHBOR_BUDGET` (or an equivalent
+non-null `opts.ablation` with that key set) — including Play-mode "Find a Hint" and Review-mode
+approval solves, the exact production paths the promotion was meant to benefit.
+
+### Direct empirical confirmation
+
+Rather than relying on the code trace alone, confirmed it directly using the exact dead-state
+`modules/solver/lower-bounds.test.ts`'s own `'property: deadlock helpers only report independently
+unsatisfiable reachable states'` test already constructs (a state where `mustCrossNeighborBudgetDeadlocked`
+genuinely returns `true`). Temporarily added two calls to `evaluatePrunedMove` at that exact state,
+reading `diagnostics.reached.PRUNE_MC_NEIGHBOR_BUDGET` to isolate this ONE rule's branch from the
+rest of the gauntlet (an earlier, cruder attempt that just checked the overall verdict was misleading
+— other, unrelated default-on rules independently reject the same state, so the overall verdict alone
+doesn't isolate this rule):
+
+```
+cfg = null                              -> reached=undefined, rejected=undefined   (branch never entered)
+cfg = { PRUNE_MC_NEIGHBOR_BUDGET: true } -> reached=1, rejected=1                    (fires correctly)
+```
+
+Diagnostic edits reverted after confirming (`git diff --stat` clean) — not part of the committed
+suite, since it was a one-off falsification of a specific hypothesis, not a durable regression test
+for the *existing* code (see "Why not fixed here" for why a real fix, if made, would need its own
+proper test).
+
+### What this means for the numbers
+
+Given `PRUNE_MC_NEIGHBOR_BUDGET` was genuinely ON for run `#33` and genuinely OFF for run `#34`,
+their corpus-2 solved counts are best read as **a re-measurement of the same neighbor-budget
+control-vs-treatment gap** `docs/solver-level-blindness.md` already documents (611/1700 control →
+665/1700 treatment) — not a worker-count effect. `665` (run `#33`, ON) matches the documented
+treatment figure exactly. `617` (run `#34`, OFF) is close to, though not identical to, the
+documented control figure (`611`) — the residual ~6-level difference is consistent with ordinary
+run-to-run variance (already documented elsewhere in this codebase, e.g. the "corpus-2 solved-count
+difference of ±5 is NOT distinguishable from noise" note in CLAUDE.md) rather than needing a
+separate explanation. The `workers=1` vs `workers=2` difference between the two runs was very
+likely a coincidental confound, not the causal variable — nobody involved (including this
+investigation's own earlier framing) had verified worker count was the *only* difference; it was
+assumed from "same solver commit, no `enable_flags`/`disable_flags` override on either dispatch,"
+which — as this section shows — is not the same claim as "the same effective ablation config."
+
+### Why not fixed here
+
+Completing the promotion correctly would mean changing `prune-gauntlet.ts:215`'s read-site
+convention from the opt-in style (`cfg && cfg.FLAG === true`) to the standard style (`!cfg ||
+cfg.FLAG`) — a real, behavior-changing edit to the solver's hot pruning path that would, for the
+first time, actually activate this prune in production (Play/Review) and in every batch tool run
+that doesn't explicitly disable it. That is squarely "a solver ablation default," which the task
+that started this investigation explicitly said not to touch. It also needs the same rigor CLAUDE.md
+requires for any hot-path change (a regression test distinguishing the two read-site conventions,
+`solver:bench --check`, and a fresh full-corpus A/B — the *existing* 611→665 A/B was run with the
+flag correctly forced on via `--enable-flags`, so it remains valid evidence for the prune's own
+soundness/value, but it was never a test of *this* promotion mechanism). Left as a clearly-scoped,
+high-value fix for whoever owns the `PRUNE_MC_NEIGHBOR_BUDGET` promotion (tracked on
+`claude/must-cross-intersection-propagation-0t3ljg`, not this branch) to pick up.
+
 ## Still open
 
 1. **Why did `R02823` solve once, for the originating report's author, and never for this session
@@ -237,18 +397,23 @@ telemetry too, just not (as far as this data shows) the deciding factor in why i
    but this was not identified. Suggest, if anyone revisits this: get the exact Node version and
    CPU architecture the originating report's session ran on, and if different, try to reproduce on
    a matching one.
-2. **What actually explains Evidence 2's corpus-scale, directionally-consistent 48-level gap?** The
-   mechanism found this session runs the wrong direction to explain it. Two candidates not yet
-   tested: (a) GitHub-hosted runners are not guaranteed identical hardware between separate
-   workflow-dispatch runs (even though each run's 20 shards run in parallel, a *different* dispatch
-   on a *different* day could draw different runner generations) — if the solver has any genuine
-   hardware-dependent behavior beyond the contention effect found here, comparing run `#33` and
-   run `#34` is implicitly also comparing whatever hardware GitHub happened to assign each time,
-   confounded with the worker-count difference; (b) a *different* wall-clock-gated decision,
-   elsewhere in the ladder, whose directional sensitivity to contention runs the other way from the
-   one found here. Neither was investigated further this session.
+2. ~~What actually explains Evidence 2's corpus-scale, directionally-consistent 48-level gap?~~ —
+   **resolved**, see "Corpus-scale directionality, resolved" above: an incomplete ablation-flag
+   promotion, not a worker-count effect. A genuine worker-count/contention effect (the
+   `runRepairProbe` bug fixed in this report) exists and is real, but was not the corpus-scale
+   gap's actual cause here — the two questions ("does worker count/contention affect outcomes at
+   all" and "what caused this specific 48-level gap") turned out to have different answers. Whether
+   worker count has ANY measurable effect on corpus-scale solved-count once the flag confound is
+   controlled for is now a fresh, well-posed question for a future matched A/B (same commit, same
+   explicit `--enable-flags`/`--disable-flags` on both arms, workers as the only declared
+   difference) — not attempted here.
 3. ~~A proper fix for the confirmed `runRepairProbe` bug~~ — **implemented and validated**, see
    "Fix implemented" below.
+4. **Complete the `PRUNE_MC_NEIGHBOR_BUDGET` promotion** (see "Why not fixed here" above) — change
+   `prune-gauntlet.ts:215`'s read-site convention, add a regression test that would have caught this
+   exact gap (e.g. asserting `cfg=null` behaves like the *new* intended default, not like explicit
+   `false`), and re-run the full-corpus A/B this time with the flag genuinely defaulting on rather
+   than requiring `--enable-flags`.
 
 ## Fix implemented
 
