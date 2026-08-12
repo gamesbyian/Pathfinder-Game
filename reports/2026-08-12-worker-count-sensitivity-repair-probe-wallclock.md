@@ -1,12 +1,13 @@
 # Worker-count solve-outcome sensitivity: follow-up investigation (2026-08-12)
 
-**Status: one confirmed, previously-unknown bug found and demonstrated; the two pieces of evidence
-in the originating report remain only partially explained.** This is a direct follow-up to
-[`reports/2026-08-12-worker-count-solve-outcome-sensitivity.md`](2026-08-12-worker-count-solve-outcome-sensitivity.md)
-(currently only on branch `claude/must-cross-intersection-propagation-0t3ljg`, not yet merged to
-`main` — this report was written from that branch's copy, fetched via `git fetch`) and
-[`reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md`](2026-08-12-neighbor-budget-five-loss-diagnosis.md)
-on the same branch. Read those first; this report does not restate their evidence.
+**Status: one confirmed, previously-unknown bug found, fixed, and validated; the two pieces of
+evidence in the originating report remain only partially explained.** This is a direct follow-up
+to `reports/2026-08-12-worker-count-solve-outcome-sensitivity.md` and
+`reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md` — both currently only on branch
+`claude/must-cross-intersection-propagation-0t3ljg`, not yet merged to `main` (this report was
+written from that branch's copy, fetched via `git fetch`; not linked here since neither file exists
+on this branch yet, which `check:documentation-links` correctly flags). Read those first; this
+report does not restate their evidence.
 
 ## Summary
 
@@ -246,17 +247,62 @@ telemetry too, just not (as far as this data shows) the deciding factor in why i
    confounded with the worker-count difference; (b) a *different* wall-clock-gated decision,
    elsewhere in the ladder, whose directional sensitivity to contention runs the other way from the
    one found here. Neither was investigated further this session.
-3. **A proper fix for the confirmed `runRepairProbe` bug** (`orchestration.ts:954`). Not implemented
-   here — this is hot-path orchestration code, and CLAUDE.md's own rules require a regression test
-   plus a full `solver:bench --check` and a before/after cost comparison on the full corpus before
-   any hot-path change can be considered verified; that full validation pass was judged out of scope
-   for the time available this session, and the task's instructions explicitly warned against
-   touching in-flight experiment configuration. The scoped fix is straightforward in shape: replace
-   the flat `30000` with a value that cannot bind before the attempt's own `gateNodeBudget` under
-   any realistic per-node cost (e.g., derived from `gateNodeBudget` and a conservative worst-case
-   nodes/sec floor, or simply raised by an order of magnitude, since the comment's own intent was
-   "never actually the binding constraint") — but implementing and validating it is real follow-up
-   work, not attempted here.
+3. ~~A proper fix for the confirmed `runRepairProbe` bug~~ — **implemented and validated**, see
+   "Fix implemented" below.
+
+## Fix implemented
+
+`modules/solver/orchestration.ts:954`'s hardcoded `30000` is replaced with a new named constant,
+`REPAIR_PROBE_ATTEMPT_MS_CAP = 1_200_000` (20 minutes), defined and justified next to
+`REPAIR_PROBE_ORDINARY_NODE_BUDGET`/`REPAIR_PROBE_BIASED_NODE_BUDGET`. A flat constant (rather than
+one derived per-attempt from `gateNodeBudget`) is sufficient because `gateNodeBudget` is always
+`<= REPAIR_PROBE_BIASED_NODE_BUDGET` (6,000,000): 20 minutes for that many nodes needs only ~5,000
+nodes/sec sustained — roughly 7-8x below the ~37,000-43,000 nodes/sec measured under real
+contention above, and >100x below nominal uncontended throughput (~650,000 nodes/sec, measured on
+this same host). Confirmed safe for the ~30s interactive latency promise (Play's "Find a Hint",
+Review's approval solve): both already pass `repairBudgetFractionOverride: 0`, which skips the
+probe outright (its call site's own `repairBudgetFraction !== 0` gate) rather than relying on this
+cap — so raising it has no effect on interactive latency.
+
+**Regression test**: `modules/solver/orchestration.test.ts`'s two existing probe tests (which
+filtered attempts by the old hardcoded `allocatedBudgetMs === 30000`) now import and filter by
+`REPAIR_PROBE_ATTEMPT_MS_CAP` instead. A new test, `'REPAIR_PROBE_ATTEMPT_MS_CAP survives real
+contention, not just an idle host'`, encodes the fix's safety margin as a direct assertion (the cap
+must cover the worst-case 6,000,000-node budget at a throughput conservatively below the measured
+contended rate) rather than re-exercising real contention, which is inherently host/load-dependent
+and unsuitable for a fast, deterministic unit test. Verified this test fails against the old value
+(`REPAIR_PROBE_ATTEMPT_MS_CAP = 30_000` → `AssertionError: ... 30000ms must cover 6000000 nodes at
+10000 nodes/sec (600000ms)`) and passes against the fix.
+
+**Validation performed**:
+- `npx vitest run modules/solver/orchestration.test.ts`: 51/51 pass (including the updated and new
+  tests above).
+- `npm run solver:bench -- --check`: **160/160 solved, no regressions, PASS** (vs.
+  `logs/solver-baseline.json`, commit `f02aba4`).
+- **Before/after isolation**: since this change should be a complete no-op on any single-process,
+  uncontended run (the trip-wire was never the binding constraint there, before or after — only
+  under real contention), ran `solver:bench --check` twice on the full 160-level published corpus,
+  once with the constant temporarily reverted to `30_000` and once with the fix
+  (`1_200_000`), both under the same pinned work budget. Result: **bit-identical `nodesExpanded`**
+  (51,959,647 both ways); wall time differed by ~3% (31.3s vs 32.3s), well within normal host
+  noise. Confirms the fix changes behavior only under genuine contention, never under ordinary
+  solves — exactly the intended scope.
+- `npm run ci`'s `check:documentation-links` step also caught and required fixing two broken
+  markdown links in this report's own first revision (pointing to the two originating-report files
+  that don't exist on this branch) — delinked to plain text references instead. One unrelated,
+  pre-existing `check:documentation-links` failure remains on this branch
+  (`reports/2026-08-12-repair-retreat-cpsat.md`'s link to a missing
+  `claude-remote-solver-handoff.md`, present in `main` before this investigation started — verified
+  via `git log`) — not touched, since it belongs to a different, concurrent investigation on this
+  branch's history and the task's instructions were explicit about not editing other sessions'
+  files.
+- Ran every other piece of `npm run ci` individually, since the one pre-existing failure above
+  stops the full pipeline early: `check:lint`, `check:types`, `check:types:tests`,
+  `check:hint-validity`, `check:corpus-level-formatting` all pass with no output; `npm run
+  test:coverage` — **83/83 test files, 1096/1096 tests pass**; `npm run test:node` (all 23
+  node-validator suites, including `test:hint-path-oracle` — **160/160 hints valid**) — all pass.
+  Every check scoped to this change (and every other check in the suite) passes cleanly; the one
+  remaining failure is pre-existing, unrelated, and out of this session's scope.
 
 ## Reproducing
 
