@@ -1,365 +1,104 @@
 # Dynamic resource frontier synthesis (2026-08-11)
 
-> **Status:** active
-> **Last evidence:** 2026-08-11 — latest Corpus-1/Corpus-2 sweep reconciliation, must-cross feature analysis, post-A/B neighbor-budget wiring change in `a113d47`, and implementation of read-only crossing-slack instrumentation
-> **Decision:** prioritize dynamic future-opportunity/resource reasoning over new static level-shape descriptors; treat current solver limits as a benchmark frontier, not authoring restrictions
-> **Remaining gate:** fresh full-population A/B of the revised post-`a113d47` `PRUNE_MC_NEIGHBOR_BUDGET` wiring before using its historical +14 result as a promotion basis
-
-## Why this synthesis exists
-
-This report records the conclusions reached after combining four evidence streams that were previously
-spread across separate documents:
-
-1. the latest completed Corpus-1 and Corpus-2 deterministic sweeps;
-2. the current mechanic/property distribution of solved versus unsolved levels;
-3. the full `PRUNE_MC_NEIGHBOR_BUDGET` shadow/soundness/live-A/B result; and
-4. a new exploratory analysis asking whether *static* must-cross layout descriptors explain the
-   remaining difficulty better than the already-known dynamic/resource variables.
-
-Read this together with:
-
-- [`../docs/solver-heuristic-capability-gap-analysis.md`](../docs/solver-heuristic-capability-gap-analysis.md)
-  for the current capability inventory and research priorities;
-- [`2026-08-08-mc-neighbor-budget-propagation.md`](2026-08-08-mc-neighbor-budget-propagation.md)
-  for the neighbor-budget derivation, soundness replay, original full A/B, and the later
-  repair-random-selection wiring change;
-- [`../docs/solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md) for the
-  exact current promotion disposition of retained default-off features;
-- [`../docs/solver-shadow-eval-harness.md`](../docs/solver-shadow-eval-harness.md) for the shared
-  oracle-labelled probe infrastructure;
-- [`2026-07-31-mustcross-forced-structure.md`](2026-07-31-mustcross-forced-structure.md) and
-  [`2026-07-31-reserved-intersection-wall.md`](2026-07-31-reserved-intersection-wall.md) for the
-  must-cross derivations that established this family;
-- [`2026-08-08-portal-parity-envelope.md`](2026-08-08-portal-parity-envelope.md) for the separate,
-  sound-but-negligible portal-parity experiment; and
-- [`../docs/future-work.md`](../docs/future-work.md) for the live queue. This report supplies the
-  evidence and rationale; `future-work.md` decides what is actually queued.
-
-## 1. Current sweep frontier
+> **Status:** active synthesis, reconciled after the revised neighbor-budget level-blind A/B
+> **Current decision:** dynamic future-opportunity/resource reasoning remains stronger than new static level-shape descriptors; the neighbor population experiment is complete and now leaves a five-loss integration problem, not a sample-size problem
+> **Capability contract:** [`../docs/solver-level-blindness.md`](../docs/solver-level-blindness.md)
 
-The latest reconciled deterministic baseline is:
+Read with:
 
-| Corpus | Solved | Unsolved |
-|---|---:|---:|
-| Corpus 1 | 96 / 102 | 6 |
-| Corpus 2 | 725 / 1700 | 975 |
+- [`2026-08-08-mc-neighbor-budget-propagation.md`](2026-08-08-mc-neighbor-budget-propagation.md) for the full neighbor-budget evidence chain;
+- [`2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md`](2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md) for the remote A/B/CP-SAT result reconciliation;
+- [`../docs/solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md) for current promotion state;
+- [`../docs/future-work.md`](../docs/future-work.md) for the live queue.
 
-All failures in both sweeps are budget exhaustion (`node-budget-reached`), not referee-invalid
-solutions or solver exceptions. The remaining problem is therefore search efficiency/capability,
-not a population of known correctness failures.
+## Measurement correction
 
-### The six Corpus-1 failures are interaction-heavy rather than individually exotic
+Older versions of this synthesis referred to Corpus-2 `725/1700` as the current solver frontier. That run used exact-level `--prime-winner` replay and is therefore a historical **re-verification** result, not unseen-level capability.
 
-The six remaining Corpus-1 failures are all 12×12 and all simultaneously sit at the historical
-"classic" stress maxima for the older mechanics:
+The current decision-bearing level-blind measurements are the 2026-08-11 revised neighbor-budget A/B:
 
-- 4 blocks;
-- 4 must-pass;
-- 4 must-cross;
-- 3 portal pairs;
-- 4 flipping filters;
-- 3 false goals; and
-- 4 geese.
+| arm | Corpus 1 | Corpus 2 | C2 nodes | C2 canonical work |
+|---|---:|---:|---:|---:|
+| control | 94/102 | **611/1700** | 43,017,428,195 | 59,668,825,637 |
+| neighbor-budget ON | 94/102 | **665/1700** | 41,320,735,149 | 56,486,598,535 |
 
-Their `reqLen` values are 87–101 and they then vary mainly by turn/surround obligations. The most
-useful interpretation is not that any one of those counts is a magic failure threshold. These six
-levels are concentrated examples of **constraint stacking and interaction load**. The solver can
-handle each ingredient much more often than it can handle many of them simultaneously while also
-satisfying a long exact path.
+Treatment effect: **+54 net, 59 gained / 5 lost**, while using ~3.94% fewer nodes and ~5.33% less canonical work. There were zero Corpus-2 attempt errors and zero deadline-truncated rows.
 
-This matters for product policy: these observations should not be converted into low editor caps.
-They are a map of the solver's present comfort zone and therefore a benchmark-generation target.
-The desired direction is to push the frontier outward until these combinations become routine.
+This correction changes the benchmark number, not the earlier static-vs-dynamic research conclusion.
 
-## 2. Which properties track current Corpus-2 difficulty
+## Static must-cross descriptors remain weak
 
-The latest current-outcome join reinforces the interaction story.
+The exploratory must-cross analysis asked whether simple root geometry explains remaining difficulty better than the already-known global variables.
 
-Strong or useful difficulty signals include:
+A baseline model using must-cross count, portals, turn load, navigation density, `reqLen/area`, `reqInt`, flippers and must-pass reached 10-fold ROC-AUC **0.7607**. Adding simple static must-cross geometry descriptors produced **0.7572**; replacing raw must-cross count with implied required-cell count produced **0.7612**.
 
-- portal-pair count;
-- must-turn count;
-- surround count;
-- combined turn-family load (`mustTurn + surround + adjacentTurn`);
-- navigation density / constrained traversable space;
-- higher `reqLen` and higher `reqLen / grid area`; and
-- to a lesser degree, must-cross count and total impassable density.
+Root free-intersection budget also failed as the missing scalar explanation in that analysis. These figures were diagnostic, not a permanent benchmark gate, but they strongly redirected the research question away from static starting layout.
 
-Weak or nearly flat signals include:
+The useful question is increasingly:
 
-- `reqInt` by itself;
-- false-goal count; and
-- several occupancy-only counts once the stronger interaction variables are known.
+> After this partial path, what future completion interfaces still exist, which resources do they consume, and which of those resources have just become scarce or mutually incompatible?
 
-In the current 725-solve baseline, solved and unsolved levels have almost identical mean `reqInt`
-(about 5.65 versus 5.68). The binned solve rate is non-monotonic rather than steadily degrading as
-`reqInt` rises. That is strong evidence against treating high intersection count itself as a leading
-remaining solver weakness.
+## Neighbor-budget is the strongest concrete example of dynamic opportunity cost
 
-The more plausible issue is **where future intersections remain available and what obligations
-reserve or consume them**, not the scalar target count.
+For a pending must-cross axis, an already-visited required neighbour forces a future revisit/intersection beyond the must-cross cell's own reserved second entry. `PRUNE_MC_NEIGHBOR_BUDGET` counts distinct such forced neighbours and compares them with remaining free intersection budget.
 
-### Grid size
+Evidence:
 
-Raw solve rate declines from the 11×11 population toward the 14–15 range. That does not support a
-simple independent "large grid" diagnosis because larger boards also carry longer paths and more
-room for mechanic interactions. Still, it is enough to treat board size as a scaling variable in
-benchmarking rather than assuming a count of mechanics has the same search cost on every grid.
+- 19 unique dead-branch catches beyond the shipped gauntlet in the oracle-labelled atlas;
+- zero applicable alive false rejects there;
+- 97,812 known-valid paths / 8.5M replayed steps, zero violations;
+- first live sample +11/30, zero losses;
+- original historical wiring A/B +14 but with 42/28 churn and exact-level winner priming;
+- stochastic repair-index diagnosis and revised caller policy;
+- **revised level-blind population A/B 611→665, 59 gains / 5 losses**.
 
-For future solver-frontier generation, scale quantities such as path length and obstacle count with
-board area, while keeping history-sensitive mechanic counts as separate axes. Do not infer that a
-12×12 level with four turn obligations and a 15×15 level with four turn obligations are equivalent
-search problems merely because the raw count matches.
+The caller-policy revision substantially validated the diagnosis: most of the old loss churn disappeared while the positive effect increased.
 
-## 3. New must-cross analysis: static layout descriptors mostly wash out
+The remaining five losses (`R00635`, `R02119`, `R02422`, `R02823`, `R02867`) now define the integration question. **Do not rerun the same full population A/B.** Determine whether a generic deterministic ordering/budget mechanism explains them and whether the 59-gain upside can be placed as default or complementary search at matched total work without accepting regression.
 
-A fresh exploratory analysis focused on the 939 Corpus-2 levels carrying must-cross cells. The
-question was whether simple root-level must-cross geometry explains remaining difficulty after the
-already-known global variables are included.
+## Crossing slack remains an observational state variable
 
-A baseline model using must-cross count, portal count, turn load, navigation density,
-`reqLen / area`, `reqInt`, flippers, and must-pass reached a 10-fold cross-validated ROC-AUC of
-**0.7607** for current solve status.
+The read-only diagnostic is:
 
-Adding static must-cross geometry descriptors such as shared required-neighbour structure and local
-overlap produced **0.7572**, slightly worse. Replacing raw must-cross count with the number of
-implied required cells produced **0.7612**, effectively unchanged.
+```text
+crossingSlack = freeInt - forcedFutureNeighbourRevisits
+```
 
-This is an exploratory analysis rather than a committed benchmark script, so these exact AUCs are
-not a permanent regression gate. Their decision value is directional: **the obvious static
-must-cross descriptors did not reveal a missing explanatory variable**.
+A bounded smoke over 10 Corpus-2 levels replayed 289 valid unique paths and 7,957 applicable prefixes with zero negative-slack soundness alarms.
 
-### Root free-intersection budget is also not the missing variable
+That is evidence the diagnostic is worth observing, not permission to turn it into a score/prune. Measure it against exact live/dead labels and known-valid prefixes before policy.
 
-For the same 939 must-cross-bearing levels, define root free intersection budget as:
+## Stronger descendant: compatible completion interfaces
 
-`freeInt = reqInt - mustCrossCount`
+The broader missing representation may be a bounded set of remaining completion interfaces rather than another scalar bound.
 
-The current solve rates are:
+Examples:
 
-- `freeInt == 0`: 279 / 656 = **42.5%** solved;
-- `freeInt > 0`: 101 / 283 = **35.7%** solved.
+- multiple pending must-cross cells are individually feasible but their remaining straight-through completion patterns may be mutually incompatible;
+- must-turn / adjacent-turn obligations remain reachable but only through entry/exit directions already consumed by path history;
+- surround satisfaction cells remain reachable but their viable visit interfaces conflict with the remaining route topology;
+- enough length remains numerically but cheap legal detours/intersection sites have been consumed.
 
-So levels with no discretionary intersections at the root are not the harder group. The scalar
-starting budget is not the important missing representation.
+For must-cross, the next sound route is conservative bounded local completion-pattern enumeration with a strict cluster cap and shadow/oracle evaluation first. This explicitly avoids reviving the static forced-edge assumption already falsified in July.
 
-Taken together, these two negative results move the hypothesis away from **static starting
-geometry** and toward **dynamic loss of future flexibility while a path is being built**.
+## Portal extension remains secondary
 
-## 4. The strongest concrete evidence for dynamic opportunity cost
+The existing neighbour-budget proof globally abstains if any portal exists. A possible descendant is a **locally abstaining** portal formulation that applies the ordinary-neighbour proof only where the particular required neighbour has no portal ambiguity.
 
-The existing neighbor-budget propagator is already a direct instance of dynamic opportunity-cost
-reasoning. For an unsatisfied must-cross axis, if a required ordinary neighbour has already been
-visited, completing the crossing later requires revisiting that neighbour and therefore spending an
-additional, previously-unreserved intersection. The rule compares those distinct forced revisits to
-the remaining free intersection budget.
+Do not implement this by deleting the global portal guard. It needs a fresh local proof, stored-solution replay on portal-bearing levels, then shadow catch-rate evaluation. Given the new population result, this is lower priority than understanding the five current losses and expanding exact score/width labels.
 
-Its original evidence chain is unusually strong:
+## Relationship to winning-lineage / CP-SAT work
 
-- 19 unique dead-branch catches beyond the shipped gauntlet in the 5,518-branch oracle-labelled
-  atlas, with zero false rejects on applicable alive branches;
-- 97,812 known-valid paths replayed, 8.5M steps, zero violations;
-- first live sample: +11 / 30, 0 losses;
-- original full deterministic Corpus-2 A/B: 725 → 739, **+14 net**, consisting of 42 gained and 28 lost;
-- Corpus 1 unchanged at 96 / 102.
+The dynamic-resource thesis and the beam score-representation thesis are complementary. The first explicit-prefix CP-SAT run produced **7 dead / 1 live / 4 abstain** from the 12 old atlas abstentions, with zero correctness/input alarms. At least one R00001 sibling ranked first by the beam is exact-infeasible while the same parent has a known-valid continuation.
 
-See [`2026-08-08-mc-neighbor-budget-propagation.md`](2026-08-08-mc-neighbor-budget-propagation.md)
-for the derivation and exact run details.
+That creates a concrete route for testing dynamic future-opportunity descriptors: ask whether they separate exact-live from exact-dead same-parent futures near real score/width extinctions. Do that before adding another hand-tuned score term.
 
-The 42/28 churn is not a soundness failure. The original wiring changed which dead search was removed
-first, which changed where a fixed node budget was spent. Later investigation identified a more
-specific source of some of that sensitivity in repair: its seeded-random `takePly` selects an index
-into the surviving candidate array, so removing one dead candidate can map the same random draw to a
-different move and change the whole repair trajectory.
+## Current order
 
-Commit `a113d47ab33a8856a1a8fcd327f28379ff65e0e2` therefore revised the participation policy: the
-neighbor-budget prune is skipped for repair's random `takePly` survivor selection while remaining
-active in DFS, beam, and deterministic repair sub-searches. This means the historical 725→739 A/B
-remains strong evidence for the **rule and original wiring**, but it is not the promotion verdict for
-the **current implementation**. A fresh full-population A/B is required before promotion.
+1. neighbor-budget five-loss diagnosis / equal-work integration;
+2. bounded extinction-adjacent explicit-prefix CP-SAT labels;
+3. exact repair-retreat CP-SAT;
+4. level-blind late-reserve population A/B;
+5. only then pursue broader dynamic completion-interface policy if the evidence points there.
 
-## 5. Revised interpretation of the solver's broad gap
-
-The earlier capability analysis described the solver as understanding **local progress** much
-better than **future opportunity cost**. The new evidence strengthens and narrows that statement.
-
-The interesting question is increasingly not:
-
-> How many must-crosses / intersections / turn objects are present?
-
-It is:
-
-> After this partial path, what future completion interfaces still exist, which resources do they
-> consume, and which of those resources have just become scarce or mutually incompatible?
-
-Examples of the resource/interface state the solver may need to understand better:
-
-- a must-cross still has an individually open axis, but one or both required neighbours now require
-  paid revisits;
-- two pending crossings are individually feasible but their remaining local completion patterns
-  cannot coexist;
-- a must-turn or adjacent-turn landmark remains reachable but only through entry/exit interfaces
-  whose axes/chirality have been consumed;
-- a surround cell still has reachable neighbours but the remaining visit pattern conflicts with
-  route topology or other obligations;
-- a portal remains globally available but is no longer useful for the particular future interface
-  that needs it;
-- enough path length remains numerically, but the path has consumed the cheap detours/intersection
-  sites needed to spend it legally.
-
-This is a dynamic, relational representation problem. It does not imply one universal heuristic or
-one large constraint solver inside the hot path.
-
-## 6. Recommended experiments, in order
-
-### A. Finish the promotion question for the **revised** neighbor-budget wiring
-
-The original flag was sound and net-positive, but the 42-gained/28-lost A/B predates the repair
-random-selection exclusion in `a113d47`. The original churn therefore no longer needs to be
-re-diagnosed as though its mechanism were unknown, and simply repeating the old implementation would
-not answer the current promotion question.
-
-The decision-bearing gate is now one thing:
-
-1. run a fresh deterministic full Corpus-2 ON/OFF A/B on the current post-`a113d47` wiring.
-
-The old 725→739 result remains load-bearing historical evidence that the deduction has power. The new
-run asks whether narrowing participation preserves enough of that upside while reducing the loss set
-enough to justify promotion. A local 68-affected-level follow-up was mentioned as in progress in the
-`a113d47` commit message, but no committed result/report was found during the 2026-08-11 status
-reconciliation, so it must not be treated as completed repository truth.
-
-Do not spend more soundness effort first. The existing replay evidence already addresses that
-question. Do not build descendants on an assumption that the revised wiring is promoted until this
-population gate lands.
-
-### B. Test a *locally abstaining* portal extension of neighbor-budget reasoning
-
-The current neighbor-budget helper abstains on an entire level when **any portal exists anywhere**.
-That was a conservative proof boundary, not an empirical finding that ordinary required-neighbour
-reasoning becomes invalid merely because an unrelated portal is present.
-
-A worthwhile shadow-only hypothesis is therefore narrower than "make the rule portal-aware":
-
-> Preserve every existing exclusion in the proof, and on portal levels apply the existing ordinary-
-> cell revisit argument only where the particular required neighbour being counted is not a portal
-> terminal and has no portal-specific ambiguity. Abstain locally around portal-affected cells rather
-> than globally for the level.
-
-Do **not** implement this by simply deleting the `portalMap.size` guard. Re-derive the exact local
-conditions, replay all stored portal solutions through the real state machinery, then score the
-variant in the existing shadow harness before any live A/B.
-
-This proposal is distinct from the portal-parity envelope. The parity experiment tested whether a
-remaining portal could rescue exact-length parity and found its reject condition negligible. This
-proposal asks whether an already-proven must-cross resource deduction can safely recover coverage
-on portal-bearing levels.
-
-### C. Crossing-slack instrumentation implemented; measurement pending
-
-The neighbor-budget rule currently turns one resource expression into a boolean deadlock:
-
-`crossingSlack = freeInt - forcedFutureNeighbourRevisits`
-
-The read-only analyzer now exists at `scripts/stress/mc-crossing-slack-analysis.mjs`. It reuses the
-exact shared `computeMcNeighborBudget` derivation and does **not** alter production search. It records:
-
-- oracle-labelled `dead-residual`, `dead-pruned`, and `alive` branch distributions;
-- unique known-valid solution-prefix distributions across the three corpora;
-- depth-decile and remaining-must-cross buckets;
-- low-slack threshold contrasts (`<= 0` through `<= 5`) between dead residual and alive branches;
-- both sample-weighted and level-balanced solution-prefix summaries; and
-- a soundness alarm if negative slack appears on an oracle-alive branch or known-valid prefix.
-
-The remaining action is measurement, not tooling: run the analyzer and ask whether dead residual
-branches erode toward low-but-nonnegative slack substantially earlier than live/winning prefixes
-after controlling for depth and remaining must-cross count.
-
-If it discriminates, it becomes a candidate **state representation / retention diagnostic**. Do not
-immediately add another scoring weight. This codebase already has strong evidence that plausible
-move-order terms can simply move finite-budget wins around.
-
-### D. Explore joint must-cross interface compatibility, not another static forced-edge rule
-
-The falsified 2026-07-31 forced-edge rule failed because nearby must-cross obligations can share
-cells through multiple structurally distinct valid completions. Any stronger successor has to model
-that multiplicity rather than pretending each obligation owns independent edges.
-
-The next principled shape is a tiny compatibility problem over remaining crossing interfaces:
-
-1. enumerate conservative local completion patterns for each pending must-cross;
-2. retain every pattern compatible with current axis/visit state;
-3. ask whether at least one mutually compatible combination remains across the interacting local
-   cluster; and
-4. abstain when the cluster/model exceeds a strict tractability cap.
-
-Prototype this offline/shadow-first. The target is a **necessary-condition reasoner**, not a
-production mini-CP-SAT tier. It should earn its existence by unique catches beyond the current
-neighbor-budget/forced-neighbour/reserved-wall gauntlet.
-
-The repository's correctness-hardening work now provides substantially better independent
-small-state/admissibility testing than existed when the static rule was first tried. Any compatibility
-reasoner should use those property/reference checks in addition to stored-solution replay and the
-5,518-branch atlas.
-
-### E. Apply the same dynamic-interface framing to turn-family landmarks
-
-The earlier open landmark proposal remains valid but should be phrased carefully. Plain reachability
-for surround/adjacent-turn was already tested and was effectively redundant. The open question is
-not "can I reach a candidate cell?" but "does any candidate cell still admit a compatible
-entry/exit/chirality interface?"
-
-For must-turn, adjacent-turn, and surround work, reuse the same progression:
-
-paper derivation → stored-solution census → shadow probe / independent falsification → live A/B.
-
-Do not copy must-cross's local rules mechanically; these mechanics have different any-of-many and
-ordering semantics.
-
-## 7. What not to infer from the latest limits analysis
-
-### Do not turn solver comfort limits into game-design limits
-
-An earlier analysis can produce conservative authoring caps with high empirical solve probability,
-but those caps should be used as **benchmark coordinates**, not product restrictions. Low caps on
-portals, surround, turn objects, or interaction density would make the level language less
-expressive precisely where the solver most needs to improve.
-
-A better use is a moving solver benchmark frontier:
-
-1. identify the current high-success envelope;
-2. generate controlled levels just outside one boundary at a time;
-3. improve the solver until that band becomes routine without regressions;
-4. move the boundary outward; and
-5. periodically test mixed-interaction levels so optimizing single axes does not create a solver
-   that only handles laboratory-isolated mechanics.
-
-### Do not over-prioritize `reqInt`
-
-The current data does not support a low `reqInt` ceiling as a primary solver-protection measure.
-Intersection *availability and reservation* matter; raw requested count currently does not track
-failure strongly.
-
-### Do not rediscover static must-cross geometry without a new representation
-
-The simple root descriptors tested here add essentially no predictive information beyond the
-existing feature set. A new must-cross proposal should therefore explain what **state evolution,
-compatibility, or resource consumption** it represents that those descriptors do not.
-
-## 8. Cross-document responsibility map
-
-To prevent this thread from fragmenting again:
-
-| Question | Canonical source |
-|---|---|
-| What does the solver currently understand / omit? | [`../docs/solver-heuristic-capability-gap-analysis.md`](../docs/solver-heuristic-capability-gap-analysis.md) |
-| What work is actually open now? | [`../docs/future-work.md`](../docs/future-work.md) |
-| Which retained opt-ins still have a promotion decision open? | [`../docs/solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md) |
-| How do we score sound candidate reasoners before production integration? | [`../docs/solver-shadow-eval-harness.md`](../docs/solver-shadow-eval-harness.md) |
-| What exactly did neighbor-budget prove and measure? | [`2026-08-08-mc-neighbor-budget-propagation.md`](2026-08-08-mc-neighbor-budget-propagation.md) |
-| Why is static must-cross forced-edge reasoning unsafe? | [`2026-07-31-mustcross-forced-structure.md`](2026-07-31-mustcross-forced-structure.md) |
-| What did portal parity actually test? | [`2026-08-08-portal-parity-envelope.md`](2026-08-08-portal-parity-envelope.md) |
-| What does the current corpus-limit/difficulty evidence imply for research direction? | **This report** |
-
-Future reports that close one of sections 6A–6E should link back here and update
-`../docs/future-work.md`; this synthesis should not become an accumulating chronological ledger.
+The guiding rule remains: **observation may use saved solutions and oracle labels; production solving may not recall exact-level history.** Any resulting prune, score, or scheduler must operate from the puzzle and current invocation alone.
