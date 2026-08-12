@@ -1,306 +1,133 @@
 # Winning-lineage survival analysis
 
-> **Status:** core diagnostic instrumentation implemented and unit-validated 2026-08-11; first bounded 8-level real-beam pilot and 4+4 stratified solved-control follow-up complete; larger population run pending; no production solver behavior is proposed here
-> **Written:** 2026-08-11
-> **Purpose:** measure where known-valid solution families disappear from the solver's real search, especially beam search, without allowing those solutions to guide the search.
->
-> **Parent methodology:** [`solver-research-operating-model.md`](solver-research-operating-model.md)
-> **Related evidence:** winning-path archaeology / witness-divergence tooling, [`variant-corpus-solver-research-plan.md`](variant-corpus-solver-research-plan.md), [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md), and the beam-retention findings summarized in [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md).
+> **Status:** instrumentation and first same-config cohort complete; score/width forensics complete; first explicit-prefix CP-SAT follow-up complete; next step is bounded extinction-adjacent exact labeling
+> **Capability rule:** known solutions are labels only and never guide the search
+> **Current result reports:** [`../reports/2026-08-11-winning-lineage-score-width-forensics.md`](../reports/2026-08-11-winning-lineage-score-width-forensics.md), [`../reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md`](../reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md)
 
-## 1. Why this is a distinct unanswered question
+## Purpose
 
-Existing Pathfinder tooling can replay a referee-valid solution through the real search state and ask how the scorer ranks the correct next move. That is useful but local.
+Winning-path archaeology answers a local question: how does the solver rank the known-correct next move? Winning-lineage observation answers the finite-frontier question:
 
-It does **not** answer the global finite-frontier question:
+> **During the actual unchanged search, does the solver continue to retain any prefix belonging to any known-valid solution family, and where is the final known support lost?**
 
-> **During the actual unchanged search, does the solver continue to retain any prefix belonging to any known-valid solution? If not, exactly where and why is the final known-winning lineage lost?**
+Known solutions are diagnostic fluorescence. They may label generated/pruned/deduped/culled/retained nodes after the search makes its ordinary decisions. They may never alter scoring, retention, tie order, budget, random state, or stopping.
 
-Beam search is the clearest first target because every width cull is irreversible. A locally well-ranked winning move can still belong to a prefix that ranks just below the global beam cutoff once thousands of other parents contribute candidates.
+## Implemented observation boundaries
 
-The current `_BEAM_DEBUG` instrumentation measures cost anatomy, not solution-lineage survival. This proposed instrumentation therefore fills a real gap rather than duplicating existing debug counters.
+The observer can distinguish support through the meaningful beam stages:
 
-## 2. Non-negotiable experimental rule
+1. incoming frontier;
+2. generated candidates;
+3. post-hard-prune;
+4. post-dedup;
+5. post-score/width cull;
+6. diversity selection where applicable.
 
-Known solutions are **labels only**.
+It records support/family coverage, extinction depth/cause, cull rank/margin, and work after final known support. Because known solutions are incomplete, “known support extinct” is never interpreted as proof that no true solution remains.
 
-The search must run with exactly the same candidate generation, scoring, pruning, deduplication, ordering, beam width, budgets, and random behavior it would have used without the known solutions.
+Observation OFF/ON parity is required: instrumentation must not change path, outcome, or canonical work.
 
-Instrumentation may ask after the fact whether a generated/retained node matches a prefix in the known-solution index. It may not:
+## Same-config cohort result
 
-- boost that node;
-- reserve a slot for it;
-- suppress another node;
-- alter tie-breaking;
-- change a budget;
-- change a random stream;
-- stop early because the final known lineage vanished.
+A deterministic 30-level solution-bearing Corpus-1 cohort used one isolated beam configuration: width 100, default profile, 100k canonical nodes.
 
-This is diagnostic fluorescence, not guidance.
+Result:
 
-## 3. Input solution set
+- **13 solved / 17 failed**;
+- observer OFF/ON parity: 30/30;
+- zero hard-prune alarms;
+- failed final labelled-support losses: **15 score/width, 2 dedup**;
+- solved controls also sometimes lost all known support and later solved, confirming label incompleteness.
 
-Use all referee-valid solutions available for the level, subject to provenance and deduplication.
+Mean normalized last-known support was substantially deeper for solves than failures, but post-extinction work alone was not discriminative enough to justify an early stop.
 
-Potential sources:
+## Score/width forensics
 
-- stress-corpus witness solutions;
-- stored hints;
-- enumerated additional hints;
-- variant-parent replay solutions that validate on the canonical parent.
+The 15 failed final score/width extinctions were classified level-wise:
 
-Do not count byte-identical paths multiple times merely because provenance differs.
+- **10 A: clearly mis-ranked**;
+- **3 B: weak-margin**;
+- **0 C: exact-tie/stable-order**;
+- **2 D: width saturation**;
+- **0 E: ambiguous**.
 
-Where the known set is incomplete, report that explicitly. “All known solution families disappeared” is not the same claim as “no solution remained in the beam.”
+No known-supported candidate exactly tied the cutoff. The two width-saturation cases had best supported ranks 108/109 at width 100, with modest positive score deficits. Most other failures had materially worse scores, sometimes dramatically worse.
 
-## 4. Prefix index
+Interpretation: the recurring failure mechanism is **score representation under a saturated frontier**, not stable exact-tie order. This does not justify global widening or tie shuffling.
 
-Build a trie or equivalent compact prefix index for the known valid paths.
+## First exact-prefix CP-SAT follow-up
 
-At any real search node, instrumentation should be able to determine cheaply:
+The existing contrastive atlas contained 12 sibling rows where the lightweight oracle had abstained. The dedicated explicit-prefix CP-SAT workflow processed all 12:
 
-- whether the node's full path is a prefix of at least one known solution;
-- how many known solutions remain compatible with that prefix;
-- optionally, which coarse solution-family IDs remain compatible after solution-family clustering.
+- **7 dead** (`INFEASIBLE`);
+- **1 live** (`OPTIMAL` with referee-valid emitted completion);
+- **4 abstain**, all R00039 `unsupported-mechanics`;
+- **0 input alarms**;
+- **0 correctness alarms**.
 
-The implementation should avoid repeatedly reconstructing every known path per candidate. Beam already uses parent-pointer nodes; the diagnostic can either maintain a lineage-label set/hash alongside debug-only nodes or reconstruct only when the observation hook is enabled.
+The live case is `R00001:42:child-[5,6]:3`.
 
-Because this is instrumentation, choose the implementation with the lowest risk of perturbing production behavior, even if it is slower than an eventual permanent telemetry path.
+The strongest direct finding is that at least one R00001 sibling ranked **first** by the beam at its parent is exact-infeasible while the same parent has a known-valid continuation. Therefore at least some observed score/width failures are genuine future-viability mis-ranking, not merely tie order or unavoidable width.
 
-## 5. Observe the beam at each decision boundary
+The one live alternative is equally important: alternatives to the stored known continuation are not all dead. The production problem is to represent generic future viability better, not imitate a stored path.
 
-The useful unit is not merely “was a known prefix somewhere in the phase?” The instrumentation should distinguish the stage at which it disappeared.
+## Next exact-label experiment
 
-For each depth/phase, record known-winning support at these boundaries where practical:
+Do **not** rerun the original 12 cases unchanged.
 
-1. **Incoming frontier**: known-winning prefixes retained from the previous phase.
-2. **Generated candidates**: known-winning children that were actually generated from those or other parents.
-3. **Post-hard-prune candidates**: known-winning children surviving the shared prune gauntlet.
-4. **Post-dedup pool**: known-winning children surviving coarse beam dedup.
-5. **Post-score/width cull frontier**: known-winning children actually retained for the next phase.
-6. **Post-diverse-selection frontier**, when diverse beam is active.
+Build a bounded set of same-parent sibling decisions near **actual score/width extinction events** from the lineage cohort or a carefully expanded cohort. Prefer cases where:
 
-If distinguishing steps 4-6 requires tiny debug-only hooks around existing branches, add those hooks rather than infer the cause later from final frontier contents.
+- the supported candidate is near or below cutoff;
+- multiple legal siblings exist;
+- the CP-SAT model supports the relevant mechanics;
+- candidate ranks/margins make the decision informative.
 
-## 6. Core metrics
+Label each exact prefix+child as:
 
-### 6.1 Winning-support coverage by depth
+- live;
+- dead;
+- timeout/unsupported/abstain.
 
-Primary metric:
+Never collapse abstain into dead.
 
-> **At each depth, what fraction of the known solution set/families still has at least one represented prefix?**
+## What to test against exact labels
 
-Report both raw-path coverage and, where meaningful, diversity-family coverage so a level with hundreds of near-identical hints does not dominate the interpretation.
+Before changing production policy, evaluate neutral descriptors such as:
 
-### 6.2 Last-known-winning depth
-
-For each level/attempt:
-
-- depth of first known-winning prefix loss;
-- depth of final known-winning path loss;
-- depth of final known-winning family loss;
-- normalized depth fraction relative to `reqLen`.
-
-### 6.3 Loss cause
-
-Classify the decisive loss where possible:
-
-- known child never generated because it was not legal according to the search state;
-- hard prune rejected the known-valid lineage;
-- dedup displaced it;
-- score/width cull displaced it;
-- diversity selection displaced it;
-- budget/deadline ended before the next phase;
-- known path prefix simply was never reached from the retained parent population.
-
-A hard prune rejecting a truly valid known prefix is a correctness alarm and should not be treated as an ordinary heuristic result.
-
-### 6.4 Work after support extinction
-
-Measure canonical work spent after the final known-winning family disappears.
-
-This is diagnostic only because the known solution set is incomplete. A large value means “the solver spent substantial work after losing every solution family we know about,” not “all later work was mathematically wasted.”
-
-### 6.5 Margin at cull
-
-When a winning candidate is score-culled, record:
-
-- its global candidate rank;
-- beam width;
-- score difference from the final retained candidate;
-- how many candidates with equal score straddled the cutoff;
-- whether a fixed directional/stable-order tie decided admission.
-
-This separates a profound heuristic miss from “candidate ranked 5003rd in a width-5000 beam.”
-
-### 6.6 Dedup collision context
-
-When a winning candidate is displaced by production coarse dedup, record the retained competing candidate's:
-
-- position;
-- production `sc` tuple;
-- score;
-- neutral metric projection where available;
-- exact/sound-state equivalence if an existing debug oracle can compute it cheaply.
-
-Do not interpret production dedup as logical equivalence; existing evidence says its value is width/diversity management rather than exact-state identity.
-
-## 7. Population comparisons
-
-At minimum, compare:
-
-- cold-solved versus cold-unsolved levels with known solutions;
-- robust family failures versus fragile family failures;
-- beam-winning versus DFS/repair/admissible-order-winning levels;
-- must-cross/turn-load/density strata already used by capability-gap analysis;
-- symmetry relatives after applying the controls in [`../reports/2026-08-11-symmetry-control-audit.md`](../reports/2026-08-11-symmetry-control-audit.md).
-
-The strongest evidence is a repeated loss mechanism across independent level families, not one dramatic level.
-
-## 8. Interpretation matrix
-
-### Known-winning prefixes are not generated
-
-Investigate candidate legality, predecessor retention, forced-order/tie effects, or an earlier frontier loss. If a directly reachable known-valid child is rejected as illegal, treat as correctness work.
-
-### Generated and hard-pruned
-
-Correctness alarm unless the known path/provenance is stale or malformed. Validate with the canonical referee and independent reference machinery.
-
-### Generated, live, then score-culled
-
-Strong evidence for a heuristic/representation or retention problem. Use score-component ablations and neutral dynamic facts before tuning weights blindly.
-
-### Dedup-displaced
-
-Strong evidence that the coarse beam state abstraction is merging opportunity classes that matter on this population. Do not jump directly to exact dedup: existing evidence says exact duplicates are too rare and coarse dedup has real diversity value. Look for a better retention/diversity descriptor.
-
-### Several known families survive deep but beam still fails
-
-Beam width may not be the immediate problem. Investigate later dynamic completion-interface collapse, exact-length/intersection closure, or budget.
-
-### All known families disappear together near the same dynamic event
-
-This is especially useful evidence for missing future-opportunity/resource reasoning. Compare crossing slack, landmark completion interfaces, separator state, or other neutral semantic facts around the extinction event.
-
-## 9. Extension: contrastive winning-prefix branch atlas
-
-Once solution-prefix replay is available, use selected prefixes to create a cleaner offline dataset for heuristic-gap research.
-
-For a known-valid prefix:
-
-1. reconstruct the exact real solver state;
-2. enumerate all legal next siblings;
-3. the known continuation is live by construction;
-4. where tractable and supported, ask CP-SAT/reference search whether each other sibling admits any completion;
-5. record live/dead labels plus neutral state facts after each sibling.
-
-The resulting dataset compares **live and dead siblings from the identical parent history**, removing much of the confounding present when arbitrary dead atlas branches are compared with arbitrary live paths.
-
-Candidate analyses:
-
-- crossing slack;
-- pending landmark completion-interface counts;
-- residual reachable volume;
+- crossing slack / forced future revisits;
+- remaining must-cross completion interfaces;
+- turn-family entry/exit opportunities;
+- residual reachable volume/topology;
 - portal/flipper state;
-- intersection/revisit commitments;
-- separator/interface capacity;
-- score terms and admissible slack;
-- family/symmetry stability.
+- future length/intersection commitments;
+- structural-family descriptors.
 
-This should precede any ambitious online failure-learning or CEGAR machinery. First establish that recurring contrastive structure exists.
+The question is whether any generic fact separates exact-live from exact-dead siblings under identical parent history.
 
-## 10. Relationship to interoperability
+## Possible later receptors
 
-Winning-lineage survival is useful before any live handoff.
+Only after exact labels reveal a recurring generic distinction should a narrow live counterfactual be designed. Possible receptors include:
 
-Examples:
+- a secondary beam retention reservoir/quota;
+- a score component or tie-break;
+- a diversity descriptor;
+- a failure artifact for another method.
 
-- if beam repeatedly retains solution-like structural families that repair never independently reaches, that supports beam -> repair producer value;
-- if beam itself destroys those families early, exporting its survivors to repair is less promising;
-- if repair elites overlap heavily with the beam's retained populations, the proposed handoff may be redundant;
-- if an external artifact predicts which equal-score beam candidates preserve winning support, that is a concrete beam retention receptor.
+A structural-family reservoir remains plausible, but it is not frozen. It must preserve the ordinary scoring/width logic as much as possible, run at matched total work, and remain level-blind.
 
-Therefore this diagnostic can kill or strengthen interoperability ideas before consumer code is written.
+## Interpretation cautions
 
-## 11. Relationship to family/variant research
+- Known solution sets are incomplete.
+- Final known-support extinction is not proof all true solutions are extinct.
+- CP-SAT support coverage is mechanic-dependent; unsupported cases are abstentions.
+- One vivid exact-dead rank-1 sibling is a useful counterexample, not a complete scoring theory.
+- Correlation with known solutions is not permission to guide search from those solutions.
 
-For a solve-status symmetry cliff, compare **where** winning support disappears, not just whether one orientation solves.
+## Current handoff
 
-After controlling semantic equivariance, directional templates, fixed tie order, and repair PRNG streams:
+1. Select a bounded extinction-adjacent sibling set.
+2. Run through `.github/workflows/cpsat-explicit-prefix-oracle.yml`.
+3. Compare neutral descriptors against exact live/dead labels.
+4. Only then specify the narrowest equal-work retention/score experiment justified by the evidence.
 
-- same extinction depth/cause suggests the final solve difference is later finite-budget noise/control;
-- one orientation loses support immediately on equal-score ties suggests deterministic ordering sensitivity;
-- one orientation keeps several winning families while the other score-culls all of them suggests a genuine heuristic/retention asymmetry;
-- corresponding dynamic-resource collapses at different transformed states suggest a semantic or metric equivariance problem.
-
-## 12. Implementation boundaries
-
-Prefer an env-gated or explicit tooling-only observation hook with zero production behavior when disabled.
-
-Do not add known-solution data to `NormalizedLevel`, `PrepLevel`, scoring profiles, or production attempt configuration merely to support this analysis if a tooling/debug boundary can carry it separately.
-
-Reuse:
-
-- canonical solution validation;
-- `SOLVER_TESTING_API` where analysis can stay outside the hot loop;
-- existing beam parent pointers and phase/cull boundaries;
-- family/solution provenance;
-- canonical work accounting.
-
-Avoid:
-
-- a parallel beam implementation;
-- a second move generator;
-- a second geometry transform implementation;
-- bespoke hint parsing if existing level/hint I/O already provides validated solutions.
-
-## 13. Acceptance criterion for the instrumentation itself
-
-Before using the data scientifically:
-
-1. with instrumentation disabled, solver behavior is unchanged;
-2. with instrumentation enabled, returned solutions and deterministic node/work outcomes remain unchanged on a representative sample, allowing only wall-clock slowdown from observation;
-3. every known solution used for labels passes the canonical referee on the exact analyzed level;
-4. a synthetic fixture demonstrates each loss-cause bucket the hook claims to distinguish, where practical;
-5. the report records known-solution-set completeness/provenance so “support extinction” is not overclaimed.
-
-## 14. What this work is allowed to produce next
-
-A completed survival report may justify a **specific** next experiment such as:
-
-- a neutral beam diversity descriptor;
-- a tie-break diagnostic;
-- a corrected dedup/retention representation;
-- a dynamic-resource metric study;
-- a beam -> repair shadow handoff;
-- a targeted correctness investigation.
-
-It should not automatically produce a new production score term. The point is to identify the actual failure stage before engineering the remedy.
-
-## 15. Implementation update (2026-08-11)
-
-The default-OFF real-beam observer, compact prefix index, provenance/family support accounting, and loss/cull/dedup context are implemented. See [`reports/2026-08-11-solver-research-observation-tooling-pilot.md`](../reports/2026-08-11-solver-research-observation-tooling-pilot.md). The original small pilots are historical; the 30-level same-configuration cohort supersedes them for active routing.
-
-## 16. Label aggregation hardening (2026-08-11)
-
-Exact duplicate paths now retain the union of every provenance and solution-family label rather than
-silently keeping only the first family. This matters when canonical hints and variant-parent replay
-produce the same canonical path through independent sources.
-
-## 17. Bounded removal-context retention (2026-08-11)
-
-The observer keeps complete stage counts but, by default, retains detailed hard-prune/dedup/cull rows
-only for candidates that carry known-winning support. This keeps larger evidence runs bounded without
-losing the rank, cutoff, competitor, or prune context needed to explain known-support extinction.
-Callers may explicitly request all removal details for a small diagnostic fixture.
-
-## 2026-08-11 review follow-up: structural families and same-config control
-
-The pilot's accidental raw-path `family` identity is fixed. Lineage schema v2 uses the established hint-diversity structural axes (directed portal usage, crossing placement, and must-cross first-entry/completion order), while exact paths and provenance remain separate. This equivalence intentionally ignores local edge detours and is not a homotopy proof.
-
-A 30-level, identical width-100/default-profile/100,000-node Corpus-1 cohort yielded 13 solves and 17 failures with observation OFF/ON parity on all runs. Mean normalized last-known-support depth was 0.505 for solves versus 0.239 for failures. Final observed failure losses were score/width on 15/17 and dedup on 2/17; solved runs had seven dedup, four score/width, and two with no observed extinction. See [`../reports/2026-08-11-pr1356-review-follow-up.md`](../reports/2026-08-11-pr1356-review-follow-up.md). This strengthens the retention-stage diagnosis but still does not prove true solution extinction or justify a score/width change.
-
-
-## 2026-08-11 score/width forensic follow-up
-
-The clean-commit rerun reproduced every headline result and recorded ranked pre-cull context. The 15 failed final score/width losses classify as ten clearly mis-ranked, three weak-margin, two narrowly width-saturated, zero exact-score-tie/stable-order, and zero ambiguous. Four solved controls also finally lost stored-label support at score/width with material margins and nevertheless solved, emphasizing label incompleteness. The strongest explanation is score representation under frontier saturation, not stable tie asymmetry. Remote contrastive labels are required before freezing a narrow family-reservoir counterfactual; production score, width, and dedup remain unchanged. See [`../reports/2026-08-11-winning-lineage-score-width-forensics.md`](../reports/2026-08-11-winning-lineage-score-width-forensics.md).
+This lane can proceed in parallel with neighbor-budget five-loss diagnosis and repair-retreat CP-SAT because it is observation/oracle work rather than a production promotion change.

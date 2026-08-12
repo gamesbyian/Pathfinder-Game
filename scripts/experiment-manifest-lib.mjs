@@ -7,7 +7,7 @@ const REQUIRED = ['schemaVersion', 'experimentId', 'runId', 'solverRef', 'corpus
 const WORKFLOW_REQUIRED_INPUTS = {
     'solver-stress-refresh': [
         'corpus2_budget_ms', 'corpus2_node_budget', 'corpus2_workers', 'enable_flags', 'disable_flags',
-        'main_loop_late_reserve_fraction', 'main_loop_late_reserve_config_count', 'prime_winner', 'persist_hints',
+        'main_loop_late_reserve_fraction', 'main_loop_late_reserve_config_count', 'persist_hints',
         'corpus1_budget_ms', 'corpus1_node_budget', 'corpus1_workers', 'deterministic',
     ],
 };
@@ -38,8 +38,9 @@ export function validateExperimentManifest(manifest) {
 /** Reject every unexpected A/B mismatch. Only arm, run/output identity, the named solver flag,
  * and explicitly declared workflow-input treatment dimensions may differ. Workflow-level inputs
  * are deliberately independent from solverFlags because GitHub Actions has decision-relevant
- * dispatch settings (prime_winner, deterministic, reserve fraction/config count, workers, etc.)
- * that can invalidate an A/B without changing the solver ablation map. */
+ * dispatch settings (deterministic mode, persistence, reserve fraction/config count, workers, etc.)
+ * that can invalidate an A/B without changing the solver ablation map. Exact-level historical
+ * priming is not a dispatch dimension: the capability workflow forbids it structurally. */
 export function compareExperimentArms(control, treatment, targetFlag, { allowedWorkflowInputDifferences = [] } = {}) {
     validateExperimentManifest(control); validateExperimentManifest(treatment);
     if (control.arm !== 'control' || treatment.arm !== 'treatment') throw new Error('expected control then treatment manifests');

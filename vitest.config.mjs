@@ -58,8 +58,10 @@ export default defineConfig({
             'node_modules/**',
             'dist/**',
         ],
-        // Solver suites can solve real levels; give them headroom over the 5s default.
-        testTimeout: 60000,
+        // Solver suites can solve/exhaustively enumerate real or synthetic states. Two consecutive
+        // hosted-runner CI attempts put the deadlock-soundness property at 61.9–63s against the old
+        // 60s ceiling; keep the assertions/cases intact and give runner variance explicit headroom.
+        testTimeout: 90000,
         hookTimeout: 60000,
 
         // Coverage (Initiative B). Off by default — `vitest run` (test:unit) stays fast; only

@@ -1,8 +1,9 @@
 # Winning-lineage score/width extinction forensics
 
-> **Status:** bounded observational result; no production retention change
+> **Status:** bounded observational result plus first exact-prefix follow-up; no production retention change
 > **Emitter commit:** `0e831fd910784c4c255367ed902fa1d447240a63`
 > **Artifact:** `reports/stress/winning-lineage-same-config-2026-08-11.json`
+> **Exact-prefix follow-up:** GitHub Actions run `31537268571`, 12 atlas abstentions → 7 dead / 1 live / 4 abstain
 
 ## Reproduction and method
 
@@ -36,8 +37,40 @@ Failures classify as **10 A clearly mis-ranked, 3 B weak-margin, 0 C exact-tie/s
 
 Solved controls had four final known-support score/width losses (S00103, S00114, R00045, R00134), all materially below cutoff (margins 1.514–10.640); seven ended labelled support at dedup and two had no observed extinction. Yet the four score-loss controls still solved, demonstrating that stored labels are incomplete and “known support extinct” is not “all true solutions extinct.” Controls also spent substantial post-label work in some cases (1,081–8,325 nodes), so post-extinction work alone does not distinguish failure.
 
-## Interpretation
+## Initial interpretation
 
 The strongest recurring mechanism is **score representation under a saturated frontier**, not deterministic exact-score tie asymmetry. Ten failures are materially below the boundary; two narrowly miss amid >2×-width pools, and three are within one score point. The evidence therefore does not justify a global tie shuffle or wider beam, and controls warn against treating labels as exhaustive.
 
-After remote contrastive labels establish which cutoff siblings are actually live/dead, the narrowest justified intervention experiment is an observation-matched **secondary structural-family reservoir/quota at extinction**, holding the score function, production width, and dedup unchanged and charging the same work. It should target only the diagnosed boundary and test whether one representative of a disappearing labelled/live family can replace a redundant retained family. Do not freeze that experiment until the CP-SAT labels arrive.
+The original next step was to obtain exact contrastive labels before freezing any retention counterfactual. That first exact-label step has now been completed.
+
+## 2026-08-11 explicit-prefix CP-SAT follow-up
+
+Workflow `.github/workflows/cpsat-explicit-prefix-oracle.yml`, run `31537268571`, processed the 12 `oracle-abstain` rows in the pilot atlas:
+
+- **7 dead** (`INFEASIBLE`);
+- **1 live** (`OPTIMAL`);
+- **4 abstain**;
+- **0 correctness alarms**;
+- **0 input alarms**.
+
+The four abstentions are all R00039 and all report `unsupported-mechanics`; they remain unknown rather than being mislabeled dead.
+
+The one live case, `R00001:42:child-[5,6]:3`, produced an OPTIMAL completion whose emitted path passed Pathfinder's referee. The model-supported dead cases comprise five R00001 siblings and two R00044 siblings.
+
+Most importantly, at least one R00001 sibling that the beam ranked **first** at its parent is now exact-infeasible while the same parent has a known-valid continuation. This provides a direct same-parent counterexample to the idea that the observed extinction problem is merely stable tie order or unavoidable beam width. The score can prefer a provably dead future over a viable one.
+
+The live alternative matters too: not every sibling outside the stored known continuation is dead, so the search can genuinely face multiple viable futures. Exact labels should therefore be used to learn which neutral state properties distinguish future viability, not to turn the solver into a one-path imitation system.
+
+## Updated interpretation / next experiment
+
+The score-representation thesis is stronger, but the exact sample is still small: only eight of the 12 cases were model-supported, and they come from R00001/R00044. Do **not** freeze a production score, family quota, wider beam, or tie shuffle from this batch.
+
+Next:
+
+1. build a bounded set of same-parent siblings adjacent to actual score/width extinction events;
+2. label them with the existing explicit-prefix CP-SAT workflow;
+3. keep live/dead/abstain distinct;
+4. test neutral future-opportunity descriptors against those labels;
+5. only then choose the narrowest equal-work retention/score counterfactual.
+
+A secondary structural-family reservoir/quota remains a plausible candidate, but it is no longer justified merely by “keep a labelled family alive.” It should be motivated by the exact labels and must remain level-blind: no exact-level known solution or historical winner may guide production selection.

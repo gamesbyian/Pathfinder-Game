@@ -1,51 +1,146 @@
-# Future Work
+# Solver future work
 
-This is the **live queue and status source of truth for genuinely open work**. Completed campaigns and historical evidence belong in topic docs and dated reports. Last reconciled: **2026-08-11**, after PR #1358 and the remote-handoff hardening follow-up.
+This is the live priority queue. Historical reports remain authoritative for what they actually measured, but this file is authoritative for **what is still worth doing next**.
 
-Use the pipeline in [`solver-research-operating-model.md`](solver-research-operating-model.md): semantic truth → controlled evidence → failure classification → missing representation → shadow evaluation → narrow intervention → population verdict. A read-only correlation is not permission to change a score or hard prune.
+Canonical measurement contract: [`solver-level-blindness.md`](solver-level-blindness.md). A solver-capability result must treat every level as unseen and may not use exact-level history such as saved winning configs/seeds, prior solutions/hints, previous solved status, or attempt caches. Saved artifacts remain research outputs and labels, not solve inputs.
 
-## Ready for remote execution
+Last reconciled: **2026-08-11**, after the revised neighbor-budget full Corpus-2 A/B and the first explicit-prefix CP-SAT run. See [`../reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md`](../reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md).
 
-The exact commands, workflow inputs, dependencies, and stop conditions are in [`claude-remote-solver-handoff.md`](claude-remote-solver-handoff.md).
+## Current capability evidence
 
-1. **Revised `PRUNE_MC_NEIGHBOR_BUDGET` full Corpus-2 A/B (first production gate).** The caller-policy correction is complete: stochastic repair `takePly` suppresses the prune, while DFS, beam, and deterministic repair sub-searches retain it. Generate fresh schema-v2 preflight manifests from one clean remote `main` SHA, including all decision-relevant workflow dispatch inputs, compare them, then dispatch fresh OFF/ON arms over all 1,700 levels at 36,000,000 canonical nodes per level and a non-binding 86,400,000 ms deadline. The prior +14 result does not decide the corrected wiring.
-2. **Contrastive-prefix CP-SAT labels.** Use the dedicated default-off execution seam `.github/workflows/cpsat-explicit-prefix-oracle.yml`: process the existing 12 abstentions first, then a bounded committed set of informative same-parent siblings near lineage extinctions. Preserve `live`, `dead`, and `timeout/abstain` as distinct labels and referee-check every SAT witness.
-3. **Exact repair retreat census.** Reuse the same explicit-prefix CP-SAT workflow with bounded retreat-prefix case files to locate the latest retreat point with a demonstrated continuation. This is a causal-window measurement, not a new repair operator.
-4. **`STRATEGY_MAIN_LOOP_LATE_RESERVE` full A/B.** After the neighbor-budget result is recorded, generate fresh schema-v2 preflight pairs that record reserve fraction/config count and the other workflow inputs, then run the frozen protocol in [`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md). Keep the experiments separate.
+The decision-bearing level-blind Corpus-2 A/B at 36M nodes / 48.24M canonical work per level, non-binding wall deadline, was:
 
-## Locally completed
+- control: **611/1700**;
+- revised `PRUNE_MC_NEIGHBOR_BUDGET`: **665/1700**;
+- **+54 net, 59 gained / 5 lost**;
+- Corpus 1: **94/102 in both arms**;
+- treatment used ~3.94% fewer C2 nodes and ~5.33% less canonical work;
+- zero attempt errors and zero deadline-truncated C2 rows.
 
-- Neighbor-budget caller-policy correction and independent diagnostics participation.
-- Winning-lineage observation at generation, hard prune, dedup, score/width, and diversity boundaries; observation OFF/ON behavior parity is tested.
-- Structural solution-family identity correction (portal use, crossing placement, and must-cross first-entry/completion order rather than exact path identity).
-- Same-configuration 30-level Corpus-1 beam cohort: **13 solved / 17 failed**, width 100, default profile, 100,000-node budget. Mean normalized last-known-support depth was approximately **0.505 solved vs 0.239 failed**. Failed final loss was **15/17 score/width** and **2/17 dedup**, with zero hard-prune correctness alarms.
-- Score/width extinction forensics for those 15 failures and solved controls. See [`../reports/2026-08-11-winning-lineage-score-width-forensics.md`](../reports/2026-08-11-winning-lineage-score-width-forensics.md). The open question is now **why the score/width boundary removes the remaining known-winning structure**, not how to build lineage instrumentation.
-- Residual-interface 20-level / 288-solution census: **31,351** exact represented-state-preserving occurrences reduced to **845** unique translation-invariant signatures; **201** cross structural solution families, but only **14** cross levels.
-- Inspection and held-out check of those 14 signatures. See [`../reports/2026-08-11-residual-interface-cross-level-inspection.md`](../reports/2026-08-11-residual-interface-cross-level-inspection.md). The remaining question is whether any independently recurring motif merits further study, not how to build substitution machinery.
-- Experiment manifest/preflight schema v2: records solver flags **and workflow dispatch inputs**, with strict arm comparison that allows only explicitly declared treatment dimensions.
-- Exact-prefix CP-SAT GitHub execution seam: reads existing atlas abstentions or generic committed case lists, reuses `cpsat-full-probe.py --prefix`, referee-validates SAT witnesses, and keeps unknown/unsupported/model failures as abstentions. It has not been dispatched in this local cleanup.
+The historical `725/1700` figure is **not** the capability baseline. It used exact-level `--prime-winner` replay. It remains useful as historical re-verification evidence only. Of the 114 levels present in that 725 result but absent from the 611 control, 112 had been `solvedByPrime`.
 
-## Still conditional—not authorized now
+## Ready / next
 
-These require the remote evidence above and a separately frozen experiment before implementation or promotion:
+### 1. Diagnose the five revised neighbor-budget losses and close the integration decision
 
-- any production beam-retention intervention, score change, width change, or dedup change;
-- beam→repair live handoff or receptor consumption;
-- repair surgery, another repair operator, or production repair-RNG change;
-- residual-interface substitution, separator DP, or CEGAR;
-- a full interoperability blackboard;
-- a differential reducer without a new recurring cross-family trigger.
+**Status: population A/B complete; do not rerun unchanged.**
 
-The strongest currently supportable **future experiment**, after remote labels arrive, is a narrow observation-matched retention counterfactual at score/width extinction (tie-neutral structural-family quota/secondary reservoir), holding production scoring and width fixed. It is not yet a production change.
+Lost IDs: `R00635`, `R02119`, `R02422`, `R02823`, `R02867`.
 
-## Other open observation work
+Goal: preserve as much of the 59-gain upside as possible without accepting a capability regression. Determine whether the five losses share one deterministic ordering/budget mechanism. Any recovery must be generic and level-blind. Do not use historical winner replay or per-ID exceptions.
 
-- Run the existing crossing-slack analyzer on its intended atlas/population and treat negative slack on a known-valid prefix as a correctness alarm.
-- Run wide family-boundary analysis as a routing layer: robust failures suggest representation gaps, fragile failures suggest retention/order, and starved fitting configurations suggest allocation.
-- Keep the optional beam→repair receptor counterfactual behind the oracle/lineage results.
+A promising integration shape, if needed, is a complementary/fallback use of the prune rather than globally changing every search. It is only acceptable if evaluated under a matched **total work** envelope; simply adding a second full-budget solve would buy solves with extra compute and would not answer the promotion question.
 
-For default-off feature status, see [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Do not infer promotion from `OPT_IN_FEATURES` membership.
+Promotion options after this analysis:
+
+- default-on if the five-loss risk can be eliminated or accepted under the project's promotion bar;
+- a bounded complementary lane if it gives a strict or near-strict superset at equal work;
+- remain opt-in if neither integration clears the bar.
+
+### 2. Expand exact CP-SAT labels around real score/width extinctions
+
+**First batch complete:** 12 previous atlas abstentions → **7 dead / 1 live / 4 abstain**, with zero correctness/input alarms. All four abstentions are R00039 `unsupported-mechanics`; the one live R00001 witness is referee-valid.
+
+The result strengthens the score-representation diagnosis: at least one R00001 sibling ranked first by the beam is CP-SAT-proven dead despite a known-valid continuation from the same parent.
+
+Next: build a bounded informative same-parent sibling set adjacent to actual winning-lineage score/width extinctions and run it through `.github/workflows/cpsat-explicit-prefix-oracle.yml`. Keep `live`, `dead`, and `abstain` distinct. Use labels to test neutral future-opportunity descriptors before changing the production score or selection policy.
+
+Do **not** rerun the original 12 unchanged.
+
+### 3. Exact repair-retreat CP-SAT checks
+
+The rollback pilot showed long demonstrated differences between retained repair elites and known solutions, but that is not a minimum edit-distance result. Use the existing explicit-prefix CP-SAT workflow for bounded coarse-to-fine/binary retreat checks on retained elites.
+
+Question: how far back must an elite be rolled before at least one exact valid continuation exists? This decides whether a genuinely different prefix-edit operator is warranted and how deep it must reach.
+
+### 4. Main-loop late-reserve full population A/B
+
+**Status: unblocked; full A/B still pending.**
+
+The mechanism pilot already showed that reserve-not-reorder activates the starved late configs and recovered 1/14 hard historical matches. Acceptance still requires the frozen full-population experiment in [`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md).
+
+Run through the hardened level-blind stress workflow. Control and treatment must differ only in:
+
+- `enable_flags` (`STRATEGY_MAIN_LOOP_LATE_RESERVE` in treatment), and
+- `main_loop_late_reserve_fraction`.
+
+`main_loop_late_reserve_config_count=4` in every arm. Test 5%, 10%, and 15% treatments against a fresh control. No exact-level priming dimension exists in the capability workflow.
+
+Interpretation:
+
+- positive population result → participation floors/starvation are a real general lever;
+- target recoveries but negative population result → static reserve is too blunt; prefer online failure-conditioned allocation;
+- null → close the current static reserve mechanism and move on.
+
+## Parallel observational work that remains valid
+
+These do not need to wait for the late-reserve promotion decision provided they remain observation/offline only:
+
+- winning-lineage analysis and exact-label expansion;
+- dynamic crossing-slack / resource-frontier observation;
+- family/variant boundary analysis;
+- producer/receptor interoperability measurements;
+- repair-retreat exact oracle work;
+- symmetry diagnosis;
+- solution-family and provenance analysis.
+
+Correlation is still not permission to prune or to alter the score. Any live policy must clear its own level-blind equal-work evaluation.
+
+## Current research interpretation
+
+### Score representation remains a stronger beam lead than tie handling or wider beam
+
+Winning-lineage forensics found 15 failed score/width final extinctions: 10 clearly mis-ranked, 3 weak-margin, 0 exact-tie/stable-order, 2 width-saturation. The first CP-SAT labels now provide direct feasibility evidence for the same story. Continue exact labeling before implementing a secondary family reservoir/quota or a new score component.
+
+### Dynamic future opportunity remains the main pruning/bounds gap
+
+Static must-cross geometry added essentially no predictive power. `crossingSlack = freeInt - forcedFutureNeighbourRevisits` passed its read-only smoke with zero negative-slack soundness alarms. If this lane advances, prefer conservative state-conditioned completion interfaces over another static descriptor pile.
+
+### Repair still lacks a genuinely deep prefix-edit capability
+
+Plateau penalty, soft recombination, exact relinking, and turn bias are closed in their current forms. The next repair question is exact retreat depth, not another append-only attraction tweak.
+
+### Online failure-conditioned control is still distinct from the closed cold-start portfolio scheduler
+
+A bespoke ladder/scheduler should answer “given what this solve has already observed, where is the next unit of work most valuable?” It must use only current-invocation evidence, never exact-level historical winners. Do not revive the old broad cold-start portfolio unchanged.
+
+## Closed / do not repeat unchanged
+
+- original neighbor-budget wiring A/B: historical evidence only; superseded by revised wiring;
+- revised neighbor-budget full population A/B: **complete**;
+- first 12 explicit-prefix CP-SAT abstentions: **complete**;
+- repair elite-prefix DFS current constants: closed negative (4/20 vs 5/20 equal-budget);
+- repair turn bias: closed negative;
+- portal parity envelope: closed negligible, zero rejects in ~240M nodes;
+- plateau penalty: closed as built;
+- recombination: closed/superseded as built;
+- exact relinking: structural dead end as built;
+- admissible-order LDS: closed negative;
+- old fast portfolio scheduler / broad cold-start variants: closed;
+- residual-interface substitution lane: demoted after the cross-level inspection; do not build an operator without new independent mechanic-conditioned evidence.
+
+## Infrastructure / hygiene
+
+- `.github/workflows/solver-stress-refresh.yml` is now the canonical **level-blind capability** workflow.
+- `scripts/level-blind-capability-sweep.mjs` projects source levels into a mechanics-only allowlist and structurally refuses exact-level historical inputs.
+- `scripts/level-blind-capability-worker.mjs` receives no permanent level ID, corpus position, hint artifact, baseline, or prior-result input.
+- Actions solve/combine jobs pin `github.sha`; never accept a mutable-branch checkout for a scientific A/B.
+- Schema-v2 experiment manifests still compare the full workflow input set, but `prime_winner` is no longer a workflow dimension because the capability workflow forbids it.
+- `persist_hints=false` + `deterministic=true` remains the correct matched-arm setting when multiple A/B arms must execute the same immutable SHA.
+- The current malformed `logs/stress-corpus2-baseline.json` is not a solver input. The next complete non-deterministic level-blind refresh will regenerate it from a valid capability run.
+- Historical emitter SHAs in older observational artifacts remain a provenance blemish; do not falsify them by rewriting to later commits.
+
+## Remote execution order
+
+The expensive neighbor-budget gate is closed. The next remote work may therefore proceed as resources allow:
+
+1. bounded neighbor-budget five-loss diagnosis/integration experiment design;
+2. extinction-adjacent explicit-prefix CP-SAT expansion;
+3. repair-retreat CP-SAT cases;
+4. late-reserve full population A/B.
+
+Items 2 and 3 are observational/oracle work and can run alongside planning for 1 or 4. Population promotion experiments should still be serialized when one result changes the configuration against which the next should be interpreted.
 
 ## Older loose-thread triage (2026-08-07)
 
-Compatibility anchor for historical reports: the former loose-thread list was reconciled into canonical topic documents or closed evidence and is not an active queue. Use the sections above for current work.
+Compatibility anchor for historical documents that linked to this section before the 2026-08-11 queue rewrite. The old loose-thread list has been fully reconciled into the current sections above and the opt-in experiment ledger. **Do not treat this heading as an additional backlog.** Follow the current queue and closed/do-not-repeat list in this file instead.
