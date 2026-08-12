@@ -825,6 +825,64 @@ export const REPAIR_PROBE_ATTEMPT_MS_CAP = 1_200_000;
  *  "Update" sections for both prior measurements. Needs its own corpus-2 A/B before promotion. */
 const REPAIR_PROBE_PREDICTED_TIER_SHARE = 0.75;
 
+/** STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (opt-in, default OFF — pilot, not yet promoted):
+ *  a single-signal, single-recipient instance of "online failure-conditioned allocation"
+ *  (docs/solver-interoperability-and-cooperation-plan.md §17, docs/future-work.md item #4).
+ *
+ *  BACKGROUND — this is a *refinement*, not a confirmation, of the hypothesis that motivated it.
+ *  The 2026-08-12 main-loop-late-reserve full-corpus sweep (635/1700, down from 694 in a since-
+ *  found-confounded A/B arm) was suspected to be explained by runRepairProbe's wall-clock-fix
+ *  (2bfefc660) now letting a contended probe attempt spend its FULL intended node budget instead
+ *  of being silently truncated, starving `STRATEGY_MAIN_LOOP_LATE_RESERVE`'s reserved slice —
+ *  see reports/2026-08-12-main-loop-late-reserve-population-ab.md's "Follow-up" section. Tracing
+ *  the actual code (this file's reserve resolution, above solveLevel's probe call site) shows that
+ *  hypothesis is WRONG AS STATED: both the admissible-order reserve and the main-loop late reserve
+ *  are computed and carved out of `nodeBudget` BEFORE the probe ever runs, and the probe's own
+ *  external node ceiling (`mainLoopEarlyNodeBudget`, passed as this function's `nodeBudget` param)
+ *  already excludes both — the probe is structurally incapable of spending into either reserve.
+ *
+ *  What IS real, confirmed directly on a small local sample (a dozen repair-gated Corpus-2 levels,
+ *  15,000,000-node budget, `--workers=1`, uncontended — see
+ *  reports/2026-08-12-repair-probe-early-main-loop-starvation.md): the repair probe and the
+ *  "early" (pre-late-reserve) main-loop configs draw from the SAME unprotected shared pool,
+ *  `mainLoopEarlyNodeBudget`, with the probe going first and taking whatever it needs (up to its
+ *  own fixed worst case, ~10,000,000 with one biased tier) before the early main-loop configs ever
+ *  get a turn. On 7 of 12 sample levels the probe alone consumed the entire pool
+ *  (mainLoopEarlyNodeBudget itself, ~9,562,500 at this budget), leaving the early main-loop
+ *  configs exactly zero nodes. A blanket, level-blind STATIC shrink of the probe's own budget
+ *  (tested locally via a scale factor matching the measured pre-fix contended-throughput ratio,
+ *  ~0.55) is a real but ZERO-SUM lever on this sample: it recovered one level (R00602: probe
+ *  freed ~4.06M nodes, an early main-loop config then solved it in 520,775) but broke another
+ *  (R02823: its own solution lay inside the biased repair tier's search at 9,308,917 nodes — a
+ *  static 0.55 cap truncated it at 5,500,015, well short). This is exactly the failure mode CLAUDE.md
+ *  warns a static reallocation risks, and it directly motivates conditioning the shrink on live
+ *  evidence instead of applying it unconditionally.
+ *
+ *  THE SIGNAL: `repairSearchFromGate` already reports `bestBadness` on every failed attempt (the
+ *  lowest near-miss score any restart reached — repair-search.ts) — current-invocation evidence,
+ *  no exact-level history, satisfies docs/solver-level-blindness.md. On the same 12-level sample,
+ *  the one level that genuinely needed the biased tier's full budget (R02823) had already shown
+ *  a LOW ordinary-tier bestBadness (min 4 across its two ordinary rounds) before the biased tier
+ *  ran — i.e. the ordinary tier's own live evidence already signaled "repair is close." Every
+ *  other sampled level's ordinary-tier minimum badness was >= 6, mostly >= 15.
+ *
+ *  THE MECHANISM: after the ordinary-tier rounds fail, if a biased repair config is about to run,
+ *  scale its node budget by `min(1, max(MIN_SCALE, BADNESS_GATE / ordinaryBestBadness))` — a
+ *  strict no-op (scale 1) whenever the live evidence already looks promising (badness <=
+ *  BADNESS_GATE, as R02823's did), and a bounded shrink (never below MIN_SCALE — a participation
+ *  floor, never zero, per solver-interoperability-and-cooperation-plan.md §17.3) when it doesn't.
+ *  Freeing nodes this way benefits whichever tier runs next against the same shared ceiling
+ *  (mainLoopEarlyNodeBudget) — normally the early main-loop configs — without touching either
+ *  protected reserve or requiring a new recipient-side change.
+ *
+ *  CALIBRATION CAVEAT: BADNESS_GATE=10 and MIN_SCALE=0.35 are picked from the n=12 local sample
+ *  above (n=1 for the "needs full budget" case) — a starting point, not a validated constant.
+ *  Needs its own dedicated population A/B (matched nodeBudget, level-blind, gains vs. losses, not
+ *  just net count) before any promotion decision — same bar as every other opt-in flag in
+ *  docs/solver-opt-in-experiment-ledger.md. Do not promote on this comment's evidence alone. */
+const REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE = 10;
+const REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE = 0.35;
+
 /** Additional seeds (see runAttempt's seedSalt param) to retry an already-failed ORDINARY probe
  *  round with, before falling through to the full (much more expensive) ladder.
  *  repairSearchFromGate's randomized local search is seeded from the gate's own coordinates
@@ -949,12 +1007,26 @@ async function runRepairProbe(
         // The turn-biased attempt, like the must-turn-biased one, is a heavier single-seed search
         // (see repair-search.ts) — give it the biased probe budget and a single seed salt.
         const isBiased = repairConfig.repairMustTurnBiased || repairConfig.repairTurnBiased;
-        // TEMP DIAGNOSTIC (repair-probe-starvation hypothesis, 2026-08-12): scales the probe's own
-        // node budget down, emulating the pre-2bfefc660 wall-clock trip-wire's effective truncation
-        // under CPU contention, WITHOUT reverting the real fix. No-op unless the env var is set.
-        // Remove before merging.
-        const _debugScale = process.env.REPAIR_PROBE_NODE_SCALE_DEBUG ? Number(process.env.REPAIR_PROBE_NODE_SCALE_DEBUG) : 1;
-        const fixedProbeNodeBudget = Math.floor((isBiased ? biasedNodeBudgetForTier(biasedSeen++) : REPAIR_PROBE_ORDINARY_NODE_BUDGET) * _debugScale);
+        let fixedProbeNodeBudget = isBiased ? biasedNodeBudgetForTier(biasedSeen++) : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
+        // STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (opt-in, default OFF — see
+        // REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE's own comment for the full derivation): scale
+        // the biased tier's node budget down when the ordinary tier's own live bestBadness evidence
+        // (already reported by repairSearchFromGate on every failed attempt, current-invocation
+        // only) shows no sign repair is close. Strict no-op whenever the ordinary tier hasn't run,
+        // reported no finite badness, or already looks promising (badness <= the gate).
+        if (isBiased && cfg && cfg.STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET === true) {
+            const ordinaryBestBadness = attempts.reduce((min, a) => (
+                a.repair && !a.repairMustTurnBiased && !a.repairTurnBiased && Number.isFinite(a.bestBadness)
+                    ? Math.min(min, a.bestBadness as number) : min
+            ), Infinity);
+            if (Number.isFinite(ordinaryBestBadness)) {
+                const scale = Math.min(1, Math.max(
+                    REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE,
+                    REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE / ordinaryBestBadness,
+                ));
+                fixedProbeNodeBudget = Math.floor(fixedProbeNodeBudget * scale);
+            }
+        }
         const seedSalts = (!isBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_MULTI_SEED))
             ? REPAIR_PROBE_ORDINARY_SEED_SALTS : [0];
         for (const seedSalt of seedSalts) {
