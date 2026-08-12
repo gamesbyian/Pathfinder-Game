@@ -128,12 +128,24 @@ recovered) is unaffected.
 
 **Decision**: kept the flag promoted (did not revert to opt-in) — the read-site fix stands on its
 own merits regardless of the confound, and the treatment-vs-treatment trend plus the mechanism
-pilot still support a real effect. Rather than a matched-control re-run, the chosen follow-up is a
-**single full corpus-1+corpus-2 sweep with everything correctly default-on** (both flags' read
-sites now fixed, so a genuinely blank `enable_flags` run gives both `PRUNE_MC_NEIGHBOR_BUDGET` and
-`STRATEGY_MAIN_LOOP_LATE_RESERVE` their real production-default state simultaneously) to directly
-observe the achieved solved count — evidence about the combined production configuration, not an
-isolated-effect measurement.
+pilot still support a real effect. Rather than a matched-control re-run, the chosen follow-up was a
+single full corpus-1+corpus-2 sweep with everything correctly default-on (both flags' read sites
+fixed, genuinely blank `enable_flags`).
+
+**Sweep result (run #38, id `31630124558`, commit `ba5630978`): Corpus-1 95/102, Corpus-2
+635/1700.** Lower than expected — lower than both the confounded 0.15 treatment (694) and the
+original neighbor-budget-only run (665, at `workers=2`). The commit diff between the confounded
+0.15 run and this sweep is not purely ablation-registry bookkeeping: it also includes `2bfefc660`
+("Fix runRepairProbe's wall-clock trip-wire silently binding under CPU contention," merged same
+day from `origin/main`), which intentionally lets a contended repair-probe attempt spend its full
+intended node budget instead of being silently truncated early. Under
+`level-blind-capability-sweep.mjs`'s hard cumulative `nodeBudget` ceiling, that means less of a
+level's shared budget survives to reach later tiers (including this flag's own reserved slice) —
+plausible, not confirmed, and specific to Corpus-2's tighter per-level budget (Corpus-1, with a
+more generous budget, ticked up slightly instead: 94→95). Full analysis:
+`reports/2026-08-12-main-loop-late-reserve-population-ab.md`'s "Follow-up" section. Not yet
+resolved whether 635 is a stable production-capability figure or an artifact of budget-allocation
+timing between three separately-justified, same-day changes landing together.
 
 **Lesson, distinct from the read-site lesson above**: even after both halves of *one* flag's
 promotion are correctly wired, a batch tool that constructs a sparse `--enable-flags` ablation

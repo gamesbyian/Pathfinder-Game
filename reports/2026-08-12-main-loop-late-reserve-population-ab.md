@@ -44,9 +44,28 @@ Rationale for not reverting: the read-site fix is correct and necessary regardle
 
 The reserve mechanism itself remains a strict no-op unless a finite `nodeBudget` is supplied (`mainLoopLateReserveEligible` requires `earlyTierNodeBudget !== Infinity`) — production Play/Editor/Review solves never set `nodeBudget`, so this only affects offline batch-tooling behavior (stress refreshes, benchmarking), not interactive solve behavior.
 
-## Follow-up: single full corpus-1+corpus-2 sweep
+## Follow-up: single full corpus-1+corpus-2 sweep (run 2026-08-12, run #38, id 31630124558, commit `ba5630978`)
 
-Now that both `PRUNE_MC_NEIGHBOR_BUDGET`'s and `STRATEGY_MAIN_LOOP_LATE_RESERVE`'s read sites are fixed, a genuinely blank `enable_flags` run correctly gives **both** flags their real production-default (ON) state simultaneously. A single full corpus-1 (102 levels) + corpus-2 (1700 levels) level-blind sweep with blank `enable_flags` directly observes the achieved solved count under the fully-promoted production configuration — not an isolated-effect measurement, but direct evidence of where the solver's capability now stands.
+Now that both `PRUNE_MC_NEIGHBOR_BUDGET`'s and `STRATEGY_MAIN_LOOP_LATE_RESERVE`'s read sites are fixed, a genuinely blank `enable_flags` run correctly gives **both** flags their real production-default (ON) state simultaneously. Same protocol as the A/B (`corpus1_workers=1`, `corpus2_workers=1`, `deterministic=true`, `corpus1_node_budget=50000000`, `corpus2_node_budget=36000000`, `budget_ms=86400000` both corpora, `main_loop_late_reserve_config_count=4`), full coverage confirmed (1700/1700 C2, 102/102 C1).
+
+**Result: Corpus-1 95/102 (nodes=769,439,503, work=1,229,099,624), Corpus-2 635/1700 (nodes=42,810,944,729, work=64,065,888,506).**
+
+This is **lower** than expected, and lower than several individual reference points:
+
+| run | workers | `PRUNE_MC_NEIGHBOR_BUDGET` | `STRATEGY_MAIN_LOOP_LATE_RESERVE` | other solver changes | C1 | C2 |
+|---|---:|---|---|---|---:|---:|
+| original neighbor-budget-only treatment | 2 | ON | n/a (didn't exist yet) | — | 94/102 | 665/1700 |
+| this A/B's control (confounded) | 1 | OFF (accidental) | OFF | — | 91/102 | 617/1700 |
+| this A/B's 0.15 treatment (confounded) | 1 | ON (accidental) | ON @ 0.15 | — | 94/102 | 694/1700 |
+| **this single sweep** | 1 | ON (intended) | ON @ 0.15 (intended) | + repair-probe wall-clock fix | 95/102 | **635/1700** |
+
+The 0.15 treatment arm and this sweep both intend the same effective configuration (both flags ON, same budgets, same worker count) — yet differ by 59 levels on Corpus-2. The diff between their two commits (`6cc3cea4e1d7` → `ba5630978`) is not just ablation-registry bookkeeping: it also includes `2bfefc660`, **"Fix runRepairProbe's wall-clock trip-wire silently binding under CPU contention"** (merged from `origin/main`, found by a separate investigation this same day). That fix replaces a 30-second hardcoded per-repair-probe-attempt wall-clock cap with a 20-minute one, specifically so a probe attempt reaches its full intended ~2,000,000-node budget under CPU contention instead of being silently truncated at ~30s of degraded throughput.
+
+**Plausible mechanism for the drop**: `level-blind-capability-sweep.mjs` enforces a hard cumulative `nodeBudget` ceiling (36,000,000 for Corpus-2) across the whole ladder for a level. Before the wall-clock fix, a contended repair probe attempt could get truncated well short of its node quota, *inadvertently* leaving more of that shared ceiling for later tiers (the main loop, repair fallback, and specifically `STRATEGY_MAIN_LOOP_LATE_RESERVE`'s own reserved slice) to spend. After the fix, probe attempts under contention now correctly consume closer to their full intended budget — which is more faithful to the documented model, but also means less of the shared ceiling survives to reach later tiers on any level where the probe doesn't itself solve. This is corpus-2-specific in exactly the way the data shows: Corpus-1's more generous per-level budget (50,000,000 vs 36,000,000) makes it far less exposed to this effect, and Corpus-1 actually ticked up slightly (94→95) rather than dropping.
+
+This has **not been confirmed** as the actual cause — it is the most plausible mechanism given what changed between the two commits, not a verified diagnosis. It has also not been checked whether GHA's own runner environment is actually under meaningful CPU contention during these sweeps (the mechanism requires contention to matter; an uncontended runner would make the wall-clock fix a no-op, per that commit's own uncontended `solver:bench --check` validation).
+
+**Not yet resolved**: whether the true production-default capability (both flags on, wall-clock fix included) is genuinely 635, or whether this specific sweep's number is itself an artifact of budget-reallocation timing rather than a stable measurement. No further action taken here beyond recording the result and this analysis; see `docs/future-work.md` for how this is tracked forward.
 
 ## Second, more general lesson
 
