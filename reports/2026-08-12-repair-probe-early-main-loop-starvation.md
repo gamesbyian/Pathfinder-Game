@@ -52,9 +52,11 @@ Sample: the 5 known `PRUNE_MC_NEIGHBOR_BUDGET` five-loss levels (`R00635`, `R021
 `mustCross>=2 && mustPass>=3`), evenly spread across `data/stress/stress-levels-random.json`:
 `R00044`, `R00602`, `R01174`, `R01856`, `R02083`, `R02205`, `R02318`. Budget: `--node-budget=15000000
 --work-budget=100000000 --budget-ms=86400000` (non-binding) `--workers=1`, uncontended (single
-process, this sandbox). 15,000,000 was chosen (rather than production's 36,000,000) purely for
-local iteration speed, per CLAUDE.md's "iterate freely before gating" — see the caveat below on why
-absolute severity at this budget does not transfer directly to production's 36M.
+process, this sandbox). 15,000,000 was chosen (rather than the canonical `solver-stress-refresh.yml`
+workflow's `corpus2_node_budget` default, 50,000,000 as of `c011b4c9`'s 2026-08-12 corpus-1/corpus-2
+unification — was 36,000,000 before that commit) purely for local iteration speed, per CLAUDE.md's
+"iterate freely before gating" — see the caveat below on why absolute severity at this budget does
+not transfer directly to production's real budget.
 
 At this budget: `admissibleOrderNodeReserve = floor(15,000,000 × 0.25) = 3,750,000`,
 `earlyTierNodeBudget = 11,250,000`, `mainLoopLateReserve = floor(11,250,000 × 0.15) = 1,687,500`,
@@ -79,13 +81,14 @@ At this budget: `admissibleOrderNodeReserve = floor(15,000,000 × 0.25) = 3,750,
 (~9,562,500), leaving the early main-loop configs exactly zero nodes.** At this reduced budget the
 probe's own worst case (~10,000,000, when a biased tier is present) is close to the whole
 early-tier pool (9,562,500), so on any level whose probe doesn't itself solve, it structurally
-crowds out every early main-loop config. At production's 36,000,000-node budget the same
-arithmetic gives `mainLoopEarlyNodeBudget = 22,950,000` — the probe's ~10,000,000 worst case is a
-much smaller fraction (~44%) of that pool, so the *severity* of this specific finding does not
-transfer 1:1 to production; the *mechanism* (unprotected shared pool, probe goes first) is
-identical regardless of budget size, and the wall-clock fix's real effect (letting a contended
-probe reach closer to its full worst case) still shifts the split between probe and early configs
-in the same direction at any budget.
+crowds out every early main-loop config. At production's real 50,000,000-node budget the same
+arithmetic gives `admissibleOrderNodeReserve = 12,500,000`, `earlyTierNodeBudget = 37,500,000`,
+`mainLoopLateReserve = 5,625,000`, `mainLoopEarlyNodeBudget = 31,875,000` — the probe's ~10,000,000
+worst case is a much smaller fraction (~31%) of that pool, so the *severity* of this specific
+finding does not transfer 1:1 to production; the *mechanism* (unprotected shared pool, probe goes
+first) is identical regardless of budget size, and the wall-clock fix's real effect (letting a
+contended probe reach closer to its full worst case) still shifts the split between probe and
+early configs in the same direction at any budget.
 
 ### A naive static fix is zero-sum, not a clean win
 
