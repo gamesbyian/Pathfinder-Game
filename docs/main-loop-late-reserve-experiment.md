@@ -1,91 +1,89 @@
-# Main-loop late-suffix reserve experiment
+# Main-loop late-reserve experiment
 
-> **Preflight note (2026-08-11):** generate schema-v2 control/treatment manifests with
-> `npm run solver:experiment-preflight` before dispatching this frozen A/B. Record the actual GitHub
-> workflow inputs as well as solver flags. For each fraction, compare with target
-> `STRATEGY_MAIN_LOOP_LATE_RESERVE` and explicitly allow only `enable_flags` and
-> `main_loop_late_reserve_fraction` to differ. `main_loop_late_reserve_config_count=4`, workers,
-> prime-winner state, budgets, deadlines, deterministic mode, and every other dispatch setting must
-> match. This does not change the frozen protocol or intermingle it with the neighbor-budget experiment.
+Status: **full-population level-blind A/B pending**. Mechanism pilot complete.
 
-**Status:** opt-in treatment implemented; 14-level mechanism pilot completed; full-population
-matched-budget A/B not yet run. See the
-[`mechanism pilot`](../reports/2026-08-10-main-loop-late-reserve-mechanism-pilot.md).
+This experiment tests one narrow hypothesis: some ordinary attempt configs that are historically capable of solving a level receive zero work because earlier configs consume the shared main-loop envelope. The treatment reserves a small fraction of that same envelope for the final ordinary configs. It does **not** reorder configs and must not increase total canonical work.
 
-## Question and frozen treatment
+Capability contract: [`solver-level-blindness.md`](solver-level-blindness.md). Historical winning attempts were useful for identifying starvation candidates, but the acceptance A/B itself must solve every level from raw level data with no exact-level history.
 
-Does reserving part of the ordinary main-loop node envelope for its final configurations recover
-deterministic budget-fitting solves without losing more existing solves elsewhere?
+## Mechanism evidence already complete
 
-The first treatment is deliberately simple and fixed before results are viewed:
+The profile-order starvation census found 34/975 historically unsolved Corpus-2 levels with a historical budget-fitting config that received zero nodes in the main loop:
 
-- preserve the existing attempt and gate order;
-- select the final **4 ordinary configurations** (repair and admissible-order configs are excluded);
-- withhold **5%, 10%, or 15%** of the ordinary main-loop node envelope from the repair probe and
-  earlier ordinary configs;
-- divide the slice cumulatively across every selected config/gate pair, so an earlier beneficiary
-  cannot consume the entire reserve and starve the rest;
-- after the suffix has run, let later repair/diversity tiers use any remainder;
-- retain the independent admissible-order reserve and the same total node/work ceilings.
+- 14 hard deterministic DFS/beam matches;
+- 20 softer repair/seed matches.
 
-The experiment is default-off behind `STRATEGY_MAIN_LOOP_LATE_RESERVE`. It must not use stored
-winning configurations to select beneficiaries. The 14 historically matched deterministic
-DFS/beam cases
-are a mechanism-check cohort, not a routing table and not the acceptance population.
+The mechanism pilot verified that reserve-not-reorder activates the intended late configs and recovered 1/14 hard historical matches at the tested arm. This is evidence that the mechanism fires, not a promotion result.
 
-## Arms
+## Frozen population experiment
 
-Run every arm from the same commit, without `--prime-winner` or `--baseline-budget`:
+Workflow: `.github/workflows/solver-stress-refresh.yml`.
 
-```bash
-COMMON="--corpus=data/stress/stress-levels-random.json --scheduler-mode=legacy \
-  --budget-ms=86400000 --node-budget=36000000 --work-budget=48240000 --workers=1"
+The workflow is now structurally level-blind and pins `github.sha`. It has no `prime_winner` input and does not pass a solver baseline.
 
-node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- $COMMON \
-  --out=reports/stress/main-loop-reserve-control.json
+Population:
 
-for FRACTION in 0.05 0.10 0.15; do
-  node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- $COMMON \
-    --enable-flags=STRATEGY_MAIN_LOOP_LATE_RESERVE \
-    --main-loop-late-reserve-fraction=$FRACTION \
-    --main-loop-late-reserve-config-count=4 \
-    --out=reports/stress/main-loop-reserve-f${FRACTION}.json
-done
+- all 1700 Corpus-2 levels;
+- all 102 Corpus-1 levels as regression/control context.
+
+Common inputs for every arm:
+
+```text
+corpus2_budget_ms=86400000
+corpus2_node_budget=36000000
+corpus2_workers=1
+disable_flags=
+main_loop_late_reserve_config_count=4
+persist_hints=false
+corpus1_budget_ms=86400000
+corpus1_node_budget=50000000
+corpus1_workers=1
+deterministic=true
 ```
 
-Use one worker for the frozen reference protocol. Parallel sharding is acceptable only if every
-arm uses the identical shard layout and combined reports assert complete coverage before analysis.
-The sweep checkpoint signature records commit, corpus digest, and sorted invocation arguments.
+Control:
 
-When this protocol is dispatched through `solver-stress-refresh.yml`, set the inert control's
-`main_loop_late_reserve_config_count` to `4` as well. That makes the declared treatment dimensions
-unambiguous: the treatment changes only the feature enablement and the tested fraction. Generate a
-fresh manifest pair for **each** of 0.05, 0.10, and 0.15 rather than comparing all treatments to an
-under-specified generic manifest. After dispatch, verify the workflow run's actual inputs against the
-manifest before accepting the arm.
+```text
+enable_flags=
+main_loop_late_reserve_fraction=
+```
 
-## Required analysis
+Treatment arms:
 
-For each treatment versus the fresh control, record:
+```text
+enable_flags=STRATEGY_MAIN_LOOP_LATE_RESERVE
+main_loop_late_reserve_fraction=0.05
+```
 
-1. full-corpus solve gains, losses, and net delta;
-2. recovery within the 14 deterministic DFS/beam cohort, separately from the 20 repair-only cases;
-3. referee validity for every gained solution;
-4. `workSpent`, `nodesExpanded`, deadline truncations, and attempt errors;
-5. the count of attempts marked `mainLoopLateReserve`, including zero-node beneficiaries;
-6. whether losses cluster by prior winning configuration or gate;
-7. Corpus-1 results under its routine 50M-node ceiling before promotion.
+then `0.10`, then `0.15`.
 
-The treatment is rejected if it recovers members of the 14-level mechanism cohort but has a
-non-positive full-population net solve delta, introduces unexplained deterministic losses, exceeds
-the unchanged budgets, increases attempt errors, or produces a referee-invalid gain. A small pilot
-may validate activation and command plumbing only; it cannot decide promotion.
+The final four ordinary configs share the reserved fraction using the implementation's existing cumulative division. Admissible-order reserve remains separate and unchanged.
 
-## Interpretation constraints
+## Preflight / acceptance
 
-- The reserve is zero-sum under a fixed node ceiling; recovered target cases do not by themselves
-  establish a net improvement.
-- Repair-only matches remain seed-dependent and must not be quoted with DFS/beam confidence.
-- This experiment tests allocation, not profile routing. Do not add feature-based beneficiary
-  selection or reorder configurations in the same A/B.
-- Keep the flag default-off until the complete matched-budget result is recorded and reviewed.
+Use schema-v2 manifests. For `solver-stress-refresh`, the complete workflow input set is part of experiment identity. The only allowed workflow-input differences are:
+
+- `enable_flags`;
+- `main_loop_late_reserve_fraction`.
+
+`main_loop_late_reserve_config_count=4` must be explicitly identical in all arms.
+
+Before accepting a result:
+
+- every arm must complete 1700/1700 C2 and 102/102 C1;
+- report `commitSha` must match between arms and the intended dispatch SHA;
+- wall deadline must not bind;
+- canonical work/node ceilings must match;
+- no exact-level historical input may have entered the solve;
+- compare gains/losses, not just net solved count;
+- compare aggregate canonical work as well as solves.
+
+`persist_hints=false` is required for the matched A/B so an earlier arm cannot mutate the branch before later arms are dispatched. Saved solutions can be persisted after the experiment from accepted artifacts if desired; output persistence is not part of the treatment.
+
+## Interpretation
+
+- **Positive full-population result:** participation floors/starvation are a real general lever. Consider promotion or a refined online allocator.
+- **Target recoveries but negative population result:** static reserve is too blunt. The more promising direction becomes online failure-conditioned allocation using evidence generated during the current solve.
+- **Null:** close `STRATEGY_MAIN_LOOP_LATE_RESERVE` in its current form; do not keep buying population runs for different tiny reserve fractions without new mechanism evidence.
+
+Do not compare the acceptance result to the historical 725 Corpus-2 re-verification count. That figure used exact-level `--prime-winner` replay. The acceptance comparison is fresh control versus treatment under the same level-blind workflow.

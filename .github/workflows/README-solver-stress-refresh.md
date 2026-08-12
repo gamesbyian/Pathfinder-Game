@@ -1,221 +1,135 @@
 # Solver stress-corpus refresh workflow
 
-**Status: replaces the old 20-branch `solver-corpus2-batch-*.yml` scheme** (see
-[`README-solver-corpus2-batches.md`](README-solver-corpus2-batches.md) for that design's full
-history — kept for the record, not deleted, since it documents two real stale-code incidents
-worth remembering). That scheme's 20 persistent `stress-corpus2-batch-NN` branches turned out to
-be a real, recurring source of confusion: the branches only ever advanced when a batch job
-happened to push to them, so a branch left over from a prior refresh silently made the *next*
-refresh run stale solver code twice (2026-07-16 and 2026-07-17 — see that README's "Track record"
-section). The branches also existed purely to survive `--resume --checkpoint=...` across separate
-workflow runs, a feature this workflow deliberately drops: every trigger is on-demand
-(`workflow_dispatch` only, never on push), so there is no "background job that might get killed
-and need resuming later" scenario to design for — every run just re-solves its whole range fresh.
+Status: **canonical level-blind capability workflow**.
 
-## What this is
+See [`../../docs/solver-level-blindness.md`](../../docs/solver-level-blindness.md) for the governing product contract and [`README-solver-corpus2-batches.md`](README-solver-corpus2-batches.md) for the retired persistent-branch design history.
 
-One workflow, `solver-stress-refresh.yml`, that solves **both** stress corpora in a single
-`workflow_dispatch` and commits **one** combined result directly to `main`:
+## Purpose
 
-- **`solve-shards`**: a 20-way GitHub Actions *matrix* (not 20 separate workflow files) — each
-  matrix leg solves 85 of stress-corpus-2's 1700 levels (`data/stress/stress-levels-random.json`)
-  **and** ~5-6 of stress-corpus-1's 102 levels (`data/stress/stress-levels.json`), both via
-  `portfolio-solve-sweep.mjs --scheduler-mode=legacy` (plus `--save-hints` unless an artifact-only
-  A/B explicitly sets `persist_hints=false`), in two separate steps within
-  the same shard job. **Uploads its results as a workflow artifact instead of committing to a
-  branch** — no git writes at all in this job (`permissions: contents: read`).
-- **`combine`**: runs after `solve-shards` (`if: always()`, so a partial refresh — some shards
-  timed out, say — still gets combined rather than discarded). Downloads every artifact, archives
-  the *previous* refresh's live report files under a timestamped
-  `logs/solver-corpus2-batches/archive/<full-timestamp>-refresh/` folder (formalizing the archiving
-  that was previously done by hand — see that directory's existing entries), lays the new results
-  onto a fresh `main` checkout, regenerates both baselines (`logs/stress-corpus{1,2}-baseline.json`)
-  and corpus-2's dev-benchmark curation, and pushes **one commit** to `main`. This is the only job
-  with `contents: write`. The archive stamp is a full date+time timestamp
-  (`date -u +%Y-%m-%dT%H%M%SZ`), not just a date — a day-only stamp (the original design) collides
-  when the workflow runs more than once in the same UTC day, since `git mv` refuses to overwrite an
-  existing destination. This bit the 2nd run on 2026-07-18: it aborted the whole archive step
-  (`set -e`) partway through, on the first `git mv` whose destination already existed from the 1st
-  run's archive, skipping every downstream step (lay-down/combine/commit) for the rest of the job —
-  no data was lost (the failure is before anything gets overwritten), but the refresh silently
-  produced no commit. Fixed the same day.
+`.github/workflows/solver-stress-refresh.yml` answers one primary question:
 
-## Cold, non-mutating 20-job A/B dispatches
+> If Pathfinder is handed these puzzles as if they were newly created in the level editor, how many can the current solver solve under this budget/configuration?
 
-The same 20-shard matrix can run attempt-ordering experiments without priming from the committed
-winner, saving hints, or mutating the dispatched branch. Those three properties matter for the
-main-loop late-reserve experiment: `--prime-winner` changes the cold order being measured, and a
-hint commit between arms would make them measure different SHAs.
+Every solve is level-blind. Exact-level historical information and corpus identity are forbidden as solver inputs.
 
-For every arm, dispatch the same branch with `deterministic=true`, `prime_winner=false`, and
-`persist_hints=false`. The control leaves `enable_flags` and both reserve inputs blank. Treatments
-set `enable_flags=STRATEGY_MAIN_LOOP_LATE_RESERVE`, `main_loop_late_reserve_config_count=4`, and one
-of the frozen fractions (`0.05`, `0.10`, or `0.15`). Example commands:
+The workflow may save a newly found solution after the solve, but it may not use saved hints, previous solutions, previous winning strategies/gates/seeds, previous solved status, baseline-derived per-level budgets/order, attempt caches, permanent level IDs, or corpus positions to decide the current solve.
 
-```bash
-REF=<branch-containing-the-experiment>
-COMMON=(-f deterministic=true -f prime_winner=false -f persist_hints=false)
+The old `--prime-winner` path is intentionally absent from this workflow. It remains available in `portfolio-solve-sweep.mjs` for explicit historical re-verification research only.
 
-gh workflow run solver-stress-refresh.yml --ref "$REF" "${COMMON[@]}"
-for FRACTION in 0.05 0.10 0.15; do
-  gh workflow run solver-stress-refresh.yml --ref "$REF" "${COMMON[@]}" \
-    -f enable_flags=STRATEGY_MAIN_LOOP_LATE_RESERVE \
-    -f main_loop_late_reserve_fraction="$FRACTION" \
-    -f main_loop_late_reserve_config_count=4
-done
+## Structure
+
+One manual `workflow_dispatch` launches a 20-way matrix. Each shard runs:
+
+- its Corpus-1 slice;
+- its 85-level Corpus-2 slice;
+- `scripts/level-blind-capability-sweep.mjs` for both.
+
+The capability sweep reads the source corpus in the parent process, projects each level through an explicit **gameplay-mechanics allowlist**, and writes a temporary mechanics-only corpus. That copy excludes ID, hints, provenance, stress/generator metadata, descriptions, difficulty and any other non-gameplay field. `scripts/level-blind-capability-worker.mjs` reads only that temporary corpus and prepares every puzzle without a corpus `levelNumber` before calling `Solver.solve()`.
+
+External hint artifacts are loaded only by the parent process when `persist_hints=true`, after solve tasks have been isolated, so newly found paths/provenance can be recorded on the output side. The solver worker cannot load those artifacts.
+
+The `combine` job downloads all 20 artifacts, removes any checked-out previous live shard files before laying down the current run, combines the two corpora, verifies full coverage and that no row was `solvedByPrime`, regenerates derived stress metadata/baselines for complete runs, uploads a combined artifact, and optionally persists the result/hints.
+
+## Immutable run identity
+
+Both solve and combine jobs check out `${{ github.sha }}`, not a mutable branch ref.
+
+This was hardened after the 2026-08-11 neighbor-budget A/B: run #32's dispatch metadata pointed at `ddb3ef...`, but queued shard jobs followed a later `main` tip and actually ran `c86ba8...`. All A/B shards happened to converge on the same actual SHA, so the experiment remained interpretable, but future runs must not rely on that luck.
+
+## Inputs
+
+All are optional:
+
+- `corpus2_budget_ms` default `86400000`;
+- `corpus2_node_budget` default `36000000`;
+- `corpus2_workers` default `2`;
+- `enable_flags` default blank;
+- `disable_flags` default blank;
+- `main_loop_late_reserve_fraction` default blank;
+- `main_loop_late_reserve_config_count` default blank;
+- `persist_hints` default `true`;
+- `corpus1_budget_ms` default `86400000`;
+- `corpus1_node_budget` default `50000000`;
+- `corpus1_workers` default `2`;
+- `deterministic` default `false`.
+
+There is deliberately **no `prime_winner` input**.
+
+`workers=1` remains level-blind because it still uses the dedicated mechanics-only child-worker path. Concurrency changes throughput, not solver knowledge.
+
+## Normal capability refresh
+
+Use the defaults unless testing a specific flag/configuration. A complete non-deterministic run:
+
+- solves every level from mechanics-only level data;
+- persists newly found hints/provenance when `persist_hints=true`;
+- updates the live combined reports and compiled baselines;
+- stores a compact run-scoped summary (solved IDs, counts, nodes/work, SHA/config) under `reports/stress/capability-runs/<run-id>/summary.json`.
+
+The compiled baseline is an **output summary of the completed level-blind run**. It is not fed back into later capability solves. Full reports remain in ordinary git history plus the 90-day combined Actions artifact; the compact per-run record avoids duplicating a very large report file on every refresh.
+
+## Matched A/B mode
+
+For experiment arms use:
+
+```text
+deterministic=true
+persist_hints=false
 ```
 
-The workflow concurrency group serializes these dispatches rather than cancelling an earlier arm.
-Each run uploads its combined reports as a run-scoped artifact and prints solved counts directly in
-the combine log. Because `persist_hints=false` and deterministic mode already suppresses baseline
-commits, no arm pushes anything; every queued run continues to measure the exact dispatched SHA.
+This forces a non-binding 24h per-level wall deadline and prevents one arm from mutating the branch before the next arm is dispatched. Node/work ceilings remain the decision-bearing resource bounds.
 
-### Sharding corpus-1 into the matrix (2026-07-23)
+Schema-v2 experiment manifests capture every workflow input. The treatment may differ only in dimensions explicitly named by the experiment protocol.
 
-Corpus-1 originally got its own dedicated job (`solve-corpus1`) rather than being folded into the
-20-shard matrix — see the "2026-07-18" note below for the reasoning at the time: a real speed win
-over strictly-sequential corpus-1 solving, smaller diff than reshaping the matrix, and keeping
-corpus-1 conceptually distinct. **That decision is reversed as of 2026-07-23.** In practice, 20
-matrix legs plus one separate `solve-corpus1` job meant **21 concurrently-queued jobs**, not 20 —
-and GitHub Actions' per-workflow concurrent-runner limit meant the 21st job (`solve-corpus1`) sat
-queued behind the matrix instead of running alongside it, waiting for a runner slot to free up as
-the 20 shards finished. Observed effect: **nearly double the total wall time** of the refresh,
-since `combine` (which needs both) couldn't start until corpus-1 finally got its turn.
+## Main-loop late-reserve dispatch shape
 
-Fixed by folding corpus-1's 102 levels into the same 20-shard matrix used for corpus-2 — each shard
-now runs two `portfolio-solve-sweep.mjs` invocations (a small corpus-1 slice, then its corpus-2
-slice), so there are only ever **20 concurrently-queued jobs**, matching GitHub's per-workflow
-runner allowance exactly. `logs/solver-corpus2-batches/` (kept its name — renaming would ripple
-into docs/history for no functional gain) now holds both corpora's per-shard files, distinguished
-by filename prefix: corpus-2's stay unprefixed (`batch-NN.json`, unchanged), corpus-1's are
-`corpus1-batch-NN.json`. The `combine` job's single `--in-dir` combine pass became two explicit
-`--in=<comma-list>` passes (one per corpus) since `portfolio-sweep-reports-to-benchmark.mjs`
-rejects a mixed-corpus input set by design (its mismatched-corpus guard) and `--in-dir` reads every
-`*.json` in a directory indiscriminately. `reports/stress/benchmark-parallel.json` (corpus-1's
-combined output, feeding `compile-baseline.mjs --mode=corpus1`) keeps its existing filename/role —
-only how it gets produced changed, not what consumes it.
+Common:
 
-Corpus-1's slice also gets the same 2026-07-23 batch-speed treatment as corpus-2 — but **only
-`--baseline=logs/stress-corpus1-baseline.json --prime-winner`, not `--baseline-budget`**. Both were
-wired in initially; `--baseline-budget` caused a real regression on this workflow's first run under
-it (corpus-2 dropped 503→473 solved) and was reverted the same day — its adaptive per-level node
-cap assumes a deterministic re-solve, which is false for a repair-search winner recorded without a
-seed (repair tries a fresh random seed cold each time, so its node cost genuinely varies run to
-run). `--prime-winner` was kept: it already self-gates away from exactly that case (no seed to
-replay = no priming attempted), so it did no harm, and its only cost on a miss is one bounded extra
-attempt. See `reports/2026-07-23-solver-batch-speed-and-hint-provenance.md` for the full root-cause
-writeup and the fix needed before `--baseline-budget` can be re-attempted.
+```text
+corpus2_budget_ms=86400000
+corpus2_node_budget=36000000
+corpus2_workers=1
+disable_flags=
+main_loop_late_reserve_config_count=4
+persist_hints=false
+corpus1_budget_ms=86400000
+corpus1_node_budget=50000000
+corpus1_workers=1
+deterministic=true
+```
 
-**Consequence, unchanged from the 2026-07-18 note below**: corpus-1 still has no
-CPU-contention-free timing source from this workflow — solved/failed counts remain trustworthy,
-`elapsedMs` does not (`compile-baseline.mjs` labels it `official-contended`, same as before). If a
-genuinely sequential corpus-1 timing baseline is ever needed again, run `stress:benchmark
---engine=sequential` locally or in a one-off job, as described there.
+Control:
 
-**2026-07-18 (superseded by the above, kept for history):** runs `stress:benchmark --parallel=N`
-(cross-level worker threads, `N` via the `corpus1_workers` input, default 2) instead of
-`--engine=sequential`. The first real end-to-end run of this workflow (2026-07-18) showed corpus-1
-was the slowest job by a wide margin — a strictly one-level-at-a-time sequential run of 102 levels
-doesn't benefit from a multi-core runner the way corpus-2's sharded+`--workers`-parallel approach
-does, so it kept the whole refresh waiting on the `combine` job long after every corpus-2 shard had
-finished. This was a deliberate trade, not an oversight: `--engine=sequential` was originally
-chosen specifically so corpus-1's timing stayed the one CPU-contention-free source in the whole
-stress pipeline (`compile-baseline.mjs`'s `sequential-official` tag). Asked explicitly, given that
-trade-off, whether to (a) fold corpus-1 into the same 20-shard matrix as corpus-2, (b) give it its
-own parallel job without merging it into corpus-2's matrix, or (c) leave it sequential and accept
-the wait — **(b) was chosen at the time**: real speed win, smaller diff than reshaping the
-corpus-2 matrix to also carry corpus-1's levels, keeps corpus-1 solving as its own conceptually
-distinct job. **(a) is what actually got built on 2026-07-23**, once the 21-job queuing cost of (b)
-showed up in practice — see above.
+```text
+enable_flags=
+main_loop_late_reserve_fraction=
+```
 
-`scripts/stress/compile-baseline.mjs` was updated 2026-07-18 to stop assuming "the official file"
-means sequential/trustworthy — it now reads the run's own self-reported `engine`/`parallel` fields
-and labels the compiled baseline's `officialSource.timingTrustworthy` accordingly
-(`sequential-official` when genuinely sequential, `official-contended` otherwise). If a genuinely
-sequential corpus-1 timing baseline is ever needed again, run
-`npm run stress:benchmark -- --engine=sequential --budget-ms=20000 --out=reports/stress/benchmark-latest.json`
-locally or in a one-off job — `reports/stress/benchmark-latest.json` (the last real sequential
-run, from before this change) is left permanently in place as a frozen reference point, since no
-future run of this workflow will ever refresh it again.
+Treatments set:
 
-## Recovering a failed shard — re-dispatch fresh, do NOT "re-run failed jobs"
+```text
+enable_flags=STRATEGY_MAIN_LOOP_LATE_RESERVE
+main_loop_late_reserve_fraction=0.05   # then 0.10, 0.15 in separate arms
+```
 
-A GH-hosted runner can be reclaimed mid-shard (a "runner has received a shutdown signal" —
-happened to shard 17 of the 2026-07-22 60 s/120 M run). That single shard fails, its
-upload/artifact steps are skipped, and — because `combine` runs `if: always()` — the refresh still
-commits the **other 19 shards'** results to `main`. That is net-additive and lossless: the failed
-shard's ~85-90 levels (85 from corpus-2, plus its ~5-6 from corpus-1 since 2026-07-23) simply keep
-whatever they had on `main` before this run.
+See [`../../docs/main-loop-late-reserve-experiment.md`](../../docs/main-loop-late-reserve-experiment.md).
 
-To recover the missing shard, **dispatch a fresh full workflow run** — do **not** use GitHub's
-"Re-run failed jobs". Re-running failed jobs fails at `combine`'s *"Download every shard's
-artifact"* step: `actions/download-artifact@v4`, in a re-run attempt, can only see artifacts
-uploaded **in that same attempt**, so the re-run's `combine` sees only the one re-run shard's
-artifact (not the 19 successful shards from the first attempt) and cannot reassemble — it errors
-and commits nothing. (Confirmed: the 2026-07-22 shard-17 re-run died exactly there.) A fresh
-dispatch has no such split-attempt problem — every shard uploads in one attempt, `combine`
-downloads them all, and because the hand-off lays results onto a fresh `main` checkout that already
-carries the earlier run's committed shards, re-solving the whole range only ever *adds* to `main`,
-never regresses it. The cost is re-solving all 20 shards (both corpora's slices); there is
-currently no cheap single-shard-subset dispatch (a `shards` input + dynamic matrix would add one,
-if the per-shard re-solve cost ever justifies it).
+## 2026-08-11 capability anchor
 
-## Why this is simpler than the branch scheme
+The revised `PRUNE_MC_NEIGHBOR_BUDGET` A/B, intentionally run without exact-level priming, produced:
 
-- **Nothing to reset before a run.** The old scheme required verifying all 20 branches were reset
-  to `main`'s tip (and their stale checkpoint files removed) before every refresh — a real,
-  easy-to-get-wrong manual checklist (see the old README's "After you're done" section). This
-  scheme has no persistent branches at all, so there is nothing to check or reset: every trigger
-  starts from `main`'s current tip, unconditionally, every time.
-- **Nothing to clean up after a run.** The old scheme required deleting/resetting 20 branches
-  after every combine, or the *next* refresh would silently inherit stale code. This scheme's
-  `combine` job leaves `main` as the only place results live — the next trigger is automatically
-  starting clean.
-- **One artifact-based hand-off instead of 20 branch pushes + a manual multi-branch git-merge.**
-  The old scheme's combine step was a multi-command manual git-merge across 20 branches (see the
-  old README — it hit real rename-detection conflicts and stale-ref bugs doing this by hand
-  twice). This scheme's combine is one job, downloading artifacts and committing once.
-- **No `--resume`/checkpoint state.** Dropped entirely, per the reasoning above — simpler
-  semantics (every run is a full fresh solve of its range) at the cost of not being able to
-  incrementally resume a killed run without re-solving already-done levels. Given `portfolio-
-  solve-sweep.mjs` already writes `--out`/`--summary-out` after every level (not just at the end),
-  a shard that gets killed mid-run still uploads whatever it found before the kill — it just
-  starts over from the top on its *next* trigger rather than picking up where it left off. This
-  matches how the workflow is actually used (occasional, deliberate, on-demand refreshes, not a
-  long-running background job).
+- control: 611/1700 Corpus 2;
+- treatment: 665/1700;
+- +54 net, 59 gained / 5 lost;
+- Corpus 1 94/102 in both arms;
+- treatment C2 nodes -3.94%; canonical work -5.33%.
 
-## Historical data
+The historical 725/1700 result used exact-level winner replay and is a re-verification count, not a capability baseline. See [`../../reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md`](../../reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md).
 
-Nothing is lost:
-- Every commit to `main` is permanent, diffable, ordinary git history — `git log -- logs/
-  solver-corpus2-batches/` shows every past refresh's results the same way it always has.
-- The `combine` job additionally auto-archives the previous refresh's live report files into a
-  timestamped folder before overwriting them (the same `logs/solver-corpus2-batches/archive/`
-  convention this repo already uses, previously done manually) — so a browsable snapshot of every
-  past refresh survives at a stable path without needing to check out old commits.
+## Failure / partial runs
 
-## Trigger
+A result is not accepted as a capability baseline unless combine sees all 102 Corpus-1 and all 1700 Corpus-2 rows from the **current run**. The combine step deletes prior live shard files before laying down artifacts specifically so a missing current shard cannot silently be filled by yesterday's output.
 
-Manual only (`workflow_dispatch`) — GitHub UI (Actions tab → "Solver stress-corpus refresh" →
-"Run workflow") or `gh workflow run solver-stress-refresh.yml`. Inputs (all optional):
+Partial results are still uploaded as artifacts for diagnosis, but the workflow refuses to persist a compiled capability baseline from incomplete coverage.
 
-- `corpus2_budget_ms` (default `8000`), `corpus2_node_budget` (default `20000000`),
-  `corpus2_workers` (default `2`) — same meaning as the old scheme's equivalent inputs.
-- `enable_flags` (default blank) — comma-separated ablation flags to turn ON via
-  `portfolio-solve-sweep --enable-flags`, applied to **both** corpora's sweep (renamed 2026-07-23
-  from `corpus2_enable_flags`, which only reached corpus-2's sweep — now that corpus-1 shares the
-  same shard job and tool, there's no reason for the toggle to be corpus-2-only).
-- `corpus1_budget_ms` (default `20000`) — matches the historical corpus-1 baseline's own budget.
-- `corpus1_workers` (default `2`) — cross-level worker *processes* for `portfolio-solve-sweep`'s
-  `--workers` on corpus-1's slice (same mechanism as `corpus2_workers`; renamed meaning 2026-07-23 —
-  corpus-1 no longer runs `stress:benchmark --parallel`, see the sharding section above). Each
-  shard only carries ~5-6 corpus-1 levels, so this rarely matters in practice.
-
-## Migration note
-
-**Done, 2026-07-17.** The in-flight refresh running when this workflow was added has finished and
-its results (302/1700 corpus-2, 94/102 corpus-1) are combined into `main`. The old
-`solver-corpus2-batch-*.yml` files and `scripts/generate-corpus2-batch-workflows.mjs` are deleted;
-their `stress-corpus2-batch-NN` branches couldn't be deleted with this session's GitHub
-credentials, so they were force-reset to `main`'s tip instead (inert orphaned refs). This is now
-the only solver-stress-refresh mechanism.
+If a runner is reclaimed or a shard fails, dispatch a fresh workflow run. Re-running only failed jobs can produce split-attempt artifact visibility problems because the combine job may not see successful artifacts from the earlier attempt.

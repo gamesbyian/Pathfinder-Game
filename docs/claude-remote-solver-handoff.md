@@ -1,82 +1,193 @@
 # Claude remote solver handoff
 
-> **Scope:** remote-only work after PR #1358 and the handoff-hardening follow-up. Do not replace these jobs with partial local runs. Use a clean, current remote `main` SHA and record it in every result.
+Current as of **2026-08-11** after the revised neighbor-budget population A/B, the first explicit-prefix CP-SAT run, and the level-blind capability reconciliation.
 
-## 0. Freeze identity and dispatch configuration before decision A/Bs
+Read first:
 
-On clean remote `main`, set `SHA=$(git rev-parse HEAD)` and verify `git status --porcelain` is empty. Experiment-manifest schema v2 records both the solver ablation map and the actual decision-relevant GitHub workflow inputs. Generate manifests immediately before dispatch; never reuse a pre-merge manifest.
+- [`solver-level-blindness.md`](solver-level-blindness.md)
+- [`future-work.md`](future-work.md)
+- [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md)
+- [`../reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md`](../reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md)
 
-For the neighbor-budget experiment, use the same complete workflow-input set in both manifests except `enable_flags`:
+## Non-negotiable capability rule
 
-```bash
-COMMON_INPUTS='corpus2_budget_ms=86400000,corpus2_node_budget=36000000,corpus2_workers=2,disable_flags=,main_loop_late_reserve_fraction=,main_loop_late_reserve_config_count=,prime_winner=false,persist_hints=false,corpus1_budget_ms=86400000,corpus1_node_budget=50000000,corpus1_workers=2,deterministic=true'
+Pathfinder's solver must treat every level as unseen. The level editor cannot supply historical winning configs, seeds, gates, hints, solutions, previous solved status, or attempt caches for a newly created level. Therefore no production/capability experiment may use exact-level history.
 
-npm run solver:experiment-preflight -- --experiment-id=neighbor-budget-c2-full-$SHA \
-  --run-id=neighbor-off-$SHA --corpus=data/stress/stress-levels-random.json --arm=control \
-  --flags=PRUNE_MC_NEIGHBOR_BUDGET=false --workflow=solver-stress-refresh \
-  --workflow-inputs="$COMMON_INPUTS,enable_flags=" --seeds= --work-budget=48240000 \
-  --wall-deadline-ms=86400000 --profile=default --instrumentation=off \
-  --output=/tmp/neighbor-off.manifest.json
+The principal workflow `.github/workflows/solver-stress-refresh.yml` is now level-blind by construction. Do not add `--prime-winner`, `--baseline`, baseline-derived priority/budgets, saved-hint guidance, or exact-level caches back into that workflow.
 
-npm run solver:experiment-preflight -- --experiment-id=neighbor-budget-c2-full-$SHA \
-  --run-id=neighbor-on-$SHA --corpus=data/stress/stress-levels-random.json --arm=treatment \
-  --flags=PRUNE_MC_NEIGHBOR_BUDGET=true --workflow=solver-stress-refresh \
-  --workflow-inputs="$COMMON_INPUTS,enable_flags=PRUNE_MC_NEIGHBOR_BUDGET" --seeds= --work-budget=48240000 \
-  --wall-deadline-ms=86400000 --profile=default --instrumentation=off \
-  --output=/tmp/neighbor-on.manifest.json
+`portfolio-solve-sweep.mjs --prime-winner` remains only for explicit historical re-verification/replay research and must not produce a headline capability number.
 
-npm run solver:experiment-preflight -- --compare-control=/tmp/neighbor-off.manifest.json \
-  --compare-treatment=/tmp/neighbor-on.manifest.json --target-flag=PRUNE_MC_NEIGHBOR_BUDGET \
-  --allow-workflow-input-differences=enable_flags
-```
+## Completed remote jobs
 
-Using `--workflow=solver-stress-refresh` makes the preflight reject a manifest that omits any dispatch input belonging to that workflow. The 48,240,000 manifest work envelope is the workflow's canonical accounting envelope for a 36,000,000 per-level node ceiling. Confirm both manifests contain exactly 1,700 unique Corpus-2 IDs in corpus order. Before accepting results, inspect each GitHub workflow run's actual dispatch inputs and verify they match its manifest. Stop if SHA, selection hash, corpus, budget, deadline, profile, seeds, instrumentation, or any non-declared workflow/solver setting differs.
+### A. Revised `PRUNE_MC_NEIGHBOR_BUDGET` full C2 A/B — COMPLETE
 
-## A. Revised neighbor-budget full C2 A/B — run first
+Runs:
 
-Dispatch `.github/workflows/solver-stress-refresh.yml` twice at **the same `$SHA`** with the values recorded above. Control has blank `enable_flags`; treatment has `enable_flags=PRUNE_MC_NEIGHBOR_BUDGET`. The treatment's intended wiring excludes stochastic repair `takePly` but includes DFS, beam, and deterministic repair sub-search callers.
+- control #32 / id `31537140410`;
+- treatment #33 / id `31537474435`.
 
-Accept artifacts only after confirming complete 1,700-level coverage, matching manifests, and actual workflow inputs matching those manifests. Report solved counts, gains, losses, net, canonical work/nodes, deadline truncations, attempt errors, full configs, referee validity of gains, and whether the prior repair-churn cohort is recovered. Stop on incomplete coverage, wrong SHA/config, invalid solution, or unexplained budget violation; rerun a fresh pair rather than mixing arms. Record the decision before job D.
+Actual shard solver SHA in **both arms**: `c86ba8f86192801176b1e6c5fece3b120850df44`.
 
-## B. Contrastive-prefix CP-SAT labels
+Result:
 
-Use `.github/workflows/cpsat-explicit-prefix-oracle.yml`, which is the narrow execution seam for exact `{levelId,prefix,child}` questions. It reuses `scripts/stress/cpsat-full-probe.py`; it is **not** a new oracle. Do not use `cpsat-hint-harvest-sweep.yml` for this job because that workflow chooses its own unharvested levels/forced-grid combinations rather than accepting an explicit case list.
+- C1: 94/102 → 94/102;
+- C2: **611/1700 → 665/1700**;
+- **+54 net, 59 gained / 5 lost**;
+- C2 nodes: 43,017,428,195 → 41,320,735,149 (-3.94%);
+- C2 work: 59,668,825,637 → 56,486,598,535 (-5.33%);
+- zero C2 attempt errors and zero deadline truncations.
 
-First dispatch the workflow with its defaults. `cases_file=reports/stress/winning-prefix-atlas-pilot-2026-08-11.json` and `case_format=atlas-abstain` select exactly the existing 12 `oracle-abstain` rows. The runner appends each row's child to its prefix, converts the atlas's packed zero-based solver keys to raw one-based coordinates, passes that exact prefix to `cpsat-full-probe.py`, replays it through the native solver for legality, referee-checks every SAT witness, and preserves **live**, **dead**, and **timeout/abstain** distinctly.
+Lost IDs: `R00635`, `R02119`, `R02422`, `R02823`, `R02867`.
 
-After those 12 are recorded, prepare a bounded committed generic case file for informative same-parent siblings at/near score/width extinctions. Generic schema:
+Do **not** dispatch another unchanged full A/B. The population gate has been paid for. The next neighbor-budget job is narrow five-loss diagnosis / equal-work integration design.
+
+The old 725→739 result is historical re-verification evidence from a `--prime-winner` workflow. Do not use 725 as the solver capability baseline.
+
+### B1. First explicit-prefix CP-SAT labels — COMPLETE
+
+Workflow: `.github/workflows/cpsat-explicit-prefix-oracle.yml`
+
+Run id: `31537268571`.
+
+Default atlas-abstain batch result:
+
+- 12 cases;
+- 7 dead;
+- 1 live (`R00001:42:child-[5,6]:3`, OPTIMAL, referee-valid witness);
+- 4 abstain, all R00039 `unsupported-mechanics`;
+- 0 correctness alarms;
+- 0 input alarms.
+
+Do **not** rerun these 12 unchanged.
+
+## Remote jobs still useful
+
+### B2. Extinction-adjacent exact-prefix CP-SAT expansion
+
+Goal: label a bounded, informative set of same-parent siblings near actual score/width winning-lineage extinctions.
+
+Use `.github/workflows/cpsat-explicit-prefix-oracle.yml` with a committed generic case file:
 
 ```json
 {
-  "schemaVersion": 1,
-  "corpus": "data/stress/stress-levels.json",
+  "corpus": "data/stress/stress-levels-random.json",
   "cases": [
-    { "id": "example", "levelId": "S00001", "prefix": [65537, 65538], "child": 131074 }
+    { "id": "...", "levelId": "R.....", "prefix": [[1,1],[1,2]], "child": [2,2] }
   ]
 }
 ```
 
-Numeric cells are packed internal solver keys and will be converted from zero-based internal coordinates. Explicit `[x,y]` pairs or `{x,y}` objects must already use the raw level/witness **one-based** coordinate convention. The runner rejects illegal native prefixes as input alarms rather than mislabelling them dead. Dispatch the same workflow with `case_format=cases` and that committed `cases_file`. Do not coerce timeouts, unsupported mechanics, model errors, input alarms, or referee-rejected SAT witnesses into dead/live evidence. Stop expansion if labels remain mostly abstentions or cases cannot be tied to an exact solver SHA/prefix.
+Coordinate rule:
 
-## C. Exact repair retreat / causal window
+- explicit `[x,y]` / `{x,y}` entries are raw-level **1-based** coordinates;
+- packed numeric solver keys, when extracted by the tooling, are internal zero-based and are converted before the oracle call.
 
-Reuse the **same explicit-prefix oracle workflow**, not another CP-SAT workflow. Start from the retained elites/input in `reports/stress/repair-rollback-census-pilot-2026-08-11.json`. Prepare bounded generic case files containing selected retreat prefixes, query them through `cpsat-explicit-prefix-oracle.yml`, then refine around the latest demonstrated-live retreat point. A coarse-to-fine/binary strategy is preferred to querying every prefix.
+Dispatch inputs:
 
-Record the latest retreat with a referee-valid demonstrated continuation, the timeout/abstain boundary, normalized retreat, elite provenance, and exact SHA. This measures the causal window only; do not implement a repair operator. Where reference limits produce abstention, stop rather than guessing.
+- `cases_file=<committed case file>`;
+- `case_format=cases`;
+- `corpus=` blank if each case/file already supplies it;
+- `time_limit=60` initially;
+- `max_cases=<bounded case count>`.
 
-## D. Main-loop late-reserve full A/B
+Keep `live`, `dead`, and `timeout/abstain` distinct. Unsupported mechanics are abstentions, not dead branches. Treat any native-prefix or referee alarm as a correctness blocker.
 
-Run only after A is complete and recorded, unless Actions capacity is demonstrably independent and result directories/manifests cannot be confused. Follow [`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md): fresh control plus 0.05/0.10/0.15 treatments, 36M node ceiling, 48.24M work envelope, 86,400,000 ms deadline, deterministic cold mode, one worker, four suffix configs, no prime winner/baseline budget.
+The purpose is to test neutral future-opportunity descriptions against exact feasibility, not to hard-code labels or per-level behavior into the solver.
 
-For each fraction, generate a fresh schema-v2 control/treatment manifest pair with `--workflow=solver-stress-refresh`. Record the actual workflow inputs including `enable_flags`, `main_loop_late_reserve_fraction`, `main_loop_late_reserve_config_count=4`, `prime_winner=false`, `persist_hints=false`, `deterministic=true`, and worker/budget inputs. Set the inert control's config count to `4` as well, so only `enable_flags` and `main_loop_late_reserve_fraction` are declared treatment dimensions. Compare with:
+### C. Exact repair-retreat CP-SAT
+
+Use the same explicit-prefix workflow and generic case format. Build bounded retreat prefixes from retained repair elites, coarse-to-fine or binary where practical.
+
+Question: how far back must the elite be rolled before an exact valid continuation exists?
+
+Do not interpret the earlier longest-common-prefix rollback pilot as minimum edit distance. Known solutions are incomplete and that pilot was only a demonstrated distance to a known solution-bearing prefix.
+
+### D. Main-loop late-reserve full population A/B
+
+Now unblocked because neighbor-budget's population gate is complete.
+
+Workflow: `.github/workflows/solver-stress-refresh.yml`.
+
+The workflow itself is level-blind. It has **no `prime_winner` input** and does not pass a solver baseline.
+
+Common inputs for all arms:
 
 ```text
---target-flag=STRATEGY_MAIN_LOOP_LATE_RESERVE \
---allow-workflow-input-differences=enable_flags,main_loop_late_reserve_fraction
+corpus2_budget_ms=86400000
+corpus2_node_budget=36000000
+corpus2_workers=1
+persist_hints=false
+corpus1_budget_ms=86400000
+corpus1_node_budget=50000000
+corpus1_workers=1
+deterministic=true
+disable_flags=
+main_loop_late_reserve_config_count=4
 ```
 
-The comparator must reject a mismatched config count, worker count, prime-winner setting, deadline, budget, or any other undeclared dispatch difference. After dispatch, also compare the actual GitHub run inputs to the intended manifest. Stop on incomplete coverage, config drift, invalid gains, attempt errors, or unchanged-budget violations.
+Control:
 
-## Optional later
+```text
+enable_flags=
+main_loop_late_reserve_fraction=
+```
 
-A bounded beam→repair receptor counterfactual may follow B/C if their labels clarify what a useful receptor must preserve. Do not dispatch it blindly and do not build live handoff in this sequence.
+Treatments, one arm each:
+
+```text
+enable_flags=STRATEGY_MAIN_LOOP_LATE_RESERVE
+main_loop_late_reserve_fraction=0.05
+```
+
+then `0.10`, then `0.15`.
+
+Schema-v2 preflight manifests must capture the full workflow input set. Allowed workflow differences are only:
+
+- `enable_flags`;
+- `main_loop_late_reserve_fraction`.
+
+`main_loop_late_reserve_config_count=4` is identical in control and every treatment.
+
+Accept only complete 1700/1700 + 102/102 arms. Compare actual report `commitSha` as well as dispatch metadata. The hardened workflow pins `github.sha`, so a mismatch is now a correctness failure rather than something to reconcile after the fact.
+
+## Neighbor-budget next step, not another population rerun
+
+Analyze the five losses from the completed revised A/B. Determine whether they share a deterministic frontier/order/budget mechanism.
+
+Any proposed recovery must satisfy all of these:
+
+- generic, not level-ID-specific;
+- uses only level/current-invocation information;
+- no exact-level winner/hint replay;
+- equal total canonical work against the control;
+- preserves the 59-gain upside as much as possible while eliminating or reducing the five losses.
+
+A bounded complementary/fallback lane is a candidate design, but it must share the same total work envelope. Giving it another full 48.24M work budget would not be a fair promotion experiment.
+
+## Interpretation after first CP-SAT labels
+
+Winning-lineage forensics already said score representation was a stronger lead than exact ties or merely widening the beam. The CP-SAT labels strengthen that: at least one sibling ranked first at an R00001 parent is exact-infeasible while a known-valid continuation exists from that parent.
+
+Do not jump straight to a new score. First expand the exact-label set around real extinction events, then test neutral descriptors. A secondary structural-family reservoir/quota remains a possible narrow experiment only after the exact labels say what property the current score is missing.
+
+## Workflow hygiene
+
+- Principal capability workflow: level-blind only.
+- Saved hints/provenance: output-only, still persistable after a solve.
+- A/B arms: use `deterministic=true`, `persist_hints=false` so queued arms cannot mutate the branch between measurements.
+- Actions checkout: immutable `github.sha`.
+- Historical `logs/stress-corpus2-baseline.json` currently contains a malformed/empty compiled baseline from an intervening refresh; this is no longer a solve input. A complete non-deterministic level-blind refresh will regenerate it.
+- Do not rewrite old observational `solverRef` values merely because some historical emitter SHAs no longer resolve. Preserve the provenance blemish honestly.
+
+## Remote order
+
+Population experiments should still serialize when one promotion changes the configuration used to interpret the next. Oracle/observational work can run alongside them.
+
+Recommended order now:
+
+1. neighbor-budget five-loss diagnosis and integration plan;
+2. B2 extinction-adjacent CP-SAT labels;
+3. C repair-retreat CP-SAT;
+4. D late-reserve full population A/B.
+
+B2/C can be dispatched while 1 is being analyzed; D is also technically unblocked after this workflow-hardening merge, but interpret it against the production/default flag state that actually exists at dispatch time.

@@ -1,39 +1,57 @@
 # Solver-research tooling completion matrix
 
-> **Status:** active handoff reference (reconciled after PR #1358 and remote-handoff hardening)
-> **Scope:** observation/tooling evidence, not production promotion
+> **Status:** active handoff reference after the 2026-08-11 remote A/B + CP-SAT runs and level-blind workflow hardening
+> **Scope:** tooling/evidence state, not automatic production promotion
 > **Date:** 2026-08-11
 
 ## Current completion state
 
 | Objective | Implemented/current evidence | Next valid action |
 |---|---|---|
-| Neighbor-budget caller policy | Corrected independent caller participation: stochastic repair `takePly` suppresses the prune; DFS, beam, and deterministic repair sub-searches retain it. | Remote-only fresh full 1,700-level corrected-wiring A/B; do not reuse the old +14 verdict. |
-| Winning lineage | Real beam boundaries; OFF/ON parity; structural family v1 (portal use, crossing placement, must-cross first-entry/completion order). Same-config Corpus-1 width-100/default/100k cohort: 13 solved, 17 failed; mean normalized last support 0.505 vs 0.239; failed final loss 15 score/width, 2 dedup; zero hard-prune alarms. | Local cutoff forensics are complete in the companion report. Obtain remote contrastive labels before freezing a retention counterfactual. |
-| Score/width forensics | Cull artifacts now record candidate pool, supported ranks/scores/families, cutoff/first-culled score, tie population, insertion order, margin, and post-extinction work. Level-balanced failure/control classification is published. | Test only a narrow retention counterfactual after CP-SAT labels; no production score/width/dedup change now. |
-| Contrastive branch atlas | Existing known-prefix sibling enumeration preserves explicit abstention; initial 12 abstentions remain unlabelled. A dedicated GitHub execution seam now accepts the exact atlas abstentions or a generic committed prefix-case list and reuses `cpsat-full-probe.py --prefix`. | Remote-only dispatch of `.github/workflows/cpsat-explicit-prefix-oracle.yml`: 12 first, then bounded same-parent siblings near extinctions; keep live/dead/timeout distinct and referee-check SAT witnesses. |
-| Residual interfaces | 20 levels / 288 canonical-valid solutions: 31,351 exact occurrences → 845 translation-invariant signatures; 459 multi-solution, 201 cross-structural-family, 14 cross-level. The 14 are inspectable with provenance and held-out classification. | Continue only motifs surviving independent held-out scrutiny; no substitution machinery. |
-| Repair causal window | Existing conservative rollback census over retained elites shows a large retreat proxy, not exact edit distance. | Remote-only bounded retreat using the same explicit-prefix CP-SAT workflow; no new repair operator. |
-| Experiment preflight | Schema v2 clean-SHA manifest records corpus, ordered IDs/hash, complete solver flag map, **workflow dispatch inputs**, seeds, work/deadline, profile, instrumentation, and output. Arm comparison permits only named false→true target polarity plus explicitly declared workflow treatment dimensions. Tests cover corpus/order/budget/deadline/profile/seeds/instrumentation/non-target drift/polarity/duplicate/missing IDs plus workflow drift such as prime-winner/workers/reserve config. | Generate fresh pairs on remote `main` immediately before each decision A/B, verify actual GitHub run inputs against the intended manifest, and reject mismatches before accepting results. |
-| Main-loop late reserve | Default-off reserve-not-reorder mechanism and 14-level activation pilot complete; frozen protocol unchanged. Schema v2 can now lock fraction/config count and other workflow settings. | Remote-only full A/B after neighbor-budget is recorded, with a fresh preflight pair for each fraction. |
-| Beam/repair producer premise | Bounded real-population observation found preliminary non-redundancy; no live receptor verdict. | Optional bounded counterfactual after oracle/lineage work clarifies the receptor. |
-| Differential reducer / blackboard | Existing single-level reducer and interoperability seams inspected; trigger not met. | Conditional only; do not build without recurring independent evidence. |
+| Level-blind capability boundary | Canonical contract in `docs/solver-level-blindness.md`; mechanics-only capability projection + dedicated anonymous worker; principal stress workflow has no baseline/prime-winner path; CI guard checks forbidden history/identity fields; Actions pins `github.sha` and removes stale shard files before combine. | Use this workflow for every headline capability run. Historical winner replay remains research/re-verification only. |
+| Neighbor-budget caller policy | Corrected caller participation: stochastic repair `takePly` suppresses the prune; DFS, beam, deterministic repair sub-searches retain it. **Full level-blind A/B complete: C2 611→665 (+54; 59 gained/5 lost), C1 94→94; C2 nodes -3.94%, work -5.33%.** | Do not rerun full A/B unchanged. Diagnose five losses and test a generic equal-work integration before promotion. |
+| Winning lineage | Real beam boundaries; OFF/ON parity; structural family v1; same-config 30-level C1 cohort: 13 solved/17 failed, 15 failed final score/width losses and 2 dedup, zero hard-prune alarms. | Expand exact labels near real extinctions before freezing retention/score changes. |
+| Score/width forensics | 15 failed score/width final extinctions classified: 10 clear mis-rank, 3 weak-margin, 0 exact-tie/stable-order, 2 width-saturation. | Combine with exact CP-SAT labels; test neutral future-opportunity descriptors first. |
+| Contrastive branch atlas / exact oracle | Dedicated explicit-prefix workflow accepts atlas abstentions or generic case files; native-prefix replay and referee validation are enforced. **First remote run complete: 12 → 7 dead / 1 live / 4 abstain, zero alarms.** | Do not rerun the original 12. Build a bounded extinction-adjacent same-parent set; retain live/dead/abstain distinction. |
+| Residual interfaces | 20 levels / 288 solutions; 31,351 exact occurrences; 845 signatures; 14 cross-level, mostly generic rectangle detours. | Lane remains demoted; require new independent mechanic-conditioned evidence before operator work. |
+| Repair causal window | Conservative rollback census shows long demonstrated retreat proxy, not minimum edit distance. Explicit-prefix workflow can accept generic retreat cases. | Run bounded coarse-to-fine exact retreat CP-SAT; no new repair operator yet. |
+| Experiment preflight | Schema v2 records corpus/order/hash, complete solver flags, workflow dispatch inputs, seeds, work/deadline, profile, instrumentation, output. Capability workflow's exact-level blindness is structural, so `prime_winner` is no longer an experiment input. | Fresh manifests before decision A/Bs; reject any non-declared workflow-input or solver-flag drift. |
+| Main-loop late reserve | Reserve-not-reorder mechanism and 14-level activation pilot complete. Full population acceptance remains pending. | Run level-blind fresh control + 5/10/15% arms, config count 4 everywhere. |
+| Beam/repair producer premise | Bounded observation found preliminary non-redundancy; no live receptor verdict. | Optional bounded counterfactual only after exact-label work clarifies the receptor. |
+| Differential reducer / blackboard | Existing reducer/interoperability seams inspected; trigger not met. | Conditional only; do not build without recurring independent evidence. |
 
-## Normal-behavior and correctness evidence
+## Remote result details now in hand
 
-Observation fields remain absent by default. Focused OFF/ON fixtures assert identical solution/failure and canonical nodes. The published benchmark remains 160/160 at 51,959,647 canonical nodes in the last completed validation. No valid known prefix in the bounded lineage cohort hit a hard prune; this is sample evidence, not a global proof.
+### Neighbor-budget A/B
 
-The explicit-prefix CP-SAT seam is execution plumbing only. It does not change the CP-SAT model or native solver. Its pure case extraction/status parsing is covered by the existing `test:research-analysis-lib` node check; the GitHub workflow installs `ortools`, runs that check, then invokes the existing probe. The workflow has not yet been dispatched as part of this local hardening.
+Runs #32/#33. Dispatch metadata differed because the old workflow followed a mutable branch, but every actual shard report in both arms records solver SHA `c86ba8f86192801176b1e6c5fece3b120850df44`. The workflow is now hardened to immutable `github.sha` checkouts so this ambiguity cannot recur.
 
-## Exact remote-only queue
+The historical 725→739 neighbor A/B remains evidence for the original wiring, but it used exact-level `--prime-winner` replay and is not a solver-capability baseline. The revised 611→665 level-blind run is the current decision-bearing population evidence.
 
-1. Corrected `PRUNE_MC_NEIGHBOR_BUDGET` deterministic full Corpus-2 OFF/ON A/B, using schema-v2 workflow-input manifests.
-2. Explicit-prefix CP-SAT contrastive labels (12 abstentions first, then bounded extinction-adjacent siblings).
-3. Explicit-prefix CP-SAT exact repair-retreat census.
-4. Frozen `STRATEGY_MAIN_LOOP_LATE_RESERVE` full A/B, separate and normally after item 1, with reserve fraction/config-count recorded in manifests.
+### Explicit-prefix CP-SAT
 
-See [`../docs/claude-remote-solver-handoff.md`](../docs/claude-remote-solver-handoff.md) for exact dispatch inputs and stop conditions. None of these remote jobs was run or approximated locally during this cleanup.
+Run `31537268571`:
 
-## Supersession note
+- 7 exact-infeasible;
+- 1 exact-live/OPTIMAL with referee-valid emitted path (`R00001:42:child-[5,6]:3`);
+- 4 R00039 `unsupported-mechanics` abstentions;
+- zero native-input or correctness alarms.
 
-The first 8-level lineage smoke and 5-level interface pilot remain historical tooling checks. They are superseded for active routing by the 30-level same-config cohort, score/width forensics, and 20-level unique-signature census above. Future agents should not rebuild lineage instrumentation or repeat raw-pair signature reduction.
+At least one R00001 sibling ranked first by the beam is CP-SAT-dead despite a known-valid continuation from the same parent. That upgrades the score-representation hypothesis from correlation to at least one direct same-parent feasibility counterexample.
+
+## Normal-behavior / correctness interpretation
+
+The level-blind workflow is infrastructure, not a new solver heuristic. It changes and hardens what information the harness is allowed to supply, not Pathfinder's legal search rules. The worker receives an allowlisted gameplay-mechanics object with exact ID/history/research fields absent. Saved hints/provenance remain output-side artifacts.
+
+`PRUNE_MC_NEIGHBOR_BUDGET` remains default-off pending integration/promotion review because the revised run still loses five control solves. The population experiment itself is finished; the remaining work is not more sample size but recovery/placement of the mechanism.
+
+## Exact remote queue now
+
+1. Five-loss neighbor-budget diagnosis and equal-work integration design.
+2. Extinction-adjacent explicit-prefix CP-SAT expansion.
+3. Explicit-prefix exact repair-retreat census.
+4. Level-blind main-loop late-reserve full A/B.
+
+Items 2 and 3 can proceed observationally while 1 is analyzed. Item 4 is unblocked after the workflow-hardening merge, but population promotion experiments should still be interpreted against the actual default configuration at dispatch.
+
+See `docs/claude-remote-solver-handoff.md` for exact remote inputs and `reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md` for the result interpretation.

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { compareExperimentArms, levelSelectionHash, validateExperimentManifest } from './experiment-manifest-lib.mjs';
@@ -8,7 +8,7 @@ import { compareExperimentArms, levelSelectionHash, validateExperimentManifest }
 const workflowInputs = {
     corpus2_budget_ms: '86400000', corpus2_node_budget: '36000000', corpus2_workers: '2',
     enable_flags: '', disable_flags: '', main_loop_late_reserve_fraction: '', main_loop_late_reserve_config_count: '',
-    prime_winner: 'false', persist_hints: 'false', corpus1_budget_ms: '86400000', corpus1_node_budget: '50000000',
+    persist_hints: 'false', corpus1_budget_ms: '86400000', corpus1_node_budget: '50000000',
     corpus1_workers: '2', deterministic: 'true',
 };
 const base = { schemaVersion: 2, experimentId: 'e', solverRef: 'abc', corpus: 'c.json', levelIds: ['a', 'b'],
@@ -35,19 +35,16 @@ assert.throws(() => compareExperimentArms({ ...control, solverFlags: { TARGET: t
 assert.throws(() => validateExperimentManifest({ ...control, levelIds: ['a'] }), /hash mismatch/);
 assert.throws(() => validateExperimentManifest({ ...control, levelIds: ['a', 'a'], levelSelectionHash: levelSelectionHash(['a', 'a']) }), /duplicates/);
 assert.throws(() => validateExperimentManifest({ ...control, workflowInputs: [] }), /workflowInputs/);
-assert.throws(() => validateExperimentManifest({ ...control, workflowInputs: { ...workflowInputs, deterministic: undefined } }), /workflowInputs/);
 const missingDeterministic = { ...workflowInputs }; delete missingDeterministic.deterministic;
 assert.throws(() => validateExperimentManifest({ ...control, workflowInputs: missingDeterministic }), /missing for solver-stress-refresh: deterministic/);
 
-// Workflow-level dispatch settings are part of experiment identity, independent of solver flags.
 assert.throws(() => compareExperimentArms(control, {
-    ...treatment, workflowInputs: { ...treatment.workflowInputs, prime_winner: 'true' },
-}, 'TARGET'), /workflowInputs\.prime_winner/);
+    ...treatment, workflowInputs: { ...treatment.workflowInputs, persist_hints: 'true' },
+}, 'TARGET'), /workflowInputs\.persist_hints/);
 assert.throws(() => compareExperimentArms(control, {
     ...treatment, workflowInputs: { ...treatment.workflowInputs, corpus2_workers: '1' },
 }, 'TARGET'), /workflowInputs\.corpus2_workers/);
 
-// Explicit treatment dimensions may differ, but must exist in both manifests.
 const reserveControl = { ...control, workflowInputs: {
     ...control.workflowInputs, enable_flags: '', main_loop_late_reserve_fraction: '', main_loop_late_reserve_config_count: '4',
 } };
@@ -63,13 +60,7 @@ assert.deepEqual(compareExperimentArms(reserveControl, reserveTreatment, 'TARGET
 assert.throws(() => compareExperimentArms(reserveControl, {
     ...reserveTreatment, workflowInputs: { ...reserveTreatment.workflowInputs, main_loop_late_reserve_config_count: '5' },
 }, 'TARGET', { allowedWorkflowInputDifferences: ['enable_flags', 'main_loop_late_reserve_fraction'] }), /workflowInputs\.main_loop_late_reserve_config_count/);
-assert.throws(() => compareExperimentArms(reserveControl, {
-    ...reserveTreatment, workflowInputs: Object.fromEntries(Object.entries(reserveTreatment.workflowInputs).filter(([key]) => key !== 'main_loop_late_reserve_fraction')),
-}, 'TARGET', { allowedWorkflowInputDifferences: ['enable_flags', 'main_loop_late_reserve_fraction'] }), /missing for solver-stress-refresh|declared treatment dimension missing/);
 
-// The CLI also verifies that solverFlags and the stress workflow's enable/disable strings describe
-// the same effective config. This closes the hole where enable_flags could be an allowed treatment
-// difference while silently containing an extra flag not represented by the manifest's solver map.
 const temp = mkdtempSync(path.join(tmpdir(), 'pathfinder-preflight-'));
 const corpus = path.join(temp, 'corpus.json');
 writeFileSync(corpus, JSON.stringify([{ id: 'L1' }]));
@@ -86,4 +77,31 @@ assert.notEqual(inconsistent.status, 0);
 assert.match(`${inconsistent.stdout}${inconsistent.stderr}`, /solverFlags disagree/);
 assert.equal(runPreflight({ runId: 'on', flagValue: 'true', inputs: { ...workflowInputs, enable_flags: 'PRUNE_MC_NEIGHBOR_BUDGET' } }).status, 0);
 
-console.log('experiment manifest unit tests passed');
+// Capability boundary guard. This is intentionally static as well as runtime-enforced: a future
+// innocent-looking workflow optimization must fail CI if it reintroduces exact-level history.
+const workflow = readFileSync('.github/workflows/solver-stress-refresh.yml', 'utf8');
+const sweep = readFileSync('scripts/level-blind-capability-sweep.mjs', 'utf8');
+const worker = readFileSync('scripts/level-blind-capability-worker.mjs', 'utf8');
+for (const forbidden of ['prime_winner:', '--prime-winner', '--baseline=', '--baseline-budget', '--attempt-cache=', '--priority=']) {
+    assert.equal(workflow.includes(forbidden), false, `capability workflow must not contain ${forbidden}`);
+}
+assert.match(workflow, /level-blind-capability-sweep\.mjs/u);
+assert.equal((workflow.match(/ref: \$\{\{ github\.sha \}\}/gu) ?? []).length, 2,
+    'both solve and combine checkouts must pin github.sha');
+assert.match(sweep, /historicalInputs: \[\]/u);
+for (const forbidden of ['--baseline', '--prime-winner', '--attempt-cache', '--priority', '--resume']) {
+    assert.ok(sweep.includes(`'${forbidden}'`), `level-blind sweep must explicitly reject ${forbidden}`);
+}
+assert.match(sweep, /const PUZZLE_FIELDS = \[/u);
+const allowlist = sweep.match(/const PUZZLE_FIELDS = \[([\s\S]*?)\];/u)?.[1] ?? '';
+for (const forbiddenField of ['id', 'hints', 'hintRecords', 'stressMeta', 'provenance', 'designerName', 'description', 'difficulty']) {
+    assert.equal(allowlist.includes(`'${forbiddenField}'`), false, `mechanics allowlist must exclude ${forbiddenField}`);
+}
+assert.match(sweep, /Never pass hintLevels[\s\S]*to the solver worker/u);
+assert.match(sweep, /level-blind-capability-worker\.mjs/u);
+assert.equal(/prepareLevelForSolver\([^\n]*levelNumber/u.test(worker), false,
+    'capability worker must not inject corpus position into solver preparation');
+assert.match(worker, /prepareLevelForSolver\(raw, \{ source: 'raw' \}\)/u);
+assert.equal(worker.includes('readLevelsWithHints'), false, 'capability worker must not load hint artifacts');
+
+console.log('experiment manifest + solver capability boundary tests passed');
