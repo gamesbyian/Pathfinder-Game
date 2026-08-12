@@ -1,10 +1,10 @@
 # Worker-count solve-outcome sensitivity: follow-up investigation (2026-08-12)
 
-**Status: TWO confirmed, previously-unknown bugs found. One (`runRepairProbe`'s wall-clock cap) is
-fixed and validated. The other — an incomplete ablation-flag promotion — is very likely the actual
-explanation for the corpus-scale directional gap (Evidence 2), which this report originally left
-unexplained; NOT fixed here (see "Why not fixed here" below), but demonstrated with a precise
-empirical isolation.** This is a direct follow-up to
+**Status: TWO confirmed, previously-unknown bugs found and BOTH fixed and validated.** One
+(`runRepairProbe`'s wall-clock cap) is a genuine worker-count/contention effect. The other — an
+incomplete ablation-flag promotion, found while investigating the corpus-scale directional gap
+(Evidence 2) — turned out to be the actual explanation for that gap, which this report originally
+left unexplained; not a worker-count effect at all. This is a direct follow-up to
 `reports/2026-08-12-worker-count-solve-outcome-sensitivity.md` and
 `reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md` — both currently only on branch
 `claude/must-cross-intersection-propagation-0t3ljg`, not yet merged to `main` (this report was
@@ -12,9 +12,10 @@ written from that branch's copy, fetched via `git fetch`; not linked here since 
 on this branch yet, which `check:documentation-links` correctly flags). Read those first; this
 report does not restate their evidence.
 
-**Read order**: the original investigation (Summary through "Fix implemented" below) was written
-before the finding in "Corpus-scale directionality, resolved" further down — that later section
-supersedes the "does not match the corpus-scale gap's direction" caveat in the Summary immediately
+**Read order**: the original investigation (Summary through the first "Fix implemented" section)
+was written before the finding in "Corpus-scale directionality, resolved" further down — that
+later section supersedes the "does not match the corpus-scale gap's direction" caveat in the
+Summary immediately
 below. Kept in write-order rather than restructured, so the reasoning that led to the resolution is
 still visible.
 
@@ -236,8 +237,10 @@ telemetry too, just not (as far as this data shows) the deciding factor in why i
 - **Solver code / corpus data drift between the two compared commits**: re-confirmed independently
   (see "Environment note" above) — zero diff in `modules/solver/` or either stress corpus JSON.
 
-## Corpus-scale directionality, resolved: run #33 and run #34 did NOT use "the same effective
-## solver flags" — the ablation-flag `PRUNE_MC_NEIGHBOR_BUDGET` differed between them
+## Corpus-scale directionality, resolved
+
+Run #33 and run #34 did NOT use "the same effective solver flags" as previously believed — the
+ablation flag `PRUNE_MC_NEIGHBOR_BUDGET` differed between them.
 
 **This is very likely THE explanation for Evidence 2's 48-level gap, and it is not a worker-count
 effect at all.** Found by re-reading the two runs' *actual invoked commands* via the GitHub Actions
@@ -372,7 +375,61 @@ investigation's own earlier framing) had verified worker count was the *only* di
 assumed from "same solver commit, no `enable_flags`/`disable_flags` override on either dispatch,"
 which — as this section shows — is not the same claim as "the same effective ablation config."
 
-### Why not fixed here
+### Fix implemented (2026-08-12, follow-up to this report)
+
+Initially left unfixed here (see the struck-through reasoning below, kept for the record) pending
+explicit user direction, since it's a real behavior change to production solving — the user then
+asked for it directly. Implemented on this branch, which turned out to need *both* halves of the
+promotion, not just the missing one: this branch had never picked up either the sibling branch's
+registry change (`OPT_IN_FEATURES`) or its read-site fix, so both were done together here.
+
+- **`scripts/ablation-config.mjs`**: removed `PRUNE_MC_NEIGHBOR_BUDGET` from `OPT_IN_FEATURES`;
+  updated its `FEATURES` description from "production default-OFF; OPEN promotion gate" to
+  "production default-ON as of 2026-08-12 (promoted)" with the population evidence summarized.
+- **`modules/solver/prune-gauntlet.ts:219`**: changed the read site from the opt-in convention
+  (`cfg && cfg.PRUNE_MC_NEIGHBOR_BUDGET === true`) to the standard convention (`!cfg ||
+  cfg.PRUNE_MC_NEIGHBOR_BUDGET`) — matching every other non-opt-in rule in the same gauntlet.
+- **Regression test** (`modules/solver/lower-bounds.test.ts`, written and confirmed failing against
+  the unfixed code first, then confirmed passing after the fix): at a state the test already knows
+  is a genuine dead branch, an ablation config built through the real `normalizeAblationConfig` path
+  with this flag left unset must still activate the rule — checked via `diagnostics.reached`/
+  `rejected` specifically (not the overall verdict, which an unrelated already-firing rule,
+  `PRUNE_MC_CEILING`, made misleadingly pass in an earlier draft of this same test).
+- **`docs/solver-opt-in-experiment-ledger.md`**: moved the flag from the open-flags table to
+  "Already promoted/default-on items"; added a dated note explaining the wiring gap this exposed
+  and a standing lesson for future promotions ("removing a flag from `OPT_IN_FEATURES` is necessary
+  but not sufficient — check every read site's convention too").
+- **`modules/solver/lower-bounds.ts:117`**: updated the stale "Opt-in, default OFF" comment.
+- **`scripts/experiment-manifest-lib-check.mjs`**: its consistency-checker fixture used
+  `PRUNE_MC_NEIGHBOR_BUDGET` as a stand-in "genuinely opt-in" flag; switched to
+  `PRUNE_PORTAL_PARITY_ENVELOPE` (still opt-in) since the test validates the preflight tool's
+  consistency logic in general, not this specific flag's disposition. Confirmed this test failed
+  first (correctly — `defaultConfig()` already derives from `OPT_IN_FEATURES` correctly, so once
+  the registry changed, this fixture's stale "off means blank workflow inputs" assumption broke) and
+  passed after the fixture swap.
+
+**Validation**: `npx vitest run modules/solver/` — 28 files / 340 tests pass.
+`npm run test:coverage` — 83/83 files, 1096/1096 tests pass. `npm run test:node` (23 validator
+suites, including 160/160 hints still PLAY-valid) — all pass. `npm run check:lint` /
+`check:types` / `check:types:tests` / `check:documentation-links` (no new issues; the one
+pre-existing unrelated failure is untouched) — all pass. `npm run solver:bench -- --check` —
+**160/160 solved, no regressions.** Isolated before/after (stashed just these two files, reran,
+restored): **51,959,647 nodes (unfixed) → 51,789,137 nodes (fixed)**, same 160/160 solved both
+ways — a small, real, positive effect (the prune now genuinely prunes a few dead branches on this
+corpus) with zero solvability change, consistent with the flag's own documented evidence (the much
+larger effect is on corpus-2, per the 611→665 A/B already gathered with the flag correctly forced
+on).
+
+**Not attempted**: a fresh full corpus-2 A/B specifically re-validating this exact fix (1700 levels
+at up to 36M nodes each is far outside this session's compute/time budget). The existing 611→665
+A/B remains valid evidence for the prune's own soundness and value — it was run with the flag
+correctly forced on via `--enable-flags`, so it was never confounded by this wiring gap — but it
+was gathered before this specific fix existed, so it doesn't directly confirm this commit's
+behavior end-to-end at corpus-2 scale. The published-corpus and corpus-1-adjacent evidence above
+(160/160 no regressions, clean isolated node-count delta) is what's directly confirmed here.
+
+<details>
+<summary>Original "why not fixed here" reasoning (superseded once the user asked for the fix directly)</summary>
 
 Completing the promotion correctly would mean changing `prune-gauntlet.ts:215`'s read-site
 convention from the opt-in style (`cfg && cfg.FLAG === true`) to the standard style (`!cfg ||
@@ -386,6 +443,8 @@ flag correctly forced on via `--enable-flags`, so it remains valid evidence for 
 soundness/value, but it was never a test of *this* promotion mechanism). Left as a clearly-scoped,
 high-value fix for whoever owns the `PRUNE_MC_NEIGHBOR_BUDGET` promotion (tracked on
 `claude/must-cross-intersection-propagation-0t3ljg`, not this branch) to pick up.
+
+</details>
 
 ## Still open
 
@@ -409,13 +468,14 @@ high-value fix for whoever owns the `PRUNE_MC_NEIGHBOR_BUDGET` promotion (tracke
    difference) — not attempted here.
 3. ~~A proper fix for the confirmed `runRepairProbe` bug~~ — **implemented and validated**, see
    "Fix implemented" below.
-4. **Complete the `PRUNE_MC_NEIGHBOR_BUDGET` promotion** (see "Why not fixed here" above) — change
-   `prune-gauntlet.ts:215`'s read-site convention, add a regression test that would have caught this
-   exact gap (e.g. asserting `cfg=null` behaves like the *new* intended default, not like explicit
-   `false`), and re-run the full-corpus A/B this time with the flag genuinely defaulting on rather
-   than requiring `--enable-flags`.
+4. ~~Complete the `PRUNE_MC_NEIGHBOR_BUDGET` promotion~~ — **implemented and validated**, see "Fix
+   implemented" above. Still genuinely open: a fresh full corpus-2 A/B specifically re-confirming
+   this exact commit's behavior at scale (not attempted — outside this session's compute budget),
+   and reconciling this fix with whatever the sibling branch
+   (`claude/must-cross-intersection-propagation-0t3ljg`) does with its own copy of the same
+   promotion when the two branches are eventually merged.
 
-## Fix implemented
+## Fix implemented: `runRepairProbe`'s wall-clock cap
 
 `modules/solver/orchestration.ts:954`'s hardcoded `30000` is replaced with a new named constant,
 `REPAIR_PROBE_ATTEMPT_MS_CAP = 1_200_000` (20 minutes), defined and justified next to
