@@ -86,7 +86,7 @@ export const FEATURES = {
     STRATEGY_REPAIR_LENGTH_GAP_CLOSE: 'Repair-search: on a dead end where every non-length/intersection objective is already satisfied, try a small bounded backtracking search to close the exact length/intersection gap instead of discarding the restart',
     STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS: 'Repair-search: additionally trigger closeLengthGap when at most LENGTH_GAP_CLOSE_STRUCTURAL_SLACK non-length objectives are still pending (not just exactly zero) — targets near-miss dead ends like "length off by 1, one pending mustTurn cell" that the strict base trigger never attempts',
     STRATEGY_REPAIR_TURN_BIAS: 'production default-OFF; CLOSED negative / retained opt-in: repair turn-aware selective-bias attempt. A clean deterministic Corpus-2 A/B after the sparse-ablation confound fix reproduced baseline 725/1700 vs ON 718/1700 (net −7; 5 gained/12 lost), byte-identical to the prior result; disabling the nogood cache gave −8 and falsified that proposed interaction. Do not promote or repeat without materially new evidence. See reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md and docs/solver-opt-in-experiment-ledger.md.',
-    STRATEGY_MAIN_LOOP_LATE_RESERVE: 'production default-OFF; OPEN promotion gate: experimental reserve-not-reorder treatment for main-loop attempt starvation. The mechanism pilot activated all beneficiaries and recovered 1/14 historical hard matches at the tested arm; a deterministic matched-budget full-population A/B remains the decision-bearing gate. See docs/main-loop-late-reserve-experiment.md and docs/solver-opt-in-experiment-ledger.md.',
+    STRATEGY_MAIN_LOOP_LATE_RESERVE: 'production default-ON as of 2026-08-12 at fraction 0.15 (MAIN_LOOP_LATE_RESERVE_FRACTION, orchestration.ts): reserve-not-reorder treatment for main-loop attempt starvation. The frozen level-blind full-population A/B (all 4 arms workers=1, deterministic=true) showed a monotonic, strict-win trend as the reserve fraction grew: Corpus-2 control 617/1700 -> 0.05: 687 -> 0.10: 692 -> 0.15: 694, with Corpus-1 saturating at 94/102 from 0.05 onward, and aggregate nodes/work DECREASING at every step despite more levels solving. 0.15 (the highest tested value) beat every other arm on every measured axis with no sign of reversal. See docs/main-loop-late-reserve-experiment.md, reports/2026-08-12-main-loop-late-reserve-population-ab.md, and docs/solver-opt-in-experiment-ledger.md. Caveat: the control/treatment arms were internally consistent (all workers=1) but their absolute solved counts are not directly comparable to any workers=2 run — see reports/2026-08-12-worker-count-solve-outcome-sensitivity.md.',
 
     // ── Templates ──────────────────────────────────────────────────────────────
     TEMPLATE_CORNER_HARVEST:    'cornerHarvest — pulls toward grid corners during harvest phase',
@@ -122,7 +122,6 @@ export const OPT_IN_FEATURES = new Set([
     'PRUNE_PORTAL_PARITY_ENVELOPE',
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS',
     'STRATEGY_REPAIR_TURN_BIAS',
-    'STRATEGY_MAIN_LOOP_LATE_RESERVE',
 ]);
 
 // ─── Template → config key mapping ───────────────────────────────────────────

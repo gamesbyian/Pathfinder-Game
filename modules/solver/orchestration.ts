@@ -709,9 +709,13 @@ export const ADMISSIBLE_ORDER_BUDGET_FRACTION = 1.0;
  *  must be 0 whenever the tier is suppressed, or an exhausted early tier would start reporting
  *  status 'failed' where it used to report 'node-budget-reached'. */
 export const ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION = 0.25;
-/** Default treatment values for the opt-in main-loop starvation experiment. Production never
- *  observes these constants unless STRATEGY_MAIN_LOOP_LATE_RESERVE is explicitly enabled. */
-export const MAIN_LOOP_LATE_RESERVE_FRACTION = 0.10;
+/** Default reserve fraction/config-count for main-loop late-suffix starvation mitigation.
+ *  STRATEGY_MAIN_LOOP_LATE_RESERVE is production default-ON as of 2026-08-12; the mechanism is
+ *  still a strict no-op unless a finite `nodeBudget` is supplied (offline batch tooling only —
+ *  see mainLoopLateReserveEligible below), so this changed no interactive Play/Editor/Review
+ *  behavior. 0.15 is the frozen level-blind population A/B's winning arm — see
+ *  docs/main-loop-late-reserve-experiment.md and reports/2026-08-12-main-loop-late-reserve-population-ab.md. */
+export const MAIN_LOOP_LATE_RESERVE_FRACTION = 0.15;
 export const MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT = 4;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from

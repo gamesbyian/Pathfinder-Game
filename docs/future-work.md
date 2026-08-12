@@ -57,24 +57,13 @@ The rollback pilot showed long demonstrated differences between retained repair 
 
 Question: how far back must an elite be rolled before at least one exact valid continuation exists? This decides whether a genuinely different prefix-edit operator is warranted and how deep it must reach.
 
-### 4. Main-loop late-reserve full population A/B
+### 4. Main-loop late-reserve full population A/B — DONE, promoted (2026-08-12)
 
-**Status: unblocked; full A/B still pending.**
+**Status: closed. Promoted to production default-ON at fraction 0.15.**
 
-The mechanism pilot already showed that reserve-not-reorder activates the starved late configs and recovered 1/14 hard historical matches. Acceptance still requires the frozen full-population experiment in [`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md).
+The frozen full-population level-blind A/B (all 4 arms `workers=1`, `deterministic=true`, full 1700/1700 C2 + 102/102 C1 coverage confirmed each arm) came back a clean positive result: Corpus-2 solved control 617 → 0.05: 687 (+70) → 0.10: 692 (+5) → 0.15: 694 (+2), Corpus-1 saturating at 94/102 from 0.05 onward, with aggregate nodes/work **decreasing** monotonically across all four arms despite more levels solving. 0.15 (the highest tested fraction) beat every other arm on every measured axis with no reversal. Full results, the promotion rationale, and the workers=1-comparability caveat: [`../reports/2026-08-12-main-loop-late-reserve-population-ab.md`](../reports/2026-08-12-main-loop-late-reserve-population-ab.md).
 
-Run through the hardened level-blind stress workflow. Control and treatment must differ only in:
-
-- `enable_flags` (`STRATEGY_MAIN_LOOP_LATE_RESERVE` in treatment), and
-- `main_loop_late_reserve_fraction`.
-
-`main_loop_late_reserve_config_count=4` in every arm. Test 5%, 10%, and 15% treatments against a fresh control. No exact-level priming dimension exists in the capability workflow.
-
-Interpretation:
-
-- positive population result → participation floors/starvation are a real general lever;
-- target recoveries but negative population result → static reserve is too blunt; prefer online failure-conditioned allocation;
-- null → close the current static reserve mechanism and move on.
+`scripts/ablation-config.mjs` no longer lists `STRATEGY_MAIN_LOOP_LATE_RESERVE` in `OPT_IN_FEATURES`; `MAIN_LOOP_LATE_RESERVE_FRACTION` in `modules/solver/orchestration.ts` is now `0.15`. The mechanism remains a strict no-op without a finite `nodeBudget`, so this only affects offline batch tooling, not interactive Play/Editor/Review solves. No further action needed; fractions beyond 0.15 are an optional, low-priority follow-up only.
 
 ## Parallel observational work that remains valid
 
