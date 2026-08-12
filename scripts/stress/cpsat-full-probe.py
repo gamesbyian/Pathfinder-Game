@@ -287,7 +287,16 @@ if not core_only and not no_mustcross:
     for c in must_cross:
         if c in idx: m.Add(visits[c] == 2)                 # crossCounts >= 2
 for g in gates:
-    if g in idx: m.Add(visits[g] <= 1)
+    # A gate cell is illegal as a move target unconditionally (move-rules.ts: `gateKeys.includes
+    # (targetKey)` rejects every gate, not just "the one already left"), including every OTHER
+    # unused gate on a multi-gate level. `visits[g] <= 1` alone only capped the CHOSEN start gate
+    # correctly (it is naturally 1, via x[0][g]) -- it left every non-chosen gate free to be
+    # visited once at any later t, which real Pathfinder forbids outright. Found via a referee-
+    # rejected witness on S00108 (4 gates): the emitted path walked through an unused gate cell
+    # mid-route ("Invalid move at step 47" == invalid-gate-reentry in move-rules.ts).
+    if g in idx:
+        m.Add(visits[g] == 1).OnlyEnforceIf(x[0][g])
+        m.Add(visits[g] == 0).OnlyEnforceIf(x[0][g].Not())
 m.Add(visits[goal] == 1)
 
 # Edge-axis reuse. The unit is a VISIT, not an entry.
