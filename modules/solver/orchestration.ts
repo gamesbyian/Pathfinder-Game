@@ -789,7 +789,9 @@ export const MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT = 4;
  *  2000-level stress corpus — too slow for this kind of per-level direct-replay measurement)
  *  before changing either value. */
 const REPAIR_PROBE_ORDINARY_NODE_BUDGET = 2_000_000;
-const REPAIR_PROBE_BIASED_NODE_BUDGET = 6_000_000;
+// Exported for orchestration.test.ts's STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET regression
+// tests, which assert the exact scaled node budget a mocked biased-tier attempt is called with.
+export const REPAIR_PROBE_BIASED_NODE_BUDGET = 6_000_000;
 
 /** Per-attempt wall-clock trip-wire for `runRepairProbe` (see its own call site's comment): meant
  *  to catch only a genuinely pathological per-node cost or host distress, never to be the actual
@@ -825,7 +827,8 @@ export const REPAIR_PROBE_ATTEMPT_MS_CAP = 1_200_000;
  *  "Update" sections for both prior measurements. Needs its own corpus-2 A/B before promotion. */
 const REPAIR_PROBE_PREDICTED_TIER_SHARE = 0.75;
 
-/** STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (opt-in, default OFF — pilot, not yet promoted):
+/** STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (production default-ON as of 2026-08-13, promoted
+ *  — see the "PROMOTION" paragraph at the end of this comment for the decision and its caveats):
  *  a single-signal, single-recipient instance of "online failure-conditioned allocation"
  *  (docs/solver-interoperability-and-cooperation-plan.md §17, docs/future-work.md item #4).
  *
@@ -875,13 +878,27 @@ const REPAIR_PROBE_PREDICTED_TIER_SHARE = 0.75;
  *  (mainLoopEarlyNodeBudget) — normally the early main-loop configs — without touching either
  *  protected reserve or requiring a new recipient-side change.
  *
- *  CALIBRATION CAVEAT: BADNESS_GATE=10 and MIN_SCALE=0.35 are picked from the n=12 local sample
- *  above (n=1 for the "needs full budget" case) — a starting point, not a validated constant.
- *  Needs its own dedicated population A/B (matched nodeBudget, level-blind, gains vs. losses, not
- *  just net count) before any promotion decision — same bar as every other opt-in flag in
- *  docs/solver-opt-in-experiment-ledger.md. Do not promote on this comment's evidence alone. */
-const REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE = 10;
-const REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE = 0.35;
+ *  CALIBRATION CAVEAT: BADNESS_GATE=10 and MIN_SCALE=0.35 are still picked from the original n=12
+ *  local sample (n=1 for the "needs full budget" case) — a starting point, not a re-derived
+ *  constant. Re-measure before changing either value, per this file's own established discipline
+ *  for tuned constants (see e.g. REPAIR_PROBE_ORDINARY_SEED_SALTS's calibration history above).
+ *
+ *  PROMOTION (2026-08-13): a 300-level stratified level-blind GHA A/B (250 of the 512-level
+ *  eligible population + 50 control, real 50,000,000-node production budget, matching
+ *  solver-stress-refresh.yml's own default — .github/workflows/solver-repair-probe-adaptive-
+ *  sample-ab.yml) reproduced the local pilot's zero-loss shape at 25x the sample size: control
+ *  108/300, treatment 109/300, net +1 (1 gained: R02719, mustCross=8/mustTurn=5/reqInt=9 —
+ *  squarely inside the eligible population, not a control-bucket artifact; 0 lost), nodes -1.5%,
+ *  work -9.0%. Promoted to production default-ON on this evidence at the project owner's explicit
+ *  direction. This is a REAL DEVIATION from this ledger's own stated bar (a dedicated
+ *  full-population Corpus-2 A/B) — 300/1700 (250/512 eligible) is strong stratified supporting
+ *  evidence, not the full-population result the bar calls for. Recorded here rather than glossed
+ *  over: if a future full-corpus run surfaces a loss this sample didn't catch, that is the
+ *  expected shape of the risk being accepted, not a surprise. See
+ *  reports/2026-08-12-repair-probe-early-main-loop-starvation.md and
+ *  docs/solver-opt-in-experiment-ledger.md for the full record. */
+export const REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE = 10;
+export const REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE = 0.35;
 
 /** Additional seeds (see runAttempt's seedSalt param) to retry an already-failed ORDINARY probe
  *  round with, before falling through to the full (much more expensive) ladder.
@@ -1008,13 +1025,19 @@ async function runRepairProbe(
         // (see repair-search.ts) — give it the biased probe budget and a single seed salt.
         const isBiased = repairConfig.repairMustTurnBiased || repairConfig.repairTurnBiased;
         let fixedProbeNodeBudget = isBiased ? biasedNodeBudgetForTier(biasedSeen++) : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
-        // STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (opt-in, default OFF — see
-        // REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE's own comment for the full derivation): scale
-        // the biased tier's node budget down when the ordinary tier's own live bestBadness evidence
-        // (already reported by repairSearchFromGate on every failed attempt, current-invocation
-        // only) shows no sign repair is close. Strict no-op whenever the ordinary tier hasn't run,
-        // reported no finite badness, or already looks promising (badness <= the gate).
-        if (isBiased && cfg && cfg.STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET === true) {
+        // STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (production default-ON as of 2026-08-13 —
+        // see REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE's own comment for the full derivation):
+        // scale the biased tier's node budget down when the ordinary tier's own live bestBadness
+        // evidence (already reported by repairSearchFromGate on every failed attempt,
+        // current-invocation only) shows no sign repair is close. Strict no-op whenever the
+        // ordinary tier hasn't run, reported no finite badness, or already looks promising
+        // (badness <= the gate). Standard (!cfg || cfg.FLAG) convention, NOT opt-in (cfg &&
+        // cfg.FLAG === true) — matching PRUNE_MC_NEIGHBOR_BUDGET's and
+        // STRATEGY_MAIN_LOOP_LATE_RESERVE's own promotions and the wiring-gap lesson both shipped
+        // with (docs/solver-opt-in-experiment-ledger.md): the opt-in convention stays inert
+        // whenever cfg is null, which is every production interactive solve and any CLI run
+        // without --enable-flags.
+        if (isBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET)) {
             const ordinaryBestBadness = attempts.reduce((min, a) => (
                 a.repair && !a.repairMustTurnBiased && !a.repairTurnBiased && Number.isFinite(a.bestBadness)
                     ? Math.min(min, a.bestBadness as number) : min

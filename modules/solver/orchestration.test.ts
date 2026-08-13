@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
@@ -342,6 +342,102 @@ test('STRATEGY_REPAIR_PROBE_MULTI_SEED: false restricts the probe to a single se
     const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === REPAIR_PROBE_ATTEMPT_MS_CAP);
     assert.equal(probeAttempts.length, 1);
     assert.equal(probeAttempts[0].seedSalt ?? 0, 0);
+});
+
+// Same shape as makeRepairGatedInfeasibleLevel, plus a must-turn cell so attempts.ts's needsRepairFallback
+// / mustTurn>0 gating (attempts.ts) also appends the must-turn-biased repair config — the only
+// thing STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET can ever act on (see attempts.test.ts's
+// nearly-identical fixture for the same repair-gated + must-turn combination).
+function makeRepairGatedMustTurnInfeasibleLevel() {
+    return {
+        ...makeRepairGatedInfeasibleLevel(),
+        mustPassTurnDirs: new Map([[PACK(1, 1), 'either']]),
+    } as unknown as NormalizedLevel;
+}
+
+// Production default-ON as of 2026-08-13 (reports/2026-08-12-repair-probe-early-main-loop-starvation.md).
+// Mirrors the PRUNE_MC_NEIGHBOR_BUDGET / STRATEGY_MAIN_LOOP_LATE_RESERVE regression pattern: an
+// entirely omitted `ablation` option (cfg=null, exactly what every production caller and any CLI
+// invocation without --enable-flags passes) must activate the rule, not silently leave it inert —
+// the wiring gap both of those promotions shipped with and had to fix separately.
+test('STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET shrinks the biased tier by default when ordinary-tier bestBadness is poor', async () => {
+    const biasedNodeBudgets: number[] = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) {
+            out.nodesExpanded = spent;
+            out.timedOut = true;
+            // Only the PROBE's biased-tier call is under test — the full repair fallback loop
+            // later in the same solve retries the same config at a different (much larger) ms
+            // budget, which must not be mistaken for a second probe attempt.
+            if (config.repairMustTurnBiased && budgetMs === REPAIR_PROBE_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
+            else if (!config.repairMustTurnBiased) out.bestBadness = 100; // poor live evidence: well above REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE
+        }
+        return null;
+    };
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, false);
+    const scale = Math.min(1, Math.max(REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE / 100));
+    const expectedScaled = Math.floor(REPAIR_PROBE_BIASED_NODE_BUDGET * scale);
+    assert.equal(biasedNodeBudgets.length, 1);
+    assert.equal(biasedNodeBudgets[0], expectedScaled);
+    assert.ok(expectedScaled < REPAIR_PROBE_BIASED_NODE_BUDGET, 'sanity: the scale actually shrank the budget');
+});
+
+test('STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET leaves the biased tier at full budget when ordinary-tier bestBadness already looks promising', async () => {
+    const biasedNodeBudgets: number[] = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) {
+            out.nodesExpanded = spent;
+            out.timedOut = true;
+            if (config.repairMustTurnBiased && budgetMs === REPAIR_PROBE_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
+            else if (!config.repairMustTurnBiased) out.bestBadness = 2; // promising: well under REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE (10)
+        }
+        return null;
+    };
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(biasedNodeBudgets.length, 1);
+    assert.equal(biasedNodeBudgets[0], REPAIR_PROBE_BIASED_NODE_BUDGET, 'scale 1: no-op when live evidence already looks promising');
+});
+
+test('STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: false keeps the biased tier at full budget even with poor evidence', async () => {
+    const biasedNodeBudgets: number[] = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) {
+            out.nodesExpanded = spent;
+            out.timedOut = true;
+            if (config.repairMustTurnBiased && budgetMs === REPAIR_PROBE_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
+            else if (!config.repairMustTurnBiased) out.bestBadness = 100;
+        }
+        return null;
+    };
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        // normalizeAblationConfig's Proxy falls back every OTHER unset key to its normal
+        // registry-derived default (!OPT_IN_FEATURES.has(key)), so a sparse object naming only
+        // this flag is enough to isolate its disablement without also touching
+        // STRATEGY_REPAIR_PROBE / STRATEGY_REPAIR_PROBE_MULTI_SEED (both non-opt-in, default true).
+        ablation: { STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: false },
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(biasedNodeBudgets.length, 1);
+    assert.equal(biasedNodeBudgets[0], REPAIR_PROBE_BIASED_NODE_BUDGET);
 });
 
 // BUG FIXED 2026-08-12 (reports/2026-08-12-worker-count-sensitivity-repair-probe-wallclock.md):

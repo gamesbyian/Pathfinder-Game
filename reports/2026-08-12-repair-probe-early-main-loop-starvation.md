@@ -7,9 +7,10 @@ and `docs/future-work.md` item #4, which flagged a plausible-but-unconfirmed mec
 several individual reference points including the confounded 0.15 treatment arm's 694.
 
 **Bottom line: the specific hypothesis in the originating report is wrong as stated, but a real,
-related, and previously-undocumented starvation mechanism exists nearby. A small opt-in pilot fix
-for that real mechanism is implemented, verified, and landed on this branch as
-`STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` (default OFF).**
+related, and previously-undocumented starvation mechanism exists nearby. A small fix for that real
+mechanism, `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET`, was implemented as an opt-in pilot, then
+confirmed at larger scale and promoted to production default-ON on 2026-08-13 — see "Promotion"
+near the end of this report for the decision and its explicit caveats.**
 
 ## Phase 1: the stated hypothesis, traced against the actual code
 
@@ -223,7 +224,44 @@ control-sample levels are consistent with the structural claim that the flag can
 pilot, and CLAUDE.md's own guidance is to gather cheap local evidence before buying an expensive
 population run). `npm run test:node` / full `npm run ci` were not re-run end-to-end after this
 change (the targeted subset above covers everything this change touches); recommended before any
-future promotion decision.
+future re-evaluation.
+
+## Promotion (2026-08-13)
+
+Promoted to production default-ON at the project owner's explicit direction, on the strength of the
+300-level stratified GHA A/B above plus the original n=12 local pilot — **not** the dedicated
+full-population Corpus-2 A/B this project's own `docs/solver-opt-in-experiment-ledger.md` normally
+requires before promotion. This is recorded here as a deliberate, acknowledged deviation from that
+bar, not an oversight: if a future full-corpus run surfaces a loss neither sample caught, that is
+the expected shape of the risk being accepted, not a surprise.
+
+Both halves of the promotion landed together, learning directly from the wiring-gap lesson that bit
+both `PRUNE_MC_NEIGHBOR_BUDGET`'s and `STRATEGY_MAIN_LOOP_LATE_RESERVE`'s own promotions the same
+week (`docs/solver-opt-in-experiment-ledger.md`):
+
+- `scripts/ablation-config.mjs`: removed from `OPT_IN_FEATURES`; `FEATURES` description updated.
+- `modules/solver/orchestration.ts`: the read site converted from the opt-in convention
+  (`cfg && cfg.FLAG === true`, which stays inert whenever `cfg` is `null` — every production
+  interactive solve and any CLI run without `--enable-flags`) to the standard convention
+  (`!cfg || cfg.FLAG`).
+- Three new regression tests in `modules/solver/orchestration.test.ts`: the mechanism activates
+  under a genuinely-omitted ablation config (not just an explicit `{ FLAG: true }` object, which
+  would have missed the exact wiring gap above); it correctly leaves the biased tier untouched when
+  live evidence already looks promising; an explicit `{ FLAG: false }` still fully disables it.
+
+**Re-verification performed at promotion time:**
+- `npx tsc --noEmit`: clean.
+- `npx vitest run modules/solver/`: 28 files / 344 tests pass (341 + 3 new).
+- `npm run check:lint`: clean.
+- `node scripts/check-documentation-links.mjs`: passes.
+- `npm run solver:bench -- --check`: **160/160 solved, 0 regressions, byte-identical 51,789,137
+  nodes** — confirms the published corpus has zero eligible levels (none are both repair-gated and
+  carry a must-turn cell), so this promotion has no effect on any interactive Play/Editor/Review
+  solve; it only changes offline batch-tooling behavior on levels that set a finite `nodeBudget`.
+
+**Still not attempted**: a full corpus-2 A/B, and a re-run of `npm run test:node` / full `npm run
+ci` end-to-end (the targeted subset above covers everything this change touches). Both remain
+reasonable follow-ups, not blockers to the promotion already made.
 
 ## Reproducing
 

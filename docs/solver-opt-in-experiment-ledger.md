@@ -4,7 +4,7 @@ This is the authoritative disposition ledger for solver mechanisms that remain p
 
 Capability decisions must obey [`solver-level-blindness.md`](solver-level-blindness.md). Exact-level history may be used for replay/research, but never to produce a headline capability verdict.
 
-Last reconciled: **2026-08-12**, after promoting `PRUNE_MC_NEIGHBOR_BUDGET` and `STRATEGY_MAIN_LOOP_LATE_RESERVE` (see "Already promoted/default-on items" and the disposition notes below).
+Last reconciled: **2026-08-13**, after promoting `PRUNE_MC_NEIGHBOR_BUDGET`, `STRATEGY_MAIN_LOOP_LATE_RESERVE` (both 2026-08-12), and `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` (2026-08-13) — see "Already promoted/default-on items" and the disposition notes below.
 
 ## Current production-default-OFF ablation flags
 
@@ -13,7 +13,6 @@ Last reconciled: **2026-08-12**, after promoting `PRUNE_MC_NEIGHBOR_BUDGET` and 
 | `STRATEGY_REPAIR_ELITE_PREFIX_DFS` | **CLOSED FOR PROMOTION IN CURRENT FORM** | Equal-budget dedicated test: ON 4/20 vs OFF 5/20, with confirmed displacement from consuming repair's shared node budget. | None. Reopen only after a materially cheaper/more selective variant clears a small equal-work retest. |
 | `STRATEGY_REPAIR_TURN_BIAS` | **CLOSED NEGATIVE** | Historical matched C2 run reproduced 725→718 (-7, 5 gained / 12 lost) and disabling nogood cache did not rescue it. That historical population used the old re-verification harness, so do not quote 725 as capability; the negative is still enough to close the unchanged mechanism. | None unless materially new mechanism evidence appears. Do not rerun the unchanged flag merely to translate the old negative into the new capability harness. |
 | `PRUNE_PORTAL_PARITY_ENVELOPE` | **CLOSED NEGLIGIBLE** | Sound stored-solution reasoning and live test; reject condition fired zero times across roughly 240M searched nodes on relevant portal levels. | None. Reopen only for a materially stronger formulation. |
-| `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` | **PILOT, evidence-gathering** (landed 2026-08-12) | A local n=12 repair-gated Corpus-2 sample (15M-node budget) found the repair probe and the early main-loop configs share one unprotected node pool, with a naive static probe-budget shrink being zero-sum (1 gain, 1 loss). This flag conditions the shrink on the ordinary tier's own live `bestBadness` evidence instead, and gets a clean +1 (1 gained, 0 lost) on that sample. **Confirmed at larger scale 2026-08-13**: a 300-level stratified level-blind GHA A/B (250 of the 512 eligible + 50 control, real 50,000,000-node production budget, `.github/workflows/solver-repair-probe-adaptive-sample-ab.yml`) — control 108/300, treatment 109/300, net +1 (1 gained: `R02719`, 0 lost), nodes -1.5%, work -9.0%. Same zero-loss shape as the pilot, now at 25x the sample size and the real production budget. See `reports/2026-08-12-repair-probe-early-main-loop-starvation.md`. | A full-corpus (or larger/repeat stratified) level-blind Corpus-2 A/B (matched `nodeBudget`, gains vs. losses not just net) remains the bar for promotion — same as every other flag here. `BADNESS_GATE`/`MIN_SCALE` are still calibrated from the original n=12 (n=1 positive case) and should be re-derived, not assumed, before promotion. |
 
 ## Default-off repair parameters that are not promotion candidates
 
@@ -64,8 +63,30 @@ The remaining repair research direction is exact retreat/deep prefix editing, no
   the actual code and found FALSE — the reserve is carved out and protected before the probe ever
   runs. A related but distinct real mechanism (the probe and the pre-reserve "early" main-loop
   configs sharing one unprotected pool) was found and given a pilot fix,
-  `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` (own row above) — see
+  `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` (own entry below) — see
   `reports/2026-08-12-repair-probe-early-main-loop-starvation.md`.**
+- `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET`: promoted to production default-ON 2026-08-13.
+  Registry change (`scripts/ablation-config.mjs`) and the `orchestration.ts` read-site convention
+  fix (opt-in `cfg && cfg.FLAG === true` → standard `!cfg || cfg.FLAG`) landed together in the same
+  commit, learning directly from the wiring-gap lesson both entries above already document, with
+  three regression tests (`modules/solver/orchestration.test.ts`) confirming: (1) the mechanism
+  activates under a genuinely-omitted ablation config specifically, not just an explicit
+  `{ FLAG: true }` object; (2) it correctly leaves the biased tier's budget untouched when live
+  evidence already looks promising; (3) an explicit `{ FLAG: false }` still fully disables it.
+  **Evidence at promotion time: a local n=12 pilot (net +1, 1 gained / 0 lost) plus a 300-level
+  stratified level-blind GHA A/B at the real 50,000,000-node production budget (250 of the 512
+  eligible levels + 50 control) — control 108/300, treatment 109/300, net +1 (1 gained: `R02719`,
+  0 lost), nodes -1.5%, work -9.0%.** Promoted on the project owner's explicit direction; this is a
+  **deliberate deviation from this ledger's usual bar** (a dedicated full-population Corpus-2 A/B)
+  — 300/1700 stratified is strong supporting evidence, not the full-population result the bar
+  normally requires, and is recorded as such rather than glossed over. `solver:bench --check`
+  (published 160-level corpus) is byte-identical (0 levels there are eligible: none are both
+  repair-gated and carry a must-turn cell), so this promotion has zero effect on any interactive
+  Play/Editor/Review solve today; it only changes offline batch-tooling behavior on levels that set
+  a finite `nodeBudget` and happen to be eligible. See
+  `reports/2026-08-12-repair-probe-early-main-loop-starvation.md` for the full record, including the
+  `BADNESS_GATE`/`MIN_SCALE` constants' own re-calibration caveat (still derived from the original
+  n=12, not re-derived at the larger sample size).
 
 ## Experiment interpretation rules
 
