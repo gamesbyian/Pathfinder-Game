@@ -201,6 +201,14 @@ interface SolveOpts {
      *  tier shares one undivided cumulative ceiling), which is what a before/after sweep sets on its
      *  baseline arm. Undefined (production default) preserves the constant exactly. */
     admissibleOrderNodeReserveFractionOverride?: number;
+    /** Override for REPAIR_FALLBACK_NODE_RESERVE_FRACTION for this solve only — same A/B-knob
+     *  shape and rationale as admissibleOrderNodeReserveFractionOverride above, and deliberately
+     *  NOT covered by `disableExtraBudgetPasses` for the same reason: STRATEGY_REPAIR_FALLBACK_
+     *  NODE_RESERVE being off already zeroes this reserve through its own run condition. 0 restores
+     *  the pre-reserve behavior (the repair fallback loop shares one undivided ceiling with the
+     *  whole main loop). Undefined (production default) preserves the constant exactly.
+     *  Opt-in, default OFF (unlike the admissible-order reserve) — see the constant's own comment. */
+    repairFallbackNodeReserveFractionOverride?: number;
     /** Override for the ordinary main-loop late-suffix reserve fraction (production default-ON,
      *  see MAIN_LOOP_LATE_RESERVE_FRACTION). Only takes effect when a finite `nodeBudget` is set
      *  (offline batch tooling) — never affects interactive Play/Editor/Review solves. The fraction
@@ -729,6 +737,41 @@ export const ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION = 0.25;
  *  docs/main-loop-late-reserve-experiment.md and reports/2026-08-12-main-loop-late-reserve-population-ab.md. */
 export const MAIN_LOOP_LATE_RESERVE_FRACTION = 0.15;
 export const MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT = 4;
+
+/** STRATEGY_REPAIR_FALLBACK_NODE_RESERVE (opt-in, default OFF — NEW, unvalidated mechanism, landed
+ *  2026-08-13). Withholds a slice of `earlyTierNodeBudget` from the probe and the whole main loop
+ *  (early + late suffix combined), the same way ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION withholds a
+ *  slice from everything before IT — except this reserve protects the repair fallback loop (and,
+ *  as a side effect, whatever the attraction-diversity pass finds still available afterward) from
+ *  the main loop's own consumption.
+ *
+ *  THE PROBLEM: the repair fallback loop and the attraction-diversity pass share `earlyTierNodeBudget`
+ *  with the main loop, completely unprotected — the main loop always runs first (it's simply the
+ *  next stage in solveLevel's ladder) and can consume the entire pool before either ever gets a
+ *  single node. Confirmed directly on an n=8 local repair-gated Corpus-2 sample (15,000,000-node
+ *  budget, `--workers=1`): 5 of 6 unsolved levels gave the repair fallback loop ZERO attempts, and
+ *  all 6 gave the attraction-diversity pass ZERO attempts — while the admissible-order tier, which
+ *  DOES have its own reserve, got its own slice on every one of the same 6 levels. Same clean
+ *  before/after control, same starvation shape as the already-fixed repair-probe/early-main-loop
+ *  bug (STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET) and the already-fixed admissible-order bug
+ *  (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION), one tier boundary further down the ladder.
+ *
+ *  THE MECHANISM: a flat carve-out from the ceiling the main loop runs against, computed BEFORE the
+ *  main loop runs — mirroring the admissible-order reserve's own mechanism exactly, not the
+ *  repair-probe fix's live-signal shrink. That fix needed live conditioning because a STATIC shrink
+ *  of the PROBE itself was zero-sum (see REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE's own comment);
+ *  here the receptor (the fallback loop) currently gets nothing at all rather than too much, so a
+ *  flat reserve — the same shape that measured +21 net for the admissible-order tier — is the
+ *  right first mechanism to test, not a novel one.
+ *
+ *  CALIBRATION CAVEAT: 0.15 is a starting point copied from MAIN_LOOP_LATE_RESERVE_FRACTION's own
+ *  validated magnitude (a "modest reserve" precedent), NOT a value derived from any A/B on this
+ *  specific mechanism — this reserve protects a much more central, heavily-used stage (the main
+ *  loop) than either existing reserve protects FROM, so it is not safe to assume the same fraction
+ *  is well-calibrated here. Landed opt-in, default OFF, specifically so it can be iterated on and
+ *  measured before any promotion decision — do not promote without a dedicated A/B, per this
+ *  codebase's standing discipline for every reserve/allocation mechanism above. */
+export const REPAIR_FALLBACK_NODE_RESERVE_FRACTION = 0.15;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
@@ -1453,6 +1496,54 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : 0;
     const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve;
 
+    // Repair-fallback node reserve (STRATEGY_REPAIR_FALLBACK_NODE_RESERVE, opt-in, default OFF —
+    // unvalidated new mechanism, see this constant's own comment). The repair fallback loop and the
+    // attraction-diversity pass share `earlyTierNodeBudget` with the WHOLE main loop (early + late
+    // suffix combined), completely unprotected: the main loop always runs first and can consume the
+    // entire pool before either ever gets a single node. Same starvation shape as the already-fixed
+    // repair-probe/early-main-loop bug (STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET) and the
+    // already-fixed admissible-order/everything-before-it bug (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION),
+    // one tier boundary further down the ladder — same mechanism as the admissible-order reserve
+    // (a flat carve-out from the ceiling the PRODUCER runs against, computed before the producer
+    // runs), not the repair-probe fix's live-signal shrink, because here the receptor (the fallback
+    // loop) needs a share of the pool it's currently denied entirely, not a scale-down of an
+    // over-consuming producer's own budget.
+    //
+    // Gated on the SAME real-run condition the fallback loop's own `for` loop below already checks
+    // (repairConfigs.length > 0 && repairBudgetFraction !== 0) — no separate ablation flag guards
+    // that loop today, so this reserve's eligibility mirrors it exactly. Reserving for a level with
+    // no repair fallback to protect would strand nodes, shrinking every disableExtraBudgetPasses
+    // caller's effective budget for nothing — the same reasoning the admissible-order reserve's own
+    // comment documents.
+    //
+    // OPT-IN convention (`cfg && cfg.FLAG === true`), NOT the standard `!cfg || cfg.FLAG` every
+    // OTHER reserve/promoted flag in this file uses — deliberately: this is a brand-new, unvalidated
+    // mechanism (see the constant's own comment), registered opt-in/default-OFF in
+    // scripts/ablation-config.mjs's OPT_IN_FEATURES, so it must stay OFF whenever `cfg` is null
+    // (every production interactive solve and any CLI run without --enable-flags) — the exact
+    // opposite-direction mismatch of the wiring-gap bug documented throughout
+    // docs/solver-opt-in-experiment-ledger.md would result from using the standard convention here.
+    const repairFallbackNodeReserveEnabled = !!(cfg && cfg.STRATEGY_REPAIR_FALLBACK_NODE_RESERVE === true);
+    const repairFallbackNodeReserveFractionRaw = Number(opts.repairFallbackNodeReserveFractionOverride);
+    const repairFallbackNodeReserveFraction = Number.isFinite(repairFallbackNodeReserveFractionRaw) && repairFallbackNodeReserveFractionRaw >= 0
+        ? Math.min(1, repairFallbackNodeReserveFractionRaw)
+        : REPAIR_FALLBACK_NODE_RESERVE_FRACTION;
+    const repairFallbackNodeReserveEligible = repairFallbackNodeReserveEnabled
+        && repairFallbackNodeReserveFraction > 0
+        && repairConfigs.length > 0
+        && repairBudgetFraction !== 0
+        && earlyTierNodeBudget !== Infinity;
+    const repairFallbackNodeReserve = repairFallbackNodeReserveEligible
+        ? Math.floor(earlyTierNodeBudget * repairFallbackNodeReserveFraction)
+        : 0;
+    // The reduced ceiling the probe and the WHOLE main loop (early + late suffix) run against —
+    // `earlyTierNodeBudget` itself is unchanged and remains what the repair fallback loop and the
+    // attraction-diversity pass check against below, so what they may spend is exactly what this
+    // reserve withheld from the main loop.
+    const mainLoopNodeBudget = earlyTierNodeBudget === Infinity
+        ? Infinity
+        : earlyTierNodeBudget - repairFallbackNodeReserve;
+
     // Ordinary main-loop late-suffix reserve. Production default-ON as of 2026-08-12 (fraction 0.15,
     // reports/2026-08-12-main-loop-late-reserve-population-ab.md) — standard `(!cfg || cfg.FLAG)`
     // convention, matching admissibleOrderTierWillRun above and every other non-opt-in flag, NOT the
@@ -1462,7 +1553,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // docs/solver-opt-in-experiment-ledger.md's "wiring gap" notes). Unlike a reorder, this retains
     // the exact config/gate iteration order: the repair probe and early config prefix see a reduced
     // absolute ceiling, while the final N ordinary configs see the ordinary tier's whole envelope
-    // (`earlyTierNodeBudget`, which already excludes the independent admissible-order reserve).
+    // (`mainLoopNodeBudget` — the main loop's own ceiling, which already excludes both the
+    // independent admissible-order reserve AND the repair-fallback reserve above).
     // After the ordinary main loop has offered that suffix its slice, repair/diversity may use any
     // remainder, so an inexpensive/exhausted suffix never strands budget. Still a strict no-op
     // without a finite `nodeBudget` (see `mainLoopLateReserveEligible` below), so this only affects
@@ -1479,16 +1571,16 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const mainLoopLateReserveEligible = mainLoopLateReserveEnabled
         && mainLoopLateReserveFraction > 0
         && mainLoopLateReserveConfigCount > 0
-        && earlyTierNodeBudget !== Infinity;
+        && mainLoopNodeBudget !== Infinity;
     const mainLoopLateReserve = mainLoopLateReserveEligible
-        ? Math.floor(earlyTierNodeBudget * mainLoopLateReserveFraction)
+        ? Math.floor(mainLoopNodeBudget * mainLoopLateReserveFraction)
         : 0;
     // A tiny finite ceiling can round the requested fraction to zero. Treat that as fully inert:
     // no telemetry marker, no altered status, and no pretend beneficiary with a zero-node slice.
     const mainLoopLateReserveWillRun = mainLoopLateReserve > 0;
-    const mainLoopEarlyNodeBudget = earlyTierNodeBudget === Infinity
+    const mainLoopEarlyNodeBudget = mainLoopNodeBudget === Infinity
         ? Infinity
-        : earlyTierNodeBudget - mainLoopLateReserve;
+        : mainLoopNodeBudget - mainLoopLateReserve;
     const mainLoopLateConfigStart = mainLoopLateReserveWillRun
         ? mainConfigs.length - mainLoopLateReserveConfigCount
         : mainConfigs.length;
@@ -1537,14 +1629,15 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // can still overshoot by up to one round's own cost, so re-check before spending any more
         // nodes in the main loop.
         //
-        // Only an EARLY return when nothing is being held back for the admissible-order tier. With a
-        // reserve in play, a probe that exhausts the early-tier ceiling must fall THROUGH to that
-        // tier rather than end the solve — returning here would spend the reserve on nothing, which
-        // is the precise failure this reserve exists to fix. Falling through is safe and needs no
-        // further guards: the main loop's runners, the repair loop and the diversity pass each
-        // re-check `earlyTierNodeBudget` themselves and no-op, so control reaches the tier having
-        // spent no extra nodes.
-        if (prep._metrics.nodesExpanded >= mainLoopEarlyNodeBudget && admissibleOrderNodeReserve === 0 && mainLoopLateReserve === 0) {
+        // Only an EARLY return when nothing is being held back for the admissible-order tier OR the
+        // repair-fallback reserve. With a reserve in play, a probe that exhausts the early-tier
+        // ceiling must fall THROUGH to whichever tier it is rather than end the solve — returning
+        // here would spend the reserve on nothing, which is the precise failure this reserve exists
+        // to fix. Falling through is safe and needs no further guards: the main loop's runners, the
+        // repair loop and the diversity pass each re-check their own ceiling (`mainLoopNodeBudget` /
+        // `earlyTierNodeBudget`) and no-op, so control reaches whichever tier has room having spent
+        // no extra nodes.
+        if (prep._metrics.nodesExpanded >= mainLoopEarlyNodeBudget && admissibleOrderNodeReserve === 0 && mainLoopLateReserve === 0 && repairFallbackNodeReserve === 0) {
             const totalMs = Date.now() - levelStartTime;
             return { ok: false, status: hasAttemptError(probeAttempts) ? 'attempt-error' : 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true, workSpent: workMeter.units - workStart, workBudget };
         }
@@ -1568,8 +1661,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const useInterleaving = (!cfg || cfg.STRATEGY_GATE_INTERLEAVING);
     const mainLoopStartTime = Date.now();
     const result = useInterleaving && activeGates.length > 1
-        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, earlyTierNodeBudget, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart)
-        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, earlyTierNodeBudget, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart);
+        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, mainLoopNodeBudget, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart)
+        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, mainLoopNodeBudget, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart);
     result.attempts = [...probeAttempts, ...result.attempts];
     const mainLoopEarlyTiersHitNodeCeiling = result.earlyNodeBudgetReached === true;
 
