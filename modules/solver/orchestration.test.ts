@@ -871,6 +871,103 @@ test('a reserve fraction that rounds to zero is fully inert', async () => {
     assert.equal(result.attempts.some(a => a.mainLoopLateReserve), false);
 });
 
+// STRATEGY_REPAIR_FALLBACK_NODE_RESERVE (opt-in, default OFF — see REPAIR_FALLBACK_NODE_RESERVE_
+// FRACTION's own comment for the two-revision history this test suite is meant to prevent a third
+// instance of). Fixture: makeRepairGatedInfeasibleLevel() has exactly 1 repair config (ordinary,
+// no must-turn-biased tier) and 16 main configs (confirmed by direct inspection); the probe is
+// disabled via STRATEGY_REPAIR_PROBE: false so it contributes zero nodes, isolating the mechanism
+// under test (main loop vs. repair fallback loop) from the probe's own fixed-cost budget entirely.
+// The mock dispatch consumes exactly the nodeBudget it is given for every attempt and never solves,
+// mirroring the main-loop-late-reserve tests' own established pattern.
+function repairFallbackReserveDispatch(): typeof runAttemptSearch {
+    return (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, , , prep, , , , , nodeBudget, out] = args;
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) { out.nodesExpanded = spent; out.timedOut = true; }
+        return null;
+    }) as typeof runAttemptSearch;
+}
+
+test('repair-fallback reserve is inert by default (cfg=null) even with a finite node ceiling', async () => {
+    // Opt-in convention: unlike STRATEGY_MAIN_LOOP_LATE_RESERVE (standard convention, activates by
+    // default), an entirely omitted ablation option must leave this flag OFF — the opposite
+    // regression direction from the wiring-gap bug documented throughout
+    // docs/solver-opt-in-experiment-ledger.md, and exactly the mismatch a first draft of this flag's
+    // read site introduced (see orchestration.ts's own comment on the read site).
+    const level = makeRepairGatedInfeasibleLevel();
+    const withoutFlag = await solveLevel(level, {
+        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        ablation: { STRATEGY_REPAIR_PROBE: false },
+        admissibleOrderBudgetFractionOverride: 0,
+        attractionDiversityBudgetFractionOverride: 0,
+        mainLoopLateReserveFractionOverride: 0.3,
+        mainLoopLateReserveConfigCountOverride: 2,
+        repairFallbackNodeReserveFractionOverride: 0.5,
+        attemptSearchForTesting: repairFallbackReserveDispatch(),
+    });
+    // cfg is non-null here (STRATEGY_REPAIR_PROBE: false is set), but this flag is unset within it —
+    // the opt-in Proxy must resolve it to false regardless of what else is in the object.
+    assert.equal(withoutFlag.attempts.filter(a => a.repair && !a.ok).length, 0, 'no repair-fallback attempts ran: the reserve did not activate');
+    assert.equal(withoutFlag.nodesExpanded, 1000, 'the main loop alone consumed the entire earlyTierNodeBudget, exactly the pre-reserve behavior');
+});
+
+test('repair-fallback reserve gives the fallback loop room without touching the probe/early-config ceiling', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const opts = {
+        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        admissibleOrderBudgetFractionOverride: 0,
+        attractionDiversityBudgetFractionOverride: 0,
+        mainLoopLateReserveFractionOverride: 0.3,
+        mainLoopLateReserveConfigCountOverride: 2,
+        repairFallbackNodeReserveFractionOverride: 0.5,
+    };
+    const off = await solveLevel(level, {
+        ...opts,
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: false },
+        attemptSearchForTesting: repairFallbackReserveDispatch(),
+    });
+    const on = await solveLevel(level, {
+        ...opts,
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true },
+        attemptSearchForTesting: repairFallbackReserveDispatch(),
+    });
+    // earlyTierNodeBudget=1000 (no admissible-order reserve), mainLoopLateReserve=floor(1000*0.3)=300,
+    // mainLoopEarlyNodeBudget=700 (identical in both arms — this is the invariant the two prior
+    // revisions violated). repairFallbackNodeReserve=floor(300*0.5)=150 only when ON, so
+    // mainLoopNodeBudget=1000 (off) vs 850 (on).
+    const mainLoopAttempts = (result: typeof off) => result.attempts.filter(a => a.repair !== true);
+    const fallbackAttempts = (result: typeof off) => result.attempts.filter(a => a.repair === true);
+    assert.equal(mainLoopAttempts(off)[0].nodesExpanded, 700, 'the FIRST early-prefix attempt consumes the untouched mainLoopEarlyNodeBudget identically in both arms');
+    assert.equal(mainLoopAttempts(on)[0].nodesExpanded, 700, 'byte-identical to the off arm: the probe/early-config ceiling must never depend on this flag');
+    assert.equal(mainLoopAttempts(off).reduce((n, a) => n + (a.nodesExpanded ?? 0), 0), 1000, 'off: the main loop alone spends the entire earlyTierNodeBudget (700 early + 150 + 150 late)');
+    assert.equal(mainLoopAttempts(on).reduce((n, a) => n + (a.nodesExpanded ?? 0), 0), 850, 'on: the late suffix is capped at mainLoopNodeBudget (700 early + 75 + 75 late), leaving room for the reserve');
+    assert.equal(fallbackAttempts(off).length, 0, 'off: earlyTierNodeBudget is already exhausted by the main loop alone, so the fallback loop never runs');
+    assert.equal(fallbackAttempts(on).length, 1, 'on: the fallback loop gets exactly the withheld slice');
+    assert.equal(fallbackAttempts(on)[0].nodesExpanded, 150, 'exactly repairFallbackNodeReserve (the room this mechanism withheld from the main loop)');
+    assert.equal(off.nodesExpanded, 1000);
+    assert.equal(on.nodesExpanded, 1000, 'same total spend either way -- this reserve only changes WHO gets the nodes, never how many exist');
+});
+
+test('repair-fallback reserve is a no-op when mainLoopLateReserve is 0 (accepted coupling)', async () => {
+    // Documented, accepted limitation (see the read site's own comment): this reserve carves FROM
+    // mainLoopLateReserve, so it has nothing to withhold when that reserve is itself zero --
+    // whether because STRATEGY_MAIN_LOOP_LATE_RESERVE is off, or its own fraction/config-count is 0.
+    // Confirms this degrades safely (no crash, no stranded nodes) rather than silently doing nothing
+    // dangerous.
+    const level = makeRepairGatedInfeasibleLevel();
+    const result = await solveLevel(level, {
+        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_MAIN_LOOP_LATE_RESERVE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true },
+        admissibleOrderBudgetFractionOverride: 0,
+        attractionDiversityBudgetFractionOverride: 0,
+        repairFallbackNodeReserveFractionOverride: 0.5,
+        attemptSearchForTesting: repairFallbackReserveDispatch(),
+    });
+    assert.equal(result.attempts.filter(a => a.repair === true).length, 0, 'nothing withheld for the fallback loop to spend');
+    assert.equal(result.nodesExpanded, 1000, 'the main loop alone spends the entire (undivided) earlyTierNodeBudget, exactly as if the flag were off');
+});
+
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {
     const legacy = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000 });
     assert.equal(legacy.schedulerMode, undefined);
