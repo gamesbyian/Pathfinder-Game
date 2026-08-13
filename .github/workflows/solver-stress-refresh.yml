@@ -326,6 +326,19 @@ jobs:
           }
           NODE
 
+      - name: Print repair-probe badness distribution
+        if: steps.coverage.outputs.complete == 'true'
+        shell: bash
+        # A full-population run through THIS workflow is the usual promotion bar for a flag like
+        # STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (see docs/future-work.md item #4 and
+        # docs/solver-opt-in-experiment-ledger.md's still-open BADNESS_GATE/MIN_SCALE recalibration
+        # caveat) -- print this to the JOB CONSOLE LOG specifically, not just the uploaded artifact,
+        # since this session's egress policy has been observed blocking the artifact-download zip
+        # (Azure blob storage, 403). See scripts/stress/repair-probe-badness-report.mjs.
+        run: |
+          node scripts/stress/repair-probe-badness-report.mjs --in=reports/stress/benchmark-parallel.json
+          node scripts/stress/repair-probe-badness-report.mjs --in=reports/stress/benchmark-latest-random.json
+
       - name: Upload combined results
         if: always()
         uses: actions/upload-artifact@v4
