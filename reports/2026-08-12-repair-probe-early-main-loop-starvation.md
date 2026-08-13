@@ -349,6 +349,39 @@ identical seed/sample/node_budget, min_scale left blank) at GHA scale and compar
 count/flips/cost the same way the original mechanism's A/B was judged, before considering any change
 to the production `REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE` constant.
 
+## Gate/min-scale recalibration: GHA A/B (2026-08-13)
+
+Same 250-eligible/50-control stratified sample as the original `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET`
+A/B (`seed=repair-probe-badness-gate-sweep-2026-08-13`, `node_budget=50000000`, `deterministic=true`),
+dispatched three times via `.github/workflows/solver-repair-probe-adaptive-sample-ab.yml`'s new
+`repair_probe_adaptive_badness_gate` input (runs `31750738328` baseline/blank, `31751758999` gate=8,
+`31750750943` gate=6 — all on branch `claude/repair-probe-adaptive-followup-p2egv5`). The
+concurrency group only allows one run in progress plus one queued, so all three had to run
+sequentially rather than in parallel (~14-27 min wall time each); dispatching them back-to-back
+without spacing bumped the middle dispatch out of the queue once, requiring a re-dispatch.
+
+| Arm | Solved | Total nodesExpanded | Total workSpent |
+|---|---:|---:|---:|
+| baseline (gate=10) | 88/300 | 11,324,468,371 | 17,391,234,058 |
+| gate=8 | 89/300 (+1) | 11,263,963,307 (−0.5%) | 17,022,244,568 (−2.1%) |
+| gate=6 | 89/300 (+1) | 11,242,314,812 (−0.7%) | 16,683,133,299 (−4.1%) |
+
+Both gate=8 and gate=6 solve the exact same set: baseline's 88 plus `R02663` (verified by exact set
+difference, not just a count match — `gate6 - baseline == gate8 - baseline == {R02663}`, and
+`baseline - gate6 == baseline - gate8 == {}`, zero losses at either gate). **Gate=6 strictly
+dominates gate=8** on this sample: identical
+solved-set gain, larger cost reduction on every metric. This is the exact shape the original
+mechanism's own promotion was judged on (net-neutral-or-positive solved count, real cost reduction),
+now reproduced for the gate value itself rather than the mechanism's on/off state — and at the same
+sample size (300, 250 eligible) the original promotion used, not just the smaller local pilot.
+
+**Decision-bearing next action**: `REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE` is a strong candidate
+for narrowing from 10 to 6 (holding `MIN_SCALE=0.35` fixed, per the recalibration's own design) —
+same evidentiary bar this file's own `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` promotion used.
+Not yet changed in `orchestration.ts` as of this writing; awaiting an explicit decision before editing
+the production constant (this recalibration only reached the *validated candidate* stage the earlier
+saved-artifact audit distinguished from — see that audit's "nominates, does not validate" framing).
+
 ## Reproducing
 
 ```bash
