@@ -14,7 +14,7 @@ const PERSISTENT_ATTEMPT_FIELDS = new Set([
 const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([
   'ok', 'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'repair',
   'timedOut', 'bestBadness', 'finalBadness', 'admissibleOrder', 'admissibleOrderNoTieBreak',
-  'admissibleOrderLds', 'mainLoopLateReserve',
+  'admissibleOrderLds', 'mainLoopLateReserve', 'repairProbe',
 ]);
 
 test('maximal Attempt has an explicit, complete provenance projection contract', () => {
