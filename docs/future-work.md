@@ -85,6 +85,12 @@ The frozen full-population level-blind A/B ran (all 4 arms `workers=1`, `determi
 
 **Promoted to production default-ON (2026-08-13)** on this evidence, at the project owner's explicit direction — a deliberate exception to the full-population-A/B bar, recorded as such rather than glossed over. Registry + `orchestration.ts` read-site convention fix landed together (learning from the wiring-gap lesson `PRUNE_MC_NEIGHBOR_BUDGET`/`STRATEGY_MAIN_LOOP_LATE_RESERVE` both required above), with three new regression tests confirming activation under a genuinely-omitted ablation config. `solver:bench --check` is byte-identical on the published 160-level corpus (zero eligible levels there), so this has no effect on any interactive Play/Editor/Review solve — only offline batch tooling with a finite `nodeBudget`. See `docs/solver-opt-in-experiment-ledger.md`'s entry for the full record.
 
+### 4b. Recalibrate repair-probe adaptive constants from tagged telemetry
+
+The promoted adaptive controller kept all 12 direct repair wins, added a later beam solve on R02719, and reduced aggregate search work in the matched full-ladder A/B. The saved-artifact audit also found a strong yield gradient: 18.4% of levels with baseline `badness <= 5` were direct repair wins, compared with 1.6% at `16-20` and 0% above 20.
+
+The next bounded experiment should keep `MIN_SCALE=0.35` fixed and compare `BADNESS_GATE` values 10, 8, and 6 against the promoted controller. Use explicit `repairProbe` attempt tags, the same immutable corpus, level-blind rules, and full-ladder outcomes. The historical replay nominates those gates; it does not validate them. See [Existing solve-data tuning opportunities](../reports/2026-08-13-existing-solve-data-tuning-opportunities.md) and the [repair-probe report](../reports/2026-08-12-repair-probe-early-main-loop-starvation.md).
+
 ## Parallel observational work that remains valid
 
 These do not need to wait for the late-reserve promotion decision provided they remain observation/offline only:
@@ -96,6 +102,8 @@ These do not need to wait for the late-reserve promotion decision provided they 
 - repair-retreat exact oracle work;
 - symmetry diagnosis;
 - solution-family and provenance analysis.
+
+The preliminary [saved-data audit](../reports/2026-08-13-existing-solve-data-tuning-opportunities.md) turns this into a concrete queue. First fix the family reporter's bare-ID collision by keying `(parentCorpus, parentId, variantId)`; then run the deterministic report and current-main retest R00526, R01407, R01875, and R01675. Do not treat the historical siblings as proof that current main misses the same behavior.
 
 Correlation is still not permission to prune or to alter the score. Any live policy must clear its own level-blind equal-work evaluation.
 

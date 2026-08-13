@@ -1,9 +1,9 @@
 # Variant Corpus Solver Research Plan
 
-> **Status:** tooling implemented; historical selected-family research reconciled; wide-trove boundary run pending
-> **Last evidence:** 2026-08-08 — [`../reports/2026-08-08-symmetry-orientation-sensitivity-synthesis.md`](../reports/2026-08-08-symmetry-orientation-sensitivity-synthesis.md)
+> **Status:** tooling implemented; historical selected-family research reconciled; preliminary wide-trove audit complete; boundary run blocked on identity-key repair
+> **Last evidence:** [existing solve-data tuning opportunities](../reports/2026-08-13-existing-solve-data-tuning-opportunities.md)
 > **Decision:** use the variant corpus to identify and diagnose solver competence boundaries that can yield more cold solves or less work without regression; treat symmetry disagreement primarily as evidence of representation-dependent solver failure, not as a production retry strategy
-> **Remaining gate:** run the read-only boundary tooling on the existing wide trove and use its ranked queue for selected divergence/profile diagnosis; the earlier selected-family experiments are evidence, but are not a prevalence census of that trove
+> **Remaining gate:** namespace family identities as `(parentCorpus, parentId, variantId)`, run the deterministic boundary report, then current-main retest the ranked historical cliff families.
 
 ## Objective
 
@@ -61,6 +61,16 @@ which artifacts track real puzzle changes versus accidental search history. Fami
 measure whether two techniques produce complementary artifacts on closely related puzzles before
 any live handoff is enabled. This is a later join between the two systems, not a reason to delay the
 current wide-trove boundary report or to turn the variant corpus into a production retry mechanism.
+
+## 2026-08-13 saved-data audit update
+
+The [existing solve-data tuning opportunities report](../reports/2026-08-13-existing-solve-data-tuning-opportunities.md) performs a preliminary parent-aware read of the wide Corpus1 trove without re-solving levels. It establishes three actionable facts:
+
+- the wide artifact contains 1,962 parents, 72,965 variants, 36,622 cold solves, and 78,429 full attempt records;
+- 37 bare variant IDs occur under more than one parent, so any analysis keyed only by variant ID can silently join unrelated families;
+- four historical symmetry cliffs are strong current-main retest candidates: R00526, R01407, R01875, and R01675.
+
+Those four families are a queue, not a capability verdict. They were observed on historical code and should be re-run on current main before any solver change is designed around them. Repair-probe allocation findings and the proposed adaptive-gate sweep live in the companion [repair-probe report](../reports/2026-08-12-repair-probe-early-main-loop-starvation.md).
 
 ## Core scientific unit: relationships between levels
 
@@ -184,6 +194,8 @@ scripts/family-boundary-report.mjs
 The exact name and internal structure may follow repository conventions, but do not duplicate an equivalent existing tool if one has appeared since this plan was written.
 
 It should consume existing canonical baselines, family manifests/provenance, and wide-trove attempt artifacts. It should not re-solve levels.
+
+Before that report is run, its join key must be corrected and regression-tested. The authoritative identity is the tuple `(parentCorpus, parentId, variantId)`, not a bare `variantId`. The current wide Corpus1 artifact contains 37 repeated bare IDs across different parents (for example, R00064 and S00064 both contain `F00064-sym-01`). The reporter should fail loudly on an ambiguous or incomplete identity rather than deduplicating it.
 
 ## Required classifications
 
