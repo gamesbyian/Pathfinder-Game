@@ -226,6 +226,33 @@ population run). `npm run test:node` / full `npm run ci` were not re-run end-to-
 change (the targeted subset above covers everything this change touches); recommended before any
 future re-evaluation.
 
+## Post-promotion saved-artifact recalibration audit (2026-08-13)
+
+A follow-up audit joined the matched control and treatment artifacts above and reconstructed each control level's initial contiguous repair-probe prefix. These artifacts predate the explicit `repairProbe` attempt tag added in PR #1368, so this reconstruction is suitable for nominating experiments, not for a final causal claim.
+
+Observed direct repair yield was sharply concentrated at low baseline badness:
+
+| Baseline badness | Eligible levels | Direct repair wins | Win rate |
+|---:|---:|---:|---:|
+| 0-5 | 38 | 7 | 18.4% |
+| 6-10 | 37 | 3 | 8.1% |
+| 11-15 | 38 | 1 | 2.6% |
+| 16-20 | 61 | 1 | 1.6% |
+| 21+ | 73 | 0 | 0.0% |
+
+The promoted treatment preserved all 12 direct repair wins, introduced no solved-level loss, added a later beam solve on R02719, and reduced aggregate node/work use. A retrospective replay with `MIN_SCALE=0.35` nominated the following `BADNESS_GATE` sweep:
+
+| Candidate gate | Biased-tier nodes avoided | Observed winning cap crossings |
+|---:|---:|---:|
+| 10 | 32.8% | 0 |
+| 8 | 40.1% | 0 |
+| 6 | 47.7% | 0 |
+| 4 | 54.4% | 2 |
+
+Accordingly, the next matched experiment should compare gates 10, 8, and 6 while holding the floor fixed. Gate 4 is excluded from the first sweep because the replay crosses two observed winning caps. The experiment must use current-main tagged telemetry and full-ladder outcomes; replayed prefixes alone are not promotion evidence.
+
+The full methodology, wider family/variant findings, and ranked tuning plan are in [Existing solve-data tuning opportunities](2026-08-13-existing-solve-data-tuning-opportunities.md).
+
 ## Promotion (2026-08-13)
 
 Promoted to production default-ON at the project owner's explicit direction, on the strength of the

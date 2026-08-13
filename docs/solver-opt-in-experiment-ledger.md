@@ -92,6 +92,8 @@ The remaining repair research direction is exact retreat/deep prefix editing, no
   `BADNESS_GATE`/`MIN_SCALE` constants' own re-calibration caveat (still derived from the original
   n=12, not re-derived at the larger sample size).
 
+A post-promotion [saved-artifact audit](../reports/2026-08-13-existing-solve-data-tuning-opportunities.md) found that direct repair yield falls from 18.4% at baseline `badness <= 5` to 0% above 20. It nominates a current-main matched sweep of `BADNESS_GATE=10,8,6` with `MIN_SCALE=0.35` fixed and explicit `repairProbe` tags. This is a calibration follow-up to the promoted adaptive controller, not a reopening of its default-on disposition.
+
 ## Experiment interpretation rules
 
 1. **`OPT_IN_FEATURES` means polarity, not backlog.** Never enumerate flags and assume every default-off switch needs another A/B.
