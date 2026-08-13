@@ -161,15 +161,43 @@ gate correctly left it untouched); every level with badness below the gate (`R01
 8) or no biased tier at all (`R00044`, `R02318`, `R02422`, `R02119`) is byte-identical to baseline,
 confirming the mechanism only ever acts where its own justification (poor live evidence) applies.
 
+## Follow-up: 300-level stratified GHA A/B at the real production budget (2026-08-13)
+
+The n=12 local sample above was a fast local diagnostic at a deliberately shrunk 15M-node budget.
+A larger, level-blind confirmation followed via `.github/workflows/solver-repair-probe-adaptive-
+sample-ab.yml` (new workflow, `scripts/stress/select-repair-probe-adaptive-sample.mjs`): 250
+levels drawn from the 512-level eligible population (repair-gated AND has a must-turn cell — the
+only levels this flag can ever touch) plus 50 control levels from the ineligible remainder,
+deterministic seed `repair-probe-adaptive-sample-2026-08-12`, at the real production
+`corpus2_node_budget` (50,000,000, matching `solver-stress-refresh.yml`'s current default),
+`--workers=2`, non-binding 24h deadline. Dispatched twice against `main` (`564f6c98`): control
+(blank `enable_flags`, run `31651604893`) and treatment (`enable_flags=
+STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET`, run `31651610514`).
+
+| arm | solved / 300 | nodes | work |
+|---|---:|---:|---:|
+| control | 108 | 10,698,789,545 | 18,179,853,725 |
+| treatment | 109 | 10,541,566,647 | 16,547,624,983 |
+
+**Net +1 (1 gained, 0 lost)**, nodes -1.5%, work -9.0%. The one gain, `R02719`
+(mustCross=8, mustPass=0, mustTurn=5, reqInt=9 — squarely inside the eligible population, not a
+control-bucket artifact), is a clean single-level flip with no corresponding loss anywhere in the
+300-level sample — the same zero-loss, non-zero-sum shape as the n=12 local result, now confirmed
+at 25x the sample size and the real production node budget rather than a shrunk local one. All 50
+control-sample levels are consistent with the structural claim that the flag cannot touch them
+(no ineligible-bucket id appears in either arm's gained/lost set).
+
 ## Caveats
 
-- **n=12 is a local iteration sample, not a promotion-grade population result.** Both the gate
-  constant (`BADNESS_GATE = 10`) and the floor (`MIN_SCALE = 0.35`) are picked from this same small
-  sample (n=1 for the positive "needs full budget" case) — a defensible starting point, not a
-  validated constant. `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` is landed **opt-in, default
-  OFF** specifically because of this; it needs its own dedicated level-blind population A/B (same
-  bar as every other flag in `docs/solver-opt-in-experiment-ledger.md`) before any promotion
-  decision.
+- **300/1700 (250 of the 512 eligible) is a real, level-blind, production-budget stratified
+  sample — stronger evidence than the n=12 local pilot, but still not the dedicated full-population
+  Corpus-2 A/B `docs/solver-opt-in-experiment-ledger.md`'s promotion bar calls for.** The gate
+  constant (`BADNESS_GATE = 10`) and floor (`MIN_SCALE = 0.35`) are still picked from the original
+  n=12 sample (n=1 for the positive "needs full budget" case) — a defensible starting point, not a
+  constant re-derived from this larger run. `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` remains
+  landed **opt-in, default OFF**; a full-corpus (or a larger/repeat stratified) A/B is the
+  reasonable next step before a promotion decision, not strictly required to have SOME positive
+  larger-than-pilot evidence on record.
 - **This does not explain the full 635-vs-694 corpus-scale gap.** It identifies and fixes a related
   but distinct starvation mechanism from the one originally hypothesized; whether it, combined with
   the still-not-fully-isolated effect of `2bfefc660` on early main-loop configs specifically,
