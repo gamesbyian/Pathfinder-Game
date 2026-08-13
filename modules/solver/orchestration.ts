@@ -201,6 +201,13 @@ interface SolveOpts {
      *  tier shares one undivided cumulative ceiling), which is what a before/after sweep sets on its
      *  baseline arm. Undefined (production default) preserves the constant exactly. */
     admissibleOrderNodeReserveFractionOverride?: number;
+    /** Override for ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION for this solve only — same
+     *  shape/rationale as admissibleOrderNodeReserveFractionOverride above, and likewise NOT covered
+     *  by `disableExtraBudgetPasses` (STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE being off
+     *  already zeroes this reserve through its own run condition). 0 restores the pre-reserve
+     *  behavior (the tier's non-'default' profiles share 'default's own undivided ceiling).
+     *  Undefined (production default) preserves the constant exactly. */
+    admissibleOrderProfileNodeReserveFractionOverride?: number;
     /** Override for REPAIR_FALLBACK_NODE_RESERVE_FRACTION for this solve only — same A/B-knob
      *  shape and rationale as admissibleOrderNodeReserveFractionOverride above, and deliberately
      *  NOT covered by `disableExtraBudgetPasses` for the same reason: STRATEGY_REPAIR_FALLBACK_
@@ -736,6 +743,16 @@ export const ADMISSIBLE_ORDER_BUDGET_FRACTION = 1.0;
  *  must be 0 whenever the tier is suppressed, or an exhausted early tier would start reporting
  *  status 'failed' where it used to report 'node-budget-reached'. */
 export const ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION = 0.25;
+
+/** See the read site's own comment (`admissibleOrderProfileNodeReserve` in `solveLevel`) for the
+ *  full derivation, the R03148 precedent this targets, and the asymmetric-risk caution specific to
+ *  this mechanism. A fraction OF `admissibleOrderNodeReserve` (never of `nodeBudget` directly)
+ *  withheld from the tier's dominant `'default'` profile specifically, for the other four profiles.
+ *  0.15 is an unvalidated starting point, matching this session's other new reserves — opt-in,
+ *  default OFF; do not promote without a dedicated A/B that specifically checks 'default'-winning
+ *  levels are unaffected, not just that new solves appear. */
+export const ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION = 0.15;
+
 /** Default reserve fraction/config-count for main-loop late-suffix starvation mitigation.
  *  STRATEGY_MAIN_LOOP_LATE_RESERVE is production default-ON as of 2026-08-12; the mechanism is
  *  still a strict no-op unless a finite `nodeBudget` is supplied (offline batch tooling only —
@@ -1565,6 +1582,57 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : 0;
     const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve;
 
+    // STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE (opt-in, default OFF — NEW, unvalidated
+    // mechanism, landed 2026-08-13). Protects the admissible-order tier's own non-'default' profiles
+    // (`ADMISSIBLE_ORDER_PROFILES`'s `'none'`/`'mustCrossFirst'`/`'intersectionHarvest'`/
+    // `'nearClosureRescue'`) from `'default'`, which runs first in that tier's own sequential loop
+    // and can consume the tier's ENTIRE guaranteed pool (`admissibleOrderNodeReserve`) before any
+    // other profile gets a single node — a documented real regression mode, not a hypothesis:
+    // `reports/2026-07-30-admissible-order-node-reserve.md` §4 found R03148 solved by `'none'` at
+    // 1.97M nodes when the tier's node reserve was OFF, but with it ON, `'default'` ate the whole
+    // 20M-node slice and `'none'` never ran at all. That report explicitly declined to fix this
+    // ("the obvious refinement — sub-slicing the reserve per profile instead of first-come-first-
+    // served — is not made here... needs its own A/B, not a guess").
+    //
+    // ASYMMETRIC RISK, unlike this session's two prior reserves: `'default'` is this tier's dominant
+    // contributor (CLAUDE.md: 103 of 115 validated solves; the same report: 21 of the 22 measured
+    // gains). A reserve sized carelessly here can trade a large, PROVEN win for a small, speculative
+    // one — the report's own explicit caution. Mitigated by nesting this reserve INSIDE
+    // `admissibleOrderNodeReserve` (a fraction OF it, not of `nodeBudget` directly), so `'default'`
+    // is guaranteed at least `earlyTierNodeBudget` worth of headroom (its full pre-reserve share)
+    // PLUS the majority of the tier's own reserve — never less than
+    // `(1 - ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION)` of it — by construction, same soundness
+    // shape as REPAIR_FALLBACK_NODE_RESERVE_FRACTION/ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION's own
+    // nesting. Scoped narrowly to protecting the non-'default' profiles COLLECTIVELY from 'default'
+    // specifically (they still compete first-come-first-served among themselves for the withheld
+    // slice, same shape as the repair-fallback loop's own repairConfigs list) — this does NOT attempt
+    // to guarantee fairness among 'none'/'mustCrossFirst'/'intersectionHarvest'/'nearClosureRescue'
+    // relative to each other; that would be a separate, deeper question without current evidence.
+    //
+    // CALIBRATION CAVEAT: 0.15 is a starting point matching this session's other new reserves' own
+    // starting fraction, NOT derived from any A/B on this specific mechanism — and given the
+    // asymmetric risk above, a promotion decision needs explicit evidence that 'default'-winning
+    // levels (not just currently-unsolved ones) are unaffected, not just that new solves appear.
+    const admissibleOrderProfileNodeReserveEnabled = !!(cfg && cfg.STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE === true);
+    const admissibleOrderProfileNodeReserveFractionRaw = Number(opts.admissibleOrderProfileNodeReserveFractionOverride);
+    const admissibleOrderProfileNodeReserveFraction = Number.isFinite(admissibleOrderProfileNodeReserveFractionRaw) && admissibleOrderProfileNodeReserveFractionRaw >= 0
+        ? Math.min(1, admissibleOrderProfileNodeReserveFractionRaw)
+        : ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION;
+    const admissibleOrderProfileNodeReserveEligible = admissibleOrderProfileNodeReserveEnabled
+        && admissibleOrderProfileNodeReserveFraction > 0
+        && admissibleOrderConfigs.length > 1
+        && admissibleOrderNodeReserve > 0;
+    const admissibleOrderProfileNodeReserve = admissibleOrderProfileNodeReserveEligible
+        ? Math.floor(admissibleOrderNodeReserve * admissibleOrderProfileNodeReserveFraction)
+        : 0;
+    // The ceiling the tier's 'default' profile specifically may reach — always >= earlyTierNodeBudget
+    // by construction (see above), so no clamp is needed. Every OTHER profile in the tier keeps
+    // checking against the full `nodeBudget`, unchanged — mirroring `repairFallbackNodeCeiling`'s
+    // identical pattern one tier up.
+    const admissibleOrderDefaultProfileCeiling = nodeBudget === Infinity
+        ? Infinity
+        : nodeBudget - admissibleOrderProfileNodeReserve;
+
     // Ordinary main-loop late-suffix reserve. Production default-ON as of 2026-08-12 (fraction 0.15,
     // reports/2026-08-12-main-loop-late-reserve-population-ab.md) — standard `(!cfg || cfg.FLAG)`
     // convention, matching admissibleOrderTierWillRun above and every other non-opt-in flag, NOT the
@@ -1955,18 +2023,25 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     if (admissibleOrderTierWillRun) {
         for (const admissibleOrderConfig of admissibleOrderConfigs) {
             if (result.solution) break;
-            if (prep._metrics.nodesExpanded >= nodeBudget) break;
+            // 'default' checks its own reduced ceiling (admissibleOrderDefaultProfileCeiling); every
+            // other profile checks the full nodeBudget, unchanged — see
+            // ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION's own comment. Equals nodeBudget whenever
+            // that reserve is ineligible (default OFF), so this is a strict no-op in that case.
+            const profileCeiling = admissibleOrderConfig.profileName === 'default'
+                ? admissibleOrderDefaultProfileCeiling
+                : nodeBudget;
+            if (prep._metrics.nodesExpanded >= profileCeiling) break;
             const admissibleOrderTotalBudget = Math.floor(timeBudgetMs * admissibleOrderBudgetFraction);
             const admissibleOrderStart = Date.now();
             for (let gi = 0; gi < activeGates.length; gi++) {
-                if (prep._metrics.nodesExpanded >= nodeBudget) break;
+                if (prep._metrics.nodesExpanded >= profileCeiling) break;
                 const gateKey = activeGates[gi];
                 const elapsed = Date.now() - admissibleOrderStart;
                 const gatesLeft = activeGates.length - gi;
                 const admissibleOrderBudget = Math.floor((admissibleOrderTotalBudget - elapsed) / gatesLeft);
                 if (admissibleOrderBudget < 50) break;
                 // Remaining GLOBAL node budget — see the repair fallback loop's identical recompute.
-                const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - prep._metrics.nodesExpanded);
+                const remainingNodeBudget = profileCeiling === Infinity ? Infinity : Math.max(0, profileCeiling - prep._metrics.nodesExpanded);
                 const r = await runAttempt(gateKey, level, prep, admissibleOrderConfig, admissibleOrderBudget, Date.now(), yieldFn, remainingNodeBudget);
                 result.attempts.push(r.attempt);
                 if (r.path) { result.solution = r.path; break; }

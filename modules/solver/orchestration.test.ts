@@ -1075,6 +1075,96 @@ test('attraction-diversity reserve is a no-op when repairFallbackNodeReserve alr
     assert.equal(result.nodesExpanded, 1000, 'all 1000 nodes accounted for: 700 early + 300 repair fallback, nothing stranded');
 });
 
+// STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE (opt-in, default OFF — see
+// ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION's own comment and the read site's, which documents
+// the R03148 precedent this targets and the asymmetric-risk caution specific to this mechanism).
+// Reuses repairFallbackReserveDispatch() and makeRepairGatedInfeasibleLevel() above: the mock's
+// "consume exactly what nodeBudget it is given" behavior works identically for admissible-order
+// attempts as it does for main-loop/repair-fallback ones, since it patches the shared dispatch seam.
+
+test('admissible-order profile reserve is inert by default (cfg=null) even with a finite node ceiling', async () => {
+    // Same opt-in-convention check as both prior reserves' own first test: cfg is non-null here
+    // (STRATEGY_REPAIR_PROBE is set), but THIS flag is unset within it — the opt-in Proxy must
+    // resolve it to false regardless of what else is set.
+    const level = makeRepairGatedInfeasibleLevel();
+    const result = await solveLevel(level, {
+        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        ablation: { STRATEGY_REPAIR_PROBE: false },
+        repairBudgetFractionOverride: 0,
+        attractionDiversityBudgetFractionOverride: 0,
+        mainLoopLateReserveFractionOverride: 0,
+        admissibleOrderNodeReserveFractionOverride: 0.4,
+        admissibleOrderProfileNodeReserveFractionOverride: 0.5,
+        attemptSearchForTesting: repairFallbackReserveDispatch(),
+    });
+    const admissibleOrderAttempts = result.attempts.filter(a => a.admissibleOrder === true);
+    // earlyTierNodeBudget = 1000 - floor(1000*0.4) = 600 (main loop consumes exactly this, see the
+    // numeric test below for the full derivation); with this flag off, 'default' gets the whole
+    // remaining 400 and every other profile is starved, exactly the pre-mechanism/R03148 shape.
+    assert.equal(admissibleOrderAttempts.filter(a => a.profile !== 'default').every(a => (a.nodesExpanded ?? 0) === 0), true, 'no room was withheld for the non-default profiles: the reserve did not activate');
+    assert.equal(admissibleOrderAttempts.find(a => a.profile === 'default')?.nodesExpanded, 400, '\'default\' alone spends the whole undivided admissible-order reserve, exactly the pre-reserve/R03148 behavior');
+});
+
+test('admissible-order profile reserve gives non-default profiles room without shrinking default\'s guaranteed floor', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const opts = {
+        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        repairBudgetFractionOverride: 0,
+        attractionDiversityBudgetFractionOverride: 0,
+        mainLoopLateReserveFractionOverride: 0,
+        admissibleOrderNodeReserveFractionOverride: 0.4,
+        admissibleOrderProfileNodeReserveFractionOverride: 0.5,
+    };
+    const off = await solveLevel(level, {
+        ...opts,
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: false },
+        attemptSearchForTesting: repairFallbackReserveDispatch(),
+    });
+    const on = await solveLevel(level, {
+        ...opts,
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true },
+        attemptSearchForTesting: repairFallbackReserveDispatch(),
+    });
+    // nodeBudget=1000, admissibleOrderNodeReserve=floor(1000*0.4)=400, earlyTierNodeBudget=600 (main
+    // loop's single early-prefix attempt consumes exactly this in both arms — mainLoopLateReserve is
+    // explicitly 0 here to keep the main-loop side of the arithmetic out of this test entirely).
+    // admissibleOrderProfileNodeReserve=floor(400*0.5)=200 only when ON, so admissibleOrderDefault
+    // ProfileCeiling=1000 (off) vs 800 (on); every OTHER profile's own ceiling stays the full 1000
+    // nodeBudget in both arms.
+    const mainLoopNodes = (result: typeof off) => result.attempts.filter(a => !a.repair && !a.attractionDiversity && !a.admissibleOrder).reduce((n, a) => n + (a.nodesExpanded ?? 0), 0);
+    const byProfile = (result: typeof off, profile: string) => result.attempts.find(a => a.admissibleOrder === true && a.profile === profile);
+    assert.equal(mainLoopNodes(off), 600, 'main loop spends the untouched earlyTierNodeBudget identically in both arms');
+    assert.equal(mainLoopNodes(on), 600, 'byte-identical to the off arm: nothing before the admissible-order tier depends on this flag');
+    assert.equal(byProfile(off, 'default')?.nodesExpanded, 400, 'off: \'default\' alone spends the whole undivided reserve (600 early + 400 default = 1000)');
+    assert.equal(byProfile(on, 'default')?.nodesExpanded, 200, 'on: \'default\'\'s ceiling is reduced by exactly admissibleOrderProfileNodeReserve (400 -> 200) -- the asymmetric risk, made concrete and measurable');
+    assert.equal(byProfile(off, 'none'), undefined, 'off: \'default\' exhausted nodeBudget before \'none\' was ever reached -- the R03148 starvation shape reproduced');
+    assert.equal(byProfile(on, 'none')?.nodesExpanded, 200, 'on: \'none\' gets exactly the withheld slice (600 + 200 default + 200 none = 1000)');
+    assert.equal(byProfile(on, 'mustCrossFirst'), undefined, 'on: this reserve protects the non-default profiles COLLECTIVELY, not individually -- \'mustCrossFirst\' still gets nothing once \'none\' exhausts the shared nodeBudget ceiling, by design (see the read site\'s own scope note)');
+    assert.equal(off.nodesExpanded, 1000);
+    assert.equal(on.nodesExpanded, 1000, 'same total spend either way -- this reserve only changes WHO gets the nodes, never how many exist');
+});
+
+test('admissible-order profile reserve is a no-op when admissibleOrderNodeReserve is 0', async () => {
+    // Documented, accepted limitation mirroring both prior reserves' own equivalent test: this
+    // reserve carves FROM admissibleOrderNodeReserve, so it has nothing to withhold when that
+    // reserve is itself zero -- whether because ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own
+    // fraction is 0, or the tier has only one profile, or no external nodeBudget is set.
+    const level = makeRepairGatedInfeasibleLevel();
+    const result = await solveLevel(level, {
+        timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true },
+        repairBudgetFractionOverride: 0,
+        attractionDiversityBudgetFractionOverride: 0,
+        mainLoopLateReserveFractionOverride: 0,
+        admissibleOrderNodeReserveFractionOverride: 0,
+        admissibleOrderProfileNodeReserveFractionOverride: 0.5,
+        attemptSearchForTesting: repairFallbackReserveDispatch(),
+    });
+    const admissibleOrderAttempts = result.attempts.filter(a => a.admissibleOrder === true);
+    assert.equal(admissibleOrderAttempts.filter(a => a.profile !== 'default').every(a => (a.nodesExpanded ?? 0) === 0), true, 'nothing withheld for the non-default profiles to spend');
+    assert.equal(result.nodesExpanded, 1000, 'the main loop (600) + \'default\' alone (400) spend the entire (undivided) nodeBudget, exactly as if the flag were off');
+});
+
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {
     const legacy = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000 });
     assert.equal(legacy.schedulerMode, undefined);
