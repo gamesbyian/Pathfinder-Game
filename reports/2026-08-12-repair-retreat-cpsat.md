@@ -181,6 +181,51 @@ applied indiscriminately might be a meaningfully different, more targeted experi
 already been tried — but that is a new mechanism proposal for a future session, not evidence gathered
 here.
 
+## Why `closeLengthGap` doesn't already close R00648's gap (2026-08-13 diagnostic)
+
+The "gate on small demonstrated rollback" idea above cannot actually be built: demonstrated rollback
+is measured against known solutions (hints), which a live solve cannot use without violating
+`docs/solver-level-blindness.md`. What's testable instead is more direct: `closeLengthGap` is already
+default-on and already hint-free (triggers on live `structuralDeficit ≤ 1` at any dead end,
+unconditionally) — does it already recover the two elites this report just proved have real slack?
+
+Direct isolated `repairSearchFromGate` runs (`PF_LENGTH_GAP_DEBUG=1`, 2,000,000-node budget):
+- **R03176**: solves on its own. `closeLengthGap` fires 583 times across the run and succeeds at
+  restart 914 (~1.86M nodes total). No gap here.
+- **R00648**: does **not** solve within 2,000,000 nodes, despite `closeLengthGap` firing 500+ times
+  and the search reaching `bestBadness=16` (far better than elite:4's own badness of 117 — the search
+  has moved on to different, better near-misses, not stuck reproducing that one elite).
+
+**First hypothesis (backtrack floor too shallow) — tested and falsified.** `closeLengthGap` can only
+backtrack within the current restart's own construction, back to `floor` (the splice point) — not
+into an elite's already-spliced prefix. If the critical branch point sits inside a spliced prefix,
+`closeLengthGap` structurally cannot reach it. Tested directly: replayed the CP-SAT-verified
+depth-30-feasible prefix through the real state machinery (`replayToPrefix`/`applyMove`), then called
+`closeLengthGap` (now exported as `__closeLengthGapForTests`, mirroring `__takePlyForTests`) with
+`floor=0` (full backtrack range, all the way to the gate) and a 2,000,000-node budget — 500x its
+production budget of 4,000. **It still did not find the completion.** So the floor wasn't the
+bottleneck; something else is.
+
+**Second hypothesis (this is a needle-in-a-haystack position) — tested and confirmed.** Ran 2,000
+independent randomized rollouts from the exact same verified-feasible depth-30 state, using the same
+epsilon-greedy construction (`takePly`) repair's own main restart loop uses. **0/2000 solved**, and
+the search died almost immediately every time — average 4.3 nodes per attempt, best attempt reached
+only depth 60 of the required 141. Essentially every continuation from this point dies within a
+handful of moves; the one CP-SAT-found completion is a specific, long (111-move), precisely-threaded
+path through what is evidently a tightly-constrained region.
+
+**Conclusion**: neither of repair-search's own techniques is well-matched to this residual problem.
+Randomized rollout has no mechanism for finding one narrow long path among an astronomically larger
+set of quick dead ends. `closeLengthGap`'s deterministic, heuristically-ordered DFS-backtrack is
+exactly the search paradigm this codebase's own history already identified as failure-prone on hard
+levels — accumulating rank-discrepancies from early ordering mistakes — which is the *original*
+motivation for building randomized repair-search in the first place (see `repair-search.ts`'s own
+header comment). CP-SAT succeeds here because it performs real constraint propagation and systematic
+branch-and-bound, a different technique class entirely, not because it searches the same space better.
+This is not a triggering, floor, or budget defect in `closeLengthGap` — it's a genuine mismatch
+between the technique and the shape of this specific residual, and no tuning of the existing
+mechanism's parameters would be expected to close it.
+
 ## Artifacts
 
 - Elite-path dump tool (deterministic, reproduces the pilot's exact selection):
