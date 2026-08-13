@@ -264,8 +264,67 @@ space (or its absence) is a first-class puzzle-difficulty variable, not inert sc
 matched pair, not a validated predictor; it would need a real sample (e.g. blocks-per-navigable-cell
 vs. repair-vs-admissible-order winner, across many solved levels) to become more than a hypothesis.
 
+## Testing the topology hypothesis at population scale (2026-08-13)
+
+**First attempt: underpowered.** A fresh 60-level stratified sample of Corpus-2 (seed
+`topology-hypothesis-2026-08-13`), solved at 15,000,000 nodes, produced only 21 solves and **zero
+admissible-order wins** (8 repair, 13 beam) — confirming admissible-order-specific wins are rare
+enough that blind resampling isn't an efficient way to test this hypothesis; a much bigger blind
+sample would be needed to collect enough admissible-order wins for a real comparison.
+
+**Better approach: mine existing hint provenance instead of resolving more levels.** Corpus-2's own
+hint corpus already records which technique won each stored solution (`solver.technique`/
+`solver.profile`, see CLAUDE.md's hint-provenance section). Scanning `data/stress/hints-random/`
+(filtered to cold, non-hint-guided entries only — `!context.hintGuided`, excluding
+`prefix-anchored`/`witness`/`human-solved`, per the standing rule for capability questions) found
+**97 distinct levels with an admissible-order/`'default'` cold win** and **205 distinct levels with an
+unforced repair cold win** — real population samples, no new solves needed.
+
+Structural features (`getNavigableDensity`/raw block count from `archetype.ts`, the same navDensity
+already used by the solver's own attempt-policy routing) by winning technique:
+
+| feature | admissible-order (n=97) | repair (n=205) |
+|---|---|---|
+| `navDensity` median | 0.765 | 0.724 |
+| `blocksFraction` median | **0.174** | **0.124** |
+| `blocks` median | 25 | 19 |
+| `reqInt` median | 4 | 7 |
+| `mustCross` median | 0 | 3 |
+| `mustCross=0` rate | 59% | 35% |
+| `blocks=0` rate | **1%** | **5%** |
+
+The `mustCross` split mostly reproduces already-known routing (repair-search was built specifically
+for the must-cross-heavy cluster — see this file's own header comment), so it isn't fresh evidence on
+its own. **Isolating the `mustCross=0` subset (57 admissible-order-won vs. 71 repair-won levels)
+removes that confound and the blocks effect survives, undiminished:**
+
+| feature (mustCross=0 only) | admissible-order (n=57) | repair (n=71) |
+|---|---|---|
+| `blocksFraction` median | **0.174** | **0.102** |
+| `blocks` median | **24** | **14** |
+| `reqInt` median | 3 | 8 |
+
+Within levels that have *no* must-cross constraint at all, admissible-order-won levels still have
+roughly **70% more blocks** (by fraction) than repair-won levels, median 24 vs. 14 blocks. `reqInt`
+flips direction in this subset (admissible-order wins on *lower* `reqInt`, repair on higher) —
+consistent with repair's randomized construction being well-suited to satisfying a flexible count of
+self-intersections (many ways to cross a path), while dense obstacle fields need the kind of
+systematic, bound-pruned navigation admissible-order provides through narrow, low-choice corridors.
+
+**Verdict: the topology hypothesis holds at population scale, independent of the mustCross confound.**
+Board obstacle density (not overall difficulty, not raw mechanic count) measurably predicts which
+technique class wins a level — real, if not yet causally proven (this is observational correlation
+over stored provenance, not a controlled matched-pair intervention). Scope discipline unchanged: no
+solver-policy, archetype-routing, or attempt-ordering change is proposed or implied by this finding —
+it explains an existing pattern, and could inform future archetype/routing work, but isn't acted on
+here.
+
 ## Artifacts
 
+- Topology-hypothesis provenance mining: distinct level-id lists and the full quartile analysis:
+  [`reports/stress/admissible-order-default-winner-levels-2026-08-13.json`](stress/admissible-order-default-winner-levels-2026-08-13.json),
+  [`reports/stress/repair-winner-levels-2026-08-13.json`](stress/repair-winner-levels-2026-08-13.json),
+  [`reports/stress/topology-hypothesis-analysis-2026-08-13.txt`](stress/topology-hypothesis-analysis-2026-08-13.txt)
 - Elite-path dump tool (deterministic, reproduces the pilot's exact selection):
   [`scripts/stress/repair-elite-path-dump.mjs`](../scripts/stress/repair-elite-path-dump.mjs)
 - Case-builder + local-replay validator:
