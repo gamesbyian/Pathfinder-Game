@@ -12,6 +12,12 @@ import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit } from 
 
 type YieldFn = (() => Promise<void>) | null;
 type AttemptSearchDispatch = typeof runAttemptSearch;
+// Temporary diagnostic-only capture for re-deriving REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE/
+// _MIN_SCALE against a richer bestBadness distribution than the original n=12 sample (see those
+// constants' own comment). Zero cost / no behavior change unless PF_BADNESS_CALIBRATION_DEBUG=1 —
+// same convention as repair-search.ts's _REPAIR_DEBUG. Remove once recalibration is done.
+const _procOrch = (globalThis as any).process as { env?: Record<string, string | undefined> } | undefined;
+const _BADNESS_CALIBRATION_DEBUG = !!(_procOrch && _procOrch.env && _procOrch.env.PF_BADNESS_CALIBRATION_DEBUG === '1');
 // Fault injection is associated with one prepared solve, never global process state. This keeps
 // concurrent solves isolated while allowing orchestration tests to deterministically fail dispatch.
 const testAttemptDispatches = new WeakMap<PrepLevel, AttemptSearchDispatch>();
@@ -1037,16 +1043,27 @@ async function runRepairProbe(
         // with (docs/solver-opt-in-experiment-ledger.md): the opt-in convention stays inert
         // whenever cfg is null, which is every production interactive solve and any CLI run
         // without --enable-flags.
-        if (isBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET)) {
+        const adaptiveBiasedBudgetOn = !cfg || cfg.STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET;
+        if (isBiased && (adaptiveBiasedBudgetOn || _BADNESS_CALIBRATION_DEBUG)) {
             const ordinaryBestBadness = attempts.reduce((min, a) => (
                 a.repair && !a.repairMustTurnBiased && !a.repairTurnBiased && Number.isFinite(a.bestBadness)
                     ? Math.min(min, a.bestBadness as number) : min
             ), Infinity);
+            let scale = 1;
             if (Number.isFinite(ordinaryBestBadness)) {
-                const scale = Math.min(1, Math.max(
+                scale = Math.min(1, Math.max(
                     REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE,
                     REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE / ordinaryBestBadness,
                 ));
+            }
+            // Diagnostic-only: log the signal/scale unconditionally (even with the flag disabled,
+            // so a --disable-flags run still reports what scale WOULD have applied — needed to
+            // compare scaled-vs-unscaled outcomes against the same badness reading). Only actually
+            // apply the shrink when the flag is on.
+            if (_BADNESS_CALIBRATION_DEBUG) {
+                console.error(`[badness-cal] level=${level.id ?? '?'} ordinaryBestBadness=${Number.isFinite(ordinaryBestBadness) ? ordinaryBestBadness : 'n/a'} scale=${scale} appliedFlag=${adaptiveBiasedBudgetOn} fixedProbeNodeBudget=${adaptiveBiasedBudgetOn ? Math.floor(fixedProbeNodeBudget * scale) : fixedProbeNodeBudget}`);
+            }
+            if (adaptiveBiasedBudgetOn && Number.isFinite(ordinaryBestBadness)) {
                 fixedProbeNodeBudget = Math.floor(fixedProbeNodeBudget * scale);
             }
         }
@@ -1082,6 +1099,9 @@ async function runRepairProbe(
                 const r = await runAttempt(gateKey, level, prep, repairConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, Date.now(), yieldFn, gateNodeBudget, nodesOut, seedSalt);
                 attempts.push(r.attempt);
                 nodesUsed += nodesOut.nodesExpanded ?? gateNodeBudget;
+                if (_BADNESS_CALIBRATION_DEBUG && isBiased) {
+                    console.error(`[badness-cal-result] level=${level.id ?? '?'} gate=${gateKey} solved=${!!r.path} nodesUsed=${nodesOut.nodesExpanded ?? '?'} resultBadness=${r.path ? 0 : (r.attempt.bestBadness ?? 'n/a')}`);
+                }
                 if (r.path) return { solution: r.path, attempts };
             }
         }
