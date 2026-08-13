@@ -226,6 +226,44 @@ This is not a triggering, floor, or budget defect in `closeLengthGap` — it's a
 between the technique and the shape of this specific residual, and no tuning of the existing
 mechanism's parameters would be expected to close it.
 
+## R03176 vs. R00648: what actually differs (2026-08-13, same-day follow-up)
+
+Ran the identical diagnostic (`closeLengthGap` with `floor=0`/2,000,000 nodes, plus 2,000 random
+rollouts) on R03176's own CP-SAT-verified branch point (depth 74, the boundary from the original
+retreat check) for a fair apples-to-apples comparison against R00648's depth-30 point:
+
+| | R00648 (depth 30, residual 111) | R03176 (depth 74, residual 67) |
+|---|---|---|
+| `closeLengthGap` (floor=0, 2M nodes) | fails | fails |
+| Random rollouts (2,000 trials) | **0/2000 solved**, avg 4.3 nodes/trial, best depth **60**/141 | **0/2000 solved**, avg 6.5 nodes/trial, best depth **134**/141 |
+
+So it isn't that R03176's specific branch is "easy" and R00648's is "hard" — **neither exact branch is
+solved by either mechanism.** The difference is in how close blind search gets: R03176's random
+rollouts routinely push to within 7 cells of the full 141-cell requirement before dying; R00648's die
+with 81 cells still to go. R03176's residual is a "wide, forgiving" space with many almost-complete
+trajectories; R00648's is a narrow trap that kills nearly every attempt almost immediately.
+
+That difference shows up directly in which technique actually solves each level in the real ladder
+(`level-blind-capability-sweep.mjs`, 25M nodes): **R03176 is solved by plain repair** (`profile:
+'repair'`, 1,857,430 nodes — reproducing the isolated test's own figure exactly, via some other
+restart's trajectory than the one tested here) — repair's blind restarts have enough forgiving basin
+to eventually stumble onto a full solution, just not through this particular branch. **R00648 is
+solved by admissible-order search** (`profile: 'default'`, admissible-order tier) in only **223
+nodes** — three orders of magnitude cheaper, because admissible-order's sound bounds let it discard
+the vast majority of near-instant-death branches by proof rather than by playing them out. Random/
+heuristic local search has no equivalent of a bound; it can only find out a branch is dead by actually
+walking it.
+
+**A structural hypothesis, not a proven cause (n=2, suggestive only)**: R00648 has 14 blocks and zero
+must-cross/must-pass constraints (`reqInt=4` only); R03176 has zero blocks, 5 must-cross constraints,
+and a higher `reqInt=10` — mechanically *more* loaded, yet the *easier* one for repair. This points
+away from raw mechanic count as the driver and toward board topology specifically: blocks reduce
+navigable space and can create the kind of narrow-corridor structure where almost every move is a trap
+unless bound-based pruning is available — consistent with CLAUDE.md's own noted gotcha that open board
+space (or its absence) is a first-class puzzle-difficulty variable, not inert scaffolding. This is one
+matched pair, not a validated predictor; it would need a real sample (e.g. blocks-per-navigable-cell
+vs. repair-vs-admissible-order winner, across many solved levels) to become more than a hypothesis.
+
 ## Artifacts
 
 - Elite-path dump tool (deterministic, reproduces the pilot's exact selection):
