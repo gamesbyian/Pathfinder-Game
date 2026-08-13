@@ -189,7 +189,8 @@ Closed unchanged forms:
 - soft recombination;
 - exact relinking;
 - turn bias;
-- current elite-prefix DFS constants.
+- current elite-prefix DFS constants;
+- fallback-loop node-budget reserve (`STRATEGY_REPAIR_FALLBACK_NODE_RESERVE`): a 300-level level-blind A/B confirmed the mechanism removes starvation as designed (7x more levels get a fallback attempt) but produced zero additional solves — every fallback attempt burns its full node allotment while stalled at a fixed badness plateau, the same wall the other closed forms hit. Allocation alone does not touch this failure mode.
 
 The next evidence gate is exact retreat depth through the existing CP-SAT seam. If valid continuation only reappears after deep rollback across many levels, that supports a genuinely different prefix-edit operator.
 
