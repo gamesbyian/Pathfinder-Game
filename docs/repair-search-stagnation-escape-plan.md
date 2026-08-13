@@ -674,3 +674,20 @@ retreating through the same elites; do not build another suffix operator yet. Se
 [`reports/2026-08-11-repair-rollback-causal-window-pilot.md`](../reports/2026-08-11-repair-rollback-causal-window-pilot.md).
 
 > **2026-08-11 review status:** No production policy from this track was changed in the PR #1356 follow-up. Completed lineage/correctness evidence and the explicitly uncompleted oracle/receptor work are recorded in [the review follow-up report](../reports/2026-08-11-pr1356-review-follow-up.md); oracle abstentions remain abstentions.
+
+## Exact repair-retreat CP-SAT: first pass and broadening both complete (2026-08-12/13)
+
+The bounded exact continuation check the rollback pilot called for above is done, in two rounds.
+First pass (2026-08-12) on 3 large-demonstrated-rollback elites found **zero exact slack** — the
+true minimum rollback matched the demonstrated (known-trajectory) rollback exactly every time, i.e.
+the instant a repair elite's trajectory diverges from every known solution, no exact completion
+exists even one step later. A broadened sample (2026-08-13), deliberately targeting smaller-
+demonstrated-rollback / `reqInt`-`mustCross`-heavy elites the first pass explicitly flagged as
+untested, found the **opposite**: 2 of 2 resolved cases had real, large exact slack (true minimum
+rollback of 1-2 steps against a demonstrated rollback of 27-29 steps — a ~25-27x overestimate by the
+heuristic proxy). **The zero-slack finding does not generalize; whether a stuck elite has real slack
+depends on which elite/level you look at, at least at this small n.** See
+[`reports/2026-08-12-repair-retreat-cpsat.md`](../reports/2026-08-12-repair-retreat-cpsat.md)'s
+"Broadened sample" section for the full numbers and the one concrete, not-yet-tried idea it surfaces
+(gate `closeLengthGap`/`enableElitePrefixDfs` on small demonstrated rollback specifically, rather than
+applying them indiscriminately as both were previously tested).

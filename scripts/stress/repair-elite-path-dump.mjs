@@ -18,12 +18,19 @@ const levelLimit = Number(args.get('--limit-levels') ?? 3);
 const nodeBudget = Number(args.get('--node-budget') ?? 30000);
 const eliteLimit = Number(args.get('--limit-elites') ?? 5);
 const outFile = args.get('--out') ?? '/tmp/elite-paths.json';
+// Direct id selection (2026-08-13, repair-retreat CP-SAT broadening): lets a caller who already
+// identified specific interesting levels/elites from repair-rollback-census-pilot.mjs's own output
+// (e.g. smallest rollbackSteps, or a specific mechanic profile) dump exactly those paths, instead of
+// re-running repair search over every file-order level up to an arbitrary --limit-levels just to
+// reach the ones that matter. Overrides --limit-levels entirely when present.
+const onlyIds = args.has('--only') ? new Set(args.get('--only').split(',').map(s => s.trim()).filter(Boolean)) : null;
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.ts');
 const { repairSearchFromGate } = await import('../../modules/solver/repair-search.ts');
 const Solver = createSolver();
-const selected = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 0).slice(0, levelLimit);
+const hintBearing = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 0);
+const selected = onlyIds ? hintBearing.filter(level => onlyIds.has(level.id)) : hintBearing.slice(0, levelLimit);
 const levels = [];
 for (const raw of selected) {
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });

@@ -274,6 +274,19 @@ jobs:
           console.log('Solved ids: ' + rows.filter(x => x.ok).map(x => x.id ?? String(x.level)).sort().join(','));
           "
 
+      - name: Print repair-probe badness distribution
+        shell: bash
+        # Only the eligible (repair-gated AND has mustTurn) population ever runs a biased repair-probe
+        # tier, so this is a no-op summary (0 levels) on the control-only ineligible sample -- printed
+        # to the JOB CONSOLE LOG specifically (not just the uploaded artifact) because this session's
+        # egress policy has been observed blocking the artifact-download zip (Azure blob storage,
+        # 403) -- console output survives that. See scripts/stress/repair-probe-badness-report.mjs and
+        # REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE's own comment in orchestration.ts for why this
+        # data matters: recalibrating that constant needs the ordinaryBestBadness distribution, not
+        # just the solved-count this workflow already printed above.
+        run: |
+          node scripts/stress/repair-probe-badness-report.mjs --in=reports/stress/repair-probe-adaptive-sample-ab.json
+
       - name: Upload combined results
         if: always()
         uses: actions/upload-artifact@v4

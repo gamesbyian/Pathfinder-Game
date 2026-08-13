@@ -16,7 +16,7 @@ import { PACK } from './encoding.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { AttemptConfig, PrepLevel } from './types.js';
+import type { AblationConfig, AttemptConfig, PrepLevel } from './types.js';
 
 function makeLevel(overrides = {}) {
   return {
@@ -76,6 +76,27 @@ test('repair branch routes to repair search — distinguishable from DFS by its 
   const dfsPath = await runAttemptSearch(dfsCfg, PACK(0, 0), level, prepFor(level), POLICY_PROFILES.default, 200, Date.now(), null, Infinity, dfsOut);
   assert.equal(dfsPath, null);
   assert.equal(dfsOut.bestBadness, undefined, 'DFS config must NOT dispatch to repair (leaves bestBadness unset)');
+});
+
+test('STRATEGY_REPAIR_BEAM_SEED threads through to repairSearchFromGate\'s enableBeamSeed param', async () => {
+  // Distinguishable the same way the repair-branch test above distinguishes repair from DFS: an
+  // elite-research observer only ever fires from inside repairSearchFromGate's considerElite(), and
+  // the beam-seed step (when enabled) calls it BEFORE any restart -- restart:0 on at least one
+  // arrival is therefore observable only when the flag genuinely reached repairSearchFromGate, not
+  // just when the repair branch ran at all (the OTHER repair test above already covers that).
+  const level = makeLevel({ reqLen: 5 }); // unreachable, so the search runs its full budget
+  const prep = prepFor(level);
+  const arrivals: { restart: number }[] = [];
+  prep._repairEliteResearchObserver = { observe: record => arrivals.push(record) };
+
+  const offCfg: AttemptConfig = { profileName: 'repair', template: null, repair: true };
+  prep._cfg = null;
+  await runAttemptSearch(offCfg, PACK(0, 0), level, prep, POLICY_PROFILES.repair, 200, Date.now(), null);
+  assert.equal(arrivals.some(a => a.restart === 0), false, 'no beam-seeded elite without the flag');
+
+  prep._cfg = { STRATEGY_REPAIR_BEAM_SEED: true } as AblationConfig;
+  await runAttemptSearch(offCfg, PACK(0, 0), level, prep, POLICY_PROFILES.repair, 200, Date.now(), null);
+  assert.equal(arrivals.some(a => a.restart === 0), true, 'a beam-seeded elite arrives at restart 0 once the flag is set on prep._cfg');
 });
 
 test('the race worker routes through the shared dispatcher instead of re-forking it', () => {

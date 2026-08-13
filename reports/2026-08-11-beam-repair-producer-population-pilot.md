@@ -41,3 +41,34 @@ The first producer premise survives as a reason for one bounded, stratified foll
 region/interface descriptors and counterfactual receptor evaluation. A live handoff or blackboard is
 not justified. The negative alternative—complete producer redundancy—was not observed in this small
 sample, but cannot be ruled out population-wide.
+
+## Stratified follow-up (2026-08-13)
+
+The tool now supports a deterministic stratified draw (`--sample=N --seed=X`, same FNV-1a ->
+mulberry32 -> Fisher-Yates convention as `scripts/stress/benchmark.mjs`), replacing the original
+pilot's first-3-in-file-order selection. Ran at `--sample=25 --seed=beam-repair-followup-2026-08-13
+--node-budget=30000 --beam-width=100` (same per-level budget as the original pilot, ~8x the level
+count):
+
+```text
+npm run solver:producer-population-pilot -- --sample=25 --seed=beam-repair-followup-2026-08-13 \
+  --node-budget=30000 --beam-width=100 --out=reports/stress/producer-population-pilot-2026-08-13.json
+```
+
+942 beam artifacts vs. 1,657 repair-elite artifacts across the 25 levels. **Zero exact-prefix overlap
+and zero metric-projection overlap on every level** — the non-redundancy signal not only survives at
+~8x the sample size, it strengthens (the original 3-level pilot's own coarser metric-projection check
+was likewise zero, but on a sample small enough that a single coincidental match could have changed
+the picture; 25 stratified levels leaves much less room for that). This is now a reasonably solid
+population-level non-redundancy result, not just a 3-level observation.
+
+**Still does not answer the harder question the original disposition named**: this shows beam reaches
+structural regions repair's own elite pool doesn't reproduce, not that repair would benefit from being
+seeded with them. The negative precedent from
+[`2026-08-07-repair-elite-prefix-dfs.md`](2026-08-07-repair-elite-prefix-dfs.md) (repair-elites ->
+deterministic-DFS seeding, a structurally similar handoff one hop over) is the concrete reason not to
+skip straight to a live mechanism: useful, non-redundant information still lost 4/20 vs. 5/20 there
+because the extra work displaced the ordinary technique's own eventual win. A counterfactual receptor
+evaluation — actually splicing a beam survivor into repair's restart pool at solve time, in shadow/
+budget-matched form, and measuring whether repair's own badness/solve outcome improves — remains the
+next evidence gate before any promotion decision, exactly as this report's original disposition said.

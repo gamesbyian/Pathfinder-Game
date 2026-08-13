@@ -1,5 +1,17 @@
 # Worker-count solve-outcome sensitivity under a nominally canonical work budget (2026-08-12)
 
+**RESOLVED (partially) by
+[`2026-08-12-worker-count-sensitivity-repair-probe-wallclock.md`](2026-08-12-worker-count-sensitivity-repair-probe-wallclock.md)'s
+"Corpus-scale directionality, resolved" section**: Evidence 2 below (the 617/1700 vs. 665/1700
+corpus-scale gap) was NOT a worker-count effect — it was an ablation-flag confound
+(`PRUNE_MC_NEIGHBOR_BUDGET`'s incomplete promotion; one run explicitly passed
+`--enable-flags=PRUNE_MC_NEIGHBOR_BUDGET`, the other left it blank on the reasonable-but-wrong
+assumption that the flag's registry-only "promotion" already meant it defaulted on — see that
+report for the exact job-log trace). A separate, genuine worker-count/contention bug (`runRepairProbe`'s
+wall-clock trip-wire) was found and fixed in the same follow-up. Evidence 1 (R02823's single-level
+non-reproducibility) remains unresolved. Kept below in its original form as the source evidence;
+read the follow-up report for the current disposition.
+
 **Status: open investigation, evidence gathered, root cause NOT identified.** This report exists
 to hand off a real, reproduced finding without pretending it's more resolved than it is.
 

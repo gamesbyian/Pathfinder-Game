@@ -115,6 +115,155 @@ change to `modules/solver/repair-search.ts`'s retention policy, elite scoring, o
 regeneration is proposed or implied by this result — consistent with the task's own instruction and
 the concurrent collision-avoidance constraint on that file this session was run under.
 
+## Broadened sample (2026-08-13) — the zero-slack finding does NOT generalize
+
+This section directly answers the "whether this generalizes is genuinely open" question above. It
+does not generalize — the opposite pattern (large, real slack) shows up just as readily once the
+sample is deliberately chosen to include smaller-`commonPrefixSteps`-gap and `reqInt`/must-cross-heavy
+elites, exactly the population the original report flagged as untested.
+
+**Method**: `repair-rollback-census-pilot.mjs` and `repair-elite-path-dump.mjs` both gained
+deterministic stratified sampling / direct-id selection (same FNV-1a → mulberry32 → Fisher-Yates
+convention used throughout this session). A cheap 40-level stratified census (`--sample=40
+--seed=repair-retreat-broaden-2026-08-13`, no CP-SAT — pure repair-search + known-solution matching)
+surfaced four candidates satisfying both of the original report's stated criteria simultaneously:
+
+| elite | reqLen | eliteLength | commonPrefixSteps | rollbackSteps (demonstrated) | reqInt | mustCross |
+|---|---:|---:|---:|---:|---:|---:|
+| `R03176:elite:2` | 141 | 76 | 50 | 27 | 10 | 5 |
+| `R00630:elite:0` | 70 | 65 | 37 | 29 | 5 | 5 |
+| `R00648:elite:4` | 141 | 32 | 4 | 29 | 4 | 0 |
+| `R02449:elite:3` | 76 | 44 | 15 | 30 | 2 | 2 |
+
+Same binary-search driver, same `cpsat-full-probe.py` oracle. Two abstained on **`unsupported-
+mechanics`** even at full elite length (`R00630`, `R02449`, both `mustCross ≥ 2`) — a real coverage
+gap distinct from the previously-known flipping-filter one, not further resolvable by this oracle.
+The other two (`R03176:elite:2`, `R00648:elite:4`) resolved cleanly at full length to `dead
+(infeasible)`, matching the original pattern — but their first midpoint probe returned CP-SAT
+`UNKNOWN` (genuine time-limit exhaustion at 60s, not a structural abstention), so a second round
+re-ran just those two at `--time-limit=240` to let the bisection actually converge.
+
+**Result — real, large slack, not zero:**
+
+| elite | eliteLength | demonstrated rollback | exact minimum rollback | boundary |
+|---|---:|---:|---:|---|
+| `R03176:elite:2` | 76 | 27 | **1–2** | depth 74 (live, OPTIMAL) → depth 75 (dead, INFEASIBLE) |
+| `R00648:elite:4` | 32 | 29 | **1–2** | depth 30 (live, OPTIMAL) → depth 31 (dead, INFEASIBLE) |
+
+Both elites are exactly recoverable to within one or two steps of their own dead end — nothing close
+to the demonstrated (known-trajectory) rollback of 27–29 steps. The demonstrated-rollback proxy
+overestimated the true minimum by roughly **25–27×** on both cases. This is the mechanical opposite
+of the original 3-elite finding: there, the true boundary sat exactly at the point where the elite's
+trajectory first diverged from every known solution (zero slack beyond visible divergence); here, a
+real exact continuation exists almost the entire remaining length, and the known-solution set simply
+never happened to contain a path matching that near-full-length prefix — the divergence-from-known-
+solutions proxy was measuring "how different is this from a path we happened to store," not "how
+close is this to any valid completion."
+
+**Practically**: both `R03176` and `R00648` are already solved by the production ladder overall
+(confirmed via `level-blind-capability-sweep.mjs` at 25M nodes, presumably by a different technique
+or a different repair restart than the specific stuck elites tested here) — so this is not two new
+capability gaps. The value is in what it says about the population, not these two levels specifically:
+**selecting elites by small demonstrated rollback appears to correlate with real, large exact slack
+near the elite's own end (2/2 resolved cases here)**, which is a very different profile from the
+large-demonstrated-rollback population the original 3 cases came from (where zero slack held both
+times). This is suggestive, not proven, at n=2 resolved — but it directly falsifies "zero slack is a
+general property of stuck repair elites," which the original report's own hedging already anticipated
+might happen.
+
+**Implication for future repair-search work, not acted on here** (scope discipline unchanged from the
+original report — no `repair-search.ts` change is made or implied by this finding): the existing
+`closeLengthGap`/`enableElitePrefixDfs` bounded-backtrack mechanisms already try exactly this kind of
+last-mile recovery, but apply broadly and were found net-negative or marginal at population scale
+(see `docs/repair-search-stagnation-escape-plan.md`). A version gated specifically on "small
+demonstrated rollback" (a cheap, already-computed signal — no new instrumentation needed) rather than
+applied indiscriminately might be a meaningfully different, more targeted experiment than what's
+already been tried — but that is a new mechanism proposal for a future session, not evidence gathered
+here.
+
+## Why `closeLengthGap` doesn't already close R00648's gap (2026-08-13 diagnostic)
+
+The "gate on small demonstrated rollback" idea above cannot actually be built: demonstrated rollback
+is measured against known solutions (hints), which a live solve cannot use without violating
+`docs/solver-level-blindness.md`. What's testable instead is more direct: `closeLengthGap` is already
+default-on and already hint-free (triggers on live `structuralDeficit ≤ 1` at any dead end,
+unconditionally) — does it already recover the two elites this report just proved have real slack?
+
+Direct isolated `repairSearchFromGate` runs (`PF_LENGTH_GAP_DEBUG=1`, 2,000,000-node budget):
+- **R03176**: solves on its own. `closeLengthGap` fires 583 times across the run and succeeds at
+  restart 914 (~1.86M nodes total). No gap here.
+- **R00648**: does **not** solve within 2,000,000 nodes, despite `closeLengthGap` firing 500+ times
+  and the search reaching `bestBadness=16` (far better than elite:4's own badness of 117 — the search
+  has moved on to different, better near-misses, not stuck reproducing that one elite).
+
+**First hypothesis (backtrack floor too shallow) — tested and falsified.** `closeLengthGap` can only
+backtrack within the current restart's own construction, back to `floor` (the splice point) — not
+into an elite's already-spliced prefix. If the critical branch point sits inside a spliced prefix,
+`closeLengthGap` structurally cannot reach it. Tested directly: replayed the CP-SAT-verified
+depth-30-feasible prefix through the real state machinery (`replayToPrefix`/`applyMove`), then called
+`closeLengthGap` (now exported as `__closeLengthGapForTests`, mirroring `__takePlyForTests`) with
+`floor=0` (full backtrack range, all the way to the gate) and a 2,000,000-node budget — 500x its
+production budget of 4,000. **It still did not find the completion.** So the floor wasn't the
+bottleneck; something else is.
+
+**Second hypothesis (this is a needle-in-a-haystack position) — tested and confirmed.** Ran 2,000
+independent randomized rollouts from the exact same verified-feasible depth-30 state, using the same
+epsilon-greedy construction (`takePly`) repair's own main restart loop uses. **0/2000 solved**, and
+the search died almost immediately every time — average 4.3 nodes per attempt, best attempt reached
+only depth 60 of the required 141. Essentially every continuation from this point dies within a
+handful of moves; the one CP-SAT-found completion is a specific, long (111-move), precisely-threaded
+path through what is evidently a tightly-constrained region.
+
+**Conclusion**: neither of repair-search's own techniques is well-matched to this residual problem.
+Randomized rollout has no mechanism for finding one narrow long path among an astronomically larger
+set of quick dead ends. `closeLengthGap`'s deterministic, heuristically-ordered DFS-backtrack is
+exactly the search paradigm this codebase's own history already identified as failure-prone on hard
+levels — accumulating rank-discrepancies from early ordering mistakes — which is the *original*
+motivation for building randomized repair-search in the first place (see `repair-search.ts`'s own
+header comment). CP-SAT succeeds here because it performs real constraint propagation and systematic
+branch-and-bound, a different technique class entirely, not because it searches the same space better.
+This is not a triggering, floor, or budget defect in `closeLengthGap` — it's a genuine mismatch
+between the technique and the shape of this specific residual, and no tuning of the existing
+mechanism's parameters would be expected to close it.
+
+## R03176 vs. R00648: what actually differs (2026-08-13, same-day follow-up)
+
+Ran the identical diagnostic (`closeLengthGap` with `floor=0`/2,000,000 nodes, plus 2,000 random
+rollouts) on R03176's own CP-SAT-verified branch point (depth 74, the boundary from the original
+retreat check) for a fair apples-to-apples comparison against R00648's depth-30 point:
+
+| | R00648 (depth 30, residual 111) | R03176 (depth 74, residual 67) |
+|---|---|---|
+| `closeLengthGap` (floor=0, 2M nodes) | fails | fails |
+| Random rollouts (2,000 trials) | **0/2000 solved**, avg 4.3 nodes/trial, best depth **60**/141 | **0/2000 solved**, avg 6.5 nodes/trial, best depth **134**/141 |
+
+So it isn't that R03176's specific branch is "easy" and R00648's is "hard" — **neither exact branch is
+solved by either mechanism.** The difference is in how close blind search gets: R03176's random
+rollouts routinely push to within 7 cells of the full 141-cell requirement before dying; R00648's die
+with 81 cells still to go. R03176's residual is a "wide, forgiving" space with many almost-complete
+trajectories; R00648's is a narrow trap that kills nearly every attempt almost immediately.
+
+That difference shows up directly in which technique actually solves each level in the real ladder
+(`level-blind-capability-sweep.mjs`, 25M nodes): **R03176 is solved by plain repair** (`profile:
+'repair'`, 1,857,430 nodes — reproducing the isolated test's own figure exactly, via some other
+restart's trajectory than the one tested here) — repair's blind restarts have enough forgiving basin
+to eventually stumble onto a full solution, just not through this particular branch. **R00648 is
+solved by admissible-order search** (`profile: 'default'`, admissible-order tier) in only **223
+nodes** — three orders of magnitude cheaper, because admissible-order's sound bounds let it discard
+the vast majority of near-instant-death branches by proof rather than by playing them out. Random/
+heuristic local search has no equivalent of a bound; it can only find out a branch is dead by actually
+walking it.
+
+**A structural hypothesis, not a proven cause (n=2, suggestive only)**: R00648 has 14 blocks and zero
+must-cross/must-pass constraints (`reqInt=4` only); R03176 has zero blocks, 5 must-cross constraints,
+and a higher `reqInt=10` — mechanically *more* loaded, yet the *easier* one for repair. This points
+away from raw mechanic count as the driver and toward board topology specifically: blocks reduce
+navigable space and can create the kind of narrow-corridor structure where almost every move is a trap
+unless bound-based pruning is available — consistent with CLAUDE.md's own noted gotcha that open board
+space (or its absence) is a first-class puzzle-difficulty variable, not inert scaffolding. This is one
+matched pair, not a validated predictor; it would need a real sample (e.g. blocks-per-navigable-cell
+vs. repair-vs-admissible-order winner, across many solved levels) to become more than a hypothesis.
+
 ## Artifacts
 
 - Elite-path dump tool (deterministic, reproduces the pilot's exact selection):
@@ -132,3 +281,11 @@ the concurrent collision-avoidance constraint on that file this session was run 
   [`reports/stress/repair-retreat-cases-2026-08-12.json`](stress/repair-retreat-cases-2026-08-12.json)
 - Final labeled oracle result (0 correctness alarms, 0 input alarms):
   [`reports/stress/cpsat-explicit-prefix-oracle-repair-retreat-2026-08-12.json`](stress/cpsat-explicit-prefix-oracle-repair-retreat-2026-08-12.json)
+
+**Broadened-sample artifacts (2026-08-13)**:
+- Elite paths for the 4 new candidates (small-rollback / `reqInt`-`mustCross`-heavy):
+  [`reports/stress/repair-retreat-broaden-elite-paths-2026-08-13.json`](stress/repair-retreat-broaden-elite-paths-2026-08-13.json)
+- Round 1 (`--time-limit=60`, all 4 elites — 2 abstained `unsupported-mechanics`, 2 hit `UNKNOWN` at their midpoint probe):
+  [`reports/stress/repair-retreat-broaden-round1-2026-08-13.json`](stress/repair-retreat-broaden-round1-2026-08-13.json)
+- Round 2 (`--time-limit=240`, the 2 `UNKNOWN`-midpoint elites only — both resolved to an exact boundary):
+  [`reports/stress/repair-retreat-broaden-round2-retry-2026-08-13.json`](stress/repair-retreat-broaden-round2-retry-2026-08-13.json)

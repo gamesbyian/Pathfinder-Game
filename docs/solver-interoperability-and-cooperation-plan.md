@@ -1318,4 +1318,30 @@ The next bounded experiment should add region/interface descriptors and counterf
 receptor evaluation. See
 [`reports/2026-08-11-beam-repair-producer-population-pilot.md`](../reports/2026-08-11-beam-repair-producer-population-pilot.md).
 
+**Stratified follow-up (2026-08-13):** the pilot tool now supports a deterministic stratified draw
+(`--sample=N --seed=X`); a 25-level stratified run (~8x the original level count, same per-level
+budget) found the identical zero/zero result — 942 beam artifacts vs. 1,657 repair-elite artifacts,
+no exact-prefix or metric-projection overlap on any level. The non-redundancy premise is now
+reasonably solid at population scale, not just a 3-level observation. Still no receptor verdict: the
+next gate remains a counterfactual evaluation (does repair's own outcome improve when seeded with a
+beam survivor, budget-matched), not a live handoff. See the report's own "Stratified follow-up"
+section for the full numbers and the negative repair-elite-prefix-DFS precedent this must clear.
+
+**Counterfactual evaluation, run and closed negative (2026-08-13):** built `enableBeamSeed`
+(`repair-search.ts`) — a small beam search seeds repair's initial elite pool from its surviving
+frontier, validated through the real state machinery and budget-charged against repair's own node
+counter — and wired it into the live ladder as `STRATEGY_REPAIR_BEAM_SEED`. An ISOLATED
+`repairSearchFromGate` counterfactual (bypassing the full ladder, matched 2,000,000-node budget)
+found what looked like a real win: R00701 went from stuck-at-badness-2 to fully solved, 0 solve
+losses across n=13. Re-tested through the actual `solveLevel()` ladder on the same sample at
+production-realistic budget (25M nodes): R00701 was **already solved by ordinary repair fallback
+with the flag OFF** — the isolated test's budget was far more constrained than what repair actually
+gets inside the full ladder, so the apparent gain never existed at the level that matters. Full-ladder
+result: 2/13 solved in both arms, byte-identical, +3.5% nodes for zero benefit. Closed, not promoted
+— but a durable methodological lesson for this whole research line: **an isolated-technique
+counterfactual must be re-verified through the full ladder before it's trusted**, since constraining
+a receptor's own budget more tightly than production ever would can manufacture a gain that doesn't
+exist at the resource envelope that actually ships. See
+`docs/solver-opt-in-experiment-ledger.md`'s `STRATEGY_REPAIR_BEAM_SEED` entry for the full record.
+
 > **2026-08-11 review status:** No production policy from this track was changed in the PR #1356 follow-up. Completed lineage/correctness evidence and the explicitly uncompleted oracle/receptor work are recorded in [the review follow-up report](../reports/2026-08-11-pr1356-review-follow-up.md); oracle abstentions remain abstentions.

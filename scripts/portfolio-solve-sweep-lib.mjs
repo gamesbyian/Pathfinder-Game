@@ -94,6 +94,9 @@ export function attemptRecord(a) {
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
         ...(a.repairTurnBiased ? { repairTurnBiased: true } : {}),
+        // Distinguishes a runRepairProbe attempt from the same repair config re-run later by the
+        // full-budget repair fallback loop -- see orchestration.ts's Attempt.repairProbe comment.
+        ...(a.repairProbe ? { repairProbe: true } : {}),
         // The admissible-order-search last-resort tier's dispatch flags. Omitting these made every
         // one of its attempts indistinguishable from a plain DFS attempt in every persisted report
         // (measured: 0 attempts carrying these flags across the whole corpus-2 baseline and the

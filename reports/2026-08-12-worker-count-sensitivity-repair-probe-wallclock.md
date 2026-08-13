@@ -448,14 +448,23 @@ high-value fix for whoever owns the `PRUNE_MC_NEIGHBOR_BUDGET` promotion (tracke
 
 ## Still open
 
-1. **Why did `R02823` solve once, for the originating report's author, and never for this session
-   across five different local configurations?** Not resolved. The search is proven deterministic
-   on a fixed host (repeat runs are byte-close in node count and identical in outcome), so this
-   points to *something* about execution context differing between the two sessions — most likely
-   the underlying machine/Node version, since solver code and corpus data are confirmed identical —
-   but this was not identified. Suggest, if anyone revisits this: get the exact Node version and
-   CPU architecture the originating report's session ran on, and if different, try to reproduce on
-   a matching one.
+1. ~~Why did `R02823` solve once, for the originating report's author, and never for this session
+   across five different local configurations?~~ — **resolved (2026-08-13, follow-up session)**.
+   It was this report's own `runRepairProbe` wall-clock cap bug, not an execution-context/Node-version
+   difference. Direct controlled test, same sandbox (Node v22.22.2, 4-core) that had previously
+   failed to reproduce the solve: with current code (`REPAIR_PROBE_ATTEMPT_MS_CAP = 1_200_000`, the
+   fix below), `R02823` solves reliably and deterministically alone at `--workers=1`
+   (`--node-budget=36000000 --work-budget=48240000`, no ablation flags) — byte-identical
+   `9,308,917` nodes via `dfs:repair:repair(mustTurnBiased)` across two separate runs, matching the
+   originating report's own solved figure exactly. Restoring *only* the old `30000`ms cap value in
+   the same file, same sandbox, same everything else, flips the outcome to `node-budget-reached`,
+   `36,000,066` nodes, no winning config — a clean single-variable demonstration that the cap (not
+   host, not Node version, not worker count) is the deciding factor. This session's own earlier
+   local reproduction attempts (the evidence table above) all predate `2bfefc6`'s fix, which is why
+   they uniformly failed regardless of contention or worker count: the 30-second cap could bind even
+   fully uncontended if the sandbox's raw uncontended throughput happened to be below the value it
+   was implicitly tuned against, not only under explicit multi-process contention as originally
+   framed. No further action needed — the fix already on `main` fully explains and resolves this.
 2. ~~What actually explains Evidence 2's corpus-scale, directionally-consistent 48-level gap?~~ —
    **resolved**, see "Corpus-scale directionality, resolved" above: an incomplete ablation-flag
    promotion, not a worker-count effect. A genuine worker-count/contention effect (the

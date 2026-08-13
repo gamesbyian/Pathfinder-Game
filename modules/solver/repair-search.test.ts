@@ -324,6 +324,69 @@ test('enableRecombination=false (default) is byte-identical to omitting it', asy
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
+// ── Counterfactual receptor experiment: beam-survivor elite seeding ──────────────────────────────
+// Motivated by the 2026-08-13 stratified beam/repair producer-population pilot (zero exact-prefix /
+// zero metric-projection overlap across 25 levels — see BEAM_SEED_WIDTH's own comment). Positional
+// args through enableElitePrefixDfs=false, then enableBeamSeed=true (18th arg).
+
+test('repairSearchFromGate with enableBeamSeed=true only ever returns sound, valid solutions', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, false, false, false, true);
+    if (path) assert.equal(replayAndValidate(path, level, prep), true);
+});
+
+test('repairSearchFromGate with enableBeamSeed=true is deterministic', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, false, false, true);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, false, false, true);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+test('enableBeamSeed=false (default) is byte-identical to omitting it', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false, false, false, false);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+test('enableBeamSeed=true actually seeds the elite pool from a beam survivor before any restart', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    const arrivals: { producer: 'repair'; path: number[]; badness: number; arrivalNodes: number; restart: number }[] = [];
+    prep._repairEliteResearchObserver = { observe: record => arrivals.push(record) };
+    await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, 50_000, null, 0, false, false, false, false, false, true);
+    // At least one elite must have arrived at restart 0 -- i.e. before the restart loop's first
+    // increment (restartCount++ is the loop's very first statement) -- proving the seed step ran
+    // and inserted through considerElite BEFORE ordinary restart-driven discovery had a chance to.
+    assert.equal(arrivals.some(a => a.restart === 0), true, 'a beam-seeded elite arrived before restart 1');
+});
+
+test('enableBeamSeed=true charges the beam-seed cost against this call\'s own nodesExpanded, not a free extra pass', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    const out: { nodesExpanded?: number } = {};
+    // A tiny nodeBudget the ordinary restart loop alone could not possibly exceed in zero restarts,
+    // isolating the beam-seed step's own node cost as (most of) what gets reported.
+    await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1, out, 0, false, false, false, false, false, true);
+    assert.equal(prep._metrics.nodesExpanded > 0, true, 'the beam-seed step spent real, globally-counted nodes');
+    // The tiny nodeBudget=1 means the restart loop's own first check trips immediately on
+    // nodesExpandedLocal alone -- so out.nodesExpanded (set on that exit path) reports ONLY the
+    // beam-seed step's own cost, not any restart-loop spend.
+    assert.equal((out.nodesExpanded ?? 0) > 0, true, 'the beam-seed cost was charged to this call\'s own local counter, which the restart loop\'s own termination check reads');
+});
+
 // ── Stage 3-real prototype: reversible-operator path relinking ───────────────────────────────────
 test('relinkPaths recombines base prefix + guide suffix at a shared anchor into a valid solution', () => {
     // 3×3, gate (1,1) → goal (3,3), reqLen 4. base is a non-solution ending at (3,1); guide is a
