@@ -756,21 +756,26 @@ export const MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT = 4;
  *  bug (STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET) and the already-fixed admissible-order bug
  *  (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION), one tier boundary further down the ladder.
  *
- *  THE MECHANISM: a flat carve-out from the ceiling the main loop runs against, computed BEFORE the
- *  main loop runs — mirroring the admissible-order reserve's own mechanism exactly, not the
- *  repair-probe fix's live-signal shrink. That fix needed live conditioning because a STATIC shrink
- *  of the PROBE itself was zero-sum (see REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE's own comment);
- *  here the receptor (the fallback loop) currently gets nothing at all rather than too much, so a
- *  flat reserve — the same shape that measured +21 net for the admissible-order tier — is the
- *  right first mechanism to test, not a novel one.
+ *  THE MECHANISM (see the read-site's own two-revision history for the full derivation): a flat
+ *  carve-out, but NOT directly from `earlyTierNodeBudget` the way ADMISSIBLE_ORDER_NODE_RESERVE_
+ *  FRACTION carves from ITS ceiling — two revisions found that both naive placements (before the
+ *  probe's own ceiling; independently after it with a Math.max clamp) actively regressed real
+ *  solves by taking budget from something already load-bearing (the probe, the main loop's own
+ *  attempt shares, or the already-validated STRATEGY_MAIN_LOOP_LATE_RESERVE's entire slice). The
+ *  landed mechanism instead takes this fraction OF `mainLoopLateReserve` itself — "of whatever the
+ *  late suffix would get, hand some to the fallback loop instead" — which is provably safe for the
+ *  probe/early-config prefix (untouched, always) and only partially reduces (not zeroes) the late
+ *  suffix's own room. Not the repair-probe fix's live-signal shrink either (that fix needed live
+ *  conditioning because a STATIC shrink of the PROBE itself was zero-sum — see
+ *  REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE's own comment) — this is still a flat reserve, just
+ *  scoped to a narrower, safer slice of the budget than the first two attempts used.
  *
- *  CALIBRATION CAVEAT: 0.15 is a starting point copied from MAIN_LOOP_LATE_RESERVE_FRACTION's own
- *  validated magnitude (a "modest reserve" precedent), NOT a value derived from any A/B on this
- *  specific mechanism — this reserve protects a much more central, heavily-used stage (the main
- *  loop) than either existing reserve protects FROM, so it is not safe to assume the same fraction
- *  is well-calibrated here. Landed opt-in, default OFF, specifically so it can be iterated on and
- *  measured before any promotion decision — do not promote without a dedicated A/B, per this
- *  codebase's standing discipline for every reserve/allocation mechanism above. */
+ *  CALIBRATION CAVEAT: 0.15 is a starting point (a modest fraction OF the late-suffix reserve, not
+ *  of the whole pool — considerably smaller in absolute terms than either existing reserve), NOT a
+ *  value derived from any A/B on this specific mechanism. Landed opt-in, default OFF, specifically
+ *  so it can be iterated on and measured before any promotion decision — do not promote without a
+ *  dedicated A/B, per this codebase's standing discipline for every reserve/allocation mechanism
+ *  above. */
 export const REPAIR_FALLBACK_NODE_RESERVE_FRACTION = 0.15;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
@@ -1555,21 +1560,41 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // loop) needs a share of the pool it's currently denied entirely, not a scale-down of an
     // over-consuming producer's own budget.
     //
-    // REVISION (2026-08-13): the first version of this reserve reduced `earlyTierNodeBudget` BEFORE
-    // deriving `mainLoopEarlyNodeBudget` — which is also the repair probe's own ceiling, and (via
-    // the late-suffix budget-share formula in runInterleavedAttempts/runGateSerialAttempts) also
-    // shrank every main-loop attempt's own node share, not just the late-suffix ones. Measured
+    // REVISION 1 (2026-08-13): the first version of this reserve reduced `earlyTierNodeBudget`
+    // BEFORE deriving `mainLoopEarlyNodeBudget` — which is also the repair probe's own ceiling, and
+    // (via the late-suffix budget-share formula in runInterleavedAttempts/runGateSerialAttempts)
+    // also shrank every main-loop attempt's own node share, not just the late-suffix ones. Measured
     // directly on this session's n=12 local sample: net −2 (0 gained, 2 lost — R02823's probe
     // attempt truncated from 5,308,905 to 4,128,152 nodes, short of the 5,308,905 it needed to win;
     // R00602's winning beam attempt truncated from 282,246 to 9,990). Taking budget from the probe
     // and main loop is not "reallocating idle capacity" the way the admissible-order reserve does —
-    // that pool is already load-bearing. Fixed by leaving `mainLoopEarlyNodeBudget` (declared above,
-    // BEFORE this reserve) completely untouched, and only capping the OUTER ceiling that governs how
-    // far the main loop's LATE SUFFIX may additionally reach beyond it — the repair probe and the
-    // main loop's early-config prefix are now structurally guaranteed byte-identical to this
-    // mechanism being off. This does not fully close the risk to the late suffix specifically (a
-    // late-suffix winner could still be capped the same way R00602's was) — that remains an open
-    // question for the next A/B, not resolved by this revision alone.
+    // that pool is already load-bearing.
+    //
+    // REVISION 2 (2026-08-13): fixing revision 1 by computing this reserve as a fraction of
+    // `earlyTierNodeBudget` directly, then clamping `mainLoopNodeBudget` to never drop below
+    // `mainLoopEarlyNodeBudget` (Math.max), traded one bug for another: with both this fraction and
+    // `mainLoopLateReserveFraction` at their same 0.15 default, `earlyTierNodeBudget -
+    // repairFallbackNodeReserve` landed EXACTLY at `mainLoopEarlyNodeBudget` (both are 15% of the
+    // same base), so the Math.max clamp silently zeroed the late suffix's entire
+    // `mainLoopLateReserve` room every time — not a rare edge case, the default-parameter case.
+    // Measured directly: R01856's winner (`beam:intersectionHarvest@beam5000`, a LATE-suffix config,
+    // 175,097 cheap nodes in baseline) got zero main-loop attempts at all once this reserve claimed
+    // the exact room the late reserve needed — a NEW regression this revision's own fix introduced,
+    // caught by re-running the same n=12 sample rather than trusting the first fix's logic alone.
+    //
+    // THE FIX: this reserve is now a fraction of `mainLoopLateReserve` itself (the room ALREADY
+    // set aside for the late suffix), not an independent claim on `earlyTierNodeBudget` — i.e. "of
+    // whatever the late suffix would get, hand some of it to the fallback loop instead" rather than
+    // two reserves independently competing for the same base pool. This makes `mainLoopNodeBudget
+    // >= mainLoopEarlyNodeBudget` true BY CONSTRUCTION (repairFallbackNodeReserve <=
+    // mainLoopLateReserve always, since the fraction is clamped to [0,1]) — no clamp needed, and the
+    // late suffix keeps a share proportional to (1 - this fraction) rather than losing it outright.
+    // ACCEPTED COUPLING: this reserve is a strict no-op whenever `mainLoopLateReserve` is 0 (whether
+    // because STRATEGY_MAIN_LOOP_LATE_RESERVE is off, or its own config-count/fraction rounds to
+    // zero) — there is nothing to carve from without repeating revision 1's mistake. Since
+    // STRATEGY_MAIN_LOOP_LATE_RESERVE is production default-ON, this only matters for a caller that
+    // explicitly disables it while enabling this flag; not fixed here (would need a second,
+    // independent floor computation) per CLAUDE.md's smallest-change guidance — flagged, not solved.
     //
     // Gated on the SAME real-run condition the fallback loop's own `for` loop below already checks
     // (repairConfigs.length > 0 && repairBudgetFraction !== 0) — no separate ablation flag guards
@@ -1594,20 +1619,19 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         && repairFallbackNodeReserveFraction > 0
         && repairConfigs.length > 0
         && repairBudgetFraction !== 0
-        && earlyTierNodeBudget !== Infinity;
+        && mainLoopLateReserve > 0;
     const repairFallbackNodeReserve = repairFallbackNodeReserveEligible
-        ? Math.floor(earlyTierNodeBudget * repairFallbackNodeReserveFraction)
+        ? Math.floor(mainLoopLateReserve * repairFallbackNodeReserveFraction)
         : 0;
     // The ceiling the main loop's LATE SUFFIX may additionally reach beyond `mainLoopEarlyNodeBudget`
-    // — never below it (Math.max guard: a level where `mainLoopLateReserve` alone already withholds
-    // MORE than this reserve would otherwise ask for must not have that existing, already-validated
-    // protection weakened by this new, unvalidated one). `earlyTierNodeBudget` itself is unchanged
-    // and remains what the repair fallback loop and the attraction-diversity pass check against
-    // below, so what they may spend is exactly what this reserve withheld from the main loop's late
-    // suffix specifically — never from the probe or the early config prefix.
+    // — always >= mainLoopEarlyNodeBudget by construction (see above), so no clamp is needed here.
+    // `earlyTierNodeBudget` itself is unchanged and remains what the repair fallback loop and the
+    // attraction-diversity pass check against below, so what they may spend is exactly what this
+    // reserve withheld from the main loop's late suffix specifically — never from the probe or the
+    // early config prefix.
     const mainLoopNodeBudget = earlyTierNodeBudget === Infinity
         ? Infinity
-        : Math.max(mainLoopEarlyNodeBudget, earlyTierNodeBudget - repairFallbackNodeReserve);
+        : earlyTierNodeBudget - repairFallbackNodeReserve;
 
     // Early, strictly-additive probe of the repair fallback — see REPAIR_PROBE_ORDINARY_NODE_BUDGET
     // / REPAIR_PROBE_BIASED_NODE_BUDGET. Absent (and free) on every level outside the repair
