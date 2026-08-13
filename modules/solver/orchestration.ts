@@ -232,6 +232,23 @@ interface SolveOpts {
     /** Number of final ordinary configs eligible for the experimental reserve. See the fraction
      *  override above. Values are clamped to the main config count; 0 disables the reserve. */
     mainLoopLateReserveConfigCountOverride?: number;
+    /** Override for REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE for this solve only — same
+     *  dedicated-override shape as the reserve-fraction overrides above (NOT an ablation flag: the
+     *  gate is read unconditionally inside the STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET branch,
+     *  so there is no existing opt-in/opt-out plumbing to piggyback on, and a fresh ablation flag
+     *  would conflate "use the adaptive mechanism at all" with "which gate value" — two different
+     *  questions). Exists so a matched batch-tooling sweep (recalibrating the gate from tagged
+     *  repairProbe telemetry per docs/future-work.md item 4b) can compare candidate gate values
+     *  against the production default without editing the constant and rebuilding. Undefined
+     *  (every production/interactive caller) preserves REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE
+     *  exactly. */
+    repairProbeAdaptiveBiasedBadnessGateOverride?: number;
+    /** Override for REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE for this solve only — same shape and
+     *  rationale as repairProbeAdaptiveBiasedBadnessGateOverride above; kept as a separate field
+     *  (not folded into one object) to match every other override in this file being a single
+     *  scalar. Undefined (every production/interactive caller) preserves
+     *  REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE exactly. */
+    repairProbeAdaptiveBiasedMinScaleOverride?: number;
     /** Convenience for offline batch tooling: sets repairBudgetFractionOverride,
      *  attractionDiversityBudgetFractionOverride, AND admissibleOrderBudgetFractionOverride all to 0
      *  (purely additive — an explicit value on any individual override still wins over this, so a
@@ -1126,6 +1143,7 @@ const REPAIR_PROBE_ORDINARY_SEED_SALTS = [0, 1];
 async function runRepairProbe(
     repairConfigs: AttemptConfig[], activeGates: number[], level: NormalizedLevel,
     prep: PrepLevel, yieldFn: YieldFn, cfg: AblationConfig | null, nodeBudget = Infinity,
+    badnessGate = REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, minScale = REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     // REPAIR_PROBE_BIASED_NODE_BUDGET was calibrated (see its own comment) against exactly one
@@ -1173,8 +1191,8 @@ async function runRepairProbe(
             ), Infinity);
             if (Number.isFinite(ordinaryBestBadness)) {
                 const scale = Math.min(1, Math.max(
-                    REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE,
-                    REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE / ordinaryBestBadness,
+                    minScale,
+                    badnessGate / ordinaryBestBadness,
                 ));
                 fixedProbeNodeBudget = Math.floor(fixedProbeNodeBudget * scale);
             }
@@ -1829,7 +1847,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // still runs), isolating the probe's own scheduling contribution from repair-search itself.
     const probeAttempts: Attempt[] = primeMissAttempt ? [primeMissAttempt] : [];
     if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
-        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, mainLoopEarlyNodeBudget);
+        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, mainLoopEarlyNodeBudget,
+            opts.repairProbeAdaptiveBiasedBadnessGateOverride ?? REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE,
+            opts.repairProbeAdaptiveBiasedMinScaleOverride ?? REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE);
         probeAttempts.push(...probe.attempts);
         if (probe.solution) {
             const totalMs = Date.now() - levelStartTime;
