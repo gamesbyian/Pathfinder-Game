@@ -115,6 +115,72 @@ change to `modules/solver/repair-search.ts`'s retention policy, elite scoring, o
 regeneration is proposed or implied by this result — consistent with the task's own instruction and
 the concurrent collision-avoidance constraint on that file this session was run under.
 
+## Broadened sample (2026-08-13) — the zero-slack finding does NOT generalize
+
+This section directly answers the "whether this generalizes is genuinely open" question above. It
+does not generalize — the opposite pattern (large, real slack) shows up just as readily once the
+sample is deliberately chosen to include smaller-`commonPrefixSteps`-gap and `reqInt`/must-cross-heavy
+elites, exactly the population the original report flagged as untested.
+
+**Method**: `repair-rollback-census-pilot.mjs` and `repair-elite-path-dump.mjs` both gained
+deterministic stratified sampling / direct-id selection (same FNV-1a → mulberry32 → Fisher-Yates
+convention used throughout this session). A cheap 40-level stratified census (`--sample=40
+--seed=repair-retreat-broaden-2026-08-13`, no CP-SAT — pure repair-search + known-solution matching)
+surfaced four candidates satisfying both of the original report's stated criteria simultaneously:
+
+| elite | reqLen | eliteLength | commonPrefixSteps | rollbackSteps (demonstrated) | reqInt | mustCross |
+|---|---:|---:|---:|---:|---:|---:|
+| `R03176:elite:2` | 141 | 76 | 50 | 27 | 10 | 5 |
+| `R00630:elite:0` | 70 | 65 | 37 | 29 | 5 | 5 |
+| `R00648:elite:4` | 141 | 32 | 4 | 29 | 4 | 0 |
+| `R02449:elite:3` | 76 | 44 | 15 | 30 | 2 | 2 |
+
+Same binary-search driver, same `cpsat-full-probe.py` oracle. Two abstained on **`unsupported-
+mechanics`** even at full elite length (`R00630`, `R02449`, both `mustCross ≥ 2`) — a real coverage
+gap distinct from the previously-known flipping-filter one, not further resolvable by this oracle.
+The other two (`R03176:elite:2`, `R00648:elite:4`) resolved cleanly at full length to `dead
+(infeasible)`, matching the original pattern — but their first midpoint probe returned CP-SAT
+`UNKNOWN` (genuine time-limit exhaustion at 60s, not a structural abstention), so a second round
+re-ran just those two at `--time-limit=240` to let the bisection actually converge.
+
+**Result — real, large slack, not zero:**
+
+| elite | eliteLength | demonstrated rollback | exact minimum rollback | boundary |
+|---|---:|---:|---:|---|
+| `R03176:elite:2` | 76 | 27 | **1–2** | depth 74 (live, OPTIMAL) → depth 75 (dead, INFEASIBLE) |
+| `R00648:elite:4` | 32 | 29 | **1–2** | depth 30 (live, OPTIMAL) → depth 31 (dead, INFEASIBLE) |
+
+Both elites are exactly recoverable to within one or two steps of their own dead end — nothing close
+to the demonstrated (known-trajectory) rollback of 27–29 steps. The demonstrated-rollback proxy
+overestimated the true minimum by roughly **25–27×** on both cases. This is the mechanical opposite
+of the original 3-elite finding: there, the true boundary sat exactly at the point where the elite's
+trajectory first diverged from every known solution (zero slack beyond visible divergence); here, a
+real exact continuation exists almost the entire remaining length, and the known-solution set simply
+never happened to contain a path matching that near-full-length prefix — the divergence-from-known-
+solutions proxy was measuring "how different is this from a path we happened to store," not "how
+close is this to any valid completion."
+
+**Practically**: both `R03176` and `R00648` are already solved by the production ladder overall
+(confirmed via `level-blind-capability-sweep.mjs` at 25M nodes, presumably by a different technique
+or a different repair restart than the specific stuck elites tested here) — so this is not two new
+capability gaps. The value is in what it says about the population, not these two levels specifically:
+**selecting elites by small demonstrated rollback appears to correlate with real, large exact slack
+near the elite's own end (2/2 resolved cases here)**, which is a very different profile from the
+large-demonstrated-rollback population the original 3 cases came from (where zero slack held both
+times). This is suggestive, not proven, at n=2 resolved — but it directly falsifies "zero slack is a
+general property of stuck repair elites," which the original report's own hedging already anticipated
+might happen.
+
+**Implication for future repair-search work, not acted on here** (scope discipline unchanged from the
+original report — no `repair-search.ts` change is made or implied by this finding): the existing
+`closeLengthGap`/`enableElitePrefixDfs` bounded-backtrack mechanisms already try exactly this kind of
+last-mile recovery, but apply broadly and were found net-negative or marginal at population scale
+(see `docs/repair-search-stagnation-escape-plan.md`). A version gated specifically on "small
+demonstrated rollback" (a cheap, already-computed signal — no new instrumentation needed) rather than
+applied indiscriminately might be a meaningfully different, more targeted experiment than what's
+already been tried — but that is a new mechanism proposal for a future session, not evidence gathered
+here.
+
 ## Artifacts
 
 - Elite-path dump tool (deterministic, reproduces the pilot's exact selection):
@@ -132,3 +198,11 @@ the concurrent collision-avoidance constraint on that file this session was run 
   [`reports/stress/repair-retreat-cases-2026-08-12.json`](stress/repair-retreat-cases-2026-08-12.json)
 - Final labeled oracle result (0 correctness alarms, 0 input alarms):
   [`reports/stress/cpsat-explicit-prefix-oracle-repair-retreat-2026-08-12.json`](stress/cpsat-explicit-prefix-oracle-repair-retreat-2026-08-12.json)
+
+**Broadened-sample artifacts (2026-08-13)**:
+- Elite paths for the 4 new candidates (small-rollback / `reqInt`-`mustCross`-heavy):
+  [`reports/stress/repair-retreat-broaden-elite-paths-2026-08-13.json`](stress/repair-retreat-broaden-elite-paths-2026-08-13.json)
+- Round 1 (`--time-limit=60`, all 4 elites — 2 abstained `unsupported-mechanics`, 2 hit `UNKNOWN` at their midpoint probe):
+  [`reports/stress/repair-retreat-broaden-round1-2026-08-13.json`](stress/repair-retreat-broaden-round1-2026-08-13.json)
+- Round 2 (`--time-limit=240`, the 2 `UNKNOWN`-midpoint elites only — both resolved to an exact boundary):
+  [`reports/stress/repair-retreat-broaden-round2-retry-2026-08-13.json`](stress/repair-retreat-broaden-round2-retry-2026-08-13.json)
