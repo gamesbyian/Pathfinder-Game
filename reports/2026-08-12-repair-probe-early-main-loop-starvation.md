@@ -290,6 +290,65 @@ week (`docs/solver-opt-in-experiment-ledger.md`):
 ci` end-to-end (the targeted subset above covers everything this change touches). Both remain
 reasonable follow-ups, not blockers to the promotion already made.
 
+## Gate/min-scale recalibration: local pilot (2026-08-13)
+
+Follow-up to the saved-artifact audit's `BADNESS_GATE=10/8/6` nomination above. Two mechanical
+additions made the sweep runnable without editing the constant: `SolveOpts.repairProbeAdaptiveBiasedBadnessGateOverride`
+/ `repairProbeAdaptiveBiasedMinScaleOverride` (`modules/solver/orchestration.ts`, dedicated
+top-level fields, same shape as every other override in that file — not ablation flags, since
+there's no existing opt-in/opt-out plumbing this could piggyback on and a fresh ablation flag would
+conflate "use the mechanism at all" with "which gate value"), and matching
+`--repair-probe-adaptive-badness-gate`/`--repair-probe-adaptive-min-scale` CLI flags on
+`scripts/level-blind-capability-sweep.mjs`. `MIN_SCALE` was left at its production default (0.35,
+undefined override) throughout — the nomination's own instruction to hold it fixed.
+
+**First attempt (n=30, `--node-budget=8000000`) was invalidated by its own budget, not the gate.**
+The probe's own worst case (ordinary tier up to 4,000,000 across 2 seed salts, plus up to 6,000,000
+for the biased tier before any scaling) can reach ~10,000,000 nodes — *larger* than the 8,000,000
+external ceiling this first pass used. Per-level attempt records confirmed the external ceiling, not
+the biased tier's own (gate-dependent) scaled budget, was cutting attempts off: all three arms
+(baseline, gate=8, gate=6) came back with byte-identical total `nodesExpanded`/`workSpent` across
+the whole sample, and a spot-check on `R02360` showed the biased-tier attempt hitting the exact same
+`nodesExpanded: 1,100,013` in both the baseline and gate=6 arms despite their different internal
+scale factors (0.53 vs. 0.35) implying different budgets (~3.16M vs. ~2.1M nodes) — the attempt
+never got far enough to reach either number, having already been stopped by the shared external
+ceiling. Same failure shape as the pre-fix `mainLoopEarlyNodeBudget` starvation this whole thread
+started from: a tight external ceiling can make an internal reallocation invisible by binding first.
+
+**Re-run at n=12 (a subset of the same deterministic draw) with `--node-budget=30000000`** — large
+enough that the probe's own budgets, not the external ceiling, are what typically decides an
+attempt's outcome — showed a real, gate-dependent effect:
+
+| Arm | Solved | Total nodesExpanded | Total workSpent |
+|---|---:|---:|---:|
+| baseline (gate=10) | 7/12 | 196,373,558 | 447,402,793 |
+| gate=8 | 7/12 | 194,250,690 (−1.1%) | 433,309,051 (−3.2%) |
+| gate=6 | 7/12 | 192,127,564 (−2.2%) | 421,207,101 (−5.9%) |
+
+Zero flips at any gate (`scripts/stress/repair-probe-badness-report.mjs`'s matched-pair mode: 0
+flips vs. baseline for both gate=8 and gate=6, out of the same 12-level sample). The per-level detail
+matches the mechanism's own logic exactly: unsolved levels that still hit the external 30,000,000
+ceiling regardless of arm (`R00532`, `R01254`, `R02102`, `R02546`, `R03083`) show ~identical node
+counts across arms (the external ceiling dominates there too, same shape as the n=30 attempt);
+solved levels where the biased tier's shrink freed nodes that would otherwise have been spent on an
+already-doomed biased-tier search show a real, monotonic reduction as the gate lowers — `R00986`
+(8.81M → 7.89M → 6.97M, −21% baseline to gate=6) and `R02476` (10.44M → 9.23M → 8.04M, −23%).
+
+This is the same shape (net-neutral or positive on solved-count, real cost reduction) the original
+`STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` promotion itself validated on before its own 300-level
+GHA A/B — n=12 is far too small to detect a rare flip (the production A/B needed 250 eligible levels
+to find its one gain), but it clears the same "worth spending GHA compute" bar the interoperability
+plan's decision gate calls for: real, monotonic cost signal, zero observed loss, mechanically
+identical population to the already-promoted, already-validated mechanism. `.github/workflows/solver-repair-probe-adaptive-sample-ab.yml`
+gained `repair_probe_adaptive_badness_gate`/`repair_probe_adaptive_min_scale` dispatch inputs so the
+existing eligible-population sampler/sharding infrastructure can be reused for this gate-value sweep
+without a new workflow.
+
+**Decision-bearing next action**: dispatch the workflow three times (blank/baseline, gate=8, gate=6;
+identical seed/sample/node_budget, min_scale left blank) at GHA scale and compare combined solved
+count/flips/cost the same way the original mechanism's A/B was judged, before considering any change
+to the production `REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE` constant.
+
 ## Reproducing
 
 ```bash

@@ -85,11 +85,17 @@ The frozen full-population level-blind A/B ran (all 4 arms `workers=1`, `determi
 
 **Promoted to production default-ON (2026-08-13)** on this evidence, at the project owner's explicit direction — a deliberate exception to the full-population-A/B bar, recorded as such rather than glossed over. Registry + `orchestration.ts` read-site convention fix landed together (learning from the wiring-gap lesson `PRUNE_MC_NEIGHBOR_BUDGET`/`STRATEGY_MAIN_LOOP_LATE_RESERVE` both required above), with three new regression tests confirming activation under a genuinely-omitted ablation config. `solver:bench --check` is byte-identical on the published 160-level corpus (zero eligible levels there), so this has no effect on any interactive Play/Editor/Review solve — only offline batch tooling with a finite `nodeBudget`. See `docs/solver-opt-in-experiment-ledger.md`'s entry for the full record.
 
-### 4b. Recalibrate repair-probe adaptive constants from tagged telemetry
+### 4b. Recalibrate repair-probe adaptive constants from tagged telemetry — LOCAL PILOT SUPPORTS THE SWEEP (2026-08-13); GHA A/B not yet dispatched
 
 The promoted adaptive controller kept all 12 direct repair wins, added a later beam solve on R02719, and reduced aggregate search work in the matched full-ladder A/B. The saved-artifact audit also found a strong yield gradient: 18.4% of levels with baseline `badness <= 5` were direct repair wins, compared with 1.6% at `16-20` and 0% above 20.
 
 The next bounded experiment should keep `MIN_SCALE=0.35` fixed and compare `BADNESS_GATE` values 10, 8, and 6 against the promoted controller. Use explicit `repairProbe` attempt tags, the same immutable corpus, level-blind rules, and full-ladder outcomes. The historical replay nominates those gates; it does not validate them. See [Existing solve-data tuning opportunities](../reports/2026-08-13-existing-solve-data-tuning-opportunities.md) and the [repair-probe report](../reports/2026-08-12-repair-probe-early-main-loop-starvation.md).
+
+**Local pilot run (n=12, `--node-budget=30000000`, same "repair-gated AND has mustTurn" eligible population the original mechanism's own A/B used):** zero flips at gate=8 and gate=6 vs. the gate=10 baseline (7/12 solved in all three arms), with a real, monotonic cost reduction as the gate lowers — nodes −1.1%/−2.2%, work −3.2%/−5.9% at gate=8/gate=6 respectively. An earlier n=30 attempt at `--node-budget=8000000` came back byte-identical across all three arms and was discarded as invalidated by its own budget: the probe's own worst case (~10,000,000 nodes) exceeded the external ceiling, so the *external* budget was the binding constraint everywhere, masking the gate's effect entirely — worth remembering for any future pilot on this mechanism. Full detail: the repair-probe report's own "Gate/min-scale recalibration: local pilot" section.
+
+`SolveOpts.repairProbeAdaptiveBiasedBadnessGateOverride`/`_MinScaleOverride` (`modules/solver/orchestration.ts`) and matching `--repair-probe-adaptive-badness-gate`/`--repair-probe-adaptive-min-scale` flags on `scripts/level-blind-capability-sweep.mjs` now exist so this sweep never needs to edit the production constant to test a candidate value. `.github/workflows/solver-repair-probe-adaptive-sample-ab.yml` gained matching dispatch inputs, reusing its existing eligible-population sampler.
+
+**Decision-bearing next action**: dispatch that workflow three times (blank/baseline, gate=8, gate=6; identical seed/sample/node_budget, min_scale left blank) at GHA scale and compare combined solved count/flips/cost before touching the production constant. Not yet dispatched as of this writing.
 
 ## Parallel observational work that remains valid
 

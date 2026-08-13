@@ -23,6 +23,15 @@
 # enable_flags=STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (treatment) -- then compare each run's
 # combined solved count/gains/losses (per-id, from each run's reports/stress/repair-probe-adaptive-
 # sample-ab.json artifact).
+#
+# GATE/MIN_SCALE RECALIBRATION REUSE (2026-08-13, docs/future-work.md item 4b,
+# reports/2026-08-13-existing-solve-data-tuning-opportunities.md): the same eligible population is
+# the only one REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE can ever affect, so this
+# workflow doubles as the gate-value sweep entrypoint via the repair_probe_adaptive_badness_gate /
+# repair_probe_adaptive_min_scale inputs (both blank = production defaults 10 / 0.35). Dispatch once
+# per candidate gate (blank baseline, then 8, then 6) with identical seed/sample/node_budget and
+# min_scale left blank throughout (the sweep holds MIN_SCALE fixed), then compare each run's combined
+# artifact the same way as the on/off A/B above.
 name: Solver repair-probe adaptive-budget sample A/B
 
 on:
@@ -68,6 +77,14 @@ on:
         description: 'true forces a 24h non-binding deadline so this run is reproducible (bit-identical nodes/work). Matched A/B arms should both use true.'
         required: false
         default: 'true'
+      repair_probe_adaptive_badness_gate:
+        description: 'Overrides REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE (production default 10) for this run only -- for the docs/future-work.md item 4b gate recalibration sweep (10/8/6). Leave blank to use the production default.'
+        required: false
+        default: ''
+      repair_probe_adaptive_min_scale:
+        description: 'Overrides REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE (production default 0.35) for this run only. Leave blank to use the production default -- the item 4b sweep holds this fixed at 0.35 across all gate arms.'
+        required: false
+        default: ''
 
 concurrency:
   group: solver-repair-probe-adaptive-sample-ab
@@ -176,6 +193,8 @@ jobs:
           extra=()
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          [ -n "${{ inputs.repair_probe_adaptive_badness_gate }}" ] && extra+=("--repair-probe-adaptive-badness-gate=${{ inputs.repair_probe_adaptive_badness_gate }}")
+          [ -n "${{ inputs.repair_probe_adaptive_min_scale }}" ] && extra+=("--repair-probe-adaptive-min-scale=${{ inputs.repair_probe_adaptive_min_scale }}")
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus=data/stress/stress-levels-random.json \
@@ -269,7 +288,7 @@ jobs:
           const solved = rows.filter(x => x.ok).length;
           const nodes = rows.reduce((n,x) => n + (x.nodesExpanded || 0), 0);
           const work = rows.reduce((n,x) => n + (x.workSpent || 0), 0);
-          console.log('enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }}');
+          console.log('enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} badness_gate=${{ inputs.repair_probe_adaptive_badness_gate }} min_scale=${{ inputs.repair_probe_adaptive_min_scale }}');
           console.log(\`SOLVED sample: \${solved}/\${rows.length} nodes=\${nodes} work=\${work}\`);
           console.log('Solved ids: ' + rows.filter(x => x.ok).map(x => x.id ?? String(x.level)).sort().join(','));
           "
