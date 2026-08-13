@@ -1318,4 +1318,13 @@ The next bounded experiment should add region/interface descriptors and counterf
 receptor evaluation. See
 [`reports/2026-08-11-beam-repair-producer-population-pilot.md`](../reports/2026-08-11-beam-repair-producer-population-pilot.md).
 
+**Stratified follow-up (2026-08-13):** the pilot tool now supports a deterministic stratified draw
+(`--sample=N --seed=X`); a 25-level stratified run (~8x the original level count, same per-level
+budget) found the identical zero/zero result — 942 beam artifacts vs. 1,657 repair-elite artifacts,
+no exact-prefix or metric-projection overlap on any level. The non-redundancy premise is now
+reasonably solid at population scale, not just a 3-level observation. Still no receptor verdict: the
+next gate remains a counterfactual evaluation (does repair's own outcome improve when seeded with a
+beam survivor, budget-matched), not a live handoff. See the report's own "Stratified follow-up"
+section for the full numbers and the negative repair-elite-prefix-DFS precedent this must clear.
+
 > **2026-08-11 review status:** No production policy from this track was changed in the PR #1356 follow-up. Completed lineage/correctness evidence and the explicitly uncompleted oracle/receptor work are recorded in [the review follow-up report](../reports/2026-08-11-pr1356-review-follow-up.md); oracle abstentions remain abstentions.
