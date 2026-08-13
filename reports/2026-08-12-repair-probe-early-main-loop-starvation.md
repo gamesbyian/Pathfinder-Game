@@ -375,12 +375,15 @@ mechanism's own promotion was judged on (net-neutral-or-positive solved count, r
 now reproduced for the gate value itself rather than the mechanism's on/off state — and at the same
 sample size (300, 250 eligible) the original promotion used, not just the smaller local pilot.
 
-**Decision-bearing next action**: `REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE` is a strong candidate
-for narrowing from 10 to 6 (holding `MIN_SCALE=0.35` fixed, per the recalibration's own design) —
-same evidentiary bar this file's own `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` promotion used.
-Not yet changed in `orchestration.ts` as of this writing; awaiting an explicit decision before editing
-the production constant (this recalibration only reached the *validated candidate* stage the earlier
-saved-artifact audit distinguished from — see that audit's "nominates, does not validate" framing).
+**Promoted (2026-08-13)**: `REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE` narrowed from 10 to 6 in
+`orchestration.ts` (`MIN_SCALE=0.35` unchanged) at the project owner's explicit direction, on the
+strength of the GHA A/B above — same evidentiary bar this file's own
+`STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` on/off promotion used. Re-verified at promotion time:
+`npx tsc --noEmit` clean, `npx vitest run modules/solver/` 362/362 pass, `npm run check:lint` clean,
+`npm run solver:bench -- --check` 160/160 solved, byte-identical 51,789,137 nodes (the published
+corpus has zero eligible must-turn+repair-gated levels, so this promotion has no effect on any
+interactive Play/Editor/Review solve — only offline batch tooling with a finite `nodeBudget`, same
+scope as the mechanism's own original promotion).
 
 ## Reproducing
 

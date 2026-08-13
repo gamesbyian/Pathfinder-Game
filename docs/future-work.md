@@ -85,7 +85,7 @@ The frozen full-population level-blind A/B ran (all 4 arms `workers=1`, `determi
 
 **Promoted to production default-ON (2026-08-13)** on this evidence, at the project owner's explicit direction — a deliberate exception to the full-population-A/B bar, recorded as such rather than glossed over. Registry + `orchestration.ts` read-site convention fix landed together (learning from the wiring-gap lesson `PRUNE_MC_NEIGHBOR_BUDGET`/`STRATEGY_MAIN_LOOP_LATE_RESERVE` both required above), with three new regression tests confirming activation under a genuinely-omitted ablation config. `solver:bench --check` is byte-identical on the published 160-level corpus (zero eligible levels there), so this has no effect on any interactive Play/Editor/Review solve — only offline batch tooling with a finite `nodeBudget`. See `docs/solver-opt-in-experiment-ledger.md`'s entry for the full record.
 
-### 4b. Recalibrate repair-probe adaptive constants from tagged telemetry — GHA A/B COMPLETE (2026-08-13); gate=6 validated as a strong candidate, constant not yet changed
+### 4b. Recalibrate repair-probe adaptive constants from tagged telemetry — PROMOTED (2026-08-13): BADNESS_GATE narrowed 10→6
 
 The promoted adaptive controller kept all 12 direct repair wins, added a later beam solve on R02719, and reduced aggregate search work in the matched full-ladder A/B. The saved-artifact audit also found a strong yield gradient: 18.4% of levels with baseline `badness <= 5` were direct repair wins, compared with 1.6% at `16-20` and 0% above 20.
 
@@ -97,7 +97,7 @@ The next bounded experiment should keep `MIN_SCALE=0.35` fixed and compare `BADN
 
 **GHA A/B (2026-08-13), same 300-level stratified sample the original mechanism's own promotion used:** baseline (gate=10) 88/300 solved; gate=8 and gate=6 both 89/300 — the identical gain (`R02663`) over baseline, zero losses at either gate. Gate=6 strictly dominates gate=8 on cost: nodes −0.7%/work −4.1% vs. baseline, compared to gate=8's −0.5%/−2.1%. Full detail and run ids: the repair-probe report's "Gate/min-scale recalibration: GHA A/B" section.
 
-**Decision-bearing next action**: `REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE=6` (holding `MIN_SCALE=0.35`) is now validated at the same evidentiary bar (sample size, real production budget) the mechanism's own on/off promotion used. Not yet applied to the production constant — awaiting an explicit decision to promote before editing `orchestration.ts`.
+**Promoted (2026-08-13)**: `REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE` narrowed from 10 to 6 in `modules/solver/orchestration.ts` (`MIN_SCALE=0.35` unchanged), at the project owner's explicit direction, on the same evidentiary bar (sample size, real production node budget) the mechanism's own on/off promotion used. `solver:bench --check` confirms zero effect on the published corpus (no eligible levels there) — only offline batch tooling with a finite `nodeBudget` is affected. No further action queued.
 
 ## Parallel observational work that remains valid
 

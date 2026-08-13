@@ -1024,10 +1024,11 @@ const REPAIR_PROBE_PREDICTED_TIER_SHARE = 0.75;
  *  (mainLoopEarlyNodeBudget) — normally the early main-loop configs — without touching either
  *  protected reserve or requiring a new recipient-side change.
  *
- *  CALIBRATION CAVEAT: BADNESS_GATE=10 and MIN_SCALE=0.35 are still picked from the original n=12
- *  local sample (n=1 for the "needs full budget" case) — a starting point, not a re-derived
- *  constant. Re-measure before changing either value, per this file's own established discipline
- *  for tuned constants (see e.g. REPAIR_PROBE_ORDINARY_SEED_SALTS's calibration history above).
+ *  CALIBRATION CAVEAT: MIN_SCALE=0.35 is still picked from the original n=12 local sample (n=1 for
+ *  the "needs full budget" case) — a starting point, not a re-derived constant. Re-measure before
+ *  changing it, per this file's own established discipline for tuned constants (see e.g.
+ *  REPAIR_PROBE_ORDINARY_SEED_SALTS's calibration history above). BADNESS_GATE has since been
+ *  re-derived once — see GATE RECALIBRATION below.
  *
  *  PROMOTION (2026-08-13): a 300-level stratified level-blind GHA A/B (250 of the 512-level
  *  eligible population + 50 control, real 50,000,000-node production budget, matching
@@ -1042,8 +1043,22 @@ const REPAIR_PROBE_PREDICTED_TIER_SHARE = 0.75;
  *  over: if a future full-corpus run surfaces a loss this sample didn't catch, that is the
  *  expected shape of the risk being accepted, not a surprise. See
  *  reports/2026-08-12-repair-probe-early-main-loop-starvation.md and
- *  docs/solver-opt-in-experiment-ledger.md for the full record. */
-export const REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE = 10;
+ *  docs/solver-opt-in-experiment-ledger.md for the full record.
+ *
+ *  GATE RECALIBRATION (2026-08-13): a saved-artifact audit of the promotion A/B above
+ *  (reports/2026-08-13-existing-solve-data-tuning-opportunities.md) found a sharp yield gradient —
+ *  ordinary-tier badness <=5 correlated with an 18.4% direct-repair win rate, falling to 0% above
+ *  20 — and nominated a matched BADNESS_GATE=10/8/6 sweep (MIN_SCALE held fixed) as a follow-up.
+ *  Re-running the SAME 300-level stratified sample/seed/budget as the promotion A/B, three times
+ *  (blank/gate=10 baseline, gate=8, gate=6, via the same workflow's new repair_probe_adaptive_
+ *  badness_gate dispatch input): baseline 88/300; gate=8 and gate=6 both 89/300, the identical gain
+ *  (R02663) over baseline with zero losses at either gate. Gate=6 strictly dominated gate=8 on cost
+ *  (nodes -0.7%/work -4.1% vs. baseline, vs. gate=8's -0.5%/-2.1%), so 6 was chosen over 8. Applied
+ *  to production at the project owner's explicit direction, at the same evidentiary bar (sample
+ *  size, real production node budget) the on/off promotion above used. See
+ *  reports/2026-08-12-repair-probe-early-main-loop-starvation.md's "Gate/min-scale recalibration:
+ *  GHA A/B" section for the full per-arm breakdown and run ids. */
+export const REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE = 6;
 export const REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE = 0.35;
 
 /** Additional seeds (see runAttempt's seedSalt param) to retry an already-failed ORDINARY probe
