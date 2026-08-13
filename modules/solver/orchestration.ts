@@ -1496,6 +1496,52 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : 0;
     const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve;
 
+    // Ordinary main-loop late-suffix reserve. Production default-ON as of 2026-08-12 (fraction 0.15,
+    // reports/2026-08-12-main-loop-late-reserve-population-ab.md) — standard `(!cfg || cfg.FLAG)`
+    // convention, matching admissibleOrderTierWillRun above and every other non-opt-in flag, NOT the
+    // opt-in `cfg && cfg.FLAG === true` convention (which stays inert whenever cfg is null — every
+    // production interactive solve and any CLI run without --enable-flags — the exact wiring gap the
+    // neighbor-budget promotion shipped with and had to fix separately; see
+    // docs/solver-opt-in-experiment-ledger.md's "wiring gap" notes). Unlike a reorder, this retains
+    // the exact config/gate iteration order: the repair probe and early config prefix see a reduced
+    // absolute ceiling, while the final N ordinary configs see the ordinary tier's whole envelope
+    // (`earlyTierNodeBudget`, which already excludes the independent admissible-order reserve).
+    // After the ordinary main loop has offered that suffix its slice, repair/diversity may use any
+    // remainder, so an inexpensive/exhausted suffix never strands budget. Still a strict no-op
+    // without a finite `nodeBudget` (see `mainLoopLateReserveEligible` below), so this only affects
+    // offline batch tooling, never interactive Play/Editor/Review solves.
+    const mainLoopLateReserveEnabled = !!(!cfg || cfg.STRATEGY_MAIN_LOOP_LATE_RESERVE);
+    const mainLoopLateReserveFractionRaw = Number(opts.mainLoopLateReserveFractionOverride);
+    const mainLoopLateReserveFraction = Number.isFinite(mainLoopLateReserveFractionRaw) && mainLoopLateReserveFractionRaw >= 0
+        ? Math.min(1, mainLoopLateReserveFractionRaw)
+        : MAIN_LOOP_LATE_RESERVE_FRACTION;
+    const mainLoopLateReserveCountRaw = Number(opts.mainLoopLateReserveConfigCountOverride);
+    const mainLoopLateReserveConfigCount = Number.isFinite(mainLoopLateReserveCountRaw) && mainLoopLateReserveCountRaw >= 0
+        ? Math.min(mainConfigs.length, Math.floor(mainLoopLateReserveCountRaw))
+        : Math.min(mainConfigs.length, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT);
+    const mainLoopLateReserveEligible = mainLoopLateReserveEnabled
+        && mainLoopLateReserveFraction > 0
+        && mainLoopLateReserveConfigCount > 0
+        && earlyTierNodeBudget !== Infinity;
+    const mainLoopLateReserve = mainLoopLateReserveEligible
+        ? Math.floor(earlyTierNodeBudget * mainLoopLateReserveFraction)
+        : 0;
+    // A tiny finite ceiling can round the requested fraction to zero. Treat that as fully inert:
+    // no telemetry marker, no altered status, and no pretend beneficiary with a zero-node slice.
+    const mainLoopLateReserveWillRun = mainLoopLateReserve > 0;
+    // The repair probe's own ceiling, AND the main loop's early-config-prefix ceiling (see
+    // runInterleavedAttempts/runGateSerialAttempts's `earlyConfigNodeBudget` param) — deliberately
+    // untouched by the repair-fallback reserve below. See that reserve's own comment for why: an
+    // earlier version of this reserve derived this value from an already-shrunk pool, which starved
+    // the probe and the main loop's own attempts instead of purely reallocating idle capacity —
+    // confirmed as a real, measured regression (see REPAIR_FALLBACK_NODE_RESERVE_FRACTION's comment).
+    const mainLoopEarlyNodeBudget = earlyTierNodeBudget === Infinity
+        ? Infinity
+        : earlyTierNodeBudget - mainLoopLateReserve;
+    const mainLoopLateConfigStart = mainLoopLateReserveWillRun
+        ? mainConfigs.length - mainLoopLateReserveConfigCount
+        : mainConfigs.length;
+
     // Repair-fallback node reserve (STRATEGY_REPAIR_FALLBACK_NODE_RESERVE, opt-in, default OFF —
     // unvalidated new mechanism, see this constant's own comment). The repair fallback loop and the
     // attraction-diversity pass share `earlyTierNodeBudget` with the WHOLE main loop (early + late
@@ -1508,6 +1554,22 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // runs), not the repair-probe fix's live-signal shrink, because here the receptor (the fallback
     // loop) needs a share of the pool it's currently denied entirely, not a scale-down of an
     // over-consuming producer's own budget.
+    //
+    // REVISION (2026-08-13): the first version of this reserve reduced `earlyTierNodeBudget` BEFORE
+    // deriving `mainLoopEarlyNodeBudget` — which is also the repair probe's own ceiling, and (via
+    // the late-suffix budget-share formula in runInterleavedAttempts/runGateSerialAttempts) also
+    // shrank every main-loop attempt's own node share, not just the late-suffix ones. Measured
+    // directly on this session's n=12 local sample: net −2 (0 gained, 2 lost — R02823's probe
+    // attempt truncated from 5,308,905 to 4,128,152 nodes, short of the 5,308,905 it needed to win;
+    // R00602's winning beam attempt truncated from 282,246 to 9,990). Taking budget from the probe
+    // and main loop is not "reallocating idle capacity" the way the admissible-order reserve does —
+    // that pool is already load-bearing. Fixed by leaving `mainLoopEarlyNodeBudget` (declared above,
+    // BEFORE this reserve) completely untouched, and only capping the OUTER ceiling that governs how
+    // far the main loop's LATE SUFFIX may additionally reach beyond it — the repair probe and the
+    // main loop's early-config prefix are now structurally guaranteed byte-identical to this
+    // mechanism being off. This does not fully close the risk to the late suffix specifically (a
+    // late-suffix winner could still be capped the same way R00602's was) — that remains an open
+    // question for the next A/B, not resolved by this revision alone.
     //
     // Gated on the SAME real-run condition the fallback loop's own `for` loop below already checks
     // (repairConfigs.length > 0 && repairBudgetFraction !== 0) — no separate ablation flag guards
@@ -1536,54 +1598,16 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const repairFallbackNodeReserve = repairFallbackNodeReserveEligible
         ? Math.floor(earlyTierNodeBudget * repairFallbackNodeReserveFraction)
         : 0;
-    // The reduced ceiling the probe and the WHOLE main loop (early + late suffix) run against —
-    // `earlyTierNodeBudget` itself is unchanged and remains what the repair fallback loop and the
-    // attraction-diversity pass check against below, so what they may spend is exactly what this
-    // reserve withheld from the main loop.
+    // The ceiling the main loop's LATE SUFFIX may additionally reach beyond `mainLoopEarlyNodeBudget`
+    // — never below it (Math.max guard: a level where `mainLoopLateReserve` alone already withholds
+    // MORE than this reserve would otherwise ask for must not have that existing, already-validated
+    // protection weakened by this new, unvalidated one). `earlyTierNodeBudget` itself is unchanged
+    // and remains what the repair fallback loop and the attraction-diversity pass check against
+    // below, so what they may spend is exactly what this reserve withheld from the main loop's late
+    // suffix specifically — never from the probe or the early config prefix.
     const mainLoopNodeBudget = earlyTierNodeBudget === Infinity
         ? Infinity
-        : earlyTierNodeBudget - repairFallbackNodeReserve;
-
-    // Ordinary main-loop late-suffix reserve. Production default-ON as of 2026-08-12 (fraction 0.15,
-    // reports/2026-08-12-main-loop-late-reserve-population-ab.md) — standard `(!cfg || cfg.FLAG)`
-    // convention, matching admissibleOrderTierWillRun above and every other non-opt-in flag, NOT the
-    // opt-in `cfg && cfg.FLAG === true` convention (which stays inert whenever cfg is null — every
-    // production interactive solve and any CLI run without --enable-flags — the exact wiring gap the
-    // neighbor-budget promotion shipped with and had to fix separately; see
-    // docs/solver-opt-in-experiment-ledger.md's "wiring gap" notes). Unlike a reorder, this retains
-    // the exact config/gate iteration order: the repair probe and early config prefix see a reduced
-    // absolute ceiling, while the final N ordinary configs see the ordinary tier's whole envelope
-    // (`mainLoopNodeBudget` — the main loop's own ceiling, which already excludes both the
-    // independent admissible-order reserve AND the repair-fallback reserve above).
-    // After the ordinary main loop has offered that suffix its slice, repair/diversity may use any
-    // remainder, so an inexpensive/exhausted suffix never strands budget. Still a strict no-op
-    // without a finite `nodeBudget` (see `mainLoopLateReserveEligible` below), so this only affects
-    // offline batch tooling, never interactive Play/Editor/Review solves.
-    const mainLoopLateReserveEnabled = !!(!cfg || cfg.STRATEGY_MAIN_LOOP_LATE_RESERVE);
-    const mainLoopLateReserveFractionRaw = Number(opts.mainLoopLateReserveFractionOverride);
-    const mainLoopLateReserveFraction = Number.isFinite(mainLoopLateReserveFractionRaw) && mainLoopLateReserveFractionRaw >= 0
-        ? Math.min(1, mainLoopLateReserveFractionRaw)
-        : MAIN_LOOP_LATE_RESERVE_FRACTION;
-    const mainLoopLateReserveCountRaw = Number(opts.mainLoopLateReserveConfigCountOverride);
-    const mainLoopLateReserveConfigCount = Number.isFinite(mainLoopLateReserveCountRaw) && mainLoopLateReserveCountRaw >= 0
-        ? Math.min(mainConfigs.length, Math.floor(mainLoopLateReserveCountRaw))
-        : Math.min(mainConfigs.length, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT);
-    const mainLoopLateReserveEligible = mainLoopLateReserveEnabled
-        && mainLoopLateReserveFraction > 0
-        && mainLoopLateReserveConfigCount > 0
-        && mainLoopNodeBudget !== Infinity;
-    const mainLoopLateReserve = mainLoopLateReserveEligible
-        ? Math.floor(mainLoopNodeBudget * mainLoopLateReserveFraction)
-        : 0;
-    // A tiny finite ceiling can round the requested fraction to zero. Treat that as fully inert:
-    // no telemetry marker, no altered status, and no pretend beneficiary with a zero-node slice.
-    const mainLoopLateReserveWillRun = mainLoopLateReserve > 0;
-    const mainLoopEarlyNodeBudget = mainLoopNodeBudget === Infinity
-        ? Infinity
-        : mainLoopNodeBudget - mainLoopLateReserve;
-    const mainLoopLateConfigStart = mainLoopLateReserveWillRun
-        ? mainConfigs.length - mainLoopLateReserveConfigCount
-        : mainConfigs.length;
+        : Math.max(mainLoopEarlyNodeBudget, earlyTierNodeBudget - repairFallbackNodeReserve);
 
     // Early, strictly-additive probe of the repair fallback — see REPAIR_PROBE_ORDINARY_NODE_BUDGET
     // / REPAIR_PROBE_BIASED_NODE_BUDGET. Absent (and free) on every level outside the repair
