@@ -67,6 +67,7 @@ export const FEATURES = {
     STRATEGY_DIVERSE_BEAM:      'Diverse beam selection bucketed by (flipperUsedMask, mustCrossMask)',
     STRATEGY_STATE_DEDUP:       'Beam state deduplication: merge same (position + constraint-state)',
     STRATEGY_REPAIR_ELITE_PREFIX_DFS: 'production default-OFF; CLOSED for promotion in its current form / retained opt-in negative: bounded deterministic completion DFS from elite prefixes is sound and mechanistically real, but the dedicated equal-budget test was ON 4/20 vs OFF 5/20 with a confirmed shared-budget displacement. Do not buy a full Corpus-2 A/B for unchanged constants merely because the historical report listed one; reopen only after a materially cheaper/more selective variant clears a small retest. See reports/2026-08-07-repair-elite-prefix-dfs.md and docs/solver-opt-in-experiment-ledger.md.',
+    STRATEGY_REPAIR_BEAM_SEED: 'production default-OFF; NEW, unvalidated (landed 2026-08-13): seeds repair\'s initial elite pool from a small, cheap beam search\'s surviving frontier (repairSearchFromGate\'s enableBeamSeed param, BEAM_SEED_WIDTH/BEAM_SEED_NODE_BUDGET/BEAM_SEED_TOP_K in repair-search.ts), validated through the real state transition machinery and budget-charged against repair\'s own node counter. Motivated by the 2026-08-13 stratified beam/repair producer-population pilot (25 levels, zero exact-prefix / zero metric-projection overlap between beam survivors and repair\'s own elites -- reports/2026-08-11-beam-repair-producer-population-pilot.md). An isolated repairSearchFromGate counterfactual (n=13 plateaued repair-gated levels, matched 2,000,000-node budget, bypassing the full ladder) found 1 solve gained (R00701: stuck at badness 2 without, fully solved with) and 0 solve losses, but a mixed badness signal otherwise (4 levels better, 8 worse) -- the fixed beam-seed cost is a real tax that only pays off when the survivor happens to unstick repair\'s specific plateau. Needs a full-ladder solveLevel() sample before any promotion decision -- the isolated test bypasses everything upstream of repair fallback.',
     STRATEGY_REPAIR_NOGOOD_CACHE: 'Repair: per-call cache of exact dead-end states, short-circuiting a restart the moment it re-enters a state already proven fruitless earlier in the same call (see modules/solver/nogood-cache.ts)',
     STRATEGY_GATE_INTERLEAVING: 'Config-outer gate-inner scheduling for multi-gate levels',
     STRATEGY_PARITY_GATE_FILTER:'Pre-filter infeasible gates by parity (portal-free levels)',
@@ -129,6 +130,7 @@ export const OPT_IN_FEATURES = new Set([
     'STRATEGY_REPAIR_FALLBACK_NODE_RESERVE',
     'STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE',
     'STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE',
+    'STRATEGY_REPAIR_BEAM_SEED',
 ]);
 
 // ─── Template → config key mapping ───────────────────────────────────────────

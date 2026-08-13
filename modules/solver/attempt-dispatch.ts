@@ -59,12 +59,17 @@ export function runAttemptSearch(
   // validation rather than reverted outright.
   const cfg = prep._cfg;
   const enableElitePrefixDfs = cfg && cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS === true;
+  // Counterfactual beam-survivor elite seeding (see repair-search.ts's BEAM_SEED_WIDTH comment and
+  // docs/solver-interoperability-and-cooperation-plan.md). Same opt-in-only convention as
+  // enableElitePrefixDfs immediately above, not the standard "!cfg || cfg.FLAG" default-on pattern:
+  // an unvalidated 2026-08-13 mechanism, kept off in production and any ordinary ablation config.
+  const enableBeamSeed = cfg && cfg.STRATEGY_REPAIR_BEAM_SEED === true;
   return admissibleOrder
     ? admissibleOrderLds
       ? admissibleOrderSearchLDS(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
       : admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
     : repair
-    ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased, !!enableElitePrefixDfs)
+    ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased, !!enableElitePrefixDfs, !!enableBeamSeed)
     : beamWidth
     ? beamSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn, diverseBeam, out, nodeBudget)
     : dfsFromGateLDS(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, out, nodeBudget);
