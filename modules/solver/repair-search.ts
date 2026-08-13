@@ -29,9 +29,10 @@ import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, structuralDeficit } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import { createNogoodCache } from './nogood-cache.js';
+import { beamSearchFromGate } from './search.js';
 import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { AblationConfig, PrepLevel, ScoringProfile, StructuralTemplate, SolverSearchState, UndoToken } from './types.js';
+import type { AblationConfig, BeamResearchRecord, PrepLevel, ScoringProfile, StructuralTemplate, SolverSearchState, UndoToken } from './types.js';
 
 type YieldFn = (() => Promise<void>) | null;
 
@@ -851,6 +852,26 @@ const EPSILON_LADDER = [0.15, 0.35, 0.6];
  *  structural family that path belongs to. A small pool of the K best-but-DISTINCT near-misses
  *  found so far gives each restart a genuinely different structural jumping-off point instead. */
 const ELITE_POOL_SIZE = 8;
+/** Counterfactual receptor experiment (see enableBeamSeed below): a small, cheap beam search run
+ *  once before the restart loop begins, whose surviving frontier is validated through the real
+ *  state transition machinery (replayToPrefix -> applyMove, the exact primitives every legal move
+ *  in this file already goes through) and seeded into the initial elite pool via the SAME
+ *  considerElite path every organically-discovered elite uses — no new consumption pathway, no
+ *  new soundness surface (docs/solver-interoperability-and-cooperation-plan.md's "candidate
+ *  interoperability" layer). Motivated by the 2026-08-13 stratified producer-population pilot
+ *  (25 levels, zero exact-prefix / zero metric-projection overlap between beam survivors and
+ *  repair's own elites — see reports/2026-08-11-beam-repair-producer-population-pilot.md's
+ *  "Stratified follow-up" section): beam reliably reaches structural regions repair's randomized
+ *  restarts do not independently sample. Deliberately SMALL and budget-charged against
+ *  nodesExpandedLocal (the same counter the restart loop's own termination check reads), so the
+ *  ordinary restart loop's own share shrinks by exactly this cost — the "protected native share"
+ *  the interop plan's own soundness rules (§5.4) require, not a free extra pass. */
+const BEAM_SEED_WIDTH = 20;
+const BEAM_SEED_NODE_BUDGET = 3000;
+/** How many of the seed beam's surviving frontier members to validate/insert — small on purpose:
+ *  this is meant to test whether a FEW structurally-novel starting points help, not to replace the
+ *  elite pool's own organic discovery. */
+const BEAM_SEED_TOP_K = 3;
 /** Restarts without a new best-ever badness before forcing a burst of pure fresh-from-gate
  *  restarts (bypassing elite splicing entirely). Even an 8-wide elite pool was measured to
  *  plateau on some levels — all 8 members converge toward variations of the same second
@@ -969,7 +990,7 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // when-off guarantee (gated, consumes no rand). ON arms, on a must-turn stagnation, a turn-aware bias
 // at the move out of a pending must-turn cell (reward the required-turn exit, penalize the others) —
 // the selective successor to Stage 2/3's flat-cell biases. No production caller passes true.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false, enableElitePrefixDfs = false): Promise<number[] | null> {
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false, enableElitePrefixDfs = false, enableBeamSeed = false): Promise<number[] | null> {
     const cfg = prep._cfg;
     const eliteResearch = prep._repairEliteResearchObserver;
     const ws = createState(startKey, level, prep, STATE_BUF_REPAIR);
@@ -1019,6 +1040,44 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     let restartCount = 0;
     let lastYield = startTime;
     let nodesExpandedLocal = 0;
+
+    // Counterfactual receptor experiment (see enableBeamSeed / BEAM_SEED_WIDTH's own comment) —
+    // inert (zero cost, zero behavior change) when the flag is off, the default and only production
+    // path. Runs ONCE, before any restart, and only ever adds candidates to the elite pool through
+    // the exact same considerElite() every organically-discovered elite already goes through.
+    if (enableBeamSeed) {
+        const prevBeamObserver = prep._beamResearchObserver;
+        let survivorPaths: number[][] = [];
+        // 'post-diversity-selection' is the final retained frontier when diverse selection ran;
+        // 'post-score-width-cull' is the equivalent boundary when it didn't (same convention
+        // scripts/stress/producer-population-pilot.mjs's own offline pilot already uses). Only the
+        // LAST record of either kind matters — each phase overwrites the previous one, so this ends
+        // up holding the beam's final surviving frontier, not an intermediate one.
+        prep._beamResearchObserver = { observe: (record: BeamResearchRecord) => {
+            if (record.stage === 'post-diversity-selection' || record.stage === 'post-score-width-cull') survivorPaths = record.paths;
+        } };
+        const beamNodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
+        await beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, BEAM_SEED_WIDTH, yieldFn, false, null, BEAM_SEED_NODE_BUDGET);
+        prep._beamResearchObserver = prevBeamObserver;
+        // Charged against THIS call's own local counter — the same one the restart loop's own
+        // termination check reads below — so the ordinary restart loop's share shrinks by exactly
+        // this cost. Never a free extra pass.
+        nodesExpandedLocal += (prep._metrics ? prep._metrics.nodesExpanded : 0) - beamNodesBefore;
+
+        // Validate every survivor through the real state transition machinery (replayToPrefix ->
+        // applyMove — the same primitives every legal move in this file already goes through, and
+        // the exact mechanism relinkPaths/elitePrefixDfsRepair already use for their own candidate
+        // intermediates) before trusting its badness, then seed only the best BEAM_SEED_TOP_K.
+        const scored = survivorPaths
+            .filter(p => p.length > 1)
+            .map(p => { replayToPrefix(ws, liveUndo, p, level, prep); return { path: p.slice(), badness: computeBadness(ws, level) }; })
+            .sort((a, b) => a.badness - b.badness);
+        for (const { path, badness } of scored.slice(0, BEAM_SEED_TOP_K)) considerElite(path, badness, null, null);
+        // Back to the gate: the restart loop's own first replayToPrefix diffs against whatever ws
+        // currently holds, so this isn't strictly required for correctness (any starting path
+        // diffs correctly), but keeps the state a known, debuggable baseline before restarts begin.
+        replayToPrefix(ws, liveUndo, [startKey], level, prep);
+    }
 
     // Stage-1 instrumentation only (see _SIG_DEBUG) — null and untouched on a normal run.
     const sigCounts = _SIG_DEBUG ? new Map<string, number>() : null;         // signature -> restarts landing there
