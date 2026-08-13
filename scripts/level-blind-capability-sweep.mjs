@@ -41,6 +41,14 @@ const mainLoopLateReserveFraction = argMap.has('--main-loop-late-reserve-fractio
     ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
 const mainLoopLateReserveConfigCount = argMap.has('--main-loop-late-reserve-config-count')
     ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
+// 2026-08-13 (docs/future-work.md item 4b): lets a matched sweep compare candidate
+// REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE values against the production defaults
+// (10, 0.35) without editing modules/solver/orchestration.ts. Same optional/omitted-means-
+// production-default shape as the main-loop-late-reserve flags above.
+const repairProbeAdaptiveBadnessGate = argMap.has('--repair-probe-adaptive-badness-gate')
+    ? Number(argMap.get('--repair-probe-adaptive-badness-gate')) : undefined;
+const repairProbeAdaptiveMinScale = argMap.has('--repair-probe-adaptive-min-scale')
+    ? Number(argMap.get('--repair-probe-adaptive-min-scale')) : undefined;
 
 for (const forbidden of ['--baseline', '--baseline-budget', '--prime-winner', '--prime-include-all', '--priority', '--attempt-cache', '--resume']) {
     if (args.some(a => a === forbidden || a.startsWith(`${forbidden}=`))) {
@@ -116,6 +124,8 @@ if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
 if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
 if (Number.isFinite(mainLoopLateReserveFraction)) solveOpts.mainLoopLateReserveFractionOverride = mainLoopLateReserveFraction;
 if (Number.isFinite(mainLoopLateReserveConfigCount)) solveOpts.mainLoopLateReserveConfigCountOverride = mainLoopLateReserveConfigCount;
+if (Number.isFinite(repairProbeAdaptiveBadnessGate)) solveOpts.repairProbeAdaptiveBiasedBadnessGateOverride = repairProbeAdaptiveBadnessGate;
+if (Number.isFinite(repairProbeAdaptiveMinScale)) solveOpts.repairProbeAdaptiveBiasedMinScaleOverride = repairProbeAdaptiveMinScale;
 if (ablation) solveOpts.ablation = ablation;
 
 // Output-side hint state is deliberately distinct from mechanicsOnlyCorpus. Never pass hintLevels
@@ -138,6 +148,8 @@ function writeReport() {
         workers, enableFlags, disableFlags,
         mainLoopLateReserveFraction: Number.isFinite(mainLoopLateReserveFraction) ? mainLoopLateReserveFraction : null,
         mainLoopLateReserveConfigCount: Number.isFinite(mainLoopLateReserveConfigCount) ? mainLoopLateReserveConfigCount : null,
+        repairProbeAdaptiveBadnessGate: Number.isFinite(repairProbeAdaptiveBadnessGate) ? repairProbeAdaptiveBadnessGate : null,
+        repairProbeAdaptiveMinScale: Number.isFinite(repairProbeAdaptiveMinScale) ? repairProbeAdaptiveMinScale : null,
         levelsRequested: targets.length, levelsRun: levels.length, solvedCount: solved,
         unsolvedCount: levels.length - solved, saveHints, hintChanges,
     };

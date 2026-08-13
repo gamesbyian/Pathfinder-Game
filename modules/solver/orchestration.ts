@@ -232,6 +232,23 @@ interface SolveOpts {
     /** Number of final ordinary configs eligible for the experimental reserve. See the fraction
      *  override above. Values are clamped to the main config count; 0 disables the reserve. */
     mainLoopLateReserveConfigCountOverride?: number;
+    /** Override for REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE for this solve only — same
+     *  dedicated-override shape as the reserve-fraction overrides above (NOT an ablation flag: the
+     *  gate is read unconditionally inside the STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET branch,
+     *  so there is no existing opt-in/opt-out plumbing to piggyback on, and a fresh ablation flag
+     *  would conflate "use the adaptive mechanism at all" with "which gate value" — two different
+     *  questions). Exists so a matched batch-tooling sweep (recalibrating the gate from tagged
+     *  repairProbe telemetry per docs/future-work.md item 4b) can compare candidate gate values
+     *  against the production default without editing the constant and rebuilding. Undefined
+     *  (every production/interactive caller) preserves REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE
+     *  exactly. */
+    repairProbeAdaptiveBiasedBadnessGateOverride?: number;
+    /** Override for REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE for this solve only — same shape and
+     *  rationale as repairProbeAdaptiveBiasedBadnessGateOverride above; kept as a separate field
+     *  (not folded into one object) to match every other override in this file being a single
+     *  scalar. Undefined (every production/interactive caller) preserves
+     *  REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE exactly. */
+    repairProbeAdaptiveBiasedMinScaleOverride?: number;
     /** Convenience for offline batch tooling: sets repairBudgetFractionOverride,
      *  attractionDiversityBudgetFractionOverride, AND admissibleOrderBudgetFractionOverride all to 0
      *  (purely additive — an explicit value on any individual override still wins over this, so a
@@ -1007,10 +1024,11 @@ const REPAIR_PROBE_PREDICTED_TIER_SHARE = 0.75;
  *  (mainLoopEarlyNodeBudget) — normally the early main-loop configs — without touching either
  *  protected reserve or requiring a new recipient-side change.
  *
- *  CALIBRATION CAVEAT: BADNESS_GATE=10 and MIN_SCALE=0.35 are still picked from the original n=12
- *  local sample (n=1 for the "needs full budget" case) — a starting point, not a re-derived
- *  constant. Re-measure before changing either value, per this file's own established discipline
- *  for tuned constants (see e.g. REPAIR_PROBE_ORDINARY_SEED_SALTS's calibration history above).
+ *  CALIBRATION CAVEAT: MIN_SCALE=0.35 is still picked from the original n=12 local sample (n=1 for
+ *  the "needs full budget" case) — a starting point, not a re-derived constant. Re-measure before
+ *  changing it, per this file's own established discipline for tuned constants (see e.g.
+ *  REPAIR_PROBE_ORDINARY_SEED_SALTS's calibration history above). BADNESS_GATE has since been
+ *  re-derived once — see GATE RECALIBRATION below.
  *
  *  PROMOTION (2026-08-13): a 300-level stratified level-blind GHA A/B (250 of the 512-level
  *  eligible population + 50 control, real 50,000,000-node production budget, matching
@@ -1025,8 +1043,22 @@ const REPAIR_PROBE_PREDICTED_TIER_SHARE = 0.75;
  *  over: if a future full-corpus run surfaces a loss this sample didn't catch, that is the
  *  expected shape of the risk being accepted, not a surprise. See
  *  reports/2026-08-12-repair-probe-early-main-loop-starvation.md and
- *  docs/solver-opt-in-experiment-ledger.md for the full record. */
-export const REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE = 10;
+ *  docs/solver-opt-in-experiment-ledger.md for the full record.
+ *
+ *  GATE RECALIBRATION (2026-08-13): a saved-artifact audit of the promotion A/B above
+ *  (reports/2026-08-13-existing-solve-data-tuning-opportunities.md) found a sharp yield gradient —
+ *  ordinary-tier badness <=5 correlated with an 18.4% direct-repair win rate, falling to 0% above
+ *  20 — and nominated a matched BADNESS_GATE=10/8/6 sweep (MIN_SCALE held fixed) as a follow-up.
+ *  Re-running the SAME 300-level stratified sample/seed/budget as the promotion A/B, three times
+ *  (blank/gate=10 baseline, gate=8, gate=6, via the same workflow's new repair_probe_adaptive_
+ *  badness_gate dispatch input): baseline 88/300; gate=8 and gate=6 both 89/300, the identical gain
+ *  (R02663) over baseline with zero losses at either gate. Gate=6 strictly dominated gate=8 on cost
+ *  (nodes -0.7%/work -4.1% vs. baseline, vs. gate=8's -0.5%/-2.1%), so 6 was chosen over 8. Applied
+ *  to production at the project owner's explicit direction, at the same evidentiary bar (sample
+ *  size, real production node budget) the on/off promotion above used. See
+ *  reports/2026-08-12-repair-probe-early-main-loop-starvation.md's "Gate/min-scale recalibration:
+ *  GHA A/B" section for the full per-arm breakdown and run ids. */
+export const REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE = 6;
 export const REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE = 0.35;
 
 /** Additional seeds (see runAttempt's seedSalt param) to retry an already-failed ORDINARY probe
@@ -1126,6 +1158,7 @@ const REPAIR_PROBE_ORDINARY_SEED_SALTS = [0, 1];
 async function runRepairProbe(
     repairConfigs: AttemptConfig[], activeGates: number[], level: NormalizedLevel,
     prep: PrepLevel, yieldFn: YieldFn, cfg: AblationConfig | null, nodeBudget = Infinity,
+    badnessGate = REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, minScale = REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     // REPAIR_PROBE_BIASED_NODE_BUDGET was calibrated (see its own comment) against exactly one
@@ -1173,8 +1206,8 @@ async function runRepairProbe(
             ), Infinity);
             if (Number.isFinite(ordinaryBestBadness)) {
                 const scale = Math.min(1, Math.max(
-                    REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE,
-                    REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE / ordinaryBestBadness,
+                    minScale,
+                    badnessGate / ordinaryBestBadness,
                 ));
                 fixedProbeNodeBudget = Math.floor(fixedProbeNodeBudget * scale);
             }
@@ -1829,7 +1862,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // still runs), isolating the probe's own scheduling contribution from repair-search itself.
     const probeAttempts: Attempt[] = primeMissAttempt ? [primeMissAttempt] : [];
     if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
-        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, mainLoopEarlyNodeBudget);
+        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, mainLoopEarlyNodeBudget,
+            opts.repairProbeAdaptiveBiasedBadnessGateOverride ?? REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE,
+            opts.repairProbeAdaptiveBiasedMinScaleOverride ?? REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE);
         probeAttempts.push(...probe.attempts);
         if (probe.solution) {
             const totalMs = Date.now() - levelStartTime;

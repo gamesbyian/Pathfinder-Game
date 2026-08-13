@@ -440,6 +440,89 @@ test('STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: false keeps the biased tier 
     assert.equal(biasedNodeBudgets[0], REPAIR_PROBE_BIASED_NODE_BUDGET);
 });
 
+// 2026-08-13 (docs/future-work.md item 4b, reports/2026-08-13-existing-solve-data-tuning-opportunities.md):
+// repairProbeAdaptiveBiasedBadnessGateOverride/repairProbeAdaptiveBiasedMinScaleOverride let a batch-tooling
+// sweep compare candidate gate/scale values against the production default without editing the constants.
+test('repairProbeAdaptiveBiasedBadnessGateOverride raises the gate: badness that used to shrink the tier now leaves it at full budget', async () => {
+    const biasedNodeBudgets: number[] = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) {
+            out.nodesExpanded = spent;
+            out.timedOut = true;
+            if (config.repairMustTurnBiased && budgetMs === REPAIR_PROBE_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
+            // badness=20 is above the production gate (10, so this would normally shrink — see the
+            // first test above), but below an overridden gate of 25.
+            else if (!config.repairMustTurnBiased) out.bestBadness = 20;
+        }
+        return null;
+    };
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        attemptSearchForTesting: dispatch,
+        repairProbeAdaptiveBiasedBadnessGateOverride: 25,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(biasedNodeBudgets.length, 1);
+    assert.equal(biasedNodeBudgets[0], REPAIR_PROBE_BIASED_NODE_BUDGET, 'scale 1: badness <= the overridden gate is a no-op');
+});
+
+test('repairProbeAdaptiveBiasedMinScaleOverride lowers the floor: very poor badness shrinks past the production MIN_SCALE', async () => {
+    const biasedNodeBudgets: number[] = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) {
+            out.nodesExpanded = spent;
+            out.timedOut = true;
+            if (config.repairMustTurnBiased && budgetMs === REPAIR_PROBE_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
+            else if (!config.repairMustTurnBiased) out.bestBadness = 1000; // terrible: gate/badness << production MIN_SCALE
+        }
+        return null;
+    };
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        attemptSearchForTesting: dispatch,
+        repairProbeAdaptiveBiasedMinScaleOverride: 0.1,
+    });
+    assert.equal(result.ok, false);
+    const expectedScaled = Math.floor(REPAIR_PROBE_BIASED_NODE_BUDGET * 0.1);
+    assert.equal(biasedNodeBudgets.length, 1);
+    assert.equal(biasedNodeBudgets[0], expectedScaled);
+    assert.ok(expectedScaled < Math.floor(REPAIR_PROBE_BIASED_NODE_BUDGET * REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE),
+        'sanity: the overridden floor shrinks further than the production MIN_SCALE would');
+});
+
+test('repairProbeAdaptiveBiasedBadnessGateOverride/MinScaleOverride undefined preserves production constants exactly', async () => {
+    // Same fixture/evidence as the very first ADAPTIVE_BIASED_BUDGET test above (poor badness=100,
+    // no override) -- confirms leaving both fields undefined is byte-identical to today's behavior.
+    const biasedNodeBudgets: number[] = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) {
+            out.nodesExpanded = spent;
+            out.timedOut = true;
+            if (config.repairMustTurnBiased && budgetMs === REPAIR_PROBE_ATTEMPT_MS_CAP) biasedNodeBudgets.push(spent);
+            else if (!config.repairMustTurnBiased) out.bestBadness = 100;
+        }
+        return null;
+    };
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, false);
+    const scale = Math.min(1, Math.max(REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE / 100));
+    const expectedScaled = Math.floor(REPAIR_PROBE_BIASED_NODE_BUDGET * scale);
+    assert.equal(biasedNodeBudgets.length, 1);
+    assert.equal(biasedNodeBudgets[0], expectedScaled);
+});
+
 // BUG FIXED 2026-08-12 (reports/2026-08-12-worker-count-sensitivity-repair-probe-wallclock.md):
 // runRepairProbe's per-attempt wall-clock cap was a flat 30 seconds, justified as "well above any
 // observed real-world cost ... contention-independent". Measured 4-way CPU contention on a 4-core
