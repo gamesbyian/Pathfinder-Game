@@ -454,6 +454,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
 
 /** Direct seam for caller-policy regression tests. Production code uses the private function. */
 export const __takePlyForTests = takePly;
+export const __closeLengthGapForTests = closeLengthGap;
 
 // Diffs ws's current live path against `targetPrefix`, undoing the divergent suffix and
 // applying only the new prefix — same technique as beamSearchFromGate's `_liveUndo` diffing
