@@ -14,12 +14,47 @@ const levelLimit = Number(args.get('--limit-levels') ?? 3);
 const nodeBudget = Number(args.get('--node-budget') ?? 30000);
 const eliteLimit = Number(args.get('--limit-elites') ?? 5);
 const outFile = args.get('--out') ?? 'reports/stress/repair-rollback-census-pilot.json';
+// Deterministic stratified draw (2026-08-13, same convention as scripts/stress/benchmark.mjs and
+// producer-population-pilot.mjs's own --sample=N --seed=X), added for the repair-retreat CP-SAT
+// broadening (reports/2026-08-12-repair-retreat-cpsat.md's own "a broader sample... could still
+// show slack" ask) -- the original pilot only ever took the first N file-order levels.
+const sampleSize = args.has('--sample') ? Number(args.get('--sample')) : null;
+const seedStr = args.get('--seed') ?? 'repair-rollback-census-pilot';
+function hashSeed(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+    return h >>> 0;
+}
+function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+        a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+function sampleDeterministic(items, n, seed) {
+    if (!Number.isFinite(n) || n >= items.length) return items.slice();
+    const rng = mulberry32(seed);
+    const pool = items.slice();
+    const picked = [];
+    for (let i = 0; i < n; i++) {
+        const j = i + Math.floor(rng() * (pool.length - i));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+        picked.push(pool[i]);
+    }
+    return picked;
+}
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.ts');
 const { repairSearchFromGate } = await import('../../modules/solver/repair-search.ts');
 const Solver = createSolver();
-const selected = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 0).slice(0, levelLimit);
+const hintBearing = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 0);
+const selected = sampleSize != null
+    ? sampleDeterministic(hintBearing, sampleSize, hashSeed(seedStr))
+    : hintBearing.slice(0, levelLimit);
 const levels = [];
 for (const raw of selected) {
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
@@ -46,13 +81,16 @@ for (const raw of selected) {
     const census = rollbackCensus(selectedElites, knownSolutions, level.reqLen);
     census.rows.forEach((row, i) => Object.assign(row, { badness: selectedElites[i].badness,
         arrivalNodes: selectedElites[i].arrivalNodes, eliteLength: selectedElites[i].path.length - 1 }));
-    levels.push({ levelId: raw.id, reqLen: level.reqLen, nodeBudget, nodesExpanded: prep._metrics.nodesExpanded,
+    levels.push({ levelId: raw.id, reqLen: level.reqLen, reqInt: level.reqInt,
+        mustCross: level.mustCrossKeys?.length ?? 0, mustPass: level.mustPassKeys?.length ?? 0,
+        nodeBudget, nodesExpanded: prep._metrics.nodesExpanded,
         knownSolutions: knownSolutions.length, observedEliteArrivals: arrivals.length, selectedElites: selectedElites.length, census });
     console.error(`${raw.id}: arrivals=${arrivals.length} selected=${selectedElites.length} medianRollback=${census.medianRollbackSteps}`);
 }
 const allRows = levels.flatMap(level => level.census.rows);
 const sortedFractions = allRows.map(row => row.rollbackFractionReqLen).sort((a, b) => a - b);
 const document = { schemaVersion: 1, generatedAt: new Date().toISOString(), levelsFile,
+    sampling: sampleSize != null ? { mode: 'stratified', sampleSize, seed: seedStr } : { mode: 'first-n', limit: levelLimit },
     meaning: 'longest-common-prefix distance from observed elite to any known-valid trajectory; not minimum causal edit distance',
     summary: { levels: levels.length, elites: allRows.length,
         medianRollbackSteps: allRows.length ? [...allRows].sort((a, b) => a.rollbackSteps - b.rollbackSteps)[Math.floor(allRows.length / 2)].rollbackSteps : null,
