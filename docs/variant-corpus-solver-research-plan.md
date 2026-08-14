@@ -658,3 +658,12 @@ is a controlled taxonomy C→D interaction, not a production policy proposal. Se
 [`reports/2026-08-11-symmetry-equivariance-prefix-pilot.md`](../reports/2026-08-11-symmetry-equivariance-prefix-pilot.md).
 
 > **2026-08-11 review status:** No production policy from this track was changed in the PR #1356 follow-up. Completed lineage/correctness evidence and the explicitly uncompleted oracle/receptor work are recorded in [the review follow-up report](../reports/2026-08-11-pr1356-review-follow-up.md); oracle abstentions remain abstentions.
+
+## 2026-08-13 tuning-campaign checkpoint
+
+The [existing-technique tuning campaign](../reports/2026-08-13-existing-technique-tuning-experimental-campaign.md) re-audited and repaired the family-result identity blocker. Boundary aggregation, flat-attempt coalescing, pair divergence, and parent-hint replay now use `(parentCorpus,parentId,variantId)`; legacy bare IDs resolve only when unique, namespaced rows cannot fall through across parents, ambiguous collisions fail loudly, and collision/cross-parent shapes are covered by regression. Historical boundary output is not retroactively certified: regenerate it and audit unmatched/legacy rows before using it. Do not treat an uncorrected historical output as evidence.
+
+
+### 2026-08-14 current-main canonical persistence check
+
+A pre-registered targeted cold retest at 5M nodes found R00526, R01407, R01875 and R01675 still unsolved (0/4), each exhausting its ceiling after three repair attempts and one admissible-order attempt. This preserves all four as current-main family pathology candidates at the diagnostic budget; it does not substitute for regenerated namespaced sibling results or establish failure at the 50M capability budget. See the ETT-012 section of the [campaign report](../reports/2026-08-13-existing-technique-tuning-experimental-campaign.md).
