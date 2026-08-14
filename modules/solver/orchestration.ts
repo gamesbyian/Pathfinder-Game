@@ -2251,9 +2251,23 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 // `earlyTierNodeBudget` (absolute, cumulative) is this tier's own ceiling, so it may
                 // spend its reserved slice plus whatever the earlier tiers left unused — exactly the
                 // pattern the diversity pass already uses against its own ceiling.
-                const remaining = earlyTierNodeBudget === Infinity
+                // The reserve is a FLOOR, not merely a derived remainder. Every node check in this
+                // file is round-granular and may overshoot its ceiling by up to one attempt's own
+                // cost ("can still overshoot by up to one round's own cost" — see runRepairProbe's
+                // own comment), and a single main-loop attempt can be tens of millions of nodes. On
+                // R00408 the main loop overshot its reduced ceiling by ~375,000 nodes and ate that
+                // much of this tier's slice, leaving 5,624,791 against the 5,965,490 its winning
+                // attempt needs — the tier fired and still failed by ~340,000 nodes. Taking the max
+                // of the plain remainder and the reserve makes the withheld slice actually
+                // withheld; the overshoot then comes out of the total rather than out of this tier.
+                // Still hard-bounded by the true external ceiling, so nodeBudget is never exceeded.
+                const remainingEarly = earlyTierNodeBudget === Infinity
                     ? Infinity
                     : Math.max(0, earlyTierNodeBudget - prep._metrics.nodesExpanded);
+                const remainingTotal = nodeBudget === Infinity
+                    ? Infinity
+                    : Math.max(0, nodeBudget - prep._metrics.nodesExpanded);
+                const remaining = Math.min(remainingTotal, Math.max(remainingEarly, shrinkRecoveryNodeReserve));
                 if (remaining < 50) break;
                 const gatesLeft = activeGates.length - gi;
                 const gateNodeBudget = Math.min(shrunk.fullNodeBudget, Math.floor(remaining / gatesLeft));
