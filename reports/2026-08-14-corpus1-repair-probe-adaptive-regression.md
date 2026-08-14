@@ -217,3 +217,44 @@ recovery can only possibly gain on the 6 that do fail (`R01485`, `R02170`, `R026
 `R02979`, `R03153`) — and the 7 solvers are regression candidates, since the reserve shrinks the main
 loop's ceiling on every eligible level. The sample is also selected for near-misses, so it is biased
 toward showing benefit and cannot detect losses among the other 1,687 Corpus-2 levels.
+
+
+## A/B result: Corpus-2 selected population (2026-08-14) — negative
+
+Matched level-blind A/B at one SHA over the 13 nominated Corpus-2 levels, 50,000,000 node budget,
+86,400,000 ms non-binding deadline, 2 workers, arms differing only by
+`--enable-flags=STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY`.
+
+| arm | solved | nodes | canonical work |
+|---|---:|---:|---:|
+| control | 7/13 | 354,745,610 | 655,020,227 |
+| treatment | 7/13 | 354,745,718 | 779,086,308 |
+| delta | **0 gained, 0 lost** | +108 (+0.0%) | **+18.9%** |
+
+**The mechanism worked exactly as designed and gained nothing.** The recovery tier fired on precisely
+the 6 failing levels — one attempt each, every one granted the full `REPAIR_PROBE_BIASED_NODE_BUDGET`
+of 6,000,000 nodes (`R01485` 6,000,013, `R02170` 6,000,003, `R02643` 6,000,003, `R02963` 6,000,000,
+`R02979` 6,000,002, `R03153` 6,000,000) — and correctly did not fire on any of the 7 that already
+solve. None of the six solved with the restored budget.
+
+Total nodes are effectively unchanged (+108) because these levels are node-capped either way: the
+reserve *reallocated* ~36M nodes from earlier tiers into the recovery tier rather than adding any,
+which is the reserve design behaving correctly. The +18.9% canonical work at flat nodes is the
+work-meter distinction CLAUDE.md documents — repair search charges far more work per node than the
+tiers it displaced.
+
+### Interpretation
+
+On the population most favorable to it — levels selected precisely because the shrink fired and the
+biased tier then came within `biasedBestBadness <= 3` — restoring the full budget gains nothing and
+costs ~19% more work. `R00408` remains the only known level this mechanism rescues.
+
+This is consistent with the plateau finding already recorded for
+`STRATEGY_REPAIR_FALLBACK_NODE_RESERVE` in the opt-in ledger: 26/26 fallback attempts burned their
+entire allotted ceiling while stalled at `bestBadness` 10-43, because `repairSearchFromGate`
+converges fast and then plateaus for most of any budget it is given. These six levels look like the
+same shape — reaching a near-miss badness and then not closing, whether the tier holds 2.8M nodes or
+6M. The shrink was not what stopped them.
+
+**Standing: sound, correctly targeted, n=1 evidence of benefit, measured cost.** That is not a
+promotion case. The mechanism remains opt-in and default OFF.
