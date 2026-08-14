@@ -92,7 +92,9 @@ The remaining repair research direction is exact retreat/deep prefix editing, no
   `BADNESS_GATE`/`MIN_SCALE` constants' own re-calibration caveat (still derived from the original
   n=12, not re-derived at the larger sample size).
 
-**Post-promotion counter-evidence (2026-08-14): this flag costs one Corpus-1 solve.** A matched
+**Post-promotion population evidence (2026-08-14): KEEP DEFAULT-ON — better evidenced than at promotion.** A three-arm A/B over the entire eligible Corpus-2 population (512 eligible + 50 control) measured turning this flag OFF at **190/562 vs 192 baseline: net −2** (gained `R02961`; lost `R02258`, `R02663`, `R02719`) and **+15.02% work**. Three levels depend on the flag, including both previously-claimed gains (`R02719` from the 300-level promotion A/B, `R02663` from the gate 10→6 sweep) plus `R02258`, which no earlier evidence had identified — now confirmed over essentially the whole affected population rather than a subsample. The correct disposition is to keep the flag and accept `R00408` as a known cost. **The Corpus-1 counter-evidence below stands as a real, fully-traced single-level loss, but the "just revert the flag" alternative it originally suggested is falsified.**
+
+  Original Corpus-1 counter-evidence (2026-08-14): this flag costs one Corpus-1 solve. A matched
 level-blind A/B at one SHA over all 102 Corpus-1 levels (50M nodes, non-binding deadline) gives
 93/102 ON versus **94/102 OFF** — `R00408` solves only with the flag disabled, and no level solves
 only with it enabled. The mechanism is traced end to end: `R00408`'s ordinary probe tier reports
@@ -117,7 +119,7 @@ zero eligible levels. Corpus 1 has 12. See
   `dfs:repair:repair(mustTurnBiased)`, finishing at 37,840,699 total nodes instead of exhausting
   50,000,224. Default-OFF is byte-identical to pre-change (`R00408` FAILED at exactly 50,000,171
   nodes), so the budget restructure is a strict no-op for every production path and existing A/B arm.
-  **A/B COMPLETE (2026-08-14) — SAFE, NOT PROMOTED.** Corpus 1 (all 102): 93→94, **+1 gained
+  **CLOSED NEGATIVE (2026-08-14).** Three-arm Corpus-2 A/B over the ENTIRE eligible population (all 512 repair-gated + must-turn levels, plus a 50-level ineligible control; 562/562 coverage, 492 producing a biased tier, deterministic, one SHA): **191/562 vs baseline 192 — 0 gained, `R00094` LOST, work +13.14%.** The loss is the predicted failure mode: the reserve withholds nodes from the main loop on every eligible level, and `R00094` needed them. Across both corpora it nets to zero solves (+1 `R00408` on Corpus 1, −1 `R00094` on Corpus 2) for +2.00% and +13.14% work. Do not promote; do not reopen by re-tuning the reserve — restoring budget is not the fix, the `repairSearchFromGate` plateau is (same closure reasoning as `STRATEGY_REPAIR_FALLBACK_NODE_RESERVE` above). Earlier per-corpus detail: Corpus 1 (all 102): 93→94, **+1 gained
   (`R00408`), 0 lost**, nodes −1.24% (the gain pays for itself: `R00408` finishes at 37.8M instead of
   exhausting 50M), work +2.00%. Corpus 2 (13 nominated levels): **7/13 both arms, 0 gained, 0 lost,
   work +18.9%** — the tier fired on all 6 failing levels at the full 6,000,000-node budget and none

@@ -310,3 +310,59 @@ The decision that would settle it is a full 1,700-level Corpus-2 A/B of three ar
 ON (today), ON + recovery, and OFF — which is the only way to compare the work cost against the real
 gain count. Until then the recovery stays opt-in and default OFF, and the underlying question of
 whether the adaptive budget should keep its default-ON status remains open.
+
+
+---
+
+## Three-arm Corpus-2 A/B (2026-08-14) — decisive; recovery closed, adaptive budget vindicated
+
+Run on the **entire eligible population** rather than a sample: all 512 Corpus-2 levels that are
+repair-gated AND carry a must-turn cell, plus a 50-level control stratum from the ineligible
+remainder. 562/562 coverage in every arm, 22/22 jobs green, `deterministic=true`, 50M node budget,
+one SHA (`c5d804cfc`), seed `three-arm-2026-08-14`. **492 of the 562 actually produced a biased
+tier** — so these gained/lost sets are the complete ones for the affected population, not estimates.
+
+| arm | solved | nodes | canonical work |
+|---|---:|---:|---:|
+| 1. baseline (adaptive budget ON — today's production) | **192**/562 | 20,163,998,248 | 31,053,096,575 |
+| 2. + `STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY` | 191/562 | +0.07% | **+13.14%** |
+| 3. `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` OFF | 190/562 | +2.07% | **+15.02%** |
+
+| comparison | net | gained | lost |
+|---|---:|---|---|
+| arm 2 vs baseline | **−1** | none | `R00094` |
+| arm 3 vs baseline | **−2** | `R02961` | `R02258`, `R02663`, `R02719` |
+
+### The recovery mechanism is closed
+
+On the population it was built for, the recovery gains **nothing** and **loses `R00094`**, at +13.14%
+work. That loss is the predicted failure mode arriving: the reserve withholds nodes from the main
+loop on every eligible level, and on `R00094` the main loop needed them. The mechanism is not merely
+ineffective here — it is net-negative.
+
+Across both corpora it nets to zero solves: +1 on Corpus 1 (`R00408`) and −1 on Corpus 2 (`R00094`),
+for +2.00% and +13.14% work respectively. **Do not promote.** The single Corpus-1 gain does not
+survive contact with the wider eligible population, which is precisely the check that n=1 evidence
+could not provide.
+
+### The adaptive budget is vindicated, and my earlier recommendation was wrong
+
+Arm 3 falsifies the "simpler alternative" this report previously recommended. Turning
+`STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` back off does reach 94/102 on Corpus 1, but at
+population scale on Corpus 2 it costs a net **2 levels** and **15% more work**. Three levels depend
+on the flag — `R02719` (the original 300-level A/B's claimed gain), `R02663` (the gate 10→6 sweep's
+gain), and `R02258`, which no prior evidence had identified — all now confirmed over essentially the
+whole eligible population rather than a 300-level subsample.
+
+So the flag's default-ON status is considerably better evidenced than it was before this
+investigation, and the right disposition is to **keep it and accept `R00408` as a known cost**. The
+earlier framing — "+1 on 300 sampled Corpus-2 levels, −1 on all of Corpus 1, so the picture is
+mixed" — is superseded: it is +3/−1 on the full eligible Corpus-2 population against −1 on Corpus 1.
+
+### What remains open
+
+`R00408` is still a real, fully-traced loss, and the 10 near-miss levels in the RISK list still show
+the shrink cutting tiers that finish within `biasedBestBadness <= 3`. What this A/B establishes is
+that *restoring the budget* is not the fix — consistent with the `repairSearchFromGate` plateau that
+closed `STRATEGY_REPAIR_FALLBACK_NODE_RESERVE`. Any future attempt should target the plateau itself,
+not the allocation.
