@@ -16,6 +16,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { readLevelsWithHints } from './level-data-io.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { buildRow } from './portfolio-solve-sweep-lib.mjs';
@@ -37,10 +38,16 @@ const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budge
 const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined;
 const workers = Math.max(1, Number(argMap.get('--workers') || 1));
 const saveHints = flags.has('--save-hints');
+const strictTotalWorkBudget = flags.has('--strict-total-work-budget');
+const attemptBudgetTelemetry = flags.has('--attempt-budget-telemetry');
+const lifecycleTelemetry = flags.has('--lifecycle-telemetry');
+const runStartedAt = new Date().toISOString();
 const mainLoopLateReserveFraction = argMap.has('--main-loop-late-reserve-fraction')
     ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
 const mainLoopLateReserveConfigCount = argMap.has('--main-loop-late-reserve-config-count')
     ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
+const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction')
+    ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
 // 2026-08-13 (docs/future-work.md item 4b): lets a matched sweep compare candidate
 // REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE values against the production defaults
 // (10, 0.35) without editing modules/solver/orchestration.ts. Same optional/omitted-means-
@@ -49,6 +56,12 @@ const repairProbeAdaptiveBadnessGate = argMap.has('--repair-probe-adaptive-badne
     ? Number(argMap.get('--repair-probe-adaptive-badness-gate')) : undefined;
 const repairProbeAdaptiveMinScale = argMap.has('--repair-probe-adaptive-min-scale')
     ? Number(argMap.get('--repair-probe-adaptive-min-scale')) : undefined;
+
+if (admissibleOrderNodeReserveFraction !== undefined &&
+    (!Number.isFinite(admissibleOrderNodeReserveFraction) || admissibleOrderNodeReserveFraction < 0 || admissibleOrderNodeReserveFraction > 1)) {
+    console.error('--admissible-order-node-reserve-fraction must be between 0 and 1.');
+    process.exit(2);
+}
 
 for (const forbidden of ['--baseline', '--baseline-budget', '--prime-winner', '--prime-include-all', '--priority', '--attempt-cache', '--resume']) {
     if (args.some(a => a === forbidden || a.startsWith(`${forbidden}=`))) {
@@ -93,9 +106,12 @@ function parseLevelSpec(spec, total) {
 }
 
 const parsedCorpus = JSON.parse(readFileSync(corpusPath, 'utf8'));
+const corpusBytes = readFileSync(corpusPath);
+const corpusSha256 = createHash('sha256').update(corpusBytes).digest('hex');
 const rawLevels = Array.isArray(parsedCorpus) ? parsedCorpus : parsedCorpus.levels;
 if (!Array.isArray(rawLevels)) throw new Error(`${corpusPath}: expected an array or {levels:[...]}`);
 const targets = parseLevelSpec(argMap.get('--levels'), rawLevels.length);
+const sampleSha256 = createHash('sha256').update(targets.join('\n')).digest('hex');
 const commit = (() => { try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
 
 // Explicit allowlist of puzzle mechanics. Deliberately excludes raw `id`, `hints`, designerName,
@@ -122,8 +138,12 @@ writeFileSync(solveCorpusPath, JSON.stringify(mechanicsOnlyCorpus));
 const solveOpts = { timeBudgetMs: budgetMs };
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
 if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
+if (strictTotalWorkBudget) solveOpts.strictTotalWorkBudget = true;
+if (attemptBudgetTelemetry) solveOpts.attemptBudgetTelemetry = true;
+if (lifecycleTelemetry) solveOpts.lifecycleTelemetry = true;
 if (Number.isFinite(mainLoopLateReserveFraction)) solveOpts.mainLoopLateReserveFractionOverride = mainLoopLateReserveFraction;
 if (Number.isFinite(mainLoopLateReserveConfigCount)) solveOpts.mainLoopLateReserveConfigCountOverride = mainLoopLateReserveConfigCount;
+if (Number.isFinite(admissibleOrderNodeReserveFraction)) solveOpts.admissibleOrderNodeReserveFractionOverride = admissibleOrderNodeReserveFraction;
 if (Number.isFinite(repairProbeAdaptiveBadnessGate)) solveOpts.repairProbeAdaptiveBiasedBadnessGateOverride = repairProbeAdaptiveBadnessGate;
 if (Number.isFinite(repairProbeAdaptiveMinScale)) solveOpts.repairProbeAdaptiveBiasedMinScaleOverride = repairProbeAdaptiveMinScale;
 if (ablation) solveOpts.ablation = ablation;
@@ -141,20 +161,25 @@ function writeReport() {
     const solved = levels.filter(r => r.ok).length;
     const summary = {
         generatedAt: new Date().toISOString(), commit,
-        corpus: path.relative(root, corpusPath), schedulerMode: 'legacy', levelBlind: true,
+        corpus: path.relative(root, corpusPath), corpusSha256, sampleSha256,
+        schedulerMode: 'legacy', levelBlind: true,
         solverInputFields: PUZZLE_FIELDS, historicalInputs: [], budgetMs,
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
         workBudget: Number.isFinite(workBudget) ? workBudget : null,
-        workers, enableFlags, disableFlags,
+        workers, enableFlags, disableFlags, strictTotalWorkBudget, attemptBudgetTelemetry, lifecycleTelemetry, runStartedAt,
         mainLoopLateReserveFraction: Number.isFinite(mainLoopLateReserveFraction) ? mainLoopLateReserveFraction : null,
         mainLoopLateReserveConfigCount: Number.isFinite(mainLoopLateReserveConfigCount) ? mainLoopLateReserveConfigCount : null,
+        admissibleOrderNodeReserveFraction: Number.isFinite(admissibleOrderNodeReserveFraction) ? admissibleOrderNodeReserveFraction : null,
         repairProbeAdaptiveBadnessGate: Number.isFinite(repairProbeAdaptiveBadnessGate) ? repairProbeAdaptiveBadnessGate : null,
         repairProbeAdaptiveMinScale: Number.isFinite(repairProbeAdaptiveMinScale) ? repairProbeAdaptiveMinScale : null,
         levelsRequested: targets.length, levelsRun: levels.length, solvedCount: solved,
         unsolvedCount: levels.length - solved, saveHints, hintChanges,
+        artifactCompletedAt: new Date().toISOString(),
     };
     mkdirSync(path.dirname(outFile), { recursive: true });
-    writeFileSync(outFile, JSON.stringify({ summary, levels }, null, 2) + '\n');
+    const artifact = JSON.stringify({ summary, levels }, null, 2) + '\n';
+    writeFileSync(outFile, artifact);
+    writeFileSync(`${outFile}.sha256`, `${createHash('sha256').update(artifact).digest('hex')}  ${path.basename(outFile)}\n`);
     mkdirSync(path.dirname(summaryOutFile), { recursive: true });
     writeFileSync(summaryOutFile, [
         '# Level-blind capability sweep', '',
@@ -162,8 +187,10 @@ function writeReport() {
         `Corpus: ${summary.corpus}`,
         'Level-blind: yes (mechanics-only input; no identity/history/hints/baseline)',
         `Budget: ${budgetMs}ms; nodes=${summary.nodeBudget ?? '(none)'}; work=${summary.workBudget ?? '(none)'}`,
+        `Strict total work ceiling: ${strictTotalWorkBudget ? 'yes (experiment only)' : 'no (legacy additive-pass semantics)'}`,
         `Workers: ${workers}`,
         `Flags: enable=${enableFlags.join(',') || '(none)'} disable=${disableFlags.join(',') || '(none)'}`,
+        `Admissible-order node reserve fraction: ${summary.admissibleOrderNodeReserveFraction ?? '(production default)'}`,
         `Completed: ${levels.length}/${targets.length}`,
         `Solved: ${solved}/${levels.length}`,
         `Hints saved: ${saveHints ? `yes (${hintChanges} write event(s))` : 'no'}`,

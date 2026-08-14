@@ -7,6 +7,7 @@ import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { normalizeRawLevel } from './normalization.js';
 import { createState, getNeighbors } from './search-state.js';
+import { workMeter } from './work-meter.js';
 import type { NormalizedLevel } from '../domain/types.js';
 
 function makeLevel(overrides = {}) {
@@ -35,6 +36,19 @@ test('admissibleOrderSearch solves a simple line level with a real tie-break pro
   prep._metrics = { nodesExpanded: 0 };
   const path = await admissibleOrderSearch(PACK(0, 0), level, prep, 1000, Date.now(), null, null, Infinity, POLICY_PROFILES.default);
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
+});
+
+test('admissibleOrderSearch honors an exhausted experiment-only strict work cap before search', async () => {
+  const level = makeLevel();
+  const prep = prepLevel(level);
+  prep._cfg = null;
+  prep._metrics = { nodesExpanded: 0 };
+  prep._strictWorkCap = workMeter.units;
+  const out: { timedOut?: boolean; nodesExpanded?: number } = {};
+  const path = await admissibleOrderSearch(PACK(0, 0), level, prep, 1000, Date.now(), null, out);
+  assert.equal(path, null);
+  assert.deepEqual(out, { timedOut: true, nodesExpanded: 0 });
+  assert.equal(prep._metrics.nodesExpanded, 0);
 });
 
 test('admissibleOrderSearch solves the same level with tieBreakProfile: null (no tie-break)', async () => {

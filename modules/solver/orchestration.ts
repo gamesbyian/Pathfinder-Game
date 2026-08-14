@@ -43,6 +43,11 @@ interface PortfolioExperimentDefinition {
 interface Attempt {
     gateKey: number; profile: string; template: string | null; beamWidth: number | null;
     ok: boolean; elapsedMs: number; allocatedBudgetMs: number;
+    /** Diagnostic-only ceilings visible at dispatch. Null denotes an uncapped currency. */
+    allocatedWorkCeiling?: number | null;
+    allocatedNodeCeiling?: number | null;
+    /** Canonical work-meter delta for this attempt; emitted only with budget/lifecycle telemetry. */
+    workSpent?: number;
     /** Explicit termination reason. Unlike `ok`/`timedOut`, this also distinguishes a technique
      *  crash from an ordinary negative search result. */
     outcome: 'success' | 'exhausted' | 'timed-out' | 'budget-starved' | 'error';
@@ -153,6 +158,13 @@ interface SolveOpts {
      *  callers keep roughly their intended cost; pass it explicitly (CI, benches, corpus runs, any
      *  A/B) to pin the result exactly regardless of what the clock does. */
     workBudget?: number;
+    /** Experiment-only whole-solve enforcement. Omitted/false preserves the historical production
+     * scheduler, where `workBudget` sizes the main ladder and additive tiers can exceed it. */
+    strictTotalWorkBudget?: boolean;
+    /** Opt-in diagnostic attempt-ceiling fields. Omitted keeps ordinary result objects unchanged. */
+    attemptBudgetTelemetry?: boolean;
+    /** Opt-in per-technique lifecycle/progress summary for experiment artifacts. */
+    lifecycleTelemetry?: boolean;
     schedulerMode?: 'legacy' | 'portfolio-experiment';
     /** Unit-test-only per-solve dispatch override. Never persisted or exposed by Solver's facade. */
     attemptSearchForTesting?: AttemptSearchDispatch;
@@ -296,7 +308,9 @@ interface SolveResult { ok: boolean; status: string; solution: number[] | null; 
     workBudget?: number;
     /** The wall-clock deadline cut this run short while work budget remained — so the result is
      *  INDETERMINATE, not a reproducible negative. Never record such a run as "unsolved". */
-    deadlineTruncated?: boolean; solvedByPrime?: boolean; schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
+    deadlineTruncated?: boolean; solvedByPrime?: boolean;
+    techniqueLifecycle?: Record<string, unknown>;
+    schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
 
 function hasAttemptError(attempts: readonly Attempt[]): boolean {
     return attempts.some(attempt => attempt.outcome === 'error');
@@ -356,6 +370,10 @@ export async function runAttempt(
     // nodesExpanded back for its cross-gate node-budget accounting; ordinary callers don't).
     const searchOut = nodesOut ?? {};
     const nodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
+    const workBefore = workMeter.units;
+    const allocatedWorkCeiling = prep._workCap == null
+        ? null
+        : Math.max(0, prep._workCap - workMeter.units);
     let path: number[] | null = null;
     let attemptError: Attempt['error'] | undefined;
     try {
@@ -384,6 +402,9 @@ export async function runAttempt(
     }
     const attMs = Date.now() - attStart;
     const nodesAfter = prep._metrics ? prep._metrics.nodesExpanded : 0;
+    const workAfter = workMeter.units;
+    const budgetStarvedAtDispatch = prep._attemptBudgetTelemetry
+        && (allocatedWorkCeiling === 0 || (Number.isFinite(nodeBudget) && nodeBudget === 0));
     return {
         path,
         attempt: {
@@ -392,10 +413,16 @@ export async function runAttempt(
             template: template?.id ?? null,
             beamWidth: beamWidth ?? null,
             ok: !!path,
-            outcome: path ? 'success' : attemptError ? 'error' : searchOut.timedOut === true ? 'timed-out' : searchOut.timedOut === false ? 'exhausted' : 'budget-starved',
+            outcome: path ? 'success' : attemptError ? 'error' : budgetStarvedAtDispatch ? 'budget-starved'
+                : searchOut.timedOut === true ? 'timed-out' : searchOut.timedOut === false ? 'exhausted' : 'budget-starved',
             ...(attemptError ? { error: attemptError } : {}),
             elapsedMs: attMs,
             allocatedBudgetMs: attBudget,
+            ...(prep._attemptBudgetTelemetry ? {
+                allocatedWorkCeiling,
+                allocatedNodeCeiling: Number.isFinite(nodeBudget) ? nodeBudget : null,
+                workSpent: workAfter - workBefore,
+            } : {}),
             nodesExpanded: nodesAfter - nodesBefore,
             ...(repair && seedSalt ? { seedSalt } : {}),
             ...(repair ? { randomSeed: repairPrimarySeed(gateKey, seedSalt) } : {}),
@@ -537,7 +564,7 @@ async function runInterleavedAttempts(
                 attBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(attBudget * adaptiveGateWeight(gateKey, gateProgress)));
             }
             if (attBudget < MIN_ATTEMPT_WORK) return { solution: null, attempts };
-            prep._workCap = workMeter.units + attBudget;
+            prep._workCap = Math.min(workMeter.units + attBudget, prep._strictWorkCap ?? Infinity);
 
             // Remaining GLOBAL node budget, recomputed fresh before each attempt (same pattern as the
             // repair fallback below): beam/DFS count nodes LOCAL to the call, so the remainder makes a
@@ -608,7 +635,7 @@ async function runGateSerialAttempts(
             const minFrac = (!cfg || cfg.STRATEGY_MIN_BUDGET_FLOOR) ? (baseConfigs[ci].minBudgetFraction ?? 0) : 0;
             const attBudget = attemptBudgetShare(remaining, attemptsLeft, remaining, minFrac);
             if (attBudget < MIN_ATTEMPT_WORK) break;
-            prep._workCap = workMeter.units + attBudget;
+            prep._workCap = Math.min(workMeter.units + attBudget, prep._strictWorkCap ?? Infinity);
 
             // Remaining GLOBAL node budget — see runInterleavedAttempts's identical recompute.
             const remainingNodeBudget = configNodeBudget === Infinity ? Infinity : Math.max(0, configNodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
@@ -1501,6 +1528,12 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const levelStartTime = Date.now();
     const workStart = workMeter.units;
     const prep = prepLevel(level);
+    // Opt-in only. Existing production behavior deliberately remains untouched until a matched
+    // confirmation can measure the solve-set effect of converting additive passes to one cap.
+    prep._strictWorkCap = opts.strictTotalWorkBudget ? workStart + workBudget : undefined;
+    if (prep._strictWorkCap !== undefined) prep._workCap = prep._strictWorkCap;
+    prep._attemptBudgetTelemetry = opts.attemptBudgetTelemetry === true || opts.lifecycleTelemetry === true
+        || opts.strictTotalWorkBudget === true;
     if (opts.attemptSearchForTesting) testAttemptDispatches.set(prep, opts.attemptSearchForTesting);
     const gateKeys = Array.isArray(level.gateKeys) ? level.gateKeys : [];
 
@@ -1523,6 +1556,68 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // Build attempt configs, then apply ablation profile/template filters and ordering overrides.
     const baseConfigs = getConfiguredAttemptConfigs(level, cfg);
     const activeGates = getActiveGates(level, gateKeys, cfg);
+
+    const finish = (solveResult: SolveResult): SolveResult => {
+        if (!opts.lifecycleTelemetry) return solveResult;
+        const classify = (attempt: Attempt) => attempt.admissibleOrder ? 'admissible-order'
+            : attempt.repairProbe ? 'repair-probe'
+                : attempt.repair ? 'repair-fallback'
+                    : attempt.attractionDiversity ? 'attraction-diversity'
+                        : 'main-ladder';
+        const disabledExtras = opts.disableExtraBudgetPasses === true;
+        const repairEnabled = !disabledExtras && Number(opts.repairBudgetFractionOverride ?? 1) !== 0;
+        const runnable = new Map<string, boolean>([
+            ['repair-probe', repairEnabled && (!cfg || cfg.STRATEGY_REPAIR_PROBE === true) && baseConfigs.some(config => config.repair)],
+            ['main-ladder', baseConfigs.some(config => !config.repair && !config.admissibleOrder)],
+            ['repair-fallback', repairEnabled && baseConfigs.some(config => config.repair)],
+            ['attraction-diversity', !disabledExtras && Number(opts.attractionDiversityBudgetFractionOverride ?? 1) !== 0
+                && (!cfg || cfg.STRATEGY_ATTRACTION_DIVERSITY === true)],
+            ['admissible-order', !disabledExtras && Number(opts.admissibleOrderBudgetFractionOverride ?? 1) !== 0
+                && (!cfg || cfg.STRATEGY_ADMISSIBLE_ORDER === true) && baseConfigs.some(config => config.admissibleOrder)],
+        ]);
+        const instantiated = new Map<string, boolean>([
+            ['repair-probe', baseConfigs.some(config => config.repair)],
+            ['main-ladder', baseConfigs.some(config => !config.repair && !config.admissibleOrder)],
+            ['repair-fallback', baseConfigs.some(config => config.repair)],
+            ['attraction-diversity', baseConfigs.some(config => !config.repair && !config.admissibleOrder)],
+            ['admissible-order', baseConfigs.some(config => config.admissibleOrder)],
+        ]);
+        const order = [...runnable.keys()];
+        const lastTechnique = solveResult.attempts.length ? classify(solveResult.attempts.at(-1)!) : null;
+        const winningIndex = solveResult.ok
+            ? Math.max(0, order.indexOf(classify(solveResult.attempts.find(attempt => attempt.ok) ?? solveResult.attempts.at(-1)!)))
+            : -1;
+        solveResult.techniqueLifecycle = Object.fromEntries(order.map((name, index) => {
+            const attempts = solveResult.attempts.filter(attempt => classify(attempt) === name);
+            const reached = attempts.length > 0;
+            const nodeStarvedAtDispatch = reached && attempts.every(attempt => attempt.allocatedNodeCeiling === 0);
+            const workStarvedAtDispatch = reached && attempts.every(attempt => attempt.allocatedWorkCeiling === 0);
+            const nodeStarved = runnable.get(name) === true && (nodeStarvedAtDispatch
+                || (!reached && !solveResult.ok && solveResult.status === 'node-budget-reached'));
+            const workStarved = runnable.get(name) === true && (workStarvedAtDispatch
+                || (!reached && !solveResult.ok && solveResult.status === 'work-budget-reached'));
+            return [name, {
+                mechanicallyEligible: instantiated.get(name) === true,
+                instantiated: instantiated.get(name) === true,
+                reached,
+                skippedBecauseSolvedEarlier: runnable.get(name) === true && solveResult.ok && !reached && index > winningIndex,
+                starvedByNodeBudget: nodeStarved,
+                starvedByWorkBudget: workStarved,
+                skippedByRoutingOrConfiguration: runnable.get(name) !== true,
+                exhaustedSearchSpace: reached && attempts.every(attempt => attempt.outcome === 'exhausted'),
+                stoppedByDeadline: reached && solveResult.deadlineTruncated === true && name === lastTechnique,
+                allocatedNodeCeilings: attempts.map(attempt => attempt.allocatedNodeCeiling ?? null),
+                allocatedWorkCeilings: attempts.map(attempt => attempt.allocatedWorkCeiling ?? null),
+                actualNodes: attempts.reduce((sum, attempt) => sum + Number(attempt.nodesExpanded ?? 0), 0),
+                actualWork: attempts.every(attempt => attempt.workSpent != null)
+                    ? attempts.reduce((sum, attempt) => sum + Number(attempt.workSpent), 0) : null,
+                attempts: attempts.length,
+                bestProgress: attempts.filter(attempt => attempt.bestBadness != null || attempt.finalBadness != null)
+                    .map(attempt => ({ nodes: attempt.nodesExpanded ?? null, bestBadness: attempt.bestBadness ?? null, finalBadness: attempt.finalBadness ?? null })),
+            }];
+        }));
+        return solveResult;
+    };
 
     // Winner-first pre-attempt (opts.primeAttempt — offline re-verify tooling only; see the field's
     // own comment for the semantics and the solvability-vs-ordering verdict caveat). Runs exactly the
@@ -1547,7 +1642,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             primeResult.attempt.configKey = opts.primeAttempt.configKey;
             if (primeResult.path) {
                 const totalMs = Date.now() - levelStartTime;
-                return { ok: true, status: 'success', solution: primeResult.path, solutions: [primeResult.path], attempts: [primeResult.attempt], totalMs, nodesExpanded: prep._metrics.nodesExpanded, solvedByPrime: true, workSpent: workMeter.units - workStart, workBudget };
+                return finish({ ok: true, status: 'success', solution: primeResult.path, solutions: [primeResult.path], attempts: [primeResult.attempt], totalMs, nodesExpanded: prep._metrics.nodesExpanded, solvedByPrime: true, workSpent: workMeter.units - workStart, workBudget });
             }
             primeMissAttempt = primeResult.attempt;
         }
@@ -1869,7 +1964,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         if (probe.solution) {
             const totalMs = Date.now() - levelStartTime;
             const nodesExpanded = prep._metrics.nodesExpanded;
-            return { ok: true, status: 'success', solution: probe.solution, solutions: [probe.solution], attempts: probeAttempts, totalMs, nodesExpanded, workSpent: workMeter.units - workStart, workBudget };
+            return finish({ ok: true, status: 'success', solution: probe.solution, solutions: [probe.solution], attempts: probeAttempts, totalMs, nodesExpanded, workSpent: workMeter.units - workStart, workBudget });
         }
         // The probe now self-limits against the external nodeBudget (see runRepairProbe's own
         // comment) but only between seed-salt rounds, its smallest independently-costed unit — it
@@ -1886,7 +1981,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // no-op, so control reaches whichever tier has room having spent no extra nodes.
         if (prep._metrics.nodesExpanded >= mainLoopEarlyNodeBudget && admissibleOrderNodeReserve === 0 && mainLoopLateReserve === 0 && repairFallbackNodeReserve === 0 && attractionDiversityNodeReserve === 0) {
             const totalMs = Date.now() - levelStartTime;
-            return { ok: false, status: hasAttemptError(probeAttempts) ? 'attempt-error' : 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true, workSpent: workMeter.units - workStart, workBudget };
+            return finish({ ok: false, status: hasAttemptError(probeAttempts) ? 'attempt-error' : 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true, workSpent: workMeter.units - workStart, workBudget });
         }
     }
 
@@ -2092,7 +2187,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // always false and this is bit-identical to the original `nodesExpanded >= nodeBudget`.
     const nodeBudgetReached = nodeBudget !== Infinity && (nodesExpanded >= nodeBudget || earlyTiersHitNodeCeiling || mainLoopEarlyTiersHitNodeCeiling);
     if (result.solution) {
-        return { ok: true, status: 'success', solution: result.solution, solutions: [result.solution], attempts: result.attempts, totalMs, nodesExpanded, workSpent: workMeter.units - workStart, workBudget };
+        return finish({ ok: true, status: 'success', solution: result.solution, solutions: [result.solution], attempts: result.attempts, totalMs, nodesExpanded, workSpent: workMeter.units - workStart, workBudget });
     }
     // The wall-clock deadline is the solver's ONE remaining non-deterministic exit, and it is not
     // needed for termination — a finite workBudget already guarantees that, since work rises
@@ -2113,5 +2208,5 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : nodeBudgetReached ? 'node-budget-reached'
         : deadlineTruncated ? 'deadline-truncated'
         : (workSpent >= workBudget ? 'work-budget-reached' : 'failed');
-    return { ok: false, status, solution: null, solutions: [], attempts: result.attempts, totalMs, nodesExpanded, nodeBudgetReached, deadlineTruncated, workSpent, workBudget };
+    return finish({ ok: false, status, solution: null, solutions: [], attempts: result.attempts, totalMs, nodesExpanded, nodeBudgetReached, deadlineTruncated, workSpent, workBudget });
 }

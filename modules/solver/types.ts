@@ -255,6 +255,10 @@ export interface PrepLevel {
      *  checks its own budget, so all four stop on the same machine-independent quantity.
      *  Infinity/undefined = uncapped. See work-meter.ts. */
     _workCap?: number;
+    /** Experiment-only immutable whole-solve cap; per-attempt allocations may only reduce it. */
+    _strictWorkCap?: number;
+    /** Opt-in diagnostic output gate; never read by search policy. */
+    _attemptBudgetTelemetry?: boolean;
     /** Research-only beam observer. Absent in every production call. The observer receives copied
      * replay-complete paths and may label them, but cannot affect search decisions. */
     _beamResearchObserver?: BeamResearchObserver | null;

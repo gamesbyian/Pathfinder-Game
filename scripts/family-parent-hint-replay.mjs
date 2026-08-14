@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Validate a variant-discovered path on its canonical parent; writes only with --save-hints. */
 import { readFileSync } from 'node:fs';
+import { findFamilyResultRow } from './family-edge-identity.mjs';
 import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
 import { normalizeRawLevel } from '../modules/solver/normalization.ts';
 import { validateCandidatePath } from '../modules/domain/path-validator.ts';
@@ -31,7 +32,7 @@ let variantPath = args.get('--path')?.split(',').map(Number);
 let discoveryFoundAt = manifest.lastUpdatedTimestamp ?? manifest.createdTimestamp;
 if (args.get('--result')) {
     const document = JSON.parse(readFileSync(args.get('--result'), 'utf8'));
-    const row = (document.levels ?? document.results ?? []).find(result => String(result.id ?? result.levelId) === String(edge.variantId));
+    const row = findFamilyResultRow(document.levels ?? document.results ?? [], { parentCorpus:manifest.parentCorpus, parentId:manifest.parentLevelId, variantId:edge.variantId });
     if (!variantPath) variantPath = row?.solution ?? row?.path;
     discoveryFoundAt = row?.foundAt ?? row?.generatedAt ?? document.generatedAt ?? document.timestamp ?? discoveryFoundAt;
 }

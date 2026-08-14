@@ -173,3 +173,71 @@ Items 2 and 3 are observational/oracle work and can run alongside planning for 1
 ## Older loose-thread triage (2026-08-07)
 
 Compatibility anchor for historical documents that linked to this section before the 2026-08-11 queue rewrite. The old loose-thread list has been fully reconciled into the current sections above and the opt-in experiment ledger. **Do not treat this heading as an additional backlog.** Follow the current queue and closed/do-not-repeat list in this file instead.
+
+### Existing-technique tuning campaign (2026-08-13 follow-up)
+
+> **Historical checkpoint; validity wording superseded by the 2026-08-14 audit immediately below.** In particular, ETT-010/011 are targeted diagnostics, not independently verifiable preregistrations or decision-bearing evidence.
+
+The [current-main empirical campaign](../reports/2026-08-13-existing-technique-tuning-experimental-campaign.md) completed 23 of 24 arms and preserved 484 level rows / 1,877 internal attempt rows. Production admissible-order versus OFF produced three gains and one loss across 60 exploratory published levels. More importantly for allocation, reserve 0.15 solved 27/40 versus production 0.25's 26/40 across two disjoint slices while using 8.2% less work. A subsequently pre-registered mechanics-enriched pilot (`ETT-010`, protocol committed before execution) preserved 19/20 solves and reduced total work 12.6% at reserve 0.15 versus 0.25, but only 1/20 levels reached admissible order; it satisfies its escalation rule while remaining far too reach-sparse for promotion. A second pre-registered hard Corpus-2 pilot (`ETT-011`) reached admissible order on 20/20 levels but solved 0/20 in both arms; reserve 0.15 increased work 7.7% versus 0.25 and failed its escalation rule. This closes immediate 0.15 promotion and shows the response is population-dependent. **Protocol audit:** the manifest was reconstructed/extended after execution, so ETT-001–009 are not decision-bearing despite cold mechanics-only solves. ETT-010 and ETT-011 are decision-bearing pilots; their opposed cost results block promotion. The paired audit identifies repair-stack eligibility as the leading interaction: 19/20 hard levels routed released nodes into repair and work worsened on 20/20. Next, pre-register equal repair-eligible and repair-ineligible mechanics strata and require the work-effect sign to differ before considering a conditional reserve. Commit and hash the sample and protocol before dispatch. Explicit eligible/reached/starved/exhausted telemetry remains prerequisite for more routing work. Family boundary identity is now fixed to `(parentCorpus,parentId,variantId)` with an ambiguity failure and collision regression; regenerate/audit the wide report before more family solves. Do not spend a larger cap on the measured 0/20 hard slice until generic best-progress telemetry can distinguish slow progress from representation failure.
+
+### 2026-08-14 campaign validity correction
+
+The ETT-010/011 short protocol SHAs were not preserved on a persistent GitHub ref after PR #1372, so
+those runs are targeted level-blind diagnostics, not independently verifiable preregistrations.
+ETT-011 was node-budget matched, not protected by an enforced equal total-work ceiling: 19/20 rows per
+arm exceeded the declared 1,333,333 units because repair/additive tiers sit outside the main-loop work
+pool. See the campaign report's post-merge correction. Do not run another generic admissible-reserve
+slice. First finish explicit reach/progress lifecycle telemetry and test the new experiment-only strict
+whole-solve work cap; only then consider the matched repair-eligibility interaction. Future
+decision-bearing protocols require a persistent GitHub ref, full SHA/permalink, hashes, commands,
+timestamps, environment, and artifact digest before execution.
+
+#### Lifecycle telemetry checkpoint (2026-08-14)
+
+The level-blind sweep now has opt-in `--lifecycle-telemetry` with explicit eligibility, reach, skip,
+starvation, exhaustion, deadline, allocation, node, and badness fields. The analyzer fails incomplete
+telemetry-enabled artifacts. Run one 8–12-level no-treatment dry run before another routing/budget
+comparison. Per-attempt canonical work remains intentionally unavailable (`actualWork: null`) and is
+the next instrumentation task if the dry run shows it is needed for classification.
+
+#### Lifecycle work-meter validation (2026-08-14)
+
+ETT-016 closed the remaining telemetry gap: on 8/8 rows, per-attempt canonical work summed exactly to
+per-technique lifecycle work and whole-level work. ETT-014–016 are one instrumentation-validation
+family, not three tuning results. Small reach-enriched diagnostics may now use these fields, but any
+equal-work claim must explicitly enable `strictTotalWorkBudget`; legacy additive scheduling exceeded
+the nominal pool on 4/8 validation rows.
+
+#### Zero-work dispatch classification (2026-08-14)
+
+ETT-016 exposed one repair-fallback dispatch with a positive node allowance but zero inherited work;
+it performed no search and was previously labelled timed-out. Zero-cap dispatches are now explicitly
+budget-starved even though the technique was reached. Do not equate attempt presence with productive
+reach; use actual work/nodes and starvation together.
+
+#### Beam-extinction mechanics audit (ETT-017, offline observational)
+
+All 19 existing score/width forensic rows were joined to mechanics. No mechanics tag predicted the
+14 clearly-mis-ranked cases strongly enough to justify routing. Portal/crossing/large-grid tags were
+instead enriched in the heterogeneous five-row weak-margin/width group, which is too small and lacks
+parent-family identity. Next: a held-out, family-namespaced 8–12-level extinction-local cohort;
+separate weak-margin and width-saturation, then test K versus 2K only at the observed boundary.
+
+#### Corrected strict-work diagnostic (ETT-019)
+
+On the targeted 8-level affected cohort, strict enforcement preserved 4/8 solves while reducing work
+52.1% and nodes 33.6%; all meaningful cuts occurred on failures, mainly admissible-order. Maximum
+checkpoint overshoot was 1,072 units, below the validator's conservative 4,096-unit tolerance. This
+shows the experiment mode is active, not that it is solve-safe. Next strict-work test must be held-out
+and balanced across later-tier winners and earlier-tier controls, with symmetric losses primary and a
+persistent GitHub protocol ref. No production change.
+
+#### Strict-cap winner-retention disposition (ETT-020)
+
+The required phase-balanced diagnostic found a concrete solve-safety failure: at a 400,000-unit total
+cap, strict mode retained 6/8 versus legacy 8/8 and lost two of three selected admissible-order
+winners. It cut work 28.5%, but that saving removed productive late-tier work. Close this cap form and
+do not escalate it to population scale. Before any different strict cap is tested, estimate the
+representative legacy total-work distribution and predeclare a cost-matched ceiling under a
+persistent GitHub protocol ref; otherwise the comparison confounds accounting semantics with a large
+resource reduction.

@@ -66,7 +66,7 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:node": "run-p test:startup-smoke test:hint-path-oracle test:loader test:hint-workbench test:hint-diversification test:hint-corpus-expand test:hint-complete-sharded test:portfolio-solve-sweep-lib test:portfolio-sweep-reports-to-benchmark test:req-length-sweep-lib test:hint-cost-drift-lib test:probe-corpus-loader test:family-generate test:family-analyze test:family-boundary test:family-boundary-cli test:family-parent-hint-replay test:divergence-lib test:research-analysis-lib test:experiment-manifest test:winning-attempt-family test:data-asset-runtime-smoke test:firestore-rules test:bundled-levels",
+    "test:node": "run-p test:startup-smoke test:hint-path-oracle test:loader test:hint-workbench test:hint-diversification test:hint-corpus-expand test:hint-complete-sharded test:portfolio-solve-sweep-lib test:portfolio-sweep-reports-to-benchmark test:req-length-sweep-lib test:hint-cost-drift-lib test:probe-corpus-loader test:family-generate test:family-analyze test:family-boundary test:family-boundary-cli test:family-parent-hint-replay test:divergence-lib test:research-analysis-lib test:experiment-manifest test:technique-campaign-analysis test:winning-attempt-family test:data-asset-runtime-smoke test:firestore-rules test:bundled-levels",
     "stress:generate": "node scripts/run-bundled.mjs scripts/stress/generate.mjs",
     "stress:generate-random": "node scripts/run-bundled.mjs scripts/stress/generate-random.mjs",
     "stress:compare": "node scripts/stress/compare.mjs",
@@ -132,7 +132,8 @@
     "test:winning-attempt-family": "node scripts/winning-attempt-family-lib-unit-tests.mjs",
     "solver:winning-attempts": "node scripts/analyze-solver-winning-attempts.mjs",
     "solver:portfolio-report": "node scripts/run-bundled.mjs scripts/portfolio-scheduler-report.mjs",
-    "solver:portfolio-replay": "node scripts/portfolio-historical-replay.mjs"
+    "solver:portfolio-replay": "node scripts/portfolio-historical-replay.mjs",
+    "test:technique-campaign-analysis": "node scripts/analyze-technique-campaign-unit-tests.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
