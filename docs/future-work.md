@@ -125,6 +125,14 @@ Winning-lineage forensics found 15 failed score/width final extinctions: 10 clea
 
 Static must-cross geometry added essentially no predictive power. `crossingSlack = freeInt - forcedFutureNeighbourRevisits` passed its read-only smoke with zero negative-slack soundness alarms. If this lane advances, prefer conservative state-conditioned completion interfaces over another static descriptor pile.
 
+### State-conditioned must-cross anchoring remains open
+
+The old `must-cross-horizon` attempt tested an unconditional form: give every must-cross level an extra `mustCrossFirst` pass with stronger urgency and satisfy the landmarks earlier. Disable-one ablation across 47 levels found zero contribution, so that attempt was removed. High-intersection evidence also shows why a universal rule is unsafe: some winning paths must initially move away from must-cross cells while constructing the geometry needed for later intersections. Do not revive the unchanged horizon pass or apply another global must-cross urgency increase.
+
+A narrower question remains untested: during a cold solve, can current-invocation state decide which pending must-cross cell should serve as the next soft anchor, which should be deliberately deferred, and when guidance should switch from the cell to its perpendicular second-crossing approach interface? Candidate signals must be derived from the live puzzle/search state, such as remaining-step slack, crossing slack, visit/axis state, approach reachability, competing obligations, and bounded local completion patterns. Saved hints or historical must-cross orders may label offline diagnostics but may never choose the live target.
+
+Start with a read-only or experiment-only diagnostic that compares the proposed target/defer decision with existing `mustCrossFirst`, `intersectionHarvest`, and default scoring on selected path prefixes. Escalate only if the distinction recurs across unrelated levels or held-out parent families, then test through the full level-blind ladder at matched total work. See [State-conditioned must-cross anchoring](solver-heuristic-capability-gap-analysis.md#state-conditioned-must-cross-anchoring-open-unconditional-form-closed) for the precise closed/open boundary.
+
 ### Repair still lacks a genuinely deep prefix-edit capability
 
 Plateau penalty, soft recombination, exact relinking, and turn bias are closed in their current forms. The next repair question is exact retreat depth, not another append-only attraction tweak.
@@ -145,6 +153,7 @@ A bespoke ladder/scheduler should answer “given what this solve has already ob
 - recombination: closed/superseded as built;
 - exact relinking: structural dead end as built;
 - admissible-order LDS: closed negative;
+- `must-cross-horizon` / unconditional early must-cross urgency: closed zero-contribution; this does not close state-conditioned target/defer guidance;
 - old fast portfolio scheduler / broad cold-start variants: closed;
 - residual-interface substitution lane: demoted after the cross-level inspection; do not build an operator without new independent mechanic-conditioned evidence.
 
