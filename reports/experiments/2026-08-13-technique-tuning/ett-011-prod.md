@@ -1,0 +1,12 @@
+# Level-blind capability sweep
+
+Commit: 7dd35d9fa8adb95f27520242cd0769a2fdcfc76b
+Corpus: data/stress/stress-levels-random.json
+Level-blind: yes (mechanics-only input; no identity/history/hints/baseline)
+Budget: 120000ms; nodes=1000000; work=1333333
+Workers: 1
+Flags: enable=(none) disable=(none)
+Admissible-order node reserve fraction: (production default)
+Completed: 20/20
+Solved: 0/20
+Hints saved: no

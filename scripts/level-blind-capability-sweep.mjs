@@ -41,6 +41,8 @@ const mainLoopLateReserveFraction = argMap.has('--main-loop-late-reserve-fractio
     ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
 const mainLoopLateReserveConfigCount = argMap.has('--main-loop-late-reserve-config-count')
     ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
+const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction')
+    ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
 // 2026-08-13 (docs/future-work.md item 4b): lets a matched sweep compare candidate
 // REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE values against the production defaults
 // (10, 0.35) without editing modules/solver/orchestration.ts. Same optional/omitted-means-
@@ -49,6 +51,12 @@ const repairProbeAdaptiveBadnessGate = argMap.has('--repair-probe-adaptive-badne
     ? Number(argMap.get('--repair-probe-adaptive-badness-gate')) : undefined;
 const repairProbeAdaptiveMinScale = argMap.has('--repair-probe-adaptive-min-scale')
     ? Number(argMap.get('--repair-probe-adaptive-min-scale')) : undefined;
+
+if (admissibleOrderNodeReserveFraction !== undefined &&
+    (!Number.isFinite(admissibleOrderNodeReserveFraction) || admissibleOrderNodeReserveFraction < 0 || admissibleOrderNodeReserveFraction > 1)) {
+    console.error('--admissible-order-node-reserve-fraction must be between 0 and 1.');
+    process.exit(2);
+}
 
 for (const forbidden of ['--baseline', '--baseline-budget', '--prime-winner', '--prime-include-all', '--priority', '--attempt-cache', '--resume']) {
     if (args.some(a => a === forbidden || a.startsWith(`${forbidden}=`))) {
@@ -124,6 +132,7 @@ if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
 if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
 if (Number.isFinite(mainLoopLateReserveFraction)) solveOpts.mainLoopLateReserveFractionOverride = mainLoopLateReserveFraction;
 if (Number.isFinite(mainLoopLateReserveConfigCount)) solveOpts.mainLoopLateReserveConfigCountOverride = mainLoopLateReserveConfigCount;
+if (Number.isFinite(admissibleOrderNodeReserveFraction)) solveOpts.admissibleOrderNodeReserveFractionOverride = admissibleOrderNodeReserveFraction;
 if (Number.isFinite(repairProbeAdaptiveBadnessGate)) solveOpts.repairProbeAdaptiveBiasedBadnessGateOverride = repairProbeAdaptiveBadnessGate;
 if (Number.isFinite(repairProbeAdaptiveMinScale)) solveOpts.repairProbeAdaptiveBiasedMinScaleOverride = repairProbeAdaptiveMinScale;
 if (ablation) solveOpts.ablation = ablation;
@@ -148,6 +157,7 @@ function writeReport() {
         workers, enableFlags, disableFlags,
         mainLoopLateReserveFraction: Number.isFinite(mainLoopLateReserveFraction) ? mainLoopLateReserveFraction : null,
         mainLoopLateReserveConfigCount: Number.isFinite(mainLoopLateReserveConfigCount) ? mainLoopLateReserveConfigCount : null,
+        admissibleOrderNodeReserveFraction: Number.isFinite(admissibleOrderNodeReserveFraction) ? admissibleOrderNodeReserveFraction : null,
         repairProbeAdaptiveBadnessGate: Number.isFinite(repairProbeAdaptiveBadnessGate) ? repairProbeAdaptiveBadnessGate : null,
         repairProbeAdaptiveMinScale: Number.isFinite(repairProbeAdaptiveMinScale) ? repairProbeAdaptiveMinScale : null,
         levelsRequested: targets.length, levelsRun: levels.length, solvedCount: solved,
@@ -164,6 +174,7 @@ function writeReport() {
         `Budget: ${budgetMs}ms; nodes=${summary.nodeBudget ?? '(none)'}; work=${summary.workBudget ?? '(none)'}`,
         `Workers: ${workers}`,
         `Flags: enable=${enableFlags.join(',') || '(none)'} disable=${disableFlags.join(',') || '(none)'}`,
+        `Admissible-order node reserve fraction: ${summary.admissibleOrderNodeReserveFraction ?? '(production default)'}`,
         `Completed: ${levels.length}/${targets.length}`,
         `Solved: ${solved}/${levels.length}`,
         `Hints saved: ${saveHints ? `yes (${hintChanges} write event(s))` : 'no'}`,

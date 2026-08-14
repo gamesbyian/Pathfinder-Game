@@ -104,6 +104,12 @@ for (const forbiddenField of ['id', 'hints', 'hintRecords', 'stressMeta', 'prove
 }
 assert.match(sweep, /Never pass hintLevels[\s\S]*to the solver worker/u);
 assert.match(sweep, /level-blind-capability-worker\.mjs/u);
+assert.match(sweep, /--admissible-order-node-reserve-fraction/u,
+    'capability sweep must expose the admissible reserve experiment override');
+assert.match(sweep, /solveOpts\.admissibleOrderNodeReserveFractionOverride = admissibleOrderNodeReserveFraction/u,
+    'admissible reserve override must reach SolveOpts');
+assert.match(sweep, /admissibleOrderNodeReserveFraction: Number\.isFinite/u,
+    'admissible reserve override must be persisted in the run summary');
 assert.equal(/prepareLevelForSolver\([^\n]*levelNumber/u.test(worker), false,
     'capability worker must not inject corpus position into solver preparation');
 assert.match(worker, /prepareLevelForSolver\(raw, \{ source: 'raw' \}\)/u);
