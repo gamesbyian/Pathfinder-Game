@@ -258,3 +258,55 @@ same shape — reaching a near-miss badness and then not closing, whether the ti
 
 **Standing: sound, correctly targeted, n=1 evidence of benefit, measured cost.** That is not a
 promotion case. The mechanism remains opt-in and default OFF.
+
+
+## A/B result: Corpus-1 full population (2026-08-14) — +1, no losses
+
+Same protocol, all 102 Corpus-1 levels.
+
+| arm | solved | nodes | canonical work |
+|---|---:|---:|---:|
+| control | 93/102 | 980,064,610 | 1,940,297,268 |
+| treatment | **94/102** | 967,905,406 | 1,979,044,792 |
+| delta | **+1 gained, 0 lost** | −1.24% | +2.00% |
+
+**Gained: `R00408`. Lost: none.** The recovery tier fired on 3 levels — `R00408` (5,965,490 nodes,
+solved), `R00526` (6,000,011, still failed) and `R01195` (6,000,032, still failed). `R00526` is a
+known ETT-013 pathology parent that fails at 50M independently of this flag.
+
+Node count *fell* 1.24% because `R00408` now finishes at 37.8M instead of exhausting 50M — the gain
+pays for itself in nodes on that level. Work still rises 2.00%, since the two non-gaining recovery
+attempts spend 12M repair nodes at repair's higher work-per-node.
+
+The control arm reproduced the pre-change run byte-identically across all 102 levels (93/102,
+980,064,610 nodes, 1,940,297,268 work, same nine unsolved ids), which is a considerably stronger
+statement of the default-OFF no-op than the earlier single-level check.
+
+## Combined verdict: do not promote
+
+| population | control | treatment | gained | lost | work |
+|---|---:|---:|---|---|---:|
+| Corpus 1 (102) | 93 | 94 | `R00408` | none | +2.00% |
+| Corpus 2 (13 selected) | 7 | 7 | none | none | +18.9% |
+
+The mechanism is **safe** — zero losses across 115 levels — and **correctly targeted**: it fires only
+on shrunk tiers, always at the full restored budget, and never on levels that already solve. But it
+gains exactly one level: the one it was designed against. On the Corpus-2 population chosen to be
+maximally favourable to it, it gains nothing and costs ~19% more work.
+
+Against this repo's own promotion rules, two are unmet: the motivating effect has not survived a
+held-out family test (rule 2), and full-corpus gained/lost IDs are not reported for Corpus 2 — 13 of
+1,700 is not a population (rule 6). Rule 4 is arguable at best: work rose in both populations, bought
+by a single solve.
+
+**A simpler alternative achieves the same Corpus-1 result.** `R00408` is lost because
+`STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` was promoted; turning that flag back off also yields
+94/102 (measured, same day, same protocol) with no new mechanism, no new reserve tier and no added
+work. The recovery's advantage over that revert is narrow and unmeasured: it preserves the adaptive
+budget's own Corpus-2 gain (`R02719`, from a 300-level sample) while adding work everywhere the
+recovery fires. Neither option has full-population Corpus-2 evidence.
+
+The decision that would settle it is a full 1,700-level Corpus-2 A/B of three arms — adaptive budget
+ON (today), ON + recovery, and OFF — which is the only way to compare the work cost against the real
+gain count. Until then the recovery stays opt-in and default OFF, and the underlying question of
+whether the adaptive budget should keep its default-ON status remains open.

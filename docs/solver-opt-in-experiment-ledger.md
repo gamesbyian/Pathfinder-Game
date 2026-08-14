@@ -117,9 +117,21 @@ zero eligible levels. Corpus 1 has 12. See
   `dfs:repair:repair(mustTurnBiased)`, finishing at 37,840,699 total nodes instead of exhausting
   50,000,224. Default-OFF is byte-identical to pre-change (`R00408` FAILED at exactly 50,000,171
   nodes), so the budget restructure is a strict no-op for every production path and existing A/B arm.
-  **Evidence is n=1 — the level it was designed against — so it demonstrates the mechanism works, not
-  that it is net-positive.** Do not promote without a dedicated A/B on BOTH corpora, with Corpus 1 in
-  an arm this time. Candidate population from run #40's corrected diagnostic: 13 Corpus-2 levels where the shrink
+  **A/B COMPLETE (2026-08-14) — SAFE, NOT PROMOTED.** Corpus 1 (all 102): 93→94, **+1 gained
+  (`R00408`), 0 lost**, nodes −1.24% (the gain pays for itself: `R00408` finishes at 37.8M instead of
+  exhausting 50M), work +2.00%. Corpus 2 (13 nominated levels): **7/13 both arms, 0 gained, 0 lost,
+  work +18.9%** — the tier fired on all 6 failing levels at the full 6,000,000-node budget and none
+  solved. Control reproduced the pre-change run byte-identically across all 102 Corpus-1 levels.
+  So the mechanism is safe and correctly targeted, but gains exactly the one level it was designed
+  against, and gains nothing on the Corpus-2 population chosen to be maximally favourable to it —
+  consistent with the same `repairSearchFromGate` plateau that closed
+  `STRATEGY_REPAIR_FALLBACK_NODE_RESERVE`: a near-miss badness does not close just because the tier
+  is handed more nodes. Promotion rules 2 (held-out family test) and 6 (full-corpus gained/lost IDs;
+  13 of 1,700 is not a population) are unmet, and rule 4 is arguable — work rose in both populations
+  for one solve. **A simpler alternative reaches the same Corpus-1 number**: turning
+  `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` back off also gives 94/102, with no new mechanism
+  and no added work; the recovery's only edge is preserving that flag's own Corpus-2 gain (`R02719`,
+  300-level sample), which is unmeasured at population scale. Candidate population from run #40's corrected diagnostic: 13 Corpus-2 levels where the shrink
   fired and the biased TIER then missed within `biasedBestBadness <= 3` — note that is the tier
   failing, not the level: measured at 50M with the recovery off, 7 of the 13 already solve by other
   tiers, so only 6 are gain candidates and the other 7 are regression candidates.
