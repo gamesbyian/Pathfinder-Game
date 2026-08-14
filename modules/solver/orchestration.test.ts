@@ -1338,6 +1338,95 @@ test('an explicit workBudget reproduces the same search and bounds the work spen
     assert.equal(spentB, spentA, 'and spend the same work');
 });
 
+test('strictTotalWorkBudget installs one remaining-work cap across every additive path', async () => {
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, , , prep, , , , , , out] = args;
+        if (prep._metrics) prep._metrics.nodesExpanded += 1;
+        if (out) { out.nodesExpanded = 1; out.timedOut = true; }
+        return null;
+    };
+    const common = {
+        timeBudgetMs: 10_000,
+        nodeBudget: 1_000_000,
+        workBudget: 100_000,
+        attemptBudgetTelemetry: true,
+        attemptSearchForTesting: dispatch,
+    };
+    const legacy = await solveLevel(makeRepairGatedInfeasibleLevel(), common);
+    assert.equal(legacy.attempts.find(attempt => attempt.repairProbe)?.allocatedWorkCeiling, null,
+        'the historical repair probe runs before the main ladder installs a work cap');
+
+    const strict = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        ...common,
+        strictTotalWorkBudget: true,
+        lifecycleTelemetry: true,
+    });
+    const paths = {
+        repairProbe: strict.attempts.find(attempt => attempt.repairProbe),
+        repairFallback: strict.attempts.find(attempt => attempt.repair && !attempt.repairProbe),
+        attractionDiversity: strict.attempts.find(attempt => attempt.attractionDiversity),
+        admissibleOrder: strict.attempts.find(attempt => attempt.admissibleOrder),
+    };
+    for (const [name, attempt] of Object.entries(paths)) {
+        assert.ok(attempt, `${name} must be reached by the controlled dispatch`);
+        assert.ok(attempt.allocatedWorkCeiling != null && attempt.allocatedWorkCeiling <= common.workBudget,
+            `${name} must see the immutable whole-solve cap`);
+        assert.ok(attempt.allocatedNodeCeiling != null, `${name} must record its node allowance`);
+    }
+    const lifecycle = strict.techniqueLifecycle as Record<string, any>;
+    for (const name of ['repair-probe', 'repair-fallback', 'attraction-diversity', 'admissible-order']) {
+        assert.equal(lifecycle[name].mechanicallyEligible, true);
+        assert.equal(lifecycle[name].reached, true);
+        assert.ok(lifecycle[name].attempts > 0);
+        assert.ok(Array.isArray(lifecycle[name].allocatedWorkCeilings));
+        assert.equal(lifecycle[name].actualWork, 0, 'controlled zero-work dispatch must meter exactly');
+    }
+    assert.equal(legacy.techniqueLifecycle, undefined, 'omitting lifecycle telemetry preserves the result shape');
+});
+
+test('lifecycle telemetry separates mechanical eligibility from disabled routing', async () => {
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        nodeBudget: 100,
+        workBudget: 100_000,
+        disableExtraBudgetPasses: true,
+        lifecycleTelemetry: true,
+    });
+    const lifecycle = result.techniqueLifecycle as Record<string, any>;
+    for (const name of ['repair-probe', 'repair-fallback', 'attraction-diversity', 'admissible-order']) {
+        assert.equal(lifecycle[name].mechanicallyEligible, true, `${name} has a mechanics-selected config`);
+        assert.equal(lifecycle[name].skippedByRoutingOrConfiguration, true, `${name} was explicitly disabled`);
+        assert.equal(lifecycle[name].reached, false);
+    }
+});
+
+test('attempt work telemetry sums exactly to whole-level canonical work', async () => {
+    const result = await solveLevel(makeLineLevel() as unknown as NormalizedLevel, {
+        timeBudgetMs: 10_000,
+        workBudget: 200_000,
+        lifecycleTelemetry: true,
+    });
+    const attemptWork = result.attempts.reduce((sum, attempt) => sum + Number(attempt.workSpent), 0);
+    const lifecycleWork = Object.values(result.techniqueLifecycle as Record<string, any>)
+        .reduce((sum: number, lifecycle: any) => sum + Number(lifecycle.actualWork ?? 0), 0);
+    assert.equal(attemptWork, result.workSpent);
+    assert.equal(lifecycleWork, result.workSpent);
+});
+
+test('a zero dispatch-time work allowance is reported as budget starvation, not a deadline timeout', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const prep = prepLevel(level);
+    prep._cfg = null;
+    prep._metrics = { nodesExpanded: 0 };
+    prep._attemptBudgetTelemetry = true;
+    prep._workCap = workMeter.units;
+    const config = getConfiguredAttemptConfigs(level, null).find(candidate => !candidate.repair && !candidate.admissibleOrder)!;
+    const result = await runAttempt(level.gateKeys[0], level, prep, config, 10_000, Date.now(), null, 1000);
+    assert.equal(result.attempt.allocatedWorkCeiling, 0);
+    assert.ok(result.attempt.workSpent! >= 0, 'primitive may spend a bounded check-interval overshoot');
+    assert.equal(result.attempt.outcome, 'budget-starved');
+});
+
 test('timeBudgetMs alone still solves, via a workBudget derived from it', async () => {
     const level = makeLineLevel();
     const res = await solveLevel(level as unknown as NormalizedLevel, { timeBudgetMs: 2000 });

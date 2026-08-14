@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** Read-only differential replay for one recorded parent→variant edge. */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { findFamilyResultRow } from '../family-edge-identity.mjs';
 import path from 'node:path';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { FEATURES } from '../ablation-config.mjs';
@@ -38,7 +39,7 @@ let variantPath = args.get('--path')?.split(',').map(Number);
 let observedRow = null;
 if (args.get('--result')) {
     const document = JSON.parse(readFileSync(args.get('--result'), 'utf8'));
-    observedRow = (document.levels ?? document.results ?? []).find(row => String(row.id ?? row.levelId) === String(edge.variantId)) ?? null;
+    observedRow = findFamilyResultRow(document.levels ?? document.results ?? [], { parentCorpus:manifest.parentCorpus, parentId:manifest.parentLevelId, variantId:edge.variantId });
     if (!variantPath) variantPath = observedRow?.solution ?? observedRow?.path;
 }
 if (!Array.isArray(variantPath)) throw new Error('no successful path supplied or found');

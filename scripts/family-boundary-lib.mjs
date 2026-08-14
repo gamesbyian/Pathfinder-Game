@@ -54,32 +54,59 @@ function concentrationEvidence(parent, solvedRows, configs) {
         successfulSiblingWork: quantiles(solvedRows.filter(v => configOf(v.result) === dominantConfig).map(v => workOf(v.result))) };
 }
 
-/** Last record wins: combined troves can contain an earlier dispatch and its replacement. */
+const parentCorpusOf = row => row?.parentCorpus ?? row?.corpus ?? null;
+const parentIdOf = row => row?.parentId ?? row?.parentLevelId ?? null;
+const variantIdOf = row => row?.variantId ?? row?.id ?? row?.levelId ?? row?.level;
+const edgeKey = (parentCorpus, parentId, variantId) =>
+    `${String(parentCorpus ?? '')}\u0000${String(parentId ?? '')}\u0000${String(variantId)}`;
+
+/** Last record wins within one fully-namespaced edge. Bare ids are retained only for legacy
+ * artifacts and may be resolved only when globally unambiguous. */
 export function dedupeResults(rows) {
     const map = new Map();
     for (const row of rows) {
-        const id = row?.id ?? row?.level ?? row?.levelId;
-        if (id != null) map.set(String(id), row);
+        const id = variantIdOf(row);
+        if (id != null) map.set(edgeKey(parentCorpusOf(row), parentIdOf(row), id), row);
     }
     return map;
+}
+
+function resultLookup(rows) {
+    const exact = dedupeResults(rows);
+    const bare = new Map();
+    for (const row of exact.values()) {
+        if (parentCorpusOf(row) != null || parentIdOf(row) != null) continue;
+        const id = String(variantIdOf(row));
+        if (!bare.has(id)) bare.set(id, []);
+        bare.get(id).push(row);
+    }
+    return (parentCorpus, parentId, variantId) => {
+        const exactRow = exact.get(edgeKey(parentCorpus, parentId, variantId));
+        if (exactRow) return exactRow;
+        const candidates = bare.get(String(variantId)) ?? [];
+        if (candidates.length > 1) {
+            throw new Error(`ambiguous bare variant id ${variantId}; require (parentCorpus,parentId,variantId)`);
+        }
+        return candidates[0] ?? null;
+    };
 }
 
 /** Convert a flat per-attempt artifact into the level-row shape consumed by the report. */
 export function coalesceAttemptRecords(rows) {
     const groups = new Map();
     for (const attempt of rows) {
-        const id = attempt?.variantId ?? attempt?.levelId ?? attempt?.id ?? attempt?.level;
+        const id = variantIdOf(attempt);
         if (id == null) continue;
-        const key = String(id);
+        const key = edgeKey(parentCorpusOf(attempt), parentIdOf(attempt), id);
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key).push(attempt);
     }
-    return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([id, attempts]) => {
+    return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, attempts]) => {
         const winner = attempts.find(a => solved(a));
         const last = attempts.at(-1) ?? {};
         return {
             ...last,
-            id,
+            id: String(variantIdOf(last)),
             ok: !!winner,
             status: winner ? 'success' : last.status ?? 'failed',
             attempts,
@@ -90,21 +117,57 @@ export function coalesceAttemptRecords(rows) {
 }
 
 export function buildBoundaryReport({ manifests = [], canonicalResults = [], variantResults = [], solutionProfileJoins = [], metadata = {}, thresholds = {} }) {
-    const canonical = dedupeResults(canonicalResults);
-    const variants = dedupeResults(variantResults);
+    const requestedVariantEdges = new Map();
+    const requestedParentEdges = new Map();
+    for (const manifest of manifests) {
+        const parentCorpus = manifest.parentCorpus ?? null;
+        const parentId = String(manifest.parentLevelId ?? manifest.parentId ?? '');
+        const parentEdges = requestedParentEdges.get(parentId) ?? new Set();
+        parentEdges.add(edgeKey(parentCorpus, parentId, parentId));
+        requestedParentEdges.set(parentId, parentEdges);
+        for (const variant of manifest.variants ?? []) {
+            const variantId = variant.variantId ?? variant.id;
+            const edges = requestedVariantEdges.get(String(variantId)) ?? new Set();
+            edges.add(edgeKey(parentCorpus, parentId, variantId));
+            requestedVariantEdges.set(String(variantId), edges);
+        }
+    }
+    const legacyVariantIds = new Set(variantResults
+        .filter(row => parentCorpusOf(row) == null && parentIdOf(row) == null)
+        .map(row => String(variantIdOf(row))));
+    const ambiguousLegacyId = [...legacyVariantIds].find(id => (requestedVariantEdges.get(id)?.size ?? 0) > 1);
+    if (ambiguousLegacyId) {
+        throw new Error(`ambiguous bare variant id ${ambiguousLegacyId}; require (parentCorpus,parentId,variantId)`);
+    }
+    const ambiguousCanonicalId = canonicalResults
+        .filter(row => parentCorpusOf(row) == null && parentIdOf(row) == null)
+        .map(row => String(variantIdOf(row)))
+        .find(id => (requestedParentEdges.get(id)?.size ?? 0) > 1);
+    if (ambiguousCanonicalId) {
+        throw new Error(`ambiguous bare parent id ${ambiguousCanonicalId}; require (parentCorpus,parentId)`);
+    }
+    const ambiguousProfileId = solutionProfileJoins
+        .filter(row => row.parentCorpus == null)
+        .find(row => (requestedVariantEdges.get(String(row.variantId))?.size ?? 0) > 1);
+    if (ambiguousProfileId) {
+        throw new Error(`ambiguous profile edge ${ambiguousProfileId.variantId}; require parentCorpus`);
+    }
+    const canonical = resultLookup(canonicalResults);
+    const variants = resultLookup(variantResults);
     const spreadThreshold = finite(thresholds.severeWorkRatio) ?? 10;
     const concentrationThreshold=finite(thresholds.configConcentration)??0.75;
     const fragileThreshold=finite(thresholds.minFragileSolveRate)??0;
-    const profileByEdge=new Map(solutionProfileJoins.map(r=>[`${r.parentId}|${r.variantId}`,r]));
+    const profileByEdge=new Map(solutionProfileJoins.map(r=>[edgeKey(r.parentCorpus, r.parentId, r.variantId),r]));
     const families = [];
     const missingFamilyRows = [];
     const mutationRows = [];
 
     for (const manifest of [...manifests].sort((a, b) => String(a.parentLevelId).localeCompare(String(b.parentLevelId)) || String(a.familyId).localeCompare(String(b.familyId)))) {
         const parentId = String(manifest.parentLevelId ?? manifest.parentId ?? '');
-        const parent = canonical.get(parentId) ?? null;
+        const parentCorpus = manifest.parentCorpus ?? null;
+        const parent = canonical(parentCorpus, parentId, parentId);
         const relation = manifest.familyMode ?? manifest.relation ?? null;
-        const listed = (manifest.variants ?? []).map(v => ({ manifest: v, result: variants.get(String(v.variantId ?? v.id)) ?? null }));
+        const listed = (manifest.variants ?? []).map(v => ({ manifest: v, result: variants(parentCorpus, parentId, v.variantId ?? v.id) }));
         for (const v of listed) if (!v.result) missingFamilyRows.push({ parentId, variantId: v.manifest.variantId ?? v.manifest.id });
         const observed = listed.filter(v => v.result);
         const solvedRows = observed.filter(v => solved(v.result));
@@ -124,7 +187,8 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
             attemptCount: Array.isArray(v.result?.attempts) ? v.result.attempts.length : v.result?.attemptCount ?? null,
             workBudget: finite(v.result?.workBudget),
             deadlineTruncated: v.result?.deadlineTruncated ?? null,
-            solutionProfile: profileByEdge.get(`${parentId}|${v.manifest.variantId ?? v.manifest.id}`) ?? null,
+            solutionProfile: profileByEdge.get(edgeKey(parentCorpus, parentId, v.manifest.variantId ?? v.manifest.id))
+                ?? profileByEdge.get(edgeKey(null, parentId, v.manifest.variantId ?? v.manifest.id)) ?? null,
         }));
         const base = { familyId: manifest.familyId ?? null, parentId, relation, canonicalSolved: parent ? parentSolved : null,
             canonicalWork: parentWork, variantCount: listed.length, observedVariantCount: observed.length,
@@ -137,7 +201,7 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
             features: manifest.features ?? manifest.parentFeatures ?? { reqInt: manifest.selectedWitnessIntersectionCount ?? null, navDensity: manifest.parentNavDensity ?? null } };
         for (const v of observed) {
             const mode=v.manifest.mutationManifest?.operation??relation??'unknown', objectType=v.manifest.mutationManifest?.objectType??null, childSolved=solved(v.result), childWork=workOf(v.result);
-            mutationRows.push({relation,mode,objectType,parentSolved,variantSolved:childSolved,rescue:!parentSolved&&childSolved,flip:parent?parentSolved!==childSolved:null,
+            mutationRows.push({relation,mode,objectType,parentSolved:parent ? parentSolved : null,variantSolved:childSolved,rescue:parent ? !parentSolved&&childSolved : null,flip:parent?parentSolved!==childSolved:null,
                 workRatio:parentSolved&&childSolved&&parentWork&&childWork?childWork/parentWork:null,configSwitch:parentSolved&&childSolved&&configOf(parent)?configOf(parent)!==configOf(v.result):null});
         }
         if (relation === 'symmetry') {
@@ -164,7 +228,7 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
                 bestOrientationWork: Number.isFinite(best) ? best : null,
                 canonicalBestWorkRatio: parentSolved && parentWork !== null && Number.isFinite(best) && best > 0 ? parentWork / best : null,
                 solvedWorkSpreadRatio, severeCostSpread: solvedWorkSpreadRatio !== null ? solvedWorkSpreadRatio >= spreadThreshold : null,
-                regretKind: !parentSolved && solvedOrientations.length ? 'solve-status-cliff' : (parentSolved ? 'numeric' : null),
+                regretKind: parent && !parentSolved && solvedOrientations.length ? 'solve-status-cliff' : (parentSolved ? 'numeric' : null),
                 canonicalFailureSymmetrySuccess: parent === null ? null : !parentSolved && solvedOrientations.length > 0 });
         } else {
             const modeGroups = {};
@@ -177,7 +241,7 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
             const ratios = parentSolved && parentWork ? works.map(w => w / parentWork) : [];
             families.push({ ...base, kind: 'non-symmetry', modeBreakdown: Object.fromEntries(Object.entries(modeGroups).sort(([a], [b]) => a.localeCompare(b))),
                 workRatios: quantiles(ratios), configSwitchRate: parentSolved && configOf(parent) && solvedRows.length ? solvedRows.filter(v => configOf(v.result) !== configOf(parent)).length / solvedRows.length : null,
-                evidence: !parentSolved && observed.length ? { fragilitySolveRate: solvedRows.length / observed.length, robustFailureRate: (observed.length - solvedRows.length) / observed.length } : null });
+                evidence: parent && !parentSolved && observed.length ? { fragilitySolveRate: solvedRows.length / observed.length, robustFailureRate: (observed.length - solvedRows.length) / observed.length } : null });
         }
     }
 
@@ -186,9 +250,9 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
         if (!family.canonicalSolved || !family.canonicalWork) continue;
         const manifest = manifests.find(m => m.familyId === family.familyId);
         for (const v of manifest?.variants ?? []) {
-            const row = variants.get(String(v.variantId ?? v.id)); const w = workOf(row);
+            const row = variants(family.provenance.parentCorpus, family.parentId, v.variantId ?? v.id); const w = workOf(row);
             if (!solved(row) || !w || w === family.canonicalWork) continue;
-            cliffs.push({ parentId: family.parentId, variantId: v.variantId ?? v.id, relation: family.relation,
+            cliffs.push({ parentCorpus: family.provenance.parentCorpus, parentId: family.parentId, variantId: v.variantId ?? v.id, relation: family.relation,
                 direction: w > family.canonicalWork ? 'variant-more-work' : 'variant-less-work', ratio: Math.max(w, family.canonicalWork) / Math.min(w, family.canonicalWork), canonicalWork: family.canonicalWork, variantWork: w });
         }
     }
@@ -203,20 +267,21 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
         if (f.kind === 'symmetry' && f.canonicalFailureSymmetrySuccess) add(1,'symmetry-pathology',f.solvedOrientationCount);
         if (f.kind === 'symmetry' && f.solveStatusConsistent === false) add(2,'symmetry-pathology',f.solvedOrientationCount);
         if (f.kind === 'symmetry' && (f.solvedWorkSpreadRatio ?? 0) >= spreadThreshold) add(3,'symmetry-pathology',f.solvedWorkSpreadRatio);
-        if (f.kind === 'non-symmetry' && !f.canonicalSolved && f.solveRate > fragileThreshold) {
+        if (f.kind === 'non-symmetry' && f.canonicalSolved === false && f.solveRate > fragileThreshold) {
             add(4,'variant-fragile',f.solveRate);
             const stable=solvedVariants.find(v=>v.solutionProfile?.classification==='small-solution-space-change');
             if(stable)add(4,'solution-space-stable-search-failure',f.solveRate,stable);
         }
         if (f.winningConfigs.concentration !== null && f.winningConfigs.concentration >= concentrationThreshold) add(5,'variant-config-concentration',f.winningConfigs.concentration);
-        if (f.kind === 'non-symmetry' && !f.canonicalSolved && f.solveRate === 0) add(7,'variant-robust',f.variantCount,f.variants[0]??null);
+        if (f.kind === 'non-symmetry' && f.canonicalSolved === false && f.solveRate === 0) add(7,'variant-robust',f.variantCount,f.variants[0]??null);
     }
-    for(const c of cliffs)c.solutionProfile=profileByEdge.get(`${c.parentId}|${c.variantId}`)??null;
+    for(const c of cliffs)c.solutionProfile=profileByEdge.get(edgeKey(c.parentCorpus, c.parentId, c.variantId))
+        ??profileByEdge.get(edgeKey(null, c.parentId, c.variantId))??null;
     for (const c of cliffs.filter(c => c.ratio >= spreadThreshold)) queue.push({ priority: 6, findingType: c.solutionProfile?.classification==='small-solution-space-change'?'solution-space-stable-search-failure':'variant-cost-cliff', parentId: c.parentId, variantId: c.variantId, relation:c.relation,score: c.ratio,solutionProfile:c.solutionProfile });
     queue.sort((a, b) => a.priority - b.priority || b.score - a.score || a.parentId.localeCompare(b.parentId) || String(a.variantId ?? '').localeCompare(String(b.variantId ?? '')));
     const conditioned=new Map();
     for(const row of mutationRows){const key=`${row.relation??'unknown'}|${row.mode}|${row.objectType??'all'}`;if(!conditioned.has(key))conditioned.set(key,[]);conditioned.get(key).push(row);}
-    const mutationSummaries=[...conditioned.entries()].map(([key,rows])=>{const comparable=field=>rows.filter(r=>r[field]!==null),failedParents=rows.filter(r=>!r.parentSolved);const wr=quantiles(rows.map(r=>r.workRatio));return{key,relation:rows[0].relation,mode:rows[0].mode,objectType:rows[0].objectType,count:rows.length,
+    const mutationSummaries=[...conditioned.entries()].map(([key,rows])=>{const comparable=field=>rows.filter(r=>r[field]!==null),failedParents=rows.filter(r=>r.parentSolved===false);const wr=quantiles(rows.map(r=>r.workRatio));return{key,relation:rows[0].relation,mode:rows[0].mode,objectType:rows[0].objectType,count:rows.length,
         rescueRate:failedParents.length?failedParents.filter(r=>r.rescue).length/failedParents.length:null,solveStatusFlipRate:comparable('flip').length?comparable('flip').filter(r=>r.flip).length/comparable('flip').length:null,
         winningConfigSwitchRate:comparable('configSwitch').length?comparable('configSwitch').filter(r=>r.configSwitch).length/comparable('configSwitch').length:null,workRatios:wr};}).sort((a,b)=>a.key.localeCompare(b.key));
     return { schemaVersion: 2, metadata: { ...metadata, schedulerCensoringWarning: 'Winning configs are scheduler-censored observations, not independent config success probabilities.', thresholds: { severeWorkRatio: spreadThreshold,configConcentration:concentrationThreshold,minFragileSolveRate:fragileThreshold }, solvesExecuted: false }, families, mutationSummaries, costCliffs: cliffs, actionableQueue: queue, diagnostics: { missingFamilyRows: missingFamilyRows.sort((a,b) => a.parentId.localeCompare(b.parentId) || String(a.variantId).localeCompare(String(b.variantId))) } };

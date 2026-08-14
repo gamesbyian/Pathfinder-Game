@@ -188,3 +188,73 @@ promotion are correctly wired, a batch tool that constructs a sparse `--enable-f
 object can silently change *other* flags' effective state too, whenever those other flags' registry
 membership has changed but their own read sites haven't been fixed yet. Any A/B run during a window
 when another flag's promotion is only half-done is at risk of exactly this cross-contamination.
+
+## 2026-08-13 existing-technique tuning campaign follow-up
+
+> **Historical checkpoint; validity wording superseded by the 2026-08-14 audit immediately below.** In particular, ETT-010/011 are targeted diagnostics, not independently verifiable preregistrations or decision-bearing evidence.
+
+A current-main level-blind campaign measured 23 complete arms plus one interrupted arm (484 level invocations / 1,877 internal attempts). Production admissible-order versus OFF finished 46/60 versus 44/60 across three disjoint exploratory published slices (three gains / one loss), demonstrating both complementarity and displacement on those samples. Two reserve-curve slices then put 0.15 at 27/40 versus production 0.25 at 26/40 with 8.2% less work; 0.35 had already matched 0.25's solved set at higher work.  A subsequently pre-registered mechanics-enriched pilot (`ETT-010`, protocol committed before execution) preserved 19/20 solves and reduced total work 12.6% at reserve 0.15 versus 0.25, but only 1/20 levels reached admissible order; it satisfies its escalation rule while remaining far too reach-sparse for promotion. A second pre-registered hard Corpus-2 pilot (`ETT-011`) reached admissible order on 20/20 levels but solved 0/20 in both arms; reserve 0.15 increased work 7.7% versus 0.25 and failed its escalation rule. This closes immediate 0.15 promotion and shows the response is population-dependent. **Validity/disposition:** the original ETT-001–009 manifest was reconstructed after execution, so those arms are targeted diagnostics, not decision-bearing A/B evidence. ETT-010 and ETT-011 were separately committed before execution and are decision-bearing pilots; their opposed cost results leave the disposition unchanged/double-edged. Do not run an unchanged broad 0.15/0.25 A/B next: the paired audit now identifies repair-stack eligibility as the leading interaction: 19/20 hard levels routed released nodes into repair and work worsened on 20/20. Confirm the sign reversal on pre-registered repair-eligible versus repair-ineligible mechanics strata before considering a conditional reserve; no immediate production change. Diverse-beam and repair-probe ablations remained reach-context nulls. See [`reports/2026-08-13-existing-technique-tuning-experimental-campaign.md`](../reports/2026-08-13-existing-technique-tuning-experimental-campaign.md).
+
+### 2026-08-14 ETT protocol/work-budget audit
+
+Post-merge audit downgrades ETT-010/011 from decision-bearing: their abbreviated protocol commits were
+not preserved by a persistent GitHub ref/permalink. ETT-011 is also reclassified as node-budget
+matched with work as an outcome, not equal-work enforced (19/20 levels in each arm exceeded the
+nominal work value). The +7.7% work and repair-node transfer remain a useful targeted mechanism result,
+but no promotion inference follows. Production remains unchanged; strict whole-solve work enforcement
+is experiment-only. Generic reserve sweeps are paused pending explicit reach/progress telemetry and a
+properly persisted matched repair-eligibility protocol.
+
+#### Lifecycle telemetry checkpoint (2026-08-14)
+
+`--lifecycle-telemetry` is now an opt-in, production-inert capability-sweep diagnostic. It records
+technique eligibility/reach and explicit stop/skip/starvation states plus allocated ceilings and
+available progress snapshots; the campaign validator rejects missing lifecycle fields. No treatment
+arm was run in this batch. Validate the schema on a small no-treatment dry run before reopening any
+routing or reserve comparison.
+
+#### Lifecycle work accounting validated (ETT-014–016)
+
+ETT-014 was invalidated by an ordering/eligibility classification defect; ETT-015 confirmed the fix;
+ETT-016 confirmed that attempt work, lifecycle work, and level work agree exactly on 8/8 rows. Treat
+all three as one instrumentation hypothesis family. No policy treatment or promotion evidence was
+produced. Legacy work exceeded the declared pool on 4/8 rows, so future equal-work experiments must
+use the opt-in strict whole-solve cap.
+
+#### Strict whole-solve work diagnostics (ETT-018/019)
+
+ETT-018 was invalidated: admissible-order did not check the experiment-only cap inside its DFS loop,
+so strict and legacy were byte-identical while strict exceeded its nominal ceiling by up to 1.13M
+work. After an opt-in-only admissible check and regression test, ETT-019 preserved 4/8 solves and cut
+work 52.1% / nodes 33.6%; the substantial cuts were all on failures and mainly admissible-order.
+Checkpoint overshoot was 298–1,072 units (validator tolerance 4,096). This validates the diagnostic
+mode, not solve safety. No production change; next test must be held-out and balance later-tier winners
+against earlier-tier controls under a persistent GitHub protocol ref.
+
+#### Strict-cap winner retention (ETT-020, 2026-08-14)
+
+A cold targeted phase-balanced diagnostic retained 8/8 historical winners under legacy scheduling but
+only 6/8 under the experiment-only 400,000-work strict cap. Both losses (P00085, P00099) were
+admissible-order winners; five early/repair controls and the cheaper admissible P00156 were retained.
+Strict reduced work 28.5% and nodes 13.1%, with maximum checkpoint overshoot 1,788, but fails its
+predeclared no-loss escalation rule. Close the current cap form; do not promote or run a population
+A/B. The protocol was only locally frozen, so this remains targeted diagnostic evidence.
+
+
+#### Comparison-role audit (2026-08-14)
+
+The campaign aggregate formerly inferred treatment/control from artifact list order. That inverted the
+ETT-018/019 strict-work labels (without changing their equal solved sets). Their post-run manifest
+entries now explicitly identify legacy control and strict treatment, and the analyzer regression suite
+pins direction for ETT-018 through ETT-020. New paired work must declare roles; never interpret delta
+signs from filename/list order.
+
+
+#### Corrected Phase-C sibling boundary (ETT-026/027)
+
+ETT-026 was invalidated because absent canonical rows were treated as canonical failures. ETT-027
+kept canonical status unknown and found historical solve-status disagreement in 8/11 symmetry parent
+families at one 20s source run. Strongest sibling rates were R02795 5/7, R00156 and R02960 4/7, and
+R02248 3/7. Treat these as four parent-family nominations, not independent sibling wins. A cold
+current-main retest requires canonical plus all siblings, one persistent protocol ref, and no
+production orientation retry proposal.

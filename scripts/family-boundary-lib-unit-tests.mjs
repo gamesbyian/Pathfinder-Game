@@ -57,4 +57,40 @@ assert.deepEqual(report.families.map(x=>x.parentId),again.families.map(x=>x.pare
 assert.match(renderBoundaryMarkdown(report),/Actionable queue/);
 const missing=buildBoundaryReport({manifests:[{familyId:'x',parentLevelId:'X',familyMode:'swap',variants:[{variantId:'missing'}]}]});
 assert.deepEqual(missing.diagnostics.missingFamilyRows,[{parentId:'X',variantId:'missing'}]);
+const missingCanonical=buildBoundaryReport({
+ manifests:[{familyId:'x',parentLevelId:'X',familyMode:'swap',variants:[{variantId:'child'}]}],
+ variantResults:[{id:'child',ok:true}],
+});
+assert.equal(missingCanonical.families[0].canonicalSolved,null);
+assert.equal(missingCanonical.families[0].evidence,null);
+assert.equal(missingCanonical.mutationSummaries[0].rescueRate,null);
+assert.equal(missingCanonical.actionableQueue.some(row => row.findingType==='variant-fragile' || row.findingType==='variant-robust'),false,
+    'missing canonical evidence is not treated as a canonical failure');
+const collisionManifests = [
+ { familyId:'r', parentCorpus:'corpus-1', parentLevelId:'R00064', familyMode:'symmetry', variants:[{variantId:'F00064-sym-01'}] },
+ { familyId:'s', parentCorpus:'corpus-1', parentLevelId:'S00064', familyMode:'symmetry', variants:[{variantId:'F00064-sym-01'}] },
+];
+const collisionReport = buildBoundaryReport({ manifests:collisionManifests, variantResults:[
+ { parentCorpus:'corpus-1', parentId:'R00064', variantId:'F00064-sym-01', ok:true, workSpent:10 },
+ { parentCorpus:'corpus-1', parentId:'S00064', variantId:'F00064-sym-01', ok:false, workSpent:20 },
+] });
+assert.equal(collisionReport.families.find(f=>f.parentId==='R00064').solvedCount,1);
+assert.equal(collisionReport.families.find(f=>f.parentId==='S00064').solvedCount,0);
+assert.throws(() => buildBoundaryReport({ manifests:collisionManifests, variantResults:[
+ // Even one legacy row is ambiguous when two manifest edges request its bare id.
+ { id:'F00064-sym-01', ok:true },
+] }), /ambiguous bare variant id/);
+const noCrossParentFallback = buildBoundaryReport({
+ manifests:[{familyId:'r',parentCorpus:'corpus-1',parentLevelId:'R00064',familyMode:'symmetry',variants:[{variantId:'only-s'}]}],
+ variantResults:[{parentCorpus:'corpus-1',parentId:'S00064',variantId:'only-s',ok:true}],
+});
+assert.equal(noCrossParentFallback.families[0].observedVariantCount,0,
+    'a uniquely named but namespaced row must never fall back across parents');
+assert.throws(() => buildBoundaryReport({
+ manifests:[
+  {familyId:'c1',parentCorpus:'corpus-1',parentLevelId:'shared',variants:[]},
+  {familyId:'c2',parentCorpus:'corpus-2',parentLevelId:'shared',variants:[]},
+ ],
+ canonicalResults:[{id:'shared',ok:true}],
+}), /ambiguous bare parent id/);
 console.log('family-boundary-lib: all tests passed');

@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';import {mkdtemp,readFile,rm,writeFile,mkdir}from'node:fs/promises';import os from'node:os';import path from'node:path';
 import{execFile as execFileCb}from'node:child_process';import{promisify}from'node:util';import{fileURLToPath}from'node:url';const execFile=promisify(execFileCb),ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-import {PACK}from'../modules/domain/cell-key.ts';import{mergeVariantDerivedHint,replayVariantPath}from'./family-parent-hint-replay-lib.mjs';
+import {PACK}from'../modules/domain/cell-key.ts';import{findFamilyResultRow}from'./family-edge-identity.mjs';import{mergeVariantDerivedHint,replayVariantPath}from'./family-parent-hint-replay-lib.mjs';
 import{normalizeRawLevel}from'../modules/solver/normalization.ts';import{validateCandidatePath}from'../modules/domain/path-validator.ts';
+const identity={parentCorpus:'c',parentId:'P',variantId:'V'};
+assert.equal(findFamilyResultRow([{parentCorpus:'c',parentId:'P',variantId:'V',ok:true}],identity).ok,true);
+assert.equal(findFamilyResultRow([{parentCorpus:'c',parentId:'OTHER',variantId:'V',ok:true}],identity),null,'namespaced rows never cross parents');
+assert.equal(findFamilyResultRow([{id:'V',ok:true}],identity).ok,true,'one legacy bare row remains readable');
+assert.throws(()=>findFamilyResultRow([{id:'V'},{levelId:'V'}],identity),/ambiguous bare variant id/);
+assert.throws(()=>findFamilyResultRow([{parentCorpus:'c',parentId:'P',variantId:'V'},{corpus:'c',parentLevelId:'P',id:'V'}],identity),/duplicate namespaced family result/);
 const parent={grid:{w:3,h:3}},canonical=[PACK(0,0),PACK(1,0)],variant=[PACK(2,0),PACK(1,0)];
 const valid=(_l,p)=>({ok:p.join(',')===canonical.join(','),reason:'bad'});
 const accepted=replayVariantPath({parentLevel:parent,variantPath:variant,edge:{relation:'symmetry',mutationManifest:{operation:'transform',variant:4}},validate:valid});assert.equal(accepted.accepted,true);
