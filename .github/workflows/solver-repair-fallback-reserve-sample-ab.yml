@@ -14,6 +14,9 @@
 # -> same sample, always (reproducible, matching scripts/stress/benchmark.mjs's --sample=N --seed=
 # convention).
 #
+# CORPUS INVARIANT: every arm also runs all of Corpus 1 and all published levels; the targeted
+# sample applies only to expensive Corpus 2. scripts/plan-ab-corpus-shards.mjs owns this shared policy.
+#
 # CAPABILITY INVARIANT (same as solver-stress-refresh.yml): uses scripts/level-blind-capability-
 # sweep.mjs, never the history-aware research sweep. Never persists hints, never touches
 # logs/stress-corpus2-baseline.json / data/level-heatmaps.json (those represent FULL-corpus truth --
@@ -115,23 +118,9 @@ jobs:
         id: plan
         shell: bash
         run: |
-          node - "${{ inputs.shard_count }}" <<'NODE'
-          const fs = require('node:fs');
-          const shardCount = Math.max(1, Number(process.argv[2] || 20));
-          const tokens = fs.readFileSync('logs/solver-repair-fallback-reserve-sample/sample.txt', 'utf8')
-            .split('\n').map(s => s.trim()).filter(Boolean)
-            .map(t => t.replace(/^pos:/, ''));
-          const shards = [];
-          for (let i = 0; i < shardCount; i++) {
-            const slice = tokens.filter((_, idx) => idx % shardCount === i);
-            if (slice.length === 0) continue;
-            shards.push({ idx: String(i + 1).padStart(2, '0'), levels: 'pos:' + slice.join(',') });
-          }
-          fs.writeFileSync(process.env.GITHUB_OUTPUT, `shards=${JSON.stringify({ shard: shards })}\n`, { flag: 'a' });
-          fs.writeFileSync(process.env.GITHUB_OUTPUT, `shard_count=${shards.length}\n`, { flag: 'a' });
-          fs.writeFileSync(process.env.GITHUB_OUTPUT, `total_levels=${tokens.length}\n`, { flag: 'a' });
-          console.log(`Planned ${shards.length} shards covering ${tokens.length} levels.`);
-          NODE
+          node scripts/plan-ab-corpus-shards.mjs \
+            --corpus2-sample="logs/solver-repair-fallback-reserve-sample/sample.txt" \
+            --corpus2-shards="${{ inputs.shard_count }}"
 
       - name: Upload the sample + shard plan for traceability
         uses: actions/upload-artifact@v4
@@ -179,7 +168,7 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
-            --corpus=data/stress/stress-levels-random.json \
+            --corpus="${{ matrix.shard.corpus }}" \
             --levels="${{ matrix.shard.levels }}" \
             --budget-ms="${DEADLINE}" \
             --node-budget="${{ inputs.node_budget }}" \
@@ -245,7 +234,7 @@ jobs:
           mkdir -p logs/solver-repair-fallback-reserve-sample reports/stress
           cp -a artifact-staging/downloaded/. logs/solver-repair-fallback-reserve-sample/
           FILES=$(ls logs/solver-repair-fallback-reserve-sample/batch-*.json 2>/dev/null | paste -sd, -)
-          [ -n "$FILES" ] && npm run solver:combine-corpus2-batches -- --in="${FILES}" --out=reports/stress/repair-fallback-reserve-sample-ab.json
+          [ -n "$FILES" ] && npm run solver:combine-corpus2-batches -- --allow-mixed-corpora --in="${FILES}" --out=reports/stress/repair-fallback-reserve-sample-ab.json
 
       - name: Verify complete coverage
         id: coverage
