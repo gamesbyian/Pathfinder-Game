@@ -248,3 +248,13 @@ ETT-018/019 strict-work labels (without changing their equal solved sets). Their
 entries now explicitly identify legacy control and strict treatment, and the analyzer regression suite
 pins direction for ETT-018 through ETT-020. New paired work must declare roles; never interpret delta
 signs from filename/list order.
+
+
+#### Corrected Phase-C sibling boundary (ETT-026/027)
+
+ETT-026 was invalidated because absent canonical rows were treated as canonical failures. ETT-027
+kept canonical status unknown and found historical solve-status disagreement in 8/11 symmetry parent
+families at one 20s source run. Strongest sibling rates were R02795 5/7, R00156 and R02960 4/7, and
+R02248 3/7. Treat these as four parent-family nominations, not independent sibling wins. A cold
+current-main retest requires canonical plus all siblings, one persistent protocol ref, and no
+production orientation retry proposal.

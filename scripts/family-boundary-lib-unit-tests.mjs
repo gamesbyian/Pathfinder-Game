@@ -57,6 +57,15 @@ assert.deepEqual(report.families.map(x=>x.parentId),again.families.map(x=>x.pare
 assert.match(renderBoundaryMarkdown(report),/Actionable queue/);
 const missing=buildBoundaryReport({manifests:[{familyId:'x',parentLevelId:'X',familyMode:'swap',variants:[{variantId:'missing'}]}]});
 assert.deepEqual(missing.diagnostics.missingFamilyRows,[{parentId:'X',variantId:'missing'}]);
+const missingCanonical=buildBoundaryReport({
+ manifests:[{familyId:'x',parentLevelId:'X',familyMode:'swap',variants:[{variantId:'child'}]}],
+ variantResults:[{id:'child',ok:true}],
+});
+assert.equal(missingCanonical.families[0].canonicalSolved,null);
+assert.equal(missingCanonical.families[0].evidence,null);
+assert.equal(missingCanonical.mutationSummaries[0].rescueRate,null);
+assert.equal(missingCanonical.actionableQueue.some(row => row.findingType==='variant-fragile' || row.findingType==='variant-robust'),false,
+    'missing canonical evidence is not treated as a canonical failure');
 const collisionManifests = [
  { familyId:'r', parentCorpus:'corpus-1', parentLevelId:'R00064', familyMode:'symmetry', variants:[{variantId:'F00064-sym-01'}] },
  { familyId:'s', parentCorpus:'corpus-1', parentLevelId:'S00064', familyMode:'symmetry', variants:[{variantId:'F00064-sym-01'}] },

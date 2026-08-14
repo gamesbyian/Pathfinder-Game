@@ -201,7 +201,7 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
             features: manifest.features ?? manifest.parentFeatures ?? { reqInt: manifest.selectedWitnessIntersectionCount ?? null, navDensity: manifest.parentNavDensity ?? null } };
         for (const v of observed) {
             const mode=v.manifest.mutationManifest?.operation??relation??'unknown', objectType=v.manifest.mutationManifest?.objectType??null, childSolved=solved(v.result), childWork=workOf(v.result);
-            mutationRows.push({relation,mode,objectType,parentSolved,variantSolved:childSolved,rescue:!parentSolved&&childSolved,flip:parent?parentSolved!==childSolved:null,
+            mutationRows.push({relation,mode,objectType,parentSolved:parent ? parentSolved : null,variantSolved:childSolved,rescue:parent ? !parentSolved&&childSolved : null,flip:parent?parentSolved!==childSolved:null,
                 workRatio:parentSolved&&childSolved&&parentWork&&childWork?childWork/parentWork:null,configSwitch:parentSolved&&childSolved&&configOf(parent)?configOf(parent)!==configOf(v.result):null});
         }
         if (relation === 'symmetry') {
@@ -228,7 +228,7 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
                 bestOrientationWork: Number.isFinite(best) ? best : null,
                 canonicalBestWorkRatio: parentSolved && parentWork !== null && Number.isFinite(best) && best > 0 ? parentWork / best : null,
                 solvedWorkSpreadRatio, severeCostSpread: solvedWorkSpreadRatio !== null ? solvedWorkSpreadRatio >= spreadThreshold : null,
-                regretKind: !parentSolved && solvedOrientations.length ? 'solve-status-cliff' : (parentSolved ? 'numeric' : null),
+                regretKind: parent && !parentSolved && solvedOrientations.length ? 'solve-status-cliff' : (parentSolved ? 'numeric' : null),
                 canonicalFailureSymmetrySuccess: parent === null ? null : !parentSolved && solvedOrientations.length > 0 });
         } else {
             const modeGroups = {};
@@ -241,7 +241,7 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
             const ratios = parentSolved && parentWork ? works.map(w => w / parentWork) : [];
             families.push({ ...base, kind: 'non-symmetry', modeBreakdown: Object.fromEntries(Object.entries(modeGroups).sort(([a], [b]) => a.localeCompare(b))),
                 workRatios: quantiles(ratios), configSwitchRate: parentSolved && configOf(parent) && solvedRows.length ? solvedRows.filter(v => configOf(v.result) !== configOf(parent)).length / solvedRows.length : null,
-                evidence: !parentSolved && observed.length ? { fragilitySolveRate: solvedRows.length / observed.length, robustFailureRate: (observed.length - solvedRows.length) / observed.length } : null });
+                evidence: parent && !parentSolved && observed.length ? { fragilitySolveRate: solvedRows.length / observed.length, robustFailureRate: (observed.length - solvedRows.length) / observed.length } : null });
         }
     }
 
@@ -267,13 +267,13 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
         if (f.kind === 'symmetry' && f.canonicalFailureSymmetrySuccess) add(1,'symmetry-pathology',f.solvedOrientationCount);
         if (f.kind === 'symmetry' && f.solveStatusConsistent === false) add(2,'symmetry-pathology',f.solvedOrientationCount);
         if (f.kind === 'symmetry' && (f.solvedWorkSpreadRatio ?? 0) >= spreadThreshold) add(3,'symmetry-pathology',f.solvedWorkSpreadRatio);
-        if (f.kind === 'non-symmetry' && !f.canonicalSolved && f.solveRate > fragileThreshold) {
+        if (f.kind === 'non-symmetry' && f.canonicalSolved === false && f.solveRate > fragileThreshold) {
             add(4,'variant-fragile',f.solveRate);
             const stable=solvedVariants.find(v=>v.solutionProfile?.classification==='small-solution-space-change');
             if(stable)add(4,'solution-space-stable-search-failure',f.solveRate,stable);
         }
         if (f.winningConfigs.concentration !== null && f.winningConfigs.concentration >= concentrationThreshold) add(5,'variant-config-concentration',f.winningConfigs.concentration);
-        if (f.kind === 'non-symmetry' && !f.canonicalSolved && f.solveRate === 0) add(7,'variant-robust',f.variantCount,f.variants[0]??null);
+        if (f.kind === 'non-symmetry' && f.canonicalSolved === false && f.solveRate === 0) add(7,'variant-robust',f.variantCount,f.variants[0]??null);
     }
     for(const c of cliffs)c.solutionProfile=profileByEdge.get(edgeKey(c.parentCorpus, c.parentId, c.variantId))
         ??profileByEdge.get(edgeKey(null, c.parentId, c.variantId))??null;
@@ -281,7 +281,7 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
     queue.sort((a, b) => a.priority - b.priority || b.score - a.score || a.parentId.localeCompare(b.parentId) || String(a.variantId ?? '').localeCompare(String(b.variantId ?? '')));
     const conditioned=new Map();
     for(const row of mutationRows){const key=`${row.relation??'unknown'}|${row.mode}|${row.objectType??'all'}`;if(!conditioned.has(key))conditioned.set(key,[]);conditioned.get(key).push(row);}
-    const mutationSummaries=[...conditioned.entries()].map(([key,rows])=>{const comparable=field=>rows.filter(r=>r[field]!==null),failedParents=rows.filter(r=>!r.parentSolved);const wr=quantiles(rows.map(r=>r.workRatio));return{key,relation:rows[0].relation,mode:rows[0].mode,objectType:rows[0].objectType,count:rows.length,
+    const mutationSummaries=[...conditioned.entries()].map(([key,rows])=>{const comparable=field=>rows.filter(r=>r[field]!==null),failedParents=rows.filter(r=>r.parentSolved===false);const wr=quantiles(rows.map(r=>r.workRatio));return{key,relation:rows[0].relation,mode:rows[0].mode,objectType:rows[0].objectType,count:rows.length,
         rescueRate:failedParents.length?failedParents.filter(r=>r.rescue).length/failedParents.length:null,solveStatusFlipRate:comparable('flip').length?comparable('flip').filter(r=>r.flip).length/comparable('flip').length:null,
         winningConfigSwitchRate:comparable('configSwitch').length?comparable('configSwitch').filter(r=>r.configSwitch).length/comparable('configSwitch').length:null,workRatios:wr};}).sort((a,b)=>a.key.localeCompare(b.key));
     return { schemaVersion: 2, metadata: { ...metadata, schedulerCensoringWarning: 'Winning configs are scheduler-censored observations, not independent config success probabilities.', thresholds: { severeWorkRatio: spreadThreshold,configConcentration:concentrationThreshold,minFragileSolveRate:fragileThreshold }, solvesExecuted: false }, families, mutationSummaries, costCliffs: cliffs, actionableQueue: queue, diagnostics: { missingFamilyRows: missingFamilyRows.sort((a,b) => a.parentId.localeCompare(b.parentId) || String(a.variantId).localeCompare(String(b.variantId))) } };

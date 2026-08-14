@@ -73,4 +73,31 @@ for (const id of ['ETT-018','ETT-019','ETT-020']) {
     assert.match(comparison.control, /legacy\.json$/);
     assert.match(comparison.treatment, /strict\.json$/);
 }
+const familyInputAudit = JSON.parse(readFileSync(path.join(campaign,'ett-023-family-input-audit.json')));
+assert.equal(familyInputAudit.counts.familyManifestFiles, 161);
+assert.equal(familyInputAudit.counts.schemaDetectedFamilyResultDocuments, 63);
+assert.equal(familyInputAudit.counts.schemaDetectedFamilyRows, 911);
+assert.equal(familyInputAudit.counts.fullyNamespacedFamilyRows, 0);
+assert.equal(familyInputAudit.counts.documentsWithMissingDeclaredCorpus, 1);
+assert.match(familyInputAudit.disposition, /^blocked on identity\/provenance:/);
+const familyIdentityAudit = JSON.parse(readFileSync(path.join(campaign,'ett-024-family-identity-audit.json')));
+assert.equal(familyIdentityAudit.manifestFiles, 161);
+assert.equal(familyIdentityAudit.distinctVariantIds, 1237);
+assert.deepEqual(familyIdentityAudit.totals, { rows:911, unique:911, ambiguous:0, unmatched:0 });
+const familyMigration = JSON.parse(readFileSync(path.join(campaign,'ett-025-family-result-migration.json')));
+assert.deepEqual(familyMigration.summary, { rows:911, uniqueEdges:886, parentFamilies:51,
+    repeatedEdges:25, repeatedRows:50, maxObservationsPerEdge:2,
+    solveStatusConflictEdges:1, winningConfigConflictEdges:0 });
+const conflictGroups = Map.groupBy(familyMigration.rows,
+    row => `${row.parentCorpus}\u0000${row.parentId}\u0000${row.variantId}`);
+const conflicts = [...conflictGroups.values()].filter(rows => new Set(rows.map(row => row.ok)).size > 1);
+assert.equal(conflicts.length, 1);
+assert.equal(conflicts[0][0].variantId, 'F02248-sym-02');
+const phaseBoundary = JSON.parse(readFileSync(path.join(campaign,'ett-027-family-boundary.json')));
+assert.equal(phaseBoundary.diagnostics.missingFamilyRows.length, 0);
+assert.equal(phaseBoundary.families.filter(row => row.canonicalSolved !== null).length, 0);
+assert.equal(phaseBoundary.families.filter(row => row.kind === 'symmetry' && row.solveStatusDisagreement).length, 8);
+assert.equal(phaseBoundary.actionableQueue.filter(row => row.findingType === 'symmetry-pathology').length, 8);
+assert.equal(phaseBoundary.actionableQueue.some(row => row.findingType === 'variant-fragile' || row.findingType === 'variant-robust'), false);
+assert.equal(phaseBoundary.mutationSummaries.some(row => row.rescueRate !== null), false);
 console.log('technique campaign validity analysis: all tests passed');

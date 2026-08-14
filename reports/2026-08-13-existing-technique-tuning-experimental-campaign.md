@@ -1,6 +1,6 @@
 # Existing-technique tuning experimental campaign (2026-08-13)
 
-> **Status (2026-08-14):** exploratory/targeted campaign; no production policy change and no independently verifiable decision-bearing experiment. **Evidence:** 20 experiment IDs, 33 arm-runs (32 complete and one partial), 556 level invocations, 2,500 recorded internal attempts, 164 unique levels, and 16 independent hypothesis families. Invalidated and partially invalidated runs remain in the totals. Machine-readable protocols and raw rows are in the [machine-readable manifest](experiments/2026-08-13-technique-tuning/manifest.json); per-arm technique reach/win/cost denominators are in the [derived aggregate](experiments/2026-08-13-technique-tuning/aggregate.json).
+> **Status (2026-08-14):** exploratory/targeted campaign; no production policy change and no independently verifiable decision-bearing experiment. **Evidence:** 27 experiment IDs, 33 arm-runs (32 complete and one partial), 556 level invocations, 2,500 recorded internal attempts, 164 unique levels, and 20 independent hypothesis families. Invalidated and partially invalidated runs remain in the totals. Machine-readable protocols and raw rows are in the [machine-readable manifest](experiments/2026-08-13-technique-tuning/manifest.json); per-arm technique reach/win/cost denominators are in the [derived aggregate](experiments/2026-08-13-technique-tuning/aggregate.json).
 
 ## Scope and evidence rules
 
@@ -435,3 +435,84 @@ accounting is useless, nor compare alternative caps. The next justified work is 
 externally comparable total-work distribution on a representative cold sample and predeclare a cap
 that matches production cost rather than truncating known late winners. Do not run another strict
 versus legacy capability A/B until that cap-selection question has a persistently verifiable protocol.
+
+
+## ETT-021–023 family-boundary input availability audit
+
+ETT-021 attempted the repository-wide input census but was invalidated before producing an artifact:
+`git log --all --name-only` exceeded Node's default 1 MiB synchronous child-process buffer. Corrected
+ETT-022 raised only that buffer to 64 MiB, but its **filename-only** detector was also invalid: it
+reported zero candidates while `reports/stress/phase-c-family-variant-results.json` is a tracked
+counterexample containing 477 family results. Both failures are retained; neither invoked the solver.
+
+ETT-023 replaced filename inference with schema inspection of every tracked reports/logs JSON document.
+It found **63 family-result documents and 911 F-prefixed result rows**, so the earlier artifact-absence
+claim is withdrawn. However, **0/911 rows** carries the complete `(parentCorpus,parentId,variantId)`
+identity required for collision-safe aggregation. One document declares an unavailable source corpus:
+the 477-row Phase-C artifact points to `data/families/phaseB/combined-corpus.json`, which is not tracked.
+
+The blocker is therefore narrower and actionable: outcomes exist, but identity/provenance must be
+reconstructed from family manifests, per-file context, or restored source corpora before aggregation.
+Do not regenerate a boundary report through ambiguous bare-ID fallback, and do not solve more variants.
+First build an auditable migration table that reports matched, unmatched, and ambiguous rows; require
+all 911 rows used by an analysis to resolve to `(parentCorpus,parentId,variantId)`, and parent-cluster
+all rates. The schema census does not recognize non-`F<digits>` IDs and local history cannot inspect
+deleted remote-only refs, so those remain explicit limitations.
+
+
+## ETT-024 manifest identity migration audit
+
+A frozen offline exact-ID join tested whether the 911 schema-detected result rows can be namespaced from
+the 161 tracked family manifests without filename heuristics. Those manifests contain 1,237 distinct
+variant IDs. **All 911/911 result rows matched exactly one manifest edge; 0 were ambiguous and 0 were
+unmatched.** Thus embedded identity is absent, but a mechanical migration is possible for this tracked
+subset.
+
+This does not resurrect the historical seven wide Corpus-1 chunks, certify the missing Phase-C combined
+corpus, or permit pooling repeated outcomes from different result documents. The next offline step is to
+emit a source-preserving migration table and quantify duplicate edge measurements by solver commit,
+budget, and run. Select one explicitly justified contemporaneous result per edge before passing rows to
+the boundary reporter; never last-write across runs. No additional family solve is justified yet.
+
+
+## ETT-025 source-preserving family-result migration
+
+The lossless migration retained all 911 observations with namespaced edge, source file, commit,
+timestamp, budget, status, nodes, work, time, and winning configuration. They cover **886 unique edges
+across 51 parent families**. Twenty-five edges have two observations each (50 repeated rows); no edge
+has more than two.
+
+One repeated edge has a solve-status conflict: `(stress-levels-random.json, R02248,
+F02248-sym-02)` solved by repair under commit `8419ee1` in the 60s family run (150,557,694 nodes), but
+timed out under commit `b43e6dd` in the 20s Phase-C run (4,497,715 nodes). This is expected
+resource/version sensitivity, not symmetry noise, and proves that last-write or pooled-edge aggregation
+would be invalid. No repeated edge had different winning configurations among multiple solved rows.
+
+The remaining repeated sets are 16 P00110 density variants measured under legacy versus portfolio
+experiment, seven R02248 symmetry variants measured in standalone versus Phase-C runs, and two R03015
+symmetry variants with original/retry artifacts. The exact next step is a declared dataset view—not a
+solver run—selecting internally comparable sources by research question. Boundary rates must publish
+the selection rule and retain excluded observations in the migration artifact.
+
+
+## ETT-026/027 Phase-C family-boundary audit
+
+ETT-026 joined all 477 Phase-C rows to 66 relation families (11 parents) with zero missing variants,
+but its boundary artifact was invalidated. The supplied historical Corpus-2 baseline contains zero
+canonical rows, and the reporter incorrectly treated `canonicalSolved:null` as a canonical failure for
+non-symmetry rescue/robust labels and mutation rescue rates. The invalid artifact is retained. The fix
+requires `canonicalSolved === false` for parent-failure claims and preserves null rescue/evidence when
+the canonical row is absent.
+
+Corrected ETT-027 retained the same rows/manifests and produced no canonical rescue/robust claims. It
+found sibling solve-status disagreement in **8/11 symmetry families**: R02795 solved 5/7 orientations;
+R00156 and R02960 4/7 each; R02248 3/7; and R00548, R01465, R02239, and R02452 2/7 each. R00059,
+R00440, and R02579 solved 0/7. Within each mixed family the winning configuration was perfectly
+concentrated in this scheduler-censored run: closureCommitment for R02795, sideCommitment for R00156,
+intersectionHarvest beam for R01465/R02248, and repair for the other four.
+
+These are historical 20-second sibling pathologies, not current-main capability or independent config
+probabilities. They support extinction/trajectory diagnostics and a small current-main cold family
+retest, but only after a persistently verifiable protocol and canonical parents are included. The top
+new parent-family candidates are R02795, R00156, R02960, and R02248; use symmetric gains/losses and
+parent-clustered counts, not 28 solved siblings as independent observations.

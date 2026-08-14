@@ -675,3 +675,36 @@ were not preserved on a persistent GitHub ref. Before another family solve batch
 using `(parentCorpus,parentId,variantId)`, persist parent-family denominators, and require explicit
 reach/progress telemetry. A future decision-bearing family protocol must use a full GitHub-resolvable
 SHA/permalink and retain the ref after merge.
+
+
+### 2026-08-14 wide-input identity blocker (ETT-021–023)
+
+The filename census was invalidated by a tracked counterexample. Corrected ETT-023 found 63 family-result documents and 911 rows, but 0/911 rows carries complete namespaced identity; the 477-row Phase-C artifact also references an untracked combined corpus. Before any more family solves, migrate existing outcomes through manifest/file context with explicit unmatched and ambiguous counts, verify every used `(parentCorpus,parentId,variantId)`, and record solver/budget provenance.
+
+
+### 2026-08-14 manifest identity recovery (ETT-024)
+
+All 911 detected result rows resolve globally uniquely against the 161 tracked manifests (0 ambiguous,
+0 unmatched; 1,237 distinct manifest variant IDs). A mechanical namespacing migration is therefore
+possible for this tracked subset. Before boundary aggregation, preserve source file/commit/budget and
+quantify duplicate measurements of the same edge; select runs explicitly rather than last-writing.
+This does not prove the subset is the missing seven-chunk Corpus-1 trove.
+
+
+#### Source-preserving family migration (ETT-025)
+
+The 911 observations represent 886 edges in 51 parent families; 25 edges repeat twice. One repeated
+edge flips solve status across a 60s standalone run and a 20s later-commit run, demonstrating that
+last-write/pooling is invalid. Define and record an internally comparable source-selection view before
+boundary aggregation; retain all excluded rows and cluster results by parent family. No new solve is
+justified by this migration alone.
+
+
+#### Corrected Phase-C sibling boundary (ETT-026/027)
+
+ETT-026 was invalidated because absent canonical rows were treated as canonical failures. ETT-027
+kept canonical status unknown and found historical solve-status disagreement in 8/11 symmetry parent
+families at one 20s source run. Strongest sibling rates were R02795 5/7, R00156 and R02960 4/7, and
+R02248 3/7. Treat these as four parent-family nominations, not independent sibling wins. A cold
+current-main retest requires canonical plus all siblings, one persistent protocol ref, and no
+production orientation retry proposal.
