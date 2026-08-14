@@ -8,6 +8,21 @@ Last reconciled: **2026-08-11**, after the revised neighbor-budget full Corpus-2
 
 ## Current capability evidence
 
+**Current level-blind capability (run #39, `31772083174`, 2026-08-14, commit `d425532ba`):**
+
+- **Corpus 2: 731/1700** (55,089,123,267 nodes / 68,721,621,532 canonical work);
+- **Corpus 1: 94/102** (804,866,761 nodes / 1,223,851,344 work);
+- protocol: production defaults with blank `enable_flags` (all promoted flags at their real ON defaults), **50M node budget on both corpora**, 2 workers, `deterministic=true`, `persist_hints=false`, 24h non-binding deadline;
+- full coverage (1700/1700 and 102/102), all 21 jobs succeeded, artifact-only (`solver-stress-refresh-combined`, ID `9209391122`).
+
+This is the highest level-blind Corpus-2 figure recorded, and it resolves the open question left by the 635 sweep below: that drop was **not** a bad promotion. Raising Corpus-2's node ceiling from 36M to 50M more than recovered it, which is consistent with the budget-reallocation mechanism proposed in [`../reports/2026-08-12-main-loop-late-reserve-population-ab.md`](../reports/2026-08-12-main-loop-late-reserve-population-ab.md).
+
+**It is a reference point, not a controlled delta.** Against the 635 sweep it changes node budget (36M→50M), worker count (1→2), and two days of `main`; against the 665 arm it additionally includes three flag promotions and the repair-probe wall-clock fix. Isolating the budget effect needs a matched 36M-vs-50M pair at one SHA — worth running, since it would say whether raising the ceiling further keeps paying.
+
+Also unexplained: **Corpus 1 went 95→94** with no budget change (it was already at 50M) under `deterministic=true`, where worker count should not matter. That points at a code difference between `ba5630978` and `d425532ba` rather than measurement noise. One level, not yet identified.
+
+### Prior decision-bearing A/B (flag comparison, superseded as a capability figure)
+
 The decision-bearing level-blind Corpus-2 A/B at 36M nodes / 48.24M canonical work per level, non-binding wall deadline, was:
 
 - control: **611/1700**;

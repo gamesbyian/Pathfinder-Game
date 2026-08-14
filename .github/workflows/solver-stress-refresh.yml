@@ -336,8 +336,8 @@ jobs:
         # since this session's egress policy has been observed blocking the artifact-download zip
         # (Azure blob storage, 403). See scripts/stress/repair-probe-badness-report.mjs.
         run: |
-          node scripts/stress/repair-probe-badness-report.mjs --in=reports/stress/benchmark-parallel.json
-          node scripts/stress/repair-probe-badness-report.mjs --in=reports/stress/benchmark-latest-random.json
+          node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in=reports/stress/benchmark-parallel.json
+          node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in=reports/stress/benchmark-latest-random.json
 
       - name: Upload combined results
         if: always()
