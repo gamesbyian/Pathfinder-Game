@@ -108,6 +108,20 @@ was never in any arm of this promotion or of the gate recalibration**: both A/B 
 zero eligible levels. Corpus 1 has 12. See
 [`../reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md`](../reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md).
 
+- `STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY`: **NEW, opt-in, default OFF (2026-08-14)** — the repair for
+  the entry above. Re-runs each shrunk biased probe config at its FULL budget, but only after the
+  main loop, repair fallback and attraction-diversity pass have all failed, so levels that solve
+  elsewhere keep the shrink's saving and the recovery's cost lands only on levels already burning
+  their whole ceiling. Confirmed on `R00408`: the recovery attempt consumed **5,965,490** nodes —
+  byte-identical to the winning attempt's count in the flag-OFF A/B arm — and solved with
+  `dfs:repair:repair(mustTurnBiased)`, finishing at 37,840,699 total nodes instead of exhausting
+  50,000,224. Default-OFF is byte-identical to pre-change (`R00408` FAILED at exactly 50,000,171
+  nodes), so the budget restructure is a strict no-op for every production path and existing A/B arm.
+  **Evidence is n=1 — the level it was designed against — so it demonstrates the mechanism works, not
+  that it is net-positive.** Do not promote without a dedicated A/B on BOTH corpora, with Corpus 1 in
+  an arm this time. Candidate population from run #40's corrected diagnostic: the 13 Corpus-2 levels
+  shrunk, failed, and finishing within `biasedBestBadness <= 3`.
+
 A post-promotion [saved-artifact audit](../reports/2026-08-13-existing-solve-data-tuning-opportunities.md) found that direct repair yield falls from 18.4% at baseline `badness <= 5` to 0% above 20. It nominated a current-main matched sweep of `BADNESS_GATE=10,8,6` with `MIN_SCALE=0.35` fixed and explicit `repairProbe` tags. This is a calibration follow-up to the promoted adaptive controller, not a reopening of its default-on disposition.
 
 **Resolved (2026-08-13)**: the nominated sweep ran as a 300-level stratified GHA A/B, the same sample/seed/budget the mechanism's own on/off promotion used. `BADNESS_GATE=8` and `=6` both gained the identical level (`R02663`) over the `=10` baseline with zero losses; `=6` strictly dominated `=8` on cost (nodes −0.7%/work −4.1% vs. baseline, vs. `=8`'s −0.5%/−2.1%). `REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE` promoted from 10 to 6 in `modules/solver/orchestration.ts` (`MIN_SCALE=0.35` unchanged) at the project owner's explicit direction. See [`reports/2026-08-12-repair-probe-early-main-loop-starvation.md`](../reports/2026-08-12-repair-probe-early-main-loop-starvation.md)'s "Gate/min-scale recalibration: GHA A/B" section for the full breakdown.

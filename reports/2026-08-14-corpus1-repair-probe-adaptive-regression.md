@@ -142,10 +142,70 @@ non-eligible level — a host artifact, not this regression. The **delta** attri
    promotion rests on 300/1700 stratified plus n=12. Run #39's Corpus-2 diagnostic already lists 10
    levels that were shrunk, failed, and finished within `biasedBestBadness <= 3` — candidate
    `R00408`s, and that list was itself computed against the stale gate.
-2. **Make the shrink recoverable rather than terminal.** The failure mode is that a mispredicted
-   level never gets the budget back. Restoring the withheld nodes to the biased tier when earlier
-   tiers exhaust, rather than deciding once up front, would keep the cost saving while removing the
-   self-fulfilling property.
+2. ~~**Make the shrink recoverable rather than terminal.**~~ **Built and confirmed on this level
+   (2026-08-14)** as `STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY`, opt-in and default OFF — see the
+   section below.
 3. **Add Corpus 1 to the repair-probe A/B workflows.** A mechanism whose whole eligible population
    is "repair-gated and must-turn-carrying" cannot be validated on a corpus chosen without regard to
    that predicate, and the published corpus has zero eligible levels.
+
+---
+
+## Follow-up: `STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY` (built 2026-08-14, opt-in, default OFF)
+
+The recovery tier re-runs each shrunk biased config at its full probe budget, but only after the
+main loop, repair fallback and attraction-diversity pass have all failed.
+
+**Placement is the design.** An immediate retry inside the probe would cost `granted + full` on
+every level whose shrink was *correct* — strictly worse than never shrinking, destroying the
+mechanism's entire reason to exist. Running last inverts that: levels that go on to solve elsewhere
+keep the full saving (the recovery never runs), and the recovery's cost lands only on levels already
+burning their whole ceiling.
+
+### Confirmed on `R00408`
+
+| arm | outcome | total nodes | recovery-tier nodes |
+|---|---|---:|---:|
+| flag OFF (production today) | FAILED (`node-budget-reached`) | 50,000,171 | — |
+| recovery, reserve = withheld difference | FAILED | 50,000,224 | 2,812,495 |
+| recovery, reserve = full debt | FAILED | 50,000,224 | 5,624,791 |
+| **recovery, reserve honored as a floor** | **SOLVED** | **37,840,699** | **5,965,490** |
+
+The final run's recovery attempt consumed **5,965,490** nodes — byte-identical to the winning
+attempt's node count in the flag-OFF A/B arm — and won with `dfs:repair:repair(mustTurnBiased)`.
+That exact match is the trajectory-extension property holding in practice: the re-run replays the
+granted prefix and continues into precisely the search the shrink cut off. The level also stops
+~12.2M nodes short of its ceiling instead of exhausting it, so the admissible-order tier never runs.
+
+### Two corrections found only by end-to-end testing
+
+Both were invisible to unit tests and to reasoning, and both made the tier fire and still fail:
+
+1. **The reserve must fund the FULL budget, not the withheld difference.** `repairSearchFromGate`
+   has no resume API, so the re-run replays from scratch; repaying `full - granted` left the tier
+   2,812,495 nodes against the 5,965,490 needed. It is now sized to the actual debt and carved as a
+   peer of `admissibleOrderNodeReserve` rather than nested inside `mainLoopLateReserve`, which at
+   6,000,000 nodes per tier is structurally too small to fund it.
+2. **The reserve must be a floor, not a derived remainder.** Node checks here are round-granular and
+   may overshoot by up to one attempt's own cost; a single main-loop attempt on this level is 24.4M
+   nodes and overshot its reduced ceiling by ~375,000, taking that straight out of the reserve and
+   leaving 5,624,791 — a failure by ~340,000 nodes. The tier now takes
+   `max(plain remainder, reserve)`, still hard-bounded by the true external `nodeBudget`.
+
+A third, unrelated gap surfaced on the way: the new `repairProbeShrinkRecovery` attempt flag was
+being dropped before it reached persisted reports, because `portfolio-solve-sweep-lib.mjs` projects
+an explicit field list — the same drop-before-persist shape CLAUDE.md documents for `admissibleOrder`.
+
+### Verified, and not
+
+Verified: the mechanism recovers `R00408`; the default-OFF path is byte-identical to the pre-change
+baseline (FAILED at exactly 50,000,171 nodes), so the budget-arithmetic restructure is a strict
+no-op for every production path and existing A/B arm; 6 unit tests plus the 77-test orchestration
+suite pass.
+
+Not verified: anything at population scale. This is n=1 — the level the mechanism was designed
+against — so it demonstrates the mechanism works, not that it is net-positive. It stays opt-in and
+default OFF until a dedicated A/B on **both** corpora, and Corpus 1 must be in an arm this time. Run
+#40's corrected Corpus-2 diagnostic supplies a natural candidate population: 13 levels that were
+shrunk, failed, and finished within `biasedBestBadness <= 3` (`R01063`, `R01485`, `R01822`, `R02112`,
+`R02170`, `R02327`, `R02360`, `R02611`, `R02643`, `R02963`, `R02979`, `R03136`, `R03153`).
