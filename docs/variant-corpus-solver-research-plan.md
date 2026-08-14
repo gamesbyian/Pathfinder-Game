@@ -666,4 +666,12 @@ The [existing-technique tuning campaign](../reports/2026-08-13-existing-techniqu
 
 ### 2026-08-14 current-main canonical persistence check
 
-A pre-registered targeted cold retest at 5M nodes found R00526, R01407, R01875 and R01675 still unsolved (0/4), each exhausting its ceiling after three repair attempts and one admissible-order attempt. This preserves all four as current-main family pathology candidates at the diagnostic budget; it does not substitute for regenerated namespaced sibling results or establish failure at the 50M capability budget. See the ETT-012 section of the [campaign report](../reports/2026-08-13-existing-technique-tuning-experimental-campaign.md).
+A locally protocol-frozen targeted cold retest at 5M nodes found R00526, R01407, R01875 and R01675 still unsolved (0/4), each exhausting its ceiling after three repair attempts and one admissible-order attempt. A locally protocol-frozen 50M-node follow-up then also failed 0/4, with minimum badness unchanged level-for-level from the 5M run (15, 13, 14, 10). This preserves all four as current-main family pathology candidates at the production capability budget and shows flat budget is saturated; it does not substitute for regenerated namespaced sibling results. See the ETT-012 section of the [campaign report](../reports/2026-08-13-existing-technique-tuning-experimental-campaign.md).
+
+### 2026-08-14 campaign sequencing gate
+
+Do not count ETT-010–013 as independently preregistered family evidence: their local protocol commits
+were not preserved on a persistent GitHub ref. Before another family solve batch, regenerate joins
+using `(parentCorpus,parentId,variantId)`, persist parent-family denominators, and require explicit
+reach/progress telemetry. A future decision-bearing family protocol must use a full GitHub-resolvable
+SHA/permalink and retain the ref after merge.

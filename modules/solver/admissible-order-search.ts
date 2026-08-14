@@ -186,6 +186,13 @@ export async function admissibleOrderSearch(
     tieBreakProfile: ScoringProfile | null = {},
     maxDiscrepancy = Infinity,
 ): Promise<number[] | null> {
+    // Experiment-only whole-solve enforcement. The historical admissible tier did not consult its
+    // inherited work cap inside this loop at all; changing that unconditionally would silently
+    // alter production scheduling. Strict mode opts into the corrected contract explicitly.
+    if (prep._strictWorkCap !== undefined && workMeter.units >= prep._strictWorkCap) {
+        if (out) { out.timedOut = true; out.nodesExpanded = 0; }
+        return null;
+    }
     const state = createState(startKey, level, prep);
     const cfg = prep._cfg;
 
@@ -205,7 +212,8 @@ export async function admissibleOrderSearch(
     while (stack.length > 0) {
         if ((++nodesExpanded & 255) === 0) {
             const now = Date.now();
-            if (now - levelStartTime > levelBudgetMs || nodesExpanded >= nodeBudget) {
+            if (now - levelStartTime > levelBudgetMs || nodesExpanded >= nodeBudget
+                || (prep._strictWorkCap !== undefined && workMeter.units >= prep._strictWorkCap)) {
                 if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
                 if (out) { out.timedOut = true; out.nodesExpanded = nodesExpanded; }
                 return null;

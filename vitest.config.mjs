@@ -55,6 +55,11 @@ export default defineConfig({
             'scripts/family-parent-hint-replay-unit-tests.mjs',
             'scripts/stress/divergence-lib-unit-tests.mjs',
             'scripts/winning-attempt-family-lib-unit-tests.mjs',
+            // Same pre-existing-gap pattern once more (plain node:assert + a top-level exit-code
+            // script, no vitest test()/describe()) — run via `npm run test:technique-campaign-analysis`,
+            // part of test:node. Landed without this exclusion, so vitest collection failed on it with
+            // "No test suite found" — a red `npm run ci` independent of any other branch's changes.
+            'scripts/analyze-technique-campaign-unit-tests.mjs',
             'node_modules/**',
             'dist/**',
         ],
