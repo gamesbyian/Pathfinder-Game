@@ -206,6 +206,14 @@ suite pass.
 Not verified: anything at population scale. This is n=1 — the level the mechanism was designed
 against — so it demonstrates the mechanism works, not that it is net-positive. It stays opt-in and
 default OFF until a dedicated A/B on **both** corpora, and Corpus 1 must be in an arm this time. Run
-#40's corrected Corpus-2 diagnostic supplies a natural candidate population: 13 levels that were
-shrunk, failed, and finished within `biasedBestBadness <= 3` (`R01063`, `R01485`, `R01822`, `R02112`,
-`R02170`, `R02327`, `R02360`, `R02611`, `R02643`, `R02963`, `R02979`, `R03136`, `R03153`).
+#40's corrected Corpus-2 diagnostic nominates 13 levels where the shrink fired and the biased tier
+then missed within `biasedBestBadness <= 3` (`R01063`, `R01485`, `R01822`, `R02112`, `R02170`,
+`R02327`, `R02360`, `R02611`, `R02643`, `R02963`, `R02979`, `R03136`, `R03153`).
+
+**Read that list carefully**: the report's "failed" means the *biased tier* did not itself win, NOT
+that the level failed. Measured directly at 50M nodes with the recovery off, **7 of the 13 already
+solve** by other tiers (`R01063`, `R01822`, `R02112`, `R02327`, `R02360`, `R02611`, `R03136`), so the
+recovery can only possibly gain on the 6 that do fail (`R01485`, `R02170`, `R02643`, `R02963`,
+`R02979`, `R03153`) — and the 7 solvers are regression candidates, since the reserve shrinks the main
+loop's ceiling on every eligible level. The sample is also selected for near-misses, so it is biased
+toward showing benefit and cannot detect losses among the other 1,687 Corpus-2 levels.

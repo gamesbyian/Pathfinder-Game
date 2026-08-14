@@ -119,8 +119,10 @@ zero eligible levels. Corpus 1 has 12. See
   nodes), so the budget restructure is a strict no-op for every production path and existing A/B arm.
   **Evidence is n=1 — the level it was designed against — so it demonstrates the mechanism works, not
   that it is net-positive.** Do not promote without a dedicated A/B on BOTH corpora, with Corpus 1 in
-  an arm this time. Candidate population from run #40's corrected diagnostic: the 13 Corpus-2 levels
-  shrunk, failed, and finishing within `biasedBestBadness <= 3`.
+  an arm this time. Candidate population from run #40's corrected diagnostic: 13 Corpus-2 levels where the shrink
+  fired and the biased TIER then missed within `biasedBestBadness <= 3` — note that is the tier
+  failing, not the level: measured at 50M with the recovery off, 7 of the 13 already solve by other
+  tiers, so only 6 are gain candidates and the other 7 are regression candidates.
 
 A post-promotion [saved-artifact audit](../reports/2026-08-13-existing-solve-data-tuning-opportunities.md) found that direct repair yield falls from 18.4% at baseline `badness <= 5` to 0% above 20. It nominated a current-main matched sweep of `BADNESS_GATE=10,8,6` with `MIN_SCALE=0.35` fixed and explicit `repairProbe` tags. This is a calibration follow-up to the promoted adaptive controller, not a reopening of its default-on disposition.
 
