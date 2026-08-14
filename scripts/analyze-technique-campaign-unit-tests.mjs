@@ -4,95 +4,73 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+const hash = ids => createHash('sha256').update(ids.join('\n')).digest('hex');
+const runAnalyzer = (directory, output) => spawnSync(process.execPath,
+    ['scripts/analyze-technique-campaign.mjs', directory, output], { encoding:'utf8' });
 const dir = mkdtempSync(path.join(tmpdir(), 'technique-campaign-'));
-writeFileSync(path.join(dir, 'arm.json'), JSON.stringify({ summary:{ levelBlind:true }, levels:[
-    { id:'A', ok:true, nodesExpanded:12, workSpent:20, attempts:[
-        { repairProbe:true, repair:true, ok:false, nodesExpanded:5, elapsedMs:2 },
-        { admissibleOrder:true, ok:true, nodesExpanded:7, elapsedMs:3 },
-    ] },
-] }));
-const out = path.join(dir, 'aggregate.json');
-const run = spawnSync(process.execPath, ['scripts/analyze-technique-campaign.mjs', dir, out], { encoding:'utf8' });
-assert.equal(run.status, 0, run.stderr);
-const result = JSON.parse(readFileSync(out, 'utf8'));
-assert.equal(result.armCount, 1);
-assert.deepEqual(result.arms[0], {
-    file:'arm.json', levels:1, solved:1, nodes:12, work:20, attemptCount:2,
-    techniques:{
-        'admissible-order':{attempts:1,levelsReached:1,wins:1,nodes:7,elapsedMs:3,winRateGivenReach:1},
-        'repair-probe':{attempts:1,levelsReached:1,wins:0,nodes:5,elapsedMs:2,winRateGivenReach:0},
-    },
-});
-const campaignDirectory = 'reports/experiments/2026-08-13-technique-tuning';
-const campaignManifest = JSON.parse(readFileSync(path.join(campaignDirectory, 'manifest.json'), 'utf8'));
-assert.equal(campaignManifest.protocolAudit.recordedBeforeExecution, false);
-assert.match(campaignManifest.protocolAudit.consequence, /not decision-bearing/);
-assert.ok(campaignManifest.experiments.filter(experiment => !['ETT-010', 'ETT-011', 'ETT-012'].includes(experiment.id)).every(experiment =>
-    experiment.protocolTiming === 'retrospectively reconstructed after execution'));
-assert.equal(campaignManifest.experiments.find(experiment => experiment.id === 'ETT-010').protocolTiming,
-    'committed before execution at 4923802b');
-assert.equal(campaignManifest.experiments.find(experiment => experiment.id === 'ETT-011').protocolTiming,
-    'committed before execution at 7dd35d9f');
-assert.equal(campaignManifest.experiments.find(experiment => experiment.id === 'ETT-012').protocolTiming,
-    'committed before execution at 51a606ca');
-for (const { id, protocolFile, arms } of [
-    { id:'ETT-010', protocolFile:'ett-010-protocol.json', arms:['ett-010-015.json', 'ett-010-prod.json'] },
-    { id:'ETT-011', protocolFile:'ett-011-protocol.json', arms:['ett-011-015.json', 'ett-011-prod.json'] },
-]) {
-    const protocol = JSON.parse(readFileSync(path.join(campaignDirectory, protocolFile), 'utf8'));
-    assert.equal(protocol.experimentId, id);
-    assert.equal(protocol.protocolStatus, 'frozen-before-execution');
-    assert.equal(createHash('sha256').update(protocol.sampleSelection.levelIds.join('\n')).digest('hex'),
-        protocol.sampleSelection.levelSelectionHash, `${id} sample hash must match its frozen ids`);
-    for (const armFile of arms) {
-        const arm = JSON.parse(readFileSync(path.join(campaignDirectory, armFile), 'utf8'));
-        assert.equal(arm.summary.levelBlind, true);
-        assert.equal(arm.summary.nodeBudget, protocol.common.nodeBudget);
-        assert.equal(arm.summary.workBudget, protocol.common.workBudget);
-        assert.equal(arm.summary.workers, protocol.common.workers);
-        const expectedFraction = armFile.includes('-015.') ? 0.15 : null;
-        assert.equal(arm.summary.admissibleOrderNodeReserveFraction, expectedFraction,
-            `${armFile} reserve override must match its frozen arm`);
-        assert.deepEqual(arm.levels.map(level => level.id), protocol.sampleSelection.levelIds,
-            `${armFile} must contain the frozen sample in frozen order`);
-    }
+const summary = { levelBlind:true, levelsRequested:2, levelsRun:2, corpus:'fixture.json', commit:'a'.repeat(40), nodeBudget:10, workBudget:20, workers:1 };
+const levels = [
+    { id:'A', ok:true, nodesExpanded:8, workSpent:12, totalMs:3, attempts:[{ repairProbe:true, repair:true, ok:false, nodesExpanded:3, elapsedMs:1 },{ admissibleOrder:true, ok:true, nodesExpanded:5, elapsedMs:2 }] },
+    { id:'B', ok:false, nodesExpanded:10, workSpent:25, totalMs:4, status:'work-budget-reached', attempts:[] },
+];
+writeFileSync(path.join(dir,'left.json'),JSON.stringify({summary:{...summary,treatment:1},levels}));
+writeFileSync(path.join(dir,'right.json'),JSON.stringify({summary:{...summary,treatment:0},levels:levels.map(level=>({...level,ok:false}))}));
+writeFileSync(path.join(dir,'manifest.json'),JSON.stringify({experiments:[{id:'T-1',class:'targeted-diagnostic',question:'q',artifacts:['left.json','right.json'],controlArtifact:'right.json',treatmentArtifact:'left.json'}]}));
+writeFileSync(path.join(dir,'t-1-protocol.json'),JSON.stringify({experimentId:'T-1',evidenceClass:'targeted-diagnostic',sampleSelection:{levelIds:['A','B'],levelSelectionHash:hash(['A','B'])},common:{nodeBudget:10,workBudget:20,workers:1},treatmentVariables:['treatment'],protocolVerification:{status:'unverifiable'}}));
+const out=path.join(dir,'aggregate.json');
+let run=runAnalyzer(dir,out); assert.equal(run.status,0,run.stderr);
+let result=JSON.parse(readFileSync(out));
+assert.equal(result.validity.valid,true); assert.equal(result.counts.uniqueLevels,2); assert.equal(result.counts.levelInvocations,4); assert.equal(result.counts.armRuns,2);
+assert.equal(result.arms.find(arm=>arm.file==='left.json').workOverBudget,1);
+assert.deepEqual(result.comparisons[0].gained,['A']); assert.deepEqual(result.comparisons[0].lost,[]);
+assert.equal(result.comparisons[0].control,'right.json'); assert.equal(result.comparisons[0].treatment,'left.json');
+assert.equal(result.comparisons[0].deltas[0].workDelta,0);
+
+// A one-sided role declaration is invalid rather than falling back to list order.
+const fixtureManifest=JSON.parse(readFileSync(path.join(dir,'manifest.json')));
+delete fixtureManifest.experiments[0].treatmentArtifact;
+writeFileSync(path.join(dir,'manifest.json'),JSON.stringify(fixtureManifest));
+run=runAnalyzer(dir,out); assert.notEqual(run.status,0); assert.match(run.stderr,/do not identify both paired arms/);
+fixtureManifest.experiments[0].treatmentArtifact='left.json';
+writeFileSync(path.join(dir,'manifest.json'),JSON.stringify(fixtureManifest));
+
+// A pair with reordered IDs is invalid, not silently aggregated as comparable.
+const bad=JSON.parse(readFileSync(path.join(dir,'right.json'))); bad.levels.reverse(); writeFileSync(path.join(dir,'right.json'),JSON.stringify(bad));
+run=runAnalyzer(dir,out); assert.notEqual(run.status,0); assert.match(run.stderr,/paired level IDs\/order differ/);
+
+const campaign='reports/experiments/2026-08-13-technique-tuning';
+const manifest=JSON.parse(readFileSync(path.join(campaign,'manifest.json')));
+assert.equal(manifest.protocolAudit.disposition,'post-merge audit: unverifiable');
+for(const id of ['ETT-010','ETT-011','ETT-012','ETT-013']) assert.equal(manifest.experiments.find(e=>e.id===id).protocolVerification.status,'unverifiable');
+const e11=manifest.experiments.find(e=>e.id==='ETT-011'); assert.match(e11.budgetValidity,/node-budget matched/);
+for(const file of ['ett-011-015.json','ett-011-prod.json']) {
+    const arm=JSON.parse(readFileSync(path.join(campaign,file)));
+    assert.equal(arm.levels.filter(level=>level.workSpent>arm.summary.workBudget).length,19);
 }
-const familyProtocol = JSON.parse(readFileSync(path.join(campaignDirectory, 'ett-012-protocol.json'), 'utf8'));
-const familyArm = JSON.parse(readFileSync(path.join(campaignDirectory, 'ett-012-current-main.json'), 'utf8'));
-assert.equal(createHash('sha256').update(familyProtocol.sampleSelection.levelIds.join('\n')).digest('hex'),
-    familyProtocol.sampleSelection.levelSelectionHash);
-assert.deepEqual([...familyArm.levels.map(level => level.id)].sort(),
-    [...familyProtocol.sampleSelection.levelIds].sort());
-assert.equal(familyArm.summary.levelBlind, true);
-assert.equal(familyArm.summary.nodeBudget, familyProtocol.common.nodeBudget);
-assert.equal(familyArm.summary.workBudget, familyProtocol.common.workBudget);
-const transfer = JSON.parse(readFileSync(path.join(campaignDirectory, 'ett-011-transfer.json'), 'utf8'));
-const lowReserve = JSON.parse(readFileSync(path.join(campaignDirectory, 'ett-011-015.json'), 'utf8'));
-const production = new Map(JSON.parse(readFileSync(path.join(campaignDirectory, 'ett-011-prod.json'), 'utf8'))
-    .levels.map(level => [level.id, level]));
-const attemptNodes = (level, predicate) => (level.attempts ?? []).filter(predicate)
-    .reduce((sum, attempt) => sum + Number(attempt.nodesExpanded ?? 0), 0);
-const expectedTransfer = lowReserve.levels.map(level => {
-    const control = production.get(level.id);
-    return {
-        id:level.id,
-        workDelta:level.workSpent - control.workSpent,
-        repairProbeNodeDelta:attemptNodes(level, attempt => attempt.repairProbe) -
-            attemptNodes(control, attempt => attempt.repairProbe),
-        repairFallbackNodeDelta:attemptNodes(level, attempt => attempt.repair && !attempt.repairProbe) -
-            attemptNodes(control, attempt => attempt.repair && !attempt.repairProbe),
-        admissibleOrderNodeDelta:attemptNodes(level, attempt => attempt.admissibleOrder) -
-            attemptNodes(control, attempt => attempt.admissibleOrder),
-    };
-});
-assert.deepEqual(transfer.levels, expectedTransfer, 'ETT-011 paired transfer rows must be reproducible');
-assert.equal(transfer.summary.workWorseLevels, expectedTransfer.filter(level => level.workDelta > 0).length);
-assert.equal(transfer.summary.totalWorkDelta, expectedTransfer.reduce((sum, level) => sum + level.workDelta, 0));
-const regenerated = path.join(dir, 'campaign-aggregate.json');
-const regenerate = spawnSync(process.execPath,
-    ['scripts/analyze-technique-campaign.mjs', campaignDirectory, regenerated], { encoding:'utf8' });
-assert.equal(regenerate.status, 0, regenerate.stderr);
-assert.deepEqual(JSON.parse(readFileSync(regenerated, 'utf8')),
-    JSON.parse(readFileSync(path.join(campaignDirectory, 'aggregate.json'), 'utf8')),
-    'committed aggregate must be reproducible from committed raw arms');
-console.log('technique campaign analysis: all tests passed');
+const regenerated=path.join(dir,'campaign.json'); run=runAnalyzer(campaign,regenerated); assert.equal(run.status,0,run.stderr);
+assert.deepEqual(JSON.parse(readFileSync(regenerated)),JSON.parse(readFileSync(path.join(campaign,'aggregate.json'))));
+const lineageMechanics = JSON.parse(readFileSync(path.join(campaign,'ett-017-lineage-mechanics.json')));
+assert.equal(lineageMechanics.denominators.forensicRows, 19);
+assert.equal(lineageMechanics.denominators.uniqueLevelIds, 19);
+assert.equal(lineageMechanics.denominators.parentFamilyIdentityAvailable, false);
+assert.equal(lineageMechanics.groups['clearly-mis-ranked'].levels, 14);
+assert.equal(lineageMechanics.groups['other-score-width'].levels, 5);
+assert.deepEqual(lineageMechanics.nominatedTags,
+    ['crossing-rich','high-intersection-burden','large-grid','portals']);
+const campaignAggregate = JSON.parse(readFileSync(path.join(campaign,'aggregate.json')));
+const campaignReport = readFileSync('reports/2026-08-13-existing-technique-tuning-experimental-campaign.md','utf8');
+assert.match(campaignReport, new RegExp(`${manifest.experiments.length} experiment IDs`));
+assert.match(campaignReport, new RegExp(`${campaignAggregate.counts.armRuns} arm-runs`));
+assert.match(campaignReport, new RegExp(`${campaignAggregate.counts.levelInvocations} level invocations`));
+assert.match(campaignReport, new RegExp(`${campaignAggregate.arms.reduce((sum, arm) => sum + arm.attemptCount, 0).toLocaleString('en-US')} recorded internal attempts`));
+assert.match(campaignReport, new RegExp(`${campaignAggregate.counts.uniqueLevels} unique levels`));
+assert.match(campaignReport, new RegExp(`${campaignAggregate.counts.independentHypothesisFamilies} independent hypothesis families`));
+const strictArm = campaignAggregate.arms.find(arm => arm.file === 'ett-019-strict.json');
+assert.equal(strictArm.strictWorkMaxOvershoot, 1072);
+assert.equal(strictArm.strictWorkOvershootTolerance, 4096);
+for (const id of ['ETT-018','ETT-019','ETT-020']) {
+    const comparison = campaignAggregate.comparisons.find(row => row.experimentId === id);
+    assert.match(comparison.control, /legacy\.json$/);
+    assert.match(comparison.treatment, /strict\.json$/);
+}
+console.log('technique campaign validity analysis: all tests passed');

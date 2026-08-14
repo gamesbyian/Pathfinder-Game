@@ -110,6 +110,9 @@ export function attemptRecord(a) {
         ...(a.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
         ...(a.mainLoopLateReserve ? { mainLoopLateReserve: true } : {}),
         ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
+        ...(a.allocatedWorkCeiling !== undefined ? { allocatedWorkCeiling: a.allocatedWorkCeiling } : {}),
+        ...(a.allocatedNodeCeiling !== undefined ? { allocatedNodeCeiling: a.allocatedNodeCeiling } : {}),
+        ...(a.workSpent !== undefined ? { workSpent: a.workSpent } : {}),
         ...(a.randomSeed !== undefined ? { randomSeed: a.randomSeed } : {}),
         // seedSalt is the value to REPLAY a repair winner directly (repairPrimarySeed(gateKey,
         // seedSalt) derives randomSeed from it, not the other way around) -- only set on the
@@ -149,6 +152,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         // docs/solver-budget-determinism.md. A deadlineTruncated row is NOT evidence of unsolvable.
         workSpent: result?.workSpent ?? null,
         deadlineTruncated: !!result?.deadlineTruncated,
+        techniqueLifecycle: result?.techniqueLifecycle ?? null,
         refereeValid: result?.refereeValid ?? null,
         solvedBeforeFallback,
         solvedByFallback,

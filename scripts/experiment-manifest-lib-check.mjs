@@ -110,6 +110,18 @@ assert.match(sweep, /solveOpts\.admissibleOrderNodeReserveFractionOverride = adm
     'admissible reserve override must reach SolveOpts');
 assert.match(sweep, /admissibleOrderNodeReserveFraction: Number\.isFinite/u,
     'admissible reserve override must be persisted in the run summary');
+assert.match(sweep, /--strict-total-work-budget/u,
+    'capability sweep must expose strict whole-solve work enforcement only as an explicit flag');
+assert.match(sweep, /if \(strictTotalWorkBudget\) solveOpts\.strictTotalWorkBudget = true/u,
+    'strict work enforcement must remain omitted by default');
+for (const provenanceField of ['corpusSha256', 'sampleSha256', 'runStartedAt', 'artifactCompletedAt']) {
+    assert.ok(sweep.includes(provenanceField), `capability sweep must persist ${provenanceField}`);
+}
+assert.match(sweep, /\.sha256/u, 'capability sweep must write an artifact digest sidecar');
+assert.match(sweep, /--lifecycle-telemetry/u,
+    'capability sweep must expose explicit per-technique lifecycle telemetry');
+assert.match(sweep, /if \(lifecycleTelemetry\) solveOpts\.lifecycleTelemetry = true/u,
+    'lifecycle telemetry must remain opt-in and reach SolveOpts when requested');
 assert.equal(/prepareLevelForSolver\([^\n]*levelNumber/u.test(worker), false,
     'capability worker must not inject corpus position into solver preparation');
 assert.match(worker, /prepareLevelForSolver\(raw, \{ source: 'raw' \}\)/u);
