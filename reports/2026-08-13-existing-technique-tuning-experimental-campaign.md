@@ -1,6 +1,6 @@
 # Existing-technique tuning experimental campaign (2026-08-13)
 
-> **Status (2026-08-14):** exploratory/targeted campaign; no production policy change and no independently verifiable decision-bearing experiment. **Evidence:** 27 experiment IDs, 33 arm-runs (32 complete and one partial), 556 level invocations, 2,500 recorded internal attempts, 164 unique levels, and 20 independent hypothesis families. Invalidated and partially invalidated runs remain in the totals. Machine-readable protocols and raw rows are in the [machine-readable manifest](experiments/2026-08-13-technique-tuning/manifest.json); per-arm technique reach/win/cost denominators are in the [derived aggregate](experiments/2026-08-13-technique-tuning/aggregate.json).
+> **Status (2026-08-14):** exploratory/targeted campaign; no production policy change and no independently verifiable decision-bearing experiment. **Evidence:** 28 experiment IDs, 33 arm-runs (32 complete and one partial), 556 level invocations, 2,500 recorded internal attempts, 164 unique levels, and 21 independent hypothesis families. Invalidated and partially invalidated runs remain in the totals. Machine-readable protocols and raw rows are in the [machine-readable manifest](experiments/2026-08-13-technique-tuning/manifest.json); per-arm technique reach/win/cost denominators are in the [derived aggregate](experiments/2026-08-13-technique-tuning/aggregate.json).
 
 ## Scope and evidence rules
 
@@ -516,3 +516,25 @@ probabilities. They support extinction/trajectory diagnostics and a small curren
 retest, but only after a persistently verifiable protocol and canonical parents are included. The top
 new parent-family candidates are R02795, R00156, R02960, and R02248; use symmetric gains/losses and
 parent-clustered counts, not 28 solved siblings as independent observations.
+
+
+## ETT-028 source-selected family-boundary report
+
+The completed source view retains the sole observation for every edge measured once and makes all
+25 repeated-edge choices explicit. It selects the portfolio arm for P00110, the complete standalone
+60-second family run for R02248, and the complete original seven-orientation run for R03015. The 25
+unselected observations remain embedded in the view with reasons; no row is pooled or selected by
+file order. Two duplicate manifest definitions are likewise resolved to the manifest matching the
+selected source cohort.
+
+The resulting **886-edge, 51-parent view** joins without loss across **123 relation families** and
+reports zero missing variant rows. Neither historical baseline contains one of these canonical parent
+rows, so canonical state remains unknown throughout: the report emits no canonical-rescue, robust,
+mutation-rescue, or cost-cliff claims.
+
+Sibling solve-status disagreement nominates eight parents at zero new solve cost: **R02795 (5/7),
+R00156 (4/7), R02248 (4/7), R02960 (4/7), R00548 (2/7), R01465 (2/7), R02239 (2/7), and R02452
+(2/7)**. R02248 changes from the Phase-C-only 3/7 to 4/7 because ETT-028 deliberately uses its
+complete 60-second standalone run. The other 71 queue rows are scheduler-censored configuration
+concentrations and are descriptive only. These eight parents may seed a future canonical-inclusive,
+current-main cold protocol; this offline report itself does not justify a solver or scheduler change.
