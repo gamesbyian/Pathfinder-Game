@@ -99,6 +99,24 @@ crossingSlack = freeInt - forcedFutureNeighbourRevisits
 
 passed a bounded valid-prefix smoke with zero negative-slack soundness alarms. It remains a research variable, not a production score/prune. Exact live/dead labels should decide whether it carries useful discrimination.
 
+### State-conditioned must-cross anchoring (open; unconditional form closed)
+
+The solver already uses pending must-cross cells as soft objectives, uses perpendicular approach maps when a second visit is pending, retains `mustCrossFirst` in selected DFS/beam and admissible-order attempts, and uses must-cross structure in sound lower bounds and propagation. The open question is therefore not whether must-cross information can guide search; it is whether the role of each pending must-cross can be selected dynamically from the current search state.
+
+The historical `must-cross-horizon` attempt is closed in its unchanged form. It gave must-cross levels an unconditional extra early-`mustCrossFirst` pass with stronger urgency and was removed after disable-one ablation across 47 levels found zero contribution. Evidence from high-intersection levels independently shows that early attraction can be counterproductive when a successful path must first create intersection geometry away from its obligations. That evidence rejects a universal attraction increase; it does not test adaptive target selection or deliberate deferral.
+
+The remaining experiment should be level-blind and state-conditioned:
+
+- choose among pending must-cross cells, defer all of them, or retain the current neutral behavior using only current-invocation facts;
+- distinguish first-visit cell attraction from second-visit perpendicular-approach anchoring;
+- consider remaining-step and crossing slack, visit/axis state, approach reachability, competing objectives, and bounded local completion interfaces;
+- begin as a shadow/rank diagnostic against default, `mustCrossFirst`, and `intersectionHarvest`;
+- use saved solutions only as offline labels for whether successful moves were promoted or demoted;
+- require recurrence across unrelated levels or held-out parent families before building a live policy;
+- evaluate any live policy through the full ladder at matched total work, including levels where early must-cross attraction is already known to be harmful.
+
+Do not use a stored must-cross visitation order, exact-level winner, hint, or corpus identity during a capability solve. The corresponding queue entry is [State-conditioned must-cross anchoring remains open](future-work.md#state-conditioned-must-cross-anchoring-remains-open).
+
 ### Joint completion interfaces
 
 The principled descendant is conservative enumeration of bounded local completion patterns for interacting pending must-cross obligations. This avoids the already-falsified static forced-edge assumption by representing multiple legal completion patterns explicitly.
