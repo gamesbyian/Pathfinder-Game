@@ -1494,3 +1494,111 @@ test('single-feature experiments enable opt-ins without activating unrelated opt
         }
     }
 });
+
+// ── STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY ────────────────────────────────────
+//
+// Opt-in, default OFF (see REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION's own comment for the
+// R00408 regression it exists to repair). The shrink itself is what creates the debt, so these
+// tests reuse makeRepairGatedMustTurnInfeasibleLevel + the poor-bestBadness dispatch the adaptive-
+// budget tests above already establish: ordinary tier reports badness 100, so the biased tier is
+// scaled to MIN_SCALE and the recovery tier has something to restore.
+function shrinkRecoveryDispatch(recovered: number[], solveOnFullBudget = false) {
+    return (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        if (out) {
+            out.nodesExpanded = spent;
+            out.timedOut = true;
+            if (config.repairMustTurnBiased && budgetMs === REPAIR_PROBE_ATTEMPT_MS_CAP) recovered.push(spent);
+            else if (!config.repairMustTurnBiased) out.bestBadness = 100;
+        }
+        // Only a biased attempt granted the FULL probe budget solves — exactly the R00408 shape,
+        // where the shrunken tier fails and the same config at its unshrunk budget wins.
+        if (solveOnFullBudget && config.repairMustTurnBiased && spent === REPAIR_PROBE_BIASED_NODE_BUDGET) {
+            return [0, 1] as unknown as ReturnType<typeof runAttemptSearch> extends Promise<infer R> ? R : never;
+        }
+        return null;
+    }) as typeof runAttemptSearch;
+}
+
+test('shrink recovery is inert by default (cfg=null): no recovery attempt is ever run', async () => {
+    const budgets: number[] = [];
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50, nodeBudget: 40_000_000,
+        attemptSearchForTesting: shrinkRecoveryDispatch(budgets),
+    });
+    assert.equal(result.attempts.some(a => a.repairProbeShrinkRecovery), false);
+});
+
+test('shrink recovery stays off under an explicit { FLAG: false }, and under a sparse unrelated ablation object', async () => {
+    for (const ablation of [
+        { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: false },
+        { STRATEGY_REPAIR_PROBE: true },
+    ]) {
+        const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+            timeBudgetMs: 50, nodeBudget: 40_000_000, ablation,
+            attemptSearchForTesting: shrinkRecoveryDispatch([]),
+        });
+        assert.equal(result.attempts.some(a => a.repairProbeShrinkRecovery), false);
+    }
+});
+
+test('shrink recovery re-runs the shrunk biased config at its FULL probe budget', async () => {
+    const biasedBudgets: number[] = [];
+    // Ample ceiling: the reserve is min(debt, fraction x earlyTierNodeBudget) and the tier is then
+    // additionally bounded by whatever headroom is actually left, so a tight ceiling tests the
+    // arithmetic rather than the contract. With room to spare the full budget must be restored.
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50, nodeBudget: 400_000_000,
+        ablation: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true },
+        attemptSearchForTesting: shrinkRecoveryDispatch(biasedBudgets),
+    });
+    const scale = Math.min(1, Math.max(REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE / 100));
+    const shrunk = Math.floor(REPAIR_PROBE_BIASED_NODE_BUDGET * scale);
+    const recovery = result.attempts.filter(a => a.repairProbeShrinkRecovery);
+    assert.equal(recovery.length, 1, 'exactly one recovery attempt');
+    assert.equal(recovery[0].nodesExpanded, REPAIR_PROBE_BIASED_NODE_BUDGET, 'recovered at the FULL budget, not the shrunken one');
+    assert.ok((recovery[0].nodesExpanded ?? 0) > shrunk, 'strictly more than the shrunken grant');
+    assert.ok(shrunk < REPAIR_PROBE_BIASED_NODE_BUDGET, 'sanity: the shrink actually fired');
+    assert.ok(biasedBudgets.includes(shrunk), 'sanity: the original probe attempt was the shrunken one');
+    // Every recovery attempt is still a probe attempt, so probe-population tooling keeps counting it.
+    assert.equal(recovery[0].repairProbe, true);
+});
+
+test('shrink recovery can solve a level the shrink otherwise loses', async () => {
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50, nodeBudget: 400_000_000,
+        ablation: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true },
+        attemptSearchForTesting: shrinkRecoveryDispatch([], true),
+    });
+    assert.equal(result.ok, true, 'the full-budget re-run wins');
+    assert.equal(result.attempts.at(-1)?.repairProbeShrinkRecovery, true);
+});
+
+test('shrink recovery does not run when the shrink never fired (promising ordinary bestBadness)', async () => {
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , , , , nodeBudget, out] = args;
+        const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += spent;
+        // badness 2 is well under the gate, so the biased tier keeps its full budget and there is
+        // no debt to recover — the tier must stay a strict no-op rather than re-running anything.
+        if (out) { out.nodesExpanded = spent; out.timedOut = true; if (!config.repairMustTurnBiased) out.bestBadness = 2; }
+        return null;
+    }) as typeof runAttemptSearch;
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50, nodeBudget: 40_000_000,
+        ablation: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true },
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.attempts.some(a => a.repairProbeShrinkRecovery), false);
+});
+
+test('shrink recovery is inert when the shrink mechanism itself is disabled', async () => {
+    const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
+        timeBudgetMs: 50, nodeBudget: 40_000_000,
+        ablation: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true, STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: false },
+        attemptSearchForTesting: shrinkRecoveryDispatch([]),
+    });
+    assert.equal(result.attempts.some(a => a.repairProbeShrinkRecovery), false);
+});

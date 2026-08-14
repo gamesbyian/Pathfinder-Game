@@ -92,6 +92,52 @@ The remaining repair research direction is exact retreat/deep prefix editing, no
   `BADNESS_GATE`/`MIN_SCALE` constants' own re-calibration caveat (still derived from the original
   n=12, not re-derived at the larger sample size).
 
+**Post-promotion population evidence (2026-08-14): KEEP DEFAULT-ON — better evidenced than at promotion.** A three-arm A/B over the entire eligible Corpus-2 population (512 eligible + 50 control) measured turning this flag OFF at **190/562 vs 192 baseline: net −2** (gained `R02961`; lost `R02258`, `R02663`, `R02719`) and **+15.02% work**. Three levels depend on the flag, including both previously-claimed gains (`R02719` from the 300-level promotion A/B, `R02663` from the gate 10→6 sweep) plus `R02258`, which no earlier evidence had identified — now confirmed over essentially the whole affected population rather than a subsample. The correct disposition is to keep the flag and accept `R00408` as a known cost. **The Corpus-1 counter-evidence below stands as a real, fully-traced single-level loss, but the "just revert the flag" alternative it originally suggested is falsified.**
+
+  Original Corpus-1 counter-evidence (2026-08-14): this flag costs one Corpus-1 solve. A matched
+level-blind A/B at one SHA over all 102 Corpus-1 levels (50M nodes, non-binding deadline) gives
+93/102 ON versus **94/102 OFF** — `R00408` solves only with the flag disabled, and no level solves
+only with it enabled. The mechanism is traced end to end: `R00408`'s ordinary probe tier reports
+`bestBadness = 13`, so the controller scales the biased tier to `max(0.35, 6/13) = 0.46`, cutting it
+from 6,000,000 to ~2,769,231 nodes — and `dfs:repair:repair(mustTurnBiased)`, the biased attempt
+itself, is the winning configuration. The prediction "high ordinary badness means the biased tier
+will not help" is self-fulfilling here, because acting on it withdraws the budget that would have
+falsified it; the level then burns the full 50M ceiling instead of solving in 9.97M. This does not
+by itself make the flag net-negative — its Corpus-2 evidence is a real +1 — but the population
+picture is now mixed (+1 on 300 sampled Corpus-2 levels, −1 across all of Corpus 1), and **Corpus 1
+was never in any arm of this promotion or of the gate recalibration**: both A/B workflows hardcode
+`--corpus=data/stress/stress-levels-random.json`, and `solver:bench --check`'s published corpus has
+zero eligible levels. Corpus 1 has 12. See
+[`../reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md`](../reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md).
+
+- `STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY`: **NEW, opt-in, default OFF (2026-08-14)** — the repair for
+  the entry above. Re-runs each shrunk biased probe config at its FULL budget, but only after the
+  main loop, repair fallback and attraction-diversity pass have all failed, so levels that solve
+  elsewhere keep the shrink's saving and the recovery's cost lands only on levels already burning
+  their whole ceiling. Confirmed on `R00408`: the recovery attempt consumed **5,965,490** nodes —
+  byte-identical to the winning attempt's count in the flag-OFF A/B arm — and solved with
+  `dfs:repair:repair(mustTurnBiased)`, finishing at 37,840,699 total nodes instead of exhausting
+  50,000,224. Default-OFF is byte-identical to pre-change (`R00408` FAILED at exactly 50,000,171
+  nodes), so the budget restructure is a strict no-op for every production path and existing A/B arm.
+  **CLOSED NEGATIVE (2026-08-14).** Three-arm Corpus-2 A/B over the ENTIRE eligible population (all 512 repair-gated + must-turn levels, plus a 50-level ineligible control; 562/562 coverage, 492 producing a biased tier, deterministic, one SHA): **191/562 vs baseline 192 — 0 gained, `R00094` LOST, work +13.14%.** The loss is the predicted failure mode: the reserve withholds nodes from the main loop on every eligible level, and `R00094` needed them. Across both corpora it nets to zero solves (+1 `R00408` on Corpus 1, −1 `R00094` on Corpus 2) for +2.00% and +13.14% work. Do not promote; do not reopen by re-tuning the reserve — restoring budget is not the fix, the `repairSearchFromGate` plateau is (same closure reasoning as `STRATEGY_REPAIR_FALLBACK_NODE_RESERVE` above). Earlier per-corpus detail: Corpus 1 (all 102): 93→94, **+1 gained
+  (`R00408`), 0 lost**, nodes −1.24% (the gain pays for itself: `R00408` finishes at 37.8M instead of
+  exhausting 50M), work +2.00%. Corpus 2 (13 nominated levels): **7/13 both arms, 0 gained, 0 lost,
+  work +18.9%** — the tier fired on all 6 failing levels at the full 6,000,000-node budget and none
+  solved. Control reproduced the pre-change run byte-identically across all 102 Corpus-1 levels.
+  So the mechanism is safe and correctly targeted, but gains exactly the one level it was designed
+  against, and gains nothing on the Corpus-2 population chosen to be maximally favourable to it —
+  consistent with the same `repairSearchFromGate` plateau that closed
+  `STRATEGY_REPAIR_FALLBACK_NODE_RESERVE`: a near-miss badness does not close just because the tier
+  is handed more nodes. Promotion rules 2 (held-out family test) and 6 (full-corpus gained/lost IDs;
+  13 of 1,700 is not a population) are unmet, and rule 4 is arguable — work rose in both populations
+  for one solve. **A simpler alternative reaches the same Corpus-1 number**: turning
+  `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` back off also gives 94/102, with no new mechanism
+  and no added work; the recovery's only edge is preserving that flag's own Corpus-2 gain (`R02719`,
+  300-level sample), which is unmeasured at population scale. Candidate population from run #40's corrected diagnostic: 13 Corpus-2 levels where the shrink
+  fired and the biased TIER then missed within `biasedBestBadness <= 3` — note that is the tier
+  failing, not the level: measured at 50M with the recovery off, 7 of the 13 already solve by other
+  tiers, so only 6 are gain candidates and the other 7 are regression candidates.
+
 A post-promotion [saved-artifact audit](../reports/2026-08-13-existing-solve-data-tuning-opportunities.md) found that direct repair yield falls from 18.4% at baseline `badness <= 5` to 0% above 20. It nominated a current-main matched sweep of `BADNESS_GATE=10,8,6` with `MIN_SCALE=0.35` fixed and explicit `repairProbe` tags. This is a calibration follow-up to the promoted adaptive controller, not a reopening of its default-on disposition.
 
 **Resolved (2026-08-13)**: the nominated sweep ran as a 300-level stratified GHA A/B, the same sample/seed/budget the mechanism's own on/off promotion used. `BADNESS_GATE=8` and `=6` both gained the identical level (`R02663`) over the `=10` baseline with zero losses; `=6` strictly dominated `=8` on cost (nodes −0.7%/work −4.1% vs. baseline, vs. `=8`'s −0.5%/−2.1%). `REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE` promoted from 10 to 6 in `modules/solver/orchestration.ts` (`MIN_SCALE=0.35` unchanged) at the project owner's explicit direction. See [`reports/2026-08-12-repair-probe-early-main-loop-starvation.md`](../reports/2026-08-12-repair-probe-early-main-loop-starvation.md)'s "Gate/min-scale recalibration: GHA A/B" section for the full breakdown.

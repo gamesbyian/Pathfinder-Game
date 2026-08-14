@@ -79,6 +79,8 @@ Two consequences:
 
 `scripts/experiment-manifest-lib.mjs` (schema v2) already requires `experimentId`, `runId`, `solverRef`, `corpus`, `levelIds`, `levelSelectionHash`, `arm`, `solverFlags`, `workflow`, `workflowInputs`, `seeds`, `canonicalWorkBudget`, `wallDeadlineMs`, `profile`, and `instrumentation`. That is already `solver_runs` and `experiment_arms`. The analytical layer should adopt it as the primary key rather than inventing parallel run identity, and should mark any row it cannot attribute to a manifest as unattributed rather than silently pooling it with attributed rows.
 
+> **Largely built already (2026-08-13).** `scripts/analyze-technique-campaign.mjs` implements this spine and most of the comparability contract below, for the campaign artifact format under `reports/experiments/<campaign>/`: level-selection hashing, completeness (`levelsRequested` vs rows), duplicate-id rejection, `deadlineTruncated` and attempt-error counting, work-budget overshoot bounds, level-blind gating, protocol verification (resolvable full commit, persistent ref, permalink, per-artifact SHA-256, evidence class), paired level-set/order equality, and — the core of the contract — rejection of any **undeclared summary difference** between two arms outside the protocol's `treatmentVariables`. It is stricter than what this section originally proposed. Do not build a parallel spine; the remaining gap is the historical archive described next, which has no manifests and no protocols.
+
 ### The layer's most valuable output is a comparability contract
 
 The archived refreshes are heterogeneous in ways that will produce confidently wrong answers if ingested naively. Measured across the 18 directories in `logs/solver-corpus2-batches/archive/`:
@@ -596,12 +598,14 @@ If the overriding goal remains more solves, faster solving, or faster progress t
 
 ### Tier 1 - strongest expected payoff
 
-1. **Run-identity and comparability spine** — the manifest-keyed run table, the comparability contract, and provenance bucketing described in section 1. Shared by items 2 and 3 below, and the part that prevents wrong answers rather than merely enabling faster ones.
+1. ~~**Run-identity and comparability spine**~~ — **done for campaign artifacts** by `analyze-technique-campaign.mjs` (2026-08-13); see the note in section 1. What remains is narrower than this item originally implied: canonical provenance-class predicates (landed as `scripts/stress/provenance-classes.mjs` + `npm run stress:provenance-coverage`) and, if it ever proves necessary, retrofitting the manifest-free historical archive.
 2. **Reusable GitHub Actions experiment substrate**
 3. **DuckDB analytical views on top of the spine** (no Parquet at this stage)
 4. **Optuna tuning harness, and Actions batch optimization for it** — preceded by random search on the existing matrix
 
 These directly increase Pathfinder's ability to exploit existing data and compute.
+
+Item 3 is now the open Tier 1 work on the data side, and it should stay gated behind the acceptance test in section 1: the campaign analyzer already answers cross-arm questions well, so a query layer has to earn its place on the questions that analyzer does *not* cover — principally cross-corpus hint/provenance analysis, where the only shared machinery today is `classifyProvenanceSource` and the provenance-class predicates.
 
 Item 2 is promoted above the query layer deliberately. Section 2's failure list is not hypothetical: wrong-ref measurements, stale checkpoints, omitted parameters, and combine failures after expensive compute had already succeeded. The canonical corpus-2 A/B is roughly 122.4 billion arm-level nodes per the [PR #1356 follow-up](../reports/2026-08-11-pr1356-review-follow-up.md); losing one arm of that to a combine bug costs more than any amount of awkward querying. Easier queries save analyst time, while a reliable substrate saves whole experiments.
 

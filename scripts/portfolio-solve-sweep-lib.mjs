@@ -97,6 +97,11 @@ export function attemptRecord(a) {
         // Distinguishes a runRepairProbe attempt from the same repair config re-run later by the
         // full-budget repair fallback loop -- see orchestration.ts's Attempt.repairProbe comment.
         ...(a.repairProbe ? { repairProbe: true } : {}),
+        // Separates a STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY re-run from the original shrunken
+        // probe attempt (both carry repairProbe) -- without this the recovery tier is invisible in
+        // every persisted report, the same drop-before-persist gap CLAUDE.md's provenance section
+        // documents for admissibleOrder.
+        ...(a.repairProbeShrinkRecovery ? { repairProbeShrinkRecovery: true } : {}),
         // The admissible-order-search last-resort tier's dispatch flags. Omitting these made every
         // one of its attempts indistinguishable from a plain DFS attempt in every persisted report
         // (measured: 0 attempts carrying these flags across the whole corpus-2 baseline and the

@@ -122,12 +122,23 @@ interface Attempt {
      *  the biased probe attempt's own `ok`/`bestBadness` shows what the scaled budget actually
      *  achieved. Not read by any solving logic. */
     repairProbe?: boolean;
+    /** True only for attempts run by the STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY tier — a re-run of a
+     *  biased probe config at the full budget the adaptive shrink withheld from it. Also carries
+     *  `repairProbe: true` (it IS a probe config), so probe-population tooling keeps counting it;
+     *  this flag is what separates a recovered attempt from the original shrunken one. */
+    repairProbeShrinkRecovery?: boolean;
     /** Diagnostic-only: this ordinary main-loop attempt belongs to the late suffix allowed to
      *  consume the experimental reserved node slice. Never set when the experiment is disabled. */
     mainLoopLateReserve?: boolean;
 }
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
-interface SearchResult { solution: number[] | null; attempts: Attempt[]; earlyNodeBudgetReached?: boolean; }
+interface SearchResult { solution: number[] | null; attempts: Attempt[]; earlyNodeBudgetReached?: boolean; shrunkBiased?: ShrunkBiasedTier[]; }
+
+/** One biased repair-probe tier whose node budget STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET
+ *  reduced, recorded so a later tier can restore what was withheld — see
+ *  STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY. `fullNodeBudget` is the budget the tier would have had
+ *  with the mechanism off; `grantedNodeBudget` is what it actually got. */
+interface ShrunkBiasedTier { config: AttemptConfig; fullNodeBudget: number; grantedNodeBudget: number; }
 interface SolveOpts {
     timeBudgetMs?: number | string;
     yieldFn?: (() => Promise<void>);
@@ -228,6 +239,9 @@ interface SolveOpts {
      *  whole main loop). Undefined (production default) preserves the constant exactly.
      *  Opt-in, default OFF (unlike the admissible-order reserve) — see the constant's own comment. */
     repairFallbackNodeReserveFractionOverride?: number;
+    /** STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY's reserve fraction; defaults to
+     *  REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION. Same override rationale as its siblings. */
+    repairProbeShrinkRecoveryNodeReserveFractionOverride?: number;
     /** Override for ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION for this solve only — same shape,
      *  rationale, and opt-in-default-OFF status as repairFallbackNodeReserveFractionOverride above
      *  (STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE being off already zeroes this reserve through its
@@ -892,6 +906,50 @@ export const REPAIR_FALLBACK_NODE_RESERVE_FRACTION = 0.15;
  *  dedicated A/B. */
 export const ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION = 0.15;
 
+/** STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY's node reserve, as a fraction of whatever
+ *  `mainLoopLateReserve` remains after the repair-fallback and attraction-diversity reserves have
+ *  taken their nested slices.
+ *
+ *  WHY THIS EXISTS: `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` shrinks a biased repair-probe
+ *  tier's node budget on the evidence of the ordinary tier's `bestBadness`. That prediction is
+ *  TERMINAL today — nothing ever restores the withheld nodes, and no later tier re-runs the biased
+ *  config, so a mispredicted level simply loses whatever that tier would have found. Corpus-1's
+ *  `R00408` is the confirmed case: ordinary badness 13 scales the biased tier to
+ *  `max(0.35, 6/13) = 0.46`, cutting it from 6,000,000 to ~2,769,231 nodes, and
+ *  `dfs:repair:repair(mustTurnBiased)` — that very tier — is the configuration that solves the
+ *  level with the full budget in 9.97M total nodes. Shrunk, it fails and the level then exhausts a
+ *  50,000,000-node ceiling. See
+ *  reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md.
+ *
+ *  WHY A LATE TIER RATHER THAN AN IMMEDIATE RETRY: re-running the shrunk tier inside the probe
+ *  would pay `granted + full` on every level whose shrink was CORRECT — strictly worse than never
+ *  shrinking at all, destroying the mechanism's entire reason to exist. Running it only after the
+ *  main loop, repair fallback and attraction-diversity pass have all failed inverts that: levels
+ *  that go on to solve elsewhere keep the full saving (the recovery never runs), and the recovery's
+ *  cost lands only on levels that were already going to burn their whole ceiling.
+ *
+ *  WHY A RESERVE RATHER THAN A REORDER: the same starvation that
+ *  `ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION` documents applies verbatim — `R00408`'s own failing
+ *  trace shows the main loop and admissible-order tier consuming 24.4M and 12.5M nodes and the
+ *  repair fallback never running at all, so a late tier with no withheld slice would reliably get
+ *  zero nodes on exactly the levels it exists to rescue.
+ *
+ *  The recovery re-runs the shrunk config at its FULL budget rather than only the withheld
+ *  remainder, because `repairSearchFromGate` is a pure function of `(gateKey, level, prep, profile,
+ *  budget)` seeded only from `gateKey` — so a larger budget's trajectory strictly EXTENDS the
+ *  smaller one's (the same property runRepairProbe's own doc comment already relies on). Replaying
+ *  the granted prefix is therefore wasted compute, never a different or weaker search, and it is
+ *  what makes recovery of the unshrunk result guaranteed rather than merely likely.
+ *
+ *  CALIBRATION CAVEAT: 0.5 is chosen so a single recovered tier can actually fit (a full biased
+ *  budget is 6,000,000 nodes and the surviving late-reserve remainder is typically far smaller than
+ *  the 50M ceiling), NOT derived from any A/B. Landed opt-in, default OFF, under the same standing
+ *  discipline as the two reserves above — do not promote without a dedicated A/B on both corpora,
+ *  and note that Corpus 1 was never in any arm of the mechanism this repairs. */
+export const REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION = 0.5;
+// (Read as a CEILING on the reserve, not its size: the reserve is `min(actual debt, this fraction of
+// earlyTierNodeBudget)`, so it only ever withholds what a shrunk tier could really use.)
+
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
  *  repair fallback, tried BEFORE the ordinary DFS/beam main loop — see runRepairProbe.
@@ -1188,6 +1246,7 @@ async function runRepairProbe(
     badnessGate = REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, minScale = REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
+    const shrunkBiased: ShrunkBiasedTier[] = [];
     // REPAIR_PROBE_BIASED_NODE_BUDGET was calibrated (see its own comment) against exactly one
     // biased tier's worst case (repairMustTurnBiased, the only one that existed at the time). When a
     // second biased tier is also present (repairTurnBiased, under STRATEGY_REPAIR_TURN_BIAS, in
@@ -1236,7 +1295,16 @@ async function runRepairProbe(
                     minScale,
                     badnessGate / ordinaryBestBadness,
                 ));
+                const fullNodeBudget = fixedProbeNodeBudget;
                 fixedProbeNodeBudget = Math.floor(fixedProbeNodeBudget * scale);
+                // Record what was withheld so STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY can restore it
+                // if every other tier later fails. Recorded even when the flag is off — this is
+                // pure bookkeeping on an already-computed value, it changes no search behavior, and
+                // making it conditional would mean the recovery tier's eligibility depended on two
+                // flags instead of one.
+                if (fixedProbeNodeBudget < fullNodeBudget) {
+                    shrunkBiased.push({ config: repairConfig, fullNodeBudget, grantedNodeBudget: fixedProbeNodeBudget });
+                }
             }
         }
         const seedSalts = (!isBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_MULTI_SEED))
@@ -1254,7 +1322,7 @@ async function runRepairProbe(
             const nodesSoFar = prep._metrics ? prep._metrics.nodesExpanded : 0;
             const remainingExternal = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - nodesSoFar);
             const probeNodeBudget = Math.min(fixedProbeNodeBudget, remainingExternal);
-            if (probeNodeBudget < 50) return { solution: null, attempts };
+            if (probeNodeBudget < 50) return { solution: null, attempts, shrunkBiased };
             let nodesUsed = 0;
             for (let gi = 0; gi < activeGates.length; gi++) {
                 const gateKey = activeGates[gi];
@@ -1274,11 +1342,11 @@ async function runRepairProbe(
                 // bestBadness from the same repair config re-run later by the full-budget fallback loop.
                 attempts.push({ ...r.attempt, repairProbe: true });
                 nodesUsed += nodesOut.nodesExpanded ?? gateNodeBudget;
-                if (r.path) return { solution: r.path, attempts };
+                if (r.path) return { solution: r.path, attempts, shrunkBiased };
             }
         }
     }
-    return { solution: null, attempts };
+    return { solution: null, attempts, shrunkBiased };
 }
 
 
@@ -1907,6 +1975,24 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         ? Math.floor((mainLoopLateReserve - repairFallbackNodeReserve) * attractionDiversityNodeReserveFraction)
         : 0;
 
+    // STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY (see REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION's
+    // own comment for the full derivation). Only the ENABLE/fraction decision can be made here: the
+    // reserve's SIZE depends on what the probe actually shrinks, which is not known until the probe
+    // has run, so it is computed below once `shrunkBiasedTiers` is populated.
+    //
+    // OPT-IN convention (`cfg && cfg.FLAG === true`), matching the two new reserves above and NOT
+    // the standard `!cfg || cfg.FLAG` the promoted flags use: brand-new and unvalidated, registered
+    // in scripts/ablation-config.mjs's OPT_IN_FEATURES, so it must stay OFF whenever `cfg` is null.
+    const shrinkRecoveryEnabled = !!(cfg && cfg.STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY === true)
+        && repairConfigs.length > 0
+        && repairBudgetFraction !== 0
+        && (!cfg || cfg.STRATEGY_REPAIR_PROBE)
+        && (!cfg || cfg.STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET);
+    const shrinkRecoveryFractionRaw = Number(opts.repairProbeShrinkRecoveryNodeReserveFractionOverride);
+    const shrinkRecoveryFraction = Number.isFinite(shrinkRecoveryFractionRaw) && shrinkRecoveryFractionRaw >= 0
+        ? Math.min(1, shrinkRecoveryFractionRaw)
+        : REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION;
+
     // The ceiling the main loop's LATE SUFFIX may additionally reach beyond `mainLoopEarlyNodeBudget`
     // — always >= mainLoopEarlyNodeBudget by construction (see above), so no clamp is needed here.
     // `earlyTierNodeBudget` itself is unchanged and remains what the repair fallback loop and the
@@ -1921,7 +2007,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // measurement confirmed always spends everything it's allowed to) cannot eat the room this
     // reserve exists to protect. Equals `earlyTierNodeBudget` whenever the reserve is ineligible
     // (default OFF), so this is a strict no-op in that case, same as every other reserve here.
-    const repairFallbackNodeCeiling = earlyTierNodeBudget === Infinity
+    const repairFallbackNodeCeilingBase = earlyTierNodeBudget === Infinity
         ? Infinity
         : earlyTierNodeBudget - attractionDiversityNodeReserve;
 
@@ -1956,11 +2042,13 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // Ablation: STRATEGY_REPAIR_PROBE skips only the probe (the full-budget fallback loop below
     // still runs), isolating the probe's own scheduling contribution from repair-search itself.
     const probeAttempts: Attempt[] = primeMissAttempt ? [primeMissAttempt] : [];
+    let shrunkBiasedTiers: ShrunkBiasedTier[] = [];
     if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
         const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, mainLoopEarlyNodeBudget,
             opts.repairProbeAdaptiveBiasedBadnessGateOverride ?? REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE,
             opts.repairProbeAdaptiveBiasedMinScaleOverride ?? REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE);
         probeAttempts.push(...probe.attempts);
+        shrunkBiasedTiers = probe.shrunkBiased ?? [];
         if (probe.solution) {
             const totalMs = Date.now() - levelStartTime;
             const nodesExpanded = prep._metrics.nodesExpanded;
@@ -1985,6 +2073,31 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         }
     }
 
+    // Now that the probe has run, size STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY's reserve to the ACTUAL
+    // debt it must repay. The recovery re-runs a shrunk config from scratch (repairSearchFromGate
+    // has no resume API), so repaying only the withheld difference is not enough — it needs the
+    // tier's FULL budget to reach the point the shrink cut off. Reserving `full - granted` was tried
+    // first and measurably fails: on R00408 it left the recovery 2,812,495 nodes against the
+    // 5,965,490 its winning attempt actually needs.
+    //
+    // Carved from `earlyTierNodeBudget` as a PEER of admissibleOrderNodeReserve rather than nested
+    // inside `mainLoopLateReserve` (where the two opt-in reserves above sit): a full biased budget
+    // is 6,000,000 nodes, larger than the whole late-reserve slice at any realistic ceiling, so a
+    // nested slice structurally cannot fund this tier. Bounded by `shrinkRecoveryFraction` of the
+    // early-tier ceiling so it can never starve the tiers it sits behind.
+    const shrinkRecoveryDebt = shrinkRecoveryEnabled
+        ? shrunkBiasedTiers.reduce((sum, t) => sum + t.fullNodeBudget, 0) : 0;
+    const shrinkRecoveryNodeReserve = (shrinkRecoveryDebt > 0 && earlyTierNodeBudget !== Infinity)
+        ? Math.min(shrinkRecoveryDebt, Math.floor(earlyTierNodeBudget * shrinkRecoveryFraction))
+        : 0;
+    // Every post-probe early tier's ceiling drops by the reserve; each equals its pre-reserve value
+    // whenever the reserve is 0 (default OFF, or nothing shrunk), so this is a strict no-op then.
+    const mainLoopNodeBudgetFinal = mainLoopNodeBudget === Infinity ? Infinity : mainLoopNodeBudget - shrinkRecoveryNodeReserve;
+    const repairFallbackNodeCeiling = repairFallbackNodeCeilingBase === Infinity
+        ? Infinity : repairFallbackNodeCeilingBase - shrinkRecoveryNodeReserve;
+    const diversityNodeCeiling = earlyTierNodeBudget === Infinity
+        ? Infinity : earlyTierNodeBudget - shrinkRecoveryNodeReserve;
+
     // Multi-gate levels: interleave configs across gates (config-outer, gate-inner).
     // This prevents Gate 1 exhausting its full budget before Gate 2 ever gets to try
     // Config 1 — crucial when Gate 1 is structurally infeasible but parity-feasible.
@@ -2003,8 +2116,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const useInterleaving = (!cfg || cfg.STRATEGY_GATE_INTERLEAVING);
     const mainLoopStartTime = Date.now();
     const result = useInterleaving && activeGates.length > 1
-        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, mainLoopNodeBudget, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart)
-        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, mainLoopNodeBudget, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart);
+        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, mainLoopNodeBudgetFinal, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart)
+        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, mainLoopNodeBudgetFinal, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart);
     result.attempts = [...probeAttempts, ...result.attempts];
     const mainLoopEarlyTiersHitNodeCeiling = result.earlyNodeBudgetReached === true;
 
@@ -2109,13 +2222,62 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // this comment requires — just the reduced one this pass shares with the other early
             // tiers, so it cannot spend the admissible-order tier's reserve.)
             const diversityResult = useInterleaving && activeGates.length > 1
-                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, earlyTierNodeBudget, workBudget, workStart)
-                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, earlyTierNodeBudget, workBudget, workStart);
+                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, diversityNodeCeiling, workBudget, workStart)
+                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, diversityNodeCeiling, workBudget, workStart);
             for (const attempt of diversityResult.attempts) attempt.attractionDiversity = true;
             result.attempts.push(...diversityResult.attempts);
             if (diversityResult.solution) result.solution = diversityResult.solution;
         } finally {
             prep._cfg = originalCfg;
+        }
+    }
+
+    // STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: restore what the adaptive shrink withheld, but only
+    // once the main loop, repair fallback and attraction-diversity pass have all already failed —
+    // see REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION's own comment for why the placement
+    // (not an immediate retry) is what preserves the shrink's savings, and why the tier needs its
+    // own withheld slice rather than a reorder.
+    //
+    // Re-runs each shrunk config at its FULL budget: repairSearchFromGate's trajectory for a larger
+    // budget strictly extends the smaller one's (pure function of (gateKey, level, prep, profile,
+    // budget), seeded only from gateKey), so this replays the already-granted prefix and then
+    // continues into exactly the search the shrink cut off. Strict no-op when nothing was shrunk.
+    if (!result.solution && shrunkBiasedTiers.length > 0 && shrinkRecoveryEnabled
+        && prep._metrics.nodesExpanded < earlyTierNodeBudget) {
+        for (const shrunk of shrunkBiasedTiers) {
+            if (result.solution) break;
+            for (let gi = 0; gi < activeGates.length; gi++) {
+                if (result.solution) break;
+                // `earlyTierNodeBudget` (absolute, cumulative) is this tier's own ceiling, so it may
+                // spend its reserved slice plus whatever the earlier tiers left unused — exactly the
+                // pattern the diversity pass already uses against its own ceiling.
+                // The reserve is a FLOOR, not merely a derived remainder. Every node check in this
+                // file is round-granular and may overshoot its ceiling by up to one attempt's own
+                // cost ("can still overshoot by up to one round's own cost" — see runRepairProbe's
+                // own comment), and a single main-loop attempt can be tens of millions of nodes. On
+                // R00408 the main loop overshot its reduced ceiling by ~375,000 nodes and ate that
+                // much of this tier's slice, leaving 5,624,791 against the 5,965,490 its winning
+                // attempt needs — the tier fired and still failed by ~340,000 nodes. Taking the max
+                // of the plain remainder and the reserve makes the withheld slice actually
+                // withheld; the overshoot then comes out of the total rather than out of this tier.
+                // Still hard-bounded by the true external ceiling, so nodeBudget is never exceeded.
+                const remainingEarly = earlyTierNodeBudget === Infinity
+                    ? Infinity
+                    : Math.max(0, earlyTierNodeBudget - prep._metrics.nodesExpanded);
+                const remainingTotal = nodeBudget === Infinity
+                    ? Infinity
+                    : Math.max(0, nodeBudget - prep._metrics.nodesExpanded);
+                const remaining = Math.min(remainingTotal, Math.max(remainingEarly, shrinkRecoveryNodeReserve));
+                if (remaining < 50) break;
+                const gatesLeft = activeGates.length - gi;
+                const gateNodeBudget = Math.min(shrunk.fullNodeBudget, Math.floor(remaining / gatesLeft));
+                if (gateNodeBudget <= shrunk.grantedNodeBudget) break;
+                const nodesOut: { nodesExpanded?: number } = {};
+                const r = await runAttempt(activeGates[gi], level, prep, shrunk.config, REPAIR_PROBE_ATTEMPT_MS_CAP,
+                    Date.now(), yieldFn, gateNodeBudget, nodesOut);
+                result.attempts.push({ ...r.attempt, repairProbe: true, repairProbeShrinkRecovery: true });
+                if (r.path) result.solution = r.path;
+            }
         }
     }
 

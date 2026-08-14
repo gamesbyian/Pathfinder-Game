@@ -8,6 +8,21 @@ Last reconciled: **2026-08-11**, after the revised neighbor-budget full Corpus-2
 
 ## Current capability evidence
 
+**Current level-blind capability (run #39, `31772083174`, 2026-08-14, commit `d425532ba`):**
+
+- **Corpus 2: 731/1700** (55,089,123,267 nodes / 68,721,621,532 canonical work);
+- **Corpus 1: 94/102** (804,866,761 nodes / 1,223,851,344 work);
+- protocol: production defaults with blank `enable_flags` (all promoted flags at their real ON defaults), **50M node budget on both corpora**, 2 workers, `deterministic=true`, `persist_hints=false`, 24h non-binding deadline;
+- full coverage (1700/1700 and 102/102), all 21 jobs succeeded, artifact-only (`solver-stress-refresh-combined`, ID `9209391122`).
+
+This is the highest level-blind Corpus-2 figure recorded, and it resolves the open question left by the 635 sweep below: that drop was **not** a bad promotion. Raising Corpus-2's node ceiling from 36M to 50M more than recovered it, which is consistent with the budget-reallocation mechanism proposed in [`../reports/2026-08-12-main-loop-late-reserve-population-ab.md`](../reports/2026-08-12-main-loop-late-reserve-population-ab.md).
+
+**It is a reference point, not a controlled delta.** Against the 635 sweep it changes node budget (36M→50M), worker count (1→2), and two days of `main`; against the 665 arm it additionally includes three flag promotions and the repair-probe wall-clock fix. Isolating the budget effect needs a matched 36M-vs-50M pair at one SHA — worth running, since it would say whether raising the ceiling further keeps paying.
+
+**Corpus 1's 95→94 is diagnosed** (2026-08-14): `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET`, promoted default-ON 2026-08-13, costs exactly one Corpus-1 level. A matched level-blind A/B at one SHA over all 102 levels gives 93/102 with the flag on and 94/102 with it off; `R00408` solves only with it off, and nothing solves only with it on. Mechanism: `R00408`'s ordinary probe tier reports `bestBadness = 13`, so the controller scales the biased tier to `max(0.35, 6/13) = 0.46`, cutting it from 6,000,000 to ~2,769,231 nodes — and the biased must-turn attempt (`dfs:repair:repair(mustTurnBiased)`) is precisely the configuration that solves the level. It then exhausts the full 50M ceiling instead of solving in 9.97M. Neither the flag nor the gate 10→6 change was ever evaluated on Corpus 1: both A/B workflows hardcode `stress-levels-random.json`, and the published corpus has zero eligible levels. Full writeup, including the corrected 5-of-12 shrink table: [`../reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md`](../reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md).
+
+### Prior decision-bearing A/B (flag comparison, superseded as a capability figure)
+
 The decision-bearing level-blind Corpus-2 A/B at 36M nodes / 48.24M canonical work per level, non-binding wall deadline, was:
 
 - control: **611/1700**;

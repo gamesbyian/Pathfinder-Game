@@ -16,8 +16,16 @@
  * for why this constant needed re-deriving in the first place: the original calibration was n=12
  * (n=1 for the "biased tier needed its full budget" case).
  *
- * Usage:
- *   node scripts/stress/repair-probe-badness-report.mjs --in=reports/stress/repair-probe-adaptive-sample-ab.json
+ * Usage (via run-bundled, because the gate/min-scale constants are imported from orchestration.ts):
+ *   node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in=reports/stress/repair-probe-adaptive-sample-ab.json
+ *
+ * `--gate=<n>` / `--min-scale=<n>` override the imported production constants. Use them ONLY to
+ * replay a historical report against the constants that were live when it was produced; the
+ * defaults must stay bound to orchestration.ts so this diagnostic cannot drift out of sync with
+ * production again (it shipped with `CURRENT_GATE = 10` hardcoded and kept printing 10 after the
+ * gate was promoted to 6 on 2026-08-13, silently understating every shrink figure it reported --
+ * a lower gate shrinks MORE, so the scaled-level count and the near-miss RISK list were both
+ * computed against the wrong constant on every capability refresh in between).
  *
  * With TWO comma-separated --in files (a matched scaled-vs-unscaled pair -- e.g. one dispatch with
  * enable_flags=STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET, one with disable_flags= the same --
@@ -28,6 +36,10 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import {
+    REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE,
+    REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE,
+} from '../../modules/solver/orchestration.ts';
 
 const argMap = new Map();
 for (const arg of process.argv.slice(2)) {
@@ -73,8 +85,20 @@ function scaleFor(badness, gate, minScale) {
     return Math.min(1, Math.max(minScale, gate / badness));
 }
 
-const CURRENT_GATE = 10;
-const CURRENT_MIN_SCALE = 0.35;
+// Bound to production, never hardcoded — see the module header for the drift bug this replaced.
+const numericArg = (name, fallback) => {
+    if (!argMap.has(name)) return { value: fallback, overridden: false };
+    const value = Number(argMap.get(name));
+    if (!Number.isFinite(value)) { console.error(`${name} must be a finite number`); process.exit(2); }
+    return { value, overridden: true };
+};
+const gateArg = numericArg('--gate', REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE);
+const minScaleArg = numericArg('--min-scale', REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE);
+const CURRENT_GATE = gateArg.value;
+const CURRENT_MIN_SCALE = minScaleArg.value;
+const constantsSource = gateArg.overridden || minScaleArg.overridden
+    ? 'CLI override (historical replay — not production)'
+    : 'imported from orchestration.ts';
 
 const perFile = files.map(f => loadRows(f).map(levelBadnessInfo));
 const [primary] = perFile;
@@ -95,7 +119,7 @@ if (eligible.length === 0) {
     const noOrdinary = eligible.filter(r => r.ordinaryBestBadness == null);
     console.log(`  no ordinary-tier reading n=${noOrdinary.length}  biased-tier solved=${noOrdinary.filter(r => r.biasedSolved).length}`);
 
-    console.log(`\nCurrent constants: BADNESS_GATE=${CURRENT_GATE} MIN_SCALE=${CURRENT_MIN_SCALE}`);
+    console.log(`\nCurrent constants: BADNESS_GATE=${CURRENT_GATE} MIN_SCALE=${CURRENT_MIN_SCALE} (${constantsSource})`);
     for (const r of eligible) {
         if (r.ordinaryBestBadness == null) continue;
         r.currentScale = scaleFor(r.ordinaryBestBadness, CURRENT_GATE, CURRENT_MIN_SCALE);
