@@ -239,6 +239,43 @@ it performed no search and was previously labelled timed-out. Zero-cap dispatche
 budget-starved even though the technique was reached. Do not equate attempt presence with productive
 reach; use actual work/nodes and starvation together.
 
+#### Mass-weighted lifecycle failure map + canonical workflow wiring (2026-08-14)
+
+`scripts/stress/lifecycle-failure-map.mjs` (`npm run stress:lifecycle-failure-map`) turns one or more
+`--lifecycle-telemetry` capability artifacts into a corpus-wide allocation map: every unsolved row is
+bucketed into exactly one of `starved` (a runnable technique never received a node), `capped` (reached
+but neither starved nor exhausted its space), `exhausted` (every reached technique ran its space out),
+`deadline-truncated`, or `attempt-error`, ranked by node/work mass rather than level count. A separate
+per-technique census (instantiated/reached/starved/exhausted counts plus node/work share, computed only
+over the unsolved population — solved rows stop the ladder early and so carry no starvation signal)
+answers "which lane deserves the next unit of work" directly, rather than by proxy through the
+per-attempt heuristics `cluster-unsolved-failures.mjs` infers (a different, complementary tool — this
+one reads the explicit `techniqueLifecycle` record ETT-014–016 validated, not attempt-shape guesses).
+It also reports the solved population's node-cost quantiles against the run's `nodeBudget`, as a
+one-run *estimate* of budget elasticity (how many solves sit near the ceiling) — explicitly not a
+substitute for a matched two-budget A/B, since internal reserves (main-loop late reserve,
+admissible-order reserve, repair-probe adaptive shrink) are fractions of `nodeBudget` itself, so a
+lower-ceiling run is not a prefix of a higher one.
+
+`.github/workflows/solver-stress-refresh.yml` gained a `lifecycle_telemetry` dispatch input (default
+`false`, matching the flag's existing opt-in convention): when true, both corpus solves add
+`--lifecycle-telemetry` and the combine job runs the failure map against each combined benchmark file
+separately (`reports/stress/capability-runs/<run-id>/lifecycle-failure-map-corpus{1,2}(-summary.md)`),
+uploaded through the existing `reports/stress/` artifact glob — no new upload target needed. Corpus 1
+and 2 are mapped separately rather than combined, since their `node_budget` inputs are independent and
+the tool refuses to mix artifacts with different budgets (a per-corpus map is also what the allocation
+question actually needs — the two corpora aren't one population).
+
+The doc's own prescribed 8–12-level no-treatment dry run (above) is done: 12 Corpus-2 levels sampled
+across the full id range, production defaults, 50,000,000-node budget, `--lifecycle-telemetry`, local
+4-worker run. 3/12 solved; `techniqueLifecycle` populated and internally consistent on every row
+(`repair-fallback`/`attraction-diversity` starved on every unsolved row that reached `repair-probe`,
+consistent with the probe-eats-the-shared-pool mechanism `reports/2026-08-12-repair-probe-early-main-loop-starvation.md`
+already documented). This is infrastructure validation at n=12, not a capability or allocation
+finding — the next step is a full-corpus run with `lifecycle_telemetry=true` (both corpora) to produce
+the actual mass-weighted map this doc's "Lifecycle telemetry checkpoint" entry called for before
+another routing/budget comparison.
+
 #### Beam-extinction mechanics audit (ETT-017, offline observational)
 
 All 19 existing score/width forensic rows were joined to mechanics. No mechanics tag predicted the
