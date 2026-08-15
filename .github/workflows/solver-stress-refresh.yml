@@ -39,7 +39,7 @@ on:
         required: false
         default: ''
       persist_hints:
-        description: 'Save newly discovered valid solutions/provenance after solving. Output-only: saved hints never enter the solve.'
+        description: 'Save newly discovered valid solutions/provenance after solving, into data/stress/hints*/. Output-only: saved hints never enter the solve. Independent of the per-run analysis summary under reports/stress/capability-runs/RUN_ID/, which is always committed regardless of this flag -- see the combine job''s "Persist capability outputs" step.'
         required: false
         default: 'true'
       corpus1_budget_ms:
@@ -55,7 +55,7 @@ on:
         required: false
         default: '2'
       deterministic:
-        description: 'true forces a 24h non-binding deadline and makes reports artifact-only; hints persist only if persist_hints=true. Use true + persist_hints=false for matched A/B arms.'
+        description: 'true forces a 24h non-binding deadline and skips overwriting the canonical logs/*baseline.json and reports/stress/ "latest" files; hints persist only if persist_hints=true. The compact per-run analysis summary (reports/stress/capability-runs/RUN_ID/) is always committed either way -- it is namespaced by run id, so it can never let one A/B arm mutate what a queued arm measures. Use true + persist_hints=false for matched A/B arms.'
         required: false
         default: 'false'
       lifecycle_telemetry:
@@ -282,19 +282,40 @@ jobs:
           node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-parallel.json
           mkdir -p "reports/stress/capability-runs/${{ github.run_id }}"
           node - <<'NODE'
+          // This directory is the ONLY durable, always-committed record of a run's per-level result --
+          // the uploaded Actions artifact (raw benchmark JSON, full attempts/techniqueLifecycle detail)
+          // is NOT a substitute: it lives on Azure blob storage, whose download has been observed
+          // blocked (403) by at least one Claude sandbox's egress policy (see the "Print repair-probe
+          // badness distribution" step's own note, and reports/2026-08-15-connectivity-axis-exhausted-
+          // regression.md's follow-up). A "leaner than the raw report, richer than an aggregate count"
+          // per-level projection is written here specifically so a later flip/regression analysis never
+          // depends on artifact-zip access being available.
           const fs = require('node:fs');
-          const summarize = file => {
+          const dir = `reports/stress/capability-runs/${process.env.RUN_ID}`;
+          const project = file => {
             const r = JSON.parse(fs.readFileSync(file, 'utf8'));
             const rows = r.levels ?? [];
             return {
-              total: rows.length,
-              solved: rows.filter(x => x.ok).length,
-              solvedIds: rows.filter(x => x.ok).map(x => x.id ?? String(x.level)).sort(),
-              nodes: rows.reduce((n,x) => n + (x.nodesExpanded || 0), 0),
-              work: rows.reduce((n,x) => n + (x.workSpent || 0), 0),
               commitSha: r.commitSha,
+              rows: rows.map(x => ({
+                id: x.id ?? String(x.level), level: x.level, ok: x.ok, status: x.status,
+                nodesExpanded: x.nodesExpanded, workSpent: x.workSpent, elapsedMs: x.elapsedMs,
+                deadlineTruncated: x.deadlineTruncated, winningConfig: x.winningConfig,
+                attemptCount: x.attemptCount, failedStrategies: x.failedStrategies,
+                solution: x.solution,
+              })),
             };
           };
+          const summarize = projected => ({
+            total: projected.rows.length,
+            solved: projected.rows.filter(x => x.ok).length,
+            solvedIds: projected.rows.filter(x => x.ok).map(x => x.id).sort(),
+            nodes: projected.rows.reduce((n,x) => n + (x.nodesExpanded || 0), 0),
+            work: projected.rows.reduce((n,x) => n + (x.workSpent || 0), 0),
+            commitSha: projected.commitSha,
+          });
+          const c1 = project('reports/stress/benchmark-parallel.json');
+          const c2 = project('reports/stress/benchmark-latest-random.json');
           const record = {
             runId: process.env.RUN_ID,
             solverRef: process.env.SOLVER_REF,
@@ -303,10 +324,12 @@ jobs:
             disableFlags: process.env.DISABLE_FLAGS,
             deterministic: process.env.DETERMINISTIC,
             persistHints: process.env.PERSIST_HINTS,
-            corpus1: summarize('reports/stress/benchmark-parallel.json'),
-            corpus2: summarize('reports/stress/benchmark-latest-random.json'),
+            corpus1: summarize(c1),
+            corpus2: summarize(c2),
           };
-          fs.writeFileSync(`reports/stress/capability-runs/${process.env.RUN_ID}/summary.json`, JSON.stringify(record, null, 2) + '\n');
+          fs.writeFileSync(`${dir}/summary.json`, JSON.stringify(record, null, 2) + '\n');
+          fs.writeFileSync(`${dir}/per-level-corpus1.json`, JSON.stringify(c1, null, 2) + '\n');
+          fs.writeFileSync(`${dir}/per-level-corpus2.json`, JSON.stringify(c2, null, 2) + '\n');
           NODE
         env:
           RUN_ID: ${{ github.run_id }}
@@ -370,11 +393,19 @@ jobs:
           retention-days: 90
 
       - name: Persist capability outputs and/or newly found hints
-        if: steps.coverage.outputs.complete == 'true' && (inputs.persist_hints == 'true' || inputs.deterministic != 'true')
+        # Always runs when coverage is complete: the per-run analysis summary (reports/stress/
+        # capability-runs/<run_id>/) is unconditional, so every completed run leaves a durable,
+        # git-fetchable per-level record even under persist_hints=false + deterministic=true -- see
+        # persist_hints's/deterministic's own input descriptions above for why this can never let one
+        # A/B arm mutate what a queued arm measures (the directory is namespaced by run id and never
+        # read back into any solve). Hint-corpus writes and canonical baseline/report overwrites stay
+        # conditional exactly as before.
+        if: steps.coverage.outputs.complete == 'true'
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add "reports/stress/capability-runs/${{ github.run_id }}/"
           git add data/stress/hints/ data/stress/hints-random/ data/stress/stress-levels.json data/stress/stress-levels-random.json
           if [ "${{ inputs.deterministic }}" != "true" ]; then
             git add logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json reports/stress/
@@ -385,6 +416,15 @@ jobs:
             if git push origin HEAD:${{ github.ref_name }}; then exit 0; fi
             sleep $((attempt * 5))
             git fetch origin "${{ github.ref_name }}"
+            # Discard any unstaged modifications to tracked files this run deliberately did NOT stage
+            # above (e.g. reports/stress/benchmark-*.json when deterministic=true, which the sweep
+            # still overwrites on disk even though we chose not to commit it). Without this, `git
+            # rebase` refuses with "You have unstaged changes. Please commit or stash them." the moment
+            # any other commit -- e.g. an unrelated chore(audit) auto-commit -- lands on the branch
+            # first, which is exactly what happened on run 31871824532 and silently dropped its whole
+            # persist step, hints included. Safe: anything left unstaged here was never meant to be
+            # committed by this run in the first place.
+            git checkout -- .
             git rebase "origin/${{ github.ref_name }}" || exit 1
           done
           exit 1

@@ -63,8 +63,8 @@ Use the defaults unless testing a specific flag/configuration. A complete non-de
 
 - solves every level from mechanics-only level data;
 - persists newly found hints/provenance when `persist_hints=true`;
-- updates the live combined reports and compiled baselines;
-- stores a compact run-scoped summary (solved IDs, counts, nodes/work, SHA/config) under `reports/stress/capability-runs/<run-id>/summary.json`.
+- updates the live combined reports and compiled baselines (skipped when `deterministic=true`);
+- **always** stores a compact run-scoped summary (solved IDs, counts, nodes/work, SHA/config) under `reports/stress/capability-runs/<run-id>/summary.json`, plus a per-level projection (per level: id, ok, status, nodesExpanded, workSpent, winningConfig, failedStrategies, solution) under `.../per-level-corpus1.json` and `.../per-level-corpus2.json` — unconditional on `persist_hints`/`deterministic` (2026-08-15+), since this is the only durable, git-fetchable per-level record: the uploaded combined Actions artifact lives on Azure blob storage, whose download has been observed blocked (403) by at least one Claude sandbox's egress policy. If a GHA capability run finishes and its result can't be fully analyzed afterward, that's a workflow bug, not an expected limitation — this per-run directory exists so that never has to be true.
 
 The compiled baseline is an **output summary of the completed level-blind run**. It is not fed back into later capability solves. Full reports remain in ordinary git history plus the 90-day combined Actions artifact; the compact per-run record avoids duplicating a very large report file on every refresh.
 
@@ -77,7 +77,9 @@ deterministic=true
 persist_hints=false
 ```
 
-This forces a non-binding 24h per-level wall deadline and prevents one arm from mutating the branch before the next arm is dispatched. Node/work ceilings remain the decision-bearing resource bounds.
+This forces a non-binding 24h per-level wall deadline and prevents one arm from mutating the shared/interpretive branch state (hint corpus, canonical baselines) before the next arm is dispatched. Node/work ceilings remain the decision-bearing resource bounds. The run-scoped analysis summary described above still gets committed under this combination — it is namespaced by run id and never read back into any solve, so it cannot let one arm influence another's measurement; only the shared files above are guarded by `persist_hints`/`deterministic`.
+
+The persist step retries a rejected push (another commit landing on the branch mid-run, e.g. an unrelated `chore(audit)` auto-commit) via fetch + rebase, discarding any leftover unstaged modifications to tracked files this run deliberately chose not to stage first (otherwise the rebase itself fails with "You have unstaged changes" and the whole persist step — hints included — silently drops; this happened on run `31871824532`, 2026-08-15).
 
 Schema-v2 experiment manifests capture every workflow input. The treatment may differ only in dimensions explicitly named by the experiment protocol.
 

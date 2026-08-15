@@ -174,7 +174,7 @@ Do not jump straight to a new score. First expand the exact-label set around rea
 
 - Principal capability workflow: level-blind only.
 - Saved hints/provenance: output-only, still persistable after a solve.
-- A/B arms: use `deterministic=true`, `persist_hints=false` so queued arms cannot mutate the branch between measurements.
+- A/B arms: use `deterministic=true`, `persist_hints=false` so queued arms cannot mutate the shared/interpretive state (hint corpus, canonical baselines) between measurements. This still leaves a small, run-id-namespaced analysis summary committed under `reports/stress/capability-runs/<run_id>/` (2026-08-15+) -- it is written once per run to a path unique to that run and never read back into any solve, so it cannot affect a queued arm's measurement; it exists specifically so a run's full per-level breakdown is available via `git`/the GitHub API without depending on the uploaded Actions artifact (Azure blob storage downloads have been observed blocked by at least one sandbox's egress policy).
 - Actions checkout: immutable `github.sha`.
 - Historical `logs/stress-corpus2-baseline.json` currently contains a malformed/empty compiled baseline from an intervening refresh; this is no longer a solve input. A complete non-deterministic level-blind refresh will regenerate it.
 - Do not rewrite old observational `solverRef` values merely because some historical emitter SHAs no longer resolve. Preserve the provenance blemish honestly.
