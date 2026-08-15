@@ -1,9 +1,9 @@
 # Variant Corpus Solver Research Plan
 
-> **Status:** namespaced source selection and the historical family-boundary report are complete; current-main canonical-inclusive cold confirmation is pending.
-> **Last evidence:** [ETT-028 source-selected family-boundary report](../reports/experiments/2026-08-13-technique-tuning/ett-028-family-boundary.md)
+> **Status:** namespaced source selection and the historical family-boundary report are complete; the canonical-only half of the cold-confirmation gate is done (2026-08-15: 5/8 solve, 3/8 genuine failures); the sibling half (for the 3 confirmed failures only) is pending.
+> **Last evidence:** [ETT-028 source-selected family-boundary report](../reports/experiments/2026-08-13-technique-tuning/ett-028-family-boundary.md); [canonical-only cold retest](#canonical-only-cold-retest-all-eight-parents-2026-08-15)
 > **Decision:** use the variant corpus to identify and diagnose solver competence boundaries that can yield more cold solves or less work without regression; treat symmetry disagreement primarily as evidence of representation-dependent solver failure, not as a production retry strategy.
-> **Remaining gate:** cold-run the eight nominated canonical parents and selected siblings on current main, then replay/ablate only boundaries that reproduce. Historical baselines lack the canonical parent outcomes, so ETT-028 itself makes no rescue, robustness, or cost-cliff claim.
+> **Remaining gate:** cold-run the nominated siblings for `R00156`, `R02248`, `R02960` (the 3 confirmed canonical failures — `R00548`/`R01465`/`R02239`/`R02452`/`R02795` already solve on current main and are out of scope) on current main, then replay/ablate only boundaries that reproduce. Historical baselines lack the canonical parent outcomes, so ETT-028 itself makes no rescue, robustness, or cost-cliff claim.
 > **Current handoff:** [Solver optimization: current priority queue](solver-optimization-current-queue.md#3-canonical-inclusive-family-boundary-retest).
 
 ## Objective
@@ -711,3 +711,41 @@ families at one 20s source run. Strongest sibling rates were R02795 5/7, R00156 
 R02248 3/7. Treat these as four parent-family nominations, not independent sibling wins. A cold
 current-main retest requires canonical plus all siblings, one persistent protocol ref, and no
 production orientation retry proposal.
+
+#### Canonical-only cold retest, all eight parents (2026-08-15)
+
+First half of the "canonical plus all siblings" gate above — the eight ETT-028 nominated canonical
+parents (`R02795, R00156, R02248, R02960, R00548, R01465, R02239, R02452`) cold-solved individually
+on current main, production protocol (`scripts/level-blind-capability-sweep.mjs`, 50M node budget,
+1 worker, sequential, non-binding 24h deadline — the exact tool/flags `solver-stress-refresh.yml`
+uses, not `stress:benchmark`'s raced engine, which was tried first and discarded: an initial raced
+run at a 120s time budget solved 8/8, but raced mode doesn't respect a node-budget ceiling and the
+tool's own printed warning says its timings aren't production-representative — confirmed misleading
+when the production-protocol re-run below disagreed with it on 3 of 8 levels). Local run, commit
+`4efc2d1` (same commit as run #41/#42, zero `modules/`/`data/config/` diff verified against both).
+
+**Result: 5/8 solved, 3/8 genuine `node-budget-reached` failures at the full 50M ceiling** —
+
+| level | result | winning config | nodes / work | wall time |
+|---|---|---|---:|---|
+| R00548 | **solved** | `beam:objectiveFirst@beam5000(diverse)` | 4,499,936 / 18,359,079 | 30.1s |
+| R01465 | **solved** | `beam:intersectionHarvest@beam5000` | 4,268,862 / 13,343,518 | 19.3s |
+| R02239 | **solved** | `beam:intersectionHarvest@beam5000(diverse)` | 4,770,937 / 22,290,874 | 14.7s |
+| R02452 | **solved** | `dfs:repair:repair` (2nd seed) | 2,143,156 / 3,818,154 | 2.8s |
+| R02795 | **solved** | `dfs:harvestThenFinish` | 31,536,354 / 20,439,776 | 15.1s |
+| R00156 | node-budget-reached | — | 50,000,096 / 47,232,580 | 17.4s |
+| R02248 | node-budget-reached | — | 50,000,070 / 50,646,509 | 28.1s |
+| R02960 | node-budget-reached | — | 50,000,108 / 48,657,970 | 29.7s |
+
+Five of the eight canonical parents ETT-028 nominated are **not** current-main failures at all —
+they solve cleanly, well under the 50M ceiling, using ordinary production techniques (beam variants,
+`repair`, `harvestThenFinish`). This narrows the "canonical plus all siblings" gate's actual scope:
+sibling comparison is only informative for the 3 genuine failures (`R00156`, `R02248`, `R02960`) —
+running siblings against the other 5 would compare a solved canonical parent against its siblings,
+which is not the symmetry-pathology question ETT-028 was built to answer. This does not itself
+validate ETT-028's sibling-rate nominations (`R02795` 5/7, `R00156`/`R02960` 4/7, `R02248` 3/7) —
+`R02795`'s inclusion in that list is now moot (canonical solves), and the other three's sibling
+counts still need the actual sibling cold-solve half of the gate, not done here.
+
+**Next**: cold-solve the nominated siblings for `R00156`, `R02248`, and `R02960` only, at the same
+frozen protocol/commit, then compare against these three's confirmed-failure status.
