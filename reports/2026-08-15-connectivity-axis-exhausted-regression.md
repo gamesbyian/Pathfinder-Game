@@ -10,10 +10,12 @@
 > winning lineage. This also explains why the effect isn't uniformly harmful (`R03248` goes the other
 > way) — it's a generic sensitivity of the width-triggered dedup design, not a defect specific to this
 > one flag.
-> **NOT a production fix** — the flag is not uniformly harmful, and a real fix needs to address the
-> width-threshold fragility (or accept it as inherent), not just this one flag. This report is scoped
-> to establishing that the regression is real, population-relevant, and now mechanistically
-> understood — not to shipping a change.
+> **NOT a production fix** — a fix attempt (unconditional dedup) was implemented, tested, and
+> **reverted**: it doesn't recover `R02248`'s regression (a deeper, flag-independent dedup-heuristic
+> issue at depth 12, not just threshold timing) and adds a real cost regression on the published
+> corpus (+13.4% nodes, +47.5% wall time) for no solve benefit there. See "A fix attempt, tried and
+> reverted" below. This report is scoped to establishing that the regression is real,
+> population-relevant, and mechanistically understood — not to shipping a change.
 > **Scope:** read-only investigation (bisection via `git worktree`, direct `runAttempt`/ablation
 > calls, hint-provenance mining). No `modules/solver/*` code touched.
 > **Motivation:** discovered as a side effect of `docs/variant-corpus-solver-research-plan.md`'s
@@ -138,6 +140,50 @@ larger-than-necessary collapse is close to a coin flip once a threshold-crossing
 at all. Most of the 195 mined candidates likely show no effect (16/20 in the tested sample) simply
 because their pool sizes at the relevant depths don't happen to straddle the threshold.
 
+## A fix attempt, tried and reverted: unconditional dedup is not a clean win
+
+The natural fix implied by the mechanism above: decouple state deduplication from the width-based
+cull, so dedup runs every generation (not just when `cands.length > beamWidth`) — removing
+functionally-redundant candidates before they can compound into a later generation's pool size and
+cause the threshold-crossing timing artifact in the first place. Implemented in
+`beamSearchFromGate` (`modules/solver/search.ts`), tested, and **reverted** — kept here as a
+recorded negative result, not shipped.
+
+**It does not recover the regression.** Re-testing `R02248` with the fix applied (flag still ON):
+the search now exhausts far more cheaply (**39,653 nodes, down from 205,351** — confirming dedup
+was indeed doing less total wasted work) but still does **not** find a solution. Tracing it with the
+same beam-frontier instrumentation shows why: with dedup now running every generation, the winning
+lineage collides with a genuinely higher-scoring competitor at **depth 12** — much earlier than the
+depth-17 threshold-crossing event — and **loses identically in both the flag-on and flag-off runs**
+(scores 462.0591 vs. 462.3672, byte-identical in both arms). This is not a threshold artifact at
+all: it's dedup's own greedy "keep only the highest scorer per `(cell, constraint-state)`" heuristic
+making a locally-correct, globally-wrong call — discarding the lineage that actually reaches the
+goal in favor of one that scores higher at that specific cell/state but does not.
+
+That reframes the finding: **the old, threshold-gated dedup behavior was, for this specific level,
+accidentally protective.** Under the original code, this depth-12 collision was simply never
+evaluated in the 11 historically-successful runs and in the flag-off comparison throughout this
+report — the candidate pool never happened to exceed `beamWidth` at that generation, so dedup was
+skipped there entirely, and the winning lineage survived undisturbed past the one comparison that
+would have killed it. That's not a designed protection — it's a lucky avoidance, contingent on pool
+size at one specific depth, which is exactly the same kind of threshold-sensitivity this whole report
+is about, just cutting in the *level's* favor this time instead of against it.
+
+**The fix also has a real cost.** `npm run solver:bench -- --check` on the published corpus: **no
+solved/failed regression** (160/160, matching baseline), but a genuine **cost regression** — **+13.4%
+nodes, +47.5% wall time** for zero solve-count benefit there. Per this repo's own testing discipline,
+a change is not verified by the solved-set check alone; this one fails the cost half outright, on top
+of not achieving its intended purpose.
+
+**Conclusion: reverted, not merged.** The width-threshold-timing mechanism traced above is confirmed
+correct as an explanation of *why* the flag's small, legitimate pruning difference flips `R02248`'s
+outcome — but "always dedup" is not the fix, because the deeper problem is dedup's greedy heuristic
+itself sometimes discarding the true winner, which the old threshold-gating was accidentally (not
+robustly) shielding this level from. A durable fix needs to address *that* — e.g. retaining more than
+one candidate per collision when scores are close, or some other softening of the "keep only the
+single best scorer" rule — not just when dedup runs. Not attempted here; this is now the concrete
+next research question, not a solved problem.
+
 ## This is not isolated to `R02248` — population scale via provenance mining
 
 Mined `data/stress/hints-random/*.json` (all 1700 corpus-2 levels) for `(level, technique, profile,
@@ -208,18 +254,21 @@ not attempted here.
 
 ## Recommended next steps (not done here)
 
-1. **Verify `R03248` shows the same threshold-crossing signature** (in the opposite direction) using
-   the identical instrumentation — confirms the mechanism is general, not `R02248`-specific.
-2. **Verify the remaining 175 unverified provenance-mining candidates** (the 2–30-node trivial tier
-   plus the >50,000-node tier beyond the 20 already tested) — establishes the real population scale,
-   and specifically how many are threshold-crossing artifacts (any pruning/scoring perturbation) vs.
-   genuinely something else.
-3. **Investigate whether the dedup/cull trigger condition itself can be made less fragile** — e.g.
-   a hysteresis band, or firing the cull based on a metric less sensitive to single-candidate-count
-   noise than a hard `cands.length > beamWidth` inequality — as a more durable fix than touching any
-   one pruning flag. This is a different, and likely more valuable, fix target than the flag itself.
+1. **Investigate a softer dedup retention policy** (e.g. keep the top 2–3 scorers per
+   `(cell, constraint-state)` key instead of only 1, or widen retention specifically near a close
+   score margin) — targets the *actual* problem the fix attempt surfaced (dedup's greedy heuristic
+   discarding a true winner) rather than the threshold-timing symptom. Needs its own cost/solve
+   tradeoff study — widening retention has an obvious cost (larger pools, more work per generation)
+   that must be measured, not assumed acceptable.
+2. **Verify `R03248` shows the threshold-crossing signature** (in the opposite direction) using the
+   identical instrumentation, and check whether its own depth-of-divergence is a genuine flag-vs-flag
+   score difference (like `R02248`'s depth-12 finding) or an actual threshold-timing effect — the two
+   are not the same question, and this report only fully traced one of the two directions.
+3. **Verify the remaining 175 unverified provenance-mining candidates** (the 2–30-node trivial tier
+   plus the >50,000-node tier beyond the 20 already tested) — establishes the real population scale.
 4. **A full-corpus matched A/B at the flag's actual production node budget (50M)**, not 10M, once (1)
-   and (3) give enough understanding to propose a specific, well-scoped fix.
+   gives a concrete, cost-validated candidate fix to test — not before, given the first fix attempt's
+   cost regression on the published corpus.
 
 ## Evidence artifacts (not committed — scratchpad only, regenerable)
 
