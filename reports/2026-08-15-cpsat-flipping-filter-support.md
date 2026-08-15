@@ -1,11 +1,11 @@
 # CP-SAT flipping-filter support: correction, encoding, a pre-existing bug fix, and validation
 
-> **Status:** encoding built and validated (102/102 flipping-filter-bearing witness-checks pass, 0
-> INFEASIBLE, plus 2 independent cold-solve+referee validations); a documentation correction; a
-> real, independent pre-existing bug found, root-caused, and fixed (all 5 originally-failing levels
-> now resolve `OPTIMAL`, including the 2 flipper-free ones); a broader confirmatory portal-only
-> batch is still running for extra population-scale confidence but is not a precondition for
-> trusting the fix, whose mechanism is understood precisely, not just empirically patched.
+> **Status:** complete. Encoding built and validated (102/102 flipping-filter-bearing witness-checks
+> pass, 0 INFEASIBLE, plus 2 independent cold-solve+referee validations); a documentation
+> correction; a real, independent pre-existing bug found, root-caused, and fixed — all 5
+> originally-failing levels now resolve `OPTIMAL`, and a further 83-level flipper-free portal batch
+> (all of Corpus 1's eligible population + a 60-level Corpus-2 sample) confirms it on its own
+> merits: 83/83 feasible, 0 INFEASIBLE.
 > **Scope:** `scripts/stress/cpsat-full-probe.py` only. No solver (`modules/solver/*`) code touched.
 > **Motivation:** docs/future-work.md's CP-SAT-coverage bottleneck (item 2: "Coverage is
 > bottlenecked by flipping-filter support in the CP-SAT model") and a correction to
@@ -149,13 +149,12 @@ the original, unconditional (and now provably correct) logic.
   (`S00103`, `S00108`) confirm the fix on its own merits, independent of any flipper logic:
   **`S00028`, `S00030`, `S00035`, `S00103`, `S00108` all now resolve `OPTIMAL`** (previously
   `INFEASIBLE`, all five).
-- A broader portal-bearing, flipper/filter-free batch (up to 60/corpus, same protocol) was started
-  to build population-scale confidence beyond the direct re-tests above; partial results before this
-  report was written are 100% clean (`S00095`, `S00099`, `S00103`, `S00108`, `R00253`, `R00525`, …
-  all `OPTIMAL`) with no INFEASIBLE seen. Not yet complete at time of writing — the mechanism itself
-  is understood precisely (not just empirically patched, see above), so this batch is confirmatory
-  population evidence, not a precondition for trusting the fix. Final tally to be appended once it
-  finishes.
+- Broader portal-bearing, flipper/filter-free batch (independent of this session's flipper work,
+  validating the fix purely on its own merits): **83 tested — 83 feasible, 0 unknown, 0 INFEASIBLE.**
+  All 23 of Corpus 1's flipper-free portal-bearing levels with a stored witness (the entire
+  population, not a sample — this is where the bug actually lived, since Corpus 2's portal levels
+  are all pair-count 4-7) plus a 60-level sample of Corpus 2's 415. Includes `S00103`/`S00108`, the
+  two levels that first exposed the bug flipper-free.
 
 **Independent cold-solve + referee validation** (the decisive under-constraint check, re-run after
 the fix to confirm it didn't introduce a new one): two levels, chosen for real flipper diversity (not
