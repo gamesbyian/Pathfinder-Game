@@ -1,10 +1,12 @@
 # Solver future work
 
-This is the live priority queue. Historical reports remain authoritative for what they actually measured, but this file is authoritative for **what is still worth doing next**.
+This is the detailed live evidence and disposition record. Historical reports remain authoritative for what they actually measured; this file preserves the current interpretation, experiment history, and closed boundaries.
+
+> **Canonical short queue:** start with [Solver optimization: current priority queue](solver-optimization-current-queue.md). It ranks the current implementation/experiment lanes and is the handoff for agents choosing optimization work. This file retains the full evidence and historical numbering; where its older order conflicts with the short queue, the short queue wins.
 
 Canonical measurement contract: [`solver-level-blindness.md`](solver-level-blindness.md). A solver-capability result must treat every level as unseen and may not use exact-level history such as saved winning configs/seeds, prior solutions/hints, previous solved status, or attempt caches. Saved artifacts remain research outputs and labels, not solve inputs.
 
-Last reconciled: **2026-08-11**, after the revised neighbor-budget full Corpus-2 A/B and the first explicit-prefix CP-SAT run. See [`../reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md`](../reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md).
+Last reconciled: **2026-08-15**, through the matched 36M/50M capability pair, full-corpus lifecycle failure map, ETT-028 family-boundary analysis, flipping-filter CP-SAT support, and the latest repair-retreat probes. The ranked disposition is summarized in [the canonical solver-optimization queue](solver-optimization-current-queue.md).
 
 ## Current capability evidence
 
@@ -45,6 +47,8 @@ The decision-bearing level-blind Corpus-2 A/B at 36M nodes / 48.24M canonical wo
 The historical `725/1700` figure is **not** the capability baseline. It used exact-level `--prime-winner` replay. It remains useful as historical re-verification evidence only. Of the 114 levels present in that 725 result but absent from the 611 control, 112 had been `solvedByPrime`.
 
 ## Ready / next
+
+> **Historical detail, not the ranked handoff.** Item numbers and completed gates are preserved for links and provenance. Use [the current optimization queue](solver-optimization-current-queue.md) for what to pick up next.
 
 ### 1. ~~Diagnose the five revised neighbor-budget losses and close the integration decision~~ — DONE, PROMOTED (2026-08-12)
 
@@ -197,14 +201,9 @@ A bespoke ladder/scheduler should answer “given what this solve has already ob
 
 ## Remote execution order
 
-The expensive neighbor-budget gate is closed. The next remote work may therefore proceed as resources allow:
+> **Superseded sequencing record.** The list that previously lived here predated the 2026-08-15 lifecycle map and several completed gates. Use [Solver optimization: current priority queue](solver-optimization-current-queue.md#ranked-queue) for current ordering.
 
-1. bounded neighbor-budget five-loss diagnosis/integration experiment design;
-2. extinction-adjacent explicit-prefix CP-SAT expansion;
-3. repair-retreat CP-SAT cases;
-4. late-reserve full population A/B.
-
-Items 2 and 3 are observational/oracle work and can run alongside planning for 1 or 4. Population promotion experiments should still be serialized when one result changes the configuration against which the next should be interpreted.
+The highest-value remote production experiment is now a matched, equal-total-budget test of **failure-conditioned late-tier allocation**, informed by lifecycle telemetry and current-invocation signals rather than a static reserve. Exact-label work (the nine newly unblocked beam B/D rows and CP-SAT repair-retreat boundaries) and the ETT-028 canonical-inclusive cold retest can proceed independently. Serialize population promotion experiments whenever one result changes the production configuration used as the next control.
 
 ## Older loose-thread triage (2026-08-07)
 

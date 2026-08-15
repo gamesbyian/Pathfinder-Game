@@ -1,9 +1,10 @@
 # Variant Corpus Solver Research Plan
 
-> **Status:** tooling implemented; historical selected-family research reconciled; preliminary wide-trove audit complete; boundary run blocked on identity-key repair
-> **Last evidence:** [existing solve-data tuning opportunities](../reports/2026-08-13-existing-solve-data-tuning-opportunities.md)
-> **Decision:** use the variant corpus to identify and diagnose solver competence boundaries that can yield more cold solves or less work without regression; treat symmetry disagreement primarily as evidence of representation-dependent solver failure, not as a production retry strategy
-> **Remaining gate:** namespace family identities as `(parentCorpus, parentId, variantId)`, run the deterministic boundary report, then current-main retest the ranked historical cliff families.
+> **Status:** namespaced source selection and the historical family-boundary report are complete; current-main canonical-inclusive cold confirmation is pending.
+> **Last evidence:** [ETT-028 source-selected family-boundary report](../reports/experiments/2026-08-13-technique-tuning/ett-028-family-boundary.md)
+> **Decision:** use the variant corpus to identify and diagnose solver competence boundaries that can yield more cold solves or less work without regression; treat symmetry disagreement primarily as evidence of representation-dependent solver failure, not as a production retry strategy.
+> **Remaining gate:** cold-run the eight nominated canonical parents and selected siblings on current main, then replay/ablate only boundaries that reproduce. Historical baselines lack the canonical parent outcomes, so ETT-028 itself makes no rescue, robustness, or cost-cliff claim.
+> **Current handoff:** [Solver optimization: current priority queue](solver-optimization-current-queue.md#3-canonical-inclusive-family-boundary-retest).
 
 ## Objective
 
@@ -15,6 +16,8 @@ The two primary outcomes are:
 2. reduce machine-independent solver work while preserving the current solved set.
 
 Descriptive research is useful only insofar as it helps reach one of those outcomes.
+
+ETT-028's source-selected view covers 886 edges, 51 parents, and 123 relation families with zero missing variant rows. Its sibling-disagreement cohort is **R02795, R00156, R02248, R02960, R00548, R01465, R02239, and R02452**. Treat parents—not sibling rows—as independent units in the next test.
 
 The preferred comparison order is:
 

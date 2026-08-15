@@ -2,6 +2,8 @@
 
 > **Status (2026-08-14):** exploratory/targeted campaign; no production policy change and no independently verifiable decision-bearing experiment. **Evidence:** 28 experiment IDs, 33 arm-runs (32 complete and one partial), 556 level invocations, 2,500 recorded internal attempts, 164 unique levels, and 21 independent hypothesis families. Invalidated and partially invalidated runs remain in the totals. Machine-readable protocols and raw rows are in the [machine-readable manifest](experiments/2026-08-13-technique-tuning/manifest.json); per-arm technique reach/win/cost denominators are in the [derived aggregate](experiments/2026-08-13-technique-tuning/aggregate.json).
 
+> **Current action handoff (2026-08-15):** this report remains the evidence ledger for ETT-001–028, not the active ordering. Use [Solver optimization: current priority queue](../docs/solver-optimization-current-queue.md), which incorporates the later full-corpus lifecycle map, matched 36M/50M run, CP-SAT coverage fixes, and repair-boundary results.
+
 ## Scope and evidence rules
 
 I reconciled current main (`d8522b50`) with the architecture, level-blindness contract, opt-in ledger, future-work queue, variant plan, existing-data audit, recent merge history, and current orchestration/attempt/family/lineage/manifest tooling. All live runs used `level-blind-capability-sweep.mjs`: mechanics-only inputs, no IDs in workers, no hints, priming, cache, baseline, or saved status; one worker and a fixed deterministic policy. The published slice is a small population pilot, while Corpus-2 positions 1–20 are a fixed hard slice, not a population estimate. No repair badness-gate experiment was repeated.
