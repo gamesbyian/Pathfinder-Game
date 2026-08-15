@@ -1,7 +1,7 @@
 # Solver optimization: current priority queue
 
 > **Status:** canonical live entry point for tuning and optimizing existing solver techniques.
-> **Last reconciled:** 2026-08-15, through the full-corpus lifecycle failure map, the matched 36M/50M capability pair, ETT-028 family-boundary analysis, flipping-filter CP-SAT support, and the latest repair-retreat probes.
+> **Last reconciled:** 2026-08-15, through the full-corpus lifecycle failure map, the matched 36M/50M capability pair, ETT-028 family-boundary analysis, flipping-filter CP-SAT support, the latest repair-retreat probes, and the confirmed `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` regression (Priority 0).
 > **Scope:** improve cold, level-blind solve count or reduce machine-independent work without losing solved levels. Exact-level history may label research data but may not control a production solve.
 
 This page answers **what optimization work is most worth doing now**. Detailed evidence, experiment history, and compatibility anchors remain in [Solver future work](future-work.md); experiment dispositions remain in the [opt-in experiment ledger](solver-opt-in-experiment-ledger.md). Those longer records are evidence stores, not competing priority lists.
@@ -23,9 +23,10 @@ The practical implication is not “raise every cap” or “reserve a fixed sli
 
 | Priority | Opportunity | Next decision-bearing step | Success signal |
 |---:|---|---|---|
+| 0 | **`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` regression (new, 2026-08-15)** | Confirmed, causally isolated capability regression from commit `80a5706` (2026-07-31) on ≥3 Corpus-2 levels (`R02248`, `R02114`, `R00592`), with 195 further mined candidates (20 spot-checked) and one confirmed opposite-direction case (`R03248`) ruling out a blanket fix. Trace the actual mechanism (beam-frontier instrumentation), verify the remaining candidates, understand `R03248`, then a matched full-corpus A/B at the real 50M budget. See [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md). | Root-caused mechanism + a narrower fix (not a blanket flag flip) that recovers the regressed population without losing `R03248`-shaped cases, validated at matched full budget. |
 | 1 | Failure-conditioned late-tier allocation | Design a state-informed, equal-total-budget treatment that gives repair fallback and/or attraction diversity nonzero work only when earlier-tier evidence predicts low marginal value; run matched full-ladder A/B on Corpus 1 and 2. | Net level-blind solve gain with no material regression and acceptable work; report reached/starved mass by technique, not only totals. |
 | 2 | Beam score/retention at proven extinction boundaries | **Re-run done (2026-08-15, run `31858783552`): 25 live / 4 dead / 3 abstain, 0 alarms — 2 new R00001-pattern instances, both D-class (`S00030`, `S00048`).** Next: assemble the held-out, family-namespaced K-vs-2K test scoped to A-class *and* D-class (not A-class only). | Recurrent exact-live/exact-dead separation across unrelated parents; a scorer change must beat widening at equal work. |
-| 3 | Canonical-inclusive family-boundary retest | **Gate complete (2026-08-15).** `R02248`: 7/7 siblings solve, canonical fails — clean beam-exhaustion reproduction, feeds Priority 2. `R00156`/`R02960`: 4/7 and 3/7 siblings solve — budget-allocation-flavored, feeds Priority 1. See the [variant corpus plan](variant-corpus-solver-research-plan.md#sibling-cold-solve-all-3-confirmed-failures-2026-08-15). | Reproduced, parent-clustered solver boundary that identifies a generic technique or representation change. |
+| 3 | Canonical-inclusive family-boundary retest | **Gate complete (2026-08-15).** `R02248`: 7/7 siblings solve, canonical fails — traced to the Priority 0 regression, not a scoring boundary (superseded framing, see that row). `R00156`/`R02960`: 4/7 and 3/7 siblings solve — budget-allocation-flavored, feeds Priority 1. See the [variant corpus plan](variant-corpus-solver-research-plan.md#sibling-cold-solve-all-3-confirmed-failures-2026-08-15). | Reproduced, parent-clustered solver boundary that identifies a generic technique or representation change. |
 | 4 | CP-SAT-anchored deep repair editing | Use verified feasible/infeasible retreat boundaries and the existing retreat-file mode to classify real repair prefixes; prototype bounded rollback/rebuild only after the label recurs. | A state feature predicts required retreat depth, followed by equal-budget full-ladder gains. |
 | 5 | State-conditioned must-cross anchoring | Add a read-only prefix diagnostic for target/defer/second-approach decisions using live slack, axis/visit state, reachability, and competing obligations. | The distinction repeats across unrelated levels or held-out parent families before any production scoring change. |
 | 6 | Mechanics-conditioned technique routing | Confirm the observed block-density split between admissible-order and repair winners and measure its interaction with repair eligibility and admissible reserve. | A mechanics-only rule improves a matched population A/B; no exact-level winner lookup. |
@@ -33,6 +34,31 @@ The practical implication is not “raise every cap” or “reserve a fixed sli
 These lanes are deliberately small-to-medium until a repeated signal justifies a full population run. Priority 1 is the main production-facing optimization question; priorities 2–6 build better routing or search representations rather than spending more blindly.
 
 ## How to execute the queue
+
+### 0. `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` regression
+
+Discovered as a side effect of Priority 3's `R02248` sibling work, not by design — worth stating
+plainly because it changes this queue's priority ordering: a **confirmed, referee-validated,
+causally-isolated regression**, not a hypothesis. `beam:intersectionHarvest@beam5000` cold-solved
+canonical `R02248` reliably 11 times (182,923–184,005 nodes, deterministic) through 2026-07-31, then
+never again in provenance. Bisected to [`80a5706`](https://github.com/gamesbyian/Pathfinder-Game/commit/80a57068103d46a20beefc4a405f2f8cd012eb7e)
+(`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`, 2026-07-31) and confirmed via direct ablation at HEAD:
+disabling just that flag restores the exact historical solve. Mining hint provenance for the same
+shape (repeatedly, deterministically, cold-found, then not found since) surfaced 195 more candidate
+configs; a 20-level spot-check confirmed 2 more regressions (`R02114`, `R00592`) and, critically,
+**one case where the flag's default-ON state is what succeeds** (`R03248`) — ruling out a blanket
+"just disable it" fix. `isConnected` was independently verified sound on `R02248`'s own recovered
+winning path (never rejects it, pre- or post-move) — the regression runs through a downstream
+mechanism (most likely beam-width competition or state dedup interacting with the flag's extra
+rejections elsewhere in the tree), not a direct false-reject. Full investigation:
+[`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).
+
+**Next**: instrument the beam frontier (`prep._beamResearchObserver`) to trace the actual mechanism
+on `R02248`, verify the remaining ~175 unverified provenance candidates, understand `R03248`'s
+opposite-direction case, then a matched full-corpus A/B at the real 50M production budget (the 10M
+population sweep already run was inconclusive by construction — full ladder redundancy plus a fifth
+of the actual budget masks a single-config regression). Do not revert or disable the flag without
+this — `R03248` proves it isn't a pure loss.
 
 ### 1. Failure-conditioned late-tier allocation
 
@@ -58,7 +84,9 @@ Existing lineage work says generic widening is a weak lead: some winning familie
 
 Next: assemble a held-out, family-namespaced set of roughly 8–12 extinction boundaries **spanning both A-class and D-class** (not A-class only, now that D-class has confirmed evidence) and compare K versus 2K at equal surrounding policy. Collect descriptor values for both live and dead siblings. Promote a score feature only if it separates feasibility across unrelated parent families and survives a full-ladder matched-budget test. Do not infer a global width increase from a few local rescues.
 
-A third, independent boundary is now available (2026-08-15, from Priority 3): `R02248`'s canonical orientation exhausts `beam:intersectionHarvest@beam5000`/`beam:objectiveFirst@beam5000` cleanly at ~200K nodes with no solution, while all 7 symmetric siblings solve with the exact same configs at ~4.2–4.4M nodes each — mechanic-free (no mustCross/portals/flippers), so this isn't an axis-geometry artifact. See the [variant corpus plan](variant-corpus-solver-research-plan.md#sibling-cold-solve-all-3-confirmed-failures-2026-08-15). Worth including as one of the held-out cases above.
+A third, independent boundary is now available (2026-08-15, from Priority 3): `R02248`'s canonical orientation exhausts `beam:intersectionHarvest@beam5000`/`beam:objectiveFirst@beam5000` cleanly at ~200K nodes with no solution, while all 7 symmetric siblings solve with the exact same configs at ~4.2–4.4M nodes each — mechanic-free (no mustCross/portals/flippers), so this isn't an axis-geometry artifact.
+
+**Update, same day: this is NOT beam-scoring orientation bias — it's a confirmed solver regression.** `R02248`'s own hint provenance showed the exact winning config cold-solved canonical `R02248` reliably 11 times through 2026-07-31, then never again. Git-bisected and causally confirmed (direct ablation at HEAD) to [`80a5706`](https://github.com/gamesbyian/Pathfinder-Game/commit/80a57068103d46a20beefc4a405f2f8cd012eb7e), `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`. Population-scale provenance mining found 195 more candidates with the same shape; a 20-level sample confirmed 2 more regressions and 1 opposite-direction case (the flag helps there) — not a blanket fix. Full report: [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md). **This makes `R02248` a poor held-out case for the K-vs-2K descriptor test below** — it's explained by a prune regression, not a scoring/width tradeoff, so it doesn't test the same hypothesis. Use `S00030`/`S00048` (Priority 2's other two confirmed instances) instead, or find a fresh held-out case not confounded by this regression.
 
 ### 3. Canonical-inclusive family-boundary retest
 
@@ -117,6 +145,7 @@ A nearby idea may remain open when it changes the information boundary—for exa
 - [Existing-technique tuning campaign](../reports/2026-08-13-existing-technique-tuning-experimental-campaign.md): ETT-001–028 methods, results, and audit limits.
 - [ETT-028 family-boundary report](../reports/experiments/2026-08-13-technique-tuning/ett-028-family-boundary.md): source-selected family nominations.
 - [Variant corpus research plan](variant-corpus-solver-research-plan.md): family experiment rules and canonical transfer gates.
+- [`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` regression](../reports/2026-08-15-connectivity-axis-exhausted-regression.md): confirmed capability regression, bisection, and population-scale provenance mining (Priority 0).
 - [Beam lineage survival analysis](winning-lineage-survival-analysis.md) and [heuristic capability gaps](solver-heuristic-capability-gap-analysis.md): representation and must-cross hypotheses.
 - [Repair retreat evidence](../reports/2026-08-12-repair-retreat-cpsat.md) and [negative rollout proxy](../reports/2026-08-15-repair-plateau-rollout-proxy-negative.md): exact-prefix boundary and rejected shortcut.
 - [Research operating model](solver-research-operating-model.md): how observations become shadow tests, A/Bs, and promotion decisions.
