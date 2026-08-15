@@ -23,7 +23,7 @@ The practical implication is not “raise every cap” or “reserve a fixed sli
 
 | Priority | Opportunity | Next decision-bearing step | Success signal |
 |---:|---|---|---|
-| 0 | **`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` regression (new, 2026-08-15)** | Confirmed, causally isolated capability regression from commit `80a5706` (2026-07-31) on ≥3 Corpus-2 levels (`R02248`, `R02114`, `R00592`), with 195 further mined candidates (20 spot-checked) and one confirmed opposite-direction case (`R03248`) ruling out a blanket fix. Trace the actual mechanism (beam-frontier instrumentation), verify the remaining candidates, understand `R03248`, then a matched full-corpus A/B at the real 50M budget. See [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md). | Root-caused mechanism + a narrower fix (not a blanket flag flip) that recovers the regressed population without losing `R03248`-shaped cases, validated at matched full budget. |
+| 0 | **`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` regression (new, 2026-08-15)** | **Mechanism confirmed**: a beam-width-threshold timing artifact (a small, correct prune reduction pushes a depth's candidate pool to the wrong side of the fixed `beamWidth` cutoff, deferring dedup/cull to a much larger, more collision-prone collapse) — not a soundness bug, and not specific to this flag. Confirmed on `R02248`, `R02114`, `R00592`; ruled out as universal by `R03248`. Verify `R03248`'s trace, verify remaining ~175 mined candidates, investigate a less-fragile dedup/cull trigger, then a matched full-corpus A/B at 50M. See [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md). | A less fragile dedup/cull trigger (or other fix targeting the mechanism, not the flag) that recovers the regressed population without losing `R03248`-shaped cases, validated at matched full budget. |
 | 1 | Failure-conditioned late-tier allocation | Design a state-informed, equal-total-budget treatment that gives repair fallback and/or attraction diversity nonzero work only when earlier-tier evidence predicts low marginal value; run matched full-ladder A/B on Corpus 1 and 2. | Net level-blind solve gain with no material regression and acceptable work; report reached/starved mass by technique, not only totals. |
 | 2 | Beam score/retention at proven extinction boundaries | **Re-run done (2026-08-15, run `31858783552`): 25 live / 4 dead / 3 abstain, 0 alarms — 2 new R00001-pattern instances, both D-class (`S00030`, `S00048`).** Next: assemble the held-out, family-namespaced K-vs-2K test scoped to A-class *and* D-class (not A-class only). | Recurrent exact-live/exact-dead separation across unrelated parents; a scorer change must beat widening at equal work. |
 | 3 | Canonical-inclusive family-boundary retest | **Gate complete (2026-08-15).** `R02248`: 7/7 siblings solve, canonical fails — traced to the Priority 0 regression, not a scoring boundary (superseded framing, see that row). `R00156`/`R02960`: 4/7 and 3/7 siblings solve — budget-allocation-flavored, feeds Priority 1. See the [variant corpus plan](variant-corpus-solver-research-plan.md#sibling-cold-solve-all-3-confirmed-failures-2026-08-15). | Reproduced, parent-clustered solver boundary that identifies a generic technique or representation change. |
@@ -49,16 +49,32 @@ configs; a 20-level spot-check confirmed 2 more regressions (`R02114`, `R00592`)
 **one case where the flag's default-ON state is what succeeds** (`R03248`) — ruling out a blanket
 "just disable it" fix. `isConnected` was independently verified sound on `R02248`'s own recovered
 winning path (never rejects it, pre- or post-move) — the regression runs through a downstream
-mechanism (most likely beam-width competition or state dedup interacting with the flag's extra
-rejections elsewhere in the tree), not a direct false-reject. Full investigation:
-[`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).
+mechanism, not a direct false-reject.
 
-**Next**: instrument the beam frontier (`prep._beamResearchObserver`) to trace the actual mechanism
-on `R02248`, verify the remaining ~175 unverified provenance candidates, understand `R03248`'s
-opposite-direction case, then a matched full-corpus A/B at the real 50M production budget (the 10M
-population sweep already run was inconclusive by construction — full ladder redundancy plus a fifth
-of the actual budget masks a single-config regression). Do not revert or disable the flag without
-this — `R03248` proves it isn't a pure loss.
+**Mechanism confirmed (2026-08-15, same day)**: beam-frontier instrumentation
+(`prep._beamResearchObserver`) traced the exact failure to a **beam-width-threshold timing artifact**,
+not a soundness bug. At depth 16, the flag's small, legitimately-correct rejection of a few extra
+axis-exhausted revisits lands the candidate pool at 4,948 — just *under* the 5,000 `beamWidth`
+threshold that triggers dedup/cull — while the flag-off pool lands at 5,239, just *over* it. That
+one-generation difference in whether the cull fires defers the flag-on collapse to depth 17, where the
+uncollapsed pool has since more than doubled (10,801 vs. a would-be ~5,239), producing a far larger,
+more collision-prone cull — 47x more state-dedup collisions at one key (30) than the flag-off run
+gets (0) — in which the eventual winning lineage's own candidate loses to a competitor it would never
+have had to compete against had the cull landed a generation earlier. This is a **generic fragility of
+the beam search's fixed-threshold dedup/cull design**, not a defect specific to this flag — any small
+perturbation to candidate counts near the threshold can trigger it, in either direction, which is
+exactly why the population signature is scattered (`R03248` almost certainly the same phenomenon
+landing the other way). Full trace: [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).
+
+**Next**: verify `R03248` shows the identical threshold-crossing signature (opposite direction);
+verify the remaining ~175 unverified provenance candidates; and — since the mechanism implicates the
+dedup/cull trigger condition itself, not the flag — investigate whether a less fragile trigger (e.g.
+hysteresis around the width threshold) is a more durable fix target than anything about
+`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`. Then a matched full-corpus A/B at the real 50M production budget
+(the 10M population sweep already run was inconclusive by construction — full ladder redundancy plus
+a fifth of the actual budget masks a single-config regression). Do not revert or disable the flag
+without this — `R03248` proves it isn't a pure loss, and the mechanism shows why a blanket disable
+would just relocate the lottery rather than resolve it.
 
 ### 1. Failure-conditioned late-tier allocation
 

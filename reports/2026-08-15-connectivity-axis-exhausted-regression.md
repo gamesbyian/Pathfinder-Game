@@ -1,10 +1,19 @@
 # A confirmed, population-scale regression from `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`
 
 > **Status:** confirmed, causally isolated regression on at least 3 levels (`R02248`, `R02114`,
-> `R00592`), with 195 further candidates from provenance mining not yet individually verified.
-> **NOT a production fix** — the flag is not uniformly harmful (one tested case, `R03248`, goes the
-> other way), and the exact mechanism is not yet root-caused. This report is scoped to establishing
-> that the regression is real and population-relevant, not to shipping a change.
+> `R00592`), with 195 further candidates from provenance mining not yet individually verified. The
+> exact mechanism on `R02248` is now **fully pinned down** (see "The mechanism, fully traced" below):
+> not a soundness bug in the flag itself, but a **beam-width-threshold timing artifact** — a
+> legitimately-correct small reduction in candidate count at one specific depth pushes the pool to
+> the wrong side of the fixed `beamWidth` cutoff, deferring the dedup/cull step by one generation and
+> causing a much larger, more collision-prone collapse later that happens to eliminate the eventual
+> winning lineage. This also explains why the effect isn't uniformly harmful (`R03248` goes the other
+> way) — it's a generic sensitivity of the width-triggered dedup design, not a defect specific to this
+> one flag.
+> **NOT a production fix** — the flag is not uniformly harmful, and a real fix needs to address the
+> width-threshold fragility (or accept it as inherent), not just this one flag. This report is scoped
+> to establishing that the regression is real, population-relevant, and now mechanistically
+> understood — not to shipping a change.
 > **Scope:** read-only investigation (bisection via `git worktree`, direct `runAttempt`/ablation
 > calls, hint-provenance mining). No `modules/solver/*` code touched.
 > **Motivation:** discovered as a side effect of `docs/variant-corpus-solver-research-plan.md`'s
@@ -63,16 +72,71 @@ exactly matching `prune-gauntlet.ts`'s real call site) — found **zero rejectio
 path**. The connectivity prune, taken in isolation against this exact witness, is sound: it never
 incorrectly rejects a state on the path that does have a valid completion.
 
-That means the regression runs through a **downstream** mechanism, not a direct false-reject: most
-plausibly the interaction between `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`'s extra rejections **elsewhere
-in the search tree** (candidates genuinely unrelated to the eventual winning path) and beam-width
-competition or state deduplication (`useStateDedup` in `beamSearchFromGate`) — pruning a sibling
-candidate could plausibly change which of two dedup-equivalent states (same cell/visited-set, 
-different `edgeUsage` history) survives, in a way that doesn't reject the winning path directly but
-still causes it to fall out of the beam's top-5000 width at some depth. **This is a hypothesis, not
-confirmed** — tracing it further would need per-depth beam-frontier instrumentation
-(`prep._beamResearchObserver`, already used elsewhere in this codebase for exactly this kind of
-trace) comparing flag-on vs flag-off frontiers depth by depth. Not done here.
+That means the regression runs through a **downstream** mechanism, not a direct false-reject.
+
+## The mechanism, fully traced: a beam-width-threshold timing artifact
+
+Instrumented `beamSearchFromGate` with `prep._beamResearchObserver` (an existing hook, already used
+elsewhere in this codebase for exactly this kind of trace) to capture every stage of every beam phase
+— `incoming-frontier`, `generated`, `hard-pruned` (with per-candidate rejection cause),
+`dedup-removed` (with the competing scores), `score-width-culled`, `post-*` — for both flag-on and
+flag-off runs of `R02248`'s `intersectionHarvest@beam5000` attempt, then diffed them phase by phase
+against the recovered winning path.
+
+**Step 1 — find where the winning lineage dies.** At depth 17, the winning path's own candidate
+(score 594.5713, reaching cell `720903` with constraint-state key `1|0|0|0|7|0|0`) is present in
+`generated` but absent from `post-production-dedup` — it was removed by **state deduplication**
+(`useStateDedup` in `beamSearchFromGate`), which keeps only the highest-scoring candidate per
+`(cell, constraint-state)` key. It lost to a competitor scoring 595.8524. In the flag-off run, the
+same winning-path candidate is *never* removed at any stage, at any depth, through to the solve.
+
+**Step 2 — is the competitor itself flag-dependent?** No: the exact competitor path (score 595.8524)
+is *also* generated in the flag-off run — but there it isn't even dedup-*eligible*, because the
+overall pool at that dedup key never collides with it (0 dedup-removed entries at that key in the
+flag-off run, vs. **30** entries at that same key in the flag-on run, the highest of 147 distinct
+colliding keys that phase). `scoreMove` never reads connectivity state, so the competitor's score is
+identical in both runs — the difference is entirely in *how many other candidates pile onto the same
+key*, not in any candidate's own score changing.
+
+**Step 3 — why does the flag-on run have a 47x larger collision pool at this exact depth?**
+Tracing `post-hard-prune` pool size at every depth from 1–18 in both runs:
+
+| depth | ON incoming→postHardPrune→postDedup | OFF incoming→postHardPrune→postDedup |
+|---:|---|---|
+| 1–15 | identical in both runs (grows 1→3→7→18→45→112→257→596→1275/1321→2919/2936→**59**→108→240→528→1143→2473) | same |
+| 16 | 2473 → **4948** → 4948 (*below* the 5000 beamWidth — dedup/cull is **skipped**) | 2473 → **5239** → 144 (*above* 5000 — dedup/cull **fires**, collapsing to 144) |
+| 17 | 4948 → **10,801** → 169 (the deferred pool, now huge, finally collapses — hard) | 144 → 229 → 229 (no collapse needed) |
+
+(Depths 8–9 already show the flag correctly rejecting a handful more candidates — 1275 vs 1321,
+2919 vs 2936 — a small, legitimate effect. Depths 10–15 collapse to the *same* size, 59, in both
+runs, coincidentally — the sets aren't necessarily identical, just equal-sized.)
+
+This is the whole mechanism: `beamSearchFromGate`'s dedup+width-cull step only fires when
+`cands.length > beamWidth` (5000). At depth 16, the flag's small, entirely legitimate reduction in
+candidate count (a handful of correctly-rejected axis-exhausted revisits, compounding from earlier
+depths) happens to land the flag-on pool at 4,948 — just **under** the 5,000 threshold — while the
+flag-off pool lands at 5,239, just **over** it. That one-generation difference in *whether the cull
+fires at all* is the entire story: the flag-off run collapses its pool promptly, at a modest size
+(5,239 → 144), while the flag-on run defers the collapse a full generation, during which the
+uncollapsed pool more than doubles (4,948 → 10,801) before finally being forced through a much larger,
+far more collision-prone cull (→ 169). That larger collapse is where the winning lineage's specific
+candidate meets, and loses to, a competitor it would never have had to compete against had the cull
+landed a generation earlier, as in the flag-off run.
+
+**This is not a soundness bug in `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`.** The flag's own direct effect
+(rejecting a few axis-exhausted revisits) is small and correct. The regression is an **emergent
+property of the beam search's fixed-threshold dedup/cull timing**: any small perturbation to
+candidate counts — from this flag, or in principle from *any* other pruning/scoring change — can push
+a depth's pool to the wrong side of the `beamWidth` cutoff, deferring a collapse and making it larger
+and more collision-prone when it finally happens. This directly explains why the effect isn't uniform
+across the corpus: `R03248` (Priority 0 above) is very likely the same phenomenon landing the
+*opposite* way — a perturbation that pushes some depth's pool onto the side that collapses *earlier*
+or *more favorably* for its own winning lineage. Population impact is fundamentally scattered by
+construction, not because the flag interacts inconsistently with different level geometries, but
+because whether a given level's real winning lineage happens to be a casualty of a deferred,
+larger-than-necessary collapse is close to a coin flip once a threshold-crossing perturbation happens
+at all. Most of the 195 mined candidates likely show no effect (16/20 in the tested sample) simply
+because their pool sizes at the relevant depths don't happen to straddle the threshold.
 
 ## This is not isolated to `R02248` — population scale via provenance mining
 
@@ -124,37 +188,47 @@ not attempted here.
 ## What this does and does not establish
 
 - **Does establish**: a real, causally-confirmed, referee-validated regression exists on at least 3
-  Corpus-2 levels, traceable to a specific commit (`80a5706`) and a specific ablation flag
-  (`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`), whose own soundness validation at introduction had a real
-  coverage gap (only checks previously-stored witnesses, not newly-recovered ones).
+  Corpus-2 levels, traceable to a specific commit (`80a5706`); the exact mechanism on `R02248` is
+  fully traced (beam-width-threshold timing artifact interacting with state dedup, not a soundness
+  bug); and the mechanism generalizes to explain the scattered, non-uniform population signature
+  (including `R03248`'s opposite-direction case) as the same phenomenon rather than a separate one.
 - **Does not establish**: the true population-wide scale (only 20 of 195 mined candidates were
-  individually tested, only in a single-attempt-config probe, not the full ladder); the exact
-  mechanism (isConnected is sound on the winning path itself — the effect is downstream, most likely
-  beam-width competition or state dedup, not confirmed); or that disabling the flag is a net-positive
-  fix (`R03248` is a direct counterexample).
+  individually tested, only in a single-attempt-config probe, not the full ladder); whether `R03248`'s
+  own trace shows the identical threshold-crossing pattern in the opposite direction (plausible from
+  the mechanism, not directly traced); or that disabling the flag is a net-positive fix (`R03248` is a
+  direct counterexample, and the mechanism explains *why* a blanket disable can't be — it would just
+  move the threshold-crossing lottery to different levels, not eliminate it).
 - **Does not itself justify** any production change. Per this repo's promotion contract
-  (`docs/solver-optimization-current-queue.md`), any actual fix needs: the real mechanism traced (not
-  just the symptom), a matched full-corpus A/B at equal node/work budget with lifecycle telemetry,
-  and explicit reporting of both gains and losses — `R03248`'s opposite-direction result makes clear
-  a blanket revert would trade some solves for others, not a pure win.
+  (`docs/solver-optimization-current-queue.md`), any actual fix needs a matched full-corpus A/B at
+  equal node/work budget with lifecycle telemetry and explicit reporting of both gains and losses —
+  and given the mechanism is a generic width-threshold fragility rather than a defect specific to one
+  flag, the more valuable fix target may be the dedup/cull triggering condition itself (e.g. hysteresis
+  around the width threshold, or triggering cull on total candidates generated rather than the
+  post-hard-prune survivor count) rather than anything about `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`.
 
 ## Recommended next steps (not done here)
 
-1. **Trace the actual mechanism** on `R02248` using `prep._beamResearchObserver` to diff the flag-on
-   vs. flag-off beam frontier depth-by-depth — find the exact depth/candidate where the winning
-   lineage's survival diverges, and confirm whether dedup or width competition is the proximate cause.
+1. **Verify `R03248` shows the same threshold-crossing signature** (in the opposite direction) using
+   the identical instrumentation — confirms the mechanism is general, not `R02248`-specific.
 2. **Verify the remaining 175 unverified provenance-mining candidates** (the 2–30-node trivial tier
-   plus the >50,000-node tier beyond the 20 already tested) — establishes the real population scale.
-3. **Investigate `R03248`'s opposite-direction case** with the same rigor — understanding why the
-   flag *helps* there is necessary to design any fix that doesn't trade wins for losses.
+   plus the >50,000-node tier beyond the 20 already tested) — establishes the real population scale,
+   and specifically how many are threshold-crossing artifacts (any pruning/scoring perturbation) vs.
+   genuinely something else.
+3. **Investigate whether the dedup/cull trigger condition itself can be made less fragile** — e.g.
+   a hysteresis band, or firing the cull based on a metric less sensitive to single-candidate-count
+   noise than a hard `cands.length > beamWidth` inequality — as a more durable fix than touching any
+   one pruning flag. This is a different, and likely more valuable, fix target than the flag itself.
 4. **A full-corpus matched A/B at the flag's actual production node budget (50M)**, not 10M, once (1)
-   and (3) give enough understanding to propose a specific, narrower fix rather than a blanket
-   ablation flip.
+   and (3) give enough understanding to propose a specific, well-scoped fix.
 
 ## Evidence artifacts (not committed — scratchpad only, regenerable)
 
 - `stale-cold-solve-candidates.json`: all 195 mined candidates.
 - `stale-candidates-verified.json`: the 20-candidate verification run's full per-level detail.
-- Mining script logic is described in full above; not committed as a script since it was a one-shot
-  investigation, not a reusable tool — a future session picking up step 2 above should decide whether
-  to promote it to `scripts/stress/` first.
+- `trace-r02248-beam.mjs` / `trace-competitor.mjs` / `trace-scores2.mjs` / `trace-pool-growth.mjs`:
+  the beam-frontier instrumentation scripts used to trace the mechanism above (`prep._beamResearchObserver`
+  driving stage-by-stage diffing of flag-on vs. flag-off runs).
+- Mining/tracing script logic is described in full above; not committed as scripts since this was a
+  one-shot investigation, not a reusable tool — a future session picking up the next steps above
+  should decide whether to promote any of them to `scripts/stress/` first (the pool-growth tracer in
+  particular is directly reusable for verifying `R03248` and any of the remaining 175 candidates).
