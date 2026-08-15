@@ -177,6 +177,34 @@ tool.
 > `reports/2026-08-12-repair-retreat-cpsat.md`'s framing of a distinct "`mustCross >= 2`" coverage
 > gap on `R00630`/`R02449` was a misattribution — both levels also carry flipping filters, which was
 > the actual (and only) cause; mustCross of any count was never unsupported.
+>
+> **Follow-up (2026-08-15, same day): the 9 rows were re-run.** See "Follow-up (2026-08-15): the 9
+> abstained rows re-run" below — 2 new confirmed R00001-pattern instances, both D-class, extending
+> the "Does this justify..." section's "only for the A-class regime" conclusion below to D-class too.
+
+## Follow-up (2026-08-15): the 9 abstained rows re-run, flipping filters now supported
+
+**GHA run [`31858783552`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/31858783552), `cpsat-explicit-prefix-oracle.yml`, `main` @ `4efc2d1`, same case file (`winning-lineage-extinction-adjacent-cases-2026-08-12.json`), same 32 cases, same 60s/case time limit.** Full re-run of all 32 cases (not just the 20 in the previously-abstained 9 rows), since re-running a subset risked missing a regression on the already-resolved rows.
+
+**Result: 25 live / 4 dead / 3 abstain, 0 correctness alarms, 0 input alarms** (up from the original 9 live / 2 dead / 21 abstain). All 3 remaining abstentions are genuine CP-SAT timeouts (`oracle-unknown`) — zero abstentions are `unsupported-mechanics` anymore, confirming flipping filters were the entire remaining blocker.
+
+| level | class | top-1 (score-preferred) | known-supported (culled) | near-cutoff extra | R00001 pattern? |
+|---|---|---|---|---|---|
+| S00028 | A | live (OPTIMAL) | live (OPTIMAL) | — | no |
+| S00030 | D | **dead** (INFEASIBLE) | **live** (OPTIMAL) | live (OPTIMAL) | **YES — new** |
+| S00035 | A | abstain (oracle-unknown, timeout) | live (OPTIMAL) | — | inconclusive |
+| S00048 | D | **dead** (INFEASIBLE) | **live** (OPTIMAL) | live (OPTIMAL) | **YES — new** |
+| S00140 | A | live (OPTIMAL) | live (OPTIMAL) | — | no |
+| R00058 | A | live (OPTIMAL) | live (OPTIMAL) | — | no |
+| R00060 | A | live (OPTIMAL) | live (OPTIMAL) | — | no |
+| R00064 | A | live (OPTIMAL) | live (OPTIMAL) | — | no |
+| R00087 | A | abstain (oracle-unknown, timeout) | abstain (oracle-unknown, timeout) | — | inconclusive |
+
+**The R00001 pattern (beam's top-1 pick provably `dead` while a known-valid alternative exists at the same parent) reproduces twice more, both D-class (width-saturation).** `S00030` and `S00048` join `S00001` and `R00104` from the original pass — 4 confirmed instances total now, across A-class *and* D-class regimes, not just A-class as the original report's "Does this justify..." section below (left unedited) had to leave open. For both `S00030` and `S00048`, the near-cutoff (rank-100, the width boundary itself) point is *also* live — consistent with the original report's D-class open question ("mostly alive... or mostly dead") resolving toward **mostly alive**: the saturated pool has real live capacity, and it's specifically the beam's *top-ranked* pick that's dead, not the whole pool.
+
+**What this means for Priority 2's decision-bearing next step** (`docs/solver-optimization-current-queue.md`): the mis-ranking pattern is no longer A-class-only. A held-out, family-namespaced K-vs-2K descriptor test (the queue's prescribed next step) should now be scoped to include D-class parents alongside A-class, not restricted to A-class as the original report's interpretation suggested before this re-run.
+
+Of the remaining 5 rows (S00028, S00140, R00058, R00060, R00064), all resolved fully live on both top-1 and culled branches — no extinction confirmed at these parents at all, so they contribute no new mis-ranking evidence either way. `S00035` and `R00087` remain genuinely inconclusive (real CP-SAT timeouts, not modeling gaps) — not pursued further with a longer time limit here.
 
 ## Does this justify moving to neutral future-opportunity descriptors?
 
@@ -195,6 +223,12 @@ mis-ranking has no a priori reason to help (or even be relevant to) B-class near
 which requires flipping-filter support in the CP-SAT model, not more case construction against the
 current model — is the more valuable next step before any global counterfactual, exactly as the handoff
 doc anticipated ("first expand the exact-label set... then test neutral descriptors").
+
+> **Correction (2026-08-15): D-class is no longer zero exact evidence.** The 9-row re-run below found
+> the R00001 pattern at `S00030` and `S00048`, both D-class — 2 of the section's 4 pattern instances
+> are now D-class, not just A-class. "Only for the A-class regime" above is superseded: the descriptor
+> test should be scoped to A-class *and* D-class. B-class evidence (3 resolved B-class rows in the
+> original pass, all fully live, no extinction) is unchanged — still no mis-ranking evidence there.
 
 ## Deliverables
 

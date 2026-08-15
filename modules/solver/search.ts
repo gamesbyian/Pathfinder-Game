@@ -332,6 +332,19 @@ const _BEAM_DEBUG = !!(_proc && _proc.env && _proc.env.PF_BEAM_DEBUG === '1');
 // levels than on their cheaply-solved near-twins, not just a witness-replay proxy for it") —
 // see reports/2026-08-06-backtrack-depth-instrumentation.md for what it found.
 const _DFS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_DFS_DEBUG === '1');
+
+// 0 = disabled (shipped 2026-08-15 — see reports/2026-08-15-connectivity-axis-exhausted-
+// regression.md for the regression this targets and the validation this margin was picked from):
+// relative score margin (fraction of the winner's score) within which beam state dedup keeps a
+// collision's runner-up alongside its winner, instead of discarding it outright. Rescues a
+// genuinely-winning-but-locally-lower-scoring lineage from a single close comparison it would
+// otherwise lose. Recovers R02248 (previously unsolved) at +0.3% nodes / +1.8% wall time on the
+// full published-corpus regression check, with zero solved/failed-set changes measured across a
+// 20-level mined-regression sample and a 112-level corpus-2 sample. Does NOT recover every known
+// case in the same regression family (R02114, R00592 remain unfixed — see the report's "what this
+// does and does not establish"). 0 must be, and is measured to be, byte-identical in behavior and
+// performance to dedup with no retention widening at all.
+const DEDUP_NEAR_TIE_MARGIN = 0.01;
 // out (optional, last param): mirrors dfsFromGate's own out contract for external tooling (the
 // stress benchmark's per-attempt telemetry) — set to whether the OVERALL call's null return was
 // because levelBudgetMs ran out (true) vs. the search genuinely exhausted every avenue it tried
@@ -725,19 +738,53 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             let pool = cands;
             const _t2 = _hrtNow();
             if (useStateDedup) {
+                // dm2 holds the runner-up ONLY for a key currently on a near-tie (see
+                // DEDUP_NEAR_TIE_MARGIN) — undefined for the overwhelming majority of keys, so this
+                // second map stays empty and costs nothing when no near-ties occur. Kept fully
+                // separate from `dm` (rather than a union-typed single map) specifically so `dm`
+                // itself is monomorphic (Map<string, BeamNode>, exactly as before) — a prior version
+                // that stored `BeamNode | BeamNode[]` in one map measured a genuine ~30% per-op
+                // slowdown from that alone, even with retention disabled, apparently from losing
+                // this map's monomorphic V8 shape. See reports/2026-08-15-connectivity-axis-
+                // exhausted-regression.md.
                 const dm = new Map<string, BeamNode>();
+                const dm2: Map<string, BeamNode> | null = DEDUP_NEAR_TIE_MARGIN > 0 ? new Map() : null;
                 const dedupRemoved: BeamNode[] | null = research ? [] : null;
                 const dedupContexts: Record<string, unknown>[] | null = research ? [] : null;
                 for (const c of cands) {
                     const dk = `${c.key}|${c.sc}`;
                     const p = dm.get(dk);
                     if (!p || c.score > p.score) {
-                        if (p && research) { dedupRemoved!.push(p); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(p, [])], competitorPath: [..._reconstructBeamPath(c, [])], removedScore: p.score, keptScore: c.score, key: dk }); }
+                        if (p) {
+                            if (research) { dedupRemoved!.push(p); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(p, [])], competitorPath: [..._reconstructBeamPath(c, [])], removedScore: p.score, keptScore: c.score, key: dk }); }
+                            // p is being displaced by a strictly-better c. If p was itself within
+                            // margin of whatever it beat to get here, it's a near-tie runner-up worth
+                            // keeping alongside the new winner — same rationale as the direct branch
+                            // below, just reached via the demotion path instead.
+                            if (dm2 && p.score >= c.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(c.score)) dm2.set(dk, p);
+                            else if (dm2) dm2.delete(dk);
+                        }
                         dm.set(dk, c);
-                    } else if (research) { dedupRemoved!.push(c); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(c, [])], competitorPath: [..._reconstructBeamPath(p, [])], removedScore: c.score, keptScore: p.score, key: dk }); }
+                    } else {
+                        if (research) { dedupRemoved!.push(c); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(c, [])], competitorPath: [..._reconstructBeamPath(p, [])], removedScore: c.score, keptScore: p.score, key: dk }); }
+                        // c lost to p, but only just — within margin, so retain it as p's runner-up
+                        // (rescues a genuinely-winning-but-locally-lower-scoring lineage from being
+                        // discarded outright on a single close comparison; see the report above for
+                        // the real level this was measured against). A THIRD near-tie candidate at
+                        // the same key simply competes for this one runner-up slot on score, same as
+                        // dm's own single-winner rule — deliberately not a general top-K, to keep the
+                        // per-candidate cost close to the original algorithm's.
+                        if (dm2 && c.score >= p.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(p.score)) {
+                            const runnerUp = dm2.get(dk);
+                            if (!runnerUp || c.score > runnerUp.score) dm2.set(dk, c);
+                        }
+                    }
                 }
                 if (dedupRemoved) emit('dedup-removed', dedupRemoved, { removals: dedupContexts });
-                if (dm.size < cands.length) pool = [...dm.values()];
+                if (dm2 && dm2.size > 0) {
+                    pool = [...dm.values()];
+                    for (const [dk, runnerUp] of dm2) if (dm.get(dk) !== runnerUp) pool.push(runnerUp);
+                } else if (dm.size < cands.length) pool = [...dm.values()];
             }
             if (research) emit('post-production-dedup', pool);
             if (_BEAM_DEBUG) { _dbgDedupNs += _hrtNow() - _t2; }
