@@ -691,3 +691,20 @@ depends on which elite/level you look at, at least at this small n.** See
 "Broadened sample" section for the full numbers and the one concrete, not-yet-tried idea it surfaces
 (gate `closeLengthGap`/`enableElitePrefixDfs` on small demonstrated rollback specifically, rather than
 applying them indiscriminately as both were previously tested).
+
+## CP-SAT-free rollout-escape proxy: closed negative (2026-08-15)
+
+Tried to extend the R00648-vs-R03176 "narrow trap vs. wide plateau" forgivingness finding above to
+population scale WITHOUT a CP-SAT oracle (CP-SAT is expensive and abstains on `mustCross >= 2` and
+flipping filters, ruling out a real population sweep). `scripts/stress/repair-plateau-rollout-classifier.mjs`
+sweeps a backoff ladder of blind rollouts (the real `takePly` primitive) from each level's own
+repair-elite dead ends, instead of a CP-SAT-verified feasible point. Sanity check against the same
+two levels (6 elites each, 150 trials/backoff) found no reliable discrimination at 4 of 5 tested
+depths — at the depth closest to the actual dead end (the one that matters most), both levels show
+the identical shape: most elites read near-zero escape, one high-outlier elite each. The signal is
+dominated by which specific dead-end trajectory you sample, not by level identity — CP-SAT's
+feasibility verification was load-bearing, not an optional refinement a cheap proxy could skip. See
+[`reports/2026-08-15-repair-plateau-rollout-proxy-negative.md`](../reports/2026-08-15-repair-plateau-rollout-proxy-negative.md).
+**Do not repeat this specific CP-SAT-free approach at population scale.** The tool is kept as
+infrastructure for a future version anchored on real CP-SAT-verified prefixes (real cost, not a
+shortcut past CP-SAT).

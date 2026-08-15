@@ -60,6 +60,12 @@ export default defineConfig({
             // part of test:node. Landed without this exclusion, so vitest collection failed on it with
             // "No test suite found" — a red `npm run ci` independent of any other branch's changes.
             'scripts/analyze-technique-campaign-unit-tests.mjs',
+            // Same pre-existing-gap pattern once more (top-level node:assert + execFile CLI-driving
+            // integration test, no vitest test()/describe()) — run via `npm run
+            // test:family-source-selection`, part of test:node. Landed (PR #1379) without this
+            // exclusion, so vitest collection failed on it with "No test suite found" — a red
+            // `npm run ci` independent of any other branch's changes.
+            'scripts/select-family-result-source-unit-tests.mjs',
             'node_modules/**',
             'dist/**',
         ],

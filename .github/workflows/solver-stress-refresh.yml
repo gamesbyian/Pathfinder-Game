@@ -58,6 +58,10 @@ on:
         description: 'true forces a 24h non-binding deadline and makes reports artifact-only; hints persist only if persist_hints=true. Use true + persist_hints=false for matched A/B arms.'
         required: false
         default: 'false'
+      lifecycle_telemetry:
+        description: 'true adds --lifecycle-telemetry to both corpus solves (per-technique eligible/reached/starved/exhausted record on every row -- see modules/solver/orchestration.ts finish()) and has the combine job emit a mass-weighted failure map (scripts/stress/lifecycle-failure-map.mjs) over the full unsolved population. Opt-in: adds negligible per-level overhead (post-processing only) but the resulting combined benchmark files carry a techniqueLifecycle field on every row, which older analysis tooling does not expect.'
+        required: false
+        default: 'false'
 
 concurrency:
   group: solver-stress-refresh
@@ -121,6 +125,7 @@ jobs:
           [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-loop-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
           [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ] && extra+=("--main-loop-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}")
           [ "${{ inputs.persist_hints }}" = "true" ] && extra+=("--save-hints")
+          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
           work=$(( ${{ inputs.corpus1_node_budget }} * 134 / 100 ))
           timeout -k 30s --preserve-status 45m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus=data/stress/stress-levels.json \
@@ -150,6 +155,7 @@ jobs:
           [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-loop-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
           [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ] && extra+=("--main-loop-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}")
           [ "${{ inputs.persist_hints }}" = "true" ] && extra+=("--save-hints")
+          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
           work=$(( ${{ inputs.corpus2_node_budget }} * 134 / 100 ))
           timeout -k 30s --preserve-status 300m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus=data/stress/stress-levels-random.json \
@@ -309,6 +315,19 @@ jobs:
           DISABLE_FLAGS: ${{ inputs.disable_flags }}
           DETERMINISTIC: ${{ inputs.deterministic }}
           PERSIST_HINTS: ${{ inputs.persist_hints }}
+
+      - name: Mass-weighted lifecycle failure map
+        if: steps.coverage.outputs.complete == 'true' && inputs.lifecycle_telemetry == 'true'
+        shell: bash
+        run: |
+          node scripts/stress/lifecycle-failure-map.mjs \
+            --in=reports/stress/benchmark-parallel.json \
+            --out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus1.json" \
+            --summary-out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus1-summary.md"
+          node scripts/stress/lifecycle-failure-map.mjs \
+            --in=reports/stress/benchmark-latest-random.json \
+            --out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus2.json" \
+            --summary-out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus2-summary.md"
 
       - name: Print solved counts
         if: steps.coverage.outputs.complete == 'true'

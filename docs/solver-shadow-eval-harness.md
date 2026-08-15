@@ -370,6 +370,17 @@ on its own: it justified growing the atlas across the real 397-level eligible po
 (portal-inclusive), which was subsequently completed in Part 5; no further flipper encoding is
 needed to establish that the prune-gap phenomenon generalizes beyond mechanic-light levels.
 
+> **2026-08-15: flipping filters ARE now encoded, for a different consumer than this verdict was
+> about.** `cpsat-full-probe.py` gained flipping-filter support to unblock the *targeted* explicit-
+> prefix/single-solve labeling `docs/future-work.md` item 2 and the repair-retreat work were
+> explicitly asking for (few, higher-value calls at a normal 15-60s budget), not this Part's
+> `prune-gap-probe.mjs` workload (many cheap branch probes at a short 45s budget). This verdict's own
+> cost concern is untested for that different workload and may well still apply — do not treat the
+> new support as reopening it without new measurement specific to `prune-gap-probe.mjs`/
+> `interface-probe-harness.mjs`. See
+> [`reports/2026-08-15-cpsat-flipping-filter-support.md`](../reports/2026-08-15-cpsat-flipping-filter-support.md)
+> for the encoding, validation, and this exact distinction spelled out in full.
+
 ## Part 7: Bounded obligation-compatibility MDD probe (section 4)
 
 `scripts/stress/probes/obligation-tour-probe.mjs` (`obligation-tour-mutex`) is the deliberately

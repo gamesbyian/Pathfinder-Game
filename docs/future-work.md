@@ -19,6 +19,16 @@ This is the highest level-blind Corpus-2 figure recorded, and it resolves the op
 
 **It is a reference point, not a controlled delta.** Against the 635 sweep it changes node budget (36M→50M), worker count (1→2), and two days of `main`; against the 665 arm it additionally includes three flag promotions and the repair-probe wall-clock fix. Isolating the budget effect needs a matched 36M-vs-50M pair at one SHA — worth running, since it would say whether raising the ceiling further keeps paying.
 
+**Matched pair, run (2026-08-15, run #41 `31852197672` @ `8865365` [50M] vs. run #42 `31855334991` @ `6065881` [36M]).** The two commits differ only in `scripts/stress/cpsat-full-probe.py` and `scripts/stress/repair-plateau-rollout-classifier.mjs` (offline research tooling, never invoked by the solve workflow) — verified zero drift in `modules/`, `scripts/` affecting the workflow, or `data/config/` via `git diff --stat` between the two SHAs, so this is a genuine matched pair despite not being literally the same commit. Both runs used the same protocol otherwise (2 workers, `deterministic=true`, `persist_hints=false`, `lifecycle_telemetry=true`).
+
+| node budget | Corpus 2 solved | Corpus 2 nodes spent | Corpus 2 work spent | Corpus 1 solved |
+|---|---:|---:|---:|---:|
+| 50M (run #41) | 731/1700 (43.0%) | 55,089,123,267 | 68,721,621,532 | 94/102 |
+| 36M (run #42) | 684/1700 (40.2%) | 41,274,098,638 | 57,447,568,354 | 94/102 |
+| **delta** | **-47 (-6.4% relative)** | -25.1% | -16.4% | **0 (identical)** |
+
+Raising the ceiling keeps paying: a 28% budget cut (50M→36M) costs 47 real solves, not a plateau — the ceiling is still binding on a meaningful slice of Corpus 2's hardest levels rather than most unsolved levels being genuinely stuck regardless of budget. Corpus 1 is unaffected in both directions (only `corpus2_node_budget` was varied), confirming clean isolation with no cross-corpus contamination. Consistent with the lifecycle failure map's own read at 50M (run #41): 0% `exhausted` on either corpus, meaning no unsolved level anywhere runs its search to natural completion — every failure is still budget-bound in some form (`capped` or `starved`), so there was no a priori reason to expect a shrunk ceiling to be free, and it wasn't. This does not by itself say whether pushing *past* 50M would keep paying at the same rate — that would need its own matched pair at a higher ceiling, not measured here.
+
 **Corpus 1's 95→94 is diagnosed** (2026-08-14): `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET`, promoted default-ON 2026-08-13, costs exactly one Corpus-1 level. A matched level-blind A/B at one SHA over all 102 levels gives 93/102 with the flag on and 94/102 with it off; `R00408` solves only with it off, and nothing solves only with it on. Mechanism: `R00408`'s ordinary probe tier reports `bestBadness = 13`, so the controller scales the biased tier to `max(0.35, 6/13) = 0.46`, cutting it from 6,000,000 to ~2,769,231 nodes — and the biased must-turn attempt (`dfs:repair:repair(mustTurnBiased)`) is precisely the configuration that solves the level. It then exhausts the full 50M ceiling instead of solving in 9.97M. Neither the flag nor the gate 10→6 change was ever evaluated on Corpus 1: both A/B workflows hardcode `stress-levels-random.json`, and the published corpus has zero eligible levels. Full writeup, including the corrected 5-of-12 shrink table: [`../reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md`](../reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md).
 
 ### Prior decision-bearing A/B (flag comparison, superseded as a capability figure)
@@ -68,7 +78,7 @@ Next: build a bounded informative same-parent sibling set adjacent to actual win
 
 Do **not** rerun the original 12 unchanged.
 
-**Second batch complete (2026-08-12):** 15 real score/width extinction decision points (10 A / 3 B / 2 D class, all distinct from the first batch) → 32 cases, 9 live / 2 dead / 21 abstain, zero correctness/input alarms after fixing an under-constrained multi-gate CP-SAT encoding bug found along the way (`cpsat-full-probe.py`). The mis-ranking pattern reproduced independently at 2 more A-class parents (S00001, R00104); it did **not** reproduce at any of 3 usable B-class rows (both branches exact-feasible there — a different failure shape); D-class got zero usable data. Coverage is bottlenecked by flipping-filter support in the CP-SAT model (9/15 levels abstained solely for that reason). See [`reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md). Justifies starting neutral future-opportunity descriptor work scoped to the A-class regime; B/D classes need more exact labels first (which needs flipping-filter CP-SAT support, not more case construction against the current model).
+**Second batch complete (2026-08-12):** 15 real score/width extinction decision points (10 A / 3 B / 2 D class, all distinct from the first batch) → 32 cases, 9 live / 2 dead / 21 abstain, zero correctness/input alarms after fixing an under-constrained multi-gate CP-SAT encoding bug found along the way (`cpsat-full-probe.py`). The mis-ranking pattern reproduced independently at 2 more A-class parents (S00001, R00104); it did **not** reproduce at any of 3 usable B-class rows (both branches exact-feasible there — a different failure shape); D-class got zero usable data. Coverage was bottlenecked by flipping-filter support in the CP-SAT model (9/15 levels abstained solely for that reason). See [`reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md). Justifies starting neutral future-opportunity descriptor work scoped to the A-class regime; B/D classes need more exact labels — **unblocked 2026-08-15**: flipping filters are now encoded in `cpsat-full-probe.py` (see [`reports/2026-08-15-cpsat-flipping-filter-support.md`](../reports/2026-08-15-cpsat-flipping-filter-support.md)), so the 9 previously-abstained rows can be re-run through the same pipeline — not yet done, next step for whoever picks up B/D-class exact labeling. (`mustCross` count was never a separate coverage limit — see that report's correction to the repair-retreat report's earlier "`mustCross >= 2`" framing.)
 
 ### 3. Exact repair-retreat CP-SAT checks — FIRST PASS + BROADENING BOTH COMPLETE (2026-08-12/13); mixed, population-dependent result
 
@@ -151,6 +161,8 @@ Start with a read-only or experiment-only diagnostic that compares the proposed 
 ### Repair still lacks a genuinely deep prefix-edit capability
 
 Plateau penalty, soft recombination, exact relinking, and turn bias are closed in their current forms. The next repair question is exact retreat depth, not another append-only attraction tweak.
+
+**CP-SAT-free rollout-escape proxy for "narrow trap vs. wide plateau" — closed negative (2026-08-15).** Tried to extend `reports/2026-08-12-repair-retreat-cpsat.md`'s R00648-vs-R03176 forgivingness finding to population scale without a CP-SAT oracle: a backoff ladder of blind rollouts from each level's own repair-elite dead ends (`scripts/stress/repair-plateau-rollout-classifier.mjs`). Sanity check against the same two levels (6 elites each, 150 trials/depth) found no reliable discrimination at 4 of 5 tested backoff depths — at the depth closest to the actual dead end, both levels show the same shape (most elites read near-zero escape, one high-outlier elite each), meaning the signal is dominated by which specific dead-end trajectory you sample, not level identity. See [`reports/2026-08-15-repair-plateau-rollout-proxy-negative.md`](../reports/2026-08-15-repair-plateau-rollout-proxy-negative.md). **Do not repeat this at population scale with the current CP-SAT-free method** — the tool is kept as infrastructure for a future version anchored on real CP-SAT-verified prefixes, which is real cost, not a shortcut past it.
 
 ### Online failure-conditioned control is still distinct from the closed cold-start portfolio scheduler
 
@@ -238,6 +250,76 @@ ETT-016 exposed one repair-fallback dispatch with a positive node allowance but 
 it performed no search and was previously labelled timed-out. Zero-cap dispatches are now explicitly
 budget-starved even though the technique was reached. Do not equate attempt presence with productive
 reach; use actual work/nodes and starvation together.
+
+#### Mass-weighted lifecycle failure map + canonical workflow wiring (2026-08-14)
+
+`scripts/stress/lifecycle-failure-map.mjs` (`npm run stress:lifecycle-failure-map`) turns one or more
+`--lifecycle-telemetry` capability artifacts into a corpus-wide allocation map: every unsolved row is
+bucketed into exactly one of `starved` (a runnable technique never received a node), `capped` (reached
+but neither starved nor exhausted its space), `exhausted` (every reached technique ran its space out),
+`deadline-truncated`, or `attempt-error`, ranked by node/work mass rather than level count. A separate
+per-technique census (instantiated/reached/starved/exhausted counts plus node/work share, computed only
+over the unsolved population — solved rows stop the ladder early and so carry no starvation signal)
+answers "which lane deserves the next unit of work" directly, rather than by proxy through the
+per-attempt heuristics `cluster-unsolved-failures.mjs` infers (a different, complementary tool — this
+one reads the explicit `techniqueLifecycle` record ETT-014–016 validated, not attempt-shape guesses).
+It also reports the solved population's node-cost quantiles against the run's `nodeBudget`, as a
+one-run *estimate* of budget elasticity (how many solves sit near the ceiling) — explicitly not a
+substitute for a matched two-budget A/B, since internal reserves (main-loop late reserve,
+admissible-order reserve, repair-probe adaptive shrink) are fractions of `nodeBudget` itself, so a
+lower-ceiling run is not a prefix of a higher one.
+
+`.github/workflows/solver-stress-refresh.yml` gained a `lifecycle_telemetry` dispatch input (default
+`false`, matching the flag's existing opt-in convention): when true, both corpus solves add
+`--lifecycle-telemetry` and the combine job runs the failure map against each combined benchmark file
+separately (`reports/stress/capability-runs/<run-id>/lifecycle-failure-map-corpus{1,2}(-summary.md)`),
+uploaded through the existing `reports/stress/` artifact glob — no new upload target needed. Corpus 1
+and 2 are mapped separately rather than combined, since their `node_budget` inputs are independent and
+the tool refuses to mix artifacts with different budgets (a per-corpus map is also what the allocation
+question actually needs — the two corpora aren't one population).
+
+The doc's own prescribed 8–12-level no-treatment dry run (above) is done: 12 Corpus-2 levels sampled
+across the full id range, production defaults, 50,000,000-node budget, `--lifecycle-telemetry`, local
+4-worker run. 3/12 solved; `techniqueLifecycle` populated and internally consistent on every row
+(`repair-fallback`/`attraction-diversity` starved on every unsolved row that reached `repair-probe`,
+consistent with the probe-eats-the-shared-pool mechanism `reports/2026-08-12-repair-probe-early-main-loop-starvation.md`
+already documented). This was infrastructure validation at n=12, not a capability or allocation
+finding on its own — superseded by the full-corpus run below.
+
+**Full-corpus mass-weighted map — run (run #41, `31852197672`, 2026-08-15, commit `8865365`,
+production defaults, 50M node budget, 2 workers, `deterministic=true`/`persist_hints=false`,
+artifact-only).** The finding the dry run couldn't produce at n=12:
+
+- **Corpus 2 (969 unsolved of 1700): 863 (89.1%) `starved`, 106 (6.2%) `capped`, 0 `exhausted`, 0
+  `deadline-truncated`, 0 `attempt-error`.** Every unsolved corpus-2 level either has a mechanically-
+  eligible technique that never received a single node, or ran without exhausting its search space —
+  none genuinely ran out of things to try. `repair-fallback` is node-starved on 515/603 instantiated
+  (85%); `attraction-diversity` is starved on 863/969 (89%) — both late-tier techniques essentially
+  never run, because earlier tiers (`main-ladder`, `repair-probe`, `admissible-order` — all reached on
+  100% of instantiated rows) consume the shared node budget first. 515 levels have both
+  `repair-fallback`+`attraction-diversity` starved simultaneously; 26 have all three
+  (+`admissible-order`, which is otherwise never starved but is *work*-starved on exactly those 26) —
+  the genuine worst case. Solve-cost tail is heavy: of 731 solves, 109 cost >50% of the 50M budget, 62
+  cost >75%, 13 cost >90% (vs. 0/94 above 90% on Corpus 1) — consistent with the already-documented
+  36M→50M budget-raise recovery, corpus-2 solvability still meaningfully tracks the node ceiling.
+- **Corpus 1 (8 unsolved of 102): 8 (100%) `starved`**, same shape at much smaller scale
+  (`repair-fallback` starved 7/8, `attraction-diversity` starved 8/8). Solve-cost tail is much lighter
+  (p95 19.9M/50M, 0 solves above 90%) — Corpus 1's ceiling is not the binding constraint the way
+  Corpus 2's is.
+
+**Reading this**: the corpus's current solve-rate ceiling on Corpus 2 is dominated by *which*
+technique gets to run, not by search quality within techniques that do get to run — the "genuinely
+searched and failed" population (`exhausted`) is empty. This directly names the next allocation
+question (give `repair-fallback`/`attraction-diversity` a real, non-zero shot on more of the 515/863
+starved population) as more promising than further tuning within `main-ladder`/`admissible-order`/
+`repair-probe`, which already run everywhere they're eligible. **Not acted on here** — this is the
+map, not a policy change; any live routing change still needs its own level-blind population A/B
+(the exact bar `reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md`'s three-arm A/B
+demonstrated is not optional, including checking Corpus 1 alongside Corpus 2 from the start this
+time). Full per-corpus data:
+`reports/stress/capability-runs/31852197672/lifecycle-failure-map-corpus{1,2}(-summary.md)` (GitHub
+Actions artifact `solver-stress-refresh-combined`, run 31852197672 — not persisted to `main`, since
+this run used `persist_hints=false`/`deterministic=true` as an artifact-only reference point).
 
 #### Beam-extinction mechanics audit (ETT-017, offline observational)
 

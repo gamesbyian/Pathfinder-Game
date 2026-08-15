@@ -136,8 +136,46 @@ surfaced four candidates satisfying both of the original report's stated criteri
 | `R02449:elite:3` | 76 | 44 | 15 | 30 | 2 | 2 |
 
 Same binary-search driver, same `cpsat-full-probe.py` oracle. Two abstained on **`unsupported-
-mechanics`** even at full elite length (`R00630`, `R02449`, both `mustCross ≥ 2`) — a real coverage
-gap distinct from the previously-known flipping-filter one, not further resolvable by this oracle.
+mechanics`** even at full elite length (`R00630`, `R02449`, both `mustCross ≥ 2`) — described at the
+time as a coverage gap distinct from the previously-known flipping-filter one.
+
+> **Correction (2026-08-15): this was a misattribution, not a distinct gap.** Both `R00630` and
+> `R02449` also carry flipping filters (5 each), which is what actually caused the abstention — the
+> skip check in `cpsat-full-probe.py` fires unconditionally on `filters`/`flippingFilters`, before
+> any mustCross-specific logic runs. `mustCross` of any count was never unsupported: the model's
+> `visits[c] == 2` constraint for must-cross cells is unconditional on count, and a direct check
+> confirms levels with mustCross up to 8 (the corpus maximum) resolve cleanly — `R00001` in this
+> same report's first pass (mustCross=6) is itself a working counter-example that was available the
+> whole time. Flipping filters are now encoded (see
+> [`reports/2026-08-15-cpsat-flipping-filter-support.md`](2026-08-15-cpsat-flipping-filter-support.md)),
+> so both `R00630` and `R02449` are re-runnable through this same binary-search protocol; not
+> re-run here (out of that report's own scope). Kept the original text above unedited, per this
+> repo's standing rule that superseded reasoning stays visible rather than silently rewritten.
+>
+> **Follow-up (2026-08-15): re-run, and it surfaced a second, independent pre-existing CP-SAT bug.**
+> Running `R00630`/`R02449` through the binary search exposed a real-`reqLen` under-constraint defect
+> in `cpsat-full-probe.py` (a `--prefix=`-mode-only exploit — `--check-witness` mode cannot trigger
+> it) that produced two referee-rejected false-SAT results before being root-caused and fixed. Full
+> mechanism, fix, and re-validation:
+> [`reports/2026-08-15-cpsat-flipping-filter-support.md`](2026-08-15-cpsat-flipping-filter-support.md)'s
+> Part 4. Post-fix results: `R00630` converges cleanly to an exact minimum-rollback boundary of
+> **low=36 (feasible), high=37 (infeasible)** — real slack of ~28 steps vs. its 65-step elite length,
+> consistent with the "small-rollback elites correlate with slack" pattern this report's broadened
+> sample already found.
+>
+> **`R02449`, narrowed further (2026-08-15, ad hoc `--prefix=` probes outside the bisection driver):**
+> the plain-midpoint probe (`depth=29`) timing out at both 60s and 180s is a real CP-SAT timeout, not
+> a modeling defect — but rather than keep doubling time at that one point, probing depths closer to
+> the known-dead end (which have a smaller residual, and are cheaper for CP-SAT to resolve either
+> way) moved the boundary substantially: `depth=37` → dead in 3.6s (high: 44→37); `depth=19` → live
+> in 26.2s, **independently referee-validated** (`Solver.validateCandidatePath` → `ok: true` on the
+> emitted completion, not just a CP-SAT-internal "feasible" claim) (low: 14→19). Final boundary:
+> **low=19 (feasible, referee-verified), high=37 (infeasible)** — real slack of at least 18 steps.
+> The interior `[20, 36]` resisted resolution at three separate points (`depth=22`, `25`, `29`) across
+> budgets up to 240s, a pattern consistent with a genuine SAT phase-transition hard region rather than
+> a budget artifact (points just outside that band resolved in seconds). Not narrowed further here —
+> diminishing returns past four consecutive interior timeouts.
+
 The other two (`R03176:elite:2`, `R00648:elite:4`) resolved cleanly at full length to `dead
 (infeasible)`, matching the original pattern — but their first midpoint probe returned CP-SAT
 `UNKNOWN` (genuine time-limit exhaustion at 60s, not a structural abstention), so a second round
