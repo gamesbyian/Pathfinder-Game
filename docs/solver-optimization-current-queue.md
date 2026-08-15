@@ -54,7 +54,7 @@ Existing lineage work says generic widening is a weak lead: some winning familie
 
 If the label pattern reproduces, assemble a held-out, family-namespaced set of roughly 8–12 extinction boundaries and compare K versus 2K at equal surrounding policy. Collect descriptor values for both live and dead siblings. Promote a score feature only if it separates feasibility across unrelated parent families and survives a full-ladder matched-budget test. Do not infer a global width increase from a few local rescues.
 
-### 3. Family and variant evidence
+### 3. Canonical-inclusive family-boundary retest
 
 ETT-028 repaired the identity/source-selection problem and produced an 886-edge, 51-parent, 123-family view with zero missing variant rows. Historical baselines contain no canonical parent outcomes, so it supports **nomination**, not rescue or robustness claims.
 
