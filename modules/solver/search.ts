@@ -344,7 +344,7 @@ const _DFS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_DFS_DEBUG === '1');
 // case in the same regression family (R02114, R00592 remain unfixed — see the report's "what this
 // does and does not establish"). 0 must be, and is measured to be, byte-identical in behavior and
 // performance to dedup with no retention widening at all.
-const DEDUP_NEAR_TIE_MARGIN = 0.01;
+const DEDUP_NEAR_TIE_MARGIN = 0; // THROWAWAY CONTROL ARM (claude/nofix-control-arm) -- do not merge
 // out (optional, last param): mirrors dfsFromGate's own out contract for external tooling (the
 // stress benchmark's per-attempt telemetry) — set to whether the OVERALL call's null return was
 // because levelBudgetMs ran out (true) vs. the search genuinely exhausted every avenue it tried
