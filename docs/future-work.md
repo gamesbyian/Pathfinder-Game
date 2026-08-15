@@ -1,6 +1,6 @@
 # Solver future work
 
-This is the live priority queue. Historical reports remain authoritative for what they actually measured, but this file is authoritative for **what is still worth doing next**.
+This is the detailed live evidence and disposition record. Historical reports remain authoritative for what they actually measured; this file preserves the current interpretation, experiment history, and closed boundaries.
 
 > **Canonical short queue:** start with [Solver optimization: current priority queue](solver-optimization-current-queue.md). It ranks the current implementation/experiment lanes and is the handoff for agents choosing optimization work. This file retains the full evidence and historical numbering; where its older order conflicts with the short queue, the short queue wins.
 
