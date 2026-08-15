@@ -161,8 +161,20 @@ time as a coverage gap distinct from the previously-known flipping-filter one.
 > Part 4. Post-fix results: `R00630` converges cleanly to an exact minimum-rollback boundary of
 > **low=36 (feasible), high=37 (infeasible)** — real slack of ~28 steps vs. its 65-step elite length,
 > consistent with the "small-rollback elites correlate with slack" pattern this report's broadened
-> sample already found. `R02449` remains genuinely open (`low=14, high=44`) — the interior probe hit
-> a real 60s CP-SAT timeout, not a modeling defect; not pursued further with a longer time limit here.
+> sample already found.
+>
+> **`R02449`, narrowed further (2026-08-15, ad hoc `--prefix=` probes outside the bisection driver):**
+> the plain-midpoint probe (`depth=29`) timing out at both 60s and 180s is a real CP-SAT timeout, not
+> a modeling defect — but rather than keep doubling time at that one point, probing depths closer to
+> the known-dead end (which have a smaller residual, and are cheaper for CP-SAT to resolve either
+> way) moved the boundary substantially: `depth=37` → dead in 3.6s (high: 44→37); `depth=19` → live
+> in 26.2s, **independently referee-validated** (`Solver.validateCandidatePath` → `ok: true` on the
+> emitted completion, not just a CP-SAT-internal "feasible" claim) (low: 14→19). Final boundary:
+> **low=19 (feasible, referee-verified), high=37 (infeasible)** — real slack of at least 18 steps.
+> The interior `[20, 36]` resisted resolution at three separate points (`depth=22`, `25`, `29`) across
+> budgets up to 240s, a pattern consistent with a genuine SAT phase-transition hard region rather than
+> a budget artifact (points just outside that band resolved in seconds). Not narrowed further here —
+> diminishing returns past four consecutive interior timeouts.
 
 The other two (`R03176:elite:2`, `R00648:elite:4`) resolved cleanly at full length to `dead
 (infeasible)`, matching the original pattern — but their first midpoint probe returned CP-SAT

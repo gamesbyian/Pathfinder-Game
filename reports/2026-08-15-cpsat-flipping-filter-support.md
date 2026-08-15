@@ -226,6 +226,19 @@ post-fix:
 `R02449`'s interior is still genuinely unresolved (a real 60s timeout at `depth=29`, not a modeling
 bug) — a longer time limit would be needed to close it further; not attempted here.
 
+**Follow-up, same day: narrowed further via ad hoc `--prefix=` probes** (not the plain-midpoint
+bisection driver — targeted points instead). Doubling the time budget at the same `depth=29`
+midpoint (60s → 180s) still timed out. Switching strategy — probing points closer to each known
+bound, which have a smaller residual and are cheaper for CP-SAT either way — moved both: `depth=37`
+resolved dead in 3.6s (`high`: 44→37); `depth=19` resolved live in 26.2s and was **independently
+referee-validated** (`Solver.validateCandidatePath` on the emitted completion → `ok: true`, not just
+CP-SAT's internal claim) (`low`: 14→19). **Final boundary: `low=19` (feasible, referee-verified),
+`high=37` (infeasible)** — real slack of at least 18 steps. The interior `[20, 36]` then resisted
+resolution at three separate points (`depth=22`, `25`, `29`) across budgets up to 240s, while points
+just outside that band resolved in seconds both times — consistent with a genuine SAT
+phase-transition hard region, not a budget artifact. Not narrowed further past four consecutive
+interior timeouts (diminishing returns).
+
 **Broader re-validation, to rule out a regression from this second fix**: re-ran the same two
 population batches from Part 3, both cleanly on top of the fix:
 
@@ -275,8 +288,9 @@ explicitly asking for it (`docs/future-work.md` item 2, the repair-retreat repor
   labeling.
 - `R00630`/`R02449`'s original repair-retreat binary search
   (`reports/2026-08-12-repair-retreat-cpsat.md`) — **done here** (Part 4): `R00630` now converges
-  cleanly to `low=36, high=37`; `R02449` remains open at `low=14, high=44`, blocked on a genuine
-  CP-SAT timeout rather than a modeling bug.
+  cleanly to `low=36, high=37`; `R02449` narrowed to `low=19` (referee-verified feasible), `high=37`
+  (infeasible) — the interior `[20, 36]` resists resolution up to 240s at three separate points, a
+  likely genuine SAT phase-transition hard region rather than a modeling bug.
 - `scripts/stress/repair-plateau-rollout-classifier.mjs` gained a `--retreat-file` mode that anchors
   its rollout ladder to a CP-SAT-verified feasible/infeasible boundary instead of an elite path's raw
   endpoint — implemented and smoke-tested against `R00630`/`R02449`'s boundary above; not yet written
