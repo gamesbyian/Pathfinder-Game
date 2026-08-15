@@ -124,15 +124,29 @@ rescue. Net: **707/1700, down from the 724 baseline and below the original 731 n
 opt-in/default-OFF (unchanged), so production is unaffected. Full breakdown:
 [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md#the-retry-pass-at-population-scale-a-net--17-not-a-recovery).
 
-**Next — decision point, not a tuning task**: the reserve needs a redesign so it stops taxing every
-level's main-loop budget unconditionally (candidate directions — smaller fraction, a conditional
-reserve gated on some pre-main-loop signal, or a fixed absolute node count instead of a `nodeBudget`
-percentage — are listed in the report's "Recommended next steps" but deliberately not picked
-unilaterally; this is a real design choice, not a fraction-tuning knob, same asymmetric-risk caution
-as `STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE`'s own history). Also still open: investigate why
-`R02114`/`R00592` don't respond to the fix; verify `R03248` (does its own divergence share
-`R02248`'s depth-12 flag-independent-loss shape, or is it a genuine threshold-timing case — already
-spot-checked as unaffected by the fix, but the *why*
+**Redesigned twice more the same day, now locally re-validated.** REVISION 2: made the reserve
+ADDITIVE instead of subtractive — `earlyTierNodeBudget` no longer references it at all (every earlier
+tier keeps the full, unshrunk `nodeBudget`), and the retry tier alone gets an extended ceiling
+(`nodeBudget + reserve`), safe by construction in production where `nodeBudget` is always `Infinity`.
+REVISION 3: local testing of REVISION 2 against 3 of the 65 collateral levels (all solved via
+`ida:default`, the admissible-order tier) found them *still* failing — the retry tier ran BEFORE the
+admissible-order tier, and its extended ceiling let it burn the shared cumulative node counter past
+`nodeBudget` on every level that doesn't need it, tripping the admissible-order tier's own
+(unextended-aware) entry guard before its turn ever came. Fixed by moving the retry tier to run dead
+last, after repair-probe-shrink-recovery and the admissible-order tier — no earlier tier's ceiling
+references it at all now. Local re-validation (6-level sample): target recovery intact (`R00180`/
+`R00901` recover, `R02110` still fails exactly as predicted), and all 3 collateral levels now solve at
+node counts **bit-identical to the original with-fix baseline** (e.g. `R00050`: 47,495,401 nodes both
+before and after).
+
+**Next**: dispatch another full-corpus GHA A/B against the same `724/1700` baseline to confirm this
+design at population scale — the 6-level local sample is encouraging but not proof; a level whose real
+solve lives in a DIFFERENT still-earlier tier (repair fallback, attraction-diversity) wasn't
+represented in the sample, though reasoning from the mechanism suggests those are also safe (nothing
+about their own ceilings changed). Also still open: investigate why `R02114`/`R00592` don't respond to
+the fix; verify `R03248` (does its own divergence share `R02248`'s depth-12 flag-independent-loss
+shape, or is it a genuine threshold-timing case — already spot-checked as unaffected by the fix, but
+the *why*
 wasn't traced); verify the remaining ~175 unverified provenance candidates. Do not revert or disable
 the flag on its own — `R03248` proves it isn't a pure loss. Full detail:
 [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).

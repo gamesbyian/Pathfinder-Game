@@ -439,6 +439,52 @@ mechanism" is not yet a usable fix for the original -7. The reserve design needs
 the retry tier — this is a real design decision, not a fraction-tuning knob, and is called out as an
 open decision point rather than acted on unilaterally (see "Recommended next steps" below).
 
+## Two more fixes: additive reserve, then reorder to run last
+
+Redesigned in two steps, both committed to `modules/solver/orchestration.ts`, each independently
+type-checked and full-suite-tested (`tsc --noEmit`, 379/379 solver unit tests) before any GHA spend:
+
+1. **REVISION 2 — make the reserve additive, not subtractive.** `nodeBudget` is only ever finite on
+   offline batch/validation paths — every production caller (Play/Editor/Review/hint-discovery) uses
+   `Infinity`, where this reserve was already forced to 0 regardless of design. So instead of
+   withholding `dedupRetryNodeReserve` from `earlyTierNodeBudget` (shrinking every level's main-loop
+   ceiling by 25% the instant the flag is on — the actual root cause above), `earlyTierNodeBudget` no
+   longer references this reserve at all, and the retry tier alone gets an EXTENDED ceiling,
+   `dedupRetryNodeCeiling = nodeBudget + dedupRetryNodeReserve` — genuine additive room past the
+   unshrunk budget every earlier tier still sees, mirroring the "extend, don't carve from the existing
+   pool" philosophy already used for this same tier's WORK budget.
+2. **REVISION 3 — move the tier to run dead last.** REVISION 2 alone was tested locally against 3 of
+   the 65 collateral-loss levels (`R00050`/`R00059`/`R00238`, all solved via `ida:default` — the
+   admissible-order tier — in the with-fix baseline, needing 37.6M–48.4M of the 50M ceiling) and all
+   three *still failed*. Cause: the retry tier ran BEFORE the admissible-order tier, and its own
+   extended ceiling let it burn `prep._metrics.nodesExpanded` well past the original `nodeBudget` on
+   every level that doesn't need it (~1666 of 1700) — the admissible-order tier's own entry guard
+   checks `nodesExpanded` against plain, unextended `nodeBudget`, so by the time its turn came the
+   guard was already tripped and it never ran at all. Extending one tier's ceiling doesn't help when a
+   *later* tier's own guard still checks the unextended budget — both draw from the same cumulative
+   counter. Fixed by moving this tier to run after repair-probe-shrink-recovery AND the admissible-
+   order tier, so no earlier tier's own ceiling references it at all, and its extension only ever
+   spends room past every other tier's full-strength attempt.
+
+**Local re-validation after REVISION 3** (same 6-level sample, real `solveLevel()`, `nodeBudget=
+50,000,000`, referee-validated):
+
+| level | result | detail |
+|---|---|---|
+| `R00180` | **solved**, referee-valid | via retry pass, 51.1M nodes total |
+| `R00901` | **solved**, referee-valid | via retry pass, 50.3M nodes total |
+| `R02110` | still fails | `node-budget-reached` at 62.5M — exactly as predicted (needs 34.8M, reserve gives 12.5M) |
+| `R00050` | **solved**, referee-valid | via `ida:default` (retry never fires) — **47,495,401 nodes, bit-identical to the with-fix baseline** |
+| `R00059` | **solved**, referee-valid | via `ida:default` (retry never fires) — **48,423,724 nodes, bit-identical to the with-fix baseline** |
+| `R00238` | **solved**, referee-valid | via `ida:default` (retry never fires) — **37,634,713 nodes, bit-identical to the with-fix baseline** |
+
+The 3 collateral levels are now solved at node counts identical to the original with-fix-no-retry
+baseline, confirming the admissible-order tier is completely unaffected by this tier's existence — the
+starvation is gone. Target recovery is unchanged (2 of the 3 spot-checked target levels recover,
+`R02110` fails exactly as its reserve sizing predicts). **Not yet re-validated at population scale** —
+this is still a 6-level local sample; the natural next step is another full-corpus GHA run against the
+same `724/1700` baseline, now dispatched (see "Recommended next steps").
+
 ## Infrastructure fixes surfaced by this investigation
 
 Two real, independent infrastructure bugs were found and fixed while trying to analyze the full-corpus
@@ -527,36 +573,27 @@ not attempted here.
   lost / 27 gained), not the "zero regressions" the 112-level sample (badness-stratified toward hard
   levels, which none of the 61 flipped levels belong to) originally suggested. A recovery mechanism
   (`STRATEGY_DEDUP_NEAR_TIE_RETRY`, opt-in/default-OFF) was built, locally validated (2/3 spot-check,
-  real ladder, referee-valid), and then validated at population scale — where it recovers 33 of the 34
-  target losses (all 27 gains intact) but **costs 65 unrelated levels via an unconditional node-reserve
-  tax on the whole corpus, netting -17 against the with-fix baseline (707 vs. 724)** — see "The retry
-  pass at population scale" above. **It does not ship default-on and remains a partial, currently
-  unusable fix**: `R02248` is the only one of the 3 originally-confirmed regressions it addresses even
-  in principle (`R02114`/`R00592` remain open, as do ~175 unverified provenance-mining candidates), and
-  its own reserve mechanism needs a redesign before it can be considered for default-on — see
-  "Recommended next steps" below.
+  real ladder, referee-valid), and then validated at population scale — where it recovered 33 of the 34
+  target losses (all 27 gains intact) but **cost 65 unrelated levels via an unconditional node-reserve
+  tax on the whole corpus, netting -17 against the with-fix baseline (707 vs. 724)**. Two further
+  fixes (additive reserve; reorder to run after the admissible-order tier — see "Two more fixes"
+  above) address the mechanism found for that cost, confirmed on a 6-level local sample (target
+  recovery intact, all 3 spot-checked collateral levels now solve at node counts bit-identical to the
+  with-fix baseline). **Still not validated at population scale under this design** and still does not
+  ship default-on. It remains a partial fix regardless of the reserve's design: `R02248` is the only
+  one of the 3 originally-confirmed regressions it addresses even in principle (`R02114`/`R00592`
+  remain open, as do ~175 unverified provenance-mining candidates).
 
 ## Recommended next steps (not done here)
 
-1. **DECISION POINT — redesign `STRATEGY_DEDUP_NEAR_TIE_RETRY`'s reserve so it isn't a blanket tax on
-   every level.** The population run confirms the mechanism works on its actual target (33/34
-   recovered, 0/27 gains broken) but the current `dedupRetryNodeReserve` is withheld from every
-   Corpus-2 level's main-loop ceiling unconditionally whenever the flag is on, which is what costs the
-   65 unrelated levels. This is a real design choice, not a fraction-tuning knob, and needs a human
-   call on direction before more GHA spend — candidate approaches (not evaluated here, deliberately
-   not picked unilaterally):
-   - Shrink the reserve fraction well below 0.25 (reduces the main-loop tax per level, but was already
-     shown insufficient for `R02110` at 0.25 — a smaller value likely recovers fewer of the 34 too, so
-     this trades one loss category for another rather than eliminating one).
-   - Make the reserve conditional on some signal available *before* the main loop commits its full
-     budget (e.g., only reserve once a level's main-loop attempt is itself trending toward
-     `node-budget-reached` on a near-tie-dedup-shaped config) rather than reserving unconditionally at
-     solve start — structurally different from every existing sibling reserve (`admissibleOrderNodeReserve`
-     included), which are all also unconditional taxes; would need its own soundness/complexity review.
-   - Accept a lower recovery rate by only reserving a small, fixed *absolute* node count (not a
-     percentage of `nodeBudget`) — bounds the per-level tax but weakens the guarantee for outliers.
-   Whichever direction, the next validation step is another full-corpus GHA run against the same
-   `724/1700` baseline — the infrastructure to do this cheaply is now in place.
+1. **Dispatch another full-corpus GHA A/B with `STRATEGY_DEDUP_NEAR_TIE_RETRY` enabled**, now under
+   the additive-reserve + run-last design (REVISION 2 + REVISION 3 above), against the same `724/1700`
+   baseline. The 6-level local sample suggests the collateral damage is fixed, but that is not
+   population evidence — a level with a *different* winning technique than `ida:default` (e.g. one
+   whose real solve lives in the repair-fallback or attraction-diversity tier, both of which still run
+   BEFORE this tier and are therefore still unaffected by it, so should be safe — but this is reasoning
+   from the mechanism, not measurement) could still expose a shape this 6-level sample didn't happen to
+   include.
 2. **Investigate why `R02114`/`R00592` don't respond to the same fix** — trace their own critical
    collision with the same beam-frontier instrumentation used on `R02248`. Their blocking collision
    is evidently a different depth/shape a single runner-up slot doesn't reach.
