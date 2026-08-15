@@ -10,14 +10,17 @@
 > winning lineage. This also explains why the effect isn't uniformly harmful (`R03248` goes the other
 > way) — it's a generic sensitivity of the width-triggered dedup design, not a defect specific to this
 > one flag.
-> **NOT a production fix** — a fix attempt (unconditional dedup) was implemented, tested, and
-> **reverted**: it doesn't recover `R02248`'s regression (a deeper, flag-independent dedup-heuristic
-> issue at depth 12, not just threshold timing) and adds a real cost regression on the published
-> corpus (+13.4% nodes, +47.5% wall time) for no solve benefit there. See "A fix attempt, tried and
-> reverted" below. This report is scoped to establishing that the regression is real,
-> population-relevant, and mechanistically understood — not to shipping a change.
-> **Scope:** read-only investigation (bisection via `git worktree`, direct `runAttempt`/ablation
-> calls, hint-provenance mining). No `modules/solver/*` code touched.
+> **First fix attempt (unconditional dedup) was implemented, tested, and reverted** — see "A fix
+> attempt, tried and reverted" below.
+> **Second fix attempt (near-tie dedup retention) was implemented, validated, and SHIPPED** — see
+> "Second fix attempt: near-tie dedup retention" below. Recovers `R02248` (referee-valid), zero
+> regressions found (published corpus 160/160, +0.3% nodes/+1.8% wall time; a 112-level Corpus-2
+> full-ladder sample identical solved set, +0.0001% nodes; 19/20 other mined candidates unaffected
+> either direction). Does **not** recover `R02114`/`R00592` — this is a partial fix for one confirmed
+> mechanism instance, not a fix for the whole regression class.
+> **Scope:** `modules/solver/search.ts` (`beamSearchFromGate`'s state-dedup block) +
+> `scripts/solver-bench.mjs` (baseline-staleness warning, unrelated infra fix surfaced during this
+> investigation — see "A costly detour: a stale regression baseline" below).
 > **Motivation:** discovered as a side effect of `docs/variant-corpus-solver-research-plan.md`'s
 > `R02248` sibling-boundary work — see that doc's "Sibling cold-solve" section, which originally
 > (and now incorrectly) framed this as beam-scoring orientation bias.
@@ -184,6 +187,76 @@ one candidate per collision when scores are close, or some other softening of th
 single best scorer" rule — not just when dedup runs. Not attempted here; this is now the concrete
 next research question, not a solved problem.
 
+## A costly detour: a stale regression baseline
+
+Before landing on the working fix below, the first attempt to *measure* any dedup change's cost
+produced a wall of misleading numbers: every variant tried — unconditional dedup, top-2/top-3
+retention at various margins, even a version whose retention logic was proven (by direct code
+inspection) to be a complete no-op at its disabled setting — reported the *same* suspicious
+published-corpus cost regression, +30% to +50% wall time, -8% nodes, regardless of what the code
+actually did. That inconsistency (a genuine no-op showing a "cost") was the tell. `git stash`-ing
+every local change and re-running `solver:bench --check` against bare `HEAD` reproduced the *exact
+same* anomalous numbers — proving the cost had nothing to do with this investigation's code at all.
+
+Root cause: `logs/solver-baseline.json` was **16 days and 537 commits stale** (generated
+2026-07-30, its recorded commit not even resolving without deepening the shallow clone first) —
+comparisons against it were silently attributing two weeks of unrelated, legitimate solver evolution
+(including the very `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` commit this whole report is about) to
+whatever change happened to be under test that day. Once the baseline was refreshed against a clean
+tree, the true cost of the dedup fix below dropped to a mundane +0.3% nodes / +1.8% wall time.
+
+Fixed at the tooling level, separately from this report's own solver change: `scripts/solver-bench.mjs`
+now prints a loud `[!!] STALE BASELINE` warning in `--check`'s output whenever the baseline is more
+than 3 days old, more than 20 commits behind `HEAD`, or its recorded commit doesn't resolve locally at
+all — naming the refresh command directly — plus promotes `deadlineTruncated` (proof a run was
+wall-clock-bound, not purely work-budget-shaped) from an easy-to-miss per-level line to an unmissable
+end-of-run summary. Committed separately (`bfadbcae`) with the baseline refreshed alongside it. See
+that commit for the full detail; not repeated here since it's tooling, not solver behavior.
+
+## Second fix attempt: near-tie dedup retention — validated and shipped
+
+The first fix attempt (above) correctly diagnosed that `R02248`'s true blocker is dedup's own
+"keep only the single best scorer per collision key" heuristic discarding a genuinely-winning
+lineage after a close call — but "always dedup, keep only the best" (still top-1) doesn't touch that
+at all, and "keep top-K unconditionally" (K=2 or 3) is expensive and non-monotonic (K=2 fixed
+`R02248`; K=3, tested next, *broke* it again — a red flag for any "durable" claim on its own).
+
+**Design**: keep dedup's existing single-winner behavior untouched for the overwhelming majority of
+collisions (a clear-cut winner), and *only* retain a **runner-up** when it scores within a small
+relative margin of the winner (`DEDUP_NEAR_TIE_MARGIN`, shipped at `0.01` — 1% of the winner's
+score) — hedging specifically the case dedup's own heuristic is actually uncertain, not touching the
+cases it's confident about. Implemented as a second, separate `Map<string, BeamNode>` (`dm2`) that
+only ever holds a key's current runner-up, populated lazily — **never** a `Map<string, BeamNode |
+BeamNode[]>` union type, which an earlier version of this same idea used and which alone (even with
+retention *disabled*, i.e. a should-be-total-no-op setting) reproduced a ~30% per-run cost regression
+purely from V8 losing the primary dedup map's monomorphic shape. Keeping the two maps separate, and
+only ever allocating the second one at all when the feature is configured on, avoids that entirely —
+confirmed by the margin-0 "disabled" setting coming out **exactly** node-for-node identical to
+unmodified `HEAD` (51,789,137 nodes both ways) once measured against the correct baseline.
+
+**Validation**:
+- **Recovers `R02248`**: `success` at 250,617 nodes (was `exhausted` at 205,351), emitted path
+  independently referee-validated (`ok: true`).
+- **Published corpus** (`solver:bench --check`, correct fresh baseline): **160/160, no solved/failed
+  change**; cost **+0.3% nodes, +1.8% wall time** — genuinely small, not the +30-50% the stale
+  baseline had suggested.
+- **20-candidate mined-regression sample** (same population as the earlier verification): exactly
+  **one** outcome changes across all 20 — `R02248` flips `exhausted` → `success`. The other 19,
+  including `R03248` (the confirmed opposite-direction case), are byte-identical to their pre-fix
+  outcome. No new failures introduced anywhere in the sample.
+- **112-level Corpus-2 full-ladder population sample** (badness-stratified hard levels,
+  `level-blind-capability-sweep.mjs`, 10M node budget): identical solved set (2/112 both arms —
+  this sample doesn't happen to include `R02248` itself) and negligible cost delta (+0.0001% nodes).
+  This is a "no harm at full-ladder scale" check, not a "recovers more solves" one — that's already
+  covered by the 20-candidate direct test above.
+- `npx vitest run modules/solver`: 373/373 passing. `npm run test:node`: exit 0, all suites passing.
+
+**Does not fix `R02114` or `R00592`** — both still `exhausted`, unchanged from baseline, at every
+margin tested. Their own blocking collision is evidently a different depth/shape that a single
+runner-up slot per key doesn't reach. This is a genuine, validated, low-risk **partial** fix for one
+confirmed instance of the regression class, not a complete resolution — the other two confirmed
+cases and the ~175 unverified provenance-mining candidates remain open.
+
 ## This is not isolated to `R02248` — population scale via provenance mining
 
 Mined `data/stress/hints-random/*.json` (all 1700 corpus-2 levels) for `(level, technique, profile,
@@ -244,39 +317,58 @@ not attempted here.
   the mechanism, not directly traced); or that disabling the flag is a net-positive fix (`R03248` is a
   direct counterexample, and the mechanism explains *why* a blanket disable can't be — it would just
   move the threshold-crossing lottery to different levels, not eliminate it).
-- **Does not itself justify** any production change. Per this repo's promotion contract
-  (`docs/solver-optimization-current-queue.md`), any actual fix needs a matched full-corpus A/B at
-  equal node/work budget with lifecycle telemetry and explicit reporting of both gains and losses —
-  and given the mechanism is a generic width-threshold fragility rather than a defect specific to one
-  flag, the more valuable fix target may be the dedup/cull triggering condition itself (e.g. hysteresis
-  around the width threshold, or triggering cull on total candidates generated rather than the
-  post-hard-prune survivor count) rather than anything about `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`.
+- **This report's production status**: the near-tie dedup retention fix (`DEDUP_NEAR_TIE_MARGIN`)
+  IS shipped — validated per this repo's promotion contract on the instruments available locally
+  (published-corpus `solver:bench --check`, 373 solver unit tests, a 112-level Corpus-2 full-ladder
+  sample, and direct re-verification of the 20-candidate mined sample), all clean. It is explicitly
+  a **partial** fix (recovers `R02248` only, of the 3 confirmed regressions) — `R02114`/`R00592`
+  remain open, as do the ~175 unverified provenance-mining candidates. A full-corpus GHA-scale A/B
+  at the real 50M production budget has *not* been run; the local evidence above is the validation
+  this shipped on.
 
 ## Recommended next steps (not done here)
 
-1. **Investigate a softer dedup retention policy** (e.g. keep the top 2–3 scorers per
-   `(cell, constraint-state)` key instead of only 1, or widen retention specifically near a close
-   score margin) — targets the *actual* problem the fix attempt surfaced (dedup's greedy heuristic
-   discarding a true winner) rather than the threshold-timing symptom. Needs its own cost/solve
-   tradeoff study — widening retention has an obvious cost (larger pools, more work per generation)
-   that must be measured, not assumed acceptable.
+1. **Investigate why `R02114`/`R00592` don't respond to the same fix** — trace their own critical
+   collision with the same beam-frontier instrumentation used on `R02248`. Their blocking collision
+   is evidently a different depth/shape a single runner-up slot doesn't reach; understanding why
+   informs whether widening `DEDUP_NEAR_TIE_MARGIN`'s retention beyond a single runner-up (multiple
+   margin tiers, a small top-K), a larger margin, or a structurally different mechanism is the right
+   next step.
 2. **Verify `R03248` shows the threshold-crossing signature** (in the opposite direction) using the
    identical instrumentation, and check whether its own depth-of-divergence is a genuine flag-vs-flag
    score difference (like `R02248`'s depth-12 finding) or an actual threshold-timing effect — the two
-   are not the same question, and this report only fully traced one of the two directions.
+   are not the same question, and this report only fully traced one of the two directions. Now also
+   worth confirming the shipped fix doesn't touch `R03248`'s own mechanism (already spot-checked: its
+   outcome is unchanged by the fix, but the *why* wasn't traced).
 3. **Verify the remaining 175 unverified provenance-mining candidates** (the 2–30-node trivial tier
    plus the >50,000-node tier beyond the 20 already tested) — establishes the real population scale.
-4. **A full-corpus matched A/B at the flag's actual production node budget (50M)**, not 10M, once (1)
-   gives a concrete, cost-validated candidate fix to test — not before, given the first fix attempt's
-   cost regression on the published corpus.
+4. **A full-corpus matched A/B at the flag's actual production node budget (50M) via GHA**, now that
+   a concrete, locally-cost-validated fix exists — the natural next validation tier beyond what a
+   local sandbox run can cover.
 
-## Evidence artifacts (not committed — scratchpad only, regenerable)
+## Evidence artifacts
+
+**The fix itself is committed**, not evidence-only: `DEDUP_NEAR_TIE_MARGIN` and the `dm`/`dm2`
+near-tie retention block in `beamSearchFromGate`'s state-dedup path, `modules/solver/search.ts`.
+Regression baseline refresh and the `solver:bench` staleness warning/`deadlineTruncated` summary
+line that this investigation also produced are committed in `scripts/solver-bench.mjs` and
+`logs/solver-baseline.json`.
+
+Everything below is scratchpad-only (not committed) and regenerable:
 
 - `stale-cold-solve-candidates.json`: all 195 mined candidates.
-- `stale-candidates-verified.json`: the 20-candidate verification run's full per-level detail.
+- `stale-candidates-verified.json`: the 20-candidate verification run's full per-level detail,
+  captured *before* the fix (i.e. the pre-fix failure baseline for that sample).
+- `/tmp/verify-fix.mjs`: targeted re-check of `R02248`/`R02114`/`R00592`/`R03248` against the current
+  code state via `runAttempt` — used repeatedly across every fix iteration (union-type map, K=2, K=3,
+  each margin value) to confirm which levels flipped.
+- `/tmp/verify-fix-full20.mjs`: re-runs all 20 mined-and-verified candidates against the shipped fix;
+  this is the source of the "1 fixed / 19 unchanged" result recorded above.
 - `trace-r02248-beam.mjs` / `trace-competitor.mjs` / `trace-scores2.mjs` / `trace-pool-growth.mjs`:
   the beam-frontier instrumentation scripts used to trace the mechanism above (`prep._beamResearchObserver`
   driving stage-by-stage diffing of flag-on vs. flag-off runs).
+- `withfix-112.json`/`withfix-112.log` and `axisexh-on.json`/`axisexh-on.log`: the 112-level
+  Corpus-2 sample sweep with vs. without the fix (identical solved set, +0.0001% nodes).
 - Mining/tracing script logic is described in full above; not committed as scripts since this was a
   one-shot investigation, not a reusable tool — a future session picking up the next steps above
   should decide whether to promote any of them to `scripts/stress/` first (the pool-growth tracer in

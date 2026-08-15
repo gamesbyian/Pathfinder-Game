@@ -66,7 +66,7 @@ perturbation to candidate counts near the threshold can trigger it, in either di
 exactly why the population signature is scattered (`R03248` almost certainly the same phenomenon
 landing the other way). Full trace: [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).
 
-**Fix attempt tried and reverted (2026-08-15, same day): unconditional dedup is not the answer.**
+**First fix attempt tried and reverted (2026-08-15, same day): unconditional dedup is not the answer.**
 Decoupling state dedup from the width-cull trigger (run dedup every generation, not just when
 `cands.length > beamWidth`) was implemented and tested. It does **not** recover `R02248`: with dedup
 now consistent, the winning lineage instead collides with a genuinely higher-scoring competitor at
@@ -79,13 +79,33 @@ original code, since the pool never crossed `beamWidth` at that generation. The 
 solved/failed regression, but a real cost regression) for zero solve benefit there. Reverted, not
 merged.
 
-**Next**: the real fix target is dedup's retention rule itself (e.g. keep top-2/3 scorers per
-collision key instead of only 1), not when dedup runs — a materially different, harder problem with
-its own cost/solve tradeoff to measure. Also still open: verify `R03248` (does its own divergence
-share `R02248`'s depth-12 flag-independent-loss shape, or is it a genuine threshold-timing case);
-verify the remaining ~175 unverified provenance candidates; then a matched full-corpus A/B at the real
-50M production budget once a concrete, cost-validated candidate fix exists. Do not revert or disable
-the flag on its own — `R03248` proves it isn't a pure loss.
+**Second fix attempt validated and shipped (2026-08-15, same day): near-tie dedup retention.**
+Instead of changing *when* dedup runs, changed dedup's own retention rule: when a collision's loser
+is within a small relative score margin of its winner (`DEDUP_NEAR_TIE_MARGIN = 0.01`,
+`modules/solver/search.ts`), keep it alongside the winner in the next frontier as a runner-up, rather
+than discarding it outright — a targeted widening (one extra slot, gated to near-ties only) rather
+than the first attempt's global "always keep top-N" change. Recovers `R02248` (250,617 nodes,
+referee-validated via `Solver.validateCandidatePath`) at **+0.3% nodes / +1.8% wall time** on the
+full published-corpus regression check (160/160, no solved/failed change) — a small fraction of the
+first attempt's cost. Cross-checked against a 20-level mined-regression sample (exactly 1 outcome
+changes — `R02248` — 19 unchanged) and a 112-level Corpus-2 sample (identical solved set, +0.0001%
+nodes). Does **not** recover `R02114`/`R00592`, the other two confirmed regressions in the same
+family — their blocking collision is evidently a different depth/shape a single runner-up slot
+doesn't reach. A first implementation of this idea (storing `BeamNode | BeamNode[]` in one map)
+separately surfaced a real ~30% V8-monomorphism performance trap unrelated to the retention logic
+itself — fixed by using two single-typed maps instead; see the report for detail, since this class of
+"perf regression traced to a data-shape change with no attempt-count difference" is subtle and worth
+recognizing again elsewhere. Full validation detail: [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).
+
+**Next**: investigate why `R02114`/`R00592` don't respond to the shipped fix (their own
+beam-frontier trace, same instrumentation used on `R02248`) — informs whether a wider margin, a
+small top-K instead of one runner-up, or a structurally different mechanism is the right next step
+for those two. Also still open: verify `R03248` (does its own divergence share `R02248`'s depth-12
+flag-independent-loss shape, or is it a genuine threshold-timing case — already spot-checked as
+unaffected by the shipped fix, but the *why* wasn't traced); verify the remaining ~175 unverified
+provenance candidates; then a matched full-corpus A/B at the real 50M production budget via GHA, now
+that a concrete, locally-cost-validated fix exists. Do not revert or disable the flag on its own —
+`R03248` proves it isn't a pure loss.
 
 ### 1. Failure-conditioned late-tier allocation
 
