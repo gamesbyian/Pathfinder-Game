@@ -139,14 +139,23 @@ references it at all now. Local re-validation (6-level sample): target recovery 
 node counts **bit-identical to the original with-fix baseline** (e.g. `R00050`: 47,495,401 nodes both
 before and after).
 
-**Next**: dispatch another full-corpus GHA A/B against the same `724/1700` baseline to confirm this
-design at population scale — the 6-level local sample is encouraging but not proof; a level whose real
-solve lives in a DIFFERENT still-earlier tier (repair fallback, attraction-diversity) wasn't
-represented in the sample, though reasoning from the mechanism suggests those are also safe (nothing
-about their own ceilings changed). Also still open: investigate why `R02114`/`R00592` don't respond to
-the fix; verify `R03248` (does its own divergence share `R02248`'s depth-12 flag-independent-loss
-shape, or is it a genuine threshold-timing case — already spot-checked as unaffected by the fix, but
-the *why*
+**CONFIRMED at population scale (2026-08-15, same day): a second full-corpus GHA A/B
+(`enable_flags=STRATEGY_DEDUP_NEAR_TIE_RETRY`, run `31902837955`, dispatched on `main` @ `c79180ef`,
+the merged REVISION 2 + REVISION 3 fix) shows the additive-reserve + run-last design fully resolves the
+collateral damage.** Result: **764/1700, +40 vs. the 724 baseline, with ZERO levels lost relative to
+baseline** — 33/34 target losses recovered (same as before, unaffected by either fix), all 27 gains
+intact, +7 bonus solves, and the 65-level collateral damage from the first design is gone entirely
+(`lost_vs_withfix` is the empty set). Corpus 1 also exactly matches the with-fix baseline (95/102).
+`STRATEGY_DEDUP_NEAR_TIE_RETRY` is now a genuinely usable, population-validated recovery mechanism for
+the `DEDUP_NEAR_TIE_MARGIN` regression.
+
+**Next — decision point**: whether to promote `STRATEGY_DEDUP_NEAR_TIE_RETRY` to default-ON. The
+population evidence is clean (full-corpus A/B, zero regressions, referee-validated), but promotion is
+a separate call from "the mechanism works" — it's a new, same-day mechanism, adds real per-level cost
+in the worst case, and this doc's own "Promotion contract" section may call for more scrutiny before
+default-on; not decided here. Also still open: investigate why `R02114`/`R00592` don't respond to the
+fix; verify `R03248` (does its own divergence share `R02248`'s depth-12 flag-independent-loss shape, or
+is it a genuine threshold-timing case — already spot-checked as unaffected by the fix, but the *why*
 wasn't traced); verify the remaining ~175 unverified provenance candidates. Do not revert or disable
 the flag on its own — `R03248` proves it isn't a pure loss. Full detail:
 [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).

@@ -23,15 +23,16 @@
 > default-ON anyway (reverting would give back the 27 gains for no improvement on the loss side
 > either) — see "A recovery mechanism: STRATEGY_DEDUP_NEAR_TIE_RETRY" below for the last-resort
 > retry pass built to recover the 34 losses without touching the 27 gains.
-> **CORRECTION (2026-08-15, same day, population-scale GHA validation): the retry pass works exactly
-> as designed on its target set (33 of 34 losses recovered, `R02110` fails exactly as its own reserve
-> sizing predicted, all 27 gains intact, +15 genuinely new solves) — but it is NOT a net win.** It
-> costs 65 *previously-unrelated* Corpus-2 levels (solved both with and without the original fix, no
-> connection to near-tie dedup at all) that now hit `node-budget-reached`, because its node reserve
-> is withheld from *every* level's main-loop ceiling whenever the flag is globally on, not just the
-> 34 that actually need the rescue. Net: **707/1700 (down from 724, and below the original 731
-> no-fix baseline)**. Stays opt-in/default-OFF (unchanged from how it shipped), so production is
-> unaffected — see "The retry pass at population scale: a net -17, not a recovery" below.
+> **CORRECTION (2026-08-15, same day, population-scale GHA validation): the retry pass's FIRST shipped
+> design worked exactly as intended on its target (33/34 recovered, 0/27 gains broken) but was NOT a
+> net win** — it cost 65 previously-unrelated Corpus-2 levels via an unconditional node-reserve tax on
+> the whole corpus, netting **707/1700 (down from 724)**. **Two follow-up fixes the same day — an
+> additive (not subtractive) reserve, then reordering the tier to run dead last after the
+> admissible-order tier — fully resolved this**, confirmed by a second full-corpus GHA run: **764/1700,
+> +40 vs. the 724 baseline, with ZERO levels lost relative to baseline** (33/34 target losses
+> recovered, all 27 gains intact, +7 bonus solves, 0 collateral damage). See "Population-scale
+> confirmation: net +40, zero regressions" below. Stays opt-in/default-OFF (unchanged from how it
+> shipped) pending a promotion decision, so production is unaffected either way.
 > **Scope:** `modules/solver/search.ts` (`beamSearchFromGate`'s state-dedup block +
 > `STRATEGY_DEDUP_NEAR_TIE_RETENTION` gating), `modules/solver/orchestration.ts` (the new
 > `STRATEGY_DEDUP_NEAR_TIE_RETRY` last-resort tier), `scripts/ablation-config.mjs` (both new flags),
@@ -481,9 +482,31 @@ type-checked and full-suite-tested (`tsc --noEmit`, 379/379 solver unit tests) b
 The 3 collateral levels are now solved at node counts identical to the original with-fix-no-retry
 baseline, confirming the admissible-order tier is completely unaffected by this tier's existence — the
 starvation is gone. Target recovery is unchanged (2 of the 3 spot-checked target levels recover,
-`R02110` fails exactly as its reserve sizing predicts). **Not yet re-validated at population scale** —
-this is still a 6-level local sample; the natural next step is another full-corpus GHA run against the
-same `724/1700` baseline, now dispatched (see "Recommended next steps").
+`R02110` fails exactly as its reserve sizing predicts).
+
+## Population-scale confirmation: net +40, zero regressions
+
+Dispatched `solver-stress-refresh.yml` on `main` @ `c79180ef` (the merged REVISION 2 + REVISION 3
+fix) with the same `enable_flags=STRATEGY_DEDUP_NEAR_TIE_RETRY`, `deterministic=true`,
+`persist_hints=true` as the broken first attempt — run `31902837955`, completed and persisted cleanly
+(commit `afbf87a2`). Result: **Corpus 2 764/1700, Corpus 1 95/102** (Corpus 1 exactly matches the
+with-fix baseline's 95). Diffing `solvedIds` against the `724/1700` with-fix-no-retry baseline:
+
+| category | count | detail |
+|---|---:|---|
+| of the 34 original losses: recovered | **33** | same as the broken first attempt — unaffected by either fix |
+| of the 34 original losses: still lost | 1 | `R02110`, exactly as its reserve sizing predicts |
+| of the 27 original gains: broken | **0** | fully intact |
+| genuinely new bonus solves | +7 | down from the broken attempt's +15 — plausibly some of those 15 were themselves collateral-damage artifacts of the old ordering, not real bonus finds |
+| **previously-stable levels now lost** | **0** | zero collateral damage, down from 65 in the broken first attempt |
+
+Net: `+33 +7 -0 = +40` against the `724` baseline (`764` measured, matches exactly) — and critically,
+**zero levels lost relative to baseline at all** (`lost_vs_withfix` is the empty set). This is a clean
+population-scale confirmation that both fixes (additive reserve; reorder to run after the
+admissible-order tier) together eliminate the collateral damage while fully preserving the target
+recovery. `STRATEGY_DEDUP_NEAR_TIE_RETRY` is now a genuinely usable recovery mechanism for the
+`DEDUP_NEAR_TIE_MARGIN` regression — still opt-in/default-OFF pending a decision on whether to
+promote it (see "Recommended next steps").
 
 ## Infrastructure fixes surfaced by this investigation
 
@@ -572,28 +595,30 @@ not attempted here.
   shipped and stays shipped — but its actual population-scale effect is **net -7 on Corpus 2** (34
   lost / 27 gained), not the "zero regressions" the 112-level sample (badness-stratified toward hard
   levels, which none of the 61 flipped levels belong to) originally suggested. A recovery mechanism
-  (`STRATEGY_DEDUP_NEAR_TIE_RETRY`, opt-in/default-OFF) was built, locally validated (2/3 spot-check,
-  real ladder, referee-valid), and then validated at population scale — where it recovered 33 of the 34
-  target losses (all 27 gains intact) but **cost 65 unrelated levels via an unconditional node-reserve
-  tax on the whole corpus, netting -17 against the with-fix baseline (707 vs. 724)**. Two further
-  fixes (additive reserve; reorder to run after the admissible-order tier — see "Two more fixes"
-  above) address the mechanism found for that cost, confirmed on a 6-level local sample (target
-  recovery intact, all 3 spot-checked collateral levels now solve at node counts bit-identical to the
-  with-fix baseline). **Still not validated at population scale under this design** and still does not
-  ship default-on. It remains a partial fix regardless of the reserve's design: `R02248` is the only
-  one of the 3 originally-confirmed regressions it addresses even in principle (`R02114`/`R00592`
-  remain open, as do ~175 unverified provenance-mining candidates).
+  (`STRATEGY_DEDUP_NEAR_TIE_RETRY`, opt-in/default-OFF) was built and went through three design
+  revisions the same day: the first shipped design recovered 33/34 target losses (0/27 gains broken)
+  but cost 65 unrelated levels via an unconditional node-reserve tax, netting -17 (707 vs. 724); an
+  additive-reserve fix (REVISION 2) plus reordering the tier to run after the admissible-order tier
+  (REVISION 3) together **fully resolved this, confirmed at population scale: 764/1700, +40 vs.
+  baseline, with ZERO levels lost relative to baseline** (33/34 recovered, all 27 gains intact, +7
+  bonus, 0 collateral damage) — see "Population-scale confirmation" above. It **still does not ship
+  default-on** — that is a separate promotion decision, not yet made — and it remains a partial fix
+  regardless: `R02248` is the only one of the 3 originally-confirmed regressions it addresses even in
+  principle (`R02114`/`R00592` remain open, as do ~175 unverified provenance-mining candidates).
 
 ## Recommended next steps (not done here)
 
-1. **Dispatch another full-corpus GHA A/B with `STRATEGY_DEDUP_NEAR_TIE_RETRY` enabled**, now under
-   the additive-reserve + run-last design (REVISION 2 + REVISION 3 above), against the same `724/1700`
-   baseline. The 6-level local sample suggests the collateral damage is fixed, but that is not
-   population evidence — a level with a *different* winning technique than `ida:default` (e.g. one
-   whose real solve lives in the repair-fallback or attraction-diversity tier, both of which still run
-   BEFORE this tier and are therefore still unaffected by it, so should be safe — but this is reasoning
-   from the mechanism, not measurement) could still expose a shape this 6-level sample didn't happen to
-   include.
+1. **DECISION POINT — promote `STRATEGY_DEDUP_NEAR_TIE_RETRY` to default-ON, or leave it opt-in.**
+   The mechanism is now population-validated as a clean, zero-regression net +40 recovery for the
+   `DEDUP_NEAR_TIE_MARGIN` retention regression. Arguments for promoting: the population evidence is
+   about as strong as this repo's own promotion contract typically asks for (full-corpus A/B, zero
+   regressions, referee-validated recoveries). Arguments for leaving it opt-in longer: it is a NEW
+   mechanism (built and validated all in one day), it adds real wall-clock/node cost to every level
+   that reaches it (a strictly-worse-than-solving-nothing scenario doesn't exist here, but every
+   solve now pays for a full extra ladder rerun in the worst case), and this repo's own promotion
+   contract (see "Promotion contract" in the main queue doc) may call for a cooldown or a second
+   independent corpus check before default-on — not evaluated here, deliberately left as a call for
+   the user rather than assumed.
 2. **Investigate why `R02114`/`R00592` don't respond to the same fix** — trace their own critical
    collision with the same beam-frontier instrumentation used on `R02248`. Their blocking collision
    is evidently a different depth/shape a single runner-up slot doesn't reach.
@@ -621,11 +646,14 @@ scratchpad):
 - `31874764534/`: the with-fix full-corpus run (724/1700 C2, 95/102 C1), committed to `main`.
 - `31877433629/`: the control-arm (no-fix, `DEDUP_NEAR_TIE_MARGIN=0`) full-corpus run (731/1700 C2,
   94/102 C1, bit-identical to run #41), committed to the throwaway `claude/nofix-control-arm` branch.
-- `31895631847/`: the `STRATEGY_DEDUP_NEAR_TIE_RETRY`-enabled full-corpus run (707/1700 C2, 93/102 C1),
-  committed to `main`.
-- Diffing these three runs' `per-level-corpus2.json` `solvedIds` is the source of the exact 34-lost/
-  27-gained flip set in "The full-corpus GHA A/B" above, and the 33-recovered/65-collateral-loss
-  breakdown in "The retry pass at population scale" above.
+- `31895631847/`: the FIRST `STRATEGY_DEDUP_NEAR_TIE_RETRY` full-corpus run, broken/subtractive-reserve
+  design (707/1700 C2, 93/102 C1), committed to `main`.
+- `31902837955/`: the SECOND `STRATEGY_DEDUP_NEAR_TIE_RETRY` full-corpus run, additive-reserve +
+  run-last design (764/1700 C2, 95/102 C1), committed to `main`.
+- Diffing these four runs' `per-level-corpus2.json` `solvedIds` is the source of the exact 34-lost/
+  27-gained flip set in "The full-corpus GHA A/B" above, the 33-recovered/65-collateral-loss breakdown
+  in "The retry pass at population scale" above, and the 33-recovered/0-collateral-loss confirmation in
+  "Population-scale confirmation" above.
 
 Everything below is scratchpad-only (not committed) and regenerable:
 
