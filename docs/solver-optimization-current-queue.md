@@ -97,15 +97,39 @@ itself — fixed by using two single-typed maps instead; see the report for deta
 "perf regression traced to a data-shape change with no attempt-count difference" is subtle and worth
 recognizing again elsewhere. Full validation detail: [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).
 
-**Next**: investigate why `R02114`/`R00592` don't respond to the shipped fix (their own
-beam-frontier trace, same instrumentation used on `R02248`) — informs whether a wider margin, a
-small top-K instead of one runner-up, or a structurally different mechanism is the right next step
-for those two. Also still open: verify `R03248` (does its own divergence share `R02248`'s depth-12
-flag-independent-loss shape, or is it a genuine threshold-timing case — already spot-checked as
-unaffected by the shipped fix, but the *why* wasn't traced); verify the remaining ~175 unverified
-provenance candidates; then a matched full-corpus A/B at the real 50M production budget via GHA, now
-that a concrete, locally-cost-validated fix exists. Do not revert or disable the flag on its own —
-`R03248` proves it isn't a pure loss.
+**CORRECTION (2026-08-15, same day): a real full-corpus GHA A/B (50M node budget, both corpora)
+overturned the "112-level sample, zero regressions" read above.** That sample was badness-stratified
+toward hard levels, and every level this margin actually flips turns out to be easy/medium (solves in
+4-35M of the 50M ceiling either way, nowhere near exhaustion on its own) — exactly the population the
+sample excluded by construction. The real effect: **net -7 on Corpus 2 (731 → 724): 27 gained
+(`R02248` among them) / 34 lost**, every flip in either direction sharing the identical
+`beam:intersectionHarvest@beam5000`/`beam:objectiveFirst@beam5000` signature. Kept default-ON anyway
+— reverting would forfeit the 27 gains for no improvement on the loss side either.
+
+**Recovery mechanism built and locally validated, not yet population-validated**:
+`STRATEGY_DEDUP_NEAR_TIE_RETRY` (opt-in, default OFF, `modules/solver/orchestration.ts`) is a
+last-resort retry pass mirroring the attraction-diversity pass's own pattern — reruns the main ladder
+once more with retention disabled, only after the main loop and repair fallback fail, in its own
+reserved node/work budget. Since every gain solves via the main loop (never reaches this tier) and
+every loss solves cheaply without retention, this should recover the losses without touching the
+gains. Local spot-check (2/3, real ladder, referee-valid) confirms the mechanism works as designed;
+the one known miss (`R02110`, needing 34.8M vs. the tier's 12.5M reserve) fails exactly as its own
+sizing predicted. Two real budget bugs were found and fixed in the process (a floor-based reserve
+that's a no-op once an earlier tier spends the whole budget; a separate work-budget starvation once
+the node reserve alone was fixed) — see the report for the full mechanism.
+
+**Next**: dispatch a full-corpus GHA A/B with `enable_flags=STRATEGY_DEDUP_NEAR_TIE_RETRY` against
+the `724/1700` baseline — the natural, now-infrastructure-ready validation step (a push-race bug and
+a missing always-persisted per-run summary, both found and fixed during this investigation, previously
+made this kind of population check unreliable/unanalyzable — see the report's "Infrastructure fixes"
+section). If it doesn't recover all 34, a larger node-reserve fraction needs its own population
+evidence before widening (same asymmetric-risk caution as `STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_
+RESERVE`'s own history). Also still open: investigate why `R02114`/`R00592` don't respond to the fix;
+verify `R03248` (does its own divergence share `R02248`'s depth-12 flag-independent-loss shape, or is
+it a genuine threshold-timing case — already spot-checked as unaffected by the fix, but the *why*
+wasn't traced); verify the remaining ~175 unverified provenance candidates. Do not revert or disable
+the flag on its own — `R03248` proves it isn't a pure loss. Full detail:
+[`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).
 
 ### 1. Failure-conditioned late-tier allocation
 

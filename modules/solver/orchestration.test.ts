@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
@@ -1601,4 +1601,96 @@ test('shrink recovery is inert when the shrink mechanism itself is disabled', as
         attemptSearchForTesting: shrinkRecoveryDispatch([]),
     });
     assert.equal(result.attempts.some(a => a.repairProbeShrinkRecovery), false);
+});
+
+// ── STRATEGY_DEDUP_NEAR_TIE_RETRY ─────────────────────────────────────────────
+//
+// Opt-in, default OFF (see DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's own comment in orchestration.ts
+// for the full-corpus A/B this exists to recover from). Reuses the same infeasible-level pattern
+// attraction-diversity's own tests already establish: this level's every attempt is pruned near-
+// instantly by distance/parity regardless of search strategy or STRATEGY_DEDUP_NEAR_TIE_RETENTION,
+// so the inertness/suppression tests below don't depend on the mechanism's own real rescue behavior.
+
+test('dedup-near-tie-retry pass reruns the main ladder once more after main loop and repair fallback fail', async () => {
+    // attractionDiversityBudgetFractionOverride/admissibleOrderBudgetFractionOverride: 0 isolate the
+    // pass under test from its sibling last-resort tiers, which also run by default and would
+    // otherwise inflate "mainLoopAttempts" below (their attempts carry none of these three markers).
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true },
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    const retryAttempts = result.attempts.filter(a => a.dedupNearTieRetry === true);
+    const mainLoopAttempts = result.attempts.filter(a => a.dedupNearTieRetry !== true);
+    assert.ok(retryAttempts.length > 0, 'expected at least one dedup-near-tie-retry attempt');
+    // The pass reruns the exact same mainConfigs ladder, so (this level being pruned near-instantly
+    // regardless of budget, meaning neither run gets cut off partway through) it should run through
+    // exactly as many configs as the main loop itself did.
+    assert.equal(retryAttempts.length, mainLoopAttempts.length);
+});
+
+test('dedup-near-tie-retry pass is inert by default (cfg=null): no retry attempt is ever run', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000 });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false);
+});
+
+test('dedup-near-tie-retry pass stays off under an explicit { FLAG: false }, and under a sparse unrelated ablation object', async () => {
+    for (const ablation of [
+        { STRATEGY_DEDUP_NEAR_TIE_RETRY: false },
+        { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
+    ]) {
+        const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, ablation });
+        assert.equal(result.ok, false);
+        assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false);
+    }
+});
+
+test('dedupNearTieRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true },
+        dedupNearTieRetryBudgetFractionOverride: 0,
+    });
+    assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false);
+});
+
+test('disableExtraBudgetPasses: true suppresses the pass even with the flag on, but an explicit override still wins', async () => {
+    const suppressed = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true },
+        disableExtraBudgetPasses: true,
+    });
+    assert.equal(suppressed.attempts.some(a => a.dedupNearTieRetry === true), false);
+
+    const overridden = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true },
+        disableExtraBudgetPasses: true,
+        dedupNearTieRetryBudgetFractionOverride: DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION,
+    });
+    assert.ok(overridden.attempts.some(a => a.dedupNearTieRetry === true));
+});
+
+test('dedup-near-tie-retry pass can solve a level the main loop misses, and disables retention while it runs', async () => {
+    // Simulates the real mechanism's shape without depending on search.ts's actual beam internals:
+    // succeeds only once prep._cfg reflects STRATEGY_DEDUP_NEAR_TIE_RETENTION explicitly disabled —
+    // exactly what the retry pass's own Proxy override produces, and exactly what the ordinary main
+    // loop's cfg (retention left at its normalized-default true) never does.
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, , , prep] = args;
+        if (prep._cfg && prep._cfg.STRATEGY_DEDUP_NEAR_TIE_RETENTION === false) return [0, 1];
+        return null;
+    }) as typeof runAttemptSearch;
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true },
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, true, 'the retention-off retry wins');
+    assert.equal(result.attempts.at(-1)?.dedupNearTieRetry, true);
 });

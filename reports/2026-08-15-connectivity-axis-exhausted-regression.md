@@ -12,15 +12,24 @@
 > one flag.
 > **First fix attempt (unconditional dedup) was implemented, tested, and reverted** — see "A fix
 > attempt, tried and reverted" below.
-> **Second fix attempt (near-tie dedup retention) was implemented, validated, and SHIPPED** — see
-> "Second fix attempt: near-tie dedup retention" below. Recovers `R02248` (referee-valid), zero
-> regressions found (published corpus 160/160, +0.3% nodes/+1.8% wall time; a 112-level Corpus-2
-> full-ladder sample identical solved set, +0.0001% nodes; 19/20 other mined candidates unaffected
-> either direction). Does **not** recover `R02114`/`R00592` — this is a partial fix for one confirmed
-> mechanism instance, not a fix for the whole regression class.
-> **Scope:** `modules/solver/search.ts` (`beamSearchFromGate`'s state-dedup block) +
-> `scripts/solver-bench.mjs` (baseline-staleness warning, unrelated infra fix surfaced during this
-> investigation — see "A costly detour: a stale regression baseline" below).
+> **Second fix attempt (near-tie dedup retention) was implemented and SHIPPED, then CORRECTED by a
+> full-corpus GHA A/B at the real 50M production node budget** (not just a 112-level sample) — see
+> "Second fix attempt: near-tie dedup retention" and "The full-corpus GHA A/B: a net -7, not a narrow
+> fix" below. The 112-level sample's "zero regressions" was an artifact of that sample being
+> badness-stratified toward hard levels; the real population effect is **net -7 on Corpus 2
+> (731 → 724): 27 gained (`R02248` among them) / 34 lost**, every single flip in either direction
+> sharing the same signature (a level that used to solve cheaply via `beam:intersectionHarvest@
+> beam5000`/`beam:objectiveFirst@beam5000` now exhausts the full 50M budget, or vice versa). Kept
+> default-ON anyway (reverting would give back the 27 gains for no improvement on the loss side
+> either) — see "A recovery mechanism: STRATEGY_DEDUP_NEAR_TIE_RETRY" below for the last-resort
+> retry pass built to recover the 34 losses without touching the 27 gains, **locally validated
+> (2/3 spot-checked, real ladder, referee-valid) but not yet validated at population scale**.
+> **Scope:** `modules/solver/search.ts` (`beamSearchFromGate`'s state-dedup block +
+> `STRATEGY_DEDUP_NEAR_TIE_RETENTION` gating), `modules/solver/orchestration.ts` (the new
+> `STRATEGY_DEDUP_NEAR_TIE_RETRY` last-resort tier), `scripts/ablation-config.mjs` (both new flags),
+> `.github/workflows/solver-stress-refresh.yml` + `README-solver-stress-refresh.md` (push-race fix +
+> always-persisted per-run analysis summary — see "Infrastructure fixes surfaced by this
+> investigation" below), and `scripts/solver-bench.mjs` (baseline-staleness warning).
 > **Motivation:** discovered as a side effect of `docs/variant-corpus-solver-research-plan.md`'s
 > `R02248` sibling-boundary work — see that doc's "Sibling cold-solve" section, which originally
 > (and now incorrectly) framed this as beam-scoring orientation bias.
@@ -257,6 +266,157 @@ runner-up slot per key doesn't reach. This is a genuine, validated, low-risk **p
 confirmed instance of the regression class, not a complete resolution — the other two confirmed
 cases and the ~175 unverified provenance-mining candidates remain open.
 
+> **CORRECTION (2026-08-15, same day): the validation above was NOT a population-scale check, and a
+> real full-corpus GHA A/B overturned its headline "zero regressions" conclusion.** The 112-level
+> sample's "identical solved set" held only because that sample is badness-stratified toward HARD
+> levels (`dev-benchmark-corpus2.json`'s own construction) — every level this margin actually flips
+> turns out to be an easy/medium one (control-arm cost 261K–35M of the 50M ceiling, nowhere near
+> `node-budget-reached` on its own). See "The full-corpus GHA A/B: a net -7, not a narrow fix" below
+> for the real population effect (net -7, 34 lost / 27 gained) and "A recovery mechanism:
+> STRATEGY_DEDUP_NEAR_TIE_RETRY" for what was built in response. The fix is still shipped
+> (`DEDUP_NEAR_TIE_MARGIN = 0.01`, default-on) — reverting would forfeit the 27 gains for no
+> improvement on the loss side either — but "validated" above should be read as "validated against
+> the wrong instrument," not as a closed question.
+
+## The full-corpus GHA A/B: a net -7, not a narrow fix
+
+Two infrastructure gaps (see "Infrastructure fixes surfaced by this investigation" below) initially
+blocked this from being measured at all: `solver-stress-refresh.yml`'s persist step silently failed
+whenever another commit landed on `main` mid-run, and even when it succeeded, `deterministic=true` +
+`persist_hints=false` (the documented matched-A/B setting) meant no per-level result ever reached a
+form fetchable outside the run's own uploaded Actions artifact — which this session's sandbox could
+not download (Azure blob storage, 403). Once both were fixed, two full 1700-level Corpus-2 runs (same
+commit modulo the fix itself, `deterministic=true`, `persist_hints=true`, 50M node budget, 2 workers)
+gave a clean, directly comparable pair:
+
+| | run #41 baseline (no fix, `8865365`) | with-fix (`1fcccd47`/`7d2b0f7a`) | delta |
+|---|---:|---:|---:|
+| Corpus 2 | 731/1700 | 724/1700 | **-7** |
+| Corpus 1 | 94/102 | 95/102 | **+1** |
+
+Both with-fix runs (one before, one after the infrastructure fix — zero solver-code difference
+between them) agree **exactly**: 724/1700, 95/102, identical `nodesExpanded`/`workSpent` totals to
+the last digit. This rules out run-to-run noise as the explanation for the delta.
+
+Diffing the two runs' `solvedIds` (via the newly-persisted `reports/stress/capability-runs/<run_id>/
+per-level-corpus2.json`) gives the exact flip set: **34 lost, 27 gained**. Every single flip, in
+either direction, shares the identical signature: the level's winning technique is `beam:
+intersectionHarvest@beam5000` or `beam:objectiveFirst@beam5000` (frequently `(diverse)`), and it
+either solves cheaply (4–35M nodes, well under the 50M ceiling) in one arm while hitting
+`node-budget-reached` at ~50,000,0xx in the other, or vice versa. This is the *same* beam-width-
+threshold-timing mechanism traced for `R02248` specifically above, but firing across a much wider
+population than "R02248-shaped regressions" — any level whose winning config is in that technique
+family is at risk, in either direction, essentially as a coin-flip. `R02248` itself is in the
+27-gained set.
+
+Cost distribution of the 34 losses' own control-arm (no-fix) node counts: min 261,132, p25 4,487,950,
+p50 6,482,497, p75 7,096,719, p90 8,194,518, max 34,800,048 (one outlier, `R02110`, a
+`perimeterSweep@beam2000` winner — not this population's dominant shape).
+
+## A recovery mechanism: `STRATEGY_DEDUP_NEAR_TIE_RETRY`
+
+Rather than revert (forfeiting the 27 gains) or leave the net -7 unaddressed, the fix follows this
+repo's own established playbook for exactly this shape of problem — the 2026-07-16 attraction-
+diversity last-resort pass (`SCORE_GOAL_ATTRACTION`, see `docs/solver-architecture.md`): keep the
+default-on behavior for the main ladder (so the 27 gains keep solving normally), and add a bounded,
+opt-out **last-resort retry pass** that reruns the same `mainConfigs` ladder once more, with
+retention disabled, only after the main loop and repair fallback have already failed. Since every one
+of the 27 gains solves via the main loop (never reaching this tier) and every one of the 34 losses
+solves cheaply without retention, this should recover the losses without touching the gains.
+
+**Implementation** (`modules/solver/search.ts`, `modules/solver/orchestration.ts`,
+`scripts/ablation-config.mjs`):
+- `STRATEGY_DEDUP_NEAR_TIE_RETENTION` (production default-ON): gates `search.ts`'s `dm2` retention
+  logic behind the standard `(!cfg || cfg.FLAG)` convention, so a caller can toggle it per-solve —
+  previously a bare, unconditional module constant.
+- `STRATEGY_DEDUP_NEAR_TIE_RETRY` (opt-in, default OFF — new/unvalidated, matching every other
+  first-cut mechanism's convention in this codebase): the last-resort tier itself, in
+  `orchestration.ts`'s `solveLevel()`, structurally identical to the attraction-diversity pass's own
+  Proxy-override rerun, just toggling a different flag.
+- `DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION = 1.0` and `DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION =
+  0.25` (sized from the 34-loss population's own p90/max, matching `ADMISSIBLE_ORDER_NODE_RESERVE_
+  FRACTION`'s own starting fraction) — a node reserve withheld up front from every earlier tier,
+  sibling to (not nested inside) the admissible-order tier's own reserve.
+- Wired into `disableExtraBudgetPasses` (the "suppress every extra-budget pass" convenience) and
+  given its own `dedupNearTieRetryBudgetFractionOverride`/`dedupNearTieRetryNodeReserveFractionOverride`
+  `SolveOpts` fields, matching every sibling last-resort tier's own escape-hatch shape.
+- Six new orchestration.test.ts unit tests (inertness under cfg=null/explicit-false/sparse-ablation,
+  `disableExtraBudgetPasses` suppression + override precedence, a mocked-dispatch rescue test) — all
+  passing, plus the full existing 379-test solver suite unaffected.
+
+**Two real bugs found and fixed before any GHA spend**, both by testing against an actual level
+locally rather than trusting the design on paper:
+
+1. **A floor-at-call-site reserve is a no-op when earlier tiers already spend the entire budget.**
+   The first implementation deliberately avoided touching the intricate nested
+   `mainLoopNodeBudget`/`repairFallbackNodeCeiling`/`earlyTierNodeBudget`/
+   `admissibleOrderDefaultProfileCeiling` reserve chain (which has already shipped two documented
+   regressions from exactly that kind of edit — see `REPAIR_FALLBACK_NODE_RESERVE_FRACTION`'s own
+   "REVISION 1"/"REVISION 2" history) by computing the retry tier's ceiling as a **floor** at its own
+   call site: `max(earlyTierNodeBudget's remainder, nodeBudget * fraction)`, capped by
+   `nodeBudget - nodesExpanded`. This is a no-op precisely when an earlier tier has already spent the
+   *entire* `nodeBudget` — which is exactly what every one of the 34 target levels does under the
+   shipped default (`node-budget-reached` at ~50,000,0xx). Caught directly: `R00180` reproduced its
+   exact GHA node count (50,000,148) locally, then the retry pass received 0 nodes and could not run.
+   Fixed by reverting to the withheld-up-front design after all — `dedupRetryNodeReserve` is now
+   computed early (alongside `admissibleOrderNodeReserve`) and subtracted from `earlyTierNodeBudget`
+   directly, protecting the tier from every earlier one by construction, the same way
+   `ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION` protects its own tier. There is no way to protect a tier
+   from tiers that ran *before* it without shrinking what those earlier tiers could see.
+2. **The node reserve alone was not sufficient — a separate work-budget starvation.** With the node
+   reserve fixed, `R00180` still failed, now spending nodes 25M→50M during the retry pass without
+   solving. Debug instrumentation traced this to `runGateSerialAttempts`'s WORK-based
+   `attemptBudgetShare` split: the retry pass shared the solve's single `(workBudget, workStart)`
+   pair with every earlier tier, and by the time it ran, ~66% of that pool (44.1M of 67M) was already
+   spent — R00180's actual winning config (`objectiveFirst@beam5000(diverse)`) got only 3.7M work
+   units in the retry pass vs. 10.9M when the ordinary main loop tries the identical config with a
+   full pool, and a beam-search node costs meaningfully more than 1 work unit (`CONNECTIVITY_WORK_
+   UNITS = 12` per `isConnected` call alone). Fixed by giving the retry pass a genuinely FRESH,
+   ADDITIVE work allocation — a new `workMeter.units` mark plus a work budget derived from this
+   tier's own ms allocation via `DEFAULT_WORK_PER_MS` (the same conversion `solveLevel`'s own
+   top-level `workBudget` uses when a caller omits it) — rather than sharing the already-depleted
+   pool. Same "extend, don't carve from the existing pool" philosophy `REPAIR_EXTRA_BUDGET_FRACTION`
+   already documents for wall time, applied here to work.
+
+**Local validation** (real `solveLevel()` through the full production ladder, `nodeBudget=50,000,000`,
+non-binding wall clock, referee-validated via `Solver.validateCandidatePath`):
+
+| level | control-arm cost | with retry pass |
+|---|---:|---|
+| `R00180` | 5,148,930 nodes | **solved**, 26,148,946 nodes total, referee-valid |
+| `R00901` | 4,329,619 nodes | **solved**, 25,329,695 nodes total, referee-valid |
+| `R02110` (34.8M outlier) | 34,800,048 nodes | still fails — `node-budget-reached`, exactly as predicted (12.5M reserve < 34.8M need) |
+
+2 of 3 spot-checked losses recovered exactly as the reserve's own sizing predicted; the one known
+outlier fails exactly as predicted too (the reserve was explicitly sized to cover p90, not the max).
+**Not yet validated at population scale** — this 3-level local sample is evidence the mechanism
+works as designed, not a population-level recovery count. The natural next step is a full-corpus GHA
+run with `enable_flags=STRATEGY_DEDUP_NEAR_TIE_RETRY` against the same `724/1700` baseline, now that
+the infrastructure exists to actually analyze the result.
+
+## Infrastructure fixes surfaced by this investigation
+
+Two real, independent infrastructure bugs were found and fixed while trying to analyze the full-corpus
+A/B above — see `.github/workflows/solver-stress-refresh.yml` and `README-solver-stress-refresh.md`
+for the full detail; summarized here since they were a direct precondition for the population-scale
+finding above:
+
+1. **The persist step's push-retry logic failed whenever another commit landed on the branch
+   mid-run.** `reports/stress/benchmark-*.json` are tracked files the sweep always overwrites on
+   disk, but the persist step only staged them for commit when `deterministic != true` — leaving
+   them as unstaged modifications that made the retry's `git rebase` fail with "You have unstaged
+   changes" the moment anything else pushed first (an unrelated automated `chore(audit)` commit, in
+   the case that surfaced this). Fixed by discarding those deliberately-unstaged changes before
+   rebasing.
+2. **Under `deterministic=true` + `persist_hints=false` (the documented matched-A/B setting), no
+   per-level result was ever committed anywhere reachable outside the run's own uploaded Actions
+   artifact.** That artifact lives on Azure blob storage, whose download this session's egress policy
+   blocks (403) — so a run could complete and still be unanalyzable. Fixed by making a compact
+   per-run analysis summary (`reports/stress/capability-runs/<run_id>/summary.json` +
+   `per-level-corpus{1,2}.json`) unconditional, regardless of `persist_hints`/`deterministic` — it is
+   namespaced by run id and never read back into any solve, so it cannot let one A/B arm mutate what
+   a queued arm measures, the actual property `persist_hints=false` protects.
+
 ## This is not isolated to `R02248` — population scale via provenance mining
 
 Mined `data/stress/hints-random/*.json` (all 1700 corpus-2 levels) for `(level, technique, profile,
@@ -317,44 +477,68 @@ not attempted here.
   the mechanism, not directly traced); or that disabling the flag is a net-positive fix (`R03248` is a
   direct counterexample, and the mechanism explains *why* a blanket disable can't be — it would just
   move the threshold-crossing lottery to different levels, not eliminate it).
-- **This report's production status**: the near-tie dedup retention fix (`DEDUP_NEAR_TIE_MARGIN`)
-  IS shipped — validated per this repo's promotion contract on the instruments available locally
-  (published-corpus `solver:bench --check`, 373 solver unit tests, a 112-level Corpus-2 full-ladder
-  sample, and direct re-verification of the 20-candidate mined sample), all clean. It is explicitly
-  a **partial** fix (recovers `R02248` only, of the 3 confirmed regressions) — `R02114`/`R00592`
-  remain open, as do the ~175 unverified provenance-mining candidates. A full-corpus GHA-scale A/B
-  at the real 50M production budget has *not* been run; the local evidence above is the validation
-  this shipped on.
+- **This report's production status**: the near-tie dedup retention fix (`DEDUP_NEAR_TIE_MARGIN`) IS
+  shipped and stays shipped — but its actual population-scale effect is **net -7 on Corpus 2** (34
+  lost / 27 gained), not the "zero regressions" the 112-level sample (badness-stratified toward hard
+  levels, which none of the 61 flipped levels belong to) originally suggested. A recovery mechanism
+  (`STRATEGY_DEDUP_NEAR_TIE_RETRY`, opt-in/default-OFF) is built and locally validated (2/3 spot-check,
+  real ladder, referee-valid) but **not yet validated at population scale** — see "A recovery
+  mechanism" above. It is explicitly a **partial** fix regardless (recovers `R02248` of the 3
+  originally-confirmed regressions; `R02114`/`R00592` remain open, as do the ~175 unverified
+  provenance-mining candidates) — and now, additionally, a **broad** one whose full population effect
+  needed a real full-corpus GHA A/B to see, not a hand-picked sample, however carefully chosen.
 
 ## Recommended next steps (not done here)
 
-1. **Investigate why `R02114`/`R00592` don't respond to the same fix** — trace their own critical
+1. **Dispatch a full-corpus GHA A/B with `STRATEGY_DEDUP_NEAR_TIE_RETRY` enabled**
+   (`enable_flags=STRATEGY_DEDUP_NEAR_TIE_RETRY`), comparing against the existing `724/1700` /
+   `95/102` baseline (run `31874764534`, already committed as `reports/stress/capability-runs/
+   31874764534/`) — the natural, now-infrastructure-ready next step. Report how many of the 34
+   losses are actually recovered, and confirm zero regressions among the 27 gains (guaranteed by
+   construction — they never reach the retry tier — but worth confirming empirically rather than
+   assuming).
+2. **If the retry tier doesn't recover all 34**, the outlier(s) (confirmed: `R02110`, needing 34.8M
+   vs. the 12.5M reserve) may need a larger `DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION` — but only
+   with population evidence that a larger reserve doesn't itself cost solves elsewhere by starving
+   the main loop/repair fallback/attraction-diversity of their own room (same asymmetric-risk caution
+   `STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE`'s own comment documents).
+3. **Investigate why `R02114`/`R00592` don't respond to the same fix** — trace their own critical
    collision with the same beam-frontier instrumentation used on `R02248`. Their blocking collision
-   is evidently a different depth/shape a single runner-up slot doesn't reach; understanding why
-   informs whether widening `DEDUP_NEAR_TIE_MARGIN`'s retention beyond a single runner-up (multiple
-   margin tiers, a small top-K), a larger margin, or a structurally different mechanism is the right
-   next step.
-2. **Verify `R03248` shows the threshold-crossing signature** (in the opposite direction) using the
+   is evidently a different depth/shape a single runner-up slot doesn't reach.
+4. **Verify `R03248` shows the threshold-crossing signature** (in the opposite direction) using the
    identical instrumentation, and check whether its own depth-of-divergence is a genuine flag-vs-flag
    score difference (like `R02248`'s depth-12 finding) or an actual threshold-timing effect — the two
-   are not the same question, and this report only fully traced one of the two directions. Now also
-   worth confirming the shipped fix doesn't touch `R03248`'s own mechanism (already spot-checked: its
-   outcome is unchanged by the fix, but the *why* wasn't traced).
-3. **Verify the remaining 175 unverified provenance-mining candidates** (the 2–30-node trivial tier
+   are not the same question, and this report only fully traced one of the two directions.
+5. **Verify the remaining 175 unverified provenance-mining candidates** (the 2–30-node trivial tier
    plus the >50,000-node tier beyond the 20 already tested) — establishes the real population scale.
-4. **A full-corpus matched A/B at the flag's actual production node budget (50M) via GHA**, now that
-   a concrete, locally-cost-validated fix exists — the natural next validation tier beyond what a
-   local sandbox run can cover.
 
 ## Evidence artifacts
 
-**The fix itself is committed**, not evidence-only: `DEDUP_NEAR_TIE_MARGIN` and the `dm`/`dm2`
-near-tie retention block in `beamSearchFromGate`'s state-dedup path, `modules/solver/search.ts`.
-Regression baseline refresh and the `solver:bench` staleness warning/`deadlineTruncated` summary
-line that this investigation also produced are committed in `scripts/solver-bench.mjs` and
-`logs/solver-baseline.json`.
+**The fix and the recovery mechanism are both committed**, not evidence-only: `DEDUP_NEAR_TIE_MARGIN`,
+`STRATEGY_DEDUP_NEAR_TIE_RETENTION` gating, and the `dm`/`dm2` near-tie retention block in
+`beamSearchFromGate`'s state-dedup path (`modules/solver/search.ts`); the `STRATEGY_DEDUP_NEAR_TIE_
+RETRY` last-resort tier, its two budget-fraction/node-reserve constants, and the `SolveOpts`
+overrides (`modules/solver/orchestration.ts`); both flags' registry entries (`scripts/ablation-
+config.mjs`). Regression baseline refresh and the `solver:bench` staleness warning/`deadlineTruncated`
+summary line are committed in `scripts/solver-bench.mjs` and `logs/solver-baseline.json`. The
+push-race fix and always-persisted per-run analysis summary are committed in
+`.github/workflows/solver-stress-refresh.yml` and its README.
+
+**Durable, git-fetchable population data** (via `reports/stress/capability-runs/<run_id>/`, not
+scratchpad):
+- `31874764534/`: the with-fix full-corpus run (724/1700 C2, 95/102 C1), committed to `main`.
+- `31877433629/`: the control-arm (no-fix, `DEDUP_NEAR_TIE_MARGIN=0`) full-corpus run (731/1700 C2,
+  94/102 C1, bit-identical to run #41), committed to the throwaway `claude/nofix-control-arm` branch.
+- Diffing these two runs' `per-level-corpus2.json` `solvedIds` is the source of the exact 34-lost/
+  27-gained flip set in "The full-corpus GHA A/B" above.
 
 Everything below is scratchpad-only (not committed) and regenerable:
+
+- `/tmp/verify-retry-pass.mjs` (session scratchpad): the local spot-check driver used to validate
+  `STRATEGY_DEDUP_NEAR_TIE_RETRY` against real levels (`R00180`/`R00901`/`R02110`) through the full
+  production ladder — the source of the "2/3 recovered, outlier fails as predicted" result above, and
+  of the two budget bugs found and fixed (floor-vs-withheld-reserve neutralization; work-budget
+  starvation).
 
 - `stale-cold-solve-candidates.json`: all 195 mined candidates.
 - `stale-candidates-verified.json`: the 20-candidate verification run's full per-level detail,

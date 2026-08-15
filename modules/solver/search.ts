@@ -344,6 +344,20 @@ const _DFS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_DFS_DEBUG === '1');
 // case in the same regression family (R02114, R00592 remain unfixed — see the report's "what this
 // does and does not establish"). 0 must be, and is measured to be, byte-identical in behavior and
 // performance to dedup with no retention widening at all.
+//
+// CORRECTION (2026-08-15, same day, full-corpus GHA A/B at production 50M node budget): the 112-
+// level sample above was badness-stratified toward HARD levels and completely missed this margin's
+// real population-scale effect. On the full 1700-level Corpus 2, default-ON nets -7 (731 -> 724):
+// 27 gained (R02248 among them) but 34 LOST, every single flip in either direction sharing the same
+// signature — a level that used to solve cheaply (4-35M nodes) via beam:intersectionHarvest@beam5000
+// or beam:objectiveFirst@beam5000 (often (diverse)) now exhausts the full 50M budget with zero
+// progress, or vice versa. This is NOT a narrow, targeted fix; it perturbs beam search broadly on
+// any level whose winning technique is in that family — a coin-flip-shaped reshuffling, not a
+// monotonic improvement. Kept default-ON regardless (net loss accepted for now — see
+// orchestration.ts's STRATEGY_DEDUP_NEAR_TIE_RETRY for the recovery mechanism this motivated,
+// implemented and locally validated the same day, not yet validated at population scale) rather
+// than reverted, since a blanket revert would give back R02248 and the 26 other gains for no net
+// improvement on the loss side either.
 const DEDUP_NEAR_TIE_MARGIN = 0.01;
 // out (optional, last param): mirrors dfsFromGate's own out contract for external tooling (the
 // stress benchmark's per-attempt telemetry) — set to whether the OVERALL call's null return was
@@ -748,7 +762,14 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // this map's monomorphic V8 shape. See reports/2026-08-15-connectivity-axis-
                 // exhausted-regression.md.
                 const dm = new Map<string, BeamNode>();
-                const dm2: Map<string, BeamNode> | null = DEDUP_NEAR_TIE_MARGIN > 0 ? new Map() : null;
+                // STRATEGY_DEDUP_NEAR_TIE_RETENTION (production default-ON, 2026-08-15): lets a
+                // last-resort retry pass (orchestration.ts's DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION)
+                // rerun the same ladder with retention off — see that pass's own comment for why: a
+                // full-corpus A/B found this margin nets +27/-34 corpus-2 flips (not a rare edge
+                // case), all sharing the same beam5000-family signature, so the two directions need
+                // to be reachable independently rather than picking one as the permanent default.
+                const nearTieRetentionEnabled = DEDUP_NEAR_TIE_MARGIN > 0 && (!cfg || cfg.STRATEGY_DEDUP_NEAR_TIE_RETENTION);
+                const dm2: Map<string, BeamNode> | null = nearTieRetentionEnabled ? new Map() : null;
                 const dedupRemoved: BeamNode[] | null = research ? [] : null;
                 const dedupContexts: Record<string, unknown>[] | null = research ? [] : null;
                 for (const c of cands) {

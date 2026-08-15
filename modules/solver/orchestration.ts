@@ -99,6 +99,10 @@ interface Attempt {
      *  apart from an ordinary main-loop attempt using the exact same config without re-deriving it
      *  from attempt order/count. Not read by any solving logic. */
     attractionDiversity?: boolean;
+    /** True only for attempts run by the 2026-08-15 STRATEGY_DEDUP_NEAR_TIE_RETRY last-resort pass
+     *  (see DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION) — same diagnostic-only shape as
+     *  attractionDiversity above. Not read by any solving logic. */
+    dedupNearTieRetry?: boolean;
     /** Diagnostic-only passthrough for the admissible-order-search.ts prototype (see
      *  AttemptConfig.admissibleOrder) — not read by any solving logic, purely so external tooling
      *  (scripts/method-probe.mjs) can tell it apart from an ordinary DFS attempt. */
@@ -211,6 +215,18 @@ interface SolveOpts {
      *  review-controller.ts's interactive call sites) preserves ATTRACTION_DIVERSITY_BUDGET_
      *  FRACTION exactly. */
     attractionDiversityBudgetFractionOverride?: number;
+    /** Overrides DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION for this solve only — same dedicated
+     *  top-level-option shape and rationale as attractionDiversityBudgetFractionOverride above (NOT
+     *  an ablation flag; a batch-tooling caller may want to isolate this pass's own cost). Undefined
+     *  (production default, and solver-controller.ts/review-controller.ts's interactive call sites)
+     *  preserves DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION exactly. */
+    dedupNearTieRetryBudgetFractionOverride?: number;
+    /** Overrides DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION for this solve only — same shape,
+     *  rationale, and withheld-up-front-sibling-to-admissibleOrderNodeReserve mechanism as
+     *  admissibleOrderNodeReserveFractionOverride above (see that constant's own comment for the
+     *  correction that put it there). Undefined (production
+     *  default) preserves the constant exactly. */
+    dedupNearTieRetryNodeReserveFractionOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape and rationale as the two overrides above (NOT an ablation flag, a
      *  THIRD independently-costed extension a batch-tooling caller may want to isolate). Undefined
@@ -276,7 +292,8 @@ interface SolveOpts {
      *  REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE exactly. */
     repairProbeAdaptiveBiasedMinScaleOverride?: number;
     /** Convenience for offline batch tooling: sets repairBudgetFractionOverride,
-     *  attractionDiversityBudgetFractionOverride, AND admissibleOrderBudgetFractionOverride all to 0
+     *  attractionDiversityBudgetFractionOverride, dedupNearTieRetryBudgetFractionOverride, AND
+     *  admissibleOrderBudgetFractionOverride all to 0
      *  (purely additive — an explicit value on any individual override still wins over this, so a
      *  caller can still isolate one extension's cost while suppressing the others via this flag).
      *  Exists because the individual overrides were deliberately kept separate (see
@@ -285,7 +302,8 @@ interface SolveOpts {
      *  cost, period" requires remembering every one of them — documented in CLAUDE.md's
      *  solver-architecture gotchas as something "a future new batch tool needs to wire up... from
      *  the start, not just the historically-older repair one" (a warning this field's own addition
-     *  for the admissible-order tier is a direct instance of — see that tier's own comment). This
+     *  for the admissible-order tier is a direct instance of — see that tier's own comment; the
+     *  dedup-near-tie-retry tier is wired in here for exactly the same reason). This
      *  flag makes the common "suppress every extra-budget pass" case a single boolean instead of an
      *  N-field combo a caller has to remember and update every time a new pass is added, without
      *  removing the fine-grained escape hatch. Undefined (every existing caller) is a no-op — every
@@ -949,6 +967,67 @@ export const ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION = 0.15;
 export const REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION = 0.5;
 // (Read as a CEILING on the reserve, not its size: the reserve is `min(actual debt, this fraction of
 // earlyTierNodeBudget)`, so it only ever withholds what a shrunk tier could really use.)
+
+/** STRATEGY_DEDUP_NEAR_TIE_RETRY (opt-in, default OFF — NEW, unvalidated mechanism, 2026-08-15).
+ *  A whole extra rerun of the SAME mainConfigs ladder, with STRATEGY_DEDUP_NEAR_TIE_RETENTION
+ *  disabled for its duration — same shape as ATTRACTION_DIVERSITY_BUDGET_FRACTION just above,
+ *  toggling search.ts's DEDUP_NEAR_TIE_MARGIN retention instead of SCORE_GOAL_ATTRACTION. Exists
+ *  because a full-corpus GHA A/B (see DEDUP_NEAR_TIE_MARGIN's own comment) found that flag's
+ *  default-ON retention nets -7 on Corpus 2 (27 gained / 34 lost) — not a rare edge case, so
+ *  reverting it outright would give back the 27 gains for no net improvement on the loss side
+ *  either. Every one of the 34 losses solves cheaply (median 6.5M nodes) WITHOUT retention, and
+ *  every one of the 27 gains solves via the main ladder WITH retention — i.e. never reaches this
+ *  tier — so a bounded last-resort retry with retention off should recover the losses without
+ *  touching the gains. Tried only after the main loop AND repair fallback have already failed on
+ *  every gate (before attraction-diversity, since this is strictly cheaper and structurally
+ *  identical in shape).
+ *
+ *  1.0, matching ATTRACTION_DIVERSITY_BUDGET_FRACTION's own reasoning: a full nominal budget's
+ *  worth for the whole ladder rerun, not a small fraction of it — this technique's own known-good
+ *  cost data (search.ts's DEDUP_NEAR_TIE_MARGIN comment: p50=6.5M, p90=8.2M, max=34.8M of a 50M
+ *  ceiling) needs headroom comparable to a level's own full first attempt at the ladder, not a
+ *  sliver. NOT YET VALIDATED at population scale — this is a first cut sized from the loss
+ *  population's own historical cost, not a calibrated A/B result. */
+export const DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION = 1.0;
+
+/** Fraction of `nodeBudget` withheld UP FRONT from every earlier tier (probe, main loop, repair
+ *  fallback, attraction-diversity) for STRATEGY_DEDUP_NEAR_TIE_RETRY's own node reserve — same
+ *  mechanism and SIBLING placement (both subtracted straight off `nodeBudget`, independently) as
+ *  ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION, not nested inside it. See dedupRetryNodeReserve's own
+ *  comment at its computation site for the full derivation.
+ *
+ *  CORRECTION: an earlier version of this constant used a "floor at the tier's own call site"
+ *  design instead (self-contained, no edit to the shared earlyTierNodeBudget chain) — deliberately
+ *  chosen to avoid touching that chain's history of shipping regressions from exactly this kind of
+ *  edit (see REPAIR_FALLBACK_NODE_RESERVE_FRACTION's "REVISION 1"/"REVISION 2"). That version was
+ *  caught locally, before any GHA spend: the floor was `max(remainder, nodeBudget * fraction)`
+ *  capped by `nodeBudget - nodesExpanded` — and every one of this tier's 34 target levels reports
+ *  `node-budget-reached` under the shipped default, i.e. the main loop alone already spends the
+ *  ENTIRE nodeBudget, so the cap neutralized the floor to ~0 in precisely the case the floor exists
+ *  to fix. Confirmed directly: R00180 reproduced its exact GHA node count (50,000,148) locally,
+ *  then the retry pass received 0 nodes and could not run. Reverted to the withheld-up-front
+ *  design despite the shared-chain risk — there is no way to protect a tier from tiers that ran
+ *  BEFORE it without shrinking what those earlier tiers could see, by construction.
+ *
+ *  0.25: the loss population's own cost distribution (n=34, search.ts's DEDUP_NEAR_TIE_MARGIN
+ *  comment) has p90=8.2M of the 50M production ceiling — 12.5M (0.25 * 50M) covers 33 of 34 with
+ *  room to spare, missing only one outlier (34.8M, itself an atypical perimeterSweep@beam2000
+ *  winner, not this population's dominant intersectionHarvest/objectiveFirst@beam5000 shape).
+ *  Matches ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own starting fraction.
+ *
+ *  LOCAL SPOT-CHECK (2026-08-15, real solveLevel() through the full production ladder, 50M node /
+ *  86.4M-work-per-ms budget, referee-validated): R00180 and R00901 (both typical-cost losses,
+ *  needing 5.1M/4.3M nodes respectively in the control arm) are recovered by this tier exactly as
+ *  predicted — R02110 (the 34.8M outlier) is not, also exactly as predicted, since 12.5M < 34.8M.
+ *  This also caught and fixed a SEPARATE bug (see dedupRetryWorkStart/dedupRetryWorkBudget at the
+ *  tier's call site): the node reserve alone was not sufficient — the retry pass shares
+ *  runGateSerialAttempts/runInterleavedAttempts's WORK-based attemptBudgetShare split with every
+ *  earlier tier by default, and that shared pool was already ~66% spent by the time this tier ran,
+ *  starving its own attempts of work even with a full node reserve genuinely available. Not yet
+ *  validated at FULL population scale (all 34 losses, all 27 gains, across all 1700 Corpus-2
+ *  levels) — the first population re-run of this mechanism should report the real aggregate
+ *  recovery count, not just this 2/3 local sample. */
+export const DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION = 0.25;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
@@ -1750,6 +1829,19 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         ? diversityFractionOverride
         : ATTRACTION_DIVERSITY_BUDGET_FRACTION;
 
+    // opts.dedupNearTieRetryBudgetFractionOverride — same shape/rationale/hoisting reason as
+    // diversityBudgetFraction just above. STRATEGY_DEDUP_NEAR_TIE_RETRY is opt-in/default-OFF (see
+    // that flag's own comment), so this tier is inert (fraction resolves but the tier's own run
+    // condition below still checks the flag) unless a caller explicitly enables it.
+    const dedupRetryFractionOverride = Number(opts.dedupNearTieRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
+    const dedupRetryBudgetFraction = Number.isFinite(dedupRetryFractionOverride) && dedupRetryFractionOverride >= 0
+        ? dedupRetryFractionOverride
+        : DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION;
+    const dedupRetryNodeReserveFractionRaw = Number(opts.dedupNearTieRetryNodeReserveFractionOverride);
+    const dedupRetryNodeReserveFraction = Number.isFinite(dedupRetryNodeReserveFractionRaw) && dedupRetryNodeReserveFractionRaw >= 0
+        ? Math.min(1, dedupRetryNodeReserveFractionRaw)
+        : DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION;
+
     // Admissible-order tier's NODE RESERVE (see ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION). Resolved
     // here, before the probe, because it has to shrink the ceiling every EARLIER tier runs against —
     // that is the whole mechanism. `earlyTierNodeBudget` replaces `nodeBudget` for the probe, the
@@ -1776,7 +1868,23 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const admissibleOrderNodeReserve = (admissibleOrderTierWillRun && nodeBudget !== Infinity)
         ? Math.floor(nodeBudget * admissibleOrderNodeReserveFraction)
         : 0;
-    const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve;
+
+    // STRATEGY_DEDUP_NEAR_TIE_RETRY's own node reserve — SIBLING to admissibleOrderNodeReserve
+    // above (both withheld straight off `nodeBudget`, independently), not nested inside it. Same
+    // "withheld from every earlier tier, tier itself keeps the room this bought it" mechanism, and
+    // the SAME reason it must be withheld up front rather than computed as a floor at the tier's own
+    // call site: a floor capped by `nodeBudget - prep._metrics.nodesExpanded` is neutralized to
+    // ~0 the moment an earlier tier has already spent the entire nodeBudget — which is exactly what
+    // happens on every one of this tier's target levels (search.ts's DEDUP_NEAR_TIE_MARGIN comment:
+    // all 34 losses report `node-budget-reached` under the current default). A first version of this
+    // tier used exactly that floor-at-call-site pattern and was caught locally, before any GHA spend,
+    // reproducing R00180's exact GHA node count (50,000,148) and then getting ZERO nodes for the
+    // retry itself — confirming the floor was a no-op in precisely the case it exists to fix.
+    const dedupRetryTierWillRun = dedupRetryBudgetFraction > 0 && !!(cfg && cfg.STRATEGY_DEDUP_NEAR_TIE_RETRY === true);
+    const dedupRetryNodeReserve = (dedupRetryTierWillRun && nodeBudget !== Infinity)
+        ? Math.floor(nodeBudget * dedupRetryNodeReserveFraction)
+        : 0;
+    const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve - dedupRetryNodeReserve;
 
     // STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE (opt-in, default OFF — NEW, unvalidated
     // mechanism, landed 2026-08-13). Protects the admissible-order tier's own non-'default' profiles
@@ -2227,6 +2335,63 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             for (const attempt of diversityResult.attempts) attempt.attractionDiversity = true;
             result.attempts.push(...diversityResult.attempts);
             if (diversityResult.solution) result.solution = diversityResult.solution;
+        } finally {
+            prep._cfg = originalCfg;
+        }
+    }
+
+    // Last-resort dedup-near-tie-retry pass (DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION,
+    // STRATEGY_DEDUP_NEAR_TIE_RETRY) — see that flag's own comment in ablation-config.mjs and
+    // DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's own comment above for the full rationale. Same
+    // Proxy-override shape as the attraction-diversity pass just above, toggling
+    // STRATEGY_DEDUP_NEAR_TIE_RETENTION instead of SCORE_GOAL_ATTRACTION. Opt-in/default-OFF (NEW,
+    // unvalidated mechanism) — the flag check below (`cfg &&` ... `=== true`) is the opt-in
+    // convention, so this whole block is a strict no-op for every production/interactive caller
+    // (cfg null) until explicitly enabled, matching STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY's own
+    // gating just below.
+    // `dedupRetryTierWillRun` is the SAME predicate dedupRetryNodeReserve was withheld from — the
+    // two must stay in lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history: drift either
+    // way strands the reserve or spends one that was never withheld). The tier checks the FULL
+    // `nodeBudget` (not a reduced ceiling), same as the admissible-order tier below: the room it may
+    // spend is exactly what dedupRetryNodeReserve bought it by shrinking every EARLIER tier's own
+    // `earlyTierNodeBudget`-derived ceiling.
+    if (!result.solution && dedupRetryTierWillRun && prep._metrics.nodesExpanded < nodeBudget) {
+        const originalCfg = prep._cfg;
+        const dedupRetryCfg: AblationConfig = new Proxy({} as AblationConfig, {
+            get(_target, prop: string | symbol) {
+                if (typeof prop !== 'string') return undefined;
+                if (prop === 'STRATEGY_DEDUP_NEAR_TIE_RETENTION') return false;
+                if (originalCfg && Object.prototype.hasOwnProperty.call(originalCfg, prop)) return originalCfg[prop];
+                return true;
+            },
+        });
+        prep._cfg = dedupRetryCfg;
+        try {
+            const dedupRetryTotalBudget = Math.floor(timeBudgetMs * dedupRetryBudgetFraction);
+            const dedupRetryStart = Date.now();
+            // FRESH, ADDITIVE work allocation — deliberately NOT (workBudget, workStart) shared with
+            // every earlier tier. That shared pool is already largely spent by the time this tier
+            // runs (main loop + repair fallback + attraction-diversity all draw from it), which
+            // starves runGateSerialAttempts/runInterleavedAttempts's own work-based attemptBudgetShare
+            // split even though dedupRetryNodeReserve genuinely protected the NODE ceiling — found
+            // directly: R00180's winning config (beam:objectiveFirst@beam5000(diverse), needs ~5.1M
+            // nodes) got only 3.7M WORK units under the shared pool (vs. 10.9M when the ordinary main
+            // loop tries the identical config with a full pool), well short given a node costs more
+            // than 1 work unit. Same "extend, don't carve from the existing pool" philosophy
+            // REPAIR_EXTRA_BUDGET_FRACTION's own comment documents for wall time, applied to work:
+            // a fresh `workMeter.units` mark plus a work budget sized off this tier's own ms
+            // allocation via DEFAULT_WORK_PER_MS, the same conversion solveLevel's own top-level
+            // workBudget uses when a caller doesn't supply one explicitly.
+            const dedupRetryWorkStart = workMeter.units;
+            const dedupRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(dedupRetryTotalBudget * DEFAULT_WORK_PER_MS));
+            // Same absolute-vs-relative nodeBudget semantics as the diversity pass's own call —
+            // see that call's comment for why this must be an ABSOLUTE ceiling, not a remainder.
+            const dedupRetryResult = useInterleaving && activeGates.length > 1
+                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, nodeBudget, dedupRetryWorkBudget, dedupRetryWorkStart)
+                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, nodeBudget, dedupRetryWorkBudget, dedupRetryWorkStart);
+            for (const attempt of dedupRetryResult.attempts) attempt.dedupNearTieRetry = true;
+            result.attempts.push(...dedupRetryResult.attempts);
+            if (dedupRetryResult.solution) result.solution = dedupRetryResult.solution;
         } finally {
             prep._cfg = originalCfg;
         }
