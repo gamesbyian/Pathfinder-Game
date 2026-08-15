@@ -634,7 +634,7 @@ test('attraction-diversity pass reruns the main ladder once more after both prio
     // admissible-order-search last-resort tier (orchestration.ts), which also runs by default after
     // this pass and would otherwise inflate "mainLoopAttempts" below (its attempts carry neither
     // marker, since it's a distinct search primitive, not a rerun of mainConfigs).
-    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0 });
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, dedupNearTieRetryBudgetFractionOverride: 0 });
     assert.equal(result.ok, false);
     const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
     const mainLoopAttempts = result.attempts.filter(a => a.attractionDiversity !== true);
@@ -752,6 +752,7 @@ test('a nodeBudget with room left after the main loop lets the diversity pass st
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         nodeBudget: 400, // > 288 (main loop alone) -- clears the pass's entry gate
+        dedupNearTieRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
     assert.equal(result.status, 'node-budget-reached');
@@ -806,10 +807,12 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
         timeBudgetMs: 1000,
         nodeBudget: 400,
         admissibleOrderNodeReserveFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
     });
     const on = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         nodeBudget: 400,
+        dedupNearTieRetryBudgetFractionOverride: 0,
     });
     assert.equal(off.nodesExpanded, 402, 'reserve off reproduces the pre-reserve total exactly');
     assert.ok(on.nodesExpanded < off.nodesExpanded, 'the reserve must hold the early tiers below the full ceiling');
@@ -984,6 +987,7 @@ test('repair-fallback reserve is inert by default (cfg=null) even with a finite 
         ablation: { STRATEGY_REPAIR_PROBE: false },
         admissibleOrderBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
@@ -1001,6 +1005,7 @@ test('repair-fallback reserve gives the fallback loop room without touching the 
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
         admissibleOrderBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
@@ -1044,6 +1049,7 @@ test('repair-fallback reserve is a no-op when mainLoopLateReserve is 0 (accepted
         ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_MAIN_LOOP_LATE_RESERVE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true },
         admissibleOrderBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
         repairFallbackNodeReserveFractionOverride: 0.5,
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
@@ -1065,6 +1071,7 @@ test('attraction-diversity reserve is inert by default (cfg=null) even with its 
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
         ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true },
         admissibleOrderBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
@@ -1087,6 +1094,7 @@ test('attraction-diversity reserve gives the diversity pass room without touchin
     const opts = {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
         admissibleOrderBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
@@ -1143,6 +1151,7 @@ test('attraction-diversity reserve is a no-op when repairFallbackNodeReserve alr
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
         ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: true },
         admissibleOrderBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 1.0,
@@ -1194,6 +1203,7 @@ test('admissible-order profile reserve gives non-default profiles room without s
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
         repairBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0,
         admissibleOrderNodeReserveFractionOverride: 0.4,
         admissibleOrderProfileNodeReserveFractionOverride: 0.5,
@@ -1238,6 +1248,7 @@ test('admissible-order profile reserve is a no-op when admissibleOrderNodeReserv
         ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true },
         repairBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0,
         admissibleOrderNodeReserveFractionOverride: 0,
         admissibleOrderProfileNodeReserveFractionOverride: 0.5,
@@ -1605,11 +1616,12 @@ test('shrink recovery is inert when the shrink mechanism itself is disabled', as
 
 // ── STRATEGY_DEDUP_NEAR_TIE_RETRY ─────────────────────────────────────────────
 //
-// Opt-in, default OFF (see DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's own comment in orchestration.ts
-// for the full-corpus A/B this exists to recover from). Reuses the same infeasible-level pattern
-// attraction-diversity's own tests already establish: this level's every attempt is pruned near-
-// instantly by distance/parity regardless of search strategy or STRATEGY_DEDUP_NEAR_TIE_RETENTION,
-// so the inertness/suppression tests below don't depend on the mechanism's own real rescue behavior.
+// PROMOTED to default-ON (2026-08-15, same day as built — see DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's
+// own comment in orchestration.ts for the full-corpus A/B population-validation history behind the
+// promotion). Reuses the same infeasible-level pattern attraction-diversity's own tests already
+// establish: this level's every attempt is pruned near-instantly by distance/parity regardless of
+// search strategy or STRATEGY_DEDUP_NEAR_TIE_RETENTION, so the inertness/suppression tests below
+// don't depend on the mechanism's own real rescue behavior.
 
 test('dedup-near-tie-retry pass reruns the main ladder once more after main loop and repair fallback fail', async () => {
     // attractionDiversityBudgetFractionOverride/admissibleOrderBudgetFractionOverride: 0 isolate the
@@ -1631,21 +1643,48 @@ test('dedup-near-tie-retry pass reruns the main ladder once more after main loop
     assert.equal(retryAttempts.length, mainLoopAttempts.length);
 });
 
-test('dedup-near-tie-retry pass is inert by default (cfg=null): no retry attempt is ever run', async () => {
-    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000 });
+test('dedup-near-tie-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    assert.ok(result.attempts.some(a => a.dedupNearTieRetry === true), 'expected the promoted default-ON tier to run with cfg=null');
+});
+
+test('disableExtraBudgetPasses: true suppresses the promoted default-ON pass even with cfg=null (the two interactive solve UIs\' real production combination)', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        disableExtraBudgetPasses: true,
+    });
+    assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false);
+});
+
+test('dedup-near-tie-retry pass stays off under an explicit { STRATEGY_DEDUP_NEAR_TIE_RETRY: false }', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: false },
+    });
     assert.equal(result.ok, false);
     assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false);
 });
 
-test('dedup-near-tie-retry pass stays off under an explicit { FLAG: false }, and under a sparse unrelated ablation object', async () => {
-    for (const ablation of [
-        { STRATEGY_DEDUP_NEAR_TIE_RETRY: false },
-        { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
-    ]) {
-        const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, ablation });
-        assert.equal(result.ok, false);
-        assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false);
-    }
+test('a sparse unrelated ablation object leaves the promoted default-ON pass active (the normalizeAblationConfig sparse-default fix this promotion now depends on)', async () => {
+    // Since promotion, this flag is unset-means-true (the standard `!cfg || cfg.FLAG` convention),
+    // so a sparse config that only touches a DIFFERENT flag (STRATEGY_DEDUP_NEAR_TIE_RETENTION here)
+    // must still leave THIS one active — the opposite assertion from the pre-promotion opt-in test
+    // this replaces, and exactly the normalizeAblationConfig sparse-default behavior CLAUDE.md's own
+    // gotcha describes (an under-registered opt-in flag silently defaulting to true; here the flag is
+    // correctly registered as default-ON so a sparse object must NOT silently disable it either).
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    assert.ok(result.attempts.some(a => a.dedupNearTieRetry === true), 'expected the promoted tier to still run: only an unrelated flag was set');
 });
 
 test('dedupNearTieRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {

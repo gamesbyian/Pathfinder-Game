@@ -31,8 +31,13 @@
 > admissible-order tier — fully resolved this**, confirmed by a second full-corpus GHA run: **764/1700,
 > +40 vs. the 724 baseline, with ZERO levels lost relative to baseline** (33/34 target losses
 > recovered, all 27 gains intact, +7 bonus solves, 0 collateral damage). See "Population-scale
-> confirmation: net +40, zero regressions" below. Stays opt-in/default-OFF (unchanged from how it
-> shipped) pending a promotion decision, so production is unaffected either way.
+> confirmation: net +40, zero regressions" below.
+> **PROMOTED to production default-ON (2026-08-15, same day)** — see "Promoted to default-ON" below
+> for the promotion commit, the ripple-effect fix to 11 pre-existing tests whose exact node-budget
+> arithmetic assumed no other default-on last-resort tier fires without explicit opt-in, and the full
+> verification (`tsc`, 381/381 solver unit tests, `npm run check`, `npm run test:node`,
+> `npm run test:coverage`, and `solver:bench --check` — 160/160 published levels, no regressions,
+> +0.3% nodes).
 > **Scope:** `modules/solver/search.ts` (`beamSearchFromGate`'s state-dedup block +
 > `STRATEGY_DEDUP_NEAR_TIE_RETENTION` gating), `modules/solver/orchestration.ts` (the new
 > `STRATEGY_DEDUP_NEAR_TIE_RETRY` last-resort tier), `scripts/ablation-config.mjs` (both new flags),
@@ -505,8 +510,41 @@ Net: `+33 +7 -0 = +40` against the `724` baseline (`764` measured, matches exact
 population-scale confirmation that both fixes (additive reserve; reorder to run after the
 admissible-order tier) together eliminate the collateral damage while fully preserving the target
 recovery. `STRATEGY_DEDUP_NEAR_TIE_RETRY` is now a genuinely usable recovery mechanism for the
-`DEDUP_NEAR_TIE_MARGIN` regression — still opt-in/default-OFF pending a decision on whether to
-promote it (see "Recommended next steps").
+`DEDUP_NEAR_TIE_MARGIN` regression.
+
+## Promoted to default-ON
+
+Promoted the same day, on the strength of the population result above: a strict superset of the
+with-fix baseline's solved set (zero levels lost, not merely a positive net count) is about as clean
+as a promotion case gets. Changed `STRATEGY_DEDUP_NEAR_TIE_RETRY`'s run-condition from the opt-in
+`cfg && cfg.FLAG === true` convention to the standard default-on `!cfg || cfg.FLAG` convention (same
+as `admissibleOrderTierWillRun`), and removed it from `scripts/ablation-config.mjs`'s
+`OPT_IN_FEATURES`. Both interactive solve UIs (`solver-controller.ts`, `review-controller.ts`) are
+unaffected — they already set `disableExtraBudgetPasses: true`, which zeroes this tier's budget
+fraction regardless of the ablation flag's default, exactly as it already does for the
+attraction-diversity and admissible-order tiers. The practical effect of promotion is scoped to
+callers that solve *without* that flag (offline batch tooling, hint-discovery) — the same population
+this session's own validation A/Bs actually exercised.
+
+**Ripple effect on 11 pre-existing tests.** Promoting a default-on last-resort tier means it now runs
+in every `orchestration.test.ts` test that sets a finite `nodeBudget` and doesn't explicitly suppress
+it — the same maintenance burden this file's own tests already document for the admissible-order
+tier's introduction (`admissibleOrderBudgetFractionOverride: 0` sprinkled through the older
+attraction-diversity tests). 11 tests with exact node-count arithmetic broke (the promoted tier now
+spends additional nodes past what their totals expected); fixed by adding
+`dedupNearTieRetryBudgetFractionOverride: 0` to each, isolating them from the newly-promoted sibling.
+Two of the dedup-retry suite's own tests were rewritten to assert the new default-ON behavior instead
+of the old opt-in one (`cfg=null` now runs the tier; a sparse ablation object touching only
+`STRATEGY_DEDUP_NEAR_TIE_RETENTION` now leaves this flag active rather than off).
+
+**Verification before merge**: `npx tsc --noEmit` clean; `npx vitest run modules/solver` 381/381
+passing; `npm run check` clean (all static checks, including `check:no-solver-level-numbers` and
+`check:hint-validity`); `npm run test:node` clean; `npm run test:coverage` 1163/1164 (the one failure,
+a property-based test in `lower-bounds.test.ts` unrelated to this change, reproduced as passing in
+~30s standalone — a resource-contention timeout under coverage instrumentation, not a regression);
+`npm run solver:bench -- --check` — **160/160 published-corpus levels solved, no regressions, +0.3%
+nodes** (wall-time increase is sandbox CPU-throttling noise per this repo's own documented caveat, not
+a real cost regression, given node count barely moved).
 
 ## Infrastructure fixes surfaced by this investigation
 
@@ -595,38 +633,28 @@ not attempted here.
   shipped and stays shipped — but its actual population-scale effect is **net -7 on Corpus 2** (34
   lost / 27 gained), not the "zero regressions" the 112-level sample (badness-stratified toward hard
   levels, which none of the 61 flipped levels belong to) originally suggested. A recovery mechanism
-  (`STRATEGY_DEDUP_NEAR_TIE_RETRY`, opt-in/default-OFF) was built and went through three design
-  revisions the same day: the first shipped design recovered 33/34 target losses (0/27 gains broken)
-  but cost 65 unrelated levels via an unconditional node-reserve tax, netting -17 (707 vs. 724); an
-  additive-reserve fix (REVISION 2) plus reordering the tier to run after the admissible-order tier
-  (REVISION 3) together **fully resolved this, confirmed at population scale: 764/1700, +40 vs.
-  baseline, with ZERO levels lost relative to baseline** (33/34 recovered, all 27 gains intact, +7
-  bonus, 0 collateral damage) — see "Population-scale confirmation" above. It **still does not ship
-  default-on** — that is a separate promotion decision, not yet made — and it remains a partial fix
-  regardless: `R02248` is the only one of the 3 originally-confirmed regressions it addresses even in
-  principle (`R02114`/`R00592` remain open, as do ~175 unverified provenance-mining candidates).
+  (`STRATEGY_DEDUP_NEAR_TIE_RETRY`) was built and went through three design revisions the same day:
+  the first shipped design recovered 33/34 target losses (0/27 gains broken) but cost 65 unrelated
+  levels via an unconditional node-reserve tax, netting -17 (707 vs. 724); an additive-reserve fix
+  (REVISION 2) plus reordering the tier to run after the admissible-order tier (REVISION 3) together
+  **fully resolved this, confirmed at population scale: 764/1700, +40 vs. baseline, with ZERO levels
+  lost relative to baseline** (33/34 recovered, all 27 gains intact, +7 bonus, 0 collateral damage) —
+  see "Population-scale confirmation" above. **Promoted to production default-ON the same day** (see
+  "Promoted to default-ON" above) on the strength of that clean result. It remains a partial fix
+  regardless of its promotion status: `R02248` is the only one of the 3 originally-confirmed
+  regressions it addresses even in principle (`R02114`/`R00592` remain open, as do ~175 unverified
+  provenance-mining candidates).
 
 ## Recommended next steps (not done here)
 
-1. **DECISION POINT — promote `STRATEGY_DEDUP_NEAR_TIE_RETRY` to default-ON, or leave it opt-in.**
-   The mechanism is now population-validated as a clean, zero-regression net +40 recovery for the
-   `DEDUP_NEAR_TIE_MARGIN` retention regression. Arguments for promoting: the population evidence is
-   about as strong as this repo's own promotion contract typically asks for (full-corpus A/B, zero
-   regressions, referee-validated recoveries). Arguments for leaving it opt-in longer: it is a NEW
-   mechanism (built and validated all in one day), it adds real wall-clock/node cost to every level
-   that reaches it (a strictly-worse-than-solving-nothing scenario doesn't exist here, but every
-   solve now pays for a full extra ladder rerun in the worst case), and this repo's own promotion
-   contract (see "Promotion contract" in the main queue doc) may call for a cooldown or a second
-   independent corpus check before default-on — not evaluated here, deliberately left as a call for
-   the user rather than assumed.
-2. **Investigate why `R02114`/`R00592` don't respond to the same fix** — trace their own critical
+1. **Investigate why `R02114`/`R00592` don't respond to the same fix** — trace their own critical
    collision with the same beam-frontier instrumentation used on `R02248`. Their blocking collision
    is evidently a different depth/shape a single runner-up slot doesn't reach.
-3. **Verify `R03248` shows the threshold-crossing signature** (in the opposite direction) using the
+2. **Verify `R03248` shows the threshold-crossing signature** (in the opposite direction) using the
    identical instrumentation, and check whether its own depth-of-divergence is a genuine flag-vs-flag
    score difference (like `R02248`'s depth-12 finding) or an actual threshold-timing effect — the two
    are not the same question, and this report only fully traced one of the two directions.
-4. **Verify the remaining 175 unverified provenance-mining candidates** (the 2–30-node trivial tier
+3. **Verify the remaining 175 unverified provenance-mining candidates** (the 2–30-node trivial tier
    plus the >50,000-node tier beyond the 20 already tested) — establishes the real population scale.
 
 ## Evidence artifacts

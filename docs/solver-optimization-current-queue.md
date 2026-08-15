@@ -149,15 +149,23 @@ intact, +7 bonus solves, and the 65-level collateral damage from the first desig
 `STRATEGY_DEDUP_NEAR_TIE_RETRY` is now a genuinely usable, population-validated recovery mechanism for
 the `DEDUP_NEAR_TIE_MARGIN` regression.
 
-**Next — decision point**: whether to promote `STRATEGY_DEDUP_NEAR_TIE_RETRY` to default-ON. The
-population evidence is clean (full-corpus A/B, zero regressions, referee-validated), but promotion is
-a separate call from "the mechanism works" — it's a new, same-day mechanism, adds real per-level cost
-in the worst case, and this doc's own "Promotion contract" section may call for more scrutiny before
-default-on; not decided here. Also still open: investigate why `R02114`/`R00592` don't respond to the
-fix; verify `R03248` (does its own divergence share `R02248`'s depth-12 flag-independent-loss shape, or
-is it a genuine threshold-timing case — already spot-checked as unaffected by the fix, but the *why*
-wasn't traced); verify the remaining ~175 unverified provenance candidates. Do not revert or disable
-the flag on its own — `R03248` proves it isn't a pure loss. Full detail:
+**PROMOTED to production default-ON (2026-08-15, same day).** On the strength of the clean
+population result (a strict superset of the with-fix baseline's solved set — zero levels lost, not
+merely a positive net count), changed the tier's run-condition from the opt-in `cfg && cfg.FLAG ===
+true` convention to the standard default-on `!cfg || cfg.FLAG` convention and removed it from
+`OPT_IN_FEATURES`. Both interactive solve UIs (`solver-controller.ts`/`review-controller.ts`) are
+unaffected — `disableExtraBudgetPasses: true` still zeroes this tier's budget fraction regardless of
+the ablation default. Promoting a default-on last-resort tier broke 11 pre-existing
+`orchestration.test.ts` tests whose exact node-budget arithmetic assumed no other tier fires without
+explicit opt-in (the same maintenance pattern already established when the admissible-order tier was
+added) — fixed by isolating each with `dedupNearTieRetryBudgetFractionOverride: 0`. Verified clean:
+`tsc`, 381/381 solver unit tests, `npm run check`, `npm run test:node`, `npm run test:coverage`
+(1163/1164 — the one failure a confirmed pre-existing timing flake, reproduced passing standalone),
+and `solver:bench --check` (160/160 published levels, no regressions, +0.3% nodes). Still open:
+investigate why `R02114`/`R00592` don't respond to the fix; verify `R03248` (does its own divergence
+share `R02248`'s depth-12 flag-independent-loss shape, or is it a genuine threshold-timing case —
+already spot-checked as unaffected by the fix, but the *why* wasn't traced); verify the remaining
+~175 unverified provenance candidates. Full detail:
 [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).
 
 ### 1. Failure-conditioned late-tier allocation
