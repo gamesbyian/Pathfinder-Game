@@ -106,27 +106,33 @@ sample excluded by construction. The real effect: **net -7 on Corpus 2 (731 → 
 `beam:intersectionHarvest@beam5000`/`beam:objectiveFirst@beam5000` signature. Kept default-ON anyway
 — reverting would forfeit the 27 gains for no improvement on the loss side either.
 
-**Recovery mechanism built and locally validated, not yet population-validated**:
-`STRATEGY_DEDUP_NEAR_TIE_RETRY` (opt-in, default OFF, `modules/solver/orchestration.ts`) is a
-last-resort retry pass mirroring the attraction-diversity pass's own pattern — reruns the main ladder
-once more with retention disabled, only after the main loop and repair fallback fail, in its own
-reserved node/work budget. Since every gain solves via the main loop (never reaches this tier) and
-every loss solves cheaply without retention, this should recover the losses without touching the
-gains. Local spot-check (2/3, real ladder, referee-valid) confirms the mechanism works as designed;
-the one known miss (`R02110`, needing 34.8M vs. the tier's 12.5M reserve) fails exactly as its own
-sizing predicted. Two real budget bugs were found and fixed in the process (a floor-based reserve
-that's a no-op once an earlier tier spends the whole budget; a separate work-budget starvation once
-the node reserve alone was fixed) — see the report for the full mechanism.
+**Recovery mechanism built, locally validated, and now population-validated — works on target, but
+net-negative overall due to a reserve-design flaw.** `STRATEGY_DEDUP_NEAR_TIE_RETRY` (opt-in, default
+OFF, `modules/solver/orchestration.ts`) is a last-resort retry pass mirroring the attraction-diversity
+pass's own pattern — reruns the main ladder once more with retention disabled, only after the main
+loop and repair fallback fail, in its own reserved node/work budget. Two real budget bugs were found
+and fixed before any GHA spend (a floor-based reserve that's a no-op once an earlier tier spends the
+whole budget; a separate work-budget starvation once the node reserve alone was fixed).
 
-**Next**: dispatch a full-corpus GHA A/B with `enable_flags=STRATEGY_DEDUP_NEAR_TIE_RETRY` against
-the `724/1700` baseline — the natural, now-infrastructure-ready validation step (a push-race bug and
-a missing always-persisted per-run summary, both found and fixed during this investigation, previously
-made this kind of population check unreliable/unanalyzable — see the report's "Infrastructure fixes"
-section). If it doesn't recover all 34, a larger node-reserve fraction needs its own population
-evidence before widening (same asymmetric-risk caution as `STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_
-RESERVE`'s own history). Also still open: investigate why `R02114`/`R00592` don't respond to the fix;
-verify `R03248` (does its own divergence share `R02248`'s depth-12 flag-independent-loss shape, or is
-it a genuine threshold-timing case — already spot-checked as unaffected by the fix, but the *why*
+**CORRECTION (2026-08-15, same day): a full-corpus GHA A/B (`enable_flags=STRATEGY_DEDUP_NEAR_TIE_RETRY`,
+run `31895631847`) confirms the mechanism hits its target but is a net loss overall.** 33 of the 34
+original losses recovered, `R02110` fails exactly as its own 12.5M-reserve sizing predicted, all 27
+gains intact, +15 bonus new solves — but **65 previously-unrelated Corpus-2 levels (solved both
+with and without the original fix) now fail**, because `dedupRetryNodeReserve` is withheld from every
+level's main-loop node ceiling the instant the flag is globally on, not just the 34 that need the
+rescue. Net: **707/1700, down from the 724 baseline and below the original 731 no-fix count.** Stays
+opt-in/default-OFF (unchanged), so production is unaffected. Full breakdown:
+[`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md#the-retry-pass-at-population-scale-a-net--17-not-a-recovery).
+
+**Next — decision point, not a tuning task**: the reserve needs a redesign so it stops taxing every
+level's main-loop budget unconditionally (candidate directions — smaller fraction, a conditional
+reserve gated on some pre-main-loop signal, or a fixed absolute node count instead of a `nodeBudget`
+percentage — are listed in the report's "Recommended next steps" but deliberately not picked
+unilaterally; this is a real design choice, not a fraction-tuning knob, same asymmetric-risk caution
+as `STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE`'s own history). Also still open: investigate why
+`R02114`/`R00592` don't respond to the fix; verify `R03248` (does its own divergence share
+`R02248`'s depth-12 flag-independent-loss shape, or is it a genuine threshold-timing case — already
+spot-checked as unaffected by the fix, but the *why*
 wasn't traced); verify the remaining ~175 unverified provenance candidates. Do not revert or disable
 the flag on its own — `R03248` proves it isn't a pure loss. Full detail:
 [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).
