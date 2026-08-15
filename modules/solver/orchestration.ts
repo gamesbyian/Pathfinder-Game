@@ -221,11 +221,12 @@ interface SolveOpts {
      *  (production default, and solver-controller.ts/review-controller.ts's interactive call sites)
      *  preserves DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION exactly. */
     dedupNearTieRetryBudgetFractionOverride?: number;
-    /** Overrides DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION for this solve only — same shape,
-     *  rationale, and withheld-up-front-sibling-to-admissibleOrderNodeReserve mechanism as
-     *  admissibleOrderNodeReserveFractionOverride above (see that constant's own comment for the
-     *  correction that put it there). Undefined (production
-     *  default) preserves the constant exactly. */
+    /** Overrides DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION for this solve only — same dedicated
+     *  top-level-option shape as admissibleOrderNodeReserveFractionOverride above, but NOT the same
+     *  mechanism as of REVISION 2 (see the constant's own comment): this fraction is ADDITIVE headroom
+     *  for the retry tier's own ceiling, not withheld from any earlier tier. 0 restores the tier's
+     *  ceiling to plain `nodeBudget` (no extra headroom at all). Undefined (production default)
+     *  preserves the constant exactly. */
     dedupNearTieRetryNodeReserveFractionOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape and rationale as the two overrides above (NOT an ablation flag, a
@@ -990,43 +991,57 @@ export const REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION = 0.5;
  *  population's own historical cost, not a calibrated A/B result. */
 export const DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION = 1.0;
 
-/** Fraction of `nodeBudget` withheld UP FRONT from every earlier tier (probe, main loop, repair
- *  fallback, attraction-diversity) for STRATEGY_DEDUP_NEAR_TIE_RETRY's own node reserve — same
- *  mechanism and SIBLING placement (both subtracted straight off `nodeBudget`, independently) as
- *  ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION, not nested inside it. See dedupRetryNodeReserve's own
- *  comment at its computation site for the full derivation.
+/** Extra node headroom given ADDITIVELY to STRATEGY_DEDUP_NEAR_TIE_RETRY's own last-resort tier, as
+ *  a fraction of `nodeBudget` — `dedupRetryNodeCeiling = nodeBudget + nodeBudget * this fraction`,
+ *  NOT withheld from any earlier tier. See dedupRetryNodeReserve's own comment at its computation
+ *  site (REVISION 2) for the full derivation and why this differs from every sibling reserve in this
+ *  file (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION included), all of which subtract from
+ *  `earlyTierNodeBudget` instead.
  *
- *  CORRECTION: an earlier version of this constant used a "floor at the tier's own call site"
- *  design instead (self-contained, no edit to the shared earlyTierNodeBudget chain) — deliberately
- *  chosen to avoid touching that chain's history of shipping regressions from exactly this kind of
- *  edit (see REPAIR_FALLBACK_NODE_RESERVE_FRACTION's "REVISION 1"/"REVISION 2"). That version was
- *  caught locally, before any GHA spend: the floor was `max(remainder, nodeBudget * fraction)`
- *  capped by `nodeBudget - nodesExpanded` — and every one of this tier's 34 target levels reports
- *  `node-budget-reached` under the shipped default, i.e. the main loop alone already spends the
- *  ENTIRE nodeBudget, so the cap neutralized the floor to ~0 in precisely the case the floor exists
- *  to fix. Confirmed directly: R00180 reproduced its exact GHA node count (50,000,148) locally,
- *  then the retry pass received 0 nodes and could not run. Reverted to the withheld-up-front
- *  design despite the shared-chain risk — there is no way to protect a tier from tiers that ran
- *  BEFORE it without shrinking what those earlier tiers could see, by construction.
+ *  REVISION 2 (2026-08-15, same day as REVISION 1): the withheld-up-front design shipped, was
+ *  population-validated (full-corpus GHA, `enable_flags=STRATEGY_DEDUP_NEAR_TIE_RETRY`), and turned
+ *  out to be a net -17 (707 vs. the 724 baseline) — it hit its target exactly (33/34 losses
+ *  recovered, 0/27 gains broken) but cost 65 unrelated levels whose main-loop ceiling was shrunk by
+ *  this reserve even though they never needed the retry tier at all. Fixed by making the reserve
+ *  ADDITIVE instead of subtractive (see dedupRetryNodeReserve's own comment for the mechanism) — safe
+ *  by construction for production, where `nodeBudget` is always `Infinity` and this fraction is
+ *  already forced to 0 regardless. Full data:
+ *  reports/2026-08-15-connectivity-axis-exhausted-regression.md's "retry pass at population scale"
+ *  section. **Not yet re-validated at population scale under this revision** — the natural next step
+ *  is another full-corpus GHA run against the same `724/1700` baseline.
+ *
+ *  REVISION 1 (2026-08-15, same day): an earlier version of this constant used a "floor at the
+ *  tier's own call site" design instead (self-contained, no edit to the shared earlyTierNodeBudget
+ *  chain) — deliberately chosen to avoid touching that chain's history of shipping regressions from
+ *  exactly this kind of edit (see REPAIR_FALLBACK_NODE_RESERVE_FRACTION's own "REVISION 1"/
+ *  "REVISION 2"). That version was caught locally, before any GHA spend: the floor was
+ *  `max(remainder, nodeBudget * fraction)` capped by `nodeBudget - nodesExpanded` — and every one of
+ *  this tier's 34 target levels reports `node-budget-reached` under the shipped default, i.e. the
+ *  main loop alone already spends the ENTIRE nodeBudget, so the cap neutralized the floor to ~0 in
+ *  precisely the case the floor exists to fix. Confirmed directly: R00180 reproduced its exact GHA
+ *  node count (50,000,148) locally, then the retry pass received 0 nodes and could not run. REVISION
+ *  1 switched to withholding the reserve up front instead (subtractive, sibling to
+ *  ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION) — this genuinely gave the tier its reserved nodes, but at
+ *  the population-scale cost REVISION 2 above fixes.
  *
  *  0.25: the loss population's own cost distribution (n=34, search.ts's DEDUP_NEAR_TIE_MARGIN
  *  comment) has p90=8.2M of the 50M production ceiling — 12.5M (0.25 * 50M) covers 33 of 34 with
  *  room to spare, missing only one outlier (34.8M, itself an atypical perimeterSweep@beam2000
- *  winner, not this population's dominant intersectionHarvest/objectiveFirst@beam5000 shape).
- *  Matches ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own starting fraction.
+ *  winner, not this population's dominant intersectionHarvest/objectiveFirst@beam5000 shape). Under
+ *  REVISION 2 this is no longer withheld from anyone, so this sizing only controls how much EXTRA
+ *  total node spend a flagged run accepts, not a redistribution tradeoff.
  *
  *  LOCAL SPOT-CHECK (2026-08-15, real solveLevel() through the full production ladder, 50M node /
- *  86.4M-work-per-ms budget, referee-validated): R00180 and R00901 (both typical-cost losses,
- *  needing 5.1M/4.3M nodes respectively in the control arm) are recovered by this tier exactly as
- *  predicted — R02110 (the 34.8M outlier) is not, also exactly as predicted, since 12.5M < 34.8M.
- *  This also caught and fixed a SEPARATE bug (see dedupRetryWorkStart/dedupRetryWorkBudget at the
- *  tier's call site): the node reserve alone was not sufficient — the retry pass shares
- *  runGateSerialAttempts/runInterleavedAttempts's WORK-based attemptBudgetShare split with every
- *  earlier tier by default, and that shared pool was already ~66% spent by the time this tier ran,
- *  starving its own attempts of work even with a full node reserve genuinely available. Not yet
- *  validated at FULL population scale (all 34 losses, all 27 gains, across all 1700 Corpus-2
- *  levels) — the first population re-run of this mechanism should report the real aggregate
- *  recovery count, not just this 2/3 local sample. */
+ *  86.4M-work-per-ms budget, referee-validated, under REVISION 1's subtractive design): R00180 and
+ *  R00901 (both typical-cost losses, needing 5.1M/4.3M nodes respectively in the control arm) are
+ *  recovered by this tier exactly as predicted — R02110 (the 34.8M outlier) is not, also exactly as
+ *  predicted, since 12.5M < 34.8M. This also caught and fixed a SEPARATE bug (see
+ *  dedupRetryWorkStart/dedupRetryWorkBudget at the tier's call site): the node reserve alone was not
+ *  sufficient — the retry pass shares runGateSerialAttempts/runInterleavedAttempts's WORK-based
+ *  attemptBudgetShare split with every earlier tier by default, and that shared pool was already ~66%
+ *  spent by the time this tier ran, starving its own attempts of work even with a full node reserve
+ *  genuinely available. This 3-level spot-check should still hold under REVISION 2 (the tier's own
+ *  ceiling only grew), but full re-validation is population-scale-only — see REVISION 2 above. */
 export const DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION = 0.25;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
@@ -1869,22 +1884,53 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         ? Math.floor(nodeBudget * admissibleOrderNodeReserveFraction)
         : 0;
 
-    // STRATEGY_DEDUP_NEAR_TIE_RETRY's own node reserve — SIBLING to admissibleOrderNodeReserve
-    // above (both withheld straight off `nodeBudget`, independently), not nested inside it. Same
-    // "withheld from every earlier tier, tier itself keeps the room this bought it" mechanism, and
-    // the SAME reason it must be withheld up front rather than computed as a floor at the tier's own
-    // call site: a floor capped by `nodeBudget - prep._metrics.nodesExpanded` is neutralized to
-    // ~0 the moment an earlier tier has already spent the entire nodeBudget — which is exactly what
-    // happens on every one of this tier's target levels (search.ts's DEDUP_NEAR_TIE_MARGIN comment:
-    // all 34 losses report `node-budget-reached` under the current default). A first version of this
-    // tier used exactly that floor-at-call-site pattern and was caught locally, before any GHA spend,
-    // reproducing R00180's exact GHA node count (50,000,148) and then getting ZERO nodes for the
-    // retry itself — confirming the floor was a no-op in precisely the case it exists to fix.
+    // STRATEGY_DEDUP_NEAR_TIE_RETRY's own node reserve.
+    //
+    // REVISION 2 (2026-08-15, same day as REVISION 1 below): the withheld-up-front design (REVISION 1)
+    // shipped, was population-validated via GHA, and turned out to be a net -17 (707 vs. the 724
+    // baseline), not a recovery. It hit its actual target exactly as designed — 33 of 34 losses
+    // recovered, 0 of 27 gains broken — but cost 65 UNRELATED levels (solved both with and without
+    // the original retention fix) that now report `node-budget-reached`. Root cause: subtracting
+    // `dedupRetryNodeReserve` from `earlyTierNodeBudget` shrinks the main loop's ceiling for EVERY
+    // Corpus-2 level the instant the flag is globally on, not just the 34 that actually reach this
+    // tier — any level whose real winning solve needed more than `nodeBudget - dedupRetryNodeReserve`
+    // in the main loop now gets cut off before finding it. Full data:
+    // reports/2026-08-15-connectivity-axis-exhausted-regression.md's "retry pass at population scale"
+    // section.
+    //
+    // Fixed by making the reserve ADDITIVE instead of subtractive — the exact "extend, don't carve
+    // from the existing pool" philosophy this tier's own WORK budget already uses (see
+    // dedupRetryWorkStart/dedupRetryWorkBudget's own comment at the call site below, fixed the same
+    // day for the same reason). `earlyTierNodeBudget` no longer includes this reserve at all — every
+    // earlier tier (probe, main loop, repair fallback, attraction-diversity) keeps the FULL `nodeBudget`
+    // (minus only `admissibleOrderNodeReserve`, unaffected by this change) exactly as if this tier
+    // didn't exist. This tier gets its own EXTENDED ceiling, `dedupRetryNodeCeiling = nodeBudget +
+    // dedupRetryNodeReserve`, used both for its entry guard and its call-site node-budget parameter
+    // (previously plain `nodeBudget` in both places — a stale reference now that earlier tiers are no
+    // longer shrunk, which would otherwise make this tier immediately skip: nodesExpanded can already
+    // sit at or above the ORIGINAL nodeBudget by the time this tier is reached).
+    //
+    // SAFE BY CONSTRUCTION for production: `nodeBudget` is `Infinity` on every production path (Play/
+    // Editor/Review/hint-discovery), where `dedupRetryNodeReserve` is already forced to 0 regardless
+    // of this change (see below) — so `dedupRetryNodeCeiling === nodeBudget === Infinity` there,
+    // unchanged. The cost of this fix is real total node spend ONLY on finite-nodeBudget offline batch
+    // runs with the flag on — this tier's reserve is no longer "free" (redistributed from elsewhere),
+    // it is a genuine addition to that run's per-level node ceiling, same tradeoff already accepted
+    // for the WORK budget.
+    //
+    // REVISION 1 (2026-08-15, same day): the first shipped design withheld this reserve straight off
+    // `nodeBudget`, SIBLING to admissibleOrderNodeReserve (both subtracted independently, not nested)
+    // — chosen over an even earlier "floor at the tier's own call site" attempt, which was a no-op the
+    // moment an earlier tier had already spent the entire nodeBudget (confirmed locally: R00180
+    // reproduced its exact GHA node count, 50,000,148, then the retry pass got 0 nodes). REVISION 1
+    // fixed that no-op — the tier genuinely got its reserved nodes — but at the population-scale cost
+    // described above, which REVISION 2 fixes by no longer taking those nodes FROM anyone.
     const dedupRetryTierWillRun = dedupRetryBudgetFraction > 0 && !!(cfg && cfg.STRATEGY_DEDUP_NEAR_TIE_RETRY === true);
     const dedupRetryNodeReserve = (dedupRetryTierWillRun && nodeBudget !== Infinity)
         ? Math.floor(nodeBudget * dedupRetryNodeReserveFraction)
         : 0;
-    const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve - dedupRetryNodeReserve;
+    const dedupRetryNodeCeiling = nodeBudget === Infinity ? Infinity : nodeBudget + dedupRetryNodeReserve;
+    const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve;
 
     // STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE (opt-in, default OFF — NEW, unvalidated
     // mechanism, landed 2026-08-13). Protects the admissible-order tier's own non-'default' profiles
@@ -2349,13 +2395,13 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // convention, so this whole block is a strict no-op for every production/interactive caller
     // (cfg null) until explicitly enabled, matching STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY's own
     // gating just below.
-    // `dedupRetryTierWillRun` is the SAME predicate dedupRetryNodeReserve was withheld from — the
-    // two must stay in lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history: drift either
-    // way strands the reserve or spends one that was never withheld). The tier checks the FULL
-    // `nodeBudget` (not a reduced ceiling), same as the admissible-order tier below: the room it may
-    // spend is exactly what dedupRetryNodeReserve bought it by shrinking every EARLIER tier's own
-    // `earlyTierNodeBudget`-derived ceiling.
-    if (!result.solution && dedupRetryTierWillRun && prep._metrics.nodesExpanded < nodeBudget) {
+    // `dedupRetryTierWillRun` is the SAME predicate dedupRetryNodeReserve is derived from — the two
+    // must stay in lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history: drift either way
+    // strands the reserve or spends one that was never allocated). REVISION 2 (see
+    // dedupRetryNodeReserve's own comment above): the tier now checks its own EXTENDED ceiling,
+    // `dedupRetryNodeCeiling = nodeBudget + dedupRetryNodeReserve` — genuinely additive room on top of
+    // the unshrunk `nodeBudget` every earlier tier still gets, not a redistributed share of it.
+    if (!result.solution && dedupRetryTierWillRun && prep._metrics.nodesExpanded < dedupRetryNodeCeiling) {
         const originalCfg = prep._cfg;
         const dedupRetryCfg: AblationConfig = new Proxy({} as AblationConfig, {
             get(_target, prop: string | symbol) {
@@ -2386,9 +2432,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             const dedupRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(dedupRetryTotalBudget * DEFAULT_WORK_PER_MS));
             // Same absolute-vs-relative nodeBudget semantics as the diversity pass's own call —
             // see that call's comment for why this must be an ABSOLUTE ceiling, not a remainder.
+            // `dedupRetryNodeCeiling` (nodeBudget + dedupRetryNodeReserve), not plain `nodeBudget` —
+            // REVISION 2, see dedupRetryNodeReserve's own comment above.
             const dedupRetryResult = useInterleaving && activeGates.length > 1
-                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, nodeBudget, dedupRetryWorkBudget, dedupRetryWorkStart)
-                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, nodeBudget, dedupRetryWorkBudget, dedupRetryWorkStart);
+                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, dedupRetryNodeCeiling, dedupRetryWorkBudget, dedupRetryWorkStart)
+                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, dedupRetryNodeCeiling, dedupRetryWorkBudget, dedupRetryWorkStart);
             for (const attempt of dedupRetryResult.attempts) attempt.dedupNearTieRetry = true;
             result.attempts.push(...dedupRetryResult.attempts);
             if (dedupRetryResult.solution) result.solution = dedupRetryResult.solution;
