@@ -1,9 +1,9 @@
 # Variant Corpus Solver Research Plan
 
-> **Status:** namespaced source selection and the historical family-boundary report are complete; the canonical-only half of the cold-confirmation gate is done (2026-08-15: 5/8 solve, 3/8 genuine failures); the sibling half (for the 3 confirmed failures only) is pending.
-> **Last evidence:** [ETT-028 source-selected family-boundary report](../reports/experiments/2026-08-13-technique-tuning/ett-028-family-boundary.md); [canonical-only cold retest](#canonical-only-cold-retest-all-eight-parents-2026-08-15)
+> **Status:** the "canonical plus all siblings" cold-confirmation gate is complete (2026-08-15). Canonical: 5/8 solve, 3/8 genuine failures. Siblings for the 3 failures: `R02248` 7/7 (total disagreement — clean beam-exhaustion evidence), `R00156` 4/7, `R02960` 3/7 (both budget-allocation-flavored, not clean scoring bias).
+> **Last evidence:** [ETT-028 source-selected family-boundary report](../reports/experiments/2026-08-13-technique-tuning/ett-028-family-boundary.md); [canonical-only cold retest](#canonical-only-cold-retest-all-eight-parents-2026-08-15); [sibling cold-solve](#sibling-cold-solve-all-3-confirmed-failures-2026-08-15)
 > **Decision:** use the variant corpus to identify and diagnose solver competence boundaries that can yield more cold solves or less work without regression; treat symmetry disagreement primarily as evidence of representation-dependent solver failure, not as a production retry strategy.
-> **Remaining gate:** cold-run the nominated siblings for `R00156`, `R02248`, `R02960` (the 3 confirmed canonical failures — `R00548`/`R01465`/`R02239`/`R02452`/`R02795` already solve on current main and are out of scope) on current main, then replay/ablate only boundaries that reproduce. Historical baselines lack the canonical parent outcomes, so ETT-028 itself makes no rescue, robustness, or cost-cliff claim.
+> **Remaining gate:** none — the cold-confirmation gate this file was blocking on is done. `R02248`'s reproduced beam-exhaustion boundary is ready to feed Priority 2's K-vs-2K descriptor test; `R00156`/`R02960` are evidence for Priority 1's allocation experiment, not a new gate of their own.
 > **Current handoff:** [Solver optimization: current priority queue](solver-optimization-current-queue.md#3-canonical-inclusive-family-boundary-retest).
 
 ## Objective
@@ -749,3 +749,23 @@ counts still need the actual sibling cold-solve half of the gate, not done here.
 
 **Next**: cold-solve the nominated siblings for `R00156`, `R02248`, and `R02960` only, at the same
 frozen protocol/commit, then compare against these three's confirmed-failure status.
+
+#### Sibling cold-solve, all 3 confirmed failures (2026-08-15)
+
+Symmetry families generated for `R00156` and `R02960` (7/7 accepted each, `--mode=symmetry
+--seed=20260716 --count=7`, matching `R02248`'s existing manifest convention exactly —
+`data/families/family-{R00156,R02960}-symmetry{,-manifest}.json`). All 21 siblings (7 per parent)
+cold-solved at the identical production protocol as the canonical run above (50M nodes, 1 worker,
+commit `4efc2d1`).
+
+| parent | canonical | siblings solved | disagreement |
+|---|---|---:|---|
+| `R02248` | fail (node-budget-reached) | **7/7** | **total** — every rotation/reflection solves, canonical alone fails |
+| `R00156` | fail (node-budget-reached) | 4/7 | partial |
+| `R02960` | fail (node-budget-reached) | 3/7 | partial |
+
+**`R02248` is a clean, single-mechanism reproduction of representation-dependent solver failure — and it carries zero mechanics that could explain it geometrically** (0 mustCross, 0 portals, 0 flipping filters, 11 plain blocks; `reqLen=101, reqInt=7`, so nothing axis-sensitive under rotation could be the cause). All 7 siblings solved via `beam:intersectionHarvest@beam5000` (5/7) or `beam:objectiveFirst@beam5000` (2/7), 4.17M–4.38M nodes each. **Canonical tried the exact same two configs** — and both **exhausted** (searched their full beam tree at that width and terminated cleanly, not a timeout) at only 205,351 and 166,474 nodes respectively, an order of magnitude cheaper than what the same config needed to succeed on every sibling. This is not a starvation story (the config got to run to completion) — it is direct evidence that `beam:intersectionHarvest@beam5000`'s scoring/retention discards the winning candidate specifically in this level's canonical orientation, while the identical technique at the identical width finds it in every rotated/reflected copy of the same puzzle. This is exactly the "reproduced, parent-clustered solver boundary that identifies a generic technique or representation change" `docs/solver-optimization-current-queue.md`'s Priority 3 success signal calls for, and it points squarely at Priority 2 (beam score/retention) as the relevant lane, not a new one.
+
+**`R00156` and `R02960` show a different, budget-allocation-flavored disagreement, not a clean exhaustion story.** `R00156`'s winning sibling technique, `dfs:perimeterSweep/sideCommitment`, needed ~19.4–19.5M nodes to solve; canonical's own attempt at that exact template only got a 6.39M-node allocation before timing out and the ladder moved to the next technique. `R02960`'s winning sibling technique, `dfs:repair:repair`, solved in 0.8–1.3M nodes on 3 siblings; canonical's two `repair` attempts both timed out at the standard 2,000,000-node repair-probe cap without reaching that badness. In both cases the technique that eventually wins on a sibling **is tried on canonical too, but is cut off before it would have had comparable node count to work with** — a shape that directly supports Priority 1's allocation-bound thesis (`docs/solver-optimization-current-queue.md`: "the ladder usually spends the shared pool before every mechanically eligible technique receives a meaningful search") rather than Priority 2's scoring-bias thesis. Whether more nodes on that exact attempt would have solved canonical is not established here (a longer per-attempt allocation was not tested) — this is suggestive, not proof, unlike `R02248`'s exhaustion evidence.
+
+**Caution on generalizing**: this is n=3 parent families, and the disagreement mechanism differs by family (clean scoring bias at `R02248` vs. budget-allocation shape at `R00156`/`R02960`) — do not treat this as one root cause. `R02248` alone is strong enough to justify including it as a held-out extinction-boundary case in Priority 2's K-vs-2K descriptor test (the beam already tried the winning config and rejected it, at a cheap, cleanly-reproducible node count). `R00156`/`R02960` are better evidence for Priority 1's allocation experiment than for Priority 2.
