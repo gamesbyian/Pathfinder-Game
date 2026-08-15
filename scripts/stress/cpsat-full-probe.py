@@ -330,6 +330,27 @@ for c in grid:
 # every later node t is real iff the PREVIOUS node wasn't already goal (padding, once started,
 # never un-starts). A plain linear expression, no new variables needed.
 real_N = 1 + sum(x[t][goal].Not() for t in range(N - 1))
+
+# BUG FIXED 2026-08-15 (found while re-running the repair-retreat --prefix binary search on
+# portal-bearing levels post flipping-filter support -- see
+# reports/2026-08-15-cpsat-flipping-filter-support.md's "Second pre-existing bug" section).
+# Nothing previously tied real_N to the level's own reqLen: the model only forced "eventually reach
+# goal by the last padded slot" (the absorption rule + `x[N-1][goal]==1`), which is equally
+# satisfiable by reaching goal EARLY (fewer real moves than reqLen) and then padding out the rest of
+# the horizon -- a real path is `reqLen + 1 + jumps` nodes (CLAUDE.md: "Counted length = nodes - 1 -
+# portal jumps"), not merely "ends at goal eventually." --check-witness never exposed this because
+# pinning the ENTIRE witness removes all freedom to arrive early; two prior cold, fully-unpinned
+# solves used in this file's own validation (see FLIPPING FILTER SUPPORT above) both happened to be
+# portal-free (P=0), where N=L+1 exactly and there is no padding slack for the exploit to live in.
+# --prefix mode against a portal-bearing level (P>0, so N>L+1) is precisely where the missing
+# constraint had real freedom to bite, and did: two referee-rejected "Path length 64 does not match
+# required 70" / "Path length 39 does not match required 76" emissions, caught only because every
+# emitted path is referee-validated, never because check-witness or the model itself flagged
+# anything. `jumps_used` sums cleanly over the WHOLE horizon (is_jump[t] is already forced 0 outside
+# the real region by the is_jump/is_normal typing block above), so no extra gating is needed.
+jumps_used = sum(is_jump[t] for t in range(1, N))
+m.Add(real_N == L + 1 + jumps_used)
+
 m.Add(sum(y.values()) == real_N - req_int)                 # reqInt == nodes - distinctCells
 for c in must_pass:
     if c in idx: m.Add(y[c] == 1)

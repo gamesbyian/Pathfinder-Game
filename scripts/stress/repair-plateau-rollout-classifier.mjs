@@ -4,13 +4,17 @@
  * the allocation" — the direction reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md's
  * three-arm A/B closed off the allocation lane for).
  *
- * **Status (2026-08-15): the core hypothesis this tool was built to test is CLOSED NEGATIVE at
- * pilot scale — see reports/2026-08-15-repair-plateau-rollout-proxy-negative.md.** Do not scale
- * this up to a larger population run expecting it to discriminate "narrow trap" vs. "wide plateau"
- * levels; the pilot already shows it doesn't. Kept as infrastructure: it correctly replays the real
- * `takePly` primitive and builds state at an arbitrary backoff point, which is useful groundwork
- * for a FUTURE version anchored on CP-SAT-verified prefixes (see that report's "What's still worth
- * keeping" section) — it does not currently take a --prefix-file input for that.
+ * **Status (2026-08-15): the core (CP-SAT-free) hypothesis this tool was built to test is CLOSED
+ * NEGATIVE at pilot scale — see reports/2026-08-15-repair-plateau-rollout-proxy-negative.md.** Do
+ * not scale the CP-SAT-free `--only`/`--sample-*` mode up to a larger population run expecting it
+ * to discriminate "narrow trap" vs. "wide plateau" levels; the pilot already shows it doesn't.
+ *
+ * **CP-SAT-anchored mode added (2026-08-15, `--retreat-file`)**: reads
+ * repair-retreat-binary-search.mjs's own output directly (no new schema) and anchors the rollout
+ * ladder at each elite's CP-SAT-verified boundary (`low` = deepest feasible depth, `high` = shallowest
+ * infeasible depth) instead of the elite's own raw dead end. This is the actual version the negative
+ * report's "what's still worth keeping" section called for — see reports/2026-08-15-repair-retreat-cpsat-anchored-rollout.md
+ * once run for results.
  *
  * Original motivation, for context: reports/2026-08-12-repair-retreat-cpsat.md's own n=2 finding
  * (R00648 vs. R03176) found repair's own `closeLengthGap` and 2,000 randomized rollouts both fail
@@ -75,7 +79,9 @@ const seedStr = args.get('--seed') || 'repair-plateau-rollout-2026-08-15';
 const eliteNodeBudget = Number(args.get('--elite-node-budget') ?? 500000);
 const rolloutTrials = Number(args.get('--rollout-trials') ?? 100);
 const rolloutNodeCap = Number(args.get('--rollout-node-cap') ?? 5000);
-const backoffs = (args.get('--backoffs') ?? '1,2,3,5,8,13,21,34').split(',').map(Number).filter(n => Number.isFinite(n) && n > 0);
+const retreatFile = args.get('--retreat-file') || null;
+const defaultBackoffs = retreatFile ? '0,1,2,3' : '1,2,3,5,8,13,21,34';
+const backoffs = (args.get('--backoffs') ?? defaultBackoffs).split(',').map(Number).filter(n => Number.isFinite(n) && n >= 0);
 const elitesPerLevel = Number(args.get('--elites-per-level') ?? 3);
 const outFile = args.get('--out') || 'reports/stress/repair-plateau-rollout-classifier.json';
 
@@ -116,9 +122,11 @@ const parsedCorpus = JSON.parse(readFileSync(corpusFile, 'utf8'));
 const rawLevels = Array.isArray(parsedCorpus) ? parsedCorpus : parsedCorpus.levels;
 const byId = new Map(rawLevels.map(lv => [lv.id, lv]));
 
-let targetIds;
+let targetIds = [];
 const provenance = {};
-if (onlyIds) {
+if (retreatFile) {
+    // Target selection is driven entirely by the retreat file's own levels below; skip sampling.
+} else if (onlyIds) {
     targetIds = [...onlyIds].filter(id => byId.has(id));
     for (const id of targetIds) provenance[id] = 'explicit --only';
 } else {
@@ -150,11 +158,11 @@ if (onlyIds) {
     targetIds = [...new Set([...repairSample, ...admissibleSample, ...unsolvedSample])];
 }
 
-if (targetIds.length === 0) {
+if (!retreatFile && targetIds.length === 0) {
     console.error('No target levels resolved (check --only ids exist in --corpus, or that the mined winner-list/checkpoint artifacts are present).');
     process.exit(2);
 }
-console.error(`Sampled ${targetIds.length} levels: ${targetIds.join(', ')}`);
+if (!retreatFile) console.error(`Sampled ${targetIds.length} levels: ${targetIds.join(', ')}`);
 
 // ─── Solver internals ───
 installBrowserStubs();
@@ -216,73 +224,116 @@ function summarizeAtDepth(depth, results, reqLen) {
     };
 }
 
-/** Sweeps the backoff ladder (steps back from the elite's own dead-end) and runs a rollout batch
- *  at each depth that's still >= 1 (need at least the gate cell to roll out from). */
-function rolloutLadder(elitePath, level, prep, trials, seedBase, nodeCap, backoffList) {
-    const eliteEnd = elitePath.length - 1;
-    const depths = [...new Set(backoffList.map(b => eliteEnd - b).filter(d => d >= 1))].sort((a, b) => a - b);
+/** Sweeps the backoff ladder (steps back from `anchorDepth`) and runs a rollout batch at each
+ *  depth that's still >= 1 (need at least the gate cell to roll out from). `anchorDepth` is either
+ *  the elite's own dead end (CP-SAT-free mode) or a CP-SAT-verified feasible depth (--retreat-file
+ *  mode, where depth=anchor itself — backoff 0 — is the actually-interesting point). */
+function rolloutLadder(elitePath, anchorDepth, level, prep, trials, seedBase, nodeCap, backoffList) {
+    const depths = [...new Set(backoffList.map(b => anchorDepth - b).filter(d => d >= 1))].sort((a, b) => a - b);
     return depths.map(depth => {
         const results = rolloutsAtDepth(elitePath, depth, level, prep, trials, seedBase ^ depth, nodeCap);
         return summarizeAtDepth(depth, results, level.reqLen);
     });
 }
 
-const levelResults = [];
-for (const id of targetIds) {
-    const raw = byId.get(id);
-    if (!raw) { console.error(`${id}: not found in corpus, skipping`); continue; }
-    const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
-    const prep = api.prepLevel(level);
-    prep._cfg = null;
-    prep._metrics = { nodesExpanded: 0 };
-    const arrivals = [];
-    prep._repairEliteResearchObserver = { observe: record => arrivals.push(record) };
-    const gateKey = level.gateKeys[0];
-    const solved = await repairSearchFromGate(gateKey, level, prep, api.POLICY_PROFILES.repair, 120000, Date.now(), null,
-        null, false, eliteNodeBudget, {});
-
+function levelBase(id, raw, level) {
     const features = levelFeatures(raw);
-    const blocksFraction = features.blocks / features.area;
-    const base = {
+    return {
         id, provenance: provenance[id] ?? 'unknown', reqLen: level.reqLen,
-        blocks: features.blocks, blocksFraction: Number(blocksFraction.toFixed(4)),
+        blocks: features.blocks, blocksFraction: Number((features.blocks / features.area).toFixed(4)),
         mustCross: features.mustCross, reqInt: features.reqInt, navDensity: Number(features.navDensity.toFixed(4)),
     };
+}
 
-    if (solved) {
-        levelResults.push({ ...base, solvedDuringEliteGathering: true, elites: null });
-        console.error(`${id}: solved directly during elite-gathering pass (${eliteNodeBudget}-node budget) — no plateau to characterize`);
-        continue;
-    }
-    if (arrivals.length === 0) {
-        levelResults.push({ ...base, solvedDuringEliteGathering: false, elites: null, note: 'no elite candidates recorded' });
-        console.error(`${id}: no elite candidates recorded within budget, skipping rollout`);
-        continue;
-    }
-    const unique = new Map();
-    for (const record of arrivals) {
-        const key = record.path.join(',');
-        const prior = unique.get(key);
-        if (!prior || record.badness < prior.badness) unique.set(key, record);
-    }
-    const topElites = [...unique.values()].sort((a, b) => a.badness - b.badness || b.path.length - a.path.length).slice(0, elitesPerLevel);
+const levelResults = [];
 
-    const eliteResults = topElites.map((elite, i) => {
-        const ladder = rolloutLadder(elite.path, level, prep, rolloutTrials, hashSeed(`${seedStr}:${id}:${i}`), rolloutNodeCap, backoffs);
-        console.error(`${id} elite[${i}]: badness=${elite.badness} eliteLength=${elite.path.length - 1}`);
-        for (const r of ladder) {
-            console.error(`  backoff=${elite.path.length - 1 - r.branchDepth} depth=${r.branchDepth} residual=${r.residual} `
-                + `progressMax=${r.progressMax} progressFractionMax=${r.progressFractionOfResidualMax?.toFixed(2)} solvedInRollout=${r.solvedInRollout}/${rolloutTrials}`);
+if (retreatFile) {
+    // ─── CP-SAT-anchored mode: reuse repair-retreat-binary-search.mjs's own output directly. Each
+    // entry's `low` is the deepest depth CP-SAT proved still has an exact completion; that is the
+    // point this mode actually tests blind rollout from, not a raw elite's own (unverified) dead
+    // end. `elite.path` in that file's dump format is already the packed-key path this tool needs.
+    const retreat = JSON.parse(readFileSync(retreatFile, 'utf8'));
+    for (const [eliteId, r] of Object.entries(retreat.results ?? {})) {
+        const { elite } = r;
+        const id = elite.levelId;
+        const raw = byId.get(id);
+        if (!raw) { console.error(`${eliteId}: level ${id} not found in --corpus, skipping`); continue; }
+        if (r.low == null || r.high == null) {
+            console.error(`${eliteId}: no resolved boundary (${r.note}), skipping`);
+            continue;
         }
-        return { badness: elite.badness, eliteLength: elite.path.length - 1, arrivalNodes: elite.arrivalNodes, rolloutLadder: ladder };
-    });
-    levelResults.push({ ...base, solvedDuringEliteGathering: false, elites: eliteResults });
+        const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
+        const prep = api.prepLevel(level);
+        prep._cfg = null;
+        prep._metrics = { nodesExpanded: 0 };
+
+        const ladder = rolloutLadder(elite.path, r.low, level, prep, rolloutTrials, hashSeed(`${seedStr}:${eliteId}`), rolloutNodeCap, backoffs);
+        console.error(`${eliteId}: verifiedFeasibleDepth=${r.low} verifiedInfeasibleDepth=${r.high} eliteLength=${elite.eliteLength}`);
+        for (const row of ladder) {
+            console.error(`  depth=${row.branchDepth} (verified-boundary backoff=${r.low - row.branchDepth}) residual=${row.residual} `
+                + `progressMax=${row.progressMax} progressFractionMax=${row.progressFractionOfResidualMax?.toFixed(2)} solvedInRollout=${row.solvedInRollout}/${rolloutTrials}`);
+        }
+        levelResults.push({
+            ...levelBase(id, raw, level), eliteId, verifiedFeasibleDepth: r.low, verifiedInfeasibleDepth: r.high,
+            eliteLength: elite.eliteLength, badness: elite.badness, rolloutLadder: ladder,
+        });
+    }
+} else {
+    // ─── CP-SAT-free mode (closed negative at pilot scale, see file header) ───
+    for (const id of targetIds) {
+        const raw = byId.get(id);
+        if (!raw) { console.error(`${id}: not found in corpus, skipping`); continue; }
+        const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
+        const prep = api.prepLevel(level);
+        prep._cfg = null;
+        prep._metrics = { nodesExpanded: 0 };
+        const arrivals = [];
+        prep._repairEliteResearchObserver = { observe: record => arrivals.push(record) };
+        const gateKey = level.gateKeys[0];
+        const solved = await repairSearchFromGate(gateKey, level, prep, api.POLICY_PROFILES.repair, 120000, Date.now(), null,
+            null, false, eliteNodeBudget, {});
+
+        const base = levelBase(id, raw, level);
+
+        if (solved) {
+            levelResults.push({ ...base, solvedDuringEliteGathering: true, elites: null });
+            console.error(`${id}: solved directly during elite-gathering pass (${eliteNodeBudget}-node budget) — no plateau to characterize`);
+            continue;
+        }
+        if (arrivals.length === 0) {
+            levelResults.push({ ...base, solvedDuringEliteGathering: false, elites: null, note: 'no elite candidates recorded' });
+            console.error(`${id}: no elite candidates recorded within budget, skipping rollout`);
+            continue;
+        }
+        const unique = new Map();
+        for (const record of arrivals) {
+            const key = record.path.join(',');
+            const prior = unique.get(key);
+            if (!prior || record.badness < prior.badness) unique.set(key, record);
+        }
+        const topElites = [...unique.values()].sort((a, b) => a.badness - b.badness || b.path.length - a.path.length).slice(0, elitesPerLevel);
+
+        const eliteResults = topElites.map((elite, i) => {
+            const anchorDepth = elite.path.length - 1;
+            const ladder = rolloutLadder(elite.path, anchorDepth, level, prep, rolloutTrials, hashSeed(`${seedStr}:${id}:${i}`), rolloutNodeCap, backoffs);
+            console.error(`${id} elite[${i}]: badness=${elite.badness} eliteLength=${anchorDepth}`);
+            for (const r of ladder) {
+                console.error(`  backoff=${anchorDepth - r.branchDepth} depth=${r.branchDepth} residual=${r.residual} `
+                    + `progressMax=${r.progressMax} progressFractionMax=${r.progressFractionOfResidualMax?.toFixed(2)} solvedInRollout=${r.solvedInRollout}/${rolloutTrials}`);
+            }
+            return { badness: elite.badness, eliteLength: anchorDepth, arrivalNodes: elite.arrivalNodes, rolloutLadder: ladder };
+        });
+        levelResults.push({ ...base, solvedDuringEliteGathering: false, elites: eliteResults });
+    }
 }
 
 mkdirSync(path.dirname(outFile), { recursive: true });
 const output = {
     generatedAt: new Date().toISOString(), corpus: corpusFile, eliteNodeBudget, rolloutTrials, rolloutNodeCap, seed: seedStr,
-    method: 'observational only; no CP-SAT feasibility verification; rollout progress is a proxy for local-search forgivingness, not a completion-existence proof — see file header',
+    retreatFile: retreatFile ?? null,
+    method: retreatFile
+        ? 'CP-SAT-anchored: rollouts start from a verified-feasible depth (repair-retreat-binary-search.mjs output), not a raw elite dead end'
+        : 'observational only; no CP-SAT feasibility verification; rollout progress is a proxy for local-search forgivingness, not a completion-existence proof — see file header',
     levels: levelResults,
 };
 writeFileSync(outFile, `${JSON.stringify(output, null, 2)}\n`);

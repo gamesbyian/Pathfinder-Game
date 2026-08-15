@@ -1,19 +1,23 @@
-# CP-SAT flipping-filter support: correction, encoding, a pre-existing bug fix, and validation
+# CP-SAT flipping-filter support: correction, encoding, two pre-existing bug fixes, and validation
 
 > **Status:** complete. Encoding built and validated (102/102 flipping-filter-bearing witness-checks
 > pass, 0 INFEASIBLE, plus 2 independent cold-solve+referee validations); a documentation
-> correction; a real, independent pre-existing bug found, root-caused, and fixed — all 5
-> originally-failing levels now resolve `OPTIMAL`, and a further 83-level flipper-free portal batch
-> (all of Corpus 1's eligible population + a 60-level Corpus-2 sample) confirms it on its own
-> merits: 83/83 feasible, 0 INFEASIBLE.
+> correction; TWO real, independent pre-existing bugs found, root-caused, and fixed — the first
+> (goal-padding axis double-count) confirmed via 102+83-level witness-check batches, 0 INFEASIBLE;
+> the second (`real_N` never tied to `reqLen`) confirmed via `R00630`/`R02449`'s repair-retreat
+> `--prefix=` binary search converging cleanly post-fix, plus a re-run of both witness-check batches
+> showing no regression.
 > **Scope:** `scripts/stress/cpsat-full-probe.py` only. No solver (`modules/solver/*`) code touched.
 > **Motivation:** docs/future-work.md's CP-SAT-coverage bottleneck (item 2: "Coverage is
 > bottlenecked by flipping-filter support in the CP-SAT model") and a correction to
 > `reports/2026-08-12-repair-retreat-cpsat.md`'s "mustCross >= 2" framing.
-> **Bonus finding:** validating the new flipping-filter support surfaced a real, pre-existing,
-> unrelated encoding bug in the portal-support padding logic (any portal-bearing level whose
-> witness doesn't use every declared portal pair was silently mis-modelled as `INFEASIBLE`) — found,
-> root-caused, and fixed. See Part 3.
+> **Bonus findings:** validating the new flipping-filter support surfaced two real, pre-existing,
+> unrelated encoding bugs. (1) The portal-support padding logic double-counted a V-axis touch on the
+> `goal` cell whenever a witness didn't use every declared portal pair, silently mis-modelling a
+> valid witness as `INFEASIBLE` — see Part 3. (2) `real_N` (the real-node count) was never
+> constrained equal to `reqLen + 1 + jumps`, letting the model satisfy "eventually reach goal" by
+> arriving early and padding — an under-constraint bug that produced a referee-rejected false-SAT on
+> `--prefix=` mode against portal-bearing levels — see Part 4.
 
 ## Part 1: the mustCross claim was a misattribution
 
@@ -174,7 +178,73 @@ different flipper counts and axis mixes. (Neither of these two levels has portal
 specifically validates the flipper logic; the padding-bug fix is validated separately by the batches
 above and the direct `S00028`/`S00030`/`S00035`/`S00103`/`S00108` re-tests.)
 
-## Part 4: this does not overturn the earlier "still no on flipping filters" verdict — it answers a different question
+## Part 4: second pre-existing bug — `real_N` was never tied to `reqLen`
+
+Found as a direct follow-up to this same report's "what this unblocks" list: re-running `R00630`
+and `R02449`'s repair-retreat `--prefix=` binary search (`repair-retreat-binary-search.mjs`), now
+newly possible on these two flipper-bearing (5 flippers each), 3-portal-pair levels once Part 2/3
+landed. The binary search abstained on both, but not with a timeout — with
+`sat-witness-referee-rejected`: CP-SAT returned a *feasible* prefix-completion, but
+`Solver.validateCandidatePath` rejected the emitted path outright (`"Path length 64 does not match
+required 70"` for `R00630`, `"Path length 39 does not match required 76"` for `R02449`). That is an
+under-constraint bug by definition — the strongest possible signal, since `--prefix=` mode can only
+ever be fooled by a model with too much freedom, never too little.
+
+**Mechanism**: nothing in the model tied `real_N` (the count of genuinely-real, non-padding nodes)
+to the level's own `reqLen`. The only goal-arrival requirement was "eventually sit at goal by the
+last padded slot" (the absorption rule plus `x[N-1][goal]==1`) — equally satisfiable by arriving at
+goal *early*, with fewer real moves than `reqLen`, and padding out the rest of the fixed-size
+horizon. A real path's node count is `reqLen + 1 + jumps` (CLAUDE.md: "Counted length = number of
+nodes − 1 − portal jumps"), not merely "ends at goal eventually."
+
+`--check-witness` mode never exposed this: pinning the *entire* witness path removes all freedom to
+arrive early, so the missing constraint was never load-bearing there — including this report's own
+two prior cold, fully-unpinned validation solves (`R02211`, `R03243` in Part 3), which both happened
+to be portal-free (`P=0`, so `N == L+1` exactly, leaving no padding slack for the exploit to live
+in). `--prefix=` mode against a portal-bearing level (`P>0`, so `N > L+1`) is precisely where the
+missing constraint had real freedom to bite — and did, on the first two flipper-bearing
+portal-bearing levels ever run through it.
+
+**Fix** (`cpsat-full-probe.py`, immediately after `real_N`'s definition):
+
+```python
+jumps_used = sum(is_jump[t] for t in range(1, N))
+m.Add(real_N == L + 1 + jumps_used)
+```
+
+`jumps_used` sums cleanly over the whole horizon with no extra gating, since `is_jump[t]` is already
+forced to `0` outside the real region by the existing `is_jump`/`is_normal` typing block.
+
+**Re-validation**: both correctness alarms disappeared. Re-running the same two binary searches
+post-fix:
+
+| level | pre-fix (buggy) | post-fix |
+|---|---|---|
+| `R00630` | `depth=37` → `sat-witness-referee-rejected` (false SAT); boundary reported as `low=36, high=39` | `depth=37` → `dead (infeasible)`, cleanly converged: **`low=36, high=37`** |
+| `R02449` | `depth=29` → `sat-witness-referee-rejected` (false SAT); boundary reported as `low=14, high=44` | `depth=29` → `timeout/abstain (oracle-unknown)` — a genuine CP-SAT timeout, not a correctness alarm; boundary remains open at `low=14, high=44` pending a longer time limit |
+
+`R02449`'s interior is still genuinely unresolved (a real 60s timeout at `depth=29`, not a modeling
+bug) — a longer time limit would be needed to close it further; not attempted here.
+
+**Broader re-validation, to rule out a regression from this second fix**: re-ran the same two
+population batches from Part 3, both cleanly on top of the fix:
+
+- Flipping-filter-bearing batch (same 102-level population): **102 tested — 102 feasible, 0 unknown,
+  0 INFEASIBLE** (unchanged from the Part 3 post-fix-1 numbers, as expected — real witnesses satisfy
+  path length by construction, so a length-underconstraint bug can never make a `--check-witness`
+  run go `INFEASIBLE`; this batch was re-run to confirm the fix's own new constraint doesn't
+  *introduce* a new over-constraint, which it doesn't).
+- Flipper-free, portal-bearing batch (independent of flipping-filter support entirely — the same
+  population shape as Part 3's 83-level batch): re-run at 60-level sample size, **0 INFEASIBLE**
+  observed through completion.
+
+Both bugs are independent (different constraint families — an axis-double-count on padding
+transitions vs. a missing length-equality constraint) and were caught by different validation modes
+(`--check-witness` batch scan for the first, `--prefix=` binary search for the second) — consistent
+with this file's own documented lesson that `--check-witness` alone cannot expose an
+under-constraint bug, only `--prefix=`/cold-solve-plus-referee can.
+
+## Part 5: this does not overturn the earlier "still no on flipping filters" verdict — it answers a different question
 
 `docs/solver-shadow-eval-harness.md`'s Part 6 (2026-08-05) explicitly recommended *against* building
 flipping-filter support, for a specific, evidence-backed reason: `prune-gap-probe.mjs`'s workload —
@@ -203,11 +273,15 @@ explicitly asking for it (`docs/future-work.md` item 2, the repair-retreat repor
   (`reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md`) are re-runnable through
   `cpsat-explicit-prefix-oracle.yml` — not done here, next step for whoever picks up B/D-class exact
   labeling.
-- `R00630`/`R02449`'s original repair-retreat binary search (`reports/2026-08-12-repair-retreat-cpsat.md`)
-  is re-runnable — not done here.
-- Any future CP-SAT-anchored version of `scripts/stress/repair-plateau-rollout-classifier.mjs`
-  (see `reports/2026-08-15-repair-plateau-rollout-proxy-negative.md`'s "what's still worth keeping")
-  can now use flipper-bearing levels, which it could not before.
+- `R00630`/`R02449`'s original repair-retreat binary search
+  (`reports/2026-08-12-repair-retreat-cpsat.md`) — **done here** (Part 4): `R00630` now converges
+  cleanly to `low=36, high=37`; `R02449` remains open at `low=14, high=44`, blocked on a genuine
+  CP-SAT timeout rather than a modeling bug.
+- `scripts/stress/repair-plateau-rollout-classifier.mjs` gained a `--retreat-file` mode that anchors
+  its rollout ladder to a CP-SAT-verified feasible/infeasible boundary instead of an elite path's raw
+  endpoint — implemented and smoke-tested against `R00630`/`R02449`'s boundary above; not yet written
+  up as its own finding (the two available boundaries are `R02449`'s still-open interior and
+  `R00630`'s single clean point, too thin a sample for a real verdict on its own).
 
 ## Scope discipline
 

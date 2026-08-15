@@ -151,6 +151,18 @@ time as a coverage gap distinct from the previously-known flipping-filter one.
 > so both `R00630` and `R02449` are re-runnable through this same binary-search protocol; not
 > re-run here (out of that report's own scope). Kept the original text above unedited, per this
 > repo's standing rule that superseded reasoning stays visible rather than silently rewritten.
+>
+> **Follow-up (2026-08-15): re-run, and it surfaced a second, independent pre-existing CP-SAT bug.**
+> Running `R00630`/`R02449` through the binary search exposed a real-`reqLen` under-constraint defect
+> in `cpsat-full-probe.py` (a `--prefix=`-mode-only exploit — `--check-witness` mode cannot trigger
+> it) that produced two referee-rejected false-SAT results before being root-caused and fixed. Full
+> mechanism, fix, and re-validation:
+> [`reports/2026-08-15-cpsat-flipping-filter-support.md`](2026-08-15-cpsat-flipping-filter-support.md)'s
+> Part 4. Post-fix results: `R00630` converges cleanly to an exact minimum-rollback boundary of
+> **low=36 (feasible), high=37 (infeasible)** — real slack of ~28 steps vs. its 65-step elite length,
+> consistent with the "small-rollback elites correlate with slack" pattern this report's broadened
+> sample already found. `R02449` remains genuinely open (`low=14, high=44`) — the interior probe hit
+> a real 60s CP-SAT timeout, not a modeling defect; not pursued further with a longer time limit here.
 
 The other two (`R03176:elite:2`, `R00648:elite:4`) resolved cleanly at full length to `dead
 (infeasible)`, matching the original pattern — but their first midpoint probe returned CP-SAT
