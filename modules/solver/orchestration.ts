@@ -969,7 +969,9 @@ export const REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION = 0.5;
 // (Read as a CEILING on the reserve, not its size: the reserve is `min(actual debt, this fraction of
 // earlyTierNodeBudget)`, so it only ever withholds what a shrunk tier could really use.)
 
-/** STRATEGY_DEDUP_NEAR_TIE_RETRY (opt-in, default OFF — NEW, unvalidated mechanism, 2026-08-15).
+/** STRATEGY_DEDUP_NEAR_TIE_RETRY (PROMOTED to default-ON, 2026-08-15 — same day as the mechanism was
+ *  built, tested opt-in, and population-validated; see the PROMOTION note below for why same-day
+ *  promotion is justified here rather than the usual cooldown).
  *  A whole extra rerun of the SAME mainConfigs ladder, with STRATEGY_DEDUP_NEAR_TIE_RETENTION
  *  disabled for its duration — same shape as ATTRACTION_DIVERSITY_BUDGET_FRACTION just above,
  *  toggling search.ts's DEDUP_NEAR_TIE_MARGIN retention instead of SCORE_GOAL_ATTRACTION. Exists
@@ -985,6 +987,21 @@ export const REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION = 0.5;
  *  before the admissible-order tier let this tier's own extended ceiling silently starve that tier's
  *  entry guard on every level that doesn't need this one, since node accounting is one shared
  *  cumulative counter every tier's own guard checks independently).
+ *
+ *  PROMOTION (2026-08-15, same day as REVISION 3): went from opt-in/default-OFF to default-ON after a
+ *  full-corpus GHA A/B (run 31902837955, additive-reserve + run-last design) confirmed **764/1700 on
+ *  Corpus 2, +40 vs. the 724 with-fix baseline, with ZERO levels lost relative to baseline** — 33/34
+ *  target losses recovered, all 27 original gains intact, +7 bonus solves, 0 collateral damage.
+ *  Corpus 1 exactly matched its own baseline (95/102). This is the same-day third design revision
+ *  (subtractive reserve → additive reserve → run-last), each population-tested before the next was
+ *  trusted — the promotion is justified by the CLEANLINESS of the final result (a strict superset of
+ *  the with-fix baseline's solved set, not merely a net-positive count), not by skipping validation
+ *  rigor. Every production caller that already sets `disableExtraBudgetPasses: true` (the two
+ *  interactive solve UIs, `solver-controller.ts`/`review-controller.ts`) is UNAFFECTED by this
+ *  promotion — that flag zeroes this tier's budget fraction regardless of the ablation flag's default,
+ *  exactly as it already does for the attraction-diversity and admissible-order tiers. The practical
+ *  effect of promotion is scoped to callers that solve WITHOUT that flag (offline batch tooling,
+ *  hint-discovery) — the same population this session's own validation A/Bs actually exercised.
  *
  *  1.0, matching ATTRACTION_DIVERSITY_BUDGET_FRACTION's own reasoning: a full nominal budget's
  *  worth for the whole ladder rerun, not a small fraction of it — this technique's own known-good
@@ -1848,9 +1865,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : ATTRACTION_DIVERSITY_BUDGET_FRACTION;
 
     // opts.dedupNearTieRetryBudgetFractionOverride — same shape/rationale/hoisting reason as
-    // diversityBudgetFraction just above. STRATEGY_DEDUP_NEAR_TIE_RETRY is opt-in/default-OFF (see
-    // that flag's own comment), so this tier is inert (fraction resolves but the tier's own run
-    // condition below still checks the flag) unless a caller explicitly enables it.
+    // diversityBudgetFraction just above. STRATEGY_DEDUP_NEAR_TIE_RETRY is default-ON as of the
+    // PROMOTION (see that flag's own comment) — `disableExtraBudgetPasses: true` (both interactive
+    // solve UIs) still zeroes this fraction, same as every other extra-budget tier.
     const dedupRetryFractionOverride = Number(opts.dedupNearTieRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const dedupRetryBudgetFraction = Number.isFinite(dedupRetryFractionOverride) && dedupRetryFractionOverride >= 0
         ? dedupRetryFractionOverride
@@ -1928,7 +1945,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // reproduced its exact GHA node count, 50,000,148, then the retry pass got 0 nodes). REVISION 1
     // fixed that no-op — the tier genuinely got its reserved nodes — but at the population-scale cost
     // described above, which REVISION 2 fixes by no longer taking those nodes FROM anyone.
-    const dedupRetryTierWillRun = dedupRetryBudgetFraction > 0 && !!(cfg && cfg.STRATEGY_DEDUP_NEAR_TIE_RETRY === true);
+    // PROMOTED to default-ON (see the constant's own comment) — standard `(!cfg || cfg.FLAG)`
+    // convention, same as admissibleOrderTierWillRun just below, not the opt-in `cfg && ... === true`
+    // shape this used before promotion.
+    const dedupRetryTierWillRun = dedupRetryBudgetFraction > 0 && !!(!cfg || cfg.STRATEGY_DEDUP_NEAR_TIE_RETRY);
     const dedupRetryNodeReserve = (dedupRetryTierWillRun && nodeBudget !== Infinity)
         ? Math.floor(nodeBudget * dedupRetryNodeReserveFraction)
         : 0;
@@ -2502,10 +2522,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // STRATEGY_DEDUP_NEAR_TIE_RETRY) — see that flag's own comment in ablation-config.mjs and
     // DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's own comment above for the full rationale. Same
     // Proxy-override shape as the attraction-diversity pass above, toggling
-    // STRATEGY_DEDUP_NEAR_TIE_RETENTION instead of SCORE_GOAL_ATTRACTION. Opt-in/default-OFF (NEW,
-    // unvalidated mechanism) — the flag check below (`cfg &&` ... `=== true`) is the opt-in
-    // convention, so this whole block is a strict no-op for every production/interactive caller
-    // (cfg null) until explicitly enabled.
+    // STRATEGY_DEDUP_NEAR_TIE_RETENTION instead of SCORE_GOAL_ATTRACTION. PROMOTED to default-ON (see
+    // the constant's own comment) — the flag check below (`!cfg ||` ...) is the standard default-on
+    // convention, so this block runs for every caller unless `disableExtraBudgetPasses: true` zeroes
+    // its budget fraction (both interactive solve UIs) or `cfg` explicitly disables the flag.
     //
     // REVISION 3 (2026-08-15, same day as REVISION 2 above): moved to run LAST — after repair-probe-
     // shrink-recovery AND the admissible-order tier, not before them — because REVISION 2's additive
