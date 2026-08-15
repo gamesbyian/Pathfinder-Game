@@ -1129,15 +1129,33 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION = 1.0;
  *  after a REVISION 2 correction, since that correction's lesson is now established practice for any
  *  NEW last-resort tier in this file.
  *
- *  0.25: matches DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION's and ADMISSIBLE_ORDER_NODE_RESERVE_
- *  FRACTION's own starting fraction — NOT derived from any A/B on this specific mechanism. The only
- *  concrete cost data available (`reports/2026-07-30-admissible-order-node-reserve.md`'s R03148
- *  figure: 1.97M nodes) is far below a typical 20-50M production ceiling, so this fraction likely has
- *  generous headroom for that one known case, but the tier may target other, more expensive
- *  non-`'default'` wins population validation hasn't found yet — needs the same population-scale
- *  gain/loss measurement the constant's own doc comment (ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_
- *  FRACTION) already calls for, before either promotion or fraction tuning. */
-export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION = 0.25;
+ *  CORRECTION (2026-08-15, same day, local testing before any GHA spend): an initial 0.25 (matching
+ *  DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION's own starting fraction) was tried first and found
+ *  useless — `R03148` still failed to recover at `nodeBudget=50M` (`+12.5M` reserve). Tracing why
+ *  found real, unrelated baseline drift since `reports/2026-07-30-admissible-order-node-reserve.md`
+ *  was written (16+ days, many intervening solver changes): at EVERY node-budget scale tested (20M,
+ *  100M), the earlier tiers (main loop/repair/diversity) now exhaust their full `earlyTierNodeBudget`
+ *  share and `'default'` then exhausts its own full remaining share too, WITHOUT EITHER SOLVING —
+ *  `'default'`'s own historical 6.87M-node need (that report's own figure) has grown to ~12.5-25M
+ *  depending on scale, byte-identical whether this flag is on or off (confirming the drift is
+ *  unrelated to this mechanism). A diagnostic run with an artificially large reserve
+ *  (`admissibleOrderNonDefaultRetryNodeReserveFractionOverride: 2.0`, giving up to +100M on a 50M
+ *  budget) DID recover `R03148` — `'none'` still only needs **1,914,111 nodes**, essentially
+ *  unchanged from the historical 1.97M figure, referee-valid — confirming the double-edged shape and
+ *  the mechanism itself are both still real; only the reserve needed to actually REACH that cheap
+ *  solve had grown, because the ladder now spends far more before this tier's turn ever comes.
+ *
+ *  0.5 (doubled from the 0.25 first cut): still NOT derived from a proper A/B — a single successful
+ *  data point (R03148 needed roughly 14.4M of additional room past a 50M ceiling to reach `'none'`'s
+ *  turn and solve, once dedup-retry's own extension is accounted for) informs the direction (bigger
+ *  than 0.25) but not a rigorous size. Population-scale validation is what determines whether 0.5 is
+ *  enough, too little, or (following DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION's own precedent of a
+ *  12.5M reserve missing exactly one 34.8M outlier) simply insufficient for some other level's own
+ *  need — same asymmetric-risk caution as every other reserve fraction in this file. See
+ *  `reports/2026-08-15-connectivity-axis-exhausted-regression.md`'s "Applying the pattern elsewhere"
+ *  section for the full local validation writeup, R02644's confirmed non-regression, and R03148's
+ *  before/after data. */
+export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION = 0.5;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
