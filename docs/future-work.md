@@ -68,7 +68,7 @@ Next: build a bounded informative same-parent sibling set adjacent to actual win
 
 Do **not** rerun the original 12 unchanged.
 
-**Second batch complete (2026-08-12):** 15 real score/width extinction decision points (10 A / 3 B / 2 D class, all distinct from the first batch) → 32 cases, 9 live / 2 dead / 21 abstain, zero correctness/input alarms after fixing an under-constrained multi-gate CP-SAT encoding bug found along the way (`cpsat-full-probe.py`). The mis-ranking pattern reproduced independently at 2 more A-class parents (S00001, R00104); it did **not** reproduce at any of 3 usable B-class rows (both branches exact-feasible there — a different failure shape); D-class got zero usable data. Coverage is bottlenecked by flipping-filter support in the CP-SAT model (9/15 levels abstained solely for that reason). See [`reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md). Justifies starting neutral future-opportunity descriptor work scoped to the A-class regime; B/D classes need more exact labels first (which needs flipping-filter CP-SAT support, not more case construction against the current model).
+**Second batch complete (2026-08-12):** 15 real score/width extinction decision points (10 A / 3 B / 2 D class, all distinct from the first batch) → 32 cases, 9 live / 2 dead / 21 abstain, zero correctness/input alarms after fixing an under-constrained multi-gate CP-SAT encoding bug found along the way (`cpsat-full-probe.py`). The mis-ranking pattern reproduced independently at 2 more A-class parents (S00001, R00104); it did **not** reproduce at any of 3 usable B-class rows (both branches exact-feasible there — a different failure shape); D-class got zero usable data. Coverage was bottlenecked by flipping-filter support in the CP-SAT model (9/15 levels abstained solely for that reason). See [`reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md). Justifies starting neutral future-opportunity descriptor work scoped to the A-class regime; B/D classes need more exact labels — **unblocked 2026-08-15**: flipping filters are now encoded in `cpsat-full-probe.py` (see [`reports/2026-08-15-cpsat-flipping-filter-support.md`](../reports/2026-08-15-cpsat-flipping-filter-support.md)), so the 9 previously-abstained rows can be re-run through the same pipeline — not yet done, next step for whoever picks up B/D-class exact labeling. (`mustCross` count was never a separate coverage limit — see that report's correction to the repair-retreat report's earlier "`mustCross >= 2`" framing.)
 
 ### 3. Exact repair-retreat CP-SAT checks — FIRST PASS + BROADENING BOTH COMPLETE (2026-08-12/13); mixed, population-dependent result
 
@@ -273,10 +273,43 @@ across the full id range, production defaults, 50,000,000-node budget, `--lifecy
 4-worker run. 3/12 solved; `techniqueLifecycle` populated and internally consistent on every row
 (`repair-fallback`/`attraction-diversity` starved on every unsolved row that reached `repair-probe`,
 consistent with the probe-eats-the-shared-pool mechanism `reports/2026-08-12-repair-probe-early-main-loop-starvation.md`
-already documented). This is infrastructure validation at n=12, not a capability or allocation
-finding — the next step is a full-corpus run with `lifecycle_telemetry=true` (both corpora) to produce
-the actual mass-weighted map this doc's "Lifecycle telemetry checkpoint" entry called for before
-another routing/budget comparison.
+already documented). This was infrastructure validation at n=12, not a capability or allocation
+finding on its own — superseded by the full-corpus run below.
+
+**Full-corpus mass-weighted map — run (run #41, `31852197672`, 2026-08-15, commit `8865365`,
+production defaults, 50M node budget, 2 workers, `deterministic=true`/`persist_hints=false`,
+artifact-only).** The finding the dry run couldn't produce at n=12:
+
+- **Corpus 2 (969 unsolved of 1700): 863 (89.1%) `starved`, 106 (6.2%) `capped`, 0 `exhausted`, 0
+  `deadline-truncated`, 0 `attempt-error`.** Every unsolved corpus-2 level either has a mechanically-
+  eligible technique that never received a single node, or ran without exhausting its search space —
+  none genuinely ran out of things to try. `repair-fallback` is node-starved on 515/603 instantiated
+  (85%); `attraction-diversity` is starved on 863/969 (89%) — both late-tier techniques essentially
+  never run, because earlier tiers (`main-ladder`, `repair-probe`, `admissible-order` — all reached on
+  100% of instantiated rows) consume the shared node budget first. 515 levels have both
+  `repair-fallback`+`attraction-diversity` starved simultaneously; 26 have all three
+  (+`admissible-order`, which is otherwise never starved but is *work*-starved on exactly those 26) —
+  the genuine worst case. Solve-cost tail is heavy: of 731 solves, 109 cost >50% of the 50M budget, 62
+  cost >75%, 13 cost >90% (vs. 0/94 above 90% on Corpus 1) — consistent with the already-documented
+  36M→50M budget-raise recovery, corpus-2 solvability still meaningfully tracks the node ceiling.
+- **Corpus 1 (8 unsolved of 102): 8 (100%) `starved`**, same shape at much smaller scale
+  (`repair-fallback` starved 7/8, `attraction-diversity` starved 8/8). Solve-cost tail is much lighter
+  (p95 19.9M/50M, 0 solves above 90%) — Corpus 1's ceiling is not the binding constraint the way
+  Corpus 2's is.
+
+**Reading this**: the corpus's current solve-rate ceiling on Corpus 2 is dominated by *which*
+technique gets to run, not by search quality within techniques that do get to run — the "genuinely
+searched and failed" population (`exhausted`) is empty. This directly names the next allocation
+question (give `repair-fallback`/`attraction-diversity` a real, non-zero shot on more of the 515/863
+starved population) as more promising than further tuning within `main-ladder`/`admissible-order`/
+`repair-probe`, which already run everywhere they're eligible. **Not acted on here** — this is the
+map, not a policy change; any live routing change still needs its own level-blind population A/B
+(the exact bar `reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md`'s three-arm A/B
+demonstrated is not optional, including checking Corpus 1 alongside Corpus 2 from the start this
+time). Full per-corpus data:
+`reports/stress/capability-runs/31852197672/lifecycle-failure-map-corpus{1,2}(-summary.md)` (GitHub
+Actions artifact `solver-stress-refresh-combined`, run 31852197672 — not persisted to `main`, since
+this run used `persist_hints=false`/`deterministic=true` as an artifact-only reference point).
 
 #### Beam-extinction mechanics audit (ETT-017, offline observational)
 
