@@ -169,6 +169,15 @@ this is a much larger practical constraint on exact-label expansion than anythin
 question itself, and it will very likely also constrain item C (repair-retreat), which reuses the same
 tool.
 
+> **Update (2026-08-15): flipping filters are now encoded.** `cpsat-full-probe.py` supports
+> flipping filters (single-use, board-wide crossing-order-parity axis requirement) — see
+> [`reports/2026-08-15-cpsat-flipping-filter-support.md`](2026-08-15-cpsat-flipping-filter-support.md)
+> for the encoding and validation. The 9 abstained rows above are unblocked and re-runnable through
+> the same `cpsat-explicit-prefix-oracle.yml` pipeline. Note that same follow-up report's correction:
+> `reports/2026-08-12-repair-retreat-cpsat.md`'s framing of a distinct "`mustCross >= 2`" coverage
+> gap on `R00630`/`R02449` was a misattribution — both levels also carry flipping filters, which was
+> the actual (and only) cause; mustCross of any count was never unsupported.
+
 ## Does this justify moving to neutral future-opportunity descriptors?
 
 **Partially, and only for the A-class (clearly-mis-ranked) regime.** The handoff doc's own next step —

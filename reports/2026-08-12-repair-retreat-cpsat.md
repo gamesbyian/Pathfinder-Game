@@ -136,8 +136,22 @@ surfaced four candidates satisfying both of the original report's stated criteri
 | `R02449:elite:3` | 76 | 44 | 15 | 30 | 2 | 2 |
 
 Same binary-search driver, same `cpsat-full-probe.py` oracle. Two abstained on **`unsupported-
-mechanics`** even at full elite length (`R00630`, `R02449`, both `mustCross ≥ 2`) — a real coverage
-gap distinct from the previously-known flipping-filter one, not further resolvable by this oracle.
+mechanics`** even at full elite length (`R00630`, `R02449`, both `mustCross ≥ 2`) — described at the
+time as a coverage gap distinct from the previously-known flipping-filter one.
+
+> **Correction (2026-08-15): this was a misattribution, not a distinct gap.** Both `R00630` and
+> `R02449` also carry flipping filters (5 each), which is what actually caused the abstention — the
+> skip check in `cpsat-full-probe.py` fires unconditionally on `filters`/`flippingFilters`, before
+> any mustCross-specific logic runs. `mustCross` of any count was never unsupported: the model's
+> `visits[c] == 2` constraint for must-cross cells is unconditional on count, and a direct check
+> confirms levels with mustCross up to 8 (the corpus maximum) resolve cleanly — `R00001` in this
+> same report's first pass (mustCross=6) is itself a working counter-example that was available the
+> whole time. Flipping filters are now encoded (see
+> [`reports/2026-08-15-cpsat-flipping-filter-support.md`](2026-08-15-cpsat-flipping-filter-support.md)),
+> so both `R00630` and `R02449` are re-runnable through this same binary-search protocol; not
+> re-run here (out of that report's own scope). Kept the original text above unedited, per this
+> repo's standing rule that superseded reasoning stays visible rather than silently rewritten.
+
 The other two (`R03176:elite:2`, `R00648:elite:4`) resolved cleanly at full length to `dead
 (infeasible)`, matching the original pattern — but their first midpoint probe returned CP-SAT
 `UNKNOWN` (genuine time-limit exhaustion at 60s, not a structural abstention), so a second round
