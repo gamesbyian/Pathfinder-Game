@@ -546,6 +546,71 @@ a property-based test in `lower-bounds.test.ts` unrelated to this change, reprod
 nodes** (wall-time increase is sandbox CPU-throttling noise per this repo's own documented caveat, not
 a real cost regression, given node count barely moved).
 
+## Applying the pattern elsewhere: `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY`
+
+The "run dead last, additive-only budget" pattern validated above generalizes directly to a SECOND
+known double-edged mechanism in this file: `ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION`
+(`reports/2026-07-30-admissible-order-node-reserve.md`). That reserve withholds a slice of the
+admissible-order tier's own node budget from `'default'` (the dominant profile, which runs first) to
+give the other profiles (`'none'`/`'mustCrossFirst'`/`'intersectionHarvest'`/`'nearClosureRescue'`) a
+genuine chance — recovering `R03148` (`'none'` solves it cheaply when the reserve is off, never runs
+at all when it's on) but turning `R02644` from SOLVED to unsolved at the same fraction, because
+`'default'` there genuinely needed the room the reserve shrinks. Real gain, real loss, same knob —
+exactly the shape a bounded last-resort retry is suited to instead.
+
+**Design**: rather than shrinking `'default'`'s ceiling in the tier's own (unchanged, unreserved) pass
+— so `R02644`-shaped levels keep their full, already-validated chance — a new tier
+(`STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY`, opt-in/default-OFF) reruns ONLY the non-`'default'`
+profiles afterward, dead last (after even the now-promoted dedup-retry tier), with a fresh additive
+node ceiling and a fresh additive `prep._workCap` override. The `prep._workCap` override is necessary
+even though this tier calls `runAttempt` directly — the same way the admissible-order tier's own
+per-profile loop does, not through the shared-pool `runInterleavedAttempts`/`runGateSerialAttempts`
+machinery dedup-retry's own work-starvation bug came from — because `prep._workCap` is a single
+mutable field on `prep`, last written by whichever of those two functions most recently dispatched an
+attempt (ordinarily the main loop), and nothing resets it fresh for a `runAttempt`-direct caller
+positioned this late in the ladder either.
+
+**A real, unrelated finding surfaced during local validation: baseline drift since 2026-07-30.** The
+initial reserve fraction (0.25, mirrored from `DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION`) was tried
+first and found completely useless — `R03148` still failed to recover at `nodeBudget=50M`. Tracing why
+found that the 2026-07-30 report's own numbers no longer reproduce on the current codebase: at every
+scale tested (20M, 100M nodes), the earlier tiers now exhaust their full `earlyTierNodeBudget` share
+and `'default'` then exhausts its own full remaining share too, **without either solving** —
+`'default'`'s own historical 6.87M-node need has grown to ~12.5–25M depending on scale, byte-identical
+whether `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` is on or off (confirming the drift is unrelated
+to this change — 16+ days and many intervening solver commits, not a bug introduced here). A
+diagnostic run with an artificially large reserve override DID recover `R03148` — `'none'` still only
+needs **1,914,111 nodes**, essentially unchanged from the historical 1.97M figure, referee-valid —
+confirming the double-edged shape and the mechanism itself are both still real; only the reserve
+needed to actually REACH that cheap solve had grown, because the ladder now spends far more before
+this tier's turn ever comes. The shipped default was doubled to 0.5 in response (still a first cut,
+not a rigorous derivation — see the constant's own comment).
+
+**Local validation at the shipped 0.5 default** (real `solveLevel()`, `nodeBudget=50,000,000`,
+referee-validated):
+
+| level | result | detail |
+|---|---|---|
+| `R03148` | **solved**, referee-valid | via `'none'` in the new retry tier, 1,914,111 nodes for that profile — target recovery confirmed |
+| `R02644` @ 60M (a budget where `'default'` solves) | **solved**, byte-identical in both arms | `'default'` = 13,207,464 nodes either way; this tier never runs (`!result.solution` guard) — confirmed zero effect |
+| `R02644` @ 50M (a budget where `'default'` itself already fails) | fails identically in both arms | `'default'` = 12,499,968 nodes either way, unsolved with or without this tier; the tier's own attempt at `'none'` also fails there but changes nothing about the outcome — confirmed no NEW regression, only a pre-existing budget-insufficiency at that specific scale |
+
+Zero regression confirmed at both a solving and a non-solving budget for the counterexample level, and
+the target recovery confirmed at the shipped default fraction (not just the artificially large
+diagnostic override). `npm run solver:bench -- --check`: 160/160 published-corpus levels, byte-identical
+node count to before this change (strict no-op, as expected for an opt-in/default-OFF flag). 5 new
+`orchestration.test.ts` tests (inertness, explicit enable, budget-fraction-0 suppression,
+`disableExtraBudgetPasses` suppression + override precedence, a mocked-dispatch rescue test
+confirming `'default'` is never retried) — full solver suite 386/386 passing.
+
+**Not yet validated at population scale, and not promoted** — this mechanism is at the same lifecycle
+stage `STRATEGY_DEDUP_NEAR_TIE_RETRY` was at before its own local-then-population validation. The
+natural next step is a full-corpus GHA A/B (`enable_flags=STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY`)
+against the current `764/1700` baseline — not dispatched here, since the baseline-drift finding above
+raises a real question the population run itself should help answer: is `R03148`'s ~7x cost growth
+representative of the whole non-default-profile-winning population, or an outlier? If representative,
+0.5 may still be systematically undersized the same way 0.25 was on this one level.
+
 ## Infrastructure fixes surfaced by this investigation
 
 Two real, independent infrastructure bugs were found and fixed while trying to analyze the full-corpus

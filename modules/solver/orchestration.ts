@@ -103,6 +103,11 @@ interface Attempt {
      *  (see DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION) — same diagnostic-only shape as
      *  attractionDiversity above. Not read by any solving logic. */
     dedupNearTieRetry?: boolean;
+    /** True only for attempts run by the 2026-08-15 STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY
+     *  last-resort pass (see ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION) — same
+     *  diagnostic-only shape as attractionDiversity/dedupNearTieRetry above. Not read by any
+     *  solving logic. */
+    admissibleOrderNonDefaultRetry?: boolean;
     /** Diagnostic-only passthrough for the admissible-order-search.ts prototype (see
      *  AttemptConfig.admissibleOrder) — not read by any solving logic, purely so external tooling
      *  (scripts/method-probe.mjs) can tell it apart from an ordinary DFS attempt. */
@@ -228,6 +233,17 @@ interface SolveOpts {
      *  ceiling to plain `nodeBudget` (no extra headroom at all). Undefined (production default)
      *  preserves the constant exactly. */
     dedupNearTieRetryNodeReserveFractionOverride?: number;
+    /** Overrides ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION for this solve only — same
+     *  dedicated top-level-option shape as dedupNearTieRetryBudgetFractionOverride above (NOT an
+     *  ablation flag). Undefined (production default, and solver-controller.ts/review-controller.ts's
+     *  interactive call sites) preserves ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION exactly. */
+    admissibleOrderNonDefaultRetryBudgetFractionOverride?: number;
+    /** Overrides ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION for this solve only —
+     *  same ADDITIVE-headroom shape as dedupNearTieRetryNodeReserveFractionOverride above (see that
+     *  field's own comment): this fraction extends the retry tier's own ceiling past `nodeBudget`,
+     *  never withheld from any earlier tier. 0 restores the tier's ceiling to plain `nodeBudget`.
+     *  Undefined (production default) preserves the constant exactly. */
+    admissibleOrderNonDefaultRetryNodeReserveFractionOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape and rationale as the two overrides above (NOT an ablation flag, a
      *  THIRD independently-costed extension a batch-tooling caller may want to isolate). Undefined
@@ -293,8 +309,9 @@ interface SolveOpts {
      *  REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE exactly. */
     repairProbeAdaptiveBiasedMinScaleOverride?: number;
     /** Convenience for offline batch tooling: sets repairBudgetFractionOverride,
-     *  attractionDiversityBudgetFractionOverride, dedupNearTieRetryBudgetFractionOverride, AND
-     *  admissibleOrderBudgetFractionOverride all to 0
+     *  attractionDiversityBudgetFractionOverride, dedupNearTieRetryBudgetFractionOverride,
+     *  admissibleOrderBudgetFractionOverride, AND admissibleOrderNonDefaultRetryBudgetFractionOverride
+     *  all to 0
      *  (purely additive — an explicit value on any individual override still wins over this, so a
      *  caller can still isolate one extension's cost while suppressing the others via this flag).
      *  Exists because the individual overrides were deliberately kept separate (see
@@ -304,7 +321,8 @@ interface SolveOpts {
      *  solver-architecture gotchas as something "a future new batch tool needs to wire up... from
      *  the start, not just the historically-older repair one" (a warning this field's own addition
      *  for the admissible-order tier is a direct instance of — see that tier's own comment; the
-     *  dedup-near-tie-retry tier is wired in here for exactly the same reason). This
+     *  dedup-near-tie-retry and admissible-order-non-default-retry tiers are wired in here for
+     *  exactly the same reason). This
      *  flag makes the common "suppress every extra-budget pass" case a single boolean instead of an
      *  N-field combo a caller has to remember and update every time a new pass is added, without
      *  removing the fine-grained escape hatch. Undefined (every existing caller) is a no-op — every
@@ -1063,6 +1081,81 @@ export const DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION = 1.0;
  *  genuinely available. This 3-level spot-check should still hold under REVISION 2 (the tier's own
  *  ceiling only grew), but full re-validation is population-scale-only — see REVISION 2 above. */
 export const DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION = 0.25;
+
+/** STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY (opt-in, default OFF — NEW, unvalidated mechanism,
+ *  2026-08-15, built the same day as STRATEGY_DEDUP_NEAR_TIE_RETRY and directly modeled on it).
+ *
+ *  Applies that tier's now-validated "run dead last, additive-only budget" pattern to a SECOND
+ *  known double-edged mechanism in this file: ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION
+ *  (see that constant's own comment). That reserve withholds a slice of the admissible-order tier's
+ *  own node budget from `'default'` (the dominant profile, which runs first) to give the OTHER
+ *  profiles (`'none'`/`'mustCrossFirst'`/`'intersectionHarvest'`/`'nearClosureRescue'`) a genuine
+ *  chance — `reports/2026-07-30-admissible-order-node-reserve.md` §4 found this recovers `R03148`
+ *  (`'none'` solves it at 1.97M nodes when the reserve is OFF but never runs at all when it's ON and
+ *  `'default'` eats the whole pool) — but a direct test also found the SAME reserve, at the SAME
+ *  fraction, turns `R02644` from SOLVED to unsolved, because `'default'` there genuinely needed more
+ *  than its reserve-shrunk ceiling. Real gain, real loss, same knob — exactly the shape a bounded
+ *  last-resort retry is suited to, rather than a global reserve.
+ *
+ *  MECHANISM: instead of shrinking `'default'`'s ceiling in the tier's own (unreserved, unchanged)
+ *  pass — so `R02644`-shaped levels keep their full, already-validated chance — this tier reruns
+ *  ONLY the non-`'default'` profiles, with a FRESH additive node ceiling (`nodeBudget +
+ *  ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION`, mirroring dedupRetryNodeCeiling) and a
+ *  fresh, additive `prep._workCap` override (see the tier's own call-site comment for why this is
+ *  necessary even though the admissible-order tier's own per-profile loop calls `runAttempt`
+ *  directly rather than through the shared-pool `runInterleavedAttempts`/`runGateSerialAttempts`
+ *  machinery dedup-retry's own work-starvation bug came from — `prep._workCap` is itself a single
+ *  mutable field on `prep`, last set by whichever of those two functions most recently dispatched an
+ *  attempt, so it is NOT reliably fresh for a `runAttempt`-direct caller positioned this late in the
+ *  ladder either). `'default'` is never rerun here at all — it already got its full, unreduced shot
+ *  in the tier's own earlier pass and failed, so repeating it with LESS effective room (this tier's
+ *  reserve fraction, however sized) would only waste budget.
+ *
+ *  Positioned dead last, AFTER STRATEGY_DEDUP_NEAR_TIE_RETRY (same reasoning as that tier's own
+ *  REVISION 3: nothing may run after this one that still checks an unextended `nodeBudget`/
+ *  `earlyTierNodeBudget`-derived ceiling, or its own extension would starve that later tier exactly
+ *  the way an earlier draft of the dedup-retry tier starved the admissible-order tier itself).
+ *
+ *  NOT YET VALIDATED — this is a first cut, same lifecycle stage STRATEGY_DEDUP_NEAR_TIE_RETRY
+ *  shipped at before its own local-then-population validation and eventual promotion. Needs the same
+ *  rigor: local spot-check against `R03148` (recovery) and `R02644` (must remain unaffected — it
+ *  solves via `'default'` in the tier's own earlier, untouched pass and never reaches this tier at
+ *  all), then a population-scale GHA A/B, before any promotion decision. */
+export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION = 1.0;
+
+/** Extra node headroom given ADDITIVELY to STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY's own
+ *  last-resort tier, as a fraction of `nodeBudget` — same ADDITIVE (not withheld-from-anyone) design
+ *  as DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION, adopted from the start here rather than arrived at
+ *  after a REVISION 2 correction, since that correction's lesson is now established practice for any
+ *  NEW last-resort tier in this file.
+ *
+ *  CORRECTION (2026-08-15, same day, local testing before any GHA spend): an initial 0.25 (matching
+ *  DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION's own starting fraction) was tried first and found
+ *  useless — `R03148` still failed to recover at `nodeBudget=50M` (`+12.5M` reserve). Tracing why
+ *  found real, unrelated baseline drift since `reports/2026-07-30-admissible-order-node-reserve.md`
+ *  was written (16+ days, many intervening solver changes): at EVERY node-budget scale tested (20M,
+ *  100M), the earlier tiers (main loop/repair/diversity) now exhaust their full `earlyTierNodeBudget`
+ *  share and `'default'` then exhausts its own full remaining share too, WITHOUT EITHER SOLVING —
+ *  `'default'`'s own historical 6.87M-node need (that report's own figure) has grown to ~12.5-25M
+ *  depending on scale, byte-identical whether this flag is on or off (confirming the drift is
+ *  unrelated to this mechanism). A diagnostic run with an artificially large reserve
+ *  (`admissibleOrderNonDefaultRetryNodeReserveFractionOverride: 2.0`, giving up to +100M on a 50M
+ *  budget) DID recover `R03148` — `'none'` still only needs **1,914,111 nodes**, essentially
+ *  unchanged from the historical 1.97M figure, referee-valid — confirming the double-edged shape and
+ *  the mechanism itself are both still real; only the reserve needed to actually REACH that cheap
+ *  solve had grown, because the ladder now spends far more before this tier's turn ever comes.
+ *
+ *  0.5 (doubled from the 0.25 first cut): still NOT derived from a proper A/B — a single successful
+ *  data point (R03148 needed roughly 14.4M of additional room past a 50M ceiling to reach `'none'`'s
+ *  turn and solve, once dedup-retry's own extension is accounted for) informs the direction (bigger
+ *  than 0.25) but not a rigorous size. Population-scale validation is what determines whether 0.5 is
+ *  enough, too little, or (following DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION's own precedent of a
+ *  12.5M reserve missing exactly one 34.8M outlier) simply insufficient for some other level's own
+ *  need — same asymmetric-risk caution as every other reserve fraction in this file. See
+ *  `reports/2026-08-15-connectivity-axis-exhausted-regression.md`'s "Applying the pattern elsewhere"
+ *  section for the full local validation writeup, R02644's confirmed non-regression, and R03148's
+ *  before/after data. */
+export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION = 0.5;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
@@ -1839,6 +1932,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // unconditional-placement comment) unless STRATEGY_ADMISSIBLE_ORDER is explicitly disabled.
     const repairConfigs = baseConfigs.filter(c => c.repair);
     const admissibleOrderConfigs = baseConfigs.filter(c => c.admissibleOrder);
+    // STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY's own config list (see that flag's own comment,
+    // ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION) — 'default' excluded, since it already
+    // gets a full unreduced shot in the admissible-order tier's own earlier pass and this tier never
+    // reruns it.
+    const admissibleOrderNonDefaultConfigs = admissibleOrderConfigs.filter(c => c.profileName !== 'default');
     const mainConfigs = baseConfigs.filter(c => !c.repair && !c.admissibleOrder);
 
     // opts.repairBudgetFractionOverride (NOT an ablation flag — see SolveOpts's field comment for
@@ -1876,6 +1974,19 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const dedupRetryNodeReserveFraction = Number.isFinite(dedupRetryNodeReserveFractionRaw) && dedupRetryNodeReserveFractionRaw >= 0
         ? Math.min(1, dedupRetryNodeReserveFractionRaw)
         : DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION;
+
+    // opts.admissibleOrderNonDefaultRetryBudgetFractionOverride — same shape/rationale/hoisting
+    // reason as dedupRetryBudgetFraction just above. Opt-in/default-OFF (NEW, unvalidated mechanism —
+    // see ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION's own comment), so the `cfg &&` ...
+    // `=== true` check below is the opt-in convention, not the standard `!cfg || cfg.FLAG` shape.
+    const nonDefaultRetryFractionOverride = Number(opts.admissibleOrderNonDefaultRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
+    const nonDefaultRetryBudgetFraction = Number.isFinite(nonDefaultRetryFractionOverride) && nonDefaultRetryFractionOverride >= 0
+        ? nonDefaultRetryFractionOverride
+        : ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION;
+    const nonDefaultRetryNodeReserveFractionRaw = Number(opts.admissibleOrderNonDefaultRetryNodeReserveFractionOverride);
+    const nonDefaultRetryNodeReserveFraction = Number.isFinite(nonDefaultRetryNodeReserveFractionRaw) && nonDefaultRetryNodeReserveFractionRaw >= 0
+        ? Math.min(1, nonDefaultRetryNodeReserveFractionRaw)
+        : ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION;
 
     // Admissible-order tier's NODE RESERVE (see ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION). Resolved
     // here, before the probe, because it has to shrink the ceiling every EARLIER tier runs against —
@@ -1953,6 +2064,21 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         ? Math.floor(nodeBudget * dedupRetryNodeReserveFraction)
         : 0;
     const dedupRetryNodeCeiling = nodeBudget === Infinity ? Infinity : nodeBudget + dedupRetryNodeReserve;
+
+    // STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY's own node reserve — additive from the start (see
+    // ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION's own comment), never subtracted from
+    // `earlyTierNodeBudget` or any other tier's ceiling. `admissibleOrderNonDefaultConfigs.length > 0`
+    // guards against reserving for a tier with nothing to run (every profile besides 'default' absent
+    // — e.g. STRATEGY_ADMISSIBLE_ORDER disabled entirely, though that already zeroes
+    // admissibleOrderConfigs itself, or a hypothetical future config list containing only 'default').
+    const nonDefaultRetryTierWillRun = nonDefaultRetryBudgetFraction > 0
+        && !!(cfg && cfg.STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY === true)
+        && admissibleOrderNonDefaultConfigs.length > 0;
+    const nonDefaultRetryNodeReserve = (nonDefaultRetryTierWillRun && nodeBudget !== Infinity)
+        ? Math.floor(nodeBudget * nonDefaultRetryNodeReserveFraction)
+        : 0;
+    const nonDefaultRetryNodeCeiling = nodeBudget === Infinity ? Infinity : nodeBudget + nonDefaultRetryNodeReserve;
+
     const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve;
 
     // STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE (opt-in, default OFF — NEW, unvalidated
@@ -2594,6 +2720,68 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             if (dedupRetryResult.solution) result.solution = dedupRetryResult.solution;
         } finally {
             prep._cfg = originalCfg;
+        }
+    }
+
+    // Last-resort admissible-order non-default-profile retry pass
+    // (ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_
+    // RETRY) — see that flag's own comment in ablation-config.mjs and the constant's own comment
+    // above for the full rationale. Opt-in/default-OFF (NEW, unvalidated mechanism) — the flag check
+    // below (`cfg &&` ... `=== true`) is the opt-in convention, so this block is a strict no-op for
+    // every production/interactive caller (cfg null) until explicitly enabled.
+    //
+    // Positioned dead last — AFTER the dedup-near-tie-retry tier above, for the identical reason that
+    // tier itself was moved to run after the admissible-order tier (REVISION 3, see
+    // dedupRetryNodeReserve's own comment): nothing may run after this tier that still checks an
+    // unextended `nodeBudget`/`earlyTierNodeBudget`-derived ceiling, or this tier's own additive
+    // extension would starve it. Nothing does — this is the true end of the ladder.
+    //
+    // `nonDefaultRetryTierWillRun` is the SAME predicate nonDefaultRetryNodeReserve is derived from —
+    // the two must stay in lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history: drift
+    // either way strands the reserve or spends one that was never allocated).
+    if (!result.solution && nonDefaultRetryTierWillRun && prep._metrics.nodesExpanded < nonDefaultRetryNodeCeiling) {
+        // FRESH, ADDITIVE `prep._workCap` override — same "extend, don't share the depleted pool"
+        // philosophy as dedupRetryWorkStart/dedupRetryWorkBudget above, applied here even though this
+        // tier calls `runAttempt` directly (like the admissible-order tier's own per-profile loop)
+        // rather than through runInterleavedAttempts/runGateSerialAttempts's shared-pool
+        // attemptBudgetShare machinery dedup-retry's bug came from. `prep._workCap` is still a SINGLE
+        // mutable field those two functions last wrote before this tier runs (from the main loop,
+        // ordinarily) — nothing resets it fresh for a `runAttempt`-direct caller positioned this late,
+        // so without this override this tier would silently inherit a stale, likely-already-exceeded
+        // cap and find nothing regardless of its own node ceiling. Restored in `finally` purely for
+        // hygiene — this is the ladder's last tier, so nothing downstream reads `prep._workCap` again.
+        const originalWorkCap = prep._workCap;
+        try {
+            const nonDefaultRetryTotalBudget = Math.floor(timeBudgetMs * nonDefaultRetryBudgetFraction);
+            const nonDefaultRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(nonDefaultRetryTotalBudget * DEFAULT_WORK_PER_MS));
+            prep._workCap = Math.min(workMeter.units + nonDefaultRetryWorkBudget, prep._strictWorkCap ?? Infinity);
+            // Same per-profile/per-gate loop shape as the admissible-order tier's own pass above
+            // (deliberately NOT a single combined runInterleavedAttempts/runGateSerialAttempts call —
+            // see that tier's own comment for why: every validated admissible-order solve was found
+            // with its own full per-profile budget standalone). 'default' is excluded from
+            // admissibleOrderNonDefaultConfigs entirely (see that list's own comment) — it already had
+            // its full, unreduced shot above and is never retried here.
+            for (const admissibleOrderConfig of admissibleOrderNonDefaultConfigs) {
+                if (result.solution) break;
+                if (prep._metrics.nodesExpanded >= nonDefaultRetryNodeCeiling) break;
+                const retryStart = Date.now();
+                for (let gi = 0; gi < activeGates.length; gi++) {
+                    if (prep._metrics.nodesExpanded >= nonDefaultRetryNodeCeiling) break;
+                    const gateKey = activeGates[gi];
+                    const elapsed = Date.now() - retryStart;
+                    const gatesLeft = activeGates.length - gi;
+                    const retryBudget = Math.floor((nonDefaultRetryTotalBudget - elapsed) / gatesLeft);
+                    if (retryBudget < 50) break;
+                    const remainingNodeBudget = nonDefaultRetryNodeCeiling === Infinity
+                        ? Infinity
+                        : Math.max(0, nonDefaultRetryNodeCeiling - prep._metrics.nodesExpanded);
+                    const r = await runAttempt(gateKey, level, prep, admissibleOrderConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
+                    result.attempts.push({ ...r.attempt, admissibleOrderNonDefaultRetry: true });
+                    if (r.path) { result.solution = r.path; break; }
+                }
+            }
+        } finally {
+            prep._workCap = originalWorkCap;
         }
     }
 
