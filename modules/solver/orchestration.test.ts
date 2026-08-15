@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
@@ -1732,4 +1732,82 @@ test('dedup-near-tie-retry pass can solve a level the main loop misses, and disa
     });
     assert.equal(result.ok, true, 'the retention-off retry wins');
     assert.equal(result.attempts.at(-1)?.dedupNearTieRetry, true);
+});
+
+// ── STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY ───────────────────────────────
+//
+// Opt-in, default OFF (see ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION's own comment in
+// orchestration.ts for the full local-validation history: recovers R03148 referee-valid at the
+// shipped 0.5 reserve fraction, confirmed zero effect on R02644 at both a solving and a
+// non-solving budget). Reuses the same infeasible-level pattern the dedup-near-tie-retry suite
+// above already establishes.
+
+test('admissible-order-non-default-retry pass can solve a level the admissible-order tier\'s own pass misses, and never retries \'default\'', async () => {
+    // Mock: only a non-'default' admissible-order profile ever solves. admissibleOrderBudgetFractionOverride: 0
+    // suppresses the admissible-order tier's OWN pass entirely (so 'default'/'none' never get tried
+    // there), isolating this tier's own contribution — same isolation shape as the dedup-retry suite's
+    // own "can solve a level the main loop misses" test.
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config] = args;
+        if (config.admissibleOrder && config.profileName !== 'default') return [0, 1];
+        return null;
+    }) as typeof runAttemptSearch;
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: true },
+        admissibleOrderBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, true, 'the non-default retry wins');
+    assert.equal(result.attempts.at(-1)?.admissibleOrderNonDefaultRetry, true);
+    assert.equal(result.attempts.filter(a => a.admissibleOrderNonDefaultRetry === true && a.profile === 'default').length, 0, "'default' is never retried by this tier");
+});
+
+test('admissible-order-non-default-retry pass is inert by default (cfg=null): no retry attempt is ever run', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000 });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
+});
+
+test('admissible-order-non-default-retry pass stays off under an explicit { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: false }', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: false },
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
+});
+
+test('admissibleOrderNonDefaultRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: true },
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+    });
+    assert.equal(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
+});
+
+test('disableExtraBudgetPasses: true suppresses the admissible-order-non-default-retry pass even with the flag on, but an explicit override still wins', async () => {
+    const suppressed = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: true },
+        disableExtraBudgetPasses: true,
+    });
+    assert.equal(suppressed.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
+
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config] = args;
+        if (config.admissibleOrder && config.profileName !== 'default') return [0, 1];
+        return null;
+    }) as typeof runAttemptSearch;
+    const overridden = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: true },
+        disableExtraBudgetPasses: true,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION,
+        admissibleOrderBudgetFractionOverride: 0,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.ok(overridden.attempts.some(a => a.admissibleOrderNonDefaultRetry === true));
 });
