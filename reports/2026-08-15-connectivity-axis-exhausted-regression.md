@@ -38,6 +38,12 @@
 > verification (`tsc`, 381/381 solver unit tests, `npm run check`, `npm run test:node`,
 > `npm run test:coverage`, and `solver:bench --check` — 160/160 published levels, no regressions,
 > +0.3% nodes).
+> **The same "run dead last, additive budget" pattern was then applied to a SECOND double-edged
+> mechanism, `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY`** (2026-08-15/16, same investigation) —
+> built, locally validated (recovering `R03148`, confirmed zero effect on `R02644`), population-
+> validated (**809/1700, +45 vs. the 764 baseline, ZERO levels lost**, on the FIRST population attempt
+> — no revision cycle needed), and **PROMOTED to production default-ON**. See "Applying the pattern
+> elsewhere" and "Promoted to default-ON (STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY)" below.
 > **Scope:** `modules/solver/search.ts` (`beamSearchFromGate`'s state-dedup block +
 > `STRATEGY_DEDUP_NEAR_TIE_RETENTION` gating), `modules/solver/orchestration.ts` (the new
 > `STRATEGY_DEDUP_NEAR_TIE_RETRY` last-resort tier), `scripts/ablation-config.mjs` (both new flags),
@@ -603,13 +609,59 @@ node count to before this change (strict no-op, as expected for an opt-in/defaul
 `disableExtraBudgetPasses` suppression + override precedence, a mocked-dispatch rescue test
 confirming `'default'` is never retried) — full solver suite 386/386 passing.
 
-**Not yet validated at population scale, and not promoted** — this mechanism is at the same lifecycle
-stage `STRATEGY_DEDUP_NEAR_TIE_RETRY` was at before its own local-then-population validation. The
-natural next step is a full-corpus GHA A/B (`enable_flags=STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY`)
-against the current `764/1700` baseline — not dispatched here, since the baseline-drift finding above
-raises a real question the population run itself should help answer: is `R03148`'s ~7x cost growth
-representative of the whole non-default-profile-winning population, or an outlier? If representative,
-0.5 may still be systematically undersized the same way 0.25 was on this one level.
+**Population-scale confirmation: net +45, zero regressions.** Dispatched `solver-stress-refresh.yml`
+on `main` @ `6e835ff0` with `enable_flags=STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY`,
+`deterministic=true`, `persist_hints=true` — run `31910836458`, completed and persisted cleanly
+(commit `6ad4320a`). Diffed against the `764/1700` baseline (run `31902837955` — a directly reusable,
+confound-free "before" arm: the only functional difference between that run's commit and this one's is
+the promotion of `STRATEGY_DEDUP_NEAR_TIE_RETRY`, itself a no-op for this comparison since that tier
+was already explicitly active in the baseline run via its own `enable_flags`, plus the new opt-in
+flag under test here).
+
+| category | count | detail |
+|---|---:|---|
+| gained | **45** | every sampled winner solves via `ida:none` — exactly the target profile |
+| lost (regressions) | **0** | strict superset of the baseline's solved set |
+| `R03148` | recovered | confirms local validation at population scale |
+| `R02644` | unsolved in BOTH arms | this run's node budget is below what `R02644` needs regardless of this flag (consistent with the local 50M-vs-60M finding above, not a new issue) |
+
+Net: **809/1700, up from 764, with zero levels lost relative to baseline** — a strict superset, the
+same clean shape `STRATEGY_DEDUP_NEAR_TIE_RETRY`'s own final (REVISION 2+3) population result had.
+Corpus 1 exactly matches its own baseline (95/102). The 0.5 reserve fraction, corrected from an
+initial useless 0.25 during local validation, held up cleanly at population scale on the first
+attempt — unlike `STRATEGY_DEDUP_NEAR_TIE_RETRY`, which needed a full extra revision cycle (subtractive
+→ additive → reorder) after its own first population run.
+
+## Promoted to default-ON (`STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY`)
+
+Promoted the same day the population result landed in, on the user's explicit instruction, on the
+strength of the same clean shape that justified promoting `STRATEGY_DEDUP_NEAR_TIE_RETRY`: a strict
+superset of the baseline's solved set (zero levels lost, +45 gained), and — unlike that tier —
+achieved on the FIRST population attempt with no revision cycle needed after the initial local-testing
+fraction correction (0.25 → 0.5). Changed the run-condition from the opt-in `cfg && cfg.FLAG === true`
+convention to the standard default-on `!cfg || cfg.FLAG` convention (same as
+`admissibleOrderTierWillRun`/`dedupRetryTierWillRun`), and removed it from `scripts/ablation-config.mjs`'s
+`OPT_IN_FEATURES`. Both interactive solve UIs are unaffected for the same reason as the first
+promotion — `disableExtraBudgetPasses: true` already zeroes this tier's budget fraction regardless of
+the ablation default.
+
+**Ripple effect on pre-existing tests, same pattern as the first promotion.** 14 tests broke: the same
+11 reserve-arithmetic tests from the first promotion (now needing a SECOND isolation override,
+`admissibleOrderNonDefaultRetryBudgetFractionOverride: 0`, alongside the first), plus one further
+pre-existing test (`admissible-order profile reserve is inert by default`) that hadn't needed
+isolation before either promotion, plus the dedup-retry suite's own "reruns the main ladder" test
+(16 vs. 20 attempts, needing the same new isolation), plus this mechanism's own "inert by default"
+test needing the same active-by-default rewrite the dedup-retry suite went through. A bulk
+`replace_all` fix for the 11 shared tests briefly over-applied to this mechanism's own "can solve"
+test too (accidentally zeroing the very tier under test via the sibling override it shares a line
+with) — caught by the immediate test run, not shipped; fixed by removing that one line from that one
+test. Final state: 388/388 solver tests passing.
+
+**Verification before merge**: `npx tsc --noEmit` clean; `npx vitest run modules/solver` 388/388
+passing; `npm run check` clean; `npm run test:node` clean; `npm run solver:bench -- --check`:
+160/160 published levels, no regressions, byte-identical node count to before this change (this
+default-on tier essentially never fires on the well-tuned published corpus, same as the first
+promotion).
 
 ## Infrastructure fixes surfaced by this investigation
 

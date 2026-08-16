@@ -168,6 +168,24 @@ already spot-checked as unaffected by the fix, but the *why* wasn't traced); ver
 ~175 unverified provenance candidates. Full detail:
 [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).
 
+**The same "run dead last, additive budget" pattern applied to a second double-edged mechanism,
+`STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` — built, validated, and PROMOTED to default-ON, all the
+same day (2026-08-15/16).** Targets `ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION`'s own known
+double-edged shape (recovers `R03148` via `'none'`, but shrinking `'default'`'s ceiling to make room
+turns `R02644` from SOLVED to unsolved at the same fraction). Instead of shrinking `'default'`'s
+ceiling in the admissible-order tier's own unreserved pass, this tier reruns ONLY the non-`'default'`
+profiles afterward, dead last (after even `STRATEGY_DEDUP_NEAR_TIE_RETRY`), with a fresh additive node
+ceiling and a fresh additive `prep._workCap` override. Local validation surfaced a real, unrelated
+finding: the mechanism's founding evidence (a 2026-07-30 report) had decayed — `'default'` now needs
+~7x more nodes than 16 days ago (confirmed unrelated to this change), which made the first reserve
+fraction (0.25) useless; corrected to 0.5 before any GHA spend. Population-scale GHA A/B (run
+`31910836458`, against the `764/1700` baseline): **809/1700, +45, ZERO levels lost relative to
+baseline** — on the FIRST population attempt, no revision cycle needed (unlike
+`STRATEGY_DEDUP_NEAR_TIE_RETRY`'s own two-revision history). Promoted to default-ON the same day.
+Both interactive solve UIs unaffected (`disableExtraBudgetPasses: true` already zeroes this tier's
+budget fraction). Full detail:
+[`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md#applying-the-pattern-elsewhere-strategy_admissible_order_non_default_retry).
+
 ### 1. Failure-conditioned late-tier allocation
 
 Start from the full lifecycle artifact, not a hand-picked list of failures. Build cohorts from fields available during the solve: technique eligibility, actual work received, termination reason, recent improvement rate, repair best-badness trajectory, unique-state growth, beam extinction/retention summaries, and remaining budget. Historical hints, prior winning configurations, saved solve status, and permanent level IDs are labels only.

@@ -1082,8 +1082,8 @@ export const DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION = 1.0;
  *  ceiling only grew), but full re-validation is population-scale-only — see REVISION 2 above. */
 export const DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION = 0.25;
 
-/** STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY (opt-in, default OFF — NEW, unvalidated mechanism,
- *  2026-08-15, built the same day as STRATEGY_DEDUP_NEAR_TIE_RETRY and directly modeled on it).
+/** STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY (PROMOTED to default-ON, 2026-08-15 — built and
+ *  population-validated the same day, directly modeled on STRATEGY_DEDUP_NEAR_TIE_RETRY).
  *
  *  Applies that tier's now-validated "run dead last, additive-only budget" pattern to a SECOND
  *  known double-edged mechanism in this file: ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION
@@ -1116,11 +1116,21 @@ export const DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION = 0.25;
  *  `earlyTierNodeBudget`-derived ceiling, or its own extension would starve that later tier exactly
  *  the way an earlier draft of the dedup-retry tier starved the admissible-order tier itself).
  *
- *  NOT YET VALIDATED — this is a first cut, same lifecycle stage STRATEGY_DEDUP_NEAR_TIE_RETRY
- *  shipped at before its own local-then-population validation and eventual promotion. Needs the same
- *  rigor: local spot-check against `R03148` (recovery) and `R02644` (must remain unaffected — it
- *  solves via `'default'` in the tier's own earlier, untouched pass and never reaches this tier at
- *  all), then a population-scale GHA A/B, before any promotion decision. */
+ *  VALIDATED then PROMOTED (2026-08-15, same day): local spot-check confirmed `R03148` recovers
+ *  (1,914,111 nodes for `'none'`, referee-valid) and `R02644` is unaffected at both a solving budget
+ *  (60M, byte-identical `'default'` attempt in both arms) and a non-solving one (50M, identical
+ *  failure in both arms). Population-scale GHA A/B (run 31910836458, against the `764/1700`
+ *  `STRATEGY_DEDUP_NEAR_TIE_RETRY`-promoted baseline) confirmed **809/1700, +45, with ZERO levels
+ *  lost relative to baseline** — a strict superset of the baseline's solved set, the same clean shape
+ *  that justified promoting `STRATEGY_DEDUP_NEAR_TIE_RETRY`. Unlike that tier, this one's reserve
+ *  fraction held up cleanly at population scale on the FIRST population attempt (no REVISION-2/
+ *  REVISION-3-style correction needed after the initial local-validation fix from 0.25 to 0.5 — see
+ *  ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION's own comment). See
+ *  reports/2026-08-15-connectivity-axis-exhausted-regression.md's "Applying the pattern elsewhere"
+ *  section for the full validation writeup. Both interactive solve UIs
+ *  (`solver-controller.ts`/`review-controller.ts`) are unaffected by this promotion — they already
+ *  set `disableExtraBudgetPasses: true`, which zeroes this tier's budget fraction regardless of the
+ *  ablation flag's default. */
 export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION = 1.0;
 
 /** Extra node headroom given ADDITIVELY to STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY's own
@@ -1976,9 +1986,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION;
 
     // opts.admissibleOrderNonDefaultRetryBudgetFractionOverride — same shape/rationale/hoisting
-    // reason as dedupRetryBudgetFraction just above. Opt-in/default-OFF (NEW, unvalidated mechanism —
-    // see ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION's own comment), so the `cfg &&` ...
-    // `=== true` check below is the opt-in convention, not the standard `!cfg || cfg.FLAG` shape.
+    // reason as dedupRetryBudgetFraction just above. PROMOTED to default-ON (see
+    // ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION's own comment) — `disableExtraBudgetPasses:
+    // true` (both interactive solve UIs) still zeroes this fraction, same as every other extra-budget
+    // tier.
     const nonDefaultRetryFractionOverride = Number(opts.admissibleOrderNonDefaultRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const nonDefaultRetryBudgetFraction = Number.isFinite(nonDefaultRetryFractionOverride) && nonDefaultRetryFractionOverride >= 0
         ? nonDefaultRetryFractionOverride
@@ -2071,8 +2082,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // guards against reserving for a tier with nothing to run (every profile besides 'default' absent
     // — e.g. STRATEGY_ADMISSIBLE_ORDER disabled entirely, though that already zeroes
     // admissibleOrderConfigs itself, or a hypothetical future config list containing only 'default').
+    // PROMOTED to default-ON (see the constant's own comment) — standard `(!cfg || cfg.FLAG)`
+    // convention, same as dedupRetryTierWillRun above, not the opt-in `cfg && ... === true` shape
+    // this used before promotion.
     const nonDefaultRetryTierWillRun = nonDefaultRetryBudgetFraction > 0
-        && !!(cfg && cfg.STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY === true)
+        && !!(!cfg || cfg.STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY)
         && admissibleOrderNonDefaultConfigs.length > 0;
     const nonDefaultRetryNodeReserve = (nonDefaultRetryTierWillRun && nodeBudget !== Infinity)
         ? Math.floor(nodeBudget * nonDefaultRetryNodeReserveFraction)
@@ -2726,9 +2740,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // Last-resort admissible-order non-default-profile retry pass
     // (ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_
     // RETRY) — see that flag's own comment in ablation-config.mjs and the constant's own comment
-    // above for the full rationale. Opt-in/default-OFF (NEW, unvalidated mechanism) — the flag check
-    // below (`cfg &&` ... `=== true`) is the opt-in convention, so this block is a strict no-op for
-    // every production/interactive caller (cfg null) until explicitly enabled.
+    // above for the full rationale. PROMOTED to default-ON (see the constant's own comment) — the
+    // flag check below (`!cfg ||` ...) is the standard default-on convention, so this block runs for
+    // every caller unless `disableExtraBudgetPasses: true` zeroes its budget fraction (both
+    // interactive solve UIs) or `cfg` explicitly disables the flag.
     //
     // Positioned dead last — AFTER the dedup-near-tie-retry tier above, for the identical reason that
     // tier itself was moved to run after the admissible-order tier (REVISION 3, see
