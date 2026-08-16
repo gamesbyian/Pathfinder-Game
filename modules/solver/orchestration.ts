@@ -1183,9 +1183,9 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION = 1.0;
  *  before/after data. */
 export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION = 0.5;
 
-/** STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY (opt-in, default OFF — NEW, unvalidated mechanism,
- *  2026-08-16, built the same day as STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY and directly
- *  modeled on both that tier and STRATEGY_DEDUP_NEAR_TIE_RETRY).
+/** STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY (PROMOTED to production default-ON, 2026-08-16 —
+ *  built the same day as STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY and directly modeled on both
+ *  that tier and STRATEGY_DEDUP_NEAR_TIE_RETRY).
  *
  *  Applies the same "run dead last, additive-only budget" pattern to a THIRD known double-edged
  *  mechanism, and this one is the root flag this whole investigation started from:
@@ -1221,15 +1221,28 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  this tier's own additive extension would starve it exactly the way an earlier draft of the
  *  dedup-retry tier starved the admissible-order tier itself.
  *
- *  NOT YET VALIDATED — same lifecycle stage both prior tiers shipped at before their own
- *  local-then-population validation. Needs the same rigor: local spot-check against `R02114`/`R00592`
- *  (recovery) and `R03248` (must remain unaffected), then a population-scale GHA A/B, before any
- *  promotion decision. Unlike the two prior tiers, `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` gates a much
- *  hotter, more frequently-hit code path (every connectivity check across every search technique, not
- *  one specific dedup collision or one specific tier's profile choice) — a full ladder rerun without
- *  it may be meaningfully more expensive per-attempt than either prior tier's own rerun, which is
- *  itself a reason to validate cost (nodesExpanded/workSpent), not just solved-count, before
- *  considering promotion. */
+ *  POPULATION-VALIDATED AND PROMOTED (2026-08-16, GHA run 31918095910, solver ref
+ *  `fc3040cb3959e499a9a8df56348e43cb4300b077`, vs the 31910836458 baseline): corpus1 95/95 — exactly
+ *  the same solved-ID set, zero change. corpus2 809→819, **+10 solves, zero regressions**
+ *  (`R00296`, `R00592`, `R02068`, `R02088`, `R02114`, `R02491`, `R02690`, `R02878`, `R03195`,
+ *  `R03357`) — both originally-targeted levels (`R02114`, `R00592`) recovered as predicted, plus 8
+ *  more the local spot-check never tested for. `R03248` (the local single-attempt-config counter-
+ *  example) was NOT lost, confirming the `!result.solution` skip-guard protected it at population
+ *  scale as designed.
+ *
+ *  Unlike the two prior (also promoted) tiers, `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` gates a much
+ *  hotter, more frequently-hit code path (every connectivity check across every search technique) —
+ *  this showed up as a real, meaningfully larger cost increase, not just a solved-count question:
+ *  corpus1 nodes +18.7% (936.8M → 1,111.8M), work +12.2% (1,415.8M → 1,588.3M); corpus2 nodes +28.2%
+ *  (78.50B → 100.61B), work +22.1% (97.23B → 118.72B). Promoted anyway per explicit user direction
+ *  (the promotion bar for this file's retry-tier ladder is solved-count gain + zero regressions, not
+ *  cost neutrality — every tier in this ladder is inherently a cost/coverage trade by construction),
+ *  but this is the largest cost delta of the three promoted tiers by a wide margin and is the first
+ *  data point worth watching if a FOURTH tier is ever stacked on top of this one: the ladder's
+ *  worst-case multiplier on `nodeBudget` is now higher, and each additional tier's own headroom has
+ *  to be judged against an already-more-expensive baseline. See
+ *  `reports/2026-08-15-connectivity-axis-exhausted-regression.md`'s "Population-scale confirmation"
+ *  section for the full writeup. */
 export const CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION = 1.0;
 
 /** Extra node headroom given ADDITIVELY to STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own
@@ -1254,9 +1267,9 @@ export const CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION = 1.0;
  *  matching ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION's own final value, and
  *  re-validated at that exact shipped setting (not the diagnostic override) before shipping — see
  *  `reports/2026-08-15-connectivity-axis-exhausted-regression.md`'s "Applying the pattern elsewhere"
- *  section for the full validation writeup. Still just a first cut, not a rigorous derivation —
- *  population-scale validation is what actually determines whether 0.5 is sufficient corpus-wide,
- *  same asymmetric-risk caution as every other reserve fraction in this file. */
+ *  section for the full validation writeup. Population-validated at 0.5 (2026-08-16, run 31918095910):
+ *  +10 corpus2 solves, zero regressions on either corpus — see this constant's sibling comment on
+ *  `CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION` for the full population result. */
 export const CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION = 0.5;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
@@ -2201,10 +2214,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     // STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own node reserve — additive from the start (see
     // CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION's own comment), never subtracted from
-    // `earlyTierNodeBudget` or any other tier's ceiling. Opt-in convention (`cfg && ... === true`) —
-    // this is a NEW, unvalidated mechanism, unlike its two promoted siblings above.
+    // `earlyTierNodeBudget` or any other tier's ceiling. PROMOTED to default-ON (2026-08-16, run
+    // 31918095910): corpus1 95/95 identical solved set (zero change), corpus2 809→819 (+10, zero
+    // regressions) — see CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION's own comment.
     const connectivityRetryTierWillRun = connectivityRetryBudgetFraction > 0
-        && !!(cfg && cfg.STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY === true);
+        && !!(!cfg || cfg.STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY);
     const connectivityRetryNodeReserve = (connectivityRetryTierWillRun && nodeBudget !== Infinity)
         ? Math.floor(nodeBudget * connectivityRetryNodeReserveFraction)
         : 0;
@@ -2936,10 +2950,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // FRACTION, STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY) — see that flag's own comment in
     // ablation-config.mjs and the constant's own comment above for the full rationale. Same
     // Proxy-override shape as the dedup-near-tie-retry pass above, toggling
-    // PRUNE_CONNECTIVITY_AXIS_EXHAUSTED instead of STRATEGY_DEDUP_NEAR_TIE_RETENTION. Opt-in/
-    // default-OFF (NEW, unvalidated mechanism) — the flag check below (`cfg &&` ... `=== true`) is
-    // the opt-in convention, so this block is a strict no-op for every production/interactive caller
-    // (cfg null) until explicitly enabled.
+    // PRUNE_CONNECTIVITY_AXIS_EXHAUSTED instead of STRATEGY_DEDUP_NEAR_TIE_RETENTION. PROMOTED to
+    // default-ON (2026-08-16, run 31918095910: corpus1 95/95 unchanged, corpus2 +10/-0) - the flag
+    // check below (`!cfg ||` ...) is the promoted-default convention, matching its two sibling tiers;
+    // an explicit `{STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false}` still disables it.
     //
     // Positioned dead last — AFTER the admissible-order-non-default-retry tier above, the current
     // true end of the ladder — for the identical reason both prior retry tiers were placed there:

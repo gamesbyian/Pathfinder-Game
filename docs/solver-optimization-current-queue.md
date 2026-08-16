@@ -187,22 +187,24 @@ budget fraction). Full detail:
 [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md#applying-the-pattern-elsewhere-strategyadmissibleordernondefaultretry).
 
 **Applied a THIRD time (2026-08-16), directly to `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` itself — the root
-flag this whole investigation started from — as `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`
-(opt-in, default OFF).** Targets `R02114`/`R00592`, the two originally-confirmed regressions
-`STRATEGY_DEDUP_NEAR_TIE_RETRY` doesn't reach (a single-attempt-config test already showed disabling
-this flag recovers both, referee-valid, while `R03248` goes the other way — structurally protected
-here the same way `R02644` was for the second tier). Local testing found and fixed a NEW variant of
-the same starvation bug class: as the THIRD stacked retry tier, its ceiling at the same 0.5 fraction
-as the tier before it computed to the identical absolute value, so the preceding tier maxing out gave
-it zero real headroom regardless of its own fraction — fixed by stacking this tier's ceiling on the
-PRECEDING tier's own ceiling instead of restarting from `nodeBudget`. Both targets recovered
-referee-valid after the fix (winning-attempt node counts matching the original single-attempt-config
-evidence almost exactly); `R03248`/`R02248` confirmed unaffected. `npm run solver:bench -- --check`:
-160/160 published levels, no regressions, byte-identical node count. **Not yet population-validated
-or promoted** — unlike the two prior tiers, this flag gates a much hotter code path (every
-connectivity check across every search technique), so the population run should watch cost, not just
-solved-count. Full detail:
-[`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md#a-third-application-strategyconnectivityaxisexhaustedretry-for-r02114r00592).
+flag this whole investigation started from — as `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`, built,
+validated, and PROMOTED to default-ON, all the same day.** Targets `R02114`/`R00592`, the two
+originally-confirmed regressions `STRATEGY_DEDUP_NEAR_TIE_RETRY` doesn't reach (a single-attempt-config
+test already showed disabling this flag recovers both, referee-valid, while `R03248` goes the other
+way — structurally protected here the same way `R02644` was for the second tier). Local testing found
+and fixed a NEW variant of the same starvation bug class: as the THIRD stacked retry tier, its ceiling
+at the same 0.5 fraction as the tier before it computed to the identical absolute value, so the
+preceding tier maxing out gave it zero real headroom regardless of its own fraction — fixed by
+stacking this tier's ceiling on the PRECEDING tier's own ceiling instead of restarting from
+`nodeBudget`. Both targets recovered referee-valid after the fix (winning-attempt node counts matching
+the original single-attempt-config evidence almost exactly); `R03248`/`R02248` confirmed unaffected.
+Population-scale GHA A/B (run `31918095910`, against the `809/1700` baseline): **corpus1 95/95
+identical solved-ID set (zero change); corpus2 819/1700, +10, ZERO regressions** — both targets
+recovered plus 8 bonus solves. Unlike the two prior tiers, cost rose meaningfully (corpus1 nodes
++18.7%/work +12.2%, corpus2 nodes +28.2%/work +22.1%), reflecting that this flag gates a much hotter
+code path (every connectivity check across every search technique) — promoted anyway since the
+ladder's bar is solved-count gain plus zero regressions, not cost neutrality. Full detail:
+[`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md#population-scale-confirmation-and-promotion-strategyconnectivityaxisexhaustedretry).
 
 ### 1. Failure-conditioned late-tier allocation
 

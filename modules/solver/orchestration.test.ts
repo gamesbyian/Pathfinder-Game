@@ -634,7 +634,7 @@ test('attraction-diversity pass reruns the main ladder once more after both prio
     // admissible-order-search last-resort tier (orchestration.ts), which also runs by default after
     // this pass and would otherwise inflate "mainLoopAttempts" below (its attempts carry neither
     // marker, since it's a distinct search primitive, not a rerun of mainConfigs).
-    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, dedupNearTieRetryBudgetFractionOverride: 0, admissibleOrderNonDefaultRetryBudgetFractionOverride: 0 });
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, dedupNearTieRetryBudgetFractionOverride: 0, admissibleOrderNonDefaultRetryBudgetFractionOverride: 0, connectivityAxisExhaustedRetryBudgetFractionOverride: 0 });
     assert.equal(result.ok, false);
     const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
     const mainLoopAttempts = result.attempts.filter(a => a.attractionDiversity !== true);
@@ -754,6 +754,7 @@ test('a nodeBudget with room left after the main loop lets the diversity pass st
         nodeBudget: 400, // > 288 (main loop alone) -- clears the pass's entry gate
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
     assert.equal(result.status, 'node-budget-reached');
@@ -810,12 +811,14 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
         admissibleOrderNodeReserveFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
     });
     const on = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         nodeBudget: 400,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
     });
     assert.equal(off.nodesExpanded, 402, 'reserve off reproduces the pre-reserve total exactly');
     assert.ok(on.nodesExpanded < off.nodesExpanded, 'the reserve must hold the early tiers below the full ceiling');
@@ -992,6 +995,7 @@ test('repair-fallback reserve is inert by default (cfg=null) even with a finite 
         attractionDiversityBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
@@ -1011,6 +1015,7 @@ test('repair-fallback reserve gives the fallback loop room without touching the 
         attractionDiversityBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
@@ -1056,6 +1061,7 @@ test('repair-fallback reserve is a no-op when mainLoopLateReserve is 0 (accepted
         attractionDiversityBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         repairFallbackNodeReserveFractionOverride: 0.5,
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
@@ -1079,6 +1085,7 @@ test('attraction-diversity reserve is inert by default (cfg=null) even with its 
         admissibleOrderBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
@@ -1103,6 +1110,7 @@ test('attraction-diversity reserve gives the diversity pass room without touchin
         admissibleOrderBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
@@ -1161,6 +1169,7 @@ test('attraction-diversity reserve is a no-op when repairFallbackNodeReserve alr
         admissibleOrderBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 1.0,
@@ -1216,6 +1225,7 @@ test('admissible-order profile reserve gives non-default profiles room without s
         attractionDiversityBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0,
         admissibleOrderNodeReserveFractionOverride: 0.4,
         admissibleOrderProfileNodeReserveFractionOverride: 0.5,
@@ -1262,6 +1272,7 @@ test('admissible-order profile reserve is a no-op when admissibleOrderNodeReserv
         attractionDiversityBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0,
         admissibleOrderNodeReserveFractionOverride: 0,
         admissibleOrderProfileNodeReserveFractionOverride: 0.5,
@@ -1646,6 +1657,7 @@ test('dedup-near-tie-retry pass reruns the main ladder once more after main loop
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
     const retryAttempts = result.attempts.filter(a => a.dedupNearTieRetry === true);
@@ -1855,12 +1867,13 @@ test('disableExtraBudgetPasses: true suppresses the admissible-order-non-default
 
 // ── STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY ────────────────────────────────
 //
-// Opt-in, default OFF (see CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION's own comment in
-// orchestration.ts for the local-validation history: recovers R02114/R00592 referee-valid at the
-// shipped 0.5 reserve fraction once its ceiling was fixed to stack on
-// STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY's own ceiling rather than restart from `nodeBudget`;
-// confirmed zero effect on R02248/R03248, both of which solve via the normal ladder). Reuses the
-// same infeasible-level pattern the sibling retry-tier suites above already establish.
+// PROMOTED to production default-ON (see CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION's own
+// comment in orchestration.ts for the full local-then-population validation history: recovers
+// R02114/R00592 referee-valid at the shipped 0.5 reserve fraction once its ceiling was fixed to
+// stack on STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY's own ceiling rather than restart from
+// `nodeBudget`; confirmed zero effect on R02248/R03248, both of which solve via the normal ladder;
+// population-validated 2026-08-16 on run 31918095910 — corpus1 95/95 unchanged, corpus2 +10/-0).
+// Reuses the same infeasible-level pattern the sibling retry-tier suites above already establish.
 
 test('connectivity-axis-exhausted-retry pass reruns the main ladder once more after everything else fails', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
@@ -1881,21 +1894,51 @@ test('connectivity-axis-exhausted-retry pass reruns the main ladder once more af
     assert.equal(retryAttempts.length, mainLoopAttempts.length);
 });
 
-test('connectivity-axis-exhausted-retry pass is inert by default (cfg=null): no retry attempt is ever run', async () => {
-    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000 });
+test('connectivity-axis-exhausted-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    assert.ok(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), 'expected the promoted default-ON tier to run with cfg=null');
+});
+
+test('disableExtraBudgetPasses: true suppresses the promoted default-ON connectivity-axis-exhausted-retry pass even with cfg=null (the two interactive solve UIs\' real production combination)', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        disableExtraBudgetPasses: true,
+    });
+    assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
+});
+
+test('connectivity-axis-exhausted-retry pass stays off under an explicit { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false }', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false },
+    });
     assert.equal(result.ok, false);
     assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
 });
 
-test('connectivity-axis-exhausted-retry pass stays off under an explicit { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false }, and under a sparse unrelated ablation object', async () => {
-    for (const ablation of [
-        { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false },
-        { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false },
-    ]) {
-        const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, ablation });
-        assert.equal(result.ok, false);
-        assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
-    }
+test('a sparse unrelated ablation object leaves the promoted default-ON connectivity-axis-exhausted-retry pass active', async () => {
+    // Since promotion, this flag is unset-means-true (the standard `!cfg || cfg.FLAG` convention),
+    // so a sparse config that only touches a DIFFERENT flag (PRUNE_CONNECTIVITY_AXIS_EXHAUSTED here,
+    // the mechanism this tier disables INTERNALLY once it starts, not the tier's own on/off switch)
+    // must still leave THIS one active — same check as the dedup-near-tie-retry/admissible-order-
+    // non-default-retry suites' own equivalent tests.
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false },
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    assert.ok(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), 'expected the promoted tier to still run: only an unrelated flag was set');
 });
 
 test('connectivityAxisExhaustedRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
