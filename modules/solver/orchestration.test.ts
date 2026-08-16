@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
@@ -1851,4 +1851,96 @@ test('disableExtraBudgetPasses: true suppresses the admissible-order-non-default
         attemptSearchForTesting: dispatch,
     });
     assert.ok(overridden.attempts.some(a => a.admissibleOrderNonDefaultRetry === true));
+});
+
+// ── STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY ────────────────────────────────
+//
+// Opt-in, default OFF (see CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION's own comment in
+// orchestration.ts for the local-validation history: recovers R02114/R00592 referee-valid at the
+// shipped 0.5 reserve fraction once its ceiling was fixed to stack on
+// STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY's own ceiling rather than restart from `nodeBudget`;
+// confirmed zero effect on R02248/R03248, both of which solve via the normal ladder). Reuses the
+// same infeasible-level pattern the sibling retry-tier suites above already establish.
+
+test('connectivity-axis-exhausted-retry pass reruns the main ladder once more after everything else fails', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true },
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    const retryAttempts = result.attempts.filter(a => a.connectivityAxisExhaustedRetry === true);
+    const mainLoopAttempts = result.attempts.filter(a => a.connectivityAxisExhaustedRetry !== true);
+    assert.ok(retryAttempts.length > 0, 'expected at least one connectivity-axis-exhausted-retry attempt');
+    // The pass reruns the exact same mainConfigs ladder, so (this level being pruned near-instantly
+    // regardless of budget, meaning neither run gets cut off partway through) it should run through
+    // exactly as many configs as the main loop itself did.
+    assert.equal(retryAttempts.length, mainLoopAttempts.length);
+});
+
+test('connectivity-axis-exhausted-retry pass is inert by default (cfg=null): no retry attempt is ever run', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000 });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
+});
+
+test('connectivity-axis-exhausted-retry pass stays off under an explicit { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false }, and under a sparse unrelated ablation object', async () => {
+    for (const ablation of [
+        { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false },
+        { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false },
+    ]) {
+        const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, ablation });
+        assert.equal(result.ok, false);
+        assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
+    }
+});
+
+test('connectivityAxisExhaustedRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true },
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+    });
+    assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
+});
+
+test('disableExtraBudgetPasses: true suppresses the connectivity-axis-exhausted-retry pass even with the flag on, but an explicit override still wins', async () => {
+    const suppressed = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true },
+        disableExtraBudgetPasses: true,
+    });
+    assert.equal(suppressed.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
+
+    const overridden = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true },
+        disableExtraBudgetPasses: true,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION,
+    });
+    assert.ok(overridden.attempts.some(a => a.connectivityAxisExhaustedRetry === true));
+});
+
+test('connectivity-axis-exhausted-retry pass can solve a level the main loop misses, and disables the connectivity-axis-exhausted prune while it runs', async () => {
+    // Simulates the real mechanism's shape without depending on topology.ts's actual flood-fill
+    // internals: succeeds only once prep._cfg reflects PRUNE_CONNECTIVITY_AXIS_EXHAUSTED explicitly
+    // disabled — exactly what the retry pass's own Proxy override produces, and exactly what the
+    // ordinary main loop's cfg (the prune left at its normalized-default true) never does.
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, , , prep] = args;
+        if (prep._cfg && prep._cfg.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED === false) return [0, 1];
+        return null;
+    }) as typeof runAttemptSearch;
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true },
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, true, 'the connectivity-axis-exhausted-off retry wins');
+    assert.equal(result.attempts.at(-1)?.connectivityAxisExhaustedRetry, true);
 });

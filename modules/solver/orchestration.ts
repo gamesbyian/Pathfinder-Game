@@ -108,6 +108,11 @@ interface Attempt {
      *  diagnostic-only shape as attractionDiversity/dedupNearTieRetry above. Not read by any
      *  solving logic. */
     admissibleOrderNonDefaultRetry?: boolean;
+    /** True only for attempts run by the 2026-08-16 STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY
+     *  last-resort pass (see CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION) — same
+     *  diagnostic-only shape as attractionDiversity/dedupNearTieRetry/admissibleOrderNonDefaultRetry
+     *  above. Not read by any solving logic. */
+    connectivityAxisExhaustedRetry?: boolean;
     /** Diagnostic-only passthrough for the admissible-order-search.ts prototype (see
      *  AttemptConfig.admissibleOrder) — not read by any solving logic, purely so external tooling
      *  (scripts/method-probe.mjs) can tell it apart from an ordinary DFS attempt. */
@@ -244,6 +249,17 @@ interface SolveOpts {
      *  never withheld from any earlier tier. 0 restores the tier's ceiling to plain `nodeBudget`.
      *  Undefined (production default) preserves the constant exactly. */
     admissibleOrderNonDefaultRetryNodeReserveFractionOverride?: number;
+    /** Overrides CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION for this solve only — same
+     *  dedicated top-level-option shape as dedupNearTieRetryBudgetFractionOverride above (NOT an
+     *  ablation flag). Undefined (production default, and solver-controller.ts/review-controller.ts's
+     *  interactive call sites) preserves CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION exactly. */
+    connectivityAxisExhaustedRetryBudgetFractionOverride?: number;
+    /** Overrides CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION for this solve only — same
+     *  ADDITIVE-headroom shape as dedupNearTieRetryNodeReserveFractionOverride above (see that
+     *  field's own comment): this fraction extends the retry tier's own ceiling past `nodeBudget`,
+     *  never withheld from any earlier tier. 0 restores the tier's ceiling to plain `nodeBudget`.
+     *  Undefined (production default) preserves the constant exactly. */
+    connectivityAxisExhaustedRetryNodeReserveFractionOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape and rationale as the two overrides above (NOT an ablation flag, a
      *  THIRD independently-costed extension a batch-tooling caller may want to isolate). Undefined
@@ -310,8 +326,8 @@ interface SolveOpts {
     repairProbeAdaptiveBiasedMinScaleOverride?: number;
     /** Convenience for offline batch tooling: sets repairBudgetFractionOverride,
      *  attractionDiversityBudgetFractionOverride, dedupNearTieRetryBudgetFractionOverride,
-     *  admissibleOrderBudgetFractionOverride, AND admissibleOrderNonDefaultRetryBudgetFractionOverride
-     *  all to 0
+     *  admissibleOrderBudgetFractionOverride, admissibleOrderNonDefaultRetryBudgetFractionOverride,
+     *  AND connectivityAxisExhaustedRetryBudgetFractionOverride all to 0
      *  (purely additive — an explicit value on any individual override still wins over this, so a
      *  caller can still isolate one extension's cost while suppressing the others via this flag).
      *  Exists because the individual overrides were deliberately kept separate (see
@@ -321,8 +337,8 @@ interface SolveOpts {
      *  solver-architecture gotchas as something "a future new batch tool needs to wire up... from
      *  the start, not just the historically-older repair one" (a warning this field's own addition
      *  for the admissible-order tier is a direct instance of — see that tier's own comment; the
-     *  dedup-near-tie-retry and admissible-order-non-default-retry tiers are wired in here for
-     *  exactly the same reason). This
+     *  dedup-near-tie-retry, admissible-order-non-default-retry, and connectivity-axis-exhausted-retry
+     *  tiers are wired in here for exactly the same reason). This
      *  flag makes the common "suppress every extra-budget pass" case a single boolean instead of an
      *  N-field combo a caller has to remember and update every time a new pass is added, without
      *  removing the fine-grained escape hatch. Undefined (every existing caller) is a no-op — every
@@ -1167,6 +1183,82 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION = 1.0;
  *  before/after data. */
 export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION = 0.5;
 
+/** STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY (opt-in, default OFF — NEW, unvalidated mechanism,
+ *  2026-08-16, built the same day as STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY and directly
+ *  modeled on both that tier and STRATEGY_DEDUP_NEAR_TIE_RETRY).
+ *
+ *  Applies the same "run dead last, additive-only budget" pattern to a THIRD known double-edged
+ *  mechanism, and this one is the root flag this whole investigation started from:
+ *  `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` (topology.ts's `isConnected`/`isConnectedForTrap`, read via
+ *  `prep._cfg` at the connectivity-flood-fill call site shared by DFS, beam, repair, and
+ *  admissible-order search through `prune-gauntlet.ts`'s move-pruning gauntlet). Default-ON, it
+ *  treats both-axes-spent cells as walls in the flood-fill reachability check — a legitimate,
+ *  usually-correct tightening, but the exact beam-width-threshold timing artifact this report traces
+ *  (see "The mechanism, fully traced" above) means it occasionally prunes away the eventual winning
+ *  lineage. The report's own single-attempt-config comparison (`reports/2026-08-15-connectivity-
+ *  axis-exhausted-regression.md`'s "This is not isolated to R02248" section) found disabling this
+ *  flag entirely recovers `R02114` and `R00592` (referee-valid) — the two originally-confirmed
+ *  regressions `STRATEGY_DEDUP_NEAR_TIE_RETRY`'s own near-tie retention does NOT reach, because their
+ *  blocking collision is a different depth/shape a single runner-up slot doesn't cover — but the SAME
+ *  single-attempt test found `R03248` goes the OTHER way: it solves WITH the flag on and fails
+ *  WITHOUT it. Real gain (`R02114`/`R00592`), real loss (`R03248`), same knob — exactly the double-
+ *  edged shape a bounded last-resort retry is suited to, for the third time in this file.
+ *
+ *  MECHANISM: identical shape to STRATEGY_DEDUP_NEAR_TIE_RETRY — reruns the SAME `mainConfigs` ladder
+ *  (every DFS/beam attempt config) via `runInterleavedAttempts`/`runGateSerialAttempts`, with
+ *  `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` disabled through a Proxy override on `prep._cfg`, a fresh
+ *  additive node ceiling (`nodeBudget + CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION`),
+ *  and a fresh additive work allocation (own `workMeter.units` mark, sized via `DEFAULT_WORK_PER_MS`
+ *  from this tier's own ms allocation — the exact fix DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION's
+ *  own history needed after its first shipped design shared the depleting pool). `R03248` is
+ *  structurally protected the same way `R02644` was for the admissible-order tier: it already solves
+ *  via the normal, flag-ON ladder, so `result.solution` is set and this tier's own `!result.solution`
+ *  guard skips it entirely — it should never reach this tier at all.
+ *
+ *  Positioned dead last — AFTER STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY, the current true end of
+ *  the ladder — for the identical reason both prior tiers were placed there: nothing may run after
+ *  this one that still checks an unextended `nodeBudget`/`earlyTierNodeBudget`-derived ceiling, or
+ *  this tier's own additive extension would starve it exactly the way an earlier draft of the
+ *  dedup-retry tier starved the admissible-order tier itself.
+ *
+ *  NOT YET VALIDATED — same lifecycle stage both prior tiers shipped at before their own
+ *  local-then-population validation. Needs the same rigor: local spot-check against `R02114`/`R00592`
+ *  (recovery) and `R03248` (must remain unaffected), then a population-scale GHA A/B, before any
+ *  promotion decision. Unlike the two prior tiers, `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` gates a much
+ *  hotter, more frequently-hit code path (every connectivity check across every search technique, not
+ *  one specific dedup collision or one specific tier's profile choice) — a full ladder rerun without
+ *  it may be meaningfully more expensive per-attempt than either prior tier's own rerun, which is
+ *  itself a reason to validate cost (nodesExpanded/workSpent), not just solved-count, before
+ *  considering promotion. */
+export const CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION = 1.0;
+
+/** Extra node headroom given ADDITIVELY to STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own
+ *  last-resort tier, as a fraction of `nodeBudget` — same ADDITIVE (not withheld-from-anyone) design
+ *  as DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION/ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_
+ *  FRACTION, adopted from the start here rather than arrived at after a correction, since that
+ *  lesson is now established practice for any new last-resort tier in this file.
+ *
+ *  CORRECTION (2026-08-16, local testing before any GHA spend): an initial 0.25 (matching
+ *  DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION's own original starting point) was tried first and
+ *  found insufficient — both `R02114`/`R00592` still failed (`node-budget-reached` at the 75M
+ *  ceiling). This tier is now the THIRD retry tier in the ladder, stacked after both
+ *  `STRATEGY_DEDUP_NEAR_TIE_RETRY` (its own reserve up to +0.25×`nodeBudget`) and
+ *  `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` (+0.5×`nodeBudget`) — in the worst case the ladder
+ *  can already sit at up to `nodeBudget × 1.75` by the time this tier's own entry guard is checked,
+ *  before this tier's own additive room even begins. A diagnostic run with an artificially large
+ *  reserve override (2.0) DID recover both — `R02114` at 204,993 nodes and `R00592` at 220,726 nodes
+ *  for the winning attempt (`objectiveFirst@2000` in both cases), essentially IDENTICAL to the
+ *  original single-attempt-config figures — confirming the technique itself is exactly as cheap as
+ *  that evidence suggested; the reserve simply needs to be large enough to let the tier's turn
+ *  actually arrive, not to fund an expensive search once it does. Doubled the default to 0.5,
+ *  matching ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION's own final value, and
+ *  re-validated at that exact shipped setting (not the diagnostic override) before shipping — see
+ *  `reports/2026-08-15-connectivity-axis-exhausted-regression.md`'s "Applying the pattern elsewhere"
+ *  section for the full validation writeup. Still just a first cut, not a rigorous derivation —
+ *  population-scale validation is what actually determines whether 0.5 is sufficient corpus-wide,
+ *  same asymmetric-risk caution as every other reserve fraction in this file. */
+export const CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION = 0.5;
+
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
  *  repair fallback, tried BEFORE the ordinary DFS/beam main loop — see runRepairProbe.
@@ -1999,6 +2091,20 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         ? Math.min(1, nonDefaultRetryNodeReserveFractionRaw)
         : ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION;
 
+    // opts.connectivityAxisExhaustedRetryBudgetFractionOverride — same shape/rationale/hoisting
+    // reason as dedupRetryBudgetFraction/nonDefaultRetryBudgetFraction above. Opt-in/default-OFF
+    // (NEW, unvalidated mechanism — see CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION's own
+    // comment), so the `cfg &&` ... `=== true` check below is the opt-in convention, not the
+    // standard `!cfg || cfg.FLAG` shape.
+    const connectivityRetryFractionOverride = Number(opts.connectivityAxisExhaustedRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
+    const connectivityRetryBudgetFraction = Number.isFinite(connectivityRetryFractionOverride) && connectivityRetryFractionOverride >= 0
+        ? connectivityRetryFractionOverride
+        : CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION;
+    const connectivityRetryNodeReserveFractionRaw = Number(opts.connectivityAxisExhaustedRetryNodeReserveFractionOverride);
+    const connectivityRetryNodeReserveFraction = Number.isFinite(connectivityRetryNodeReserveFractionRaw) && connectivityRetryNodeReserveFractionRaw >= 0
+        ? Math.min(1, connectivityRetryNodeReserveFractionRaw)
+        : CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION;
+
     // Admissible-order tier's NODE RESERVE (see ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION). Resolved
     // here, before the probe, because it has to shrink the ceiling every EARLIER tier runs against —
     // that is the whole mechanism. `earlyTierNodeBudget` replaces `nodeBudget` for the probe, the
@@ -2092,6 +2198,32 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         ? Math.floor(nodeBudget * nonDefaultRetryNodeReserveFraction)
         : 0;
     const nonDefaultRetryNodeCeiling = nodeBudget === Infinity ? Infinity : nodeBudget + nonDefaultRetryNodeReserve;
+
+    // STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own node reserve — additive from the start (see
+    // CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION's own comment), never subtracted from
+    // `earlyTierNodeBudget` or any other tier's ceiling. Opt-in convention (`cfg && ... === true`) —
+    // this is a NEW, unvalidated mechanism, unlike its two promoted siblings above.
+    const connectivityRetryTierWillRun = connectivityRetryBudgetFraction > 0
+        && !!(cfg && cfg.STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY === true);
+    const connectivityRetryNodeReserve = (connectivityRetryTierWillRun && nodeBudget !== Infinity)
+        ? Math.floor(nodeBudget * connectivityRetryNodeReserveFraction)
+        : 0;
+    // STACKED on `nonDefaultRetryNodeCeiling` (the immediately-preceding tier's own ceiling), NOT
+    // `nodeBudget` directly — found necessary by local testing before any GHA spend: at matching
+    // fractions (both 0.5), `nodeBudget + connectivityRetryNodeReserve` computes to the EXACT SAME
+    // absolute value as `nonDefaultRetryNodeCeiling` (both `1.5 × nodeBudget`), so the instant that
+    // preceding tier maxes out its own ceiling on a failing attempt, this tier's entry guard
+    // (`nodesExpanded < connectivityRetryNodeCeiling`) is already false — zero real headroom,
+    // regardless of this tier's own reserve fraction. Confirmed directly: `R02114`/`R00592` both
+    // recovered with an artificially large reserve override (2.0) but STILL failed at the shipped 0.5
+    // default until this fix, landing at exactly the SAME `75,000,003`/`75,000,198` node counts either
+    // way — proof the tier was never actually getting more room as the fraction changed. Stacking on
+    // the preceding tier's own ceiling instead guarantees genuine additive headroom regardless of what
+    // fraction that tier happens to use, rather than relying on the two fractions coincidentally
+    // differing (which is what let `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY`'s own 0.5 vs.
+    // `STRATEGY_DEDUP_NEAR_TIE_RETRY`'s 0.25 avoid this exact bug by accident, not by design — not
+    // retroactively changed here, since both are already population-validated and shipped as-is).
+    const connectivityRetryNodeCeiling = nonDefaultRetryNodeCeiling === Infinity ? Infinity : nonDefaultRetryNodeCeiling + connectivityRetryNodeReserve;
 
     const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve;
 
@@ -2797,6 +2929,54 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             }
         } finally {
             prep._workCap = originalWorkCap;
+        }
+    }
+
+    // Last-resort connectivity-axis-exhausted retry pass (CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_
+    // FRACTION, STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY) — see that flag's own comment in
+    // ablation-config.mjs and the constant's own comment above for the full rationale. Same
+    // Proxy-override shape as the dedup-near-tie-retry pass above, toggling
+    // PRUNE_CONNECTIVITY_AXIS_EXHAUSTED instead of STRATEGY_DEDUP_NEAR_TIE_RETENTION. Opt-in/
+    // default-OFF (NEW, unvalidated mechanism) — the flag check below (`cfg &&` ... `=== true`) is
+    // the opt-in convention, so this block is a strict no-op for every production/interactive caller
+    // (cfg null) until explicitly enabled.
+    //
+    // Positioned dead last — AFTER the admissible-order-non-default-retry tier above, the current
+    // true end of the ladder — for the identical reason both prior retry tiers were placed there:
+    // nothing may run after this one that still checks an unextended `nodeBudget`/
+    // `earlyTierNodeBudget`-derived ceiling, or this tier's own additive extension would starve it.
+    //
+    // `connectivityRetryTierWillRun` is the SAME predicate connectivityRetryNodeReserve is derived
+    // from — the two must stay in lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history:
+    // drift either way strands the reserve or spends one that was never allocated).
+    if (!result.solution && connectivityRetryTierWillRun && prep._metrics.nodesExpanded < connectivityRetryNodeCeiling) {
+        const originalCfg = prep._cfg;
+        const connectivityRetryCfg: AblationConfig = new Proxy({} as AblationConfig, {
+            get(_target, prop: string | symbol) {
+                if (typeof prop !== 'string') return undefined;
+                if (prop === 'PRUNE_CONNECTIVITY_AXIS_EXHAUSTED') return false;
+                if (originalCfg && Object.prototype.hasOwnProperty.call(originalCfg, prop)) return originalCfg[prop];
+                return true;
+            },
+        });
+        prep._cfg = connectivityRetryCfg;
+        try {
+            const connectivityRetryTotalBudget = Math.floor(timeBudgetMs * connectivityRetryBudgetFraction);
+            const connectivityRetryStart = Date.now();
+            // FRESH, ADDITIVE work allocation — same "extend, don't share the depleted pool"
+            // philosophy as dedupRetryWorkStart/dedupRetryWorkBudget above (that tier's own history:
+            // sharing the depleting (workBudget, workStart) pool with every earlier tier starved its
+            // attempts of work even when the node reserve genuinely protected the node ceiling).
+            const connectivityRetryWorkStart = workMeter.units;
+            const connectivityRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(connectivityRetryTotalBudget * DEFAULT_WORK_PER_MS));
+            const connectivityRetryResult = useInterleaving && activeGates.length > 1
+                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, connectivityRetryTotalBudget, connectivityRetryStart, yieldFn, connectivityRetryNodeCeiling, connectivityRetryWorkBudget, connectivityRetryWorkStart)
+                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, connectivityRetryTotalBudget, connectivityRetryStart, yieldFn, connectivityRetryNodeCeiling, connectivityRetryWorkBudget, connectivityRetryWorkStart);
+            for (const attempt of connectivityRetryResult.attempts) attempt.connectivityAxisExhaustedRetry = true;
+            result.attempts.push(...connectivityRetryResult.attempts);
+            if (connectivityRetryResult.solution) result.solution = connectivityRetryResult.solution;
+        } finally {
+            prep._cfg = originalCfg;
         }
     }
 
