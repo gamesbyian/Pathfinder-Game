@@ -44,6 +44,15 @@
 > validated (**809/1700, +45 vs. the 764 baseline, ZERO levels lost**, on the FIRST population attempt
 > — no revision cycle needed), and **PROMOTED to production default-ON**. See "Applying the pattern
 > elsewhere" and "Promoted to default-ON (STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY)" below.
+> **Applied a THIRD time (2026-08-16) directly to `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` itself — the
+> root flag this whole investigation started from** — as `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`,
+> targeting `R02114`/`R00592` (the two originally-confirmed regressions `STRATEGY_DEDUP_NEAR_TIE_
+> RETRY` doesn't reach). Locally validated (both recovered referee-valid; `R03248`/`R02248` confirmed
+> unaffected) after finding and fixing a NEW variant of the same starvation bug class — this tier's
+> ceiling, as a third stacked retry tier, needs to build on the PRECEDING tier's own ceiling, not
+> restart from `nodeBudget`, or two tiers at the same fraction land on the identical absolute ceiling
+> and the later one gets zero real headroom. **Not yet population-validated or promoted.** See "A
+> third application" below.
 > **Scope:** `modules/solver/search.ts` (`beamSearchFromGate`'s state-dedup block +
 > `STRATEGY_DEDUP_NEAR_TIE_RETENTION` gating), `modules/solver/orchestration.ts` (the new
 > `STRATEGY_DEDUP_NEAR_TIE_RETRY` last-resort tier), `scripts/ablation-config.mjs` (both new flags),
@@ -662,6 +671,65 @@ passing; `npm run check` clean; `npm run test:node` clean; `npm run solver:bench
 160/160 published levels, no regressions, byte-identical node count to before this change (this
 default-on tier essentially never fires on the well-tuned published corpus, same as the first
 promotion).
+
+## A third application: `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`, for `R02114`/`R00592`
+
+Applied the same pattern a third time, directly to the ROOT flag this whole investigation started
+from: `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` itself. The report's own single-attempt-config comparison
+(above, "This is not isolated to `R02248`") already showed disabling this flag entirely recovers
+`R02114` and `R00592` (referee-valid) — the two originally-confirmed regressions
+`STRATEGY_DEDUP_NEAR_TIE_RETRY`'s own near-tie retention doesn't reach, because their blocking
+collision is a different depth/shape a single runner-up slot doesn't cover — but the same test found
+`R03248` goes the OTHER way (solves flag-on, fails flag-off). Real gain, real loss, same knob, for
+the third time in this file.
+
+**Mechanism**: structurally identical to `STRATEGY_DEDUP_NEAR_TIE_RETRY` (not the admissible-order
+tier's own per-profile shape) — reruns the SAME `mainConfigs` ladder with
+`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` disabled via a Proxy override, a fresh additive node ceiling, and
+a fresh additive work allocation. `R03248` is structurally protected the same way `R02644` was: it
+already solves via the normal flag-on ladder, so `!result.solution` skips this tier entirely.
+
+**A new bug, a new variant of the same starvation class.** Local testing at the initial 0.25 reserve
+(mirroring `DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION`'s own original value) found `R02114`/`R00592`
+still failing at `node-budget-reached`. Doubling to 0.5 (matching `ADMISSIBLE_ORDER_NON_DEFAULT_
+RETRY_NODE_RESERVE_FRACTION`'s own final value) made **no difference at all** — both landed at the
+identical node count either way. Root cause: this is now the THIRD retry tier in the ladder, and its
+ceiling (`nodeBudget + 0.5×nodeBudget`) computed to the exact same absolute value as the tier
+immediately before it (`STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY`'s own ceiling, also `nodeBudget
++ 0.5×nodeBudget`) — so the instant that tier maxed out on a failing attempt, this tier's entry guard
+was already false, giving it zero real headroom regardless of its own fraction. Fixed by stacking
+this tier's ceiling on the PRECEDING tier's own ceiling (`nonDefaultRetryNodeCeiling +
+connectivityRetryNodeReserve`) instead of restarting from `nodeBudget` — guaranteeing genuine
+additive headroom regardless of what fraction the tier before it happens to use, rather than relying
+on the two fractions coincidentally differing (which is what let the SECOND tier avoid this exact bug
+by accident when it was built, not by design). The two already-promoted tiers were not retroactively
+changed — both are already population-validated and shipped as-is.
+
+**Local validation after the fix** (real `solveLevel()`, `nodeBudget=50,000,000`, referee-validated):
+
+| level | result | detail |
+|---|---|---|
+| `R02114` | **solved**, referee-valid | via retry, 75,843,583 nodes total; winning attempt (`objectiveFirst@2000`) needs 204,993 nodes — essentially identical to the original single-attempt-config figure |
+| `R00592` | **solved**, referee-valid | via retry, 75,896,832 nodes total; winning attempt needs 220,726 nodes — same match |
+| `R03248` | unaffected | solves normally (340,928 nodes), retry never fires |
+| `R02248` | unaffected | solves via its own existing near-tie-retention fix (4,250,643 nodes), retry never fires |
+
+Both targets recovered with node counts for the winning attempt matching the original evidence almost
+exactly — confirming the technique itself is exactly as cheap as that evidence suggested; the only
+real cost is reaching the tier's own turn at all, now that it stacks correctly. 6 new
+`orchestration.test.ts` tests (reruns-the-ladder, inert-by-default, explicit-false + sparse-object,
+budget-fraction-0, `disableExtraBudgetPasses` + override, mocked-dispatch rescue) — one initial test
+failure (32 vs. 16 attempts) traced to a missing isolation override in the test itself (the
+also-default-on dedup-retry tier's own attempts weren't suppressed), not a mechanism bug; fixed before
+commit. Full solver suite: 394/394 passing. `npm run solver:bench -- --check`: 160/160 published
+levels, no regressions, byte-identical node count (opt-in/default-OFF, strict no-op as expected).
+
+**Not yet validated at population scale, and not promoted** — same lifecycle stage the two prior
+tiers shipped at before their own population validation. Unlike those two, this flag gates a much
+hotter, more frequently-hit code path (every connectivity check across every search technique, not
+one dedup collision or one tier's profile choice) — a full ladder rerun without it may be meaningfully
+more expensive per-attempt, which is a reason to watch cost (`nodesExpanded`/`workSpent`), not just
+solved-count, in the population run.
 
 ## Infrastructure fixes surfaced by this investigation
 
