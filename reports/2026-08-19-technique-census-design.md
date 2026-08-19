@@ -86,8 +86,11 @@ below the node cap**, because it isn't being fed fresh restarts by the rest of t
 is in production — bounded search width genuinely runs out of distinct states to expand. dfs/ida/
 repair techniques, when they don't solve, reliably run to the cap at a consistent ~0.7ms per 1,000
 nodes (~35s at 50M). Beam is bimodal: often cheap (exhausts in 1–5s) but capable of running the full
-cap when the level structure allows deep exploration (~150–200s, per a real production winning beam
-attempt recorded earlier this session: `R02422` reached 50,333,677 nodes in 155,856ms). Blended
+cap when the level structure allows deep exploration (~150–200s, per a beam attempt recorded earlier
+this session as a production winning attempt on `R02422` at 50,333,677 nodes/155,856ms — a claim that
+did not reproduce on direct re-verification during this same day's `STRATEGY_MC_NEIGHBOR_BUDGET_
+RETRY` promotion work, see `docs/solver-opt-in-experiment-ledger.md`'s correction note; kept here only
+as the qualitative "beam can run the full cap" illustration, not a re-verified figure). Blended
 estimate: **~35s/cell for dfs/ida/repair, ~50s/cell blended for beam, ~45s/cell overall average.**
 
 **A second calibration round (2026-08-19, for the full-parity revision below) checked whether solved

@@ -235,11 +235,14 @@ cost below) — but the durable process result from building it is the DEFECT it
 tiers that came before it.** That prune shipped
 default-ON on 611/1700 → 665/1700 (59 gained / **5 lost**), explicitly accepting its five losses
 because nothing then existed to recover them. Three of the five have since been recovered by
-unrelated work; `R02119`/`R02422` remain unsolved at the 819 baseline and **both recover at HEAD
-with the prune off**, referee-valid, via exactly the configs
+unrelated work; `R02119`/`R02422` remain unsolved at the 819 baseline and were reported (at this
+point in the investigation) to **both recover at HEAD with the prune off**, referee-valid, via
+exactly the configs
 [`reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md`](../reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md)
-named. The tier as first written — a faithful copy of the connectivity tier — recovered **neither**,
-and raising its reserve 4.5× changed only how long its *first* config ran (12.7s → 77.1s).
+named — **`R02422`'s own recovery does not reproduce; see the correction note in
+[`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md)'s `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY`
+section, added 2026-08-19.** The tier as first written — a faithful copy of the connectivity tier — recovered
+**neither**, and raising its reserve 4.5× changed only how long its *first* config ran (12.7s → 77.1s).
 
 **The defect: every ladder-rerun tier gives its first config the entire node reserve and the other
 seven exactly 0ms.** These tiers divide budget between configs in WORK units but treat the node
@@ -254,8 +257,9 @@ the admissible-order tier, recurring at a new call site in tiers written after t
 
 Fixed for the new tier only (per-config node staircase via `lateConfigStart = 0`): its profile became
 `5134, 5199, 2094` and `R02119` solved via `beam:mustCrossFirst@beam2000`, referee-valid, at the full
-50M level-blind protocol. `R02422` still fails and is understood — its winning attempt needs
-50,333,677 nodes alone, more than a fair 8-way split of the reserve can grant.
+50M level-blind protocol. `R02422` still fails; the "needs 50,333,677 nodes alone" explanation
+recorded here at the time does not reproduce under later re-verification (see the ledger's own
+correction note) — its non-recovery is not a budget-starvation story after all.
 
 **That follow-up was then built and CLOSED NEGATIVE the same day** as
 `STRATEGY_RETRY_TIER_NODE_STAIRCASE` (opt-in, default OFF, retained for the record). Generalizing the

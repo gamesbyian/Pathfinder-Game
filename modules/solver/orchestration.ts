@@ -1394,12 +1394,15 @@ export const REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *
  *  WHY NOW, AND WHAT IS CONFIRMED. Three of the five (`R00635`, `R02823`, `R02867`) have since been
  *  recovered by unrelated solver work and are solved at the 2026-08-16 capability baseline (run
- *  `31918095910`, 819/1700). The remaining two, `R02119` and `R02422`, are still unsolved there and
- *  BOTH recover at HEAD when the prune is disabled — referee-valid, level-blind, at the production
- *  50M-node protocol, via exactly the winning configs the 2026-08-12 diagnosis named
- *  (`beam:mustCrossFirst@beam2000` at 25,863,058 nodes; `beam:intersectionHarvest@beam5000(diverse)`
- *  at 50,333,677). So the diagnosed mechanism still reproduces 8 days and ~95 corpus-2 solves later,
- *  on levels the current ladder cannot otherwise reach.
+ *  `31918095910`, 819/1700). The remaining two, `R02119` and `R02422`, are still unsolved there;
+ *  `R02119` recovers at HEAD when the prune is disabled — referee-valid, level-blind, at the
+ *  production 50M-node protocol, via `beam:mustCrossFirst@beam2000` at 25,863,058 nodes, matching the
+ *  2026-08-12 diagnosis. `R02422` was ALSO reported to recover this way (via
+ *  `beam:intersectionHarvest@beam5000(diverse)` at 50,333,677 nodes) but that finding does NOT
+ *  reproduce — see MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION's own promotion comment below for the
+ *  2026-08-19 re-verification (the config exhausts naturally at ~304,900 nodes regardless of this
+ *  prune's setting; not a budget story). So the diagnosed mechanism is confirmed live only via
+ *  `R02119` 8 days and ~95 corpus-2 solves later, not via both originally-claimed levels.
  *
  *  WHY LEVELS THE PRUNE HELPS ARE SAFE. Structurally protected exactly the way `R02644` was for
  *  `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` and `R03248` for
@@ -1447,10 +1450,12 @@ export const MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION = 1.0;
  *  literally zero headroom no matter what fraction it is given), applied here from the start rather
  *  than rediscovered a fifth time.
  *
- *  SIZING. `R02422`, the more expensive of the two confirmed targets, needed 50,333,677 cumulative
- *  nodes to solve in a from-scratch prune-off solve at the 50M protocol. This tier reruns
- *  `mainConfigs` only (never the repair fallback), so its own replay is cheaper than that figure,
- *  but the figure is the right order of magnitude to provision against. At 0.5 of a
+ *  SIZING (historical basis, not re-derived after the 2026-08-19 correction below). `R02422` was
+ *  originally reported to need 50,333,677 cumulative nodes to solve in a from-scratch prune-off
+ *  solve at the 50M protocol -- that figure does not reproduce (see MC_NEIGHBOR_BUDGET_RETRY_BUDGET_
+ *  FRACTION's own promotion comment), but the fraction below was never retuned to a smaller number on
+ *  the strength of that correction, since the actual population A/B (which supersedes any single-
+ *  level sizing estimate) already validated the fraction as shipped. At 0.5 of a
  *  `repairElitePrefixDfsRetryNodeCeiling` that is itself 100M at `nodeBudget` 50M (both preceding
  *  retry tiers default-ON, elite-prefix-DFS retry default-OFF and contributing 0), that is 50M of
  *  genuine additive headroom. Calibrated to the confirmed targets, NOT to an A/B — expect to retune
