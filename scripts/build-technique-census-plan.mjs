@@ -221,19 +221,37 @@ const T1_PROMOTED_VARIANTS = [
     // baseline to promote FROM; it's included here anyway (rather than left at T4's smaller sample)
     // because it's a genuine, cheap, distinct algorithmic variant per point 1's own framing, not
     // because a toggle comparison is meaningful for it specifically.
-    { label: 'dfs:repair:repair(turnBiased)+repair-turn-bias-on', techniqueKey: 'dfs:repair:repair(turnBiased)', ablation: { enable: ['STRATEGY_REPAIR_TURN_BIAS'], disable: [] }, eligible: raw => (raw.landmarks ?? []).some(l => typeof l.role === 'string' && l.role.startsWith('mustTurn')) },
+    //
+    // ablation: null, NOT { enable: ['STRATEGY_REPAIR_TURN_BIAS'] } -- verified 2026-08-19 that the
+    // flag is inert here regardless: attempt-dispatch.ts reads `repairTurnBiased` straight off the
+    // AttemptConfig object (`!!repairTurnBiased`), which parseAttemptConfigKey already sets true from
+    // the `(turnBiased)` marker in the key string itself, never consulting prep._cfg for it.
+    // STRATEGY_REPAIR_TURN_BIAS only gates whether attempts.ts's getAttemptConfigs ADDS this config to
+    // a ladder's list -- a routing decision this census never makes (it constructs the config
+    // directly and calls runAttempt). Setting it would have implied the toggle does something here;
+    // it doesn't, so it's omitted rather than left in as misleading decoration.
+    { label: 'dfs:repair:repair(turnBiased)', techniqueKey: 'dfs:repair:repair(turnBiased)', ablation: null, eligible: raw => (raw.landmarks ?? []).some(l => typeof l.role === 'string' && l.role.startsWith('mustTurn')) },
 ];
 
 // ─── T4's remaining curated flag experiments (smaller sample -- exploratory, not yet evidenced) ────
-const FLAG_EXPERIMENTS = [
-    {
-        name: 'archetype-routing-off',
-        disable: ['STRATEGY_ARCHETYPE_ROUTING'],
-        techniqueKeys: ['dfs:default'],
-        eligible: () => true,
-        note: 'Isolates the catch-all fallback config from the feature-routing that normally surrounds it.',
-    },
-];
+// Empty as of 2026-08-19: the one candidate here, STRATEGY_ARCHETYPE_ROUTING off (testing dfs:default
+// as the catch-all fallback in isolation), was found and REMOVED after a direct architectural check,
+// not a soft judgment call -- that flag is read ONLY inside attempts.ts's getAttemptConfigs, which
+// decides which configs a LADDER routes to. This census never calls getAttemptConfigs; every cell
+// constructs its AttemptConfig directly and calls runAttempt. So the toggle is not merely unlikely to
+// matter here, it is PROVABLY inert on every cell it would have generated -- verified by tracing every
+// read site of the flag (grep across modules/solver/*.ts) and confirming none of them sit in the
+// runAttempt/attempt-dispatch.ts/dfsFromGate/beamSearchFromGate/repairSearchFromGate/prune-gauntlet.ts
+// call graph this census actually exercises. Left as an empty list (not deleted structurally) so a
+// FUTURE flag confirmed to be read from prep._cfg inside that call graph has a place to go, and so
+// the "what belongs in group 3 but hasn't earned a slot yet" framing above stays meaningful. See
+// reports/2026-08-19-technique-census-design.md's "Is anything else provably wasted" section for the
+// full writeup, including the general check this failure mode implies: EVERY flag promoted anywhere
+// in this file must be traced to a live prep._cfg read inside the actual search functions
+// (search.ts/prune-gauntlet.ts/topology.ts/repair-search.ts), not merely "the flag exists and sounds
+// relevant" -- the three flags in T1_PROMOTED_VARIANTS above were re-verified against exactly this
+// standard the same day this was found, and all three passed.
+const FLAG_EXPERIMENTS = [];
 
 // ─── T3's curated complementary pairs ───────────────────────────────────────────────────────────
 // Each pair shares ONE budget (method-probe.mjs's own --only=A,B semantics: cumulative across the

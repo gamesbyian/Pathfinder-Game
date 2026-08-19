@@ -38,14 +38,16 @@ self-updating if the ladder's routing ever changes:
 
 | Tier | Population | Budget | Cells | What it answers |
 |---|---|---:|---:|---|
-| **T1** | all 34 techniques + 7 promoted flag-variant rows × a 400-level sample (all 7 currently-unsolved Corpus-1 levels + a seeded random draw from Corpus-2's 881 unsolved) | 50,000,000 nodes (full) | 15,942 | **The decision-bearing tier**: can any single isolated technique (or known-complementary flag variant) crack a level the production ladder can't, given the whole budget instead of a shared slice |
-| **T2** | all 34 techniques × every level in all 3 real corpora (1,962 levels, solved and unsolved) | 1,000,000 nodes | 66,708 | Cheap breadth/redundancy fingerprint across the whole game — which techniques are near-duplicates of each other, which are load-bearing |
-| **T3** | 10 curated complementary pairs × a 200-level sub-sample of T1's own pool | 50,000,000 nodes (shared across the pair, same cost shape as one T1 cell) | 2,000 | Does trying A-then-B find something neither finds alone |
-| **T4** | 1 curated ablation-flag experiment (`STRATEGY_ARCHETYPE_ROUTING` off — the one flag without prior evidence of a different solve population) × the same 200-level sub-sample | 50,000,000 nodes | 200 | Exploratory flag sensitivity, smaller sample. `PRUNE_MC_NEIGHBOR_BUDGET`/`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`/`STRATEGY_DEDUP_NEAR_TIE_RETENTION`/`STRATEGY_REPAIR_TURN_BIAS` — every flag WITH such evidence — were promoted to T1 instead (see "External review" below); `PRUNE_PORTAL_PARITY_ENVELOPE` was dropped entirely (evidence-backed inert) |
+| **T1** | all 34 techniques (minus 1 provably-degenerate eligibility skip) + 6 promoted flag-variant rows × a 400-level sample (all 7 currently-unsolved Corpus-1 levels + a seeded random draw from Corpus-2's 881 unsolved) | 50,000,000 nodes (full) | 15,810 | **The decision-bearing tier**: can any single isolated technique (or known-complementary flag variant) crack a level the production ladder can't, given the whole budget instead of a shared slice |
+| **T2** | all 34 techniques (minus the same eligibility skip) × every level in all 3 real corpora (1,962 levels, solved and unsolved) | 1,000,000 nodes | 65,714 | Cheap breadth/redundancy fingerprint across the whole game — which techniques are near-duplicates of each other, which are load-bearing |
+| **T3** | 10 curated complementary pairs (skipped where a member is eligibility-ineligible) × a 200-level sub-sample of T1's own pool | 50,000,000 nodes (shared across the pair, same cost shape as one T1 cell) | 1,932 | Does trying A-then-B find something neither finds alone |
+| **T4** | *(empty — see "Was that the only one?" below)* | — | 0 | Structural placeholder for a future flag confirmed to reach live search code, not merely routing. Every candidate so far is either promoted to T1 (`PRUNE_MC_NEIGHBOR_BUDGET`/`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`/`STRATEGY_DEDUP_NEAR_TIE_RETENTION`/`STRATEGY_REPAIR_TURN_BIAS`, each verified to read `prep._cfg` inside actual search code) or removed (`PRUNE_PORTAL_PARITY_ENVELOPE`: evidence-backed inert; `STRATEGY_ARCHETYPE_ROUTING`: provably inert in this census's execution model — only ever read inside routing logic this census bypasses) |
 
-**Total: 90,130 cells.** T3/T4's sample is a strict subset of T1's, so every (technique, level) pair
-they touch already has a T1 baseline — pairs and flags are compared by joining against T1's data at
-combine time, not by re-running a redundant control cell.
+**Total: 83,456 cells** (final, post-review + post-eligibility-audit numbers; see "External review"
+and "Was that the only one?" below for how this was reached from the original 90,130). T3/T4's
+sample is a strict subset of T1's, so every (technique, level) pair they touch already has a T1
+baseline — pairs and flags are compared by joining against T1's data at combine time, not by
+re-running a redundant control cell.
 
 ### Why the population isn't literally "every level"
 
@@ -85,15 +87,16 @@ estimate: **~35s/cell for dfs/ida/repair, ~50s/cell blended for beam, ~45s/cell 
 
 | tier | cells | est. cost |
 |---|---:|---:|
-| T1 | 15,942 | ~204 runner-hours |
-| T2 | 66,708 | ~37 runner-hours |
-| T3 | 2,000 | ~25 runner-hours |
-| T4 | 200 | ~3 runner-hours |
-| **total** | **84,850** | **~268 runner-hours** |
+| T1 | 15,810 | ~202 runner-hours |
+| T2 | 65,714 | ~36 runner-hours |
+| T3 | 1,932 | ~24 runner-hours |
+| T4 | 0 | 0 runner-hours |
+| **total** | **83,456** | **~262 runner-hours** |
 
-Across 60 shards: **~4.47h/shard average**, against GitHub's hard 360-minute (6h) per-job ceiling —
-**~25% margin** (post-review numbers; the original 90,130-cell/600-level design had ~18% margin
-before trading level-sample breadth for the promoted flag variants — see "External review" below). Cells are interleaved (technique varies fastest within a tier) so any contiguous
+Across 60 shards: **~4.37h/shard average**, against GitHub's hard 360-minute (6h) per-job ceiling —
+**~27% margin** (final numbers; the original 90,130-cell/600-level design had ~18% margin before
+trading level-sample breadth for the promoted flag variants, then the eligibility audit removed a
+further 1,394 cells outright — see "External review" and "Was that the only one?" below). Cells are interleaved (technique varies fastest within a tier) so any contiguous
 shard slice contains a representative mix of cheap and expensive cells rather than clumping. Given
 real calibration uncertainty (6 samples, not a population), every shard is additionally wrapped in a
 `timeout -k 30s --preserve-status 345m` wall-clock safety net (15 minutes under the hard cap) — a
@@ -193,7 +196,8 @@ meaningless outside one. Applying this:
 **3. Sample size trimmed 600 → 400 to afford the promotions.** The 7 promoted variants add 3,493
 cells to T1 at the same full budget — recalibrated total cost with `t1_sample_size=600` came to
 ~370h (over the 60-shard/360-runner-hour envelope). Trimming to 400 (still all 7 of Corpus-1's
-unsolved levels, plus ~45% of Corpus-2's 881) brings the total to **84,850 cells, ~268 runner-hours,
+unsolved levels, plus ~45% of Corpus-2's 881) brings the total to **84,850 cells, ~268 runner-hours
+(pre-eligibility-audit; see "Was that the only one?" below for the final 83,456-cell/~262-hour numbers),
 ~4.47h/shard average — a wider margin (~25%) than the original 600-level design had, despite testing
 materially more per level.** This is the direct trade the review's own framing argues for: fewer raw
 levels, but every level gets a fair shot from techniques we already have specific reason to think
@@ -277,3 +281,41 @@ rather than half of it silently doing nothing). Saved 1,194 cells (15,942→15,8
 66,708→65,714 in T2, 2,000→1,932 in T3) — a modest ~15 runner-hour saving, but the more important
 effect is removing rows from the capability tables that would otherwise silently duplicate another
 row's numbers under a different label, which is worse than wasted compute: it's misleading output.
+
+### "Was that the only one?" — asked again, found a bigger case
+
+Pressed further: was the mustTurnBiased case the only one, or the only one found so far? Went
+looking systematically rather than declaring the first find complete, checking a different failure
+mode entirely — not "does this technique degenerate to another one," but "does this **ablation flag**
+actually reach the code my census executes, or only code my census never calls."
+
+**Every ablation flag promoted to T1 scale must be traced to a live `prep._cfg` read inside the
+actual search functions this census's `runAttempt`/`attempt-dispatch.ts` call graph exercises**
+(`search.ts`, `prune-gauntlet.ts`, `topology.ts`, `repair-search.ts`) — not merely "the flag exists
+and sounds like it should matter." Applying that standard to all four promoted flags:
+
+- `PRUNE_MC_NEIGHBOR_BUDGET`, `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`, `STRATEGY_DEDUP_NEAR_TIE_RETENTION`
+  all read `prep._cfg` directly inside `prune-gauntlet.ts`/`topology.ts`/`search.ts`, functions
+  genuinely on this census's execution path. **Re-verified empirically, not just architecturally**:
+  ran the exact `technique-census.mjs` pipeline (not `method-probe.mjs`) on the `mc-neighbor-budget-
+  off` variant against `R02119`, a level with a known ground-truth answer from earlier work this
+  session (recovers only with `PRUNE_MC_NEIGHBOR_BUDGET` disabled) — solved, matching the known
+  answer exactly (112,938 nodes, `beam:mustCrossFirst@beam2000`). Confirmed real, not just plausible.
+- `STRATEGY_ARCHETYPE_ROUTING` is read **only** inside `attempts.ts`'s `getAttemptConfigs` — the
+  function that decides which configs a *ladder* routes to. This census never calls
+  `getAttemptConfigs`; every cell constructs its `AttemptConfig` directly and calls `runAttempt`,
+  bypassing routing entirely. So the flag is not merely unlikely to matter here — it is **provably
+  inert on every single cell it would generate, unconditionally, on every level** — a strictly bigger
+  problem than the must-turn case (which was conditional on a level property; this one has no
+  condition under which it does anything at all in this execution model). The entire
+  `archetype-routing-off` T4 experiment (200 cells) was removed, not gated.
+- A related, smaller finding surfaced by the same check: the `repair-turn-bias-on` T1 variant's own
+  `ablation: { enable: ['STRATEGY_REPAIR_TURN_BIAS'] }` was *also* inert, for the identical reason —
+  `attempt-dispatch.ts` reads `repairTurnBiased` straight off the `AttemptConfig` object (already set
+  `true` by the `(turnBiased)` marker in the technique key string), never consulting `prep._cfg` for
+  it. Not wasted compute (the cell still tests something real — the technique itself), but the
+  ablation toggle implied the flag was what mattered, and it wasn't. Simplified to `ablation: null`.
+
+T4 is now empty (`FLAG_EXPERIMENTS = []`) — every candidate that has ever been proposed for it is now
+either promoted to T1 (evidenced) or removed (provably inert here). Left as a structural placeholder,
+not deleted, for a future flag that's confirmed to reach live search code rather than only routing.
