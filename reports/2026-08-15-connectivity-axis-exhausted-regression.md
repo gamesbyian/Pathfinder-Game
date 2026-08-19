@@ -51,8 +51,15 @@
 > unaffected) after finding and fixing a NEW variant of the same starvation bug class — this tier's
 > ceiling, as a third stacked retry tier, needs to build on the PRECEDING tier's own ceiling, not
 > restart from `nodeBudget`, or two tiers at the same fraction land on the identical absolute ceiling
-> and the later one gets zero real headroom. **Not yet population-validated or promoted.** See "A
-> third application" below.
+> and the later one gets zero real headroom. **Population-validated (2026-08-16, run 31918095910) and
+> PROMOTED to production default-ON**: corpus1 95/95 — identical solved-ID set, zero change; corpus2
+> 809 → 819, **+10 solves, ZERO regressions** (`R02114`/`R00592` both recovered as predicted, plus 8
+> more; `R03248` confirmed unaffected). Unlike the two prior tiers this one showed a real, larger cost
+> increase — corpus1 nodes +18.7%/work +12.2%, corpus2 nodes +28.2%/work +22.1% — reflecting that
+> `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` gates a much hotter code path than either prior tier's own
+> target; promoted anyway since the ladder's bar is solved-count gain plus zero regressions, not cost
+> neutrality. See "A third application" and "Population-scale confirmation and promotion
+> (`STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`)" below.
 > **Scope:** `modules/solver/search.ts` (`beamSearchFromGate`'s state-dedup block +
 > `STRATEGY_DEDUP_NEAR_TIE_RETENTION` gating), `modules/solver/orchestration.ts` (the new
 > `STRATEGY_DEDUP_NEAR_TIE_RETRY` last-resort tier), `scripts/ablation-config.mjs` (both new flags),
@@ -724,12 +731,73 @@ also-default-on dedup-retry tier's own attempts weren't suppressed), not a mecha
 commit. Full solver suite: 394/394 passing. `npm run solver:bench -- --check`: 160/160 published
 levels, no regressions, byte-identical node count (opt-in/default-OFF, strict no-op as expected).
 
-**Not yet validated at population scale, and not promoted** — same lifecycle stage the two prior
-tiers shipped at before their own population validation. Unlike those two, this flag gates a much
-hotter, more frequently-hit code path (every connectivity check across every search technique, not
-one dedup collision or one tier's profile choice) — a full ladder rerun without it may be meaningfully
-more expensive per-attempt, which is a reason to watch cost (`nodesExpanded`/`workSpent`), not just
-solved-count, in the population run.
+Population-scale validation (dispatched next) — see the following section for the result.
+
+## Population-scale confirmation and promotion (`STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`)
+
+Dispatched `solver-stress-refresh.yml` (`deterministic=true`, `persist_hints=true`,
+`enable_flags=STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`) on `main` @
+`fc3040cb3959e499a9a8df56348e43cb4300b077`, run `31918095910`, reusing the 809-baseline run
+(`31910836458`) since the only functional difference between the two commits is this one flag. The
+persist step landed cleanly on `main` (commit `c2ddd3764175266b098c946fc5ba33f21c3a4067`).
+
+**Solved-count result — a clean superset, exactly the promotion bar:**
+
+| corpus | baseline | new | delta |
+|---|---|---|---|
+| corpus 1 | 95/102 | 95/102 | **identical solved-ID set — zero change** |
+| corpus 2 | 809/1700 | 819/1700 | **+10, ZERO regressions** |
+
+Exact corpus-2 diff: gained `R00296`, `R00592`, `R02068`, `R02088`, `R02114`, `R02491`, `R02690`,
+`R02878`, `R03195`, `R03357` (10 levels); lost: none. Both originally-targeted levels (`R02114`,
+`R00592`) recovered exactly as the local validation predicted, plus 8 more the local spot-check never
+tested for. `R03248` — the local single-attempt-config counter-example that solves flag-on and fails
+flag-off — was NOT lost, confirming the `!result.solution` skip-guard protected it at population scale
+the same way it protected `R02644`/`R02248` for the two prior tiers.
+
+**Cost result — the largest increase of the three tiers, as flagged before dispatch:**
+
+| corpus | metric | baseline | new | delta |
+|---|---|---|---|---|
+| corpus 1 | nodes | 936,819,573 | 1,111,819,565 | **+18.7%** |
+| corpus 1 | work | 1,415,794,400 | 1,588,279,948 | **+12.2%** |
+| corpus 2 | nodes | 78,500,720,005 | 100,607,325,929 | **+28.2%** |
+| corpus 2 | work | 97,229,415,622 | 118,724,006,397 | **+22.1%** |
+
+This is materially larger than either prior promoted tier's own cost delta, and is exactly what was
+predicted before dispatch: `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` gates a much hotter, more
+frequently-hit code path (every connectivity flood-fill across every search technique, via
+`prune-gauntlet.ts`'s shared move-pruning gauntlet) than either a single dedup collision
+(`STRATEGY_DEDUP_NEAR_TIE_RETRY`) or one tier's own profile choice
+(`STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY`), so a full ladder rerun without it is genuinely more
+expensive per-attempt, not just occasionally triggered.
+
+**Promoted anyway.** The explicit promotion bar for this ladder, applied consistently across all
+three tiers, is solved-count gain plus zero regressions — not cost neutrality; every tier in this
+ladder is inherently a cost/coverage trade by construction (it exists to search more when the cheaper
+path already failed). Given a clean +10/-0 population result on top of an already-validated local
+mechanism, promoted `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` to production default-ON
+(`!cfg || cfg.STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`, removed from `OPT_IN_FEATURES` in
+`scripts/ablation-config.mjs`). The cost increase is recorded here as the first data point worth
+watching if a fourth tier is ever stacked on top of this one: the ladder's worst-case multiplier on
+`nodeBudget` is now higher, and any new tier's own headroom has to be judged against an
+already-more-expensive baseline than the one the first two tiers were validated against.
+
+**Ripple-effect test fixes**: promoting a third default-ON tier broke 14 pre-existing
+`orchestration.test.ts` tests whose finite-`nodeBudget` arithmetic didn't isolate this newly-active
+tier (the same class of fix both prior promotions needed, at larger scale since three tiers now
+overlap in every such test) — fixed by adding `connectivityAxisExhaustedRetryBudgetFractionOverride: 0`
+alongside the existing isolation overrides, and rewriting the tier's own two "default-OFF" tests
+(`... is inert by default`, `... stays off under an explicit false / sparse object`) into the
+promoted-tier shape the other two tiers' suites already establish (`... is ACTIVE by default`, a
+`disableExtraBudgetPasses` suppression test, an explicit-false test, and a sparse-unrelated-object
+test). Full suite: 100/100 passing (`modules/solver/orchestration.test.ts`).
+
+**Verification before merge**: `npx tsc --noEmit` clean; `npx vitest run` 1179/1179 passing; `npm run
+check` clean; `npm run test:node` clean; `npm run solver:bench -- --check`: 160/160 published levels,
+no regressions, -24.1% wall time / +0.3% nodes vs. the (stale, 38-commits-behind) committed baseline —
+consistent with this tier essentially never firing on the well-tuned published corpus, same as both
+prior promotions.
 
 ## Infrastructure fixes surfaced by this investigation
 
