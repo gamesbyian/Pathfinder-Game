@@ -243,3 +243,37 @@ defaults above. The `baseline` input must point at a frozen `summary.json` from 
 `solver-stress-refresh.yml` run (default: `31918095910`, the 819/1700 baseline this session's other
 work is measured against) — this defines T1/T3/T4's "currently unsolved" population and should be
 refreshed to the latest capability run before dispatch if one has landed since.
+
+## "Does this ever run a technique we already know can't do anything different?" (2026-08-19)
+
+Asked directly, and worth a real answer rather than an assurance. Investigated by reading the
+relevant search code, not guessing — the general pattern (a DFS/beam/admissible-order *scoring
+profile* like `mustCrossFirst` or `portalFirstTransfer`) is **not** provably redundant on a level
+lacking its namesake feature: each profile differs from `default` across many weight dimensions at
+once (`goalAttractionWeight`, `perimeterBiasWeight`, `antiDitherWeight`, ... — see
+`modules/solver/policy.ts`'s `POLICY_PROFILES`), so the other weight differences still produce a
+genuinely different search even at zero of the profile's own feature. Pruning on "probably not the
+best fit for this level" would be exactly the kind of assumption this census exists to check
+empirically — a technique winning outside its expected regime is one of its more interesting
+possible findings, not noise to filter out. So that softer judgment is deliberately never used to
+skip a cell.
+
+One case **is** provably degenerate, though, and it was real: `dfs:repair:repair(mustTurnBiased)`
+layers a pure additive bias on top of ordinary repair via a second, independently-seeded RNG stream
+(`rand2` in `repair-search.ts`) that is only ever *consumed* when `ws.mustTurnMask !== 0` — a bit
+that can never be set on a level with zero must-turn landmarks, while the primary stream (`rand`) is
+seeded identically regardless of the bias flag. So on such a level the "biased" and ordinary repair
+searches are the same search, not just similar ones. Verified empirically, not just read from the
+code: on 3 real solvable levels, `nodesExpanded` and the full solution path matched exactly (70/93/58
+nodes, byte-for-byte identical paths) between the two configs. This exact config is already gated the
+same way in production's own `getAttemptConfigs` (`if (f.mustTurn > 0) ...`) — the census had
+inherited the technique key correctly (it's real ladder output) but not the eligibility constraint
+production enforces when deciding whether to generate it for a given level.
+
+Fixed: `TECHNIQUE_ELIGIBILITY` in `build-technique-census-plan.mjs` gates this one key on
+`mustTurn > 0` in T1, T2, and T3 (a pair containing an ineligible member degenerates to testing only
+the other one — pure duplicate of that member's own T1 cell, so the whole pair-level is skipped
+rather than half of it silently doing nothing). Saved 1,194 cells (15,942→15,810 in T1,
+66,708→65,714 in T2, 2,000→1,932 in T3) — a modest ~15 runner-hour saving, but the more important
+effect is removing rows from the capability tables that would otherwise silently duplicate another
+row's numbers under a different label, which is worse than wasted compute: it's misleading output.

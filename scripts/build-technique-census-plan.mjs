@@ -141,6 +141,37 @@ for (const name of Object.keys(corpusLevels)) {
 }
 const ALL_TECHNIQUE_KEYS = [...techniqueKeySet].sort();
 
+// ─── Provable-degeneracy eligibility gate (2026-08-19, per external review) ────────────────────────
+// A cell is only worth spending budget on if the technique COULD mechanically behave differently
+// from one already being tested. This is deliberately a narrow, code-verified list, not a general
+// "unlikely to help" heuristic — a scoring PROFILE (mustCrossFirst, portalFirstTransfer, etc.)
+// differs from `default` across MANY weight dimensions simultaneously (goalAttraction,
+// perimeterBias, antiDither, ...), not just its namesake term, so it is NOT provably redundant on a
+// level lacking that one feature — the other weight differences still produce genuinely different
+// search trajectories, which is exactly the empirical question this census exists to answer rather
+// than assume away. Pruning on that softer "probably not the best fit" judgment would silently hide
+// the census's own most interesting possible finding (a technique winning outside its expected
+// regime) — so it is deliberately NOT done here, only cells with a PROVEN, code-verified identical
+// outcome are skipped.
+//
+// The one confirmed case: `dfs:repair:repair(mustTurnBiased)` layers a PURE ADDITIVE bias on top of
+// ordinary repair (repair-search.ts) via a second, independently-seeded RNG stream (`rand2`) that is
+// only ever CONSUMED when `ws.mustTurnMask !== 0` (repair-search.ts line ~359) — a bit that can never
+// be set on a level with zero must-turn landmarks. The primary stream (`rand`) is seeded identically
+// regardless of the bias flag. So on such a level the two searches are the SAME search, not just
+// similar — verified empirically (not just read from the code) on 3 real solvable levels:
+// nodesExpanded and the full solution path matched exactly (70/93/58 nodes, byte-identical paths).
+// Gated the same way production's own getAttemptConfigs gates this exact config
+// (`if (f.mustTurn > 0) configs = [...configs, repairMustTurnBiasedAttempt()]`) — this mirrors an
+// eligibility constraint the ladder itself already enforces, not a new one invented for the census.
+const TECHNIQUE_ELIGIBILITY = new Map([
+    ['dfs:repair:repair(mustTurnBiased)', raw => (raw.landmarks ?? []).some(l => typeof l.role === 'string' && l.role.startsWith('mustTurn'))],
+]);
+function techniqueEligible(key, raw) {
+    const check = TECHNIQUE_ELIGIBILITY.get(key);
+    return !check || check(raw);
+}
+
 // ─── T1 sample: all currently-unsolved corpus-1 levels + a seeded sample of corpus-2's ────────────
 const c1Unsolved = corpusLevels.corpus1.filter(l => !isSolved('corpus1', l.id));
 const c2Unsolved = corpusLevels.corpus2.filter(l => !isSolved('corpus2', l.id));
@@ -256,7 +287,9 @@ function pushCell(tier, level, techniqueKeys, nodeBudget, ablation, extra = {}) 
 // T1_PROMOTED_VARIANTS's own comment above for why these get full T1 treatment rather than a
 // smaller side-sample).
 for (const level of t1Sample) {
-    for (const key of ALL_TECHNIQUE_KEYS) pushCell('T1', level, [key], T1_NODE_BUDGET, null);
+    for (const key of ALL_TECHNIQUE_KEYS) {
+        if (techniqueEligible(key, level.raw)) pushCell('T1', level, [key], T1_NODE_BUDGET, null);
+    }
     for (const variant of T1_PROMOTED_VARIANTS) {
         if (variant.eligible(level.raw)) pushCell('T1', level, [variant.techniqueKey], T1_NODE_BUDGET, variant.ablation, { variantLabel: variant.label });
     }
@@ -266,12 +299,22 @@ for (const level of t1Sample) {
 for (const name of Object.keys(corpusLevels)) {
     for (const l of corpusLevels[name]) {
         const level = { corpus: name, pos: l.pos, id: l.id };
-        for (const key of ALL_TECHNIQUE_KEYS) pushCell('T2', level, [key], T2_NODE_BUDGET, null);
+        for (const key of ALL_TECHNIQUE_KEYS) {
+            if (techniqueEligible(key, l.raw)) pushCell('T2', level, [key], T2_NODE_BUDGET, null);
+        }
     }
 }
 
-// T3: every curated pair x the T3/T4 sample, both members sharing one budget.
-for (const level of t3t4Sample) for (const pair of TECHNIQUE_PAIRS) pushCell('T3', level, pair, T3_NODE_BUDGET, null, { pairLabel: pair.join('+') });
+// T3: every curated pair x the T3/T4 sample, both members sharing one budget. Skipped whenever ANY
+// member is TECHNIQUE_ELIGIBILITY-ineligible for this level: a pair with a provably-inert member
+// degenerates to testing only the other member (method-probe's shared-budget semantics mean the
+// ineligible member never gets any real nodes once the eligible one has run) -- pure duplicate
+// compute with T1's own cell for that same (level, technique), not a genuine pair test. The only
+// pair this currently affects is dfs:repair:repair + dfs:repair:repair(mustTurnBiased) on
+// zero-must-turn levels.
+for (const level of t3t4Sample) for (const pair of TECHNIQUE_PAIRS) {
+    if (pair.every(k => techniqueEligible(k, level.raw))) pushCell('T3', level, pair, T3_NODE_BUDGET, null, { pairLabel: pair.join('+') });
+}
 
 // T4: every curated flag experiment x its mechanically-eligible subset of the T3/T4 sample.
 for (const exp of FLAG_EXPERIMENTS) {
