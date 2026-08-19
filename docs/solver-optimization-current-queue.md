@@ -23,7 +23,7 @@ The practical implication is not “raise every cap” or “reserve a fixed sli
 
 | Priority | Opportunity | Next decision-bearing step | Success signal |
 |---:|---|---|---|
-| 0 | **`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` regression (2026-08-15/16) — RESOLVED for all 4 originally-named levels, residual population scope still open** | **STATUS CORRECTED 2026-08-19: this row was stale relative to the queue's own detailed section 0 below it (last edited 2026-08-15, before the second fix shipped), and misleadingly read as "still needs a fix" a full 3 days after both fixes were built, validated, and promoted.** Two default-ON retry tiers now cover the originally-confirmed regressions: `STRATEGY_DEDUP_NEAR_TIE_RETRY` (near-tie dedup retention, recovers `R02248`-shaped losses) and `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` (disables the prune directly as a last resort, recovers `R02114`/`R00592`-shaped losses). Directly re-verified against the current baseline (2026-08-19, run `32224200709`): `R02248`, `R02114`, `R00592`, AND `R03248` (the case that goes the other way) are ALL currently solved. Next decision-bearing step is now much narrower than "build a fix": verify whether the ~175 unverified provenance-mining candidates from the original investigation (only 20 of 195 were ever spot-checked) are also resolved, to establish whether any residual population of this regression class remains or whether this item can close outright — not attempted here (the original candidate list was scratchpad-only and no longer exists; re-mining it is a real, separate task). Given the fixes are shipped, this item likely no longer deserves the #0 ranking on effort-vs-value grounds alone; left in place rather than reordered, since reordering the queue is a separate editorial judgment this correction doesn't make unilaterally. See [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md) and section 0 below (accurate, not stale — the correction is scoped to this summary row only). | A re-mined, verified read on the residual (non-named) candidate population — not a new fix, since both shipped fixes already meet the original success signal (recovers the regressed population without losing `R03248`-shaped cases or regressing published-corpus cost) for every named case. |
+| 0 | **`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` regression class — residual population now measured (2026-08-19): 14 confirmed genuine regressions out of 609 freshly-mined candidates, not covered by either shipped recovery tier** | **Fresh, broader mining pass (2026-08-19) superseded the original connectivity-axis-specific 195-candidate list (whose exact contents no longer exist).** Generalized the methodology beyond one flag: mined all cold, `classifyProvenanceSource === 'production-solver'` hint entries across all 4 techniques (dfs/beam/repair/admissible-order) for (level, config) pairs found ≥3 times with ≤5% node-count spread — 609 "real-tier" (≥50,000 median nodes) candidates. Re-testing each in isolation against current HEAD found 199 raw failures, but 87 were a script bug (the beam config-key builder silently dropped the `template` field, testing the wrong search) — not real. Of the remaining 189 distinct failed levels, cross-referencing against the already-computed population baseline (run `32224200709`, corpus2 828/1700 solved) showed **175 are still solved** (recovered by other ladder tiers/techniques — exactly what the shipped recovery tiers are for). The remaining **14 were directly re-tested through the full production `solveLevel()` ladder** (production defaults, both shipped recovery tiers active) at generous budget (40–60M nodes, 4–14× their historical median): **all 14 confirmed unsolved** (`nodeBudgetReached: true` for every one — budget-truncated, not exhaustively proven unsolvable, but well beyond what used to suffice). Breakdown: 9 beam-only (`R01151`/`R01229`/`R02050`/`R02422`/`R02424`/`R02516`/`R02543`/`R02691`/`R02760`), 4 repair-only (`R00632`/`R02900`/`R03205`/`R03329`), 1 both (`R02546`) — `R02422` matches this session's earlier isolated finding that it doesn't reproduce. Repair-technique members carry an extra caveat (repair's search isn't fully deterministic even at `randomSeed: null`, per this session's `seedSalt` finding), but the beam-only 9 are not subject to that confound (all `template: null`, genuinely deterministic). Not yet root-caused — a natural next step is bisecting one beam-only case (e.g. `R02516`, 10 historical finds) the same way `R02248` was bisected in section 0 below. | A root cause identified for at least one of the 9 beam-only cases, and/or a recovery mechanism (matching the existing `STRATEGY_DEDUP_NEAR_TIE_RETRY`/`STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` pattern) that recovers them without new regressions. |
 | 1 | Failure-conditioned late-tier allocation | **Local pilot (2026-08-19, 30-level sample, see section 1 below): starvation premise didn't hold at 10M-class budget (repair already ran on 73% of sampled levels), and participation converted to zero solves regardless of badness — no correlation to condition a trigger on. Argues against building the originally-conceived trigger at this scale; not yet a population-level closure.** Next: read the same question off the in-flight technique census (isolated-technique, full-budget) once it lands, before committing further design effort here. | Net level-blind solve gain with no material regression and acceptable work; report reached/starved mass by technique, not only totals. |
 | 2 | Beam score/retention at proven extinction boundaries | **Re-run done (2026-08-15, run `31858783552`): 25 live / 4 dead / 3 abstain, 0 alarms — 2 new R00001-pattern instances, both D-class (`S00030`, `S00048`).** Next: assemble the held-out, family-namespaced K-vs-2K test scoped to A-class *and* D-class (not A-class only). | Recurrent exact-live/exact-dead separation across unrelated parents; a scorer change must beat widening at equal work. |
 | 3 | Canonical-inclusive family-boundary retest | **Gate complete (2026-08-15).** `R02248`: 7/7 siblings solve, canonical fails — traced to the Priority 0 regression, not a scoring boundary (superseded framing, see that row). `R00156`/`R02960`: 4/7 and 3/7 siblings solve — budget-allocation-flavored, feeds Priority 1. See the [variant corpus plan](variant-corpus-solver-research-plan.md#sibling-cold-solve-all-3-confirmed-failures-2026-08-15). | Reproduced, parent-clustered solver boundary that identifies a generic technique or representation change. |
@@ -164,8 +164,11 @@ added) — fixed by isolating each with `dedupNearTieRetryBudgetFractionOverride
 and `solver:bench --check` (160/160 published levels, no regressions, +0.3% nodes). Still open:
 investigate why `R02114`/`R00592` don't respond to the fix; verify `R03248` (does its own divergence
 share `R02248`'s depth-12 flag-independent-loss shape, or is it a genuine threshold-timing case —
-already spot-checked as unaffected by the fix, but the *why* wasn't traced); verify the remaining
-~175 unverified provenance candidates. Full detail:
+already spot-checked as unaffected by the fix, but the *why* wasn't traced). The "verify the remaining
+~175 unverified provenance candidates" item that used to sit here is now resolved by the 2026-08-19
+fresh mining pass below (its own scope, methodology, and vocabulary superseded the original
+connectivity-axis-specific 195-candidate list, whose exact contents no longer exist) — see "Residual
+population, re-measured" below rather than treating this paragraph's number as current. Full detail:
 [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md).
 
 **The same "run dead last, additive budget" pattern applied to a second double-edged mechanism,
@@ -279,6 +282,55 @@ scored a +72.7% wall-time change as free, exactly as `CLAUDE.md` warns. No promo
 form: guaranteeing later configs a floor without capping config #1 needs a strictly LARGER reserve,
 i.e. more budget rather than redistribution, forfeiting the only property that made it attractive.
 Full data: [experiment ledger](solver-opt-in-experiment-ledger.md).
+
+**Residual population, re-measured (2026-08-19).** The original 195-candidate provenance mining
+(above) was scoped to the connectivity-axis regression specifically and its exact candidate list no
+longer exists as a scratchpad artifact. Rather than try to reconstruct it, ran a fresh, deliberately
+broader pass: mine hint provenance for ANY (level, technique+config) pair that was cold-found by the
+production solver (`classifyProvenanceSource === 'production-solver'`, `isColdCapabilityEvidence`) at
+least 3 times with tight (≤5%) node-count agreement, across all 4 techniques (dfs/beam/repair/
+admissible-order), not just beam. This found 781 total groups (172 "trivial", <50,000 median nodes;
+**609 "real-tier"**, ≥50,000 median nodes — the scale comparable to `R02248`'s own shape). Directly
+re-tested each real-tier candidate in isolation against current HEAD (production defaults, generous
+1.5×-historical-median node budget): 199 raw failures.
+
+**87 of those 199 were a script bug, not a regression**: the verify script's config-key builder
+included the `template` field for `dfs` configs (correctly) but silently dropped it for `beam` configs
+— so 87 `perimeterSweep`-with-`perimeterCW`/`perimeterCCW` candidates were re-tested against the WRONG
+search (the template-less base profile) rather than the one that actually found the historical
+solution. Excluding those, the remaining failures span 189 distinct levels. Cross-referencing all 189
+against the already-computed population baseline (run `32224200709`, corpus2 828/1700 solved) found
+**175 are still in the solved set** — i.e. some other technique/gate in the full `solveLevel()` ladder
+recovers them today, which is exactly the job `STRATEGY_DEDUP_NEAR_TIE_RETRY` and
+`STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` were built for. This single cross-reference (no fresh
+solving needed — the baseline was already computed) answers most of the original "residual population"
+question directly: the shipped fixes generalize far beyond the 4 originally-named levels.
+
+**The remaining 14 do NOT reduce to the script bug or ladder-recovery, and were confirmed via a second,
+independent method.** Re-ran each through the actual `solveLevel()` entry point (not an isolated
+config) at production defaults with a generous 40–60M node ceiling (4–14× the historical median that
+used to suffice) — this is a strictly stronger test than the isolated-config probe, since it lets every
+technique, gate, and both promoted recovery tiers compete for the win, the same way a real Play/Editor/
+hint-discovery solve would. **All 14 still came back unsolved**, every one `nodeBudgetReached: true`
+(budget-truncated at a very generous ceiling, not exhaustively proven mathematically unsolvable, but
+well past what historically sufficed). Breakdown by originally-flagged technique: 9 beam-only
+(`R01151`, `R01229`, `R02050`, `R02422`, `R02424`, `R02516`, `R02543`, `R02691`, `R02760` — all
+`template: null`, so not subject to the script bug above, and beam is fully deterministic, so not
+subject to repair's stochastic-search caveat either), 4 repair-only (`R00632`, `R02900`, `R03205`,
+`R03329` — repair's search isn't fully deterministic even at `randomSeed: null`, per this session's
+`seedSalt` finding, so these carry an extra grain of caution), and 1 both (`R02546`, flagged
+independently by a beam config AND a repair config — the strongest single case). `R02422` matches this
+session's earlier isolated single-config finding that it doesn't reproduce, now confirmed at the
+population/full-ladder level too, not just in isolation.
+
+**Not yet root-caused.** The 9 beam-only cases are the cleanest lead: genuinely deterministic, not
+confounded by the script bug or repair's stochasticity, and — like `R02248` — likely traceable by the
+same beam-frontier-instrumentation bisection method used above (a natural starting point: `R02516`,
+10 historical finds, or `R02546`, flagged by two independent techniques). Whether they share `R02248`'s
+exact mechanism (a beam-width-threshold timing artifact) or a different cause is unknown; no bisection
+was run this pass. Scratch scripts (`scripts/tmp-stale-solve-mine.mjs`, `scripts/tmp-stale-solve-verify.mjs`)
+were deleted after use, not committed — their logic and full results are captured here and in the local
+scratchpad.
 
 ### 1. Failure-conditioned late-tier allocation
 
