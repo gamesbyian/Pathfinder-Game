@@ -2494,6 +2494,17 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         ? Infinity
         : repairElitePrefixDfsRetryNodeCeiling + mcNeighborBudgetRetryNodeReserve;
 
+    // STRATEGY_RETRY_TIER_NODE_STAIRCASE (opt-in, default OFF) — whether the attraction-diversity pass
+    // and the two promoted whole-ladder retry tiers subdivide their node reserve per config instead of
+    // letting the first config consume all of it. See the flag's own comment in ablation-config.mjs
+    // for the measured defect, and STRATEGY_MC_NEIGHBOR_BUDGET_RETRY's own call site for the fix this
+    // generalizes (that tier does it unconditionally, since it never shipped without it).
+    //
+    // Opt-in specifically because it is a REDISTRIBUTION, not a free win: capping the first config at
+    // reserve/N can lose a level whose retry-tier win came from that config spending the whole
+    // reserve. Both directions are real and only a full-corpus A/B can price them.
+    const retryTierStaircase = !!(cfg && cfg.STRATEGY_RETRY_TIER_NODE_STAIRCASE === true);
+
     const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve;
 
     // STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE (opt-in, default OFF — NEW, unvalidated
@@ -2939,9 +2950,18 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // (`earlyTierNodeBudget` rather than `nodeBudget`: still an ABSOLUTE ceiling, exactly as
             // this comment requires — just the reduced one this pass shares with the other early
             // tiers, so it cannot spend the admissible-order tier's reserve.)
+            // STRATEGY_RETRY_TIER_NODE_STAIRCASE (opt-in, default OFF) — see that flag's own comment
+            // in ablation-config.mjs, and STRATEGY_MC_NEIGHBOR_BUDGET_RETRY's own call site below for
+            // the measurement that found this defect. Off (every production caller and every existing
+            // A/B arm), `staircaseEntry`/`staircaseStart` are `undefined`, both runners fall back to
+            // their `earlyConfigNodeBudget = nodeBudget` / `lateConfigStart = baseConfigs.length`
+            // defaults, and this call is byte-identical to before.
+            const diversityStaircaseEntry = retryTierStaircase ? prep._metrics.nodesExpanded : undefined;
+            const diversityStaircaseStart = retryTierStaircase ? 0 : undefined;
             const diversityResult = useInterleaving && activeGates.length > 1
-                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, diversityNodeCeiling, workBudget, workStart)
-                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, diversityNodeCeiling, workBudget, workStart);
+                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, diversityNodeCeiling, workBudget, workStart, diversityStaircaseEntry, diversityStaircaseStart)
+                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, diversityNodeCeiling, workBudget, workStart, diversityStaircaseEntry, diversityStaircaseStart);
+            if (retryTierStaircase) for (const attempt of diversityResult.attempts) delete attempt.mainLoopLateReserve;
             for (const attempt of diversityResult.attempts) attempt.attractionDiversity = true;
             result.attempts.push(...diversityResult.attempts);
             if (diversityResult.solution) result.solution = diversityResult.solution;
@@ -3127,9 +3147,14 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // see that call's comment for why this must be an ABSOLUTE ceiling, not a remainder.
             // `dedupRetryNodeCeiling` (nodeBudget + dedupRetryNodeReserve), not plain `nodeBudget` —
             // REVISION 2, see dedupRetryNodeReserve's own comment above.
+            // STRATEGY_RETRY_TIER_NODE_STAIRCASE — see the diversity pass's own note above. Strictly
+            // byte-identical to before when the flag is off, which is every production caller.
+            const dedupRetryStaircaseEntry = retryTierStaircase ? prep._metrics.nodesExpanded : undefined;
+            const dedupRetryStaircaseStart = retryTierStaircase ? 0 : undefined;
             const dedupRetryResult = useInterleaving && activeGates.length > 1
-                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, dedupRetryNodeCeiling, dedupRetryWorkBudget, dedupRetryWorkStart)
-                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, dedupRetryNodeCeiling, dedupRetryWorkBudget, dedupRetryWorkStart);
+                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, dedupRetryNodeCeiling, dedupRetryWorkBudget, dedupRetryWorkStart, dedupRetryStaircaseEntry, dedupRetryStaircaseStart)
+                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, dedupRetryNodeCeiling, dedupRetryWorkBudget, dedupRetryWorkStart, dedupRetryStaircaseEntry, dedupRetryStaircaseStart);
+            if (retryTierStaircase) for (const attempt of dedupRetryResult.attempts) delete attempt.mainLoopLateReserve;
             for (const attempt of dedupRetryResult.attempts) attempt.dedupNearTieRetry = true;
             result.attempts.push(...dedupRetryResult.attempts);
             if (dedupRetryResult.solution) result.solution = dedupRetryResult.solution;
@@ -3238,9 +3263,14 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // attempts of work even when the node reserve genuinely protected the node ceiling).
             const connectivityRetryWorkStart = workMeter.units;
             const connectivityRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(connectivityRetryTotalBudget * DEFAULT_WORK_PER_MS));
+            // STRATEGY_RETRY_TIER_NODE_STAIRCASE — see the diversity pass's own note above. Strictly
+            // byte-identical to before when the flag is off, which is every production caller.
+            const connectivityRetryStaircaseEntry = retryTierStaircase ? prep._metrics.nodesExpanded : undefined;
+            const connectivityRetryStaircaseStart = retryTierStaircase ? 0 : undefined;
             const connectivityRetryResult = useInterleaving && activeGates.length > 1
-                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, connectivityRetryTotalBudget, connectivityRetryStart, yieldFn, connectivityRetryNodeCeiling, connectivityRetryWorkBudget, connectivityRetryWorkStart)
-                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, connectivityRetryTotalBudget, connectivityRetryStart, yieldFn, connectivityRetryNodeCeiling, connectivityRetryWorkBudget, connectivityRetryWorkStart);
+                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, connectivityRetryTotalBudget, connectivityRetryStart, yieldFn, connectivityRetryNodeCeiling, connectivityRetryWorkBudget, connectivityRetryWorkStart, connectivityRetryStaircaseEntry, connectivityRetryStaircaseStart)
+                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, connectivityRetryTotalBudget, connectivityRetryStart, yieldFn, connectivityRetryNodeCeiling, connectivityRetryWorkBudget, connectivityRetryWorkStart, connectivityRetryStaircaseEntry, connectivityRetryStaircaseStart);
+            if (retryTierStaircase) for (const attempt of connectivityRetryResult.attempts) delete attempt.mainLoopLateReserve;
             for (const attempt of connectivityRetryResult.attempts) attempt.connectivityAxisExhaustedRetry = true;
             result.attempts.push(...connectivityRetryResult.attempts);
             if (connectivityRetryResult.solution) result.solution = connectivityRetryResult.solution;

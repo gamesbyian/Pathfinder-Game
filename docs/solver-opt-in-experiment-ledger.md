@@ -74,11 +74,35 @@ The main loop divides correctly only because it passes the **external, binding**
 
 **Remaining gate before any promotion decision:** a full-corpus level-blind A/B on **both** corpora reporting gained/lost IDs and cost, per this ledger's standing bar. The reserve fraction (0.5) is calibrated to `R02119`, **not** to an A/B.
 
-### Follow-up this opens (larger than the tier itself)
+### The follow-up this opened, and its closure
 
-The three **promoted** tiers and the attraction-diversity pass all still have the pre-fix division defect. Under the capability protocol they are each paying a full ladder-rerun node reserve to rerun **one config** — so their measured contributions (+40, +45, +10) came from levels where the winner happened to be config #1, and there is likely unclaimed solve headroom sitting inside reserves that are *already being spent*. Fixing their division would redistribute budget rather than add it, which is the rare kind of change that can raise solve count **without** raising per-level cost.
+Generalizing the fix to the three **promoted** tiers and the attraction-diversity pass looked like the highest-value follow-up: they each pay a full ladder-rerun node reserve to rerun **one config**, so fixing their division would redistribute budget rather than add it. It was built as `STRATEGY_RETRY_TIER_NODE_STAIRCASE` and tested. **It is closed negative — see that flag's own entry below.** The short version: the "defect" turns out to be load-bearing.
 
-Deliberately **not** bundled into this change: altering a shipped, population-validated tier's search behavior is decision-bearing and needs its own full-corpus A/B, not a free ride-along. It is the single highest-value follow-up identified here.
+## `STRATEGY_RETRY_TIER_NODE_STAIRCASE` (NEW, 2026-08-19 — CLOSED NEGATIVE, same day)
+
+**Disposition: CLOSED NEGATIVE.** Opt-in, production default-OFF, retained for the record. Do not reopen in this form.
+
+Applies `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY`'s per-config node staircase to the attraction-diversity pass and the two promoted whole-ladder retry tiers, so a non-terminating first config cannot consume the tier's entire node reserve.
+
+**The mechanism works exactly as designed.** On a 14-level random sample of unsolved Corpus-2 levels (20M node budget, level-blind, `deterministic`), starvation was eliminated outright — `connRetry` coverage went `1/16 → 16/16`, `1/7 → 7/7`, `5/6 → 6/6`, and the sample-wide starvation rate went **21–29% → 0%**.
+
+**The outcome is decisively negative anyway.**
+
+| arm | population | result |
+|---|---|---|
+| gain | 14 random unsolved Corpus-2 levels | **0 solves gained** (0 → 0) |
+| risk | **all 9** Corpus-2 levels whose retry-tier win came from config #1 | **8 of 9 LOST** — only `R02680` survived, at 50,261,345 nodes, byte-identical to run `31918095910` |
+| cost | the 14-level gain sample | **+72.7% wall time** (1,918s → 3,312s) at **−1.4% nodes** |
+
+The risk arm is the complete at-risk population, not a sample: 55 solved Corpus-2 levels used a genuine ladder rerun, and exactly 9 of them won on config #1. Eight of those nine now fail.
+
+**Why: giving the first config the whole reserve is not an accident to be fixed — it is what produces these tiers' wins.** In these ladders config #1 is `dfs:perimeterSweep/cornerHarvest` (or `beam:perimeterSweep/perimeterCW@beam2000`), the single highest-value config, and the levels it rescues need 50–96M nodes to do it. A uniform staircase caps it at reserve/N and it fails; nothing later recovers the level. The +40/+45/+10 those tiers delivered came *through* the behavior this change removes. So the division defect is real as a mechanism and simultaneously load-bearing in effect — the two are not in tension, and measuring only the mechanism (coverage `1/16 → 16/16`) would have been badly misleading.
+
+**The cost line is its own lesson**, and a textbook instance of `CLAUDE.md`'s standing warning that node/work counts are blind to what an operation *costs*: nodes fell 1.4% while wall time rose 72.7%, because the redistributed budget buys beam attempts instead of one long DFS. A node-only or work-only comparison would have scored this change as free.
+
+**No promotion path in this form.** A variant that guarantees later configs a floor *without* capping config #1 would need a strictly larger reserve — i.e. more budget, not redistribution — which forfeits the only property that made this attractive.
+
+**Consequence for `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` (above), stated plainly:** that tier applies the same staircase *unconditionally*, and this result says the staircase is neither free nor generally beneficial. It is kept there because without it that tier recovers **nothing** (both targets verified failing), and with it it recovers `R02119` — the difference between a useless tier and a working one. But its population A/B must price the same trade this closure measured: later-config rescues bought at the price of config-#1 rescues, plus a wall-time cost that node counts will not show.
 
 ## Default-off repair parameters that are not promotion candidates
 

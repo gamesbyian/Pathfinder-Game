@@ -253,13 +253,24 @@ Fixed for the new tier only (per-config node staircase via `lateConfigStart = 0`
 50M level-blind protocol. `R02422` still fails and is understood — its winning attempt needs
 50,333,677 nodes alone, more than a fair 8-way split of the reserve can grant.
 
-**The follow-up is worth more than the tier.** The three PROMOTED tiers are each paying a full
-ladder-rerun reserve to rerun ONE config, so their +40/+45/+10 came only from levels whose winner was
-config #1, and there is likely unclaimed headroom inside reserves *already being spent*. Fixing their
-division redistributes budget instead of adding it — the rare change that can raise solve count
-**without** raising per-level cost, which is exactly what the compounding-cost trend above demands.
-Not bundled in: changing a shipped, population-validated tier's search behavior needs its own
-full-corpus A/B. See the [experiment ledger](solver-opt-in-experiment-ledger.md).
+**That follow-up was then built and CLOSED NEGATIVE the same day** as
+`STRATEGY_RETRY_TIER_NODE_STAIRCASE` (opt-in, default OFF, retained for the record). Generalizing the
+staircase to the two promoted tiers and the diversity pass **eliminated starvation completely**
+(sample-wide 21–29% → 0%; `connRetry` coverage `1/16 → 16/16`) and was still decisively negative:
+**0 solves gained** on 14 random unsolved levels, **8 of 9 LOST** on the *complete* at-risk population
+(all Corpus-2 levels whose retry-tier win came from config #1 — 9 of the 55 solved levels that use a
+genuine ladder rerun), at **+72.7% wall time on −1.4% nodes**.
+
+**Giving the first config the whole reserve is load-bearing, not a bug in effect.** In these ladders
+config #1 is `dfs:perimeterSweep/cornerHarvest`, the highest-value config, and the levels it rescues
+need 50–96M nodes to do it; capped at reserve/N it fails and nothing later recovers them. The
++40/+45/+10 came *through* the behavior a staircase removes. Two transferable lessons: a mechanism can
+be genuinely defective and simultaneously load-bearing (coverage `1/16 → 16/16` looked like a clean
+win and was not), and node/work counts are blind to what an operation COSTS — a node-only comparison
+scored a +72.7% wall-time change as free, exactly as `CLAUDE.md` warns. No promotion path in this
+form: guaranteeing later configs a floor without capping config #1 needs a strictly LARGER reserve,
+i.e. more budget rather than redistribution, forfeiting the only property that made it attractive.
+Full data: [experiment ledger](solver-opt-in-experiment-ledger.md).
 
 ### 1. Failure-conditioned late-tier allocation
 
