@@ -18,6 +18,68 @@ Last reconciled: **2026-08-13**, after promoting `PRUNE_MC_NEIGHBOR_BUDGET`, `ST
 | `STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE` | **CLOSED — real mechanism, real regression risk, not safe to promote or naively calibrate** | Targeted the documented R03148 starvation precedent (`reports/2026-07-30-admissible-order-node-reserve.md` §4: `'default'` runs first in the admissible-order tier and can consume the tier's entire reserve before `'none'`/`'mustCrossFirst'`/`'intersectionHarvest'`/`'nearClosureRescue'` ever get a node). Direct single-level tests on R03148 (20M nodes, matching the original report) confirmed the mechanism genuinely works: OFF reproduces the starvation exactly (`'none'` never runs); at the shipped starting fraction (0.15) `'none'` gets only 750K of the ~1.9-2M it needs and still fails; at fraction 0.40 `'none'` gets 1.91M and solves, matching the original report's own 1.97M figure. But a targeted hunt for the OPPOSITE case — a level where `'default'` itself wins, drawn from 384 hint-provenance-identified `admissible-order`/`'default'` winners — found a real regression on the FIRST candidate tried: R02644 at 60M nodes needs `'default'` to spend 13.2M of its 15M undivided share to solve; at fraction 0.15, `'default'`'s ceiling shrinks to 12.75M and the level goes from SOLVED to unsolved, with the withheld 2.25M going to `'none'` (which does not solve it either) — a clean net loss. A 20-level general sample (25M nodes, fraction 0.15) showed zero regressions and a strong 0→14/20 participation shift, but that sample apparently contained no `'default'`-margin-limited case; the R02644 counter-example shows such levels exist and are found on the first deliberate look, not after exhaustive search. | None. This mechanism is double-edged (both real gains like R03148 and real losses like R02644 exist at the same fraction), unlike the two closed reserves above (safe either way). Any promotion decision needs a population-scale measurement of the gain/loss ratio across BOTH failure shapes before it's meaningful — that is a materially larger investment than this session's other closures, and was not undertaken. Reopen only with that dedicated population evidence, per the originating report's own explicit caution against a "guess." |
 | `STRATEGY_REPAIR_BEAM_SEED` | **CLOSED — sound and safe, but the apparent capability gain was an isolated-test artifact; no full-ladder benefit found** | The first genuine producer→receptor candidate/handoff mechanism this session (not a node-budget reserve): seeds repair's initial elite pool from a small, cheap beam search's surviving frontier, motivated by the 2026-08-13 stratified beam/repair producer-population pilot (25 levels, zero exact-prefix / zero metric-projection overlap — see `reports/2026-08-11-beam-repair-producer-population-pilot.md`). An isolated `repairSearchFromGate` counterfactual (n=13 plateaued repair-gated levels, matched 2,000,000-node budget, bypassing the full ladder) found what looked like a real win: 1 solve gained (R00701: stuck at badness 2 without, fully solved with), 0 solve losses, mixed badness elsewhere (4 better, 8 worse). Wired into the live ladder (`STRATEGY_REPAIR_BEAM_SEED`, `attempt-dispatch.ts`) and re-tested through the real `solveLevel()` ladder on the SAME 13-level sample at production-realistic budget (25M nodes): **R00701 was already solved by ordinary repair fallback with the flag OFF** — the isolated test's 2,000,000-node direct budget was far more constrained than the effective budget ordinary repair actually gets inside the full ladder (`REPAIR_EXTRA_BUDGET_FRACTION=6.0` plus unused main-loop room), so the "gain" never existed at the level that matters. Full-ladder result: 2/13 solved in both arms, byte-identical solved-id set, +3.5% total nodes for zero benefit. Badness data on the remaining unsolved levels was mostly unavailable and what little existed was mixed, no reliable signal. | None. Sound (zero regressions, well-tested: soundness/determinism/off-identical/mechanism-verification/budget-accounting all pass) but no capability benefit demonstrated at the resource envelope that actually matters. A concrete lesson for future producer→receptor work in this codebase: an isolated-technique counterfactual can look like a real win purely because it constrains the receptor's OWN budget more tightly than the real ladder ever would — always re-test through `solveLevel()` before trusting an isolated result, the same discipline the admissible-order-profile-reserve closure established from the opposite direction. Reopen only with a full-ladder-level positive signal, not an isolated one. |
 
+## `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` (NEW, 2026-08-19 — open promotion decision)
+
+**Disposition: OPEN — built, locally validated on both confirmed targets, awaiting a full-corpus population A/B.** Opt-in, production default-OFF.
+
+The fifth application of the "run dead last, additive-only budget" retry-tier pattern, and the fourth distinct double-edged mechanism it has been pointed at. Target: `PRUNE_MC_NEIGHBOR_BUDGET`, promoted default-ON 2026-08-12 on a strong level-blind population result (**611/1700 OFF → 665/1700 ON, 59 gained / 5 lost**) that explicitly accepted its five losses as "a small, bounded, already-understood cost" — because at the time no mechanism existed to recover them without giving back the 59 gains.
+
+**Why the five losses are the right receptor.** [`reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md`](../reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md) diagnosed four of the five to one clean mechanism: the exact deterministic beam attempt that wins under OFF is still tried under ON, runs to a similar node count, and fails — a bounded-width diverse-beam retention effect, not budget exhaustion and not the already-fixed repair-seed reindexing issue.
+
+**What is confirmed at HEAD (2026-08-19).** Three of the five (`R00635`, `R02823`, `R02867`) have since been recovered by unrelated solver work and are solved at the 2026-08-16 capability baseline (run `31918095910`, 819/1700). The remaining two are still unsolved there, and **both recover at HEAD with the prune disabled**, level-blind, referee-valid, at the production 50M-node protocol — via exactly the winning configs the 2026-08-12 diagnosis named:
+
+| level | winning config | nodes | work | referee |
+|---|---|---:|---:|---|
+| `R02119` | `beam:mustCrossFirst@beam2000` | 25,863,058 | 17,979,254 | valid |
+| `R02422` | `beam:intersectionHarvest@beam5000(diverse)` | 50,333,677 | 63,440,947 | valid |
+
+So the diagnosed mechanism still reproduces 8 days and ~95 Corpus-2 solves later, on levels the current ladder cannot otherwise reach.
+
+**Why the 59 gains are not at risk.** Structurally protected exactly as `R02644` was for `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` and `R03248` for `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`: a level that benefits from the prune already solves via the normal flag-on ladder, so the tier's own `!result.solution` guard skips it entirely. This tier never runs on a level that solved.
+
+**The one structural difference from its four predecessors: a soundness-based eligibility gate.** `prune-gauntlet.ts` reaches `PRUNE_MC_NEIGHBOR_BUDGET` only when `state.mustCrossMask !== 0`. On a level with `prep.initialMustCrossMask === 0` the prune rejected exactly zero moves, so rerunning the ladder with it disabled is provably **bit-identical** to the ladder that already failed — waste, not a second chance. Gating on that is a soundness argument rather than a heuristic predictor, costs one field read at prep time, and skips **389 of the 881 unsolved Corpus-2 levels (44%)** outright.
+
+This matters because the pattern's returns are decaying while its cost compounds: the four prior applications landed **+40, +45, +10, and 0** solves, and the third alone cost **+28.2% Corpus-2 nodes / +22.1% work**, because each tier stacks another additive ceiling on the last (at `nodeBudget` 50M a failing level already runs to 100M). The three shipped tiers each pay their full cost on every unsolved level, unconditionally. If this gate holds up at population scale, the same soundness-gate treatment is the obvious follow-up for reclaiming part of the cost those three already charge.
+
+### The tier's first build was defective, and finding out why is the more valuable result
+
+The tier as first written — a byte-faithful copy of `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` — **recovered neither target**. Both still failed at the tier's own 150M ceiling. Raising the reserve 4.5× changed nothing except how long the tier's *first* config ran (12.7s → 77.1s), which ruled out under-provisioning and pointed at budget division.
+
+**The defect, measured.** `runGateSerialAttempts`/`runInterleavedAttempts` divide budget *between* configs in **work** units (`attemptBudgetShare` over `workBudget`), but treat the node ceiling as a single shared **absolute** cap with no per-config subdivision (`earlyConfigNodeBudget` defaults to `nodeBudget`, which switches the staircase off). Every ladder-rerun tier sizes its fresh work budget as `timeBudgetMs × fraction × DEFAULT_WORK_PER_MS` — and under the capability protocol `timeBudgetMs` is a deliberately **non-binding** 24h deadline (`deterministic=true`, [`solver-budget-determinism.md`](solver-budget-determinism.md)). The work pool is therefore ~2.9e11 units, the work-based division never bites, and the **first config runs until the tier's absolute node ceiling is gone**.
+
+Per-attempt elapsed ms inside each tier on `R02119` (probe at `nodeBudget` 10M), before the fix:
+
+| tier | per-attempt ms | configs given real time |
+|---|---|---:|
+| main loop | `10782, 473, 496, 482, 1561` | 5 / 5 |
+| attraction-diversity | `685, 0, 0, 0, 0, 0, 0, 0` | 1 / 8 |
+| `STRATEGY_DEDUP_NEAR_TIE_RETRY` | `10896, 0, 0, 0, 0, 0, 0, 0` | 1 / 8 |
+| `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` | `21319, 0, 0, 0, 0, 0, 0, 0` | 1 / 8 |
+| this tier (before fix) | `39602, 0, 0, 0, 0, 0, 0, 0` | 1 / 8 |
+
+The main loop divides correctly only because it passes the **external, binding** work budget rather than a deadline-derived one.
+
+**This is the same trap `CLAUDE.md` already documents for the admissible-order tier** — "those `timeBudgetMs` fractions are denominated in TIME, but what actually stops a level in a batch run is `nodeBudget`" — resurfacing at a different call site, in tiers written after that note.
+
+**The fix (scoped to this tier).** Reuse the staircase the main loop's own late-reserve wiring already provides: `lateConfigStart = 0` makes every config a staircase step, and `earlyConfigNodeBudget` set to the cumulative node count at tier entry gives config *i* the cumulative cap `entry + reserve × (i+1)/N`. A config that has already blown past its step is skipped rather than starving the rest of the ladder. On `R02119` the tier's per-attempt profile became `5134, 5199, 2094` and the level **solved via `beam:mustCrossFirst@beam2000`** — the exact config the 2026-08-12 diagnosis named.
+
+### Local validation result: 1 of 2 targets recovered
+
+| level | protocol | result | winner | nodes | referee |
+|---|---|---|---|---:|---|
+| `R02119` | 50M node budget, level-blind, `deterministic` | **SOLVED** | `beam:mustCrossFirst@beam2000` | 112,613,177 | valid |
+| `R02422` | same | still unsolved | — | 150,000,121 (ceiling) | — |
+
+`R02422` is understood, not mysterious: its winning attempt needed **50,333,677 nodes in a single attempt** in the from-scratch prune-off solve, while a fair 8-way staircase over a 50M reserve gives config #3 only ~18.75M. Recovering it means roughly 4× the reserve — a cost the [current queue's](solver-optimization-current-queue.md) own cost trajectory does not obviously justify. Left to the population A/B to price rather than pre-tuned for one level.
+
+**Remaining gate before any promotion decision:** a full-corpus level-blind A/B on **both** corpora reporting gained/lost IDs and cost, per this ledger's standing bar. The reserve fraction (0.5) is calibrated to `R02119`, **not** to an A/B.
+
+### Follow-up this opens (larger than the tier itself)
+
+The three **promoted** tiers and the attraction-diversity pass all still have the pre-fix division defect. Under the capability protocol they are each paying a full ladder-rerun node reserve to rerun **one config** — so their measured contributions (+40, +45, +10) came from levels where the winner happened to be config #1, and there is likely unclaimed solve headroom sitting inside reserves that are *already being spent*. Fixing their division would redistribute budget rather than add it, which is the rare kind of change that can raise solve count **without** raising per-level cost.
+
+Deliberately **not** bundled into this change: altering a shipped, population-validated tier's search behavior is decision-bearing and needs its own full-corpus A/B, not a free ride-along. It is the single highest-value follow-up identified here.
+
 ## Default-off repair parameters that are not promotion candidates
 
 - `enablePlateauPenalty`: **closed as built**. It reshapes search but produced no solve gain and mixed/misleading near-miss movement.

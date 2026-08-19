@@ -118,6 +118,12 @@ interface Attempt {
      *  shape as attractionDiversity/dedupNearTieRetry/admissibleOrderNonDefaultRetry/
      *  connectivityAxisExhaustedRetry above. Not read by any solving logic. */
     repairElitePrefixDfsRetry?: boolean;
+    /** True only for attempts run by the 2026-08-19 STRATEGY_MC_NEIGHBOR_BUDGET_RETRY last-resort
+     *  pass (see MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION) — same diagnostic-only shape as
+     *  attractionDiversity/dedupNearTieRetry/admissibleOrderNonDefaultRetry/
+     *  connectivityAxisExhaustedRetry/repairElitePrefixDfsRetry above. Not read by any solving
+     *  logic. */
+    mcNeighborBudgetRetry?: boolean;
     /** Diagnostic-only passthrough for the admissible-order-search.ts prototype (see
      *  AttemptConfig.admissibleOrder) — not read by any solving logic, purely so external tooling
      *  (scripts/method-probe.mjs) can tell it apart from an ordinary DFS attempt. */
@@ -280,6 +286,20 @@ interface SolveOpts {
      *  the preceding tier's own ceiling exactly. Undefined (production default) preserves the
      *  constant exactly. */
     repairElitePrefixDfsRetryNodeReserveFractionOverride?: number;
+    /** Overrides MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION for this solve only — same dedicated
+     *  top-level-option shape as dedupNearTieRetryBudgetFractionOverride above (NOT an ablation
+     *  flag). Undefined (production default) preserves the constant exactly. Like
+     *  repairElitePrefixDfsRetryBudgetFractionOverride and unlike the three promoted siblings, this
+     *  tier is still opt-in (STRATEGY_MC_NEIGHBOR_BUDGET_RETRY must also be explicitly set true in
+     *  `ablation`) — this override only controls the BUDGET once the flag has already enabled the
+     *  tier. */
+    mcNeighborBudgetRetryBudgetFractionOverride?: number;
+    /** Overrides MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION for this solve only — same ADDITIVE-
+     *  headroom shape as dedupNearTieRetryNodeReserveFractionOverride above (see that field's own
+     *  comment): this fraction extends the retry tier's own ceiling past the preceding tier's own
+     *  ceiling, never withheld from any earlier tier. 0 restores the tier's ceiling to the preceding
+     *  tier's own ceiling exactly. Undefined (production default) preserves the constant exactly. */
+    mcNeighborBudgetRetryNodeReserveFractionOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape and rationale as the two overrides above (NOT an ablation flag, a
      *  THIRD independently-costed extension a batch-tooling caller may want to isolate). Undefined
@@ -1360,6 +1380,77 @@ export const REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION = 1.0;
  *  (post-correction) value; not yet locally or population validated at this exact setting. */
 export const REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION = 0.5;
 
+/** STRATEGY_MC_NEIGHBOR_BUDGET_RETRY (NEW, opt-in, default OFF — 2026-08-19). The FIFTH application
+ *  of the "run dead last, additive-only budget" pattern, and the fourth distinct double-edged
+ *  mechanism it has been pointed at: `PRUNE_MC_NEIGHBOR_BUDGET`.
+ *
+ *  WHY THIS MECHANISM. That prune was promoted default-ON on a strong level-blind population result
+ *  (611/1700 OFF -> 665/1700 ON, 59 gained / 5 lost). The five losses were then individually
+ *  diagnosed (`reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md`): four of them share one
+ *  clean mechanism — the exact deterministic beam attempt that WINS under OFF is still tried under
+ *  ON, runs to a similar node count, and fails. Not budget exhaustion, not the already-fixed
+ *  repair-seed reindexing issue: a bounded-width diverse-beam retention effect. That promotion
+ *  deliberately accepted those five as "a small, bounded, already-understood cost" because no
+ *  mechanism existed to recover them without giving back the 59 gains. This tier is that mechanism.
+ *
+ *  WHY NOW, AND WHAT IS CONFIRMED. Three of the five (`R00635`, `R02823`, `R02867`) have since been
+ *  recovered by unrelated solver work and are solved at the 2026-08-16 capability baseline (run
+ *  `31918095910`, 819/1700). The remaining two, `R02119` and `R02422`, are still unsolved there and
+ *  BOTH recover at HEAD when the prune is disabled — referee-valid, level-blind, at the production
+ *  50M-node protocol, via exactly the winning configs the 2026-08-12 diagnosis named
+ *  (`beam:mustCrossFirst@beam2000` at 25,863,058 nodes; `beam:intersectionHarvest@beam5000(diverse)`
+ *  at 50,333,677). So the diagnosed mechanism still reproduces 8 days and ~95 corpus-2 solves later,
+ *  on levels the current ladder cannot otherwise reach.
+ *
+ *  WHY LEVELS THE PRUNE HELPS ARE SAFE. Structurally protected exactly the way `R02644` was for
+ *  `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` and `R03248` for
+ *  `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`: a level that benefits from the prune already solves
+ *  via the normal flag-on ladder, so this tier's own `!result.solution` guard skips it entirely. The
+ *  59 gains are never at risk, because this tier never runs on a level that solved.
+ *
+ *  THE ELIGIBILITY GATE — the one thing this tier does that its four predecessors do not.
+ *  `prune-gauntlet.ts` only ever reaches `PRUNE_MC_NEIGHBOR_BUDGET` when `state.mustCrossMask !== 0`.
+ *  A level whose `prep.initialMustCrossMask` is 0 therefore can never have had a single move rejected
+ *  by this prune, so rerunning the ladder with it disabled is provably BIT-IDENTICAL to the ladder
+ *  that already ran and failed — pure waste, not a second chance. Gating on that is sound (a
+ *  soundness argument, not a heuristic predictor) and free (one field read at prep time, no hot-path
+ *  instrumentation). It skips 389 of the 881 unsolved Corpus-2 levels outright — 44%.
+ *
+ *  This matters because the pattern's cost is compounding while its returns decay: the tiers landed
+ *  +40, +45, +10, and 0 solves respectively, and the third alone cost +28.2% Corpus-2 nodes / +22.1%
+ *  work, because each tier stacks another additive ceiling on the last (at `nodeBudget` 50M a failing
+ *  level already runs to 100M). The three shipped tiers each pay their full cost on every unsolved
+ *  level. Making the newest one pay only where it could possibly help is the cheapest available brake
+ *  — and if this gate holds up at population scale, the same soundness-gate treatment is the obvious
+ *  follow-up for reclaiming part of the cost already paid by the three tiers above.
+ *
+ *  1.0 = one full `timeBudgetMs` window, same as all four sibling tiers. NOT yet population-
+ *  validated: opt-in until a full-corpus A/B reports gained/lost IDs and cost on BOTH corpora. */
+export const MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION = 1.0;
+
+/** Extra node headroom given ADDITIVELY to STRATEGY_MC_NEIGHBOR_BUDGET_RETRY's own ceiling, as a
+ *  fraction of the PRECEDING tier's own ceiling (`repairElitePrefixDfsRetryNodeCeiling`), never
+ *  withheld from any earlier tier.
+ *
+ *  STACKED ON THE PRECEDING TIER'S CEILING, not `nodeBudget` — the lesson
+ *  `CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION`'s own comment paid for the hard way
+ *  (two tiers whose fractions coincide compute the identical absolute ceiling, so the later one gets
+ *  literally zero headroom no matter what fraction it is given), applied here from the start rather
+ *  than rediscovered a fifth time.
+ *
+ *  SIZING. `R02422`, the more expensive of the two confirmed targets, needed 50,333,677 cumulative
+ *  nodes to solve in a from-scratch prune-off solve at the 50M protocol. This tier reruns
+ *  `mainConfigs` only (never the repair fallback), so its own replay is cheaper than that figure,
+ *  but the figure is the right order of magnitude to provision against. At 0.5 of a
+ *  `repairElitePrefixDfsRetryNodeCeiling` that is itself 100M at `nodeBudget` 50M (both preceding
+ *  retry tiers default-ON, elite-prefix-DFS retry default-OFF and contributing 0), that is 50M of
+ *  genuine additive headroom. Calibrated to the confirmed targets, NOT to an A/B — expect to retune
+ *  it downward once a population run shows what the tier actually spends, exactly as
+ *  `ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION` was corrected from 0.25 to 0.5 before
+ *  any GHA spend. Strictly a no-op when `nodeBudget` is `Infinity` (every production path) or the
+ *  tier is ineligible/suppressed. */
+export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
+
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
  *  repair fallback, tried BEFORE the ordinary DFS/beam main loop — see runRepairProbe.
@@ -2222,6 +2313,21 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         ? Math.min(1, repairElitePrefixDfsRetryNodeReserveFractionRaw)
         : REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION;
 
+    // opts.mcNeighborBudgetRetryBudgetFractionOverride — same shape/hoisting reason as the four
+    // above. Opt-in/default-OFF (NEW, unvalidated mechanism — see MC_NEIGHBOR_BUDGET_RETRY_BUDGET_
+    // FRACTION's own comment), so the `cfg &&` ... `=== true` check below (where this tier's run
+    // condition is computed) is the opt-in convention, not the standard `!cfg || cfg.FLAG` shape.
+    // No `disableExtraBudgetPasses` fallback: an opt-in tier is already off by default, same as
+    // STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY's own fraction resolution just above.
+    const mcNeighborBudgetRetryFractionOverride = Number(opts.mcNeighborBudgetRetryBudgetFractionOverride);
+    const mcNeighborBudgetRetryBudgetFraction = Number.isFinite(mcNeighborBudgetRetryFractionOverride) && mcNeighborBudgetRetryFractionOverride >= 0
+        ? mcNeighborBudgetRetryFractionOverride
+        : MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION;
+    const mcNeighborBudgetRetryNodeReserveFractionRaw = Number(opts.mcNeighborBudgetRetryNodeReserveFractionOverride);
+    const mcNeighborBudgetRetryNodeReserveFraction = Number.isFinite(mcNeighborBudgetRetryNodeReserveFractionRaw) && mcNeighborBudgetRetryNodeReserveFractionRaw >= 0
+        ? Math.min(1, mcNeighborBudgetRetryNodeReserveFractionRaw)
+        : MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION;
+
     // Admissible-order tier's NODE RESERVE (see ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION). Resolved
     // here, before the probe, because it has to shrink the ceiling every EARLIER tier runs against —
     // that is the whole mechanism. `earlyTierNodeBudget` replaces `nodeBudget` for the probe, the
@@ -2360,6 +2466,33 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const repairElitePrefixDfsRetryNodeCeiling = connectivityRetryNodeCeiling === Infinity
         ? Infinity
         : connectivityRetryNodeCeiling + repairElitePrefixDfsRetryNodeReserve;
+
+    // STRATEGY_MC_NEIGHBOR_BUDGET_RETRY's own node reserve — additive from the start (see
+    // MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION's own comment), never subtracted from
+    // `earlyTierNodeBudget` or any other tier's ceiling. Opt-in convention (`cfg && ... === true`) —
+    // this is a NEW, unvalidated mechanism, like STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY above and
+    // unlike the three promoted tiers.
+    //
+    // `prep.initialMustCrossMask !== 0` is this tier's SOUNDNESS-BASED eligibility gate, and the one
+    // structural difference from its four predecessors. prune-gauntlet.ts reaches
+    // PRUNE_MC_NEIGHBOR_BUDGET only when `state.mustCrossMask !== 0`, which can never hold on a level
+    // that starts with no must-cross obligations — so on such a level the prune rejected exactly zero
+    // moves, and rerunning the ladder with it disabled is provably BIT-IDENTICAL to the ladder that
+    // just failed. Skipping it is therefore free in solves and free in cost, not a heuristic bet.
+    // Folded into the reserve's own predicate (not just the loop guard) so an ineligible level does
+    // not strand reserved nodes it will never spend — the lockstep requirement
+    // ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history documents.
+    const mcNeighborBudgetRetryTierWillRun = mcNeighborBudgetRetryBudgetFraction > 0
+        && !!(cfg && cfg.STRATEGY_MC_NEIGHBOR_BUDGET_RETRY === true)
+        && prep.initialMustCrossMask !== 0;
+    const mcNeighborBudgetRetryNodeReserve = (mcNeighborBudgetRetryTierWillRun && nodeBudget !== Infinity)
+        ? Math.floor(repairElitePrefixDfsRetryNodeCeiling * mcNeighborBudgetRetryNodeReserveFraction)
+        : 0;
+    // STACKED on `repairElitePrefixDfsRetryNodeCeiling` (the immediately-preceding tier's own
+    // ceiling), NOT `nodeBudget` directly — same reason as its two stacked predecessors.
+    const mcNeighborBudgetRetryNodeCeiling = repairElitePrefixDfsRetryNodeCeiling === Infinity
+        ? Infinity
+        : repairElitePrefixDfsRetryNodeCeiling + mcNeighborBudgetRetryNodeReserve;
 
     const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve;
 
@@ -3180,6 +3313,95 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         } finally {
             prep._cfg = originalCfg;
             prep._workCap = originalWorkCap;
+        }
+    }
+
+    // Last-resort must-cross-neighbor-budget retry pass (MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION,
+    // STRATEGY_MC_NEIGHBOR_BUDGET_RETRY) — see that flag's own comment in ablation-config.mjs and the
+    // constant's own comment above for the full rationale. Same Proxy-override, same mainConfigs
+    // rerun shape as the dedup-near-tie-retry and connectivity-axis-exhausted-retry passes above,
+    // toggling PRUNE_MC_NEIGHBOR_BUDGET instead. Opt-in/default-OFF (NEW, unvalidated mechanism) —
+    // the flag check in `mcNeighborBudgetRetryTierWillRun` is the opt-in convention, so this block is
+    // a strict no-op for every production/interactive caller (cfg null) until explicitly enabled.
+    //
+    // Positioned dead last — AFTER the repair-elite-prefix-DFS-retry tier above, the current true end
+    // of the ladder — for the identical reason all four tiers above were placed there: nothing may
+    // run after this one that still checks an unextended `nodeBudget`/`earlyTierNodeBudget`-derived
+    // ceiling, or this tier's own additive extension would starve it.
+    //
+    // `mcNeighborBudgetRetryTierWillRun` is the SAME predicate mcNeighborBudgetRetryNodeReserve is
+    // derived from — including its `initialMustCrossMask` eligibility gate — so the two stay in
+    // lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history: drift either way strands the
+    // reserve or spends one that was never allocated).
+    if (!result.solution && mcNeighborBudgetRetryTierWillRun && prep._metrics.nodesExpanded < mcNeighborBudgetRetryNodeCeiling) {
+        const originalCfg = prep._cfg;
+        const mcNeighborBudgetRetryCfg: AblationConfig = new Proxy({} as AblationConfig, {
+            get(_target, prop: string | symbol) {
+                if (typeof prop !== 'string') return undefined;
+                if (prop === 'PRUNE_MC_NEIGHBOR_BUDGET') return false;
+                if (originalCfg && Object.prototype.hasOwnProperty.call(originalCfg, prop)) return originalCfg[prop];
+                return true;
+            },
+        });
+        prep._cfg = mcNeighborBudgetRetryCfg;
+        try {
+            const mcNeighborBudgetRetryTotalBudget = Math.floor(timeBudgetMs * mcNeighborBudgetRetryBudgetFraction);
+            const mcNeighborBudgetRetryStart = Date.now();
+            // FRESH, ADDITIVE work allocation — same "extend, don't share the depleted pool"
+            // philosophy as connectivityRetryWorkStart/connectivityRetryWorkBudget above.
+            const mcNeighborBudgetRetryWorkStart = workMeter.units;
+            const mcNeighborBudgetRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(mcNeighborBudgetRetryTotalBudget * DEFAULT_WORK_PER_MS));
+            // PER-CONFIG NODE SUBDIVISION — the one place this tier deliberately does NOT copy its
+            // four predecessors, because measurement showed their shared shape is defective.
+            //
+            // THE DEFECT. runGateSerialAttempts/runInterleavedAttempts divide budget BETWEEN configs
+            // in WORK units (`attemptBudgetShare` over `workBudget`), but treat the node ceiling as a
+            // single shared ABSOLUTE cap with no per-config subdivision (`earlyConfigNodeBudget`
+            // defaults to `nodeBudget`, which switches the staircase off). Every retry tier sizes its
+            // fresh work budget as `timeBudgetMs * fraction * DEFAULT_WORK_PER_MS` — and under the
+            // capability protocol `timeBudgetMs` is a deliberately NON-BINDING 24h deadline
+            // (`deterministic=true`, see docs/solver-budget-determinism.md). That makes the work pool
+            // ~2.9e11 units, so the work-based division never bites, and the FIRST config simply runs
+            // until the tier's absolute node ceiling is gone. Measured directly on `R02119` (probe at
+            // `nodeBudget` 10M): per-attempt elapsed inside each ladder-rerun tier was
+            // `[10896, 0, 0, 0, 0, 0, 0, 0]` for the dedup-near-tie tier, `[21319, 0 x7]` for the
+            // connectivity tier, `[685, 0 x7]` for the attraction-diversity pass, and `[39602, 0 x7]`
+            // for this one before the fix — while the main loop, which passes the EXTERNAL (binding)
+            // work budget, divided properly at `[10782, 473, 496, 482, 1561]`. Raising this tier's
+            // reserve 4.5x changed nothing except how long config #1 ran (12.7s -> 77.1s), confirming
+            // a division defect rather than under-provisioning. This is the same "fractions are
+            // denominated in TIME but what actually stops a level is nodeBudget" trap CLAUDE.md
+            // already documents for the admissible-order tier, resurfacing at a different call site.
+            //
+            // THE FIX. Reuse the staircase the main loop's own late-reserve wiring already provides:
+            // `lateConfigStart = 0` makes every config a staircase step, and `earlyConfigNodeBudget`
+            // set to the cumulative node count AT TIER ENTRY gives config i the cumulative cap
+            // `entry + reserve * (i+1)/N`. A config that has already blown past its step is skipped
+            // (the `continue` at that guard) rather than starving the rest of the ladder, so the
+            // winning config is reached even when an earlier one would happily run forever — which is
+            // exactly `R02119`'s shape (`dfs:perimeterSweep/cornerHarvest` never exhausts; the winner
+            // `beam:mustCrossFirst@beam2000` is config #3).
+            //
+            // Deliberately scoped to THIS tier: the same defect in the three promoted tiers and the
+            // diversity pass is a real, separately-measurable opportunity (they are currently paying a
+            // full ladder-rerun reserve to rerun ONE config), but changing a shipped, population-
+            // validated tier's search behavior is decision-bearing and needs its own full-corpus A/B —
+            // it is not a free ride-along on this one. See the ledger entry for the follow-up.
+            const mcNeighborBudgetRetryEntryNodes = prep._metrics.nodesExpanded;
+            const mcNeighborBudgetRetryResult = useInterleaving && activeGates.length > 1
+                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, mcNeighborBudgetRetryTotalBudget, mcNeighborBudgetRetryStart, yieldFn, mcNeighborBudgetRetryNodeCeiling, mcNeighborBudgetRetryWorkBudget, mcNeighborBudgetRetryWorkStart, mcNeighborBudgetRetryEntryNodes, 0)
+                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, mcNeighborBudgetRetryTotalBudget, mcNeighborBudgetRetryStart, yieldFn, mcNeighborBudgetRetryNodeCeiling, mcNeighborBudgetRetryWorkBudget, mcNeighborBudgetRetryWorkStart, mcNeighborBudgetRetryEntryNodes, 0);
+            for (const attempt of mcNeighborBudgetRetryResult.attempts) {
+                attempt.mcNeighborBudgetRetry = true;
+                // `lateConfigStart = 0` makes both runners tag every attempt `mainLoopLateReserve`,
+                // which here means "took a staircase step", not "belongs to the main loop's late
+                // reserve experiment". Strip it so telemetry consumers of that field are not polluted.
+                delete attempt.mainLoopLateReserve;
+            }
+            result.attempts.push(...mcNeighborBudgetRetryResult.attempts);
+            if (mcNeighborBudgetRetryResult.solution) result.solution = mcNeighborBudgetRetryResult.solution;
+        } finally {
+            prep._cfg = originalCfg;
         }
     }
 

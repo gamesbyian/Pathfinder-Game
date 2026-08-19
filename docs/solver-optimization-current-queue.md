@@ -226,6 +226,41 @@ codebase (opt-in, zero production risk) but not a promotion candidate without a 
 different approach to the underlying operator. Full detail:
 [`reports/2026-08-07-repair-elite-prefix-dfs.md`](../reports/2026-08-07-repair-elite-prefix-dfs.md#follow-up-2026-08-19-a-dedicated-retry-tier-tested-and-negative).
 
+**A FIFTH application (2026-08-19) targeted `PRUNE_MC_NEIGHBOR_BUDGET` as
+`STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` — built, opt-in, 1 of 2 targets recovered — but the durable
+result is the DEFECT it exposed in the four tiers that came before it.** That prune shipped
+default-ON on 611/1700 → 665/1700 (59 gained / **5 lost**), explicitly accepting its five losses
+because nothing then existed to recover them. Three of the five have since been recovered by
+unrelated work; `R02119`/`R02422` remain unsolved at the 819 baseline and **both recover at HEAD
+with the prune off**, referee-valid, via exactly the configs
+[`reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md`](../reports/2026-08-12-neighbor-budget-five-loss-diagnosis.md)
+named. The tier as first written — a faithful copy of the connectivity tier — recovered **neither**,
+and raising its reserve 4.5× changed only how long its *first* config ran (12.7s → 77.1s).
+
+**The defect: every ladder-rerun tier gives its first config the entire node reserve and the other
+seven exactly 0ms.** These tiers divide budget between configs in WORK units but treat the node
+ceiling as one shared absolute cap with no per-config subdivision, and they size their fresh work
+budget from `timeBudgetMs`, which under the capability protocol is a deliberately NON-BINDING 24h
+deadline — so the division never bites. Measured per-attempt ms on `R02119`: main loop
+`10782, 473, 496, 482, 1561` (divides correctly — it passes the external, binding work budget);
+attraction-diversity `685, 0×7`; `STRATEGY_DEDUP_NEAR_TIE_RETRY` `10896, 0×7`;
+`STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` `21319, 0×7`. This is the same "fractions are
+denominated in TIME but what stops a level is `nodeBudget`" trap `CLAUDE.md` already documents for
+the admissible-order tier, recurring at a new call site in tiers written after that note.
+
+Fixed for the new tier only (per-config node staircase via `lateConfigStart = 0`): its profile became
+`5134, 5199, 2094` and `R02119` solved via `beam:mustCrossFirst@beam2000`, referee-valid, at the full
+50M level-blind protocol. `R02422` still fails and is understood — its winning attempt needs
+50,333,677 nodes alone, more than a fair 8-way split of the reserve can grant.
+
+**The follow-up is worth more than the tier.** The three PROMOTED tiers are each paying a full
+ladder-rerun reserve to rerun ONE config, so their +40/+45/+10 came only from levels whose winner was
+config #1, and there is likely unclaimed headroom inside reserves *already being spent*. Fixing their
+division redistributes budget instead of adding it — the rare change that can raise solve count
+**without** raising per-level cost, which is exactly what the compounding-cost trend above demands.
+Not bundled in: changing a shipped, population-validated tier's search behavior needs its own
+full-corpus A/B. See the [experiment ledger](solver-opt-in-experiment-ledger.md).
+
 ### 1. Failure-conditioned late-tier allocation
 
 Start from the full lifecycle artifact, not a hand-picked list of failures. Build cohorts from fields available during the solve: technique eligibility, actual work received, termination reason, recent improvement rate, repair best-badness trajectory, unique-state growth, beam extinction/retention summaries, and remaining budget. Historical hints, prior winning configurations, saved solve status, and permanent level IDs are labels only.
