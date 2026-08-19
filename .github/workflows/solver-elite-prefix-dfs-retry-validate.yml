@@ -1,0 +1,71 @@
+# One-off local-validation runner for STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY
+# (modules/solver/orchestration.ts, scripts/stress/elite-prefix-dfs-retry-validate.mjs).
+#
+# NOT a population A/B and NOT solver-stress-refresh.yml's canonical corpus workflow — this runs
+# scripts/stress/elite-prefix-dfs-retry-validate.mjs's own small, fixed 20-level closest-miss
+# sample (reports/2026-08-07-repair-elite-prefix-dfs.md's own sample) as a single unsharded job,
+# since 20 levels is small enough that sharding would add more overhead than it saves. Exists
+# because the same validation run locally can take close to an hour (two runAttempt calls per
+# level at multi-million-node budgets, ~20 levels) — moving it to a GHA runner keeps that off the
+# interactive sandbox. Never commits to main, never touches any baseline/heatmap file.
+name: Solver elite-prefix-dfs-retry local validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      protected_node_budget:
+        description: 'Node budget for the ordinary (flag-off) repair call.'
+        required: false
+        default: '15000000'
+      retry_node_budget:
+        description: 'Node budget for the retry (flag-on) repair call, only spent if the protected call fails.'
+        required: false
+        default: '15000000'
+      corpus_file:
+        description: 'Corpus JSON file the target ids are drawn from.'
+        required: false
+        default: 'data/stress/stress-levels-random.json'
+      ids_csv:
+        description: 'Comma-separated level ids to test. Leave blank for the tool''s own default 20-level closest-miss sample.'
+        required: false
+        default: ''
+
+jobs:
+  validate:
+    name: Run isolated-repair-call validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run the validation script
+        shell: bash
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/elite-prefix-dfs-retry-validate.mjs \
+            "${{ inputs.protected_node_budget }}" \
+            "${{ inputs.retry_node_budget }}" \
+            "${{ inputs.corpus_file }}" \
+            "${{ inputs.ids_csv }}" \
+            | tee elite-prefix-dfs-retry-validate.log
+
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: elite-prefix-dfs-retry-validate-log
+          path: elite-prefix-dfs-retry-validate.log
+          retention-days: 90
