@@ -113,6 +113,11 @@ interface Attempt {
      *  diagnostic-only shape as attractionDiversity/dedupNearTieRetry/admissibleOrderNonDefaultRetry
      *  above. Not read by any solving logic. */
     connectivityAxisExhaustedRetry?: boolean;
+    /** True only for attempts run by the 2026-08-16 STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY
+     *  last-resort pass (see REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION) — same diagnostic-only
+     *  shape as attractionDiversity/dedupNearTieRetry/admissibleOrderNonDefaultRetry/
+     *  connectivityAxisExhaustedRetry above. Not read by any solving logic. */
+    repairElitePrefixDfsRetry?: boolean;
     /** Diagnostic-only passthrough for the admissible-order-search.ts prototype (see
      *  AttemptConfig.admissibleOrder) — not read by any solving logic, purely so external tooling
      *  (scripts/method-probe.mjs) can tell it apart from an ordinary DFS attempt. */
@@ -260,6 +265,21 @@ interface SolveOpts {
      *  never withheld from any earlier tier. 0 restores the tier's ceiling to plain `nodeBudget`.
      *  Undefined (production default) preserves the constant exactly. */
     connectivityAxisExhaustedRetryNodeReserveFractionOverride?: number;
+    /** Overrides REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION for this solve only — same dedicated
+     *  top-level-option shape as dedupNearTieRetryBudgetFractionOverride above (NOT an ablation
+     *  flag). Undefined (production default) preserves the constant exactly. Unlike its three
+     *  promoted siblings, this tier is still opt-in (STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY must
+     *  also be explicitly set true in `ablation`) — this override only controls the BUDGET once the
+     *  flag has already enabled the tier, same relationship as every prior tier's own pre-promotion
+     *  lifecycle stage. */
+    repairElitePrefixDfsRetryBudgetFractionOverride?: number;
+    /** Overrides REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION for this solve only — same
+     *  ADDITIVE-headroom shape as dedupNearTieRetryNodeReserveFractionOverride above (see that
+     *  field's own comment): this fraction extends the retry tier's own ceiling past the preceding
+     *  tier's own ceiling, never withheld from any earlier tier. 0 restores the tier's ceiling to
+     *  the preceding tier's own ceiling exactly. Undefined (production default) preserves the
+     *  constant exactly. */
+    repairElitePrefixDfsRetryNodeReserveFractionOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape and rationale as the two overrides above (NOT an ablation flag, a
      *  THIRD independently-costed extension a batch-tooling caller may want to isolate). Undefined
@@ -1272,6 +1292,63 @@ export const CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION = 1.0;
  *  `CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION` for the full population result. */
 export const CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION = 0.5;
 
+/** STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY (opt-in, default OFF — NEW, unvalidated mechanism,
+ *  2026-08-16, built the same day as the three tiers above and directly modeled on them, but
+ *  applied to a DIFFERENT known double-edged mechanism than any of the three: `STRATEGY_REPAIR_
+ *  ELITE_PREFIX_DFS` (repair-search.ts's `elitePrefixDfsRepair`, gated by `attempt-dispatch.ts`'s
+ *  own opt-in-only `enableElitePrefixDfs` read, NOT the `!cfg || cfg.FLAG` convention).
+ *
+ *  `reports/2026-08-07-repair-elite-prefix-dfs.md` found this mechanism sound and mechanistically
+ *  real (a confirmed badness-improvement feedback loop, debug-traced), but net-negative in its own
+ *  20-level A/B (4/20 solved vs. 5/20 with it off) — with ONE confirmed cause: `R02239` solves via
+ *  ordinary repair at 14,194,203 nodes with the mechanism off, but exhausts the SAME repair call's
+ *  own 15,000,000-node budget without solving when it's on. This is the identical "scarce shared
+ *  node budget, zero-sum reallocation" shape `STRATEGY_DEDUP_NEAR_TIE_RETRY`/`STRATEGY_ADMISSIBLE_
+ *  ORDER_NON_DEFAULT_RETRY`/`STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` were each built to fix —
+ *  the report's own "what would need to change" section proposed shrinking the mechanism's own
+ *  constants or narrowing its attempt grid, but never considered running it as an ADDITIVE,
+ *  DEAD-LAST retry instead of inline within the ordinary repair fallback loop's own shared budget.
+ *
+ *  MECHANISM: unlike the three tiers above (which rerun `mainConfigs`), this reruns `repairConfigs`
+ *  — the same per-config/per-gate manual loop shape as the ordinary repair fallback loop (and
+ *  `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY`'s own per-profile loop) rather than
+ *  `runInterleavedAttempts`/`runGateSerialAttempts`. `prep._cfg` is Proxy-overridden to force
+ *  `STRATEGY_REPAIR_ELITE_PREFIX_DFS: true` (the OPPOSITE polarity from the three tiers above,
+ *  which each disable a flag — this one ENABLES one), which `attempt-dispatch.ts`'s `runAttemptSearch`
+ *  reads to set `enableElitePrefixDfs` for `repairSearchFromGate`. Because the ordinary repair
+ *  fallback loop above already ran to completion with the flag OFF and its own UNTOUCHED node
+ *  ceiling, `R02239`-shaped levels are structurally protected exactly the way `R02644`/`R03248` were
+ *  for the other two tiers: the ordinary loop's own budget is never shared with this tier, so a
+ *  level that solves there is unaffected regardless of what this tier does afterward. Within THIS
+ *  tier's own fresh additive budget, the elite-prefix-DFS sub-search still competes with ordinary
+ *  repair exploration for nodes exactly as the original report described — that internal cost is
+ *  accepted as this specific technique's own price of admission, the same way a whole-ladder rerun
+ *  is accepted as `STRATEGY_DEDUP_NEAR_TIE_RETRY`'s own cost; what changes is that the cost is no
+ *  longer paid by a DIFFERENT, otherwise-successful attempt.
+ *
+ *  Positioned dead last — AFTER `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`, the current true end
+ *  of the ladder — for the identical reason all three tiers above were placed there: nothing may
+ *  run after this one that still checks an unextended ceiling, or this tier's own additive
+ *  extension would starve it.
+ *
+ *  NOT YET VALIDATED — same lifecycle stage all three tiers above shipped at before their own
+ *  local-then-population validation. Needs the same rigor: local spot-check against `R02239`
+ *  (recovery) and the rest of the original 20-level sample (no regressions), then a population-scale
+ *  GHA A/B, before any promotion decision. See `reports/2026-08-07-repair-elite-prefix-dfs.md` for
+ *  the founding evidence this targets. */
+export const REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION = 1.0;
+
+/** Extra node headroom given ADDITIVELY to STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY's own last-resort
+ *  tier, as a fraction of the PRECEDING tier's own ceiling (`connectivityRetryNodeCeiling`) — same
+ *  "stack on the immediately-preceding tier's own ceiling" design `CONNECTIVITY_AXIS_EXHAUSTED_
+ *  RETRY_NODE_RESERVE_FRACTION`'s own comment derives and explains (restarting from plain
+ *  `nodeBudget` risks landing on the exact same absolute ceiling as an earlier tier at a
+ *  coincidentally-equal fraction, giving this tier zero real headroom) — adopted from the start
+ *  here rather than arrived at after a correction, since that lesson is now established practice
+ *  for any new last-resort tier in this file. Starting value matches the three siblings' own final
+ *  (post-correction) value; not yet locally or population validated at this exact setting. */
+export const REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION = 0.5;
+
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
  *  repair fallback, tried BEFORE the ordinary DFS/beam main loop — see runRepairProbe.
@@ -2105,10 +2182,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION;
 
     // opts.connectivityAxisExhaustedRetryBudgetFractionOverride — same shape/rationale/hoisting
-    // reason as dedupRetryBudgetFraction/nonDefaultRetryBudgetFraction above. Opt-in/default-OFF
-    // (NEW, unvalidated mechanism — see CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION's own
-    // comment), so the `cfg &&` ... `=== true` check below is the opt-in convention, not the
-    // standard `!cfg || cfg.FLAG` shape.
+    // reason as dedupRetryBudgetFraction/nonDefaultRetryBudgetFraction above. PROMOTED to
+    // default-ON (see CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION's own comment), so the
+    // `!cfg ||` check below is the standard promoted-default convention, matching its two promoted
+    // siblings, not an opt-in check.
     const connectivityRetryFractionOverride = Number(opts.connectivityAxisExhaustedRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const connectivityRetryBudgetFraction = Number.isFinite(connectivityRetryFractionOverride) && connectivityRetryFractionOverride >= 0
         ? connectivityRetryFractionOverride
@@ -2117,6 +2194,22 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const connectivityRetryNodeReserveFraction = Number.isFinite(connectivityRetryNodeReserveFractionRaw) && connectivityRetryNodeReserveFractionRaw >= 0
         ? Math.min(1, connectivityRetryNodeReserveFractionRaw)
         : CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION;
+
+    // opts.repairElitePrefixDfsRetryBudgetFractionOverride — same shape/hoisting reason as the
+    // three above. Opt-in/default-OFF (NEW, unvalidated mechanism — see REPAIR_ELITE_PREFIX_DFS_
+    // RETRY_BUDGET_FRACTION's own comment), so the `cfg &&` ... `=== true` check below (where this
+    // tier's run condition is computed) is the opt-in convention, not the standard `!cfg || cfg.FLAG`
+    // shape — matching every tier's own pre-promotion lifecycle stage. No `disableExtraBudgetPasses`
+    // fallback: an opt-in tier is already off by default, same as STRATEGY_REPAIR_PROBE_SHRINK_
+    // RECOVERY's own fraction resolution.
+    const repairElitePrefixDfsRetryFractionOverride = Number(opts.repairElitePrefixDfsRetryBudgetFractionOverride);
+    const repairElitePrefixDfsRetryBudgetFraction = Number.isFinite(repairElitePrefixDfsRetryFractionOverride) && repairElitePrefixDfsRetryFractionOverride >= 0
+        ? repairElitePrefixDfsRetryFractionOverride
+        : REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION;
+    const repairElitePrefixDfsRetryNodeReserveFractionRaw = Number(opts.repairElitePrefixDfsRetryNodeReserveFractionOverride);
+    const repairElitePrefixDfsRetryNodeReserveFraction = Number.isFinite(repairElitePrefixDfsRetryNodeReserveFractionRaw) && repairElitePrefixDfsRetryNodeReserveFractionRaw >= 0
+        ? Math.min(1, repairElitePrefixDfsRetryNodeReserveFractionRaw)
+        : REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION;
 
     // Admissible-order tier's NODE RESERVE (see ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION). Resolved
     // here, before the probe, because it has to shrink the ceiling every EARLIER tier runs against —
@@ -2238,6 +2331,24 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // `STRATEGY_DEDUP_NEAR_TIE_RETRY`'s 0.25 avoid this exact bug by accident, not by design — not
     // retroactively changed here, since both are already population-validated and shipped as-is).
     const connectivityRetryNodeCeiling = nonDefaultRetryNodeCeiling === Infinity ? Infinity : nonDefaultRetryNodeCeiling + connectivityRetryNodeReserve;
+
+    // STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY's own node reserve — additive from the start (see
+    // REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION's own comment), never subtracted from
+    // `earlyTierNodeBudget` or any other tier's ceiling. Opt-in convention (`cfg && ... === true`) —
+    // this is a NEW, unvalidated mechanism, unlike its three promoted siblings above.
+    const repairElitePrefixDfsRetryTierWillRun = repairElitePrefixDfsRetryBudgetFraction > 0
+        && !!(cfg && cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY === true)
+        && repairConfigs.length > 0;
+    const repairElitePrefixDfsRetryNodeReserve = (repairElitePrefixDfsRetryTierWillRun && nodeBudget !== Infinity)
+        ? Math.floor(connectivityRetryNodeCeiling * repairElitePrefixDfsRetryNodeReserveFraction)
+        : 0;
+    // STACKED on `connectivityRetryNodeCeiling` (the immediately-preceding tier's own ceiling), NOT
+    // `nodeBudget` directly — this tier is built with that lesson already applied from the start
+    // (see REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION's own comment), rather than
+    // discovering the same starvation bug a fourth time.
+    const repairElitePrefixDfsRetryNodeCeiling = connectivityRetryNodeCeiling === Infinity
+        ? Infinity
+        : connectivityRetryNodeCeiling + repairElitePrefixDfsRetryNodeReserve;
 
     const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve;
 
@@ -2991,6 +3102,73 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             if (connectivityRetryResult.solution) result.solution = connectivityRetryResult.solution;
         } finally {
             prep._cfg = originalCfg;
+        }
+    }
+
+    // Last-resort repair-elite-prefix-DFS retry pass (REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_
+    // FRACTION, STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY) — see that flag's own comment in
+    // ablation-config.mjs and the constant's own comment above for the full rationale. Unlike the
+    // three tiers above (which rerun `mainConfigs` via runInterleavedAttempts/runGateSerialAttempts,
+    // or the admissible-order-non-default-retry tier's own per-profile loop over admissible-order
+    // configs), this reruns `repairConfigs` via the SAME per-config/per-gate manual loop shape as
+    // the ordinary repair fallback loop above, with `prep._cfg` Proxy-overridden to force
+    // `STRATEGY_REPAIR_ELITE_PREFIX_DFS: true` — the OPPOSITE polarity from every tier above (each
+    // of which disables a flag; this one enables one). Opt-in/default-OFF (NEW, unvalidated
+    // mechanism) — the flag check below (`cfg &&` ... `=== true`) is the opt-in convention, so this
+    // block is a strict no-op for every production/interactive caller (cfg null) until explicitly
+    // enabled.
+    //
+    // Positioned dead last — AFTER the connectivity-axis-exhausted-retry tier above, the current
+    // true end of the ladder — for the identical reason all three tiers above were placed there:
+    // nothing may run after this one that still checks an unextended ceiling, or this tier's own
+    // additive extension would starve it.
+    //
+    // `repairElitePrefixDfsRetryTierWillRun` is the SAME predicate repairElitePrefixDfsRetryNodeReserve
+    // is derived from — the two must stay in lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own
+    // history: drift either way strands the reserve or spends one that was never allocated).
+    if (!result.solution && repairElitePrefixDfsRetryTierWillRun && prep._metrics.nodesExpanded < repairElitePrefixDfsRetryNodeCeiling) {
+        const originalCfg = prep._cfg;
+        const repairElitePrefixDfsRetryCfg: AblationConfig = new Proxy({} as AblationConfig, {
+            get(_target, prop: string | symbol) {
+                if (typeof prop !== 'string') return undefined;
+                if (prop === 'STRATEGY_REPAIR_ELITE_PREFIX_DFS') return true;
+                if (originalCfg && Object.prototype.hasOwnProperty.call(originalCfg, prop)) return originalCfg[prop];
+                return true;
+            },
+        });
+        prep._cfg = repairElitePrefixDfsRetryCfg;
+        // FRESH, ADDITIVE `prep._workCap` override — same "extend, don't share the depleted pool"
+        // philosophy as the non-default-retry tier's own override above (that tier's own history:
+        // `prep._workCap` is a single mutable field this tier's own `runAttempt`-direct calls would
+        // otherwise silently inherit stale from whichever earlier tier last wrote it).
+        const originalWorkCap = prep._workCap;
+        try {
+            const repairElitePrefixDfsRetryTotalBudget = Math.floor(timeBudgetMs * repairElitePrefixDfsRetryBudgetFraction);
+            const repairElitePrefixDfsRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(repairElitePrefixDfsRetryTotalBudget * DEFAULT_WORK_PER_MS));
+            prep._workCap = Math.min(workMeter.units + repairElitePrefixDfsRetryWorkBudget, prep._strictWorkCap ?? Infinity);
+            // Same per-config/per-gate loop shape as the ordinary repair fallback loop above.
+            for (const repairConfig of repairConfigs) {
+                if (result.solution) break;
+                if (prep._metrics.nodesExpanded >= repairElitePrefixDfsRetryNodeCeiling) break;
+                const retryStart = Date.now();
+                for (let gi = 0; gi < activeGates.length; gi++) {
+                    if (prep._metrics.nodesExpanded >= repairElitePrefixDfsRetryNodeCeiling) break;
+                    const gateKey = activeGates[gi];
+                    const elapsed = Date.now() - retryStart;
+                    const gatesLeft = activeGates.length - gi;
+                    const retryBudget = Math.floor((repairElitePrefixDfsRetryTotalBudget - elapsed) / gatesLeft);
+                    if (retryBudget < 50) break;
+                    const remainingNodeBudget = repairElitePrefixDfsRetryNodeCeiling === Infinity
+                        ? Infinity
+                        : Math.max(0, repairElitePrefixDfsRetryNodeCeiling - prep._metrics.nodesExpanded);
+                    const r = await runAttempt(gateKey, level, prep, repairConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
+                    result.attempts.push({ ...r.attempt, repairElitePrefixDfsRetry: true });
+                    if (r.path) { result.solution = r.path; break; }
+                }
+            }
+        } finally {
+            prep._cfg = originalCfg;
+            prep._workCap = originalWorkCap;
         }
     }
 
