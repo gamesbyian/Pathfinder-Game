@@ -2,11 +2,11 @@
 
 > **Status:** built, locally validated, not yet dispatched at population scale.
 > **Scope:** every technique the production ladder ever generates, tested in isolation (the FULL
-> node budget to itself, not a shared ladder slice) against a large sample of every currently-unsolved
-> level in all 3 real corpora, plus a curated set of complementary technique pairs and ablation-flag
-> variants. Answers "which technique solves or fails, and how" — a different question from every
-> existing batch tool in `docs/solver-architecture.md`'s tool-selection table, none of which isolate a
-> single technique's full budget across a whole corpus.
+> node budget to itself, not a shared ladder slice) against **every currently-unsolved level in both
+> real corpora** (888 levels, no sampling — see the worker-pool addendum below), plus a curated set of
+> complementary technique pairs and ablation-flag variants. Answers "which technique solves or fails,
+> and how" — a different question from every existing batch tool in `docs/solver-architecture.md`'s
+> tool-selection table, none of which isolate a single technique's full budget across a whole corpus.
 
 ## Why this is a new tool, not a reuse of an existing one
 
@@ -38,25 +38,29 @@ self-updating if the ladder's routing ever changes:
 
 | Tier | Population | Budget | Cells | What it answers |
 |---|---|---:|---:|---|
-| **T1** | all 34 techniques (minus 1 provably-degenerate eligibility skip) + 6 promoted flag-variant rows × a 400-level sample (all 7 currently-unsolved Corpus-1 levels + a seeded random draw from Corpus-2's 881 unsolved) | 50,000,000 nodes (full) | 15,810 | **The decision-bearing tier**: can any single isolated technique (or known-complementary flag variant) crack a level the production ladder can't, given the whole budget instead of a shared slice |
+| **T1** | all 34 techniques (minus 1 provably-degenerate eligibility skip) + 7 promoted flag-variant rows × **every currently-unsolved level in both real corpora, no sampling** (888 levels: all 7 Corpus-1 + all 881 Corpus-2) | 50,000,000 nodes (full) | 35,042 | **The decision-bearing tier**: can any single isolated technique (or known-complementary flag variant) crack a level the production ladder can't, given the whole budget instead of a shared slice — for literally every level currently in that state, not a sample of them |
 | **T2** | all 34 techniques (minus the same eligibility skip) × every level in all 3 real corpora (1,962 levels, solved and unsolved) | 1,000,000 nodes | 65,714 | Cheap breadth/redundancy fingerprint across the whole game — which techniques are near-duplicates of each other, which are load-bearing |
-| **T3** | 10 curated complementary pairs (skipped where a member is eligibility-ineligible) × a 200-level sub-sample of T1's own pool | 50,000,000 nodes (shared across the pair, same cost shape as one T1 cell) | 1,932 | Does trying A-then-B find something neither finds alone |
+| **T3** | 10 curated complementary pairs (skipped where a member is eligibility-ineligible) × a 200-level sub-sample of T1's own pool | 50,000,000 nodes (shared across the pair, same cost shape as one T1 cell) | 1,935 | Does trying A-then-B find something neither finds alone |
 | **T4** | *(empty — see "Was that the only one?" below)* | — | 0 | Structural placeholder for a future flag confirmed to reach live search code, not merely routing. Every candidate so far is either promoted to T1 (`PRUNE_MC_NEIGHBOR_BUDGET`/`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`/`STRATEGY_DEDUP_NEAR_TIE_RETENTION`/`STRATEGY_REPAIR_TURN_BIAS`, each verified to read `prep._cfg` inside actual search code) or removed (`PRUNE_PORTAL_PARITY_ENVELOPE`: evidence-backed inert; `STRATEGY_ARCHETYPE_ROUTING`: provably inert in this census's execution model — only ever read inside routing logic this census bypasses) |
 
-**Total: 83,456 cells** (final, post-review + post-eligibility-audit numbers; see "External review"
-and "Was that the only one?" below for how this was reached from the original 90,130). T3/T4's
-sample is a strict subset of T1's, so every (technique, level) pair they touch already has a T1
-baseline — pairs and flags are compared by joining against T1's data at combine time, not by
-re-running a redundant control cell.
+**Total: 102,691 cells** (final, post-review + post-eligibility-audit + post-worker-pool-addendum
+numbers; see "External review", "Was that the only one?", and the worker-pool addendum below for how
+this was reached from the original 90,130). T3/T4's sample is a strict subset of T1's, so every
+(technique, level) pair they touch already has a T1 baseline — pairs and flags are compared by joining
+against T1's data at combine time, not by re-running a redundant control cell.
 
-### Why the population isn't literally "every level"
+### Why T2/T3/T4 don't also run full-budget on literally every level
 
-The literal ask — every technique × every currently-unsolved level, full budget — is ~30,192 cells at
-T1 alone; at a naive cost estimate that's well over the platform's hard per-shard ceiling (GitHub-
-hosted runners cap a job at 360 minutes, not configurable higher). T1's 400-level sample is a
-deliberate, documented trade against that hard constraint: all of Corpus-1's tiny unsolved population
-(7 levels) plus 84% coverage-equivalent of Corpus-2's after calibration (see below). T2 recovers full
-"every level" breadth cheaply, at a much smaller budget.
+T1 now genuinely is "every technique × every currently-unsolved level" (see the worker-pool addendum
+below for how that became affordable) — but running the *full* 50M budget on literally every level in
+**all 3 real corpora** (1,962 levels, including the 1,074 already solved) would be wasted compute: a
+solved level's own production solve already answers "can the solver do this," and re-running 34
+techniques' full budgets against it in isolation asks a much narrower question (which of the 34 would
+independently have found it) that T2's cheap 1M-node breadth pass already answers well enough to
+surface near-duplicate/load-bearing technique clusters. T3/T4 sample a 200-level sub-population of
+T1's own pool because a pair or flag experiment's value is in the *comparison* against a T1 baseline
+that already exists for that same (technique, level); running every pair against all 888 T1 levels
+would multiply cost for combinatorial coverage the curated-pair selection doesn't need.
 
 ## Calibration: measured, not guessed
 
@@ -85,25 +89,70 @@ estimate: **~35s/cell for dfs/ida/repair, ~50s/cell blended for beam, ~45s/cell 
 
 ## Cost estimate and safety margin
 
-| tier | cells | est. cost |
-|---|---:|---:|
-| T1 | 15,810 | ~202 runner-hours |
-| T2 | 65,714 | ~36 runner-hours |
-| T3 | 1,932 | ~24 runner-hours |
-| T4 | 0 | 0 runner-hours |
-| **total** | **83,456** | **~262 runner-hours** |
+Sequential-equivalent cost (1 worker), from the calibrated per-cell rates below (`## Calibration`):
 
-Across 60 shards: **~4.37h/shard average**, against GitHub's hard 360-minute (6h) per-job ceiling —
-**~27% margin** (final numbers; the original 90,130-cell/600-level design had ~18% margin before
-trading level-sample breadth for the promoted flag variants, then the eligibility audit removed a
-further 1,394 cells outright — see "External review" and "Was that the only one?" below). Cells are interleaved (technique varies fastest within a tier) so any contiguous
-shard slice contains a representative mix of cheap and expensive cells rather than clumping. Given
-real calibration uncertainty (6 samples, not a population), every shard is additionally wrapped in a
-`timeout -k 30s --preserve-status 345m` wall-clock safety net (15 minutes under the hard cap) — a
-shard running hotter than calibrated stops gracefully and reports whatever it completed, since
-`technique-census.mjs` writes its output after every single cell. Any gap the safety net catches is
-closed by a follow-up dispatch with `--skip-existing` pointed at the prior partial output, not a
-full re-run.
+| tier | cells | est. cost (1 worker) |
+|---|---:|---:|
+| T1 | 35,042 | ~448 runner-hours |
+| T2 | 65,714 | ~36 runner-hours |
+| T3 | 1,935 | ~24 runner-hours |
+| T4 | 0 | 0 runner-hours |
+| **total** | **102,691** | **~508 runner-hours** |
+
+Every shard runs with **`--workers=2`** (see the worker-pool addendum immediately below) — a measured
+**1.78x** wall-clock speedup, bringing the actual dispatched cost to **~285 runner-hours**. Across 60
+shards: **~4.76h/shard average**, against GitHub's hard 360-minute (6h) per-job ceiling — **~21%
+margin** (the original 90,130-cell/600-level, 1-worker design had ~18% margin; the eligibility audit
+then removed 1,394 cells outright before the worker-pool addendum reinvested the freed headroom into
+full T1 population coverage rather than banking it as extra slack — see "External review", "Was that
+the only one?", and the addendum below). Cells are interleaved (technique varies fastest within a
+tier) so any contiguous shard slice contains a representative mix of cheap and expensive cells rather
+than clumping — and cells are also dispatched to the worker pool on demand, not by a fixed static
+split, so heterogeneous per-cell cost within a shard doesn't leave one worker idle while the other is
+still on an expensive cell. Given real calibration uncertainty (6 samples, not a population, plus the
+speedup measurement's own sampling error), every shard is additionally wrapped in a `timeout -k 30s
+--preserve-status 345m` wall-clock safety net (15 minutes under the hard cap) — a shard running hotter
+than calibrated stops gracefully and reports whatever it completed, since `technique-census.mjs`
+writes its output after every single cell (both the sequential and worker-pool code paths call the
+same `writeReport` after each result). Any gap the safety net catches is closed by a follow-up
+dispatch with `--skip-existing` pointed at the prior partial output, not a full re-run.
+
+## Worker-pool parallelism and full-population T1 (2026-08-19 addendum)
+
+GitHub-hosted `ubuntu-latest` standard runners are 2-vCPU, and `scripts/technique-census.mjs`'s
+sequential path used only one of them — real headroom left on the table for a 6h-per-shard-capped
+batch job. `scripts/solver-worker-pool.mjs` (`runWorkerPool`/`runWorkerMain`) already provides exactly
+this pattern for `level-blind-capability-sweep.mjs`, so the census now reuses it rather than inventing
+a second parallelism mechanism: `technique-census-cell.mjs` extracts the previously-inline per-cell
+execution logic (level-blind prep, per-gate fair-share budget division, attempt execution, referee
+validation) into a shared `createCellRunner()`, called identically from the sequential path
+(`--workers=1`, unchanged behavior) and from a new dedicated worker entry point
+(`technique-census-worker.mjs`, `--workers>1`) — so a cell's outcome can never depend on which path
+ran it. `technique-census.mjs` gained a `--workers=N` flag selecting between them.
+
+**Verified, not assumed**, before trusting it for the real dispatch: a 60-cell timing plan run
+sequentially (87s) and pooled at `--workers=2` (49s) — a **1.78x** wall-clock speedup — with a full
+cell-by-cell correctness comparison between the two arms (`ok`, `nodesExpanded`, `status` for all 60
+cells) showing **0 mismatches**. `npx eslint` clean on all three new/changed files.
+
+**The freed headroom was spent on coverage, not banked as slack.** A 1.78x speedup at the previous
+83,456-cell/400-level-sample plan would have simply cut shard time from ~4.37h to ~2.46h/shard — a
+~59% margin, more than this calibration's uncertainty actually warrants sitting idle. Instead, T1's
+sample was widened from a 400-level draw (all of Corpus-1's unsolved + ~45% of Corpus-2's) to **the
+literal full currently-unsolved population of both corpora (888 levels, 0% sampling)** —
+`scripts/build-technique-census-plan.mjs`'s `--t1-sample-size` now accepts `'all'` (the new default,
+also used when the flag is omitted) alongside a numeric cap for a smaller/faster test-drive run; `'all'`
+resolves to `Infinity` rather than a hardcoded population count, so a future baseline with a different
+unsolved count still gets full coverage without this file needing a matching edit. This raises T1 from
+15,810 to 35,042 cells (2.2x) while the *dispatched* wall-clock cost only grows from ~4.37h/shard to
+~4.76h/shard (workers=2 more than compensates for the larger population) — landing at ~21% margin,
+comparable to the original 400-level/1-worker design's ~18%, while eliminating sampling variance from
+T1 entirely: every currently-unsolved level gets isolated-technique evidence from this run, not just a
+seeded random 45% of Corpus-2's. (The now-largely-redundant `PRIORITY_LEVEL_IDS` guarantee mechanism —
+which force-included three research-flagged still-unsolved levels, `R02119`/`R02422`/`R02644`, into a
+partial sample — is kept in the plan builder rather than deleted: it's dead weight only in `'all'`
+mode, but it still matters for a deliberately smaller test-drive `--t1-sample-size` run, and removing
+it would mean re-deriving it if that need comes up again.)
 
 ## Concurrency safety: shards never write to git-tracked data
 
@@ -201,7 +250,9 @@ unsolved levels, plus ~45% of Corpus-2's 881) brings the total to **84,850 cells
 ~4.47h/shard average — a wider margin (~25%) than the original 600-level design had, despite testing
 materially more per level.** This is the direct trade the review's own framing argues for: fewer raw
 levels, but every level gets a fair shot from techniques we already have specific reason to think
-matter.
+matter. *(Superseded later the same day — see the "Worker-pool parallelism and full-population T1"
+addendum below: the 400-level trade was a response to a 1-worker compute ceiling; once that ceiling
+moved, the trade was revisited and T1 went to the full, unsampled population instead.)*
 
 **4. The oracle union is now a first-class, automatically-computed headline statistic.** The
 review's point 5 — "how many levels are solved by at least one isolated technique, compared with
@@ -239,6 +290,79 @@ column) rather than guessing budget breakpoints blind. Point 9 (routing experime
 strongest signals) is exactly `docs/solver-optimization-current-queue.md`'s own Priority 1 — this
 run's oracle-union/uniqueness/pair-synergy output is the evidence that lane has been waiting for.
 
+## Level-blind measurement compliance
+
+Every cell's solve attempt follows `docs/solver-level-blindness.md`'s non-negotiable boundary exactly:
+`technique-census-cell.mjs`'s `runCell` strips `id`/`stressMeta` from the raw level object before
+calling `Solver.prepareLevelForSolver` (`const { id: _id, stressMeta: _sm, ...rawLevel } = entry;`) —
+byte-identical to `level-blind-capability-sweep.mjs`'s own pattern — so no individual solve attempt
+ever has access to the level's identity, prior solved/unsolved status, or any other out-of-band
+signal. The node budget, ablation config, and technique choice for a cell are all fixed by the plan
+before the solve runs; nothing about a specific solve's own behavior can leak back into how it's
+configured.
+
+Using baseline solved/unsolved status to *select which levels the census's T1 sample covers* is a
+distinct thing from feeding that status into an individual solve, and is not a level-blindness
+violation: it is a research-design decision about where to spend compute (precedented by
+`solver-highbudget-unsolved-sweep.yml`, which does the same thing), not a change to what any solve
+attempt itself can see or use. With T1 now covering the full unsolved population rather than a sample,
+this distinction matters less than it did — there's no longer a sampling decision to defend — but the
+underlying solves were, and remain, fully level-blind regardless.
+
+## How this serves open solver research
+
+This census wasn't designed in a vacuum — its four output artifacts (`level-technique-coverage.json`,
+`technique-capability-summary.md`, `pair-synergy.md`, `flag-sensitivity.md`) each answer a question a
+currently-open research thread is already asking, at full-population scale instead of the few-dozen-
+level spot-checks those threads have had to rely on so far:
+
+- **`docs/solver-optimization-current-queue.md`'s Priority 0** (the confirmed
+  `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` beam-dedup regression, currently evidenced on exactly 3 levels —
+  `R02248`/`R02114`/`R00592` — plus one case where the flag's default-on state is what succeeds,
+  `R03248`) gets its first population-scale read: the `beam:intersectionHarvest@beam5000`/
+  `beam:objectiveFirst@beam5000` `connectivity-axis-exhausted-off` T1-promoted variants run against
+  **every** currently-unsolved Corpus-2 level, not just the 3 known ones — `flag-sensitivity.md`
+  reports exactly how many additional unsolved levels the toggle flips either direction. That directly
+  answers whether the regression's population is "3 known cases plus scattered noise" or a much wider,
+  previously-invisible pattern — the open question the queue's own writeup already flags as unresolved
+  ("the population signature is scattered... exactly why").
+- **`docs/solver-heuristic-capability-gap-analysis.md`'s Priority 1** (`PRUNE_MC_NEIGHBOR_BUDGET`
+  five-loss diagnosis and equal-work integration — population evidence already showed 611→665, +54
+  net, 59 gained/5 lost) gets a complementary isolated-technique read from the
+  `beam:mustCrossFirst@beam2000`/`dfs:mustCrossFirst` `mc-neighbor-budget-off` T1-promoted variants:
+  which of the currently-unsolved, must-cross-eligible levels the flag alone recovers in isolation,
+  independent of ladder position — narrower evidence than a full-ladder A/B, but isolates the flag's
+  own effect from everything else moving around it in a shared ladder pass.
+- **`docs/solver-optimization-current-queue.md`'s Priority 1** and
+  **`docs/solver-heuristic-capability-gap-analysis.md`'s Priority 4** (failure-conditioned/late-reserve
+  budget allocation — "the ladder usually spends the shared pool before every mechanically eligible
+  technique receives a meaningful search") is exactly what the oracle-union headline stat and
+  `level-technique-coverage.json` are built to distinguish: a currently-unsolved level with **zero**
+  isolated-technique solves anywhere in T1∪T2 is a genuine technique blind spot (new algorithms
+  needed), while one that at least one isolated technique *does* crack under its own full budget is a
+  starvation/scheduling candidate — direct, population-scale evidence for which lane (new technique
+  work vs. routing/allocation work) is the higher-value next investment, instead of the queue's current
+  reliance on lifecycle classification (starved/capped/exhausted) alone.
+- **`docs/solver-optimization-current-queue.md`'s Priority 6** (mechanics-conditioned technique
+  routing — "confirm the observed block-density split between admissible-order and repair winners")
+  and **`docs/solver-research-operating-model.md`**'s family/variant failure-routing taxonomy both
+  benefit from `technique-capability-summary.md`'s per-technique unique-solve-count column: a
+  technique with few total solves but many *unique* ones (solves nothing else does) is exactly the
+  signal a mechanics-conditioned routing rule would key off — this run supplies that signal across the
+  whole currently-unsolved population in one pass, rather than requiring a bespoke sweep per candidate
+  rule.
+- **`pair-synergy.md`** speaks directly to whether Priority 1's "failure-conditioned late-tier
+  allocation" should ever route to a *specific* fallback technique conditioned on an earlier one's
+  failure (as opposed to a generic reserve/retry), since it measures exactly that: does trying B after
+  A find something neither finds alone, for 10 curated pairs already chosen for plausible
+  complementarity (e.g. `dfs:mustCrossFirst` + `ida:mustCrossFirst`, `dfs:repair:repair` +
+  `dfs:repair:repair(mustTurnBiased)`).
+
+None of this substitutes for the queue's own next decision-bearing steps (a matched full-ladder A/B is
+still required to actually change production routing) — but it replaces "spot-check 3-20 levels and
+extrapolate" with "here is the full-population answer," which is a materially stronger evidence base
+to design that A/B against.
+
 ## How to dispatch
 
 `workflow_dispatch` on `.github/workflows/technique-census.yml` — every parameter (baseline, sample
@@ -246,7 +370,9 @@ sizes, node budgets, seed, max-parallel, save-hints) is a documented input with 
 defaults above. The `baseline` input must point at a frozen `summary.json` from a real
 `solver-stress-refresh.yml` run (default: `31918095910`, the 819/1700 baseline this session's other
 work is measured against) — this defines T1/T3/T4's "currently unsolved" population and should be
-refreshed to the latest capability run before dispatch if one has landed since.
+refreshed to the latest capability run before dispatch if one has landed since. `t1_sample_size`
+defaults to `'all'` (every currently-unsolved level in both real corpora); pass a number instead for a
+smaller/faster test-drive run.
 
 ## "Does this ever run a technique we already know can't do anything different?" (2026-08-19)
 

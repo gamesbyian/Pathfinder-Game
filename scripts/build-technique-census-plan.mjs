@@ -60,7 +60,13 @@ const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map
 const BASELINE_FILE = args.get('--baseline') || 'reports/stress/capability-runs/31918095910/summary.json';
 const OUT_FILE = args.get('--out') || 'reports/stress/technique-census-plan.json';
 const SEED = Number(args.get('--seed') || 20260819);
-const T1_SAMPLE_SIZE = Number(args.get('--t1-sample-size') || 600);
+// 'all' (the default, 2026-08-19 workers=2 revision): every currently-unsolved level in both real
+// corpora, no sampling. Expressed as Infinity rather than a hardcoded population count (888 as of
+// this baseline: 7 corpus-1 + 881 corpus-2) so a future baseline with a different unsolved count
+// still gets full coverage without this file needing a matching edit. A numeric value still works
+// for a smaller/faster test-drive run (local iteration, a quick plan-shape check).
+const T1_SAMPLE_SIZE_ARG = args.get('--t1-sample-size');
+const T1_SAMPLE_SIZE = (!T1_SAMPLE_SIZE_ARG || T1_SAMPLE_SIZE_ARG === 'all') ? Infinity : Number(T1_SAMPLE_SIZE_ARG);
 const T3T4_SAMPLE_SIZE = Number(args.get('--t3t4-sample-size') || 200);
 const T1_NODE_BUDGET = Number(args.get('--t1-node-budget') || 50000000);
 const T2_NODE_BUDGET = Number(args.get('--t2-node-budget') || 1000000);
@@ -172,15 +178,51 @@ function techniqueEligible(key, raw) {
     return !check || check(raw);
 }
 
-// ─── T1 sample: all currently-unsolved corpus-1 levels + a seeded sample of corpus-2's ────────────
+// ─── Priority levels: guaranteed T1 inclusion, not left to random draw ─────────────────────────────
+// Every Corpus-2 level individually named as still-open evidence in docs/future-work.md,
+// docs/solver-optimization-current-queue.md, or docs/solver-heuristic-capability-gap-analysis.md,
+// as of 2026-08-19 -- cross-checked against the frozen baseline so only genuinely still-unsolved
+// ones are listed (most of this session's own named levels, e.g. R02248/R00156/R02960/R02114/
+// R00592/R03148, have SINCE been solved by the STRATEGY_*_RETRY tiers promoted earlier this
+// session, and are correctly excluded here: T1's population is "currently unsolved," and testing an
+// isolated technique against an already-solved level answers a different, lower-value question T2
+// already covers cheaply). A random 34-technique/50M-budget draw would likely include some of these
+// anyway given a large enough sample, but "likely" isn't "guaranteed" -- these are the exact levels
+// the open research threads are already asking about, so a full isolated-technique reading on them
+// is close to the highest-value data this census can produce, and should not depend on a coin flip.
+//   R02119, R02422 -- PRUNE_MC_NEIGHBOR_BUDGET's own two remaining unrecovered losses
+//     (docs/solver-optimization-current-queue.md Priority 0 lineage; this session's own
+//     STRATEGY_MC_NEIGHBOR_BUDGET_RETRY work). Already tested in isolation earlier this session
+//     (confirmed recoverable/partially-recoverable) -- full T1 coverage (all 34 techniques, not just
+//     the 2 already tried) is the natural completion of that investigation.
+//   R02644 -- the ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE counter-example (needs 'default' to keep
+//     13.2M of a 15M share; docs/solver-opt-in-experiment-ledger.md) -- still unsolved and still the
+//     open half of that mechanism's double-edged-shape evidence.
+// (Corpus-1's R00408 -- the STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET regression target,
+// reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md -- needs no separate entry: ALL of
+// Corpus-1's unsolved levels are already unconditionally in T1 below.)
+const PRIORITY_LEVEL_IDS = new Set(['R02119', 'R02422', 'R02644']);
+
+// ─── T1 sample: all currently-unsolved corpus-1 levels + priority levels + a seeded sample of the
+// rest of corpus-2's unsolved population ──────────────────────────────────────────────────────────
 const c1Unsolved = corpusLevels.corpus1.filter(l => !isSolved('corpus1', l.id));
 const c2Unsolved = corpusLevels.corpus2.filter(l => !isSolved('corpus2', l.id));
+const c2Priority = c2Unsolved.filter(l => PRIORITY_LEVEL_IDS.has(l.id));
+const c2Rest = c2Unsolved.filter(l => !PRIORITY_LEVEL_IDS.has(l.id));
+const missingPriorityIds = [...PRIORITY_LEVEL_IDS].filter(id => !c2Priority.some(l => l.id === id));
+if (missingPriorityIds.length) {
+    // Not fatal -- a priority id may have been solved since this list was last reconciled against
+    // the docs, which is itself useful information, not a bug. Surfaced loudly so it's noticed
+    // rather than silently dropped.
+    console.warn(`technique-census plan: priority level(s) not found in the unsolved Corpus-2 population (solved since, or id typo?): ${missingPriorityIds.join(', ')}`);
+}
 const rng = mulberry32(SEED);
-const c2UnsolvedShuffled = seededShuffle(c2Unsolved, rng);
-const t1Budget = Math.max(0, T1_SAMPLE_SIZE - c1Unsolved.length);
+const c2RestShuffled = seededShuffle(c2Rest, rng);
+const t1Budget = Math.max(0, T1_SAMPLE_SIZE - c1Unsolved.length - c2Priority.length);
 const t1Sample = [
     ...c1Unsolved.map(l => ({ corpus: 'corpus1', ...l })),
-    ...c2UnsolvedShuffled.slice(0, t1Budget).map(l => ({ corpus: 'corpus2', ...l })),
+    ...c2Priority.map(l => ({ corpus: 'corpus2', ...l })),
+    ...c2RestShuffled.slice(0, t1Budget).map(l => ({ corpus: 'corpus2', ...l })),
 ];
 
 // T3/T4 sample: a seeded subset of T1's OWN sample (not a fresh draw) -- guarantees every (level,

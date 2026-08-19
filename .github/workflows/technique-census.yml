@@ -19,8 +19,14 @@
 # technique-census.mjs's and combine-technique-census-shards.mjs's own header comments.
 #
 # PER-SHARD WALL-CLOCK SAFETY NET. GitHub-hosted runners hard-cap a job at 360 minutes; this cannot
-# be raised. The plan is calibrated to average ~4.9h/shard (60 shards, ~296 runner-hours total, ~18%
-# margin under the hard cap) from 6 real method-probe.mjs timings, not a guess -- but calibration
+# be raised. Each shard runs with --workers=2 (scripts/technique-census.mjs's OS-level worker-pool
+# path, scripts/solver-worker-pool.mjs) -- GitHub-hosted `ubuntu-latest` standard runners are 2-vCPU,
+# and a real 60-cell timing comparison (sequential vs --workers=2, 0 result mismatches) measured a
+# 1.78x wall-clock speedup. That speedup is spent on COVERAGE, not slack: T1 now runs the FULL
+# currently-unsolved population of both real corpora (t1_sample_size=all, 888 levels: 7 corpus-1 +
+# 881 corpus-2) instead of a partial sample. At that size the plan is calibrated to average ~4.76h/
+# shard (60 shards, ~285 runner-hours total, ~21% margin under the hard cap) from 6 real
+# method-probe.mjs timings plus the measured worker-pool speedup, not a guess -- but calibration
 # uncertainty is real, so every shard is wrapped in `timeout -k 30s --preserve-status 345m` (5h45m,
 # 15 minutes of buffer under the hard cap). A shard that runs hotter than calibrated stops gracefully
 # and reports whatever it finished -- technique-census.mjs writes its output after every cell, so at
@@ -37,9 +43,9 @@ on:
         required: false
         default: 'reports/stress/capability-runs/31918095910/summary.json'
       t1_sample_size:
-        description: 'T1: total unsolved-level sample size (all of corpus-1''s unsolved levels are always included; the rest is a seeded random draw from corpus-2''s unsolved population). 400 (not 600) after 2026-08-19 review promoted 7 known-complementary flag variants to T1-scale full-budget cells -- see reports/2026-08-19-technique-census-design.md''s "External review" section for the calibrated trade.'
+        description: '''all'' (default): every currently-unsolved level in both real corpora, no sampling -- enabled by the --workers=2 speedup below. A number instead caps it to that many levels (all of corpus-1''s unsolved levels always included first, the rest a seeded random draw from corpus-2''s unsolved population, with a few research-flagged levels guaranteed in) for a smaller/faster test-drive run. See reports/2026-08-19-technique-census-design.md''s "External review" and worker-pool sections for the calibrated trade.'
         required: false
-        default: '400'
+        default: 'all'
       t3t4_sample_size:
         description: 'T3/T4: sub-sample size drawn from T1''s own sample (a strict subset, so T3/T4 results always have a T1 baseline to join against)'
         required: false
@@ -155,7 +161,7 @@ jobs:
           mkdir -p logs/technique-census-shards
           timeout -k 30s --preserve-status 345m node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
             --plan=plan/technique-census-plan.json \
-            --shard="${{ matrix.shard }}" --shards=60 \
+            --shard="${{ matrix.shard }}" --shards=60 --workers=2 \
             --out="logs/technique-census-shards/shard-${nn}.json" \
             --summary-out="logs/technique-census-shards/shard-${nn}-summary.md" \
             2>&1 | tee "logs/technique-census-shards/shard-${nn}.console.log"

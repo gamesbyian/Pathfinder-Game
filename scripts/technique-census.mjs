@@ -6,7 +6,16 @@
  * each cell (one or two technique keys against one level, optionally with an ablation toggle), runs
  * EVERY listed technique key as its own independent attempt sharing the cell's node budget
  * cumulatively (same semantics as method-probe.mjs's `--only=A,B`), records the outcome, and writes
- * results incrementally.
+ * results incrementally. Per-cell execution logic lives in technique-census-cell.mjs, shared with
+ * the worker-pool entry (technique-census-worker.mjs) so a cell's outcome never depends on which
+ * path ran it.
+ *
+ * --workers=N (default 1): N=1 runs sequentially in-process (simplest path, used for small/local
+ * runs and this script's own dev iteration). N>1 uses scripts/solver-worker-pool.mjs's OS-level
+ * child_process pool (real parallelism across CPU cores, not just Promise interleaving) — the same
+ * mechanism level-blind-capability-sweep.mjs already uses for cross-level parallelism, matching
+ * solver-stress-refresh.yml's own `corpus2_workers` convention. On a 2-vCPU GitHub-hosted runner,
+ * --workers=2 is the natural fit.
  *
  * READ-ONLY with respect to git-tracked data. Deliberately never writes to the data/hints tree or any
  * corpus file, and never calls hintCapture — a level can appear in cells assigned to DIFFERENT
@@ -19,7 +28,7 @@
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
- *     --plan=/path/to/plan.json --shard=1 --shards=60 \
+ *     --plan=/path/to/plan.json --shard=1 --shards=60 --workers=2 \
  *     --out=logs/technique-census-shards/shard-01.json \
  *     --summary-out=logs/technique-census-shards/shard-01-summary.md
  */
@@ -27,8 +36,8 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { makeAttemptConfigKeyParser } from './attempt-config-key.mjs';
+import { createCellRunner } from './technique-census-cell.mjs';
+import { runWorkerPool } from './solver-worker-pool.mjs';
 
 const argv = process.argv.slice(2);
 const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -46,6 +55,7 @@ if (!Number.isInteger(SHARD) || !Number.isInteger(SHARDS) || SHARD < 1 || SHARD 
 }
 const OUT_FILE = args.get('--out') || null;
 const SUMMARY_OUT_FILE = args.get('--summary-out') || null;
+const WORKERS = Math.max(1, Number(args.get('--workers') || 1));
 // --skip-existing=<path>: a PRIOR shard output at this exact path (e.g. a resumed run after a kill)
 // — cellIds already present there are skipped. Never auto-resumes from --out itself (same
 // discipline as stress:benchmark's --skip-existing-dir / portfolio-solve-sweep.mjs's --resume, per
@@ -53,13 +63,6 @@ const SUMMARY_OUT_FILE = args.get('--summary-out') || null;
 // a genuinely different prior-run path is what recovers a partial run; re-running with the same
 // --out just starts over).
 const SKIP_EXISTING_FILE = args.get('--skip-existing') || null;
-
-installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
-const { PROFILE_ORDER: _PROFILE_ORDER, TEMPLATES, POLICY_PROFILES } = await import('../modules/solver/policy.js');
-const Solver = createSolver();
-const { prepLevel, runAttempt, attemptConfigKey, normalizeAblationConfig } = SOLVER_TESTING_API;
-const parseAttemptConfigKey = makeAttemptConfigKeyParser({ TEMPLATES, POLICY_PROFILES, attemptConfigKey });
 
 const plan = JSON.parse(readFileSync(path.resolve(PLAN_FILE), 'utf8'));
 const total = plan.cells.length;
@@ -74,122 +77,15 @@ if (SKIP_EXISTING_FILE && existsSync(SKIP_EXISTING_FILE)) {
         for (const r of prior.results ?? []) alreadyDone.add(r.cellId);
     } catch { /* malformed/partial prior file — just don't skip anything */ }
 }
+const runCells = myCells.filter(c => !alreadyDone.has(c.cellId));
 
-console.log(`technique-census shard ${SHARD}/${SHARDS}: ${myCells.length} cells (plan total ${total}), ${alreadyDone.size} already done`);
-
-// ─── Corpus files: loaded lazily and cached, one parse per corpus regardless of how many cells
-// reference it (a shard's cells can span all 3 corpora across different tiers). Read-only. ────────
-const CORPUS_FILES = { published: 'data/levels.json', corpus1: 'data/stress/stress-levels.json', corpus2: 'data/stress/stress-levels-random.json' };
-const corpusCache = new Map();
-function getRawLevel(corpus, pos) {
-    if (!corpusCache.has(corpus)) {
-        const raw = JSON.parse(readFileSync(path.resolve(CORPUS_FILES[corpus]), 'utf8'));
-        corpusCache.set(corpus, Array.isArray(raw) ? raw : raw.levels);
-    }
-    return corpusCache.get(corpus)[pos - 1];
-}
-
-const parsedConfigCache = new Map(); // technique key -> parsed AttemptConfig (parsing is pure, safe to cache across cells)
-function getParsedConfig(key) {
-    if (!parsedConfigCache.has(key)) parsedConfigCache.set(key, parseAttemptConfigKey(key));
-    return parsedConfigCache.get(key);
-}
-
-/** Runs one cell: every listed technique key, per gate, sharing the cell's node budget
- *  cumulatively — same early-return-on-first-success shape as method-probe.mjs's own probeLevel,
- *  generalized from a fixed --only list to a per-cell technique list and an optional ablation
- *  override. */
-async function runCell(cell) {
-    const entry = getRawLevel(cell.corpus, cell.levelPos);
-    const { id: _id, stressMeta: _sm, ...rawLevel } = entry;
-    const level = Solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
-    const prep = prepLevel(level);
-    prep._cfg = cell.ablation
-        ? normalizeAblationConfig(Object.fromEntries([
-            ...(cell.ablation.enable ?? []).map(f => [f, true]),
-            ...(cell.ablation.disable ?? []).map(f => [f, false]),
-        ]))
-        : null;
-    prep._metrics = { nodesExpanded: 0 };
-    prep._forcedFirstStepKey = null;
-    prep._forcedPortalExitKey = null;
-
-    const configs = cell.techniqueKeys.map(key => ({ key, config: getParsedConfig(key) }));
-    const attempts = [];
-    const gateSummaries = [];
-    let solution = null;
-    let winningKey = null;
-    let winningGate = null;
-    const startTime = Date.now();
-    // FAIR PER-GATE NODE SHARE, not gate-outer exhaustion. A single-technique-per-cell census with
-    // one shared budget across every gate would let gate 1 alone consume the entire cell.nodeBudget
-    // before gate 2 is ever tried on a multi-gate level — silently recreating, INSIDE the very
-    // experiment meant to eliminate it, the exact ladder gate-starvation
-    // STRATEGY_GATE_INTERLEAVING/runGateSerialAttempts's own gatesLeft-based division already exists
-    // to prevent in production (see orchestration.ts). Published carries real exposure here (54/160
-    // levels have 2-3 gates; T2 tests every published level), so this isn't a hypothetical. Mirrors
-    // that same "recompute remaining / gatesLeft at each gate boundary" pattern: an early-exhausted
-    // gate's unspent share rolls forward to the gates still to come, rather than being stranded.
-    outer:
-    for (let gi = 0; gi < level.gateKeys.length; gi++) {
-        const gateKey = level.gateKeys[gi];
-        const remainingTotal = cell.nodeBudget === Infinity ? Infinity : Math.max(0, cell.nodeBudget - prep._metrics.nodesExpanded);
-        if (remainingTotal <= 0) break outer;
-        const gatesLeft = level.gateKeys.length - gi;
-        const gateShare = remainingTotal === Infinity ? Infinity : Math.floor(remainingTotal / gatesLeft);
-        const gateStartNodes = prep._metrics.nodesExpanded;
-        const gateCeiling = gateShare === Infinity ? Infinity : gateStartNodes + gateShare;
-        for (const { key, config } of configs) {
-            if (prep._metrics.nodesExpanded >= gateCeiling) break;
-            const remaining = gateCeiling === Infinity ? Infinity : Math.max(0, gateCeiling - prep._metrics.nodesExpanded);
-            const r = await runAttempt(gateKey, level, prep, config, cell.budgetMs, Date.now(), null, remaining);
-            attempts.push({ configKey: key, gateKey, ...r.attempt });
-            if (r.path) { solution = r.path; winningKey = key; winningGate = gateKey; break outer; }
-        }
-        gateSummaries.push({ gateKey, nodesExpanded: prep._metrics.nodesExpanded - gateStartNodes, share: gateShare === Infinity ? null : gateShare });
-    }
-
-    const nodesExpanded = prep._metrics.nodesExpanded;
-    const totalMs = Date.now() - startTime;
-    let refereeValid = null;
-    if (solution) refereeValid = Solver.validateCandidatePath(level, solution).ok;
-    const ok = !!solution && refereeValid === true;
-    // Derived status vocabulary, aligned with the rest of the batch-tooling family
-    // (level-blind-capability-sweep.mjs / portfolio-solve-sweep.mjs): 'success' | 'node-budget-
-    // reached' | 'exhausted' (every technique in the cell terminated on its own, under budget) |
-    // 'referee-invalid' (a rare, load-bearing signal: the solver found a path SOLVER-mode rules
-    // accept but PLAY-mode rules don't — see CLAUDE.md's MoveContext.SOLVER note — never silently
-    // dropped as a plain failure).
-    const status = ok ? 'success'
-        : (solution && refereeValid === false) ? 'referee-invalid'
-        : (nodesExpanded >= cell.nodeBudget) ? 'node-budget-reached'
-        : 'exhausted';
-
-    return {
-        cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, levelId: entry.id ?? null, levelPos: cell.levelPos,
-        techniqueKeys: cell.techniqueKeys, pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
-        ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget,
-        ok, status, refereeValid, winningConfigKey: winningKey, winningGate,
-        // Per-gate breakdown — only when there's more than one gate to break down (the overwhelming
-        // majority of cells are single-gate; a 1-element array there is pure redundancy with the
-        // fields above). Answers "which gate got cut off at its own share vs. genuinely exhausted"
-        // at finer grain than the cell-level `status` aggregate above.
-        gateSummaries: level.gateKeys.length > 1 ? gateSummaries : undefined,
-        nodesExpanded, totalMs,
-        // Full per-attempt breakdown (needed by provenanceFromSolveResult at combine time) is kept
-        // only for a genuine solve — most of the 90K cells will be negative results on an unsolved
-        // level, and the aggregate above is what every downstream analysis actually needs from those;
-        // keeping every attempt record for all of them would multiply artifact size for no benefit.
-        attempts: ok ? attempts : undefined,
-        solution: ok ? solution : undefined,
-    };
-}
+console.log(`technique-census shard ${SHARD}/${SHARDS}: ${myCells.length} cells (plan total ${total}), ${alreadyDone.size} already done, workers=${WORKERS}`);
 
 const results = [];
 if (OUT_FILE) mkdirSync(path.dirname(path.resolve(OUT_FILE)), { recursive: true });
 function writeReport(partial) {
     if (!OUT_FILE) return;
-    writeFileSync(path.resolve(OUT_FILE), JSON.stringify({ shard: SHARD, shards: SHARDS, planFile: PLAN_FILE, partial, results }));
+    writeFileSync(path.resolve(OUT_FILE), JSON.stringify({ shard: SHARD, shards: SHARDS, planFile: PLAN_FILE, workers: WORKERS, partial, results }));
 }
 
 let handledSignal = false;
@@ -203,18 +99,47 @@ function onSignal() {
 process.on('SIGINT', onSignal);
 process.on('SIGTERM', onSignal);
 
-for (let i = 0; i < myCells.length; i++) {
-    const cell = myCells[i];
-    if (alreadyDone.has(cell.cellId)) continue;
-    let r;
-    try { r = await runCell(cell); }
-    catch (err) { r = { cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, levelPos: cell.levelPos, ok: false, status: 'error', error: err?.message ?? String(err) }; }
-    results.push(r);
-    if ((i + 1) % 25 === 0 || i === myCells.length - 1) {
-        console.log(`  [${i + 1}/${myCells.length}] ${cell.cellId} ${r.ok ? 'SOLVED' : r.status}`);
+function logProgress(count, cellId, r) {
+    if (count % 25 === 0 || count === runCells.length) {
+        console.log(`  [${count}/${runCells.length}] ${cellId} ${r.ok ? 'SOLVED' : r.status}`);
     }
-    // Report/persist between cells, not only at the end — CLAUDE.md's batch-tool requirement.
-    writeReport(true);
+}
+
+if (WORKERS === 1) {
+    // Sequential, in-process — simplest path, no child_process/bundling overhead. Used for small
+    // runs, local dev iteration, and as the fallback WORKERS=1 always resolves to regardless of
+    // platform core count.
+    const { runCellSafe } = await createCellRunner();
+    let count = 0;
+    for (const cell of runCells) {
+        const r = await runCellSafe(cell);
+        results.push(r);
+        count += 1;
+        logProgress(count, cell.cellId, r);
+        // Report/persist between cells, not only at the end — CLAUDE.md's batch-tool requirement.
+        writeReport(true);
+    }
+} else {
+    // OS-level parallelism across WORKERS child processes (solver-worker-pool.mjs) — tasks are
+    // dispatched on-demand (a worker that finishes a cheap cell immediately gets the next one, not a
+    // fixed static split), so the heterogeneous cell costs this census produces (a beam config that
+    // exhausts in under a second next to a dfs/ida/repair config that runs 35+ seconds to the node
+    // cap) don't leave a worker idle waiting on a static partition.
+    let count = 0;
+    await runWorkerPool({
+        workerScript: 'scripts/technique-census-worker.mjs',
+        tasks: runCells,
+        concurrency: WORKERS,
+        onResult: (_index, r) => {
+            results.push(r);
+            count += 1;
+            logProgress(count, r.cellId, r);
+            // Report/persist between cells, not only at the end — results arrive in COMPLETION
+            // order (not task order) under the pool, which is fine: this file's own row order was
+            // never meaningful, only which cellIds have been recorded.
+            writeReport(true);
+        },
+    });
 }
 writeReport(false);
 
@@ -226,7 +151,7 @@ if (SUMMARY_OUT_FILE) {
     for (const r of results) { byTier[r.tier] ??= { total: 0, ok: 0 }; byTier[r.tier].total++; if (r.ok) byTier[r.tier].ok++; }
     const lines = [
         `# technique-census shard ${SHARD}/${SHARDS}`, '',
-        `Plan: \`${PLAN_FILE}\` — ${myCells.length} cells assigned, ${alreadyDone.size} pre-skipped, ${results.length} run.`,
+        `Plan: \`${PLAN_FILE}\` — ${myCells.length} cells assigned, ${alreadyDone.size} pre-skipped, ${results.length} run, workers=${WORKERS}.`,
         '', `**Solved: ${solved}/${results.length}**`, '',
         '| tier | ok | total |', '|---|---:|---:|',
         ...Object.entries(byTier).map(([t, v]) => `| ${t} | ${v.ok} | ${v.total} |`),
