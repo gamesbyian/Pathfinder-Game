@@ -46,6 +46,7 @@ import process from 'node:process';
 
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { selectLevelsBySpec } from './level-data-io.mjs';
+import { makeAttemptConfigKeyParser } from './attempt-config-key.mjs';
 
 const ROOT = process.cwd();
 const argv = process.argv.slice(2);
@@ -71,51 +72,12 @@ if (flags.has('--list-templates')) {
     process.exit(0);
 }
 
-/** Parses attemptConfigKey()'s own canonical string format back into an AttemptConfig, then
- *  round-trips it through attemptConfigKey() again to confirm an exact match — a parser bug that
- *  silently builds the WRONG config would otherwise be invisible (the tool would just report a
- *  fast, confident answer about a different method than the one requested). */
+// Shared parser (scripts/attempt-config-key.mjs) — the error messages there are generic; this
+// tool prefixes them with "--only: " for CLI-appropriate context.
+const parseAttemptConfigKeyRaw = makeAttemptConfigKeyParser({ TEMPLATES, POLICY_PROFILES, attemptConfigKey });
 function parseAttemptConfigKey(key) {
-    const idaMatch = /^ida:([A-Za-z]+)(\(lds\))?$/.exec(key);
-    if (idaMatch) {
-        const [, profileName, ldsMarker] = idaMatch;
-        const lds = !!ldsMarker;
-        // 'none' is a sentinel, not a POLICY_PROFILES lookup: skips the soft-score tie-break
-        // entirely (admissible-order-search.ts's rankByAdmissibleSlack gets tieBreakProfile: null),
-        // reproducing the technique's original no-tie-break ordering. See
-        // AttemptConfig.admissibleOrderNoTieBreak's own doc for why this exists.
-        if (profileName === 'none') {
-            const config = { profileName: 'none', template: null, admissibleOrder: true, admissibleOrderNoTieBreak: true, ...(lds ? { admissibleOrderLds: true } : {}) };
-            const roundTrip = attemptConfigKey(config);
-            if (roundTrip !== key) throw new Error(`--only: "${key}" parsed to a config that re-serializes as "${roundTrip}" — parser/format mismatch, refusing to guess.`);
-            return config;
-        }
-        if (!POLICY_PROFILES[profileName]) throw new Error(`--only: "${key}" references unknown profile "${profileName}" (this selects the soft-score tie-break profile — see admissible-order-search.ts). Run with --list-profiles for the vocabulary, or "ida:none" for no tie-break at all.`);
-        const config = { profileName, template: null, admissibleOrder: true, ...(lds ? { admissibleOrderLds: true } : {}) };
-        const roundTrip = attemptConfigKey(config);
-        if (roundTrip !== key) throw new Error(`--only: "${key}" parsed to a config that re-serializes as "${roundTrip}" — parser/format mismatch, refusing to guess.`);
-        return config;
-    }
-    const m = /^(dfs|beam):([A-Za-z]+)(?:\/([A-Za-z]+))?(?:@beam(\d+))?(\(diverse\))?(:repair)?(\(mustTurnBiased\)|\(turnBiased\))?$/.exec(key);
-    if (!m) throw new Error(`--only: "${key}" is not a valid attemptConfigKey format. Run with --list-profiles/--list-templates for the vocabulary.`);
-    const [, mode, profileName, templateId, beamWidth, diverse, repairMarker, biased] = m;
-    if (mode === 'beam' && !beamWidth) throw new Error(`--only: "${key}" says beam but has no @beamN width.`);
-    if (mode === 'dfs' && beamWidth) throw new Error(`--only: "${key}" says dfs but has a @beamN width (that's a beam key).`);
-    if (templateId && !TEMPLATES[templateId]) throw new Error(`--only: "${key}" references unknown template "${templateId}".`);
-    if (profileName !== 'repair' && (repairMarker || biased)) throw new Error(`--only: "${key}" has a repair marker but profileName isn't "repair".`);
-    if (repairMarker === undefined && biased) throw new Error(`--only: "${key}" has a biased marker without ":repair" — not a valid repair config.`);
-    const config = {
-        profileName,
-        template: templateId ? TEMPLATES[templateId] : null,
-        ...(beamWidth ? { beamWidth: Number(beamWidth) } : {}),
-        ...(diverse ? { diverseBeam: true } : {}),
-        ...(repairMarker ? { repair: true } : {}),
-        ...(biased === '(mustTurnBiased)' ? { repairMustTurnBiased: true } : {}),
-        ...(biased === '(turnBiased)' ? { repairTurnBiased: true } : {}),
-    };
-    const roundTrip = attemptConfigKey(config);
-    if (roundTrip !== key) throw new Error(`--only: "${key}" parsed to a config that re-serializes as "${roundTrip}" — parser/format mismatch, refusing to guess.`);
-    return config;
+    try { return parseAttemptConfigKeyRaw(key); }
+    catch (err) { throw new Error(`--only: ${err.message}`); }
 }
 
 const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels-random.json';
