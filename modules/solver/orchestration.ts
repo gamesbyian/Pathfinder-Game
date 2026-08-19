@@ -288,11 +288,10 @@ interface SolveOpts {
     repairElitePrefixDfsRetryNodeReserveFractionOverride?: number;
     /** Overrides MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape as dedupNearTieRetryBudgetFractionOverride above (NOT an ablation
-     *  flag). Undefined (production default) preserves the constant exactly. Like
-     *  repairElitePrefixDfsRetryBudgetFractionOverride and unlike the three promoted siblings, this
-     *  tier is still opt-in (STRATEGY_MC_NEIGHBOR_BUDGET_RETRY must also be explicitly set true in
-     *  `ablation`) — this override only controls the BUDGET once the flag has already enabled the
-     *  tier. */
+     *  flag). Undefined (production default) preserves the constant exactly. STRATEGY_MC_NEIGHBOR_
+     *  BUDGET_RETRY is PROMOTED to default-ON (2026-08-19, GHA run 32224200709: corpus1 95/102
+     *  identical solved set, corpus2 819→828, +9, zero regressions) — this override only controls the
+     *  BUDGET; the tier now runs by default like its three promoted siblings above. */
     mcNeighborBudgetRetryBudgetFractionOverride?: number;
     /** Overrides MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION for this solve only — same ADDITIVE-
      *  headroom shape as dedupNearTieRetryNodeReserveFractionOverride above (see that field's own
@@ -1424,8 +1423,18 @@ export const REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  — and if this gate holds up at population scale, the same soundness-gate treatment is the obvious
  *  follow-up for reclaiming part of the cost already paid by the three tiers above.
  *
- *  1.0 = one full `timeBudgetMs` window, same as all four sibling tiers. NOT yet population-
- *  validated: opt-in until a full-corpus A/B reports gained/lost IDs and cost on BOTH corpora. */
+ *  1.0 = one full `timeBudgetMs` window, same as all four sibling tiers.
+ *
+ *  POPULATION-VALIDATED AND PROMOTED (2026-08-19, GHA run 32224200709 vs the 31918095910 baseline):
+ *  corpus1 95/102 identical solved-ID set (zero change); corpus2 819→828, +9 solves (R02119,
+ *  R02128, R02132, R02401, R02512, R02783, R02835, R02947, R03361), ZERO regressions. R02119
+ *  recovered as predicted; R02422 did NOT recover in this shared-ladder-rerun population run despite
+ *  the isolated single-config test above showing it recoverable — an open, non-blocking discrepancy
+ *  (see ablation-config.mjs's own comment), most likely the shared additive-budget rerun not giving
+ *  `beam:intersectionHarvest@beam5000(diverse)` enough of the tier's reserve. Cost: corpus1 nodes
+ *  +22.5%/work +12.4%, corpus2 nodes +23.0%/work +16.5% — comparable to (cheaper on corpus2 than)
+ *  STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own promoted cost; promoted per the same established
+ *  bar (solved-count gain plus zero regressions, not cost neutrality). */
 export const MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION = 1.0;
 
 /** Extra node headroom given ADDITIVELY to STRATEGY_MC_NEIGHBOR_BUDGET_RETRY's own ceiling, as a
@@ -2469,9 +2478,15 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     // STRATEGY_MC_NEIGHBOR_BUDGET_RETRY's own node reserve — additive from the start (see
     // MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION's own comment), never subtracted from
-    // `earlyTierNodeBudget` or any other tier's ceiling. Opt-in convention (`cfg && ... === true`) —
-    // this is a NEW, unvalidated mechanism, like STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY above and
-    // unlike the three promoted tiers.
+    // `earlyTierNodeBudget` or any other tier's ceiling. PROMOTED to default-ON (2026-08-19, GHA run
+    // 32224200709 vs the 31918095910 baseline): corpus1 95/102 identical solved-ID set (zero change),
+    // corpus2 819→828 (+9: R02119/R02128/R02132/R02401/R02512/R02783/R02835/R02947/R03361), ZERO
+    // regressions. Cost: corpus1 nodes +22.5%/work +12.4%, corpus2 nodes +23.0%/work +16.5% —
+    // comparable to (cheaper on corpus2 than) STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own
+    // promoted cost. Standard opt-OUT convention (`!cfg || cfg.FLAG`), matching its three promoted
+    // siblings — NOT the opt-in `cfg && cfg.FLAG === true` shape STRATEGY_REPAIR_ELITE_PREFIX_DFS_
+    // RETRY above still uses (that one remains closed/opt-in). See ablation-config.mjs's own comment
+    // for the full mechanism and the R02422 non-recovery caveat.
     //
     // `prep.initialMustCrossMask !== 0` is this tier's SOUNDNESS-BASED eligibility gate, and the one
     // structural difference from its four predecessors. prune-gauntlet.ts reaches
@@ -2483,7 +2498,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // not strand reserved nodes it will never spend — the lockstep requirement
     // ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history documents.
     const mcNeighborBudgetRetryTierWillRun = mcNeighborBudgetRetryBudgetFraction > 0
-        && !!(cfg && cfg.STRATEGY_MC_NEIGHBOR_BUDGET_RETRY === true)
+        && !!(!cfg || cfg.STRATEGY_MC_NEIGHBOR_BUDGET_RETRY)
         && prep.initialMustCrossMask !== 0;
     const mcNeighborBudgetRetryNodeReserve = (mcNeighborBudgetRetryTierWillRun && nodeBudget !== Infinity)
         ? Math.floor(repairElitePrefixDfsRetryNodeCeiling * mcNeighborBudgetRetryNodeReserveFraction)
@@ -3350,9 +3365,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // STRATEGY_MC_NEIGHBOR_BUDGET_RETRY) — see that flag's own comment in ablation-config.mjs and the
     // constant's own comment above for the full rationale. Same Proxy-override, same mainConfigs
     // rerun shape as the dedup-near-tie-retry and connectivity-axis-exhausted-retry passes above,
-    // toggling PRUNE_MC_NEIGHBOR_BUDGET instead. Opt-in/default-OFF (NEW, unvalidated mechanism) —
-    // the flag check in `mcNeighborBudgetRetryTierWillRun` is the opt-in convention, so this block is
-    // a strict no-op for every production/interactive caller (cfg null) until explicitly enabled.
+    // toggling PRUNE_MC_NEIGHBOR_BUDGET instead. PROMOTED to default-ON (2026-08-19) — the flag check
+    // in `mcNeighborBudgetRetryTierWillRun` now uses the standard opt-OUT convention (`!cfg ||
+    // cfg.FLAG`), so this block runs for every production/interactive caller (cfg null) by default,
+    // same as its three promoted siblings; still gated on `prep.initialMustCrossMask !== 0`
+    // regardless (soundness, not polarity).
     //
     // Positioned dead last — AFTER the repair-elite-prefix-DFS-retry tier above, the current true end
     // of the ladder — for the identical reason all four tiers above were placed there: nothing may

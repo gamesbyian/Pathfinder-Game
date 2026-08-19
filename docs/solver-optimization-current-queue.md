@@ -227,8 +227,12 @@ different approach to the underlying operator. Full detail:
 [`reports/2026-08-07-repair-elite-prefix-dfs.md`](../reports/2026-08-07-repair-elite-prefix-dfs.md#follow-up-2026-08-19-a-dedicated-retry-tier-tested-and-negative).
 
 **A FIFTH application (2026-08-19) targeted `PRUNE_MC_NEIGHBOR_BUDGET` as
-`STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` — built, opt-in, 1 of 2 targets recovered — but the durable
-result is the DEFECT it exposed in the four tiers that came before it.** That prune shipped
+`STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` — built, locally validated 1 of 2 targets recovered, then
+PROMOTED to default-ON the same day on a clean population A/B (GHA run `32224200709`: corpus1
+95/102 identical solved set, corpus2 819→828, **+9, zero regressions**; cost corpus1 nodes +22.5%/
+work +12.4%, corpus2 nodes +23.0%/work +16.5% — comparable to the connectivity tier's own promoted
+cost below) — but the durable process result from building it is the DEFECT it exposed in the four
+tiers that came before it.** That prune shipped
 default-ON on 611/1700 → 665/1700 (59 gained / **5 lost**), explicitly accepting its five losses
 because nothing then existed to recover them. Three of the five have since been recovered by
 unrelated work; `R02119`/`R02422` remain unsolved at the 819 baseline and **both recover at HEAD

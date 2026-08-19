@@ -634,7 +634,7 @@ test('attraction-diversity pass reruns the main ladder once more after both prio
     // admissible-order-search last-resort tier (orchestration.ts), which also runs by default after
     // this pass and would otherwise inflate "mainLoopAttempts" below (its attempts carry neither
     // marker, since it's a distinct search primitive, not a rerun of mainConfigs).
-    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, dedupNearTieRetryBudgetFractionOverride: 0, admissibleOrderNonDefaultRetryBudgetFractionOverride: 0, connectivityAxisExhaustedRetryBudgetFractionOverride: 0 });
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, dedupNearTieRetryBudgetFractionOverride: 0, admissibleOrderNonDefaultRetryBudgetFractionOverride: 0, connectivityAxisExhaustedRetryBudgetFractionOverride: 0, mcNeighborBudgetRetryBudgetFractionOverride: 0 });
     assert.equal(result.ok, false);
     const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
     const mainLoopAttempts = result.attempts.filter(a => a.attractionDiversity !== true);
@@ -755,6 +755,7 @@ test('a nodeBudget with room left after the main loop lets the diversity pass st
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
     assert.equal(result.status, 'node-budget-reached');
@@ -812,6 +813,7 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
     });
     const on = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
@@ -819,6 +821,7 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
     });
     assert.equal(off.nodesExpanded, 402, 'reserve off reproduces the pre-reserve total exactly');
     assert.ok(on.nodesExpanded < off.nodesExpanded, 'the reserve must hold the early tiers below the full ceiling');
@@ -996,6 +999,7 @@ test('repair-fallback reserve is inert by default (cfg=null) even with a finite 
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
@@ -1016,6 +1020,7 @@ test('repair-fallback reserve gives the fallback loop room without touching the 
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
@@ -1062,6 +1067,7 @@ test('repair-fallback reserve is a no-op when mainLoopLateReserve is 0 (accepted
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
         repairFallbackNodeReserveFractionOverride: 0.5,
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
@@ -1086,6 +1092,7 @@ test('attraction-diversity reserve is inert by default (cfg=null) even with its 
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
@@ -1111,6 +1118,7 @@ test('attraction-diversity reserve gives the diversity pass room without touchin
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
@@ -1170,6 +1178,7 @@ test('attraction-diversity reserve is a no-op when repairFallbackNodeReserve alr
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0.3,
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 1.0,
@@ -1226,6 +1235,7 @@ test('admissible-order profile reserve gives non-default profiles room without s
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0,
         admissibleOrderNodeReserveFractionOverride: 0.4,
         admissibleOrderProfileNodeReserveFractionOverride: 0.5,
@@ -1273,6 +1283,7 @@ test('admissible-order profile reserve is a no-op when admissibleOrderNodeReserv
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0,
         admissibleOrderNodeReserveFractionOverride: 0,
         admissibleOrderProfileNodeReserveFractionOverride: 0.5,
@@ -1658,6 +1669,7 @@ test('dedup-near-tie-retry pass reruns the main ladder once more after main loop
         admissibleOrderBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
     const retryAttempts = result.attempts.filter(a => a.dedupNearTieRetry === true);
@@ -1946,6 +1958,7 @@ test('connectivityAxisExhaustedRetryBudgetFractionOverride: 0 suppresses the pas
         timeBudgetMs: 1000,
         ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true },
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
 });
@@ -2015,6 +2028,7 @@ test('repair-elite-prefix-dfs-retry pass reruns the repair ladder once more afte
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
     const retryAttempts = result.attempts.filter(a => a.repairElitePrefixDfsRetry === true);
@@ -2081,6 +2095,7 @@ test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
         attemptSearchForTesting: dispatch,
     });
     assert.equal(result.ok, true, 'the elite-prefix-dfs-on retry wins');
