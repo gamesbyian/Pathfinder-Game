@@ -10,34 +10,54 @@
  * enumeration. Deterministic (fixed seed) so a local run reproduces byte-identical to CI's.
  *
  * WHAT THIS ANSWERS: "which technique, given the FULL ladder node budget to itself (not shared
- * across a ladder), solves or fails on this level — and how." Four tiers, each answering a
- * different piece of that:
+ * across a ladder), solves or fails on this level — and how." Three active tiers (T2 retired, see
+ * below), each answering a different piece of that:
  *
- *   T1 (primary, full budget): every technique the real ladder ever generates (derived live from
- *       getConfiguredAttemptConfigs across all 3 corpora, not a hardcoded/synthetic list) x a large
- *       sample of CURRENTLY UNSOLVED levels (all of corpus-1's unsolved + a seeded random sample of
- *       corpus-2's), each at the full 50,000,000-node budget. This is THE decision-bearing tier for
- *       "can any single isolated technique crack a level the production ladder can't."
- *   T2 (breadth, cheap budget): every technique x EVERY level in all 3 real corpora (solved and
- *       unsolved), at a small budget -- a coarse capability/redundancy fingerprint across the whole
- *       game, cheap enough to run exhaustively.
+ *   T1 (primary, full budget, FULL POPULATION): every technique the real ladder ever generates
+ *       (derived live from getConfiguredAttemptConfigs across all 3 corpora, not a hardcoded/
+ *       synthetic list) x EVERY level in all 3 real corpora -- solved AND unsolved, 1,962 levels, no
+ *       sampling -- each at the full 50,000,000-node budget. This is THE decision-bearing tier for
+ *       "can any single isolated technique crack a level the production ladder can't," AND (since
+ *       2026-08-19's full-parity revision) the only tier capable of catching a technique/flag
+ *       combination that makes a level the ladder CURRENTLY solves newly fail in isolation -- exactly
+ *       the shape of the PRUNE_CONNECTIVITY_AXIS_EXHAUSTED regression this run's own T1_PROMOTED_
+ *       VARIANTS exist to test (see "T2 retired" below for why the original unsolved-only design
+ *       couldn't see this failure mode at all).
+ *   T2 -- RETIRED 2026-08-19, not reused as a tier letter (the same "gap kept, never reused"
+ *       convention this codebase already applies to level/hint ids -- see CLAUDE.md's Level Stats
+ *       section on P00153). Originally: every technique x every level in all 3 corpora at a small
+ *       1,000,000-node budget, as a cheap breadth/redundancy fingerprint standing in for full
+ *       population coverage T1 couldn't originally afford. Retired because (a) once T1 itself covers
+ *       every level at the FULL budget, T2's cheap pass is strictly subsumed -- any signal it could
+ *       show, T1's higher-fidelity data shows better, at zero marginal cost; (b) a real calibration
+ *       check (8 solved Corpus-2 levels, non-winning techniques, full 50M budget) found 3 of 4
+ *       successful solves needed 9-16M nodes -- an order of magnitude past T2's 1M cap -- meaning
+ *       T2's own "near-duplicate"/"load-bearing" technique clustering on solved levels was likely
+ *       measuring which techniques are cheap, not which are mechanistically redundant. Prompted by a
+ *       direct question ("why only unsolved levels -- don't we need to see the effect on all levels
+ *       to truly understand the results") that exposed both of these as real gaps, not just
+ *       stylistic ones -- see reports/2026-08-19-technique-census-design.md's full-parity addendum.
  *   T3 (pairs): 10 curated, mechanically-complementary technique pairs (sharing ONE full budget,
  *       same cost shape as a single T1 cell) against a sub-sample of T1's own level pool -- answers
  *       "does trying A then B find something neither finds alone."
- *   T4 (flags): 6 curated ablation-flag experiments, each gated to the levels where the flag is
- *       mechanically reachable (e.g. PRUNE_MC_NEIGHBOR_BUDGET only reaches must-cross levels), run
- *       against the SAME sub-sample T3 uses. Only the flag-toggled arm is a new cell -- the default
- *       arm for the same (technique, level) pair is already in T1's data (T3/T4's sample is a strict
- *       subset of T1's), so results join against T1 rather than duplicating a control run.
+ *   T4 (flags): structural placeholder, currently empty -- see FLAG_EXPERIMENTS below. Every flag
+ *       candidate that ever reached T1-scale evidence lives in T1_PROMOTED_VARIANTS instead, run
+ *       against the full population directly rather than a smaller side-sample.
  *
- * Budget math (calibrated 2026-08-19 from 6 real method-probe runs at 50,000,000 nodes -- see
- * reports/2026-08-19-technique-census-design.md): dfs/ida/repair techniques that run to the node
- * cap cost ~35s; a single beam config run in isolation (no ladder restarts feeding it) very often
+ * Budget math (calibrated 2026-08-19 from 6 real method-probe runs at 50,000,000 nodes on unsolved
+ * levels, plus 8 more on solved levels for the full-parity revision -- see
+ * reports/2026-08-19-technique-census-design.md): dfs/ida/repair techniques that run to the node cap
+ * cost ~35s regardless of solved/unsolved (a technique either finds the level's solution or it
+ * doesn't -- solvedness of the LEVEL by some OTHER technique doesn't make a failing technique's own
+ * search cheaper). A single beam config run in isolation (no ladder restarts feeding it) very often
  * EXHAUSTS its own frontier far below the cap (observed 29K-395K nodes, 1-5s) and occasionally runs
- * the full cap (~150-200s, per a production beam5000 win recorded earlier this session) -- blended
- * ~45s/cell average. Sized so the total workload fits comfortably under GitHub Actions' 360-minute
- * per-job hard ceiling across 60 shards (~4.9h/shard average, ~18% margin) with a per-shard wall-
- * clock safety wrapper as the belt-and-suspenders backstop (see the workflow).
+ * the full cap (~150-200s, per a production beam5000 win recorded earlier this session). The solved-
+ * level calibration sample averaged modestly cheaper (~12.4s/cell vs ~18.3s/cell unsolved) but on
+ * only 8 samples -- too little evidence to bank a cost discount on, so sizing below conservatively
+ * uses the SAME calibrated rate for the whole population rather than assuming solved levels are
+ * cheap. Sized so the total workload fits comfortably under GitHub Actions' 360-minute per-job hard
+ * ceiling with a per-shard wall-clock safety wrapper as the belt-and-suspenders backstop (see the
+ * workflow for the current shard count/margin, since the full-parity revision changed both).
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/build-technique-census-plan.mjs -- \
@@ -69,7 +89,6 @@ const T1_SAMPLE_SIZE_ARG = args.get('--t1-sample-size');
 const T1_SAMPLE_SIZE = (!T1_SAMPLE_SIZE_ARG || T1_SAMPLE_SIZE_ARG === 'all') ? Infinity : Number(T1_SAMPLE_SIZE_ARG);
 const T3T4_SAMPLE_SIZE = Number(args.get('--t3t4-sample-size') || 200);
 const T1_NODE_BUDGET = Number(args.get('--t1-node-budget') || 50000000);
-const T2_NODE_BUDGET = Number(args.get('--t2-node-budget') || 1000000);
 const T3_NODE_BUDGET = Number(args.get('--t3-node-budget') || 50000000);
 const T4_NODE_BUDGET = Number(args.get('--t4-node-budget') || 50000000);
 // Per-attempt wall-clock cap passed to runAttempt -- a belt-and-suspenders backstop alongside the
@@ -179,14 +198,14 @@ function techniqueEligible(key, raw) {
 }
 
 // ─── Priority levels: guaranteed T1 inclusion, not left to random draw ─────────────────────────────
-// Every Corpus-2 level individually named as still-open evidence in docs/future-work.md,
+// Relevant only when --t1-sample-size is a smaller test-drive number, not 'all' (the default) --
+// 'all' already includes every level unconditionally, priority or not. Every Corpus-2 level
+// individually named as still-open evidence in docs/future-work.md,
 // docs/solver-optimization-current-queue.md, or docs/solver-heuristic-capability-gap-analysis.md,
 // as of 2026-08-19 -- cross-checked against the frozen baseline so only genuinely still-unsolved
 // ones are listed (most of this session's own named levels, e.g. R02248/R00156/R02960/R02114/
 // R00592/R03148, have SINCE been solved by the STRATEGY_*_RETRY tiers promoted earlier this
-// session, and are correctly excluded here: T1's population is "currently unsolved," and testing an
-// isolated technique against an already-solved level answers a different, lower-value question T2
-// already covers cheaply). A random 34-technique/50M-budget draw would likely include some of these
+// session, and are correctly excluded here). A random draw would likely include some of these
 // anyway given a large enough sample, but "likely" isn't "guaranteed" -- these are the exact levels
 // the open research threads are already asking about, so a full isolated-technique reading on them
 // is close to the highest-value data this census can produce, and should not depend on a coin flip.
@@ -203,26 +222,30 @@ function techniqueEligible(key, raw) {
 // Corpus-1's unsolved levels are already unconditionally in T1 below.)
 const PRIORITY_LEVEL_IDS = new Set(['R02119', 'R02422', 'R02644']);
 
-// ─── T1 sample: all currently-unsolved corpus-1 levels + priority levels + a seeded sample of the
-// rest of corpus-2's unsolved population ──────────────────────────────────────────────────────────
+// ─── T1 sample: FULL POPULATION by default (2026-08-19 full-parity revision) -- every level in all
+// 3 real corpora, solved and unsolved alike, no sampling. A numeric --t1-sample-size still draws a
+// smaller test-drive sample: Corpus-1's unsolved levels + the priority levels are guaranteed in
+// first (cheap: 10 levels total), the remainder is a seeded random draw from every OTHER level
+// across all 3 corpora (previously drawn from corpus-2's unsolved population only -- broadened so a
+// smaller sample still reflects the full solved+unsolved mix rather than skewing entirely unsolved).
 const c1Unsolved = corpusLevels.corpus1.filter(l => !isSolved('corpus1', l.id));
-const c2Unsolved = corpusLevels.corpus2.filter(l => !isSolved('corpus2', l.id));
-const c2Priority = c2Unsolved.filter(l => PRIORITY_LEVEL_IDS.has(l.id));
-const c2Rest = c2Unsolved.filter(l => !PRIORITY_LEVEL_IDS.has(l.id));
-const missingPriorityIds = [...PRIORITY_LEVEL_IDS].filter(id => !c2Priority.some(l => l.id === id));
+const allLevelsFlat = Object.keys(corpusLevels).flatMap(name => corpusLevels[name].map(l => ({ corpus: name, ...l })));
+const priorityLevels = allLevelsFlat.filter(l => l.corpus === 'corpus2' && PRIORITY_LEVEL_IDS.has(l.id));
+const missingPriorityIds = [...PRIORITY_LEVEL_IDS].filter(id => !priorityLevels.some(l => l.id === id));
 if (missingPriorityIds.length) {
-    // Not fatal -- a priority id may have been solved since this list was last reconciled against
-    // the docs, which is itself useful information, not a bug. Surfaced loudly so it's noticed
-    // rather than silently dropped.
-    console.warn(`technique-census plan: priority level(s) not found in the unsolved Corpus-2 population (solved since, or id typo?): ${missingPriorityIds.join(', ')}`);
+    // Not fatal -- a priority id may not exist under this corpus file, which is itself useful
+    // information, not a bug. Surfaced loudly so it's noticed rather than silently dropped.
+    console.warn(`technique-census plan: priority level(s) not found in Corpus-2: ${missingPriorityIds.join(', ')}`);
 }
+const guaranteed = new Set([...c1Unsolved.map(l => `corpus1/${l.pos}`), ...priorityLevels.map(l => `corpus2/${l.pos}`)]);
+const restLevels = allLevelsFlat.filter(l => !guaranteed.has(`${l.corpus}/${l.pos}`));
 const rng = mulberry32(SEED);
-const c2RestShuffled = seededShuffle(c2Rest, rng);
-const t1Budget = Math.max(0, T1_SAMPLE_SIZE - c1Unsolved.length - c2Priority.length);
+const restShuffled = seededShuffle(restLevels, rng);
+const t1Budget = Math.max(0, T1_SAMPLE_SIZE - c1Unsolved.length - priorityLevels.length);
 const t1Sample = [
     ...c1Unsolved.map(l => ({ corpus: 'corpus1', ...l })),
-    ...c2Priority.map(l => ({ corpus: 'corpus2', ...l })),
-    ...c2RestShuffled.slice(0, t1Budget).map(l => ({ corpus: 'corpus2', ...l })),
+    ...priorityLevels,
+    ...restShuffled.slice(0, t1Budget),
 ];
 
 // T3/T4 sample: a seeded subset of T1's OWN sample (not a fresh draw) -- guarantees every (level,
@@ -355,15 +378,9 @@ for (const level of t1Sample) {
     }
 }
 
-// T2: every technique x every level in all 3 corpora, single technique per cell, small budget.
-for (const name of Object.keys(corpusLevels)) {
-    for (const l of corpusLevels[name]) {
-        const level = { corpus: name, pos: l.pos, id: l.id };
-        for (const key of ALL_TECHNIQUE_KEYS) {
-            if (techniqueEligible(key, l.raw)) pushCell('T2', level, [key], T2_NODE_BUDGET, null);
-        }
-    }
-}
+// T2 retired 2026-08-19 -- see the file header's "T2 -- RETIRED" entry. T1 above now covers every
+// level T2 used to (published + corpus1 + corpus2, solved and unsolved) at the full budget instead
+// of a 1,000,000-node breadth pass, so a separate cheap tier would be pure redundant compute.
 
 // T3: every curated pair x the T3/T4 sample, both members sharing one budget. Skipped whenever ANY
 // member is TECHNIQUE_ELIGIBILITY-ineligible for this level: a pair with a provably-inert member
@@ -397,12 +414,13 @@ const plan = {
     flagExperiments: FLAG_EXPERIMENTS.map(({ eligible: _eligible, ...rest }) => rest),
     population: {
         corpus1Unsolved: c1Unsolved.length,
-        corpus2Unsolved: c2Unsolved.length,
+        priorityLevels: priorityLevels.length,
         t1SampleSize: t1Sample.length,
         t3t4SampleSize: t3t4Sample.length,
         allCorporaLevels: Object.fromEntries(Object.entries(corpusLevels).map(([k, v]) => [k, v.length])),
     },
-    tierCounts: Object.fromEntries(['T1', 'T2', 'T3', 'T4'].map(t => [t, cells.filter(c => c.tier === t).length])),
+    // T2 intentionally absent -- retired 2026-08-19, gap kept rather than reused (see file header).
+    tierCounts: Object.fromEntries(['T1', 'T3', 'T4'].map(t => [t, cells.filter(c => c.tier === t).length])),
     totalCells: cells.length,
     cells,
 };
@@ -410,8 +428,7 @@ const plan = {
 mkdirSync(path.dirname(path.resolve(OUT_FILE)), { recursive: true });
 writeFileSync(path.resolve(OUT_FILE), JSON.stringify(plan));
 console.log(`technique-census plan: ${ALL_TECHNIQUE_KEYS.length} technique keys, ${cells.length} total cells`);
-console.log(`  T1 (full budget, unsolved sample): ${plan.tierCounts.T1} cells (${t1Sample.length} levels x ${ALL_TECHNIQUE_KEYS.length} techniques)`);
-console.log(`  T2 (breadth, all levels, small budget): ${plan.tierCounts.T2} cells`);
+console.log(`  T1 (full budget, FULL population -- solved + unsolved): ${plan.tierCounts.T1} cells (${t1Sample.length} levels x ${ALL_TECHNIQUE_KEYS.length} techniques)`);
 console.log(`  T3 (pairs): ${plan.tierCounts.T3} cells`);
 console.log(`  T4 (flags): ${plan.tierCounts.T4} cells`);
 console.log(`Written to ${OUT_FILE}`);

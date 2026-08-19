@@ -7,7 +7,7 @@
 # reports/2026-08-19-technique-census-design.md for the full rationale and calibrated cost estimate.
 #
 # THREE-STAGE PIPELINE (plan -> shard -> combine), not the two-stage shape solver-stress-refresh.yml
-# uses: the plan (which technique/level/flag cells exist) must be identical across all 60 shards, so
+# uses: the plan (which technique/level/flag cells exist) must be identical across all 120 shards, so
 # it is generated ONCE by a dedicated job and distributed as a build artifact -- each shard downloads
 # the SAME plan.json and slices its own contiguous range by cellId INDEX (floor-based even split,
 # the same convention solver-stress-refresh.yml/method-probe-sweep.yml already use for level ranges).
@@ -22,28 +22,46 @@
 # be raised. Each shard runs with --workers=2 (scripts/technique-census.mjs's OS-level worker-pool
 # path, scripts/solver-worker-pool.mjs) -- GitHub-hosted `ubuntu-latest` standard runners are 2-vCPU,
 # and a real 60-cell timing comparison (sequential vs --workers=2, 0 result mismatches) measured a
-# 1.78x wall-clock speedup. That speedup is spent on COVERAGE, not slack: T1 now runs the FULL
-# currently-unsolved population of both real corpora (t1_sample_size=all, 888 levels: 7 corpus-1 +
-# 881 corpus-2) instead of a partial sample. At that size the plan is calibrated to average ~4.76h/
-# shard (60 shards, ~285 runner-hours total, ~21% margin under the hard cap) from 6 real
-# method-probe.mjs timings plus the measured worker-pool speedup, not a guess -- but calibration
-# uncertainty is real, so every shard is wrapped in `timeout -k 30s --preserve-status 345m` (5h45m,
-# 15 minutes of buffer under the hard cap). A shard that runs hotter than calibrated stops gracefully
-# and reports whatever it finished -- technique-census.mjs writes its output after every cell, so at
-# most the one cell in flight is lost, never the whole shard. The combine step reports exactly which
-# cells did and didn't complete; any gap is closed by a follow-up dispatch with --skip-existing
-# pointed at the prior partial output, not by re-running everything.
+# 1.78x wall-clock speedup.
+#
+# FULL-PARITY REVISION (2026-08-19): T1 covers EVERY level in all 3 real corpora, solved and
+# unsolved alike (1,962 levels, t1_sample_size=all) -- not just the 888 then-currently-unsolved ones
+# the original design tested. Prompted directly by a real gap: an unsolved-only T1 can never observe
+# a technique/flag combination that makes a currently-SOLVED level newly fail in isolation -- exactly
+# the shape of the PRUNE_CONNECTIVITY_AXIS_EXHAUSTED regression (the solver-optimization queue's own
+# Priority 0), which was itself discovered because a previously-solved level stopped solving. A
+# separate small-budget T2 breadth tier (originally the cheap stand-in for full coverage) is retired
+# as a result -- once T1 covers everyone at the full budget, T2's 1,000,000-node pass is strictly
+# subsumed, and a real calibration check found that budget was too small to reliably observe even a
+# genuine solve (3 of 4 successful sampled solves needed 9-16M nodes). See
+# reports/2026-08-19-technique-census-design.md's full-parity addendum for the full evidence and cost
+# accounting this revision is based on.
+#
+# This roughly doubles total cost (76,614 T1 cells vs the unsolved-only design's 35,042, since a
+# failing technique on a SOLVED level costs about the same as on an unsolved one -- no early-exit
+# discount to bank on, confirmed by a second real calibration sample) -- too much for 60 shards to
+# hold at a safe margin, so the shard count grew to **120** (still 20 concurrent by default, so this
+# roughly doubles calendar latency to ~6 waves instead of ~3). At 120 shards the plan is calibrated to
+# average ~4.69h/shard (~563 runner-hours total, ~22% margin under the hard cap) from 6 real
+# method-probe.mjs timings on unsolved levels, 8 more on solved levels, and the measured worker-pool
+# speedup, not a guess -- but calibration uncertainty is real, so every shard is wrapped in `timeout
+# -k 30s --preserve-status 345m` (5h45m, 15 minutes of buffer under the hard cap). A shard that runs
+# hotter than calibrated stops gracefully and reports whatever it finished -- technique-census.mjs
+# writes its output after every cell, so at most the one cell in flight is lost, never the whole
+# shard. The combine step reports exactly which cells did and didn't complete; any gap is closed by a
+# follow-up dispatch with --skip-existing pointed at the prior partial output, not by re-running
+# everything.
 name: Technique capability census (isolated single-/paired-/flag-technique, full budget)
 
 on:
   workflow_dispatch:
     inputs:
       baseline:
-        description: 'Frozen capability-baseline summary.json (defines the currently-unsolved population T1/T3/T4 sample from) -- see reports/stress/capability-runs/RUN_ID/summary.json'
+        description: 'Frozen capability-baseline summary.json (defines corpus-1''s currently-unsolved set, used only for the guaranteed-inclusion levels on a smaller test-drive sample) -- see reports/stress/capability-runs/RUN_ID/summary.json'
         required: false
         default: 'reports/stress/capability-runs/31918095910/summary.json'
       t1_sample_size:
-        description: '''all'' (default): every currently-unsolved level in both real corpora, no sampling -- enabled by the --workers=2 speedup below. A number instead caps it to that many levels (all of corpus-1''s unsolved levels always included first, the rest a seeded random draw from corpus-2''s unsolved population, with a few research-flagged levels guaranteed in) for a smaller/faster test-drive run. See reports/2026-08-19-technique-census-design.md''s "External review" and worker-pool sections for the calibrated trade.'
+        description: '''all'' (default, full-parity revision): EVERY level in all 3 real corpora, solved and unsolved alike, no sampling -- enabled by the --workers=2 speedup below. A number instead caps it to that many levels (corpus-1''s unsolved levels + a few research-flagged levels guaranteed in first, the rest a seeded random draw across the WHOLE population) for a smaller/faster test-drive run. See reports/2026-08-19-technique-census-design.md''s full-parity addendum for the calibrated trade.'
         required: false
         default: 'all'
       t3t4_sample_size:
@@ -51,13 +69,9 @@ on:
         required: false
         default: '200'
       t1_node_budget:
-        description: 'T1/T3/T4 per-cell node budget (the "full ladder budget" this run exists to test)'
+        description: 'T1/T3/T4 per-cell node budget (the "full ladder budget" this run exists to test; T2 -- a separate, smaller-budget breadth tier -- was retired 2026-08-19 once T1 itself grew to cover every level)'
         required: false
         default: '50000000'
-      t2_node_budget:
-        description: 'T2 per-cell node budget (small -- a breadth pass across every level in all 3 corpora)'
-        required: false
-        default: '1000000'
       seed:
         description: 'PRNG seed for the T1/T3/T4 sampling -- fixed by default for full reproducibility'
         required: false
@@ -105,7 +119,6 @@ jobs:
             --t1-sample-size="${{ inputs.t1_sample_size }}" \
             --t3t4-sample-size="${{ inputs.t3t4_sample_size }}" \
             --t1-node-budget="${{ inputs.t1_node_budget }}" \
-            --t2-node-budget="${{ inputs.t2_node_budget }}" \
             --t3-node-budget="${{ inputs.t1_node_budget }}" \
             --t4-node-budget="${{ inputs.t1_node_budget }}" \
             --out=plan/technique-census-plan.json
@@ -119,7 +132,7 @@ jobs:
           if-no-files-found: error
 
   shards:
-    name: Census shard ${{ matrix.shard }}/60
+    name: Census shard ${{ matrix.shard }}/120
     needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 360
@@ -129,7 +142,7 @@ jobs:
       fail-fast: false
       max-parallel: ${{ fromJSON(inputs.max_parallel) }}
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120]
     steps:
       - name: Check out the dispatched commit exactly
         uses: actions/checkout@v4
@@ -161,7 +174,7 @@ jobs:
           mkdir -p logs/technique-census-shards
           timeout -k 30s --preserve-status 345m node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
             --plan=plan/technique-census-plan.json \
-            --shard="${{ matrix.shard }}" --shards=60 --workers=2 \
+            --shard="${{ matrix.shard }}" --shards=120 --workers=2 \
             --out="logs/technique-census-shards/shard-${nn}.json" \
             --summary-out="logs/technique-census-shards/shard-${nn}-summary.md" \
             2>&1 | tee "logs/technique-census-shards/shard-${nn}.console.log"
