@@ -13,9 +13,12 @@
 // loop, though never a confirmed extra solve).
 //
 // SCRATCH-ADJACENT TOOL — reusable, not scratch-deleted, same convention as elite-prefix-dfs-ab.mjs.
+// Shardable: pass a subset of ids via idsCsv and a distinct outJsonFile per shard (see
+// .github/workflows/solver-elite-prefix-dfs-retry-validate.yml's matrix, which runs each shard as
+// its own parallel job rather than one long sequential run).
 // Run locally via:
-//   node scripts/run-bundled.mjs scripts/stress/elite-prefix-dfs-retry-validate.mjs [protectedNodeBudget] [retryNodeBudget] [corpusFile] [idsCsv]
-import { readFileSync } from 'node:fs';
+//   node scripts/run-bundled.mjs scripts/stress/elite-prefix-dfs-retry-validate.mjs [protectedNodeBudget] [retryNodeBudget] [corpusFile] [idsCsv] [outJsonFile]
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -38,6 +41,7 @@ const PROTECTED_NODE_BUDGET = process.argv[2] ? Number(process.argv[2]) : 15_000
 const RETRY_NODE_BUDGET = process.argv[3] ? Number(process.argv[3]) : 15_000_000;
 const CORPUS_FILE = process.argv[4] || 'data/stress/stress-levels-random.json';
 const IDS = process.argv[5] ? process.argv[5].split(',') : DEFAULT_IDS;
+const OUT_JSON_FILE = process.argv[6] || null;
 const WALL_MS = 300000; // generous, non-binding — node budget is the real ceiling
 
 const corpus = JSON.parse(readFileSync(path.join(ROOT, CORPUS_FILE), 'utf8'));
@@ -56,6 +60,7 @@ let retryAttempted = 0;
 let retryRecovered = 0;
 const recovered = [];
 const invalid = [];
+const rows = [];
 
 for (const id of IDS) {
     const entry = byId.get(id);
@@ -106,6 +111,11 @@ for (const id of IDS) {
     const line = `${id}: protected=${offSolved ? 'SOLVED' : 'fail'} (${prepOff._metrics.nodesExpanded}n, ${offMs}ms)` +
         (offSolved ? '' : ` retry=${retrySolved ? 'SOLVED' : 'fail'} (${retryNodes}n, ${retryMs}ms)${validNote}`);
     console.log(line);
+    rows.push({
+        id, offSolved, offNodes: prepOff._metrics.nodesExpanded, offMs,
+        retryAttempted: !offSolved, retrySolved, retryNodes, retryMs,
+        refereeInvalid: invalid.some(x => x.id === id),
+    });
 }
 
 console.log(`\nProtected (ordinary loop) solved: ${protectedSolved}/${IDS.length}`);
@@ -114,5 +124,12 @@ console.log(`Retry recovered (referee-valid): ${retryRecovered}`);
 console.log(`Recovered ids: ${recovered.join(',') || '(none)'}`);
 if (invalid.length > 0) {
     console.log(`REFEREE-INVALID solves (bug — must be zero): ${JSON.stringify(invalid)}`);
-    process.exitCode = 1;
 }
+
+if (OUT_JSON_FILE) {
+    writeFileSync(OUT_JSON_FILE, JSON.stringify({
+        protectedSolved, total: IDS.length, retryAttempted, retryRecovered, recovered, invalid, rows,
+    }, null, 2));
+}
+
+if (invalid.length > 0) process.exitCode = 1;
