@@ -37,9 +37,9 @@ on:
         required: false
         default: 'reports/stress/capability-runs/31918095910/summary.json'
       t1_sample_size:
-        description: 'T1: total unsolved-level sample size (all of corpus-1''s unsolved levels are always included; the rest is a seeded random draw from corpus-2''s unsolved population)'
+        description: 'T1: total unsolved-level sample size (all of corpus-1''s unsolved levels are always included; the rest is a seeded random draw from corpus-2''s unsolved population). 400 (not 600) after 2026-08-19 review promoted 7 known-complementary flag variants to T1-scale full-budget cells -- see reports/2026-08-19-technique-census-design.md''s "External review" section for the calibrated trade.'
         required: false
-        default: '600'
+        default: '400'
       t3t4_sample_size:
         description: 'T3/T4: sub-sample size drawn from T1''s own sample (a strict subset, so T3/T4 results always have a T1 baseline to join against)'
         required: false

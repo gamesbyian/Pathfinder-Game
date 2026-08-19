@@ -38,10 +38,10 @@ self-updating if the ladder's routing ever changes:
 
 | Tier | Population | Budget | Cells | What it answers |
 |---|---|---:|---:|---|
-| **T1** | all 34 techniques × a 600-level sample (all 7 currently-unsolved Corpus-1 levels + a seeded random draw from Corpus-2's 881 unsolved) | 50,000,000 nodes (full) | 20,400 | **The decision-bearing tier**: can any single isolated technique crack a level the production ladder can't, given the whole budget instead of a shared slice |
+| **T1** | all 34 techniques + 7 promoted flag-variant rows × a 400-level sample (all 7 currently-unsolved Corpus-1 levels + a seeded random draw from Corpus-2's 881 unsolved) | 50,000,000 nodes (full) | 15,942 | **The decision-bearing tier**: can any single isolated technique (or known-complementary flag variant) crack a level the production ladder can't, given the whole budget instead of a shared slice |
 | **T2** | all 34 techniques × every level in all 3 real corpora (1,962 levels, solved and unsolved) | 1,000,000 nodes | 66,708 | Cheap breadth/redundancy fingerprint across the whole game — which techniques are near-duplicates of each other, which are load-bearing |
 | **T3** | 10 curated complementary pairs × a 200-level sub-sample of T1's own pool | 50,000,000 nodes (shared across the pair, same cost shape as one T1 cell) | 2,000 | Does trying A-then-B find something neither finds alone |
-| **T4** | 6 curated ablation-flag experiments (each gated to levels where the flag is mechanically reachable) × the same 200-level sub-sample | 50,000,000 nodes | 1,022 | Isolated flag sensitivity — extends several currently-open ledger/queue threads (`PRUNE_MC_NEIGHBOR_BUDGET`, `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`, `STRATEGY_REPAIR_TURN_BIAS`, `STRATEGY_DEDUP_NEAR_TIE_RETENTION`, `PRUNE_PORTAL_PARITY_ENVELOPE`, `STRATEGY_ARCHETYPE_ROUTING`) to full coverage instead of anecdote |
+| **T4** | 1 curated ablation-flag experiment (`STRATEGY_ARCHETYPE_ROUTING` off — the one flag without prior evidence of a different solve population) × the same 200-level sub-sample | 50,000,000 nodes | 200 | Exploratory flag sensitivity, smaller sample. `PRUNE_MC_NEIGHBOR_BUDGET`/`PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`/`STRATEGY_DEDUP_NEAR_TIE_RETENTION`/`STRATEGY_REPAIR_TURN_BIAS` — every flag WITH such evidence — were promoted to T1 instead (see "External review" below); `PRUNE_PORTAL_PARITY_ENVELOPE` was dropped entirely (evidence-backed inert) |
 
 **Total: 90,130 cells.** T3/T4's sample is a strict subset of T1's, so every (technique, level) pair
 they touch already has a T1 baseline — pairs and flags are compared by joining against T1's data at
@@ -51,7 +51,7 @@ combine time, not by re-running a redundant control cell.
 
 The literal ask — every technique × every currently-unsolved level, full budget — is ~30,192 cells at
 T1 alone; at a naive cost estimate that's well over the platform's hard per-shard ceiling (GitHub-
-hosted runners cap a job at 360 minutes, not configurable higher). T1's 600-level sample is a
+hosted runners cap a job at 360 minutes, not configurable higher). T1's 400-level sample is a
 deliberate, documented trade against that hard constraint: all of Corpus-1's tiny unsolved population
 (7 levels) plus 84% coverage-equivalent of Corpus-2's after calibration (see below). T2 recovers full
 "every level" breadth cheaply, at a much smaller budget.
@@ -85,14 +85,15 @@ estimate: **~35s/cell for dfs/ida/repair, ~50s/cell blended for beam, ~45s/cell 
 
 | tier | cells | est. cost |
 |---|---:|---:|
-| T1 | 20,400 | ~226 runner-hours |
+| T1 | 15,942 | ~204 runner-hours |
 | T2 | 66,708 | ~37 runner-hours |
 | T3 | 2,000 | ~25 runner-hours |
-| T4 | 1,022 | ~8 runner-hours |
-| **total** | **90,130** | **~296 runner-hours** |
+| T4 | 200 | ~3 runner-hours |
+| **total** | **84,850** | **~268 runner-hours** |
 
-Across 60 shards: **~4.9h/shard average**, against GitHub's hard 360-minute (6h) per-job ceiling —
-**~18% margin**. Cells are interleaved (technique varies fastest within a tier) so any contiguous
+Across 60 shards: **~4.47h/shard average**, against GitHub's hard 360-minute (6h) per-job ceiling —
+**~25% margin** (post-review numbers; the original 90,130-cell/600-level design had ~18% margin
+before trading level-sample breadth for the promoted flag variants — see "External review" below). Cells are interleaved (technique varies fastest within a tier) so any contiguous
 shard slice contains a representative mix of cheap and expensive cells rather than clumping. Given
 real calibration uncertainty (6 samples, not a population), every shard is additionally wrapped in a
 `timeout -k 30s --preserve-status 345m` wall-clock safety net (15 minutes under the hard cap) — a
@@ -139,6 +140,100 @@ derived from):
 - **`flag-sensitivity.md`** — for each T4 experiment, how many levels the flag toggle flips relative
   to T1's default-flag baseline for the identical technique+level pair — an isolated flag effect, not
   confounded by ladder position or budget-sharing the way a full-ladder A/B can be.
+
+## External review (2026-08-19): what changed and why
+
+A second design review raised several points before dispatch. Two were real, verified problems;
+the rest were valuable framing that reshaped the flag/variant selection and the combine step's
+analysis, at no extra cost (derived from data already being collected) except where noted.
+
+**1. Gate-budget fairness — a genuine correctness bug, fixed.** The review noted that sharing one
+node budget across all of a level's gates, gate-outer, can recreate starvation *inside* the very
+experiment meant to eliminate it — exactly the pathology `STRATEGY_GATE_INTERLEAVING`/
+`runGateSerialAttempts` already exist to prevent in the production ladder. Checked against the real
+corpora: Corpus-2 is uniformly single-gate (1,700/1,700), Corpus-1 has only 2 multi-gate levels (both
+already solved, so outside T1's population) — but **published carries real exposure: 54 of 160
+levels (34%) have 2–3 gates, and T2 tests every published level.** `technique-census.mjs`'s `runCell`
+now divides the cell's node budget fairly across gates (`remaining / gatesLeft`, recomputed at each
+gate boundary, unspent share rolling forward — the same pattern `runGateSerialAttempts` already
+uses), instead of letting gate 1 exhaust the whole budget before gate 2 is ever tried. Verified
+directly against a real 4-gate level (`S00103`): before the fix, gate 1 alone would consume a
+400,000-node test budget; after, all 4 gates got a fair, near-even share (100,051 / 100,075 / 99,998
+/ 99,919 nodes). A `gateSummaries` field now records each gate's own node spend and share on any
+multi-gate cell (omitted on single-gate cells, the overwhelming majority, to keep output lean).
+
+**2. Flag classification into three groups, and re-selecting T4 around it.** Reframed the flag
+selection around the review's classification: (a) production-default flags stay off the census
+entirely — T1/T2's `ablation: null` baseline already **is** "canonical technique;" (b) flags with
+**existing evidence** a toggle produces a genuinely different solve population are promoted to
+first-class T1-scale variants, not a smaller side-experiment; (c) everything else — including every
+budget-management/orchestration flag (reserve fractions, late-tier reserves) and every
+`STRATEGY_*_RETRY` wrapper — is excluded outright, since an isolated single-technique cell has no
+ladder to allocate a reserve against and a retry tier exists only to rerun a *whole ladder pass*,
+meaningless outside one. Applying this:
+
+- **Promoted to T1 scale** (`T1_PROMOTED_VARIANTS`, full 400-level population, full 50M budget,
+  restricted to levels where the flag is mechanically reachable): `PRUNE_MC_NEIGHBOR_BUDGET` off on
+  `beam:mustCrossFirst@beam2000`/`dfs:mustCrossFirst` (must-cross levels — this session's own
+  `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` work already confirmed 2 real targets); `PRUNE_CONNECTIVITY_
+  AXIS_EXHAUSTED` off on `beam:intersectionHarvest@beam5000`/`beam:objectiveFirst@beam5000`
+  (confirmed regression on `R02248`/`R02114`/`R00592`); `STRATEGY_DEDUP_NEAR_TIE_RETENTION` off on
+  the same two beam configs (confirmed net −7/+27 at ladder scale); `STRATEGY_REPAIR_TURN_BIAS` on
+  (the `dfs:repair:repair(turnBiased)` technique key doesn't exist without it, so it's a genuine
+  algorithmic variant on must-turn levels, not a toggle comparison). 7 variant rows total, 3,493
+  additional T1 cells.
+- **Dropped entirely, not re-swept**: `PRUNE_PORTAL_PARITY_ENVELOPE`. Per the review's own "closed
+  negative opt-ins go in a secondary museum sweep only where isolation asks a materially new
+  question" — the existing closure (`reports/2026-08-08-portal-parity-envelope.md`) already found
+  its reject condition fires **zero times** over ~240M searched nodes. Isolation doesn't change
+  whether a prune condition can fire; re-testing it asks nothing new.
+- **Left at T4's smaller, exploratory sample**: `STRATEGY_ARCHETYPE_ROUTING` off — no prior evidence
+  of a different solve population, kept as a cheap diagnostic rather than promoted.
+
+**3. Sample size trimmed 600 → 400 to afford the promotions.** The 7 promoted variants add 3,493
+cells to T1 at the same full budget — recalibrated total cost with `t1_sample_size=600` came to
+~370h (over the 60-shard/360-runner-hour envelope). Trimming to 400 (still all 7 of Corpus-1's
+unsolved levels, plus ~45% of Corpus-2's 881) brings the total to **84,850 cells, ~268 runner-hours,
+~4.47h/shard average — a wider margin (~25%) than the original 600-level design had, despite testing
+materially more per level.** This is the direct trade the review's own framing argues for: fewer raw
+levels, but every level gets a fair shot from techniques we already have specific reason to think
+matter.
+
+**4. The oracle union is now a first-class, automatically-computed headline statistic.** The
+review's point 5 — "how many levels are solved by at least one isolated technique, compared with
+production" — was previously only reconstructable by hand from `level-technique-coverage.json`.
+`technique-capability-summary.md` now leads with it explicitly: of T1's sample levels (0 solved by
+production at the frozen baseline, by construction), how many at least one T1 technique solves
+alone, and how many when T2's cheaper pass on the same levels is folded in too. This is the number
+that decides whether the next lever is scheduling (queue Priority 1) or genuinely new algorithms.
+
+**5. Per-technique unique-solve counts and solve-cost distribution, free from data already
+collected.** `technique-capability-summary.md`'s T1 table now carries a `unique` column (levels only
+that technique solves among all 34 + 7 promoted variants) and a `median solve nodes` column — both
+pure cross-tabulations of results the run was already producing, at zero extra compute. Directly
+serves the review's point 6 ("a technique with few total solves but dozens of unique solves is an
+extremely valuable specialist").
+
+**6. Identity-key fix, found while wiring in the above.** A promoted variant (e.g.
+`beam:mustCrossFirst@beam2000` with `PRUNE_MC_NEIGHBOR_BUDGET` off) shares its bare technique key
+with its default-ablation counterpart. Every aggregation (`technique-capability-summary.md`,
+`level-technique-coverage.json`, the uniqueness count) now keys on `variantLabel ?? techniqueKeys[0]`
+so a variant's solves are never silently merged into its base technique's row — caught locally
+before it could misattribute which configuration actually solved anything. `pair-synergy.md`/
+`flag-sensitivity.md`'s own baseline lookup was separately hardened to only ever read `ablation ===
+null` T1 rows, so a promoted variant's own reading can never leak in as "the" default baseline a
+pair or flag experiment gets compared against.
+
+**7. Explicitly deferred, not built — the schema already supports them without re-running
+anything.** Point 7 (joining capability with level-blind features — block density, nav density,
+reqInt regimes) and point 8 (response curves at 1M/5M/10M/20M/50M) are real, valuable follow-ups but
+each is its own substantial piece of work (point 8 alone would need ~5x this run's compute if done
+as separate full sweeps). Every row already carries `corpus`/`levelId`/`levelPos`, so a follow-up
+script can join against the raw level files for point 7 without touching this pipeline; point 8 is
+better designed *after* seeing this run's actual solve-cost distribution (the new median-solve-nodes
+column) rather than guessing budget breakpoints blind. Point 9 (routing experiments built from the
+strongest signals) is exactly `docs/solver-optimization-current-queue.md`'s own Priority 1 — this
+run's oracle-union/uniqueness/pair-synergy output is the evidence that lane has been waiting for.
 
 ## How to dispatch
 

@@ -116,19 +116,37 @@ async function runCell(cell) {
 
     const configs = cell.techniqueKeys.map(key => ({ key, config: getParsedConfig(key) }));
     const attempts = [];
+    const gateSummaries = [];
     let solution = null;
     let winningKey = null;
     let winningGate = null;
     const startTime = Date.now();
+    // FAIR PER-GATE NODE SHARE, not gate-outer exhaustion. A single-technique-per-cell census with
+    // one shared budget across every gate would let gate 1 alone consume the entire cell.nodeBudget
+    // before gate 2 is ever tried on a multi-gate level — silently recreating, INSIDE the very
+    // experiment meant to eliminate it, the exact ladder gate-starvation
+    // STRATEGY_GATE_INTERLEAVING/runGateSerialAttempts's own gatesLeft-based division already exists
+    // to prevent in production (see orchestration.ts). Published carries real exposure here (54/160
+    // levels have 2-3 gates; T2 tests every published level), so this isn't a hypothetical. Mirrors
+    // that same "recompute remaining / gatesLeft at each gate boundary" pattern: an early-exhausted
+    // gate's unspent share rolls forward to the gates still to come, rather than being stranded.
     outer:
-    for (const gateKey of level.gateKeys) {
+    for (let gi = 0; gi < level.gateKeys.length; gi++) {
+        const gateKey = level.gateKeys[gi];
+        const remainingTotal = cell.nodeBudget === Infinity ? Infinity : Math.max(0, cell.nodeBudget - prep._metrics.nodesExpanded);
+        if (remainingTotal <= 0) break outer;
+        const gatesLeft = level.gateKeys.length - gi;
+        const gateShare = remainingTotal === Infinity ? Infinity : Math.floor(remainingTotal / gatesLeft);
+        const gateStartNodes = prep._metrics.nodesExpanded;
+        const gateCeiling = gateShare === Infinity ? Infinity : gateStartNodes + gateShare;
         for (const { key, config } of configs) {
-            if (prep._metrics.nodesExpanded >= cell.nodeBudget) break outer;
-            const remaining = cell.nodeBudget === Infinity ? Infinity : Math.max(0, cell.nodeBudget - prep._metrics.nodesExpanded);
+            if (prep._metrics.nodesExpanded >= gateCeiling) break;
+            const remaining = gateCeiling === Infinity ? Infinity : Math.max(0, gateCeiling - prep._metrics.nodesExpanded);
             const r = await runAttempt(gateKey, level, prep, config, cell.budgetMs, Date.now(), null, remaining);
             attempts.push({ configKey: key, gateKey, ...r.attempt });
             if (r.path) { solution = r.path; winningKey = key; winningGate = gateKey; break outer; }
         }
+        gateSummaries.push({ gateKey, nodesExpanded: prep._metrics.nodesExpanded - gateStartNodes, share: gateShare === Infinity ? null : gateShare });
     }
 
     const nodesExpanded = prep._metrics.nodesExpanded;
@@ -152,6 +170,11 @@ async function runCell(cell) {
         techniqueKeys: cell.techniqueKeys, pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
         ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget,
         ok, status, refereeValid, winningConfigKey: winningKey, winningGate,
+        // Per-gate breakdown — only when there's more than one gate to break down (the overwhelming
+        // majority of cells are single-gate; a 1-element array there is pure redundancy with the
+        // fields above). Answers "which gate got cut off at its own share vs. genuinely exhausted"
+        // at finer grain than the cell-level `status` aggregate above.
+        gateSummaries: level.gateKeys.length > 1 ? gateSummaries : undefined,
         nodesExpanded, totalMs,
         // Full per-attempt breakdown (needed by provenanceFromSolveResult at combine time) is kept
         // only for a genuine solve — most of the 90K cells will be negative results on an unsolved

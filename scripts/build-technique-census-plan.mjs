@@ -47,6 +47,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { execSync } from 'node:child_process';
 
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 
@@ -69,6 +70,8 @@ const T4_NODE_BUDGET = Number(args.get('--t4-node-budget') || 50000000);
 // node budget (mirrors method-probe.mjs's own --budget-ms). Generous: the node budget is what's
 // meant to bind in the overwhelming majority of cells.
 const ATTEMPT_BUDGET_MS = Number(args.get('--attempt-budget-ms') || 600000);
+
+const COMMIT_SHA = (() => { try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
@@ -154,48 +157,44 @@ const t1Sample = [
 // results, so the combine step can join rather than needing a redundant control cell.
 const t3t4Sample = seededShuffle(t1Sample, mulberry32(SEED + 1)).slice(0, Math.min(T3T4_SAMPLE_SIZE, t1Sample.length));
 
-// ─── T4's curated flag experiments ─────────────────────────────────────────────────────────────
-// Each: a technique (or techniques) the flag is documented to affect, the ablation toggle, and a
-// mechanical eligibility predicate over the RAW level so the run only spends budget where the flag
-// can possibly matter. Picked for direct continuity with currently-open threads in
-// docs/solver-opt-in-experiment-ledger.md / docs/solver-optimization-current-queue.md rather than
-// an unconstrained flag x technique cross-product.
+// ─── Flag classification (2026-08-19, per external design review) ─────────────────────────────────
+// Ablation flags fall into three groups, treated differently rather than swept as an unconstrained
+// flag x technique cross-product:
+//   1. Production-default flags stay OFF the census entirely -- T1/T2's baseline `ablation: null`
+//      already IS "production defaults," which is what "the canonical technique" should mean.
+//   2. Known-complementary search-behavior flags -- ones with EXISTING evidence (from this session's
+//      own work) that the toggle produces a genuinely different solve population on at least one real
+//      level -- are promoted to T1_PROMOTED_VARIANTS below: full population, full budget, treated as
+//      first-class portfolio members rather than a smaller side-experiment. A flag whose own
+//      confirmed effect IS "this changes what a technique can solve" deserves the same fair shot
+//      every other technique gets, not a token sub-sample.
+//   3. Everything else -- exploratory flags with no such evidence, PLUS every budget-management/
+//      orchestration flag (reserve fractions, late-tier reserves, retry-tier wrappers) -- either
+//      doesn't matter here (an isolated single-technique cell has no ladder to allocate a reserve
+//      against; STRATEGY_*_RETRY exists only to rerun a WHOLE ladder pass, meaningless outside one)
+//      or hasn't earned T1-scale budget yet. What's left goes in FLAG_EXPERIMENTS below, at T4's
+//      smaller sample.
+// A flag already CLOSED NEGATIVE/NEGLIGIBLE at the ladder level with strong evidence the mechanism
+// doesn't fire (PRUNE_PORTAL_PARITY_ENVELOPE: zero rejects over ~240M searched nodes,
+// reports/2026-08-08-portal-parity-envelope.md) is not re-swept here at all -- isolation doesn't
+// change whether a prune condition can fire, so this asks no materially new question. Reopen only
+// with a formulation that's actually different, not a cleaner budget on the same one.
+const T1_PROMOTED_VARIANTS = [
+    { label: 'beam:mustCrossFirst@beam2000+mc-neighbor-budget-off', techniqueKey: 'beam:mustCrossFirst@beam2000', ablation: { enable: [], disable: ['PRUNE_MC_NEIGHBOR_BUDGET'] }, eligible: raw => (raw.mustCross?.length ?? 0) > 0 },
+    { label: 'dfs:mustCrossFirst+mc-neighbor-budget-off', techniqueKey: 'dfs:mustCrossFirst', ablation: { enable: [], disable: ['PRUNE_MC_NEIGHBOR_BUDGET'] }, eligible: raw => (raw.mustCross?.length ?? 0) > 0 },
+    { label: 'beam:intersectionHarvest@beam5000+connectivity-axis-exhausted-off', techniqueKey: 'beam:intersectionHarvest@beam5000', ablation: { enable: [], disable: ['PRUNE_CONNECTIVITY_AXIS_EXHAUSTED'] }, eligible: () => true },
+    { label: 'beam:objectiveFirst@beam5000+connectivity-axis-exhausted-off', techniqueKey: 'beam:objectiveFirst@beam5000', ablation: { enable: [], disable: ['PRUNE_CONNECTIVITY_AXIS_EXHAUSTED'] }, eligible: () => true },
+    { label: 'beam:intersectionHarvest@beam5000+dedup-near-tie-retention-off', techniqueKey: 'beam:intersectionHarvest@beam5000', ablation: { enable: [], disable: ['STRATEGY_DEDUP_NEAR_TIE_RETENTION'] }, eligible: () => true },
+    { label: 'beam:objectiveFirst@beam5000+dedup-near-tie-retention-off', techniqueKey: 'beam:objectiveFirst@beam5000', ablation: { enable: [], disable: ['STRATEGY_DEDUP_NEAR_TIE_RETENTION'] }, eligible: () => true },
+    // dfs:repair:repair(turnBiased) does not exist without its own flag -- there is no default-arm
+    // baseline to promote FROM; it's included here anyway (rather than left at T4's smaller sample)
+    // because it's a genuine, cheap, distinct algorithmic variant per point 1's own framing, not
+    // because a toggle comparison is meaningful for it specifically.
+    { label: 'dfs:repair:repair(turnBiased)+repair-turn-bias-on', techniqueKey: 'dfs:repair:repair(turnBiased)', ablation: { enable: ['STRATEGY_REPAIR_TURN_BIAS'], disable: [] }, eligible: raw => (raw.landmarks ?? []).some(l => typeof l.role === 'string' && l.role.startsWith('mustTurn')) },
+];
+
+// ─── T4's remaining curated flag experiments (smaller sample -- exploratory, not yet evidenced) ────
 const FLAG_EXPERIMENTS = [
-    {
-        name: 'mc-neighbor-budget-off',
-        disable: ['PRUNE_MC_NEIGHBOR_BUDGET'],
-        techniqueKeys: ['beam:mustCrossFirst@beam2000', 'dfs:mustCrossFirst'],
-        eligible: raw => (raw.mustCross?.length ?? 0) > 0,
-        note: 'Extends the 2026-08-19 STRATEGY_MC_NEIGHBOR_BUDGET_RETRY investigation (2 confirmed targets) to full coverage over the sample’s must-cross levels.',
-    },
-    {
-        name: 'connectivity-axis-exhausted-off',
-        disable: ['PRUNE_CONNECTIVITY_AXIS_EXHAUSTED'],
-        techniqueKeys: ['beam:intersectionHarvest@beam5000', 'beam:objectiveFirst@beam5000'],
-        eligible: () => true,
-        note: 'Extends the R02248/R02114/R00592 regression-mining (2026-08-15) beyond the ~215 provenance-mined candidates to a fresh, unbiased sample.',
-    },
-    {
-        name: 'repair-turn-bias-on',
-        enable: ['STRATEGY_REPAIR_TURN_BIAS'],
-        techniqueKeys: ['dfs:repair:repair(turnBiased)'],
-        eligible: raw => (raw.landmarks ?? []).some(l => typeof l.role === 'string' && l.role.startsWith('mustTurn')),
-        note: 'This technique key does not exist without the flag -- no default-arm baseline to join against; the cell itself is the whole answer to "does this variant ever win here."',
-    },
-    {
-        name: 'dedup-near-tie-retention-off',
-        disable: ['STRATEGY_DEDUP_NEAR_TIE_RETENTION'],
-        techniqueKeys: ['beam:intersectionHarvest@beam5000', 'beam:objectiveFirst@beam5000'],
-        eligible: () => true,
-        note: 'Isolated single-technique read on the mechanism a full-corpus GHA A/B already found net -7/+27 at the ladder level (2026-08-15) -- a different vantage on the same regression.',
-    },
-    {
-        name: 'portal-parity-envelope-on',
-        enable: ['PRUNE_PORTAL_PARITY_ENVELOPE'],
-        techniqueKeys: ['dfs:portalFirstTransfer', 'dfs:portalCommitted'],
-        eligible: raw => (raw.portals?.length ?? 0) > 0,
-        note: 'Closed-negligible at the ladder level (2026-08-08, zero rejects over ~240M nodes) -- checks whether isolation changes that reading.',
-    },
     {
         name: 'archetype-routing-off',
         disable: ['STRATEGY_ARCHETYPE_ROUTING'],
@@ -229,6 +228,10 @@ for (const exp of FLAG_EXPERIMENTS) for (const k of exp.techniqueKeys) {
     if (k.includes('(turnBiased)')) continue; // only reachable WITH its own flag -- can't appear in the live-derived default-ladder list
     if (!ALL_TECHNIQUE_KEYS.includes(k)) throw new Error(`T4 experiment "${exp.name}" references unknown technique key "${k}".`);
 }
+for (const variant of T1_PROMOTED_VARIANTS) {
+    if (variant.techniqueKey.includes('(turnBiased)')) continue;
+    if (!ALL_TECHNIQUE_KEYS.includes(variant.techniqueKey)) throw new Error(`T1 promoted variant "${variant.label}" references unknown technique key "${variant.techniqueKey}".`);
+}
 
 // ─── Build the flat cell list ───────────────────────────────────────────────────────────────────
 // Interleaved (technique varies fastest within a tier) so any contiguous shard slice contains a
@@ -248,8 +251,16 @@ function pushCell(tier, level, techniqueKeys, nodeBudget, ablation, extra = {}) 
     });
 }
 
-// T1: every technique x every T1-sample level, single technique per cell.
-for (const level of t1Sample) for (const key of ALL_TECHNIQUE_KEYS) pushCell('T1', level, [key], T1_NODE_BUDGET, null);
+// T1: every technique x every T1-sample level, single technique per cell, PLUS every promoted
+// flag variant restricted to the levels where its flag can mechanically matter (see
+// T1_PROMOTED_VARIANTS's own comment above for why these get full T1 treatment rather than a
+// smaller side-sample).
+for (const level of t1Sample) {
+    for (const key of ALL_TECHNIQUE_KEYS) pushCell('T1', level, [key], T1_NODE_BUDGET, null);
+    for (const variant of T1_PROMOTED_VARIANTS) {
+        if (variant.eligible(level.raw)) pushCell('T1', level, [variant.techniqueKey], T1_NODE_BUDGET, variant.ablation, { variantLabel: variant.label });
+    }
+}
 
 // T2: every technique x every level in all 3 corpora, single technique per cell, small budget.
 for (const name of Object.keys(corpusLevels)) {
@@ -273,11 +284,13 @@ for (const exp of FLAG_EXPERIMENTS) {
 
 const plan = {
     generatedAt: new Date().toISOString(),
+    commitSha: COMMIT_SHA,
     seed: SEED,
     baselineFile: BASELINE_FILE,
     baselineRunId: path.basename(path.dirname(path.resolve(BASELINE_FILE))),
     allTechniqueKeys: ALL_TECHNIQUE_KEYS,
     techniquePairs: TECHNIQUE_PAIRS,
+    t1PromotedVariants: T1_PROMOTED_VARIANTS.map(({ eligible: _eligible, ...rest }) => rest),
     flagExperiments: FLAG_EXPERIMENTS.map(({ eligible: _eligible, ...rest }) => rest),
     population: {
         corpus1Unsolved: c1Unsolved.length,

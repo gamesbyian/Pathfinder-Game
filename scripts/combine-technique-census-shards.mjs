@@ -77,15 +77,20 @@ mkdirSync(OUT_DIR, { recursive: true });
 writeFileSync(path.join(OUT_DIR, 'combined-cells.json'), JSON.stringify({ generatedAt: new Date().toISOString(), missingShards: missing, partialShards: partial, totalCells: allResults.length, results: allResults }));
 
 // ─── technique-capability-summary.md ────────────────────────────────────────────────────────────
+// identityKey: a promoted flag variant (r.variantLabel set) is its OWN row, distinct from its base
+// technique's plain (ablation: null) entry — they are genuinely different configurations that
+// happen to share a techniqueKey, and merging them would silently blend two different capability
+// readings into one (a variant's extra solves misattributed to the base technique, or vice versa).
+function identityKey(r) { return r.variantLabel ?? r.techniqueKeys[0]; }
 function techniqueStats(tier) {
     const byKey = new Map();
     for (const r of allResults) {
         if (r.tier !== tier || (r.techniqueKeys?.length ?? 0) !== 1) continue;
-        const key = r.techniqueKeys[0];
-        if (!byKey.has(key)) byKey.set(key, { total: 0, ok: 0, nodeBudgetReached: 0, exhausted: 0, refereeInvalid: 0, error: 0, sumMs: 0 });
+        const key = identityKey(r);
+        if (!byKey.has(key)) byKey.set(key, { total: 0, ok: 0, nodeBudgetReached: 0, exhausted: 0, refereeInvalid: 0, error: 0, sumMs: 0, solveNodes: [] });
         const s = byKey.get(key);
         s.total++; s.sumMs += r.totalMs ?? 0;
-        if (r.ok) s.ok++;
+        if (r.ok) { s.ok++; s.solveNodes.push(r.nodesExpanded); }
         else if (r.status === 'node-budget-reached') s.nodeBudgetReached++;
         else if (r.status === 'exhausted') s.exhausted++;
         else if (r.status === 'referee-invalid') s.refereeInvalid++;
@@ -95,19 +100,66 @@ function techniqueStats(tier) {
 }
 const t1Stats = techniqueStats('T1');
 const t2Stats = techniqueStats('T2');
-function statsTable(byKey) {
-    const rows = [...byKey.entries()].sort((a, b) => b[1].ok - a[1].ok || a[0].localeCompare(b[0]));
-    return [
-        '| technique | solved | node-cap | exhausted | referee-invalid | error | total | solve rate | avg ms |',
-        '|---|---:|---:|---:|---:|---:|---:|---:|---:|',
-        ...rows.map(([k, s]) => `| \`${k}\` | ${s.ok} | ${s.nodeBudgetReached} | ${s.exhausted} | ${s.refereeInvalid} | ${s.error} | ${s.total} | ${(100 * s.ok / s.total).toFixed(1)}% | ${Math.round(s.sumMs / s.total)} |`),
-    ].join('\n');
+// Per-technique UNIQUE solve count within T1 (2026-08-19, per external review point 6): a level
+// counts toward a technique's "unique" total only if that technique is the ONLY T1 entry (default
+// key OR promoted variant) that solves it — the specialist signal ("few total solves, many unique
+// solves" identifies a technique worth keeping even if its raw solve count looks unremarkable).
+const t1SolversByLevel = new Map(); // "corpus/levelPos" -> Set<identityKey>
+for (const r of allResults) {
+    if (r.tier !== 'T1' || (r.techniqueKeys?.length ?? 0) !== 1 || !r.ok) continue;
+    const lk = `${r.corpus}/${r.levelPos}`;
+    if (!t1SolversByLevel.has(lk)) t1SolversByLevel.set(lk, new Set());
+    t1SolversByLevel.get(lk).add(identityKey(r));
 }
+const uniqueSolveCounts = new Map(); // identityKey -> count
+for (const solvers of t1SolversByLevel.values()) if (solvers.size === 1) {
+    const only = [...solvers][0];
+    uniqueSolveCounts.set(only, (uniqueSolveCounts.get(only) ?? 0) + 1);
+}
+function median(nums) {
+    if (!nums.length) return null;
+    const s = [...nums].sort((a, b) => a - b);
+    const mid = Math.floor(s.length / 2);
+    return s.length % 2 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
+}
+function statsTable(byKey, { withUnique = false } = {}) {
+    const rows = [...byKey.entries()].sort((a, b) => b[1].ok - a[1].ok || a[0].localeCompare(b[0]));
+    const header = withUnique
+        ? '| technique | solved | unique | node-cap | exhausted | referee-invalid | error | total | solve rate | avg ms | median solve nodes |'
+        : '| technique | solved | node-cap | exhausted | referee-invalid | error | total | solve rate | avg ms |';
+    const rule = withUnique ? '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|' : '|---|---:|---:|---:|---:|---:|---:|---:|---:|';
+    return [header, rule, ...rows.map(([k, s]) => {
+        const base = `| \`${k}\` | ${s.ok} |`;
+        const uniqueCol = withUnique ? ` ${uniqueSolveCounts.get(k) ?? 0} |` : '';
+        const rest = ` ${s.nodeBudgetReached} | ${s.exhausted} | ${s.refereeInvalid} | ${s.error} | ${s.total} | ${(100 * s.ok / s.total).toFixed(1)}% | ${Math.round(s.sumMs / s.total)} |`;
+        const medianCol = withUnique ? ` ${median(s.solveNodes) ?? '—'} |` : '';
+        return base + uniqueCol + rest + medianCol;
+    })].join('\n');
+}
+// ─── The oracle union (2026-08-19, per external review point 5 -- the single most important
+// number this run produces): of T1's sample levels (every one currently unsolved by the production
+// ladder at the frozen baseline, by construction), how many does AT LEAST ONE isolated technique
+// solve when given the full budget to itself? This directly separates "production fails because no
+// existing technique can do it" from "production fails because of scheduling/allocation" -- a large
+// oracle union means the next big lever is smarter routing (queue Priority 1), not new algorithms.
+const t1LevelKeys = new Set(allResults.filter(r => r.tier === 'T1').map(r => `${r.corpus}/${r.levelPos}`));
+const oracleSolvedT1Only = [...t1SolversByLevel.keys()].length;
+const t2SolversByLevel = new Map();
+for (const r of allResults) {
+    if (r.tier !== 'T2' || (r.techniqueKeys?.length ?? 0) !== 1 || !r.ok) continue;
+    const lk = `${r.corpus}/${r.levelPos}`;
+    if (!t1LevelKeys.has(lk)) continue; // only count T2 solves ON T1's own sample, for a fair comparison
+    if (!t2SolversByLevel.has(lk)) t2SolversByLevel.set(lk, new Set());
+    t2SolversByLevel.get(lk).add(identityKey(r));
+}
+const oracleUnionKeys = new Set([...t1SolversByLevel.keys(), ...t2SolversByLevel.keys()]);
+const oracleLine = `**Oracle union**: of ${t1LevelKeys.size} T1-sample levels (0 solved by the production ladder at the frozen baseline, by construction), ${oracleSolvedT1Only} (${(100 * oracleSolvedT1Only / t1LevelKeys.size).toFixed(1)}%) are solved by at least one T1 isolated technique at the full 50,000,000-node budget; ${oracleUnionKeys.size} (${(100 * oracleUnionKeys.size / t1LevelKeys.size).toFixed(1)}%) when T2's small-budget pass on the same levels is also counted.`;
 const capabilitySummary = [
     '# Technique capability census — technique summary', '',
     `Cross-matrix: ${allResults.length} cells. Missing shards: ${missing.length ? missing.join(', ') : 'none'}.`, '',
+    oracleLine, '',
     '## T1 — full 50,000,000-node budget, isolated, currently-unsolved-level sample', '',
-    statsTable(t1Stats), '',
+    statsTable(t1Stats, { withUnique: true }), '',
     '## T2 — small-budget breadth pass, every level in all 3 corpora', '',
     statsTable(t2Stats), '',
 ].join('\n');
@@ -119,14 +171,16 @@ for (const r of allResults) {
     if ((r.tier !== 'T1' && r.tier !== 'T2') || (r.techniqueKeys?.length ?? 0) !== 1) continue;
     const k = `${r.corpus}/${r.levelId}`;
     if (!coverage.has(k)) coverage.set(k, { corpus: r.corpus, levelId: r.levelId, solvedByT1: [], solvedByT2: [] });
-    if (r.ok) coverage.get(k)[r.tier === 'T1' ? 'solvedByT1' : 'solvedByT2'].push(r.techniqueKeys[0]);
+    if (r.ok) coverage.get(k)[r.tier === 'T1' ? 'solvedByT1' : 'solvedByT2'].push(identityKey(r));
 }
 writeFileSync(path.join(OUT_DIR, 'level-technique-coverage.json'), JSON.stringify([...coverage.values()]));
 const zeroIsolatedSolves = [...coverage.values()].filter(c => c.solvedByT1.length === 0 && c.solvedByT2.length === 0 && allResults.some(r => r.tier === 'T1' && r.corpus === c.corpus && r.levelId === c.levelId));
 
 // ─── pair-synergy.md — T3 pairs vs. their own members' T1 results ─────────────────────────────────
+// DEFAULT (ablation: null) T1 rows only -- a promoted variant's reading is a different config and
+// must never silently become "the" baseline a pair or flag experiment is compared against.
 const t1ByLevelTechnique = new Map(); // "corpus/levelPos/key" -> ok
-for (const r of allResults) if (r.tier === 'T1' && (r.techniqueKeys?.length ?? 0) === 1) t1ByLevelTechnique.set(`${r.corpus}/${r.levelPos}/${r.techniqueKeys[0]}`, r.ok);
+for (const r of allResults) if (r.tier === 'T1' && (r.techniqueKeys?.length ?? 0) === 1 && !r.ablation) t1ByLevelTechnique.set(`${r.corpus}/${r.levelPos}/${r.techniqueKeys[0]}`, r.ok);
 const pairRows = new Map(); // pairLabel -> { total, pairSolved, neitherAloneSolved }
 for (const r of allResults) {
     if (r.tier !== 'T3') continue;
