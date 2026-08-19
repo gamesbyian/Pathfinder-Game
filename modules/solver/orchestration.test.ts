@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION, REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
@@ -1986,4 +1986,103 @@ test('connectivity-axis-exhausted-retry pass can solve a level the main loop mis
     });
     assert.equal(result.ok, true, 'the connectivity-axis-exhausted-off retry wins');
     assert.equal(result.attempts.at(-1)?.connectivityAxisExhaustedRetry, true);
+});
+
+// ── STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY ─────────────────────────────────────
+//
+// Opt-in, default OFF (see REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION's own comment in
+// orchestration.ts): applies the same pattern to a DIFFERENT known double-edged mechanism,
+// STRATEGY_REPAIR_ELITE_PREFIX_DFS (reports/2026-08-07-repair-elite-prefix-dfs.md) — sound and
+// mechanistically real, but net-negative in its own 20-level A/B due to shared-node-budget
+// displacement (R02239 solves via ordinary repair with it off, exhausts the SAME repair call's
+// budget with it on). Unlike the three sibling suites above, this reruns `repairConfigs` (the
+// same per-config/per-gate manual loop shape as the ordinary repair fallback loop), not
+// `mainConfigs`, and ENABLES a flag via its Proxy override rather than disabling one. Reuses
+// makeRepairGatedInfeasibleLevel() (genuinely unsolvable: reqLen=1 with 3 must-pass + 2 must-cross
+// on a 6x6 grid) since it carries a real repair config, unlike the mainConfigs-only fixture the
+// three sibling suites use.
+
+test('repair-elite-prefix-dfs-retry pass reruns the repair ladder once more after everything else fails', async () => {
+    // Isolate from every other default-on last-resort tier (none of which touch repairConfigs) so
+    // "ordinaryRepairAttempts" below counts only the ordinary repair-fallback loop's own attempts —
+    // and exclude the early repair PROBE's own attempts (a.repairProbe === true), which also carry
+    // repair === true but run before the main loop, not as part of the fallback loop this tier reruns.
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    const retryAttempts = result.attempts.filter(a => a.repairElitePrefixDfsRetry === true);
+    const ordinaryRepairAttempts = result.attempts.filter(a => a.repair === true && !a.repairProbe && a.repairElitePrefixDfsRetry !== true);
+    assert.ok(retryAttempts.length > 0, 'expected at least one repair-elite-prefix-dfs-retry attempt');
+    // The pass reruns the exact same repairConfigs ladder, so (this level being genuinely
+    // unsolvable, meaning neither run gets cut off early by finding a solution) it should run
+    // through exactly as many config/gate pairs as the ordinary repair fallback loop itself did.
+    assert.equal(retryAttempts.length, ordinaryRepairAttempts.length);
+});
+
+test('repair-elite-prefix-dfs-retry pass is inert by default (cfg=null): no retry attempt is ever run', async () => {
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 1000 });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.repairElitePrefixDfsRetry === true), false);
+});
+
+test('repair-elite-prefix-dfs-retry pass stays off under an explicit { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: false }, and under a sparse unrelated ablation object', async () => {
+    for (const ablation of [
+        { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: false },
+        { STRATEGY_REPAIR_ELITE_PREFIX_DFS: false },
+    ]) {
+        const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 1000, ablation });
+        assert.equal(result.ok, false);
+        assert.equal(result.attempts.some(a => a.repairElitePrefixDfsRetry === true), false);
+    }
+});
+
+test('repairElitePrefixDfsRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
+        repairElitePrefixDfsRetryBudgetFractionOverride: 0,
+    });
+    assert.equal(result.attempts.some(a => a.repairElitePrefixDfsRetry === true), false);
+});
+
+test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses, and enables STRATEGY_REPAIR_ELITE_PREFIX_DFS while it runs', async () => {
+    // Simulates the real mechanism's shape without depending on repair-search.ts's actual
+    // elitePrefixDfsRepair internals: succeeds only once prep._cfg reflects
+    // STRATEGY_REPAIR_ELITE_PREFIX_DFS explicitly enabled — exactly what the retry pass's own Proxy
+    // override produces, and exactly what the ordinary repair fallback loop's cfg (unset, so
+    // opt-in-default-false) never does.
+    //
+    // Isolates every sibling default-on retry tier (attractionDiversity/admissibleOrder/dedupNearTieRetry/
+    // admissibleOrderNonDefaultRetry/connectivityAxisExhaustedRetry) via budget-fraction overrides:
+    // each of THEIR OWN Proxy overrides falls through to `true` for any prop it doesn't explicitly
+    // name (originalCfg has no own-key for an unrelated flag, since `normalizeAblationConfig` wraps
+    // the RAW sparse ablation object, not a fully-materialized one) — so without this isolation, an
+    // earlier sibling tier's own Proxy would satisfy this mock's `=== true` check first and this
+    // tier's own pass would never actually run. (The three PROMOTED siblings' own equivalent tests
+    // don't need this because their mocks check the OPPOSITE polarity — `=== false` — which the same
+    // fallback-to-true default can never accidentally satisfy.)
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, , , prep] = args;
+        if (prep._cfg && prep._cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS === true) return [0, 1];
+        return null;
+    }) as typeof runAttemptSearch;
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, true, 'the elite-prefix-dfs-on retry wins');
+    assert.equal(result.attempts.at(-1)?.repairElitePrefixDfsRetry, true);
 });
