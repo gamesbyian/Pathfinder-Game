@@ -1331,11 +1331,22 @@ export const CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  run after this one that still checks an unextended ceiling, or this tier's own additive
  *  extension would starve it.
  *
- *  NOT YET VALIDATED — same lifecycle stage all three tiers above shipped at before their own
- *  local-then-population validation. Needs the same rigor: local spot-check against `R02239`
- *  (recovery) and the rest of the original 20-level sample (no regressions), then a population-scale
- *  GHA A/B, before any promotion decision. See `reports/2026-08-07-repair-elite-prefix-dfs.md` for
- *  the founding evidence this targets. */
+ *  CLOSED, NOT PROMOTED (2026-08-19). Validated on the original 20-level closest-miss sample at
+ *  TWO retry budgets (7.5M and the full 15M matching the original report's own ON-arm scale, via
+ *  `scripts/stress/elite-prefix-dfs-retry-validate.mjs`, sharded across 10 parallel GHA jobs):
+ *  **zero recoveries at either budget** — the protected (flag-off) loop alone solved 5/20
+ *  (`R00342`/`R00877`/`R02022`/`R02220`/`R02239`, byte-identical at both budgets), and of the 15
+ *  that failed there, none were rescued by a fresh, fully-uncontested retry pass either. Doubling
+ *  the retry budget changed nothing, ruling out under-provisioning. This confirms the mechanism's
+ *  real limitation was never the shared-budget displacement this tier structurally eliminates —
+ *  `elitePrefixDfsRepair` itself doesn't have enough power to close these particular gaps at these
+ *  budgets, full stop; the original report's own "badness improved from 4 to 3" evidence was always
+ *  intermediate progress, never an actual extra solve, so this negative result is consistent with
+ *  that report's own findings, not a reversal of them. Kept in the codebase (opt-in, default-OFF,
+ *  zero production risk, sound reusable infrastructure) but NOT a promotion candidate without a
+ *  materially different approach to the underlying operator itself. See
+ *  `reports/2026-08-07-repair-elite-prefix-dfs.md`'s "Follow-up (2026-08-19)" section for the full
+ *  writeup and data table. */
 export const REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION = 1.0;
 
 /** Extra node headroom given ADDITIVELY to STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY's own last-resort

@@ -206,6 +206,26 @@ code path (every connectivity check across every search technique) — promoted 
 ladder's bar is solved-count gain plus zero regressions, not cost neutrality. Full detail:
 [`reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md#population-scale-confirmation-and-promotion-strategyconnectivityaxisexhaustedretry).
 
+**Applied a FOURTH time (2026-08-16/19) to a DIFFERENT known double-edged mechanism —
+`STRATEGY_REPAIR_ELITE_PREFIX_DFS` (`reports/2026-08-07-repair-elite-prefix-dfs.md`) — as
+`STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY`. CLOSED, not promoted: negative result.** That mechanism
+is sound and mechanistically real but net-negative in its own 20-level A/B due to a confirmed
+shared-node-budget displacement (`R02239` solves via ordinary repair with it off, exhausts the SAME
+repair call's own budget with it on). This tier reruns `repairConfigs` (not `mainConfigs`) and
+**enables** the flag via Proxy override (the opposite polarity from the three tiers above),
+structurally eliminating the displacement: the ordinary repair fallback loop always runs first,
+unaffected, at its own untouched budget. Validated on the original 20-level sample at TWO retry
+budgets (7.5M and the full 15M matching the original report's own scale, run sharded across 10
+parallel GHA jobs rather than one near-hour-long sequential job): **zero recoveries at either
+budget** — doubling the budget changed nothing, ruling out under-provisioning. Confirms the
+mechanism's real limitation was never budget competition (now structurally removed) but that
+`elitePrefixDfsRepair` itself lacks the power to close these gaps at these budgets; the original
+report's own evidence (badness improving 4→3) was always intermediate progress, never an actual
+extra solve, so this is consistent with, not a reversal of, that report's own findings. Kept in the
+codebase (opt-in, zero production risk) but not a promotion candidate without a materially
+different approach to the underlying operator. Full detail:
+[`reports/2026-08-07-repair-elite-prefix-dfs.md`](../reports/2026-08-07-repair-elite-prefix-dfs.md#follow-up-2026-08-19-a-dedicated-retry-tier-tested-and-negative).
+
 ### 1. Failure-conditioned late-tier allocation
 
 Start from the full lifecycle artifact, not a hand-picked list of failures. Build cohorts from fields available during the solve: technique eligibility, actual work received, termination reason, recent improvement rate, repair best-badness trajectory, unique-state growth, beam extinction/retention summaries, and remaining budget. Historical hints, prior winning configurations, saved solve status, and permanent level IDs are labels only.
