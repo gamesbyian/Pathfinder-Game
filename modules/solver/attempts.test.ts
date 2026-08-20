@@ -74,10 +74,13 @@ test('default attempt order keeps template sweep before profile fallbacks, with 
   assert.deepEqual(nonAdmissibleOrder.slice(4, 16).map(c => c.profileName), PROFILE_ORDER);
   // Beam-routing-gap fix (technique census, run 32240161854): the catch-all rule now offers beam
   // search too, placed LAST (within the main loop's protected late-reserve config-count window --
-  // see the rule's own comment for why leading with beam was tried and reverted).
+  // see the rule's own comment for why leading with beam was tried and reverted). A follow-up pass
+  // added perimeterSweep CW/CCW STANDARD beams after the original WIDE pair, same trailing position.
   assert.deepEqual(nonAdmissibleOrder.slice(16).map(c => [c.profileName, c.beamWidth]), [
     ['objectiveFirst', 5000],
     ['intersectionHarvest', 5000],
+    ['perimeterSweep', 2000],
+    ['perimeterSweep', 2000],
   ]);
   assert.deepEqual(attempts.filter(c => c.admissibleOrder).map(c => c.profileName), ADMISSIBLE_ORDER_PROFILES);
 });
@@ -91,9 +94,11 @@ test('default no-must-pass levels prefer perimeterCCW before perimeterCW, with b
     'sideCommitment',
   ]);
   const nonAdmissibleOrder = attempts.filter(c => !c.admissibleOrder);
-  assert.deepEqual(nonAdmissibleOrder.slice(-2).map(c => [c.profileName, c.beamWidth]), [
+  assert.deepEqual(nonAdmissibleOrder.slice(-4).map(c => [c.profileName, c.beamWidth]), [
     ['objectiveFirst', 5000],
     ['intersectionHarvest', 5000],
+    ['perimeterSweep', 2000],
+    ['perimeterSweep', 2000],
   ]);
 });
 
@@ -119,11 +124,14 @@ test('portal-heavy levels lead with portal profiles, with beam configs trailing 
   assert.deepEqual(attempts.slice(0, 2).map(c => c.profileName), ['portalFirstTransfer', 'portalCommitted']);
   // Beam-routing-gap fix (technique census, run 32240161854): beam search trails last (within the
   // main loop's protected late-reserve config-count window -- see the rule's own comment for why
-  // leading with beam was tried and reverted).
+  // leading with beam was tried and reverted). A follow-up pass added perimeterSweep CW/CCW
+  // STANDARD beams after the original WIDE pair, same trailing position.
   const nonAdmissibleOrder = attempts.filter(c => !c.admissibleOrder);
-  assert.deepEqual(nonAdmissibleOrder.slice(-2).map(c => [c.profileName, c.beamWidth]), [
+  assert.deepEqual(nonAdmissibleOrder.slice(-4).map(c => [c.profileName, c.beamWidth]), [
     ['objectiveFirst', 5000],
     ['intersectionHarvest', 5000],
+    ['perimeterSweep', 2000],
+    ['perimeterSweep', 2000],
   ]);
 });
 
@@ -151,9 +159,11 @@ test('STRATEGY_ARCHETYPE_ROUTING disabled forces the catch-all rule regardless o
   // This level is also repair-eligible (isHighInt && reqInt>=7), so a repair attempt gets appended
   // after the rule's own list too -- filter both trailing tiers to isolate the rule's own ordering.
   const forcedNonAdmissibleOrder = forcedDefault.filter(c => !c.admissibleOrder && !c.repair);
-  assert.deepEqual(forcedNonAdmissibleOrder.slice(-2).map(c => [c.profileName, c.beamWidth]), [
+  assert.deepEqual(forcedNonAdmissibleOrder.slice(-4).map(c => [c.profileName, c.beamWidth]), [
     ['objectiveFirst', 5000],
     ['intersectionHarvest', 5000],
+    ['perimeterSweep', 2000],
+    ['perimeterSweep', 2000],
   ]);
   assert.notDeepEqual(forcedDefault.map(c => c.profileName), routed.map(c => c.profileName));
 

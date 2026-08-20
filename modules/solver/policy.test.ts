@@ -65,10 +65,13 @@ test('Solver uses the extracted policy data for default attempt configs', () => 
   assert.deepEqual(attempts.slice(0, 4).map(c => c.template?.id), ATTEMPT_CONFIGS.slice(0, 4).map(c => c.template?.id));
   assert.ok(attempts.some(c => c.profileName === 'default' && c.template === null));
   // Beam-routing-gap fix (technique census, run 32240161854): the catch-all rule now offers beam
-  // search too, trailing last (within the main loop's protected late-reserve window).
+  // search too, trailing last (within the main loop's protected late-reserve window). A follow-up
+  // pass added perimeterSweep CW/CCW STANDARD beams after the original WIDE pair, same position.
   const nonAdmissibleOrder = attempts.filter(c => !c.admissibleOrder);
-  assert.deepEqual(nonAdmissibleOrder.slice(-2).map(c => [c.profileName, c.beamWidth]), [
+  assert.deepEqual(nonAdmissibleOrder.slice(-4).map(c => [c.profileName, c.beamWidth]), [
     ['objectiveFirst', 5000],
     ['intersectionHarvest', 5000],
+    ['perimeterSweep', 2000],
+    ['perimeterSweep', 2000],
   ]);
 });

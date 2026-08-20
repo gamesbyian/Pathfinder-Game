@@ -342,6 +342,12 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // instead recovered the same levels but cost every already-solving level in this archetype
         // 1-6+ seconds of needless beam search first (measured on the published corpus: +94% total
         // wall time, 66/160 levels meaningfully slower) — reverted in favor of this placement.
+        // Follow-up (technique census, run 32240161854 — docs/solver-optimization-current-queue.md
+        // Priority 7): objectiveFirst/intersectionHarvest WIDE alone left a further gap on THIS
+        // archetype specifically — `beam:perimeterSweep/perimeterCW@beam2000` and its CCW sibling are
+        // each independently the cheap census winner on more of this archetype's oracle-union
+        // population than either WIDE config. Added at the same trailing position for the same
+        // late-reserve-protection reason.
         why: 'portal-heavy: portal-transfer profiles, remaining profiles/templates, beams last (protected reserve slice)',
         when: f => f.arch === 'portal-heavy',
         build: () => [
@@ -349,6 +355,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             ...PROFILE_ORDER.filter(p => p !== 'portalFirstTransfer' && p !== 'portalCommitted').map(p => dfs(p)),
             ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
             beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
+            beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
         ],
     },
     {
@@ -410,6 +417,10 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // levels, but cost every already-solving level in this archetype 1-6+ seconds of needless
         // beam search first — measured on the published corpus: +94% total wall time, 66/160 levels
         // meaningfully slower).
+        // Follow-up (technique census, run 32240161854 — docs/solver-optimization-current-queue.md
+        // Priority 7): same additional gap as the portal-heavy rule's own follow-up comment —
+        // beam:perimeterSweep/perimeterCW(CCW)@beam2000 is independently the cheap census winner on
+        // more of this archetype's oracle-union population than the WIDE configs alone reach.
         why: 'default, no must-pass: CCW template before CW (open grids where CW times out), then profiles, beams last (protected reserve slice)',
         when: f => f.mustPass === 0,
         build: () => [
@@ -417,6 +428,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', sideCommitment),
             ...PROFILE_ORDER.map(p => dfs(p)),
             beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
+            beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
         ],
     },
     {
@@ -428,6 +440,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
             ...PROFILE_ORDER.map(p => dfs(p)),
             beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
+            beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
         ],
     },
 ];
