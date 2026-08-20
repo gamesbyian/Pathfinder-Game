@@ -53,7 +53,7 @@ currently worth doing.
 | Doc | Role |
 |---|---|
 | [`solver-architecture.md`](solver-architecture.md) | Durable implementation reference: attempt policy, DFS/beam/repair/admissible-order search, pruning, prep data, encodings, orchestration, and tool selection. |
-| [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) | **Canonical ranked entry point for optimizing existing solver techniques.** Current priorities, next decision-bearing steps, success signals, and closed forms not to repeat. |
+| [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) | **Canonical ranked entry point for optimizing existing solver techniques.** Deliberately short: live state, next gates, stable priority IDs, and closed forms. |
 | [`solver-level-blindness.md`](solver-level-blindness.md) | Capability contract: production/editor solves treat every puzzle as unseen; exact-level history and stored solutions are output-side research evidence only. |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Broader research coordination and sequencing across families, heuristics, mechanics, repair, oracles, cooperation, and allocation. |
 | [`future-work.md`](future-work.md) | Detailed evidence/disposition and broader deferral record. It is not a competing ranked optimization queue. |
@@ -92,6 +92,7 @@ not be mistaken for the current backlog.
 
 | Doc | Status/context |
 |---|---|
+| [`solver-optimization-current-queue-2026-08-20-snapshot.md`](solver-optimization-current-queue-2026-08-20-snapshot.md) | Verbatim snapshot of the detailed optimization-queue chronology through 2026-08-20, preserved when the canonical queue was compacted. Evidence/history only; use the undated queue for live priority. |
 | [`solver-improvement-research-notes.md`](solver-improvement-research-notes.md) | Historical research ledger reconciled with later implementation/results. |
 | [`solver-next-frontier-2026-08-02.md`](solver-next-frontier-2026-08-02.md) | Unvalidated research brainstorm; no code or experiment results. |
 | [`solver-next-frontier-multilingual-research-update-2026-08-02.md`](solver-next-frontier-multilingual-research-update-2026-08-02.md) | Multilingual literature update to the same unvalidated brainstorm. |
