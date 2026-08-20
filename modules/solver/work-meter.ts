@@ -22,10 +22,30 @@
 // was fitted, not guessed: it is the weight that minimises that spread over per-attempt
 // work/elapsedMs samples. See docs/solver-budget-determinism.md.
 //
-// Deliberately a plain module-level object rather than a field on `prep`: it is incremented on the
-// hottest path in the solver, and a monomorphic direct field bump is the cheapest form available.
-// Module state is per-worker under worker_threads, same as the other solver scratch. Consumers read
-// DELTAS across a span (attempt, probe, restart) rather than resetting it.
+// CONCURRENCY (fixed 2026-08-20). This module-level counter used to be the ONLY work counter,
+// shared by every `solveLevel()` call in the same JS realm — safe under `worker_threads` (module
+// state is per-worker, a separate V8 isolate each) but NOT safe for two solves running
+// concurrently in the SAME realm (e.g. `Promise.all([solveLevel(a), solveLevel(b)])`, which the
+// public API has always permitted): one solve's own `spent = workMeter.units - workStart` delta
+// could silently include work a completely unrelated concurrent solve did in between, and — more
+// seriously — search-state.ts's DFS/beam/repair buffer pool was ALSO module-global at the time,
+// so two overlapping attempts of the same technique could have their live `visited`/`edgeUsage`
+// arrays cleared out from under them by each other's `createState` calls.
+//
+// Every internal budget check and per-solve accounting computation in the solver now reads
+// `prep._workMeter.units` instead (see PrepLevel's own comment) — a fresh, isolated counter per
+// `solveLevel()` call, since `prep` is already threaded through every hot-path function and
+// recreated fresh per solve. `applyMove`/`isConnected` (the two sites that increment work) still
+// ALSO increment THIS module-global counter, unchanged, purely so offline hint-discovery tooling
+// that spans many sequential `solveLevel()` calls in one process (diversification.ts, hint-
+// ablation-generator.ts, scripts/hint-workbench.mjs) can keep reading a monotonically-increasing
+// cross-call cumulative total exactly as before — none of those read prep-scoped state (they call
+// `solverApi.solve(...)` as a black box, never internal search functions directly), so this
+// module-global counter's ORIGINAL role is fully preserved for them.
+//
+// Deliberately a plain module-level object rather than a field on `prep` for ITS OWN increment
+// site's sake: it is incremented on the hottest path in the solver, and a monomorphic direct field
+// bump is the cheapest form available — `prep._workMeter` gets the exact same treatment.
 export const workMeter = { units: 0 };
 
 /** Cost of one isConnected flood fill, in applyMove-equivalents. Fitted — see above. */

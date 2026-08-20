@@ -1442,7 +1442,7 @@ test('the ordinary repair fallback loop gets fresh work room, not a stale cap le
         if (prep._metrics) prep._metrics.nodesExpanded += 1;
         if (out) out.nodesExpanded = 1;
         if (config.repair) {
-            repairAllocatedWorkCeiling = prep._workCap == null ? undefined : prep._workCap - workMeter.units;
+            repairAllocatedWorkCeiling = prep._workCap == null ? undefined : prep._workCap - prep._workMeter.units;
             return [0, 1];
         }
         return null;
@@ -1542,7 +1542,10 @@ test('a zero dispatch-time work allowance is reported as budget starvation, not 
     prep._cfg = null;
     prep._metrics = { nodesExpanded: 0 };
     prep._attemptBudgetTelemetry = true;
-    prep._workCap = workMeter.units;
+    // prep._workMeter.units (not the module-global workMeter.units, which accumulates across every
+    // solve/test in this process and is no longer what any budget check reads — see PrepLevel's own
+    // comment) is this fresh prep's own baseline, 0 until something spends against it.
+    prep._workCap = prep._workMeter.units;
     const config = getConfiguredAttemptConfigs(level, null).find(candidate => !candidate.repair && !candidate.admissibleOrder)!;
     const result = await runAttempt(level.gateKeys[0], level, prep, config, 10_000, Date.now(), null, 1000);
     assert.equal(result.attempt.allocatedWorkCeiling, 0);

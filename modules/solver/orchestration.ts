@@ -2,7 +2,6 @@ import { PORTFOLIO_EXPERIMENT } from '../../data/config/portfolio-experiment.js'
 import { OPT_IN_FEATURES } from '../../scripts/ablation-config.mjs';
 import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS, repairAttempt } from './attempts.js';
 import { POLICY_PROFILES } from './policy.js';
-import { workMeter } from './work-meter.js';
 import { prepLevel } from './prep.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { repairPrimarySeed } from './repair-search.js';
@@ -491,10 +490,10 @@ export async function runAttempt(
     // nodesExpanded back for its cross-gate node-budget accounting; ordinary callers don't).
     const searchOut = nodesOut ?? {};
     const nodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
-    const workBefore = workMeter.units;
+    const workBefore = prep._workMeter.units;
     const allocatedWorkCeiling = prep._workCap == null
         ? null
-        : Math.max(0, prep._workCap - workMeter.units);
+        : Math.max(0, prep._workCap - prep._workMeter.units);
     let path: number[] | null = null;
     let attemptError: Attempt['error'] | undefined;
     try {
@@ -523,7 +522,7 @@ export async function runAttempt(
     }
     const attMs = Date.now() - attStart;
     const nodesAfter = prep._metrics ? prep._metrics.nodesExpanded : 0;
-    const workAfter = workMeter.units;
+    const workAfter = prep._workMeter.units;
     const budgetStarvedAtDispatch = prep._attemptBudgetTelemetry
         && (allocatedWorkCeiling === 0 || (Number.isFinite(nodeBudget) && nodeBudget === 0));
     return {
@@ -677,7 +676,7 @@ async function runInterleavedAttempts(
             const minFrac = (!cfg || cfg.STRATEGY_MIN_BUDGET_FLOOR) ? (baseConfigs[ci].minBudgetFraction ?? 0) : 0;
             // The remainder being divided is WORK, never wall clock — that is what makes the whole
             // schedule a function of (level, workBudget) alone. See work-meter.ts.
-            const workSpent = workMeter.units - workStart;
+            const workSpent = prep._workMeter.units - workStart;
             if (workSpent >= workBudget) return { solution: null, attempts };
             const budgetLeft = workBudget - workSpent;
             let attBudget = attemptBudgetShare(budgetLeft, pairsLeft, budgetLeft / activeGates.length, minFrac);
@@ -694,7 +693,7 @@ async function runInterleavedAttempts(
                 attBudget = Math.min(budgetLeft, Math.max(MIN_ATTEMPT_WORK, Math.floor(attBudget * adaptiveGateWeight(gateKey, gateProgress))));
             }
             if (attBudget < MIN_ATTEMPT_WORK) return { solution: null, attempts };
-            prep._workCap = Math.min(workMeter.units + attBudget, prep._strictWorkCap ?? Infinity);
+            prep._workCap = Math.min(prep._workMeter.units + attBudget, prep._strictWorkCap ?? Infinity);
 
             // Remaining GLOBAL node budget, recomputed fresh before each attempt (same pattern as the
             // repair fallback below): beam/DFS count nodes LOCAL to the call, so the remainder makes a
@@ -738,8 +737,8 @@ async function runGateSerialAttempts(
         if ((prep._metrics ? prep._metrics.nodesExpanded : 0) >= nodeBudget) return { solution: null, attempts };
 
         // This gate's slice of the remaining WORK, and the mark it measures its own spend from.
-        const gateStartUnits = workMeter.units;
-        const workSpent = workMeter.units - workStart;
+        const gateStartUnits = prep._workMeter.units;
+        const workSpent = prep._workMeter.units - workStart;
         if (workSpent >= workBudget) return { solution: null, attempts };
         const gatesLeft = activeGates.length - gi;
         const gateBudget = Math.floor((workBudget - workSpent) / gatesLeft);
@@ -756,7 +755,7 @@ async function runGateSerialAttempts(
                 if (latePairIndex + 1 < latePairCount) continue;
                 return { solution: null, attempts, earlyNodeBudgetReached };
             }
-            const elapsed = workMeter.units - gateStartUnits;
+            const elapsed = prep._workMeter.units - gateStartUnits;
             if (elapsed >= gateBudget) break;
 
             const remaining = gateBudget - elapsed;
@@ -765,7 +764,7 @@ async function runGateSerialAttempts(
             const minFrac = (!cfg || cfg.STRATEGY_MIN_BUDGET_FLOOR) ? (baseConfigs[ci].minBudgetFraction ?? 0) : 0;
             const attBudget = attemptBudgetShare(remaining, attemptsLeft, remaining, minFrac);
             if (attBudget < MIN_ATTEMPT_WORK) break;
-            prep._workCap = Math.min(workMeter.units + attBudget, prep._strictWorkCap ?? Infinity);
+            prep._workCap = Math.min(prep._workMeter.units + attBudget, prep._strictWorkCap ?? Infinity);
 
             // Remaining GLOBAL node budget — see runInterleavedAttempts's identical recompute.
             const remainingNodeBudget = configNodeBudget === Infinity ? Infinity : Math.max(0, configNodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
@@ -1271,7 +1270,7 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  (every DFS/beam attempt config) via `runInterleavedAttempts`/`runGateSerialAttempts`, with
  *  `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` disabled through a Proxy override on `prep._cfg`, a fresh
  *  additive node ceiling (`nodeBudget + CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION`),
- *  and a fresh additive work allocation (own `workMeter.units` mark, sized via `DEFAULT_WORK_PER_MS`
+ *  and a fresh additive work allocation (own `prep._workMeter.units` mark, sized via `DEFAULT_WORK_PER_MS`
  *  from this tier's own ms allocation — the exact fix DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION's
  *  own history needed after its first shipped design shared the depleting pool). `R03248` is
  *  structurally protected the same way `R02644` was for the admissible-order tier: it already solves
@@ -2184,8 +2183,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         return runPortfolioExperiment(level, opts, timeBudgetMs, yieldFn);
     }
     const levelStartTime = Date.now();
-    const workStart = workMeter.units;
     const prep = prepLevel(level);
+    // This solve's own isolated counter (see PrepLevel._workMeter) — always 0 for a fresh prep, but
+    // read explicitly rather than hardcoded, matching every other workStart-style snapshot in this
+    // file and staying correct regardless of prepLevel()'s own initialization details.
+    const workStart = prep._workMeter.units;
     // Opt-in only. Existing production behavior deliberately remains untouched until a matched
     // confirmation can measure the solve-set effect of converting additive passes to one cap.
     prep._strictWorkCap = opts.strictTotalWorkBudget ? workStart + workBudget : undefined;
@@ -2344,7 +2346,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             primeResult.attempt.configKey = opts.primeAttempt.configKey;
             if (primeResult.path) {
                 const totalMs = Date.now() - levelStartTime;
-                return finish({ ok: true, status: 'success', solution: primeResult.path, solutions: [primeResult.path], attempts: [primeResult.attempt], totalMs, nodesExpanded: prep._metrics.nodesExpanded, solvedByPrime: true, workSpent: workMeter.units - workStart, workBudget });
+                return finish({ ok: true, status: 'success', solution: primeResult.path, solutions: [primeResult.path], attempts: [primeResult.attempt], totalMs, nodesExpanded: prep._metrics.nodesExpanded, solvedByPrime: true, workSpent: prep._workMeter.units - workStart, workBudget });
             }
             primeMissAttempt = primeResult.attempt;
         }
@@ -2954,7 +2956,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         if (probe.solution) {
             const totalMs = Date.now() - levelStartTime;
             const nodesExpanded = prep._metrics.nodesExpanded;
-            return finish({ ok: true, status: 'success', solution: probe.solution, solutions: [probe.solution], attempts: probeAttempts, totalMs, nodesExpanded, workSpent: workMeter.units - workStart, workBudget });
+            return finish({ ok: true, status: 'success', solution: probe.solution, solutions: [probe.solution], attempts: probeAttempts, totalMs, nodesExpanded, workSpent: prep._workMeter.units - workStart, workBudget });
         }
         // The probe now self-limits against the external nodeBudget (see runRepairProbe's own
         // comment) but only between seed-salt rounds, its smallest independently-costed unit — it
@@ -2971,7 +2973,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // no-op, so control reaches whichever tier has room having spent no extra nodes.
         if (prep._metrics.nodesExpanded >= mainLoopEarlyNodeBudget && admissibleOrderNodeReserve === 0 && mainLoopLateReserve === 0 && repairFallbackNodeReserve === 0 && attractionDiversityNodeReserve === 0) {
             const totalMs = Date.now() - levelStartTime;
-            return finish({ ok: false, status: hasAttemptError(probeAttempts) ? 'attempt-error' : 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true, workSpent: workMeter.units - workStart, workBudget });
+            return finish({ ok: false, status: hasAttemptError(probeAttempts) ? 'attempt-error' : 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true, workSpent: prep._workMeter.units - workStart, workBudget });
         }
     }
 
@@ -3037,7 +3039,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     try {
         const repairFallbackTotalBudget = Math.floor(timeBudgetMs * repairBudgetFraction);
         const repairFallbackWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(repairFallbackTotalBudget * DEFAULT_WORK_PER_MS));
-        prep._workCap = Math.min(workMeter.units + repairFallbackWorkBudget, prep._strictWorkCap ?? Infinity);
+        prep._workCap = Math.min(prep._workMeter.units + repairFallbackWorkBudget, prep._strictWorkCap ?? Infinity);
         for (const repairConfig of repairConfigs) {
             if (result.solution) break;
             if (prep._metrics.nodesExpanded >= repairFallbackNodeCeiling) break;
@@ -3331,10 +3333,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // when the ordinary main loop tries the identical config with a full pool), well short
             // given a node costs more than 1 work unit. Same "extend, don't carve from the existing
             // pool" philosophy REPAIR_EXTRA_BUDGET_FRACTION's own comment documents for wall time,
-            // applied to work: a fresh `workMeter.units` mark plus a work budget sized off this tier's
+            // applied to work: a fresh `prep._workMeter.units` mark plus a work budget sized off this tier's
             // own ms allocation via DEFAULT_WORK_PER_MS, the same conversion solveLevel's own
             // top-level workBudget uses when a caller doesn't supply one explicitly.
-            const dedupRetryWorkStart = workMeter.units;
+            const dedupRetryWorkStart = prep._workMeter.units;
             const dedupRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(dedupRetryTotalBudget * DEFAULT_WORK_PER_MS));
             // Same absolute-vs-relative nodeBudget semantics as the diversity pass's own call —
             // see that call's comment for why this must be an ABSOLUTE ceiling, not a remainder.
@@ -3388,7 +3390,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         try {
             const nonDefaultRetryTotalBudget = Math.floor(timeBudgetMs * nonDefaultRetryBudgetFraction);
             const nonDefaultRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(nonDefaultRetryTotalBudget * DEFAULT_WORK_PER_MS));
-            prep._workCap = Math.min(workMeter.units + nonDefaultRetryWorkBudget, prep._strictWorkCap ?? Infinity);
+            prep._workCap = Math.min(prep._workMeter.units + nonDefaultRetryWorkBudget, prep._strictWorkCap ?? Infinity);
             // Same per-profile/per-gate loop shape as the admissible-order tier's own pass above
             // (deliberately NOT a single combined runInterleavedAttempts/runGateSerialAttempts call —
             // see that tier's own comment for why: every validated admissible-order solve was found
@@ -3455,7 +3457,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // philosophy as dedupRetryWorkStart/dedupRetryWorkBudget above (that tier's own history:
             // sharing the depleting (workBudget, workStart) pool with every earlier tier starved its
             // attempts of work even when the node reserve genuinely protected the node ceiling).
-            const connectivityRetryWorkStart = workMeter.units;
+            const connectivityRetryWorkStart = prep._workMeter.units;
             const connectivityRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(connectivityRetryTotalBudget * DEFAULT_WORK_PER_MS));
             // STRATEGY_RETRY_TIER_NODE_STAIRCASE — see the diversity pass's own note above. Strictly
             // byte-identical to before when the flag is off, which is every production caller.
@@ -3514,7 +3516,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         try {
             const repairElitePrefixDfsRetryTotalBudget = Math.floor(timeBudgetMs * repairElitePrefixDfsRetryBudgetFraction);
             const repairElitePrefixDfsRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(repairElitePrefixDfsRetryTotalBudget * DEFAULT_WORK_PER_MS));
-            prep._workCap = Math.min(workMeter.units + repairElitePrefixDfsRetryWorkBudget, prep._strictWorkCap ?? Infinity);
+            prep._workCap = Math.min(prep._workMeter.units + repairElitePrefixDfsRetryWorkBudget, prep._strictWorkCap ?? Infinity);
             // Same per-config/per-gate loop shape as the ordinary repair fallback loop above.
             for (const repairConfig of repairConfigs) {
                 if (result.solution) break;
@@ -3577,7 +3579,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             const mcNeighborBudgetRetryStart = Date.now();
             // FRESH, ADDITIVE work allocation — same "extend, don't share the depleted pool"
             // philosophy as connectivityRetryWorkStart/connectivityRetryWorkBudget above.
-            const mcNeighborBudgetRetryWorkStart = workMeter.units;
+            const mcNeighborBudgetRetryWorkStart = prep._workMeter.units;
             const mcNeighborBudgetRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(mcNeighborBudgetRetryTotalBudget * DEFAULT_WORK_PER_MS));
             // PER-CONFIG NODE SUBDIVISION — the one place this tier deliberately does NOT copy its
             // four predecessors, because measurement showed their shared shape is defective.
@@ -3677,14 +3679,14 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // this tier shipped with (huge non-binding `timeBudgetMs`, so the last tier's own workCap
         // still had astronomical headroom) but a real starvation risk under production's actual
         // ~30s `timeBudgetMs`, where an earlier tier's last attempt can leave `prep._workCap` at or
-        // near `workMeter.units` — repair-search.ts/search.ts's own budget checks read
-        // `workMeter.units >= (prep._workCap ?? Infinity)` as a hard stop, so a stale, already-spent
+        // near `prep._workMeter.units` — repair-search.ts/search.ts's own budget checks read
+        // `prep._workMeter.units >= (prep._workCap ?? Infinity)` as a hard stop, so a stale, already-spent
         // cap would make this tier's very first `runAttempt` call terminate immediately regardless of
         // its own generous node/time budget.
         const originalWorkCap = prep._workCap;
         try {
             const repairLateProbeWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(repairLateProbeTotalBudget * DEFAULT_WORK_PER_MS));
-            prep._workCap = Math.min(workMeter.units + repairLateProbeWorkBudget, prep._strictWorkCap ?? Infinity);
+            prep._workCap = Math.min(prep._workMeter.units + repairLateProbeWorkBudget, prep._strictWorkCap ?? Infinity);
             for (let gi = 0; gi < activeGates.length; gi++) {
                 if (prep._metrics.nodesExpanded >= repairLateProbeNodeCeiling) break;
                 const ownBudgetRemaining = repairLateProbeNodeBudget - (prep._metrics.nodesExpanded - repairLateProbeEntryNodes);
@@ -3715,7 +3717,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // always false and this is bit-identical to the original `nodesExpanded >= nodeBudget`.
     const nodeBudgetReached = nodeBudget !== Infinity && (nodesExpanded >= nodeBudget || earlyTiersHitNodeCeiling || mainLoopEarlyTiersHitNodeCeiling);
     if (result.solution) {
-        return finish({ ok: true, status: 'success', solution: result.solution, solutions: [result.solution], attempts: result.attempts, totalMs, nodesExpanded, workSpent: workMeter.units - workStart, workBudget });
+        return finish({ ok: true, status: 'success', solution: result.solution, solutions: [result.solution], attempts: result.attempts, totalMs, nodesExpanded, workSpent: prep._workMeter.units - workStart, workBudget });
     }
     // The wall-clock deadline is the solver's ONE remaining non-deterministic exit, and it is not
     // needed for termination — a finite workBudget already guarantees that, since work rises
@@ -3726,7 +3728,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // Offline callers (CI, benches, corpus runs, any A/B) should leave timeBudgetMs generous and
     // bound the run with workBudget alone, in which case this can never be set.
     // See docs/solver-budget-determinism.md.
-    const workSpent = workMeter.units - workStart;
+    const workSpent = prep._workMeter.units - workStart;
     const deadlineTruncated = totalMs >= timeBudgetMs && workSpent < workBudget && !nodeBudgetReached;
     // A technique exception is not evidence that the level exhausted, timed out, or consumed its
     // node allowance. Attempts after it still run, but an unsuccessful aggregate remains visibly
