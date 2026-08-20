@@ -2066,6 +2066,38 @@ test('repairElitePrefixDfsRetryBudgetFractionOverride: 0 suppresses the pass eve
     assert.equal(result.attempts.some(a => a.repairElitePrefixDfsRetry === true), false);
 });
 
+test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit tier overrides still win', async () => {
+    const eliteSuppressed = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
+        disableExtraBudgetPasses: true,
+    });
+    assert.equal(eliteSuppressed.attempts.some(a => a.repairElitePrefixDfsRetry === true), false);
+
+    const mcSuppressed = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_MC_NEIGHBOR_BUDGET_RETRY: true },
+        disableExtraBudgetPasses: true,
+    });
+    assert.equal(mcSuppressed.attempts.some(a => a.mcNeighborBudgetRetry === true), false);
+
+    const eliteOverridden = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
+        disableExtraBudgetPasses: true,
+        repairElitePrefixDfsRetryBudgetFractionOverride: 1,
+    });
+    assert.ok(eliteOverridden.attempts.some(a => a.repairElitePrefixDfsRetry === true));
+
+    const lateProbeOverridden = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_REPAIR_LATE_PROBE: true },
+        disableExtraBudgetPasses: true,
+        repairLateProbeNodeBudgetOverride: 100,
+    });
+    assert.ok(lateProbeOverridden.attempts.some(a => a.repairLateProbe === true));
+});
+
 test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses, and enables STRATEGY_REPAIR_ELITE_PREFIX_DFS while it runs', async () => {
     // Simulates the real mechanism's shape without depending on repair-search.ts's actual
     // elitePrefixDfsRepair internals: succeeds only once prep._cfg reflects
