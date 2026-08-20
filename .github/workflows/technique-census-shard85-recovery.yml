@@ -1,0 +1,223 @@
+# One-off recovery for GHA run 32240161854 (technique-census.yml): shard 85/120's runner received an
+# external shutdown signal mid-run ("The runner has received a shutdown signal... The operation was
+# canceled") after 550/654 cells -- a genuine infra failure, not a script bug or timeout (it had used
+# only ~70 of its 345-minute budget). `continue-on-error`/`if: always()` on that job never got to run
+# before the runner was torn down, so no artifact/partial JSON survived; the other 119 shards + the
+# plan artifact are intact and unaffected.
+#
+# Rather than wait ~2.5h for a single re-run of shard 85 (654 cells, --workers=2, matching the
+# original per-shard shape), this re-shards JUST those 654 cells into 20 independent, fully-parallel
+# sub-jobs (~33 cells each) -- the plan.cells slice for shard 85 of 120 is a pure, context-free
+# function of the ALREADY-uploaded plan artifact, so no new plan generation is needed. combine-
+# technique-census-shards.mjs only cares that every `technique-census-shard-*` artifact directory
+# contains a `shard-\d+\.json` file -- it doesn't care about the shard-N/M numbering inside, so the
+# sub-shard artifacts (named technique-census-shard-85-sub-N) drop straight into the SAME combine
+# pass as the original 119, downloaded here from the ORIGINAL run via download-artifact's cross-run
+# `run-id` support.
+#
+# CORRECTNESS: the reshard/subshards jobs pin `ref` to the EXACT commit the other 119 shards tested
+# (c96f57c853a13e96a565105995719e23cc95bd87) -- solver code must match exactly for the census's
+# isolated-technique comparisons to be internally consistent. The finalize job checks out the CURRENT
+# branch tip instead (no `ref:` override) so hint-capture writes land on top of the latest corpus, not
+# a stale snapshot -- `--solver-version` still records the pinned SHA as metadata (which commit's
+# solver actually produced these results), independent of what's checked out to run combine itself.
+#
+# Delete this file once run 32240161854's results are safely combined and committed -- it exists only
+# to close this one specific incident, not as a reusable recovery tool.
+name: Technique census shard-85 recovery (run 32240161854)
+
+on:
+  workflow_dispatch: {}
+
+concurrency:
+  group: technique-census
+  cancel-in-progress: false
+
+jobs:
+  reshard:
+    name: Slice shard 85/120's exact cell range into a standalone sub-plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout the commit the original census tested
+        uses: actions/checkout@v4
+        with:
+          ref: c96f57c853a13e96a565105995719e23cc95bd87
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Download the original plan (from run 32240161854)
+        uses: actions/download-artifact@v4
+        with:
+          name: technique-census-plan
+          path: plan
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Slice out shard 85 of 120's exact cell range (same floor-based split technique-census.mjs uses)
+        run: |
+          node -e "
+            const fs = require('fs');
+            const plan = JSON.parse(fs.readFileSync('plan/technique-census-plan.json', 'utf8'));
+            const total = plan.cells.length;
+            const shard = 85, shards = 120;
+            const start = Math.floor((shard - 1) * total / shards);
+            const end = Math.floor(shard * total / shards);
+            const myCells = plan.cells.slice(start, end);
+            console.log('shard 85/120 cell count:', myCells.length, 'index range', start, end);
+            fs.mkdirSync('subplan', { recursive: true });
+            fs.writeFileSync('subplan/shard85-subplan.json', JSON.stringify({ cells: myCells }));
+          "
+
+      - name: Upload the sub-plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: shard85-subplan
+          path: subplan/shard85-subplan.json
+          retention-days: 1
+          if-no-files-found: error
+
+  subshards:
+    name: Shard 85 sub-slice ${{ matrix.sub }}/20
+    needs: reshard
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        sub: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    steps:
+      - name: Checkout the commit the original census tested
+        uses: actions/checkout@v4
+        with:
+          ref: c96f57c853a13e96a565105995719e23cc95bd87
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download the sub-plan
+        uses: actions/download-artifact@v4
+        with:
+          name: shard85-subplan
+          path: subplan
+
+      - name: Run this sub-slice
+        id: run
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          nn=$(printf '%02d' "${{ matrix.sub }}")
+          mkdir -p logs/technique-census-shards
+          timeout -k 30s --preserve-status 55m node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+            --plan=subplan/shard85-subplan.json \
+            --shard="${{ matrix.sub }}" --shards=20 --workers=2 \
+            --out="logs/technique-census-shards/shard-${nn}.json" \
+            --summary-out="logs/technique-census-shards/shard-${nn}-summary.md" \
+            2>&1 | tee "logs/technique-census-shards/shard-${nn}.console.log"
+          status=${PIPESTATUS[0]}
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload this sub-slice's results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: technique-census-shard-85-sub-${{ matrix.sub }}
+          path: logs/technique-census-shards/
+          retention-days: 7
+          if-no-files-found: warn
+
+  finalize:
+    name: Combine the original 119 shards with the recovered shard 85
+    needs: subshards
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Checkout current branch tip
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download the original plan (from run 32240161854)
+        uses: actions/download-artifact@v4
+        with:
+          name: technique-census-plan
+          path: plan
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download the original 119 shard artifacts (from run 32240161854)
+        uses: actions/download-artifact@v4
+        with:
+          pattern: technique-census-shard-*
+          path: artifact-staging
+          merge-multiple: false
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download this run's shard-85 sub-slices
+        uses: actions/download-artifact@v4
+        with:
+          pattern: technique-census-shard-85-sub-*
+          path: artifact-staging
+          merge-multiple: false
+
+      - name: Combine, derive summaries, and persist novel solutions
+        run: |
+          node scripts/run-bundled.mjs scripts/combine-technique-census-shards.mjs -- \
+            --staging-dir=artifact-staging \
+            --out-dir="reports/stress/technique-census/32240161854" \
+            --plan=plan/technique-census-plan.json \
+            --solver-version="c96f57c853a13e96a565105995719e23cc95bd87" \
+            --save-hints
+
+      - name: Upload the combined result
+        uses: actions/upload-artifact@v4
+        with:
+          name: technique-census-combined
+          path: reports/stress/technique-census/32240161854/
+          retention-days: 90
+
+      - name: Persist the run summary and any newly discovered hints
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add "reports/stress/technique-census/32240161854/"
+          git add data/hints/ data/stress/hints/ data/stress/hints-random/
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Technique capability census (32240161854) -- shard 85 recovered via a 20-way resharded rerun after an infra-cancelled runner"
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:${{ github.ref_name }}; then exit 0; fi
+            sleep $((attempt * 5))
+          done
+          exit 1
