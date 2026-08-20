@@ -34,6 +34,15 @@ they matter. A report may remain valuable evidence after its implementation or r
 been superseded. Prefer its explicit status/decision block when present, then reconcile with the
 current topic reference or queue before acting on it.
 
+### Current reconciliation notes
+
+- [`2026-08-20-technique-census-reconciliation.md`](2026-08-20-technique-census-reconciliation.md)
+  records that the population technique census was successfully dispatched as run `32240161854` and
+  is now decision-bearing evidence. The older
+  [`2026-08-19-technique-census-design.md`](2026-08-19-technique-census-design.md) remains the detailed
+  design/calibration record; its opening “not yet dispatched” status is historical pre-run state, not
+  current tool status.
+
 The full developer reference's
 [`Solver Architecture / Common gotchas`](../DEVELOPER_REFERENCE.md#common-gotchas) section also
 cites several reports for specific durable lessons rather than current priority.

@@ -18,6 +18,11 @@ Use the status values exactly as written above. Do not replace `Status` with fre
 "built, locally validated"; put that detail in `Decision` or the body so status remains cheaply
 searchable and comparable across reports.
 
+For top-level dated reports created on or after **2026-08-20**, `npm run check:documentation-links`
+enforces this block. A generated top-level dated report may opt out only by placing
+`<!-- report-metadata: generated -->` immediately after its title; generated reports in collection
+subdirectories remain governed by their generator/run metadata and collection conventions.
+
 Rules:
 
 - **Active** means work is actually underway or queued with an owner/prerequisite. A merely possible
@@ -78,7 +83,8 @@ Before calling an investigation complete:
 7. If the implementation changed after the decisive A/B, explicitly decide whether that A/B is
    still promotion-relevant; if not, record the new gate rather than pretending the old run tested
    the new wiring.
-8. Run `npm run check:documentation-links`; it validates both file targets and heading anchors.
+8. Run `npm run check:documentation-links`; it validates file targets, heading anchors, top-level doc
+   indexing, workflow-index coverage, agent-router integrity, and prospective report metadata.
 
 This convention is prospective. Older reports need not be mechanically reformatted unless they are
 being revised, but stale status discovered in them must still be reconciled with the live queue and,

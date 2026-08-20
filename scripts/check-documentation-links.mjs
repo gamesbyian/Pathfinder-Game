@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, extname, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -107,10 +107,60 @@ for (const prefix of ['docs/', 'docs/archive/']) {
   }
 }
 
+// Keep the compact AI entry points converged on the same canonical routers instead of allowing
+// vendor-specific instructions to drift into separate, contradictory knowledge bases.
+const routerRequirements = [
+  ['AGENTS.md', ['docs/tooling-catalog.md', 'docs/solver-optimization-current-queue.md', 'docs/testing.md', 'reports/README.md']],
+  ['CLAUDE.md', ['AGENTS.md', 'DEVELOPER_REFERENCE.md']],
+  ['.github/copilot-instructions.md', ['AGENTS.md']],
+  ['docs/tooling-catalog.md', ['package.json', 'scripts/README.md', '.github/workflows/README.md']],
+];
+for (const [file, requiredStrings] of routerRequirements) {
+  const target = resolve(ROOT, file);
+  if (!existsSync(target)) {
+    failures.push(`${file}: required repository navigation surface is missing`);
+    continue;
+  }
+  const source = readFileSync(target, 'utf8');
+  for (const required of requiredStrings) {
+    if (!source.includes(required)) failures.push(`${file}: navigation surface does not reference ${required}`);
+  }
+}
+
+// The workflow directory is effectively a second research CLI. Every YAML workflow must be named
+// in the directory index so a cold agent does not have to discover capabilities by opening files one
+// at a time. Descriptions may group workflows, but filenames are the mechanically checked contract.
+const workflowDir = resolve(ROOT, '.github/workflows');
+const workflowIndex = readFileSync(resolve(workflowDir, 'README.md'), 'utf8');
+for (const name of readdirSync(workflowDir).filter((name) => /\.ya?ml$/i.test(name)).sort()) {
+  if (!workflowIndex.includes(name)) failures.push(`.github/workflows/${name}: not named in .github/workflows/README.md`);
+}
+
+// Prospective report metadata. Legacy reports remain valid evidence and are not churned simply to
+// satisfy a new schema. From the convention's adoption date onward, top-level dated human reports
+// must expose a small exact status block that semantic search can classify reliably.
+const reportStatusValues = 'active|concluded-positive|concluded-negative|inconclusive|superseded|cancelled';
+const reportMetadataPattern = new RegExp(
+  `^# .+\\r?\\n\\r?\\n> \\*\\*Status:\\*\\* (${reportStatusValues})\\r?\\n` +
+  '> \\*\\*Last evidence:\\*\\* \\d{4}-\\d{2}-\\d{2} — .+\\r?\\n' +
+  '> \\*\\*Decision:\\*\\* .+\\r?\\n' +
+  '> \\*\\*Remaining gate:\\*\\* .+',
+  'm',
+);
+for (const name of readdirSync(resolve(ROOT, 'reports')).filter((name) => /^\d{4}-\d{2}-\d{2}-.+\.md$/.test(name))) {
+  const reportDate = name.slice(0, 10);
+  if (reportDate < '2026-08-20') continue;
+  const source = readFileSync(resolve(ROOT, 'reports', name), 'utf8');
+  if (source.includes('<!-- report-metadata: generated -->')) continue;
+  if (!reportMetadataPattern.test(source)) {
+    failures.push(`reports/${name}: missing or malformed Status / Last evidence / Decision / Remaining gate block`);
+  }
+}
+
 if (failures.length > 0) {
-  console.error(`Documentation link check failed (${failures.length} issue${failures.length === 1 ? '' : 's'}):`);
+  console.error(`Documentation/navigation check failed (${failures.length} issue${failures.length === 1 ? '' : 's'}):`);
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
 
-console.log(`Documentation link check passed (${markdownFiles.length} Markdown files).`);
+console.log(`Documentation/navigation check passed (${markdownFiles.length} Markdown files).`);
