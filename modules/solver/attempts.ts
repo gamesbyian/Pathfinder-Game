@@ -325,9 +325,28 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         },
     },
     {
-        why: 'portal-heavy: portal-transfer profiles first, then templates',
+        // Beam added here too (technique census, run 32240161854 — docs/solver-optimization-current-
+        // queue.md Priority 7): this turned out to be the DOMINANT contributor to the beam-routing
+        // gap (43 of 69 zero-beam oracle-union levels, vs. 26 across the two sibling default rules
+        // fixed above) — profilesFirst() built this archetype's list purely from DFS profiles and
+        // templates too, with no beam offered at all. Placed as the LAST two configs deliberately
+        // (not first): mainConfigs' last MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (orchestration.ts, 4)
+        // entries get a protected node-budget reserve regardless of what earlier configs consume, so
+        // this placement recovers previously-unsolved levels (where earlier DFS attempts can burn
+        // their full allocated time without concluding) while costing nothing on already-solving
+        // levels — the main loop exits on first success, so an already-fast template/profile win
+        // never even reaches these trailing beam configs. A first attempt at leading with beam
+        // instead recovered the same levels but cost every already-solving level in this archetype
+        // 1-6+ seconds of needless beam search first (measured on the published corpus: +94% total
+        // wall time, 66/160 levels meaningfully slower) — reverted in favor of this placement.
+        why: 'portal-heavy: portal-transfer profiles, remaining profiles/templates, beams last (protected reserve slice)',
         when: f => f.arch === 'portal-heavy',
-        build: () => profilesFirst(['portalFirstTransfer', 'portalCommitted']),
+        build: () => [
+            dfs('portalFirstTransfer'), dfs('portalCommitted'),
+            ...PROFILE_ORDER.filter(p => p !== 'portalFirstTransfer' && p !== 'portalCommitted').map(p => dfs(p)),
+            ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
+            beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
+        ],
     },
     {
         why: 'must-cross + flipper-heavy with many objectives: diverse beam, then DFS fallbacks (see BEAM comment above — wider tiers removed, proven not to help this archetype)',
@@ -372,20 +391,40 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         ],
     },
     {
-        why: 'default, no must-pass: CCW template before CW (open grids where CW times out), then profiles',
+        // Beam added here (technique census, run 32240161854 — docs/solver-optimization-current-
+        // queue.md Priority 7): this rule previously built its list purely from DFS templates and
+        // profiles, so it never offered beam search at all — a real capability gap on exactly the
+        // open, low-constraint levels this rule matches, where beam disproportionately wins cheaply.
+        // Placed as the LAST two configs deliberately (not first, not right after the templates):
+        // mainConfigs' last MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (orchestration.ts, 4) entries get a
+        // protected node-budget reserve regardless of what earlier configs consume, so this placement
+        // recovers previously-unsolved levels (where the 4 template DFS attempts can each burn their
+        // full ~20-30s allocated slice without concluding, otherwise starving anything placed right
+        // after them) while costing nothing on already-solving levels — the main loop exits on first
+        // success, so an already-fast template/profile win never even reaches these trailing beam
+        // configs. Two earlier placements were tried and reverted: right after the 4 templates (beam
+        // never got a real node share, 0/25 sampled recoveries) and leading the whole list (recovered
+        // levels, but cost every already-solving level in this archetype 1-6+ seconds of needless
+        // beam search first — measured on the published corpus: +94% total wall time, 66/160 levels
+        // meaningfully slower).
+        why: 'default, no must-pass: CCW template before CW (open grids where CW times out), then profiles, beams last (protected reserve slice)',
         when: f => f.mustPass === 0,
         build: () => [
             dfs('perimeterSweep', cornerHarvest), dfs('perimeterSweep', perimeterCCW),
             dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', sideCommitment),
             ...PROFILE_ORDER.map(p => dfs(p)),
+            beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
         ],
     },
     {
-        why: 'default: standard template sweep, then all profiles',
+        // Same beam-routing-gap fix and same late-placement reasoning as the sibling rule above (see
+        // its comment) — this catch-all previously never offered beam search either.
+        why: 'default: standard template sweep, then all profiles, beams last (protected reserve slice)',
         when: () => true,
         build: () => [
             ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
             ...PROFILE_ORDER.map(p => dfs(p)),
+            beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
         ],
     },
 ];

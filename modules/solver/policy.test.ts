@@ -64,4 +64,11 @@ test('Solver uses the extracted policy data for default attempt configs', () => 
   const attempts = SOLVER_TESTING_API.getAttemptConfigs(level);
   assert.deepEqual(attempts.slice(0, 4).map(c => c.template?.id), ATTEMPT_CONFIGS.slice(0, 4).map(c => c.template?.id));
   assert.ok(attempts.some(c => c.profileName === 'default' && c.template === null));
+  // Beam-routing-gap fix (technique census, run 32240161854): the catch-all rule now offers beam
+  // search too, trailing last (within the main loop's protected late-reserve window).
+  const nonAdmissibleOrder = attempts.filter(c => !c.admissibleOrder);
+  assert.deepEqual(nonAdmissibleOrder.slice(-2).map(c => [c.profileName, c.beamWidth]), [
+    ['objectiveFirst', 5000],
+    ['intersectionHarvest', 5000],
+  ]);
 });

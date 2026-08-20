@@ -64,24 +64,36 @@ test('repairTurnBiased attempt is default-off; under STRATEGY_REPAIR_TURN_BIAS B
   assert.equal(highRepairs[2].repairMustTurnBiased, true, 'high reqInt: mustTurnBiased is the fallback, still tried, placed last');
 });
 
-test('default attempt order keeps template sweep before profile fallbacks', () => {
+test('default attempt order keeps template sweep before profile fallbacks, with beams trailing last', () => {
   const attempts = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] }));
   assert.deepEqual(attempts.slice(0, 4).map(c => c.template?.id), ATTEMPT_CONFIGS.slice(0, 4).map(c => c.template?.id));
   // Excludes the admissible-order-search last-resort tier appended at the very end (see
   // ADMISSIBLE_ORDER_PROFILES) -- this assertion is specifically about the main DFS/beam profile
   // ordering, not that unconditionally-appended, always-last tier.
   const nonAdmissibleOrder = attempts.filter(c => !c.admissibleOrder);
-  assert.deepEqual(nonAdmissibleOrder.slice(4).map(c => c.profileName), PROFILE_ORDER);
+  assert.deepEqual(nonAdmissibleOrder.slice(4, 16).map(c => c.profileName), PROFILE_ORDER);
+  // Beam-routing-gap fix (technique census, run 32240161854): the catch-all rule now offers beam
+  // search too, placed LAST (within the main loop's protected late-reserve config-count window --
+  // see the rule's own comment for why leading with beam was tried and reverted).
+  assert.deepEqual(nonAdmissibleOrder.slice(16).map(c => [c.profileName, c.beamWidth]), [
+    ['objectiveFirst', 5000],
+    ['intersectionHarvest', 5000],
+  ]);
   assert.deepEqual(attempts.filter(c => c.admissibleOrder).map(c => c.profileName), ADMISSIBLE_ORDER_PROFILES);
 });
 
-test('default no-must-pass levels prefer perimeterCCW before perimeterCW', () => {
+test('default no-must-pass levels prefer perimeterCCW before perimeterCW, with beams trailing last', () => {
   const attempts = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [] }));
   assert.deepEqual(attempts.slice(0, 4).map(c => c.template?.id), [
     'cornerHarvest',
     'perimeterCCW',
     'perimeterCW',
     'sideCommitment',
+  ]);
+  const nonAdmissibleOrder = attempts.filter(c => !c.admissibleOrder);
+  assert.deepEqual(nonAdmissibleOrder.slice(-2).map(c => [c.profileName, c.beamWidth]), [
+    ['objectiveFirst', 5000],
+    ['intersectionHarvest', 5000],
   ]);
 });
 
@@ -95,6 +107,24 @@ test('near-closure attempts prioritize closure rescue profiles before templates'
   ]);
   assert.equal(attempts.slice(0, 4).every(c => c.template === null), true);
   assert.equal(attempts.some(c => c.template?.id === 'cornerHarvest'), true);
+});
+
+test('portal-heavy levels lead with portal profiles, with beam configs trailing last', () => {
+  // portalMap.size >= 4 (2+ pairs) triggers the portal-heavy archetype (archetype.ts); reqInt kept
+  // low enough to avoid the high-intersection-burden rule matching first.
+  const attempts = getAttemptConfigs(makeLevel({
+    reqLen: 40, reqInt: 2,
+    portalMap: new Map([[PACK(1, 1), PACK(2, 2)], [PACK(2, 2), PACK(1, 1)], [PACK(3, 3), PACK(4, 4)], [PACK(4, 4), PACK(3, 3)]]),
+  }));
+  assert.deepEqual(attempts.slice(0, 2).map(c => c.profileName), ['portalFirstTransfer', 'portalCommitted']);
+  // Beam-routing-gap fix (technique census, run 32240161854): beam search trails last (within the
+  // main loop's protected late-reserve config-count window -- see the rule's own comment for why
+  // leading with beam was tried and reverted).
+  const nonAdmissibleOrder = attempts.filter(c => !c.admissibleOrder);
+  assert.deepEqual(nonAdmissibleOrder.slice(-2).map(c => [c.profileName, c.beamWidth]), [
+    ['objectiveFirst', 5000],
+    ['intersectionHarvest', 5000],
+  ]);
 });
 
 test('high-intersection dense levels lead with beam configs', () => {
@@ -117,6 +147,13 @@ test('STRATEGY_ARCHETYPE_ROUTING disabled forces the catch-all rule regardless o
   const forcedDefault = getAttemptConfigs(level, { STRATEGY_ARCHETYPE_ROUTING: false });
   assert.deepEqual(forcedDefault.slice(0, 4).map(c => c.template?.id), [
     'cornerHarvest', 'perimeterCW', 'perimeterCCW', 'sideCommitment',
+  ]);
+  // This level is also repair-eligible (isHighInt && reqInt>=7), so a repair attempt gets appended
+  // after the rule's own list too -- filter both trailing tiers to isolate the rule's own ordering.
+  const forcedNonAdmissibleOrder = forcedDefault.filter(c => !c.admissibleOrder && !c.repair);
+  assert.deepEqual(forcedNonAdmissibleOrder.slice(-2).map(c => [c.profileName, c.beamWidth]), [
+    ['objectiveFirst', 5000],
+    ['intersectionHarvest', 5000],
   ]);
   assert.notDeepEqual(forcedDefault.map(c => c.profileName), routed.map(c => c.profileName));
 
