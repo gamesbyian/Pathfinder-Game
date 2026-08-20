@@ -2132,6 +2132,26 @@ test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit t
     assert.ok(lateProbeOverridden.attempts.some(a => a.repairLateProbe === true));
 });
 
+test('repair-late-probe does not fire when repairConfigs is empty only because STRATEGY_REPAIR_FALLBACK was ablated off (regression, fixed 2026-08-20)', async () => {
+    // makeRepairGatedInfeasibleLevel() genuinely needs repair fallback (needsRepairFallback(f) is
+    // true for it), unlike makeAttractionDiversityGatedInfeasibleLevel() above, which the late
+    // probe's own eligibility gate targets. `repairConfigs.length === 0` here comes ONLY from the
+    // explicit STRATEGY_REPAIR_FALLBACK: false ablation (applyAttemptConfigOptions strips every
+    // repair config when that flag is off) -- an experiment deliberately routing away from repair,
+    // not a level repair was never eligible for. Before the fix, the late probe's eligibility check
+    // couldn't tell the two apart and would silently reintroduce repair anyway.
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_REPAIR_LATE_PROBE: true, STRATEGY_REPAIR_FALLBACK: false },
+        disableExtraBudgetPasses: true,
+        repairLateProbeNodeBudgetOverride: 100,
+    });
+    assert.equal(result.attempts.some(a => a.repairLateProbe === true), false,
+        'STRATEGY_REPAIR_FALLBACK: false must not be silently undone by the late-probe tier');
+    assert.equal(result.attempts.some(a => a.repair === true), false,
+        'no repair attempt of any kind should run when the fallback is explicitly disabled');
+});
+
 test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses, and enables STRATEGY_REPAIR_ELITE_PREFIX_DFS while it runs', async () => {
     // Simulates the real mechanism's shape without depending on repair-search.ts's actual
     // elitePrefixDfsRepair internals: succeeds only once prep._cfg reflects

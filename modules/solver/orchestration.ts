@@ -2578,18 +2578,27 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : repairElitePrefixDfsRetryNodeCeiling + mcNeighborBudgetRetryNodeReserve;
 
     // STRATEGY_REPAIR_LATE_PROBE — see REPAIR_LATE_PROBE_NODE_BUDGET's own comment for the full
-    // rationale. `repairConfigs.length === 0` is exactly "needsRepairFallback was false for this
-    // level" (the same eligibility signal the early probe and ordinary fallback loop already gate
-    // on) — this tier exists specifically FOR that population, so it is the opposite polarity of
-    // every other repairConfigs.length check in this function. Opt-in/default-OFF, unvalidated new
-    // mechanism — same convention as its five predecessors.
+    // rationale. `repairConfigs.length === 0` is USUALLY exactly "needsRepairFallback was false for
+    // this level" (the same eligibility signal the early probe and ordinary fallback loop already
+    // gate on) — this tier exists specifically FOR that population, so it is the opposite polarity
+    // of every other repairConfigs.length check in this function. Opt-in/default-OFF, unvalidated
+    // new mechanism — same convention as its five predecessors.
+    //
+    // NOT a safe substitute for needsRepairFallback in general, though: `applyAttemptConfigOptions`
+    // (attempts.ts) also empties `repairConfigs` when an ablation explicitly sets
+    // `STRATEGY_REPAIR_FALLBACK: false` — a level a caller deliberately routed AWAY from repair, not
+    // one repair was never eligible for. Fixed 2026-08-20: without the extra guard below, an
+    // experiment combining `STRATEGY_REPAIR_LATE_PROBE: true` with `STRATEGY_REPAIR_FALLBACK: false`
+    // (a natural pairing — "does the new tier's gain hold with the old fallback disabled") would
+    // silently reintroduce repair through this tier, defeating the ablation's own purpose.
     const repairLateProbeNodeBudgetRaw = Number(opts.repairLateProbeNodeBudgetOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const repairLateProbeNodeBudget = Number.isFinite(repairLateProbeNodeBudgetRaw) && repairLateProbeNodeBudgetRaw >= 0
         ? repairLateProbeNodeBudgetRaw
         : REPAIR_LATE_PROBE_NODE_BUDGET;
     const repairLateProbeTierWillRun = repairLateProbeNodeBudget > 0
         && !!(cfg && cfg.STRATEGY_REPAIR_LATE_PROBE === true)
-        && repairConfigs.length === 0;
+        && repairConfigs.length === 0
+        && !(cfg && 'STRATEGY_REPAIR_FALLBACK' in cfg && cfg.STRATEGY_REPAIR_FALLBACK === false);
     // Flat additive reserve, NOT scaled by nodeBudget/the preceding tier's ceiling — see
     // REPAIR_LATE_PROBE_NODE_BUDGET's own comment for why this tier's shape deliberately differs
     // from the five whole-ladder-rerun tiers above. Still stacked on the preceding tier's own
