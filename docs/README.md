@@ -51,10 +51,10 @@ Start here only when [`../AGENTS.md`](../AGENTS.md) does not already route the t
 | [`variant-level-research.md`](variant-level-research.md) | Canonical family/variant resource, including the off-main ~2.5 GB trove. |
 | [`future-work.md`](future-work.md) | Compact broader deferred/reopen idea index, not a ranked queue. |
 | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) | Compact current disposition of every production-default-OFF mechanism. |
-| [`solver-budget-determinism.md`](solver-budget-determinism.md) | Work-budget/determinism model. |
+| [`solver-budget-determinism.md`](solver-budget-determinism.md) | Canonical work-unit, budget, deadline, and reproducibility contract. |
 | [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md) | Correctness-hardening taxonomy and remaining work. |
 | [`solver-mutable-storage-inventory.md`](solver-mutable-storage-inventory.md) | Reusable scratch-storage contracts. |
-| [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md) | Game-rule/solver opportunity ledger. |
+| [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md) | Durable solver/game semantic-boundary and rule-alignment contract. |
 | [`solution-profile.md`](solution-profile.md) | Known-solution behavioral fingerprints. |
 
 ## Current research instruments
