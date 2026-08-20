@@ -96,10 +96,11 @@ for (const prefix of ['docs/', 'docs/archive/']) {
 }
 
 const routerRequirements = [
-  ['AGENTS.md', ['docs/tooling-catalog.md', 'docs/solver-optimization-current-queue.md', 'docs/variant-level-research.md', 'docs/testing.md', 'reports/README.md']],
+  ['AGENTS.md', ['docs/tooling-catalog.md', 'docs/solver-optimization-current-queue.md', 'docs/variant-level-research.md', 'docs/solver-research-operating-model.md', 'docs/solver-opt-in-experiment-ledger.md', 'docs/testing.md', 'reports/README.md']],
   ['CLAUDE.md', ['AGENTS.md', 'DEVELOPER_REFERENCE.md']],
   ['.github/copilot-instructions.md', ['AGENTS.md']],
   ['docs/tooling-catalog.md', ['package.json', 'scripts/README.md', '.github/workflows/README.md', 'variant-level-research.md']],
+  ['docs/solver-research-operating-model.md', ['solver-optimization-current-queue.md', 'solver-level-blindness.md', 'variant-level-research.md']],
 ];
 for (const [file, requiredStrings] of routerRequirements) {
   const target = resolve(ROOT, file);
@@ -123,6 +124,22 @@ for (const required of [
   'family-wide-trove.yml',
 ]) {
   if (!variantReference.includes(required)) failures.push(`docs/variant-level-research.md: missing variant-trove locator ${required}`);
+}
+
+// OPT_IN_FEATURES is a polarity registry, not a backlog, but the disposition ledger must cover
+// every retained default-off switch so an agent never has to infer status from code comments.
+const ablationSource = readFileSync(resolve(ROOT, 'scripts/ablation-config.mjs'), 'utf8');
+const optInStart = ablationSource.indexOf('export const OPT_IN_FEATURES = new Set([');
+const optInEnd = optInStart < 0 ? -1 : ablationSource.indexOf(']);', optInStart);
+if (optInStart < 0 || optInEnd < 0) {
+  failures.push('scripts/ablation-config.mjs: could not locate OPT_IN_FEATURES for ledger coverage check');
+} else {
+  const optInBlock = ablationSource.slice(optInStart, optInEnd);
+  const optInFlags = [...optInBlock.matchAll(/'([A-Z0-9_]+)'/g)].map((match) => match[1]);
+  const ledger = readFileSync(resolve(ROOT, 'docs/solver-opt-in-experiment-ledger.md'), 'utf8');
+  for (const flag of optInFlags) {
+    if (!ledger.includes(`\`${flag}\``)) failures.push(`docs/solver-opt-in-experiment-ledger.md: missing current OPT_IN_FEATURES member ${flag}`);
+  }
 }
 
 const workflowDir = resolve(ROOT, '.github/workflows');

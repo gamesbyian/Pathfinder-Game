@@ -1,15 +1,21 @@
 # Frozen documentation snapshots
 
-These files preserve the exact pre-consolidation text of historical, concluded, superseded, or
-original-proposal documents. Their original top-level paths now contain short compatibility pointers
-to current references.
+These files preserve the exact pre-consolidation text of historical, concluded, superseded, or notebook-style documents. Their original top-level paths now contain short compatibility pointers or compact current contracts.
 
-Snapshots are evidence, not current instructions. Relative links inside them are preserved exactly
-as written at the original path and may therefore no longer resolve from this archive directory.
-Use the compatibility pointer or current topic reference for navigation.
+Snapshots are evidence, not current instructions. Relative links inside them are preserved exactly as written at the original path and may therefore no longer resolve from this archive directory. Use the compatibility pointer or current topic reference for navigation.
 
 | Snapshot | Why preserved |
 |---|---|
+| [`future-work-2026-08-20.md`](future-work-2026-08-20.md) | Full future-work evidence/chronology ledger before separation into queue, ledger, method, and deferred ideas. |
+| [`solver-research-operating-model-2026-08-20.md`](solver-research-operating-model-2026-08-20.md) | Living research notebook before conversion to a stable method contract. |
+| [`solver-opt-in-experiment-ledger-2026-08-20.md`](solver-opt-in-experiment-ledger-2026-08-20.md) | Full default-off/promotion experiment chronology before compaction into a true flag ledger. |
+| [`solver-shadow-eval-harness-2026-08-20.md`](solver-shadow-eval-harness-2026-08-20.md) | Harness implementation plus dated prototype-result notebook before tool-contract compaction. |
+| [`winning-lineage-survival-analysis-2026-08-20.md`](winning-lineage-survival-analysis-2026-08-20.md) | Lineage instrumentation plus dated cohort/oracle results before tool-contract compaction. |
+| [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md) | Dated capability-gap inventory superseded by newer queue/census evidence. |
+| [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md) | Full producer/receptor cooperation design before consolidation into the operating model. |
+| [`research-infrastructure-and-optimization-opportunities.md`](research-infrastructure-and-optimization-opportunities.md) | Strategic research-infrastructure review with dated measurements and implementation notes. |
+| [`main-loop-late-reserve-experiment.md`](main-loop-late-reserve-experiment.md) | Full concluded/confounded reserve experiment protocol and interpretation. |
+| [`ai-assisted-manual-solving.md`](ai-assisted-manual-solving.md) | Full worked AI/manual accepted-path methodology note. |
 | [`sibling-cousin-system.md`](sibling-cousin-system.md) | Full family-system implementation/design/history before consolidation. |
 | [`variant-corpus-solver-research-plan.md`](variant-corpus-solver-research-plan.md) | Full variant-corpus plan and dated experimental addenda. |
 | [`family-and-scaling-research-possibilities.md`](family-and-scaling-research-possibilities.md) | Original family/scaling proposal. |

@@ -13,6 +13,8 @@ This is the shortest reliable entry point for an AI coding or research agent wor
 | Variant/family research or use the large variant trove | [`docs/variant-level-research.md`](docs/variant-level-research.md) |
 | Find an existing probe, batch tool, or workflow | [`docs/tooling-catalog.md`](docs/tooling-catalog.md) |
 | Understand a prior experiment | [`reports/README.md`](reports/README.md), then the specific report and its current topic reference |
+| Broader deferred/reopen solver ideas | [`docs/future-work.md`](docs/future-work.md) |
+| Default-off experiment disposition | [`docs/solver-opt-in-experiment-ledger.md`](docs/solver-opt-in-experiment-ledger.md) |
 | Stress-corpus work | [`data/stress/README.md`](data/stress/README.md) and the relevant provenance reference in [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md#provenance) |
 | Test or validation choice | [`docs/testing.md`](docs/testing.md) |
 
@@ -21,7 +23,7 @@ This is the shortest reliable entry point for an AI coding or research agent wor
 1. **Read before editing.** Inspect the current topic reference and the implementation you are about to touch. Prefer the existing pattern over a new abstraction.
 2. **Keep diffs narrow.** Do not reformat unrelated code or build speculative infrastructure. Check the tooling catalog, `package.json`, `scripts/`, and `.github/workflows/` before creating another tool.
 3. **Treat current references and historical evidence differently.** Current behavior belongs in topic docs. Dated reports and archive snapshots preserve evidence. A historical statement can be true for its tested commit and false for current `main`.
-4. **Use the current solver queue for priority.** [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md) is the live ranked entry point. [`docs/future-work.md`](docs/future-work.md) is detailed evidence/disposition, not a competing ranking.
+4. **Use the current solver queue for priority.** [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md) is the live ranked entry point. [`docs/future-work.md`](docs/future-work.md) is a broader deferred/reopen index, not a competing ranking or run notebook.
 5. **Know where the variant trove lives.** The ~2.5 GB generated family dataset is intentionally retained on `claude/variant-levels-solver-insights-tpk4qg`, not `main`. Main contains the reusable family tooling. Read [`docs/variant-level-research.md`](docs/variant-level-research.md) before generating more variants or designing family analytics.
 6. **Solver policy is level-blind.** Production/cold behavior may key on mechanics and current state, never exact level identity, saved hints, known winning configs, historical solve status, or other exact-level knowledge. See [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md).
 7. **Preserve provenance distinctions.** A valid stored hint is not automatically cold capability evidence. Witness, human-solved, hint-guided, variant-derived, and cold production-solver finds have different research meanings.
@@ -44,13 +46,14 @@ Do not claim a check passed if it was not actually run.
 
 ## Research authority map
 
-1. Current implementation and topic contract under `docs/`.
+1. Current implementation and durable topic/tool contract under `docs/`.
 2. Current solver optimization priority: [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md).
-3. Broader coordination: [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md).
+3. Research method and evidence routing: [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md).
 4. Variant/family resource and methods: [`docs/variant-level-research.md`](docs/variant-level-research.md).
-5. Detailed evidence/dispositions: [`docs/future-work.md`](docs/future-work.md) plus the opt-in ledger where applicable.
-6. Individual experiment evidence: dated files under `reports/`.
-7. Historical campaign records and [`docs/archive/`](docs/archive/README.md): provenance, not current instruction.
+5. Default-off mechanism disposition: [`docs/solver-opt-in-experiment-ledger.md`](docs/solver-opt-in-experiment-ledger.md).
+6. Broader deferred/reopen ideas: [`docs/future-work.md`](docs/future-work.md).
+7. Individual experiment evidence: dated files under `reports/`.
+8. Historical campaign records and [`docs/archive/`](docs/archive/README.md): provenance, not current instruction.
 
 Human-authored investigations should follow the [`Status / Last evidence / Decision / Remaining gate`](docs/investigation-report-conventions.md) convention.
 
