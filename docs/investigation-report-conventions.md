@@ -14,11 +14,15 @@ Place this block immediately after the title:
 > **Remaining gate:** one concrete measurement/decision, or `none`
 ```
 
+Use the status values exactly as written above. Do not replace `Status` with free-form prose such as
+"built, locally validated"; put that detail in `Decision` or the body so status remains cheaply
+searchable and comparable across reports.
+
 Rules:
 
 - **Active** means work is actually underway or queued with an owner/prerequisite. A merely possible
-  future experiment is deferred work and belongs in [`future-work.md`](future-work.md), not under an
-  indefinite active label.
+  future experiment is deferred work and belongs in the relevant current queue/deferral document,
+  not under an indefinite active label.
 - **Inconclusive** must say what evidence would resolve it. If no further evidence is worth buying,
   use `cancelled` and state why.
 - **Superseded** must link to the replacement. Preserve the old evidence; do not silently rewrite a
@@ -43,7 +47,9 @@ Rules:
 | Information | Canonical home |
 |---|---|
 | Current product or solver behavior | Topic reference under `docs/` |
-| Current open queue and deferral triggers | [`future-work.md`](future-work.md) |
+| Ranked priority for optimizing existing solver techniques | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) |
+| Broader solver research coordination | [`solver-research-operating-model.md`](solver-research-operating-model.md) |
+| Detailed solver evidence, dispositions, and deferred possibilities | [`future-work.md`](future-work.md) |
 | Current disposition of retained/default-off solver experiments | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) |
 | One experiment's evidence and decision | Dated file under `reports/` |
 | Generated results | The relevant `reports/` collection, indexed by its synthesis/README |
@@ -51,13 +57,19 @@ Rules:
 | Completed plan or handoff | [`archive/`](archive/README.md) |
 | Durable architecture decision | [`adr/`](adr/) |
 
+A document may preserve historical evidence outside its current canonical home, but it must not call
+itself a competing live queue. When a narrower current queue supersedes a broader document's ordering,
+link to the narrower queue prominently and describe the broader document as evidence/deferral history.
+
 ## Closing checklist
 
 Before calling an investigation complete:
 
 1. Update the status block and remove “in progress” language that is no longer historical context.
 2. Link the final evidence and distinguish measured facts from inference.
-3. Update `future-work.md` to remove, close, or narrow the old queue item.
+3. Update the current queue/coordination document that actually owns the question: for optimization
+   of existing solver techniques this is `solver-optimization-current-queue.md`; keep
+   `future-work.md` reconciled when its detailed evidence/disposition record also changes.
 4. If the work concerns a retained/default-off solver mechanism, update
    `solver-opt-in-experiment-ledger.md` and ensure the corresponding `FEATURES` description does not
    advertise a stale gate.
