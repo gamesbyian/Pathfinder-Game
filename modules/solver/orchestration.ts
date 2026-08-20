@@ -379,7 +379,9 @@ interface SolveOpts {
     /** Convenience for offline batch tooling: sets repairBudgetFractionOverride,
      *  attractionDiversityBudgetFractionOverride, dedupNearTieRetryBudgetFractionOverride,
      *  admissibleOrderBudgetFractionOverride, admissibleOrderNonDefaultRetryBudgetFractionOverride,
-     *  AND connectivityAxisExhaustedRetryBudgetFractionOverride all to 0
+     *  connectivityAxisExhaustedRetryBudgetFractionOverride,
+     *  repairElitePrefixDfsRetryBudgetFractionOverride,
+     *  mcNeighborBudgetRetryBudgetFractionOverride, AND repairLateProbeNodeBudgetOverride all to 0
      *  (purely additive — an explicit value on any individual override still wins over this, so a
      *  caller can still isolate one extension's cost while suppressing the others via this flag).
      *  Exists because the individual overrides were deliberately kept separate (see
@@ -2379,10 +2381,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // three above. Opt-in/default-OFF (NEW, unvalidated mechanism — see REPAIR_ELITE_PREFIX_DFS_
     // RETRY_BUDGET_FRACTION's own comment), so the `cfg &&` ... `=== true` check below (where this
     // tier's run condition is computed) is the opt-in convention, not the standard `!cfg || cfg.FLAG`
-    // shape — matching every tier's own pre-promotion lifecycle stage. No `disableExtraBudgetPasses`
-    // fallback: an opt-in tier is already off by default, same as STRATEGY_REPAIR_PROBE_SHRINK_
-    // RECOVERY's own fraction resolution.
-    const repairElitePrefixDfsRetryFractionOverride = Number(opts.repairElitePrefixDfsRetryBudgetFractionOverride);
+    // shape — matching every tier's own pre-promotion lifecycle stage. The convenience switch must
+    // still suppress an explicitly selected experimental config: batch callers use it to mean no
+    // additive work at all. As with the promoted tiers, an explicit per-tier override wins.
+    const repairElitePrefixDfsRetryFractionOverride = Number(opts.repairElitePrefixDfsRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const repairElitePrefixDfsRetryBudgetFraction = Number.isFinite(repairElitePrefixDfsRetryFractionOverride) && repairElitePrefixDfsRetryFractionOverride >= 0
         ? repairElitePrefixDfsRetryFractionOverride
         : REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION;
@@ -2392,12 +2394,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION;
 
     // opts.mcNeighborBudgetRetryBudgetFractionOverride — same shape/hoisting reason as the four
-    // above. Opt-in/default-OFF (NEW, unvalidated mechanism — see MC_NEIGHBOR_BUDGET_RETRY_BUDGET_
-    // FRACTION's own comment), so the `cfg &&` ... `=== true` check below (where this tier's run
-    // condition is computed) is the opt-in convention, not the standard `!cfg || cfg.FLAG` shape.
-    // No `disableExtraBudgetPasses` fallback: an opt-in tier is already off by default, same as
-    // STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY's own fraction resolution just above.
-    const mcNeighborBudgetRetryFractionOverride = Number(opts.mcNeighborBudgetRetryBudgetFractionOverride);
+    // above. This tier is now default-ON, so omitting the convenience fallback here would make
+    // disableExtraBudgetPasses leak an entire additive ladder rerun on must-cross levels.
+    const mcNeighborBudgetRetryFractionOverride = Number(opts.mcNeighborBudgetRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const mcNeighborBudgetRetryBudgetFraction = Number.isFinite(mcNeighborBudgetRetryFractionOverride) && mcNeighborBudgetRetryFractionOverride >= 0
         ? mcNeighborBudgetRetryFractionOverride
         : MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION;
@@ -2584,7 +2583,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // on) — this tier exists specifically FOR that population, so it is the opposite polarity of
     // every other repairConfigs.length check in this function. Opt-in/default-OFF, unvalidated new
     // mechanism — same convention as its five predecessors.
-    const repairLateProbeNodeBudgetRaw = Number(opts.repairLateProbeNodeBudgetOverride);
+    const repairLateProbeNodeBudgetRaw = Number(opts.repairLateProbeNodeBudgetOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const repairLateProbeNodeBudget = Number.isFinite(repairLateProbeNodeBudgetRaw) && repairLateProbeNodeBudgetRaw >= 0
         ? repairLateProbeNodeBudgetRaw
         : REPAIR_LATE_PROBE_NODE_BUDGET;
