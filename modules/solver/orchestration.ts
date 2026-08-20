@@ -2878,6 +2878,12 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const probeAttempts: Attempt[] = primeMissAttempt ? [primeMissAttempt] : [];
     let shrunkBiasedTiers: ShrunkBiasedTier[] = [];
     if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
+        // No `prep._workCap` override here, deliberately: this probe runs BEFORE the main ladder
+        // (`runInterleavedAttempts`/`runGateSerialAttempts`, below) ever executes, so — unlike every
+        // tier further down this function — there is no earlier attempt that could have left a stale
+        // cap for it to inherit. `prep._workCap` is genuinely unset (null) at this point in normal
+        // (non-strict) mode; pinned by orchestration.test.ts's own
+        // 'strictTotalWorkBudget installs one remaining-work cap across every additive path' test.
         const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, mainLoopEarlyNodeBudget,
             opts.repairProbeAdaptiveBiasedBadnessGateOverride ?? REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE,
             opts.repairProbeAdaptiveBiasedMinScaleOverride ?? REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE);
@@ -2960,28 +2966,41 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // `repairFallbackNodeCeiling`, NOT `earlyTierNodeBudget` directly, so this loop cannot spend the
     // attraction-diversity pass's own reserved slice — see ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION's
     // own comment. Identical to `earlyTierNodeBudget` whenever that reserve is ineligible (default).
-    for (const repairConfig of repairConfigs) {
-        if (result.solution) break;
-        if (prep._metrics.nodesExpanded >= repairFallbackNodeCeiling) break;
-        const repairTotalBudget = Math.floor(timeBudgetMs * repairBudgetFraction);
-        const repairStart = Date.now();
-        for (let gi = 0; gi < activeGates.length; gi++) {
+    //
+    // FRESH, ADDITIVE `prep._workCap` override (2026-08-20 fix, same rationale as the early probe's
+    // own override just above and repairElitePrefixDfsRetry's below): this loop's `runAttempt` calls
+    // used to silently inherit whatever `prep._workCap` the main loop (or the probe just above) last
+    // wrote, which can already be exhausted on exactly the levels this loop exists for.
+    const repairFallbackOriginalWorkCap = prep._workCap;
+    try {
+        const repairFallbackTotalBudget = Math.floor(timeBudgetMs * repairBudgetFraction);
+        const repairFallbackWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(repairFallbackTotalBudget * DEFAULT_WORK_PER_MS));
+        prep._workCap = Math.min(workMeter.units + repairFallbackWorkBudget, prep._strictWorkCap ?? Infinity);
+        for (const repairConfig of repairConfigs) {
+            if (result.solution) break;
             if (prep._metrics.nodesExpanded >= repairFallbackNodeCeiling) break;
-            const gateKey = activeGates[gi];
-            const elapsed = Date.now() - repairStart;
-            const gatesLeft = activeGates.length - gi;
-            const repairBudget = Math.floor((repairTotalBudget - elapsed) / gatesLeft);
-            if (repairBudget < 50) break;
-            // Remaining GLOBAL node budget, recomputed fresh before each call: repairSearchFromGate's
-            // own nodeBudget param counts nodes LOCAL to that one call (nodesExpandedLocal starts at
-            // 0 each time), so passing the external total directly would compare a per-call counter
-            // against a whole-solve target — recomputing the remainder keeps it correct regardless
-            // of how many nodes earlier attempts already spent.
-            const remainingNodeBudget = repairFallbackNodeCeiling === Infinity ? Infinity : Math.max(0, repairFallbackNodeCeiling - prep._metrics.nodesExpanded);
-            const r = await runAttempt(gateKey, level, prep, repairConfig, repairBudget, Date.now(), yieldFn, remainingNodeBudget);
-            result.attempts.push(r.attempt);
-            if (r.path) { result.solution = r.path; break; }
+            const repairTotalBudget = repairFallbackTotalBudget;
+            const repairStart = Date.now();
+            for (let gi = 0; gi < activeGates.length; gi++) {
+                if (prep._metrics.nodesExpanded >= repairFallbackNodeCeiling) break;
+                const gateKey = activeGates[gi];
+                const elapsed = Date.now() - repairStart;
+                const gatesLeft = activeGates.length - gi;
+                const repairBudget = Math.floor((repairTotalBudget - elapsed) / gatesLeft);
+                if (repairBudget < 50) break;
+                // Remaining GLOBAL node budget, recomputed fresh before each call: repairSearchFromGate's
+                // own nodeBudget param counts nodes LOCAL to that one call (nodesExpandedLocal starts at
+                // 0 each time), so passing the external total directly would compare a per-call counter
+                // against a whole-solve target — recomputing the remainder keeps it correct regardless
+                // of how many nodes earlier attempts already spent.
+                const remainingNodeBudget = repairFallbackNodeCeiling === Infinity ? Infinity : Math.max(0, repairFallbackNodeCeiling - prep._metrics.nodesExpanded);
+                const r = await runAttempt(gateKey, level, prep, repairConfig, repairBudget, Date.now(), yieldFn, remainingNodeBudget);
+                result.attempts.push(r.attempt);
+                if (r.path) { result.solution = r.path; break; }
+            }
         }
+    } finally {
+        prep._workCap = repairFallbackOriginalWorkCap;
     }
 
     // Last-resort attraction-diversity pass (ATTRACTION_DIVERSITY_BUDGET_FRACTION, attempts.ts's
@@ -3588,22 +3607,41 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // per-call bound below is always `min(flat cap remaining, outer ceiling remaining)` — never
         // just the outer ceiling — regardless of whether nodeBudget is finite or Infinity.
         const repairLateProbeEntryNodes = prep._metrics.nodesExpanded;
-        for (let gi = 0; gi < activeGates.length; gi++) {
-            if (prep._metrics.nodesExpanded >= repairLateProbeNodeCeiling) break;
-            const ownBudgetRemaining = repairLateProbeNodeBudget - (prep._metrics.nodesExpanded - repairLateProbeEntryNodes);
-            if (ownBudgetRemaining <= 0) break;
-            const gateKey = activeGates[gi];
-            const elapsed = Date.now() - repairLateProbeStart;
-            const gatesLeft = activeGates.length - gi;
-            const retryBudget = Math.floor((repairLateProbeTotalBudget - elapsed) / gatesLeft);
-            if (retryBudget < 50) break;
-            const outerCeilingRemaining = repairLateProbeNodeCeiling === Infinity
-                ? Infinity
-                : Math.max(0, repairLateProbeNodeCeiling - prep._metrics.nodesExpanded);
-            const remainingNodeBudget = Math.min(ownBudgetRemaining, outerCeilingRemaining);
-            const r = await runAttempt(gateKey, level, prep, repairLateProbeConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
-            result.attempts.push({ ...r.attempt, repairLateProbe: true });
-            if (r.path) { result.solution = r.path; break; }
+        // FRESH, ADDITIVE `prep._workCap` override — same "extend, don't share the depleted pool"
+        // philosophy as repairElitePrefixDfsRetry's own override above (that tier's own history:
+        // `prep._workCap` is a single mutable field this tier's own `runAttempt`-direct calls would
+        // otherwise silently inherit stale from whichever earlier tier last wrote it). An earlier
+        // version of this tier omitted this entirely — invisible under the census-style validation
+        // this tier shipped with (huge non-binding `timeBudgetMs`, so the last tier's own workCap
+        // still had astronomical headroom) but a real starvation risk under production's actual
+        // ~30s `timeBudgetMs`, where an earlier tier's last attempt can leave `prep._workCap` at or
+        // near `workMeter.units` — repair-search.ts/search.ts's own budget checks read
+        // `workMeter.units >= (prep._workCap ?? Infinity)` as a hard stop, so a stale, already-spent
+        // cap would make this tier's very first `runAttempt` call terminate immediately regardless of
+        // its own generous node/time budget.
+        const originalWorkCap = prep._workCap;
+        try {
+            const repairLateProbeWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(repairLateProbeTotalBudget * DEFAULT_WORK_PER_MS));
+            prep._workCap = Math.min(workMeter.units + repairLateProbeWorkBudget, prep._strictWorkCap ?? Infinity);
+            for (let gi = 0; gi < activeGates.length; gi++) {
+                if (prep._metrics.nodesExpanded >= repairLateProbeNodeCeiling) break;
+                const ownBudgetRemaining = repairLateProbeNodeBudget - (prep._metrics.nodesExpanded - repairLateProbeEntryNodes);
+                if (ownBudgetRemaining <= 0) break;
+                const gateKey = activeGates[gi];
+                const elapsed = Date.now() - repairLateProbeStart;
+                const gatesLeft = activeGates.length - gi;
+                const retryBudget = Math.floor((repairLateProbeTotalBudget - elapsed) / gatesLeft);
+                if (retryBudget < 50) break;
+                const outerCeilingRemaining = repairLateProbeNodeCeiling === Infinity
+                    ? Infinity
+                    : Math.max(0, repairLateProbeNodeCeiling - prep._metrics.nodesExpanded);
+                const remainingNodeBudget = Math.min(ownBudgetRemaining, outerCeilingRemaining);
+                const r = await runAttempt(gateKey, level, prep, repairLateProbeConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
+                result.attempts.push({ ...r.attempt, repairLateProbe: true });
+                if (r.path) { result.solution = r.path; break; }
+            }
+        } finally {
+            prep._workCap = originalWorkCap;
         }
     }
 

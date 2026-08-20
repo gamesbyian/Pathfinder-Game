@@ -1430,6 +1430,40 @@ test('strictTotalWorkBudget installs one remaining-work cap across every additiv
     assert.equal(legacy.techniqueLifecycle, undefined, 'omitting lifecycle telemetry preserves the result shape');
 });
 
+test('the ordinary repair fallback loop gets fresh work room, not a stale cap left by the main loop (regression, fixed 2026-08-20)', async () => {
+    // Unlike the repair PROBE (which runs before the main ladder and therefore never inherits a
+    // cap from it — see the previous test), the ordinary repair fallback loop runs AFTER the main
+    // ladder finishes. Its `runAttempt` calls used to leave `prep._workCap` untouched, silently
+    // inheriting whatever the main loop's LAST attempt left behind — which, once budget-share
+    // division has run through many configs, can be a small fraction of the real repair budget.
+    let repairAllocatedWorkCeiling: number | undefined;
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , , , , , out] = args;
+        if (prep._metrics) prep._metrics.nodesExpanded += 1;
+        if (out) out.nodesExpanded = 1;
+        if (config.repair) {
+            repairAllocatedWorkCeiling = prep._workCap == null ? undefined : prep._workCap - workMeter.units;
+            return [0, 1];
+        }
+        return null;
+    };
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 5000,
+        workBudget: 100_000,
+        attemptBudgetTelemetry: true,
+        ablation: { STRATEGY_REPAIR_PROBE: false },
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, true, 'the mocked repair config must win');
+    assert.ok(repairAllocatedWorkCeiling !== undefined, 'the repair fallback attempt must have run');
+    // Before the fix this was whatever the main loop's last per-attempt slice happened to be
+    // (bounded by the external workBudget=100,000). After the fix it is REPAIR_EXTRA_BUDGET_FRACTION
+    // (6.0) * timeBudgetMs * DEFAULT_WORK_PER_MS, ~100.5M — three orders of magnitude larger, so a
+    // generous threshold well above workBudget cleanly distinguishes the two.
+    assert.ok(repairAllocatedWorkCeiling! > 1_000_000,
+        `repair fallback must see a fresh, generous work cap, got ${repairAllocatedWorkCeiling}`);
+});
+
 test('lifecycle telemetry separates mechanical eligibility from disabled routing', async () => {
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
