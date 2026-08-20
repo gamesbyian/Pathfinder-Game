@@ -89,6 +89,7 @@ A useful shadow result answers a concrete question such as:
 
 Shadow instrumentation must have OFF/ON parity for solution, work, ordering, and randomness unless the instrument's purpose explicitly changes those things.
 
+<a id="producer--receptor-cooperation"></a>
 ## Producer -> receptor cooperation
 
 Cross-technique cooperation is a specific handoff experiment, not a mandate to build a shared blackboard.
