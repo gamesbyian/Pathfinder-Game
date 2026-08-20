@@ -2217,28 +2217,72 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     const finish = (solveResult: SolveResult): SolveResult => {
         if (!opts.lifecycleTelemetry) return solveResult;
-        const classify = (attempt: Attempt) => attempt.admissibleOrder ? 'admissible-order'
-            : attempt.repairProbe ? 'repair-probe'
-                : attempt.repair ? 'repair-fallback'
-                    : attempt.attractionDiversity ? 'attraction-diversity'
-                        : 'main-ladder';
+        // Checked most-specific-first: several of the newer retry tiers ALSO set `repair`/
+        // `admissibleOrder` on their attempts (they rerun repairConfigs/admissibleOrderConfigs), so
+        // their own distinguishing field must be checked before the broader bucket it would
+        // otherwise fall into, or it silently collapses into ordinary repair-fallback/admissible-
+        // order/main-ladder activity — exactly the gap fixed 2026-08-20 (this classifier hadn't been
+        // extended since the original 5 categories; every retry tier added after that went
+        // unclassified). Order matters for `winningIndex`/`stoppedByDeadline` too, not just labeling.
+        const classify = (attempt: Attempt) => attempt.repairLateProbe ? 'repair-late-probe'
+            : attempt.repairElitePrefixDfsRetry ? 'repair-elite-prefix-dfs-retry'
+                : attempt.mcNeighborBudgetRetry ? 'mc-neighbor-budget-retry'
+                    : attempt.connectivityAxisExhaustedRetry ? 'connectivity-axis-exhausted-retry'
+                        : attempt.dedupNearTieRetry ? 'dedup-near-tie-retry'
+                            : attempt.admissibleOrderNonDefaultRetry ? 'admissible-order-non-default-retry'
+                                : attempt.admissibleOrder ? 'admissible-order'
+                                    : attempt.repairProbe ? 'repair-probe'
+                                        : attempt.repair ? 'repair-fallback'
+                                            : attempt.attractionDiversity ? 'attraction-diversity'
+                                                : 'main-ladder';
         const disabledExtras = opts.disableExtraBudgetPasses === true;
         const repairEnabled = !disabledExtras && Number(opts.repairBudgetFractionOverride ?? 1) !== 0;
+        // NOTE on TDZ safety: this closure can be invoked from the primeAttempt early-return path
+        // BELOW this point but ABOVE where `repairConfigs`/`mainConfigs`/`admissibleOrderNonDefault
+        // Configs` are declared later in this function — referencing those consts here would throw
+        // (temporal dead zone) on that path. Every predicate below is built ONLY from `baseConfigs`/
+        // `prep`/`opts`/`cfg`, all already in scope by this point, matching the original 5
+        // categories' own existing pattern (they never referenced those later consts either).
+        const hasRepairConfig = baseConfigs.some(config => config.repair);
+        const hasMainConfig = baseConfigs.some(config => !config.repair && !config.admissibleOrder);
+        const hasNonDefaultAdmissibleOrderConfig = baseConfigs.some(config => config.admissibleOrder && config.profileName !== 'default');
         const runnable = new Map<string, boolean>([
-            ['repair-probe', repairEnabled && (!cfg || cfg.STRATEGY_REPAIR_PROBE === true) && baseConfigs.some(config => config.repair)],
-            ['main-ladder', baseConfigs.some(config => !config.repair && !config.admissibleOrder)],
-            ['repair-fallback', repairEnabled && baseConfigs.some(config => config.repair)],
+            ['repair-probe', repairEnabled && (!cfg || cfg.STRATEGY_REPAIR_PROBE === true) && hasRepairConfig],
+            ['main-ladder', hasMainConfig],
+            ['repair-fallback', repairEnabled && hasRepairConfig],
             ['attraction-diversity', !disabledExtras && Number(opts.attractionDiversityBudgetFractionOverride ?? 1) !== 0
                 && (!cfg || cfg.STRATEGY_ATTRACTION_DIVERSITY === true)],
             ['admissible-order', !disabledExtras && Number(opts.admissibleOrderBudgetFractionOverride ?? 1) !== 0
                 && (!cfg || cfg.STRATEGY_ADMISSIBLE_ORDER === true) && baseConfigs.some(config => config.admissibleOrder)],
+            ['dedup-near-tie-retry', !disabledExtras && Number(opts.dedupNearTieRetryBudgetFractionOverride ?? 1) !== 0
+                && !!(!cfg || cfg.STRATEGY_DEDUP_NEAR_TIE_RETRY)],
+            ['admissible-order-non-default-retry', !disabledExtras && Number(opts.admissibleOrderNonDefaultRetryBudgetFractionOverride ?? 1) !== 0
+                && !!(!cfg || cfg.STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY) && hasNonDefaultAdmissibleOrderConfig],
+            ['connectivity-axis-exhausted-retry', !disabledExtras && Number(opts.connectivityAxisExhaustedRetryBudgetFractionOverride ?? 1) !== 0
+                && !!(!cfg || cfg.STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY)],
+            ['repair-elite-prefix-dfs-retry', Number(opts.repairElitePrefixDfsRetryBudgetFractionOverride ?? (disabledExtras ? 0 : 1)) !== 0
+                && !!(cfg && cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY === true) && hasRepairConfig],
+            ['mc-neighbor-budget-retry', !disabledExtras && Number(opts.mcNeighborBudgetRetryBudgetFractionOverride ?? 1) !== 0
+                && !!(!cfg || cfg.STRATEGY_MC_NEIGHBOR_BUDGET_RETRY) && prep.initialMustCrossMask !== 0],
+            ['repair-late-probe', Number(opts.repairLateProbeNodeBudgetOverride ?? (disabledExtras ? 0 : 1)) !== 0
+                && !!(cfg && cfg.STRATEGY_REPAIR_LATE_PROBE === true) && !hasRepairConfig
+                && !(cfg && 'STRATEGY_REPAIR_FALLBACK' in cfg && cfg.STRATEGY_REPAIR_FALLBACK === false)],
         ]);
         const instantiated = new Map<string, boolean>([
-            ['repair-probe', baseConfigs.some(config => config.repair)],
-            ['main-ladder', baseConfigs.some(config => !config.repair && !config.admissibleOrder)],
-            ['repair-fallback', baseConfigs.some(config => config.repair)],
-            ['attraction-diversity', baseConfigs.some(config => !config.repair && !config.admissibleOrder)],
+            ['repair-probe', hasRepairConfig],
+            ['main-ladder', hasMainConfig],
+            ['repair-fallback', hasRepairConfig],
+            ['attraction-diversity', hasMainConfig],
             ['admissible-order', baseConfigs.some(config => config.admissibleOrder)],
+            ['dedup-near-tie-retry', hasMainConfig],
+            ['admissible-order-non-default-retry', hasNonDefaultAdmissibleOrderConfig],
+            ['connectivity-axis-exhausted-retry', hasMainConfig],
+            ['repair-elite-prefix-dfs-retry', hasRepairConfig],
+            ['mc-neighbor-budget-retry', hasMainConfig],
+            // Inverted, deliberately: this tier's own structural precondition is the OPPOSITE of
+            // repair-fallback's (see repairLateProbeTierWillRun's own comment) — it exists FOR
+            // levels with no repair config in the ladder, not levels that have one.
+            ['repair-late-probe', !hasRepairConfig],
         ]);
         const order = [...runnable.keys()];
         const lastTechnique = solveResult.attempts.length ? classify(solveResult.attempts.at(-1)!) : null;

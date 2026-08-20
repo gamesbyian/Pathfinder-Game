@@ -1464,6 +1464,49 @@ test('the ordinary repair fallback loop gets fresh work room, not a stale cap le
         `repair fallback must see a fresh, generous work cap, got ${repairAllocatedWorkCeiling}`);
 });
 
+test('lifecycle telemetry classifies newer retry tiers as their own technique, not main-ladder/repair-fallback/admissible-order (regression, fixed 2026-08-20)', async () => {
+    // Before the fix, `classify()` only knew 5 categories (repair-probe/repair-fallback/attraction-
+    // diversity/admissible-order/main-ladder) -- every retry tier added since (dedup-near-tie,
+    // connectivity-axis-exhausted, repair-elite-prefix-dfs, mc-neighbor-budget, repair-late-probe,
+    // admissible-order-non-default) silently fell into whichever of those 5 buckets its OWN base
+    // config type happened to match (mc-neighbor-budget-retry reruns mainConfigs -> 'main-ladder';
+    // repair-elite-prefix-dfs-retry reruns repairConfigs -> 'repair-fallback'), misreporting which
+    // stage of the ladder actually ran or found a solution.
+    //
+    // Wins only via mcNeighborBudgetRetryCfg's own distinguishing override (PRUNE_MC_NEIGHBOR_BUDGET:
+    // false), which nothing else in the ladder ever sets -- so a win here can only have come from
+    // that specific tier. STRATEGY_REPAIR_PROBE disabled so the repair-gated level's genuine
+    // needsRepairFallback eligibility doesn't let an earlier repair attempt win first by accident.
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, , , prep] = args;
+        if (prep._cfg && prep._cfg.PRUNE_MC_NEIGHBOR_BUDGET === false) return [0, 1];
+        return null;
+    }) as typeof runAttemptSearch;
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 2000,
+        ablation: { STRATEGY_REPAIR_PROBE: false },
+        repairBudgetFractionOverride: 0,
+        lifecycleTelemetry: true,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, true, 'the mc-neighbor-budget-retry-only mock must win');
+    const winningAttempts = result.attempts.filter(a => a.ok);
+    assert.equal(winningAttempts.length, 1);
+    assert.equal(winningAttempts[0].mcNeighborBudgetRetry, true, 'the winning attempt must be tagged by its real tier');
+    const lifecycle = result.techniqueLifecycle as Record<string, any>;
+    assert.ok(lifecycle['mc-neighbor-budget-retry'], 'the new category must exist in the lifecycle map');
+    assert.equal(lifecycle['mc-neighbor-budget-retry'].reached, true);
+    assert.ok(lifecycle['mc-neighbor-budget-retry'].attempts > 0);
+    // The winning attempt must NOT also be double-counted into main-ladder, which is what every
+    // mcNeighborBudgetRetry attempt used to collapse into (it reruns mainConfigs, so attempt.repair
+    // and attempt.admissibleOrder are both unset -- exactly what the old classify()'s final
+    // fallback branch matched).
+    const mainLadderAttempts = result.attempts.filter(a => !a.repair && !a.admissibleOrder && !a.attractionDiversity
+        && !a.mcNeighborBudgetRetry && !a.connectivityAxisExhaustedRetry && !a.dedupNearTieRetry);
+    assert.equal(lifecycle['main-ladder'].attempts, mainLadderAttempts.length,
+        'main-ladder must not absorb attempts that belong to a newer retry tier');
+});
+
 test('lifecycle telemetry separates mechanical eligibility from disabled routing', async () => {
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
