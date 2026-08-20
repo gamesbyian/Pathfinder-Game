@@ -1,6 +1,6 @@
 import { PORTFOLIO_EXPERIMENT } from '../../data/config/portfolio-experiment.js';
 import { OPT_IN_FEATURES } from '../../scripts/ablation-config.mjs';
-import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } from './attempts.js';
+import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS, repairAttempt } from './attempts.js';
 import { POLICY_PROFILES } from './policy.js';
 import { workMeter } from './work-meter.js';
 import { prepLevel } from './prep.js';
@@ -124,6 +124,12 @@ interface Attempt {
      *  connectivityAxisExhaustedRetry/repairElitePrefixDfsRetry above. Not read by any solving
      *  logic. */
     mcNeighborBudgetRetry?: boolean;
+    /** True only for attempts run by the 2026-08-20 STRATEGY_REPAIR_LATE_PROBE last-resort pass
+     *  (see REPAIR_LATE_PROBE_NODE_BUDGET) — same diagnostic-only shape as
+     *  attractionDiversity/dedupNearTieRetry/admissibleOrderNonDefaultRetry/
+     *  connectivityAxisExhaustedRetry/repairElitePrefixDfsRetry/mcNeighborBudgetRetry above. Not
+     *  read by any solving logic. */
+    repairLateProbe?: boolean;
     /** Diagnostic-only passthrough for the admissible-order-search.ts prototype (see
      *  AttemptConfig.admissibleOrder) — not read by any solving logic, purely so external tooling
      *  (scripts/method-probe.mjs) can tell it apart from an ordinary DFS attempt. */
@@ -299,6 +305,13 @@ interface SolveOpts {
      *  ceiling, never withheld from any earlier tier. 0 restores the tier's ceiling to the preceding
      *  tier's own ceiling exactly. Undefined (production default) preserves the constant exactly. */
     mcNeighborBudgetRetryNodeReserveFractionOverride?: number;
+    /** Overrides REPAIR_LATE_PROBE_NODE_BUDGET for this solve only — a flat node count, not a
+     *  fraction (see that constant's own comment for why this tier's budget shape deliberately
+     *  differs from every whole-ladder-rerun tier above it). Undefined (production default)
+     *  preserves the constant exactly; 0 disables the tier's own node room (the tier's run
+     *  condition also requires this to be > 0). Opt-in via STRATEGY_REPAIR_LATE_PROBE — this
+     *  override has no effect unless that flag is also set. */
+    repairLateProbeNodeBudgetOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape and rationale as the two overrides above (NOT an ablation flag, a
      *  THIRD independently-costed extension a batch-tooling caller may want to isolate). Undefined
@@ -1465,6 +1478,57 @@ export const MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION = 1.0;
  *  tier is ineligible/suppressed. */
 export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
 
+/** STRATEGY_REPAIR_LATE_PROBE (NEW, opt-in, default OFF — 2026-08-20). Priority 7 (docs/solver-
+ *  optimization-current-queue.md): the census found 94 of 158 currently-unsolved Corpus-2 levels
+ *  where repair wins in isolation are structurally excluded from EVER trying repair, because
+ *  `needsRepairFallback` (`mustCross >= 2 AND mustPass >= 3`, or very-high reqInt) never matches
+ *  them — `repairConfigs` is empty for the whole level, so neither the early probe
+ *  (runRepairProbe) nor the ordinary fallback loop below ever run, regardless of budget or
+ *  ordering. Widening `needsRepairFallback` itself was rejected (matched-comparison analysis found
+ *  no single/pair feature cleanly separates "repair wins cheaply here" from the much larger
+ *  ineligible population that never wins) — this tier sidesteps the "which levels" question
+ *  entirely by trying repair ANYWAY, cheaply and unconditionally, on every level `repairConfigs`
+ *  left untouched, but ONLY as the true dead-last tier, after every other technique has already
+ *  failed.
+ *
+ *  WHY DEAD LAST, NOT EARLY (the shape this tier deliberately avoids): the existing repair PROBE
+ *  (`runRepairProbe`, `REPAIR_PROBE_ORDINARY_NODE_BUDGET`) is already a small, bounded repair
+ *  attempt — but it runs unconditionally BEFORE the main loop, on every solve of an eligible level,
+ *  win or lose. Its own code comments document the resulting cost on a level where repair never
+ *  succeeds: "the probe instead burns its FULL node budget as pure dead search every single
+ *  solve" (confirmed on R02401, ~10.7s of unconditional overhead, the exact bug
+ *  `repairBudgetFractionOverride: 0` was supposed to prevent). Naively widening THAT probe's
+ *  eligibility would import the identical tax onto every newly-eligible level's EVERY solve, not
+ *  just its failures. A dead-last placement instead means a level that already solves via any
+ *  earlier technique — the overwhelming majority of any corpus — never reaches this tier at all,
+ *  so it costs nothing there regardless of budget size; the "dead search" cost is paid only by
+ *  levels that were already going to report unsolved.
+ *
+ *  SIZING: flat 2,000,000-node cap (REPAIR_LATE_PROBE_NODE_BUDGET below), deliberately NOT a
+ *  fraction of `timeBudgetMs`/`nodeBudget` like the five whole-ladder-rerun tiers above — this
+ *  tier's entire premise is being cheap and tightly bounded, not thorough (mirroring
+ *  REPAIR_PROBE_ORDINARY_NODE_BUDGET's own flat-constant shape, not the fractional-reserve shape).
+ *  Population-scale quantification (docs/solver-optimization-current-queue.md, same section): at a
+ *  2,000,000-node cap, 26 of the 314 currently-unsolved Corpus-2 levels this tier can reach solve
+ *  within budget (8.3%) — a real but modest recovery rate, with the large majority of newly-probed
+ *  levels paying the full capped cost for nothing. Because of the dead-last placement, that cost
+ *  is confined to already-failing levels (a batch/regression-timing cost), never a solve a player
+ *  could otherwise win.
+ *
+ *  Positioned dead last — AFTER the must-cross-neighbor-budget retry tier above, the current true
+ *  end of the ladder — for the identical reason as its five predecessors: nothing may run after
+ *  this one that still checks an unextended ceiling, or this tier's own additive extension would
+ *  starve it.
+ *
+ *  Opt-in/default-OFF (unvalidated new mechanism, matching every other tier's pre-promotion
+ *  lifecycle stage): the flag check at this tier's own run condition below uses the opt-in
+ *  convention (`cfg && cfg.STRATEGY_REPAIR_LATE_PROBE === true`), so this block is a strict no-op
+ *  for every production/interactive caller (cfg null) and any ordinary ablation config until
+ *  explicitly enabled. NOT yet validated end-to-end or at population scale — local/isolated
+ *  evidence only; needs the same `solver:bench --check` + full-corpus cost/benefit validation
+ *  every other mechanism in this file went through before any promotion. */
+export const REPAIR_LATE_PROBE_NODE_BUDGET = 2_000_000;
+
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
  *  repair fallback, tried BEFORE the ordinary DFS/beam main loop — see runRepairProbe.
@@ -2514,6 +2578,28 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         ? Infinity
         : repairElitePrefixDfsRetryNodeCeiling + mcNeighborBudgetRetryNodeReserve;
 
+    // STRATEGY_REPAIR_LATE_PROBE — see REPAIR_LATE_PROBE_NODE_BUDGET's own comment for the full
+    // rationale. `repairConfigs.length === 0` is exactly "needsRepairFallback was false for this
+    // level" (the same eligibility signal the early probe and ordinary fallback loop already gate
+    // on) — this tier exists specifically FOR that population, so it is the opposite polarity of
+    // every other repairConfigs.length check in this function. Opt-in/default-OFF, unvalidated new
+    // mechanism — same convention as its five predecessors.
+    const repairLateProbeNodeBudgetRaw = Number(opts.repairLateProbeNodeBudgetOverride);
+    const repairLateProbeNodeBudget = Number.isFinite(repairLateProbeNodeBudgetRaw) && repairLateProbeNodeBudgetRaw >= 0
+        ? repairLateProbeNodeBudgetRaw
+        : REPAIR_LATE_PROBE_NODE_BUDGET;
+    const repairLateProbeTierWillRun = repairLateProbeNodeBudget > 0
+        && !!(cfg && cfg.STRATEGY_REPAIR_LATE_PROBE === true)
+        && repairConfigs.length === 0;
+    // Flat additive reserve, NOT scaled by nodeBudget/the preceding tier's ceiling — see
+    // REPAIR_LATE_PROBE_NODE_BUDGET's own comment for why this tier's shape deliberately differs
+    // from the five whole-ladder-rerun tiers above. Still stacked on the preceding tier's own
+    // ceiling (never restarting from nodeBudget directly), for the same reason as its predecessors.
+    const repairLateProbeNodeReserve = repairLateProbeTierWillRun ? repairLateProbeNodeBudget : 0;
+    const repairLateProbeNodeCeiling = mcNeighborBudgetRetryNodeCeiling === Infinity
+        ? Infinity
+        : mcNeighborBudgetRetryNodeCeiling + repairLateProbeNodeReserve;
+
     // STRATEGY_RETRY_TIER_NODE_STAIRCASE (opt-in, default OFF) — whether the attraction-diversity pass
     // and the two promoted whole-ladder retry tiers subdivide their node reserve per config instead of
     // letting the first config consume all of it. See the flag's own comment in ablation-config.mjs
@@ -3454,6 +3540,61 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             if (mcNeighborBudgetRetryResult.solution) result.solution = mcNeighborBudgetRetryResult.solution;
         } finally {
             prep._cfg = originalCfg;
+        }
+    }
+
+    // Last-resort repair-late-probe pass (REPAIR_LATE_PROBE_NODE_BUDGET, STRATEGY_REPAIR_LATE_PROBE)
+    // — see that constant's own comment for the full rationale. Unlike every tier above (which
+    // rerun `mainConfigs` or `repairConfigs`), `repairConfigs` is EMPTY here by construction (this
+    // tier's own eligibility gate is `repairConfigs.length === 0`), so there is no existing config
+    // list to replay — a single plain repair attempt is built directly via `repairAttempt()`, the
+    // same builder `attempts.ts` uses for the ordinary case, and run through the same per-gate
+    // manual loop shape as the ordinary repair fallback loop / repair-elite-prefix-DFS-retry tier
+    // above (not runInterleavedAttempts/runGateSerialAttempts, which only ever see `mainConfigs`).
+    //
+    // Positioned dead last — AFTER the must-cross-neighbor-budget retry tier above, the current true
+    // end of the ladder — for the identical reason as its five predecessors: nothing may run after
+    // this one that still checks an unextended ceiling, or this tier's own additive extension would
+    // starve it.
+    //
+    // `repairLateProbeTierWillRun` is the SAME predicate repairLateProbeNodeReserve is derived from
+    // — the two must stay in lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history: drift
+    // either way strands the reserve or spends one that was never allocated).
+    if (!result.solution && repairLateProbeTierWillRun && prep._metrics.nodesExpanded < repairLateProbeNodeCeiling) {
+        const repairLateProbeConfig = repairAttempt();
+        // Generous, deliberately non-binding time budget (ms, divided across gates below purely for
+        // fairness between them — not a work-unit conversion) — matching the capability protocol's
+        // own convention that nodeBudget is the real constraint here, not time; see
+        // REPAIR_LATE_PROBE_NODE_BUDGET's own comment on why this tier's budget is a flat node cap.
+        const repairLateProbeTotalBudget = timeBudgetMs;
+        const repairLateProbeStart = Date.now();
+        // The tier's own flat budget is tracked independently of the stacked-ceiling chain, entirely
+        // by design: `repairLateProbeNodeCeiling` (like every ceiling above it) collapses to Infinity
+        // whenever the caller's `nodeBudget` is Infinity — the actual production/interactive case —
+        // which would otherwise leave THIS tier's own cap unenforced (an early implementation shipped
+        // exactly that gap: caught locally when a level's late-probe attempt spent 2,498,406 nodes
+        // against a declared 2,000,000 cap, because unused headroom left over by the preceding tier's
+        // own unspent reserve bled into "remaining ceiling room" and was handed straight to this
+        // tier). `repairLateProbeEntryNodes` anchors the tier's own spend to where IT started, so the
+        // per-call bound below is always `min(flat cap remaining, outer ceiling remaining)` — never
+        // just the outer ceiling — regardless of whether nodeBudget is finite or Infinity.
+        const repairLateProbeEntryNodes = prep._metrics.nodesExpanded;
+        for (let gi = 0; gi < activeGates.length; gi++) {
+            if (prep._metrics.nodesExpanded >= repairLateProbeNodeCeiling) break;
+            const ownBudgetRemaining = repairLateProbeNodeBudget - (prep._metrics.nodesExpanded - repairLateProbeEntryNodes);
+            if (ownBudgetRemaining <= 0) break;
+            const gateKey = activeGates[gi];
+            const elapsed = Date.now() - repairLateProbeStart;
+            const gatesLeft = activeGates.length - gi;
+            const retryBudget = Math.floor((repairLateProbeTotalBudget - elapsed) / gatesLeft);
+            if (retryBudget < 50) break;
+            const outerCeilingRemaining = repairLateProbeNodeCeiling === Infinity
+                ? Infinity
+                : Math.max(0, repairLateProbeNodeCeiling - prep._metrics.nodesExpanded);
+            const remainingNodeBudget = Math.min(ownBudgetRemaining, outerCeilingRemaining);
+            const r = await runAttempt(gateKey, level, prep, repairLateProbeConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
+            result.attempts.push({ ...r.attempt, repairLateProbe: true });
+            if (r.path) { result.solution = r.path; break; }
         }
     }
 

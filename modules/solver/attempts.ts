@@ -156,7 +156,10 @@ const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= PO
 const needsRepairFallback = (f: LevelFeatures): boolean =>
     (f.mustCross >= POLICY.REPAIR_MC_MIN && f.mustPass >= POLICY.REPAIR_MP_MIN)
     || (isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT);
-const repairAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true });
+// Exported for orchestration.ts's STRATEGY_REPAIR_LATE_PROBE tier, which needs to build a plain
+// repair AttemptConfig itself when repairConfigs is empty (needsRepairFallback was false) — see
+// that tier's own comment.
+export const repairAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true });
 /** A second repair attempt, appended only when the level has must-turn cells (so a level with
  *  none can never reach it) and only ever run after the ordinary repairAttempt above has already
  *  failed — see AttemptConfig.repairMustTurnBiased and data/stress/README.md's S043 writeup. */
