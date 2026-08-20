@@ -9,8 +9,8 @@
 # EXACTLY shards 1-20 are missing -- the 20 oldest-created artifacts in that run, pushed out of the
 # "most recent 100" window. This silently dropped ~13,036 T1 cells from the committed combine output
 # without tripping combined-cells.json's own missingShards/partialShards checks (from the combine
-# script's point of view, every directory it *did* receive was complete -- it never learns a
-# directory it never received should have existed).
+# script's point of view, every directory it *did* see was complete -- it never learns a directory
+# it never received should have existed).
 #
 # Fix: keep the original pattern-based download (it already correctly retrieves the other 100 --
 # shards 21-120, plus one small already-understood duplicate/partial artifact from an unrelated
@@ -74,64 +74,164 @@ jobs:
 
       - name: Download shard 1 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-1, path: artifact-staging/technique-census-shard-1, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 2
+        with:
+          name: technique-census-shard-1
+          path: artifact-staging/technique-census-shard-1
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 2 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-2, path: artifact-staging/technique-census-shard-2, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 3
+        with:
+          name: technique-census-shard-2
+          path: artifact-staging/technique-census-shard-2
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 3 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-3, path: artifact-staging/technique-census-shard-3, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 4
+        with:
+          name: technique-census-shard-3
+          path: artifact-staging/technique-census-shard-3
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 4 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-4, path: artifact-staging/technique-census-shard-4, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 5
+        with:
+          name: technique-census-shard-4
+          path: artifact-staging/technique-census-shard-4
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 5 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-5, path: artifact-staging/technique-census-shard-5, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 6
+        with:
+          name: technique-census-shard-5
+          path: artifact-staging/technique-census-shard-5
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 6 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-6, path: artifact-staging/technique-census-shard-6, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 7
+        with:
+          name: technique-census-shard-6
+          path: artifact-staging/technique-census-shard-6
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 7 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-7, path: artifact-staging/technique-census-shard-7, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 8
+        with:
+          name: technique-census-shard-7
+          path: artifact-staging/technique-census-shard-7
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 8 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-8, path: artifact-staging/technique-census-shard-8, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 9
+        with:
+          name: technique-census-shard-8
+          path: artifact-staging/technique-census-shard-8
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 9 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-9, path: artifact-staging/technique-census-shard-9, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 10
+        with:
+          name: technique-census-shard-9
+          path: artifact-staging/technique-census-shard-9
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 10 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-10, path: artifact-staging/technique-census-shard-10, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 11
+        with:
+          name: technique-census-shard-10
+          path: artifact-staging/technique-census-shard-10
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 11 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-11, path: artifact-staging/technique-census-shard-11, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 12
+        with:
+          name: technique-census-shard-11
+          path: artifact-staging/technique-census-shard-11
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 12 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-12, path: artifact-staging/technique-census-shard-12, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 13
+        with:
+          name: technique-census-shard-12
+          path: artifact-staging/technique-census-shard-12
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 13 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-13, path: artifact-staging/technique-census-shard-13, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 14
+        with:
+          name: technique-census-shard-13
+          path: artifact-staging/technique-census-shard-13
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 14 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-14, path: artifact-staging/technique-census-shard-14, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 15
+        with:
+          name: technique-census-shard-14
+          path: artifact-staging/technique-census-shard-14
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 15 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-15, path: artifact-staging/technique-census-shard-15, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 16
+        with:
+          name: technique-census-shard-15
+          path: artifact-staging/technique-census-shard-15
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 16 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-16, path: artifact-staging/technique-census-shard-16, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 17
+        with:
+          name: technique-census-shard-16
+          path: artifact-staging/technique-census-shard-16
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 17 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-17, path: artifact-staging/technique-census-shard-17, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 18
+        with:
+          name: technique-census-shard-17
+          path: artifact-staging/technique-census-shard-17
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 18 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-18, path: artifact-staging/technique-census-shard-18, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 19
+        with:
+          name: technique-census-shard-18
+          path: artifact-staging/technique-census-shard-18
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 19 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-19, path: artifact-staging/technique-census-shard-19, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
-      - name: Download shard 20
+        with:
+          name: technique-census-shard-19
+          path: artifact-staging/technique-census-shard-19
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download shard 20 (by exact name, bypasses the list-artifacts cap)
         uses: actions/download-artifact@v4
-        with: { name: technique-census-shard-20, path: artifact-staging/technique-census-shard-20, repository: gamesbyian/Pathfinder-Game, run-id: 32240161854, github-token: ${{ secrets.GITHUB_TOKEN }} }
+        with:
+          name: technique-census-shard-20
+          path: artifact-staging/technique-census-shard-20
+          repository: gamesbyian/Pathfinder-Game
+          run-id: 32240161854
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download the recovered shard 85 sub-slices (from run 32331263147)
         uses: actions/download-artifact@v4
