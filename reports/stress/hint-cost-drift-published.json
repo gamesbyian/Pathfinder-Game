@@ -1,19 +1,19 @@
 {
- "generatedAt": "2026-08-19T11:34:48.728Z",
+ "generatedAt": "2026-08-20T16:45:02.009Z",
  "corpora": [
   "published"
  ],
  "minRatio": 1.25,
  "comparisons": 342,
- "stable": 227,
- "drifted": 115,
+ "stable": 226,
+ "drifted": 116,
  "groups": [
   {
    "corpus": "published",
    "level": "P00003",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 2510,
    "maxNodes": 5299,
    "ratio": 2.111155378486056,
@@ -330,6 +330,12 @@
      "nodes": 2510,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:07.079Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 2510,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:20.717Z"
     }
    ]
   },
@@ -338,7 +344,7 @@
    "level": "P00005",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 745,
    "maxNodes": 815,
    "ratio": 1.0939597315436242,
@@ -655,6 +661,12 @@
      "nodes": 745,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:07.119Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 745,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:20.751Z"
     }
    ]
   },
@@ -663,7 +675,7 @@
    "level": "P00006",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 21875,
    "maxNodes": 21890,
    "ratio": 1.0006857142857142,
@@ -980,6 +992,12 @@
      "nodes": 21875,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:07.162Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 21875,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:20.797Z"
     }
    ]
   },
@@ -988,7 +1006,7 @@
    "level": "P00009",
    "hintIndex": 1,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 4452,
    "maxNodes": 5278,
    "ratio": 1.1855345911949686,
@@ -1305,6 +1323,12 @@
      "nodes": 4452,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:07.198Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 4452,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:20.835Z"
     }
    ]
   },
@@ -1313,7 +1337,7 @@
    "level": "P00010",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 173,
    "maxNodes": 228,
    "ratio": 1.3179190751445087,
@@ -1630,6 +1654,12 @@
      "nodes": 173,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:07.208Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 173,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:20.843Z"
     }
    ]
   },
@@ -1638,7 +1668,7 @@
    "level": "P00011",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 7268,
    "maxNodes": 7333,
    "ratio": 1.00894331315355,
@@ -1955,6 +1985,12 @@
      "nodes": 7268,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:07.235Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 7268,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:20.880Z"
     }
    ]
   },
@@ -1963,7 +1999,7 @@
    "level": "P00012",
    "hintIndex": 0,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 182,
    "maxNodes": 209,
    "ratio": 1.1483516483516483,
@@ -2280,6 +2316,12 @@
      "nodes": 182,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:07.245Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 182,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:20.893Z"
     }
    ]
   },
@@ -2288,7 +2330,7 @@
    "level": "P00015",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 25883,
    "maxNodes": 26222,
    "ratio": 1.0130973998377313,
@@ -2605,6 +2647,12 @@
      "nodes": 25883,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:07.341Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 25883,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:20.995Z"
     }
    ]
   },
@@ -2613,7 +2661,7 @@
    "level": "P00021",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 791,
    "maxNodes": 1116,
    "ratio": 1.4108723135271808,
@@ -2930,6 +2978,12 @@
      "nodes": 791,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:07.404Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 791,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:21.066Z"
     }
    ]
   },
@@ -2938,7 +2992,7 @@
    "level": "P00022",
    "hintIndex": 1,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 438,
    "maxNodes": 723,
    "ratio": 1.6506849315068493,
@@ -3255,6 +3309,12 @@
      "nodes": 438,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:07.410Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 438,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:21.072Z"
     }
    ]
   },
@@ -3263,7 +3323,7 @@
    "level": "P00023",
    "hintIndex": 0,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 1638,
    "maxNodes": 2118,
    "ratio": 1.293040293040293,
@@ -3580,6 +3640,12 @@
      "nodes": 1638,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:07.418Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1638,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:21.081Z"
     }
    ]
   },
@@ -3588,7 +3654,7 @@
    "level": "P00029",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 2338,
    "maxNodes": 2352,
    "ratio": 1.0059880239520957,
@@ -3905,6 +3971,12 @@
      "nodes": 2338,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.005Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 2338,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:21.724Z"
     }
    ]
   },
@@ -3913,7 +3985,7 @@
    "level": "P00031",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 2779,
    "maxNodes": 2879,
    "ratio": 1.0359841669665346,
@@ -4230,6 +4302,12 @@
      "nodes": 2779,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.038Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 2779,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:21.759Z"
     }
    ]
   },
@@ -4238,7 +4316,7 @@
    "level": "P00035",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 3027,
    "maxNodes": 3164,
    "ratio": 1.0452593326726132,
@@ -4555,6 +4633,12 @@
      "nodes": 3027,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.102Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 3027,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:21.822Z"
     }
    ]
   },
@@ -4563,7 +4647,7 @@
    "level": "P00036",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 1218,
    "maxNodes": 2878,
    "ratio": 2.3628899835796386,
@@ -4880,6 +4964,12 @@
      "nodes": 1218,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.114Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1218,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:21.843Z"
     }
    ]
   },
@@ -4888,7 +4978,7 @@
    "level": "P00038",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 1197,
    "maxNodes": 1293,
    "ratio": 1.0802005012531328,
@@ -5205,6 +5295,12 @@
      "nodes": 1197,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.442Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1197,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.215Z"
     }
    ]
   },
@@ -5213,7 +5309,7 @@
    "level": "P00040",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 48476,
    "maxNodes": 85975,
    "ratio": 1.7735580493440053,
@@ -5530,6 +5626,12 @@
      "nodes": 48476,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.495Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 48476,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.264Z"
     }
    ]
   },
@@ -5538,7 +5640,7 @@
    "level": "P00043",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 54644,
    "maxNodes": 55575,
    "ratio": 1.017037552155772,
@@ -5855,6 +5957,12 @@
      "nodes": 54644,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.535Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 54644,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.317Z"
     }
    ]
   },
@@ -5863,7 +5971,7 @@
    "level": "P00044",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 666,
    "maxNodes": 1377,
    "ratio": 2.0675675675675675,
@@ -6180,6 +6288,12 @@
      "nodes": 666,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.548Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 666,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.330Z"
     }
    ]
   },
@@ -6188,7 +6302,7 @@
    "level": "P00047",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 4336,
    "maxNodes": 7047,
    "ratio": 1.625230627306273,
@@ -6505,6 +6619,12 @@
      "nodes": 4336,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.579Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 4336,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.372Z"
     }
    ]
   },
@@ -6513,7 +6633,7 @@
    "level": "P00049",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 234822,
    "maxNodes": 239567,
    "ratio": 1.0202067949340352,
@@ -6830,6 +6950,12 @@
      "nodes": 234822,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.632Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 234822,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.427Z"
     }
    ]
   },
@@ -6838,7 +6964,7 @@
    "level": "P00052",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 76850,
    "maxNodes": 76856,
    "ratio": 1.000078074170462,
@@ -7155,6 +7281,12 @@
      "nodes": 76850,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.707Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 76850,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.504Z"
     }
    ]
   },
@@ -7163,7 +7295,7 @@
    "level": "P00054",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 40194,
    "maxNodes": 40261,
    "ratio": 1.0016669154600188,
@@ -7480,6 +7612,12 @@
      "nodes": 40194,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.731Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 40194,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.536Z"
     }
    ]
   },
@@ -7488,7 +7626,7 @@
    "level": "P00056",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 7419,
    "maxNodes": 11459,
    "ratio": 1.5445477827200431,
@@ -7805,6 +7943,12 @@
      "nodes": 7419,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.753Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 7419,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.559Z"
     }
    ]
   },
@@ -7813,7 +7957,7 @@
    "level": "P00057",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 10795,
    "maxNodes": 12505,
    "ratio": 1.158406669754516,
@@ -8130,6 +8274,12 @@
      "nodes": 10795,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.763Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 10795,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.569Z"
     }
    ]
   },
@@ -8138,7 +8288,7 @@
    "level": "P00058",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 6537,
    "maxNodes": 7527,
    "ratio": 1.1514456172556218,
@@ -8455,6 +8605,12 @@
      "nodes": 6537,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.772Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 6537,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.578Z"
     }
    ]
   },
@@ -8463,7 +8619,7 @@
    "level": "P00059",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 8176,
    "maxNodes": 8632,
    "ratio": 1.0557729941291585,
@@ -8780,6 +8936,12 @@
      "nodes": 8176,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.781Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 8176,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.587Z"
     }
    ]
   },
@@ -8788,7 +8950,7 @@
    "level": "P00064",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 1829,
    "maxNodes": 1842,
    "ratio": 1.0071077091306726,
@@ -9105,6 +9267,12 @@
      "nodes": 1829,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.822Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1829,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.629Z"
     }
    ]
   },
@@ -9113,7 +9281,7 @@
    "level": "P00066",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 14913,
    "maxNodes": 793316,
    "ratio": 53.196271709246965,
@@ -9430,6 +9598,12 @@
      "nodes": 14913,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.853Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 14913,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.661Z"
     }
    ]
   },
@@ -9438,7 +9612,7 @@
    "level": "P00067",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 1282,
    "maxNodes": 2038,
    "ratio": 1.5897035881435257,
@@ -9755,6 +9929,12 @@
      "nodes": 1282,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.862Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1282,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.671Z"
     }
    ]
   },
@@ -9763,7 +9943,7 @@
    "level": "P00068",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 10655,
    "maxNodes": 10656,
    "ratio": 1.0000938526513374,
@@ -10080,6 +10260,12 @@
      "nodes": 10655,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.869Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 10655,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.679Z"
     }
    ]
   },
@@ -10088,7 +10274,7 @@
    "level": "P00069",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 3564,
    "maxNodes": 3995,
    "ratio": 1.1209315375982043,
@@ -10405,6 +10591,12 @@
      "nodes": 3564,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.879Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 3564,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.689Z"
     }
    ]
   },
@@ -10413,7 +10605,7 @@
    "level": "P00071",
    "hintIndex": 2,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 20340,
    "maxNodes": 20454,
    "ratio": 1.005604719764012,
@@ -10730,6 +10922,12 @@
      "nodes": 20340,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.902Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 20340,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.709Z"
     }
    ]
   },
@@ -10738,7 +10936,7 @@
    "level": "P00073",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 7471,
    "maxNodes": 14140,
    "ratio": 1.8926515861330477,
@@ -11055,6 +11253,343 @@
      "nodes": 7471,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:08.926Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 7471,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.730Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00074",
+   "hintIndex": 2,
+   "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
+   "versions": 53,
+   "minNodes": 2797012,
+   "maxNodes": 3145283,
+   "ratio": 1.124515375693776,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "532ce27",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-07-30T06:54:02.905Z"
+    },
+    {
+     "version": "8665884",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-07-30T08:33:18.756Z"
+    },
+    {
+     "version": "2b0c531",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-07-30T14:18:42.009Z"
+    },
+    {
+     "version": "8ec8cce",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-07-31T00:07:16.236Z"
+    },
+    {
+     "version": "39c19ac",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:03:08.376Z"
+    },
+    {
+     "version": "a79a8c2",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:39:01.497Z"
+    },
+    {
+     "version": "cbb8571",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:03:09.596Z"
+    },
+    {
+     "version": "051c68c",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:39:20.932Z"
+    },
+    {
+     "version": "9b1c5ab",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-07-31T07:25:20.893Z"
+    },
+    {
+     "version": "57c27f4",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-05T01:06:33.347Z"
+    },
+    {
+     "version": "63270f5",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:18:03.977Z"
+    },
+    {
+     "version": "5973bf1",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:38:46.455Z"
+    },
+    {
+     "version": "a018811",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:59:57.481Z"
+    },
+    {
+     "version": "8fabcae",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-06T02:32:41.021Z"
+    },
+    {
+     "version": "903dbc0",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-07T19:25:31.898Z"
+    },
+    {
+     "version": "3690f2e",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-08T02:59:59.581Z"
+    },
+    {
+     "version": "c26d355",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-08T04:55:22.239Z"
+    },
+    {
+     "version": "d5c4d1f",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-08T07:07:23.009Z"
+    },
+    {
+     "version": "0c4750c",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-09T22:30:20.500Z"
+    },
+    {
+     "version": "162d0b0",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:14:06.632Z"
+    },
+    {
+     "version": "be188ae",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:24:36.683Z"
+    },
+    {
+     "version": "65dad32",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:56:05.055Z"
+    },
+    {
+     "version": "1d98ef2",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:12:50.889Z"
+    },
+    {
+     "version": "cf09b69",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:41:06.235Z"
+    },
+    {
+     "version": "36083ed",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-10T01:16:30.836Z"
+    },
+    {
+     "version": "aaa743e",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-10T02:45:52.180Z"
+    },
+    {
+     "version": "6ef012f",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-11T06:34:41.414Z"
+    },
+    {
+     "version": "9ff4ef1",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:14:22.635Z"
+    },
+    {
+     "version": "a1e8ae8",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:59:09.784Z"
+    },
+    {
+     "version": "90a8bcb",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-11T19:41:50.682Z"
+    },
+    {
+     "version": "1346c34",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-12T00:32:06.329Z"
+    },
+    {
+     "version": "28282a1",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:27:50.565Z"
+    },
+    {
+     "version": "0b63464",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:33:38.654Z"
+    },
+    {
+     "version": "e3695b9",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-12T21:27:10.325Z"
+    },
+    {
+     "version": "564f6c9",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-12T23:39:17.365Z"
+    },
+    {
+     "version": "002b634",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-13T01:04:11.314Z"
+    },
+    {
+     "version": "0c44892",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-13T20:54:24.260Z"
+    },
+    {
+     "version": "70f9294",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-13T23:34:30.275Z"
+    },
+    {
+     "version": "307a71c",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-14T03:32:50.309Z"
+    },
+    {
+     "version": "cced525",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-14T21:34:13.968Z"
+    },
+    {
+     "version": "1fcccd4",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-15T07:24:40.578Z"
+    },
+    {
+     "version": "a7aa4ba",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-15T16:30:32.192Z"
+    },
+    {
+     "version": "c79180e",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-15T19:04:55.469Z"
+    },
+    {
+     "version": "f1e5ef4",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:03:21.331Z"
+    },
+    {
+     "version": "6e835ff",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:58:43.334Z"
+    },
+    {
+     "version": "a698b6f",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:03:43.441Z"
+    },
+    {
+     "version": "fc3040c",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:49:43.345Z"
+    },
+    {
+     "version": "19886e9",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-19T01:03:01.996Z"
+    },
+    {
+     "version": "29f5c36",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-19T02:41:18.385Z"
+    },
+    {
+     "version": "d50113d",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-19T03:18:41.601Z"
+    },
+    {
+     "version": "c96f57c",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-19T09:57:37.368Z"
+    },
+    {
+     "version": "6ba0894",
+     "nodes": 3145283,
+     "unit": "work",
+     "foundAt": "2026-08-19T11:34:09.331Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 2797012,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.134Z"
     }
    ]
   },
@@ -11063,7 +11598,7 @@
    "level": "P00075",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 74622,
    "maxNodes": 90798,
    "ratio": 1.2167725335691888,
@@ -11380,6 +11915,12 @@
      "nodes": 74622,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.353Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 74622,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.152Z"
     }
    ]
   },
@@ -11388,7 +11929,7 @@
    "level": "P00076",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 113958,
    "maxNodes": 115123,
    "ratio": 1.010223064637849,
@@ -11705,6 +12246,12 @@
      "nodes": 113958,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.414Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 113958,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.180Z"
     }
    ]
   },
@@ -11713,7 +12260,7 @@
    "level": "P00078",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 9732,
    "maxNodes": 10414,
    "ratio": 1.070078092889437,
@@ -12030,6 +12577,12 @@
      "nodes": 9732,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.427Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 9732,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.199Z"
     }
    ]
   },
@@ -12038,7 +12591,7 @@
    "level": "P00079",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 1299,
    "maxNodes": 1386,
    "ratio": 1.0669745958429562,
@@ -12355,6 +12908,12 @@
      "nodes": 1299,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.437Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1299,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.213Z"
     }
    ]
   },
@@ -12363,7 +12922,7 @@
    "level": "P00080",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 16620,
    "maxNodes": 17420,
    "ratio": 1.0481347773766547,
@@ -12680,6 +13239,12 @@
      "nodes": 16620,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.460Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 16620,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.242Z"
     }
    ]
   },
@@ -12688,7 +13253,7 @@
    "level": "P00081",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 1165,
    "maxNodes": 1235,
    "ratio": 1.0600858369098713,
@@ -13005,6 +13570,12 @@
      "nodes": 1165,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.472Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1165,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.252Z"
     }
    ]
   },
@@ -13013,7 +13584,7 @@
    "level": "P00083",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 4206,
    "maxNodes": 4398,
    "ratio": 1.0456490727532097,
@@ -13330,6 +13901,12 @@
      "nodes": 4206,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.497Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 4206,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.281Z"
     }
    ]
   },
@@ -13338,7 +13915,7 @@
    "level": "P00084",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 11729,
    "maxNodes": 80636,
    "ratio": 6.874925398584705,
@@ -13655,6 +14232,12 @@
      "nodes": 11729,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.515Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 11729,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.312Z"
     }
    ]
   },
@@ -13663,7 +14246,7 @@
    "level": "P00085",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 100843,
    "maxNodes": 101944,
    "ratio": 1.0109179615838482,
@@ -13980,6 +14563,12 @@
      "nodes": 100843,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.538Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 100843,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.343Z"
     }
    ]
   },
@@ -13988,7 +14577,7 @@
    "level": "P00086",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 2967,
    "maxNodes": 3415,
    "ratio": 1.150994270306707,
@@ -14305,6 +14894,12 @@
      "nodes": 2967,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.548Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 2967,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.355Z"
     }
    ]
   },
@@ -14313,7 +14908,7 @@
    "level": "P00087",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 137278,
    "maxNodes": 143124,
    "ratio": 1.0425851192470752,
@@ -14630,6 +15225,12 @@
      "nodes": 137278,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.574Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 137278,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.381Z"
     }
    ]
   },
@@ -14638,7 +15239,7 @@
    "level": "P00088",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 105405,
    "maxNodes": 109140,
    "ratio": 1.0354347516721218,
@@ -14955,6 +15556,12 @@
      "nodes": 105405,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.598Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 105405,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.409Z"
     }
    ]
   },
@@ -14963,7 +15570,7 @@
    "level": "P00089",
    "hintIndex": 1,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 22160,
    "maxNodes": 25321,
    "ratio": 1.14264440433213,
@@ -15280,6 +15887,12 @@
      "nodes": 22160,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.609Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 22160,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.420Z"
     }
    ]
   },
@@ -15288,7 +15901,7 @@
    "level": "P00090",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 9430,
    "maxNodes": 9431,
    "ratio": 1.0001060445387062,
@@ -15605,6 +16218,12 @@
      "nodes": 9430,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.617Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 9430,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.428Z"
     }
    ]
   },
@@ -15613,7 +16232,7 @@
    "level": "P00091",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 2306,
    "maxNodes": 2508,
    "ratio": 1.0875975715524717,
@@ -15930,6 +16549,12 @@
      "nodes": 2306,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.627Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 2306,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.438Z"
     }
    ]
   },
@@ -15938,7 +16563,7 @@
    "level": "P00092",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 19044,
    "maxNodes": 19045,
    "ratio": 1.0000525099768955,
@@ -16255,6 +16880,12 @@
      "nodes": 19044,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.636Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 19044,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.448Z"
     }
    ]
   },
@@ -16263,7 +16894,7 @@
    "level": "P00093",
    "hintIndex": 2,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 56458,
    "maxNodes": 56469,
    "ratio": 1.0001948350986574,
@@ -16580,6 +17211,12 @@
      "nodes": 56469,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.654Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 56469,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.467Z"
     }
    ]
   },
@@ -16588,7 +17225,7 @@
    "level": "P00094",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 27072,
    "maxNodes": 28043,
    "ratio": 1.03586731678487,
@@ -16905,6 +17542,12 @@
      "nodes": 27072,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.665Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 27072,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.481Z"
     }
    ]
   },
@@ -16913,7 +17556,7 @@
    "level": "P00095",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 42181,
    "maxNodes": 42971,
    "ratio": 1.018728811550224,
@@ -17230,6 +17873,12 @@
      "nodes": 42181,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.677Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 42181,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.492Z"
     }
    ]
   },
@@ -17238,7 +17887,7 @@
    "level": "P00097",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 9926,
    "maxNodes": 10928,
    "ratio": 1.1009470078581503,
@@ -17555,6 +18204,12 @@
      "nodes": 9926,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:09.799Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 9926,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.616Z"
     }
    ]
   },
@@ -17563,7 +18218,7 @@
    "level": "P00099",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 67817,
    "maxNodes": 75264,
    "ratio": 1.109810224574959,
@@ -17880,6 +18535,12 @@
      "nodes": 67817,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.094Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 67817,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.931Z"
     }
    ]
   },
@@ -17888,7 +18549,7 @@
    "level": "P00100",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 8597,
    "maxNodes": 8690,
    "ratio": 1.0108177271141097,
@@ -18205,6 +18866,12 @@
      "nodes": 8690,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.115Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 8690,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:23.948Z"
     }
    ]
   },
@@ -18213,7 +18880,7 @@
    "level": "P00101",
    "hintIndex": 0,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 39647,
    "maxNodes": 57807,
    "ratio": 1.4580422226145735,
@@ -18530,6 +19197,12 @@
      "nodes": 39647,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.166Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 39647,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.008Z"
     }
    ]
   },
@@ -18538,7 +19211,7 @@
    "level": "P00102",
    "hintIndex": 4,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 18865,
    "maxNodes": 19319,
    "ratio": 1.0240657301881793,
@@ -18855,6 +19528,12 @@
      "nodes": 18865,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.175Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 18865,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.018Z"
     }
    ]
   },
@@ -18863,7 +19542,7 @@
    "level": "P00103",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 2778,
    "maxNodes": 2976,
    "ratio": 1.0712742980561556,
@@ -19180,6 +19859,12 @@
      "nodes": 2778,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.189Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 2778,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.032Z"
     }
    ]
   },
@@ -19188,7 +19873,7 @@
    "level": "P00104",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 5286,
    "maxNodes": 22117,
    "ratio": 4.1840711312902,
@@ -19505,6 +20190,12 @@
      "nodes": 5286,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.206Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 5286,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.056Z"
     }
    ]
   },
@@ -19513,7 +20204,7 @@
    "level": "P00105",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 63672,
    "maxNodes": 67977,
    "ratio": 1.0676121372031662,
@@ -19830,6 +20521,12 @@
      "nodes": 63672,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.244Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 63672,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.089Z"
     }
    ]
   },
@@ -19838,7 +20535,7 @@
    "level": "P00106",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 96352,
    "maxNodes": 100533,
    "ratio": 1.043392975755563,
@@ -20155,6 +20852,12 @@
      "nodes": 96352,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.309Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 96352,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.149Z"
     }
    ]
   },
@@ -20163,7 +20866,7 @@
    "level": "P00108",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 36684,
    "maxNodes": 38150,
    "ratio": 1.0399629266165085,
@@ -20480,6 +21183,12 @@
      "nodes": 36684,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.333Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 36684,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.189Z"
     }
    ]
   },
@@ -20488,7 +21197,7 @@
    "level": "P00109",
    "hintIndex": 2,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 8204,
    "maxNodes": 8335,
    "ratio": 1.015967820575329,
@@ -20805,6 +21514,12 @@
      "nodes": 8204,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.344Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 8204,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.218Z"
     }
    ]
   },
@@ -20813,7 +21528,7 @@
    "level": "P00111",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 66146,
    "maxNodes": 66419,
    "ratio": 1.0041272336951592,
@@ -21130,6 +21845,12 @@
      "nodes": 66146,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.525Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 66146,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.397Z"
     }
    ]
   },
@@ -21138,7 +21859,7 @@
    "level": "P00112",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 10214,
    "maxNodes": 12724,
    "ratio": 1.2457411396122968,
@@ -21455,6 +22176,12 @@
      "nodes": 10214,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.543Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 10214,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.417Z"
     }
    ]
   },
@@ -21463,7 +22190,7 @@
    "level": "P00113",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 14884,
    "maxNodes": 15255,
    "ratio": 1.0249260951357162,
@@ -21780,6 +22507,12 @@
      "nodes": 14884,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.564Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 14884,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.438Z"
     }
    ]
   },
@@ -21788,7 +22521,7 @@
    "level": "P00114",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 16529,
    "maxNodes": 37028,
    "ratio": 2.2401839191723636,
@@ -22105,6 +22838,12 @@
      "nodes": 16529,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.591Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 16529,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.465Z"
     }
    ]
   },
@@ -22113,7 +22852,7 @@
    "level": "P00115",
    "hintIndex": 2,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 7586,
    "maxNodes": 31393,
    "ratio": 4.138281044028473,
@@ -22430,6 +23169,12 @@
      "nodes": 7586,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.599Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 7586,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.473Z"
     }
    ]
   },
@@ -22438,7 +23183,7 @@
    "level": "P00116",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 1172,
    "maxNodes": 1252,
    "ratio": 1.068259385665529,
@@ -22755,6 +23500,12 @@
      "nodes": 1172,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.613Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1172,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.485Z"
     }
    ]
   },
@@ -22763,7 +23514,7 @@
    "level": "P00117",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 3836,
    "maxNodes": 3871,
    "ratio": 1.0091240875912408,
@@ -23080,6 +23831,12 @@
      "nodes": 3871,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.627Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 3871,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.497Z"
     }
    ]
   },
@@ -23088,7 +23845,7 @@
    "level": "P00118",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 4251,
    "maxNodes": 5052,
    "ratio": 1.1884262526464362,
@@ -23405,6 +24162,12 @@
      "nodes": 4251,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.648Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 4251,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.519Z"
     }
    ]
   },
@@ -23413,7 +24176,7 @@
    "level": "P00120",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 4559,
    "maxNodes": 4860,
    "ratio": 1.0660232507128757,
@@ -23730,6 +24493,12 @@
      "nodes": 4602,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.685Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 4602,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.567Z"
     }
    ]
   },
@@ -23738,7 +24507,7 @@
    "level": "P00121",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 14102,
    "maxNodes": 14196,
    "ratio": 1.0066657211743015,
@@ -24055,6 +24824,12 @@
      "nodes": 14102,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.706Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 14102,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.595Z"
     }
    ]
   },
@@ -24063,7 +24838,7 @@
    "level": "P00124",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 1514,
    "maxNodes": 1997,
    "ratio": 1.3190224570673712,
@@ -24380,6 +25155,12 @@
      "nodes": 1514,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:10.772Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1514,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:24.640Z"
     }
    ]
   },
@@ -24419,7 +25200,7 @@
    "level": "P00125",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 2527412,
    "maxNodes": 2570837,
    "ratio": 1.017181607114313,
@@ -24736,6 +25517,12 @@
      "nodes": 2527412,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:11.866Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 2527412,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:25.658Z"
     }
    ]
   },
@@ -24744,7 +25531,7 @@
    "level": "P00126",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 111853,
    "maxNodes": 124782,
    "ratio": 1.1155892108392265,
@@ -25061,6 +25848,12 @@
      "nodes": 111853,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:11.894Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 111853,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:25.689Z"
     }
    ]
   },
@@ -25069,7 +25862,7 @@
    "level": "P00127",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 170,
    "maxNodes": 4694,
    "ratio": 27.611764705882354,
@@ -25386,6 +26179,12 @@
      "nodes": 170,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:11.902Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 170,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:25.698Z"
     }
    ]
   },
@@ -25394,7 +26193,7 @@
    "level": "P00128",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 11664,
    "maxNodes": 13850,
    "ratio": 1.1874142661179699,
@@ -25711,6 +26510,12 @@
      "nodes": 11664,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:11.937Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 11664,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:25.733Z"
     }
    ]
   },
@@ -25750,7 +26555,7 @@
    "level": "P00129",
    "hintIndex": 27,
    "config": "beam|mustCrossFirst|-|2000|-|74",
-   "versions": 41,
+   "versions": 42,
    "minNodes": 287883,
    "maxNodes": 369090,
    "ratio": 1.2820833463594585,
@@ -26001,6 +26806,12 @@
      "nodes": 369090,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:12.073Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 369090,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:25.883Z"
     }
    ]
   },
@@ -26040,7 +26851,7 @@
    "level": "P00131",
    "hintIndex": 54,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 1214373,
    "maxNodes": 1436328,
    "ratio": 1.1827733324110468,
@@ -26357,6 +27168,12 @@
      "nodes": 1214373,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:12.850Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1214373,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:26.712Z"
     }
    ]
   },
@@ -26365,7 +27182,7 @@
    "level": "P00132",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 5366,
    "maxNodes": 7039,
    "ratio": 1.3117778606038017,
@@ -26682,6 +27499,12 @@
      "nodes": 5366,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:12.862Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 5366,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:26.724Z"
     }
    ]
   },
@@ -26690,10 +27513,10 @@
    "level": "P00133",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|perimeterCCW|-|-|73",
-   "versions": 50,
-   "minNodes": 6602462,
+   "versions": 51,
+   "minNodes": 5904429,
    "maxNodes": 6603916,
-   "ratio": 1.000220220881241,
+   "ratio": 1.118468187186263,
    "drifted": true,
    "byVersion": [
     {
@@ -26995,6 +27818,12 @@
      "nodes": 6602462,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:14.532Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 5904429,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:28.367Z"
     }
    ]
   },
@@ -27003,7 +27832,7 @@
    "level": "P00134",
    "hintIndex": 3,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 12276,
    "maxNodes": 16813,
    "ratio": 1.369582926034539,
@@ -27320,6 +28149,12 @@
      "nodes": 12276,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:14.550Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 12276,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:28.375Z"
     }
    ]
   },
@@ -27328,7 +28163,7 @@
    "level": "P00135",
    "hintIndex": 1,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 454,
    "maxNodes": 481,
    "ratio": 1.0594713656387664,
@@ -27645,6 +28480,12 @@
      "nodes": 454,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:14.562Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 454,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:28.382Z"
     }
    ]
   },
@@ -27870,7 +28711,7 @@
    "level": "P00137",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 15050,
    "maxNodes": 20805,
    "ratio": 1.3823920265780731,
@@ -28187,6 +29028,12 @@
      "nodes": 15050,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:14.862Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 15050,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:28.713Z"
     }
    ]
   },
@@ -28238,7 +29085,7 @@
    "level": "P00139",
    "hintIndex": 54,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 967790,
    "maxNodes": 971140,
    "ratio": 1.003461494745761,
@@ -28555,6 +29402,12 @@
      "nodes": 967790,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:18.107Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 967790,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:31.905Z"
     }
    ]
   },
@@ -28594,7 +29447,7 @@
    "level": "P00140",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|perimeterCW|-|-|73",
-   "versions": 50,
+   "versions": 51,
    "minNodes": 7665549,
    "maxNodes": 7724057,
    "ratio": 1.0076325909598909,
@@ -28899,6 +29752,12 @@
      "nodes": 7665549,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:21.027Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 7665549,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:34.842Z"
     }
    ]
   },
@@ -28938,10 +29797,10 @@
    "level": "P00142",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|perimeterCW|-|-|73",
-   "versions": 52,
-   "minNodes": 6315179,
+   "versions": 53,
+   "minNodes": 5616969,
    "maxNodes": 6315260,
-   "ratio": 1.000012826239763,
+   "ratio": 1.1243181153394295,
    "drifted": true,
    "byVersion": [
     {
@@ -29255,6 +30114,12 @@
      "nodes": 6315179,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:23.662Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 5616969,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:37.373Z"
     }
    ]
   },
@@ -29263,7 +30128,7 @@
    "level": "P00143",
    "hintIndex": 1,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 2205,
    "maxNodes": 2461,
    "ratio": 1.1160997732426303,
@@ -29580,6 +30445,12 @@
      "nodes": 2205,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:23.670Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 2205,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:37.382Z"
     }
    ]
   },
@@ -29818,7 +30689,7 @@
    "level": "P00144",
    "hintIndex": 25,
    "config": "repair|repair|-|-|-|100",
-   "versions": 21,
+   "versions": 22,
    "minNodes": 44384,
    "maxNodes": 45125,
    "ratio": 1.016695205479452,
@@ -29949,6 +30820,12 @@
      "nodes": 44384,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:23.786Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 44384,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:37.501Z"
     }
    ]
   },
@@ -30399,7 +31276,7 @@
    "level": "P00151",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 1272,
    "maxNodes": 3497,
    "ratio": 2.7492138364779874,
@@ -30716,6 +31593,12 @@
      "nodes": 1272,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:33.820Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1272,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:47.461Z"
     }
    ]
   },
@@ -30724,7 +31607,7 @@
    "level": "P00152",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 1492,
    "maxNodes": 1699,
    "ratio": 1.138739946380697,
@@ -31041,6 +31924,12 @@
      "nodes": 1492,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:33.828Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1492,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:47.470Z"
     }
    ]
   },
@@ -31049,7 +31938,7 @@
    "level": "P00154",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|73",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 6282893,
    "maxNodes": 6283587,
    "ratio": 1.0001104586692786,
@@ -31366,6 +32255,12 @@
      "nodes": 6282893,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:35.783Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 6282893,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:49.409Z"
     }
    ]
   },
@@ -31374,7 +32269,7 @@
    "level": "P00155",
    "hintIndex": 1,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 976,
    "maxNodes": 1104,
    "ratio": 1.1311475409836065,
@@ -31691,6 +32586,12 @@
      "nodes": 976,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:35.790Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 976,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:49.416Z"
     }
    ]
   },
@@ -31699,7 +32600,7 @@
    "level": "P00156",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|perimeterCW|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 406394,
    "maxNodes": 803017,
    "ratio": 1.9759568300713102,
@@ -32016,6 +32917,12 @@
      "nodes": 406394,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:35.946Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 406394,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:49.573Z"
     }
    ]
   },
@@ -32135,7 +33042,7 @@
    "level": "P00158",
    "hintIndex": 1016,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 21961,
    "maxNodes": 22022,
    "ratio": 1.0027776512909248,
@@ -32452,6 +33359,12 @@
      "nodes": 22022,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:44.946Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 22022,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:58.289Z"
     }
    ]
   },
@@ -32713,7 +33626,7 @@
    "level": "P00161",
    "hintIndex": 1003,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 52,
+   "versions": 53,
    "minNodes": 58455,
    "maxNodes": 58457,
    "ratio": 1.000034214352921,
@@ -33030,6 +33943,12 @@
      "nodes": 58457,
      "unit": "work",
      "foundAt": "2026-08-19T11:34:46.499Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 58457,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:59.885Z"
     }
    ]
   }
