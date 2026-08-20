@@ -1,38 +1,38 @@
 # GitHub Actions workflow index
 
-This directory contains ordinary CI/deployment workflows plus expensive or sharded solver-research jobs. Use this index before reading YAML files one by one or adding a new workflow.
-
-For local equivalents and broader tool selection, see [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.md).
+This directory is a second research CLI: ordinary CI/deployment plus expensive or sharded solver
+jobs. Use this index and [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.md) before
+opening YAML files one by one or adding another workflow.
 
 ## CI and deployment
 
 | Workflow | Purpose |
 |---|---|
 | `ci.yml` | Normal repository CI gate. |
-| `deploy-pages.yml` | Build/deploy the static Vite site to GitHub Pages. |
-| `deploy-firestore-rules.yml` | Firestore rules/index deployment path. |
-| `audit-export.yml` | Audit-export workflow. |
+| `deploy-pages.yml` | Vite/GitHub Pages deployment. |
+| `deploy-firestore-rules.yml` | Firestore rules/index deployment. |
+| `audit-export.yml` | Audit export. |
 
-## Current solver/corpus research entry points
+## Current solver/corpus research
 
 | Workflow | Reach for it when |
 |---|---|
-| `solver-stress-refresh.yml` | You need a full sharded refresh of the real stress corpora using the current production solver. Detailed operating notes: [`README-solver-stress-refresh.md`](README-solver-stress-refresh.md). |
-| `solver-typical-budget-baseline.yml` | You need current level-blind capability evidence or a matched deterministic baseline/experiment at the standard budget shape. |
-| `technique-census.yml` | You need the isolated technique-by-level capability matrix. This is expensive; reconcile with the current census report before re-dispatching. |
-| `method-probe-sweep.yml` | You need one named technique or short method list probed over a larger population without running the entire technique census. |
-| `solver-highbudget-unsolved-sweep.yml` | The research question specifically asks whether additional compute unlocks unresolved levels. Do not use it as a default response to solver failure. |
-| `family-wide-trove.yml` | You need population-scale family/variant research. |
-| `atlas-sweep.yml` | You need the existing atlas-style solver research sweep. |
-| `mitm-frontier-sweep.yml` | You need the existing meet-in-the-middle/frontier experiment. |
+| `solver-stress-refresh.yml` | Full sharded refresh of current stress corpora. See [`README-solver-stress-refresh.md`](README-solver-stress-refresh.md). |
+| `solver-typical-budget-baseline.yml` | Level-blind capability baseline or matched deterministic experiment. |
+| `technique-census.yml` | Full isolated technique-by-level matrix. Expensive; check the existing census first. |
+| `method-probe-sweep.yml` | One named technique/short list over a larger population. |
+| `solver-highbudget-unsolved-sweep.yml` | The question specifically concerns additional compute on unresolved levels. |
+| `family-wide-trove.yml` | Population-scale family/variant work. **Existing generated trove:** ~2.5 GB on research branch `claude/variant-levels-solver-insights-tpk4qg`; read [`../../docs/variant-level-research.md`](../../docs/variant-level-research.md) before dispatching another family campaign. |
+| `atlas-sweep.yml` | Existing atlas-style research sweep. |
+| `mitm-frontier-sweep.yml` | Existing meet-in-the-middle/frontier experiment. |
 
 ## Oracle / CP-SAT research
 
-- `cpsat-explicit-prefix-oracle.yml`: explicit-prefix CP-SAT oracle work.
-- `cpsat-hint-harvest-sweep.yml`: CP-SAT hint-harvest sweep over the configured research population.
-- `cpsat-hint-harvest-sweep-published.yml`: published-corpus variant of that harvest workflow.
+- `cpsat-explicit-prefix-oracle.yml`: explicit-prefix CP-SAT work.
+- `cpsat-hint-harvest-sweep.yml`: configured research-population hint harvest.
+- `cpsat-hint-harvest-sweep-published.yml`: published-corpus harvest.
 
-These are research/oracle instruments. Their output does not become production cold-solver capability merely because it finds a valid path.
+Oracle output is research evidence, not production cold-solver capability by itself.
 
 ## Focused solver experiments
 
@@ -40,18 +40,23 @@ These are research/oracle instruments. Their output does not become production c
 - `solver-repair-probe-adaptive-sample-ab.yml`
 - `solver-elite-prefix-dfs-retry-validate.yml`
 
-These workflows encode specific experiment shapes. Before reusing them, confirm the tested mechanism and wiring still match the current implementation and that the experiment has not already been concluded or superseded in the current queue/ledger.
+Confirm that the mechanism/wiring still matches current code and that the question remains open
+before reusing these workflows.
 
 ## Historical workflow documentation
 
-[`README-solver-corpus2-batches.md`](README-solver-corpus2-batches.md) documents the retired multi-branch Corpus-2 batch scheme and the stale-code/merge incidents learned from it. It is historical evidence, not the current dispatch path. Use `solver-stress-refresh.yml` for the current full refresh.
+[`README-solver-corpus2-batches.md`](README-solver-corpus2-batches.md) records the retired multi-branch
+Corpus-2 batch scheme and stale-code/merge incidents. It is historical evidence, not the current
+full-refresh path.
 
 ## Before adding or dispatching a workflow
 
-1. Start with [`../../docs/solver-optimization-current-queue.md`](../../docs/solver-optimization-current-queue.md) for solver optimization priority and closed forms.
-2. Check [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.md) for a cheaper local/sample tool that answers the same next gate.
-3. Search [`../../reports/`](../../reports/README.md) for prior runs of the mechanism.
-4. Preserve level-blindness, provenance, deterministic-budget, and experiment-comparability requirements from the current solver docs.
-5. For long jobs, keep per-cell/per-level progress recoverable so an interrupted shard does not erase all completed work.
+1. Check [`../../docs/solver-optimization-current-queue.md`](../../docs/solver-optimization-current-queue.md).
+2. Check [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.md) for a cheaper local/sample tool.
+3. For family work, check [`../../docs/variant-level-research.md`](../../docs/variant-level-research.md)
+   and the existing research-branch trove before generating more data.
+4. Search [`../../reports/`](../../reports/README.md) for prior runs.
+5. Preserve level-blindness, provenance, deterministic-budget, and experiment-comparability rules.
+6. Keep long-job progress recoverable per cell/level.
 
-Workflow presence means infrastructure exists. It does not mean the corresponding hypothesis is currently active or worth rerunning.
+Workflow presence means infrastructure exists, not that its hypothesis is active.

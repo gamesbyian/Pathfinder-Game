@@ -1,9 +1,17 @@
 # Documentation archive
 
-Completed, superseded, or historical plans live here so current-state references and active work
-remain easy to distinguish. Archive membership does not mean the reasoning is invalid; it means the
-document is no longer the source of truth for current behavior. Each record should point forward to
-its result or replacement, and current docs may link back when the design history matters.
+Completed, superseded, or historical plans live here so current references remain easy to identify.
+Archive membership means "not current source of truth," not "unimportant." Current docs should point
+forward; archive records preserve reasoning and provenance.
+
+## Frozen pre-consolidation snapshots
+
+[`snapshots/`](snapshots/README.md) preserves verbatim copies of large historical/current-mixed
+documents whose old top-level paths were replaced with short compatibility pointers on 2026-08-20.
+Those snapshots intentionally preserve their original text, including relative links written for the
+old location.
+
+## Earlier archived records
 
 | Record | Disposition |
 |---|---|
@@ -13,7 +21,7 @@ its result or replacement, and current docs may link back when the design histor
 | [`codebase-strengthening-plan.md`](codebase-strengthening-plan.md) | Completed strengthening plan. |
 | [`corpus2-failure-categorization-handoff.md`](corpus2-failure-categorization-handoff.md) | Completed session handoff; result is the linked corpus-2 failure-categorization report. |
 | [`hint-corpus-expansion-plan.md`](hint-corpus-expansion-plan.md) | Completed core expansion plan; optional top-ups remain in `future-work.md`. |
-| [`hint-discovery-design.md`](hint-discovery-design.md) | Historical design prototype superseded by the current hint workbench documentation. |
+| [`hint-discovery-design.md`](hint-discovery-design.md) | Historical design prototype superseded by current hint-workbench documentation. |
 | [`hint-workbench-implementation-plan.md`](hint-workbench-implementation-plan.md) | Completed implementation plan; current operation is documented in `../hint-workbench.md`. |
 | [`landmark-submission-serialization-plan.md`](landmark-submission-serialization-plan.md) | Completed serialization correction. |
 | [`level-id-unification-plan.md`](level-id-unification-plan.md) | Completed level-id migration. |
