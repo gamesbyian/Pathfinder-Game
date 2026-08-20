@@ -11,6 +11,8 @@ Snapshots are evidence, not current instructions. Relative links inside them are
 | [`solver-opt-in-experiment-ledger-2026-08-20.md`](solver-opt-in-experiment-ledger-2026-08-20.md) | Full default-off/promotion experiment chronology before compaction into a true flag ledger. |
 | [`solver-shadow-eval-harness-2026-08-20.md`](solver-shadow-eval-harness-2026-08-20.md) | Harness implementation plus dated prototype-result notebook before tool-contract compaction. |
 | [`winning-lineage-survival-analysis-2026-08-20.md`](winning-lineage-survival-analysis-2026-08-20.md) | Lineage instrumentation plus dated cohort/oracle results before tool-contract compaction. |
+| [`solver-budget-determinism-2026-08-20.md`](solver-budget-determinism-2026-08-20.md) | Completed work-budget migration diary, calibration evidence, and intermediate prototype states before compaction to the current budget contract. |
+| [`solver-aware-game-architecture-2026-08-20.md`](solver-aware-game-architecture-2026-08-20.md) | Solver-aware architecture/rule-alignment campaign, completed item chronology, and research-menu triage before compaction to durable semantic contracts. |
 | [`solver-heuristic-capability-gap-analysis.md`](solver-heuristic-capability-gap-analysis.md) | Dated capability-gap inventory superseded by newer queue/census evidence. |
 | [`solver-interoperability-and-cooperation-plan.md`](solver-interoperability-and-cooperation-plan.md) | Full producer/receptor cooperation design before consolidation into the operating model. |
 | [`research-infrastructure-and-optimization-opportunities.md`](research-infrastructure-and-optimization-opportunities.md) | Strategic research-infrastructure review with dated measurements and implementation notes. |

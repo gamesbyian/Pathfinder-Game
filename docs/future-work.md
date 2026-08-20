@@ -65,6 +65,23 @@ A classifier or fitted routing rule is only interesting after the repository has
 
 Do not train on sibling rows and randomly split them across train/test; that is family leakage.
 
+### Deferred architecture/search measurements from the 2026 solver-aware campaign
+
+The original campaign is archived at [`archive/snapshots/solver-aware-game-architecture-2026-08-20.md`](archive/snapshots/solver-aware-game-architecture-2026-08-20.md). Its completed items should not remain mixed with these genuinely deferred descendants.
+
+- **Contrastive failure-directed activity:** would require new per-branch sibling-outcome telemetry during search. Do not build it until a current representation/retention question needs that signal.
+- **Hazard-based adaptive capping / participation floors:** specialist starvation has historical precedent, but a general survival model needs censored per-attempt hazard telemetry. Reconcile with the current technique-census/routing evidence before treating this as useful.
+- **Multi-abstraction CEGAR:** the labelled atlas exists, but a refinement loop is a substantial standalone research machine rather than a small probe.
+- **Detour-gadget discovery / slack allocation:** a relatively cheap first test is to mine existing stored solutions for interface-equivalent subpaths with different length/intersection deltas.
+- **Interface-preserving repair surgery:** gated on causal-window evidence in addition to the residual-interface work already measured. Do not build the live operator first.
+- **Partial-order / commuting-segment analysis:** another cheap-first mining candidate over stored solutions before any search integration.
+- **Eulerian/local-transition relaxation:** a smallest E0 relaxation can be evaluated as a bounded offline/shadow check before a larger ladder is considered.
+- **Topology-signature diversity:** diagnostics first; measure whether the proposed signature separates useful frontier modes before adding selection machinery.
+- **Topology-first skeleton compilation / automatic rule synthesis:** moonshots. Keep deferred until their prerequisite abstraction/counterexample/proof machinery exists and there is evidence the cost is justified.
+- **Shared compiled puzzle graph:** reopen only when a concrete new consumer removes duplicated semantics without weakening the intentionally independent oracle. See [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md).
+
+These items are intentionally unranked. A current queue entry, new census result, family boundary, or exact/shadow label may make one newly relevant; otherwise do not interpret age as priority.
+
 ## Reopen rules for closed ideas
 
 A closed result is not a ban on descendants. It is a boundary on repeating the same mechanism.
@@ -82,6 +99,8 @@ Do not reopen an unchanged negative by changing only a small constant, sample, o
 ## Closed forms that should not be rediscovered as fresh ideas
 
 The current queue owns the definitive short list. At this reconciliation, repeatedly closed forms include universal beam widening, unconditional must-cross attraction, broad cold-start portfolio scheduling, plain extra repair budget for plateaued repair, static repair-fallback reserve, blind late-tier carve-outs, repair plateau penalties, soft recombination, exact relinking, repair turn bias, admissible-order LDS, and the rejected admissible-order density/profile reserve forms.
+
+Also closed/deprioritized from the solver-aware architecture campaign: general fully-sound DFS/beam transposition caching in the measured form, exact whole-level symmetry canonicalization as a meaningful stress-corpus lever, static forced-sequence macros on the measured level populations, and the three narrow Tier-2 hard-prune/shadow reasoners already scored at atlas scale.
 
 For retained code switches, consult [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) rather than inferring status from the presence of an ablation flag.
 
