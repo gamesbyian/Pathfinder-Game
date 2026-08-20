@@ -2152,6 +2152,58 @@ test('repair-late-probe does not fire when repairConfigs is empty only because S
         'no repair attempt of any kind should run when the fallback is explicitly disabled');
 });
 
+test('adaptive gate weighting cannot claim more than the remaining tier budget (regression, fixed 2026-08-20)', async () => {
+    // adaptiveGateWeight is unbounded above ((share*n)**2 for a gate that has accumulated more
+    // than its "fair" 1/n share of nodesExpanded progress) and used to multiply attBudget without
+    // ever being clamped back to budgetLeft -- every OTHER path through attemptBudgetShare (the
+    // plain even split, and the minBudgetFraction floor) already respects that bound. Only reachable
+    // on >= ADAPTIVE_GATE_THRESHOLD (4) gate levels via runInterleavedAttempts; the published corpus
+    // never has more than 3 gates (CLAUDE.md), so this is a stress-corpus-only path solver:bench
+    // --check cannot exercise.
+    //
+    // Many gates (20) so the weight's theoretical ceiling (n**2 when one gate holds ~100% of all
+    // progress) is large enough to exceed pairsLeft even many rounds in; gate 0 reports a huge
+    // nodesExpanded on EVERY round (not just the first) to keep its dominant share sustained as
+    // pairsLeft shrinks toward the end of the config list, where the unclamped product is most
+    // likely to overshoot. Scans every attempt's own allocatedWorkCeiling (attemptBudgetTelemetry)
+    // rather than tracking one specific round, since which round overflows first depends on the
+    // exact config-list length.
+    const gateCount = 10;
+    const gateKeys = Array.from({ length: gateCount }, (_, i) => PACK(i, 0));
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, gateKey, , prep, , , , , , out] = args;
+        const reported = gateKey === gateKeys[0] ? 200_000 : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += reported;
+        if (out) out.nodesExpanded = reported;
+        return null;
+    }) as typeof runAttemptSearch;
+    const level = {
+        ...makeRepairGatedInfeasibleLevel(), grid: { w: 15, h: 15 }, gateKeys,
+        goalKey: PACK(14, 14), mustPassKeys: [], mustCrossKeys: [],
+    };
+    const workBudget = 500_000;
+    const result = await solveLevel(level as unknown as NormalizedLevel, {
+        timeBudgetMs: 60_000,
+        workBudget,
+        nodeBudget: 50_000_000,
+        attemptBudgetTelemetry: true,
+        disableExtraBudgetPasses: true,
+        // Otherwise STRATEGY_PARITY_GATE_FILTER (getActiveGates) drops every gate whose parity
+        // relative to the goal/reqLen doesn't match, silently shrinking activeGates below what
+        // this test constructed — irrelevant to the scheduling behavior under test.
+        ablation: { STRATEGY_PARITY_GATE_FILTER: false },
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, false, 'the mocked dispatch never solves');
+    const gate0Attempts = result.attempts.filter(a => a.gateKey === gateKeys[0] && a.allocatedWorkCeiling != null);
+    assert.ok(gate0Attempts.length > gateCount, 'gate 0 must have run across several weighted rounds, not just round 0');
+    const maxCeiling = Math.max(...gate0Attempts.map(a => a.allocatedWorkCeiling as number));
+    // budgetLeft <= workBudget always, so this is a valid (if slightly loose) upper bound for any
+    // single attempt regardless of which round it came from.
+    assert.ok(maxCeiling <= workBudget,
+        `a single weighted attempt must not be granted more than the tier's own workBudget (${workBudget}), got ${maxCeiling}`);
+});
+
 test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses, and enables STRATEGY_REPAIR_ELITE_PREFIX_DFS while it runs', async () => {
     // Simulates the real mechanism's shape without depending on repair-search.ts's actual
     // elitePrefixDfsRepair internals: succeeds only once prep._cfg reflects

@@ -682,7 +682,16 @@ async function runInterleavedAttempts(
             const budgetLeft = workBudget - workSpent;
             let attBudget = attemptBudgetShare(budgetLeft, pairsLeft, budgetLeft / activeGates.length, minFrac);
             if (gateProgress && ci >= 1) {
-                attBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(attBudget * adaptiveGateWeight(gateKey, gateProgress)));
+                // adaptiveGateWeight is unbounded above ((share*n)**2 for a gate that has been
+                // getting more than its "fair" 1/n share of progress) — every OTHER path through
+                // attemptBudgetShare above (the plain even split, and the minBudgetFraction floor,
+                // which is itself bounded by budgetLeft/activeGates.length) already keeps attBudget
+                // <= budgetLeft by construction, so this clamp preserves that same invariant rather
+                // than changing the weighting's own (validated, S142-scoped) relative aggressiveness.
+                // Without it, a single heavily-weighted attempt could claim several times budgetLeft,
+                // overspending this tier's declared workBudget before the outer `workSpent >= workBudget`
+                // check on the NEXT iteration ever gets a chance to stop it.
+                attBudget = Math.min(budgetLeft, Math.max(MIN_ATTEMPT_WORK, Math.floor(attBudget * adaptiveGateWeight(gateKey, gateProgress))));
             }
             if (attBudget < MIN_ATTEMPT_WORK) return { solution: null, attempts };
             prep._workCap = Math.min(workMeter.units + attBudget, prep._strictWorkCap ?? Infinity);
