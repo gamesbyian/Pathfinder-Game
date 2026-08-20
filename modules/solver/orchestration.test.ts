@@ -2106,14 +2106,14 @@ test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses,
     // opt-in-default-false) never does.
     //
     // Isolates every sibling default-on retry tier (attractionDiversity/admissibleOrder/dedupNearTieRetry/
-    // admissibleOrderNonDefaultRetry/connectivityAxisExhaustedRetry) via budget-fraction overrides:
-    // each of THEIR OWN Proxy overrides falls through to `true` for any prop it doesn't explicitly
-    // name (originalCfg has no own-key for an unrelated flag, since `normalizeAblationConfig` wraps
-    // the RAW sparse ablation object, not a fully-materialized one) — so without this isolation, an
-    // earlier sibling tier's own Proxy would satisfy this mock's `=== true` check first and this
-    // tier's own pass would never actually run. (The three PROMOTED siblings' own equivalent tests
-    // don't need this because their mocks check the OPPOSITE polarity — `=== false` — which the same
-    // fallback-to-true default can never accidentally satisfy.)
+    // admissibleOrderNonDefaultRetry/connectivityAxisExhaustedRetry) via budget-fraction overrides.
+    // Historically load-bearing: each sibling Proxy used to fall through to a blind `true` for any
+    // prop it didn't explicitly name, so an earlier sibling tier's own Proxy would satisfy this
+    // mock's `=== true` check on STRATEGY_REPAIR_ELITE_PREFIX_DFS (an opt-in flag) before this
+    // tier's own pass ever ran. Fixed 2026-08-20 (all 5 retry-tier Proxies now fall through to
+    // `!OPT_IN_FEATURES.has(prop)`, matching `normalizeAblationConfig`), so this isolation is no
+    // longer strictly required for this specific flag — kept anyway as good practice/defense in
+    // depth for whichever prop a future version of this test happens to check.
     const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
         const [, , , prep] = args;
         if (prep._cfg && prep._cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS === true) return [0, 1];
@@ -2132,4 +2132,34 @@ test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses,
     });
     assert.equal(result.ok, true, 'the elite-prefix-dfs-on retry wins');
     assert.equal(result.attempts.at(-1)?.repairElitePrefixDfsRetry, true);
+});
+
+test('retry-tier config Proxies do not leak unrelated opt-in flags to true (regression, fixed 2026-08-20)', async () => {
+    // Direct regression coverage for the bug the previous test's comment describes: every retry-tier
+    // Proxy (attractionDiversity/dedupNearTieRetry/connectivityAxisExhaustedRetry/
+    // repairElitePrefixDfsRetry/mcNeighborBudgetRetry) used to fall through to a blind `true` for any
+    // prop it didn't explicitly name — so with the real production default `cfg === null`, ANY
+    // unrelated opt-in/default-OFF flag (e.g. PRUNE_PORTAL_PARITY_ENVELOPE) would read `true` for the
+    // whole duration of the retry pass, silently activating an unvalidated experimental mechanism no
+    // caller asked for. Captures the observed value while repairElitePrefixDfsRetry's own Proxy is
+    // active (representative of all 5, which share the identical fixed fallback shape).
+    let observedPortalParity: unknown;
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, , , prep] = args;
+        if (prep._cfg) observedPortalParity = prep._cfg.PRUNE_PORTAL_PARITY_ENVELOPE;
+        if (prep._cfg && prep._cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS === true) return [0, 1];
+        return null;
+    }) as typeof runAttemptSearch;
+    await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.notEqual(observedPortalParity, true, 'an unrelated opt-in flag must not read true under a retry-tier Proxy with cfg=null');
 });

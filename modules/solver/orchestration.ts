@@ -3022,16 +3022,22 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // failed to rescue any of the 3 known R00156/R02960 variants even at a full extra 15s
         // budget, while a standalone plain-ablation call (bypassing this pass entirely) rescued one
         // of them in 788ms — isolating the difference to exactly this. The Proxy instead falls
-        // through to `true` for any flag not explicitly named here or already set on originalCfg,
-        // faithfully reproducing "originalCfg's own settings, plus these candidate flags off, plus
-        // everything else exactly as if no ablation config were present" regardless of whether
-        // originalCfg itself was null or a real (sparse-or-not) config object.
+        // through to `!OPT_IN_FEATURES.has(prop)` for any flag not explicitly named here or already
+        // set on originalCfg, faithfully reproducing "originalCfg's own settings, plus these
+        // candidate flags off, plus everything else exactly as if no ablation config were present"
+        // regardless of whether originalCfg itself was null or a real (sparse-or-not) config object.
+        // FIXED 2026-08-20: an earlier version fell through to a blind `true`, which — for any prop
+        // not covered by the two checks above — silently force-enabled every opt-in/default-OFF
+        // strategy flag whenever this pass ran, the exact same bug `normalizeAblationConfig`'s own
+        // comment already documents shipping once (2026-08-07/08 turn-bias/elite-prefix-dfs
+        // confound). All 5 sibling retry-tier Proxies below had the same bug; fixed together.
         const originalCfg = prep._cfg;
         const diversityCfg: AblationConfig = new Proxy({} as AblationConfig, {
             get(_target, prop: string | symbol) {
                 if (typeof prop !== 'string') return undefined;
                 if ((ATTRACTION_DIVERSITY_CANDIDATE_FLAGS as readonly string[]).includes(prop)) return false;
                 if (originalCfg && Object.prototype.hasOwnProperty.call(originalCfg, prop)) return originalCfg[prop];
+                if (OPT_IN_FEATURES.has(prop)) return false;
                 return true;
             },
         });
@@ -3226,6 +3232,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 if (typeof prop !== 'string') return undefined;
                 if (prop === 'STRATEGY_DEDUP_NEAR_TIE_RETENTION') return false;
                 if (originalCfg && Object.prototype.hasOwnProperty.call(originalCfg, prop)) return originalCfg[prop];
+                if (OPT_IN_FEATURES.has(prop)) return false;
                 return true;
             },
         });
@@ -3355,6 +3362,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 if (typeof prop !== 'string') return undefined;
                 if (prop === 'PRUNE_CONNECTIVITY_AXIS_EXHAUSTED') return false;
                 if (originalCfg && Object.prototype.hasOwnProperty.call(originalCfg, prop)) return originalCfg[prop];
+                if (OPT_IN_FEATURES.has(prop)) return false;
                 return true;
             },
         });
@@ -3412,6 +3420,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 if (typeof prop !== 'string') return undefined;
                 if (prop === 'STRATEGY_REPAIR_ELITE_PREFIX_DFS') return true;
                 if (originalCfg && Object.prototype.hasOwnProperty.call(originalCfg, prop)) return originalCfg[prop];
+                if (OPT_IN_FEATURES.has(prop)) return false;
                 return true;
             },
         });
@@ -3477,6 +3486,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 if (typeof prop !== 'string') return undefined;
                 if (prop === 'PRUNE_MC_NEIGHBOR_BUDGET') return false;
                 if (originalCfg && Object.prototype.hasOwnProperty.call(originalCfg, prop)) return originalCfg[prop];
+                if (OPT_IN_FEATURES.has(prop)) return false;
                 return true;
             },
         });
