@@ -39,4 +39,5 @@ const compact = compactResearchStatusIndex(index, { query: 'current question' })
 assert.equal(compact.count, 1);
 assert.equal(compact.entries[0].kind, 'queue');
 assert.equal(compact.entries[0].authority, 'docs/solver-optimization-current-queue.md');
+await import('./corpus-query-node-test.mjs');
 console.log('research status index check passed');
