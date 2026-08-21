@@ -114,6 +114,36 @@ for (const [file, requiredStrings] of routerRequirements) {
   }
 }
 
+// Current reference docs must name actual TypeScript source paths, not the .js import specifiers
+// used inside TypeScript source. Limit this check to authoritative navigation/reference surfaces so
+// historical experiment prose can describe old paths without breaking current CI.
+for (const file of ['AGENTS.md', 'docs/architecture.md', 'docs/command-glossary.md', 'docs/typing.md']) {
+  const source = readFileSync(resolve(ROOT, file), 'utf8');
+  for (const match of source.matchAll(/`(modules\/[A-Za-z0-9_./*-]+\.js)`/g)) {
+    const documented = match[1];
+    if (documented.includes('*')) continue;
+    const documentedTarget = resolve(ROOT, documented);
+    if (existsSync(documentedTarget)) continue;
+    const tsTarget = documented.replace(/\.js$/, '.ts');
+    if (existsSync(resolve(ROOT, tsTarget))) {
+      failures.push(`${file}: stale source path ${documented}; document actual source path ${tsTarget}`);
+    } else {
+      failures.push(`${file}: missing documented source path ${documented}`);
+    }
+  }
+}
+
+// Commands presented as runnable documentation should continue to exist. This deliberately checks
+// only `npm run <alias>` forms; arbitrary shell snippets may invoke binaries or temporary scripts.
+const packageScripts = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8')).scripts ?? {};
+for (const file of markdownFiles) {
+  if (file.startsWith('docs/archive/snapshots/') && file !== 'docs/archive/snapshots/README.md') continue;
+  const source = readFileSync(resolve(ROOT, file), 'utf8');
+  for (const match of source.matchAll(/npm run ([A-Za-z0-9:_-]+)/g)) {
+    if (!(match[1] in packageScripts)) failures.push(`${file}: documented npm alias does not exist: npm run ${match[1]}`);
+  }
+}
+
 // Make the expensive off-main family dataset impossible to lose from the agent-facing map.
 const variantReference = readFileSync(resolve(ROOT, 'docs/variant-level-research.md'), 'utf8');
 for (const required of [
