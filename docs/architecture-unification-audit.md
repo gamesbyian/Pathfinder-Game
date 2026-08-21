@@ -1,648 +1,301 @@
 # Architecture unification audit
 
-> **Status:** current engineering review and migration proposal. This is not an instruction to
-> mechanically collapse every duplicated representation. It classifies current plurality by
-> semantics and recommends behavior-preserving consolidation where multiple authorities or policy
-> implementations can drift.
+> **Status:** current engineering review. Preserve behavior and research evidence; do not collapse representations merely because they look similar.
 >
-> **Last verified:** 2026-08-20 against `main` at `c30a780c9a176993511156e055dbab2728dbc7d6`.
-> Re-check the named files before implementing a proposal; solver orchestration is changing quickly.
+> **Verified:** 2026-08-21 against `main` after the solver-authority consolidation work. Re-check named code before implementation because solver orchestration changes quickly.
 >
-> **Priority rule:** solver solve count, correctness, deterministic research evidence, and speed take
-> precedence over architectural neatness. Refactors should preserve the existing search policy first;
-> optimization is a separate decision-bearing change.
+> **Priority:** solve count, correctness, deterministic evidence, and speed outrank architectural neatness. Keep structural refactors separate from solver-policy tuning.
 
-## Executive conclusion
+## Executive summary
 
-Pathfinder does not have one generic "too much duplication" problem. It has four different shapes
-that should be treated differently:
+Treat duplication by semantics:
 
-1. **Intentional plurality:** two representations or counters answer different questions. Preserve
-   both and make their ownership explicit.
-2. **Compatibility at a boundary:** old/new external forms are accepted, then normalized. Keep this;
-   it is the healthy form of legacy support.
-3. **Parallel internal authorities:** two modules independently encode the same policy, schema, or
-   interpretation and therefore have to "stay in sync." Unify these.
-4. **Patch-stack orchestration:** each new solver stage adds another condition, budget override,
-   boolean tag, reporter field, provenance special case, and alternate-executor implementation.
-   Generalize the repeated mechanism without changing what the stages do.
+1. **Intentional plurality:** representations answer different questions. Keep them and make ownership explicit.
+2. **Boundary compatibility:** accept old/new external forms, normalize once, keep the adapter.
+3. **Parallel internal authority:** modules independently encode one policy/schema/interpretation. Unify them.
+4. **Repeated orchestration mechanics:** stages repeat the same budget, telemetry, provenance, and executor plumbing. Generalize the mechanism, not stage behavior.
 
-A useful rule for future cleanup is:
+External forms may vary; internal authorities should not. Shared event counts may still need separate scopes. The problem is duplicated policy or callers having to remember synchronization rules.
 
-> **Multiple external forms are fine. Multiple internal authorities are suspicious. Multiple
-> implementations of policy are dangerous.**
+Recent work materially improved the highest-risk solver area: canonical stage IDs, stage planning/budgets, attempt identity, telemetry typing, and shared retry execution now exist. Remaining work is mostly boundary cleanup, compatibility migration, conformance, and retiring residual parallel authorities.
 
-A second rule follows from the current work-accounting design:
+## Classification
 
-> **Do not unify things merely because they count the same event. Scope and semantics can make two
-> counters legitimately different. The smell is when callers must personally remember the treaty
-> between them.**
-
-The highest-value work is therefore not deleting aliases or shaving small adapters. It is making
-solver stage identity, telemetry/provenance, budget ownership, and executor policy first-class so
-new solver research stops creating another synchronization surface each time it ships.
-
-## Classification summary
-
-| Area | Classification | Recommendation |
+| Area | Classification | Current direction |
 |---|---|---|
-| Per-solve vs cumulative work meters | **Preserve semantics; encapsulate interface** | Per-solve meter remains budget authority; cumulative meter remains a distinct session/tooling scope, but should not be a generally mutable solver-internal singleton API. |
-| `workSpent` vs `nodesExpanded` vs elapsed time | **Preserve** | They measure normalized allocation, technique-local progress, and real latency respectively. Never collapse them into one "cost" field. |
-| Solver post-ladder/retry stages | **Unify policy representation** | Introduce declarative stage descriptors consumed by orchestration, telemetry, provenance, and alternate executors. |
-| Attempt/result telemetry | **Unify authority** | Export one stable telemetry schema; stop re-declaring `AttemptLike`, `unknown[]`, and reporter whitelists independently. |
-| Sequential vs raced solver orchestration | **Unify policy; keep execution different** | Both executors should consume the same stage plan while retaining different scheduling semantics. |
-| Hint `Hint[]` vs `.hints` + `.hintRecords` | **Boundary compatibility moving inward** | Keep legacy readers; migrate tools toward one canonical in-memory `Hint[]` authority and derive bare paths on demand. |
-| Persistent level id vs fingerprint | **Preserve both, fix ownership** | Persistent id identifies the level entity; fingerprint identifies an exact structural revision. Persistence should stop using revision identity where entity identity is intended. |
-| Legacy fingerprint calculators | **Preserve** | This is exemplary versioned compatibility: frozen old algorithms at a read/migration boundary. Reuse it instead of inventing other legacy scans. |
-| Raw game parser vs raw solver parser | **Unify wire interpretation** | Parse wire semantics once, then project into the solver's optimized representation. |
-| Runtime/domain/solver rule implementations | **Keep optimized representations; unify specification/conformance** | Share pure rule predicates where practical and differential-test the solver's optimized implementation against the canonical referee. |
-| Engine flat + grouped facade | **Preserve** | Current architecture explicitly makes them identical references and tests that contract. This is codified compatibility, not drift-prone duplication. |
-| Level selector parsing | **Unify** | Canonical capability tooling should use the shared explicit `pos:`/`id:` selector contract. |
-| Firestore fingerprint full scans | **Retire compatibility patch** | Query known frozen legacy fingerprints or migrate/backfill stored keys; reserve full scans for exceptional unknown data, not the normal bridge. |
-| Published local corpus vs Firestore publication paths | **Encapsulate storage plurality** | Keep both stores if needed, but expose one application-level published-level abstraction. |
-| Corpus activation (`ingest` + two hint-source setters) | **Encapsulate coordination** | Make corpus activation one operation so callers cannot forget themes or one hint source. |
+| Per-solve vs cumulative work meters | **Keep semantics; clarify ownership** | Per-solve meter stays budget authority; replace/encapsulate mutable global cumulative scope. |
+| `workSpent` vs `nodesExpanded` vs elapsed time | **Keep** | Allocation, technique progress, and latency are distinct metrics. |
+| Solver stage/retry policy | **Mostly unified** | `stage-policy.ts`, `stage-budget.ts`, `stage-plan.ts`, canonical `stageId`, and shared retry executors now carry much of the policy. Keep removing residual mirrored dispatch. |
+| Attempt/result telemetry | **Mostly unified** | Canonical attempt/result typing and `stageId` now cross the ports/provenance boundary; keep compatibility fields only where old artifacts need them. |
+| Sequential vs raced orchestration | **Share policy; keep execution distinct** | `RACE_SUPPORTED_STAGE_IDS` documents raced coverage. Continue moving both executors toward shared policy inputs without requiring deterministic race winners. |
+| Hint `Hint[]` vs `.hints` + `.hintRecords` | **Boundary compatibility moving inward** | Keep legacy readers; make `Hint[]` the sole mutable in-memory authority. |
+| Persistent level id vs fingerprint | **Keep both; fix ownership** | ID = entity, fingerprint = structural revision. Entity-attached persistence should use ID plus revision. |
+| Legacy fingerprint calculators | **Keep** | Frozen legacy algorithms are the right versioned-compatibility pattern. |
+| Raw game parser vs raw solver parser | **Unify wire meaning** | Parse semantics once, then project to optimized solver representation. |
+| Runtime/domain/solver rules | **One specification, optimized implementations** | Share cheap predicates/constants and differential-test optimized solver rules against the canonical referee. |
+| Engine flat + grouped facade | **Keep** | Both views come from one mapping and reference-identity tests enforce the contract. |
+| Level selector parsing | **Unify** | Canonical tools should use the shared explicit `pos:`/`id:` contract. |
+| Firestore fingerprint full scans | **Retire normal fallback** | Query known legacy keys/backfill; reserve scans for unknown historical data. |
+| Local vs Firestore published storage | **Encapsulate** | Keep backend plurality behind an application-level published-level abstraction. |
+| Corpus activation | **Encapsulate coordination** | One operation should own levels, local hints, supplemental hints, and theme policy. |
 
-## 1. Work accounting: intentional dual tracking, but the scope contract should be explicit
+## 1. Work accounting: keep two scopes, remove implicit ownership
 
-### Current design
+Each canonical work event increments the same unit in two scopes:
 
-`modules/solver/work-meter.ts` now documents a concurrency fix that materially changes how its
-module-global `workMeter` should be understood.
+- `prep._workMeter.units`: fresh per `solveLevel()`, authoritative for solve budgets and concurrent-solve independence.
+- module-global `workMeter.units`: cumulative process/realm scope used by multi-solve discovery tooling.
 
-Every canonical work event increments **two counters of the same unit**:
+These are two scopes of one metric. `workSpent`, nodes, and elapsed time are different metrics.
 
-- `prep._workMeter.units` is fresh per `solveLevel()` call. Every internal work cap and per-solve
-  accounting decision uses it. It is the correctness/budget authority and makes concurrent solves
-  in one JS realm independent.
-- module-global `workMeter.units` is still incremented as a process/realm cumulative total so
-  black-box hint-discovery code spanning many sequential `solverApi.solve()` calls can impose one
-  ceiling without reaching into each call's `prep`.
+The remaining risk is the mutable global singleton. `modules/solver/diversification.ts` can compare absolute global work against a session ceiling, so unrelated work in the same realm may affect that session.
 
-This is not the same duality as `workSpent` versus nodes versus time. Those are different *metrics*;
-these are two *scopes of the same metric*.
+### Direction
 
-The fix is sound and the two scopes are useful. The remaining architectural issue is that the
-cumulative scope is still exposed as the mutable solver-internal singleton `workMeter`. For example,
-`modules/solver/diversification.ts` imports it directly and compares absolute global values against
-its resumable session ceiling. That makes an important assumption implicit: unrelated concurrent
-solver work in the same realm must not be allowed to count against that discovery session.
+1. Keep `prep._workMeter` as the sole internal solve-budget authority.
+2. Prefer caller-owned session accounting: accumulate `SolveResult.workSpent`, pass remaining work as each nested solve's `workBudget`.
+3. If a session must stop inside a nested solve, use an explicit caller-owned live scope rather than process-global state.
+4. Keep hot-path accounting direct/monomorphic and reject abstractions with measurable per-move cost.
+5. Characterize current discovery stopping behavior before migration and preserve found-hint order/set under pinned work.
 
-### Proposal
+`CONNECTIVITY_WORK_UNITS = 12` is allocation currency, not a claim that connectivity literally costs 12 moves. Use pinned work for deterministic policy comparison and wall time for implementation-speed changes. See [`solver-budget-determinism.md`](solver-budget-determinism.md).
 
-Do **not** collapse back to one counter. Instead make the scope distinction a public contract:
+## 2. Solver stage and budget authority: consolidation largely landed
 
-1. Keep `prep._workMeter` as the only internal solve-budget authority.
-2. Rename or wrap the global role as explicitly cumulative/session instrumentation, for example
-   `cumulativeWorkMeter`, with a read-only external API such as `readCumulativeWorkUnits()`.
-3. Prefer removing the global dependency from high-level discovery sessions entirely if it can be
-   done without changing their stopping point: track `SolveResult.workSpent` across completed nested
-   solves and pass the session's remaining work into each subsequent solve as an explicit
-   `workBudget`. This gives the caller its own scope and cannot absorb another concurrent solve.
-4. If a discovery algorithm truly needs a live cumulative counter that can stop *inside* a nested
-   solve, introduce an explicit caller-owned work scope rather than falling back to a process
-   singleton. Keep the hot-path implementation monomorphic/direct; do not buy architecture purity
-   with measurable per-move overhead.
-5. Characterize the existing discovery-session stopping behavior before migration and require
-   equivalent found-hint order/set under a pinned work ceiling.
+Older orchestration accumulated stage booleans and one-off budget fields across retries. The 2026-08-21 consolidation moved major policy into executable shared modules:
 
-### Important semantic guardrail
+- `modules/solver/stage-policy.ts`: stable stage identity/policy.
+- `modules/solver/stage-budget.ts`: canonical budget computation and envelopes.
+- `modules/solver/stage-plan.ts`: stage eligibility/plan derived from the same budget plan used by dispatch.
+- `modules/solver/stage-executors.ts`: shared execution shape for whole-ladder retry tiers.
+- `Attempt.stageId`: primary stage identity; legacy booleans are compatibility fallback.
+- `modules/solver/attempt-identity.mjs`: one attempt/config identity formatter shared by solver and sweep tooling.
 
-The canonical work unit is an **allocation/fairness currency**, not a literal CPU stopwatch.
-`CONNECTIVITY_WORK_UNITS = 12` was fitted to equalize work rates across heterogeneous techniques.
-It therefore should not be used as a claim that every `isConnected` call physically costs exactly
-12 `applyMove` calls, or that an optimization which halves the cost of each connectivity call must
-halve `workSpent`.
+This is the desired pattern: one policy description consumed by orchestration, telemetry, and tooling. Do not regress to new stage-specific copies.
 
-For solver-policy comparisons, pinned work is the right deterministic currency. For pure speed/hot-
-path optimization, report wall time as well: a change can make the same declared work substantially
-cheaper. `docs/solver-budget-determinism.md` should preserve this distinction explicitly.
+### Remaining checks
 
-## 2. Solver stages have outgrown boolean flags and one-off budget fields
+- Keep moving residual stage eligibility/order/budget decisions out of ad hoc orchestration branches when a shared policy can express them without obscuring genuinely different execution shapes.
+- Keep sequential and raced engines on shared stage identity/policy. Different scheduling and winner timing are legitimate.
+- New stages should enter via canonical stage/budget/telemetry infrastructure, not new boolean/report/provenance treaties.
+- Structural stage refactors must preserve order, budgets, flags, solved set, and deterministic work before any tuning.
 
-`modules/solver/attempts.ts` already demonstrates the good form: base attempt selection is encoded in
-a declarative `ATTEMPT_POLICY`. The orchestration *around* those attempts has not reached the same
-shape.
+### Budget model
 
-`modules/solver/orchestration.ts`'s `Attempt` currently carries a growing family of diagnostic stage
-booleans, including `attractionDiversity`, `dedupNearTieRetry`,
-`admissibleOrderNonDefaultRetry`, `connectivityAxisExhaustedRetry`,
-`repairElitePrefixDfsRetry`, `mcNeighborBudgetRetry`, `repairLateProbe`, `repairProbe`,
-`repairProbeShrinkRecovery`, and `mainLoopLateReserve`. `SolveOpts` likewise carries stage-specific
-budget/reserve overrides.
+Keep multiple resources explicit:
 
-Individually, many of these stages are rational. A feature that helps globally can still have a
-small counterfactual population that is worth retrying only after the ordinary solver fails. The
-architectural problem is not "retries are hacks." It is that every retry has to hand-wire the same
-cross-cutting concerns again.
-
-### Proposal: a first-class stage plan
-
-Introduce a declarative `SolverStage`/`StageSpec` representation whose fields cover at least:
-
-- stable `stageId` and optional variant/tags;
-- eligibility predicate;
-- attempt/config source or config overlay;
-- scheduling/order semantics;
-- feature overrides/forcing;
-- budget policy;
-- whether budget is additive or carved from the ordinary envelope;
-- work/node/deadline semantics;
-- provenance identity;
-- whether the stage is production/default, opt-in, or research-only.
-
-The first migration must be **behaviorally inert**. Encode the current ladder exactly, in the same
-order with the same budgets and flags, and have the existing sequential executor interpret it.
-Only after equivalence tests should any stage policy itself change.
-
-A useful consequence is that a new counterfactual retry becomes one data entry rather than changes
-scattered through orchestration, options, reporters, provenance, and alternate schedulers.
-
-## 3. Budgeting should be one multi-resource model, not one currency
-
-The current budget documentation correctly distinguishes:
-
-- `workBudget`: deterministic cross-technique allocation currency;
-- `timeBudgetMs`: outer latency/deadline resource;
-- `nodeBudget`: technique-local/diagnostic cap;
+- `workBudget`: deterministic cross-technique allocation.
+- `timeBudgetMs`: latency/deadline.
+- `nodeBudget`: technique/diagnostic cap.
 - `strictTotalWorkBudget`: experiment-only whole-solve envelope.
 
-That plurality should remain. The failure mode to eliminate is **manual interaction between the
-resources**.
+A stage budget must make ownership and interaction explicit: allocation/rollover, node-ceiling scope, deadline relation, additive/reserve behavior, expected binding resource, behavior when another resource binds first, and strict-total-work participation.
 
-Recent retry-tier work has repeatedly shown why. A stage may divide WORK fairly among configs while
-all configs share one absolute NODE ceiling. If the node ceiling binds first, config 1 can consume
-the stage's effective capacity and leave later configs with nominal work allowance they can no
-longer spend. That is not an argument for deleting node tracking; it is an argument for making node
-ownership explicit.
+The historical failure to avoid is partitioned WORK under one shared NODE ceiling, where an early config consumes effective stage capacity and later configs retain nominal work they cannot spend.
 
-### Proposal: `StageBudget` / `BudgetEnvelope`
+## 3. Telemetry and provenance: canonicalize once, preserve legacy only at boundaries
 
-A stage should declare, rather than reimplement:
+Earlier code had internal `Attempt`, `SolveResult.attempts: unknown[]`, a provenance `AttemptLike`, and a reporter whitelist. Fields could disappear between the live solver and stored evidence.
 
-- work allocation and whether unused work rolls forward;
-- node ceiling and whether it is per-attempt, per-config, per-stage, or whole-solve;
-- deadline relationship;
-- reserve/additive semantics;
-- which resource is expected to bind;
-- what happens when another resource binds first;
-- whether the stage is subject to `strictTotalWorkBudget`.
+Current code now has typed attempt/result telemetry at the ports boundary, canonical stage identity, and provenance anchored to the canonical attempt type. Keep that direction.
 
-This turns "shared node cap + partitioned work cap" from an accidental interaction into an explicit
-policy a reviewer can see in one place.
+### Requirements
 
-## 4. Attempt/result telemetry is still a parallel-schema system
+- One stable external attempt/result projection should originate in the solver layer.
+- Workers, reporters, provenance, and ports should consume it rather than redeclare it.
+- `stageId` is primary. Emit old booleans only where historical artifact compatibility requires them.
+- Keep attempt identity formatting centralized.
+- Schema-completeness tests should round-trip all supported telemetry through worker transport, report JSON, and provenance without silent loss.
+- Provenance must distinguish technique from invocation/stage. DFS/beam/repair/admissible-order and `stageId` vary independently.
 
-This is currently the clearest data-integrity cleanup and should precede a large stage refactor.
+Stored provenance should answer: full production solve or isolated tooling; winning stage; non-default forcing/overrides; and production/default vs force-enabled/research-only invocation.
 
-`modules/solver/orchestration.ts` owns the real `Attempt` shape, but that interface is internal.
-`modules/ports.ts` declares `SolveResult.attempts: unknown[]` and its `SolveResult` interface omits
-newer result fields such as work/deadline/lifecycle telemetry. `modules/solver/hint-provenance.ts`
-therefore declares its own `AttemptLike` and explicitly says it is duck-typing the unexported
-attempt objects. Batch tooling performs another hand-maintained projection in
-`scripts/portfolio-solve-sweep-lib.mjs::attemptRecord()`.
+## 4. Sequential and raced execution: policy parity, not winner parity
 
-The comments in that reporter record several previous incidents where a newly added field was
-silently omitted and persisted reports misclassified attempts. The same class of drift exists on
-current main: `Attempt` has the newer retry-stage flags listed above, while `attemptRecord()` does
-not currently project `dedupNearTieRetry`, `admissibleOrderNonDefaultRetry`,
-`connectivityAxisExhaustedRetry`, `repairElitePrefixDfsRetry`, `mcNeighborBudgetRetry`, or
-`repairLateProbe`.
+`scripts/solver-parallel/race.mjs` is legitimately a different executor. Worker scheduling makes first success timing-sensitive.
 
-That means the live solver can know *why* an attempt ran while a persisted sweep erases the answer.
+Risk begins when it reconstructs solver policy independently. `RACE_SUPPORTED_STAGE_IDS` now makes coverage explicit; continue sharing stage/config identity and budget policy where practical. Tests should compare planned stage/attempt sets, not require raced winner determinism.
 
-### Proposal
+Until every stage is shared, document sequential-only vs raced-supported stages explicitly rather than claiming blanket orchestration identity.
 
-1. Export a stable `SolveAttemptTelemetry` and current `SolveResult` contract from the solver layer.
-   The runtime-internal attempt object may remain richer if useful, but external consumers should
-   receive one canonical stable projection produced once at the source.
-2. Make `modules/ports.ts`, workers, reporters, and provenance import that contract rather than
-   re-declare it.
-3. Replace the accumulating mutually-overlapping stage booleans with a first-class `stageId` plus
-   optional structured stage metadata. During migration, legacy booleans can still be emitted by an
-   artifact codec if old reports require them.
-4. Centralize `attemptConfigKey` too. `portfolio-solve-sweep-lib.mjs` currently documents that its
-   implementation must mirror orchestration exactly; this is precisely the kind of duplicate policy
-   that should become one pure shared formatter/identity function.
-5. Add schema-completeness tests: a sentinel attempt containing every supported telemetry field
-   should survive worker transport, report projection, JSON round-trip, and provenance conversion
-   without silent loss.
+## 5. Level identity vs structural revision
 
-### Immediate repair before the larger refactor
+Persistent IDs (`P…`, `S…`, `R…`) identify level entities across reorderings. Fingerprints identify exact structure and change when the puzzle changes.
 
-Even if the stage/schema refactor is deferred, add the currently missing retry-stage identity to
-persisted attempt records now. Current research should not continue generating artifacts that erase
-known information.
+Some persistence still keys entity-like data by fingerprint, including Dev-mode ratings and local supplemental hints. Editing a level can therefore change lookup identity even when the conceptual entity is unchanged.
 
-## 5. Hint provenance needs invocation/stage identity, not more special cases
+### Direction
 
-`modules/solver/hint-provenance.ts` currently recognizes ordinary technique/config information,
-repair bias, admissible-order, and the attraction-diversity rerun. It does not recognize the newer
-retry-stage booleans.
+For entity-attached records:
 
-This is especially important because the live optimization queue now treats provenance/invocation
-ambiguity as a decision-bearing problem: a valid hint found by an isolated technique is not the same
-evidence as a cold production-ladder solve.
+1. key by persistent ID;
+2. store current fingerprint/revision;
+3. define revision-mismatch behavior per data type: reuse, stale, validate/migrate, or discard;
+4. migrate fingerprint-keyed records on read and keep the old record until the new write succeeds.
 
-### Proposal
+Keep fingerprints for structural equality/duplicates. Eventually rename numeric/position-derived `EngineLevel.id` to `position`/`sourceIndex` and reserve `id` for durable identity.
 
-Add a structured invocation/stage dimension to solver provenance rather than mapping every new stage
-to another bespoke field. It should be possible to answer from a stored hint:
+## 6. Fingerprint compatibility: reuse versioned keys, avoid normal full scans
 
-- Was this a full production `solveLevel()` invocation or isolated method tooling?
-- Which orchestration stage produced the winning attempt?
-- Which non-default feature overrides/forcing were active?
-- Was the stage default-on production policy, force-enabled experiment, or research-only?
+`modules/domain/level-fingerprint.ts` has the right pattern: frozen old calculators exposed through `getLegacyLevelFingerprints()`. Consumers try current, then known legacy keys, and migrate hits forward.
 
-Keep `technique` (DFS/beam/repair/admissible-order) separate from `stageId`: they vary independently.
-Do not overload `forcing.disabledFeatures` to mean every kind of stage identity.
+`modules/persistence/level-submission-repository.ts` can instead fall back from a current-fingerprint miss to a collection scan plus structural comparison. That is robust as an emergency bridge but scales with collection size and duplicates known compatibility logic.
 
-This should share the same canonical telemetry/invocation descriptor as reports. Provenance should
-not reverse-engineer the answer from attempt order.
+Query current + frozen legacy fingerprints directly and/or backfill current keys. Keep a bounded full scan only for genuinely unknown/unversioned records, with telemetry so it can be retired.
 
-## 6. Sequential and raced execution should share policy, not implementation
+**Rule:** known versioned compatibility should reconstruct the old key, not normalize collection-wide search as permanent behavior.
 
-`scripts/solver-parallel/race.mjs` is intentionally a different executor: it runs attempts on worker
-threads and therefore has different scheduling and winner-timing semantics. That plurality is
-legitimate.
+## 7. Hint compatibility: normalize at I/O, not throughout tooling
 
-The risky part is that the file also independently reconstructs solver orchestration. Its header
-says it races the same policy-selected attempts and is purely a scheduling change, but it contains
-its own budget-sharing logic, repair/main queues, ablation materialization, and a separately ported
-attraction-diversity post-phase. There is no shared first-class stage plan that can mechanically
-ensure every subsequently added retry/tail stage exists in both executors with the intended
-semantics.
+`scripts/level-data-io.mjs` correctly accepts historical file shapes and upgrades them to canonical `Hint[]` records. Node tooling still exposes both:
 
-### Proposal
-
-Have sequential and raced execution consume the same `StageSpec[]`:
-
-- sequential executor interprets stage order serially;
-- raced executor decides how eligible attempts within a stage are scheduled across workers;
-- both report the same canonical stage/config identity and budget envelope;
-- a parity test enumerates the planned attempt/stage set without running search and verifies both
-  executors consume the same policy input.
-
-Do **not** require raced results to be deterministic in the same sense as sequential results; first
-success in a race is inherently timing-sensitive. The unification target is *planned policy*, not
-winner timing.
-
-Until that exists, documentation should describe raced execution as a separately mirrored scheduler
-and state which post-ladder stages it implements, rather than promising blanket identity that code
-cannot enforce.
-
-## 7. Persistent level identity and structural revision are still conflated in persistence
-
-The level-id migration established a useful distinction:
-
-- persistent string ids (`P…`, `S…`, `R…`) identify a level entity across reorderings;
-- fingerprints identify an exact structural content/revision and intentionally change when the
-  puzzle changes.
-
-Current persistence has not fully adopted that split. Dev-mode ratings are still stored under a
-fingerprint key (`level_ratings/{fingerprint}`), and local supplemental hints are stored under
-`local_level_hints/{fingerprint}`. Editing a level therefore changes the lookup identity even when
-what the application conceptually wants is "this level, now at a new revision."
-
-### Proposal
-
-For records conceptually attached to a level entity:
-
-1. key by persistent id;
-2. store the current fingerprint/revision on the record;
-3. define explicit behavior when the stored revision and current revision differ (reuse, mark
-   stale, validate/migrate, or discard according to the data type);
-4. migrate old fingerprint-keyed records on read, retaining the old record until the new write is
-   confirmed.
-
-Keep fingerprints for exact-structure equality and duplicate detection. Do not turn persistent ids
-into content hashes.
-
-Also continue the naming cleanup over time: `EngineLevel.id` is still numeric/position-derived while
-`EngineLevel.persistentId` is the actual durable id. Reserve `id` for durable identity in a future
-major representation migration and call the numeric concept `position`/`sourceIndex`.
-
-## 8. Fingerprint compatibility has one excellent pattern and one expensive patch
-
-`modules/domain/level-fingerprint.ts` is a model worth copying. Old fingerprint algorithms are frozen
-as self-contained calculators and exposed through `getLegacyLevelFingerprints()`. The rating manager
-tries the current key, tries known legacy keys on a miss, and copies a hit forward.
-
-`modules/persistence/level-submission-repository.ts` handles the same versioning problem differently.
-After an indexed current-fingerprint miss it performs a full collection scan and recomputes
-structural equality under the current algorithm so pre-version-bump documents can still be found.
-That is robust as an emergency bridge but scales with collection size and duplicates compatibility
-knowledge that already exists in the fingerprint module.
-
-### Proposal
-
-Query the finite set of known current + frozen legacy fingerprint values directly and/or backfill
-stored documents to the current fingerprint version. Keep a full structural scan only as a bounded
-fallback for genuinely unknown/unversioned historical records, with telemetry so it can eventually
-be retired.
-
-General rule: when a compatibility algorithm is known and versioned, **reconstruct the old key**;
-do not permanently compensate with a collection-wide search.
-
-## 9. Hint compatibility is healthy at the file boundary but still dual inside tooling
-
-The on-disk direction is good. `scripts/level-data-io.mjs` accepts multiple historical hint formats
-and upgrades them to canonical `Hint[]` records. This is exactly "accept many, normalize once."
-
-The remaining compatibility burden is that Node tools receive *both*:
-
-- `level.hints`: bare `number[][]` paths for old geometry-oriented tools;
+- `level.hints`: bare `number[][]` paths;
 - `level.hintRecords`: canonical `Hint[]` with provenance.
 
-`writeLevelsWithHints()` then reconciles the two authorities. This has preserved a large existing tool
-surface safely, but it also means any new tool can accidentally join the legacy side and prolong the
-migration.
+`writeLevelsWithHints()` reconciles both, leaving two mutable authorities.
 
-### Proposal
+### Direction
 
-1. Declare `Hint[]` the sole target in-memory authority for newly touched tooling.
-2. Give geometry-only code an explicit `hintPaths(records)` derived view rather than a synchronized
-   sibling property.
-3. Migrate scripts opportunistically when they are otherwise modified; do not stage a risky flag-day
-   rewrite of every hint tool.
-4. Once no writer mutates bare `.hints`, simplify `writeLevelsWithHints()` and retain only legacy
-   *readers* at the persistence boundary.
+1. Newly touched tooling uses `Hint[]` as the sole mutable authority.
+2. Geometry-only code gets a derived `hintPaths(records)` view.
+3. Migrate scripts opportunistically, not by flag-day rewrite.
+4. Once no writer mutates bare `.hints`, simplify `writeLevelsWithHints()` and keep legacy readers only at the file boundary.
 
-Legacy file formats should remain readable. The cleanup target is dual mutable in-memory authority,
-not historical data compatibility.
+Historical file formats should remain readable.
 
-## 10. Raw level wire semantics are parsed twice
+## 8. Parse raw wire semantics once
 
-`modules/domain/level-codec.ts::parseRawLevel()` is documented as the shared application parser from
-1-based wire data to packed engine data. `modules/solver/normalization.ts::normalizeRawLevel()`
-independently interprets the same wire fields into the solver's `NormalizedLevel`, including
-coordinates, axis values, portals, landmarks, hazards, and identity defaults.
+`modules/domain/level-codec.ts::parseRawLevel()` and `modules/solver/normalization.ts::normalizeRawLevel()` both interpret wire coordinates, axes, portals, landmarks, hazards, and identity defaults.
 
-The solver absolutely should keep an optimized representation. The duplicate part is deciding what
-the wire format *means*.
+Keep the solver's optimized representation, but define wire meaning once. Parse/validate into canonical domain semantics, then project to the solver form. If layering blocks direct reuse, extract a small dependency-free semantic parser shared by both projections.
 
-### Proposal
+Goal: one wire interpretation, not one universal runtime object.
 
-Parse/validate wire semantics once into a canonical domain level, then project that parsed object
-into the solver's representation. Keep the solver projection dependency-light and benchmark it, but
-make adding a new mechanic require one wire-format interpretation rather than coordinated parser
-changes.
+## 9. Rule duplication needs a conformance contract
 
-If import layering makes direct reuse undesirable, extract a tiny dependency-free wire parser shared
-by both projections. The goal is one semantic parser, not one universal runtime object.
+Several implementations intentionally optimize the same gameplay rules:
 
-## 11. Rule duplication should be governed by a conformance contract
+- `modules/runtime/game-rules.ts::areWinMetricsSatisfied()`;
+- `modules/domain/path-validator.ts`;
+- `modules/domain/move-rules.ts`;
+- `modules/solver/solution.ts::isSolutionState()`;
+- solver dynamic move validity.
 
-There are good reasons the solver cannot simply call the runtime referee on every search node. Its
-bitmasks and typed arrays exist for speed. But several rule implementations currently carry explicit
-"must stay in sync" or "mirrors X" comments:
+The solver cannot call a slow referee on every search node, but historical drift proves these copies need one specification.
 
-- `modules/runtime/game-rules.ts::areWinMetricsSatisfied()` is the live win arbiter;
-- `modules/domain/path-validator.ts` replays moves then independently rechecks length,
-  intersections, must-pass/cross, surround, must-turn, and adjacent-turn;
-- `modules/domain/move-rules.ts` contains goal-time metric checks and documents historical drift
-  from game rules;
-- `modules/solver/solution.ts::isSolutionState()` is the optimized solver acceptance predicate;
-- solver dynamic move validity has its own optimized representation of movement constraints.
+### Direction
 
-The comments record real occasions where one side had a rule the other lacked. That makes this a
-correctness-sensitive parallel-authority area.
-
-### Proposal
-
-- Extract/share small pure semantic predicates where doing so does not harm the hot path.
+- Share small pure predicates/constants when hot-path cost permits.
 - Treat the domain referee as canonical for complete-path correctness.
-- Keep optimized solver acceptance/move logic, but maintain differential/conformance tests that
-  generate/replay states and prove agreement with the domain rules.
-- Require a new mechanic to update the conformance fixtures as part of its definition of done.
+- Differential-test optimized solver acceptance/movement against domain rules.
+- Require conformance fixtures for new mechanics.
+- Move universal mode/axis/status literals out of “must stay in sync” comments into a shared dependency-free module.
+- Push `MoveState` alias polymorphism into adapters so core rule evaluation accepts one shape.
 
-The aim is **one specification with multiple optimized implementations**, not one slow implementation
-forced into every context.
+## 10. Candidate path coordinate formats should be explicit
 
-### Related narrow cleanup
+`modules/domain/path-validator.ts` accepts packed keys, `[x,y]`, and `{x,y}`. Arrays are 1-based; objects heuristically infer 0- vs 1-based coordinates, which is ambiguous for ordinary in-bounds values.
 
-`modules/domain/move-rules.ts` and `modules/runtime/game-rules.ts` still hard-code mode/axis/status
-values with comments saying they must stay synchronized with Core. Move dependency-free universal
-constants into a domain constants module and have Core re-export them. A "MUST stay in sync" comment
-for a literal enum value is a cheap, high-confidence unification target.
+Expose explicit formats/entry points (`packed`, `xy0`, `xy1`). Keep autodetection only as a compatibility adapter during migration; internal callers should never guess coordinate base.
 
-`MoveState` also accepts nested engine state and several flat aliases (`visitedCounts`/`counts`,
-`cellUsage`/`usage`, `isPortalJump`/`jumpSet`, etc.). Move that polymorphism into adapters and let the
-core rule accept one exact evaluation-state shape once test callers have migrated.
+## 11. Unify CLI level selection
 
-## 12. Candidate path coordinate formats are ambiguous
+`scripts/level-data-io.mjs` requires explicit `pos:` or `id:` for numeric selectors. `scripts/level-blind-capability-sweep.mjs` historically had its own parser and accepted bare numbers/ranges.
 
-`modules/domain/path-validator.ts` accepts packed numeric keys, `[x,y]` arrays, and `{x,y}` objects.
-Arrays are interpreted as 1-based coordinates. Objects are heuristically treated as 0- or 1-based,
-which is inherently ambiguous for ordinary in-bounds values.
+Move canonical solver CLIs to the shared selector parser/help. Preserve old syntax only where an actual workflow needs a clearly deprecated compatibility layer.
 
-### Proposal
+Do **not** remove the capability sweep's explicit `PUZZLE_FIELDS` allowlist: it is a research-integrity boundary that intentionally requires conscious admission of new mechanics into cold solver input.
 
-Expose explicit entry points or a required format option (`packed`, `xy0`, `xy1`). Keep the existing
-autodetecting wrapper only as a compatibility adapter until callers are migrated. Internal code
-should never depend on guessing a coordinate base.
+## 12. Corpus activation should be one operation
 
-## 13. Canonical CLI level-selection semantics are not universal yet
+Changing corpora currently coordinates:
 
-`scripts/level-data-io.mjs` now has a shared selector contract that deliberately rejects bare numeric
-specs as ambiguous and requires explicit `pos:` or `id:` meaning.
-
-`scripts/level-blind-capability-sweep.mjs`, despite being the canonical capability entrypoint, still
-implements its own `parseLevelSpec()` and accepts bare numbers/ranges (and strips an optional
-`pos:` prefix). This is exactly the sort of small local parser that later becomes a tooling treaty.
-
-### Proposal
-
-Use the shared selector parser/help text in the capability sweep and any remaining solver CLIs. Keep
-one compatibility layer only where a workflow actually depends on the old syntax, and deprecate it
-explicitly rather than silently supporting different meanings in different tools.
-
-The capability sweep's explicit `PUZZLE_FIELDS` allowlist is **not** duplication to remove. It is a
-research-integrity boundary that intentionally requires a conscious edit when a new mechanic is
-allowed into cold solver input.
-
-## 14. Corpus activation is a coordinated operation represented as three calls
-
-`modules/dev-corpus.ts` currently knows that changing corpora requires all of the following:
-
-- `data.ingest(...)` with themes explicitly re-supplied because ingest otherwise resets them;
+- `data.ingest(...)`, with themes re-supplied;
 - `data.setHintsSource(...)`;
 - `data.setFirestoreHintsSource(...)`.
 
-The switcher handles this correctly, but the comments show the failure mode: forgetting one part can
-wipe themes, point at the wrong hint directory, or accidentally merge supplemental published hints
-into a stress corpus.
+A missed call can reset themes, select the wrong hint directory, or merge published supplemental hints into stress data.
 
-### Proposal
+A `DataService` activation operation should accept levels, local hints, supplemental hints, and theme policy. `dev-corpus.ts` should select a `CorpusConfig`, not maintain the synchronization recipe. Low priority while there is only one coordinator.
 
-Give `DataService` a first-class corpus/source activation operation whose input describes levels,
-local hint source, supplemental hint source, and theme-retention policy. `dev-corpus.ts` should select
-a `CorpusConfig`; it should not personally maintain the synchronization recipe.
+## 13. Published-level storage should hide backend plurality
 
-This is a lower-priority cleanup because there is currently one well-documented coordinator. It
-becomes more valuable if another corpus-switching caller appears.
+Published levels span committed local data and Firestore staging/`published_levels`; review therefore has backend-specific hint-addition paths and identifiers.
 
-## 15. Published levels span two storage backends and leak that distinction upward
+Keep the storage differences, but expose an application-level `PublishedLevelRef`/catalog that resolves backing store and operations such as duplicate lookup and hint addition. Persistent IDs should be the common entity key after the identity migration.
 
-The application has published levels in the local committed corpus and in Firestore staging/
-`published_levels`. Review persistence therefore has separate `approveHintAddition()` and
-`approveLocalHintAddition()` paths, with different storage mechanics. Local supplemental hints are
-also identified by fingerprint while Firestore-published additions target a document id.
+Do not force local files and Firestore into one physical schema.
 
-Different storage is legitimate. The application-level concept is still "add reviewed hints to a
-published level."
+## 14. Solver aliases are low-value compatibility debt
 
-### Proposal
+`modules/ports.ts::SolverApi` exposes `universalSolveLevel`, `solveLevel`, and `solve` for the same basic operation. Pick one internal canonical name, migrate callers opportunistically, and leave deprecated adapters until unused. Do not spend a large refactor window here while higher-value authority work remains.
 
-Introduce a `PublishedLevelRef`/catalog abstraction that resolves a published level to its backing
-store and exposes operations such as duplicate lookup and hint addition. Keep backend-specific
-transaction semantics inside repositories. Persistent level ids should become the common entity
-identifier once the migration in section 7 is complete.
+## Patterns to preserve
 
-Do not force local files and Firestore into one physical schema merely for symmetry.
+| Pattern | Why it is good |
+|---|---|
+| Frozen legacy fingerprint calculators | Versioned compatibility at the read/migration boundary. |
+| Hint file upgrade on read | Accept many external forms, normalize to one internal form. |
+| `LEVEL_KEY_FIELDS` | One registry for coordinate-bearing fields. |
+| Declarative `ATTEMPT_POLICY` plus stage policy/plan/budget modules | One executable policy source consumed by orchestration/tooling. |
+| Engine flat + grouped facade | Compatibility views generated from one mapping and identity-tested. |
+| Explicit cold-capability `PUZZLE_FIELDS` | Intentional duplicate declaration as a research/security boundary. |
 
-## 16. Solver facade aliases are low-risk compatibility debt
+## Remaining implementation order
 
-`modules/ports.ts::SolverApi` still exposes `universalSolveLevel`, `solveLevel`, and `solve` for the
-same basic operation. This is not causing the current research-integrity problems, so it belongs
-near the end of the queue.
+Structural changes below should preserve behavior; tune solver policy separately.
 
-### Proposal
+### Phase 1: finish solver authority cleanup
 
-Choose one canonical name (`solve` or `solveLevel`) for internal callers, migrate them, and keep the
-other names only in an explicitly deprecated adapter until usage reaches zero. Do not spend a large
-refactor window on this while stage/telemetry authority is still fragmented.
+- Keep stage/budget/attempt identity canonical as new stages are added.
+- Remove remaining mirrored dispatch/policy only when the shared representation stays clear.
+- Preserve legacy telemetry fields only at compatibility boundaries.
+- Expand round-trip/parity tests as schemas evolve.
 
-## Patterns that should be copied, not cleaned up
-
-Several parts of current main already demonstrate the desired architecture:
-
-### Frozen legacy fingerprint calculators
-
-Known old versions are preserved as immutable implementations and only used on a current-key miss.
-Compatibility is explicit, versioned, and migrates forward.
-
-### Hint file upgrade on read
-
-Bare arrays and older wrapper schemas are accepted at the I/O boundary and converted into canonical
-`Hint[]`. Consumers do not need separate parsers for every historical file format.
-
-### `LEVEL_KEY_FIELDS`
-
-Coordinate-bearing fields are centrally enumerated so remap/iteration operations consume one
-declarative registry rather than each forgetting the newest field.
-
-### Declarative `ATTEMPT_POLICY`
-
-Base solver attempt selection already lives in one ordered policy table. The proposed stage plan is
-an extension of this successful pattern to the orchestration layers surrounding the attempts.
-
-### Engine grouped facade
-
-The flat and grouped surfaces are constructed from one mapping and tests assert reference identity.
-This is how to retain a compatibility view without retaining two implementations.
-
-### Explicit cold-capability allowlist
-
-`PUZZLE_FIELDS` in the level-blind sweep intentionally duplicates awareness of gameplay mechanics so
-research metadata is excluded by default. Security/research boundaries sometimes should require a
-second explicit declaration.
-
-## Proposed implementation order
-
-This order minimizes the chance that architecture work perturbs solver capability or destroys the
-very evidence needed to judge later changes.
-
-### Phase 0 — characterize, do not optimize
-
-- Pin current-main solver result/attempt schemas in tests.
-- Add report/provenance round-trip coverage for all current stage flags and budget fields.
-- Add/retain sequential solver deterministic fixtures under explicit work budgets.
-- Record raced planned-stage parity separately from raced winner timing.
-
-### Phase 1 — repair telemetry/provenance authority
-
-1. Immediately persist the currently dropped retry-stage identity.
-2. Export canonical attempt/result telemetry types.
-3. Make ports, worker transports, report projection, and hint provenance consume them.
-4. Add structured invocation/stage identity while retaining legacy fields during migration.
-5. Centralize attempt config identity formatting.
-
-This phase directly supports the current solver queue's provenance-repair work and should happen
-before more evidence is accumulated under an ambiguous schema.
-
-### Phase 2 — make orchestration declarative
-
-1. Introduce `StageSpec` and `StageBudget` without changing behavior.
-2. Encode every existing main/retry/probe/tail stage exactly.
-3. Run equivalence tests and current solved-set/cost gates.
-4. Make sequential execution consume the plan.
-5. Make raced execution consume the same plan, preserving its own concurrency semantics.
-
-Do not combine this with tuning stage order, fractions, eligibility, or technique configs. A
-structural refactor should not get credit/blame for a solver-policy experiment in the same diff.
-
-### Phase 3 — clarify work scopes
+### Phase 2: clarify work scopes
 
 - Keep per-solve `_workMeter` authoritative.
-- Encapsulate or replace direct global `workMeter` consumption in discovery tooling.
-- If cumulative discovery budgeting can be expressed as `remainingWork -> nested solve workBudget`,
-  retire the global mutable compatibility surface after proving equivalent behavior.
-- If not, introduce an explicit caller-owned cumulative scope.
-- Benchmark the hot path; reject an abstraction that measurably taxes every candidate move.
+- Prefer `remainingWork -> nested solve workBudget` for discovery sessions.
+- If live nested cancellation needs it, add a caller-owned cumulative scope.
+- Retire mutable global consumption only after equivalent behavior is proved.
+- Benchmark hot-path cost.
 
-### Phase 4 — finish identity and hint migrations
+### Phase 3: finish identity and hint migrations
 
-- Key entity-attached persistence by persistent level id plus revision fingerprint.
-- Reuse frozen fingerprint calculators for legacy lookup/backfill; reduce full scans.
-- Migrate touched tooling to canonical `Hint[]`; derive geometry paths on demand.
+- Key entity-attached persistence by persistent ID + revision fingerprint.
+- Reuse frozen fingerprint calculators and reduce full scans.
+- Move touched tooling to canonical `Hint[]` with derived path views.
 
-### Phase 5 — semantic boundaries
+### Phase 4: semantic boundaries
 
-- Centralize raw wire parsing.
-- Add stronger domain-referee/solver conformance tests and share small predicates/constants.
-- Narrow `MoveState` and candidate-path format polymorphism behind adapters.
-- Move CLI selectors onto the shared parser.
+- Centralize raw wire interpretation.
+- Strengthen domain-referee/solver conformance tests and shared constants/predicates.
+- Narrow `MoveState` and candidate-coordinate polymorphism behind adapters.
+- Move remaining CLIs to shared selectors.
 
-### Phase 6 — low-value surface cleanup
+### Phase 5: lower-value surfaces
 
-- Corpus activation abstraction if multiple callers justify it.
+- Corpus activation abstraction if coordination spreads.
 - Published-level storage facade.
-- Solver naming aliases and other narrow deprecations.
+- Solver naming aliases and narrow deprecations.
 
-## Verification requirements for this cleanup campaign
+## Verification
 
-Architecture work in the solver should be held to a stricter standard than "tests pass" because a
-small ordering/budget change can trade solved levels invisibly.
+Behavior-preserving solver refactors should:
 
-For any solver-internal refactor intended to be behavior-preserving:
-
-- run targeted unit/characterization tests during development;
-- run the normal repository CI finish-line gate;
-- use explicit `workBudget` with a non-binding deadline for decision-bearing solver comparisons;
+- run targeted characterization tests while editing;
+- pass the appropriate repository finish-line gate;
+- use explicit `workBudget` with a non-binding deadline for decision-bearing comparisons;
 - compare solved sets, not only totals;
-- compare `workSpent`, attempt order/config/stage identity, and deadline truncation;
+- compare `workSpent`, attempt order/config/stage, and deadline truncation;
 - referee-validate returned paths;
-- if raced execution changes, separately test planned policy parity and accept that winner timing may
-  differ;
-- do not mix an architectural migration with a solver-policy optimization unless the policy change is
-  separately measured and reported.
+- test raced planned-policy parity separately from winner timing;
+- keep policy optimization in a separately measured change.
 
-For documentation-only changes, run the documentation-link check when possible.
+Documentation-only changes should run the documentation-link check when feasible.
 
-## Final architectural target
+## Target
 
-The desired endpoint is not a codebase with one representation of everything. It is a codebase in
-which every plurality has an explicit reason and owner:
+Every plurality should have an explicit owner and reason: one wire interpretation with optimized projections; one solver policy/stage authority with multiple executors; one telemetry/provenance contract with multiple reporters; explicit work scopes; distinct work/node/time metrics; durable entity identity plus structural revision; legacy forms normalized at boundaries; compatibility views derived from one authority.
 
-- one canonical semantic wire interpretation, with optimized projections;
-- one canonical solver stage plan, with multiple executors;
-- one canonical telemetry/provenance contract, with multiple reporters;
-- one deterministic work unit, with explicitly scoped counters;
-- distinct work/node/time metrics with distinct jobs;
-- one durable level identity plus explicit structural revisions;
-- legacy formats accepted at boundaries and normalized immediately;
-- compatibility views generated from one authority rather than hand-maintained beside it.
-
-That would remove the recurring class of Pathfinder bug where a new capability is implemented
-correctly in the solver but silently disappears, changes meaning, or behaves differently when it
-crosses a reporter, provenance writer, worker boundary, alternate executor, or persistence layer.
+This removes the recurring failure mode where a solver capability works locally but disappears, changes meaning, or diverges across reporting, provenance, workers, alternate executors, or persistence.
