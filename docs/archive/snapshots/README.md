@@ -1,14 +1,16 @@
 # Frozen documentation snapshots
 
-These files preserve the exact pre-consolidation text of historical, concluded, superseded, or notebook-style documents. Their original top-level paths now contain short compatibility pointers or compact current contracts.
+These files preserve exact pre-consolidation text from historical, concluded, superseded, or notebook-style documents. Snapshots are evidence, not current instructions. Use [`../../README.md`](../../README.md) for current navigation.
 
-Snapshots are evidence, not current instructions. Relative links inside them are preserved exactly as written at the original path and may therefore no longer resolve from this archive directory. Use the compatibility pointer or current topic reference for navigation.
+Historical top-level compatibility stubs were retired once current guidance was absorbed into canonical docs. Use this index to find old concepts directly. Relative links inside snapshots were preserved as originally written and may not resolve from this archive directory.
 
 | Snapshot | Why preserved |
 |---|---|
 | [`future-work-2026-08-20.md`](future-work-2026-08-20.md) | Full future-work evidence/chronology ledger before separation into queue, ledger, method, and deferred ideas. |
 | [`solver-research-operating-model-2026-08-20.md`](solver-research-operating-model-2026-08-20.md) | Living research notebook before conversion to a stable method contract. |
 | [`solver-opt-in-experiment-ledger-2026-08-20.md`](solver-opt-in-experiment-ledger-2026-08-20.md) | Full default-off/promotion experiment chronology before compaction into a true flag ledger. |
+| [`solver-optimization-current-queue-2026-08-20.md`](solver-optimization-current-queue-2026-08-20.md) | Earlier 2026-08-20 live queue state before provenance/routing reconciliation. |
+| [`solver-optimization-current-queue-2026-08-20-post-1398.md`](solver-optimization-current-queue-2026-08-20-post-1398.md) | Late 2026-08-20 regression/provenance chronology and routing state. |
 | [`solver-shadow-eval-harness-2026-08-20.md`](solver-shadow-eval-harness-2026-08-20.md) | Harness implementation plus dated prototype-result notebook before tool-contract compaction. |
 | [`winning-lineage-survival-analysis-2026-08-20.md`](winning-lineage-survival-analysis-2026-08-20.md) | Lineage instrumentation plus dated cohort/oracle results before tool-contract compaction. |
 | [`solver-budget-determinism-2026-08-20.md`](solver-budget-determinism-2026-08-20.md) | Completed work-budget migration diary, calibration evidence, and intermediate prototype states before compaction to the current budget contract. |

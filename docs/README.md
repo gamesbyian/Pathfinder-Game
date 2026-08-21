@@ -1,38 +1,28 @@
 # Pathfinder documentation index
 
-Use [`../AGENTS.md`](../AGENTS.md) first when it routes the task.
+Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file is the current-reference inventory, not a second agent guide.
 
-## Task map
-
-| Need | Start here |
-|---|---|
-| Application architecture | [`architecture.md`](architecture.md) |
-| Architecture cleanup / duplicate authority | [`architecture-unification-audit.md`](architecture-unification-audit.md) |
-| Cross-cutting schema/state/telemetry change | [`change-recipes.md`](change-recipes.md) |
-| Tests / finish-line validation | [`testing.md`](testing.md) |
-| CLI, probe, workflow discovery | [`tooling-catalog.md`](tooling-catalog.md) |
-| Solver implementation | [`solver-architecture.md`](solver-architecture.md) |
-| Current solver priority | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) |
-| Solver research method | [`solver-research-operating-model.md`](solver-research-operating-model.md) |
-| Variant/family research | [`variant-level-research.md`](variant-level-research.md) |
-| Default-off solver mechanisms | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) |
-| Deferred/reopen solver ideas | [`future-work.md`](future-work.md) |
-| Prior experiment evidence | [`../reports/README.md`](../reports/README.md) |
-| Stress corpora | [`../data/stress/README.md`](../data/stress/README.md) |
-| Full rules/gotchas | [`../DEVELOPER_REFERENCE.md`](../DEVELOPER_REFERENCE.md) |
-
-## Other current references
+## Current references
 
 | Doc | Role |
 |---|---|
+| [`architecture.md`](architecture.md) | Application structure and code ownership. |
+| [`architecture-unification-audit.md`](architecture-unification-audit.md) | Remaining duplicate-authority/architecture debt. |
+| [`change-recipes.md`](change-recipes.md) | Cross-boundary schema/state/telemetry changes. |
+| [`testing.md`](testing.md) | Validation and finish-line gates. |
+| [`tooling-catalog.md`](tooling-catalog.md) | CLI, probe, batch, and workflow discovery. |
+| [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy. |
+| [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) | Ranked live solver priority. |
+| [`solver-research-operating-model.md`](solver-research-operating-model.md) | Solver research/evidence method. |
+| [`variant-level-research.md`](variant-level-research.md) | Variant/family research and trove use. |
+| [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) | Default-off mechanism dispositions. |
+| [`future-work.md`](future-work.md) | Deferred/reopen ideas. |
 | [`typing.md`](typing.md) | TypeScript model and `.ts` source / `.js` import rule. |
 | [`command-glossary.md`](command-glossary.md) | Runtime flow names and implementation locations. |
 | [`ui-accessibility.md`](ui-accessibility.md) | Dialog/focus/keyboard/accessibility conventions. |
-| [`security.md`](security.md) | Security/data/debug policy. |
-| [`content-security-policy.md`](content-security-policy.md) | CSP contract. |
-| [`firestore-security-model.md`](firestore-security-model.md) | Firestore access model. |
-| [`firebase-config-and-secret-hygiene.md`](firebase-config-and-secret-hygiene.md) | Commit/secret boundary. |
-| [`third-party-dependencies.md`](third-party-dependencies.md) | External dependency allowlist. |
+| [`security.md`](security.md) | Firestore authorization, Firebase config/secrets, debug exposure, security workflow. |
+| [`content-security-policy.md`](content-security-policy.md) | Production CSP contract. |
+| [`third-party-dependencies.md`](third-party-dependencies.md) | External dependency/origin allowlist. |
 | [`hint-curation.md`](hint-curation.md) | Player hint selection/diversity. |
 | [`solve-button-variety.md`](solve-button-variety.md) | Varied-hint search behavior. |
 | [`hint-workbench.md`](hint-workbench.md) | Hint research CLI. |
@@ -56,19 +46,10 @@ Presence does not imply current priority.
 | [`ablation.md`](ablation.md) | Feature-flag ablation lab. |
 | [`req-length-sweep.md`](req-length-sweep.md) | Required-length scaling. |
 
-## Compatibility and history
+Prior experiment evidence: [`../reports/README.md`](../reports/README.md). Stress corpora: [`../data/stress/README.md`](../data/stress/README.md). Broad rules/gotchas: [`../DEVELOPER_REFERENCE.md`](../DEVELOPER_REFERENCE.md), load selectively.
 
-Old paths stay small so historical links resolve. Frozen pre-consolidation text: [`archive/snapshots/`](archive/snapshots/README.md).
+## History
 
-- `solver-heuristic-capability-gap-analysis.md`, `solver-improvement-research-notes.md`, `solver-next-frontier-*`, `solver-development-roadmap.md`: historical solver research.
-- `solver-interoperability-and-cooperation-plan.md`: producer/receptor design now in the operating model.
-- `research-infrastructure-and-optimization-opportunities.md`: split across current tooling/method/deferred docs.
-- `main-loop-late-reserve-experiment.md`, `fast-portfolio-scheduler-plan.md`, `repair-search-stagnation-escape-plan.md`: concluded work.
-- `ai-assisted-manual-solving.md`: worked note; current accepted-path method is in the operating model.
-- `sibling-cousin-system.md`, `variant-corpus-solver-research-plan.md`, `family-and-scaling-research-possibilities.md`: superseded family research.
-- `solver-dev-tooling-plan.md`: completed plan.
-- `claude-remote-solver-handoff.md`: dated handoff.
+Superseded plans, concluded experiments, old queue states/research ledgers, and pre-consolidation text live in [`archive/snapshots/`](archive/snapshots/README.md). Other history: [`adr/`](adr/), [`archive/`](archive/README.md), [`history/development-journal.md`](history/development-journal.md), [`refactor-notes/`](refactor-notes/).
 
-2026-08-20 queue history: [`solver-optimization-current-queue-2026-08-20-snapshot.md`](solver-optimization-current-queue-2026-08-20-snapshot.md), [`solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md`](solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md). Other history: [`adr/`](adr/), [`archive/`](archive/README.md), [`history/development-journal.md`](history/development-journal.md), [`refactor-notes/`](refactor-notes/).
-
-`../CLAUDE.md` and `.github/copilot-instructions.md` adapt `../AGENTS.md`; they are not separate knowledge bases.
+`../CLAUDE.md` and `.github/copilot-instructions.md` are thin adapters to `../AGENTS.md`, not separate knowledge bases.

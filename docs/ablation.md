@@ -1,10 +1,8 @@
 # Ablation Laboratory
 
-Specialized solver-analysis tooling: `scripts/run-ablation.mjs`, `scripts/analyze-ablation.mjs`, `modules/solver/ablation-config.ts`, and npm `ablation:*` commands.
+Solver-analysis tooling: `scripts/run-ablation.mjs`, `scripts/analyze-ablation.mjs`, `modules/solver/ablation-config.ts`, npm `ablation:*`.
 
-The framework toggles solver features through `opts.ablation`. Production-default features default on; experimental opt-ins default off. Baseline matches the production-default solver.
-
-Ablation commands use `scripts/run-bundled.mjs`, not raw `tsx`, because the solver hot path is ~5× slower under `tsx` and wall-time results would not be comparable.
+Features toggle through `opts.ablation`: production-default features default on, experimental opt-ins off, so baseline matches production. Commands use `scripts/run-bundled.mjs`, not raw `tsx`, because the hot path is ~5× slower under `tsx`.
 
 ## Feature flags (76)
 
@@ -16,23 +14,21 @@ Ablation commands use `scripts/run-bundled.mjs`, not raw `tsx`, because the solv
 | templates | 8 | structural traversal templates |
 | profiles | 12 | `PROFILE_<name>` attempt eligibility |
 
-Exact names and defaults live in `modules/solver/ablation-config.ts`.
+Exact names/defaults: `modules/solver/ablation-config.ts`.
 
-Important strategy distinctions:
-- `STRATEGY_REPAIR_FALLBACK`: removes repair configs and therefore their early probe.
-- `STRATEGY_REPAIR_PROBE`: disables only the early probe; full fallback remains.
-- `STRATEGY_REPAIR_MUSTTURN_BIAS`: removes only the biased repair attempt.
-- `STRATEGY_LOWER_BOUND_MEMO`: recomputes exact MP/MC bounds without memoization.
-- `STRATEGY_ARCHETYPE_ROUTING`: bypasses feature/archetype routing and uses the catch-all rule.
+Important distinctions:
+- `STRATEGY_REPAIR_FALLBACK`: removes repair configs and early probe.
+- `STRATEGY_REPAIR_PROBE`: disables only early probe; fallback remains.
+- `STRATEGY_REPAIR_MUSTTURN_BIAS`: only biased repair attempt.
+- `STRATEGY_LOWER_BOUND_MEMO`: exact MP/MC bounds without memoization.
+- `STRATEGY_ARCHETYPE_ROUTING`: catch-all rule instead of feature/archetype routing.
 - `STRATEGY_MIN_BUDGET_FLOOR`: disables `minBudgetFraction` floors.
-- `STRATEGY_REPAIR_ELITE_SPLICE`, `STRATEGY_REPAIR_STAGNATION_BURST`, `STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST`: isolate repair exploration mechanisms.
-- `SCORE_MUST_TURN_EXIT_GUIDANCE`: isolates exit-direction guidance from must-turn urgency.
-- `STRATEGY_REPAIR_LENGTH_GAP_CLOSE`: gates the bounded exact-length/intersection close operator.
-- `STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS`: permits that operator with one remaining structural deficit (`LENGTH_GAP_CLOSE_STRUCTURAL_SLACK`, default 1).
+- `STRATEGY_REPAIR_ELITE_SPLICE`, `STRATEGY_REPAIR_STAGNATION_BURST`, `STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST`: repair exploration mechanisms.
+- `SCORE_MUST_TURN_EXIT_GUIDANCE`: exit guidance separate from must-turn urgency.
+- `STRATEGY_REPAIR_LENGTH_GAP_CLOSE`: bounded exact-length/intersection close operator.
+- `STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS`: allows it with one structural deficit (`LENGTH_GAP_CLOSE_STRUCTURAL_SLACK`, default 1).
 
-History/results for these mechanisms belong in dated reports and the current solver queue/ledger.
-
-`ATTEMPT_ORDER` may be `'reverse'`, `'random'` (with `_randomSeed`), or `'profile-grouped'` for ordering tests.
+History/results belong in dated reports and current queue/ledger. `ATTEMPT_ORDER`: `'reverse'`, `'random'` (with `_randomSeed`), or `'profile-grouped'`.
 
 ## Commands
 
@@ -47,7 +43,7 @@ npm run ablation:full -- --budget-ms=5000 --output=logs/ablation/lab-full.json
 npm run ablation:analyze -- --input=logs/ablation/lab-full.json --text
 ```
 
-Targeted example:
+Targeted:
 
 ```bash
 node scripts/run-bundled.mjs scripts/run-ablation.mjs \
@@ -57,15 +53,15 @@ node scripts/run-bundled.mjs scripts/run-ablation.mjs \
   --budget-ms=30000
 ```
 
-Reuse a saved baseline with `--baseline=logs/ablation/baseline.json`.
+Reuse a baseline with `--baseline=logs/ablation/baseline.json`.
 
 ## `run-ablation.mjs` flags
 
 | Flag | Default | Description |
 |---|---|---|
 | `--experiment=<phase>` | `full` | `baseline`, `single-feature`, `profiles`, `templates`, `order`, `pairs`, `full` |
-| `--corpus=<path>` | `data/levels.json` | Corpus path; stress witness metadata is stripped before solving |
-| `--levels=<spec>` | `all` | Explicit-prefix selector (`pos:`, `id:`, or full ID); bare numbers rejected |
+| `--corpus=<path>` | `data/levels.json` | Corpus; stress witness metadata stripped before solving |
+| `--levels=<spec>` | `all` | `pos:`, `id:`, or full ID; bare numbers rejected |
 | `--budget-ms=<n>` | `10000` | Per-level time budget |
 | `--output=<path>` | timestamped | JSON output |
 | `--baseline=<path>` | — | Reuse baseline |
@@ -73,8 +69,6 @@ Reuse a saved baseline with `--baseline=logs/ablation/baseline.json`.
 | `--concise` | off | Omit per-level attempt lists |
 
 ## JSON format
-
-Each `runs[]` entry contains:
 
 ```js
 {
@@ -92,16 +86,7 @@ Each `runs[]` entry contains:
 
 ## Analysis
 
-`analyze-ablation.mjs` emits:
-- `featureRanking[]`
-- `tierSummary` (`critical | strong | helpful | neutral | negative`)
-- `profileRanking[]`
-- `templateRanking[]`
-- `attemptOrderSensitivity[]`
-- `redundancyAnalysis[]`
-- `recommendations[]`
-
-Importance score:
+`analyze-ablation.mjs` emits `featureRanking[]`, `tierSummary`, `profileRanking[]`, `templateRanking[]`, `attemptOrderSensitivity[]`, `redundancyAnalysis[]`, `recommendations[]`.
 
 ```text
 score = (baselineSolved - ablationSolved) * 100

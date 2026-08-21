@@ -1,8 +1,8 @@
 # Pathfinder Architecture
 
-> **Status:** current state. Refactor history: `docs/refactor-notes/`; lasting decisions: `docs/adr/`; completed modernization plan: `docs/archive/modernization-plan.md`.
+> **Status:** current. History: `docs/refactor-notes/`; decisions: `docs/adr/`; completed modernization: `docs/archive/modernization-plan.md`.
 
-Pathfinder is a Vite-built browser game deployed as a static GitHub Pages site. Source is native ES modules plus semantic CSS. Firebase (Firestore/Auth) and Tone.js are bundled npm dependencies, not CDN scripts.
+Pathfinder is a Vite-built static GitHub Pages browser game using native ES modules and semantic CSS. Firebase (Firestore/Auth) and Tone.js are bundled npm dependencies, not CDN scripts.
 
 ## Layers
 
@@ -13,71 +13,64 @@ Pathfinder is a Vite-built browser game deployed as a static GitHub Pages site. 
 | **Controllers/application** | `modules/engine*`, `modules/engine/`, `modules/input/`, `modules/editor.ts`, `modules/boot.ts` | domain + injected adapters | raw browser globals |
 | **Facade/debug** | `modules/app.ts` | everything, built last | — |
 
-AST ESLint rules enforce browser-free `domain/runtime/solver`, ENGINE mutation through state actions, and no raw HTML injection. Solver worker files are explicit browser-boundary exceptions. See [`testing.md`](testing.md).
+ESLint enforces browser-free `domain/runtime/solver`, ENGINE mutation via state actions, and no raw HTML injection; solver workers are explicit browser-boundary exceptions. See [`testing.md`](testing.md).
 
 ### Directory ownership
 
-Directory names are part of the architecture contract, not just filing convention:
+- `modules/`: executable app/runtime policy and reusable domain logic.
+- `scripts/`: developer, batch, migration, research, validation entry points.
+- `data/`: serializable inputs, fixtures, corpora, generated evidence.
+- `reports/`: interpreted evidence; `logs/`: raw run evidence.
 
-- `modules/` owns executable application/runtime policy and reusable domain logic;
-- `scripts/` owns developer, batch, migration, research, and validation entry points;
-- `data/` owns serializable inputs, fixtures, corpora, and generated evidence;
-- `reports/` owns interpreted human-readable evidence; `logs/` owns raw generated run evidence.
-
-Shared executable authority should live under `modules/` and be imported by tooling, rather than application/runtime code importing policy from `scripts/` or executable modules under `data/`. ESLint mechanically rejects executable `scripts/` or `data/` imports from `modules/`; serializable runtime data imports remain allowed. The shared solver ablation and portfolio policies therefore live in `modules/solver/` and tooling imports them.
+Shared executable authority belongs in `modules/` and tooling imports it. ESLint rejects executable `scripts/`/`data/` imports from `modules/` while allowing serializable runtime data. Shared solver ablation/portfolio policy therefore lives in `modules/solver/`.
 
 ## Composition root (`modules/app.ts`)
 
-`createApp()` builds acyclic stages with no mutable forward declarations or post-construction init:
+`createApp()` builds acyclic stages without mutable forward declarations/post-init:
 
-- **Stage 1, pure services:** `core`, `state`, `solverApi`, `data`, `debug`, `createErrorReporter`. Failure paths use injected `reportError(context, err, meta?)`; factories may use `defaultReportError` in tests. `data` is a leaf service.
-- **Stage 2, browser subsystems:** `ui`, `renderer`, `levelUtils`, `persistence`, `themes`. Dependencies are one-way; `persistence` validates theme IDs through `data`, then `themes` consumes `persistence`.
-- **Stage 3, controllers:** `editor`, `engine`, `input`, `loader`, `boot`. Editor accesses engine through lazy `getEngineRuntime: () => createEditorEnginePort(engine)`, avoiding a construction cycle.
+- **Stage 1, pure services:** `core`, `state`, `solverApi`, `data`, `debug`, `createErrorReporter`; failure paths use injected `reportError(context, err, meta?)`, tests may use `defaultReportError`; `data` is a leaf.
+- **Stage 2, browser subsystems:** `ui`, `renderer`, `levelUtils`, `persistence`, `themes`; dependencies are one-way. `persistence` validates theme IDs through `data`, then `themes` consumes `persistence`.
+- **Stage 3, controllers:** `editor`, `engine`, `input`, `loader`, `boot`; editor reaches engine lazily through `getEngineRuntime: () => createEditorEnginePort(engine)` to avoid a construction cycle.
 
-`bootstrapApp()` installs SVG sprites, palette, and modal icons, builds the app, then exposes diagnostics.
+`bootstrapApp()` installs SVG sprites/palette/modal icons, builds the app, then exposes diagnostics.
 
 ## State
 
-`modules/state-slices.ts` owns the mutable `ENGINE` tree: `nav`, `hazards`, `solver`, `hinter`, `viewport`, `review`, `ui`, `runtime`, `gamepad`, `flags`, `editor`, `levelRating`, plus top-level state.
-
-All ENGINE mutations go through `modules/state-actions.ts` / `modules/state/actions/*.ts`. `check:engine-state-boundary` forbids direct writes in engine/input/ui consumers.
+`state-slices.ts` owns mutable `ENGINE`: `nav`, `hazards`, `solver`, `hinter`, `viewport`, `review`, `ui`, `runtime`, `gamepad`, `flags`, `editor`, `levelRating`, plus top-level state. All mutations use `state-actions.ts` / `state/actions/*.ts`; `check:engine-state-boundary` forbids direct writes in engine/input/ui consumers.
 
 ## Runtime commands/effects
 
-`modules/runtime/` contains:
-- `actions.ts` / `effects.ts`: frozen action/effect types and factories;
+`modules/runtime/`:
+
+- `actions.ts` / `effects.ts`: frozen types/factories;
 - `step-processor.ts`: pure step computation;
-- `effect-runner.ts`: effect dispatcher over injected adapters;
-- `game-rules.ts`, `path-state.ts`, `state-machine.ts`: win metrics, path derivation, legal state transitions.
+- `effect-runner.ts`: dispatcher over injected adapters;
+- `game-rules.ts`, `path-state.ts`, `state-machine.ts`: win metrics, path derivation, legal transitions.
 
-`rebuildDerivedState` recomputes navigation derivatives (`visitedCounts`, `cellUsage`, `intersections`, `flipCount`, `crossedFlippingFilters`). `test:path-state-invariants` checks incremental and rebuilt state agree.
+`rebuildDerivedState` recomputes `visitedCounts`, `cellUsage`, `intersections`, `flipCount`, `crossedFlippingFilters`; `test:path-state-invariants` checks parity with incremental state.
 
-Correctness-sensitive flows use pure tested decision/transition cores: `computeStep`, `PathNavigator.applySnapshot`, `computeWinEffects`, hazard-effect planners, `planResetCheat`, and `planSubmissionAdvance`. Controllers execute the returned decisions/effects. There is intentionally no universal command reducer. `replayMoves` supports declarative move tests.
+Correctness-sensitive flows use pure tested cores (`computeStep`, `PathNavigator.applySnapshot`, `computeWinEffects`, hazard planners, `planResetCheat`, `planSubmissionAdvance`); controllers execute their decisions/effects. There is intentionally no universal command reducer. `replayMoves` supports declarative move tests.
 
 ## Engine facade (`modules/engine.ts`)
 
-`createEngine()` coordinates `modules/engine/` subcontrollers and exposes flat methods plus grouped `game`, `navigation`, `overlays`, `hints`, `solver`, `review`, and `ratings` namespaces. Grouped entries are the same instances as their flat counterparts; unit tests enforce this. Input controllers prefer grouped namespaces. Flat-only methods remain for implementation/debug use.
+`createEngine()` coordinates `modules/engine/` subcontrollers and exposes flat methods plus grouped `game`, `navigation`, `overlays`, `hints`, `solver`, `review`, `ratings`. Grouped entries are identical references to flat counterparts; tests enforce this. Input prefers grouped namespaces; flat-only methods remain for implementation/debug.
 
-## Solver
+## Solver and persistence
 
-`modules/Solver.ts` is a thin facade over `modules/solver/`. Test/analysis access is through `SOLVER_TESTING_API`. Runtime worker support is in `modules/solver/worker.js` and `modules/solver/solver-worker-client.ts`. See [`solver-architecture.md`](solver-architecture.md).
+`modules/Solver.ts` is a thin facade over `modules/solver/`; test/analysis access uses `SOLVER_TESTING_API`; runtime workers live in `modules/solver/worker.js` and `solver-worker-client.ts`. See [`solver-architecture.md`](solver-architecture.md).
 
-## Persistence
-
-`modules/persistence/` contains the Firebase client seam, submission/progress/review/rating/supplemental-hint repositories, and local-session fallback. `firebase-config.js` is public client config. See [`security.md`](security.md) and [`firestore-security-model.md`](firestore-security-model.md).
+`modules/persistence/` contains Firebase client seam, submission/progress/review/rating/supplemental-hint repositories, and local-session fallback. `firebase-config.js` is public client config. See [`security.md`](security.md), [`firestore-security-model.md`](firestore-security-model.md).
 
 ## UI and styling
 
-`modules/ui/` owns DOM helpers, modals/focus trapping, toast/layout/loading/solver overlays, SVG defs, editor palette, and modal icons.
+`modules/ui/` owns DOM helpers, modals/focus, toast/layout/loading/solver overlays, SVG defs, editor palette, modal icons.
 
-Styles are one semantic system: `styles/app.css` imports `reset.css` -> `tokens.css` -> `components.css`. No Tailwind or utility layer. Allowed non-component classes are the type scale and `.hidden` / `.is-shown` / `.selected` state hooks.
-
-When changing cascade order, preserve computed behavior: old same-specificity utility/component conflicts sometimes made apparent markup intent differ from the actual applied value. Design record: [`archive/styling-semantic-migration-plan.md`](archive/styling-semantic-migration-plan.md). Accessibility conventions: [`ui-accessibility.md`](ui-accessibility.md).
+`styles/app.css` imports `reset.css` -> `tokens.css` -> `components.css`; no Tailwind/utility layer. Allowed non-component classes are type scale plus `.hidden` / `.is-shown` / `.selected`. Preserve computed behavior when changing cascade order; old same-specificity conflicts sometimes differed from apparent markup intent. See [`archive/styling-semantic-migration-plan.md`](archive/styling-semantic-migration-plan.md), [`ui-accessibility.md`](ui-accessibility.md).
 
 ## Where new code goes
 
 - puzzle/solver rule or pure transform -> `modules/domain/` or `modules/solver/`;
-- ENGINE field -> correct state slice + matching state-action helper;
-- control/flow -> `modules/input/` or an `engine/` subcontroller with narrow injected dependencies;
-- browser side effect -> adapter in `ui/`, `render/`, `persistence/`, or runtime effect runner;
+- ENGINE field -> state slice + state-action helper;
+- control/flow -> `modules/input/` or `engine/` subcontroller with narrow injected dependencies;
+- browser side effect -> `ui/`, `render/`, `persistence/`, or runtime effect runner;
 - modal/UI primitive -> follow `ui-accessibility.md`; construct DOM nodes, never raw `innerHTML`.
