@@ -6,7 +6,11 @@ import type { Attempt } from './orchestration.js';
  * The error outcome is intentional; provenance tests turn the same record into a successful win.
  */
 export const MAXIMALLY_POPULATED_SOLVER_ATTEMPT = Object.freeze({
-  stageId: 'repair-probe-shrink-recovery',
+  // Matches the `repairLateProbe: true` legacy flag below — classifyAttemptTier (orchestration.ts)
+  // reads `stageId` first, so this fixture's canonical/legacy fields must agree on which stage this
+  // "maximal" attempt represents, even though every OTHER legacy boolean below is also populated
+  // (deliberately over-specified, for field-projection round-trip coverage, not stage consistency).
+  stageId: 'repair-late-probe',
   gateKey: 589833,
   profile: 'perimeterSweep',
   template: 'perimeterCW',

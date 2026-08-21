@@ -17,7 +17,24 @@
  * Usage: node scripts/family-wide-trove-shard-run.mjs --shard-file=<path to shard JSON slice>
  *   --nn=<01-60> --progress=<log file> --summary=<jsonl file>
  *   [--budget-ms=86400000] [--node-budget=36000000] [--workers=4] [--seed=20260807]
- *   [--variant-count=10] [--max-wall-ms=20400000]
+ *   [--variant-count=10] [--max-wall-ms=20400000] [--run-id=<id>] [--shard-count=60]
+ *   [--workflow=family-wide-trove.yml]
+ *
+ * MANIFEST EMISSION (experiment-manifest-lib.mjs's validateFamilyEvaluationRunManifest): on
+ * completion this writes a validator-compliant family evaluation run manifest to
+ * logs/family-census/wide-shard-<NN>/manifest.json, listing every solve-*.json this shard produced
+ * as `outputArtifacts` and every family-*.json it generated as `sourceGenerationArtifacts` --
+ * family-index-lib.mjs's buildFamilyIndex discovers it by filename (any `manifest.json` under
+ * logs/family-census/) and joins it back to the matching evidence rows via outputArtifacts, giving
+ * every solve in the trove its solver commit/budgets/seed provenance instead of leaving it
+ * evidence with no recorded producer. `--run-id` should be the SAME value across every shard of one
+ * dispatch (e.g. the GitHub Actions run id) so family-index-lib.mjs's per-run shard-agreement check
+ * groups them as one run; omitting it skips manifest emission entirely (a local ad hoc rerun that
+ * doesn't care about trove provenance), it is never defaulted to something synthetic that would
+ * silently fabricate run identity. `--shard-count` must match the workflow's own total shard count
+ * (its own `inputs.shards`) -- a mismatched count fails validateFamilyEvaluationRunManifest's
+ * one-based-index-within-count check rather than writing a manifest that under/overstates the run's
+ * shape.
  *
  * Budget defaults (2026-08-07 update) match the CURRENT production corpus-2 routine baseline
  * (.github/workflows/solver-stress-refresh.yml's corpus2_node_budget=36000000,
@@ -34,9 +51,10 @@
  * solver-stress-refresh.yml/solver-highbudget-unsolved-sweep.yml already use.
  */
 import { execFileSync } from 'node:child_process';
-import { appendFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs';
+import { appendFileSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { buildFamilyEvaluationRunManifest } from './experiment-manifest-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [k, ...v] = a.split('=');
@@ -53,6 +71,12 @@ const WORKERS = args.get('--workers') || '4';
 const SEED = args.get('--seed') || '20260807';
 const VARIANT_COUNT = args.get('--variant-count') || '10';
 const MAX_WALL_MS = Number(args.get('--max-wall-ms') || 20_400_000); // 340 min default
+// Manifest emission is opt-in via --run-id: omitted (every ad hoc/local invocation) is a no-op,
+// never a synthetic/fabricated run identity -- see this file's own header comment.
+const RUN_ID = args.get('--run-id') || null;
+const SHARD_COUNT = Number(args.get('--shard-count') || 60);
+const WORKFLOW = args.get('--workflow') || 'family-wide-trove.yml';
+const MANIFEST_OUT = `logs/family-census/wide-shard-${NN}/manifest.json`;
 
 mkdirSync(path.dirname(PROGRESS), { recursive: true });
 mkdirSync('data/families/hints', { recursive: true });
@@ -89,10 +113,24 @@ function solvedCount(file) {
 const shard = JSON.parse(readFileSync(path.resolve(process.cwd(), SHARD_FILE), 'utf8'));
 log(`[${nowStamp()}] SHARD START ${shard.length} level(s)`);
 
+// Manifest provenance, tracked only for artifacts THIS run actually wrote -- a (level, mode) task
+// the idempotency skip above found already present (family + solve both exist) is NOT added here:
+// it was produced by some EARLIER run under that run's own commit/budgets, and re-claiming it under
+// this run's manifest would misattribute its provenance (the exact "misleading evidence" the
+// manifest contract exists to prevent). Sets, not arrays: the same familyFile can legitimately be
+// touched by more than one mode in future generator revisions without a duplicate entry.
+const outputArtifacts = new Set();
+const sourceGenerationArtifacts = new Set();
+const corporaSeen = new Set();
+const familiesSeen = new Set();
+const manifestStartedAt = new Date().toISOString();
+
 let stoppedEarly = false;
 for (const entry of shard) {
     if (Date.now() - startedAt > MAX_WALL_MS) { stoppedEarly = true; break; }
     const { id, corpus, corpusPath, modes, group } = entry;
+    corporaSeen.add(corpus);
+    familiesSeen.add(`${corpus}:${id}`);
     log(`[${nowStamp()}] START ${id}`);
     for (const mode of modes) {
         if (Date.now() - startedAt > MAX_WALL_MS) { stoppedEarly = true; break; }
@@ -150,6 +188,13 @@ for (const entry of shard) {
             `--node-budget=${NODE_BUDGET}`, `--work-budget=${WORK_BUDGET}`, `--workers=${WORKERS}`,
             '--save-hints', `--out=${solveOut}`], 10_800_000);
         if (!solve.ok) log(`    solve failed/timed out: ${solve.error}`);
+        // Reached this point past the generate-failure/zero-variant early-continues above, so the
+        // family file genuinely is this run's own fresh output. The solve output is recorded only
+        // if it actually exists on disk (portfolio-solve-sweep.mjs may still have written partial
+        // results even when `solve.ok` is false, e.g. a timeout mid-sweep) -- matching solvedCount's
+        // own existsSync-guarded read just below, not the exit-code check alone.
+        sourceGenerationArtifacts.add(familyFile);
+        if (existsSync(solveOut)) outputArtifacts.add(solveOut);
 
         const variantN = mode === 'symmetry' ? 7 : VARIANT_COUNT;
         const hw = run('node', ['scripts/run-bundled.mjs', 'scripts/hint-workbench.mjs', '--',
@@ -166,3 +211,25 @@ for (const entry of shard) {
 
 log(`[${nowStamp()}] SHARD END${stoppedEarly ? ' (stopped early: wall-clock budget reached)' : ''}`);
 console.log(`Shard ${NN} finished${stoppedEarly ? ' EARLY (budget)' : ''}: ${shard.length} level(s) in slice.`);
+
+// Manifest emission (opt-in via --run-id; see this file's own header comment for why a missing
+// --run-id is a silent no-op rather than a fabricated identity). A shard that produced NOTHING new
+// (every task idempotency-skipped) still writes a valid, empty-artifact manifest -- an accurate
+// record that this run/shard contributed no new evidence, not a reason to omit provenance.
+if (RUN_ID) {
+    const manifest = buildFamilyEvaluationRunManifest({
+        runId: RUN_ID, tool: 'family-wide-trove-shard-run.mjs', workflow: WORKFLOW,
+        corpora: [...corporaSeen].sort(), families: [...familiesSeen].sort(),
+        trove: { manifest: 'data/families/wide-trove-manifest.json', shardFile: SHARD_FILE },
+        solverPolicy: { mode: 'legacy', profile: null, config: null, flags: {}, strictTotalWorkBudget: false },
+        budgets: { workUnits: Number(WORK_BUDGET), nodeCeiling: Number(NODE_BUDGET), wallDeadlineMs: Number(BUDGET_MS) },
+        seeds: [Number(SEED)], shardCount: SHARD_COUNT, shardIndex: Number(NN),
+        startedAt: manifestStartedAt, completedAt: new Date().toISOString(),
+        outputArtifacts: [...outputArtifacts].sort(),
+        sourceGenerationArtifacts: [...sourceGenerationArtifacts].sort(),
+    });
+    mkdirSync(path.dirname(MANIFEST_OUT), { recursive: true });
+    writeFileSync(MANIFEST_OUT, `${JSON.stringify(manifest, null, 2)}\n`);
+    log(`[${nowStamp()}] wrote run manifest ${MANIFEST_OUT} (${outputArtifacts.size} output artifact(s))`);
+    console.log(`Wrote run manifest ${MANIFEST_OUT}: runId=${RUN_ID} shard=${Number(NN)}/${SHARD_COUNT} outputArtifacts=${outputArtifacts.size}`);
+}

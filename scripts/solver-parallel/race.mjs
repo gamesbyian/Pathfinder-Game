@@ -77,6 +77,21 @@ import { buildSync } from 'esbuild';
 import { attemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
 import { withSolverStage } from '../../modules/solver/stage-policy.js';
 
+// The policy-level stage IDs (stage-policy.ts's SOLVER_STAGE_IDS) this raced engine actually
+// implements: main-loop + repair-fallback racing concurrently (phase 1), then attraction-diversity
+// (phase 2). Every other stage in the full sequential ladder (repair-probe, admissible-order,
+// dedup-near-tie-retry, admissible-order-non-default-retry, connectivity-axis-exhausted-retry,
+// repair-elite-prefix-dfs-retry, mc-neighbor-budget-retry, repair-late-probe, repair-probe-shrink-
+// recovery) is sequential-only — this file does not reimplement a different, narrower ladder for
+// them, it simply does not run them at all. A raced solve is therefore NOT a complete substitute
+// for the sequential engine on a level that only solves via one of the unraced tiers; callers that
+// need the full ladder's coverage should fall back to solveLevel() (orchestration.ts) after a
+// raced miss, the same way scripts/solver-parallel/benchmark.mjs already does. See
+// modules/solver/race-stage-parity.test.ts for the shared-stage contract this file and
+// orchestration.ts both honor (same eligible stage IDs, same budget-fraction constants —
+// imported from orchestration.js below, never a second hardcoded copy).
+export const RACE_SUPPORTED_STAGE_IDS = Object.freeze(['main-loop', 'repair-fallback', 'attraction-diversity']);
+
 // process.cwd(), not import.meta.url-relative math: this module is usually loaded as a
 // dependency of some OTHER entry that scripts/run-bundled.mjs esbuild-bundles, which flattens
 // everything into one output file under .solver-tools/ — import.meta.url would then resolve to
