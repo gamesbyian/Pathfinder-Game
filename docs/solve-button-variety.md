@@ -75,7 +75,7 @@ Targeted mode stays main-thread with `yieldFn`. Complete mode uses the worker po
 
 Complete mode shards by `(gate, root-child)` through `hint-enumeration.ts::rootChildren`; DFS semantics stay unchanged. Workers stream raw candidates, while PLAY validation/dedupe remain main-thread. `createEnumerationPoolClient` returns the same `VarietyResult` shape.
 
-Pool creation/run failure falls back to main-thread complete mode for the browser session. Verification covers real 3-worker execution, both Find-all variants, 2,500 -> 5,000 continuation, cancellation, and forced Worker-construction fallback. Details: [`solver-architecture.md`](solver-architecture.md#parallel-find-all-enumeration-browser-production-path).
+Pool creation/run failure falls back to main-thread complete mode for the browser session. Verification covers real 3-worker execution, both Find-all variants, 2,500 -> 5,000 continuation, cancellation, and forced Worker-construction fallback. Details: [`solver-architecture.md`](solver-architecture.md#parallel-find-all-enumeration-browser).
 
 ### UI and persistence
 
