@@ -54,6 +54,12 @@ The wide parent-hint replay batch also accepts `--trove-root=<path>` for read-on
 variant hints while continuing to read/write canonical parent corpora in the current-main checkout.
 `--save-hints` remains the explicit mutation gate; omission is a dry run.
 
+### Evaluation-run provenance limitation
+
+Generation provenance is normalized for new family manifests, but historical **solver evaluation runs are not yet governed by one universal run-manifest schema**. The family index exposes `runId`, `solverCommit`, budget, winning configuration, and related fields when the source census/report artifact contains them; absence means unknown, not that the run had no such property. Do not infer a uniform invocation contract across old `logs/family-census/` and wide-trove artifacts from the normalized index rows alone.
+
+For new decision-bearing family evaluations, preserve solver commit, run/workflow identity, selection/population, relevant flags/profile, deterministic work budget and wall deadline, seeds/sharding, timestamps, and output paths in the run artifact or an accompanying manifest. Prefer the repository's existing experiment/run-manifest machinery when it fits rather than creating an investigation-specific provenance format. A future consolidation may normalize these heterogeneous historical run headers, but must not rewrite old evidence merely to make it look uniform.
+
 When citing trove evidence, record the branch/commit or artifact hash used. Generation manifests are durable evidence about the generated family; they do not make historical solver results current. Re-test decision-bearing solver cliffs on current code.
 
 ## What variants are for
