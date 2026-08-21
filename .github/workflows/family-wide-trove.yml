@@ -194,7 +194,9 @@ jobs:
             --summary="logs/family-census/wide-shard-${nn}-summary.jsonl" \
             --budget-ms="${{ env.BUDGET_MS }}" --node-budget="${{ env.NODE_BUDGET }}" \
             --workers="${{ env.WORKERS }}" --variant-count="${{ env.VARIANT_COUNT }}" \
-            --max-wall-ms="${{ env.MAX_WALL_MS }}" || true
+            --max-wall-ms="${{ env.MAX_WALL_MS }}" \
+            --run-id="${{ github.run_id }}" --shard-count="${{ env.SHARDS }}" \
+            --workflow=family-wide-trove.yml || true
 
       - name: Stage this shard's outputs for upload
         if: always()

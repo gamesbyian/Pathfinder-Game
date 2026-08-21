@@ -1,4 +1,46 @@
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+
+/** Canonical git-state capture for a family evaluation run manifest's `solver` field — one shared
+ *  implementation for every producer, so "which commit/ref produced this evidence" is never
+ *  reconstructed ad hoc per tool. `commit` is required by validateFamilyEvaluationRunManifest (a
+ *  producer that can't resolve HEAD has nothing trustworthy to record and should fail loudly, not
+ *  write a manifest with a fabricated/null commit); `ref` and `dirty` are best-effort — `dirty:
+ *  null` still satisfies the schema (see validateFamilyEvaluationRunManifest) for an environment
+ *  where `git status` itself is unavailable, which `commit` alone never is if HEAD resolves.
+ *  Deliberately does NOT refuse to proceed on a dirty worktree (unlike solver-experiment-
+ *  preflight.mjs's stricter one-shot gate) — a batch/shard producer records what it ran against
+ *  rather than blocking a long-running job over local dev noise; a CI checkout is always clean. */
+export function captureSolverGitState() {
+    const git = (...gitArgs) => execFileSync('git', gitArgs, { encoding: 'utf8' }).trim();
+    const commit = git('rev-parse', 'HEAD');
+    let ref = null, dirty = null;
+    try { ref = git('rev-parse', '--abbrev-ref', 'HEAD'); } catch { /* detached/unavailable */ }
+    try { dirty = git('status', '--porcelain').length > 0; } catch { /* git unavailable beyond rev-parse */ }
+    return { commit, ref, dirty };
+}
+
+/** Assembles + validates one family evaluation run manifest from a producer's own tracked run
+ *  state — the ONE canonical shape every current/future family/variant solver-evaluation producer
+ *  (family-wide-trove-shard-run.mjs today) should build through, instead of each hand-assembling
+ *  the FAMILY_RUN_REQUIRED object shape itself. `solver` defaults to captureSolverGitState() (a
+ *  producer overrides it only for testing — see this module's own node-test). Throws (via
+ *  validateFamilyEvaluationRunManifest) before returning anything a caller could write to disk, so
+ *  an invalid producer input never reaches a manifest file. */
+export function buildFamilyEvaluationRunManifest({
+    runId, tool, workflow, corpora, families, trove, solverPolicy, budgets, seeds,
+    shardCount, shardIndex, startedAt, completedAt, outputArtifacts, sourceGenerationArtifacts,
+    solver = captureSolverGitState(),
+}) {
+    return validateFamilyEvaluationRunManifest({
+        schemaVersion: 1, runId, solver,
+        invocation: { tool, workflow },
+        selection: { corpora, families },
+        trove, solverPolicy, budgets, seeds,
+        shard: { count: shardCount, index: shardIndex },
+        startedAt, completedAt, outputArtifacts, sourceGenerationArtifacts,
+    });
+}
 
 const REQUIRED = ['schemaVersion', 'experimentId', 'runId', 'solverRef', 'corpus', 'levelIds',
     'arm', 'solverFlags', 'workflow', 'workflowInputs', 'seeds', 'canonicalWorkBudget', 'wallDeadlineMs', 'profile',
