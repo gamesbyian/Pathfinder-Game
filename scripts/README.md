@@ -2,6 +2,16 @@
 
 Use [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md) before scanning filenames or adding a script. `package.json` is the exhaustive npm-alias list.
 
+## Cheap discovery first
+
+Before opening large evidence/data files:
+
+- research/experiment status: `node scripts/research-status-index.mjs --compact`, optionally `--query=...`, `--status=...`, or `--kind=queue|experiment|evidence`;
+- level corpora: `node scripts/corpus-query.mjs --corpus=stress2` for a summary; add filters, `--list`, or deterministic `--sample=N`; use `--full` only when exact level payloads are needed;
+- tracked raw artifacts: `node scripts/artifact-query.mjs`, optionally `--query=...` or `--role=...`.
+
+These are derived views, not new authorities. Raw reports, corpora, and logs remain canonical evidence.
+
 ## Directory map
 
 - `stress/`: corpus generation, benchmarks, diagnostics, reducers, profiles, provenance, oracle/research tools.
