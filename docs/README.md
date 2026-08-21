@@ -58,8 +58,8 @@ Presence does not imply current priority.
 
 ## History
 
-Superseded plans, concluded experiments, old research ledgers, and pre-consolidation text live in [`archive/snapshots/`](archive/snapshots/README.md). Do not treat snapshot chronology or old priorities as current instructions; use the task map above.
+Superseded plans, concluded experiments, old queue states/research ledgers, and pre-consolidation text live in [`archive/snapshots/`](archive/snapshots/README.md). Do not treat snapshot chronology or old priorities as current instructions; use the task map above.
 
-2026-08-20 queue history: [`solver-optimization-current-queue-2026-08-20-snapshot.md`](solver-optimization-current-queue-2026-08-20-snapshot.md), [`solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md`](solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md). Other history: [`adr/`](adr/), [`archive/`](archive/README.md), [`history/development-journal.md`](history/development-journal.md), [`refactor-notes/`](refactor-notes/).
+Other history: [`adr/`](adr/), [`archive/`](archive/README.md), [`history/development-journal.md`](history/development-journal.md), [`refactor-notes/`](refactor-notes/).
 
 `../CLAUDE.md` and `.github/copilot-instructions.md` adapt `../AGENTS.md`; they are not separate knowledge bases.
