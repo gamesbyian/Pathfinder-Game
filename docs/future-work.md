@@ -104,6 +104,10 @@ Also closed/deprioritized from the solver-aware architecture campaign: general f
 
 For retained code switches, consult [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) rather than inferring status from the presence of an ablation flag.
 
+## Older loose-thread triage (2026-08-07)
+
+Historical compatibility anchor for reports written against the former long-form ledger. The complete triage and its dated dispositions are preserved in [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md). Do not treat that older ordering as a current queue; use [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+
 ## Historical compatibility
 
 The full pre-consolidation file, including dated capability figures, numbered investigations, experiment chronologies, and old queue ordering, is frozen at [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md). It remains evidence for the commits and protocols it describes, not current instruction.

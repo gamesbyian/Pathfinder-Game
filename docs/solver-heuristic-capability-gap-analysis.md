@@ -12,3 +12,7 @@ The 2026 capability-gap analysis captured an important research transition, but 
 The durable high-level diagnosis remains useful: Pathfinder generally represents **local legality/progress more strongly than future opportunity cost**, so exact/shadow evidence about future viability remains valuable. Treat the current queue, not this sentence, as the implementation handoff.
 
 The complete pre-consolidation analysis is preserved verbatim at [`archive/snapshots/solver-heuristic-capability-gap-analysis.md`](archive/snapshots/solver-heuristic-capability-gap-analysis.md).
+
+## State-conditioned must-cross anchoring: open, unconditional form closed
+
+Historical compatibility anchor. The unconditional must-cross attraction/horizon form is closed. The narrower state-conditioned question remains a diagnostic/research lane: use live prefix state to distinguish target, defer, and second-approach behavior, require recurrence across unrelated levels or held-out families, and consult the current optimization queue before changing production scoring.

@@ -91,9 +91,14 @@ The following old paths remain intentionally small so old links resolve without 
 | [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md) | Historical repair investigation. |
 | [`claude-remote-solver-handoff.md`](claude-remote-solver-handoff.md) | Dated remote-agent handoff. |
 
-[`solver-optimization-current-queue-2026-08-20-snapshot.md`](solver-optimization-current-queue-2026-08-20-snapshot.md) remains beside the live queue because preserving its original directory keeps its dense network of relative evidence links valid. It is history, not live priority.
+Two same-directory queue snapshots preserve dense historical link networks while keeping the live queue short:
 
-## Decisions and deeper history
+- [`solver-optimization-current-queue-2026-08-20-snapshot.md`](solver-optimization-current-queue-2026-08-20-snapshot.md) is the earlier 2026-08-20 chronology;
+- [`solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md`](solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md) is the exact post-PR-#1398 queue and contains the latest pre-compaction regression/provenance notes.
+
+Both are history, not live priority.
+
+## Decisions
 
 - [`adr/`](adr/) contains architecture decisions.
 - [`archive/`](archive/README.md) contains completed records and frozen pre-consolidation snapshots.
