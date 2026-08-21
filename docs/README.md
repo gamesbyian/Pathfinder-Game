@@ -7,6 +7,7 @@ Start here only when [`../AGENTS.md`](../AGENTS.md) does not already route the t
 | Need | Start here |
 |---|---|
 | Application architecture | [`architecture.md`](architecture.md) |
+| Architecture cleanup / compatibility / duplicate-authority review | [`architecture-unification-audit.md`](architecture-unification-audit.md) |
 | Tests / finish-line validation | [`testing.md`](testing.md) |
 | Existing CLI, probe, or workflow | [`tooling-catalog.md`](tooling-catalog.md) |
 | Solver implementation | [`solver-architecture.md`](solver-architecture.md) |
@@ -24,6 +25,7 @@ Start here only when [`../AGENTS.md`](../AGENTS.md) does not already route the t
 | Doc | Role |
 |---|---|
 | [`architecture.md`](architecture.md) | Layering, runtime/state, engine facade, UI structure, code placement. |
+| [`architecture-unification-audit.md`](architecture-unification-audit.md) | Current review of intentional plurality, legacy compatibility, duplicate authorities, and behavior-preserving unification priorities. |
 | [`testing.md`](testing.md) | Test tiers and required validation. |
 | [`tooling-catalog.md`](tooling-catalog.md) | Task-oriented tool/workflow discovery. |
 | [`typing.md`](typing.md) | Strict TypeScript model and `.ts` source / `.js` import-specifier rule. |
