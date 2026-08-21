@@ -56,18 +56,9 @@ Presence does not imply current priority.
 | [`ablation.md`](ablation.md) | Feature-flag ablation lab. |
 | [`req-length-sweep.md`](req-length-sweep.md) | Required-length scaling. |
 
-## Compatibility and history
+## History
 
-Old paths stay small so historical links resolve. Frozen pre-consolidation text: [`archive/snapshots/`](archive/snapshots/README.md).
-
-- `solver-heuristic-capability-gap-analysis.md`, `solver-improvement-research-notes.md`, `solver-next-frontier-*`, `solver-development-roadmap.md`: historical solver research.
-- `solver-interoperability-and-cooperation-plan.md`: producer/receptor design now in the operating model.
-- `research-infrastructure-and-optimization-opportunities.md`: split across current tooling/method/deferred docs.
-- `main-loop-late-reserve-experiment.md`, `fast-portfolio-scheduler-plan.md`, `repair-search-stagnation-escape-plan.md`: concluded work.
-- `ai-assisted-manual-solving.md`: worked note; current accepted-path method is in the operating model.
-- `sibling-cousin-system.md`, `variant-corpus-solver-research-plan.md`, `family-and-scaling-research-possibilities.md`: superseded family research.
-- `solver-dev-tooling-plan.md`: completed plan.
-- `claude-remote-solver-handoff.md`: dated handoff.
+Superseded plans, concluded experiments, old research ledgers, and pre-consolidation text live in [`archive/snapshots/`](archive/snapshots/README.md). Do not treat snapshot chronology or old priorities as current instructions; use the task map above.
 
 2026-08-20 queue history: [`solver-optimization-current-queue-2026-08-20-snapshot.md`](solver-optimization-current-queue-2026-08-20-snapshot.md), [`solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md`](solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md). Other history: [`adr/`](adr/), [`archive/`](archive/README.md), [`history/development-journal.md`](history/development-journal.md), [`refactor-notes/`](refactor-notes/).
 
