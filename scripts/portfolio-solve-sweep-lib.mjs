@@ -2,30 +2,27 @@
  *  and scripts/portfolio-solve-sweep-worker.mjs (parallel worker path) — kept in one place so the
  *  two never compute a row's fields differently. */
 
+import { formatAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
+
+/** Reconstructs an attempt's config-identity string from a PERSISTED Attempt record (this file's
+ *  own reports/telemetry shape), not a live AttemptConfig — normalizes to AttemptIdentityFields
+ *  and defers the actual string-building to attempt-identity.mjs's formatAttemptIdentityKey, the
+ *  same canonical logic orchestration.ts's own attemptConfigKey uses. Kept as a separate function
+ *  (rather than importing orchestration.ts's attemptConfigKey directly) because the two start from
+ *  different shapes: a persisted Attempt's `template` is already a bare id string, and its
+ *  `profile` field is named differently from AttemptConfig's `profileName`. Two copies of this
+ *  reconstruction previously drifted from orchestration.ts's own format independently (a missing
+ *  admissibleOrder branch, then a missing repairTurnBiased suffix — see git history) — routing both
+ *  through one shared formatter closes that class of bug at the source instead of by inspection.
+ */
 export function attemptConfigKey(attempt) {
-    // admissible-order-search attempts carry no beamWidth, so without this branch they reconstructed
-    // as plain `dfs:<profile>` -- silently attributing every admissible-order win to DFS in every
-    // report's winningConfig/failedStrategies (the tier's no-tie-break entry showed up as `dfs:none`,
-    // which is how this was noticed). Mirrors orchestration.ts's own attemptConfigKey, which has had
-    // this branch since the tier existed; only this reconstruction-from-a-persisted-attempt copy
-    // lacked it.
-    if (attempt?.admissibleOrder) {
-        const base = attempt.admissibleOrderNoTieBreak ? 'ida:none' : `ida:${attempt.profile ?? 'unknown'}`;
-        return attempt.admissibleOrderLds ? `${base}(lds)` : base;
-    }
-    const family = attempt?.beamWidth ? 'beam' : 'dfs';
-    const template = attempt?.template ? `/${attempt.template}` : '';
-    const beam = attempt?.beamWidth ? `@beam${attempt.beamWidth}` : '';
-    const diverse = attempt?.diverseBeam ? '(diverse)' : '';
-    const repair = attempt?.repair ? ':repair' : '';
-    // Must mirror orchestration.ts's own attemptConfigKey exactly (repairMustTurnBiased takes
-    // precedence, else repairTurnBiased, else neither) -- this file's copy previously omitted
-    // repairTurnBiased entirely, so a turn-biased repair winner's persisted winningConfig silently
-    // lost its "(turnBiased)" suffix, matching the WRONG (plain repair) config on any later
-    // config-key lookup (e.g. --prime-winner's primeAttemptFor) -- found while measuring the
-    // winner-first pre-attempt's hit rate on repair winners (2026-07-23).
-    const biased = attempt?.repairMustTurnBiased ? '(mustTurnBiased)' : attempt?.repairTurnBiased ? '(turnBiased)' : '';
-    return `${family}:${attempt?.profile ?? 'unknown'}${template}${beam}${diverse}${repair}${biased}`;
+    return formatAttemptIdentityKey({
+        profileName: attempt?.profile ?? 'unknown', templateId: attempt?.template ?? null,
+        beamWidth: attempt?.beamWidth, diverseBeam: attempt?.diverseBeam, repair: attempt?.repair,
+        repairMustTurnBiased: attempt?.repairMustTurnBiased, repairTurnBiased: attempt?.repairTurnBiased,
+        admissibleOrder: attempt?.admissibleOrder, admissibleOrderNoTieBreak: attempt?.admissibleOrderNoTieBreak,
+        admissibleOrderLds: attempt?.admissibleOrderLds,
+    });
 }
 
 export function winningAttempt(result, phase = null) {
