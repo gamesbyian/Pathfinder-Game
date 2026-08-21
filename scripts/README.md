@@ -10,7 +10,7 @@ Use [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md) before scanning f
 - top-level `hint-*`: hint discovery/enumeration/provenance.
 - top-level `family-*`: variant/family generation and analysis.
 - `check-*`: repository/data/documentation invariants.
-- `*-unit-tests.mjs`: script/adapter harnesses that intentionally remain outside colocated module tests.
+- `*-unit-tests.mjs`: historical naming shared by both Vitest suites and standalone Node/CLI harnesses. Do not infer the runner from the filename; `vitest.config.mjs` and `package.json` are authoritative.
 
 ## Before adding a script
 
@@ -18,6 +18,7 @@ Use [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md) before scanning f
 2. Search existing scripts and relevant reports for the concept.
 3. Check [`.github/workflows/`](../.github/workflows/README.md) for remote/sharded machinery.
 4. Extend shared loaders/parsers/workers/report shapes when they already model the operation.
+5. For a change that crosses telemetry, provenance, persistence, state, or worker boundaries, use [`../docs/change-recipes.md`](../docs/change-recipes.md).
 
 Research code presence does not imply an active hypothesis; reconcile with the current solver queue and dated evidence.
 
