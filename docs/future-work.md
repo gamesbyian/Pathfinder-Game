@@ -1,113 +1,103 @@
 # Solver future work
 
-This file is the compact index for solver ideas that are **not** the current ranked optimization queue.
-
-Use the repository's research surfaces by role:
+Compact index of solver ideas outside the current ranked optimization queue.
 
 | Question | Authority |
 |---|---|
-| What solver work should be done next? | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) |
-| Does a retained/default-off mechanism still need a promotion decision? | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) |
-| How should solver research be designed and promoted? | [`solver-research-operating-model.md`](solver-research-operating-model.md) |
-| How can the large family/variant dataset help? | [`variant-level-research.md`](variant-level-research.md) |
-| What did a specific experiment actually measure? | [`../reports/README.md`](../reports/README.md) and the dated report |
+| What solver work is next? | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) |
+| Does retained/default-off code need a promotion decision? | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) |
+| How should research be designed and promoted? | [`solver-research-operating-model.md`](solver-research-operating-model.md) |
+| How can the family/variant dataset help? | [`variant-level-research.md`](variant-level-research.md) |
+| What did an experiment measure? | [`../reports/README.md`](../reports/README.md) and its dated report |
 | What did this file previously contain? | [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md) |
 
-The former long-form future-work ledger mixed current priorities, dated run summaries, completed experiments, and speculative descendants. That history is preserved in the snapshot above. Do not reconstruct today's queue from it.
+The old ledger mixed priorities, run summaries, completed experiments, and speculative descendants. Its snapshot preserves that history; do not reconstruct the current queue from it.
 
 ## Broader deferred opportunities
 
-These are idea families, not ranked work. Before implementing one, check current code, the optimization queue, the opt-in ledger, reports, and [`tooling-catalog.md`](tooling-catalog.md) to make sure the capability or experiment has not already been built or concluded.
+These are unranked idea families. Before implementing one, check current code, the queue, opt-in ledger, reports, and [`tooling-catalog.md`](tooling-catalog.md) for an existing capability or concluded experiment.
 
 ### Queryable research evidence
 
-Pathfinder repeatedly joins level structure, run identity, attempt telemetry, hints/provenance, family relationships, oracle labels, and experiment arms. A derived analytical layer could become useful when repeated joins are still forcing new one-off scripts.
+Pathfinder often joins level structure, run identity, attempt telemetry, hints/provenance, family relationships, oracle labels, and experiment arms. A derived analytical layer may be useful if these joins keep producing one-off scripts.
 
-The valuable part is the **comparability contract**, not a database product. Reuse `scripts/experiment-manifest-lib.mjs` for run identity, keep existing JSON/JSONL as canonical where appropriate, reject incomparable runs rather than averaging them, and keep analytical data strictly offline from production solver policy. Build this only when it replaces recurring analysis work.
+The key requirement is a **comparability contract**, not a database product. Reuse `scripts/experiment-manifest-lib.mjs` for run identity; keep JSON/JSONL canonical where appropriate; reject incomparable runs rather than averaging them; keep analytical data offline from production policy. Build only when it replaces recurring analysis work.
 
 ### Cross-technique cooperation
 
-Different techniques produce potentially useful information and have different measured sensitivities. The open form is a named **producer -> receptor** hypothesis, not a universal blackboard.
+Treat cooperation as a named **producer -> receptor** hypothesis, not a universal blackboard. A live handoff needs:
 
-A handoff is worth a live experiment only when:
+- a measured receptor failure;
+- producer information the receptor does not already get cheaply;
+- useful timing;
+- bounded replay/consumption cost;
+- protected independent receptor search;
+- positive shadow evidence;
+- a level-blind matched-work verdict.
 
-- the receptor has a measured failure mode;
-- the producer emits information the receptor does not already have cheaply;
-- the information arrives early enough to matter;
-- replay/consumption cost is bounded;
-- the recipient's normal independent search remains protected;
-- shadow evidence survives before behavior changes;
-- the final verdict is level-blind and matched-work.
-
-See [`solver-research-operating-model.md`](solver-research-operating-model.md#producer--receptor-cooperation) for the current method. The full 2026 design record is preserved at [`archive/snapshots/solver-interoperability-and-cooperation-plan.md`](archive/snapshots/solver-interoperability-and-cooperation-plan.md).
+Method: [`solver-research-operating-model.md`](solver-research-operating-model.md#producer--receptor-cooperation). Full 2026 design record: [`archive/snapshots/solver-interoperability-and-cooperation-plan.md`](archive/snapshots/solver-interoperability-and-cooperation-plan.md).
 
 ### Broader scaling research
 
-Controlled variants can test scaling with navigable area, required length, intersection pressure, mechanic density, portal load, and related structural variables. Existing exact-length work lives in [`req-length-sweep.md`](req-length-sweep.md); the family/variant dataset and experimental cautions are in [`variant-level-research.md`](variant-level-research.md).
+Controlled variants can test navigable area, required length, intersection pressure, mechanic density, portal load, and related structural variables. Existing exact-length work: [`req-length-sweep.md`](req-length-sweep.md). Family/variant methods: [`variant-level-research.md`](variant-level-research.md).
 
-Do not treat tens of thousands of siblings as independent observations. Parent families are the statistical units.
+Treat parent families, not tens of thousands of siblings, as the statistical units.
 
 ### Recipe cousins and new generated families
 
-Recipe cousins remain a weaker, population-level form of family research. They become useful when a finding from exact-witness siblings needs transfer testing across newly generated witnesses with controlled feature recipes. They should not be mixed with counterfactual sibling-effect estimates.
+Recipe cousins are a weaker population-level family tool. Use them when exact-witness sibling findings need transfer testing across newly generated witnesses with controlled feature recipes. Do not mix them with counterfactual sibling-effect estimates.
 
-Do not generate another large trove merely because the machinery exists. The existing off-main research trove should be queried first.
+Query the existing off-main trove before generating another large one.
 
 ### AI/manual accepted-path diagnosis
 
-A human or AI can occasionally provide a valid path the production solver did not find. The useful research object is the **accepted path**, not the narrator's explanation of why it worked.
+A human or AI may provide a valid path the production solver missed. The research object is the **accepted path**, not the narrator's explanation.
 
-Validate the path through the canonical referee, record provenance honestly, then compare its trajectory with what the unchanged solver generated, ranked, pruned, or lost. Repeated divergence patterns may nominate a generic heuristic/representation experiment. See [`solver-research-operating-model.md`](solver-research-operating-model.md#accepted-path-differential-diagnosis).
+Validate through the canonical referee, record provenance, then compare the path with what the unchanged solver generated, ranked, pruned, or lost. Repeated divergence can nominate a generic heuristic or representation experiment. See [`solver-research-operating-model.md`](solver-research-operating-model.md#accepted-path-differential-diagnosis).
 
 ### Learned or fitted routing
 
-A classifier or fitted routing rule is only interesting after the repository has a stable target and enough family-balanced evidence. Split by parent family, preserve level-blindness, and compare against simpler mechanics-conditioned rules and the current production ladder at matched work.
+Consider a classifier or fitted routing rule only after there is a stable target and enough family-balanced evidence. Split by parent family, preserve level-blindness, and compare against simpler mechanics-conditioned rules and the production ladder at matched work.
 
-Do not train on sibling rows and randomly split them across train/test; that is family leakage.
+Never randomly split sibling rows across train/test; that leaks family information.
 
-### Deferred architecture/search measurements from the 2026 solver-aware campaign
+### Deferred 2026 solver-aware measurements
 
-The original campaign is archived at [`archive/snapshots/solver-aware-game-architecture-2026-08-20.md`](archive/snapshots/solver-aware-game-architecture-2026-08-20.md). Its completed items should not remain mixed with these genuinely deferred descendants.
+Original campaign: [`archive/snapshots/solver-aware-game-architecture-2026-08-20.md`](archive/snapshots/solver-aware-game-architecture-2026-08-20.md). Completed items belong there, not here.
 
-- **Contrastive failure-directed activity:** would require new per-branch sibling-outcome telemetry during search. Do not build it until a current representation/retention question needs that signal.
-- **Hazard-based adaptive capping / participation floors:** specialist starvation has historical precedent, but a general survival model needs censored per-attempt hazard telemetry. Reconcile with the current technique-census/routing evidence before treating this as useful.
-- **Multi-abstraction CEGAR:** the labelled atlas exists, but a refinement loop is a substantial standalone research machine rather than a small probe.
-- **Detour-gadget discovery / slack allocation:** a relatively cheap first test is to mine existing stored solutions for interface-equivalent subpaths with different length/intersection deltas.
-- **Interface-preserving repair surgery:** gated on causal-window evidence in addition to the residual-interface work already measured. Do not build the live operator first.
-- **Partial-order / commuting-segment analysis:** another cheap-first mining candidate over stored solutions before any search integration.
-- **Eulerian/local-transition relaxation:** a smallest E0 relaxation can be evaluated as a bounded offline/shadow check before a larger ladder is considered.
-- **Topology-signature diversity:** diagnostics first; measure whether the proposed signature separates useful frontier modes before adding selection machinery.
-- **Topology-first skeleton compilation / automatic rule synthesis:** moonshots. Keep deferred until their prerequisite abstraction/counterexample/proof machinery exists and there is evidence the cost is justified.
-- **Shared compiled puzzle graph:** reopen only when a concrete new consumer removes duplicated semantics without weakening the intentionally independent oracle. See [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md).
+- **Contrastive failure-directed activity:** needs per-branch sibling-outcome telemetry. Build only for a current representation/retention question.
+- **Hazard-based adaptive capping / participation floors:** specialist starvation has precedent, but a general survival model needs censored per-attempt hazard telemetry. Reconcile with current census/routing evidence first.
+- **Multi-abstraction CEGAR:** atlas exists; a refinement loop is a substantial standalone research machine.
+- **Detour-gadget discovery / slack allocation:** first mine stored solutions for interface-equivalent subpaths with different length/intersection deltas.
+- **Interface-preserving repair surgery:** requires causal-window evidence beyond existing residual-interface measurements. Do not build the live operator first.
+- **Partial-order / commuting-segment analysis:** mine stored solutions before search integration.
+- **Eulerian/local-transition relaxation:** test a smallest E0 relaxation offline/shadow before considering a larger ladder.
+- **Topology-signature diversity:** first test whether the signature separates useful frontier modes.
+- **Topology-first skeleton compilation / automatic rule synthesis:** moonshots; defer until prerequisite abstraction/counterexample/proof machinery and cost evidence exist.
+- **Shared compiled puzzle graph:** reopen only for a concrete consumer that removes duplicated semantics without weakening the independent oracle. See [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md).
 
-These items are intentionally unranked. A current queue entry, new census result, family boundary, or exact/shadow label may make one newly relevant; otherwise do not interpret age as priority.
+These remain unranked. A queue entry, census result, family boundary, or exact/shadow label may make one relevant; age does not.
 
 ## Reopen rules for closed ideas
 
-A closed result is not a ban on descendants. It is a boundary on repeating the same mechanism.
-
-Reopen only when at least one of these is true:
+Closed results forbid repetition of the same mechanism, not all descendants. Reopen only if:
 
 - the mechanism materially changes;
-- the information available to the decision changes;
+- the decision gets new information;
 - the receptor/search operator changes;
-- new evidence falsifies the reason it was closed;
+- new evidence falsifies the closure reason; or
 - a former cost can now be avoided rather than merely paid with more budget.
 
-Do not reopen an unchanged negative by changing only a small constant, sample, or workflow wrapper unless the earlier result explicitly left that parameter as the unresolved gate.
+Do not reopen an unchanged negative by changing only a small constant, sample, or workflow wrapper unless that parameter was the earlier unresolved gate.
 
-## Closed forms that should not be rediscovered as fresh ideas
+## Closed forms not to rediscover
 
-The current queue owns the definitive short list. At this reconciliation, repeatedly closed forms include universal beam widening, unconditional must-cross attraction, broad cold-start portfolio scheduling, plain extra repair budget for plateaued repair, static repair-fallback reserve, blind late-tier carve-outs, repair plateau penalties, soft recombination, exact relinking, repair turn bias, admissible-order LDS, and the rejected admissible-order density/profile reserve forms.
+The current queue is definitive. Repeatedly closed forms include universal beam widening, unconditional must-cross attraction, broad cold-start portfolio scheduling, plain extra repair budget for plateaued repair, static repair-fallback reserve, blind late-tier carve-outs, repair plateau penalties, soft recombination, exact relinking, repair turn bias, admissible-order LDS, and rejected admissible-order density/profile reserve forms.
 
-Also closed/deprioritized from the solver-aware architecture campaign: general fully-sound DFS/beam transposition caching in the measured form, exact whole-level symmetry canonicalization as a meaningful stress-corpus lever, static forced-sequence macros on the measured level populations, and the three narrow Tier-2 hard-prune/shadow reasoners already scored at atlas scale.
+Also closed/deprioritized from the solver-aware campaign: measured fully-sound DFS/beam transposition caching, exact whole-level symmetry canonicalization as a meaningful stress-corpus lever, static forced-sequence macros on measured populations, and the three narrow Tier-2 hard-prune/shadow reasoners already scored at atlas scale.
 
-For retained code switches, consult [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) rather than inferring status from the presence of an ablation flag.
-
-## Older loose-thread triage (2026-08-07)
-
-Historical compatibility anchor for reports written against the former long-form ledger. The complete triage and its dated dispositions are preserved in [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md). Do not treat that older ordering as a current queue; use [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+For retained switches, use [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md); an ablation flag does not imply open status.
 
 ## Historical compatibility
 
-The full pre-consolidation file, including dated capability figures, numbered investigations, experiment chronologies, and old queue ordering, is frozen at [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md). It remains evidence for the commits and protocols it describes, not current instruction.
+The full pre-consolidation file, including the 2026-08-07 loose-thread triage, capability figures, numbered investigations, chronologies, and old ordering, is frozen at [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md). It is historical evidence, not current instruction.

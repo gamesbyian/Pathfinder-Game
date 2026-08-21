@@ -1,25 +1,23 @@
 # Pathfinder
 
-Pathfinder is a browser-based grid-path puzzle game with a deliberately serious solver and research toolchain behind it. The app is built with Vite and TypeScript, deployed to GitHub Pages, and uses Firebase/Firestore for submissions and progress.
+Browser grid-path puzzle game with a Vite/TypeScript app, solver/research toolchain, GitHub Pages deployment, and Firebase/Firestore persistence.
 
 ## Start here
 
-Choose the smallest entry point that matches the job:
-
-| Need | Start here |
+| Need | Reference |
 |---|---|
-| AI or coding agent onboarding | [`AGENTS.md`](AGENTS.md) |
-| Current application architecture | [`docs/architecture.md`](docs/architecture.md) |
-| Full current developer reference and game-rule gotchas | [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md) |
-| Solver implementation and batch-tool selection | [`docs/solver-architecture.md`](docs/solver-architecture.md) |
-| Current solver optimization priorities | [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md) |
-| **Variant/family research and the large off-main trove** | **[`docs/variant-level-research.md`](docs/variant-level-research.md)** |
-| Existing CLI/research tooling | [`docs/tooling-catalog.md`](docs/tooling-catalog.md) |
-| Test selection and merge gates | [`docs/testing.md`](docs/testing.md) |
-| Research reports and experiment history | [`reports/README.md`](reports/README.md) |
-| All documentation by topic | [`docs/README.md`](docs/README.md) |
+| Coding-agent onboarding | [`AGENTS.md`](AGENTS.md) |
+| Application architecture | [`docs/architecture.md`](docs/architecture.md) |
+| Full developer/game-rule reference | [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md) |
+| Solver implementation | [`docs/solver-architecture.md`](docs/solver-architecture.md) |
+| Current solver priorities | [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md) |
+| Variant/family research trove | [`docs/variant-level-research.md`](docs/variant-level-research.md) |
+| CLI/research tooling | [`docs/tooling-catalog.md`](docs/tooling-catalog.md) |
+| Tests/merge gates | [`docs/testing.md`](docs/testing.md) |
+| Reports/history | [`reports/README.md`](reports/README.md) |
+| Documentation index | [`docs/README.md`](docs/README.md) |
 
-Do not reconstruct current solver priorities from dated reports. Reports preserve evidence and history; the current queue above owns the ranked optimization priorities. Before generating new level families, check the existing multi-gigabyte variant research trove documented above.
+Use the live solver queue for current priorities, not dated reports. Check the existing variant trove before generating more families.
 
 ## Development
 
@@ -29,16 +27,15 @@ npm run dev
 npm run ci
 ```
 
-`npm run ci` is the normal pre-merge gate. Browser/release confidence uses `npm run ci:full`. Solver hot-path work has additional regression and cost checks documented in [`docs/testing.md`](docs/testing.md).
+`npm run ci:full` adds browser/release confidence. Solver hot-path changes have additional gates in [`docs/testing.md`](docs/testing.md).
 
-## Repository shape
+## Repository map
 
-- `modules/` contains the TypeScript application and solver source.
-- `scripts/` contains local validation, analysis, solver, corpus, hint, family, and research tools. See [`scripts/README.md`](scripts/README.md).
-- `.github/workflows/` contains CI/deployment plus expensive or sharded research jobs. See [`.github/workflows/README.md`](.github/workflows/README.md).
-- `data/` contains published runtime data and the separately documented stress corpora.
-- `reports/` contains human-readable analysis and investigation results.
-- `logs/` contains raw run/audit data.
-- `docs/` contains current references and compact compatibility pointers; large concluded/superseded documentation is kept under [`docs/archive/`](docs/archive/README.md).
+- `modules/`: application and solver source.
+- `scripts/`: local tooling; [`scripts/README.md`](scripts/README.md).
+- `.github/workflows/`: CI/deploy/remote research; [workflow index](.github/workflows/README.md).
+- `data/`: runtime data plus separate stress corpora.
+- `reports/`: human-readable analysis; `logs/`: raw run/audit data.
+- `docs/`: current references and archive pointers.
 
-TypeScript source files are `.ts`, while import specifiers intentionally remain `.js`; see [`docs/typing.md`](docs/typing.md) before treating a `.js` import path as a repository filename.
+TypeScript source uses `.ts` files with intentional `.js` import specifiers; see [`docs/typing.md`](docs/typing.md).

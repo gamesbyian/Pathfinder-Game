@@ -1,21 +1,19 @@
 # Solver work budgets and determinism
 
-> **Status:** current budget/determinism contract. The implementation migration is complete.
-> **Historical investigation:** [`archive/snapshots/solver-budget-determinism-2026-08-20.md`](archive/snapshots/solver-budget-determinism-2026-08-20.md).
+> **Status:** current contract; migration complete.
+> **History:** [`archive/snapshots/solver-budget-determinism-2026-08-20.md`](archive/snapshots/solver-budget-determinism-2026-08-20.md).
 
-Pathfinder uses one machine-independent work currency for solver allocation. Wall clock is an outer latency deadline, not an allocation currency.
+Solver allocation uses one machine-independent work currency. Wall clock is only an outer latency deadline.
 
-## Canonical work unit
+## Work unit
 
-[`../modules/solver/work-meter.ts`](../modules/solver/work-meter.ts) defines:
+[`../modules/solver/work-meter.ts`](../modules/solver/work-meter.ts):
 
 ```text
 work = applyMove calls + 12 * isConnected calls
 ```
 
-The connectivity weight was fitted from measured cross-technique cost rather than guessed. It reduced the measured DFS/beam/repair work-rate spread from roughly 11x under `nodesExpanded` to about 1.02x under `workSpent`.
-
-`nodesExpanded` remains useful as technique-local telemetry, but one node does not represent the same primitive in DFS, beam, repair, and admissible-order search. Do not compare raw node counts across techniques as though they were a common cost unit.
+The fitted connectivity weight reduced measured DFS/beam/repair work-rate spread from ~11x under `nodesExpanded` to ~1.02x under `workSpent`. Use raw nodes only within a technique.
 
 ### Work is an allocation currency, not a literal CPU-cost model
 
@@ -42,79 +40,58 @@ Do not replace internal budget checks with the module-global counter. Also do no
 
 | Field | Role |
 |---|---|
-| `workBudget` | Primary machine-independent solver budget and the quantity shared among gate/config attempts. Pin this explicitly for CI, A/Bs, benchmarks, corpus research, and reproducible diagnostics. |
-| `timeBudgetMs` | Outer wall-clock deadline. It can truncate a run for latency/safety but must not size attempt shares. |
-| `nodeBudget` | Legacy/diagnostic cap retained for callers and technique-specific experiments. It is not the cross-technique allocation currency. |
-| `strictTotalWorkBudget` | Experiment-only whole-solve ceiling. Use when additive retry/tail tiers must fit inside the same total work envelope rather than exceeding the historical main-ladder budget. |
+| `workBudget` | Primary machine-independent budget shared among gate/config attempts. Pin for CI, A/Bs, benchmarks, corpus research, and reproducible diagnostics. |
+| `timeBudgetMs` | Outer latency/safety deadline. It may truncate a run but must not size attempt shares. |
+| `nodeBudget` | Legacy/diagnostic or technique-specific cap; not the cross-technique currency. |
+| `strictTotalWorkBudget` | Experiment-only whole-solve ceiling when additive retry/tail tiers must fit inside one total envelope. |
 
-If `workBudget` is omitted, ms-shaped callers are converted at the run boundary using the solver's committed default work-per-ms calibration. This preserves approximate historical cost without using live machine speed to make allocation decisions.
+If `workBudget` is omitted, ms-shaped callers convert at the run boundary using the committed default work-per-ms calibration. Live host speed never controls allocation.
 
-## Deterministic-run contract
-
-A solver comparison is reproducible only when the wall deadline cannot bind.
+## Reproducible comparison
 
 For decision-bearing offline work:
 
-1. pin `workBudget` explicitly;
-2. use a generous/non-binding `timeBudgetMs` or the workflow's deterministic mode;
-3. reject or separately classify any `deadlineTruncated` / clock-bound result;
-4. compare `workSpent` for machine-independent search effort;
-5. record wall time separately when the treatment can change the cost of a metered primitive;
-6. record the exact protocol, commit, flags, corpus, and budget.
+1. pin `workBudget`;
+2. use a non-binding `timeBudgetMs` or deterministic workflow mode;
+3. reject or separately classify `deadlineTruncated` results;
+4. compare `workSpent` for cost;
+5. record protocol, commit, flags, corpus, and budget.
 
-With the same level/config/seed/work budget and a non-binding deadline, the search is deterministic across host speed/load. The completed migration was verified under CPU contention with identical solve results and work despite wall-time changes.
+With equal level/config/seed/work budget and a non-binding deadline, search is deterministic across host speed/load. For remote A/Bs use `solver-typical-budget-baseline.yml` with `deterministic: true`.
 
-For the standard remote baseline workflow, use `solver-typical-budget-baseline.yml` with `deterministic: true` when the run is intended as an A/B or reproducibility check. Historical headline baseline series may intentionally preserve binding-deadline continuity; such a run is useful as that series, not as machine-independent causal evidence.
+A binding historical baseline may remain useful for continuity, but not as machine-independent causal evidence.
 
-## Deadline truncation is indeterminate
+## Deadline truncation
 
-Interactive solving has a real latency promise. A wall deadline may therefore cut the search off before its work budget is spent.
+A wall deadline may end an interactive solve before its work budget is spent. `deadlineTruncated` means the requested deterministic search did not finish within the latency envelope; it does not establish a reproducible unsolved result at the declared work budget.
 
-Such a result means:
+Offline tools must exclude or label these results rather than turning machine load into a negative.
 
-> the requested deterministic search was not completed within the latency envelope.
+## Hint discovery and provenance
 
-It does **not** mean the level is reproducibly unsolved at the declared work budget.
+Hint discovery follows the same rule: phase/escalation decisions use work, not elapsed time. Cooperative yielding and latency reporting may read the clock.
 
-`SolveResult.deadlineTruncated` / deadline-truncated status and work telemetry exist so offline tooling can exclude or label this case rather than silently turning machine load into a negative solver result.
+Use:
 
-## Hint discovery
+- `workSpent`: comparable algorithmic cost;
+- `workBudget`: intended deterministic ceiling;
+- `deadlineTruncated`: whether wall time interfered;
+- `nodesExpanded`: within-technique diagnostics or legacy data;
+- `elapsedMs`: user/runtime latency.
 
-Hint discovery/enumeration follows the same principle. Phase/escalation decisions are bounded by work, not live elapsed time. Cooperative-yield timing and elapsed-time reporting may read the clock; they must not decide which search branch or phase receives budget.
+Label units when reading old/new provenance; never mix nodes and work silently.
 
-This matters because hint provenance is research data. A stored cost should reflect solver search effort rather than the incidental speed of the machine that produced the hint.
+## Matched-work experiments
 
-The cumulative module-global meter currently lets a discovery session place one work ceiling across many sequential solver calls. That role is intentionally distinct from the per-solve meter used by each nested call. New discovery code should not casually import the mutable singleton as a substitute for an explicit session budget; see the scope contract above.
+State whether additive retries/passes are inside or outside the declared envelope. If treatment can spend extra work, use `strictTotalWorkBudget` or report the extra cost explicitly. Equal `nodeBudget` does not imply equal work when technique mixes differ.
 
-## Cost and provenance fields
+## Non-regression rules
 
-Prefer:
+- No wall-clock-derived attempt shares or escalation thresholds.
+- No live warm-up speed measurement in solver policy.
+- No raw nodes as portable cross-technique cost.
+- No deadline-truncated failure recorded as ordinary unsolved capability.
+- No hidden total-work increase behind retry/reserve mechanisms.
+- Changing work-meter weights is a budget-unit migration and requires cross-technique calibration plus reproducibility/regression validation.
 
-- `workSpent` for comparable machine-independent **search effort/allocation cost**;
-- `workBudget` for the intended deterministic ceiling;
-- `deadlineTruncated` / clock-bound status for whether wall time interfered;
-- `nodesExpanded` only for within-technique diagnostics or historical datasets that lack work data;
-- `elapsedMs` for user/runtime latency and implementation-speed measurement, not as the solver's allocation currency.
-
-Tools that support both old and new provenance must label the unit rather than silently mixing nodes and work.
-
-## Experimental fairness
-
-A matched-work A/B should specify whether additive passes/retries are inside or outside the declared work envelope. If the treatment can spend extra work after the ordinary ladder, compare it either with `strictTotalWorkBudget` or with an explicit accounting that makes the extra cost visible.
-
-Do not call two arms "same budget" merely because they share the same `nodeBudget` when their technique mixes differ.
-
-For a treatment whose purpose is to make an already-metered primitive cheaper, a matched-work run answers "what capability does the faster implementation buy at the same search-effort allowance?" but does **not** answer "how much faster is the implementation?" Measure wall time separately for the latter.
-
-## Rules that should not regress
-
-- Do not reintroduce wall-clock-derived attempt shares or escalation thresholds.
-- Do not use a live warm-up speed measurement to decide solver policy; that recreates host dependence.
-- Do not treat raw nodes as a portable cross-technique currency.
-- Do not treat the module-global cumulative work meter as an internal per-solve budget authority.
-- Do not treat canonical work units as an exact microsecond model of every metered primitive.
-- Do not record deadline-truncated failures as ordinary unsolved capability results.
-- Do not hide a changed total-work envelope behind a new retry/reserve mechanism.
-- Do not change the work-meter weights casually. A new weight is a budget-unit migration and needs cross-technique calibration plus reproducibility/regression validation.
-
-The frozen historical document records the original nondeterminism measurements, raw-node prototype failure, work-unit fitting, migration phases, hint-workbench diagnosis, and tool-by-tool conversion chronology. Keep those facts as evidence, but use this file for current behavior.
+The archived snapshot contains the nondeterminism measurements, raw-node prototype failure, work-unit fitting, migration, hint-workbench diagnosis, and tool conversion history.
