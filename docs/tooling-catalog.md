@@ -20,7 +20,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 | One technique over a population | `scripts/method-probe.mjs` / `method-probe-sweep.yml` |
 | Hint generation/diversification | `npm run hints:workbench`; [`hint-workbench.md`](hint-workbench.md) |
 | Family/variant research | [`variant-level-research.md`](variant-level-research.md) plus `family:*` tools |
-| Existing generated variant trove | branch `claude/variant-levels-solver-insights-tpk4qg`; see [`variant-level-research.md`](variant-level-research.md) |
+| Existing generated variant trove | separate worktree of branch `claude/variant-levels-solver-insights-tpk4qg`; verify with `node scripts/family-trove-doctor.mjs --root=<path>`; see [`variant-level-research.md`](variant-level-research.md) |
 | Prior experiment evidence | [`../reports/README.md`](../reports/README.md), current queue, opt-in ledger |
 
 ## Command families
@@ -31,7 +31,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 | Solver | `solver:direct`, `solver:bench`, `solver:speed-probe`, `solver:fingerprint*`, `solver:req-length-sweep`, `solver:trap-audit`, `solver:winning-attempts`, `solver:experiment-preflight`; [`solver-architecture.md`](solver-architecture.md) |
 | Ablation | `ablation:*`; [`ablation.md`](ablation.md), [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) |
 | Stress | `stress:generate*`, `stress:validate-witnesses`, `stress:benchmark*`, `stress:regression`, `stress:solve-one`, `stress:reduce-level`, `stress:rank-levels`, `stress:failure-inbox`, `stress:lifecycle-failure-map`, `stress:solution-profile*`, `stress:provenance-coverage`; [`../data/stress/README.md`](../data/stress/README.md) |
-| Families | `family:generate`, `family:analyze`, `family:boundary-report`, `family:parent-hint-replay`, `stress:family-pair-divergence`, `solver:winning-attempts`; [`variant-level-research.md`](variant-level-research.md) |
+| Families | `family:generate`, `family:analyze`, `family:boundary-report`, `family:parent-hint-replay`, `stress:family-pair-divergence`, `solver:winning-attempts`; safe trove boundary check: `node scripts/family-trove-doctor.mjs`; [`variant-level-research.md`](variant-level-research.md) |
 | Hints | `hints:workbench`, `hints:workbench-parallel`, `hints:expansion-audit`, `hints:discover-candidates`, `hints:expand`, `hints:diversify`, `hints:calibrate-weights`, `hints:complete-sharded`; [`hint-workbench.md`](hint-workbench.md) |
 | Level/data | `levels:import-published`, `levels:generate-heatmaps`, `levels:heatmap-report`, `levels:ratings-report`, `check:hint-validity`, `check:level-provenance`, `check:corpus-level-formatting` |
 | Remote research | [`.github/workflows/README.md`](../.github/workflows/README.md) |
@@ -47,6 +47,7 @@ Historical portfolio tools (`solver:portfolio-report`, `solver:portfolio-replay`
 - Use shared explicit level selectors (`pos:` / `id:`) where required.
 - Treat parent families, not sibling variants, as independent evaluation units.
 - Do not generate another large family trove before checking the existing research branch.
+- Keep current `main` as the code/instruction environment when using the off-main trove; do not run historical branch code merely because the data lives there.
 - Stored valid hints are broader than cold solver evidence; use shared provenance classification.
 
 [`command-glossary.md`](command-glossary.md) maps runtime flow names to code; it is not a CLI catalog.

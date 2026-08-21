@@ -8,12 +8,20 @@ The large generated dataset is **not on `main`**. It lives on branch `claude/var
 
 One audited wide artifact contains **1,962 parents, 72,965 variants, 36,622 cold solves, and 78,429 attempt records**. Other campaigns bring the broader collection to roughly 96,000 variants. Quote the specific campaign/artifact rather than treating all generated variants as one homogeneous table.
 
+### Access model
+
+**Keep current `main` as the execution and instruction environment. Treat the trove branch as read-only historical data.** Do not switch the working checkout to the trove branch: its code, docs, root prompts, counts, and investigation state predate current `main` and are not current authority.
+
 Prefer a separate worktree:
 
 ```bash
 git fetch origin claude/variant-levels-solver-insights-tpk4qg
 git worktree add ../pathfinder-variant-research origin/claude/variant-levels-solver-insights-tpk4qg
 ```
+
+Run current tools from the `main` worktree and pass/read data from the sibling worktree when the tool supports an external path. If a needed current tool assumes in-tree family data, adapt the tool to accept a data-root argument rather than running historical branch code.
+
+When citing trove evidence, record the branch/commit or artifact hash used. Generation manifests are durable evidence about the generated family; they do not make historical solver results current. Re-test decision-bearing solver cliffs on current code.
 
 ## What variants are for
 
@@ -62,6 +70,8 @@ Broader scaling questions can use variants too. `npm run solver:req-length-sweep
 | Large family campaign | `.github/workflows/family-wide-trove.yml` |
 | Technique probe | `scripts/method-probe.mjs` / `.github/workflows/method-probe-sweep.yml` |
 | Reduce pathological level | `npm run stress:reduce-level` |
+
+There is not yet a canonical global point-query/index layer over the entire off-main trove. Do not create ad hoc duplicate indexes for one investigation; if point lookup or coverage joins are needed, extend the shared family tooling so the index is reproducible from canonical family/census artifacts.
 
 Start with [`tooling-catalog.md`](tooling-catalog.md) before adding infrastructure. Detailed historical designs/experiments are frozen under [`archive/snapshots/`](archive/snapshots/README.md).
 

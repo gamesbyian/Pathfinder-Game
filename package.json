@@ -116,6 +116,7 @@
     "family:analyze": "node scripts/family-analyze.mjs",
     "family:boundary-report": "node scripts/family-boundary-report.mjs",
     "family:parent-hint-replay": "tsx scripts/family-parent-hint-replay.mjs",
+    "family:trove:doctor": "node scripts/family-trove-doctor.mjs",
     "test:family-generate": "tsx scripts/family-generate-unit-tests.mjs",
     "test:family-analyze": "node scripts/family-analyze-unit-tests.mjs",
     "test:family-boundary": "node scripts/family-boundary-lib-unit-tests.mjs",

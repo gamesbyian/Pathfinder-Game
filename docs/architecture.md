@@ -10,12 +10,12 @@ Pathfinder is a Vite-built browser game deployed as a static GitHub Pages site. 
 |---|---|---|---|
 | **Domain/services** | `modules/domain/`, `modules/solver/`, `modules/runtime/`, pure theme/editor helpers | domain | DOM, canvas, Firebase, Tone, browser globals, timers, network |
 | **Browser adapters** | `modules/render/`, `modules/persistence/`, `modules/ui/`, SOUND_BUS, loader shim | domain | controllers generally |
-| **Controllers/application** | `modules/engine*`, `modules/engine/`, `modules/input/`, `modules/editor.js`, `modules/boot.js` | domain + injected adapters | raw browser globals |
-| **Facade/debug** | `modules/app.js` | everything, built last | — |
+| **Controllers/application** | `modules/engine*`, `modules/engine/`, `modules/input/`, `modules/editor.ts`, `modules/boot.ts` | domain + injected adapters | raw browser globals |
+| **Facade/debug** | `modules/app.ts` | everything, built last | — |
 
 AST ESLint rules enforce browser-free `domain/runtime/solver`, ENGINE mutation through state actions, and no raw HTML injection. Solver worker files are explicit browser-boundary exceptions. See [`testing.md`](testing.md).
 
-## Composition root (`modules/app.js`)
+## Composition root (`modules/app.ts`)
 
 `createApp()` builds acyclic stages with no mutable forward declarations or post-construction init:
 
@@ -27,29 +27,29 @@ AST ESLint rules enforce browser-free `domain/runtime/solver`, ENGINE mutation t
 
 ## State
 
-`modules/state-slices.js` owns the mutable `ENGINE` tree: `nav`, `hazards`, `solver`, `hinter`, `viewport`, `review`, `ui`, `runtime`, `gamepad`, `flags`, `editor`, `levelRating`, plus top-level state.
+`modules/state-slices.ts` owns the mutable `ENGINE` tree: `nav`, `hazards`, `solver`, `hinter`, `viewport`, `review`, `ui`, `runtime`, `gamepad`, `flags`, `editor`, `levelRating`, plus top-level state.
 
-All ENGINE mutations go through `modules/state-actions.js` / `modules/state/actions/*.js`. `check:engine-state-boundary` forbids direct writes in engine/input/ui consumers.
+All ENGINE mutations go through `modules/state-actions.ts` / `modules/state/actions/*.ts`. `check:engine-state-boundary` forbids direct writes in engine/input/ui consumers.
 
 ## Runtime commands/effects
 
 `modules/runtime/` contains:
-- `actions.js` / `effects.js`: frozen action/effect types and factories;
-- `step-processor.js`: pure step computation;
-- `effect-runner.js`: effect dispatcher over injected adapters;
-- `game-rules.js`, `path-state.js`, `state-machine.js`: win metrics, path derivation, legal state transitions.
+- `actions.ts` / `effects.ts`: frozen action/effect types and factories;
+- `step-processor.ts`: pure step computation;
+- `effect-runner.ts`: effect dispatcher over injected adapters;
+- `game-rules.ts`, `path-state.ts`, `state-machine.ts`: win metrics, path derivation, legal state transitions.
 
 `rebuildDerivedState` recomputes navigation derivatives (`visitedCounts`, `cellUsage`, `intersections`, `flipCount`, `crossedFlippingFilters`). `test:path-state-invariants` checks incremental and rebuilt state agree.
 
 Correctness-sensitive flows use pure tested decision/transition cores: `computeStep`, `PathNavigator.applySnapshot`, `computeWinEffects`, hazard-effect planners, `planResetCheat`, and `planSubmissionAdvance`. Controllers execute the returned decisions/effects. There is intentionally no universal command reducer. `replayMoves` supports declarative move tests.
 
-## Engine facade (`modules/engine.js`)
+## Engine facade (`modules/engine.ts`)
 
 `createEngine()` coordinates `modules/engine/` subcontrollers and exposes flat methods plus grouped `game`, `navigation`, `overlays`, `hints`, `solver`, `review`, and `ratings` namespaces. Grouped entries are the same instances as their flat counterparts; unit tests enforce this. Input controllers prefer grouped namespaces. Flat-only methods remain for implementation/debug use.
 
 ## Solver
 
-`modules/Solver.ts` is a thin facade over `modules/solver/`. Test/analysis access is through `SOLVER_TESTING_API`. Runtime worker support is in `modules/solver/worker.js` and `solver-worker-client.ts`. See [`solver-architecture.md`](solver-architecture.md).
+`modules/Solver.ts` is a thin facade over `modules/solver/`. Test/analysis access is through `SOLVER_TESTING_API`. Runtime worker support is in `modules/solver/worker.js` and `modules/solver/solver-worker-client.ts`. See [`solver-architecture.md`](solver-architecture.md).
 
 ## Persistence
 
