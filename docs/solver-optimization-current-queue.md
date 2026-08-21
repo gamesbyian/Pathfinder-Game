@@ -4,7 +4,7 @@
 > **Reconciled:** 2026-08-21 through solver-authority consolidation and `STRATEGY_REPAIR_LATE_PROBE` promotion.
 > **Scope:** improve cold, level-blind solve count or machine-independent work without losing solves. Exact-level history may label research, never control production solves.
 
-Chronology: [`solver-optimization-current-queue-2026-08-20-snapshot.md`](solver-optimization-current-queue-2026-08-20-snapshot.md), [`solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md`](solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md). Deferred ideas: [`future-work.md`](future-work.md). Default-off mechanisms: [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Method: [`solver-research-operating-model.md`](solver-research-operating-model.md).
+Chronology: [`archive/snapshots/solver-optimization-current-queue-2026-08-20.md`](archive/snapshots/solver-optimization-current-queue-2026-08-20.md), [`archive/snapshots/solver-optimization-current-queue-2026-08-20-post-1398.md`](archive/snapshots/solver-optimization-current-queue-2026-08-20-post-1398.md). Deferred ideas: [`future-work.md`](future-work.md). Default-off mechanisms: [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Method: [`solver-research-operating-model.md`](solver-research-operating-model.md).
 
 ## Evidence reset
 
@@ -47,7 +47,7 @@ Late 2026-08-20 findings:
 - `R03329`: likewise non-regression; forced-replay repair signature plus isolated-census admissible-order wins;
 - `R02424`, `R01229`: plausible residual beam losses matching corrected key-width behavior, not independently bisected.
 
-Re-mine regressions under repaired stage/invocation telemetry before designing recovery for old aggregate categories. Full chronology: [`solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md`](solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md).
+Re-mine regressions under repaired stage/invocation telemetry before designing recovery for old aggregate categories. Full chronology: [`archive/snapshots/solver-optimization-current-queue-2026-08-20-post-1398.md`](archive/snapshots/solver-optimization-current-queue-2026-08-20-post-1398.md).
 
 ## 1. Failure-conditioned late-tier allocation
 
@@ -89,8 +89,8 @@ A descendant is new only if mechanism or information boundary materially changes
 
 ## Evidence map
 
-- [`solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md`](solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md): late regression/provenance chronology and routing notes.
-- [`solver-optimization-current-queue-2026-08-20-snapshot.md`](solver-optimization-current-queue-2026-08-20-snapshot.md): earlier chronology.
+- [`archive/snapshots/solver-optimization-current-queue-2026-08-20-post-1398.md`](archive/snapshots/solver-optimization-current-queue-2026-08-20-post-1398.md): late regression/provenance chronology and routing notes.
+- [`archive/snapshots/solver-optimization-current-queue-2026-08-20.md`](archive/snapshots/solver-optimization-current-queue-2026-08-20.md): earlier chronology.
 - [`../reports/2026-08-20-technique-census-reconciliation.md`](../reports/2026-08-20-technique-census-reconciliation.md), [`../reports/stress/technique-census/32240161854/`](../reports/stress/technique-census/32240161854/): census.
 - [`../reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md): regression/beam history.
 - [`winning-lineage-survival-analysis.md`](winning-lineage-survival-analysis.md): lineage observation.
