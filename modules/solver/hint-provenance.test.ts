@@ -4,17 +4,19 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { deriveSolveAttemptInfo, provenanceFromSolveResult, hintsFromVarietyResult } from './hint-provenance.js';
-import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from '../../scripts/test-lib/fixtures.mjs';
+import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from './testing-fixtures.js';
 
 const PERSISTENT_ATTEMPT_FIELDS = new Set([
   'profile', 'template', 'beamWidth', 'diverseBeam', 'gateKey', 'elapsedMs', 'nodesExpanded',
   'allocatedBudgetMs', 'randomSeed', 'seedSalt', 'repairMustTurnBiased', 'repairTurnBiased',
   'attractionDiversity',
 ]);
+const TRANSIENT_FIELDS_WITH_DISTINCT_PROVENANCE_MEANING = new Set(['workSpent']);
 const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([
-  'ok', 'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'repair',
-  'timedOut', 'bestBadness', 'finalBadness', 'admissibleOrder', 'admissibleOrderNoTieBreak',
-  'admissibleOrderLds', 'mainLoopLateReserve', 'repairProbe',
+  'stageId', 'ok', 'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'repair',
+  'timedOut', 'bestBadness', 'finalBadness', 'allocatedWorkCeiling', 'allocatedNodeCeiling',
+  'workSpent', 'admissibleOrder', 'admissibleOrderNoTieBreak', 'admissibleOrderLds',
+  'mainLoopLateReserve', 'repairProbe', 'repairProbeShrinkRecovery',
   // Consulted by orchestration.ts's classifyAttemptTier to derive the single retryTier field
   // (below), not copied onto provenance 1:1 under their own attempt-field names.
   'dedupNearTieRetry', 'admissibleOrderNonDefaultRetry', 'connectivityAxisExhaustedRetry',
@@ -58,8 +60,11 @@ test('maximal Attempt has an explicit, complete provenance projection contract',
   for (const field of INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS) {
     assert.equal(Object.hasOwn(entry, field), false, `${field} leaked into provenance`);
     assert.equal(Object.hasOwn(entry.solver, field), false, `${field} leaked into solver provenance`);
-    assert.equal(Object.hasOwn(entry.search, field), false, `${field} leaked into search provenance`);
+    if (!TRANSIENT_FIELDS_WITH_DISTINCT_PROVENANCE_MEANING.has(field)) {
+      assert.equal(Object.hasOwn(entry.search, field), false, `${field} leaked into search provenance`);
+    }
   }
+  assert.equal(entry.search.workSpent, null, 'attempt workSpent is not whole-solve provenance workSpent');
   assert.equal(entry.solver.technique, 'repair');
   // Every retry-tier flag is true on this fixture, so classifyAttemptTier's precedence chain
   // (orchestration.ts) resolves to its most-specific category, 'repair-late-probe' — proving the

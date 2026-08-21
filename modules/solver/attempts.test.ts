@@ -5,7 +5,7 @@ import { SOLVER_TESTING_API } from '../Solver.js';
 import { ADMISSIBLE_ORDER_PROFILES, applyAttemptConfigOptions, getAttemptConfigs, getConfiguredAttemptConfigs } from './attempts.js';
 import { PACK } from './encoding.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER } from './policy.js';
-import { defaultConfig } from '../../scripts/ablation-config.mjs';
+import { defaultConfig } from './ablation-config.js';
 import type { NormalizedLevel } from '../domain/types.js';
 
 

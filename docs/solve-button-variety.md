@@ -90,7 +90,7 @@ When available, complete mode uses a browser Web Worker pool. Each job handles o
 
 If pool creation or a run fails, complete mode falls back to the main-thread implementation for the rest of the browser session, matching the `trap-scan-controller.ts` fallback pattern. Browser verification covered a real 3-worker pool, both Find-all variants including the 2,500 -> 5,000 prompt, and identical fallback results when `Worker` construction was forced to fail.
 
-Full pool correctness/details: [`solver-architecture.md`](solver-architecture.md#parallel-find-all-enumeration-browser-web-worker-pool).
+Full pool correctness/details: [`solver-architecture.md`](solver-architecture.md#parallel-find-all-enumeration-browser-production-path).
 
 ### UI and persistence
 

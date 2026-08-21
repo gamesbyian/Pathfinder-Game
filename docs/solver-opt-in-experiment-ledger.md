@@ -6,7 +6,7 @@ This is the authoritative compact ledger for solver mechanisms whose **productio
 
 It is not a priority queue. Current ranked solver work lives in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md). The full pre-consolidation experiment chronology is frozen at [`archive/snapshots/solver-opt-in-experiment-ledger-2026-08-20.md`](archive/snapshots/solver-opt-in-experiment-ledger-2026-08-20.md).
 
-`OPT_IN_FEATURES` in [`../scripts/ablation-config.mjs`](../scripts/ablation-config.mjs) is the source of truth for **default polarity**, not experiment status. Documentation checks require every current member of that set to appear below.
+`OPT_IN_FEATURES` in [`../modules/solver/ablation-config.ts`](../modules/solver/ablation-config.ts) is the source of truth for **default polarity**, not experiment status. Documentation checks require every current member of that set to appear below.
 
 Capability decisions obey [`solver-level-blindness.md`](solver-level-blindness.md). Historical winners, hints, and exact-level outcomes may label research; they may not guide a headline cold-capability solve.
 

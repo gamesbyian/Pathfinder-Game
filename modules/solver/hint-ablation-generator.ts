@@ -37,7 +37,7 @@ import { deriveSolveAttemptInfo } from './hint-provenance.js';
 import {
     TEMPLATE_CONFIG_KEY, PROFILE_CONFIG_KEY, FEATURE_GROUPS,
     withFeaturesDisabled, withFeatureDisabled,
-} from '../../scripts/ablation-config.mjs';
+} from './ablation-config.js';
 
 const STRATEGY_FLAGS: string[] = FEATURE_GROUPS.strategy;
 

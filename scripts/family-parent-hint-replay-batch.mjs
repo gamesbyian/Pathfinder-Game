@@ -9,7 +9,7 @@
  * Read-only until --save-hints is passed (dry run reports counts without writing).
  *
  * Usage: npx tsx scripts/family-parent-hint-replay-batch.mjs [--save-hints]
- *   [--corpora=published,corpus1,corpus2] [--out=<report.json>]
+ *   [--corpora=published,corpus1,corpus2] [--trove-root=<data-worktree>] [--out=<report.json>]
  */
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
@@ -19,6 +19,7 @@ import { normalizeRawLevel } from '../modules/solver/normalization.ts';
 import { validateCandidatePath } from '../modules/domain/path-validator.ts';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
 import { mergeVariantDerivedHint, replayVariantPath } from './family-parent-hint-replay-lib.mjs';
+import { familyArtifactRoots, troveRootArg } from './family-paths.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [k, ...v] = a.split('=');
@@ -27,6 +28,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 const SAVE = process.argv.includes('--save-hints');
 const CORPORA = (args.get('--corpora') || 'published,corpus1,corpus2').split(',');
 const OUT = args.get('--out') || 'reports/families/2026-08-08-parent-hint-replay.json';
+const TROVE = familyArtifactRoots(troveRootArg());
 
 const CORPUS_LEVELS_FILE = {
     published: 'data/levels.json',
@@ -55,7 +57,8 @@ function discoverFamilyManifests(dir) {
     return found;
 }
 
-const allManifests = discoverFamilyManifests('data/families');
+if (!existsSync(TROVE.families)) throw new Error(`family data root does not exist: ${TROVE.families}`);
+const allManifests = discoverFamilyManifests(TROVE.families);
 
 for (const corpus of CORPORA) {
     const levelsFile = CORPUS_LEVELS_FILE[corpus];
@@ -70,7 +73,7 @@ for (const corpus of CORPORA) {
     let variantsChecked = 0, variantsAccepted = 0, parentsTouched = new Set();
 
     for (const { fullPath: manifestPath, manifest } of manifestFiles) {
-        const mf = path.relative('data/families', manifestPath);
+        const mf = path.relative(TROVE.families, manifestPath);
         const parent = byId.get(String(manifest.parentLevelId));
         // A missing parent is corpus/manifest drift, not an ineligible replay. Silently skipping
         // here previously omitted S00141's entire family after its manifest and level corpus used

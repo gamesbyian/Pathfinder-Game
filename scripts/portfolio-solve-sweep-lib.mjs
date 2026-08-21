@@ -72,6 +72,7 @@ export function passForWin(result) {
  *  the row level — see below). */
 export function attemptRecord(a) {
     return {
+        ...(a.stageId !== undefined ? { stageId: a.stageId } : {}),
         gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
         ok: a.ok, elapsedMs: a.elapsedMs,
         ...(a.outcome !== undefined ? { outcome: a.outcome } : {}),
@@ -115,6 +116,12 @@ export function attemptRecord(a) {
         ...(a.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
         ...(a.mainLoopLateReserve ? { mainLoopLateReserve: true } : {}),
         ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
+        ...(a.dedupNearTieRetry ? { dedupNearTieRetry: true } : {}),
+        ...(a.admissibleOrderNonDefaultRetry ? { admissibleOrderNonDefaultRetry: true } : {}),
+        ...(a.connectivityAxisExhaustedRetry ? { connectivityAxisExhaustedRetry: true } : {}),
+        ...(a.repairElitePrefixDfsRetry ? { repairElitePrefixDfsRetry: true } : {}),
+        ...(a.mcNeighborBudgetRetry ? { mcNeighborBudgetRetry: true } : {}),
+        ...(a.repairLateProbe ? { repairLateProbe: true } : {}),
         ...(a.allocatedWorkCeiling !== undefined ? { allocatedWorkCeiling: a.allocatedWorkCeiling } : {}),
         ...(a.allocatedNodeCeiling !== undefined ? { allocatedNodeCeiling: a.allocatedNodeCeiling } : {}),
         ...(a.workSpent !== undefined ? { workSpent: a.workSpent } : {}),

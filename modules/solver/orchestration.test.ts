@@ -8,7 +8,7 @@ import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
 import { workMeter } from './work-meter.js';
 import { prepLevel } from './prep.js';
-import { buildExperimentList, defaultConfig, FEATURES, OPT_IN_FEATURES } from '../../scripts/ablation-config.mjs';
+import { buildExperimentList, defaultConfig, FEATURES, OPT_IN_FEATURES } from './ablation-config.js';
 
 function makeLineLevel() {
     return {

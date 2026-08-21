@@ -45,7 +45,7 @@ cases that motivated each version of the rule: `554` vs `888` (60% apart) now se
 `5862` vs `5872` (0.2% apart, the ordinary per-attempt jitter the *original* nearest-second fix was
 built to tolerate) still merge correctly. Shipped as `scripts/stress/hint-cost-drift-lib.mjs`,
 extracted from the CLI script so the bucketing logic is unit-testable without triggering a corpus
-scan on import — 11 new tests in `hint-cost-drift-lib-unit-tests.mjs`, registered in `test:node`.
+scan on import — 11 new tests in `hint-cost-drift-lib-node-test.mjs`, registered in `test:node`.
 
 **Effect on the numbers**: 949→977 cross-commit comparisons available (the corrected bucket
 recovers a few genuine matches the coarse one also missed), 153→148 drifted, and critically, the two
@@ -95,7 +95,7 @@ says: a lead, not a verdict — and per this report, usually not even that.
 ## Verification
 
 Read-only investigation and a scoped bug fix; no solver code touched.
-`node scripts/stress/hint-cost-drift-lib-unit-tests.mjs`: 11/11 pass, including regression coverage
+`node scripts/stress/hint-cost-drift-lib-node-test.mjs`: 11/11 pass, including regression coverage
 for both the collision case (554ms/888ms, 78ms/20000ms, 312ms/8000ms) and the jitter-tolerance case
 (5862ms/5872ms, 312ms/320ms) the original fix was built to preserve. `check:lint` and
 `check:dead-scripts` pass. The pre/post comparison (949→977 comparisons, 153→148 drifted, R03253 and

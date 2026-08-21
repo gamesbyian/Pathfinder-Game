@@ -1,10 +1,12 @@
-import { PORTFOLIO_EXPERIMENT } from '../../data/config/portfolio-experiment.js';
-import { OPT_IN_FEATURES } from '../../scripts/ablation-config.mjs';
+import { PORTFOLIO_EXPERIMENT } from './portfolio-experiment.js';
+import { OPT_IN_FEATURES } from './ablation-config.js';
 import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS, repairAttempt } from './attempts.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { repairPrimarySeed } from './repair-search.js';
+import { withSolverStage } from './stage-policy.js';
+import type { SolverStageId } from './stage-policy.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit } from './types.js';
@@ -40,6 +42,8 @@ interface PortfolioExperimentDefinition {
 }
 /** One recorded attempt's metadata. */
 export interface Attempt {
+    /** Canonical policy-stage identity; legacy booleans below are compatibility projections. */
+    stageId: SolverStageId;
     gateKey: number; profile: string; template: string | null; beamWidth: number | null;
     ok: boolean; elapsedMs: number; allocatedBudgetMs: number;
     /** Diagnostic-only ceilings visible at dispatch. Null denotes an uncapped currency. */
@@ -570,7 +574,7 @@ export async function runAttempt(
         && (allocatedWorkCeiling === 0 || (Number.isFinite(nodeBudget) && nodeBudget === 0));
     return {
         path,
-        attempt: {
+        attempt: withSolverStage({
             gateKey,
             profile: profileName,
             template: template?.id ?? null,
@@ -599,7 +603,7 @@ export async function runAttempt(
             ...(admissibleOrder ? { admissibleOrder: true } : {}),
             ...(admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
             ...(admissibleOrderLds ? { admissibleOrderLds: true } : {}),
-        },
+        }, 'main-loop'),
     };
 }
 
@@ -1502,7 +1506,7 @@ export const REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  R02128, R02132, R02401, R02512, R02783, R02835, R02947, R03361), ZERO regressions. R02119
  *  recovered as predicted; R02422 did NOT recover in this shared-ladder-rerun population run despite
  *  the isolated single-config test above showing it recoverable — an open, non-blocking discrepancy
- *  (see ablation-config.mjs's own comment), most likely the shared additive-budget rerun not giving
+ *  (see ablation-config.ts's own comment), most likely the shared additive-budget rerun not giving
  *  `beam:intersectionHarvest@beam5000(diverse)` enough of the tier's reserve. Cost: corpus1 nodes
  *  +22.5%/work +12.4%, corpus2 nodes +23.0%/work +16.5% — comparable to (cheaper on corpus2 than)
  *  STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own promoted cost; promoted per the same established
@@ -1977,7 +1981,7 @@ async function runRepairProbe(
                 // repairProbe: true marks every attempt this function produces (see Attempt.repairProbe's
                 // own comment) so external tooling can distinguish a probe-phase repair attempt's
                 // bestBadness from the same repair config re-run later by the full-budget fallback loop.
-                attempts.push({ ...r.attempt, repairProbe: true });
+                attempts.push(withSolverStage(r.attempt, 'repair-probe'));
                 nodesUsed += nodesOut.nodesExpanded ?? gateNodeBudget;
                 if (r.path) return { solution: r.path, attempts, shrunkBiased };
             }
@@ -2039,7 +2043,7 @@ function portfolioFeatureGateMatches(level: NormalizedLevel, gate: NonNullable<P
  * externally-supplied `opts.ablation` through here before it ever reaches `prep._cfg` — the only
  * place any read site ever gets a cfg from — so a sparse override is safe from ANY entry point
  * (production call, orchestration.test.ts, scripts/repair-direct-probe.mjs, future tooling)
- * without every call site needing to remember to build it via ablation-config.mjs's
+ * without every call site needing to remember to build it via ablation-config.ts's
  * `defaultConfig()`/`withFeatureDisabled()` helpers first.
  *
  * A Proxy, not a plain merged object: the flag set isn't enumerated here (scripts/ablation-
@@ -2056,7 +2060,7 @@ function portfolioFeatureGateMatches(level: NormalizedLevel, gate: NonNullable<P
  * Exported (also re-exported from `testing-api.ts`) so external diagnostic tooling that needs to
  * hand-build a `prep._cfg` override — e.g. `scripts/stress/hint-divergence.mjs`'s per-flag
  * ablation sweep — gets this same provably-correct sparse-override behavior directly, rather than
- * reimplementing it by hand-listing every flag from `scripts/ablation-config.mjs`'s `FEATURES`
+ * reimplementing it by hand-listing every flag from `modules/solver/ablation-config.ts`'s `FEATURES`
  * (an earlier version of that tool did exactly this, complete only for the `SCORE_*` subset it
  * happened to need — harmless there since nothing in its own call path reads `PRUNE_*`/`STRATEGY_*`
  * flags, but a real instance of the exact footgun this comment describes, latent rather than
@@ -2110,6 +2114,7 @@ async function runAttemptSlice(
     const result = await runAttempt(gateKey, level, prep, attemptConfig, capMs, Date.now(), yieldFn);
     result.attempt.configKey = attemptConfigKey(attemptConfig);
     Object.assign(result.attempt, metadata);
+    if (metadata.schedulerPhase === 'portfolio') Object.assign(result.attempt, withSolverStage(result.attempt, 'portfolio-pass'));
     return result;
 }
 
@@ -2376,6 +2381,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             const primeNodeBudget = Number(opts.primeAttempt.nodeBudget) > 0 ? Number(opts.primeAttempt.nodeBudget) : nodeBudget;
             const primeSeedSalt = Number.isFinite(opts.primeAttempt.seedSalt) ? Number(opts.primeAttempt.seedSalt) : 0;
             const primeResult = await runAttempt(opts.primeAttempt.gateKey, level, prep, primeConfig, timeBudgetMs, Date.now(), yieldFn, primeNodeBudget, null, primeSeedSalt);
+            Object.assign(primeResult.attempt, withSolverStage(primeResult.attempt, 'prime'));
             primeResult.attempt.configKey = opts.primeAttempt.configKey;
             if (primeResult.path) {
                 const totalMs = Date.now() - levelStartTime;
@@ -2641,7 +2647,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // comparable to (cheaper on corpus2 than) STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own
     // promoted cost. Standard opt-OUT convention (`!cfg || cfg.FLAG`), matching its three promoted
     // siblings — NOT the opt-in `cfg && cfg.FLAG === true` shape STRATEGY_REPAIR_ELITE_PREFIX_DFS_
-    // RETRY above still uses (that one remains closed/opt-in). See ablation-config.mjs's own comment
+    // RETRY above still uses (that one remains closed/opt-in). See ablation-config.ts's own comment
     // for the full mechanism and the R02422 non-recovery caveat.
     //
     // `prep.initialMustCrossMask !== 0` is this tier's SOUNDNESS-BASED eligibility gate, and the one
@@ -2698,7 +2704,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     // STRATEGY_RETRY_TIER_NODE_STAIRCASE (opt-in, default OFF) — whether the attraction-diversity pass
     // and the two promoted whole-ladder retry tiers subdivide their node reserve per config instead of
-    // letting the first config consume all of it. See the flag's own comment in ablation-config.mjs
+    // letting the first config consume all of it. See the flag's own comment in ablation-config.ts
     // for the measured defect, and STRATEGY_MC_NEIGHBOR_BUDGET_RETRY's own call site for the fix this
     // generalizes (that tier does it unconditionally, since it never shipped without it).
     //
@@ -2865,7 +2871,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // OPT-IN convention (`cfg && cfg.FLAG === true`), NOT the standard `!cfg || cfg.FLAG` every
     // OTHER reserve/promoted flag in this file uses — deliberately: this is a brand-new, unvalidated
     // mechanism (see the constant's own comment), registered opt-in/default-OFF in
-    // scripts/ablation-config.mjs's OPT_IN_FEATURES, so it must stay OFF whenever `cfg` is null
+    // modules/solver/ablation-config.ts's OPT_IN_FEATURES, so it must stay OFF whenever `cfg` is null
     // (every production interactive solve and any CLI run without --enable-flags) — the exact
     // opposite-direction mismatch of the wiring-gap bug documented throughout
     // docs/solver-opt-in-experiment-ledger.md would result from using the standard convention here.
@@ -2913,7 +2919,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     //
     // OPT-IN convention (`cfg && cfg.FLAG === true`), matching the two new reserves above and NOT
     // the standard `!cfg || cfg.FLAG` the promoted flags use: brand-new and unvalidated, registered
-    // in scripts/ablation-config.mjs's OPT_IN_FEATURES, so it must stay OFF whenever `cfg` is null.
+    // in modules/solver/ablation-config.ts's OPT_IN_FEATURES, so it must stay OFF whenever `cfg` is null.
     const shrinkRecoveryEnabled = !!(cfg && cfg.STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY === true)
         && repairConfigs.length > 0
         && repairBudgetFraction !== 0
@@ -3092,7 +3098,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 // of how many nodes earlier attempts already spent.
                 const remainingNodeBudget = repairFallbackNodeCeiling === Infinity ? Infinity : Math.max(0, repairFallbackNodeCeiling - prep._metrics.nodesExpanded);
                 const r = await runAttempt(gateKey, level, prep, repairConfig, repairBudget, Date.now(), yieldFn, remainingNodeBudget);
-                result.attempts.push(r.attempt);
+                result.attempts.push(withSolverStage(r.attempt, 'repair-fallback'));
                 if (r.path) { result.solution = r.path; break; }
             }
         }
@@ -3178,7 +3184,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // this comment requires — just the reduced one this pass shares with the other early
             // tiers, so it cannot spend the admissible-order tier's reserve.)
             // STRATEGY_RETRY_TIER_NODE_STAIRCASE (opt-in, default OFF) — see that flag's own comment
-            // in ablation-config.mjs, and STRATEGY_MC_NEIGHBOR_BUDGET_RETRY's own call site below for
+            // in ablation-config.ts, and STRATEGY_MC_NEIGHBOR_BUDGET_RETRY's own call site below for
             // the measurement that found this defect. Off (every production caller and every existing
             // A/B arm), `staircaseEntry`/`staircaseStart` are `undefined`, both runners fall back to
             // their `earlyConfigNodeBudget = nodeBudget` / `lateConfigStart = baseConfigs.length`
@@ -3189,7 +3195,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, diversityNodeCeiling, workBudget, workStart, diversityStaircaseEntry, diversityStaircaseStart)
                 : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, diversityNodeCeiling, workBudget, workStart, diversityStaircaseEntry, diversityStaircaseStart);
             if (retryTierStaircase) for (const attempt of diversityResult.attempts) delete attempt.mainLoopLateReserve;
-            for (const attempt of diversityResult.attempts) attempt.attractionDiversity = true;
+            diversityResult.attempts = diversityResult.attempts.map(attempt => withSolverStage(attempt, 'attraction-diversity'));
             result.attempts.push(...diversityResult.attempts);
             if (diversityResult.solution) result.solution = diversityResult.solution;
         } finally {
@@ -3240,7 +3246,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 const nodesOut: { nodesExpanded?: number } = {};
                 const r = await runAttempt(activeGates[gi], level, prep, shrunk.config, REPAIR_PROBE_ATTEMPT_MS_CAP,
                     Date.now(), yieldFn, gateNodeBudget, nodesOut);
-                result.attempts.push({ ...r.attempt, repairProbe: true, repairProbeShrinkRecovery: true });
+                result.attempts.push(withSolverStage(r.attempt, 'repair-probe-shrink-recovery'));
                 if (r.path) result.solution = r.path;
             }
         }
@@ -3300,14 +3306,14 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 // Remaining GLOBAL node budget — see the repair fallback loop's identical recompute.
                 const remainingNodeBudget = profileCeiling === Infinity ? Infinity : Math.max(0, profileCeiling - prep._metrics.nodesExpanded);
                 const r = await runAttempt(gateKey, level, prep, admissibleOrderConfig, admissibleOrderBudget, Date.now(), yieldFn, remainingNodeBudget);
-                result.attempts.push(r.attempt);
+                result.attempts.push(withSolverStage(r.attempt, 'admissible-order'));
                 if (r.path) { result.solution = r.path; break; }
             }
         }
     }
 
     // Last-resort dedup-near-tie-retry pass (DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION,
-    // STRATEGY_DEDUP_NEAR_TIE_RETRY) — see that flag's own comment in ablation-config.mjs and
+    // STRATEGY_DEDUP_NEAR_TIE_RETRY) — see that flag's own comment in ablation-config.ts and
     // DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's own comment above for the full rationale. Same
     // Proxy-override shape as the attraction-diversity pass above, toggling
     // STRATEGY_DEDUP_NEAR_TIE_RETENTION instead of SCORE_GOAL_ATTRACTION. PROMOTED to default-ON (see
@@ -3385,7 +3391,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, dedupRetryNodeCeiling, dedupRetryWorkBudget, dedupRetryWorkStart, dedupRetryStaircaseEntry, dedupRetryStaircaseStart)
                 : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, dedupRetryNodeCeiling, dedupRetryWorkBudget, dedupRetryWorkStart, dedupRetryStaircaseEntry, dedupRetryStaircaseStart);
             if (retryTierStaircase) for (const attempt of dedupRetryResult.attempts) delete attempt.mainLoopLateReserve;
-            for (const attempt of dedupRetryResult.attempts) attempt.dedupNearTieRetry = true;
+            dedupRetryResult.attempts = dedupRetryResult.attempts.map(attempt => withSolverStage(attempt, 'dedup-near-tie-retry'));
             result.attempts.push(...dedupRetryResult.attempts);
             if (dedupRetryResult.solution) result.solution = dedupRetryResult.solution;
         } finally {
@@ -3395,7 +3401,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     // Last-resort admissible-order non-default-profile retry pass
     // (ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_
-    // RETRY) — see that flag's own comment in ablation-config.mjs and the constant's own comment
+    // RETRY) — see that flag's own comment in ablation-config.ts and the constant's own comment
     // above for the full rationale. PROMOTED to default-ON (see the constant's own comment) — the
     // flag check below (`!cfg ||` ...) is the standard default-on convention, so this block runs for
     // every caller unless `disableExtraBudgetPasses: true` zeroes its budget fraction (both
@@ -3447,7 +3453,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                         ? Infinity
                         : Math.max(0, nonDefaultRetryNodeCeiling - prep._metrics.nodesExpanded);
                     const r = await runAttempt(gateKey, level, prep, admissibleOrderConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
-                    result.attempts.push({ ...r.attempt, admissibleOrderNonDefaultRetry: true });
+                    result.attempts.push(withSolverStage(r.attempt, 'admissible-order-non-default-retry'));
                     if (r.path) { result.solution = r.path; break; }
                 }
             }
@@ -3458,7 +3464,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     // Last-resort connectivity-axis-exhausted retry pass (CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_
     // FRACTION, STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY) — see that flag's own comment in
-    // ablation-config.mjs and the constant's own comment above for the full rationale. Same
+    // ablation-config.ts and the constant's own comment above for the full rationale. Same
     // Proxy-override shape as the dedup-near-tie-retry pass above, toggling
     // PRUNE_CONNECTIVITY_AXIS_EXHAUSTED instead of STRATEGY_DEDUP_NEAR_TIE_RETENTION. PROMOTED to
     // default-ON (2026-08-16, run 31918095910: corpus1 95/95 unchanged, corpus2 +10/-0) - the flag
@@ -3502,7 +3508,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, connectivityRetryTotalBudget, connectivityRetryStart, yieldFn, connectivityRetryNodeCeiling, connectivityRetryWorkBudget, connectivityRetryWorkStart, connectivityRetryStaircaseEntry, connectivityRetryStaircaseStart)
                 : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, connectivityRetryTotalBudget, connectivityRetryStart, yieldFn, connectivityRetryNodeCeiling, connectivityRetryWorkBudget, connectivityRetryWorkStart, connectivityRetryStaircaseEntry, connectivityRetryStaircaseStart);
             if (retryTierStaircase) for (const attempt of connectivityRetryResult.attempts) delete attempt.mainLoopLateReserve;
-            for (const attempt of connectivityRetryResult.attempts) attempt.connectivityAxisExhaustedRetry = true;
+            connectivityRetryResult.attempts = connectivityRetryResult.attempts.map(attempt => withSolverStage(attempt, 'connectivity-axis-exhausted-retry'));
             result.attempts.push(...connectivityRetryResult.attempts);
             if (connectivityRetryResult.solution) result.solution = connectivityRetryResult.solution;
         } finally {
@@ -3512,7 +3518,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     // Last-resort repair-elite-prefix-DFS retry pass (REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_
     // FRACTION, STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY) — see that flag's own comment in
-    // ablation-config.mjs and the constant's own comment above for the full rationale. Unlike the
+    // ablation-config.ts and the constant's own comment above for the full rationale. Unlike the
     // three tiers above (which rerun `mainConfigs` via runInterleavedAttempts/runGateSerialAttempts,
     // or the admissible-order-non-default-retry tier's own per-profile loop over admissible-order
     // configs), this reruns `repairConfigs` via the SAME per-config/per-gate manual loop shape as
@@ -3568,7 +3574,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                         ? Infinity
                         : Math.max(0, repairElitePrefixDfsRetryNodeCeiling - prep._metrics.nodesExpanded);
                     const r = await runAttempt(gateKey, level, prep, repairConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
-                    result.attempts.push({ ...r.attempt, repairElitePrefixDfsRetry: true });
+                    result.attempts.push(withSolverStage(r.attempt, 'repair-elite-prefix-dfs-retry'));
                     if (r.path) { result.solution = r.path; break; }
                 }
             }
@@ -3579,7 +3585,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     }
 
     // Last-resort must-cross-neighbor-budget retry pass (MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION,
-    // STRATEGY_MC_NEIGHBOR_BUDGET_RETRY) — see that flag's own comment in ablation-config.mjs and the
+    // STRATEGY_MC_NEIGHBOR_BUDGET_RETRY) — see that flag's own comment in ablation-config.ts and the
     // constant's own comment above for the full rationale. Same Proxy-override, same mainConfigs
     // rerun shape as the dedup-near-tie-retry and connectivity-axis-exhausted-retry passes above,
     // toggling PRUNE_MC_NEIGHBOR_BUDGET instead. PROMOTED to default-ON (2026-08-19) — the flag check
@@ -3657,7 +3663,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, mcNeighborBudgetRetryTotalBudget, mcNeighborBudgetRetryStart, yieldFn, mcNeighborBudgetRetryNodeCeiling, mcNeighborBudgetRetryWorkBudget, mcNeighborBudgetRetryWorkStart, mcNeighborBudgetRetryEntryNodes, 0)
                 : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, mcNeighborBudgetRetryTotalBudget, mcNeighborBudgetRetryStart, yieldFn, mcNeighborBudgetRetryNodeCeiling, mcNeighborBudgetRetryWorkBudget, mcNeighborBudgetRetryWorkStart, mcNeighborBudgetRetryEntryNodes, 0);
             for (const attempt of mcNeighborBudgetRetryResult.attempts) {
-                attempt.mcNeighborBudgetRetry = true;
+                Object.assign(attempt, withSolverStage(attempt, 'mc-neighbor-budget-retry'));
                 // `lateConfigStart = 0` makes both runners tag every attempt `mainLoopLateReserve`,
                 // which here means "took a staircase step", not "belongs to the main loop's late
                 // reserve experiment". Strip it so telemetry consumers of that field are not polluted.
@@ -3736,7 +3742,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                     : Math.max(0, repairLateProbeNodeCeiling - prep._metrics.nodesExpanded);
                 const remainingNodeBudget = Math.min(ownBudgetRemaining, outerCeilingRemaining);
                 const r = await runAttempt(gateKey, level, prep, repairLateProbeConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
-                result.attempts.push({ ...r.attempt, repairLateProbe: true });
+                result.attempts.push(withSolverStage(r.attempt, 'repair-late-probe'));
                 if (r.path) { result.solution = r.path; break; }
             }
         } finally {

@@ -40,7 +40,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
-import { defaultConfig } from './ablation-config.mjs';
+import { defaultConfig } from '../modules/solver/ablation-config.js';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { parseLevelPositions } from './level-data-io.mjs';
 

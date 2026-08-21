@@ -8,59 +8,20 @@ import { makeProvenanceEntry, toHint } from '../domain/hint-types.js';
 import { ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } from './attempts.js';
 import { classifyAttemptTier } from './orchestration.js';
 import type { Hint, HintProvenanceEntry } from '../domain/hint-types.js';
+import type { Attempt } from './orchestration.js';
 
-interface AttemptLike {
-    profile: string;
-    template?: string | null;
-    beamWidth?: number | null;
-    diverseBeam?: boolean;
-    gateKey?: number;
-    repair?: boolean;
-    /** Repair attempts only — which biased variant (if any) this attempt was. See
-     *  SolveAttemptInfo's own fields for why these are captured separately from `technique`. */
-    repairMustTurnBiased?: boolean;
-    repairTurnBiased?: boolean;
-    /** admissible-order-search.ts winner (attemptConfigKey's `ida:<profile>` shape) rather than a
-     *  dfs/beam/repair attempt — see deriveSolveAttemptInfo's technique derivation. */
-    admissibleOrder?: boolean;
-    /** Set post-hoc (not by runAttempt itself) on every attempt from the last-resort attraction-
-     *  diversity rerun (orchestration.ts) — orthogonal to repair/beam/dfs, so a dfs OR beam OR
-     *  repair winner can equally have this true. */
-    attractionDiversity?: boolean;
-    /** The remaining force-enabled last-resort retry tiers (orchestration.ts's own doc comments on
-     *  the Attempt interface) — passed straight through to classifyAttemptTier alongside repair/
-     *  admissibleOrder/attractionDiversity above so `retryTier` below reflects the SAME precedence
-     *  orchestration.ts's own lifecycle-telemetry labeling uses, rather than a second hand-derived
-     *  copy of that chain going stale as new tiers are added (exactly how this gap arose the first
-     *  time — see docs/solver-optimization-current-queue.md's Priority 0). */
-    repairProbe?: boolean;
-    admissibleOrderNonDefaultRetry?: boolean;
-    dedupNearTieRetry?: boolean;
-    connectivityAxisExhaustedRetry?: boolean;
-    mcNeighborBudgetRetry?: boolean;
-    repairElitePrefixDfsRetry?: boolean;
-    repairLateProbe?: boolean;
-    ok: boolean;
-    outcome?: 'success' | 'exhausted' | 'timed-out' | 'budget-starved' | 'error';
-    elapsedMs?: number | null;
-    nodesExpanded?: number | null;
-    allocatedBudgetMs?: number | null;
-    /** Repair attempts only: the seed the randomized search ran with (orchestration.ts records it
-     *  via repairPrimarySeed). Absent/null for deterministic dfs/beam attempts. */
-    randomSeed?: number | null;
-    /** Repair attempts only: the seedSalt INPUT to repairPrimarySeed — see HintSearchProvenance.
-     *  seedSalt's own comment for why this is stored alongside randomSeed rather than only the
-     *  derived seed. Only set on the attempt at all when nonzero (orchestration.ts's convention). */
-    seedSalt?: number;
-}
+// Tests and older callers intentionally construct partial attempts, but every supported field and
+// its type comes from orchestration's exported Attempt contract rather than a second hand-written
+// telemetry schema here.
+type AttemptLike = Pick<Attempt, 'profile' | 'ok'> & Partial<Omit<Attempt, 'profile' | 'ok'>>;
 
 interface SolveResultLike {
-    // Duck-typed against orchestration.ts's (unexported) Attempt[] — callers pass the real
-    // SolveResult, whose `attempts` TypeScript only knows as `unknown[]` at the ports.ts boundary.
-    attempts?: any[];
+    attempts?: AttemptLike[];
     nodesExpanded?: number;
     totalMs?: number;
     status?: string;
+    workSpent?: number;
+    workBudget?: number;
 }
 
 interface VarietySavedMetaLike { nodesExpanded: number | null; elapsedMs: number | null; technique: string; anchorSeed?: string | null; anchorDepth?: number | null; }
@@ -194,10 +155,10 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         cumulativeElapsedMs: result.totalMs ?? null,
         cumulativeBudgetMs: ctx.budgetMs ?? null,
         // The machine-independent, cross-technique-comparable cost pair — see hint-types.ts's
-        // HintSearchProvenance.workSpent. Taken from the whole solve (SolveResult.workSpent), the
-        // same scope as cumulativeNodesExpanded.
-        workSpent: (result as { workSpent?: number }).workSpent ?? null,
-        workBudget: (result as { workBudget?: number }).workBudget ?? null,
+        // HintSearchProvenance.workSpent. Taken from the whole solve, the same scope as
+        // cumulativeNodesExpanded.
+        workSpent: result.workSpent ?? null,
+        workBudget: result.workBudget ?? null,
         // Map the orchestration SolveResult.status onto the documented HintSearchProvenance
         // termination vocabulary (hint-types.ts): a solve reports status 'success', but the schema's
         // success value is 'solved' (what every enumeration technique writes) — normalize so the two

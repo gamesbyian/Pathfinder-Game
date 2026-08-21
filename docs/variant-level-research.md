@@ -8,12 +8,72 @@ The large generated dataset is **not on `main`**. It lives on branch `claude/var
 
 One audited wide artifact contains **1,962 parents, 72,965 variants, 36,622 cold solves, and 78,429 attempt records**. Other campaigns bring the broader collection to roughly 96,000 variants. Quote the specific campaign/artifact rather than treating all generated variants as one homogeneous table.
 
+### Access model
+
+**Keep current `main` as the execution and instruction environment. Treat the trove branch as read-only historical data.** Do not switch the working checkout to the trove branch: its code, docs, root prompts, counts, and investigation state predate current `main` and are not current authority.
+
 Prefer a separate worktree:
 
 ```bash
 git fetch origin claude/variant-levels-solver-insights-tpk4qg
 git worktree add ../pathfinder-variant-research origin/claude/variant-levels-solver-insights-tpk4qg
 ```
+
+Run current tools from the `main` worktree and pass/read data from the sibling worktree when the tool supports an external path. If a needed current tool assumes in-tree family data, adapt the tool to accept a data-root argument rather than running historical branch code.
+
+### Disposable point-query index
+
+Build the shared derived index with current-main code while pointing at the data worktree:
+
+```bash
+npm run family:index -- --trove-root=../pathfinder-variant-research
+npm run family:show -- --trove-root=../pathfinder-variant-research --variant-id=F00110-01
+npm run family:show -- --trove-root=../pathfinder-variant-research --parent-corpus=data/levels.json --parent-id=P00110 --variant-id=F00110-01
+npm run family:query -- --trove-root=../pathfinder-variant-research --corpus=corpus2 --mode=symmetry
+npm run family:query -- --trove-root=../pathfinder-variant-research --operator=transform
+npm run family:query -- --trove-root=../pathfinder-variant-research --object-type=blocks
+npm run family:query -- --trove-root=../pathfinder-variant-research --evaluated=false
+npm run family:coverage -- --trove-root=../pathfinder-variant-research --corpus=corpus2
+```
+
+The compact `.cache/family-index.json` is disposable and deterministic: it omits build timestamps
+and absolute worktree paths. It records canonical family/manifest paths,
+full parent/family/variant identity, generation implementation metadata when present, and joins
+machine-readable census evidence. Coverage is grouped by parent and explicitly counts unevaluated
+variants. It consumes both census JSON/JSONL and the canonical chunked wide-trove attempt reports;
+malformed evidence is reported in index diagnostics rather than silently ignored. Older manifests
+without `schemaVersion`, per-run history, or implementation metadata remain readable.
+Malformed/non-family manifest classifications and evidence files above the parser safety limit are
+also explicit diagnostics; an index never silently presents those artifacts as evaluated coverage.
+All family commands using the index share `--trove-root=<path>`; omission keeps ordinary in-tree
+use unchanged. Research scripts that already accept explicit `--manifest`, `--in-dir`, or result
+paths remain external-root capable through those narrower arguments and were not given redundant
+flags.
+
+The wide parent-hint replay batch also accepts `--trove-root=<path>` for read-only manifests and
+variant hints while continuing to read/write canonical parent corpora in the current-main checkout.
+`--save-hints` remains the explicit mutation gate; omission is a dry run.
+
+### Evaluation-run provenance
+
+Generation provenance is normalized for new family manifests. New decision-bearing solver
+evaluation runs use the family run contract validated by
+`scripts/experiment-manifest-lib.mjs::validateFamilyEvaluationRunManifest`. It records solver
+commit/ref/dirty state, tool and workflow, corpus/family selection, external-trove identity, solver
+mode/profile/config/flags, work/node/wall budgets, strict-total-work mode, seeds, one-based shard
+identity, timestamps, outputs, and source generation artifacts. Put each shard manifest under
+`logs/family-census/**/manifest.json` and list repository-relative output paths.
+
+The disposable family index groups valid shards by `runId`, reports whether all declared shards are
+present, and attaches normalized provenance to listed output evidence. A manifest with a declared
+schema that fails validation is an explicit index diagnostic. Pre-schema historical run notes and
+historical evidence remain readable: missing provenance stays `null`/unknown rather than being
+guessed. Do not infer a uniform invocation contract across old census and wide-trove artifacts.
+
+This contract extends the existing experiment-manifest helper rather than creating a parallel
+family-only provenance subsystem. Historical artifacts are not rewritten merely to look uniform.
+
+When citing trove evidence, record the branch/commit or artifact hash used. Generation manifests are durable evidence about the generated family; they do not make historical solver results current. Re-test decision-bearing solver cliffs on current code.
 
 ## What variants are for
 
@@ -52,7 +112,8 @@ Broader scaling questions can use variants too. `npm run solver:req-length-sweep
 
 | Need | Entry point |
 |---|---|
-| Generate variants | `npm run family:generate` |
+| Generate variants | `npm run family:generate` (new manifests include source hash and Git identity) |
+| Build/query disposable trove index | `npm run family:index`, `family:show`, `family:query`, `family:coverage` |
 | Join solve/mutation effects | `npm run family:analyze` |
 | Family-boundary synthesis | `npm run family:boundary-report` |
 | Replay child path on parent | `npm run family:parent-hint-replay` |
@@ -62,6 +123,9 @@ Broader scaling questions can use variants too. `npm run solver:req-length-sweep
 | Large family campaign | `.github/workflows/family-wide-trove.yml` |
 | Technique probe | `scripts/method-probe.mjs` / `.github/workflows/method-probe-sweep.yml` |
 | Reduce pathological level | `npm run stress:reduce-level` |
+
+The family index is the canonical disposable point-query layer. Extend it rather than creating an
+investigation-specific index; canonical JSON and census artifacts remain the evidence authority.
 
 Start with [`tooling-catalog.md`](tooling-catalog.md) before adding infrastructure. Detailed historical designs/experiments are frozen under [`archive/snapshots/`](archive/snapshots/README.md).
 

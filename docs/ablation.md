@@ -1,6 +1,6 @@
 # Ablation Laboratory
 
-Specialized solver-analysis tooling: `scripts/run-ablation.mjs`, `scripts/analyze-ablation.mjs`, `scripts/ablation-config.mjs`, and npm `ablation:*` commands.
+Specialized solver-analysis tooling: `scripts/run-ablation.mjs`, `scripts/analyze-ablation.mjs`, `modules/solver/ablation-config.ts`, and npm `ablation:*` commands.
 
 The framework toggles solver features through `opts.ablation`. Production-default features default on; experimental opt-ins default off. Baseline matches the production-default solver.
 
@@ -16,7 +16,7 @@ Ablation commands use `scripts/run-bundled.mjs`, not raw `tsx`, because the solv
 | templates | 8 | structural traversal templates |
 | profiles | 12 | `PROFILE_<name>` attempt eligibility |
 
-Exact names and defaults live in `scripts/ablation-config.mjs`.
+Exact names and defaults live in `modules/solver/ablation-config.ts`.
 
 Important strategy distinctions:
 - `STRATEGY_REPAIR_FALLBACK`: removes repair configs and therefore their early probe.
@@ -121,7 +121,7 @@ score = (baselineSolved - ablationSolved) * 100
 ## Programmatic use
 
 ```js
-import { withFeatureDisabled, withFeaturesDisabled, soloConfig } from './scripts/ablation-config.mjs';
+import { withFeatureDisabled, withFeaturesDisabled, soloConfig } from './modules/solver/ablation-config.ts';
 
 const result = await Solver.solve(level, {
   timeBudgetMs: 15000,

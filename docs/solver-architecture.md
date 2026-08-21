@@ -286,7 +286,7 @@ This fixed real silent wrong-level selection caused by two historical parser con
 
 ## Fast Portfolio Scheduler Experiment
 
-`opts.schedulerMode` is `'legacy'` or offline-only `'portfolio-experiment'`; live Play/Editor/Review/hint discovery use legacy. Portfolio tiers in `data/config/portfolio-experiment.js` run broad cheap timed passes, with feature-gated specialist passes, then full legacy fallback, so solvability cannot be below legacy but runtime can be worse.
+`opts.schedulerMode` is `'legacy'` or offline-only `'portfolio-experiment'`; live Play/Editor/Review/hint discovery use legacy. Portfolio tiers in `modules/solver/portfolio-experiment.ts` run broad cheap timed passes, with feature-gated specialist passes, then full legacy fallback, so solvability cannot be below legacy but runtime can be worse.
 
 **Verdict: not production-ready.** 2026-07-12 best measured published variant (500/2000/5000 ms) was still **1.51×** legacy while preserving solves. Re-verification 2026-07-16 after the elite-splice repair fix weakened the stress case: an earlier corpus1 1–20 result of **0.57×** became **1.45×** on the same config/subset, with two levels falling from portfolio-tier solve to fallback. Portfolio comparisons must be revalidated whenever legacy speed changes. See `reports/portfolio/portfolio-scheduler-decision.md` and the 2026-07-16 reverification report.
 

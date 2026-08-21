@@ -56,6 +56,18 @@ test('domain-purity flags an adapter-layer import from the pure core', async () 
     assert.ok(hasRule(msgs, 'no-restricted-imports'), JSON.stringify(msgs));
 });
 
+test('module ownership rejects executable imports from scripts and data', async () => {
+    for (const source of ['../../scripts/tool.mjs', '../../data/config/policy.js']) {
+        const msgs = await lint(`import { x } from '${source}';\nexport const y = x;`, 'modules/solver/_fixture.ts');
+        assert.ok(hasRule(msgs, 'no-restricted-imports'), `${source}: ${JSON.stringify(msgs)}`);
+    }
+});
+
+test('module ownership allows serializable runtime data imports', async () => {
+    const msgs = await lint("import levels from '../../data/levels.json' with { type: 'json' };\nexport const y = levels;", 'modules/domain/_fixture.ts');
+    assert.ok(!hasRule(msgs, 'no-restricted-imports'), JSON.stringify(msgs));
+});
+
 test('domain-purity allows a type import from state-slices', async () => {
     const msgs = await lint("import type { EngineState } from '../state-slices.js';\nexport type T = EngineState;", 'modules/runtime/_fixture.ts');
     assert.ok(!hasRule(msgs, 'no-restricted-imports'), JSON.stringify(msgs));
