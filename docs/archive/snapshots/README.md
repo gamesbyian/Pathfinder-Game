@@ -9,6 +9,8 @@ Relative links inside snapshots were preserved as originally written and may not
 | [`future-work-2026-08-20.md`](future-work-2026-08-20.md) | Full future-work evidence/chronology ledger before separation into queue, ledger, method, and deferred ideas. |
 | [`solver-research-operating-model-2026-08-20.md`](solver-research-operating-model-2026-08-20.md) | Living research notebook before conversion to a stable method contract. |
 | [`solver-opt-in-experiment-ledger-2026-08-20.md`](solver-opt-in-experiment-ledger-2026-08-20.md) | Full default-off/promotion experiment chronology before compaction into a true flag ledger. |
+| [`solver-optimization-current-queue-2026-08-20.md`](solver-optimization-current-queue-2026-08-20.md) | Earlier 2026-08-20 live queue state before provenance/routing reconciliation. |
+| [`solver-optimization-current-queue-2026-08-20-post-1398.md`](solver-optimization-current-queue-2026-08-20-post-1398.md) | Late 2026-08-20 regression/provenance chronology and routing state. |
 | [`solver-shadow-eval-harness-2026-08-20.md`](solver-shadow-eval-harness-2026-08-20.md) | Harness implementation plus dated prototype-result notebook before tool-contract compaction. |
 | [`winning-lineage-survival-analysis-2026-08-20.md`](winning-lineage-survival-analysis-2026-08-20.md) | Lineage instrumentation plus dated cohort/oracle results before tool-contract compaction. |
 | [`solver-budget-determinism-2026-08-20.md`](solver-budget-determinism-2026-08-20.md) | Completed work-budget migration diary, calibration evidence, and intermediate prototype states before compaction to the current budget contract. |
