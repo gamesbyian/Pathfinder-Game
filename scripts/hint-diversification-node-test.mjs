@@ -21,11 +21,27 @@ const { readLevelsWithHints } = await import('./level-data-io.mjs');
 // unconditionally (unlike hint-workbench.mjs, which checks path.isAbsolute first) — so the
 // fixture must live under ROOT and be referenced by a ROOT-relative path. tmp/ is gitignored,
 // so a fixture under ROOT/tmp never risks landing in git status.
+//
+// A trivial single-gate, portal-less corridor rather than the real level 1 (2 gates + a portal):
+// every assertion below checks report SHAPE (field types, level number, errors === []) or is
+// explicitly conditional on a hint actually being found, never a non-zero combo count for any
+// specific phase — a portal-less level still runs (and reports, as a valid 0) every phase. Real
+// level 1's gate x direction x portal-dest combo count used to dominate this file's wall time
+// regardless of --attempt-budget-ms/--max-wall-ms (each combo pays a real, largely
+// budget-insensitive minimum solve cost — see scripts/hint-workbench-node-test.mjs's identical
+// fixture swap and docs/testing.md's "Timing instrumentation" for the same finding there).
+function trivialFixtureLevel() {
+    return {
+        grid: { w: 5, h: 1 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 }, falseGoals: [],
+        reqLen: 4, reqInt: 0, blocks: [], mustPass: [], mustCross: [], filters: [],
+        flippingFilters: [], portals: [], geese: [], designerName: '', description: '', difficulty: null,
+    };
+}
+
 async function writeFixtureLevel(fixtureDirAbs) {
-    const sourceLevels = readLevelsWithHints(path.join(ROOT, 'data/levels.json'));
     await mkdir(fixtureDirAbs, { recursive: true });
     const fixtureLevelsPathAbs = path.join(fixtureDirAbs, 'levels.json');
-    await writeFile(fixtureLevelsPathAbs, `${JSON.stringify([sourceLevels[0]], null, 2)}\n`);
+    await writeFile(fixtureLevelsPathAbs, `${JSON.stringify([trivialFixtureLevel()], null, 2)}\n`);
     return path.relative(ROOT, fixtureLevelsPathAbs);
 }
 
@@ -49,9 +65,9 @@ async function main() {
         const result = await runDiversification([
             `--levels-json=${fixtureLevelsPathRelative}`,
             '--levels=pos:1',
-            '--attempt-budget-ms=30',
-            '--baseline-budget-ms=100',
-            '--max-wall-ms=2000',
+            '--attempt-budget-ms=300',
+            '--baseline-budget-ms=500',
+            '--max-wall-ms=5000',
             `--output=${outputPath}`,
         ]);
         assert.match(result.stdout, /Hint diversification sweep: 1 level\(s\)/);
@@ -84,9 +100,9 @@ async function main() {
             `--levels-json=${fixtureLevelsPathRelative}`,
             '--levels=pos:1',
             '--combined-only',
-            '--attempt-budget-ms=30',
-            '--baseline-budget-ms=100',
-            '--max-wall-ms=2000',
+            '--attempt-budget-ms=300',
+            '--baseline-budget-ms=500',
+            '--max-wall-ms=5000',
             `--output=${combinedOnlyOutput}`,
         ]);
         assert.match(combinedOnlyResult.stdout, /Hint diversification sweep: 1 level\(s\)/);

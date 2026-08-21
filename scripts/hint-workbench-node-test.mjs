@@ -172,10 +172,27 @@ async function main() {
         assert.equal(includeReport.axisPlan.source, 'include');
         assert.deepEqual(includeReport.axisPlan.steps, ['enumerate-targeted']);
 
+        // The four ablation-heavy calls below only assert on REPORT SHAPE (phasesRun order,
+        // axisCoverage field presence/types, axisPlan echo) — never on any actual hint being
+        // found or on a specific non-zero combo count (see the field-type-only loop below). None
+        // of that depends on the target level's own geometry, only on running the phases at all.
+        // Real level 1 (2 gates, a portal, 9x9 grid) makes each phase's gate x direction x
+        // portal-dest combo count large enough that these four calls alone used to account for
+        // ~90% of this file's wall time REGARDLESS of --attempt-budget-ms/--wall-ms (each combo's
+        // solve pays a real, largely budget-insensitive minimum cost — see docs/testing.md's
+        // "Timing instrumentation"). Pointing them at the same trivial single-gate, portal-less
+        // corridor fixture already used below cuts combo count to nearly nothing while proving the
+        // exact same plumbing (a portal-less level still runs — and records — portalCascade/
+        // swapPortal/combined/swapCombined with zero combos, which is still a valid `number`).
+        const ablationFixtureDir = path.join(tempDir, 'ablation-fixture');
+        await mkdir(ablationFixtureDir, { recursive: true });
+        const ablationFixtureLevelsPath = await writeTrivialFixtureLevel(ablationFixtureDir);
+
         // --directions=forward,reverse and --combined=evidence are real (Component 5): the
         // ablation-full step's phase toggles follow them instead of the earlier fail-fast stubs.
         const ablationFullOutput = path.join(tempDir, 'ablation-full-report.json');
         await runWorkbench([
+            `--levels-json=${ablationFixtureLevelsPath}`,
             '--levels=pos:1',
             '--include=ablation-full',
             '--directions=forward,reverse',
@@ -208,6 +225,7 @@ async function main() {
         // --directions/--combined (its name promises full coverage; Component 2's invariant).
         const ablationFullDefaultOutput = path.join(tempDir, 'ablation-full-default-report.json');
         await runWorkbench([
+            `--levels-json=${ablationFixtureLevelsPath}`,
             '--levels=pos:1',
             '--preset=ablation-full',
             '--policy=audit-only',
@@ -244,6 +262,7 @@ async function main() {
         // regardless of --directions/--combined (they are not tunable by those flags).
         const combinedOnlyOutput = path.join(tempDir, 'ablation-combined-only-report.json');
         await runWorkbench([
+            `--levels-json=${ablationFixtureLevelsPath}`,
             '--levels=pos:1',
             '--preset=ablation-combined-only',
             '--policy=audit-only',
@@ -258,6 +277,7 @@ async function main() {
 
         const reverseOnlyOutput = path.join(tempDir, 'ablation-reverse-only-report.json');
         await runWorkbench([
+            `--levels-json=${ablationFixtureLevelsPath}`,
             '--levels=pos:1',
             '--preset=ablation-reverse-only',
             '--policy=audit-only',

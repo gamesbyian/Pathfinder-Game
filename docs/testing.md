@@ -5,13 +5,31 @@ Current test tiers and finish-line requirements.
 ## Core commands
 
 ```bash
-npm run ci          # local full code gate: static checks + coverage/unit suites + node validators
-npm run ci:fast      # quick local signal: checks + fast-tier unit/node suites (skips deep solver proofs)
+npm run ci:fast     # DEFAULT local gate for most changes: checks + fast-tier unit/node suites (~1 min)
+npm run ci          # full local gate: adds coverage + the deep solver-proof tests + slow CLI harnesses (~4 min)
 npm run test:unit   # Vitest unit/integration suites
 npm run ci:full     # ci + Playwright browser e2e
 npm run test:e2e    # Playwright functional browser tests
 npm run test:visual # opt-in environment-sensitive visual baselines
 ```
+
+**Use `npm run ci:fast` by default.** It exercises the same code, at the same assertions, minus
+only the handful of tests tagged `deepTest` (see Fast and deep gates below) — those are expensive
+specifically because their own subject is deep solver-search/budget behavior, not because they
+cover more surface than anything else. Reach for full `npm run ci` instead when any of the
+following holds, otherwise `ci:fast` is the defensible, faster choice:
+
+- the change touches `modules/solver/orchestration.ts`, `search.ts`, `repair-search.ts`,
+  `lower-bounds.ts`, `prune-gauntlet.ts`, `scoring.ts`, `diversification.ts`, or
+  `hint-ablation-generator.ts` (or their CLI wrappers `scripts/hint-workbench.mjs` /
+  `scripts/hint-diversification.mjs`) — exactly the files the deep tests exist to protect;
+- the task is specifically about solver budget/allocation semantics, node-budget capping, deadlock
+  soundness, or a real-corpus regression rescue — the deep tests' own subject matter;
+- the change plausibly shifts coverage thresholds in `vitest.config.mjs`'s scope (`modules/domain`,
+  `runtime`, `solver`, `state`, `state-slices.ts`, `input/*-core.ts`) — `ci:fast` skips coverage
+  instrumentation entirely for speed, so use `npm run test:coverage` (or full `ci`) instead;
+- it's the final validation before a high-stakes completeness claim on a change with broad blast
+  radius, where the deep tests' extra confidence is worth the extra ~3 minutes.
 
 `npm run ci` is browser-free. `ci:full` adds browser confidence. Visual baselines stay separate because font/anti-aliasing differences make cross-environment comparison unreliable. GitHub Actions is a remote execution convenience; pushing or merging does not wait on it. Agents that need validation should run the relevant commands locally and report exactly what ran.
 
@@ -21,7 +39,7 @@ npm run test:visual # opt-in environment-sensitive visual baselines
 |---|---|---|
 | Static | `npm run check` | lint/architecture, types, security, CSP, data/document invariants |
 | Unit/integration | `npm run test:unit` / `test:coverage` | Vitest logic and controller tests; coverage thresholds apply in `test:coverage` |
-| Node validators/harnesses | `npm run test:node` / `test:node:fast` | boot/data/oracle/loader/Firestore/bundled-level and CLI-driving harnesses; `:fast` skips `test:hint-workbench`/`test:hint-diversification`, the two CLI harnesses whose real end-to-end solver search dominates this tier's wall time |
+| Node validators/harnesses | `npm run test:node` / `test:node:fast` | boot/data/oracle/loader/Firestore/bundled-level and CLI-driving harnesses; `test:node:fast` is a placeholder for a future slow validator to exclude the same way `test:unit:fast` excludes deep Vitest tests — every current validator already runs fast (see `hint-workbench-node-test.mjs`/`hint-diversification-node-test.mjs`'s fixture-swap comments for how the two previously-dominant ones got there) |
 | Browser e2e | `npm run test:e2e` | production Vite bundle through Playwright Chromium |
 | Visual | `npm run test:visual` | modal/overlay screenshot regression |
 | Solver/data research | solver, stress, ablation, hint, level tools | on demand; not part of ordinary `ci` |
@@ -116,11 +134,13 @@ For repeated local e2e runs, keep `npm run build && npm run preview` running; Pl
 ## What to run when
 
 - **While editing:** targeted Vitest/e2e or a small solver sample.
-- **Before claiming a normal code change complete:** local `npm run ci` when feasible; otherwise state which narrower checks ran and why.
+- **Before claiming a normal code change complete:** local `npm run ci:fast` when feasible (the
+  default — see Core commands above for exactly when full `ci` is the better call); otherwise state
+  which narrower checks ran and why.
 - **UI/controller changes:** add focused e2e; use `ci:full` for broad browser confidence when warranted.
 - **Modal/markup changes:** `npm run test:visual`; update baselines only for intentional changes.
 - **Level/hint changes:** `npm run test:hint-path-oracle` and relevant validators.
-- **Solver hot-path changes:** use the solver gates below.
+- **Solver hot-path changes:** full `npm run ci`, not `ci:fast` — then the solver gates below.
 
 ## Solver iteration versus promotion
 

@@ -6,7 +6,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 
 | Question | Preferred entry point |
 |---|---|
-| Repository checks | `npm run ci`; [`testing.md`](testing.md) |
+| Repository checks | `npm run ci:fast` (default); full `npm run ci` for solver-core changes or a final completeness claim — [`testing.md`](testing.md) |
 | Browser flows | focused `test:e2e:*`; `npm run ci:full` for release confidence |
 | Production solver on named levels | `npm run solver:direct -- --levels=...` |
 | Published solved-set regression | `npm run solver:bench -- --check` |
