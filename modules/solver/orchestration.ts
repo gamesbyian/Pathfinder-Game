@@ -9,6 +9,7 @@ import { withSolverStage } from './stage-policy.js';
 import type { SolverStageId } from './stage-policy.js';
 import { buildSolverStagePlan } from './stage-plan.js';
 import { formatAttemptIdentityKey } from './attempt-identity.mjs';
+import { buildRetryTierAblationOverride, runWholeLadderRetryTier } from './stage-executors.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit } from './types.js';
@@ -23,30 +24,12 @@ function isSolverCancellation(value: unknown): boolean {
     catch { return false; }
 }
 
-/** Builds a retry tier's own ablation-config override: `overrides`' flags win outright (the tier's
- *  whole reason to exist — e.g. "rerun the ladder with this ONE flag forced off/on"), every other
- *  flag falls through to `originalCfg`'s own setting, and anything unset there defaults exactly
- *  like `!cfg || cfg.FLAG` reads elsewhere in this file (opt-in features default false, everything
- *  else true) — never a blind `true` fallthrough. A Proxy, not a plain spread: see
- *  ATTRACTION_DIVERSITY_BUDGET_FRACTION's own comment for why a sparse `{ ...cfg, FLAG: false }`
- *  object silently disables every OTHER unset strategy flag under the `(!cfg || cfg.FLAG)`
- *  convention. The one canonical implementation for every whole-ladder-rerun retry tier below
- *  (attraction-diversity, dedup-near-tie-retry, connectivity-axis-exhausted-retry, repair-elite-
- *  prefix-dfs-retry, mc-neighbor-budget-retry) — each previously built its own copy of this exact
- *  Proxy, and each shipped the same "falls through to a blind `true`" bug independently before
- *  being fixed together on 2026-08-20 (see this function's git history / that fix's own comment
- *  for the confound it caused). A future retry tier reuses this instead of writing a sixth copy. */
-function buildRetryTierAblationOverride(originalCfg: AblationConfig | null, overrides: Readonly<Record<string, boolean>>): AblationConfig {
-    return new Proxy({} as AblationConfig, {
-        get(_target, prop: string | symbol) {
-            if (typeof prop !== 'string') return undefined;
-            if (Object.prototype.hasOwnProperty.call(overrides, prop)) return overrides[prop];
-            if (originalCfg && Object.prototype.hasOwnProperty.call(originalCfg, prop)) return originalCfg[prop];
-            if (OPT_IN_FEATURES.has(prop)) return false;
-            return true;
-        },
-    });
-}
+// buildRetryTierAblationOverride and runWholeLadderRetryTier now live in stage-executors.ts — the
+// canonical execution adapter for the four "rerun mainConfigs under one forced flag" retry tiers
+// (attraction-diversity, dedup-near-tie-retry, connectivity-axis-exhausted-retry, mc-neighbor-
+// budget-retry). repair-elite-prefix-dfs-retry still builds its own override directly (a genuinely
+// different execution shape — see stage-executors.ts's own header comment for why it wasn't
+// folded into the same adapter), importing the shared builder rather than keeping a sixth copy.
 interface PortfolioExperimentDefinition {
     pass1Ms: number;
     pass2Ms: number;
@@ -1888,75 +1871,35 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // resolution's own comment for why ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION's eligibility check
     // needs it before this point.)
     if (!result.solution && diversityBudgetFraction > 0 && (!cfg || cfg.STRATEGY_ATTRACTION_DIVERSITY) && prep._metrics.nodesExpanded < earlyTierNodeBudget) {
-        const diversityBudget = Math.floor(timeBudgetMs * diversityBudgetFraction);
         // SCORE_* flags don't affect getConfiguredAttemptConfigs's config selection (only
         // STRATEGY_*/PROFILE_*/TEMPLATE_* do), so reusing mainConfigs (built under the original
-        // cfg) under this overridden prep._cfg selects the exact same attempts the diagnosis's own
-        // full re-solve-with-ablation would have selected.
+        // cfg) under the executor's overridden prep._cfg selects the exact same attempts the
+        // diagnosis's own full re-solve-with-ablation would have selected.
         //
-        // A Proxy, NOT a plain `{ ...(originalCfg ?? {}) }` spread: every ablation-gated check in
-        // this file and repair-search.ts/attempts.ts reads `(!cfg || cfg.SOME_FLAG)` — "no ablation
-        // object at all" is the only way an unset flag defaults to enabled. `originalCfg` is most
-        // commonly `null` (the production default), so a plain spread produces a SPARSE object
-        // ({ SCORE_GOAL_ATTRACTION: false } and nothing else) — a non-null object whose every OTHER
-        // flag now reads as `undefined` (falsy), silently disabling STRATEGY_GATE_INTERLEAVING,
-        // STRATEGY_MIN_BUDGET_FLOOR, STRATEGY_ARCHETYPE_ROUTING, etc. for the whole pass. This is
-        // the exact bug SolveOpts's repairBudgetFractionOverride field comment already documents
-        // shipping once before ("passing ANY ablation object... silently disables every OTHER unset
-        // strategy flag") — caught here empirically: an initial version using the plain-spread form
-        // failed to rescue any of the 3 known R00156/R02960 variants even at a full extra 15s
-        // budget, while a standalone plain-ablation call (bypassing this pass entirely) rescued one
-        // of them in 788ms — isolating the difference to exactly this. The Proxy instead falls
-        // through to `!OPT_IN_FEATURES.has(prop)` for any flag not explicitly named here or already
-        // set on originalCfg, faithfully reproducing "originalCfg's own settings, plus these
-        // candidate flags off, plus everything else exactly as if no ablation config were present"
-        // regardless of whether originalCfg itself was null or a real (sparse-or-not) config object.
-        // FIXED 2026-08-20: an earlier version fell through to a blind `true`, which — for any prop
-        // not covered by the two checks above — silently force-enabled every opt-in/default-OFF
-        // strategy flag whenever this pass ran, the exact same bug `normalizeAblationConfig`'s own
-        // comment already documents shipping once (2026-08-07/08 turn-bias/elite-prefix-dfs
-        // confound). All 5 sibling retry-tier Proxies below had the same bug; fixed together.
-        const originalCfg = prep._cfg;
-        const diversityCfg = buildRetryTierAblationOverride(originalCfg,
-            Object.fromEntries((ATTRACTION_DIVERSITY_CANDIDATE_FLAGS as readonly string[]).map(flag => [flag, false])));
-        prep._cfg = diversityCfg;
-        try {
-            const diversityStart = Date.now();
-            // Pass the ABSOLUTE nodeBudget here, NOT a remaining/relative value — unlike the repair
-            // loop just above (which calls runAttempt -> repairSearchFromGate, whose own nodeBudget
-            // param counts nodes LOCAL to that one call, starting fresh at 0, so a remaining-budget
-            // value is correct there), runInterleavedAttempts/runGateSerialAttempts check nodeBudget
-            // directly against prep._metrics.nodesExpanded — the GLOBAL cumulative counter, already
-            // carrying the main loop's own nodes — exactly as the main loop's own call to these same
-            // functions does a few lines above (passing raw `nodeBudget`, not a remainder, since
-            // nodesExpanded is 0 when IT runs). An earlier version of this copied the repair loop's
-            // remaining-budget pattern without checking that these two callees have different
-            // (absolute vs. local-relative) nodeBudget semantics — caught by a unit test: passing a
-            // remaining value of e.g. 112 when 288 nodes were already globally spent made the check
-            // `288 >= 112` true immediately, silently skipping the whole pass on any level where the
-            // main loop's own node spend already exceeded the REMAINDER (even though plenty of
-            // absolute budget was left).
-            // (`earlyTierNodeBudget` rather than `nodeBudget`: still an ABSOLUTE ceiling, exactly as
-            // this comment requires — just the reduced one this pass shares with the other early
-            // tiers, so it cannot spend the admissible-order tier's reserve.)
-            // STRATEGY_RETRY_TIER_NODE_STAIRCASE (opt-in, default OFF) — see that flag's own comment
-            // in ablation-config.ts, and STRATEGY_MC_NEIGHBOR_BUDGET_RETRY's own call site below for
-            // the measurement that found this defect. Off (every production caller and every existing
-            // A/B arm), `staircaseEntry`/`staircaseStart` are `undefined`, both runners fall back to
-            // their `earlyConfigNodeBudget = nodeBudget` / `lateConfigStart = baseConfigs.length`
-            // defaults, and this call is byte-identical to before.
-            const diversityStaircaseEntry = retryTierStaircase ? prep._metrics.nodesExpanded : undefined;
-            const diversityStaircaseStart = retryTierStaircase ? 0 : undefined;
-            const diversityResult = useInterleaving && activeGates.length > 1
-                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, diversityNodeCeiling, workBudget, workStart, diversityStaircaseEntry, diversityStaircaseStart)
-                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, diversityNodeCeiling, workBudget, workStart, diversityStaircaseEntry, diversityStaircaseStart);
-            if (retryTierStaircase) for (const attempt of diversityResult.attempts) delete attempt.mainLoopLateReserve;
-            diversityResult.attempts = diversityResult.attempts.map(attempt => withSolverStage(attempt, 'attraction-diversity'));
-            result.attempts.push(...diversityResult.attempts);
-            if (diversityResult.solution) result.solution = diversityResult.solution;
-        } finally {
-            prep._cfg = originalCfg;
-        }
+        // NODE CEILING: `diversityNodeCeiling`, not a remaining/relative value — unlike the repair
+        // loop just above (which calls runAttempt -> repairSearchFromGate, whose own nodeBudget
+        // param counts nodes LOCAL to that one call), runInterleavedAttempts/runGateSerialAttempts
+        // (which this executor calls) check nodeBudget directly against the GLOBAL cumulative
+        // prep._metrics.nodesExpanded — an absolute ceiling, same as the main loop's own call to
+        // these same functions above. `earlyTierNodeBudget` rather than plain `nodeBudget`: the
+        // reduced ceiling this pass shares with the other early tiers, so it cannot spend the
+        // admissible-order tier's reserve.
+        //
+        // WORK POOL: the OUTER, already-depleting (workBudget, workStart) — unlike every promoted
+        // retry tier below, deliberately NOT a fresh one (this pass predates that fix and has never
+        // been re-measured with it; see dedup-near-tie-retry's own call site for why a fresh pool
+        // matters for a tier whose ceiling is genuinely protected but whose work share isn't).
+        const diversityResult = await runWholeLadderRetryTier({
+            stageId: 'attraction-diversity',
+            proxyOverrides: Object.fromEntries((ATTRACTION_DIVERSITY_CANDIDATE_FLAGS as readonly string[]).map(flag => [flag, false])),
+            activeGates, mainConfigs, level, prep, yieldFn,
+            runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
+            totalBudgetMs: Math.floor(timeBudgetMs * diversityBudgetFraction),
+            nodeCeiling: diversityNodeCeiling, workBudget, workStart,
+            staircase: retryTierStaircase,
+        });
+        result.attempts.push(...diversityResult.attempts);
+        if (diversityResult.solution) result.solution = diversityResult.solution;
     }
 
     // STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: restore what the adaptive shrink withheld, but only
@@ -2106,45 +2049,31 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // must stay in lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history: drift either way
     // strands the reserve or spends one that was never allocated).
     if (!result.solution && dedupRetryTierWillRun && prep._metrics.nodesExpanded < dedupRetryNodeCeiling) {
-        const originalCfg = prep._cfg;
-        const dedupRetryCfg = buildRetryTierAblationOverride(originalCfg, { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false });
-        prep._cfg = dedupRetryCfg;
-        try {
-            const dedupRetryTotalBudget = Math.floor(timeBudgetMs * dedupRetryBudgetFraction);
-            const dedupRetryStart = Date.now();
-            // FRESH, ADDITIVE work allocation — deliberately NOT (workBudget, workStart) shared with
-            // every earlier tier. That shared pool is already largely spent by the time this tier
-            // runs (main loop + repair fallback + attraction-diversity + admissible-order all draw
-            // from it), which starves runGateSerialAttempts/runInterleavedAttempts's own work-based
-            // attemptBudgetShare split even though dedupRetryNodeReserve genuinely protected the NODE
-            // ceiling — found directly: R00180's winning config (beam:objectiveFirst@beam5000
-            // (diverse), needs ~5.1M nodes) got only 3.7M WORK units under the shared pool (vs. 10.9M
-            // when the ordinary main loop tries the identical config with a full pool), well short
-            // given a node costs more than 1 work unit. Same "extend, don't carve from the existing
-            // pool" philosophy REPAIR_EXTRA_BUDGET_FRACTION's own comment documents for wall time,
-            // applied to work: a fresh `prep._workMeter.units` mark plus a work budget sized off this tier's
-            // own ms allocation via DEFAULT_WORK_PER_MS, the same conversion solveLevel's own
-            // top-level workBudget uses when a caller doesn't supply one explicitly.
-            const dedupRetryWorkStart = prep._workMeter.units;
-            const dedupRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(dedupRetryTotalBudget * DEFAULT_WORK_PER_MS));
-            // Same absolute-vs-relative nodeBudget semantics as the diversity pass's own call —
-            // see that call's comment for why this must be an ABSOLUTE ceiling, not a remainder.
-            // `dedupRetryNodeCeiling` (nodeBudget + dedupRetryNodeReserve), not plain `nodeBudget` —
-            // REVISION 2, see dedupRetryNodeReserve's own comment above.
-            // STRATEGY_RETRY_TIER_NODE_STAIRCASE — see the diversity pass's own note above. Strictly
-            // byte-identical to before when the flag is off, which is every production caller.
-            const dedupRetryStaircaseEntry = retryTierStaircase ? prep._metrics.nodesExpanded : undefined;
-            const dedupRetryStaircaseStart = retryTierStaircase ? 0 : undefined;
-            const dedupRetryResult = useInterleaving && activeGates.length > 1
-                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, dedupRetryNodeCeiling, dedupRetryWorkBudget, dedupRetryWorkStart, dedupRetryStaircaseEntry, dedupRetryStaircaseStart)
-                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, dedupRetryNodeCeiling, dedupRetryWorkBudget, dedupRetryWorkStart, dedupRetryStaircaseEntry, dedupRetryStaircaseStart);
-            if (retryTierStaircase) for (const attempt of dedupRetryResult.attempts) delete attempt.mainLoopLateReserve;
-            dedupRetryResult.attempts = dedupRetryResult.attempts.map(attempt => withSolverStage(attempt, 'dedup-near-tie-retry'));
-            result.attempts.push(...dedupRetryResult.attempts);
-            if (dedupRetryResult.solution) result.solution = dedupRetryResult.solution;
-        } finally {
-            prep._cfg = originalCfg;
-        }
+        // FRESH, ADDITIVE work allocation — deliberately NOT (workBudget, workStart) shared with
+        // every earlier tier. That shared pool is already largely spent by the time this tier runs
+        // (main loop + repair fallback + attraction-diversity + admissible-order all draw from it),
+        // which starves runGateSerialAttempts/runInterleavedAttempts's own work-based
+        // attemptBudgetShare split even though dedupRetryNodeReserve genuinely protected the NODE
+        // ceiling — found directly: R00180's winning config (beam:objectiveFirst@beam5000
+        // (diverse), needs ~5.1M nodes) got only 3.7M WORK units under the shared pool (vs. 10.9M
+        // when the ordinary main loop tries the identical config with a full pool), well short given
+        // a node costs more than 1 work unit. Same "extend, don't carve from the existing pool"
+        // philosophy REPAIR_EXTRA_BUDGET_FRACTION's own comment documents for wall time, applied to
+        // work: a fresh `prep._workMeter.units` mark plus a work budget sized off this tier's own ms
+        // allocation via DEFAULT_WORK_PER_MS, the same conversion solveLevel's own top-level
+        // workBudget uses when a caller doesn't supply one explicitly.
+        const dedupRetryTotalBudget = Math.floor(timeBudgetMs * dedupRetryBudgetFraction);
+        const dedupRetryResult = await runWholeLadderRetryTier({
+            stageId: 'dedup-near-tie-retry', proxyOverrides: { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
+            activeGates, mainConfigs, level, prep, yieldFn,
+            runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
+            totalBudgetMs: dedupRetryTotalBudget, nodeCeiling: dedupRetryNodeCeiling,
+            workBudget: Math.max(MIN_ATTEMPT_WORK, Math.floor(dedupRetryTotalBudget * DEFAULT_WORK_PER_MS)),
+            workStart: prep._workMeter.units,
+            staircase: retryTierStaircase,
+        });
+        result.attempts.push(...dedupRetryResult.attempts);
+        if (dedupRetryResult.solution) result.solution = dedupRetryResult.solution;
     }
 
     // Last-resort admissible-order non-default-profile retry pass
@@ -2228,32 +2157,22 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // from — the two must stay in lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history:
     // drift either way strands the reserve or spends one that was never allocated).
     if (!result.solution && connectivityRetryTierWillRun && prep._metrics.nodesExpanded < connectivityRetryNodeCeiling) {
-        const originalCfg = prep._cfg;
-        const connectivityRetryCfg = buildRetryTierAblationOverride(originalCfg, { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false });
-        prep._cfg = connectivityRetryCfg;
-        try {
-            const connectivityRetryTotalBudget = Math.floor(timeBudgetMs * connectivityRetryBudgetFraction);
-            const connectivityRetryStart = Date.now();
-            // FRESH, ADDITIVE work allocation — same "extend, don't share the depleted pool"
-            // philosophy as dedupRetryWorkStart/dedupRetryWorkBudget above (that tier's own history:
-            // sharing the depleting (workBudget, workStart) pool with every earlier tier starved its
-            // attempts of work even when the node reserve genuinely protected the node ceiling).
-            const connectivityRetryWorkStart = prep._workMeter.units;
-            const connectivityRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(connectivityRetryTotalBudget * DEFAULT_WORK_PER_MS));
-            // STRATEGY_RETRY_TIER_NODE_STAIRCASE — see the diversity pass's own note above. Strictly
-            // byte-identical to before when the flag is off, which is every production caller.
-            const connectivityRetryStaircaseEntry = retryTierStaircase ? prep._metrics.nodesExpanded : undefined;
-            const connectivityRetryStaircaseStart = retryTierStaircase ? 0 : undefined;
-            const connectivityRetryResult = useInterleaving && activeGates.length > 1
-                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, connectivityRetryTotalBudget, connectivityRetryStart, yieldFn, connectivityRetryNodeCeiling, connectivityRetryWorkBudget, connectivityRetryWorkStart, connectivityRetryStaircaseEntry, connectivityRetryStaircaseStart)
-                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, connectivityRetryTotalBudget, connectivityRetryStart, yieldFn, connectivityRetryNodeCeiling, connectivityRetryWorkBudget, connectivityRetryWorkStart, connectivityRetryStaircaseEntry, connectivityRetryStaircaseStart);
-            if (retryTierStaircase) for (const attempt of connectivityRetryResult.attempts) delete attempt.mainLoopLateReserve;
-            connectivityRetryResult.attempts = connectivityRetryResult.attempts.map(attempt => withSolverStage(attempt, 'connectivity-axis-exhausted-retry'));
-            result.attempts.push(...connectivityRetryResult.attempts);
-            if (connectivityRetryResult.solution) result.solution = connectivityRetryResult.solution;
-        } finally {
-            prep._cfg = originalCfg;
-        }
+        // FRESH, ADDITIVE work allocation — same "extend, don't share the depleted pool" philosophy
+        // as dedup-near-tie-retry's own call site above (that tier's own history: sharing the
+        // depleting (workBudget, workStart) pool with every earlier tier starved its attempts of
+        // work even when the node reserve genuinely protected the node ceiling).
+        const connectivityRetryTotalBudget = Math.floor(timeBudgetMs * connectivityRetryBudgetFraction);
+        const connectivityRetryResult = await runWholeLadderRetryTier({
+            stageId: 'connectivity-axis-exhausted-retry', proxyOverrides: { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false },
+            activeGates, mainConfigs, level, prep, yieldFn,
+            runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
+            totalBudgetMs: connectivityRetryTotalBudget, nodeCeiling: connectivityRetryNodeCeiling,
+            workBudget: Math.max(MIN_ATTEMPT_WORK, Math.floor(connectivityRetryTotalBudget * DEFAULT_WORK_PER_MS)),
+            workStart: prep._workMeter.units,
+            staircase: retryTierStaircase,
+        });
+        result.attempts.push(...connectivityRetryResult.attempts);
+        if (connectivityRetryResult.solution) result.solution = connectivityRetryResult.solution;
     }
 
     // Last-resort repair-elite-prefix-DFS retry pass (REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_
@@ -2336,68 +2255,52 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history: drift either way strands the
     // reserve or spends one that was never allocated).
     if (!result.solution && mcNeighborBudgetRetryTierWillRun && prep._metrics.nodesExpanded < mcNeighborBudgetRetryNodeCeiling) {
-        const originalCfg = prep._cfg;
-        const mcNeighborBudgetRetryCfg = buildRetryTierAblationOverride(originalCfg, { PRUNE_MC_NEIGHBOR_BUDGET: false });
-        prep._cfg = mcNeighborBudgetRetryCfg;
-        try {
-            const mcNeighborBudgetRetryTotalBudget = Math.floor(timeBudgetMs * mcNeighborBudgetRetryBudgetFraction);
-            const mcNeighborBudgetRetryStart = Date.now();
-            // FRESH, ADDITIVE work allocation — same "extend, don't share the depleted pool"
-            // philosophy as connectivityRetryWorkStart/connectivityRetryWorkBudget above.
-            const mcNeighborBudgetRetryWorkStart = prep._workMeter.units;
-            const mcNeighborBudgetRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(mcNeighborBudgetRetryTotalBudget * DEFAULT_WORK_PER_MS));
-            // PER-CONFIG NODE SUBDIVISION — the one place this tier deliberately does NOT copy its
-            // four predecessors, because measurement showed their shared shape is defective.
-            //
-            // THE DEFECT. runGateSerialAttempts/runInterleavedAttempts divide budget BETWEEN configs
-            // in WORK units (`attemptBudgetShare` over `workBudget`), but treat the node ceiling as a
-            // single shared ABSOLUTE cap with no per-config subdivision (`earlyConfigNodeBudget`
-            // defaults to `nodeBudget`, which switches the staircase off). Every retry tier sizes its
-            // fresh work budget as `timeBudgetMs * fraction * DEFAULT_WORK_PER_MS` — and under the
-            // capability protocol `timeBudgetMs` is a deliberately NON-BINDING 24h deadline
-            // (`deterministic=true`, see docs/solver-budget-determinism.md). That makes the work pool
-            // ~2.9e11 units, so the work-based division never bites, and the FIRST config simply runs
-            // until the tier's absolute node ceiling is gone. Measured directly on `R02119` (probe at
-            // `nodeBudget` 10M): per-attempt elapsed inside each ladder-rerun tier was
-            // `[10896, 0, 0, 0, 0, 0, 0, 0]` for the dedup-near-tie tier, `[21319, 0 x7]` for the
-            // connectivity tier, `[685, 0 x7]` for the attraction-diversity pass, and `[39602, 0 x7]`
-            // for this one before the fix — while the main loop, which passes the EXTERNAL (binding)
-            // work budget, divided properly at `[10782, 473, 496, 482, 1561]`. Raising this tier's
-            // reserve 4.5x changed nothing except how long config #1 ran (12.7s -> 77.1s), confirming
-            // a division defect rather than under-provisioning. This is the same "fractions are
-            // denominated in TIME but what actually stops a level is nodeBudget" trap CLAUDE.md
-            // already documents for the admissible-order tier, resurfacing at a different call site.
-            //
-            // THE FIX. Reuse the staircase the main loop's own late-reserve wiring already provides:
-            // `lateConfigStart = 0` makes every config a staircase step, and `earlyConfigNodeBudget`
-            // set to the cumulative node count AT TIER ENTRY gives config i the cumulative cap
-            // `entry + reserve * (i+1)/N`. A config that has already blown past its step is skipped
-            // (the `continue` at that guard) rather than starving the rest of the ladder, so the
-            // winning config is reached even when an earlier one would happily run forever — which is
-            // exactly `R02119`'s shape (`dfs:perimeterSweep/cornerHarvest` never exhausts; the winner
-            // `beam:mustCrossFirst@beam2000` is config #3).
-            //
-            // Deliberately scoped to THIS tier: the same defect in the three promoted tiers and the
-            // diversity pass is a real, separately-measurable opportunity (they are currently paying a
-            // full ladder-rerun reserve to rerun ONE config), but changing a shipped, population-
-            // validated tier's search behavior is decision-bearing and needs its own full-corpus A/B —
-            // it is not a free ride-along on this one. See the ledger entry for the follow-up.
-            const mcNeighborBudgetRetryEntryNodes = prep._metrics.nodesExpanded;
-            const mcNeighborBudgetRetryResult = useInterleaving && activeGates.length > 1
-                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, mcNeighborBudgetRetryTotalBudget, mcNeighborBudgetRetryStart, yieldFn, mcNeighborBudgetRetryNodeCeiling, mcNeighborBudgetRetryWorkBudget, mcNeighborBudgetRetryWorkStart, mcNeighborBudgetRetryEntryNodes, 0)
-                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, mcNeighborBudgetRetryTotalBudget, mcNeighborBudgetRetryStart, yieldFn, mcNeighborBudgetRetryNodeCeiling, mcNeighborBudgetRetryWorkBudget, mcNeighborBudgetRetryWorkStart, mcNeighborBudgetRetryEntryNodes, 0);
-            for (const attempt of mcNeighborBudgetRetryResult.attempts) {
-                Object.assign(attempt, withSolverStage(attempt, 'mc-neighbor-budget-retry'));
-                // `lateConfigStart = 0` makes both runners tag every attempt `mainLoopLateReserve`,
-                // which here means "took a staircase step", not "belongs to the main loop's late
-                // reserve experiment". Strip it so telemetry consumers of that field are not polluted.
-                delete attempt.mainLoopLateReserve;
-            }
-            result.attempts.push(...mcNeighborBudgetRetryResult.attempts);
-            if (mcNeighborBudgetRetryResult.solution) result.solution = mcNeighborBudgetRetryResult.solution;
-        } finally {
-            prep._cfg = originalCfg;
-        }
+        // PER-CONFIG NODE SUBDIVISION (staircase: true below) — the one place this tier deliberately
+        // does NOT copy its three ladder-rerun siblings, because measurement showed their shared
+        // shape (one undivided node ceiling across every config in the rerun) is defective.
+        //
+        // THE DEFECT. runGateSerialAttempts/runInterleavedAttempts divide budget BETWEEN configs in
+        // WORK units (`attemptBudgetShare` over `workBudget`), but treat the node ceiling as a
+        // single shared ABSOLUTE cap with no per-config subdivision unless the staircase is used.
+        // Every retry tier sizes its fresh work budget as `timeBudgetMs * fraction *
+        // DEFAULT_WORK_PER_MS` — and under the capability protocol `timeBudgetMs` is a deliberately
+        // NON-BINDING 24h deadline (`deterministic=true`, see docs/solver-budget-determinism.md).
+        // That makes the work pool ~2.9e11 units, so the work-based division never bites, and the
+        // FIRST config simply runs until the tier's absolute node ceiling is gone. Measured directly
+        // on `R02119` (probe at `nodeBudget` 10M): per-attempt elapsed inside each ladder-rerun tier
+        // was `[10896, 0, 0, 0, 0, 0, 0, 0]` for the dedup-near-tie tier, `[21319, 0 x7]` for the
+        // connectivity tier, `[685, 0 x7]` for the attraction-diversity pass, and `[39602, 0 x7]` for
+        // this one before the fix — while the main loop, which passes the EXTERNAL (binding) work
+        // budget, divided properly at `[10782, 473, 496, 482, 1561]`. Raising this tier's reserve
+        // 4.5x changed nothing except how long config #1 ran (12.7s -> 77.1s), confirming a division
+        // defect rather than under-provisioning. This is the same "fractions are denominated in TIME
+        // but what actually stops a level is nodeBudget" trap CLAUDE.md already documents for the
+        // admissible-order tier, resurfacing at a different call site.
+        //
+        // THE FIX. Reuse the staircase the main loop's own late-reserve wiring already provides
+        // (runWholeLadderRetryTier's `staircase: true` — a config that has already blown past its own
+        // cumulative step is skipped rather than starving the rest of the ladder, so the winning
+        // config is reached even when an earlier one would happily run forever — exactly `R02119`'s
+        // shape, `dfs:perimeterSweep/cornerHarvest` never exhausts; the winner
+        // `beam:mustCrossFirst@beam2000` is config #3).
+        //
+        // Deliberately scoped to THIS tier: the same defect in the three promoted tiers and the
+        // diversity pass is a real, separately-measurable opportunity (they are currently paying a
+        // full ladder-rerun reserve to rerun ONE config), but changing a shipped, population-
+        // validated tier's search behavior is decision-bearing and needs its own full-corpus A/B — it
+        // is not a free ride-along on this one. See the ledger entry for the follow-up.
+        const mcNeighborBudgetRetryTotalBudget = Math.floor(timeBudgetMs * mcNeighborBudgetRetryBudgetFraction);
+        const mcNeighborBudgetRetryResult = await runWholeLadderRetryTier({
+            stageId: 'mc-neighbor-budget-retry', proxyOverrides: { PRUNE_MC_NEIGHBOR_BUDGET: false },
+            activeGates, mainConfigs, level, prep, yieldFn,
+            runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
+            totalBudgetMs: mcNeighborBudgetRetryTotalBudget, nodeCeiling: mcNeighborBudgetRetryNodeCeiling,
+            workBudget: Math.max(MIN_ATTEMPT_WORK, Math.floor(mcNeighborBudgetRetryTotalBudget * DEFAULT_WORK_PER_MS)),
+            workStart: prep._workMeter.units,
+            staircase: true,
+        });
+        result.attempts.push(...mcNeighborBudgetRetryResult.attempts);
+        if (mcNeighborBudgetRetryResult.solution) result.solution = mcNeighborBudgetRetryResult.solution;
     }
 
     // Last-resort repair-late-probe pass (REPAIR_LATE_PROBE_NODE_BUDGET, STRATEGY_REPAIR_LATE_PROBE)
