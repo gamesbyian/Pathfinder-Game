@@ -1,8 +1,8 @@
 # Frozen documentation snapshots
 
-These files preserve the exact pre-consolidation text of historical, concluded, superseded, or notebook-style documents. Their original top-level paths now contain short compatibility pointers or compact current contracts.
+These files preserve exact pre-consolidation text from historical, concluded, superseded, or notebook-style documents. Snapshots are evidence, not current instructions. Use [`../../README.md`](../../README.md) for current navigation.
 
-Snapshots are evidence, not current instructions. Relative links inside them are preserved exactly as written at the original path and may therefore no longer resolve from this archive directory. Use the compatibility pointer or current topic reference for navigation.
+Relative links inside snapshots were preserved as originally written and may not resolve from this archive directory.
 
 | Snapshot | Why preserved |
 |---|---|
