@@ -5,22 +5,22 @@ Current test tiers and finish-line requirements.
 ## Core commands
 
 ```bash
-npm run ci          # required PR gate: static checks + coverage/unit suites + node validators
+npm run ci          # local full code gate: static checks + coverage/unit suites + node validators
 npm run test:unit   # Vitest unit/integration suites
 npm run ci:full     # ci + Playwright browser e2e
 npm run test:e2e    # Playwright functional browser tests
 npm run test:visual # opt-in environment-sensitive visual baselines
 ```
 
-`npm run ci` is browser-free. `ci:full` adds browser confidence. Visual baselines stay separate because font/anti-aliasing differences make cross-environment comparison unreliable.
+`npm run ci` is browser-free. `ci:full` adds browser confidence. Visual baselines stay separate because font/anti-aliasing differences make cross-environment comparison unreliable. GitHub Actions is a remote execution convenience; pushing or merging does not wait on it. Agents that need validation should run the relevant commands locally and report exactly what ran.
 
 ## Tier map
 
 | Tier | Command | Purpose |
 |---|---|---|
 | Static | `npm run check` | lint/architecture, types, security, CSP, data/document invariants |
-| Unit/integration | `npm run test:unit` / `test:coverage` | Vitest logic and controller tests; CI enforces coverage |
-| Node validators | `npm run test:node` | boot/data/oracle/loader/Firestore/bundled-level harnesses |
+| Unit/integration | `npm run test:unit` / `test:coverage` | Vitest logic and controller tests; coverage thresholds apply in `test:coverage` |
+| Node validators/harnesses | `npm run test:node` | boot/data/oracle/loader/Firestore/bundled-level and CLI-driving harnesses |
 | Browser e2e | `npm run test:e2e` | production Vite bundle through Playwright Chromium |
 | Visual | `npm run test:visual` | modal/overlay screenshot regression |
 | Solver/data research | solver, stress, ablation, hint, level tools | on demand; not part of ordinary `ci` |
@@ -40,9 +40,11 @@ npm run test:visual # opt-in environment-sensitive visual baselines
 
 A PLAY-valid stored hint proves a valid solution, not cold solver capability. Use shared provenance classification when making capability claims.
 
-## Unit and coverage
+## Unit, harness, and coverage topology
 
-Vitest discovers colocated `modules/**/*.test.ts` plus the remaining script harness suites configured in `vitest.config.mjs`. Use targeted filtering while editing:
+Vitest discovers colocated `modules/**/*.test.ts` plus script suites explicitly included by `vitest.config.mjs`. Some historical files named `*-unit-tests.mjs` are actually standalone Node/CLI-driving harnesses and run through `npm run test:node`; filename alone is not runner authority. `package.json` and `vitest.config.mjs` define the current execution topology.
+
+Use targeted filtering while editing:
 
 ```bash
 npm run test:unit:watch
@@ -74,20 +76,20 @@ For repeated local e2e runs, keep `npm run build && npm run preview` running; Pl
 ## What to run when
 
 - **While editing:** targeted Vitest/e2e or a small solver sample.
-- **Before merge:** `npm run ci`.
-- **UI/controller changes:** add focused e2e; use `ci:full` for broad browser confidence.
+- **Before claiming a normal code change complete:** local `npm run ci` when feasible; otherwise state which narrower checks ran and why.
+- **UI/controller changes:** add focused e2e; use `ci:full` for broad browser confidence when warranted.
 - **Modal/markup changes:** `npm run test:visual`; update baselines only for intentional changes.
 - **Level/hint changes:** `npm run test:hint-path-oracle` and relevant validators.
 - **Solver hot-path changes:** use the solver gates below.
 
 ## Solver iteration versus promotion
 
-Do not pay full-corpus costs on every edit. During exploration, use the smallest representative sample that can falsify the idea. Full gates apply when reporting a result as validated, merging it, or promoting a default.
+Do not pay full-corpus costs on every edit. During exploration, use the smallest representative sample that can falsify the idea. Full gates apply when reporting a result as validated or promoting a default.
 
 Hard mechanisms need more care during exploration than soft ones:
 
 - **Soft:** scoring, ordering, bias, default-off attempts. They can miss solves or cost more work, but returned solutions still pass the referee.
-- **Hard:** pruning, bounds, caches, state equivalence. They can silently remove valid search states. Require proof-oriented tests and differential/counterexample validation while developing, not only at merge time. See [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md).
+- **Hard:** pruning, bounds, caches, state equivalence. They can silently remove valid search states. Require proof-oriented tests and differential/counterexample validation while developing, not only at the finish line. See [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md).
 
 Any experiment that finds a genuinely new valid solve has produced useful data even if the mechanism is later reverted. Before discarding solver experiment code, check whether its newly solved levels already have stored hints. Persist novel finds through the shared hint/provenance machinery rather than hand-writing them.
 
