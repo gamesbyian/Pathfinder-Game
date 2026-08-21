@@ -1,160 +1,100 @@
 # Solver research operating model
 
-> **Status:** current research-method and evidence-routing contract.
-> **Priority authority:** [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+> **Status:** current research-method/evidence-routing contract.
+> **Priority:** [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
 > **Capability boundary:** [`solver-level-blindness.md`](solver-level-blindness.md).
 
-This document defines **how** solver research proceeds. Put measurements in dated reports, ranked decisions in the optimization queue, and retained/default-off dispositions in the opt-in ledger. Pre-consolidation notebook: [`archive/snapshots/solver-research-operating-model-2026-08-20.md`](archive/snapshots/solver-research-operating-model-2026-08-20.md).
+Measurements belong in dated reports, ranked decisions in the optimization queue, and retained/default-off dispositions in the opt-in ledger. Pre-consolidation notebook: [`archive/snapshots/solver-research-operating-model-2026-08-20.md`](archive/snapshots/solver-research-operating-model-2026-08-20.md).
 
 ## Research pipeline
 
-For most nontrivial solver work:
+> semantic truth -> controlled evidence -> failure class -> exact/shadow evaluation -> narrow intervention -> level-blind matched population verdict
 
-> semantic truth -> controlled evidence -> failure classification -> exact/shadow evaluation -> narrow intervention -> level-blind matched population verdict
-
-Correctness bugs may go directly to a fix plus regression/soundness validation. Before changing production search for a speculative heuristic, test the premise with an existing observer, oracle, family comparison, reducer, isolated-technique probe, or replay tool when possible.
+Correctness bugs may go directly to fix + regression/soundness validation. For speculative heuristics, test the premise first with existing observers, oracles, family comparisons, reducers, isolated-technique probes, or replay tools.
 
 ## Capability boundary
 
-The product case is an unseen editor level. A cold solve may use mechanics, current search state, current invocation telemetry, and generic code/configuration only.
+The product case is an unseen editor level. Cold solves may use mechanics, current search state/telemetry, and generic code/config only. Exact-level history may label offline research but may not steer capability solves.
 
-Exact-level history may label offline research but may not guide a capability solve. Forbidden inputs include:
+Forbidden steering includes saved hints/solutions; prior winning config/gate/seed/order; historical solved status, timing, nodes, badness, or family outcome; per-level caches/special cases; and IDs/corpus position. Known solutions are diagnostic evidence only.
 
-- saved solution or hint guidance;
-- previous winning config, gate, seed, or attempt order;
-- historical solved status, timing, nodes, badness, or family outcome used for exact-level allocation;
-- per-level caches or special cases;
-- permanent IDs or corpus position as policy signals.
+## Failure classes
 
-Known solutions are diagnostic fluorescence, not steering instructions.
-
-## Classify the failure first
-
-Use the narrowest measured class.
-
-| Failure class | Meaning | Typical next instrument |
+| Class | Meaning | Typical instrument |
 |---|---|---|
-| Correctness / soundness | Legal solution rejected, invalid solution accepted, unsound prune/cache/state identity. | Canonical referee, differential tests, tiny exhaustive reference, reducer. |
-| Regression | A reproducible current level/config lost a capability it previously had. | Commit bisection, exact config replay, causal ablation, paired current-code check. |
-| Routing | An isolated technique solves cheaply but production does not give it enough relevant work. | Technique census, method probe, lifecycle telemetry, bounded tail routing. |
-| Search quality | A technique gets substantial/full isolated budget and still fails. | Technique-specific trace/diagnostics, exact labels, operator or representation work. |
-| Representation / retention | Viable candidates are generated but ranked, deduped, or width-culled away. | Winning lineage, pair divergence, exact-prefix oracle, shadow descriptors. |
-| Allocation | Useful techniques compete for finite shared work and treatment changes the split. | Lifecycle accounting, explicit work caps, matched-work population A/B. |
+| Correctness / soundness | Legal solution rejected, invalid accepted, or unsound prune/cache/state identity. | Referee, differential tests, tiny exhaustive reference, reducer. |
+| Regression | Reproducible current level/config lost prior capability. | Bisection, exact replay, causal ablation, paired current-code check. |
+| Routing | Isolated technique solves cheaply but production gives it too little relevant work. | Technique census, method probe, lifecycle telemetry, bounded tail routing. |
+| Search quality | Technique gets substantial/full isolated budget and still fails. | Technique trace/diagnostics, exact labels, operator/representation work. |
+| Representation / retention | Viable candidates are generated then ranked, deduped, or width-culled away. | Winning lineage, pair divergence, exact-prefix oracle, shadow descriptors. |
+| Allocation | Useful techniques compete for finite shared work. | Lifecycle accounting, explicit work caps, matched-work A/B. |
 
-Do not use “starvation” for routing and search-quality failures interchangeably: a ladder-starved technique can still fail with the full isolated budget.
+Do not call both routing and search-quality failures “starvation”: a ladder-starved technique can still fail at full isolated budget.
 
 ## Evidence hierarchy
 
-Use the strongest evidence for the question, not the largest artifact.
-
-1. **Canonical semantic/referee truth** for legality and correctness.
+1. **Canonical referee truth** for legality/correctness.
 2. **Exact or bounded oracle labels** for supported feasibility questions.
 3. **Controlled paired evidence**, especially same-parent variants or matched A/B arms.
 4. **Level-blind population evidence** for promotion/capability decisions.
-5. **Historical runs** for nomination and mechanism clues, reconciled against current code before action.
+5. **Historical runs** for nomination/mechanism clues, reconciled to current code before action.
 
-Row count does not erase dependence. In family research, parent families are the independent units. See [`variant-level-research.md`](variant-level-research.md).
+Row count does not remove dependence; family research treats parents as independent units. See [`variant-level-research.md`](variant-level-research.md).
 
 ## Experimental substrate
 
-Prefer existing infrastructure:
+Prefer existing infrastructure: deterministic work accounting; schema-v2 manifests/run identity; stress corpora/lifecycle telemetry; family/variant and hint/solution provenance; shadow probes; winning-lineage tools; explicit-prefix CP-SAT/reference labels; reducers/replay; isolated technique census/method probes.
 
-- deterministic/canonical work accounting;
-- schema-v2 experiment manifests and stable run identity;
-- stress corpora and lifecycle telemetry;
-- family/variant manifests and provenance;
-- hint/solution provenance;
-- shadow probe harness;
-- winning-lineage observation;
-- explicit-prefix CP-SAT/reference labels;
-- automatic reduction and real-state replay;
-- isolated technique census/method probes.
-
-Start at [`tooling-catalog.md`](tooling-catalog.md). Add a framework only when it replaces repeated one-off work.
+Start at [`tooling-catalog.md`](tooling-catalog.md). Add frameworks only when they replace repeated one-off work.
 
 ## Shadow first
 
-For scoring, retention, routing, or information-sharing hypotheses, prefer read-only observation before changing search.
+For scoring, retention, routing, or information-sharing hypotheses, observe before changing search. Ask whether a descriptor separates exact-live/dead siblings, a reasoner catches extra dead branches without false rejects, a producer emits novel useful information, or a routing feature predicts isolated capability rather than historical winners.
 
-Useful shadow questions include:
-
-- does a neutral descriptor separate exact-live from exact-dead siblings?
-- does a reasoner catch dead branches beyond the current gauntlet without false rejects?
-- does a producer emit information the receptor lacks?
-- does a routing feature identify isolated capability rather than historical winners?
-
-Shadow instrumentation must preserve OFF/ON solution, work, ordering, and randomness parity unless changing one is its explicit purpose.
+Unless parity is the experiment, shadow instrumentation must preserve OFF/ON solution, work, ordering, and randomness.
 
 <a id="producer--receptor-cooperation"></a>
 ## Producer -> receptor cooperation
 
-Cross-technique cooperation is a specific handoff experiment, not a shared-blackboard mandate. Before a live handoff establish:
+A live handoff requires:
 
-1. **Receptor:** measured limitation in a named technique.
-2. **Producer:** information another technique emits or can emit cheaply.
-3. **Novelty:** receptor would not cheaply rediscover it.
-4. **Timing:** information arrives before the receptor spends the work it could save.
-5. **Consumption cost:** bounded replay/storage/branching cost.
-6. **Independence:** normal recipient search remains a control path.
-7. **Shadow result:** premise survives without changing search.
-8. **Matched verdict:** live treatment improves solves or work at fair total budget.
+1. measured receptor limitation;
+2. useful producer information the receptor cannot cheaply rediscover;
+3. timely arrival;
+4. bounded replay/storage/branching cost;
+5. an independent receptor control path;
+6. positive shadow evidence;
+7. a level-blind matched-work verdict.
 
-Useful information can still reduce solve count if its consumption displaces successful recipient work; treat that as a standing constraint.
-
-Original design: [`archive/snapshots/solver-interoperability-and-cooperation-plan.md`](archive/snapshots/solver-interoperability-and-cooperation-plan.md).
+Useful information can still hurt if consuming it displaces successful receptor work. Original design: [`archive/snapshots/solver-interoperability-and-cooperation-plan.md`](archive/snapshots/solver-interoperability-and-cooperation-plan.md).
 
 ## Family/variant evidence
 
-Use the off-main variant trove as a controlled diagnostic surface, not production retries or independent-row bulk data.
+Use the off-main trove for controlled diagnosis, not production retries or independent-row bulk statistics. Useful patterns include symmetry cliffs, local solved/unsolved boundaries, technique changes across relatives, re-embedding/density effects, and held-out-parent generalization. See [`variant-level-research.md`](variant-level-research.md).
 
-Useful routes:
-
-- symmetry cliffs -> orientation/order/representation investigation;
-- local solved/unsolved boundaries -> causal scoring/pruning/operator diagnosis;
-- isolated-technique changes across relatives -> routing/capability hypotheses;
-- re-embedding/density changes -> sensitivity to navigable space;
-- held-out parent families -> generalization tests.
-
-See [`variant-level-research.md`](variant-level-research.md).
-
+<a id="accepted-path-differential-diagnosis"></a>
 ## Accepted-path differential diagnosis
 
-A valid path supplied by a human, AI, oracle, or variant transformation can diagnose a production miss:
+For a valid human/AI/oracle/variant path:
 
-1. validate it through the canonical path referee;
-2. record provenance;
-3. keep it out of the cold solve;
-4. observe where the unchanged solver first diverges from, rejects, or loses compatible prefixes;
-5. identify the score, prune, state representation, width decision, or routing boundary;
-6. require recurrence across unrelated levels or held-out families before changing production behavior.
+1. referee-validate and record provenance;
+2. keep it out of the cold solve;
+3. locate where unchanged search first diverges, rejects, or loses compatible prefixes;
+4. identify the score/prune/state/width/routing boundary;
+5. require recurrence across unrelated levels or held-out families before changing production.
 
-Post-hoc human/AI explanations are not causal evidence; the accepted path plus solver trace is.
-
-Worked historical note: [`archive/snapshots/ai-assisted-manual-solving.md`](archive/snapshots/ai-assisted-manual-solving.md).
+Narrative explanations are not causal evidence; accepted path + trace is. Historical note: [`archive/snapshots/ai-assisted-manual-solving.md`](archive/snapshots/ai-assisted-manual-solving.md).
 
 ## Promotion contract
 
-A production-facing treatment should normally have:
+Production-facing treatments normally require level-blind execution; identifiable code/protocol state; complete intended population or explicit sample; non-binding deadlines when work comparability matters; comparable arms with declared treatments; gains and losses; `workSpent`, nodes, errors, and deadline truncation where relevant; Corpus 1/2 and published transfer/cost checks as appropriate; no hidden hint/data mutation; and queue/ledger updates when disposition changes.
 
-- level-blind execution;
-- persistent, identifiable code/protocol state;
-- the complete intended population or an explicit sample;
-- deterministic/non-binding wall-clock conditions when work comparability matters;
-- comparable arm inputs with declared treatment variables;
-- gains **and** losses, not only net count;
-- `workSpent`, nodes, errors, and deadline truncation where applicable;
-- relevant Corpus 1, Corpus 2, and published transfer/cost checks;
-- no hidden hint/data mutation between arms;
-- queue and opt-in ledger updates when disposition changes.
-
-A direct small negative may close an unchanged mechanism. A promising small result usually nominates a broader gate; it does not promote production behavior by itself.
+A direct small negative may close an unchanged mechanism. A promising small result normally nominates a broader gate rather than promotion.
 
 ## Documentation handoff
 
-After an investigation:
-
-- measurements and chronology -> dated report;
-- ranked priority/state changes -> [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md);
-- retained/default-off disposition changes -> [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md);
-- durable behavior or reusable interpretation changes -> topic/tool contract;
+- measurements/chronology -> dated report;
+- ranked state -> [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md);
+- retained/default-off disposition -> [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md);
+- durable behavior/interpretation -> topic/tool contract;
 - concluded plans -> archive.
