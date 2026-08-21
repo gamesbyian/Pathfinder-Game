@@ -12,7 +12,7 @@ Semantic CSS only: `styles/app.css` imports `reset.css` → `tokens.css` → `co
 
 ## Modals and overlays
 
-Both `.screen-modal` and `.modal-overlay` families are managed by `modules/ui/modal-ui.js`.
+Both `.screen-modal` and `.modal-overlay` families are managed by `modules/ui/modal-ui.ts`.
 
 Every modal container requires `role="dialog"`, `aria-modal="true"`, and a non-empty `aria-label`; `check:modal-a11y` enforces this.
 

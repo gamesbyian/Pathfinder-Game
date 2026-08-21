@@ -63,7 +63,7 @@ by players before spending calibration effort on it.
   — two matrices per level (distinct-path visit count, cumulative visit count incl. revisits),
   regenerated whenever a level's hints change. `scripts/level-heatmap-report.mjs` surfaces dead
   squares (zero-visit, non-object cells) and grid-trim candidates.
-- **Resumable diverse-search session** (`modules/solver/diversification.js`, superseded by the
+- **Resumable diverse-search session** (`modules/solver/diversification.ts`, superseded by the
   hint-enumeration engine — see the 2026-07-03 entry below) — a budget-bounded, incrementally
   resumable port of the CLI diversification script for interactive UI time budgets.
 - **Submission duplicate-check fix** — a match against an already-published level now soft-warns

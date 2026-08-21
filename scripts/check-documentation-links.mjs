@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { dirname, extname, resolve } from 'node:path';
+import { dirname, extname, relative, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -43,10 +43,13 @@ function markdownAnchors(target) {
   return anchors;
 }
 
+const historicalDocumentation = file => file.startsWith('reports/') ||
+  (file.startsWith('docs/archive/snapshots/') && file !== 'docs/archive/snapshots/README.md');
+
 for (const file of markdownFiles) {
   // Frozen snapshots preserve byte-for-byte historical text from another directory. Their relative
   // links intentionally describe the original location; current navigation lives in their stubs.
-  if (file.startsWith('docs/archive/snapshots/') && file !== 'docs/archive/snapshots/README.md') continue;
+  if (historicalDocumentation(file)) continue;
 
   const source = readFileSync(resolve(ROOT, file), 'utf8');
   for (const match of source.matchAll(markdownLink)) {
@@ -85,7 +88,7 @@ for (const file of markdownFiles) {
   }
 }
 
-for (const prefix of ['docs/', 'docs/archive/']) {
+for (const prefix of ['docs/archive/']) {
   const index = `${prefix}README.md`;
   const indexSource = readFileSync(resolve(ROOT, index), 'utf8');
   for (const file of markdownFiles.filter((path) => dirname(path) === prefix.slice(0, -1))) {
@@ -114,12 +117,27 @@ for (const [file, requiredStrings] of routerRequirements) {
   }
 }
 
+// Explicit current authorities are checked more strictly than retained evidence. The docs index is
+// the authority boundary: unindexed legacy design notes and dated reports remain searchable, but
+// do not make historical commands/paths current contracts merely by existing in Git.
+const docsIndex = readFileSync(resolve(ROOT, 'docs/README.md'), 'utf8');
+const currentAuthorityFiles = new Set([
+  'AGENTS.md', 'CLAUDE.md', 'DEVELOPER_REFERENCE.md', 'docs/README.md', 'reports/README.md',
+  'scripts/README.md', '.github/workflows/README.md', 'modules/solver/README.md',
+]);
+for (const match of docsIndex.matchAll(markdownLink)) {
+  const destination = match[1].split('#', 1)[0];
+  if (destination && !/^[a-z][a-z0-9+.-]*:/i.test(destination)) {
+    const target = relative(ROOT, resolve(ROOT, 'docs', destination)).split('\\').join('/');
+    if (target.endsWith('.md')) currentAuthorityFiles.add(target);
+  }
+}
+
 // Current reference docs must name actual TypeScript source paths, not the .js import specifiers
-// used inside TypeScript source. Limit this check to authoritative navigation/reference surfaces so
-// historical experiment prose can describe old paths without breaking current CI.
-for (const file of ['AGENTS.md', 'docs/architecture.md', 'docs/command-glossary.md', 'docs/typing.md']) {
+// used inside TypeScript source. Import statements are outside this Markdown-only authority set.
+for (const file of [...currentAuthorityFiles].filter(file => existsSync(resolve(ROOT, file)))) {
   const source = readFileSync(resolve(ROOT, file), 'utf8');
-  for (const match of source.matchAll(/`(modules\/[A-Za-z0-9_./*-]+\.js)`/g)) {
+  for (const match of source.matchAll(/`(modules\/[A-Za-z0-9_./*-]+\.(?:[cm]?js|ts))`/g)) {
     const documented = match[1];
     if (documented.includes('*')) continue;
     const documentedTarget = resolve(ROOT, documented);
@@ -136,8 +154,8 @@ for (const file of ['AGENTS.md', 'docs/architecture.md', 'docs/command-glossary.
 // Commands presented as runnable documentation should continue to exist. This deliberately checks
 // only `npm run <alias>` forms; arbitrary shell snippets may invoke binaries or temporary scripts.
 const packageScripts = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8')).scripts ?? {};
-for (const file of markdownFiles) {
-  if (file.startsWith('docs/archive/snapshots/') && file !== 'docs/archive/snapshots/README.md') continue;
+for (const file of currentAuthorityFiles) {
+  if (!existsSync(resolve(ROOT, file))) continue;
   const source = readFileSync(resolve(ROOT, file), 'utf8');
   for (const match of source.matchAll(/npm run ([A-Za-z0-9:_-]+)/g)) {
     if (!(match[1] in packageScripts)) failures.push(`${file}: documented npm alias does not exist: npm run ${match[1]}`);
