@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, extname, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-// Include staged/tracked and non-ignored untracked files so a new document is checked before its
-// first commit, not only after it enters the index.
 const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], { cwd: ROOT })
   .toString()
   .split('\0')
@@ -23,8 +21,6 @@ function githubHeadingSlug(heading) {
     .replace(/[`*_~]/g, '')
     .trim()
     .toLowerCase()
-    // GitHub removes punctuation but preserves hyphens/underscores and does not collapse the two
-    // spaces left around removed punctuation (so "A — B" becomes "a--b").
     .replace(/[^\p{Letter}\p{Number}\p{Mark}\p{Connector_Punctuation}\- ]/gu, '')
     .replace(/ /g, '-');
 }
@@ -41,28 +37,26 @@ function markdownAnchors(target) {
       slugCounts.set(base, seen + 1);
       anchors.add(seen === 0 ? base : `${base}-${seen}`);
     }
-    for (const explicit of line.matchAll(/<a\s+(?:id|name)=["']([^"']+)["']/gi)) {
-      anchors.add(explicit[1]);
-    }
+    for (const explicit of line.matchAll(/<a\s+(?:id|name)=["']([^"']+)["']/gi)) anchors.add(explicit[1]);
   }
   anchorCache.set(target, anchors);
   return anchors;
 }
 
 for (const file of markdownFiles) {
+  // Frozen snapshots preserve byte-for-byte historical text from another directory. Their relative
+  // links intentionally describe the original location; current navigation lives in their stubs.
+  if (file.startsWith('docs/archive/snapshots/') && file !== 'docs/archive/snapshots/README.md') continue;
+
   const source = readFileSync(resolve(ROOT, file), 'utf8');
   for (const match of source.matchAll(markdownLink)) {
     let destination = match[1].trim();
-    if (destination.startsWith('<') && destination.endsWith('>')) {
-      destination = destination.slice(1, -1);
-    }
-    // Optional Markdown titles follow a whitespace boundary. Repository paths do not contain spaces.
+    if (destination.startsWith('<') && destination.endsWith('>')) destination = destination.slice(1, -1);
     destination = destination.split(/\s+["']/)[0];
     if (/^[a-z][a-z0-9+.-]*:/i.test(destination)) continue;
 
     const [destinationWithoutFragment, encodedFragment] = destination.split('#', 2);
     const pathPart = destinationWithoutFragment.split('?', 1)[0];
-
     let decoded;
     try {
       decoded = decodeURIComponent(pathPart);
@@ -86,31 +80,95 @@ for (const file of markdownFiles) {
         failures.push(`${file}: malformed encoded anchor: ${destination}`);
         continue;
       }
-      if (!markdownAnchors(target).has(fragment)) {
-        failures.push(`${file}: missing anchor target: ${destination}`);
-      }
+      if (!markdownAnchors(target).has(fragment)) failures.push(`${file}: missing anchor target: ${destination}`);
     }
   }
 }
 
-// Top-level docs are navigation surfaces. Every current doc and every archived record must be
-// discoverable from its directory index; reports are intentionally indexed at collection level.
 for (const prefix of ['docs/', 'docs/archive/']) {
   const index = `${prefix}README.md`;
   const indexSource = readFileSync(resolve(ROOT, index), 'utf8');
   for (const file of markdownFiles.filter((path) => dirname(path) === prefix.slice(0, -1))) {
     if (file === index) continue;
     const basename = file.slice(prefix.length);
-    if (!indexSource.includes(`(${basename})`)) {
-      failures.push(`${file}: not linked from ${index}`);
-    }
+    if (!indexSource.includes(`(${basename})`)) failures.push(`${file}: not linked from ${index}`);
+  }
+}
+
+const routerRequirements = [
+  ['AGENTS.md', ['docs/tooling-catalog.md', 'docs/solver-optimization-current-queue.md', 'docs/variant-level-research.md', 'docs/solver-research-operating-model.md', 'docs/solver-opt-in-experiment-ledger.md', 'docs/testing.md', 'reports/README.md']],
+  ['CLAUDE.md', ['AGENTS.md', 'DEVELOPER_REFERENCE.md']],
+  ['.github/copilot-instructions.md', ['AGENTS.md']],
+  ['docs/tooling-catalog.md', ['package.json', 'scripts/README.md', '.github/workflows/README.md', 'variant-level-research.md']],
+  ['docs/solver-research-operating-model.md', ['solver-optimization-current-queue.md', 'solver-level-blindness.md', 'variant-level-research.md']],
+];
+for (const [file, requiredStrings] of routerRequirements) {
+  const target = resolve(ROOT, file);
+  if (!existsSync(target)) {
+    failures.push(`${file}: required repository navigation surface is missing`);
+    continue;
+  }
+  const source = readFileSync(target, 'utf8');
+  for (const required of requiredStrings) {
+    if (!source.includes(required)) failures.push(`${file}: navigation surface does not reference ${required}`);
+  }
+}
+
+// Make the expensive off-main family dataset impossible to lose from the agent-facing map.
+const variantReference = readFileSync(resolve(ROOT, 'docs/variant-level-research.md'), 'utf8');
+for (const required of [
+  'claude/variant-levels-solver-insights-tpk4qg',
+  'data/families/',
+  'logs/family-census/',
+  'reports/families/',
+  'family-wide-trove.yml',
+]) {
+  if (!variantReference.includes(required)) failures.push(`docs/variant-level-research.md: missing variant-trove locator ${required}`);
+}
+
+// OPT_IN_FEATURES is a polarity registry, not a backlog, but the disposition ledger must cover
+// every retained default-off switch so an agent never has to infer status from code comments.
+const ablationSource = readFileSync(resolve(ROOT, 'scripts/ablation-config.mjs'), 'utf8');
+const optInStart = ablationSource.indexOf('export const OPT_IN_FEATURES = new Set([');
+const optInEnd = optInStart < 0 ? -1 : ablationSource.indexOf(']);', optInStart);
+if (optInStart < 0 || optInEnd < 0) {
+  failures.push('scripts/ablation-config.mjs: could not locate OPT_IN_FEATURES for ledger coverage check');
+} else {
+  const optInBlock = ablationSource.slice(optInStart, optInEnd);
+  const optInFlags = [...optInBlock.matchAll(/'([A-Z0-9_]+)'/g)].map((match) => match[1]);
+  const ledger = readFileSync(resolve(ROOT, 'docs/solver-opt-in-experiment-ledger.md'), 'utf8');
+  for (const flag of optInFlags) {
+    if (!ledger.includes(`\`${flag}\``)) failures.push(`docs/solver-opt-in-experiment-ledger.md: missing current OPT_IN_FEATURES member ${flag}`);
+  }
+}
+
+const workflowDir = resolve(ROOT, '.github/workflows');
+const workflowIndex = readFileSync(resolve(workflowDir, 'README.md'), 'utf8');
+for (const name of readdirSync(workflowDir).filter((name) => /\.ya?ml$/i.test(name)).sort()) {
+  if (!workflowIndex.includes(name)) failures.push(`.github/workflows/${name}: not named in .github/workflows/README.md`);
+}
+
+const reportStatusValues = 'active|concluded-positive|concluded-negative|inconclusive|superseded|cancelled';
+const reportMetadataPattern = new RegExp(
+  `^# .+\\r?\\n\\r?\\n> \\*\\*Status:\\*\\* (${reportStatusValues})\\r?\\n` +
+  '> \\*\\*Last evidence:\\*\\* \\d{4}-\\d{2}-\\d{2} — .+\\r?\\n' +
+  '> \\*\\*Decision:\\*\\* .+\\r?\\n' +
+  '> \\*\\*Remaining gate:\\*\\* .+',
+  'm',
+);
+for (const name of readdirSync(resolve(ROOT, 'reports')).filter((name) => /^\d{4}-\d{2}-\d{2}-.+\.md$/.test(name))) {
+  if (name.slice(0, 10) < '2026-08-20') continue;
+  const source = readFileSync(resolve(ROOT, 'reports', name), 'utf8');
+  if (source.includes('<!-- report-metadata: generated -->')) continue;
+  if (!reportMetadataPattern.test(source)) {
+    failures.push(`reports/${name}: missing or malformed Status / Last evidence / Decision / Remaining gate block`);
   }
 }
 
 if (failures.length > 0) {
-  console.error(`Documentation link check failed (${failures.length} issue${failures.length === 1 ? '' : 's'}):`);
+  console.error(`Documentation/navigation check failed (${failures.length} issue${failures.length === 1 ? '' : 's'}):`);
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
 
-console.log(`Documentation link check passed (${markdownFiles.length} Markdown files).`);
+console.log(`Documentation/navigation check passed (${markdownFiles.length} Markdown files).`);

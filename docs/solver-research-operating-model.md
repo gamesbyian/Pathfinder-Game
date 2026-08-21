@@ -1,224 +1,168 @@
 # Solver research operating model
 
-> **Status:** living coordination model, reconciled 2026-08-11 after the revised neighbor-budget population A/B and first explicit-prefix CP-SAT run
-> **Queue authority:** [`future-work.md`](future-work.md)
-> **Capability contract:** [`solver-level-blindness.md`](solver-level-blindness.md)
+> **Status:** current research-method and evidence-routing contract.
+> **Priority authority:** [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+> **Capability boundary:** [`solver-level-blindness.md`](solver-level-blindness.md).
 
-This document explains how Pathfinder's solver-research programmes fit together. It is not a second backlog. Dated reports remain authoritative for what they actually measured; `future-work.md` decides what remains worth doing.
+This document explains **how** Pathfinder solver research should proceed. It does not contain a second queue and should not accumulate dated run-by-run results. Put measurements in dated reports; put current ranked decisions in the optimization queue; put retained/default-off flag dispositions in the opt-in ledger.
 
-## One research pipeline
+The pre-consolidation operating notebook is preserved at [`archive/snapshots/solver-research-operating-model-2026-08-20.md`](archive/snapshots/solver-research-operating-model-2026-08-20.md).
 
-Most nontrivial solver work should move through this chain:
+## Research pipeline
 
-> **semantic truth → controlled evidence → failure classification → missing representation/artifact → shadow/exact evaluation → narrow intervention → level-blind population verdict**
+Most nontrivial solver work should follow this sequence:
 
-A correctness bug can skip directly to a fix and regression tests. A speculative heuristic generally should not.
+> semantic truth -> controlled evidence -> failure classification -> exact/shadow evaluation -> narrow intervention -> level-blind matched population verdict
 
-## The non-negotiable measurement boundary
+A correctness bug can move directly to a fix plus regression/soundness validation. A speculative heuristic generally should not.
 
-Pathfinder's product use case is a newly created editor level. A capability solve therefore receives puzzle mechanics plus current solver/configuration only. Exact-level history cannot guide the solve.
+Before changing production search, ask whether the premise can be tested by an existing observer, oracle, family comparison, reducer, isolated-technique probe, or replay tool.
 
-Allowed research use of known solutions/hints/history:
+## Capability boundary
 
-- label what an unchanged search generated or lost;
-- supply CP-SAT/oracle test cases;
-- compare variants/families;
-- discover general neutral features or policies;
-- validate regressions and proofs.
+Pathfinder's product case is an unseen editor level. A cold capability solve may use puzzle mechanics, current search state, current invocation telemetry, and generic code/configuration only.
 
-Forbidden capability use:
+Exact-level history may be used offline to **label research** but not to guide a capability solve. Forbidden capability inputs include:
 
-- previous winning config/gate/seed;
-- saved solution/hint guidance;
-- exact-level solved status, timing, nodes or badness for allocation;
-- attempt caches or per-level special cases;
-- permanent level ID/corpus position as a policy or seed signal.
+- saved solution or hint guidance;
+- previous winning config, gate, seed, or attempt order;
+- historical solved status, timing, nodes, badness, or family outcome used for exact-level allocation;
+- per-level caches or special cases;
+- permanent IDs or corpus position as policy signals.
 
-The principal workflow enforces this structurally; see [`solver-level-blindness.md`](solver-level-blindness.md).
+Known solutions are diagnostic fluorescence, not steering instructions.
 
-## Evidence/measurement substrate
+## Classify the failure before choosing a treatment
 
-Shared infrastructure should make hypotheses cheap to falsify before production search changes:
+Use the narrowest category that explains the measured failure.
 
-- canonical work accounting and deterministic budgets;
-- explicit-prefix CP-SAT/reference labels;
-- shadow probe infrastructure;
-- exhaustive tiny-state/reference checks;
-- solution/hint provenance;
-- family/variant provenance and transformations;
-- real-state path replay;
+| Failure class | Meaning | Typical next instrument |
+|---|---|---|
+| Correctness / soundness | Legal solution rejected, invalid solution accepted, unsound prune/cache/state identity. | Canonical referee, differential tests, tiny exhaustive reference, reducer. |
+| Regression | A reproducible current level/config lost a capability it previously had. | Commit bisection, exact config replay, causal ablation, paired current-code check. |
+| Routing | An existing technique solves cheaply when isolated but production policy never offers it enough relevant work. | Technique census, method probe, lifecycle telemetry, bounded tail routing. |
+| Search quality | The technique is tried and receives substantial/full isolated budget but still fails. | Trace, repair/DFS/beam-specific diagnostics, exact labels, operator or representation work. |
+| Representation / retention | A viable candidate family is generated but ranked, deduped, or width-culled away. | Winning lineage, pair divergence, exact-prefix oracle, shadow descriptors. |
+| Allocation | Multiple useful techniques compete for a finite shared pool and the treatment changes who receives work. | Lifecycle accounting, explicit work caps, matched-work population A/B. |
+
+Do not use “starvation” as a catch-all. The technique census demonstrated why: a technique can be starved in the ladder and still fail when given the entire isolated budget.
+
+## Evidence hierarchy
+
+Use the strongest available evidence for the question rather than the largest artifact by default.
+
+1. **Canonical semantic/referee truth** for legality and correctness.
+2. **Exact or bounded oracle labels** for feasibility questions where model coverage is supported.
+3. **Controlled paired evidence**, especially same-parent family variants or matched A/B arms.
+4. **Level-blind population evidence** for promotion/capability decisions.
+5. **Historical runs** for nomination and mechanism clues, reconciled against current code before action.
+
+Large row counts do not compensate for dependence. In family research, parents/families are the independent units. See [`variant-level-research.md`](variant-level-research.md).
+
+## Experimental substrate
+
+Prefer existing infrastructure:
+
+- deterministic/canonical work accounting;
+- schema-v2 experiment manifests and stable run identity;
+- stress corpora and lifecycle telemetry;
+- family/variant manifests and provenance;
+- hint/solution provenance;
+- shadow probe harness;
 - winning-lineage observation;
-- automatic level reduction;
-- solver testing APIs exposing real primitives.
+- explicit-prefix CP-SAT/reference labels;
+- automatic reduction and real-state replay;
+- isolated technique census/method probes.
 
-When a new idea appears, first ask whether one of these can test its premise without changing production behavior.
+Start at [`tooling-catalog.md`](tooling-catalog.md). A new research framework should replace repeated one-off work, not merely sit beside it.
 
-## Semantic substrate
+## Shadow first
 
-Mechanic state contracts and solver-aware domain architecture are research infrastructure when they expose future-relevant facts precisely enough to be independently tested.
+When a hypothesis concerns scoring, retention, routing, or information sharing, prefer read-only observation before live behavior.
 
-Prefer **neutral semantic facts** before technique-specific knobs. Examples:
+A useful shadow result answers a concrete question such as:
 
-- crossing slack;
-- remaining must-cross completion interfaces;
-- viable entry/exit axes for turn-family obligations;
-- residual opportunity counts;
-- neutral structural-family descriptors.
+- does a neutral descriptor separate exact-live from exact-dead siblings?
+- does a candidate reasoner catch dead branches beyond the existing gauntlet without false rejects?
+- does a producer emit information the proposed receptor lacks?
+- does a proposed routing feature identify actual isolated capability rather than historical winners?
 
-A fact may later become a beam retention feature, repair diagnostic, scheduler signal, tie-break, or, only with a proof, a prune.
+Shadow instrumentation must have OFF/ON parity for solution, work, ordering, and randomness unless the instrument's purpose explicitly changes those things.
 
-## Family/variant analysis routes failures
+<a id="producer--receptor-cooperation"></a>
+## Producer -> receptor cooperation
 
-Variants are controlled experiments, not production retries.
+Cross-technique cooperation is a specific handoff experiment, not a mandate to build a shared blackboard.
 
-### Robust failure
+Before a live handoff, identify:
 
-Canonical and nearby/symmetry relatives mostly fail; config changes do not cheaply rescue them; known-valid trajectories reveal unrepresented future constraints.
+1. **Receptor:** a measured limitation in a named technique.
+2. **Producer:** information another technique already emits or can emit cheaply.
+3. **Novelty:** evidence that the receptor would not cheaply rediscover the same information.
+4. **Timing:** the information arrives before the receptor spends the work it could save.
+5. **Consumption cost:** replay/storage/branching cost is bounded.
+6. **Independence:** ordinary recipient search remains protected as a control path.
+7. **Shadow result:** the handoff premise survives without changing search.
+8. **Matched verdict:** the final live experiment improves solves or work at a fair total budget.
 
-Route toward mechanic-derived facts, exact labels, shadow analysis, and representation work.
+Useful information can still reduce solve count if consuming it displaces the recipient's own successful work. That failure mode has already occurred in Pathfinder and should be treated as a standing design constraint.
 
-### Fragile failure
+The full original cooperation design is archived at [`archive/snapshots/solver-interoperability-and-cooperation-plan.md`](archive/snapshots/solver-interoperability-and-cooperation-plan.md).
 
-Rotation/reflection or small mutation changes outcome cheaply; local winning moves are not obviously bad; tiny ordering/retention changes cause cliffs.
+## Family/variant evidence
 
-Route toward first divergence, beam survival, score/retention, symmetry controls, stochastic trajectory sensitivity and interoperability.
+Use the off-main variant trove as a controlled diagnostic surface, not as production retries or a giant bag of independent examples.
 
-### Starved capability
+Especially useful routes:
 
-A relevant late technique/config can solve related/historical cases but receives little or zero current work.
+- symmetry cliffs -> orientation/order/representation investigation;
+- local solved/unsolved boundaries -> causal scoring/pruning/operator diagnosis;
+- isolated-technique changes across relatives -> routing/capability hypotheses;
+- re-embedding/density changes -> sensitivity to navigable space;
+- held-out parent families -> generalization test for a proposed rule.
 
-Route toward participation/allocation. `STRATEGY_MAIN_LOOP_LATE_RESERVE` is the current bounded experiment.
+The canonical resource and exact research branch are documented in [`variant-level-research.md`](variant-level-research.md).
 
-### Repair-basin failure
+## Accepted-path differential diagnosis
 
-Repair repeatedly returns to similar elites/near misses and append-only/local changes cannot escape.
+A valid path constructed by a human, AI assistant, oracle, or variant transformation can be useful when the production solver does not find it.
 
-Route toward exact retreat depth and genuinely deeper prefix editing, not another attraction tweak.
+The method is:
 
-## Current evidence routing after the remote runs
+1. validate it through the canonical path referee;
+2. record provenance honestly;
+3. keep it out of the cold solve;
+4. replay/observe where the unchanged solver first diverges from, rejects, or loses compatible prefixes;
+5. identify the concrete score, prune, state representation, width decision, or routing boundary involved;
+6. require the pattern to recur across unrelated levels or held-out families before changing production behavior.
 
-### Neighbor-budget population gate is complete
+Do not treat an AI's or human's post-hoc explanation of “why the path works” as causal evidence. The accepted path plus the solver trace is the evidence.
 
-The revised `PRUNE_MC_NEIGHBOR_BUDGET` level-blind A/B produced:
+The original worked AI-manual note is archived at [`archive/snapshots/ai-assisted-manual-solving.md`](archive/snapshots/ai-assisted-manual-solving.md).
 
-- Corpus 2: **611 → 665**;
-- **+54 net, 59 gained / 5 lost**;
-- Corpus 1: **94 → 94**;
-- treatment C2 nodes ~3.94% lower;
-- treatment canonical work ~5.33% lower.
+## Promotion contract
 
-This is no longer a pending population-measurement task. The five losses now route the mechanism into a narrow **integration/placement** question. Do not rerun the same 1700-level A/B unchanged.
+A production-facing solver treatment should normally satisfy all of the following:
 
-### Winning-lineage observation is implemented and has a first real cohort
+- level-blind execution;
+- persistent, identifiable code/protocol state;
+- complete intended population or explicitly declared sample;
+- deterministic/non-binding wall-clock conditions when the question requires work comparability;
+- comparable arm inputs with declared treatment variables;
+- gains **and** losses reported, not just net count;
+- `workSpent`, nodes, errors, and deadline truncation reported where applicable;
+- relevant Corpus 1, Corpus 2, and published transfer/cost checks;
+- no hidden mutation of hints/data between arms;
+- current queue and opt-in ledger updated when the decision changes.
 
-The 30-level same-config cohort found 13 solved / 17 failed. Failed final labelled-support losses were 15 score/width and 2 dedup, with zero hard-prune alarms. Score/width forensics classified the 15 as:
+A small negative can close an unchanged mechanism when it directly falsifies the premise. A promising small result usually nominates a broader gate; it does not by itself promote production behavior.
 
-- 10 clear mis-ranks;
-- 3 weak-margin misses;
-- 0 exact-tie/stable-order;
-- 2 width-saturation.
+## Documentation handoff
 
-This routes the beam problem toward score representation/future viability, not global tie shuffling or merely widening the beam.
+After an investigation:
 
-### First exact-prefix CP-SAT batch is complete
-
-The original 12 atlas abstentions produced:
-
-- **7 dead**;
-- **1 live** with referee-valid OPTIMAL witness;
-- **4 abstain**, all R00039 unsupported mechanics;
-- zero input/correctness alarms.
-
-At least one R00001 sibling ranked first by beam score is exact-dead while the same parent has a known-valid continuation. This is direct evidence of genuine future-viability mis-ranking.
-
-The route is now: expand a bounded set of extinction-adjacent same-parent exact labels, then test neutral descriptors. Do not immediately freeze a score or retention quota.
-
-## Promotion work serializes; observation does not
-
-Production-changing experiments should be interpreted against a known default configuration. Independent observation/oracle work can proceed in parallel.
-
-Current implications:
-
-- neighbor-budget population A/B is finished; its five-loss integration analysis can proceed;
-- explicit-prefix CP-SAT expansion can proceed independently;
-- exact repair-retreat CP-SAT can proceed independently;
-- late-reserve full population A/B is unblocked after the level-blind workflow hardening;
-- a production policy derived from the CP-SAT labels should wait until the exact-label evidence is broad enough to justify it.
-
-## Winning-lineage and contrastive branch laboratory
-
-Known solutions are diagnostic fluorescence only. The observer may ask whether a generated/retained node matches any known valid prefix, but it may not alter search.
-
-The useful boundaries are:
-
-1. incoming frontier;
-2. generated candidates;
-3. post-hard-prune;
-4. post-dedup;
-5. post-score/width;
-6. post-diversity selection where relevant.
-
-The next exact-label experiment should sample same-parent siblings near **actual score/width extinction events**. This is stronger than generic live/dead branch sampling because history up to the decision is identical.
-
-Candidate neutral descriptors include:
-
-- crossing slack;
-- remaining completion-interface counts;
-- residual volume/topology;
-- portal/flipper state;
-- turn opportunity;
-- future resource commitments;
-- structural-family descriptors.
-
-## Interoperability: producer → receptor
-
-Do not build a universal blackboard because different techniques happen to expose artifacts. First show that a producer emits replayable, structurally useful information that a named receptor does not rediscover in time.
-
-The existing beam-versus-repair pilot found preliminary non-redundancy but no live receptor verdict. If revisited, compare:
-
-- replayed prefixes;
-- softer structural summaries such as obligation order, region/interface state, or attraction sets.
-
-Preserve recipient independence. Exact transplantation has already failed in repair relinking, so “more exact path sharing” is not automatically better.
-
-## Repair route
-
-Closed unchanged forms:
-
-- plateau penalty;
-- soft recombination;
-- exact relinking;
-- turn bias;
-- current elite-prefix DFS constants;
-- fallback-loop node-budget reserve (`STRATEGY_REPAIR_FALLBACK_NODE_RESERVE`): a 300-level level-blind A/B confirmed the mechanism removes starvation as designed (7x more levels get a fallback attempt) but produced zero additional solves — every fallback attempt burns its full node allotment while stalled at a fixed badness plateau, the same wall the other closed forms hit. Allocation alone does not touch this failure mode.
-
-The next evidence gate is exact retreat depth through the existing CP-SAT seam. If valid continuation only reappears after deep rollback across many levels, that supports a genuinely different prefix-edit operator.
-
-## Failure-conditioned allocation
-
-The old broad cold-start portfolio scheduler is closed. The still-open question is different:
-
-> **Given evidence generated during this solve, where should the next unit of work go?**
-
-Candidate current-invocation evidence includes:
-
-- config progress/stall signatures;
-- frontier diversity/extinction;
-- repair elite/badness/plateau facts;
-- dynamic resource slack;
-- repeated exact nogoods;
-- producer/receptor novelty.
-
-Historical exact-level winners are forbidden. Any eventual bespoke ladder must infer from the puzzle and current run.
-
-The late-reserve experiment is the current narrow precursor because it tests whether guaranteeing participation to starved late configs helps at population scale without reordering the ladder.
-
-## Current routing summary
-
-1. **Neighbor-budget:** diagnose five losses; test generic equal-work integration; then decide promotion.
-2. **Beam/score:** expand exact extinction-adjacent labels; test neutral viability descriptors; only then design retention/score counterfactual.
-3. **Repair:** exact retreat CP-SAT; only then decide whether deep prefix editing deserves engineering.
-4. **Allocation:** run level-blind late-reserve population A/B; positive result supports participation floors, negative-with-target-recoveries favors adaptive online allocation.
-5. **Variants/symmetry:** continue as controlled diagnostics, never production rotate/retry.
-
-The recurring rule is simple: **historical data may teach the general solver; the solver must then prove the lesson without remembering the level.**
+- put measurements and chronology in a dated report;
+- update [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) if ranked priority/state changed;
+- update [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) if a retained/default-off mechanism changed disposition;
+- update a durable topic/tool contract only when its behavior or reusable interpretation changed;
+- archive concluded plans rather than leaving them masquerading as current instructions.
