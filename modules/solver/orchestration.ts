@@ -1166,8 +1166,11 @@ export const DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION = 1.0;
  *  by construction for production, where `nodeBudget` is always `Infinity` and this fraction is
  *  already forced to 0 regardless. Full data:
  *  reports/2026-08-15-connectivity-axis-exhausted-regression.md's "retry pass at population scale"
- *  section. **Not yet re-validated at population scale under this revision** — the natural next step
- *  is another full-corpus GHA run against the same `724/1700` baseline.
+ *  section. RE-VALIDATED the same day, combined with REVISION 3's run-last reordering below (run
+ *  31902837955): **764/1700, +40 vs. the 724 baseline, ZERO levels lost** — see
+ *  DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's own PROMOTION note above for the full result. This additive
+ *  design plus REVISION 3's positioning is what's actually shipped, so that population run IS this
+ *  revision's own validation, not a still-open follow-up.
  *
  *  REVISION 1 (2026-08-15, same day): an earlier version of this constant used a "floor at the
  *  tier's own call site" design instead (self-contained, no edit to the shared earlyTierNodeBudget
@@ -3332,7 +3335,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // existence — none of their own ceilings reference dedupRetryNodeReserve or dedupRetryNodeCeiling
     // at all (see earlyTierNodeBudget's own comment). This tier's additive extension only ever spends
     // room past every other tier's own full-strength, unshrunk attempt — genuine bonus room, not
-    // borrowed from (or lent to) anyone. Not yet re-validated at population scale under this revision.
+    // borrowed from (or lent to) anyone. This reordering, combined with the additive reserve above,
+    // IS what full-corpus GHA run 31902837955 validated (764/1700, +40, zero losses) — see
+    // DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's own PROMOTION comment for the result.
     // `dedupRetryTierWillRun` is the SAME predicate dedupRetryNodeReserve is derived from — the two
     // must stay in lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history: drift either way
     // strands the reserve or spends one that was never allocated).
