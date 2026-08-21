@@ -169,7 +169,11 @@ interface SearchResult { solution: number[] | null; attempts: Attempt[]; earlyNo
  *  STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY. `fullNodeBudget` is the budget the tier would have had
  *  with the mechanism off; `grantedNodeBudget` is what it actually got. */
 interface ShrunkBiasedTier { config: AttemptConfig; fullNodeBudget: number; grantedNodeBudget: number; }
-interface SolveOpts {
+// Exported so the worker-client adapter (solver-worker-client.ts) can type its own `solve()`
+// against the exact same option set the direct/on-thread solver accepts, rather than a hand-
+// maintained subset — the drift between the two is exactly what let the worker adapter silently
+// drop most SolveOpts fields for years (fixed 2026-08-20). Pure type export, zero runtime cost.
+export interface SolveOpts {
     timeBudgetMs?: number | string;
     yieldFn?: (() => Promise<void>);
     ablation?: AblationConfig | null;

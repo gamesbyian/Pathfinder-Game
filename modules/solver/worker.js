@@ -3,7 +3,14 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 // Loaded as a module worker: new Worker(url, { type: 'module' })
 //
 // Inbound message types:
-//   { type: 'SOLVE',     id, levelRaw, budgetMs }  — solve a raw (1-indexed) level
+//   { type: 'SOLVE',     id, levelRaw, budgetMs, solveOpts? }  — solve a raw (1-indexed) level.
+//                                                    solveOpts carries every other SolveOpts field
+//                                                    (see orchestration.ts) the caller wants
+//                                                    forwarded — ablation/nodeBudget/workBudget/
+//                                                    disableExtraBudgetPasses/lifecycleTelemetry/
+//                                                    etc. timeBudgetMs and yieldFn are NOT part of
+//                                                    it; they stay the dedicated budgetMs param and
+//                                                    this worker's own cancellation-checking yieldFn.
 //   { type: 'TRAP',      id, level, budgetMs }      — trap-spot search on a NORMALIZED level
 //                                                     (0-indexed keys; postMessage's structured
 //                                                     clone carries its Sets/Maps intact, so the
@@ -23,8 +30,12 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 //   { type: 'CANCEL',    id }                       — abort an in-flight search
 //
 // Outbound message types:
-//   { type: 'RESULT',            id, ok, status, solution, elapsedMs, nodesExpanded, attempts,
-//                                deadlineTruncated?, cancelled? }
+//   { type: 'RESULT',            id, ok, status, solution, solutions, elapsedMs, nodesExpanded,
+//                                attempts, deadlineTruncated?, nodeBudgetReached?, workSpent?,
+//                                workBudget?, solvedByPrime?, techniqueLifecycle?, schedulerMode?,
+//                                portfolio?, cancelled? } — see buildSolveWorkerResult's own
+//                                comment (worker-result-serialization.mjs) for why this mirrors the
+//                                full on-thread SolveResult shape.
 //   { type: 'TRAP_PROGRESS',     id, newSpots: number[], gatesProcessed?, gatesCompleted?, totalGates? }
 //                                — streamed while the trap search runs: newly-found spot keys
 //                                  (flushed at most every ~100ms) and per-gate sweep progress
@@ -154,14 +165,21 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
 
     if (type !== 'SOLVE') return;
 
-    const { levelRaw, budgetMs = 30000 } = data;
+    // solveOpts carries every other SolveOpts field the client-side adapter was asked to forward
+    // (ablation, nodeBudget, workBudget, disableExtraBudgetPasses, lifecycleTelemetry, the various
+    // *BudgetFractionOverride fields, etc.) — see solver-worker-client.ts's own comment for why this
+    // exists (fixed 2026-08-20: the adapter used to silently drop everything but timeBudgetMs).
+    // timeBudgetMs/yieldFn are still handled via the dedicated budgetMs param and this worker's own
+    // cancellation-checking yieldFn below, exactly as before — spread FIRST so neither can be
+    // overridden by a stray same-named key in solveOpts.
+    const { levelRaw, budgetMs = 30000, solveOpts = {} } = data;
 
     try {
         const level = normalizeRawLevel(levelRaw);
         const yieldFn = () => {
             if (cancelledIds.has(id)) throw new Error('Solver:cancelled');
         };
-        const result = await solveLevel(level, { timeBudgetMs: budgetMs, yieldFn });
+        const result = await solveLevel(level, { ...solveOpts, timeBudgetMs: budgetMs, yieldFn });
         cancelledIds.delete(id);
         postBack(buildSolveWorkerResult(id, result));
     } catch (err) {
