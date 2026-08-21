@@ -48,7 +48,7 @@ export function buildResearchStatusIndex(root) {
         const reportPath = `reports/${name}`;
         const source = readFileSync(path.join(root, reportPath), 'utf8');
         const metadata = METADATA.exec(source);
-        if (!metadata) continue; // Older evidence predates the structured report convention.
+        if (!metadata) continue;
         const linkedPaths = [...source.matchAll(MARKDOWN_LINK)]
             .map(match => repositoryPath(root, reportPath, match[1])).filter(Boolean);
         const currentAuthorities = linkedPaths.filter(link => link.startsWith('docs/') &&
@@ -81,6 +81,35 @@ export function buildResearchStatusIndex(root) {
     return { schemaVersion: 2, scope: 'current-authority-and-structured-evidence',
         authorityOrder: ['current-queue', 'opt-in-ledger', 'structured-report'], queue, experiments,
         evidence: topics };
+}
+
+function compactEntry(kind, entry) {
+    if (kind === 'queue') return { kind, id: entry.topicId, priority: entry.priority, status: entry.status,
+        question: entry.question, gate: entry.remainingGate, authority: entry.authority };
+    if (kind === 'experiment') return { kind, id: entry.experimentId, status: entry.status,
+        decision: entry.disposition, evidence: entry.latestEvidenceOrGate, authority: entry.authority };
+    return { kind, id: entry.topicId, status: entry.status, title: entry.title,
+        date: entry.latestEvidence.date, decision: entry.decision, gate: entry.remainingGate,
+        report: entry.latestEvidence.report, authorities: entry.authorities };
+}
+
+export function queryResearchStatusIndex(index, { query = '', status = '', kind = '' } = {}) {
+    const entries = [
+        ...index.queue.map(entry => compactEntry('queue', entry)),
+        ...index.experiments.map(entry => compactEntry('experiment', entry)),
+        ...index.evidence.map(entry => compactEntry('evidence', entry)),
+    ];
+    const q = query.trim().toLowerCase();
+    const wantedStatus = status.trim().toLowerCase();
+    const wantedKind = kind.trim().toLowerCase();
+    return entries.filter(entry => (!wantedKind || entry.kind === wantedKind) &&
+        (!wantedStatus || entry.status === wantedStatus) &&
+        (!q || JSON.stringify(entry).toLowerCase().includes(q)));
+}
+
+export function compactResearchStatusIndex(index, filters = {}) {
+    const entries = queryResearchStatusIndex(index, filters);
+    return { schemaVersion: 1, count: entries.length, entries };
 }
 
 export function writeResearchStatusIndex(index, output) {
