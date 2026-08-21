@@ -1,108 +1,49 @@
-# Pathfinder Security Model
+# Pathfinder security model
 
-> **Status:** current-state reference + known gaps. The remaining hardening items (custom-claim
-> admin auth cutover, emulator-backed rule tests) are tracked in `docs/future-work.md`.
-> Detailed sub-references: `docs/firestore-security-model.md`,
-> `docs/firebase-config-and-secret-hygiene.md`, `docs/third-party-dependencies.md`.
+Pathfinder is a static browser app with Firebase Auth/Firestore and no private application server. Firestore rules are the backend authorization boundary.
 
-Pathfinder is a static-hosted browser game with a Firebase (Firestore + Auth) backend. There
-is no private application server; all backend authorization is enforced by Firestore security
-rules.
+Detailed contracts:
 
-## Data classification
+- [`firestore-security-model.md`](firestore-security-model.md): collection access and admin/hint rules.
+- [`firebase-config-and-secret-hygiene.md`](firebase-config-and-secret-hygiene.md): public web config vs real secrets.
+- [`content-security-policy.md`](content-security-policy.md): production CSP.
+- [`third-party-dependencies.md`](third-party-dependencies.md): browser dependency/origin allowlist.
 
-| Class | Location | Readers | Writers |
-|---|---|---|---|
-| Bundled levels/themes | repo (`data/*.json`, `data/hints/`) | everyone (static) | committers |
-| Solver stress-test corpora | repo (`data/stress/`) — never bundled, see `vite.config.ts` | committers | tooling |
-| Published levels | `published_levels` | public-read | admin-write |
-| Level ratings/tags | `level_ratings` | public-read | admin-write |
-| Player progress/session | `/artifacts/{appId}/users/{uid}/data/{doc}` | that `uid` only | that `uid` only |
-| Pending submissions | submissions collection | any authenticated user (duplicate detection) | creator (`submittedBy == uid`); no updates; admin delete |
-| Local debug/audit artifacts | `logs/` + `reports/` (repo) | committers | tooling |
+## Data/access summary
 
-See `docs/firestore-security-model.md` for the authoritative rule-by-rule model and
-`scripts/firestore-rules-test.mjs` for the characterization tests.
+| Data | Access |
+|---|---|
+| Bundled levels/themes/hints | public static assets; repository writers change them |
+| Stress corpora | repository/tooling only; not bundled into the player app |
+| Published levels / ratings | public read, admin write |
+| Player progress/session | matching authenticated UID only |
+| Pending submissions | authenticated read; creator can create; no update; admin delete |
+| Supplemental published-level hints | public read; authenticated create; immutable |
+| Logs/reports | repository/tooling artifacts |
 
-## Firebase config is public, not secret
+## Admin
 
-`firebase-config.js` holds the public Firebase web config. It is **safe to commit** — it is
-client configuration, not a credential. Authorization is enforced by Firestore rules, never by
-the config. See `docs/firebase-config-and-secret-hygiene.md`. `check:secret-hygiene` scans for
-genuinely-secret material.
+Firestore admin authorization accepts custom claim `admin: true` plus a temporary legacy-email fallback. The claim cutover is tracked in [`firestore-security-model.md`](firestore-security-model.md). Client-side admin checks are UX gates, not authorization.
 
-## Admin authorization (current + gap)
+## Debug surfaces
 
-Admin access (Dev Mode, Review/Publish, rating writes) is gated by an authenticated Google
-sign-in whose token email matches the admin email in `firestore.rules`, and the same popup
-gates the in-app admin UI.
+`bootstrapApp()` exposes:
 
-Admin authorization in the rules now accepts a Firebase **custom claim** (`admin: true`) **or** the
-legacy admin email as a transitional fallback — a no-lockout migration toward claim-based admin.
+- `window.PATHFINDER` by default: frozen/read-only diagnostics returning cloned snapshots, not live mutable state;
+- full mutable `window.APP` when the URL contains `?debug`, including on production hosts.
 
-> **Remaining (tracked in `docs/future-work.md`):** provision the custom claim in production, then
-> delete the email fallback from the rules and migrate the client-side email check
-> (`review-repository.js`, UX-only) to read the claim. Full procedure + cutover checklist:
-> `docs/firestore-security-model.md` ("Admin custom-claim migration"). Emulator-backed behavioral
-> rule tests are **deliberately deferred** — they need the Firebase emulator suite + CI wiring, and
-> the payoff only lands when the rules change, so revisit alongside any Firestore-rules edit. The
-> current suite is source-level characterization + negative-case guards in
-> `scripts/firestore-rules-test.mjs`.
+`tests/security.spec.mjs` guards both modes. Production debugging therefore requires only `?debug`; there is no separate host restriction or persisted opt-in.
 
-## Debug surface policy
+## Browser security
 
-`bootstrapApp()` exposes diagnostics with a **read-only-by-default** posture:
-- **Default:** `window.PATHFINDER` — read-only. Getters return `deepClone`d snapshots
-  (`getStateSnapshot`, `getCurrentLevel`, `getCurrentLevelIndex`, `getMode`); no live
-  references, no mutators.
-- **Opt-in:** the full mutable `window.APP` facade (live `State.ENGINE`, engine, editor, …) is
-  exposed whenever `shouldExposeMutableFacade()` sees a `?debug` query param — on any host,
-  including production. There is no additional host check or persisted opt-in step: the
-  documented debugging workflow is simply "load the live site with `?debug`".
+The CSP is enforced through `index.html` from source policy `security/csp-policy.json`; `check:csp` and `tests/csp.spec.mjs` guard drift and browser behavior. Firebase and Tone are bundled by Vite; Google Fonts and Firebase/Google runtime origins are explicitly allowlisted. See [`content-security-policy.md`](content-security-policy.md).
 
-This invariant is regression-guarded at boot by `tests/security.spec.mjs` (default boot exposes no
-`window.APP`; frozen `window.PATHFINDER` with no live refs; clone-only snapshot; `?debug` opts into
-the mutable facade). The pure predicate itself is unit-tested in `scripts/app-module-unit-tests.mjs`
-via the injectable `shouldExposeMutableFacade({ search })`.
+`firebase-config.js` is public client configuration. Service-account/Admin SDK keys and tokens are secrets and must remain outside git. See [`firebase-config-and-secret-hygiene.md`](firebase-config-and-secret-hygiene.md).
 
-> **Production debugging:** just load the live site with `?debug`. The read-only
-> `window.PATHFINDER` needs no opt-in either way.
+## Contributor workflow
 
-## Content Security Policy
-
-The CSP is **enforced in production** via an enforcing `<meta http-equiv>` in `index.html` (GitHub
-Pages can't set response headers) and was verified live on 2026-06-26 — boot, Tone.js audio, and the
-Google `signInWithPopup` admin sign-in all confirmed working on the deployed site.
-
-- Source of truth: `security/csp-policy.json` (directives + per-directive rationale +
-  required-runtime-origins). Render the string with `npm run check:csp -- --print`.
-- `check:csp` (in the default `check` group) fails the build if `index.html` loads an external
-  origin no directive covers, if a documented runtime origin (Firestore/Auth/sign-in) isn't
-  covered, or if the enforcing `<meta>` CSP drifts from the policy file. So the enforced policy
-  can't rot relative to the app's real dependencies.
-- `tests/csp.spec.mjs` (e2e) asserts no CSP violations at boot/worker/interaction against the
-  production build. Full rationale + the post-change checklist: `docs/content-security-policy.md`.
-
-> **Note:** `signInWithPopup` needs `script-src https://apis.google.com` (the gapi iframe loader
-> Firebase injects) — omitting it fails sign-in with `auth/internal-error`. `signInWithRedirect` is
-> the documented fallback if the popup ever regresses.
-
-## Third-party dependencies
-
-Firebase and Tone.js are **bundled by Vite** (npm deps), not loaded from CDNs. The only
-remaining external browser origin is Google Fonts, restricted by an allowlist enforced by
-`check:third-party`. Rationale/risk is in `docs/third-party-dependencies.md`.
-
-## Credential rotation
-The Firebase web config is public (no confidentiality rotation needed) but should be **restricted at
-the source** (Cloud Console HTTP-referrer + API restrictions). Actually-secret material
-(service-account/Admin-SDK keys) must never be committed; rotate immediately if exposed. Full
-procedures: `docs/firebase-config-and-secret-hygiene.md` ("Credential rotation procedures").
-
-## Contributor security workflow
 - `check:secret-hygiene`, `check:third-party`, and `check:csp` run in `npm run ci`.
-- Changing Firestore access? Update `firestore.rules` **and** `scripts/firestore-rules-test.mjs`
-  **and** `docs/firestore-security-model.md`. Rules deploy only via
-  `.github/workflows/deploy-firestore-rules.yml` (push to `main` or manual dispatch).
-- Adding an external script/asset? Update the allowlist + `docs/third-party-dependencies.md` **and**
-  `security/csp-policy.json` (so `check:csp` keeps the CSP in sync), then re-run `check:csp`.
+- Firestore access changes require `firestore.rules`, `scripts/firestore-rules-test.mjs`, and [`firestore-security-model.md`](firestore-security-model.md) to agree. Rules deploy through `.github/workflows/deploy-firestore-rules.yml`.
+- New external browser origins require the dependency allowlist and `security/csp-policy.json` to be updated together.
+
+Remaining security work, including claim cutover and deferred emulator-backed rule tests, is tracked in [`future-work.md`](future-work.md).
