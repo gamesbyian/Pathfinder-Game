@@ -44,7 +44,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
     return [k, v.join('=')];
 }));
 const COUNT_PER_BATCH = Number(args.get('--count-per-batch') || 25);
-const MASTER_SEED = Number(args.get('--master-seed') || 20260708);
+const MASTER_SEED = Number(args.get('--master-seed') ?? 20260708);
 const OUT_FILE = args.get('--out') || 'data/stress/stress-levels.json';
 const VERBOSE = args.has('--verbose');
 

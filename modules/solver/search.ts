@@ -1,13 +1,8 @@
-import { getDistanceFromArray } from './distance.js';
-import { popcount } from './encoding.js';
-import { workMeter } from './work-meter.js';
-import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { STATE_BUF_BEAM, STATE_BUF_DFS, applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
-import { isConnected } from './topology.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
-import { keyParity } from '../domain/cell-key.js';
+import type { PruneDiagnostics } from './prune-gauntlet.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, UndoToken, ScoringProfile, StructuralTemplate } from './types.js';
 
@@ -23,7 +18,48 @@ interface DfsFrame { key: number; children: number[]; childIdx: number; undoInfo
  *  siblings under their parent, giving a depth-first walk of the beam's parent-pointer tree, which
  *  is what makes repositioning the shared working state cheap. Keeping them separate is the point:
  *  walk order and cull order are decoupled. */
-interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: number; sc: string; insOrd: number; treeOrd: number; sk?: string; }
+interface BeamPathNode { key: number; prev: BeamPathNode | null; depth: number }
+interface BeamNode extends BeamPathNode { prev: BeamNode | null; score: number; sc: string; insOrd: number; treeOrd: number; sk?: string; }
+
+/** Single implementation of the pre-move forced-first-step prune shared by DFS and beam. */
+function pruneFirstStepNeighbors(startKey: number, neighbors: number[], prep: PrepLevel, diagnostics?: PruneDiagnostics): number[] {
+    if (prep._forcedFirstStepKey != null) return neighbors.filter(k => k === prep._forcedFirstStepKey);
+    const cfg = prep._cfg;
+    if ((!cfg || cfg.PRUNE_MC_FORCED_FIRST_MOVE) && prep.gateForcedFirstStepKey.has(startKey)) {
+        const forced = prep.gateForcedFirstStepKey.get(startKey);
+        if (diagnostics) diagnostics.reached.PRUNE_MC_FORCED_FIRST_MOVE =
+            (diagnostics.reached.PRUNE_MC_FORCED_FIRST_MOVE ?? 0) + 1;
+        const filtered = neighbors.filter(k => k === forced);
+        if (diagnostics && filtered.length < neighbors.length) diagnostics.rejected.PRUNE_MC_FORCED_FIRST_MOVE =
+            (diagnostics.rejected.PRUNE_MC_FORCED_FIRST_MOVE ?? 0) + neighbors.length - filtered.length;
+        return filtered;
+    }
+    return neighbors;
+}
+
+/** Test seam for the pre-candidate prune that necessarily runs before evaluatePrunedMove. */
+export function __pruneFirstStepNeighborsForTests(startKey: number, neighbors: number[], prep: PrepLevel,
+    diagnostics: PruneDiagnostics): number[] {
+    return pruneFirstStepNeighbors(startKey, neighbors, prep, diagnostics);
+}
+
+/** Reconstruct a parent-pointer path into caller-owned scratch. */
+function _reconstructBeamPath(node: BeamPathNode, scratch: number[]): number[] {
+    const len = node.depth + 1;
+    scratch.length = len;
+    let cur: BeamPathNode | null = node;
+    for (let i = len - 1; i >= 0; i--) {
+        if (!cur) throw new Error('beam parent chain shorter than declared depth');
+        scratch[i] = cur.key;
+        cur = cur.prev;
+    }
+    return scratch;
+}
+
+/** Test seam for the production reconstruction routine's exact-length reuse contract. */
+export function __reconstructBeamPathForTests(node: BeamPathNode, scratch: number[]): number[] {
+    return _reconstructBeamPath(node, scratch);
+}
 
 // ─── Core DFS ─────────────────────────────────────────────────────────────────
 
@@ -46,13 +82,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 
     // Stack entry: { key, children, childIdx, undoInfo, disc } where disc = cumulative
     // discrepancy to REACH this node (sum of chosen child-indices along the path).
-    let children0 = getNeighbors(startKey, state, level, prep);
-    if (prep._forcedFirstStepKey != null) {
-        children0 = children0.filter(k => k === prep._forcedFirstStepKey);
-    } else if ((!cfg || cfg.PRUNE_MC_FORCED_FIRST_MOVE) && prep.gateForcedFirstStepKey.has(startKey)) {
-        const forced = prep.gateForcedFirstStepKey.get(startKey);
-        children0 = children0.filter(k => k === forced);
-    }
+    const children0 = pruneFirstStepNeighbors(startKey, getNeighbors(startKey, state, level, prep), prep);
     scoreAndSort(children0, startKey, state, level, prep, profile, template);
     const stack: DfsFrame[] = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null, disc: 0 }];
 
@@ -97,7 +127,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         if ((++nodesExpanded & 255) === 0) {
             const now = Date.now();
             if (now - levelStartTime > levelBudgetMs || nodesExpanded >= nodeBudget
-                || workMeter.units >= (prep._workCap ?? Infinity)) {
+                || prep._workMeter.units >= (prep._workCap ?? Infinity)) {
                 // Credit prep._metrics BEFORE returning — the exact same instrumentation gap
                 // beamSearchFromGate's timeout paths had (see reports/2026-07-16-beam-
                 // nodesexpanded-instrumentation-gap.md): `out.nodesExpanded` was already set here,
@@ -301,6 +331,33 @@ const _BEAM_DEBUG = !!(_proc && _proc.env && _proc.env.PF_BEAM_DEBUG === '1');
 // levels than on their cheaply-solved near-twins, not just a witness-replay proxy for it") —
 // see reports/2026-08-06-backtrack-depth-instrumentation.md for what it found.
 const _DFS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_DFS_DEBUG === '1');
+
+// 0 = disabled (shipped 2026-08-15 — see reports/2026-08-15-connectivity-axis-exhausted-
+// regression.md for the regression this targets and the validation this margin was picked from):
+// relative score margin (fraction of the winner's score) within which beam state dedup keeps a
+// collision's runner-up alongside its winner, instead of discarding it outright. Rescues a
+// genuinely-winning-but-locally-lower-scoring lineage from a single close comparison it would
+// otherwise lose. Recovers R02248 (previously unsolved) at +0.3% nodes / +1.8% wall time on the
+// full published-corpus regression check, with zero solved/failed-set changes measured across a
+// 20-level mined-regression sample and a 112-level corpus-2 sample. Does NOT recover every known
+// case in the same regression family (R02114, R00592 remain unfixed — see the report's "what this
+// does and does not establish"). 0 must be, and is measured to be, byte-identical in behavior and
+// performance to dedup with no retention widening at all.
+//
+// CORRECTION (2026-08-15, same day, full-corpus GHA A/B at production 50M node budget): the 112-
+// level sample above was badness-stratified toward HARD levels and completely missed this margin's
+// real population-scale effect. On the full 1700-level Corpus 2, default-ON nets -7 (731 -> 724):
+// 27 gained (R02248 among them) but 34 LOST, every single flip in either direction sharing the same
+// signature — a level that used to solve cheaply (4-35M nodes) via beam:intersectionHarvest@beam5000
+// or beam:objectiveFirst@beam5000 (often (diverse)) now exhausts the full 50M budget with zero
+// progress, or vice versa. This is NOT a narrow, targeted fix; it perturbs beam search broadly on
+// any level whose winning technique is in that family — a coin-flip-shaped reshuffling, not a
+// monotonic improvement. Kept default-ON regardless (net loss accepted for now — see
+// orchestration.ts's STRATEGY_DEDUP_NEAR_TIE_RETRY for the recovery mechanism this motivated,
+// implemented and locally validated the same day, not yet validated at population scale) rather
+// than reverted, since a blanket revert would give back R02248 and the 26 other gains for no net
+// improvement on the loss side either.
+const DEDUP_NEAR_TIE_MARGIN = 0.01;
 // out (optional, last param): mirrors dfsFromGate's own out contract for external tooling (the
 // stress benchmark's per-attempt telemetry) — set to whether the OVERALL call's null return was
 // because levelBudgetMs ran out (true) vs. the search genuinely exhausted every avenue it tried
@@ -419,6 +476,12 @@ function _diverseSelect(sorted: BeamNode[], beamWidth: number): BeamNode[] {
 export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, beamWidth: number, yieldFn: YieldFn, diverseBeam?: boolean, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
     const ws = createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
+    const research = prep._beamResearchObserver;
+    const emit = (stage: import('./types.js').BeamResearchStage, nodes: BeamNode[], details?: Record<string, unknown>): void => {
+        if (!research) return;
+        research.observe({ stage, depth: nodes[0]?.depth ?? phasesCompleted, work: nodesExpandedTotal + frontierIndex,
+            paths: nodes.map(node => [..._reconstructBeamPath(node, [])]), ...(details ? { details } : {}) });
+    };
     // State dedup: safe when there are no portals (portals aren't captured in sc).
     // Ablation: STRATEGY_STATE_DEDUP can disable this optimisation independently.
     const useStateDedup = level.portalMap.size === 0 && (!cfg || cfg.STRATEGY_STATE_DEDUP);
@@ -485,7 +548,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         // (offline batch tooling only, same as dfsFromGate's). Counted in the exact quantity credited
         // to prep._metrics below (nodesExpandedTotal + frontierIndex), so the cap and the reported
         // node count stay consistent. timedOut=true matches dfsFromGate's node-budget exit.
-        if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || workMeter.units >= (prep._workCap ?? Infinity)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
+        if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || prep._workMeter.units >= (prep._workCap ?? Infinity)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
         if (phasesCompleted >= maxPhases) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('maxPhases'); if (out) out.timedOut = false; return null; }
         phasesCompleted++;
         if (yieldFn) {
@@ -494,6 +557,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         }
 
         const cands: BeamNode[] = [];
+        const generatedForResearch: BeamNode[] | null = research ? [] : null;
+        const hardPrunedForResearch: BeamNode[] | null = research ? [] : null;
+        const hardPruneContexts: Record<string, unknown>[] | null = research ? [] : null;
+        if (research) emit('incoming-frontier', frontier);
         if (_BEAM_DEBUG) _dbgPhases++;
 
         // `frontier` arrives in cull (score) order. Record that as each node's score rank, then
@@ -520,7 +587,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // frontierIndex here is PARTIAL progress within the current (unfinished) phase --
                 // same rationale as the outer checks above, just crediting an in-progress phase
                 // instead of a fully-completed one.
-                if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || workMeter.units >= (prep._workCap ?? Infinity)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
+                if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || prep._workMeter.units >= (prep._workCap ?? Infinity)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
                 await yieldIfNeeded();
             }
             if (_BEAM_DEBUG) _dbgFrontierNodes++;
@@ -528,9 +595,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             // Reconstruct path from parent-pointer chain into _scratch.
             // node.depth stores path length-1, so one traversal suffices (no length-count pass).
             const len = node.depth + 1;
-            _scratch.length = len;
-            let cur: BeamNode = node;
-            for (let i = len - 1; i >= 0; i--) { _scratch[i] = cur.key; cur = cur.prev as BeamNode; }
+            _reconstructBeamPath(node, _scratch);
 
             // Diff ws's current live path against the reconstructed target path: undo the
             // divergent suffix of what's currently loaded, then apply only the new suffix.
@@ -562,11 +627,18 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
 
             const _t1 = _hrtNow();
             let neighbors = getNeighbors(pos, ws, level, prep);
-            if (pos === startKey && prep._forcedFirstStepKey != null) {
-                neighbors = neighbors.filter(k => k === prep._forcedFirstStepKey);
-            } else if (pos === startKey && (!cfg || cfg.PRUNE_MC_FORCED_FIRST_MOVE) && prep.gateForcedFirstStepKey.has(startKey)) {
-                const forced = prep.gateForcedFirstStepKey.get(startKey);
-                neighbors = neighbors.filter(k => k === forced);
+            if (pos === startKey) {
+                const beforeForced = research ? [...neighbors] : null;
+                const diagnostics: PruneDiagnostics | undefined = research ? { reached: {}, rejected: {} } : undefined;
+                neighbors = pruneFirstStepNeighbors(startKey, neighbors, prep, diagnostics);
+                if (beforeForced && beforeForced.length !== neighbors.length) for (const removed of beforeForced) {
+                    if (neighbors.includes(removed)) continue;
+                    const diagnosticNode: BeamNode = { key: removed, prev: node, depth: node.depth + 1, score: node.score,
+                        sc: '', insOrd: 0, treeOrd: 0 };
+                    hardPrunedForResearch!.push(diagnosticNode);
+                    hardPruneContexts!.push({ path: [..._reconstructBeamPath(diagnosticNode, [])],
+                        cause: '_forced-first-step', diagnostics });
+                }
             }
             const _beamNeighborCount = neighbors.length;
             // ws is fixed for this node's whole candidate batch — none of these siblings has
@@ -579,62 +651,34 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 const undo = applyMove(next, ws, level, prep, isJump);
                 const realLen = getRealLengthFromState(ws);
                 const rSteps  = level.reqLen - realLen;
-                let ok = realLen <= level.reqLen && ws.ints <= level.reqInt; // fundamental, always on
-
-                if (ok && (!cfg || cfg.PRUNE_MC_CEILING) && ws.mustCrossMask !== 0) {
-                    if (ws.ints + popcount(ws.mustCrossMask) > level.reqInt) ok = false;
+                // Beam keeps its deliberately wider connectivity schedule, but all rule
+                // ordering and verdicts come from the shared gauntlet so it cannot drift from DFS.
+                const runConnectivity = rSteps <= 20 || (realLen & 7) === 0;
+                const _tc = _BEAM_DEBUG && runConnectivity ? _hrtNow() : 0n;
+                const pruneDiagnostics: PruneDiagnostics | undefined = research ? { reached: {}, rejected: {} } : undefined;
+                const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity,
+                    { diagnostics: pruneDiagnostics });
+                if (_BEAM_DEBUG && runConnectivity) { _dbgConnNs += _hrtNow() - _tc; _dbgConnCalls++; }
+                if (verdict === 'solution') {
+                    // ws.path is already [startKey, ..., pos, next] — return it
+                    const sol = ws.path.slice();
+                    undoMove(undo, ws);
+                    if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex + _beamNeighborCount;
+                    if (_BEAM_DEBUG) _dbgCandGenNs += _hrtNow() - _t1;
+                    _dbgFlush('solved-candidate');
+                    return sol;
                 }
-                if (ok && next === level.goalKey) {
-                    if (isSolutionState(ws, level)) {
-                        // ws.path is already [startKey, ..., pos, next] — return it
-                        const sol = ws.path.slice();
-                        undoMove(undo, ws);
-                        if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex + _beamNeighborCount;
-                        if (_BEAM_DEBUG) _dbgCandGenNs += _hrtNow() - _t1;
-                        _dbgFlush('solved-candidate');
-                        return sol;
+                const ok = verdict === 'pass';
+                if (research) {
+                    const diagnosticNode: BeamNode = { key: next, prev: node, depth: node.depth + 1, score: node.score,
+                        sc: '', insOrd: 0, treeOrd: 0 };
+                    generatedForResearch!.push(diagnosticNode);
+                    if (!ok) {
+                        hardPrunedForResearch!.push(diagnosticNode);
+                        hardPruneContexts!.push({ path: [..._reconstructBeamPath(diagnosticNode, [])], verdict,
+                            cause: Object.keys(pruneDiagnostics!.rejected)[0] ?? (next === level.goalKey ? '_invalid-goal' : '_fundamental'),
+                            diagnostics: pruneDiagnostics });
                     }
-                    ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_DISTANCE_BOUND)) {
-                    const gd = getDistanceFromArray(prep.goalDistArr, next, prep.gridW);
-                    if (!Number.isFinite(gd) || gd > rSteps) ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_PARITY) && level.portalMap.size === 0) {
-                    const pp = keyParity(next);
-                    const gp = keyParity(level.goalKey);
-                    if ((realLen === 1 || level.blockSet.size >= 10) && ((pp ^ gp ^ (rSteps & 1)) !== 0)) ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_MUST_PASS_LB) && level.mustPassKeys.length > 0) {
-                    const lb = mustPassLowerBound(next, ws, level, prep);
-                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_MUST_CROSS_LB) && ws.mustCrossMask !== 0) {
-                    const lb = mustCrossLowerBound(next, ws, level, prep);
-                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_SURROUND_LB) && ws.surroundMask !== 0) {
-                    const lb = surroundLowerBound(next, ws, level, prep);
-                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_ADJ_TURN_LB) && ws.adjTurnMask !== 0) {
-                    const lb = adjTurnLowerBound(next, ws, level, prep);
-                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
-                }
-                if (ok && (!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
-                if (ok && (!cfg || cfg.PRUNE_MC_FORCED_NEIGHBOR) && ws.mustCrossMask !== 0 && mustCrossForcedNeighborDeadlocked(next, ws, level, prep)) ok = false;
-                if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
-                // Connectivity: check near end and every 8 path steps. rSteps<=20 is intentionally
-                // wider than dfsFromGate's/repair-search's rSteps<=10 -- tried narrowing it to 10
-                // (2026-07-23, commit eadfadc) to cut isConnected's ~20%-of-CPU cost, but a clean
-                // uncontended stress-corpus-1 before/after run found it cost 2 additional unsolved
-                // levels (R01014, R01271) with no offsetting speed win, so it was reverted. See
-                // reports/2026-07-23-solver-batch-speed-and-hint-provenance.md.
-                if (ok && (!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 20 || (realLen & 7) === 0)) {
-                    const _tc = _BEAM_DEBUG ? _hrtNow() : 0n;
-                    const _connOk = isConnected(next, ws, level, prep);
-                    if (_BEAM_DEBUG) { _dbgConnNs += _hrtNow() - _tc; _dbgConnCalls++; }
-                    if (!_connOk) ok = false;
                 }
                 if (ok) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template, curCtx);
@@ -688,6 +732,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             if (_BEAM_DEBUG) _dbgCandGenNs += _hrtNow() - _t1;
         }
         if (_BEAM_DEBUG) _dbgCandCount += cands.length;
+        if (generatedForResearch) emit('generated', generatedForResearch);
+        if (hardPrunedForResearch) emit('hard-pruned', hardPrunedForResearch, { rejections: hardPruneContexts });
+        if (research) emit('post-hard-prune', cands);
 
         if (cands.length === 0) break;
         await yieldIfNeeded();
@@ -704,22 +751,94 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             let pool = cands;
             const _t2 = _hrtNow();
             if (useStateDedup) {
+                // dm2 holds the runner-up ONLY for a key currently on a near-tie (see
+                // DEDUP_NEAR_TIE_MARGIN) — undefined for the overwhelming majority of keys, so this
+                // second map stays empty and costs nothing when no near-ties occur. Kept fully
+                // separate from `dm` (rather than a union-typed single map) specifically so `dm`
+                // itself is monomorphic (Map<string, BeamNode>, exactly as before) — a prior version
+                // that stored `BeamNode | BeamNode[]` in one map measured a genuine ~30% per-op
+                // slowdown from that alone, even with retention disabled, apparently from losing
+                // this map's monomorphic V8 shape. See reports/2026-08-15-connectivity-axis-
+                // exhausted-regression.md.
                 const dm = new Map<string, BeamNode>();
+                // STRATEGY_DEDUP_NEAR_TIE_RETENTION (production default-ON, 2026-08-15): lets a
+                // last-resort retry pass (orchestration.ts's DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION)
+                // rerun the same ladder with retention off — see that pass's own comment for why: a
+                // full-corpus A/B found this margin nets +27/-34 corpus-2 flips (not a rare edge
+                // case), all sharing the same beam5000-family signature, so the two directions need
+                // to be reachable independently rather than picking one as the permanent default.
+                const nearTieRetentionEnabled = DEDUP_NEAR_TIE_MARGIN > 0 && (!cfg || cfg.STRATEGY_DEDUP_NEAR_TIE_RETENTION);
+                const dm2: Map<string, BeamNode> | null = nearTieRetentionEnabled ? new Map() : null;
+                const dedupRemoved: BeamNode[] | null = research ? [] : null;
+                const dedupContexts: Record<string, unknown>[] | null = research ? [] : null;
                 for (const c of cands) {
                     const dk = `${c.key}|${c.sc}`;
                     const p = dm.get(dk);
-                    if (!p || c.score > p.score) dm.set(dk, c);
+                    if (!p || c.score > p.score) {
+                        if (p) {
+                            if (research) { dedupRemoved!.push(p); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(p, [])], competitorPath: [..._reconstructBeamPath(c, [])], removedScore: p.score, keptScore: c.score, key: dk }); }
+                            // p is being displaced by a strictly-better c. If p was itself within
+                            // margin of whatever it beat to get here, it's a near-tie runner-up worth
+                            // keeping alongside the new winner — same rationale as the direct branch
+                            // below, just reached via the demotion path instead.
+                            if (dm2 && p.score >= c.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(c.score)) dm2.set(dk, p);
+                            else if (dm2) dm2.delete(dk);
+                        }
+                        dm.set(dk, c);
+                    } else {
+                        if (research) { dedupRemoved!.push(c); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(c, [])], competitorPath: [..._reconstructBeamPath(p, [])], removedScore: c.score, keptScore: p.score, key: dk }); }
+                        // c lost to p, but only just — within margin, so retain it as p's runner-up
+                        // (rescues a genuinely-winning-but-locally-lower-scoring lineage from being
+                        // discarded outright on a single close comparison; see the report above for
+                        // the real level this was measured against). A THIRD near-tie candidate at
+                        // the same key simply competes for this one runner-up slot on score, same as
+                        // dm's own single-winner rule — deliberately not a general top-K, to keep the
+                        // per-candidate cost close to the original algorithm's.
+                        if (dm2 && c.score >= p.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(p.score)) {
+                            const runnerUp = dm2.get(dk);
+                            if (!runnerUp || c.score > runnerUp.score) dm2.set(dk, c);
+                        }
+                    }
                 }
-                if (dm.size < cands.length) pool = [...dm.values()];
+                if (dedupRemoved) emit('dedup-removed', dedupRemoved, { removals: dedupContexts });
+                if (dm2 && dm2.size > 0) {
+                    pool = [...dm.values()];
+                    for (const [dk, runnerUp] of dm2) if (dm.get(dk) !== runnerUp) pool.push(runnerUp);
+                } else if (dm.size < cands.length) pool = [...dm.values()];
             }
+            if (research) emit('post-production-dedup', pool);
             if (_BEAM_DEBUG) { _dbgDedupNs += _hrtNow() - _t2; }
             const _t3 = _hrtNow();
             pool.sort((a, b) => b.score - a.score);
             if (_BEAM_DEBUG) { _dbgSortNs += _hrtNow() - _t3; }
             await yieldIfNeeded();
-            frontier = effectiveDiverseBeam ? _diverseSelect(pool, beamWidth) : pool.slice(0, beamWidth);
+            const widthSelected = pool.slice(0, beamWidth);
+            frontier = effectiveDiverseBeam ? _diverseSelect(pool, beamWidth) : widthSelected;
+            // Diverse selection is the production retention decision, not a score-width cull
+            // followed by a second chance. Report only candidates absent from the actual result;
+            // otherwise support would falsely disappear at the provisional slice and reappear.
+            const retained = research && effectiveDiverseBeam ? new Set(frontier) : null;
+            const actuallyCulled = research && pool.length > beamWidth
+                ? (retained ? pool.filter(c => !retained.has(c)) : pool.slice(beamWidth)) : null;
+            if (actuallyCulled) emit(effectiveDiverseBeam ? 'diversity-culled' : 'score-width-culled', actuallyCulled, {
+                beamWidth, cutoffScore: pool[beamWidth - 1]?.score ?? null,
+                firstCulledScore: pool[beamWidth]?.score ?? null,
+                equalScoreAtCutoff: pool.filter(c => c.score === pool[beamWidth - 1]?.score).length,
+                stableOrderAdmission: pool[beamWidth - 1]?.score === pool[beamWidth]?.score,
+                // Observation-only forensic context. The lineage observer immediately reduces this
+                // to supported ranks/families, so compact artifacts do not retain the whole pool.
+                rankedPool: pool.map((c, rank) => ({ path: [..._reconstructBeamPath(c, [])],
+                    rank: rank + 1, score: c.score, insertionOrder: c.insOrd })),
+                culled: actuallyCulled.map(c => ({ path: [..._reconstructBeamPath(c, [])], rank: pool.indexOf(c) + 1,
+                    score: c.score, scoreMarginToCutoff: (pool[beamWidth - 1]?.score ?? c.score) - c.score })),
+            });
+            if (research) emit(effectiveDiverseBeam ? 'post-diversity-selection' : 'post-score-width-cull', frontier);
         } else {
             frontier = cands;
+            if (research) {
+                emit('post-production-dedup', frontier);
+                emit('post-score-width-cull', frontier);
+            }
         }
     }
     _dbgFlush('exhausted');
@@ -727,4 +846,3 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     if (out) out.timedOut = false;
     return null;
 }
-

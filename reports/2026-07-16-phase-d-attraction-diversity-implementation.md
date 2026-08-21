@@ -1,5 +1,11 @@
 # Phase D implementation: the attraction-diversity last-resort pass (2026-07-16)
 
+> **Status:** concluded-positive
+> **Last evidence:** 2026-08-07 — sequential-widening disposition in the live queue
+> **Decision:** keep the shipped single-flag, 1.0-budget pass; do not widen or add sequential
+> per-flag passes without a cheap selector or isolation mechanism
+> **Remaining gate:** none
+
 ## Goal
 
 `reports/2026-07-16-phase-d-fragile-group-ablation-diagnosis.md` found that 5 levels in the
@@ -181,17 +187,24 @@ was derived entirely from non-repair-gated levels, so no estimate is offered for
   denser variant sets — a different, arguably more representative population than Phase C's
   120/477 variant-solve-rate figure, and the two shouldn't be conflated.
 
-## Follow-ups (still not done)
+## Historical follow-ups — resolved
+
+These were the open questions at implementation time. The larger independent evaluation in
+[`2026-07-17-attraction-diversity-fraction-and-flag-widening-evaluation.md`](2026-07-17-attraction-diversity-fraction-and-flag-widening-evaluation.md)
+tested the budget increase and combined widening; neither justified a production change. The
+remaining sequential shape was later closed on cost/evidence in
+[`docs/future-work.md`](../docs/future-work.md#older-loose-thread-triage-2026-08-07): up to five
+extra full passes are not worth buying without a cheap selector or isolation mechanism.
 
 - Widening `ATTRACTION_DIVERSITY_CANDIDATE_FLAGS` to the other diagnosed culprits
   (`SCORE_OBJECTIVE_ATTRACTION`, `SCORE_INTERSECTION_SETUP`, `SCORE_SURROUND_URGENCY`,
   `SCORE_PERIMETER_BIAS`) would need either multiple sequential sub-passes (each its own budget
-  slice) or a combined single pass with all candidates off at once — untested, and the marginal
-  corpus-wide benefit vs. cost hasn't been measured for either shape.
+  slice) or a combined single pass with all candidates off at once. The combined shape was later
+  measured; the sequential shape is deliberately closed under the disposition above.
 - This session's verification covers a 30-level `dfs-plain` sample plus the 6 known-rescuable
   variants plus the published-corpus regression check — not a full stress-corpus-2 before/after
-  sweep. That would be the natural next step before considering this more than a verified
-  prototype, and would replace the rough estimate above with a real count.
+  sweep. The subsequent 100-level independent test was sufficient to reject the proposed constant
+  changes; a full sweep is no longer a gate for the unchanged production behavior.
 
 ## Follow-up closure (same day): `portfolio-solve-sweep.mjs` cost-control flag
 

@@ -1,0 +1,89 @@
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 save-hints=true
+  adaptive budgets: mult=3x floor=2,000,000 unsolved=(no cap) | 4 known-solved scaled (min 2,000,000 / med 30,000,135 / max 195,455,085 nodes), 1 uncapped
+  winner-first: normal + seeded-repair winners (shares solve budget) | 0/5 levels will be primed
+  [1/5] L88 (R01685) ok=✓ legacy [hint saved]
+  [2/5] L89 (R01689) ok=✓ legacy [hint saved]
+  [3/5] L90 (R01696) ok=✓ legacy [hint saved]
+  [4/5] L91 (R01737) ok=✓ legacy [hint saved]
+  [5/5] L87 (R01675) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-18.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-18-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 4/5 levels will be primed
+  [1/5] L88 (R01685) ok=✓ legacy [primed] [hint saved]
+  [2/5] L89 (R01689) ok=✓ legacy [primed] [hint saved]
+  [3/5] L90 (R01696) ok=✓ legacy [primed] [hint saved]
+  [4/5] L91 (R01737) ok=✓ legacy [primed] [hint saved]
+  [5/5] L87 (R01675) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-18.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-18-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 enable-flags=STRATEGY_REPAIR_TURN_BIAS save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 4/5 levels will be primed
+  [1/5] L88 (R01685) ok=✓ legacy [primed] [hint saved]
+  [2/5] L89 (R01689) ok=✓ legacy [hint saved]
+  [3/5] L90 (R01696) ok=✓ legacy [primed] [hint saved]
+  [4/5] L91 (R01737) ok=✓ legacy [primed] [hint saved]
+  [5/5] L87 (R01675) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-18.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-18-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 enable-flags=STRATEGY_REPAIR_TURN_BIAS save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 3/5 levels will be primed
+  [1/5] L88 (R01685) ok=✓ legacy [primed] [hint saved]
+  [2/5] L89 (R01689) ok=✓ legacy [hint saved]
+  [3/5] L90 (R01696) ok=✓ legacy [primed] [hint saved]
+  [4/5] L91 (R01737) ok=✓ legacy [primed] [hint saved]
+  [5/5] L87 (R01675) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-18.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-18-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 enable-flags=STRATEGY_REPAIR_TURN_BIAS save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 3/5 levels will be primed
+  [1/5] L88 (R01685) ok=✓ legacy [primed] [hint saved]
+  [2/5] L89 (R01689) ok=✓ legacy [hint saved]
+  [3/5] L90 (R01696) ok=✓ legacy [primed] [hint saved]
+  [4/5] L91 (R01737) ok=✓ legacy [primed] [hint saved]
+  [5/5] L87 (R01675) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-18.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-18-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 enable-flags=STRATEGY_REPAIR_TURN_BIAS save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 3/5 levels will be primed
+  [1/5] L88 (R01685) ok=✓ legacy [primed] [hint saved]
+  [2/5] L89 (R01689) ok=✓ legacy [hint saved]
+  [3/5] L90 (R01696) ok=✓ legacy [primed] [hint saved]
+  [4/5] L91 (R01737) ok=✓ legacy [primed] [hint saved]
+  [5/5] L87 (R01675) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-18.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-18-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=86400000ms node-budget=50000000 workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 4/5 levels will be primed
+  [1/5] L88 (R01685) ok=✓ legacy [primed] [hint saved]
+  [2/5] L89 (R01689) ok=✓ legacy [primed] [hint saved]
+  [3/5] L90 (R01696) ok=✓ legacy [primed] [hint saved]
+  [4/5] L91 (R01737) ok=✓ legacy [primed] [hint saved]
+  [5/5] L87 (R01675) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-18.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-18-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=86400000ms node-budget=50000000 workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 4/5 levels will be primed
+  [1/5] L88 (R01685) ok=✓ legacy [primed] [hint saved]
+  [2/5] L89 (R01689) ok=✓ legacy [primed] [hint saved]
+  [3/5] L90 (R01696) ok=✓ legacy [primed] [hint saved]
+  [4/5] L91 (R01737) ok=✓ legacy [primed] [hint saved]
+  [5/5] L87 (R01675) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-18.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-18-summary.md

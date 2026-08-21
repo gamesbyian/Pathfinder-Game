@@ -1,61 +1,24 @@
 import { defineConfig } from 'vitest/config';
 
-// Vitest runs the migrated unit/integration suites (modernization-plan §6 / codebase-quality-review
-// #6). These were ~33 hand-rolled `node scripts/*-unit-tests.mjs` files on a homegrown register/run
-// harness; they now use Vitest's `test()` + `node:assert` and are discovered here.
-//
-// They all run DOM-free (they did under plain `node`), so a single `node` environment covers every
-// suite — no jsdom/happy-dom split needed. Node-run validators that aren't unit tests
-// (hint-path-oracle, validate-bundled-levels, firestore-rules, startup-smoke, loader,
-// data-asset-runtime-smoke) stay as `node` scripts — see package.json `test:node`.
+// `*-unit-tests.mjs` is the positive Vitest convention for script-level unit suites.
+// Standalone Node/CLI harnesses use `*-node-test.mjs` and are owned by `test:node`.
+
 export default defineConfig({
     test: {
         environment: 'node',
         include: [
-            // Colocated, type-checked unit suites (codebase-quality-followup-plan §4 migration).
             'modules/**/*.test.ts',
-            // Suites not yet migrated + node-harness hold-outs still under scripts/.
             'scripts/**/*-unit-tests.mjs',
             'scripts/path-state-invariant-tests.mjs',
         ],
-        exclude: [
-            // Legacy inline-harness hold-out (browser-adapter IIFE structure) — still a node script.
-            'scripts/loader-unit-tests.mjs',
-            // CLI-driving integration tests (execFile + assert + main().catch()), not vitest test()/
-            // describe() suites — matched by the *-unit-tests.mjs include glob above by name only.
-            'scripts/hint-workbench-unit-tests.mjs',
-            'scripts/hint-diversification-unit-tests.mjs',
-            'scripts/hint-corpus-expand-unit-tests.mjs',
-            'scripts/hint-complete-enumeration-sharded-unit-tests.mjs',
-            'scripts/family-generate-unit-tests.mjs',
-            'scripts/family-analyze-unit-tests.mjs',
-            'scripts/portfolio-solve-sweep-lib-unit-tests.mjs',
-            'scripts/portfolio-sweep-reports-to-benchmark-unit-tests.mjs',
-            // Same pre-existing-gap pattern as the others above (plain node:assert + a hand-rolled
-            // runner/exit-code, not vitest test()/describe()) — run via `npm run
-            // test:hint-cost-drift-lib` (part of test:node), not vitest's own discovery.
-            'scripts/stress/hint-cost-drift-lib-unit-tests.mjs',
-            // Same pattern again (node:test + node:assert, run via `npm run test:req-length-sweep-lib`
-            // under test:node). Landed on main without the exclusion, so vitest collection failed on
-            // it — a red `npm run ci` independent of this branch's changes.
-            'scripts/req-length-sweep-lib-unit-tests.mjs',
-            // Pre-existing gap: matches the *-unit-tests.mjs glob above but was never migrated to
-            // vitest's test() API (plain node:assert + a main().catch() entrypoint, run directly via
-            // `node` under npm run test:hint-workbench / test:node) — vitest collection always fails
-            // it with "No test suite found", independent of the file's own assertions passing.
-            'scripts/hint-workbench-unit-tests.mjs',
-            'node_modules/**',
-            'dist/**',
-        ],
-        // Solver suites can solve real levels; give them headroom over the 5s default.
-        testTimeout: 60000,
+        exclude: ['node_modules/**', 'dist/**'],
+        // Solver suites can solve/exhaustively enumerate real or synthetic states; hosted-runner
+        // variance has exceeded 60s for the deadlock-soundness property.
+        testTimeout: 90000,
         hookTimeout: 60000,
 
-        // Coverage (Initiative B). Off by default — `vitest run` (test:unit) stays fast; only
-        // `test:coverage` (--coverage) instruments. Scope is the **pure logic surface** (domain/
-        // runtime/solver/state + the extracted input cores), NOT the DOM/adapter shells (render/,
-        // ui/, input controllers, engine/editor/persistence wiring), which are verified by the
-        // Playwright e2e suites instead. See docs/testing.md "Coverage" for the recorded baseline.
+        // Coverage is opt-in through `test:coverage`. The config is the authority for current
+        // scope and thresholds; docs/testing.md intentionally does not duplicate the percentages.
         coverage: {
             provider: 'v8',
             reporter: ['text-summary', 'json-summary'],
@@ -69,16 +32,10 @@ export default defineConfig({
                 'modules/input/*-core.ts',
             ],
             exclude: [
-                'modules/**/*.test.ts',         // the tests themselves, not source under test
-                'modules/**/types.ts',          // type-only modules (no executable code)
-                'modules/solver/testing-api.ts',// test/debug helpers
+                'modules/**/*.test.ts',
+                'modules/**/types.ts',
+                'modules/solver/testing-api.ts',
             ],
-            // Soft floor: a regression that drops coverage below these aggregates fails CI.
-            // Ratcheted by the hardening plan §1 coverage pass (measured baseline: statements
-            // 86.2 / branches 75.3 / functions 94.8 / lines 91.9 — see docs/testing.md). The
-            // floors sit a few points below measured so normal solver-suite jitter doesn't trip
-            // them; the extracted input cores carry a strict per-file floor (they are 100% /
-            // ~97% covered and must stay that way).
             thresholds: {
                 statements: 82,
                 branches: 72,

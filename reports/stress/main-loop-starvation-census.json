@@ -1,0 +1,110 @@
+{
+ "corpus-2": {
+  "unsolved": {
+   "levels": 975,
+   "totalAttempts": 11572,
+   "starvedAttempts": 3041,
+   "starvedAttemptRate": 0.26278949187694434,
+   "levelsWithStarved": 849,
+   "levelsWithStarvedRate": 0.8707692307692307,
+   "starvedByFamily": {
+    "dfs": 2015,
+    "beam": 294,
+    "repair": 732
+   },
+   "levelsRecoverable": 34,
+   "recoverableByFamily": {
+    "dfs": 10,
+    "repair": 20,
+    "beam": 4
+   },
+   "recoverableDfsOrBeam": 14,
+   "recoverableRepairOnly": 20,
+   "recoverableIds": [
+    "R00477",
+    "R00632",
+    "R00720",
+    "R01420",
+    "R01724",
+    "R01778",
+    "R01860",
+    "R02242",
+    "R02252",
+    "R02296",
+    "R02437",
+    "R02479",
+    "R02488",
+    "R02533",
+    "R02546",
+    "R02553",
+    "R02569",
+    "R02586",
+    "R02654",
+    "R02716",
+    "R02816",
+    "R02876",
+    "R02900",
+    "R02931",
+    "R02992",
+    "R03031",
+    "R03042",
+    "R03071",
+    "R03173",
+    "R03192",
+    "R03275",
+    "R03293",
+    "R03329",
+    "R03331"
+   ]
+  },
+  "solvedControl": {
+   "levels": 725,
+   "totalAttempts": 948,
+   "starvedAttempts": 43,
+   "starvedAttemptRate": 0.04535864978902954,
+   "levelsWithStarved": 6,
+   "levelsWithStarvedRate": 0.008275862068965517,
+   "starvedByFamily": {
+    "dfs": 41,
+    "repair": 2
+   },
+   "levelsRecoverable": 0,
+   "recoverableByFamily": {},
+   "recoverableDfsOrBeam": 0,
+   "recoverableRepairOnly": 0,
+   "recoverableIds": []
+  }
+ },
+ "corpus-1": {
+  "unsolved": {
+   "levels": 6,
+   "totalAttempts": 53,
+   "starvedAttempts": 4,
+   "starvedAttemptRate": 0.07547169811320754,
+   "levelsWithStarved": 3,
+   "levelsWithStarvedRate": 0.5,
+   "starvedByFamily": {
+    "dfs": 4
+   },
+   "levelsRecoverable": 0,
+   "recoverableByFamily": {},
+   "recoverableDfsOrBeam": 0,
+   "recoverableRepairOnly": 0,
+   "recoverableIds": []
+  },
+  "solvedControl": {
+   "levels": 96,
+   "totalAttempts": 97,
+   "starvedAttempts": 0,
+   "starvedAttemptRate": 0,
+   "levelsWithStarved": 0,
+   "levelsWithStarvedRate": 0,
+   "starvedByFamily": {},
+   "levelsRecoverable": 0,
+   "recoverableByFamily": {},
+   "recoverableDfsOrBeam": 0,
+   "recoverableRepairOnly": 0,
+   "recoverableIds": []
+  }
+ }
+}

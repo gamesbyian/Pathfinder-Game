@@ -96,7 +96,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
     return [k, v.join('=')];
 }));
 const COUNT = Number(args.get('--count') || 2000);
-const MASTER_SEED = Number(args.get('--master-seed') || 20260709);
+const MASTER_SEED = Number(args.get('--master-seed') ?? 20260709);
 const OUT_FILE = args.get('--out') || 'data/stress/stress-levels-random.json';
 const VERBOSE = args.has('--verbose');
 const APPEND = args.has('--append');

@@ -89,6 +89,31 @@ test('SOLVE result has attempts array', async () => {
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     assert.ok(Array.isArray(posts[0].attempts));
+    assert.equal(posts[0].status, 'success');
+    assert.equal(posts[0].attempts.every(a => typeof a.outcome === 'string'), true);
+});
+
+test('SOLVE result carries the full SolveResult shape, not a fixed subset (regression, fixed 2026-08-20)', async () => {
+    // buildSolveWorkerResult used to include only ok/status/solution/elapsedMs/nodesExpanded/
+    // attempts/deadlineTruncated, silently dropping every other SolveResult field -- breaking the
+    // worker client's own "drop-in swap for on-thread solving" promise for any caller reading them.
+    const posts = [];
+    const cancelledIds = new Set();
+    await handleWorkerMessage(
+        { type: 'SOLVE', id: 42, levelRaw: SIMPLE_RAW, budgetMs: 10000 },
+        { postBack: (m) => posts.push(m), cancelledIds }
+    );
+    const result = posts[0];
+    assert.ok(Array.isArray(result.solutions), 'solutions must be present');
+    assert.equal(typeof result.workSpent, 'number', 'workSpent must be present');
+    assert.equal(typeof result.workBudget, 'number', 'workBudget must be present');
+    // nodeBudgetReached/solvedByPrime/techniqueLifecycle/schedulerMode/portfolio are all legitimately
+    // undefined on an ordinary successful solve (their own SolveResult fields are optional) -- the
+    // point is they're no longer STRIPPED by the serializer, which `'x' in result` (not a value
+    // check) verifies regardless of whether this particular solve populated them.
+    for (const field of ['nodeBudgetReached', 'solvedByPrime', 'techniqueLifecycle', 'schedulerMode', 'portfolio']) {
+        assert.ok(field in result, `${field} must survive the worker result serializer`);
+    }
 });
 
 test('SOLVE with pre-cancelled id posts RESULT with cancelled:true', async () => {
@@ -115,6 +140,35 @@ test('SOLVE with invalid raw level posts ERROR message', async () => {
     assert.equal(posts[0].type, 'ERROR');
     assert.equal(posts[0].id, 5);
     assert.equal(typeof posts[0].message, 'string');
+});
+
+test('SOLVE threads solveOpts through to the real solveLevel() call (regression, fixed 2026-08-20)', async () => {
+    // Before the fix, the worker's SOLVE handler only ever passed { timeBudgetMs, yieldFn } to
+    // solveLevel() -- any other option the caller sent was silently discarded. lifecycleTelemetry
+    // is a clean, verifiable signal: it only ever appears on the result when solveLevel() actually
+    // received it, so a populated techniqueLifecycle here proves solveOpts genuinely reached the
+    // real solver, not just that the worker accepted the field without using it.
+    const posts = [];
+    const cancelledIds = new Set();
+    await handleWorkerMessage(
+        { type: 'SOLVE', id: 40, levelRaw: SIMPLE_RAW, budgetMs: 10000, solveOpts: { lifecycleTelemetry: true } },
+        { postBack: (m) => posts.push(m), cancelledIds }
+    );
+    assert.equal(posts[0].type, 'RESULT');
+    assert.equal(posts[0].ok, true);
+    assert.ok(posts[0].techniqueLifecycle && typeof posts[0].techniqueLifecycle === 'object',
+        'lifecycleTelemetry from solveOpts must have reached the real solveLevel() call');
+});
+
+test('SOLVE omitting solveOpts entirely still works (backward compatible)', async () => {
+    const posts = [];
+    const cancelledIds = new Set();
+    await handleWorkerMessage(
+        { type: 'SOLVE', id: 41, levelRaw: SIMPLE_RAW, budgetMs: 10000 },
+        { postBack: (m) => posts.push(m), cancelledIds }
+    );
+    assert.equal(posts[0].type, 'RESULT');
+    assert.equal(posts[0].ok, true);
 });
 
 test('cancelled id is cleaned up after SOLVE completes', async () => {
@@ -285,6 +339,37 @@ test('createSolverWorkerClient with mock Worker returns object with solve and te
         if (origWorker === undefined) delete globalThis.Worker;
         else globalThis.Worker = origWorker;
     }
+});
+
+test('client.solve() forwards the full SolveOpts as solveOpts, minus timeBudgetMs/yieldFn/functions (regression, fixed 2026-08-20)', () => {
+    // Before the fix, only { timeBudgetMs, yieldFn } ever reached postMessage -- ablation,
+    // nodeBudget, workBudget, disableExtraBudgetPasses, and every other SolveOpts field were
+    // silently dropped, breaking the "drop-in swap for on-thread solving" promise for any caller
+    // relying on them.
+    const sent = [];
+    const fakeWorker = { onmessage: null, onerror: null, postMessage: (m) => sent.push(m), terminate() {} };
+    const client = createSolverWorkerClient(fakeWorker);
+    const ablation = { STRATEGY_REPAIR_PROBE: false };
+    const attemptSearchForTesting = () => null;
+    client.solve({ fake: 'level' }, {
+        timeBudgetMs: 5000,
+        yieldFn: async () => {},
+        ablation,
+        nodeBudget: 12345,
+        disableExtraBudgetPasses: true,
+        lifecycleTelemetry: true,
+        attemptSearchForTesting,
+    });
+    assert.equal(sent.length, 1);
+    assert.equal(sent[0].type, 'SOLVE');
+    assert.equal(sent[0].budgetMs, 5000, 'timeBudgetMs still reaches the dedicated budgetMs field');
+    assert.deepEqual(sent[0].solveOpts.ablation, ablation);
+    assert.equal(sent[0].solveOpts.nodeBudget, 12345);
+    assert.equal(sent[0].solveOpts.disableExtraBudgetPasses, true);
+    assert.equal(sent[0].solveOpts.lifecycleTelemetry, true);
+    assert.ok(!('timeBudgetMs' in sent[0].solveOpts), 'timeBudgetMs must not be duplicated into solveOpts');
+    assert.ok(!('yieldFn' in sent[0].solveOpts), 'yieldFn cannot cross structured-clone and must be stripped');
+    assert.ok(!('attemptSearchForTesting' in sent[0].solveOpts), 'function-valued options must be stripped, not just yieldFn specifically');
 });
 
 test('createSolverWorkerClient accepts an already-constructed Worker instance', async () => {

@@ -1,51 +1,43 @@
 # Reports — index
 
-Generated, human-readable analysis output from any tool — as opposed to [`logs/`](../logs/)'s raw
-per-run data (see that directory's own `README.md`). This directory had no top-level index before;
-this file exists to orient a reader (human or AI agent) who lands here without prior context.
+Human-readable analysis and investigation output. Raw per-run material belongs in [`logs/`](../logs/).
 
-## The solver research narrative (loose dated files at this level)
+New or materially revised human-authored investigations use the [`Status / Last evidence / Decision / Remaining gate` convention](../docs/investigation-report-conventions.md). Generated summaries use their generator/run metadata instead.
 
-The ~35 `YYYY-MM-DD-<topic>.md` files directly in this directory are individual investigation
-writeups from the ongoing push toward full stress-corpus solvability. **Don't try to reconstruct
-the story by reading filenames** — start at
-[`docs/solver-development-roadmap.md`](../docs/solver-development-roadmap.md) (the active,
-maintained campaign narrative) and [`docs/solver-architecture.md`](../docs/solver-architecture.md)
-(the durable reference, which folds in verified conclusions), both of which cite the large
-majority of these files by exact path at the point in the narrative they matter. A file not cited
-from either doc is either a self-contained negative/null result (title usually says so) or
-superseded by a later file in the same topic cluster — check the file's own opening paragraph,
-which typically states what it follows up on or supersedes.
+## Dated solver investigations
 
-`CLAUDE.md`'s Solver Architecture gotchas section also cites several of these directly for
-specific, still-relevant lessons (not just narrative history).
+Loose `YYYY-MM-DD-<topic>.md` files are evidence, not a live queue. Do not reconstruct current priorities chronologically from them. Use [`docs/README.md`](../docs/README.md) to route to the current topic authority, especially:
+
+- [`solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md): ranked optimization queue.
+- [`solver-research-operating-model.md`](../docs/solver-research-operating-model.md): research method and promotion rules.
+- [`solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md): retained/default-off mechanism dispositions.
+- [`future-work.md`](../docs/future-work.md): broader deferred/reopen ideas.
+- [`variant-level-research.md`](../docs/variant-level-research.md): family/variant evidence.
+- [`solver-architecture.md`](../docs/solver-architecture.md): durable implementation reference.
+
+A dated report can remain valid evidence after its recommendation is superseded. Prefer its explicit status/decision block, then reconcile with the current topic reference before acting.
+
+Current reconciliation note: [`2026-08-20-technique-census-reconciliation.md`](2026-08-20-technique-census-reconciliation.md) records successful population census run `32240161854`; [`2026-08-19-technique-census-design.md`](2026-08-19-technique-census-design.md) is its design/calibration record. Older pre-dispatch wording there is historical.
+
+Repository-wide older loose-thread inventory: [`2026-08-06-documentation-loose-threads-audit.md`](2026-08-06-documentation-loose-threads-audit.md), itself dated evidence.
 
 ## Subdirectories
 
-- [`families/`](families/) — raw per-level backing data for the sibling/cousin research system
-  (`docs/sibling-cousin-system.md`). Has its own [`README.md`](families/README.md) indexing all
-  41 parent-level ids and pointing to the 5 curated synthesis docs.
-- [`portfolio/`](portfolio/) — generated outputs for the fast-portfolio-scheduler experiment
-  (`docs/fast-portfolio-scheduler-plan.md`). Has its own [`README.md`](portfolio/README.md), a
-  running chronological log of every measurement and the command that produced it. The verdict
-  lives in `portfolio/portfolio-scheduler-decision.md`.
-- [`stress/`](stress/) — benchmark/novelty/solution-profile/witness-divergence outputs for the
-  stress-test corpora (`data/stress/README.md`). Several files here are live tooling inputs, not
-  just historical record — `solution-profile-published.json`/`-corpus1.json` and their
-  `-summary.md` pairs are read and auto-refreshed by `scripts/stress/solution-profile-compare.mjs`
-  (see `docs/solution-profile.md`); `witness-divergence-corpus1.json` is cited from
-  `docs/solver-improvement-research-notes.md`. Treat anything in this subdirectory as
-  potentially-load-bearing, not pure archive.
-- [`solver-determinism/`](solver-determinism/) — `determinism-report.md`, a standalone
-  investigation into flaky solve/strategy identity (`runRepairProbe`'s wall-clock-gated race),
-  cited from `docs/solver-architecture.md`'s "Wall-clock-gated search probes" section.
-- `hint-workbench/` — gitignored local-workflow output from `hints:workbench` runs (see
-  `docs/hint-workbench.md`); nothing here should be committed.
+- [`families/`](families/): family backing data and analyses. Current entry point: [`docs/variant-level-research.md`](../docs/variant-level-research.md).
+- [`portfolio/`](portfolio/): concluded fast-portfolio-scheduler experiment; verdict in `portfolio-scheduler-decision.md`.
+- [`stress/`](stress/): benchmark/profile/census and other stress outputs. Some are live tooling inputs; do not bulk-move/delete. See [`data/stress/README.md`](../data/stress/README.md).
+- [`solver-determinism/`](solver-determinism/): determinism investigation evidence.
+- `hint-workbench/`: gitignored local workbench output; do not commit.
 
-## Loose top-level data files
+## Loose top-level data
 
-- `solver-winning-attempts.json` — generated by `scripts/analyze-solver-winning-attempts.mjs`
-  (its hardcoded default `--output` path).
-- `hint-selection.json` — no generator script or doc reference currently traces to this file; its
-  provenance is unclear. Left in place rather than guessed at; worth asking whoever last touched
-  hint-selection tooling before treating it as either load-bearing or safe to delete.
+- `solver-winning-attempts.json`: generated by `scripts/analyze-solver-winning-attempts.mjs`.
+- `hint-selection.json`: legacy 160-level snapshot with no current generator/consumer; quarantined until checked for unique evidence, then archive or delete explicitly.
+
+## Report hygiene
+
+- Put chronology and measurements here, not in undated current-state docs.
+- Closed reports need an explicit decision and remaining gate (`none` when complete).
+- Link superseding reports both ways; do not rewrite old measurements as if they used later methods.
+- Promote durable conclusions into the current topic doc while leaving experiment detail here.
+- Check consumers before moving/deleting generated report collections; some are tooling inputs.

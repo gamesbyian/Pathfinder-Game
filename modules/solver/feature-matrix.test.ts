@@ -11,6 +11,10 @@ import { createSolver } from '../Solver.js';
 import { validateCandidatePath } from '../domain/path-validator.js';
 import { parseRawLevel } from '../domain/level-codec.js';
 import { PACK } from './encoding.js';
+import { prepLevel } from './prep.js';
+import { applyMove, createState } from './search-state.js';
+import { evaluatePrunedMove } from './prune-gauntlet.js';
+import type { PruneDiagnostics } from './prune-gauntlet.js';
 
 const solver = createSolver();
 const K = (x: number, y: number) => PACK(x - 1, y - 1);
@@ -123,9 +127,29 @@ test('dense near-Hamiltonian level engages the DFS ordering regime', async () =>
 test('infeasible level: solver reports failure rather than a bogus path', async () => {
     // Parity-impossible: gate and goal parities cannot meet in an odd reqLen. (3x3,
     // gate (1,1) parity 0, goal (3,3) parity 0, reqLen 5 → odd — unreachable exactly.)
-    const level = solver.prepareLevelForSolver(raw({
+    const impossibleRaw = raw({
         grid: { w: 3, h: 3 }, goal: { x: 3, y: 3 }, reqLen: 5, reqInt: 0,
-    }), { source: 'raw' });
+    });
+    const level = solver.prepareLevelForSolver(impossibleRaw, { source: 'raw' });
+    const prep = prepLevel(level);
+    const state = createState(K(1, 1), level, prep);
+    applyMove(K(2, 1), state, level, prep, false);
+    const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+    assert.equal(evaluatePrunedMove(K(2, 1), 1, state, level, prep,
+        { PRUNE_PARITY: true }, false, { diagnostics }), 'reject');
+    assert.equal(diagnostics.reached.PRUNE_PARITY, 1, 'integration fixture reaches the parity branch');
+    assert.equal(diagnostics.rejected.PRUNE_PARITY, 1, 'parity is the isolated first firing rule');
+
+    const feasible = solver.prepareLevelForSolver({ ...impossibleRaw, reqLen: 4 }, { source: 'raw' });
+    const feasiblePrep = prepLevel(feasible), feasibleState = createState(K(1, 1), feasible, feasiblePrep);
+    applyMove(K(2, 1), feasibleState, feasible, feasiblePrep, false);
+    const feasibleDiagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+    assert.equal(evaluatePrunedMove(K(2, 1), 1, feasibleState, feasible, feasiblePrep,
+        { PRUNE_PARITY: true }, false, { diagnostics: feasibleDiagnostics }), 'pass');
+    assert.equal(feasibleDiagnostics.reached.PRUNE_PARITY, 1);
+    assert.equal(feasibleDiagnostics.rejected.PRUNE_PARITY, undefined,
+        'the exact four-edge oracle path remains available');
+
     const result = await solver.solve(level, { timeBudgetMs: 2000 });
     assert.equal(result.ok, false);
     assert.equal(result.solution, null);

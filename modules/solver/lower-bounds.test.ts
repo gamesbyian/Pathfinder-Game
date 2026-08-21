@@ -2,8 +2,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { AXIS_H, KEY_SPACE, PACK } from './encoding.js';
+import { getDistanceFromArray } from './distance.js';
 import { IntHashMap } from './int-hash-map.js';
-import { mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
+import { MAX_MST_K, mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
 import { prepLevel } from './prep.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState } from './types.js';
@@ -98,8 +99,14 @@ test('prepLevel output can feed extracted lower-bound helpers', () => {
 
 // ── Hardening plan §1 additions: prune-fires / prune-does-not-fire behavior ──────
 import { normalizeRawLevel } from './normalization.js';
-import { createState, applyMove } from './search-state.js';
-import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, mustCrossForcedNeighborDeadlocked } from './lower-bounds.js';
+import { createState, applyMove, getNeighbors, undoMove } from './search-state.js';
+import { getRealLengthFromState } from './solution.js';
+import { validateCandidatePath } from '../domain/path-validator.js';
+import { isConnected } from './topology.js';
+import { evaluatePrunedMove } from './prune-gauntlet.js';
+import type { PruneDiagnostics, PruneId } from './prune-gauntlet.js';
+import { normalizeAblationConfig } from './orchestration.js';
+import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, mustCrossForcedNeighborDeadlocked, mustCrossNeighborBudgetDeadlocked } from './lower-bounds.js';
 
 const W = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 
@@ -114,6 +121,13 @@ function wireLevel(overrides: any = {}) {
   });
 }
 
+/** Run exactly one configurable gauntlet rule against an already-reached test state. */
+function diagnoseRule(id: PruneId, next: number, state: SolverSearchState, level: NormalizedLevel, prep: ReturnType<typeof prepLevel>) {
+  const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+  const verdict = evaluatePrunedMove(next, getRealLengthFromState(state), state, level, prep, { [id]: true }, false, { diagnostics });
+  return { verdict, reached: diagnostics.reached[id] ?? 0, rejected: diagnostics.rejected[id] ?? 0 };
+}
+
 test('mustPassLowerBound is Infinity (prune fires) when the objective is sealed off', () => {
   const sealed = wireLevel({
     gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },
@@ -123,6 +137,13 @@ test('mustPassLowerBound is Infinity (prune fires) when the objective is sealed 
   const prep = prepLevel(sealed);
   const st = createState(W(1, 1), sealed, prep);
   assert.equal(mustPassLowerBound(W(1, 1), st, sealed, prep), Infinity);
+  assert.deepEqual(diagnoseRule('PRUNE_MUST_PASS_LB', W(1, 1), st, sealed, prep),
+    { verdict: 'reject', reached: 1, rejected: 1 });
+
+  const open = wireLevel({ goal: { x: 5, y: 1 }, mustPass: [{ x: 3, y: 1 }], reqLen: 4 });
+  const openPrep = prepLevel(open), openState = createState(W(1, 1), open, openPrep);
+  assert.deepEqual(diagnoseRule('PRUNE_MUST_PASS_LB', W(1, 1), openState, open, openPrep),
+    { verdict: 'pass', reached: 1, rejected: 0 }, 'feasible exact path is not removed');
 });
 
 test('mustCrossLowerBound is Infinity (prune fires) when the objective is sealed off', () => {
@@ -134,6 +155,13 @@ test('mustCrossLowerBound is Infinity (prune fires) when the objective is sealed
   const prep = prepLevel(sealed);
   const st = createState(W(1, 1), sealed, prep);
   assert.equal(mustCrossLowerBound(W(1, 1), st, sealed, prep), Infinity);
+  assert.deepEqual(diagnoseRule('PRUNE_MUST_CROSS_LB', W(1, 1), st, sealed, prep),
+    { verdict: 'reject', reached: 1, rejected: 1 });
+
+  const open = wireLevel({ goal: { x: 5, y: 1 }, mustCross: [{ x: 3, y: 2 }], reqLen: 8, reqInt: 1 });
+  const openPrep = prepLevel(open), openState = createState(W(1, 1), open, openPrep);
+  assert.deepEqual(diagnoseRule('PRUNE_MUST_CROSS_LB', W(1, 1), openState, open, openPrep),
+    { verdict: 'pass', reached: 1, rejected: 0 }, 'ample-budget control reaches and passes the rule');
 });
 
 test('MST joint bounds are tighter than the max single-objective bound when cells spread out', () => {
@@ -256,9 +284,13 @@ test('surroundLowerBound: zero when satisfied, positive when work remains, Infin
   const sPrep = prepLevel(sealed);
   const sSt = createState(W(1, 1), sealed, sPrep);
   assert.equal(surroundLowerBound(W(1, 1), sSt, sealed, sPrep), Infinity);
+  assert.deepEqual(diagnoseRule('PRUNE_SURROUND_LB', W(1, 1), sSt, sealed, sPrep),
+    { verdict: 'reject', reached: 1, rejected: 1 });
+  assert.deepEqual(diagnoseRule('PRUNE_SURROUND_LB', W(1, 1), st, l, prep),
+    { verdict: 'pass', reached: 1, rejected: 0 }, 'reachable surround work is a feasible negative control');
 });
 
-test('adjTurnLowerBound: zero when satisfied, positive when remaining, Infinity when unreachable', () => {
+test('adjTurnLowerBound: zero when satisfied, positive when remaining, and rejects when over budget', () => {
   const l = wireLevel({
     grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },
     landmarks: [{ x: 3, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'either' }],
@@ -271,6 +303,19 @@ test('adjTurnLowerBound: zero when satisfied, positive when remaining, Infinity 
   const satisfied = createState(W(1, 1), l, prep);
   satisfied.adjTurnMask = 0;
   assert.equal(adjTurnLowerBound(W(1, 1), satisfied, l, prep), 0);
+
+  const sealed = wireLevel({
+    grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },
+    blocks: [{ x: 4, y: 3 }, { x: 5, y: 2 }],
+    landmarks: [{ x: 5, y: 3, objectType: 'fountain', role: 'adjacentTurn', turn: 'either' }],
+    reqLen: 5,
+  });
+  const sealedPrep = prepLevel(sealed), sealedState = createState(W(1, 1), sealed, sealedPrep);
+  assert.ok(adjTurnLowerBound(W(1, 1), sealedState, sealed, sealedPrep) > sealed.reqLen);
+  assert.deepEqual(diagnoseRule('PRUNE_ADJ_TURN_LB', W(1, 1), sealedState, sealed, sealedPrep),
+    { verdict: 'reject', reached: 1, rejected: 1 });
+  assert.deepEqual(diagnoseRule('PRUNE_ADJ_TURN_LB', W(1, 1), st, l, prep),
+    { verdict: 'pass', reached: 1, rejected: 0 }, 'reachable adjacent-turn work survives');
 });
 
 // mustTurnDeadlocked: a still-pending must-turn cell whose edgeUsage already has both axis
@@ -289,6 +334,8 @@ test('mustTurnDeadlocked: false on a fresh, untouched must-turn cell', () => {
   const prep = prepLevel(l);
   const st = createState(W(2, 1), l, prep);
   assert.equal(mustTurnDeadlocked(st, prep), false);
+  assert.deepEqual(diagnoseRule('PRUNE_MUST_TURN_DEADLOCK', W(2, 1), st, l, prep),
+    { verdict: 'pass', reached: 1, rejected: 0 });
 });
 
 test('mustTurnDeadlocked: false after a straight pass-through (only one axis used)', () => {
@@ -309,6 +356,8 @@ test('mustTurnDeadlocked: true after a wrong-direction turn (both axes now used)
   applyMove(W(3, 2), st, l, prep, false); // exit east — ccw, not the required cw
   assert.equal(st.mustTurnMask, 1, 'wrong direction — still unsatisfied');
   assert.equal(mustTurnDeadlocked(st, prep), true, 'both axes now used — provably unsatisfiable');
+  assert.deepEqual(diagnoseRule('PRUNE_MUST_TURN_DEADLOCK', W(3, 2), st, l, prep),
+    { verdict: 'reject', reached: 1, rejected: 1 });
 });
 
 test('mustTurnDeadlocked: false after a correct-direction turn (requirement satisfied, not checked)', () => {
@@ -343,6 +392,8 @@ test('mustCrossForcedNeighborDeadlocked: false on a fresh, untouched must-cross 
   const prep = prepLevel(l);
   const st = createState(W(1, 1), l, prep);
   assert.equal(mustCrossForcedNeighborDeadlocked(W(1, 1), st, l, prep), false);
+  assert.deepEqual(diagnoseRule('PRUNE_MC_FORCED_NEIGHBOR', W(1, 1), st, l, prep),
+    { verdict: 'pass', reached: 1, rejected: 0 });
 });
 
 test('mustCrossForcedNeighborDeadlocked: false right after the first (V-axis) pass — both H neighbors still open', () => {
@@ -376,6 +427,8 @@ test('mustCrossForcedNeighborDeadlocked: true once a still-needed neighbor becom
   assert.equal(st.edgeUsage[W(2, 3)], 3, 'W neighbor now a hard wall — both axes spent');
   assert.equal(mustCrossForcedNeighborDeadlocked(W(1, 3), st, l, prep), true,
     'W was required for MCs still-pending H-pass and can never be entered again');
+  assert.deepEqual(diagnoseRule('PRUNE_MC_FORCED_NEIGHBOR', W(1, 3), st, l, prep),
+    { verdict: 'reject', reached: 1, rejected: 1 });
 });
 
 // This is the exact bug caught by replaying real solutions through search state (see the
@@ -447,4 +500,341 @@ test('STRATEGY_LOWER_BOUND_MEMO=false bypasses the caches with identical values'
     mustCrossLowerBound(PACK(0, 1), mcState, level, cached));
   assert.equal(uncached._mcLowerBoundCache, undefined, 'memo disabled — mc cache never created');
   assert.equal(cached._mcLowerBoundCache instanceof IntHashMap && cached._mcLowerBoundCache.size > 0, true);
+});
+
+test('MST scratch is sequence-independent across large, tiny, shifted, and original objective sets', () => {
+  const sets = [
+    Array.from({ length: MAX_MST_K }, (_, i) => PACK(i % 5, (i / 5) | 0)),
+    [],
+    [PACK(2, 1)],
+    [PACK(4, 0), PACK(0, 2), PACK(3, 2), PACK(1, 0)],
+  ];
+  const run = (keys: number[], cross: boolean) => {
+    const level = makeLevel({ grid: { w: 5, h: 4 }, goalKey: PACK(4, 3),
+      mustPassKeys: cross ? [] : keys, mustCrossKeys: cross ? keys : [] });
+    const prep = prepLevel(level);
+    prep._cfg = { STRATEGY_LOWER_BOUND_MEMO: false };
+    const state = makeState(cross ? {
+      mustCrossMask: (1 << keys.length) - 1, crossCounts: new Uint8Array(keys.length),
+    } : {});
+    return cross ? mustCrossLowerBound(PACK(0, 3), state, level, prep)
+      : mustPassLowerBound(PACK(0, 3), state, level, prep);
+  };
+  const baseline = sets.map(keys => [run(keys, false), run(keys, true)]);
+  for (const index of [0, 1, 2, 3, 0, 3, 2, 1, 0]) {
+    // Alternate owners as well as sizes: both remaining-index buffers feed the shared
+    // edge/union-find scratch, so this catches contamination at either layer.
+    assert.equal(run(sets[index], true), baseline[index][1]);
+    assert.equal(run(sets[index], false), baseline[index][0]);
+  }
+});
+
+test('MST declared capacity is accepted and capacity+1 uses the safe individual-bound fallback', () => {
+  const keys = Array.from({ length: MAX_MST_K + 1 }, (_, i) => PACK(i % 5, (i / 5) | 0));
+  const evaluate = (n: number) => {
+    const level = makeLevel({ grid: { w: 5, h: 4 }, goalKey: PACK(4, 3), mustPassKeys: keys.slice(0, n) });
+    const prep = prepLevel(level); prep._cfg = { STRATEGY_LOWER_BOUND_MEMO: false };
+    const pos = PACK(0, 3);
+    const actual = mustPassLowerBound(pos, makeState(), level, prep);
+    const individual = Math.max(...prep.mpDistArrs.map((dist, i) =>
+      getDistanceFromArray(dist, pos, prep.gridW) + prep.mustPassToGoalDist[i]));
+    return { actual, individual };
+  };
+  assert.ok(Number.isFinite(evaluate(MAX_MST_K).actual), 'capacity boundary enters MST safely');
+  const overflow = evaluate(MAX_MST_K + 1);
+  assert.ok(Number.isFinite(overflow.actual), 'overflow skips MST instead of overrunning fixed scratch');
+  assert.equal(overflow.actual, overflow.individual, 'overflow returns exactly the documented max-of-individual fallback');
+  assert.equal(overflow.actual, evaluate(MAX_MST_K + 1).actual, 'fallback is stable after the boundary call');
+});
+
+function referencePathStats(path: number[], level: NormalizedLevel) {
+  const counts = new Map<number, number>();
+  counts.set(path[0], 1);
+  let cost = 0, ints = 0, lastWasJump = false;
+  for (let i = 1; i < path.length; i++) {
+    const from = path[i - 1], to = path[i];
+    const jump: boolean = !lastWasJump && level.portalMap.get(from)?.dest === to;
+    if (!jump) cost++;
+    const seen = counts.get(to) ?? 0;
+    if (seen > 0 && to !== level.goalKey && !level.gateKeys.includes(to)) ints++;
+    counts.set(to, seen + 1);
+    lastWasJump = jump;
+  }
+  return { cost, ints, lastWasJump };
+}
+
+function referenceCandidates(path: number[], level: NormalizedLevel): number[] {
+  const pos = path[path.length - 1];
+  const { lastWasJump } = referencePathStats(path, level);
+  const portal = level.portalMap.get(pos);
+  if (portal && !lastWasJump) return [portal.dest];
+  const x = pos & 0xFFFF, y = (pos >>> 16) & 0xFFFF;
+  const out: number[] = [];
+  if (x > 0) out.push(pos - 1);
+  if (x + 1 < level.grid.w) out.push(pos + 1);
+  if (y > 0) out.push(pos - 0x10000);
+  if (y + 1 < level.grid.h) out.push(pos + 0x10000);
+  return out;
+}
+
+/** Independent reference search: candidate generation and accounting above do not use solver
+ * transitions. The domain referee independently accepts or rejects every prefix and completion.
+ * A legal path has at most `area - 1` first-time ordinary arrivals plus `reqInt` revisits, so the
+ * derived bound is complete; exhausting it is an independent proof of unreachability. */
+function referenceSearch(state: SolverSearchState, level: NormalizedLevel, targetOnly?: number): number {
+  const path = state.path.slice();
+  const prefixCost = referencePathStats(path, level).cost;
+  const maxCost = level.grid.w * level.grid.h - 1 + level.reqInt;
+  let best = Infinity;
+  const walk = () => {
+    const pos = path[path.length - 1];
+    const stats = referencePathStats(path, level);
+    if (stats.ints > level.reqInt || stats.cost > maxCost || stats.cost - prefixCost >= best) return;
+    if (targetOnly !== undefined && pos === targetOnly) { best = stats.cost - prefixCost; return; }
+    if (pos === level.goalKey) {
+      if (targetOnly !== undefined) return;
+      const candidateLevel = { ...level, reqLen: stats.cost, reqInt: stats.ints } as NormalizedLevel;
+      if (validateCandidatePath(candidateLevel, path).ok) best = stats.cost - prefixCost;
+      return;
+    }
+    for (const next of referenceCandidates(path, level)) {
+      path.push(next);
+      const nextStats = referencePathStats(path, level);
+      // With objectives removed and this endpoint terminal, the independent referee checks the
+      // entire prefix's move legality. Reference accounting separately enforces the real budget.
+      const probeStats = referencePathStats(path, { ...level, goalKey: next } as NormalizedLevel);
+      const prefixLevel = { ...level, goalKey: next, mustPassKeys: [], mustCrossKeys: [],
+        surroundKeys: [], mustPassTurnDirs: new Map(), adjacentTurnKeys: [],
+        reqLen: nextStats.cost, reqInt: probeStats.ints } as unknown as NormalizedLevel;
+      if (validateCandidatePath(prefixLevel, path).ok) walk();
+      path.pop();
+    }
+  };
+  walk();
+  return best;
+}
+
+function exactRemainingCost(_pos: number, state: SolverSearchState, level: NormalizedLevel, _prep: ReturnType<typeof prepLevel>): number {
+  return referenceSearch(state, level);
+}
+
+function exactCostToRequiredCell(target: number, state: SolverSearchState, level: NormalizedLevel, _prep: ReturnType<typeof prepLevel>): number {
+  return referenceSearch(state, level, target);
+}
+
+let hardConclusionsChecked = 0;
+function assertPermittedLowerBoundDirection(label: string, bound: number, exact: number) {
+  if (bound === Infinity) {
+    hardConclusionsChecked++;
+    assert.equal(exact, Infinity, `${label}: hard conclusion needs an independently unreachable state`);
+  }
+  else assert.ok(bound <= exact, `${label}: ${bound} must not exceed exact remaining cost ${exact}`);
+}
+
+function checkAllBounds(level: NormalizedLevel, prep: ReturnType<typeof prepLevel>, state: SolverSearchState) {
+  const pos = state.path[state.path.length - 1];
+  const exact = exactRemainingCost(pos, state, level, prep);
+  const mp: number[] = [], mc: number[] = [];
+  for (let i = 0; i < level.mustPassKeys.length; i++) if (!(state.mpVisitedMask & (1 << i))) mp.push(i);
+  for (let i = 0; i < level.mustCrossKeys.length; i++) if (state.mustCrossMask & (1 << i)) mc.push(i);
+  const values = [
+    ['mustPassLowerBound', mustPassLowerBound(pos, state, level, prep)],
+    ['mustCrossLowerBound', mustCrossLowerBound(pos, state, level, prep)],
+    // Production only invokes the MST helpers for two or more remaining objectives; their
+    // documented precondition is k >= 2. The capacity fixture below exercises both directly.
+    ['mpMSTLowerBound', mp.length >= 2 ? mpMSTLowerBound(pos, mp, mp.length, level, prep) : 0],
+    ['mcMSTLowerBound', mc.length >= 2 ? mcMSTLowerBound(pos, mc, mc.length, state, level, prep) : 0],
+    ['surroundLowerBound', surroundLowerBound(pos, state, level, prep)],
+    ['adjTurnLowerBound', adjTurnLowerBound(pos, state, level, prep)],
+  ] as const;
+  for (const [name, bound] of values) assertPermittedLowerBoundDirection(name, bound, exact);
+  return exact;
+}
+
+test('property: every lower bound underestimates the exact legal completion cost on exhaustive small reachable states', () => {
+  hardConclusionsChecked = 0;
+  const levels = [
+    wireLevel({ grid: { w: 3, h: 3 }, goal: { x: 3, y: 3 }, reqLen: 12, reqInt: 1,
+      mustPass: [{ x: 2, y: 1 }, { x: 1, y: 3 }], mustCross: [{ x: 2, y: 2 }] }),
+    wireLevel({ grid: { w: 4, h: 2 }, goal: { x: 4, y: 2 }, reqLen: 10, reqInt: 1,
+      portals: [{ a: { x: 2, y: 1 }, b: { x: 3, y: 2 } }], mustPass: [{ x: 1, y: 2 }] }),
+    wireLevel({ grid: { w: 3, h: 3 }, goal: { x: 3, y: 1 }, reqLen: 12, reqInt: 1,
+      landmarks: [
+        { x: 2, y: 2, objectType: 'park', role: 'surround' },
+        { x: 3, y: 3, objectType: 'fountain', role: 'adjacentTurn', turn: 'either' },
+      ] }),
+    wireLevel({ grid: { w: 3, h: 3 }, goal: { x: 3, y: 1 }, reqLen: 6, reqInt: 0,
+      blocks: [{ x: 2, y: 3 }, { x: 3, y: 2 }], mustPass: [{ x: 3, y: 3 }] }),
+  ];
+  let checked = 0, satisfiedMpStates = 0, satisfiedMcStates = 0;
+  let directionalCrossStates = 0, portalStates = 0, intersectionStates = 0;
+  for (const level of levels) {
+    const prep = prepLevel(level);
+    const state = createState(level.gateKeys[0], level, prep);
+    const visit = () => {
+      const _exact = checkAllBounds(level, prep, state);
+      checked++;
+      if (level.mustPassKeys.length > 0 && state.mpVisitedMask !== 0) satisfiedMpStates++;
+      if (level.mustCrossKeys.length > 0 && state.mustCrossMask === 0) satisfiedMcStates++;
+      if (state.crossCounts.some(n => n === 1)) directionalCrossStates++;
+      if (state.portalJumps) portalStates++;
+      if (state.ints > 0) intersectionStates++;
+      const pos = state.path[state.path.length - 1];
+      if (pos === level.goalKey) return;
+      for (const next of getNeighbors(pos, state, level, prep)) {
+        const p = level.portalMap.get(pos);
+        const jump = !!(p && !state.lastWasPortalJump && p.dest === next);
+        const undo = applyMove(next, state, level, prep, jump);
+        if (state.ints <= level.reqInt) visit();
+        undoMove(undo, state);
+      }
+    };
+    visit();
+  }
+  assert.ok(checked > 20 && satisfiedMpStates > 0 && satisfiedMcStates > 0);
+  assert.ok(directionalCrossStates > 0 && portalStates > 0 && intersectionStates > 0);
+  assert.ok(hardConclusionsChecked > 0, 'Infinity conclusions were independently checked');
+});
+
+test('property: lower-bound MST scratch maximum objective counts stay admissible', () => {
+  const objectiveCells = [
+    ...Array.from({ length: 8 }, (_, i) => ({ x: i + 2, y: 1 })),
+    ...Array.from({ length: 8 }, (_, i) => ({ x: 9 - i, y: 3 })),
+  ];
+  for (const kind of ['mustPassKeys', 'mustCrossKeys'] as const) {
+    assert.equal(objectiveCells.length, MAX_MST_K);
+    const level = wireLevel({ grid: { w: 9, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 1, y: 3 },
+      blocks: Array.from({ length: 7 }, (_, i) => ({ x: i + 2, y: 2 })),
+      reqInt: kind === 'mustCrossKeys' ? MAX_MST_K : 0,
+      [kind === 'mustPassKeys' ? 'mustPass' : 'mustCross']: objectiveCells });
+    const prep = prepLevel(level);
+    const state = createState(W(1, 1), level, prep);
+    const exact = checkAllBounds(level, prep, state);
+    if (kind === 'mustPassKeys') assert.equal(exact, MAX_MST_K + 2);
+    else assert.equal(exact, Infinity, 'the one-cell-wide corridor cannot provide perpendicular second crossings');
+  }
+});
+
+test('property: topology connectivity over-approximates every truly reachable required cell', () => {
+  const level = wireLevel({ grid: { w: 4, h: 3 }, goal: { x: 4, y: 3 }, reqLen: 10, reqInt: 1,
+    mustPass: [{ x: 2, y: 1 }, { x: 1, y: 3 }], mustCross: [{ x: 3, y: 2 }],
+    portals: [{ a: { x: 3, y: 1 }, b: { x: 2, y: 3 } }] });
+  const prep = prepLevel(level);
+  const state = createState(level.gateKeys[0], level, prep);
+  let reachableRequiredCells = 0;
+  const walk = () => {
+    const pos = state.path[state.path.length - 1];
+    const required = [level.goalKey];
+    for (let i = 0; i < level.mustPassKeys.length; i++)
+      if (!(state.mpVisitedMask & (1 << i))) required.push(level.mustPassKeys[i]);
+    for (let i = 0; i < level.mustCrossKeys.length; i++)
+      if (state.mustCrossMask & (1 << i)) required.push(level.mustCrossKeys[i]);
+    for (const target of required) {
+      const exact = exactCostToRequiredCell(target, state, level, prep);
+      if (!Number.isFinite(exact)) continue;
+      reachableRequiredCells++;
+      // Ask the connectivity model about this cell alone, avoiding unrelated objectives and
+      // making its volume condition exactly fit the independently found witness length.
+      const probeLevel = { ...level, goalKey: target, mustPassKeys: [], mustCrossKeys: [],
+        reqLen: getRealLengthFromState(state) + exact } as NormalizedLevel;
+      const probePrep = prepLevel(probeLevel);
+      assert.equal(isConnected(pos, state, probeLevel, probePrep), true,
+        `connectivity model omitted truly reachable required cell ${target}`);
+    }
+    if (pos === level.goalKey) return;
+    for (const next of getNeighbors(pos, state, level, prep)) {
+      const p = level.portalMap.get(pos), jump = !!(p && !state.lastWasPortalJump && p.dest === next);
+      const undo = applyMove(next, state, level, prep, jump);
+      if (state.ints <= level.reqInt) walk();
+      undoMove(undo, state);
+    }
+  };
+  walk();
+  assert.ok(reachableRequiredCells > 0, 'property exercised truly reachable required cells');
+});
+
+test('property: deadlock helpers only report independently unsatisfiable reachable states', () => {
+  const levels = [mustTurnLevel('cw'), mcForcedNeighborLevel()];
+  const reportedDeadStates = [0, 0, 0];
+  const diagnosedDeadStates = [0, 0, 0];
+  const feasibleControls = [0, 0, 0];
+  const ids: PruneId[] = ['PRUNE_MUST_TURN_DEADLOCK', 'PRUNE_MC_FORCED_NEIGHBOR', 'PRUNE_MC_NEIGHBOR_BUDGET'];
+  for (const level of levels) {
+    const prep = prepLevel(level), state = createState(level.gateKeys[0], level, prep);
+    for (let i = 0; i < ids.length; i++) {
+      const applicable = i === 0 ? state.mustTurnMask !== 0 : state.mustCrossMask !== 0;
+      if (!applicable || feasibleControls[i]) continue;
+      assert.deepEqual(diagnoseRule(ids[i], level.gateKeys[0], state, level, prep),
+        { verdict: 'pass', reached: 1, rejected: 0 }, `${ids[i]} fresh feasible control must survive`);
+      feasibleControls[i]++;
+    }
+    const walk = () => {
+      const pos = state.path[state.path.length - 1];
+      const reports = [mustTurnDeadlocked(state, prep), mustCrossForcedNeighborDeadlocked(pos, state, level, prep),
+        mustCrossNeighborBudgetDeadlocked(pos, state, level, prep)];
+      for (let i = 0; i < reports.length; i++) {
+        if (reports[i]) {
+          reportedDeadStates[i]++;
+          assert.equal(exactRemainingCost(pos, state, level, prep), Infinity, `deadlock helper ${i} false positive`);
+          const diagnostic = diagnoseRule(ids[i], pos, state, level, prep);
+          if (diagnostic.reached) {
+            assert.deepEqual(diagnostic, { verdict: 'reject', reached: 1, rejected: 1 },
+              `${ids[i]} must be the isolated firing rule once its branch is reached`);
+            if (i === 2 && diagnosedDeadStates[i] === 0) {
+              const suppressedDiagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+              assert.equal(evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
+                { PRUNE_MC_NEIGHBOR_BUDGET: true }, false,
+                { allowNeighborBudgetPrune: false, diagnostics: suppressedDiagnostics }), 'pass',
+              'stochastic-repair participation policy keeps this otherwise rejected candidate alive');
+              assert.equal(suppressedDiagnostics.reached.PRUNE_MC_NEIGHBOR_BUDGET, undefined,
+                'diagnostics remain independent and do not claim a suppressed rule was reached');
+              assert.equal(evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
+                { PRUNE_MC_NEIGHBOR_BUDGET: false }, false), 'pass',
+              'explicit disable still suppresses the rule regardless of production default');
+              // Promoted to default-on 2026-08-12 (reports/2026-08-08-mc-neighbor-budget-propagation.md,
+              // reports/2026-08-12-worker-count-sensitivity-repair-probe-wallclock.md's "Corpus-scale
+              // directionality, resolved" section): an entirely omitted ablation config (cfg=null,
+              // exactly what every production caller and any CLI invocation without --enable-flags
+              // passes) must now activate this rule, not silently leave it inert. Uses REAL production
+              // resolution (normalizeAblationConfig), not a raw sparse object like diagnoseRule's --
+              // a raw object would leave every OTHER key `undefined` (falsy), silently disabling every
+              // other default-on rule instead of testing this one's real default. PRUNE_MC_CEILING
+              // happens to independently reject this same walked state (a legitimate, harmless
+              // overlap in production) and fires first in gauntlet order, so it's suppressed here to
+              // isolate PRUNE_MC_NEIGHBOR_BUDGET's own default alone, via diagnostics rather than the
+              // overall verdict -- trusting the verdict alone is exactly what made an earlier, cruder
+              // version of this check misleadingly pass for the wrong reason.
+              const isolatedCfg = normalizeAblationConfig({ PRUNE_MC_CEILING: false });
+              const isolatedDiagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+              const isolatedVerdict = evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
+                isolatedCfg, false, { diagnostics: isolatedDiagnostics });
+              assert.equal(isolatedDiagnostics.rejected.PRUNE_MC_NEIGHBOR_BUDGET, 1,
+                `production default-ON: an ablation config that leaves PRUNE_MC_NEIGHBOR_BUDGET ` +
+                `unset must still activate it (verdict=${isolatedVerdict} rejected=${JSON.stringify(isolatedDiagnostics.rejected)} reached=${JSON.stringify(isolatedDiagnostics.reached)})`);
+              // And the fully-omitted case (cfg=null, exactly what every production caller and any
+              // CLI invocation without --enable-flags passes) must still end in 'reject' overall --
+              // whichever rule fires, the candidate must not silently pass.
+              assert.equal(evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
+                null, false), 'reject',
+                'an omitted ablation config must not let this genuinely dead state pass');
+            }
+            diagnosedDeadStates[i]++;
+          }
+        }
+      }
+      if (pos === level.goalKey) return;
+      for (const next of getNeighbors(pos, state, level, prep)) {
+        const undo = applyMove(next, state, level, prep, false);
+        if (state.ints <= level.reqInt) walk();
+        undoMove(undo, state);
+      }
+    };
+    walk();
+  }
+  assert.ok(reportedDeadStates.every(n => n > 0),
+    `property must exercise every deadlock helper; reports=${reportedDeadStates.join(',')}`);
+  assert.ok(diagnosedDeadStates.every(n => n > 0),
+    `property must reach every gauntlet branch before it fires; diagnostics=${diagnosedDeadStates.join(',')}`);
+  assert.ok(feasibleControls.every(n => n > 0),
+    `property must find an oracle-feasible negative control for every helper; controls=${feasibleControls.join(',')}`);
 });

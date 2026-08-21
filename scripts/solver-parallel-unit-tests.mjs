@@ -9,7 +9,7 @@ import { test } from 'vitest';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 
 installBrowserStubs();
-const { solveLevelRaced, createRacePool } = await import('./solver-parallel/race.mjs');
+const { solveLevelRaced, createRacePool, racedAttemptRecord } = await import('./solver-parallel/race.mjs');
 const { createSolver } = await import('../modules/Solver.js');
 const Solver = createSolver();
 
@@ -26,6 +26,37 @@ function rawLevel(overrides = {}) {
     ...overrides,
   };
 }
+
+test('racedAttemptRecord preserves every dispatch-identity flag in every race phase', () => {
+  const job = {
+    gateKey: 7,
+    attemptConfig: {
+      profileName: 'none', template: null, repair: true, repairTurnBiased: true,
+      admissibleOrder: true, admissibleOrderNoTieBreak: true, admissibleOrderLds: true,
+    },
+  };
+  assert.deepEqual(racedAttemptRecord(job, { ok: false, outcome: 'exhausted', elapsedMs: 12 }, { stageId: 'attraction-diversity' }), {
+    gateKey: 7, profile: 'none', template: null, beamWidth: null,
+    repair: true, repairTurnBiased: true,
+    admissibleOrder: true, admissibleOrderNoTieBreak: true, admissibleOrderLds: true,
+    attractionDiversity: true, stageId: 'attraction-diversity',
+    ok: false, outcome: 'exhausted', elapsedMs: 12, nodesExpanded: 0,
+  });
+});
+
+test('racedAttemptRecord expands bounded worker errors with attempt identity', () => {
+  const job = { gateKey: 7, attemptConfig: { profileName: 'default', template: { id: 'portal' }, beamWidth: 500 } };
+  const record = racedAttemptRecord(job, {
+    ok: false, outcome: 'error', allocatedBudgetMs: 50, elapsedMs: 3,
+    error: { name: 'TypeError', message: 'dispatch failed' },
+  });
+  assert.equal(record.outcome, 'error');
+  assert.equal(record.allocatedBudgetMs, 50);
+  assert.deepEqual(record.error, {
+    name: 'TypeError', message: 'dispatch failed', gateKey: 7,
+    configKey: 'beam:default/portal@beam500', profile: 'default', template: 'portal',
+  });
+});
 
 test('solveLevelRaced returns a solution that passes the PLAY referee', async () => {
   const raw = rawLevel();
@@ -75,6 +106,27 @@ test('attractionDiversityBudgetFractionOverride: 0 suppresses the raced diversit
   });
   assert.equal(result.ok, false);
   assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
+}, 20000);
+
+test('a sparse raced ablation override preserves unrelated production-default strategies', async () => {
+  const result = await solveLevelRaced(parityPreservingInfeasibleLevel(), {
+    timeBudgetMs: 500,
+    poolSize: 2,
+    ablation: { PRUNE_PARITY: false },
+  });
+  assert.equal(result.ok, false);
+  assert.ok(result.attempts.some(a => a.attractionDiversity === true),
+    'an unrelated sparse override must not silently disable the default-on diversity phase');
+}, 20000);
+
+test('an undefined raced ablation property does not override its production default', async () => {
+  const result = await solveLevelRaced(parityPreservingInfeasibleLevel(), {
+    timeBudgetMs: 500,
+    poolSize: 2,
+    ablation: { STRATEGY_ATTRACTION_DIVERSITY: undefined },
+  });
+  assert.equal(result.ok, false);
+  assert.ok(result.attempts.some(a => a.attractionDiversity === true));
 }, 20000);
 
 test('solveLevelRaced works with poolSize=1 (degenerate single-worker pool)', async () => {

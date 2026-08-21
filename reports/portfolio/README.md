@@ -7,7 +7,13 @@ See also `2026-07-16-portfolio-scheduler-reverification.md` (relocated here from
 post-elite-splice-fix solver, cited from `docs/solver-architecture.md`'s "Fast portfolio scheduler
 experiment" section.
 
-## Solvability probing on unsolved stress levels (not yet run to completion)
+## Solvability probing on unsolved stress levels (cancelled incomplete)
+
+> **Disposition (2026-08-07): cancelled, do not resume unless the portfolio scheduler experiment is
+> explicitly reopened.** The 4/17 partial corpus-1 sweep and never-started corpus-2 slice cannot
+> change the recorded production decision: portfolio mode remains opt-in/not production-ready, and
+> subsequent legacy-ladder changes invalidate direct timing comparison with this experiment's old
+> results. The incomplete coverage is preserved below as history, not presented as current work.
 
 Everything below this point is the legacy-vs-portfolio *comparison* tool (`solver:portfolio-report`),
 which always solves against a level the legacy ladder already solves — useful for retention/runtime
@@ -31,9 +37,9 @@ mapped to positions in `data/stress/stress-levels-random.json`) has not been att
 portfolio scheduler experiment" section, "Batch-scale tooling" — `--resume`, `--feature-filter`,
 `--priority`/`--baseline`, `--workers`, `--attempt-cache`) built specifically for recurring solver-
 feature iteration against these unsolved corpora, plus a companion direct-technique harness
-(`scripts/repair-direct-probe.mjs`, with a `--races` parallel-seed mode). Resume the corpus-1 straggler
-sweep with `--resume` so a future interruption doesn't lose progress again, and `--workers` to use more
-than one core:
+(`scripts/repair-direct-probe.mjs`, with a `--races` parallel-seed mode). If a future decision
+explicitly reopens the scheduler experiment, the historical corpus-1 command can resume the old
+checkpoint with `--resume` and `--workers`; do not run it merely to complete a stale table:
 
 ```
 node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=data/stress/stress-levels.json --levels=37,39,44,45,49,57,65,66,71,73,75,82,87,93,95,96,98 --budget-ms=15000 --workers=4 --resume --checkpoint=reports/portfolio/corpus1-unsolved-17-15000.checkpoint.jsonl --save-hints --out=reports/portfolio/corpus1-unsolved-17-15000.json --summary-out=reports/portfolio/corpus1-unsolved-17-15000-summary.md

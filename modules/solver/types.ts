@@ -41,7 +41,8 @@ export interface SolverSearchState {
 }
 
 /**
- * Ablation config (null/absent = all features enabled). Primarily a bag of boolean feature flags
+ * Ablation config (null/absent = production defaults; most features on, experimental opt-ins off).
+ * Primarily a bag of boolean feature flags
  * (`SCORE_*`/`PRUNE_*`/`STRATEGY_*`/`PROFILE_*`/`TEMPLATE_*`), plus two special non-boolean controls
  * read by `attempts.ts` ordering: `ATTEMPT_ORDER` and `_randomSeed`.
  */
@@ -249,11 +250,51 @@ export interface PrepLevel {
     _forcedFirstStepKey?: number | null;
     /** mutable node-count accumulator */
     _metrics?: { nodesExpanded: number };
-    /** Absolute `workMeter.units` value at which the CURRENT attempt must stop, set by the attempt
-     *  ladder before each attempt. Every search technique checks it in the same place it already
-     *  checks its own budget, so all four stop on the same machine-independent quantity.
+    /** This solve's OWN work counter, isolated from every other concurrent `solveLevel()` call in
+     *  the same JS realm. Always present (initialized fresh to `{ units: 0 }` by `prepLevel()`) —
+     *  never optional, so a caller can never accidentally read/write a shared fallback. Every
+     *  canonical work unit (`applyMove`, `isConnected` — see work-meter.ts) increments BOTH this
+     *  AND the legacy module-global `workMeter.units` (offline hint-discovery tooling that spans
+     *  many sequential `solveLevel()` calls, e.g. diversification.ts/hint-ablation-generator.ts,
+     *  still reads the module-global directly for cross-call cumulative tracking — that role is
+     *  unaffected). Every budget-check comparison and per-solve accounting computation inside the
+     *  attempt ladder and the four search techniques reads/derives from THIS field, not the module
+     *  global, precisely so two concurrent solves in the same realm cannot see or consume each
+     *  other's work. Fixed 2026-08-20 — see work-meter.ts's own comment for the incident this
+     *  closes (a real, confirmed race: `workMeter.units` was previously a single module singleton
+     *  every concurrent solve shared, so one solve's own `spent = workMeter.units - workStart`
+     *  delta could include work a DIFFERENT concurrent solve did in between). */
+    _workMeter: { units: number };
+    /** Absolute `prep._workMeter.units` value at which the CURRENT attempt must stop, set by the
+     *  attempt ladder before each attempt. Every search technique checks it in the same place it
+     *  already checks its own budget, so all four stop on the same machine-independent quantity.
      *  Infinity/undefined = uncapped. See work-meter.ts. */
     _workCap?: number;
+    /** Experiment-only immutable whole-solve cap; per-attempt allocations may only reduce it. */
+    _strictWorkCap?: number;
+    /** Reusable DFS/beam/repair search-state backing buffers (see search-state.ts's `createState`),
+     *  keyed by call-site slot (`STATE_BUF_DFS`/`STATE_BUF_BEAM`/`STATE_BUF_REPAIR`) and lazily
+     *  allocated on first use. Scoped to THIS prep (i.e. this one `solveLevel()` call) rather than
+     *  module-global: the reuse-across-attempts optimization these buffers exist for only ever
+     *  needs to span the attempts within one solve (same prep instance throughout), and scoping
+     *  them per-prep — instead of per-JS-realm — is what makes two concurrent solves safe to
+     *  interleave. Fixed 2026-08-20, same incident as `_workMeter` above: a module-global buffer
+     *  pool meant a concurrently-running technique of the same kind (two overlapping DFS attempts,
+     *  for example) could have its live `visited`/`edgeUsage` arrays cleared out from under it by
+     *  the other solve's own next `createState` call. */
+    _stateBufs?: ({ visited: Uint16Array; edgeUsage: Uint8Array } | undefined)[];
+    /** Opt-in diagnostic output gate; never read by search policy. */
+    _attemptBudgetTelemetry?: boolean;
+    /** Research-only beam observer. Absent in every production call. The observer receives copied
+     * replay-complete paths and may label them, but cannot affect search decisions. */
+    _beamResearchObserver?: BeamResearchObserver | null;
+    /** Research/test-only repair seed control. When absent, the long-standing gate/salt-derived
+     * production seeds are used byte-for-byte. Both independent repair streams derive from it. */
+    _repairResearchSeed?: number | null;
+    /** Research-only repair elite sink. Receives copied paths after elite retention; never read by search. */
+    _repairEliteResearchObserver?: RepairEliteResearchObserver | null;
+    /** Research-only repair choice sink for diagnosing shared-draw/survivor-order interactions. */
+    _repairChoiceResearchObserver?: RepairChoiceResearchObserver | null;
     /** Memoization cache for mustPassLowerBound, lazily created — see lower-bounds.ts. Sound to
      *  share across every attempt/gate within one solveLevel() call (same prep instance for all
      *  of them): the bound is a pure function of (pos, state.mpVisitedMask) alone, nothing
@@ -312,6 +353,31 @@ export interface PrepLevel {
     /** per must-turn cell: single-source BFS distance-to-cell array (see prep.ts) */
     mustTurnDistMaps?: Uint16Array[];
 }
+
+export type BeamResearchStage = 'incoming-frontier' | 'generated' | 'hard-pruned'
+    | 'post-hard-prune' | 'dedup-removed' | 'post-production-dedup'
+    | 'score-width-culled' | 'diversity-culled' | 'post-score-width-cull' | 'post-diversity-selection';
+
+export interface BeamResearchRecord {
+    stage: BeamResearchStage;
+    depth: number;
+    work: number;
+    paths: number[][];
+    /** Present for removals/culls; indices refer to score-sorted pool order. */
+    details?: Record<string, unknown>;
+}
+
+export interface BeamResearchObserver { observe(record: BeamResearchRecord): void; }
+
+export interface RepairEliteResearchRecord {
+    producer: 'repair'; path: number[]; badness: number; arrivalNodes: number; restart: number;
+}
+export interface RepairEliteResearchObserver { observe(record: RepairEliteResearchRecord): void; }
+export interface RepairChoiceResearchRecord {
+    prefix: number[]; survivors: number[]; chosenIndex: number; chosen: number;
+    mode: 'only' | 'greedy' | 'explore' | 'must-turn-override'; primaryDraws: number[]; biasDraw: number | null;
+}
+export interface RepairChoiceResearchObserver { observe(record: RepairChoiceResearchRecord): void; }
 
 /** Undo token returned by `applyMove` (landmark fields present only when hasLandmarkConstraints). */
 export interface UndoToken {

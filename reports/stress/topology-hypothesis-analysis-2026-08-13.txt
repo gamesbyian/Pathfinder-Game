@@ -1,0 +1,20 @@
+admissible-order/default winners: 97 levels
+repair winners: 205 levels
+
+navDensity      admissible-order: Q1=0.699 median=0.765 Q3=0.821   |   repair: Q1=0.662 median=0.724 Q3=0.788
+blocksFraction  admissible-order: Q1=0.136 median=0.174 Q3=0.207   |   repair: Q1=0.066 median=0.124 Q3=0.178
+blocks          admissible-order: Q1=18.000 median=25.000 Q3=29.000   |   repair: Q1=10.000 median=19.000 Q3=27.000
+reqInt          admissible-order: Q1=2.000 median=4.000 Q3=5.000   |   repair: Q1=4.000 median=7.000 Q3=9.000
+mustCross       admissible-order: Q1=0.000 median=0.000 Q3=3.000   |   repair: Q1=0.000 median=3.000 Q3=5.000
+mustPass        admissible-order: Q1=0.000 median=7.000 Q3=10.000   |   repair: Q1=5.000 median=6.000 Q3=8.000
+
+mustCross=0 rate: admissible-order 57/97 (59%)  repair 71/205 (35%)
+blocks=0 rate:    admissible-order 1/97 (1%)  repair 11/205 (5%)
+
+=== mustCross=0 subset only (isolates blocks from the known must-cross-heavy routing) ===
+admissible-order: 57 levels    repair: 71 levels
+navDensity      admissible-order: Q1=0.685 median=0.754 Q3=0.802   |   repair: Q1=0.664 median=0.712 Q3=0.803
+blocksFraction  admissible-order: Q1=0.133 median=0.174 Q3=0.207   |   repair: Q1=0.049 median=0.102 Q3=0.151
+blocks          admissible-order: Q1=18.000 median=24.000 Q3=30.000   |   repair: Q1=8.000 median=14.000 Q3=26.000
+reqInt          admissible-order: Q1=2.000 median=3.000 Q3=5.000   |   repair: Q1=7.000 median=8.000 Q3=9.000
+mustPass        admissible-order: Q1=6.000 median=7.000 Q3=12.000   |   repair: Q1=0.000 median=6.000 Q3=8.000

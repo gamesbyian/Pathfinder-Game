@@ -1,5 +1,11 @@
 # Phase D: fragile-group ablation diagnosis (2026-07-16)
 
+> **Status:** concluded-positive
+> **Last evidence:** 2026-08-19 — cheap widening of `ATTRACTION_DIVERSITY_CANDIDATE_FLAGS` tried and
+> found negative on this report's own 5-level sample (see "Follow-up (2026-08-19)" below)
+> **Decision:** reject a universal score-term retune; use the repeatable failure shape to evaluate bounded, feature-gated diversity only after ranked family diagnosis
+> **Remaining gate:** run the wide-trove boundary ranking and diagnose the highest independent symmetry cliffs before selecting a diversity design
+
 ## Goal
 
 Phase C found that the `dfs-plain` cluster's "fragile" subgroup (levels where most structural
@@ -120,3 +126,48 @@ seeds, denser variants) before a real pattern (if one exists) would be distingui
 - Every implicated flag is very likely load-bearing elsewhere (as both prior reports already noted
   for `SCORE_INTERSECTION_SETUP`/`SCORE_SURROUND_URGENCY`) — this report does not claim otherwise
   for the 3 newly-implicated flags, and disabling any of them globally is not proposed.
+
+## Follow-up (2026-08-19): a cheap widening tried, found negative on this sample
+
+`2026-08-08-symmetry-orientation-sensitivity-synthesis.md` explicitly warns against reviving "the
+previously closed sequential five-full-pass attraction-diversity design" (five separate additional
+full-ladder reruns, one per candidate flag) without a cheap predictor — that design's cost was
+already judged disproportionate. A cheaper variant respects that constraint without adding any new
+pass: widen the *existing* single attraction-diversity pass's own candidate list (`attempts.ts`'s
+`ATTRACTION_DIVERSITY_CANDIDATE_FLAGS`, currently `['SCORE_GOAL_ATTRACTION']` alone) to include all
+four other implicated terms at once — `SCORE_OBJECTIVE_ATTRACTION`, `SCORE_INTERSECTION_SETUP`,
+`SCORE_SURROUND_URGENCY`, `SCORE_PERIMETER_BIAS` — so the one existing pass, at its existing budget
+and ladder position, tries the whole fragile family together in a single rerun instead of just the
+one term that happened to generalize best in the original diagnosis.
+
+Tried directly (local A/B, not shipped): widened the constant, re-ran this report's own 5-level
+sample (`R02248`, `R01465`, `R02795`, `R00156`, `R02960`) isolated to main loop + repair fallback +
+attraction-diversity (other additive tiers disabled via `SolveOpts` overrides), at two node budgets
+(12M and 45M).
+
+| level | baseline (1 flag), 12M | widened (5 flags), 12M | baseline, 45M | widened, 45M |
+|---|---|---|---|---|
+| `R02248` | solved (earlier tier) | solved (earlier tier) | solved (earlier tier) | solved (earlier tier) |
+| `R01465` | fail | fail | fail | fail |
+| `R02795` | fail | fail | fail | fail |
+| `R00156` | fail | fail | **solved (earlier tier)** | **solved (earlier tier)**, byte-identical node count |
+| `R02960` | fail | fail | fail | fail |
+
+**Zero attributable rescues.** `R02248` already solves via an unrelated earlier tier today (the
+solver has changed substantially since 2026-07-16). `R00156` newly solves at 45M nodes, but
+byte-identically whether the widened flags are present or not (`10,827,266` nodes either way,
+attributed to an earlier tier, not attraction-diversity) — confirming the larger budget alone
+explains it, not the widening. `R01465`/`R02795`/`R02960` fail at both budgets regardless of the
+flag set: at 12M all four originally-failing levels hit the node ceiling before the diversity pass
+ever gets meaningful room (main loop + repair fallback alone consume it), and at 45M the three that
+still fail do so identically either way — the diversity pass itself never appears to be the
+deciding mechanism for any of them.
+
+**Not pursued further.** This is a small (n=5), historically-selected sample, not a population
+test, so it does not rule out the widening helping elsewhere — but it found no signal on the exact
+sample this whole investigation is built around, which is the sample most favorable to it. Per the
+same "give it every chance to help, then stop" discipline this session applied to
+`STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY` (`reports/2026-08-07-repair-elite-prefix-dfs.md`), this
+is written off rather than shipped. The code change (`attempts.ts`'s
+`ATTRACTION_DIVERSITY_CANDIDATE_FLAGS`) was never committed — the constant remains
+`['SCORE_GOAL_ATTRACTION']`, byte-identical to before this test.

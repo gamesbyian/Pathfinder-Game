@@ -32,7 +32,7 @@ import { createHintAblationGenerator } from '../modules/solver/hint-ablation-gen
 import { deriveSolveAttemptInfo } from '../modules/solver/hint-provenance.ts';
 import { makeProvenanceEntry, mergeHints, toHint } from '../modules/domain/hint-types.ts';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
-import { FEATURE_GROUPS, withFeatureDisabled } from './ablation-config.mjs';
+import { FEATURE_GROUPS, withFeatureDisabled } from '../modules/solver/ablation-config.js';
 
 installBrowserStubs();
 
@@ -1079,7 +1079,7 @@ const opts = {
     enumTieBreak: argMap.get('--enum-tie-break') === 'true',
     diversityFloor: Number(argMap.get('--diversity-floor') || 0.65),
     heatmapScoreFloor: Number(argMap.get('--heatmap-score-floor') || 1),
-    seed: Number(argMap.get('--seed') || 20260703),
+    seed: Number(argMap.get('--seed') ?? 20260703),
     wallMs: Number(argMap.get('--wall-ms') || 5 * 60 * 1000),
     // Enumeration (targeted/complete) is node-governed — see runEnumeration's shouldStop. The wall
     // clock there is only a hang-safety: honor an explicit --wall-ms, else default it high (1h) so it

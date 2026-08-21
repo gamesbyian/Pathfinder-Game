@@ -30,6 +30,7 @@ import { execSync } from 'node:child_process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createRacePool } from './race.mjs';
 import { selectLevelsBySpec } from '../level-data-io.mjs';
+import { attemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
 
 const ROOT = process.cwd();
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -90,8 +91,7 @@ for (const entry of levels) {
     }
 
     const winner = (result.attempts || []).find(a => a.ok) || null;
-    const label = a => `${a.profile}${a.template ? `/${a.template}` : ''}${a.beamWidth ? `@beam${a.beamWidth}` : '@dfs'}` +
-        (a.diverseBeam ? '(diverse)' : '') + (a.repair ? (a.repairMustTurnBiased ? '(repair-biased)' : '(repair)') : '');
+    const label = a => attemptConfigKey(a);
     results.push({
         id, batch,
         status: result.status,

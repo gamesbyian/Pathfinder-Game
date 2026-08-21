@@ -38,8 +38,9 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { FEATURES } from '../ablation-config.mjs';
+import { FEATURES } from '../../modules/solver/ablation-config.js';
 import { packedToPair, witnessDescriptors } from './features.mjs';
+import { tracePathRanks } from './divergence-lib.mjs';
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
@@ -113,28 +114,9 @@ if (TARGET_PATH_ARG) {
 
 // --- Replay: rank of the target's own move among scoreAndSort's greedy ordering, per step ---
 function traceRankOnly(cfgOverride, profileOverride = winningProfile, templateOverride = winningTemplate) {
-    const localPrep = { ...prep, _cfg: cfgOverride };
-    const state = createState(targetPath[0], level, localPrep);
-    let cumulativeDiscrepancy = 0;
-    const perStep = [];
-    for (let i = 1; i < targetPath.length; i++) {
-        const pos = state.path[state.path.length - 1];
-        const nextKey = targetPath[i];
-        const neighbors = getNeighbors(pos, state, level, localPrep);
-        if (!neighbors.includes(nextKey)) {
-            perStep.push({ step: i, invalid: true });
-        } else if (neighbors.length > 1) {
-            const arr = [...neighbors];
-            scoreAndSort(arr, pos, state, level, localPrep, profileOverride, templateOverride);
-            const rank = arr.indexOf(nextKey);
-            cumulativeDiscrepancy += rank;
-            perStep.push({ step: i, rank, topChoice: arr[0], nCandidates: arr.length });
-        }
-        const portalEntry = level.portalMap.get(pos);
-        const isPortalJump = !!(portalEntry && portalEntry.dest === nextKey);
-        applyMove(nextKey, state, level, localPrep, isPortalJump);
-    }
-    return { cumulativeDiscrepancy, perStep, finalIsSolution: isSolutionState(state, level) };
+    const result = tracePathRanks({ api: { createState, getNeighbors, applyMove, scoreAndSort, isSolutionState }, level, prep, path: targetPath,
+        profile: profileOverride, template: templateOverride, configOverride: cfgOverride });
+    return { ...result, finalIsSolution: result.finalIsSolution };
 }
 
 const baseline = traceRankOnly(null);

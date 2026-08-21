@@ -115,6 +115,7 @@ const {
 const { witnessFromLevelAndPath } = await import('./stress/witness-adapter.mjs');
 const { inheritedWitnessHint, transformedWitnessHint } = await import('./stress/witness-provenance.mjs');
 const { readLevelsWithHints, writeLevelsWithHints, hintsDirFor } = await import('./level-data-io.mjs');
+const { generatorImplementationProvenance } = await import('./generator-implementation-provenance.mjs');
 
 const GENERATOR_VERSION = '0.1.0';
 
@@ -127,7 +128,7 @@ const PARENT_CORPUS = args.get('--parent-corpus') || 'data/levels.json';
 const PARENT_SELECTOR = args.get('--parent');
 const WITNESS_INDEX = Number(args.get('--witness-index') || 0);
 const COUNT = Number(args.get('--count') || 12);
-const SEED = Number(args.get('--seed') || 20260716);
+const SEED = Number(args.get('--seed') ?? 20260716);
 const MAX_ATTEMPTS_PER_SIBLING = Number(args.get('--max-attempts-per-sibling') || 40);
 const MUTATION_TYPES_ARG = args.get('--mutation-types');
 const MODE = args.get('--mode') || 'local-mutant';
@@ -157,6 +158,7 @@ if (!PARENT_SELECTOR) {
 }
 
 const root = process.cwd();
+const generatorImplementation = generatorImplementationProvenance(root);
 // path.join(root, p) does NOT special-case an already-absolute `p` — it concatenates
 // unconditionally, silently producing a doubled/broken path (e.g. path.join('/a/b', '/c/d')
 // === '/a/b/c/d', not '/c/d'). Matches hint-corpus-expand.mjs/hint-complete-enumeration-
@@ -745,6 +747,7 @@ async function main() {
         variantManifests.push({
             variantId: siblingId, familyId: FAMILY_ID, relation, witnessRelation,
             randomSeed: SEED, inventoryPolicy, parentContentHash, variantContentHash: levelFp,
+            generatorImplementation,
             mutationManifest: mutation, generationAttempts: attempts,
             navDensity: navDensityOf(witnessObj, extras),
         });
@@ -921,11 +924,18 @@ async function main() {
     const manifestAbs = resolveFromRoot(MANIFEST_FILE);
     const existingManifest = existsSync(manifestAbs) ? JSON.parse(readFileSync(manifestAbs, 'utf8')) : null;
     const allVariants = [...(existingManifest?.variants ?? []), ...variantManifests];
+    const generationRun = {
+        createdTimestamp: new Date().toISOString(), randomSeed: SEED,
+        generatorVersion: GENERATOR_VERSION, generatorImplementation,
+        variantIds: variantManifests.map(variant => variant.variantId),
+    };
     const manifest = {
+        schemaVersion: 2,
         familyId: FAMILY_ID, parentLevelId: parentId, parentCorpus: PARENT_CORPUS, parentContentHash,
         selectedWitnessSource: witnessSelection.source, selectedWitnessLength: witness.path.length - witness.jumps.size,
         selectedWitnessIntersectionCount: rawParent.reqInt,
         familyMode: MODE, generatorVersion: GENERATOR_VERSION, randomSeed: SEED,
+        generationRuns: [...(existingManifest?.generationRuns ?? []), generationRun],
         createdTimestamp: existingManifest?.createdTimestamp ?? new Date().toISOString(),
         lastUpdatedTimestamp: new Date().toISOString(),
         requestedCount, acceptedCount: allVariants.length, generationAttempts: attempts, attemptBudget,

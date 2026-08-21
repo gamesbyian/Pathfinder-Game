@@ -28,7 +28,10 @@
  *                                nodesExpanded, since stress baselines do not carry workSpent yet.
  *   --node-budget=<n>            legacy per-technique cap (SolveOpts.nodeBudget),
  *                                 flat across every level.
- *   --baseline-budget            per-level ADAPTIVE node budgets in place of one flat --node-budget:
+ *   --baseline-budget            DEPRECATED experimental per-level node budgets. Kept only for
+ *                                 historical reproduction: repair winners are not reproducible from
+ *                                 recorded nodes alone, and "node" buys different work by technique.
+ *                                 Prefer an explicit --work-budget. If used despite this warning:
  *                                 each known-solved level (per --baseline) gets a budget scaled to
  *                                 its own recorded nodesExpanded, so fast levels stop fast and a
  *                                 regression fails at K x its old cost instead of the global ceiling.
@@ -101,14 +104,21 @@
  *                                 reserve). Pass 0 for the pre-reserve behaviour — that is the
  *                                 baseline arm of an A/B on the reserve itself. Also not honored
  *                                 under --race-pool-size (race.mjs has no nodeBudget handling).
+ *   --main-loop-late-reserve-fraction=<f>
+ *   --main-loop-late-reserve-config-count=<n>
+ *                                 opt-in main-loop starvation experiment knobs. Enable with
+ *                                 --enable-flags=STRATEGY_MAIN_LOOP_LATE_RESERVE; the final n
+ *                                 ordinary configs may consume fraction f of the ordinary node
+ *                                 envelope withheld from the probe/early prefix. Requires a finite
+ *                                 --node-budget and is not supported by --race-pool-size.
  *   --disable-extra-budget-passes  sets all three fractions above to 0 at once
  *                                 (SolveOpts.disableExtraBudgetPasses). Prefer this over remembering
  *                                 each flag when a sweep just wants no extra-pass cost; an explicit
  *                                 individual fraction still wins over it.
  *   --enable-flags=FLAG1,FLAG2   turn the named ablation flags ON for the whole run (via
  *                                 SolveOpts.ablation, a SPARSE object — normalizeAblationConfig's
- *                                 Proxy reads every unset flag as true, so nothing else is disabled).
- *                                 Names validated against ablation-config.mjs FEATURES. The A/B lever
+ *                                 normalizer restores each unset flag's production default).
+ *                                 Names validated against modules/solver/ablation-config.ts FEATURES. The A/B lever
  *                                 for an ablation-gated attempt like STRATEGY_REPAIR_TURN_BIAS:
  *                                 baseline run (omit) vs on run (--enable-flags=STRATEGY_REPAIR_TURN_BIAS).
  *                                 Threaded through every solve path (main, worker, race pool).
@@ -122,7 +132,8 @@
  * Batch-scale knobs, for recurring solver-feature iteration against the unsolved corpora:
  *   --resume [--checkpoint=<path>]     append each level's result to a JSONL checkpoint as it
  *                                       completes (default <out>.checkpoint.jsonl); on the next
- *                                       run with --resume, already-checkpointed levels are loaded
+ *                                       identical commit/invocation with --resume, completed levels
+ *                                       are loaded; stale/legacy checkpoints are rejected
  *                                       from disk instead of re-solved. Survives Ctrl-C / kill.
  *   --feature-filter=<tokens>          only run levels whose features match, e.g.
  *                                       "mustCross>=2,mustPass>=3" (supported keys: reqLen,
@@ -181,14 +192,15 @@ import path from 'node:path';
 import process from 'node:process';
 import os from 'node:os';
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { PORTFOLIO_EXPERIMENT } from '../data/config/portfolio-experiment.js';
+import { PORTFOLIO_EXPERIMENT } from '../modules/solver/portfolio-experiment.js';
 import { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } from './level-data-io.mjs';
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
 import { createRacePool } from './solver-parallel/race.mjs';
-import { FEATURES } from './ablation-config.mjs';
+import { FEATURES } from '../modules/solver/ablation-config.js';
 import {
     computeCurrentFamilyHashes, loadFamilyCache, saveFamilyCache, relevantFamiliesFor, familiesUnchanged,
 } from './solver-attempt-family-cache.mjs';
@@ -210,16 +222,19 @@ const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(arg
 const attractionDiversityBudgetFraction = argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined;
 const admissibleOrderBudgetFraction = argMap.has('--admissible-order-budget-fraction') ? Number(argMap.get('--admissible-order-budget-fraction')) : undefined;
 const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction') ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
+const mainLoopLateReserveFraction = argMap.has('--main-loop-late-reserve-fraction') ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
+const mainLoopLateReserveConfigCount = argMap.has('--main-loop-late-reserve-config-count') ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
 const disableExtraBudgetPasses = flags.has('--disable-extra-budget-passes');
-// --baseline-budget: per-level adaptive node budgets scaled off --baseline's recorded per-level
+// DEPRECATED --baseline-budget: per-level adaptive node budgets scaled off recorded per-level
 // nodesExpanded, instead of one flat --node-budget on every level. Rationale (measured on
 // stress-corpus-2's baseline): the winning attempt is cheap (p50 68K, p90 9M nodes) but a flat
 // budget exists only to give the hardest levels room, so most levels get budget they never spend.
 // SolveOpts.nodeBudget is a CUMULATIVE cap across all attempts (orchestration.ts checks it against
 // the running prep._metrics.nodesExpanded), and the baseline's nodesExpanded is that same cumulative
-// total — so K x baseline-nodes gives a level K x its demonstrated need. A deterministic re-solve
-// hits exactly baseline-nodes and exits early (no change on a green run); a level that regressed
-// fails FAST at K x its old cost instead of burning the global ceiling. The extra-budget passes
+// total. The original implementation assumed K x baseline nodes represented demonstrated need;
+// corpus-scale use disproved that for stochastic repair winners and caused 45 apparent regressions.
+// This flag remains for historical experiments only, not as a supported regression workflow. The
+// extra-budget passes
 // (6x repair, attraction) are themselves gated on nodesExpanded < nodeBudget, so a tight per-level
 // cap also curtails those automatically. Known-failed / not-in-baseline levels get
 // --unsolved-node-budget (the discovery lever: leave it high to still find new solves, or drop it
@@ -252,25 +267,25 @@ const workerCount = argMap.has('--workers') ? Math.max(1, Number(argMap.get('--w
 const attemptCachePath = argMap.get('--attempt-cache') || null;
 // --enable-flags=FLAG1,FLAG2 turns those ablation flags ON (via SolveOpts.ablation), all others left
 // at their default. The value is a SPARSE ablation object; orchestration.ts's normalizeAblationConfig
-// Proxy reads every unset flag as true, so this enables exactly the named flags without disabling
-// anything else (the sparse-config footgun that bit this codebase before). Primary use: the corpus-2
+// normalizer restores every unset flag's production default, so this enables exactly the named
+// flags without disabling anything else. Primary use: the corpus-2
 // refresh toggling STRATEGY_REPAIR_TURN_BIAS baseline-vs-on. Validated against FEATURES to catch typos.
 const enableFlags = argMap.has('--enable-flags')
     ? argMap.get('--enable-flags').split(',').map(s => s.trim()).filter(Boolean)
     : [];
 for (const f of enableFlags) {
-    if (!(f in FEATURES)) { console.error(`--enable-flags: unknown ablation flag "${f}" (see scripts/ablation-config.mjs FEATURES).`); process.exit(2); }
+    if (!(f in FEATURES)) { console.error(`--enable-flags: unknown ablation flag "${f}" (see modules/solver/ablation-config.ts FEATURES).`); process.exit(2); }
 }
 // --disable-flags=FLAG1,FLAG2 is the exact counterpart: it turns the named flags OFF, leaving every
 // other flag at its default. Needed because most flags DEFAULT to on, so --enable-flags cannot test
 // whether an existing mechanism is load-bearing — only --disable-flags can. Same sparse-object
-// safety as above (normalizeAblationConfig's Proxy reads unset flags as true, so naming one flag
-// here disables exactly that one). A flag named in both is rejected rather than silently resolved.
+// safety as above means naming one flag here disables exactly that one. A flag named in both is
+// rejected rather than silently resolved.
 const disableFlags = argMap.has('--disable-flags')
     ? argMap.get('--disable-flags').split(',').map(s => s.trim()).filter(Boolean)
     : [];
 for (const f of disableFlags) {
-    if (!(f in FEATURES)) { console.error(`--disable-flags: unknown ablation flag "${f}" (see scripts/ablation-config.mjs FEATURES).`); process.exit(2); }
+    if (!(f in FEATURES)) { console.error(`--disable-flags: unknown ablation flag "${f}" (see modules/solver/ablation-config.ts FEATURES).`); process.exit(2); }
     if (enableFlags.includes(f)) { console.error(`--disable-flags: "${f}" is also in --enable-flags; pick one.`); process.exit(2); }
 }
 const ablation = (enableFlags.length > 0 || disableFlags.length > 0)
@@ -292,6 +307,9 @@ if (Number.isFinite(admissibleOrderNodeReserveFraction) && !Number.isFinite(node
 }
 if (baselineBudget && !argMap.has('--baseline')) {
     console.error('--baseline-budget requires --baseline (it scales each level\'s node budget off the baseline\'s recorded per-level nodesExpanded). Ignoring --baseline-budget.');
+}
+if (baselineBudget) {
+    console.error('WARNING: --baseline-budget is deprecated and unsound for general regression use (repair winners are stochastic and raw nodes are technique-dependent). Prefer --work-budget; this mode is retained only for historical reproduction.');
 }
 if (baselineBudget && racePoolSize > 0) {
     console.error('--baseline-budget has no effect under --race-pool-size (the race pool has no node-budget concept — see the --node-budget warning above). Per-level budgets are ignored for raced solves.');
@@ -370,22 +388,31 @@ function priorityValue(record, field) {
     return Number.isFinite(v) ? v : Infinity;
 }
 
-function readCheckpoint(checkpointFile) {
+function readCheckpoint(checkpointFile, expectedSignature) {
     const rows = new Map();
     if (!existsSync(checkpointFile)) return rows;
     const text = readFileSync(checkpointFile, 'utf8');
+    let actualSignature = null;
     for (const line of text.split('\n')) {
         const t = line.trim();
         if (!t) continue;
         try {
             const row = JSON.parse(t);
+            if (row?._checkpointSignature) { actualSignature = row._checkpointSignature; continue; }
             if (Number.isFinite(row.level)) rows.set(row.level, row);
         } catch { /* skip a malformed/truncated last line from an interrupted run */ }
     }
+    if (actualSignature !== expectedSignature) {
+        const reason = actualSignature == null ? 'has no run signature (legacy checkpoint)' : 'belongs to a different commit or invocation';
+        throw new Error(`--resume refused ${checkpointFile}: checkpoint ${reason}. Remove it or choose a new --checkpoint path.`);
+    }
     return rows;
 }
-function appendCheckpoint(checkpointFile, row) {
+function appendCheckpoint(checkpointFile, row, signature) {
     mkdirSync(path.dirname(checkpointFile), { recursive: true });
+    if (!existsSync(checkpointFile) || readFileSync(checkpointFile, 'utf8').trim() === '') {
+        appendFileSync(checkpointFile, `${JSON.stringify({ _checkpointSignature: signature })}\n`);
+    }
     appendFileSync(checkpointFile, `${JSON.stringify(row)}\n`);
 }
 
@@ -407,6 +434,15 @@ let targets = levelFilter
 // match the format hint-workbench.mjs and every other corpus writer records, so version grouping
 // across the corpus stays exact rather than mixing 7-char and 40-char SHAs.
 const commit = (() => { try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
+// Resume is crash recovery for this exact run, not a cache across solver revisions or changed
+// flags. A previous corpus-2 refresh silently did zero work because old rows were trusted after
+// the code changed. Persist the commit plus behavior-affecting invocation as a checkpoint header;
+// omit only --resume itself, whose presence naturally differs between an initial run and recovery.
+const checkpointSignature = JSON.stringify({
+    commit,
+    corpusDigest: createHash('sha256').update(readFileSync(corpusPath)).digest('hex'),
+    args: args.filter(arg => arg !== '--resume' && arg !== '--').sort(),
+});
 const portfolioExperiment = experimentFromArgs();
 
 const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
@@ -417,6 +453,8 @@ if (Number.isFinite(repairBudgetFraction)) solveOpts.repairBudgetFractionOverrid
 if (Number.isFinite(attractionDiversityBudgetFraction)) solveOpts.attractionDiversityBudgetFractionOverride = attractionDiversityBudgetFraction;
 if (Number.isFinite(admissibleOrderBudgetFraction)) solveOpts.admissibleOrderBudgetFractionOverride = admissibleOrderBudgetFraction;
 if (Number.isFinite(admissibleOrderNodeReserveFraction)) solveOpts.admissibleOrderNodeReserveFractionOverride = admissibleOrderNodeReserveFraction;
+if (Number.isFinite(mainLoopLateReserveFraction)) solveOpts.mainLoopLateReserveFractionOverride = mainLoopLateReserveFraction;
+if (Number.isFinite(mainLoopLateReserveConfigCount)) solveOpts.mainLoopLateReserveConfigCountOverride = mainLoopLateReserveConfigCount;
 // Set LAST of the fraction group on purpose: orchestration.ts resolves each individual override with
 // `?? (disableExtraBudgetPasses ? 0 : undefined)`, so an explicit --repair-budget-fraction etc. still
 // wins over this flag — the additive semantics its own SolveOpts comment promises.
@@ -429,7 +467,7 @@ if ((priorityField || attemptCachePath) && !baselineMap) {
     console.error('--priority and --attempt-cache require --baseline; ignoring both.');
 }
 
-// Adaptive per-level node budgets are active only with both --baseline-budget and a loaded baseline,
+// Deprecated adaptive per-level node budgets are active only with both --baseline-budget and a loaded baseline,
 // and never under racing (the race pool ignores node budgets). When inactive, nodeBudgetFor() returns
 // the flat global nodeBudget so every code path can call it unconditionally.
 const adaptiveBudget = baselineBudget && !!baselineMap && racePoolSize === 0;
@@ -562,7 +600,7 @@ if (featureFilterTokens.length > 0) {
 }
 
 // --resume: split into already-checkpointed (loaded, not re-solved) vs still to do.
-const checkpointRows = resume ? readCheckpoint(checkpointPath) : new Map();
+const checkpointRows = resume ? readCheckpoint(checkpointPath, checkpointSignature) : new Map();
 const toRun = targets.filter(n => !checkpointRows.has(n));
 const skippedByResume = targets.length - toRun.length;
 if (resume && skippedByResume > 0) console.log(`--resume: ${skippedByResume} level(s) already checkpointed in ${checkpointPath}, skipping.`);
@@ -644,7 +682,7 @@ function recordRow(row, { fromCheckpointOrCache = false } = {}) {
     if (row.solvedByPrime) primeHitCount += 1;
     if (!row.ok) unsolvedCount += 1;
     tallyPass(passCounts, row, schedulerMode);
-    if (!fromCheckpointOrCache && resume) appendCheckpoint(checkpointPath, row);
+    if (!fromCheckpointOrCache && resume) appendCheckpoint(checkpointPath, row, checkpointSignature);
 }
 // Pre-existing checkpoint/cache rows already reflect a completed (or safely-skipped) outcome —
 // tally them but never re-append to the checkpoint file (idempotent resume).
@@ -653,7 +691,7 @@ for (const row of cachedSkipRows) recordRow(row, { fromCheckpointOrCache: true }
 
 const effectiveParallelism = workerCount * Math.max(1, racePoolSize);
 const cpuCount = os.cpus().length;
-console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(attractionDiversityBudgetFraction) ? ` attraction-diversity-budget-fraction=${attractionDiversityBudgetFraction}` : ''}${Number.isFinite(admissibleOrderBudgetFraction) ? ` admissible-order-budget-fraction=${admissibleOrderBudgetFraction}` : ''}${Number.isFinite(admissibleOrderNodeReserveFraction) ? ` admissible-order-node-reserve-fraction=${admissibleOrderNodeReserveFraction}` : ''}${disableExtraBudgetPasses ? ' disable-extra-budget-passes' : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
+console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(attractionDiversityBudgetFraction) ? ` attraction-diversity-budget-fraction=${attractionDiversityBudgetFraction}` : ''}${Number.isFinite(admissibleOrderBudgetFraction) ? ` admissible-order-budget-fraction=${admissibleOrderBudgetFraction}` : ''}${Number.isFinite(admissibleOrderNodeReserveFraction) ? ` admissible-order-node-reserve-fraction=${admissibleOrderNodeReserveFraction}` : ''}${Number.isFinite(mainLoopLateReserveFraction) ? ` main-loop-late-reserve-fraction=${mainLoopLateReserveFraction}` : ''}${Number.isFinite(mainLoopLateReserveConfigCount) ? ` main-loop-late-reserve-config-count=${mainLoopLateReserveConfigCount}` : ''}${disableExtraBudgetPasses ? ' disable-extra-budget-passes' : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
 if (adaptiveBudget) {
     const assigned = toActuallyRun.map(n => nodeBudgetFor(rawLevels[n - 1]?.id));
     const capped = assigned.filter(b => b !== undefined).sort((a, b) => a - b);

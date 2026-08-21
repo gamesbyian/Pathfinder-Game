@@ -174,3 +174,20 @@ reconsidering promotion, in rough order of promise:
    level, each then getting the *full* un-split `REPAIR_PROBE_BIASED_NODE_BUDGET`, is the only idea on
    this list that doesn't inherit the shared-budget zero-sum property — worth prototyping before any
    further promotion attempt, but not yet started.
+
+## Later implementation addendum: exclusive selection was tried and rejected
+
+The “only remaining untried avenue” above is historical, not current. A later full corpus-2 refresh
+did test exclusive selection using the best simple predictor found in a 31-level cross-corpus sample:
+`reqInt <= 3` predicts `mustTurnBiased`, otherwise `turnBiased` (74% sample accuracy versus a 58%
+majority-class baseline). Exclusive selection produced **8 attributable gains and 10 attributable
+losses, net −2**, because a wrong classification removed the technique a level actually needed.
+
+The retained, still flag-gated experiment is deliberately non-exclusive: both techniques run, the
+predicted one is ordered first, and it receives 75% of the fixed biased probe budget while the
+fallback receives 25%. The equal 50/50 split and exclusive selector are both rejected measured
+designs. This weighted form is implemented and unit-tested in `modules/solver/attempts.ts` and
+`modules/solver/orchestration.ts`, but its comments correctly retain the remaining gate: a dedicated
+corpus-2 A/B before any default-on promotion. Do not restart the older 9/30
+`repairMustTurnBiasedAttempt` sweep as a substitute; it cannot validate this two-technique weighted
+design.

@@ -35,6 +35,7 @@ function main() {
     const inDir = args.get('--in-dir');
     const inList = args.get('--in');
     const outFile = args.get('--out');
+    const allowMixedCorpora = args.has('--allow-mixed-corpora');
     if ((!inDir && !inList) || !outFile) {
         console.error('Usage: node scripts/portfolio-sweep-reports-to-benchmark.mjs (--in=<file1>,<file2>,... | --in-dir=<dir>) --out=<combined.json>');
         process.exit(2);
@@ -65,7 +66,7 @@ function main() {
         if (r.summary.budgetMs !== first.budgetMs) {
             throw new Error(`Mismatched budgetMs: ${reports[0].path} used ${first.budgetMs}ms, ${r.path} used ${r.summary.budgetMs}ms.`);
         }
-        if (r.summary.corpus !== first.corpus) {
+        if (!allowMixedCorpora && r.summary.corpus !== first.corpus) {
             throw new Error(`Mismatched corpus: ${reports[0].path} used ${first.corpus}, ${r.path} used ${r.summary.corpus}.`);
         }
         if (r.summary.schedulerMode !== first.schedulerMode) {
@@ -74,16 +75,22 @@ function main() {
     }
 
     const seenIds = new Map();
+    const seenPositions = new Map();
     const levels = [];
     for (const r of reports) {
         for (const lv of r.levels) {
-            if (lv.id && seenIds.has(lv.id)) {
-                console.error(`Warning: duplicate level id ${lv.id} in both ${seenIds.get(lv.id)} and ${r.path} — keeping the later one.`);
-                const idx = levels.findIndex(l => l.id === lv.id);
-                if (idx >= 0) levels.splice(idx, 1);
+            const identityPrefix = allowMixedCorpora ? `${r.summary.corpus}:` : '';
+            const idKey = lv.id ? identityPrefix + lv.id : null;
+            const positionKey = Number.isFinite(lv.level) ? identityPrefix + lv.level : null;
+            if (idKey && seenIds.has(idKey)) {
+                throw new Error(`Duplicate level id ${lv.id} in both ${seenIds.get(idKey)} and ${r.path}; batch ranges or inputs overlap.`);
             }
-            if (lv.id) seenIds.set(lv.id, r.path);
-            levels.push(lv);
+            if (positionKey && seenPositions.has(positionKey)) {
+                throw new Error(`Duplicate level position ${lv.level} in both ${seenPositions.get(positionKey)} and ${r.path}; batch ranges or inputs overlap.`);
+            }
+            if (idKey) seenIds.set(idKey, r.path);
+            if (positionKey) seenPositions.set(positionKey, r.path);
+            levels.push(allowMixedCorpora ? { corpus: r.summary.corpus, ...lv } : lv);
         }
     }
 
@@ -111,7 +118,7 @@ function main() {
     const combined = {
         timestamp: new Date().toISOString(),
         commitSha: reports.map(r => r.summary.commit).find(Boolean) ?? 'unknown',
-        corpus: first.corpus,
+        corpus: allowMixedCorpora ? [...new Set(reports.map(r => r.summary.corpus))] : first.corpus,
         budgetMs: first.budgetMs,
         nodeBudget: nodeBudgets.length === 1 ? nodeBudgets[0] : (nodeBudgets.length === 0 ? null : nodeBudgets),
         workBudget: workBudgets.length === 1 ? workBudgets[0] : (workBudgets.length === 0 ? null : workBudgets),

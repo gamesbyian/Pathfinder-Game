@@ -1,5 +1,11 @@
 # Repair-probe budget-composition bug: `repairBudgetFractionOverride` didn't cover the early probe (2026-07-17)
 
+> **Status:** concluded-positive
+> **Last evidence:** 2026-08-07 — follow-up disposition and smoke-pin repair
+> **Decision:** keep the override-composition fix; defer proportional probe scaling until a real
+> sub-30-second caller demonstrates material latency; the separate smoke-pin repair is complete
+> **Remaining gate:** none
+
 ## Context
 
 `reports/2026-07-17-attraction-diversity-dose-response.md` flagged, but didn't investigate, an
@@ -129,7 +135,7 @@ fallback loop's own comment already accepts a "worse but bounded" outcome for ex
 - Direct interactive-UI-path re-check on the 4 known repair-gated published levels: see the
   trade-off table above.
 
-## Follow-ups (not done here — out of this fix's scope)
+## Out-of-scope items — disposition 2026-08-07
 
 - The probe's node budgets are still a fixed absolute cost, unscaled by `timeBudgetMs`, even under
   the *production default* (non-zero, non-override) path — a caller using a very small
@@ -137,8 +143,12 @@ fallback loop's own comment already accepts a "worse but bounded" outcome for ex
   the main loop starts. This fix only closes the `repairBudgetFractionOverride: 0` gap; it doesn't
   make the probe's cost proportional to `timeBudgetMs` in the general case. Worth a dedicated look
   if a future finding shows this mattering in practice (e.g. a UI or tool using a
-  smaller-than-30s budget on a repair-gated level).
-- The stale smoke-set pin-file gap (`S00017`/`S00031`/`S00036`/`S00118`) noted above should be
-  triaged separately — either the ids need updating to the corpus's current ids, or the levels are
-  genuinely gone and need replacement smoke-set members per `docs/solver-dev-tooling-plan.md`
-  Component A's own invariants.
+  smaller-than-30s budget on a repair-gated level). This is explicitly **deferred**, not an active
+  implementation task; the canonical trigger is recorded in `docs/future-work.md`.
+- The stale smoke-set pin-file gap (`S00017`/`S00031`/`S00036`/`S00118`) was **completed
+  2026-08-07**. The replacements are `R01189` (high-intersection/must-cross structural coverage),
+  `R00134` and `R00087` (repair winners), and `S00103` (four gates); the refreshed suite holds
+  14/14 under one minute. The old `S00017` bug-specific identity was not recoverable from available
+  metadata, so its replacement is deliberately labelled structural rather than claiming false
+  provenance. The canonical disposition is in
+  [`docs/future-work.md`](../docs/future-work.md#older-loose-thread-triage-2026-08-07).

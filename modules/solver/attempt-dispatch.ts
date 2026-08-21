@@ -46,12 +46,30 @@ export function runAttemptSearch(
   const { beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
   const template = attemptConfig.template ?? null;
   const admissibleOrderProfile = admissibleOrderNoTieBreak ? null : profile;
+  // Elite-prefix DFS repair (see repair-search.ts's own header comment). Opt-in-only, matching
+  // STRATEGY_REPAIR_TURN_BIAS's convention, NOT the standard "!cfg || cfg.FLAG" default-on
+  // pattern: a same-day 20-level A/B against the repair-close/repair-far closest-miss population
+  // (reports/2026-08-07-repair-elite-prefix-dfs.md) found a net-negative signal (4/20 solved vs.
+  // 5/20 with the mechanism off, one confirmed displacement — R02239 exhausts the shared node
+  // budget with this on, solves at 14.19M nodes with it off) — the same "scarce shared node
+  // budget, zero-sum reallocation" dynamic documented for turn bias's own initial rollout
+  // (reports/2026-07-23-turnbias-corpus2-ab-validation.md). Sound and mechanistically real (its
+  // own badness-improvement feedback loop is confirmed working), just not validated as a net
+  // production win at these constants — kept available for future recalibration/population-scale
+  // validation rather than reverted outright.
+  const cfg = prep._cfg;
+  const enableElitePrefixDfs = cfg && cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS === true;
+  // Counterfactual beam-survivor elite seeding (see repair-search.ts's BEAM_SEED_WIDTH comment and
+  // docs/solver-interoperability-and-cooperation-plan.md). Same opt-in-only convention as
+  // enableElitePrefixDfs immediately above, not the standard "!cfg || cfg.FLAG" default-on pattern:
+  // an unvalidated 2026-08-13 mechanism, kept off in production and any ordinary ablation config.
+  const enableBeamSeed = cfg && cfg.STRATEGY_REPAIR_BEAM_SEED === true;
   return admissibleOrder
     ? admissibleOrderLds
       ? admissibleOrderSearchLDS(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
       : admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
     : repair
-    ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased)
+    ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased, !!enableElitePrefixDfs, !!enableBeamSeed)
     : beamWidth
     ? beamSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn, diverseBeam, out, nodeBudget)
     : dfsFromGateLDS(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, out, nodeBudget);

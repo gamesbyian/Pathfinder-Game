@@ -5,10 +5,12 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { repairSearchFromGate, computePlateauPenaltyCells, selectGuideCells, relinkPaths, preferredTurnExit } from './repair-search.js';
+import { repairSearchFromGate, repairStreamSeeds, computePlateauPenaltyCells, selectGuideCells, relinkPaths, preferredTurnExit, __takePlyForTests } from './repair-search.js';
 import { createState, applyMove } from './search-state.js';
-import { isSolutionState } from './solution.js';
-import { withFeatureDisabled } from '../../scripts/ablation-config.mjs';
+import { getRealLengthFromState, isSolutionState } from './solution.js';
+import { evaluatePrunedMove } from './prune-gauntlet.js';
+import type { PruneDiagnostics } from './prune-gauntlet.js';
+import { withFeatureDisabled } from './ablation-config.js';
 
 const K = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 
@@ -62,6 +64,34 @@ test('repairSearchFromGate finds a valid path requiring an intersection and a mu
     assert.equal(replayAndValidate(path as number[], level, prep), true);
 });
 
+test('stochastic takePly retains a candidate that deterministic neighbor-budget rejects', () => {
+    const level = makeLevel({
+        grid: { w: 5, h: 5 }, goal: { x: 5, y: 5 }, mustCross: [{ x: 3, y: 3 }],
+        reqLen: 20, reqInt: 0,
+    });
+    const prep = prepLevel(level);
+    prep._cfg = { PRUNE_MC_NEIGHBOR_BUDGET: true };
+    const prefix = [K(1, 1), K(2, 1), K(3, 1), K(4, 1), K(5, 1), K(5, 2), K(4, 2), K(3, 2)];
+    const candidate = K(2, 2);
+    const state = createState(prefix[0], level, prep);
+    for (const next of prefix.slice(1)) applyMove(next, state, level, prep, false);
+
+    const choices: Array<{ survivors: number[] }> = [];
+    prep._repairChoiceResearchObserver = { observe: record => choices.push(record) };
+    __takePlyForTests(state, level, prep, POLICY_PROFILES.repair, null, () => 0, null, 0, []);
+    assert.ok(choices[0]?.survivors.includes(candidate),
+        'the exact stochastic survivor-selection loop must retain the neighbor-budget candidate');
+
+    const deterministicState = createState(prefix[0], level, prep);
+    for (const next of prefix.slice(1)) applyMove(next, deterministicState, level, prep, false);
+    applyMove(candidate, deterministicState, level, prep, false);
+    const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+    assert.equal(evaluatePrunedMove(candidate, getRealLengthFromState(deterministicState), deterministicState,
+        level, prep, prep._cfg, false, { diagnostics }), 'reject');
+    assert.equal(diagnostics.rejected.PRUNE_MC_NEIGHBOR_BUDGET, 1,
+        'the equivalent deterministic shared-gauntlet use still rejects and names the rule');
+});
+
 test('repairSearchFromGate is deterministic: identical inputs produce identical output', async () => {
     const level = makeLevel({
         grid: { w: 4, h: 4 },
@@ -77,9 +107,26 @@ test('repairSearchFromGate is deterministic: identical inputs produce identical 
 
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
+    const eliteRecords: number[][] = [];
+    const choiceRecords: Array<{ survivors: number[]; chosenIndex: number }> = [];
+    prepB._repairEliteResearchObserver = { observe: record => eliteRecords.push(record.path) };
+    prepB._repairChoiceResearchObserver = { observe: record => choiceRecords.push(record) };
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 1500, Date.now(), null);
 
     assert.deepEqual(pathA, pathB);
+    assert.equal(prepA._metrics.nodesExpanded, prepB._metrics.nodesExpanded, 'elite observation must not change canonical work');
+    assert.ok(eliteRecords.every(path => path[0] === K(1, 1)), 'emitted elites are replay-complete from the gate');
+    assert.ok(choiceRecords.every(record => record.survivors[record.chosenIndex] !== undefined));
+});
+
+test('repair research seed normalizes both independent streams without changing production derivation', () => {
+    const production = repairStreamSeeds(K(1, 1), 7);
+    assert.notEqual(production.primary, production.mustTurn);
+    assert.deepEqual(repairStreamSeeds(K(1, 1), 7, null), production);
+    const normalizedA = repairStreamSeeds(K(1, 1), 7, 12345);
+    const normalizedB = repairStreamSeeds(K(4, 4), 99, 12345);
+    assert.deepEqual(normalizedA, normalizedB);
+    assert.notEqual(normalizedA.primary, normalizedA.mustTurn);
 });
 
 test('repairSearchFromGate returns null and respects its budget on a parity-impossible level', async () => {
@@ -276,6 +323,69 @@ test('enableRecombination=false (default) is byte-identical to omitting it', asy
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
+
+// ── Counterfactual receptor experiment: beam-survivor elite seeding ──────────────────────────────
+// Motivated by the 2026-08-13 stratified beam/repair producer-population pilot (zero exact-prefix /
+// zero metric-projection overlap across 25 levels — see BEAM_SEED_WIDTH's own comment). Positional
+// args through enableElitePrefixDfs=false, then enableBeamSeed=true (18th arg).
+
+test('repairSearchFromGate with enableBeamSeed=true only ever returns sound, valid solutions', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, false, false, false, true);
+    if (path) assert.equal(replayAndValidate(path, level, prep), true);
+});
+
+test('repairSearchFromGate with enableBeamSeed=true is deterministic', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, false, false, true);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, false, false, true);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+test('enableBeamSeed=false (default) is byte-identical to omitting it', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false, false, false, false);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+test('enableBeamSeed=true actually seeds the elite pool from a beam survivor before any restart', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    const arrivals: { producer: 'repair'; path: number[]; badness: number; arrivalNodes: number; restart: number }[] = [];
+    prep._repairEliteResearchObserver = { observe: record => arrivals.push(record) };
+    await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, 50_000, null, 0, false, false, false, false, false, true);
+    // At least one elite must have arrived at restart 0 -- i.e. before the restart loop's first
+    // increment (restartCount++ is the loop's very first statement) -- proving the seed step ran
+    // and inserted through considerElite BEFORE ordinary restart-driven discovery had a chance to.
+    assert.equal(arrivals.some(a => a.restart === 0), true, 'a beam-seeded elite arrived before restart 1');
+});
+
+test('enableBeamSeed=true charges the beam-seed cost against this call\'s own nodesExpanded, not a free extra pass', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    const out: { nodesExpanded?: number } = {};
+    // A tiny nodeBudget the ordinary restart loop alone could not possibly exceed in zero restarts,
+    // isolating the beam-seed step's own node cost as (most of) what gets reported.
+    await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1, out, 0, false, false, false, false, false, true);
+    assert.equal(prep._metrics.nodesExpanded > 0, true, 'the beam-seed step spent real, globally-counted nodes');
+    // The tiny nodeBudget=1 means the restart loop's own first check trips immediately on
+    // nodesExpandedLocal alone -- so out.nodesExpanded (set on that exit path) reports ONLY the
+    // beam-seed step's own cost, not any restart-loop spend.
+    assert.equal((out.nodesExpanded ?? 0) > 0, true, 'the beam-seed cost was charged to this call\'s own local counter, which the restart loop\'s own termination check reads');
+});
 
 // ── Stage 3-real prototype: reversible-operator path relinking ───────────────────────────────────
 test('relinkPaths recombines base prefix + guide suffix at a shared anchor into a valid solution', () => {

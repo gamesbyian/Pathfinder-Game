@@ -6,7 +6,30 @@ import type { SolverSearchState, PrepLevel } from './types.js';
 
 const _reachQ   = new Int32Array(512); // BFS queue; max grid is 15x15=225 cells
 let _reachGen   = 0;
-const _reachGenBuf = new Uint32Array(KEY_SPACE); // generation tracking (32-bit avoids wrap)
+const _reachGenBuf = new Uint32Array(KEY_SPACE);
+
+// Generation tags avoid clearing the 1M-entry packed-key buffer on every BFS, but the tags stored
+// in the Uint32Array must remain comparable with the JavaScript number in `_reachGen`.  Letting the
+// number advance past 0xFFFFFFFF silently breaks that invariant: writes truncate to uint32 while
+// `_reachCanEnter` compares them with the untruncated number, so already-enqueued cells stop looking
+// visited and a cyclic flood fill can overflow its fixed queue.  Pay the full clear once per 2^32
+// BFS calls instead.  This is the same reused-buffer failure class as the historical stale-row and
+// undersized-MST-scratch bugs, just at the generation counter boundary.
+function _nextReachGeneration(): number {
+    if (_reachGen >= 0xFFFFFFFF) {
+        _reachGenBuf.fill(0);
+        _reachGen = 1;
+    } else {
+        _reachGen++;
+    }
+    return _reachGen;
+}
+
+/** Test-only rollover seam; production callers must never manipulate scratch generations. */
+export function __setReachGenerationForTests(value: number, markedKey?: number): void {
+    _reachGen = value;
+    if (markedKey !== undefined) _reachGenBuf[markedKey] = 1;
+}
 
 /** Max grid width/height the bit-parallel flood fill handles: one 32-bit word per grid row, and
  *  the row-growth step shifts left by 1, so bit w must stay clear of the sign bit. Grids are
@@ -96,8 +119,7 @@ function _floodFillBfs(pos: number, state: SolverSearchState, level: NormalizedL
     const hasPortals = level.portalMap.size > 0;
 
     _reachMode = 0;
-    _reachGen++;
-    const gen = _reachGen;
+    const gen = _nextReachGeneration();
     let qHead = 0, qTail = 0;
     _reachGenBuf[pos] = gen;
     _reachQ[qTail++] = pos;
@@ -317,8 +339,11 @@ const EMPTY_KEYS: ArrayLike<number> = [];
  *  The only sound corner is intNeeded === 0, where the return trip's intersection is unaffordable —
  *  but that never coincides with the must-cross-heavy regime the prune was aimed at, since pending
  *  must-cross cells reserve intersections and keep intNeeded above zero. Not worth the code. */
+// Permitted error: reachable-set over-approximation only; see property: topology connectivity over-approximates every truly reachable required cell.
 export function isConnected(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
-    workMeter.units += CONNECTIVITY_WORK_UNITS;  // see work-meter.ts
+    // Dual increment — see applyMove's identical comment in search-state.ts.
+    workMeter.units += CONNECTIVITY_WORK_UNITS;
+    prep._workMeter.units += CONNECTIVITY_WORK_UNITS;
     const intNeeded = level.reqInt - state.ints;
     // Threshold: visited count allowed to pass through.
     //   0 intersections remaining: only unvisited cells (path acts as hard walls).
@@ -408,4 +433,3 @@ export function isConnectedForTrap(pos: number, state: SolverSearchState, level:
     }
     return true;
 }
-

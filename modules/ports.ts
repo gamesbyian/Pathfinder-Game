@@ -8,6 +8,7 @@
 
 import type { EngineLevel } from './domain/level-schema.js';
 import type { PackedKey } from './domain/cell-key.js';
+import type { Attempt } from './solver/orchestration.js';
 
 export interface LevelBounds { minX: number; minY: number; maxX: number; maxY: number; }
 
@@ -22,15 +23,35 @@ export type ReportError = (context: string, err: unknown, meta?: Record<string, 
 /** Result of validating a candidate path against the domain rules. */
 export type PathValidation = { ok: true; path: number[] } | { ok: false; reason: string };
 
-/** A solver run result (mirrors solver/orchestration.ts SolveResult). */
+/** Public solver result boundary. Attempt records use orchestration's canonical Attempt contract. */
 export interface SolveResult {
     ok: boolean;
     status: string;
     solution: number[] | null;
     solutions: number[][];
-    attempts: unknown[];
+    attempts: Attempt[];
     totalMs: number;
     nodesExpanded: number;
+    nodeBudgetReached?: boolean;
+    workSpent?: number;
+    workBudget?: number;
+    deadlineTruncated?: boolean;
+    solvedByPrime?: boolean;
+    techniqueLifecycle?: Record<string, unknown>;
+    schedulerMode?: 'legacy' | 'portfolio-experiment';
+    portfolio?: {
+        solvedBeforeFallback: boolean;
+        fallbackAttemptCount: number;
+        repeatedAttemptElapsedMs: number;
+        repeatedPrefixNodeUpperBound: number;
+        runtimeBreakdown?: {
+            prepMs: number;
+            portfolioAttemptSearchMs: number;
+            schedulerOverheadMs: number;
+            fallbackSearchMs: number;
+            totalMs: number;
+        };
+    };
 }
 
 /**

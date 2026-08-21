@@ -1,5 +1,11 @@
 # Evaluating the budget-fraction 1.5 candidate and candidate-flag widening (2026-07-17)
 
+> **Status:** concluded-negative
+> **Last evidence:** 2026-08-07 — sequential per-flag cost/evidence disposition
+> **Decision:** retain fraction 1.0 and the single `SCORE_GOAL_ATTRACTION` flag; do not schedule
+> sequential per-flag passes without a cheap selector or isolation mechanism
+> **Remaining gate:** none
+
 ## Background
 
 Two related open follow-ups from the attraction-diversity last-resort pass's implementation
@@ -85,7 +91,7 @@ check"), and given what this larger, independent sample shows:
 `ATTRACTION_DIVERSITY_CANDIDATE_FLAGS` based on this evidence.** Both remain at their current
 values (fraction 1.0, single `SCORE_GOAL_ATTRACTION` flag) — no code change made.
 
-## What would be worth trying next (not done here)
+## Historical alternative — subsequently closed
 
 The swapped-not-added result for combined widening suggests the two untested shapes from the
 original follow-up are not equivalent, and the untested one is more promising:
@@ -95,10 +101,11 @@ original follow-up are not equivalent, and the untested one is more promising:
   flag rescues individually — plausibly close to summing each flag's own individual rescue rate —
   rather than the lossy trade a combined pass produces. This was flagged as untested in the
   original implementation report specifically because of its cost: up to 5x the current pass's
-  budget (one rerun per candidate flag) instead of 1x. Whether that cost is worth the presumably
-  larger and more consistent rescue count is a genuinely open question this session didn't have
-  budget to answer, and would need its own dedicated sample-then-full-corpus verification pass
-  before any change, per the same standing rule.
+  budget (one rerun per candidate flag) instead of 1x. This is no longer an open queue item: the
+  repository-wide triage closed it because the measured combined form gained only 1/100 and the
+  sequential form multiplies the full-pass cost. Reopen only with a cheap selector or isolation
+  mechanism; see
+  [`docs/future-work.md`](../docs/future-work.md#older-loose-thread-triage-2026-08-07).
 - Any future test of either shape should draw an even larger sample (or, ideally, the real
   full-corpus GitHub Actions batch run) before concluding — this session's 100-level sample is
   already far more powered than the original 30, but a 1-in-100 finding is still a small-count

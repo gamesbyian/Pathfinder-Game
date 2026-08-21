@@ -37,6 +37,21 @@ test('admissibleOrderSearch solves a simple line level with a real tie-break pro
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
 });
 
+test('admissibleOrderSearch honors an exhausted experiment-only strict work cap before search', async () => {
+  const level = makeLevel();
+  const prep = prepLevel(level);
+  prep._cfg = null;
+  prep._metrics = { nodesExpanded: 0 };
+  // prep._workMeter.units (this fresh prep's own baseline, 0), not the module-global workMeter.units
+  // which accumulates across every solve/test in this process — see PrepLevel's own comment.
+  prep._strictWorkCap = prep._workMeter.units;
+  const out: { timedOut?: boolean; nodesExpanded?: number } = {};
+  const path = await admissibleOrderSearch(PACK(0, 0), level, prep, 1000, Date.now(), null, out);
+  assert.equal(path, null);
+  assert.deepEqual(out, { timedOut: true, nodesExpanded: 0 });
+  assert.equal(prep._metrics.nodesExpanded, 0);
+});
+
 test('admissibleOrderSearch solves the same level with tieBreakProfile: null (no tie-break)', async () => {
   const level = makeLevel();
   const prep = prepLevel(level);

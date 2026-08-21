@@ -32,6 +32,24 @@ export function winningAttempt(result, phase = null) {
     return (Array.isArray(result?.attempts) ? result.attempts : []).find(a => a?.ok && (!phase || a.schedulerPhase === phase)) ?? null;
 }
 
+function projectedAttemptError(error) {
+    const bounded = (value, fallback, max) => {
+        let string;
+        try { string = typeof value === 'string' ? value : value == null ? fallback : String(value); }
+        catch { string = fallback; }
+        return string.slice(0, max);
+    };
+    const field = (key) => { try { return error?.[key]; } catch { return undefined; } };
+    return {
+        name: bounded(field('name'), 'Error', 120),
+        message: bounded(field('message'), 'Unknown attempt error', 500),
+        gateKey: Number.isFinite(field('gateKey')) ? field('gateKey') : null,
+        configKey: bounded(field('configKey'), 'unknown', 240),
+        profile: bounded(field('profile'), 'unknown', 120),
+        template: field('template') == null ? null : bounded(field('template'), 'unknown', 120),
+    };
+}
+
 /** Portfolio-experiment attempts carry schedulerPhase ('portfolio'/'fallback'); plain legacy-mode
  *  attempts and race.mjs's raced attempts never do (confirmed: scripts/solver-parallel/
  *  benchmark.mjs finds its own winner the same phase-free way, `attempts.find(a => a.ok)`) — so a
@@ -54,8 +72,17 @@ export function passForWin(result) {
  *  the row level — see below). */
 export function attemptRecord(a) {
     return {
+        ...(a.stageId !== undefined ? { stageId: a.stageId } : {}),
         gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
         ok: a.ok, elapsedMs: a.elapsedMs,
+        ...(a.outcome !== undefined ? { outcome: a.outcome } : {}),
+        // Re-project an explicit whitelist instead of retaining an arbitrary thrown object or a
+        // future accidental `stack` field from an upstream transport.
+        ...(a.error !== undefined ? { error: projectedAttemptError(a.error) } : {}),
+        ...(a.passNumber !== undefined ? { passNumber: a.passNumber } : {}),
+        ...(a.configKey !== undefined ? { configKey: a.configKey } : {}),
+        ...(a.restart !== undefined ? { restart: a.restart } : {}),
+        ...(a.schedulerPhase !== undefined ? { schedulerPhase: a.schedulerPhase } : {}),
         // How much budget this attempt was actually GIVEN. Without it, an attempt that exhausted its
         // search and one that got a sliver of a divided budget are indistinguishable in a report --
         // which is exactly the question "did the last-resort tier get room to run?" needs answered.
@@ -68,6 +95,14 @@ export function attemptRecord(a) {
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
         ...(a.repairTurnBiased ? { repairTurnBiased: true } : {}),
+        // Distinguishes a runRepairProbe attempt from the same repair config re-run later by the
+        // full-budget repair fallback loop -- see orchestration.ts's Attempt.repairProbe comment.
+        ...(a.repairProbe ? { repairProbe: true } : {}),
+        // Separates a STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY re-run from the original shrunken
+        // probe attempt (both carry repairProbe) -- without this the recovery tier is invisible in
+        // every persisted report, the same drop-before-persist gap CLAUDE.md's provenance section
+        // documents for admissibleOrder.
+        ...(a.repairProbeShrinkRecovery ? { repairProbeShrinkRecovery: true } : {}),
         // The admissible-order-search last-resort tier's dispatch flags. Omitting these made every
         // one of its attempts indistinguishable from a plain DFS attempt in every persisted report
         // (measured: 0 attempts carrying these flags across the whole corpus-2 baseline and the
@@ -79,7 +114,17 @@ export function attemptRecord(a) {
         ...(a.admissibleOrder ? { admissibleOrder: true } : {}),
         ...(a.admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
         ...(a.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
+        ...(a.mainLoopLateReserve ? { mainLoopLateReserve: true } : {}),
         ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
+        ...(a.dedupNearTieRetry ? { dedupNearTieRetry: true } : {}),
+        ...(a.admissibleOrderNonDefaultRetry ? { admissibleOrderNonDefaultRetry: true } : {}),
+        ...(a.connectivityAxisExhaustedRetry ? { connectivityAxisExhaustedRetry: true } : {}),
+        ...(a.repairElitePrefixDfsRetry ? { repairElitePrefixDfsRetry: true } : {}),
+        ...(a.mcNeighborBudgetRetry ? { mcNeighborBudgetRetry: true } : {}),
+        ...(a.repairLateProbe ? { repairLateProbe: true } : {}),
+        ...(a.allocatedWorkCeiling !== undefined ? { allocatedWorkCeiling: a.allocatedWorkCeiling } : {}),
+        ...(a.allocatedNodeCeiling !== undefined ? { allocatedNodeCeiling: a.allocatedNodeCeiling } : {}),
+        ...(a.workSpent !== undefined ? { workSpent: a.workSpent } : {}),
         ...(a.randomSeed !== undefined ? { randomSeed: a.randomSeed } : {}),
         // seedSalt is the value to REPLAY a repair winner directly (repairPrimarySeed(gateKey,
         // seedSalt) derives randomSeed from it, not the other way around) -- only set on the
@@ -108,6 +153,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         id: id ?? null,
         ok: !!result?.ok,
         status: result?.status ?? 'unknown',
+        hadAttemptError: attempts.some(a => a.outcome === 'error'),
         error: result?.error ?? null,
         totalMs: result?.totalMs ?? null,
         elapsedMs: result?.totalMs ?? null,
@@ -118,6 +164,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         // docs/solver-budget-determinism.md. A deadlineTruncated row is NOT evidence of unsolvable.
         workSpent: result?.workSpent ?? null,
         deadlineTruncated: !!result?.deadlineTruncated,
+        techniqueLifecycle: result?.techniqueLifecycle ?? null,
         refereeValid: result?.refereeValid ?? null,
         solvedBeforeFallback,
         solvedByFallback,

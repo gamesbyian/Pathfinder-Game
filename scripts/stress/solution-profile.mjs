@@ -35,7 +35,7 @@ const LEVELS_JSON = args.get('--levels-json') || 'data/stress/stress-levels.json
 const CORPUS_TAG = path.basename(LEVELS_JSON, '.json') === 'levels' ? 'published' : path.basename(LEVELS_JSON, '.json');
 const OUT_FILE = args.get('--out') || `reports/stress/solution-profile-${CORPUS_TAG}.json`;
 const MIN_HINTS_PER_SOURCE = Number(args.get('--min-hints-per-source') || 3);
-const SEED = Number(args.get('--seed') || 20260703);
+const SEED = Number(args.get('--seed') ?? 20260703);
 const LEVEL_SPEC = args.get('--levels') || 'all';
 
 function main() {

@@ -1,90 +1,65 @@
-# Replaces the old 20-branch solver-corpus2-batch-*.yml + stress-corpus2-batch-NN branch scheme
-# (see .github/workflows/README-solver-corpus2-batches.md for that design's history and the
-# staleness bugs it caused twice). This single workflow solves BOTH stress corpora in one
-# workflow_dispatch and commits ONE combined result directly to main -- no persistent branches,
-# no checkpoint/resume, nothing to reset before a future run. See
-# .github/workflows/README-solver-stress-refresh.md for the full design rationale.
+# Canonical Pathfinder solver-capability workflow.
 #
-# 2026-07-23: corpus-1 folded into the same 20-shard matrix as corpus-2 (previously its own,
-# 21st job -- see README-solver-stress-refresh.md's "Sharding corpus-1 into the matrix" section
-# for why: a 21st concurrently-queued job left it waiting for a runner slot behind the 20-shard
-# matrix, nearly doubling total wall time). logs/solver-corpus2-batches/ now holds BOTH corpora's
-# per-shard files (kept the name -- renaming it would ripple into docs/history for no functional
-# gain): corpus-2's are unprefixed (batch-NN.json, unchanged), corpus-1's are corpus1-batch-NN.json
-# (new, distinct prefix so a plain `batch-*.json` glob still means "corpus-2 only" everywhere it
-# already did).
-#
-# 2026-07-23: --baseline-budget tried and reverted same day (see the sweep steps' own comment
-# below) -- it caused a real 503->473 solved-count regression on corpus-2 in this workflow's first
-# run under it. --prime-winner is kept (proven harmless + real potential upside).
-#
-# 2026-08-06: added an opt-in `deterministic` mode, porting the core safety property (not the full
-# dynamic-sharding machinery) from solver-typical-budget-baseline.yml's own `deterministic: true`.
-# WHY: reports/2026-08-01-budget-vs-algorithm.md measured that this workflow's own default budgets
-# (8000ms/20M for corpus-2) were WALL-CLOCK BINDING -- removing the deadline alone (same node/work
-# budget) found +32 corpus-2 solves, and raising the node budget 1.8x found +25 more, entirely from
-# configuration. Originally shipped additive-only (existing routine defaults untouched, deterministic
-# defaulting false) specifically because raising the ROUTINE defaults was called out as "a separate
-# decision this flag does not make" -- deliberately deferred, not decided, pending explicit sign-off.
-#
-# 2026-08-06 (same day, follow-up): that sign-off was given. The ROUTINE defaults below now ARE the
-# report's measured OFF@36M configuration (91 corpus-1 / 562 corpus-2 solved, 0 clock-bound, 0
-# deadline-truncated on a full deterministic run) -- corpus2_budget_ms/corpus1_budget_ms both default
-# to a non-binding 24h value (matching what `deterministic=true` already forced), corpus2_node_budget
-# defaults to 36M (up from 20M), and corpus1 now always gets a real node ceiling
-# (corpus1_node_budget, previously deterministic-only). This intentionally breaks strict numeric
-# continuity with every prior refresh's 8000ms/20M-shaped history -- that history was never a
-# deliberate target, it was inherited from `solver-corpus2-batch-*.yml`'s original budget, carried
-# forward each time this workflow was rewritten. The per-sweep timeout wrappers (previously widened
-# only under deterministic=true) are widened unconditionally for the same reason: routine runs are
-# now shaped the same way. `deterministic=true` still means something distinct: it forces a truly
-# unbounded 24h deadline regardless of what a dispatch types into corpus*_budget_ms (belt-and-braces
-# for a precise A/B), and -- unchanged from before -- it NEVER commits, so an ablation-flag experiment
-# (`enable_flags`) can be run and compared without touching the persisted baseline series at all.
-name: Solver stress-corpus refresh (corpus-1 + corpus-2)
+# CAPABILITY INVARIANT: each solve sees only the current puzzle mechanics plus current solver/config.
+# No saved hint, prior solution, baseline status, winning config/gate/seed, attempt cache, corpus
+# identity/position, provenance, or other exact-level history may influence the search. This mirrors
+# the level editor: a freshly created level has no history to consult. Historical artifacts remain
+# valuable as OUTPUTS for research and validation, but never as inputs to Solver.solve here.
+name: Solver stress-corpus refresh (level-blind capability)
 
 on:
   workflow_dispatch:
     inputs:
       corpus2_budget_ms:
-        description: 'Corpus-2: per-level solve budget in milliseconds. Defaults to a non-binding 24h value (2026-08-06: raised from the historical 8000ms, which was measured wall-clock-binding -- see reports/2026-08-01-budget-vs-algorithm.md). corpus2_node_budget is the real ceiling now, not this. deterministic=true forces 24h regardless of what you pass here.'
+        description: 'Corpus-2 per-level wall budget. Default 24h is intentionally non-binding; node/work budgets are the real ceilings.'
         required: false
         default: '86400000'
-      # 36M, not 20M: reports/2026-08-01-budget-vs-algorithm.md's OFF@36M row (91 corpus-1 / 562
-      # corpus-2 solved, 0 clock-bound, 0 deadline-truncated) is the measured, validated config this
-      # default now matches -- raised from 20M 2026-08-06 alongside removing the binding deadline
-      # above; the two changes were measured together and should be raised/lowered together, not
-      # independently. 20M, not 8M, was itself chosen because the early repair probe's own fixed
-      # internal worst case is ~8-10M nodes (REPAIR_PROBE_ORDINARY_NODE_BUDGET/_BIASED_NODE_BUDGET,
-      # orchestration.ts) -- at 8M a repair-gated level that needs the full probe has nothing left
-      # over for the main loop/fallback/attraction-diversity passes, silently defeating the point of
-      # the 2026-07-17 repair-probe budget fixes (see CLAUDE.md's budget-composition gotcha).
       corpus2_node_budget:
-        description: 'Corpus-2: per-level node-count ceiling -- the real stopping point now that corpus2_budget_ms defaults to non-binding. 36000000 matches the 2026-08-01 report''s measured OFF@36M configuration (562/1700 solved).'
+        description: 'Corpus-2 cumulative node ceiling per level. Unified with corpus1_node_budget (2026-08-12) -- previously 36000000, a value with no corpus-2-specific justification beyond an old, since-drifted wall-clock ratio; the solver should treat levels identically regardless of which corpus they came from. See corpus1_node_budget''s description for the unification rationale.'
         required: false
-        default: '36000000'
+        default: '50000000'
       corpus2_workers:
-        description: 'Corpus-2: cross-level worker processes per shard (GH-hosted ubuntu-latest runners have 2-4 cores)'
+        description: 'Cross-level worker processes per shard. Level-blindness is preserved even at 1 worker.'
         required: false
         default: '2'
       enable_flags:
-        description: 'Comma-separated ablation flags to turn ON (portfolio-solve-sweep --enable-flags), applied to BOTH corpora, e.g. STRATEGY_REPAIR_TURN_BIAS. Blank = baseline. Run the refresh twice (blank vs flag) to A/B; keep the repair fallback on (do NOT pass a repair-budget-fraction of 0). The default budget is fine — turn bias solves early now (its attempt runs first).'
+        description: 'Comma-separated ablation flags to turn ON for both corpora.'
         required: false
         default: ''
+      disable_flags:
+        description: 'Comma-separated ablation flags to turn OFF for both corpora.'
+        required: false
+        default: ''
+      main_loop_late_reserve_fraction:
+        description: 'Optional STRATEGY_MAIN_LOOP_LATE_RESERVE fraction; blank for control.'
+        required: false
+        default: ''
+      main_loop_late_reserve_config_count:
+        description: 'Optional late-reserve suffix config count; frozen experiment uses 4.'
+        required: false
+        default: ''
+      persist_hints:
+        description: 'Save newly discovered valid solutions/provenance after solving, into data/stress/hints*/. Output-only: saved hints never enter the solve. Independent of the per-run analysis summary under reports/stress/capability-runs/RUN_ID/, which is always committed regardless of this flag -- see the combine job''s "Persist capability outputs" step.'
+        required: false
+        default: 'true'
       corpus1_budget_ms:
-        description: 'Corpus-1: per-level solve budget in milliseconds. Defaults to a non-binding 24h value (2026-08-06: raised from the historical 20000ms alongside corpus2_budget_ms -- see corpus2_budget_ms''s own description). corpus1_node_budget is the real ceiling now. deterministic=true forces 24h regardless of what you pass here.'
+        description: 'Corpus-1 per-level wall budget. Default 24h is intentionally non-binding.'
         required: false
         default: '86400000'
       corpus1_node_budget:
-        description: 'Corpus-1: per-level node-count ceiling -- now ALWAYS applied (2026-08-06: previously deterministic-only, back when corpus1_budget_ms stayed small enough that a real ceiling wasn''t needed; corpus-1''s sweep now always passes this via --node-budget). 50000000 is the sibling workflow''s own analog value for a corpus this size.'
+        description: 'Corpus-1 cumulative node ceiling per level. Unified with corpus2_node_budget at 50000000 (2026-08-12): the two previously differed (corpus-1 50000000 vs corpus-2 36000000) purely because corpus-1''s number was mechanically derived from an old wall-clock ratio (20000ms corpus-1 : 8000ms corpus-2) applied to corpus-2''s node budget AT THE TIME (20000000) -- never independently justified, and never revisited when corpus-2''s own number was later raised to 36000000, leaving the two inconsistent with even their own original ratio. The solver should be corpus-agnostic: a level''s budget must not depend on which corpus it happens to live in. See reports/2026-08-12-main-loop-late-reserve-population-ab.md for the investigation that surfaced this.'
         required: false
         default: '50000000'
       corpus1_workers:
-        description: 'Corpus-1: cross-level worker processes per shard (same idea as corpus2_workers — each shard only carries ~5-6 corpus-1 levels, so this rarely matters)'
+        description: 'Cross-level worker processes per shard.'
         required: false
         default: '2'
       deterministic:
-        description: 'true = strict A/B mode: forces both ms deadlines to a truly unbounded 24h value regardless of what corpus*_budget_ms is set to (belt-and-braces for a precise comparison), and NEVER commits -- results are combined and uploaded as an artifact only, so an enable_flags experiment can be run and compared without touching the persisted baseline series. false (default, 2026-08-06 routine defaults) commits to main as always, now at the non-binding budget shape described above rather than the old binding one.'
+        description: 'true forces a 24h non-binding deadline and skips overwriting the canonical logs/*baseline.json and reports/stress/ "latest" files; hints persist only if persist_hints=true. The compact per-run analysis summary (reports/stress/capability-runs/RUN_ID/) is always committed either way -- it is namespaced by run id, so it can never let one A/B arm mutate what a queued arm measures. Use true + persist_hints=false for matched A/B arms.'
+        required: false
+        default: 'false'
+      lifecycle_telemetry:
+        description: 'true adds --lifecycle-telemetry to both corpus solves (per-technique eligible/reached/starved/exhausted record on every row -- see modules/solver/orchestration.ts finish()) and has the combine job emit a mass-weighted failure map (scripts/stress/lifecycle-failure-map.mjs) over the full unsolved population. Opt-in: adds negligible per-level overhead (post-processing only) but the resulting combined benchmark files carry a techniqueLifecycle field on every row, which older analysis tooling does not expect.'
         required: false
         default: 'false'
 
@@ -93,17 +68,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # 20 parallel shards, each carrying a slice of BOTH corpora: 85 of corpus-2's 1700 levels (exact
-  # split) plus ~5-6 of corpus-1's 102 levels (102/20 doesn't divide evenly; shards 10 and 20 get 6,
-  # the rest get 5 — computed below, not hardcoded, so it stays correct if either corpus is resized).
-  # One job, one matrix -- corpus-1 no longer gets its own job (see the top-of-file 2026-07-23 note
-  # for why). Each shard only uploads an artifact; it never commits to git, so there is no
-  # branch/checkpoint state to go stale between runs. Deliberately NOT using portfolio-solve-sweep's
-  # --resume/--checkpoint: every trigger is a full, fresh solve of every level in range, matching how
-  # this workflow is actually used (on-demand workflow_dispatch, not a background job meant to be
-  # resumed).
   solve-shards:
-    name: Stress shard ${{ matrix.shard }}/20 (corpus-1 + corpus-2)
+    name: Capability shard ${{ matrix.shard }}/20
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
@@ -113,10 +79,12 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     steps:
-      - name: Check out main
+      - name: Check out the dispatched commit exactly
         uses: actions/checkout@v4
         with:
-          ref: main
+          # Pin the immutable dispatch SHA. Using github.ref here caused run #32 to start at
+          # ddb3ef... but queued shards to resolve a later main tip c86ba8....
+          ref: ${{ github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -127,15 +95,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Compute this shard's level ranges (corpus-1 102/20, corpus-2 85/shard, 1700 total)
+      - name: Compute shard ranges
         id: range
         shell: bash
         run: |
           nn=$(printf '%02d' "${{ matrix.shard }}")
           c2start=$(( (${{ matrix.shard }} - 1) * 85 + 1 ))
           c2end=$(( ${{ matrix.shard }} * 85 ))
-          # Floor-based even split of 102 levels across 20 shards (5 or 6 each, sums to exactly
-          # 102 with no gaps/overlaps) -- not hardcoded per-shard since 102/20 isn't exact.
           c1start=$(( ( (${{ matrix.shard }} - 1) * 102 ) / 20 + 1 ))
           c1end=$(( ( ${{ matrix.shard }} * 102 ) / 20 ))
           echo "nn=${nn}" >> "$GITHUB_OUTPUT"
@@ -144,200 +110,103 @@ jobs:
           echo "c1start=${c1start}" >> "$GITHUB_OUTPUT"
           echo "c1end=${c1end}" >> "$GITHUB_OUTPUT"
 
-      - name: Prepare log files (always creates valid result files before anything else runs)
-        shell: bash
-        run: |
-          mkdir -p logs/solver-corpus2-batches
-          cat > "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" <<'JSON'
-          {
-           "summary": { "corpus": "data/stress/stress-levels-random.json", "budgetMs": null, "status": "not-started" },
-           "levels": [],
-           "note": "placeholder written before the sweep ran; overwritten with real results as soon as the first level completes"
-          }
-          JSON
-          touch "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.console.log"
-          cat > "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.json" <<'JSON'
-          {
-           "summary": { "corpus": "data/stress/stress-levels.json", "budgetMs": null, "status": "not-started" },
-           "levels": [],
-           "note": "placeholder written before the sweep ran; overwritten with real results as soon as the first level completes"
-          }
-          JSON
-          touch "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.console.log"
-
-      # NOTE: --baseline-budget deliberately NOT passed (tried 2026-07-23, reverted same day) -- its
-      # adaptive per-level node cap (K x a level's baseline-recorded nodesExpanded) assumes a
-      # deterministic re-solve, which is false for a repair-search winner without a recorded seed
-      # (this baseline predates the seed-persistence fix): repair tries a fresh random seed each cold
-      # attempt, so its node cost varies run-to-run, and 3x one historical lucky sample is frequently
-      # too tight. Confirmed on this exact run: corpus-2 dropped 503->473 solved (45 regressions, 1
-      # new solve) -- R00001 is the traced example (capped at exactly 3x556's old nodesExpanded,
-      # hit node-budget-reached burning 3 fresh-seed repair attempts). --prime-winner is KEPT: it
-      # already self-gates away from exactly this case (no seed to replay = no priming attempted,
-      # confirmed via R00001's own attempts array showing no prime), so it did no harm here and its
-      # only cost on a miss is one bounded extra attempt. See
-      # reports/2026-07-23-solver-batch-speed-and-hint-provenance.md for the full writeup.
-      - name: Run portfolio-solve-sweep on this shard's corpus-1 slice (small; legacy scheduler, matches production)
-        id: sweep-corpus1
+      - name: Run level-blind Corpus-1 slice
+        id: c1
         continue-on-error: true
         shell: bash
+        env:
+          DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus1_budget_ms }}
         run: |
           set +e
-          ENABLE_FLAGS_ARG=""
-          if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
-          # 2026-08-06: corpus1_node_budget now ALWAYS applies (previously deterministic-only, back
-          # when the routine corpus1_budget_ms default stayed small enough that no real node ceiling
-          # was needed -- see corpus1_node_budget's own description). The 45m wrapper is likewise now
-          # unconditional: routine runs are shaped the same non-binding way deterministic runs always
-          # were, so both need the same room for the ms deadline to actually go non-binding instead
-          # of being replaced by an equally-binding wrapper cutoff.
-          #
-          # --work-budget, ADDED 2026-08-06 (see reports/2026-08-06-near-twin-starvation-fix.md):
-          # without it, portfolio-solve-sweep.mjs derives workBudget from --budget-ms alone (x
-          # DEFAULT_WORK_PER_MS, orchestration.ts) -- with DEADLINE_C1 at the non-binding 24h value
-          # this makes workBudget effectively infinite (~289 BILLION work units), so the ladder's own
-          # per-attempt WORK-based fair-division (attemptBudgetShare) never actually binds and the
-          # FIRST attempt tried (main-loop, repair fallback, or a --prime-winner miss) is free to run
-          # all the way to the much smaller --node-budget ceiling by itself, leaving every later
-          # attempt (including the level's real winning technique) exactly 0 nodes -- confirmed as the
-          # root cause of all 9 starvation/never-attempted cases in
-          # reports/2026-08-06-near-twin-solver-response-comparison.md (3 confirmed via exact
-          # repairPrimarySeed(gateKey,0) match to a --prime-winner miss; the other 6 via the identical
-          # "first attempt burns ~(nodeBudget x (1 - AO reserve)), everything else 0" shape). CLAUDE.md
-          # already documents "pass --work-budget with a generous --budget-ms" for exactly this
-          # reason. 1.34x node-budget matches this codebase's own established ratio (the
-          # --budget-ms=8000/--node-budget=20000000/--work-budget=26800000 recipe used throughout
-          # docs/solver-architecture.md and this session's A/B reports, itself DEFAULT_WORK_PER_MS x
-          # 8000ms) -- derived from node-budget rather than a second static input so a future
-          # node-budget override can't silently drift out of sync with it.
-          WORK_BUDGET_C1=$(( ${{ inputs.corpus1_node_budget }} * 134 / 100 ))
-          timeout -k 30s --preserve-status 45m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+          mkdir -p logs/solver-corpus2-batches
+          extra=()
+          [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+          [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-loop-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
+          [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ] && extra+=("--main-loop-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}")
+          [ "${{ inputs.persist_hints }}" = "true" ] && extra+=("--save-hints")
+          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
+          work=$(( ${{ inputs.corpus1_node_budget }} * 134 / 100 ))
+          timeout -k 30s --preserve-status 45m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus=data/stress/stress-levels.json \
             --levels="pos:${{ steps.range.outputs.c1start }}-${{ steps.range.outputs.c1end }}" \
-            --scheduler-mode=legacy \
-            --budget-ms="${DEADLINE_C1}" \
+            --budget-ms="${DEADLINE}" \
             --node-budget="${{ inputs.corpus1_node_budget }}" \
-            --work-budget="${WORK_BUDGET_C1}" \
+            --work-budget="${work}" \
             --workers="${{ inputs.corpus1_workers }}" \
-            --baseline=logs/stress-corpus1-baseline.json \
-            --prime-winner \
-            $ENABLE_FLAGS_ARG \
-            --save-hints \
+            "${extra[@]}" \
             --out="logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.json" \
-            --summary-out="logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}-summary.md" \
-            2>&1 | tee -a "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.console.log"
-          status=${PIPESTATUS[0]}
+            --summary-out="logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}-summary.md"
+          status=$?
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
-        env:
-          # See solver-typical-budget-baseline.yml's identical pattern: raising the deadline until
-          # the wall clock cannot bind is what makes a run reproducible.
-          DEADLINE_C1: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus1_budget_ms }}
 
-      - name: Run portfolio-solve-sweep on this shard's corpus-2 slice (legacy scheduler, matches production)
-        id: sweep-corpus2
+      - name: Run level-blind Corpus-2 slice
+        id: c2
         continue-on-error: true
         shell: bash
+        env:
+          DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus2_budget_ms }}
         run: |
           set +e
-          ENABLE_FLAGS_ARG=""
-          if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
-          # 2026-08-06: 300m (down slightly from the old 320m) to keep the two sweeps' combined
-          # worst case (45m + 300m = 345m) safely under the job's 360-minute timeout-minutes, itself
-          # already at GitHub-hosted runners' 6-hour hard per-job ceiling -- this cannot be raised
-          # further, only better-utilized. Both wrappers are unconditional now: routine runs are
-          # shaped the same non-binding way deterministic runs always were (see corpus-1's identical
-          # comment above).
-          #
-          # --work-budget: see corpus-1's identical comment above (same starvation mechanism, same
-          # 1.34x-node-budget derivation).
-          WORK_BUDGET_C2=$(( ${{ inputs.corpus2_node_budget }} * 134 / 100 ))
-          timeout -k 30s --preserve-status 300m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+          extra=()
+          [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+          [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-loop-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
+          [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ] && extra+=("--main-loop-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}")
+          [ "${{ inputs.persist_hints }}" = "true" ] && extra+=("--save-hints")
+          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
+          work=$(( ${{ inputs.corpus2_node_budget }} * 134 / 100 ))
+          timeout -k 30s --preserve-status 300m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus=data/stress/stress-levels-random.json \
             --levels="pos:${{ steps.range.outputs.c2start }}-${{ steps.range.outputs.c2end }}" \
-            --scheduler-mode=legacy \
-            --budget-ms="${DEADLINE_C2}" \
+            --budget-ms="${DEADLINE}" \
             --node-budget="${{ inputs.corpus2_node_budget }}" \
-            --work-budget="${WORK_BUDGET_C2}" \
+            --work-budget="${work}" \
             --workers="${{ inputs.corpus2_workers }}" \
-            --baseline=logs/stress-corpus2-baseline.json \
-            --prime-winner \
-            $ENABLE_FLAGS_ARG \
-            --save-hints \
+            "${extra[@]}" \
             --out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" \
-            --summary-out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}-summary.md" \
-            2>&1 | tee -a "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.console.log"
-          status=${PIPESTATUS[0]}
+            --summary-out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}-summary.md"
+          status=$?
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
-        env:
-          DEADLINE_C2: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus2_budget_ms }}
 
-      - name: Stage this shard's changed files for upload (both corpora's reports + any new/changed hint files)
+      - name: Stage shard artifact
         if: always()
         shell: bash
         run: |
           stage="artifact-staging/stress-shard-${{ steps.range.outputs.nn }}"
-          mkdir -p "${stage}/logs/solver-corpus2-batches" "${stage}/data/stress/hints" "${stage}/data/stress/hints-random"
+          mkdir -p "$stage/logs/solver-corpus2-batches" "$stage/data/stress/hints" "$stage/data/stress/hints-random"
           for f in \
             "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" \
             "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}-summary.md" \
-            "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.console.log" \
             "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.json" \
-            "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}-summary.md" \
-            "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.console.log"; do
-            cp "$f" "${stage}/logs/solver-corpus2-batches/" 2>/dev/null || true
+            "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}-summary.md"; do
+            [ -e "$f" ] && cp "$f" "$stage/logs/solver-corpus2-batches/"
           done
-          # Only this shard's own hint files change (disjoint level ranges across shards, for each
-          # corpus independently), so a plain git-status diff against the fresh checkout is a safe,
-          # precise changed-file list.
           git status --porcelain -- data/stress/hints/ data/stress/hints-random/ | awk '{print $2}' | while read -r f; do
-            mkdir -p "${stage}/$(dirname "$f")"
-            cp "$f" "${stage}/${f}"
+            mkdir -p "$stage/$(dirname "$f")"
+            cp "$f" "$stage/$f"
           done
 
-      - name: Upload this shard's staged results as an artifact
+      - name: Upload shard artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          # Must match the staging step's directory name exactly (steps.range.outputs.nn, zero-
-          # padded) -- NOT matrix.shard (unpadded). These silently diverged for shards 1-9 in the
-          # 2026-07-18 trial run: the staging step wrote to .../corpus2-shard-01/ while this step
-          # looked for .../corpus2-shard-1/, found nothing, and "if-no-files-found: warn" let the
-          # step (and the whole job) report success while uploading zero bytes -- 9/20 shards'
-          # results were silently dropped from that refresh's combine. Confirmed via that run's
-          # own logs ("No files were found with the provided path: artifact-staging/corpus2-shard-1.
-          # No artifacts will be uploaded.") and cross-checked against list_workflow_run_artifacts
-          # (only shards 10-20 appeared, since printf '%02d' happens to equal the raw shard number
-          # as a string for those, masking the bug for two-digit shards only).
           name: stress-shard-${{ steps.range.outputs.nn }}
           path: artifact-staging/stress-shard-${{ steps.range.outputs.nn }}
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 90
 
-      - name: Fail the job if either sweep failed (visibility only -- artifacts already uploaded above)
+      - name: Fail on unexpected sweep error
         if: >-
           always() &&
-          ((steps.sweep-corpus1.outputs.exit_code != '0' && steps.sweep-corpus1.outputs.exit_code != '124' && steps.sweep-corpus1.outputs.exit_code != '143') ||
-          (steps.sweep-corpus2.outputs.exit_code != '0' && steps.sweep-corpus2.outputs.exit_code != '124' && steps.sweep-corpus2.outputs.exit_code != '143'))
-        run: |
-          echo "sweep-corpus1 exit_code=${{ steps.sweep-corpus1.outputs.exit_code }}"
-          echo "sweep-corpus2 exit_code=${{ steps.sweep-corpus2.outputs.exit_code }}"
-          echo "Note: exit codes 124/143 (timeout/SIGTERM from the timeout wrapper) are treated as expected for a" \
-               "budget-exhausting shard, not a failure -- whatever was found before the timeout was already" \
-               "uploaded as this shard's artifact."
-          exit 1
+          ((steps.c1.outputs.exit_code != '0' && steps.c1.outputs.exit_code != '124' && steps.c1.outputs.exit_code != '143') ||
+           (steps.c2.outputs.exit_code != '0' && steps.c2.outputs.exit_code != '124' && steps.c2.outputs.exit_code != '143'))
+        run: exit 1
 
-  # Runs whether or not every shard succeeded (if: always()) so a partial refresh -- some shards
-  # timed out, say -- still gets combined and committed rather than silently discarded. This is the
-  # ONLY job in the whole workflow that touches git history: it downloads every artifact, lays the
-  # changed files onto a fresh main checkout, archives the PREVIOUS refresh's live report files (so
-  # nothing is overwritten without a permanent copy first -- see the archive step below),
-  # regenerates both corpora's baselines/dev-benchmark curation, and commits once, directly to main.
-  # No branches, no per-shard pushes, no reset step needed before the next run -- the next trigger
-  # just starts from main's tip again, which this job always leaves clean.
   combine:
-    name: Combine results and commit to main
+    name: Combine level-blind capability results
     needs: [solve-shards]
     if: always()
     runs-on: ubuntu-latest
@@ -345,10 +214,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Check out main
+      - name: Check out the dispatched commit exactly
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
       - name: Setup Node
@@ -360,127 +229,159 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download every shard's artifact
+      - name: Download shard artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: 'stress-shard-*'
           path: artifact-staging/downloaded
           merge-multiple: true
 
-      - name: Archive the previous refresh's live report files before overwriting them
+      - name: Remove stale live shard files, lay down this run, and combine
         shell: bash
         run: |
-          # reports/stress/benchmark-latest.json is checked for here too (but never written by
-          # this workflow), it's the last genuinely sequential corpus-1 run, from before the
-          # 2026-07-18 switch to --parallel and the 2026-07-23 fold into this shard matrix. Left in
-          # place permanently as a frozen reference point rather than archived/rotated, since no
-          # future run will ever refresh it.
-          # stamp is a full timestamp (date+time), not just date -- a day-only stamp collides
-          # when this workflow runs more than once in the same UTC day: the 2nd 2026-07-18 run
-          # hit "fatal: destination exists" from `git mv` because the 1st run's same-day archive
-          # folder (logs/solver-corpus2-batches/archive/2026-07-18-refresh/) already had a
-          # batch-10.json in it, aborting this whole step (set -e) and skipping every downstream
-          # step (lay-down/combine/commit) for the rest of the job. No data was lost (the failure
-          # is before anything gets overwritten), but the refresh silently produced no commit.
-          if [ -n "$(ls -A logs/solver-corpus2-batches/*.json 2>/dev/null)" ] || [ -f reports/stress/benchmark-parallel.json ]; then
-            stamp="$(date -u +%Y-%m-%dT%H%M%SZ)-refresh"
-            dest="logs/solver-corpus2-batches/archive/${stamp}"
-            mkdir -p "${dest}"
-            for f in logs/solver-corpus2-batches/batch-*.json logs/solver-corpus2-batches/batch-*-summary.md logs/solver-corpus2-batches/batch-*.console.log \
-                     logs/solver-corpus2-batches/corpus1-batch-*.json logs/solver-corpus2-batches/corpus1-batch-*-summary.md logs/solver-corpus2-batches/corpus1-batch-*.console.log; do
-              [ -e "$f" ] && git mv "$f" "${dest}/$(basename "$f")"
-            done
-            [ -f reports/stress/benchmark-parallel.json ] && cp reports/stress/benchmark-parallel.json "${dest}/corpus1-benchmark-parallel.json"
-            [ -f reports/stress/benchmark-latest-random.json ] && cp reports/stress/benchmark-latest-random.json "${dest}/corpus2-benchmark-latest-random.json"
-            echo "Archived previous refresh's live files under ${dest}."
-          else
-            echo "No previous live report files found -- nothing to archive (first run, or already archived)."
-          fi
-
-      - name: Lay the downloaded shard results onto the working tree
-        shell: bash
-        run: |
+          # A missing artifact must become missing coverage, never silently inherit a shard from the
+          # checked-out previous refresh.
+          rm -f logs/solver-corpus2-batches/batch-*.json \
+                logs/solver-corpus2-batches/batch-*-summary.md \
+                logs/solver-corpus2-batches/corpus1-batch-*.json \
+                logs/solver-corpus2-batches/corpus1-batch-*-summary.md
           cp -a artifact-staging/downloaded/. ./
+          C1=$(ls logs/solver-corpus2-batches/corpus1-batch-*.json 2>/dev/null | paste -sd, -)
+          C2=$(ls logs/solver-corpus2-batches/batch-*.json 2>/dev/null | paste -sd, -)
+          [ -n "$C1" ] && npm run solver:combine-corpus2-batches -- --in="${C1}" --out=reports/stress/benchmark-parallel.json
+          [ -n "$C2" ] && npm run solver:combine-corpus2-batches -- --in="${C2}" --out=reports/stress/benchmark-latest-random.json
 
-      - name: Combine each corpus's 20 shard reports + regenerate baselines and dev-benchmark curation
+      - name: Verify complete coverage and level-blind provenance
+        id: coverage
+        continue-on-error: true
         shell: bash
         run: |
-          # Two separate combines, not one --in-dir pass: the directory holds BOTH corpora's batch
-          # files (distinguished only by the corpus1-batch-* prefix), and the combiner itself
-          # rejects a mixed-corpus input set (its own mismatched-corpus guard) -- so each corpus's
-          # files must be explicitly listed via --in rather than handed the whole directory.
-          CORPUS1_FILES=$(ls logs/solver-corpus2-batches/corpus1-batch-*.json | paste -sd, -)
-          npm run solver:combine-corpus2-batches -- --in="${CORPUS1_FILES}" --out=reports/stress/benchmark-parallel.json
-          CORPUS2_FILES=$(ls logs/solver-corpus2-batches/batch-*.json | paste -sd, -)
-          npm run solver:combine-corpus2-batches -- --in="${CORPUS2_FILES}" --out=reports/stress/benchmark-latest-random.json
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const expected = [['reports/stress/benchmark-parallel.json', 102], ['reports/stress/benchmark-latest-random.json', 1700]];
+          let ok = true;
+          for (const [file, total] of expected) {
+            if (!fs.existsSync(file)) { console.error(`${file}: missing`); ok = false; continue; }
+            const report = JSON.parse(fs.readFileSync(file, 'utf8'));
+            const rows = report.levels ?? [];
+            if (rows.length !== total) { console.error(`${file}: ${rows.length}/${total} levels; incomplete.`); ok = false; }
+            if (rows.some(r => r.solvedByPrime)) { console.error(`${file}: solvedByPrime appeared in a capability report.`); ok = false; }
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `complete=${ok ? 'true' : 'false'}\n`);
+          if (!ok) process.exit(1);
+          NODE
+
+      - name: Regenerate derived stress metadata and compact run record
+        if: steps.coverage.outputs.complete == 'true'
+        shell: bash
+        run: |
           node scripts/stress/rank-levels.mjs --in=reports/stress/benchmark-latest-random.json --status=unsolved --top=30 || true
           node scripts/stress/classify-stability.mjs --in=reports/stress/benchmark-latest-random.json --out=reports/stress/stability-random.json || true
           npm run stress:curate-dev-benchmark -- --benchmark=reports/stress/benchmark-latest-random.json || true
           node scripts/stress/compile-baseline.mjs --mode=corpus2 --official=reports/stress/benchmark-latest-random.json
           node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-parallel.json
-
-      # A truncated level is indeterminate, not unsolved -- and under deterministic=true the whole
-      # point is reproducibility, so any clock-bound level here means the wrapper timeout (not the
-      # removed ms deadline) ended up the actual binding constraint. Ported from
-      # solver-typical-budget-baseline.yml's identical step; see that workflow's own comment for why
-      # `deadlineTruncated` alone is not enough (a level can be entirely clock-decided without ever
-      # setting that flag).
-      - name: Check that the wall deadline never bound (informational under deterministic=true)
-        shell: bash
-        run: |
-          set -euo pipefail
+          mkdir -p "reports/stress/capability-runs/${{ github.run_id }}"
           node - <<'NODE'
-          const { readFileSync, existsSync } = require('node:fs');
-          let truncated = 0, total = 0, clockBound = 0;
-          const deadlines = {
-            'reports/stress/benchmark-parallel.json': Number(process.env.DEADLINE_C1 || 0),
-            'reports/stress/benchmark-latest-random.json': Number(process.env.DEADLINE_C2 || 0),
+          // This directory is the ONLY durable, always-committed record of a run's per-level result --
+          // the uploaded Actions artifact (raw benchmark JSON, full attempts/techniqueLifecycle detail)
+          // is NOT a substitute: it lives on Azure blob storage, whose download has been observed
+          // blocked (403) by at least one Claude sandbox's egress policy (see the "Print repair-probe
+          // badness distribution" step's own note, and reports/2026-08-15-connectivity-axis-exhausted-
+          // regression.md's follow-up). A "leaner than the raw report, richer than an aggregate count"
+          // per-level projection is written here specifically so a later flip/regression analysis never
+          // depends on artifact-zip access being available.
+          const fs = require('node:fs');
+          const dir = `reports/stress/capability-runs/${process.env.RUN_ID}`;
+          const project = file => {
+            const r = JSON.parse(fs.readFileSync(file, 'utf8'));
+            const rows = r.levels ?? [];
+            return {
+              commitSha: r.commitSha,
+              rows: rows.map(x => ({
+                id: x.id ?? String(x.level), level: x.level, ok: x.ok, status: x.status,
+                nodesExpanded: x.nodesExpanded, workSpent: x.workSpent, elapsedMs: x.elapsedMs,
+                deadlineTruncated: x.deadlineTruncated, winningConfig: x.winningConfig,
+                attemptCount: x.attemptCount, failedStrategies: x.failedStrategies,
+                solution: x.solution,
+              })),
+            };
           };
-          for (const [f, deadline] of Object.entries(deadlines)) {
-            if (!existsSync(f)) continue;
-            for (const lv of JSON.parse(readFileSync(f, 'utf8')).levels ?? []) {
-              total++;
-              if (lv.deadlineTruncated || lv.status === 'deadline-truncated') {
-                truncated++;
-                if (truncated <= 20) console.log(`  truncated: ${lv.id ?? lv.level} (${f})`);
-              } else if (deadline > 0 && (lv.elapsedMs ?? 0) >= deadline * 0.98) {
-                clockBound++;
-              }
-            }
-          }
-          console.log(`${truncated}/${total} level(s) reported deadline truncation.`);
-          console.log(`${clockBound}/${total} level(s) were CLOCK-BOUND (elapsed reached the deadline without the flag).`);
-          if (truncated > 0) {
-            console.log('::warning::Deadline-truncated levels are INDETERMINATE, not unsolved.');
-          }
-          if (clockBound > 0) {
-            console.log(`::warning::${clockBound} level(s) were decided by the wall clock -- under deterministic=true this means the per-shard timeout wrapper (not the removed ms deadline) bound instead, so this run is not fully reproducible.`);
-          }
+          const summarize = projected => ({
+            total: projected.rows.length,
+            solved: projected.rows.filter(x => x.ok).length,
+            solvedIds: projected.rows.filter(x => x.ok).map(x => x.id).sort(),
+            nodes: projected.rows.reduce((n,x) => n + (x.nodesExpanded || 0), 0),
+            work: projected.rows.reduce((n,x) => n + (x.workSpent || 0), 0),
+            commitSha: projected.commitSha,
+          });
+          const c1 = project('reports/stress/benchmark-parallel.json');
+          const c2 = project('reports/stress/benchmark-latest-random.json');
+          const record = {
+            runId: process.env.RUN_ID,
+            solverRef: process.env.SOLVER_REF,
+            levelBlind: true,
+            enableFlags: process.env.ENABLE_FLAGS,
+            disableFlags: process.env.DISABLE_FLAGS,
+            deterministic: process.env.DETERMINISTIC,
+            persistHints: process.env.PERSIST_HINTS,
+            corpus1: summarize(c1),
+            corpus2: summarize(c2),
+          };
+          fs.writeFileSync(`${dir}/summary.json`, JSON.stringify(record, null, 2) + '\n');
+          fs.writeFileSync(`${dir}/per-level-corpus1.json`, JSON.stringify(c1, null, 2) + '\n');
+          fs.writeFileSync(`${dir}/per-level-corpus2.json`, JSON.stringify(c2, null, 2) + '\n');
           NODE
         env:
-          DEADLINE_C1: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus1_budget_ms }}
-          DEADLINE_C2: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus2_budget_ms }}
+          RUN_ID: ${{ github.run_id }}
+          SOLVER_REF: ${{ github.sha }}
+          ENABLE_FLAGS: ${{ inputs.enable_flags }}
+          DISABLE_FLAGS: ${{ inputs.disable_flags }}
+          DETERMINISTIC: ${{ inputs.deterministic }}
+          PERSIST_HINTS: ${{ inputs.persist_hints }}
 
-      - name: Print solved counts (readable even when not committing)
+      - name: Mass-weighted lifecycle failure map
+        if: steps.coverage.outputs.complete == 'true' && inputs.lifecycle_telemetry == 'true'
         shell: bash
         run: |
-          set -euo pipefail
-          echo "flags: enable='${{ inputs.enable_flags }}' deterministic='${{ inputs.deterministic }}'"
+          node scripts/stress/lifecycle-failure-map.mjs \
+            --in=reports/stress/benchmark-parallel.json \
+            --out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus1.json" \
+            --summary-out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus1-summary.md"
+          node scripts/stress/lifecycle-failure-map.mjs \
+            --in=reports/stress/benchmark-latest-random.json \
+            --out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus2.json" \
+            --summary-out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus2-summary.md"
+
+      - name: Print solved counts
+        if: steps.coverage.outputs.complete == 'true'
+        shell: bash
+        run: |
           node - <<'NODE'
-          const { readFileSync, existsSync } = require('node:fs');
-          for (const [name, f] of [['corpus-1', 'reports/stress/benchmark-parallel.json'],
-                                   ['corpus-2', 'reports/stress/benchmark-latest-random.json']]) {
-            if (!existsSync(f)) { console.log(`${name}: MISSING`); continue; }
-            const rows = JSON.parse(readFileSync(f, 'utf8')).levels ?? [];
-            const ok = rows.filter(r => r.ok).length;
-            const nodes = rows.reduce((a, b) => a + (b.nodesExpanded || 0), 0);
-            console.log(`SOLVED ${name}: ${ok}/${rows.length}  nodes=${nodes}`);
+          const fs = require('node:fs');
+          for (const [name, file] of [['corpus-1','reports/stress/benchmark-parallel.json'], ['corpus-2','reports/stress/benchmark-latest-random.json']]) {
+            const r = JSON.parse(fs.readFileSync(file,'utf8'));
+            const rows = r.levels ?? [];
+            const solved = rows.filter(x => x.ok).length;
+            const nodes = rows.reduce((n,x) => n + (x.nodesExpanded || 0), 0);
+            const work = rows.reduce((n,x) => n + (x.workSpent || 0), 0);
+            console.log(`SOLVED ${name}: ${solved}/${rows.length} nodes=${nodes} work=${work} levelBlind=true`);
           }
           NODE
 
-      # Uploaded unconditionally (even when deterministic=true skips the commit below) so a
-      # capability-ceiling run's numbers are never lost -- only ever readable from the log otherwise.
-      - name: Upload the combined refresh as an artifact (always, even when not committing)
+      - name: Print repair-probe badness distribution
+        if: steps.coverage.outputs.complete == 'true'
+        shell: bash
+        # A full-population run through THIS workflow is the usual promotion bar for a flag like
+        # STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (see docs/future-work.md item #4 and
+        # docs/solver-opt-in-experiment-ledger.md's still-open BADNESS_GATE/MIN_SCALE recalibration
+        # caveat) -- print this to the JOB CONSOLE LOG specifically, not just the uploaded artifact,
+        # since this session's egress policy has been observed blocking the artifact-download zip
+        # (Azure blob storage, 403). See scripts/stress/repair-probe-badness-report.mjs.
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in=reports/stress/benchmark-parallel.json
+          node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in=reports/stress/benchmark-latest-random.json
+
+      - name: Upload combined results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -488,32 +389,48 @@ jobs:
           path: |
             reports/stress/
             logs/solver-corpus2-batches/
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 90
 
-      - name: Commit and push the combined refresh to main
-        # deterministic=true is a capability-ceiling/A-B mode whose numbers are not comparable with
-        # the committed continuity baseline's binding-budget history (see this file's top-of-file
-        # 2026-08-06 note) -- never commit those, only the artifact above.
-        if: ${{ inputs.deterministic != 'true' }}
+      - name: Persist capability outputs and/or newly found hints
+        # Always runs when coverage is complete: the per-run analysis summary (reports/stress/
+        # capability-runs/<run_id>/) is unconditional, so every completed run leaves a durable,
+        # git-fetchable per-level record even under persist_hints=false + deterministic=true -- see
+        # persist_hints's/deterministic's own input descriptions above for why this can never let one
+        # A/B arm mutate what a queued arm measures (the directory is namespaced by run id and never
+        # read back into any solve). Hint-corpus writes and canonical baseline/report overwrites stay
+        # conditional exactly as before.
+        if: steps.coverage.outputs.complete == 'true'
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add data/stress/hints/ data/stress/hints-random/ data/stress/stress-levels.json data/stress/stress-levels-random.json \
-                  logs/solver-corpus2-batches/ logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json \
-                  reports/stress/
-          if git diff --cached --quiet; then
-            echo "Nothing changed -- not creating an empty commit."
-            exit 0
+          git add "reports/stress/capability-runs/${{ github.run_id }}/"
+          git add data/stress/hints/ data/stress/hints-random/ data/stress/stress-levels.json data/stress/stress-levels-random.json
+          if [ "${{ inputs.deterministic }}" != "true" ]; then
+            git add logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json reports/stress/
           fi
-          git commit -m "Solver stress-corpus refresh: corpus-1 + corpus-2 ($(date -u +%FT%TZ))"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Solver level-blind capability refresh (${{ github.run_id }})"
           for attempt in 1 2 3 4; do
-            if git push origin HEAD:main; then exit 0; fi
-            echo "Push attempt ${attempt} failed; retrying after a short wait..."
+            if git push origin HEAD:${{ github.ref_name }}; then exit 0; fi
             sleep $((attempt * 5))
-            git fetch origin main
-            git rebase origin/main || { echo "Rebase failed -- leaving commit local for manual recovery."; exit 1; }
+            git fetch origin "${{ github.ref_name }}"
+            # Discard any unstaged modifications to tracked files this run deliberately did NOT stage
+            # above (e.g. reports/stress/benchmark-*.json when deterministic=true, which the sweep
+            # still overwrites on disk even though we chose not to commit it). Without this, `git
+            # rebase` refuses with "You have unstaged changes. Please commit or stash them." the moment
+            # any other commit -- e.g. an unrelated chore(audit) auto-commit -- lands on the branch
+            # first, which is exactly what happened on run 31871824532 and silently dropped its whole
+            # persist step, hints included. Safe: anything left unstaged here was never meant to be
+            # committed by this run in the first place.
+            git checkout -- .
+            git rebase "origin/${{ github.ref_name }}" || exit 1
           done
-          echo "All push attempts failed."
+          exit 1
+
+      - name: Fail incomplete capability run
+        if: steps.coverage.outputs.complete != 'true'
+        run: |
+          echo 'Capability run incomplete; results were uploaded but no baseline/report state was persisted.'
           exit 1

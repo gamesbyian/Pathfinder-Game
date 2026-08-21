@@ -39,7 +39,8 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { defaultConfig } from '../ablation-config.mjs';
+import { defaultConfig } from '../../modules/solver/ablation-config.js';
+import { loadProbeCorpora } from './probe-corpus-loader.mjs';
 
 installBrowserStubs();
 const { normalizeRawLevel } = await import('../../modules/solver/normalization.js');
@@ -77,12 +78,7 @@ const corpora = [
     ['data/stress/stress-levels.json', 'data/stress/hints'],
     ['data/levels.json', 'data/hints'],
 ];
-const levelById = new Map();
-const hintsDirById = new Map();
-for (const [lf, hd] of corpora) {
-    const raw = JSON.parse(readFileSync(path.join(ROOT, lf), 'utf8'));
-    for (const l of (Array.isArray(raw) ? raw : raw.levels)) if (l.id) { levelById.set(l.id, l); hintsDirById.set(l.id, hd); }
-}
+const { levelById, hintsDirById } = loadProbeCorpora(ROOT, corpora);
 
 /** Reachability over (cell, entry-axis) states — the relation the real move rules define. */
 function axisAwareReach(pos, state, level, prep) {

@@ -1,0 +1,9001 @@
+{
+ "summary": {
+  "corpus": "data/stress/stress-levels-random.json",
+  "levelsTotal": 1700,
+  "levelsWithTwistPortal": 933,
+  "levelsWithNoHint": 516,
+  "levelsChecked": 417,
+  "totalSteps": 35942,
+  "mismatchSteps": 14401,
+  "mismatchWithUnusedTwist": 14401,
+  "mismatchWithPlausiblyReachableTwist": 14401,
+  "violations": 0,
+  "violationDetails": []
+ },
+ "levels": [
+  {
+   "id": "R00001",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00039",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00044",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00046",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R00050",
+   "twistPairs": 5,
+   "steps": 120,
+   "mismatches": 57,
+   "mismatchesWithUnusedTwist": 57,
+   "violations": 0
+  },
+  {
+   "id": "R00059",
+   "twistPairs": 1,
+   "steps": 77,
+   "mismatches": 66,
+   "mismatchesWithUnusedTwist": 66,
+   "violations": 0
+  },
+  {
+   "id": "R00073",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R00080",
+   "twistPairs": 3,
+   "steps": 100,
+   "mismatches": 42,
+   "mismatchesWithUnusedTwist": 42,
+   "violations": 0
+  },
+  {
+   "id": "R00082",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R00088",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00093",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00094",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00108",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00112",
+   "twistPairs": 1,
+   "steps": 73,
+   "mismatches": 27,
+   "mismatchesWithUnusedTwist": 27,
+   "violations": 0
+  },
+  {
+   "id": "R00118",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00137",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00139",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R00142",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00143",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00153",
+   "twistPairs": 4,
+   "steps": 90,
+   "mismatches": 33,
+   "mismatchesWithUnusedTwist": 33,
+   "violations": 0
+  },
+  {
+   "id": "R00156",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00169",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00180",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00181",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00193",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00209",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00228",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00234",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00238",
+   "twistPairs": 4,
+   "steps": 64,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R00239",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00242",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00260",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00274",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00278",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00285",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00296",
+   "twistPairs": 1,
+   "steps": 81,
+   "mismatches": 13,
+   "mismatchesWithUnusedTwist": 13,
+   "violations": 0
+  },
+  {
+   "id": "R00303",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R00306",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00312",
+   "twistPairs": 2,
+   "steps": 129,
+   "mismatches": 37,
+   "mismatchesWithUnusedTwist": 37,
+   "violations": 0
+  },
+  {
+   "id": "R00314",
+   "twistPairs": 1,
+   "steps": 71,
+   "mismatches": 2,
+   "mismatchesWithUnusedTwist": 2,
+   "violations": 0
+  },
+  {
+   "id": "R00320",
+   "twistPairs": 3,
+   "steps": 140,
+   "mismatches": 109,
+   "mismatchesWithUnusedTwist": 109,
+   "violations": 0
+  },
+  {
+   "id": "R00323",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00329",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00340",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R00342",
+   "twistPairs": 2,
+   "steps": 79,
+   "mismatches": 48,
+   "mismatchesWithUnusedTwist": 48,
+   "violations": 0
+  },
+  {
+   "id": "R00347",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00349",
+   "twistPairs": 3,
+   "steps": 112,
+   "mismatches": 92,
+   "mismatchesWithUnusedTwist": 92,
+   "violations": 0
+  },
+  {
+   "id": "R00350",
+   "twistPairs": 2,
+   "steps": 110,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R00355",
+   "twistPairs": 1,
+   "steps": 86,
+   "mismatches": 18,
+   "mismatchesWithUnusedTwist": 18,
+   "violations": 0
+  },
+  {
+   "id": "R00358",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00367",
+   "twistPairs": 1,
+   "steps": 60,
+   "mismatches": 51,
+   "mismatchesWithUnusedTwist": 51,
+   "violations": 0
+  },
+  {
+   "id": "R00370",
+   "skipped": "no-hint",
+   "twistPairs": 6
+  },
+  {
+   "id": "R00372",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00373",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R00386",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00399",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R00417",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00433",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00434",
+   "twistPairs": 2,
+   "steps": 109,
+   "mismatches": 45,
+   "mismatchesWithUnusedTwist": 45,
+   "violations": 0
+  },
+  {
+   "id": "R00440",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00449",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00460",
+   "twistPairs": 3,
+   "steps": 68,
+   "mismatches": 10,
+   "mismatchesWithUnusedTwist": 10,
+   "violations": 0
+  },
+  {
+   "id": "R00466",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00468",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00477",
+   "twistPairs": 2,
+   "steps": 68,
+   "mismatches": 58,
+   "mismatchesWithUnusedTwist": 58,
+   "violations": 0
+  },
+  {
+   "id": "R00479",
+   "twistPairs": 3,
+   "steps": 67,
+   "mismatches": 40,
+   "mismatchesWithUnusedTwist": 40,
+   "violations": 0
+  },
+  {
+   "id": "R00481",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00488",
+   "twistPairs": 2,
+   "steps": 115,
+   "mismatches": 72,
+   "mismatchesWithUnusedTwist": 72,
+   "violations": 0
+  },
+  {
+   "id": "R00500",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00506",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00507",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00512",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R00513",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00518",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00527",
+   "twistPairs": 2,
+   "steps": 146,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R00528",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00532",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R00536",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R00537",
+   "twistPairs": 2,
+   "steps": 87,
+   "mismatches": 22,
+   "mismatchesWithUnusedTwist": 22,
+   "violations": 0
+  },
+  {
+   "id": "R00544",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00546",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00548",
+   "twistPairs": 4,
+   "steps": 67,
+   "mismatches": 18,
+   "mismatchesWithUnusedTwist": 18,
+   "violations": 0
+  },
+  {
+   "id": "R00553",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00555",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00556",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00561",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R00563",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R00565",
+   "twistPairs": 3,
+   "steps": 80,
+   "mismatches": 27,
+   "mismatchesWithUnusedTwist": 27,
+   "violations": 0
+  },
+  {
+   "id": "R00573",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R00592",
+   "twistPairs": 2,
+   "steps": 129,
+   "mismatches": 60,
+   "mismatchesWithUnusedTwist": 60,
+   "violations": 0
+  },
+  {
+   "id": "R00593",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00595",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00597",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00602",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00623",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R00630",
+   "twistPairs": 3,
+   "steps": 66,
+   "mismatches": 44,
+   "mismatchesWithUnusedTwist": 44,
+   "violations": 0
+  },
+  {
+   "id": "R00632",
+   "twistPairs": 1,
+   "steps": 96,
+   "mismatches": 26,
+   "mismatchesWithUnusedTwist": 26,
+   "violations": 0
+  },
+  {
+   "id": "R00635",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00639",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00646",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R00647",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00648",
+   "twistPairs": 2,
+   "steps": 135,
+   "mismatches": 58,
+   "mismatchesWithUnusedTwist": 58,
+   "violations": 0
+  },
+  {
+   "id": "R00656",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R00672",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R00682",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R00690",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R00691",
+   "twistPairs": 3,
+   "steps": 93,
+   "mismatches": 61,
+   "mismatchesWithUnusedTwist": 61,
+   "violations": 0
+  },
+  {
+   "id": "R00692",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R00701",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00702",
+   "skipped": "no-hint",
+   "twistPairs": 6
+  },
+  {
+   "id": "R00703",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00707",
+   "twistPairs": 4,
+   "steps": 86,
+   "mismatches": 59,
+   "mismatchesWithUnusedTwist": 59,
+   "violations": 0
+  },
+  {
+   "id": "R00709",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R00712",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00720",
+   "twistPairs": 3,
+   "steps": 65,
+   "mismatches": 10,
+   "mismatchesWithUnusedTwist": 10,
+   "violations": 0
+  },
+  {
+   "id": "R00726",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00727",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00728",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R00732",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R00741",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00756",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R00762",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R00765",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00786",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00787",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00803",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00813",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00815",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00817",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00850",
+   "twistPairs": 2,
+   "steps": 87,
+   "mismatches": 67,
+   "mismatchesWithUnusedTwist": 67,
+   "violations": 0
+  },
+  {
+   "id": "R00851",
+   "twistPairs": 2,
+   "steps": 111,
+   "mismatches": 17,
+   "mismatchesWithUnusedTwist": 17,
+   "violations": 0
+  },
+  {
+   "id": "R00852",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00860",
+   "twistPairs": 3,
+   "steps": 95,
+   "mismatches": 30,
+   "mismatchesWithUnusedTwist": 30,
+   "violations": 0
+  },
+  {
+   "id": "R00866",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00867",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00869",
+   "twistPairs": 3,
+   "steps": 76,
+   "mismatches": 56,
+   "mismatchesWithUnusedTwist": 56,
+   "violations": 0
+  },
+  {
+   "id": "R00877",
+   "twistPairs": 2,
+   "steps": 87,
+   "mismatches": 41,
+   "mismatchesWithUnusedTwist": 41,
+   "violations": 0
+  },
+  {
+   "id": "R00886",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00893",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00901",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00911",
+   "twistPairs": 3,
+   "steps": 66,
+   "mismatches": 6,
+   "mismatchesWithUnusedTwist": 6,
+   "violations": 0
+  },
+  {
+   "id": "R00912",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00923",
+   "skipped": "no-hint",
+   "twistPairs": 7
+  },
+  {
+   "id": "R00927",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00930",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00934",
+   "twistPairs": 4,
+   "steps": 62,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R00943",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00960",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00963",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R00970",
+   "twistPairs": 3,
+   "steps": 93,
+   "mismatches": 21,
+   "mismatchesWithUnusedTwist": 21,
+   "violations": 0
+  },
+  {
+   "id": "R00975",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R00976",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00977",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00986",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00988",
+   "twistPairs": 2,
+   "steps": 81,
+   "mismatches": 61,
+   "mismatchesWithUnusedTwist": 61,
+   "violations": 0
+  },
+  {
+   "id": "R00989",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00990",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01000",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01006",
+   "twistPairs": 2,
+   "steps": 113,
+   "mismatches": 13,
+   "mismatchesWithUnusedTwist": 13,
+   "violations": 0
+  },
+  {
+   "id": "R01009",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01011",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01012",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01016",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01019",
+   "twistPairs": 3,
+   "steps": 68,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R01020",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01022",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R01023",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01024",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01044",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01052",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01058",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01061",
+   "twistPairs": 2,
+   "steps": 115,
+   "mismatches": 27,
+   "mismatchesWithUnusedTwist": 27,
+   "violations": 0
+  },
+  {
+   "id": "R01063",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01080",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01085",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01086",
+   "twistPairs": 3,
+   "steps": 72,
+   "mismatches": 42,
+   "mismatchesWithUnusedTwist": 42,
+   "violations": 0
+  },
+  {
+   "id": "R01091",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01092",
+   "twistPairs": 3,
+   "steps": 105,
+   "mismatches": 74,
+   "mismatchesWithUnusedTwist": 74,
+   "violations": 0
+  },
+  {
+   "id": "R01097",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01099",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01105",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01118",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01124",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01129",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01132",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01134",
+   "twistPairs": 1,
+   "steps": 86,
+   "mismatches": 5,
+   "mismatchesWithUnusedTwist": 5,
+   "violations": 0
+  },
+  {
+   "id": "R01142",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01151",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01153",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01154",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R01155",
+   "twistPairs": 3,
+   "steps": 56,
+   "mismatches": 32,
+   "mismatchesWithUnusedTwist": 32,
+   "violations": 0
+  },
+  {
+   "id": "R01157",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01158",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01172",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01174",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R01179",
+   "twistPairs": 2,
+   "steps": 77,
+   "mismatches": 16,
+   "mismatchesWithUnusedTwist": 16,
+   "violations": 0
+  },
+  {
+   "id": "R01190",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01208",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01210",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01211",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01215",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01218",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01229",
+   "twistPairs": 1,
+   "steps": 71,
+   "mismatches": 3,
+   "mismatchesWithUnusedTwist": 3,
+   "violations": 0
+  },
+  {
+   "id": "R01234",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01251",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01254",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01262",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01269",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01273",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01274",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01280",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01290",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01316",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01318",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01325",
+   "twistPairs": 4,
+   "steps": 97,
+   "mismatches": 26,
+   "mismatchesWithUnusedTwist": 26,
+   "violations": 0
+  },
+  {
+   "id": "R01333",
+   "twistPairs": 2,
+   "steps": 63,
+   "mismatches": 16,
+   "mismatchesWithUnusedTwist": 16,
+   "violations": 0
+  },
+  {
+   "id": "R01341",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01342",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01344",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01351",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01356",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01367",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01368",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01378",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01380",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01382",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01397",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01403",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01416",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R01417",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R01420",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01425",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01426",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R01428",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01461",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01462",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01465",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01467",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01477",
+   "twistPairs": 4,
+   "steps": 70,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R01485",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R01487",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01489",
+   "twistPairs": 2,
+   "steps": 86,
+   "mismatches": 17,
+   "mismatchesWithUnusedTwist": 17,
+   "violations": 0
+  },
+  {
+   "id": "R01492",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01495",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01500",
+   "twistPairs": 5,
+   "steps": 71,
+   "mismatches": 47,
+   "mismatchesWithUnusedTwist": 47,
+   "violations": 0
+  },
+  {
+   "id": "R01501",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01504",
+   "twistPairs": 7,
+   "steps": 86,
+   "mismatches": 58,
+   "mismatchesWithUnusedTwist": 58,
+   "violations": 0
+  },
+  {
+   "id": "R01511",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01516",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01523",
+   "twistPairs": 2,
+   "steps": 94,
+   "mismatches": 12,
+   "mismatchesWithUnusedTwist": 12,
+   "violations": 0
+  },
+  {
+   "id": "R01531",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01535",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01551",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01553",
+   "twistPairs": 6,
+   "steps": 64,
+   "mismatches": 19,
+   "mismatchesWithUnusedTwist": 19,
+   "violations": 0
+  },
+  {
+   "id": "R01554",
+   "twistPairs": 2,
+   "steps": 109,
+   "mismatches": 71,
+   "mismatchesWithUnusedTwist": 71,
+   "violations": 0
+  },
+  {
+   "id": "R01558",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01568",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R01571",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01576",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01577",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R01584",
+   "twistPairs": 3,
+   "steps": 88,
+   "mismatches": 38,
+   "mismatchesWithUnusedTwist": 38,
+   "violations": 0
+  },
+  {
+   "id": "R01590",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01600",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01603",
+   "twistPairs": 2,
+   "steps": 75,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R01609",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01613",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01614",
+   "twistPairs": 3,
+   "steps": 70,
+   "mismatches": 30,
+   "mismatchesWithUnusedTwist": 30,
+   "violations": 0
+  },
+  {
+   "id": "R01625",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R01632",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R01633",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01642",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01644",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01652",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01655",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01672",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R01673",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01678",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01683",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01691",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01694",
+   "twistPairs": 2,
+   "steps": 86,
+   "mismatches": 11,
+   "mismatchesWithUnusedTwist": 11,
+   "violations": 0
+  },
+  {
+   "id": "R01698",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01706",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01718",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01719",
+   "twistPairs": 3,
+   "steps": 70,
+   "mismatches": 45,
+   "mismatchesWithUnusedTwist": 45,
+   "violations": 0
+  },
+  {
+   "id": "R01723",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01724",
+   "twistPairs": 4,
+   "steps": 100,
+   "mismatches": 28,
+   "mismatchesWithUnusedTwist": 28,
+   "violations": 0
+  },
+  {
+   "id": "R01725",
+   "twistPairs": 1,
+   "steps": 74,
+   "mismatches": 5,
+   "mismatchesWithUnusedTwist": 5,
+   "violations": 0
+  },
+  {
+   "id": "R01730",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01735",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01738",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R01744",
+   "twistPairs": 5,
+   "steps": 93,
+   "mismatches": 32,
+   "mismatchesWithUnusedTwist": 32,
+   "violations": 0
+  },
+  {
+   "id": "R01761",
+   "twistPairs": 3,
+   "steps": 64,
+   "mismatches": 34,
+   "mismatchesWithUnusedTwist": 34,
+   "violations": 0
+  },
+  {
+   "id": "R01763",
+   "twistPairs": 3,
+   "steps": 71,
+   "mismatches": 60,
+   "mismatchesWithUnusedTwist": 60,
+   "violations": 0
+  },
+  {
+   "id": "R01764",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01765",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R01766",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01767",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01769",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R01773",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R01778",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01792",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01799",
+   "skipped": "no-hint",
+   "twistPairs": 6
+  },
+  {
+   "id": "R01800",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01822",
+   "twistPairs": 3,
+   "steps": 91,
+   "mismatches": 39,
+   "mismatchesWithUnusedTwist": 39,
+   "violations": 0
+  },
+  {
+   "id": "R01849",
+   "twistPairs": 4,
+   "steps": 125,
+   "mismatches": 52,
+   "mismatchesWithUnusedTwist": 52,
+   "violations": 0
+  },
+  {
+   "id": "R01854",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01856",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01857",
+   "twistPairs": 5,
+   "steps": 55,
+   "mismatches": 17,
+   "mismatchesWithUnusedTwist": 17,
+   "violations": 0
+  },
+  {
+   "id": "R01860",
+   "twistPairs": 3,
+   "steps": 71,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R01865",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01870",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01872",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01882",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R01888",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01903",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01905",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01909",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01913",
+   "twistPairs": 4,
+   "steps": 81,
+   "mismatches": 38,
+   "mismatchesWithUnusedTwist": 38,
+   "violations": 0
+  },
+  {
+   "id": "R01925",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01930",
+   "twistPairs": 2,
+   "steps": 90,
+   "mismatches": 7,
+   "mismatchesWithUnusedTwist": 7,
+   "violations": 0
+  },
+  {
+   "id": "R01932",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R01936",
+   "twistPairs": 3,
+   "steps": 96,
+   "mismatches": 44,
+   "mismatchesWithUnusedTwist": 44,
+   "violations": 0
+  },
+  {
+   "id": "R01945",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R01953",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R01957",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01969",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01972",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01997",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01998",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01999",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02000",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02001",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02002",
+   "twistPairs": 1,
+   "steps": 81,
+   "mismatches": 52,
+   "mismatchesWithUnusedTwist": 52,
+   "violations": 0
+  },
+  {
+   "id": "R02003",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02004",
+   "twistPairs": 2,
+   "steps": 76,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R02005",
+   "twistPairs": 2,
+   "steps": 82,
+   "mismatches": 37,
+   "mismatchesWithUnusedTwist": 37,
+   "violations": 0
+  },
+  {
+   "id": "R02006",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02007",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02008",
+   "twistPairs": 2,
+   "steps": 68,
+   "mismatches": 27,
+   "mismatchesWithUnusedTwist": 27,
+   "violations": 0
+  },
+  {
+   "id": "R02009",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02010",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02011",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02012",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02013",
+   "twistPairs": 3,
+   "steps": 75,
+   "mismatches": 52,
+   "mismatchesWithUnusedTwist": 52,
+   "violations": 0
+  },
+  {
+   "id": "R02014",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02015",
+   "twistPairs": 4,
+   "steps": 104,
+   "mismatches": 44,
+   "mismatchesWithUnusedTwist": 44,
+   "violations": 0
+  },
+  {
+   "id": "R02016",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02017",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02018",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02019",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02020",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02021",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02022",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02023",
+   "twistPairs": 1,
+   "steps": 55,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R02024",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02025",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02026",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02027",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02028",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02029",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02030",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02031",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02032",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02033",
+   "twistPairs": 3,
+   "steps": 111,
+   "mismatches": 47,
+   "mismatchesWithUnusedTwist": 47,
+   "violations": 0
+  },
+  {
+   "id": "R02034",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02035",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02036",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02037",
+   "twistPairs": 3,
+   "steps": 80,
+   "mismatches": 17,
+   "mismatchesWithUnusedTwist": 17,
+   "violations": 0
+  },
+  {
+   "id": "R02038",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02039",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02040",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02041",
+   "twistPairs": 3,
+   "steps": 119,
+   "mismatches": 46,
+   "mismatchesWithUnusedTwist": 46,
+   "violations": 0
+  },
+  {
+   "id": "R02042",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02043",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02044",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02045",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02046",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02047",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02048",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02049",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02050",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02051",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02052",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02053",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02054",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02055",
+   "twistPairs": 2,
+   "steps": 77,
+   "mismatches": 13,
+   "mismatchesWithUnusedTwist": 13,
+   "violations": 0
+  },
+  {
+   "id": "R02056",
+   "twistPairs": 5,
+   "steps": 73,
+   "mismatches": 18,
+   "mismatchesWithUnusedTwist": 18,
+   "violations": 0
+  },
+  {
+   "id": "R02057",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02058",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02059",
+   "twistPairs": 3,
+   "steps": 78,
+   "mismatches": 38,
+   "mismatchesWithUnusedTwist": 38,
+   "violations": 0
+  },
+  {
+   "id": "R02060",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02061",
+   "twistPairs": 1,
+   "steps": 59,
+   "mismatches": 55,
+   "mismatchesWithUnusedTwist": 55,
+   "violations": 0
+  },
+  {
+   "id": "R02062",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02063",
+   "twistPairs": 2,
+   "steps": 81,
+   "mismatches": 10,
+   "mismatchesWithUnusedTwist": 10,
+   "violations": 0
+  },
+  {
+   "id": "R02064",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02065",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02066",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02067",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02068",
+   "twistPairs": 4,
+   "steps": 69,
+   "mismatches": 20,
+   "mismatchesWithUnusedTwist": 20,
+   "violations": 0
+  },
+  {
+   "id": "R02069",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02070",
+   "twistPairs": 4,
+   "steps": 69,
+   "mismatches": 35,
+   "mismatchesWithUnusedTwist": 35,
+   "violations": 0
+  },
+  {
+   "id": "R02071",
+   "twistPairs": 2,
+   "steps": 87,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R02072",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02073",
+   "twistPairs": 6,
+   "steps": 66,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R02074",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02075",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02076",
+   "twistPairs": 4,
+   "steps": 84,
+   "mismatches": 33,
+   "mismatchesWithUnusedTwist": 33,
+   "violations": 0
+  },
+  {
+   "id": "R02077",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02078",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02079",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02080",
+   "twistPairs": 4,
+   "steps": 117,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R02081",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02082",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02083",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02084",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02085",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02086",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02087",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02088",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02089",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02090",
+   "twistPairs": 3,
+   "steps": 80,
+   "mismatches": 47,
+   "mismatchesWithUnusedTwist": 47,
+   "violations": 0
+  },
+  {
+   "id": "R02091",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02092",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02093",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02094",
+   "twistPairs": 3,
+   "steps": 112,
+   "mismatches": 45,
+   "mismatchesWithUnusedTwist": 45,
+   "violations": 0
+  },
+  {
+   "id": "R02095",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02096",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02097",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02098",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02099",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02100",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02101",
+   "twistPairs": 1,
+   "steps": 106,
+   "mismatches": 27,
+   "mismatchesWithUnusedTwist": 27,
+   "violations": 0
+  },
+  {
+   "id": "R02102",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02103",
+   "twistPairs": 2,
+   "steps": 98,
+   "mismatches": 26,
+   "mismatchesWithUnusedTwist": 26,
+   "violations": 0
+  },
+  {
+   "id": "R02104",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02105",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02106",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02107",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02108",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02109",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02110",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02111",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02112",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02113",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02114",
+   "twistPairs": 2,
+   "steps": 108,
+   "mismatches": 22,
+   "mismatchesWithUnusedTwist": 22,
+   "violations": 0
+  },
+  {
+   "id": "R02115",
+   "twistPairs": 3,
+   "steps": 90,
+   "mismatches": 56,
+   "mismatchesWithUnusedTwist": 56,
+   "violations": 0
+  },
+  {
+   "id": "R02116",
+   "twistPairs": 4,
+   "steps": 55,
+   "mismatches": 14,
+   "mismatchesWithUnusedTwist": 14,
+   "violations": 0
+  },
+  {
+   "id": "R02117",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02118",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02119",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02120",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02121",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02122",
+   "twistPairs": 4,
+   "steps": 71,
+   "mismatches": 37,
+   "mismatchesWithUnusedTwist": 37,
+   "violations": 0
+  },
+  {
+   "id": "R02123",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02124",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02125",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02126",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02127",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02128",
+   "twistPairs": 5,
+   "steps": 93,
+   "mismatches": 41,
+   "mismatchesWithUnusedTwist": 41,
+   "violations": 0
+  },
+  {
+   "id": "R02129",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02130",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02131",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02132",
+   "twistPairs": 5,
+   "steps": 67,
+   "mismatches": 28,
+   "mismatchesWithUnusedTwist": 28,
+   "violations": 0
+  },
+  {
+   "id": "R02133",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02134",
+   "twistPairs": 5,
+   "steps": 77,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R02135",
+   "twistPairs": 4,
+   "steps": 92,
+   "mismatches": 30,
+   "mismatchesWithUnusedTwist": 30,
+   "violations": 0
+  },
+  {
+   "id": "R02136",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02137",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02138",
+   "twistPairs": 2,
+   "steps": 110,
+   "mismatches": 27,
+   "mismatchesWithUnusedTwist": 27,
+   "violations": 0
+  },
+  {
+   "id": "R02139",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02140",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02141",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02142",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02143",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02144",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02145",
+   "twistPairs": 1,
+   "steps": 99,
+   "mismatches": 7,
+   "mismatchesWithUnusedTwist": 7,
+   "violations": 0
+  },
+  {
+   "id": "R02146",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02147",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02148",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02149",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02150",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02151",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02152",
+   "twistPairs": 4,
+   "steps": 110,
+   "mismatches": 18,
+   "mismatchesWithUnusedTwist": 18,
+   "violations": 0
+  },
+  {
+   "id": "R02153",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02154",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02155",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02156",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02157",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02158",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02159",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02160",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02161",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02162",
+   "twistPairs": 2,
+   "steps": 83,
+   "mismatches": 20,
+   "mismatchesWithUnusedTwist": 20,
+   "violations": 0
+  },
+  {
+   "id": "R02163",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02164",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02165",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02166",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02167",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02168",
+   "twistPairs": 2,
+   "steps": 90,
+   "mismatches": 51,
+   "mismatchesWithUnusedTwist": 51,
+   "violations": 0
+  },
+  {
+   "id": "R02169",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02170",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02171",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02172",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02173",
+   "twistPairs": 1,
+   "steps": 95,
+   "mismatches": 62,
+   "mismatchesWithUnusedTwist": 62,
+   "violations": 0
+  },
+  {
+   "id": "R02174",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02175",
+   "twistPairs": 4,
+   "steps": 91,
+   "mismatches": 12,
+   "mismatchesWithUnusedTwist": 12,
+   "violations": 0
+  },
+  {
+   "id": "R02176",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02177",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02178",
+   "twistPairs": 2,
+   "steps": 105,
+   "mismatches": 0,
+   "mismatchesWithUnusedTwist": 0,
+   "violations": 0
+  },
+  {
+   "id": "R02179",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02180",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02181",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02182",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02183",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02184",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02185",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02186",
+   "twistPairs": 1,
+   "steps": 76,
+   "mismatches": 5,
+   "mismatchesWithUnusedTwist": 5,
+   "violations": 0
+  },
+  {
+   "id": "R02187",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02188",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02189",
+   "twistPairs": 1,
+   "steps": 74,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R02190",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02191",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02192",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02193",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02194",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02195",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02196",
+   "twistPairs": 3,
+   "steps": 82,
+   "mismatches": 46,
+   "mismatchesWithUnusedTwist": 46,
+   "violations": 0
+  },
+  {
+   "id": "R02197",
+   "twistPairs": 3,
+   "steps": 71,
+   "mismatches": 31,
+   "mismatchesWithUnusedTwist": 31,
+   "violations": 0
+  },
+  {
+   "id": "R02198",
+   "twistPairs": 4,
+   "steps": 67,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R02199",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02200",
+   "twistPairs": 3,
+   "steps": 99,
+   "mismatches": 58,
+   "mismatchesWithUnusedTwist": 58,
+   "violations": 0
+  },
+  {
+   "id": "R02201",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02202",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02203",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02204",
+   "twistPairs": 3,
+   "steps": 56,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R02205",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02206",
+   "twistPairs": 4,
+   "steps": 73,
+   "mismatches": 20,
+   "mismatchesWithUnusedTwist": 20,
+   "violations": 0
+  },
+  {
+   "id": "R02207",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02208",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02209",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02210",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02211",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02212",
+   "twistPairs": 4,
+   "steps": 94,
+   "mismatches": 37,
+   "mismatchesWithUnusedTwist": 37,
+   "violations": 0
+  },
+  {
+   "id": "R02213",
+   "twistPairs": 3,
+   "steps": 123,
+   "mismatches": 83,
+   "mismatchesWithUnusedTwist": 83,
+   "violations": 0
+  },
+  {
+   "id": "R02214",
+   "twistPairs": 2,
+   "steps": 82,
+   "mismatches": 53,
+   "mismatchesWithUnusedTwist": 53,
+   "violations": 0
+  },
+  {
+   "id": "R02215",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02216",
+   "twistPairs": 4,
+   "steps": 125,
+   "mismatches": 42,
+   "mismatchesWithUnusedTwist": 42,
+   "violations": 0
+  },
+  {
+   "id": "R02217",
+   "twistPairs": 2,
+   "steps": 59,
+   "mismatches": 10,
+   "mismatchesWithUnusedTwist": 10,
+   "violations": 0
+  },
+  {
+   "id": "R02218",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02219",
+   "twistPairs": 5,
+   "steps": 76,
+   "mismatches": 44,
+   "mismatchesWithUnusedTwist": 44,
+   "violations": 0
+  },
+  {
+   "id": "R02220",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02221",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02222",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02223",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02224",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02225",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02226",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02227",
+   "twistPairs": 3,
+   "steps": 118,
+   "mismatches": 69,
+   "mismatchesWithUnusedTwist": 69,
+   "violations": 0
+  },
+  {
+   "id": "R02228",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02229",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02230",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02231",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02232",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02233",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02234",
+   "twistPairs": 3,
+   "steps": 54,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R02235",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02236",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02237",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02238",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02239",
+   "twistPairs": 3,
+   "steps": 107,
+   "mismatches": 55,
+   "mismatchesWithUnusedTwist": 55,
+   "violations": 0
+  },
+  {
+   "id": "R02240",
+   "twistPairs": 1,
+   "steps": 63,
+   "mismatches": 12,
+   "mismatchesWithUnusedTwist": 12,
+   "violations": 0
+  },
+  {
+   "id": "R02241",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02242",
+   "twistPairs": 3,
+   "steps": 137,
+   "mismatches": 74,
+   "mismatchesWithUnusedTwist": 74,
+   "violations": 0
+  },
+  {
+   "id": "R02243",
+   "twistPairs": 4,
+   "steps": 79,
+   "mismatches": 28,
+   "mismatchesWithUnusedTwist": 28,
+   "violations": 0
+  },
+  {
+   "id": "R02244",
+   "twistPairs": 2,
+   "steps": 130,
+   "mismatches": 99,
+   "mismatchesWithUnusedTwist": 99,
+   "violations": 0
+  },
+  {
+   "id": "R02245",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02246",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02247",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02248",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02249",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02250",
+   "twistPairs": 3,
+   "steps": 100,
+   "mismatches": 60,
+   "mismatchesWithUnusedTwist": 60,
+   "violations": 0
+  },
+  {
+   "id": "R02251",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02252",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02253",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02254",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02255",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02256",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02257",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02258",
+   "twistPairs": 1,
+   "steps": 133,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R02259",
+   "twistPairs": 4,
+   "steps": 81,
+   "mismatches": 4,
+   "mismatchesWithUnusedTwist": 4,
+   "violations": 0
+  },
+  {
+   "id": "R02260",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02261",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02262",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02263",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02264",
+   "twistPairs": 3,
+   "steps": 78,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R02265",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02266",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02267",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02268",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02269",
+   "twistPairs": 3,
+   "steps": 84,
+   "mismatches": 58,
+   "mismatchesWithUnusedTwist": 58,
+   "violations": 0
+  },
+  {
+   "id": "R02270",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02271",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02272",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02273",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02274",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02275",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02276",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02277",
+   "twistPairs": 1,
+   "steps": 61,
+   "mismatches": 42,
+   "mismatchesWithUnusedTwist": 42,
+   "violations": 0
+  },
+  {
+   "id": "R02278",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02279",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02280",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02281",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02282",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02283",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02284",
+   "twistPairs": 3,
+   "steps": 91,
+   "mismatches": 41,
+   "mismatchesWithUnusedTwist": 41,
+   "violations": 0
+  },
+  {
+   "id": "R02285",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02286",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02287",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02288",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02289",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02290",
+   "twistPairs": 3,
+   "steps": 55,
+   "mismatches": 31,
+   "mismatchesWithUnusedTwist": 31,
+   "violations": 0
+  },
+  {
+   "id": "R02291",
+   "twistPairs": 1,
+   "steps": 73,
+   "mismatches": 39,
+   "mismatchesWithUnusedTwist": 39,
+   "violations": 0
+  },
+  {
+   "id": "R02292",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02293",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02294",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02295",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02296",
+   "twistPairs": 2,
+   "steps": 63,
+   "mismatches": 49,
+   "mismatchesWithUnusedTwist": 49,
+   "violations": 0
+  },
+  {
+   "id": "R02297",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02298",
+   "twistPairs": 5,
+   "steps": 122,
+   "mismatches": 78,
+   "mismatchesWithUnusedTwist": 78,
+   "violations": 0
+  },
+  {
+   "id": "R02299",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02300",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02301",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02302",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02303",
+   "twistPairs": 4,
+   "steps": 121,
+   "mismatches": 70,
+   "mismatchesWithUnusedTwist": 70,
+   "violations": 0
+  },
+  {
+   "id": "R02304",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02305",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02306",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02307",
+   "twistPairs": 2,
+   "steps": 107,
+   "mismatches": 39,
+   "mismatchesWithUnusedTwist": 39,
+   "violations": 0
+  },
+  {
+   "id": "R02308",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02309",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02310",
+   "twistPairs": 2,
+   "steps": 99,
+   "mismatches": 61,
+   "mismatchesWithUnusedTwist": 61,
+   "violations": 0
+  },
+  {
+   "id": "R02311",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02312",
+   "twistPairs": 3,
+   "steps": 84,
+   "mismatches": 64,
+   "mismatchesWithUnusedTwist": 64,
+   "violations": 0
+  },
+  {
+   "id": "R02313",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02314",
+   "twistPairs": 5,
+   "steps": 73,
+   "mismatches": 50,
+   "mismatchesWithUnusedTwist": 50,
+   "violations": 0
+  },
+  {
+   "id": "R02315",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02316",
+   "twistPairs": 2,
+   "steps": 67,
+   "mismatches": 12,
+   "mismatchesWithUnusedTwist": 12,
+   "violations": 0
+  },
+  {
+   "id": "R02317",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02318",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02319",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02320",
+   "twistPairs": 3,
+   "steps": 60,
+   "mismatches": 31,
+   "mismatchesWithUnusedTwist": 31,
+   "violations": 0
+  },
+  {
+   "id": "R02321",
+   "twistPairs": 1,
+   "steps": 86,
+   "mismatches": 12,
+   "mismatchesWithUnusedTwist": 12,
+   "violations": 0
+  },
+  {
+   "id": "R02322",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02323",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02324",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02325",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02326",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02327",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02328",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02329",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02330",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02331",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02332",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02333",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02334",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02335",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02336",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02337",
+   "twistPairs": 4,
+   "steps": 78,
+   "mismatches": 32,
+   "mismatchesWithUnusedTwist": 32,
+   "violations": 0
+  },
+  {
+   "id": "R02338",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02339",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02340",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02341",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02342",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02343",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02344",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02345",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02346",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02347",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02348",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02349",
+   "twistPairs": 2,
+   "steps": 70,
+   "mismatches": 10,
+   "mismatchesWithUnusedTwist": 10,
+   "violations": 0
+  },
+  {
+   "id": "R02350",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02351",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02352",
+   "twistPairs": 1,
+   "steps": 126,
+   "mismatches": 53,
+   "mismatchesWithUnusedTwist": 53,
+   "violations": 0
+  },
+  {
+   "id": "R02353",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02354",
+   "twistPairs": 3,
+   "steps": 72,
+   "mismatches": 42,
+   "mismatchesWithUnusedTwist": 42,
+   "violations": 0
+  },
+  {
+   "id": "R02355",
+   "twistPairs": 3,
+   "steps": 108,
+   "mismatches": 88,
+   "mismatchesWithUnusedTwist": 88,
+   "violations": 0
+  },
+  {
+   "id": "R02356",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02357",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02358",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02359",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02360",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02361",
+   "twistPairs": 2,
+   "steps": 66,
+   "mismatches": 12,
+   "mismatchesWithUnusedTwist": 12,
+   "violations": 0
+  },
+  {
+   "id": "R02362",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02363",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02364",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02365",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02366",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02367",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02368",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02369",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02370",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02371",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02372",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02373",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02374",
+   "twistPairs": 1,
+   "steps": 69,
+   "mismatches": 26,
+   "mismatchesWithUnusedTwist": 26,
+   "violations": 0
+  },
+  {
+   "id": "R02375",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02376",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02377",
+   "twistPairs": 2,
+   "steps": 75,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R02378",
+   "twistPairs": 3,
+   "steps": 72,
+   "mismatches": 69,
+   "mismatchesWithUnusedTwist": 69,
+   "violations": 0
+  },
+  {
+   "id": "R02379",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02380",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02381",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02382",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02383",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02384",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02385",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02386",
+   "twistPairs": 2,
+   "steps": 93,
+   "mismatches": 45,
+   "mismatchesWithUnusedTwist": 45,
+   "violations": 0
+  },
+  {
+   "id": "R02387",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02388",
+   "twistPairs": 3,
+   "steps": 86,
+   "mismatches": 32,
+   "mismatchesWithUnusedTwist": 32,
+   "violations": 0
+  },
+  {
+   "id": "R02389",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02390",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02391",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02392",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02393",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02394",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02395",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02396",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02397",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02398",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02399",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02400",
+   "twistPairs": 1,
+   "steps": 86,
+   "mismatches": 11,
+   "mismatchesWithUnusedTwist": 11,
+   "violations": 0
+  },
+  {
+   "id": "R02401",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02402",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02403",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02404",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02405",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02406",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02407",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02408",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02409",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02410",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02411",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02412",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02413",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02414",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02415",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02416",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02417",
+   "twistPairs": 2,
+   "steps": 91,
+   "mismatches": 44,
+   "mismatchesWithUnusedTwist": 44,
+   "violations": 0
+  },
+  {
+   "id": "R02418",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02419",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02420",
+   "twistPairs": 3,
+   "steps": 109,
+   "mismatches": 96,
+   "mismatchesWithUnusedTwist": 96,
+   "violations": 0
+  },
+  {
+   "id": "R02421",
+   "twistPairs": 3,
+   "steps": 116,
+   "mismatches": 84,
+   "mismatchesWithUnusedTwist": 84,
+   "violations": 0
+  },
+  {
+   "id": "R02422",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02423",
+   "twistPairs": 4,
+   "steps": 84,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R02424",
+   "twistPairs": 3,
+   "steps": 117,
+   "mismatches": 41,
+   "mismatchesWithUnusedTwist": 41,
+   "violations": 0
+  },
+  {
+   "id": "R02425",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02426",
+   "twistPairs": 1,
+   "steps": 85,
+   "mismatches": 27,
+   "mismatchesWithUnusedTwist": 27,
+   "violations": 0
+  },
+  {
+   "id": "R02427",
+   "twistPairs": 2,
+   "steps": 102,
+   "mismatches": 8,
+   "mismatchesWithUnusedTwist": 8,
+   "violations": 0
+  },
+  {
+   "id": "R02428",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02429",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02430",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02431",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02432",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02433",
+   "twistPairs": 3,
+   "steps": 91,
+   "mismatches": 50,
+   "mismatchesWithUnusedTwist": 50,
+   "violations": 0
+  },
+  {
+   "id": "R02434",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02435",
+   "twistPairs": 2,
+   "steps": 114,
+   "mismatches": 18,
+   "mismatchesWithUnusedTwist": 18,
+   "violations": 0
+  },
+  {
+   "id": "R02436",
+   "twistPairs": 1,
+   "steps": 107,
+   "mismatches": 22,
+   "mismatchesWithUnusedTwist": 22,
+   "violations": 0
+  },
+  {
+   "id": "R02437",
+   "twistPairs": 4,
+   "steps": 116,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R02438",
+   "twistPairs": 2,
+   "steps": 99,
+   "mismatches": 32,
+   "mismatchesWithUnusedTwist": 32,
+   "violations": 0
+  },
+  {
+   "id": "R02439",
+   "twistPairs": 4,
+   "steps": 97,
+   "mismatches": 30,
+   "mismatchesWithUnusedTwist": 30,
+   "violations": 0
+  },
+  {
+   "id": "R02440",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02441",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02442",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02443",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02444",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02445",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02446",
+   "twistPairs": 6,
+   "steps": 129,
+   "mismatches": 64,
+   "mismatchesWithUnusedTwist": 64,
+   "violations": 0
+  },
+  {
+   "id": "R02447",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02448",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02449",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02450",
+   "twistPairs": 5,
+   "steps": 89,
+   "mismatches": 71,
+   "mismatchesWithUnusedTwist": 71,
+   "violations": 0
+  },
+  {
+   "id": "R02451",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02452",
+   "twistPairs": 3,
+   "steps": 71,
+   "mismatches": 13,
+   "mismatchesWithUnusedTwist": 13,
+   "violations": 0
+  },
+  {
+   "id": "R02453",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02454",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02455",
+   "twistPairs": 1,
+   "steps": 99,
+   "mismatches": 5,
+   "mismatchesWithUnusedTwist": 5,
+   "violations": 0
+  },
+  {
+   "id": "R02456",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02457",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02458",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02459",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02460",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02461",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02462",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02463",
+   "skipped": "no-hint",
+   "twistPairs": 6
+  },
+  {
+   "id": "R02464",
+   "twistPairs": 2,
+   "steps": 80,
+   "mismatches": 7,
+   "mismatchesWithUnusedTwist": 7,
+   "violations": 0
+  },
+  {
+   "id": "R02465",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02466",
+   "twistPairs": 3,
+   "steps": 78,
+   "mismatches": 33,
+   "mismatchesWithUnusedTwist": 33,
+   "violations": 0
+  },
+  {
+   "id": "R02467",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02468",
+   "twistPairs": 2,
+   "steps": 93,
+   "mismatches": 37,
+   "mismatchesWithUnusedTwist": 37,
+   "violations": 0
+  },
+  {
+   "id": "R02469",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02470",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02471",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02472",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02473",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02474",
+   "twistPairs": 6,
+   "steps": 83,
+   "mismatches": 28,
+   "mismatchesWithUnusedTwist": 28,
+   "violations": 0
+  },
+  {
+   "id": "R02475",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02476",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02477",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02478",
+   "twistPairs": 1,
+   "steps": 71,
+   "mismatches": 15,
+   "mismatchesWithUnusedTwist": 15,
+   "violations": 0
+  },
+  {
+   "id": "R02479",
+   "twistPairs": 4,
+   "steps": 75,
+   "mismatches": 45,
+   "mismatchesWithUnusedTwist": 45,
+   "violations": 0
+  },
+  {
+   "id": "R02480",
+   "twistPairs": 2,
+   "steps": 69,
+   "mismatches": 10,
+   "mismatchesWithUnusedTwist": 10,
+   "violations": 0
+  },
+  {
+   "id": "R02481",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02482",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02483",
+   "twistPairs": 3,
+   "steps": 79,
+   "mismatches": 18,
+   "mismatchesWithUnusedTwist": 18,
+   "violations": 0
+  },
+  {
+   "id": "R02484",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02485",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02486",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02487",
+   "twistPairs": 2,
+   "steps": 72,
+   "mismatches": 22,
+   "mismatchesWithUnusedTwist": 22,
+   "violations": 0
+  },
+  {
+   "id": "R02488",
+   "twistPairs": 1,
+   "steps": 68,
+   "mismatches": 1,
+   "mismatchesWithUnusedTwist": 1,
+   "violations": 0
+  },
+  {
+   "id": "R02489",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02490",
+   "twistPairs": 1,
+   "steps": 77,
+   "mismatches": 5,
+   "mismatchesWithUnusedTwist": 5,
+   "violations": 0
+  },
+  {
+   "id": "R02491",
+   "twistPairs": 3,
+   "steps": 110,
+   "mismatches": 18,
+   "mismatchesWithUnusedTwist": 18,
+   "violations": 0
+  },
+  {
+   "id": "R02492",
+   "twistPairs": 4,
+   "steps": 89,
+   "mismatches": 30,
+   "mismatchesWithUnusedTwist": 30,
+   "violations": 0
+  },
+  {
+   "id": "R02493",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02494",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02495",
+   "twistPairs": 2,
+   "steps": 67,
+   "mismatches": 25,
+   "mismatchesWithUnusedTwist": 25,
+   "violations": 0
+  },
+  {
+   "id": "R02496",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02497",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02498",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02499",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02500",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02501",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02502",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02503",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02504",
+   "twistPairs": 4,
+   "steps": 98,
+   "mismatches": 51,
+   "mismatchesWithUnusedTwist": 51,
+   "violations": 0
+  },
+  {
+   "id": "R02505",
+   "twistPairs": 4,
+   "steps": 95,
+   "mismatches": 33,
+   "mismatchesWithUnusedTwist": 33,
+   "violations": 0
+  },
+  {
+   "id": "R02506",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02507",
+   "twistPairs": 4,
+   "steps": 78,
+   "mismatches": 50,
+   "mismatchesWithUnusedTwist": 50,
+   "violations": 0
+  },
+  {
+   "id": "R02508",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02509",
+   "twistPairs": 5,
+   "steps": 62,
+   "mismatches": 24,
+   "mismatchesWithUnusedTwist": 24,
+   "violations": 0
+  },
+  {
+   "id": "R02510",
+   "twistPairs": 3,
+   "steps": 75,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R02511",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02512",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02513",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02514",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02515",
+   "twistPairs": 3,
+   "steps": 69,
+   "mismatches": 38,
+   "mismatchesWithUnusedTwist": 38,
+   "violations": 0
+  },
+  {
+   "id": "R02516",
+   "twistPairs": 2,
+   "steps": 122,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R02517",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02518",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02519",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02520",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02521",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02522",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02523",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02524",
+   "twistPairs": 4,
+   "steps": 62,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R02525",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02526",
+   "twistPairs": 3,
+   "steps": 95,
+   "mismatches": 78,
+   "mismatchesWithUnusedTwist": 78,
+   "violations": 0
+  },
+  {
+   "id": "R02527",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02528",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02529",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02530",
+   "twistPairs": 2,
+   "steps": 84,
+   "mismatches": 59,
+   "mismatchesWithUnusedTwist": 59,
+   "violations": 0
+  },
+  {
+   "id": "R02531",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02532",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02533",
+   "twistPairs": 1,
+   "steps": 107,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R02534",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02535",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02536",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02537",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02538",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02539",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02540",
+   "twistPairs": 2,
+   "steps": 66,
+   "mismatches": 1,
+   "mismatchesWithUnusedTwist": 1,
+   "violations": 0
+  },
+  {
+   "id": "R02541",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02542",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02543",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02544",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02545",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02546",
+   "twistPairs": 1,
+   "steps": 79,
+   "mismatches": 2,
+   "mismatchesWithUnusedTwist": 2,
+   "violations": 0
+  },
+  {
+   "id": "R02547",
+   "twistPairs": 3,
+   "steps": 75,
+   "mismatches": 62,
+   "mismatchesWithUnusedTwist": 62,
+   "violations": 0
+  },
+  {
+   "id": "R02548",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02549",
+   "twistPairs": 3,
+   "steps": 101,
+   "mismatches": 38,
+   "mismatchesWithUnusedTwist": 38,
+   "violations": 0
+  },
+  {
+   "id": "R02550",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02551",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02552",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02553",
+   "twistPairs": 4,
+   "steps": 80,
+   "mismatches": 22,
+   "mismatchesWithUnusedTwist": 22,
+   "violations": 0
+  },
+  {
+   "id": "R02554",
+   "twistPairs": 3,
+   "steps": 74,
+   "mismatches": 32,
+   "mismatchesWithUnusedTwist": 32,
+   "violations": 0
+  },
+  {
+   "id": "R02555",
+   "twistPairs": 4,
+   "steps": 102,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R02556",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02557",
+   "twistPairs": 5,
+   "steps": 88,
+   "mismatches": 70,
+   "mismatchesWithUnusedTwist": 70,
+   "violations": 0
+  },
+  {
+   "id": "R02558",
+   "twistPairs": 1,
+   "steps": 77,
+   "mismatches": 44,
+   "mismatchesWithUnusedTwist": 44,
+   "violations": 0
+  },
+  {
+   "id": "R02559",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02560",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02561",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02562",
+   "twistPairs": 1,
+   "steps": 96,
+   "mismatches": 54,
+   "mismatchesWithUnusedTwist": 54,
+   "violations": 0
+  },
+  {
+   "id": "R02563",
+   "twistPairs": 4,
+   "steps": 55,
+   "mismatches": 31,
+   "mismatchesWithUnusedTwist": 31,
+   "violations": 0
+  },
+  {
+   "id": "R02564",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02565",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02566",
+   "twistPairs": 2,
+   "steps": 79,
+   "mismatches": 27,
+   "mismatchesWithUnusedTwist": 27,
+   "violations": 0
+  },
+  {
+   "id": "R02567",
+   "twistPairs": 5,
+   "steps": 68,
+   "mismatches": 38,
+   "mismatchesWithUnusedTwist": 38,
+   "violations": 0
+  },
+  {
+   "id": "R02568",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02569",
+   "twistPairs": 1,
+   "steps": 95,
+   "mismatches": 6,
+   "mismatchesWithUnusedTwist": 6,
+   "violations": 0
+  },
+  {
+   "id": "R02570",
+   "twistPairs": 4,
+   "steps": 55,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R02571",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02572",
+   "twistPairs": 2,
+   "steps": 69,
+   "mismatches": 45,
+   "mismatchesWithUnusedTwist": 45,
+   "violations": 0
+  },
+  {
+   "id": "R02573",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02574",
+   "twistPairs": 3,
+   "steps": 66,
+   "mismatches": 33,
+   "mismatchesWithUnusedTwist": 33,
+   "violations": 0
+  },
+  {
+   "id": "R02575",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02576",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02577",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02578",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02579",
+   "twistPairs": 3,
+   "steps": 99,
+   "mismatches": 80,
+   "mismatchesWithUnusedTwist": 80,
+   "violations": 0
+  },
+  {
+   "id": "R02580",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02581",
+   "twistPairs": 1,
+   "steps": 90,
+   "mismatches": 60,
+   "mismatchesWithUnusedTwist": 60,
+   "violations": 0
+  },
+  {
+   "id": "R02582",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02583",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02584",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02585",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02586",
+   "twistPairs": 2,
+   "steps": 78,
+   "mismatches": 27,
+   "mismatchesWithUnusedTwist": 27,
+   "violations": 0
+  },
+  {
+   "id": "R02587",
+   "twistPairs": 4,
+   "steps": 95,
+   "mismatches": 47,
+   "mismatchesWithUnusedTwist": 47,
+   "violations": 0
+  },
+  {
+   "id": "R02588",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02589",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02590",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02591",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02592",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02593",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02594",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02595",
+   "twistPairs": 4,
+   "steps": 63,
+   "mismatches": 28,
+   "mismatchesWithUnusedTwist": 28,
+   "violations": 0
+  },
+  {
+   "id": "R02596",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02597",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02598",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02599",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02600",
+   "twistPairs": 3,
+   "steps": 119,
+   "mismatches": 82,
+   "mismatchesWithUnusedTwist": 82,
+   "violations": 0
+  },
+  {
+   "id": "R02601",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02602",
+   "twistPairs": 5,
+   "steps": 61,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R02603",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02604",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02605",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02606",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02607",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02608",
+   "twistPairs": 2,
+   "steps": 72,
+   "mismatches": 28,
+   "mismatchesWithUnusedTwist": 28,
+   "violations": 0
+  },
+  {
+   "id": "R02609",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02610",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02611",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02612",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02613",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02614",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02615",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02616",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02617",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02618",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02619",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02620",
+   "twistPairs": 3,
+   "steps": 89,
+   "mismatches": 79,
+   "mismatchesWithUnusedTwist": 79,
+   "violations": 0
+  },
+  {
+   "id": "R02621",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02622",
+   "twistPairs": 2,
+   "steps": 83,
+   "mismatches": 0,
+   "mismatchesWithUnusedTwist": 0,
+   "violations": 0
+  },
+  {
+   "id": "R02623",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02624",
+   "twistPairs": 3,
+   "steps": 140,
+   "mismatches": 31,
+   "mismatchesWithUnusedTwist": 31,
+   "violations": 0
+  },
+  {
+   "id": "R02625",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02626",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02627",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02628",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02629",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02630",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02631",
+   "twistPairs": 3,
+   "steps": 100,
+   "mismatches": 27,
+   "mismatchesWithUnusedTwist": 27,
+   "violations": 0
+  },
+  {
+   "id": "R02632",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02633",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02634",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02635",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02636",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02637",
+   "twistPairs": 3,
+   "steps": 107,
+   "mismatches": 9,
+   "mismatchesWithUnusedTwist": 9,
+   "violations": 0
+  },
+  {
+   "id": "R02638",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02639",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02640",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02641",
+   "twistPairs": 2,
+   "steps": 62,
+   "mismatches": 0,
+   "mismatchesWithUnusedTwist": 0,
+   "violations": 0
+  },
+  {
+   "id": "R02642",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02643",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02644",
+   "twistPairs": 3,
+   "steps": 64,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R02645",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02646",
+   "twistPairs": 2,
+   "steps": 85,
+   "mismatches": 5,
+   "mismatchesWithUnusedTwist": 5,
+   "violations": 0
+  },
+  {
+   "id": "R02647",
+   "skipped": "no-hint",
+   "twistPairs": 6
+  },
+  {
+   "id": "R02648",
+   "twistPairs": 1,
+   "steps": 110,
+   "mismatches": 18,
+   "mismatchesWithUnusedTwist": 18,
+   "violations": 0
+  },
+  {
+   "id": "R02649",
+   "twistPairs": 3,
+   "steps": 93,
+   "mismatches": 40,
+   "mismatchesWithUnusedTwist": 40,
+   "violations": 0
+  },
+  {
+   "id": "R02650",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02651",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02652",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02653",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02654",
+   "twistPairs": 2,
+   "steps": 92,
+   "mismatches": 30,
+   "mismatchesWithUnusedTwist": 30,
+   "violations": 0
+  },
+  {
+   "id": "R02655",
+   "twistPairs": 2,
+   "steps": 96,
+   "mismatches": 44,
+   "mismatchesWithUnusedTwist": 44,
+   "violations": 0
+  },
+  {
+   "id": "R02656",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02657",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02658",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02659",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02660",
+   "twistPairs": 2,
+   "steps": 92,
+   "mismatches": 32,
+   "mismatchesWithUnusedTwist": 32,
+   "violations": 0
+  },
+  {
+   "id": "R02661",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02662",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02663",
+   "twistPairs": 4,
+   "steps": 113,
+   "mismatches": 9,
+   "mismatchesWithUnusedTwist": 9,
+   "violations": 0
+  },
+  {
+   "id": "R02664",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02665",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02666",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02667",
+   "twistPairs": 4,
+   "steps": 65,
+   "mismatches": 25,
+   "mismatchesWithUnusedTwist": 25,
+   "violations": 0
+  },
+  {
+   "id": "R02668",
+   "twistPairs": 4,
+   "steps": 97,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R02669",
+   "twistPairs": 3,
+   "steps": 83,
+   "mismatches": 64,
+   "mismatchesWithUnusedTwist": 64,
+   "violations": 0
+  },
+  {
+   "id": "R02670",
+   "twistPairs": 3,
+   "steps": 78,
+   "mismatches": 51,
+   "mismatchesWithUnusedTwist": 51,
+   "violations": 0
+  },
+  {
+   "id": "R02671",
+   "twistPairs": 3,
+   "steps": 76,
+   "mismatches": 33,
+   "mismatchesWithUnusedTwist": 33,
+   "violations": 0
+  },
+  {
+   "id": "R02672",
+   "twistPairs": 3,
+   "steps": 89,
+   "mismatches": 5,
+   "mismatchesWithUnusedTwist": 5,
+   "violations": 0
+  },
+  {
+   "id": "R02673",
+   "twistPairs": 2,
+   "steps": 95,
+   "mismatches": 15,
+   "mismatchesWithUnusedTwist": 15,
+   "violations": 0
+  },
+  {
+   "id": "R02674",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02675",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02676",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02677",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02678",
+   "twistPairs": 2,
+   "steps": 101,
+   "mismatches": 56,
+   "mismatchesWithUnusedTwist": 56,
+   "violations": 0
+  },
+  {
+   "id": "R02679",
+   "twistPairs": 3,
+   "steps": 60,
+   "mismatches": 28,
+   "mismatchesWithUnusedTwist": 28,
+   "violations": 0
+  },
+  {
+   "id": "R02680",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02681",
+   "twistPairs": 3,
+   "steps": 97,
+   "mismatches": 13,
+   "mismatchesWithUnusedTwist": 13,
+   "violations": 0
+  },
+  {
+   "id": "R02682",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02683",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02684",
+   "twistPairs": 2,
+   "steps": 67,
+   "mismatches": 37,
+   "mismatchesWithUnusedTwist": 37,
+   "violations": 0
+  },
+  {
+   "id": "R02685",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02686",
+   "twistPairs": 4,
+   "steps": 70,
+   "mismatches": 32,
+   "mismatchesWithUnusedTwist": 32,
+   "violations": 0
+  },
+  {
+   "id": "R02687",
+   "twistPairs": 2,
+   "steps": 66,
+   "mismatches": 12,
+   "mismatchesWithUnusedTwist": 12,
+   "violations": 0
+  },
+  {
+   "id": "R02688",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02689",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02690",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02691",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02692",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02693",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02694",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02695",
+   "twistPairs": 2,
+   "steps": 95,
+   "mismatches": 38,
+   "mismatchesWithUnusedTwist": 38,
+   "violations": 0
+  },
+  {
+   "id": "R02696",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02697",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02698",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02699",
+   "twistPairs": 3,
+   "steps": 75,
+   "mismatches": 51,
+   "mismatchesWithUnusedTwist": 51,
+   "violations": 0
+  },
+  {
+   "id": "R02700",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02701",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02702",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02703",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02704",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02705",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02706",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02707",
+   "twistPairs": 5,
+   "steps": 96,
+   "mismatches": 52,
+   "mismatchesWithUnusedTwist": 52,
+   "violations": 0
+  },
+  {
+   "id": "R02708",
+   "twistPairs": 1,
+   "steps": 63,
+   "mismatches": 28,
+   "mismatchesWithUnusedTwist": 28,
+   "violations": 0
+  },
+  {
+   "id": "R02709",
+   "twistPairs": 2,
+   "steps": 113,
+   "mismatches": 13,
+   "mismatchesWithUnusedTwist": 13,
+   "violations": 0
+  },
+  {
+   "id": "R02710",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02711",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02712",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02713",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02714",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02715",
+   "twistPairs": 2,
+   "steps": 70,
+   "mismatches": 53,
+   "mismatchesWithUnusedTwist": 53,
+   "violations": 0
+  },
+  {
+   "id": "R02716",
+   "twistPairs": 3,
+   "steps": 87,
+   "mismatches": 9,
+   "mismatchesWithUnusedTwist": 9,
+   "violations": 0
+  },
+  {
+   "id": "R02717",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02718",
+   "twistPairs": 3,
+   "steps": 82,
+   "mismatches": 73,
+   "mismatchesWithUnusedTwist": 73,
+   "violations": 0
+  },
+  {
+   "id": "R02719",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02720",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02721",
+   "twistPairs": 3,
+   "steps": 66,
+   "mismatches": 15,
+   "mismatchesWithUnusedTwist": 15,
+   "violations": 0
+  },
+  {
+   "id": "R02722",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02723",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02724",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02725",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02726",
+   "twistPairs": 2,
+   "steps": 94,
+   "mismatches": 9,
+   "mismatchesWithUnusedTwist": 9,
+   "violations": 0
+  },
+  {
+   "id": "R02727",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02728",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02729",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02730",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02731",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02732",
+   "twistPairs": 4,
+   "steps": 75,
+   "mismatches": 16,
+   "mismatchesWithUnusedTwist": 16,
+   "violations": 0
+  },
+  {
+   "id": "R02733",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02734",
+   "twistPairs": 5,
+   "steps": 66,
+   "mismatches": 33,
+   "mismatchesWithUnusedTwist": 33,
+   "violations": 0
+  },
+  {
+   "id": "R02735",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02736",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02737",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02738",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02739",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02740",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02741",
+   "twistPairs": 3,
+   "steps": 82,
+   "mismatches": 14,
+   "mismatchesWithUnusedTwist": 14,
+   "violations": 0
+  },
+  {
+   "id": "R02742",
+   "twistPairs": 3,
+   "steps": 121,
+   "mismatches": 52,
+   "mismatchesWithUnusedTwist": 52,
+   "violations": 0
+  },
+  {
+   "id": "R02743",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02744",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02745",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02746",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02747",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02748",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02749",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02750",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02751",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02752",
+   "twistPairs": 3,
+   "steps": 77,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R02753",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02754",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02755",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02756",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02757",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02758",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02759",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02760",
+   "twistPairs": 2,
+   "steps": 75,
+   "mismatches": 35,
+   "mismatchesWithUnusedTwist": 35,
+   "violations": 0
+  },
+  {
+   "id": "R02761",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02762",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02763",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02764",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02765",
+   "twistPairs": 4,
+   "steps": 69,
+   "mismatches": 62,
+   "mismatchesWithUnusedTwist": 62,
+   "violations": 0
+  },
+  {
+   "id": "R02766",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02767",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02768",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02769",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02770",
+   "twistPairs": 3,
+   "steps": 89,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R02771",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02772",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02773",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02774",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02775",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02776",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02777",
+   "twistPairs": 3,
+   "steps": 73,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R02778",
+   "twistPairs": 1,
+   "steps": 54,
+   "mismatches": 10,
+   "mismatchesWithUnusedTwist": 10,
+   "violations": 0
+  },
+  {
+   "id": "R02779",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02780",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02781",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02782",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02783",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02784",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02785",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02786",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02787",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02788",
+   "twistPairs": 2,
+   "steps": 74,
+   "mismatches": 21,
+   "mismatchesWithUnusedTwist": 21,
+   "violations": 0
+  },
+  {
+   "id": "R02789",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02790",
+   "twistPairs": 3,
+   "steps": 125,
+   "mismatches": 32,
+   "mismatchesWithUnusedTwist": 32,
+   "violations": 0
+  },
+  {
+   "id": "R02791",
+   "twistPairs": 2,
+   "steps": 66,
+   "mismatches": 21,
+   "mismatchesWithUnusedTwist": 21,
+   "violations": 0
+  },
+  {
+   "id": "R02792",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02793",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02794",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02795",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02796",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02797",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02798",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02799",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02800",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02801",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02802",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02803",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02804",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02805",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02806",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02807",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02808",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02809",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02810",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02811",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02812",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02813",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02814",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02815",
+   "twistPairs": 4,
+   "steps": 86,
+   "mismatches": 15,
+   "mismatchesWithUnusedTwist": 15,
+   "violations": 0
+  },
+  {
+   "id": "R02816",
+   "twistPairs": 2,
+   "steps": 74,
+   "mismatches": 11,
+   "mismatchesWithUnusedTwist": 11,
+   "violations": 0
+  },
+  {
+   "id": "R02817",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02818",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02819",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02820",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02821",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02822",
+   "twistPairs": 2,
+   "steps": 78,
+   "mismatches": 46,
+   "mismatchesWithUnusedTwist": 46,
+   "violations": 0
+  },
+  {
+   "id": "R02823",
+   "twistPairs": 2,
+   "steps": 68,
+   "mismatches": 24,
+   "mismatchesWithUnusedTwist": 24,
+   "violations": 0
+  },
+  {
+   "id": "R02824",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02825",
+   "twistPairs": 6,
+   "steps": 57,
+   "mismatches": 10,
+   "mismatchesWithUnusedTwist": 10,
+   "violations": 0
+  },
+  {
+   "id": "R02826",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02827",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02828",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02829",
+   "twistPairs": 1,
+   "steps": 120,
+   "mismatches": 26,
+   "mismatchesWithUnusedTwist": 26,
+   "violations": 0
+  },
+  {
+   "id": "R02830",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02831",
+   "twistPairs": 4,
+   "steps": 92,
+   "mismatches": 20,
+   "mismatchesWithUnusedTwist": 20,
+   "violations": 0
+  },
+  {
+   "id": "R02832",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02833",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02834",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02835",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02836",
+   "twistPairs": 4,
+   "steps": 61,
+   "mismatches": 24,
+   "mismatchesWithUnusedTwist": 24,
+   "violations": 0
+  },
+  {
+   "id": "R02837",
+   "twistPairs": 2,
+   "steps": 112,
+   "mismatches": 50,
+   "mismatchesWithUnusedTwist": 50,
+   "violations": 0
+  },
+  {
+   "id": "R02838",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02839",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02840",
+   "twistPairs": 5,
+   "steps": 81,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R02841",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02842",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02843",
+   "twistPairs": 1,
+   "steps": 102,
+   "mismatches": 24,
+   "mismatchesWithUnusedTwist": 24,
+   "violations": 0
+  },
+  {
+   "id": "R02844",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02845",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02846",
+   "twistPairs": 3,
+   "steps": 74,
+   "mismatches": 33,
+   "mismatchesWithUnusedTwist": 33,
+   "violations": 0
+  },
+  {
+   "id": "R02847",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02848",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02849",
+   "twistPairs": 3,
+   "steps": 67,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R02850",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02851",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02852",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02853",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02854",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02855",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02856",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02857",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02858",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02859",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02860",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02861",
+   "twistPairs": 3,
+   "steps": 57,
+   "mismatches": 20,
+   "mismatchesWithUnusedTwist": 20,
+   "violations": 0
+  },
+  {
+   "id": "R02862",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02863",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02864",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02865",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02866",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02867",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02868",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02869",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02870",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02871",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02872",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02873",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02874",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02875",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02876",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02877",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02878",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02879",
+   "twistPairs": 1,
+   "steps": 93,
+   "mismatches": 16,
+   "mismatchesWithUnusedTwist": 16,
+   "violations": 0
+  },
+  {
+   "id": "R02880",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02881",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02882",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02883",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02884",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02885",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02886",
+   "skipped": "no-hint",
+   "twistPairs": 6
+  },
+  {
+   "id": "R02887",
+   "twistPairs": 2,
+   "steps": 102,
+   "mismatches": 75,
+   "mismatchesWithUnusedTwist": 75,
+   "violations": 0
+  },
+  {
+   "id": "R02888",
+   "twistPairs": 3,
+   "steps": 68,
+   "mismatches": 24,
+   "mismatchesWithUnusedTwist": 24,
+   "violations": 0
+  },
+  {
+   "id": "R02889",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02890",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02891",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02892",
+   "twistPairs": 2,
+   "steps": 111,
+   "mismatches": 79,
+   "mismatchesWithUnusedTwist": 79,
+   "violations": 0
+  },
+  {
+   "id": "R02893",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02894",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02895",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02896",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02897",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02898",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02899",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02900",
+   "twistPairs": 2,
+   "steps": 69,
+   "mismatches": 37,
+   "mismatchesWithUnusedTwist": 37,
+   "violations": 0
+  },
+  {
+   "id": "R02901",
+   "twistPairs": 4,
+   "steps": 65,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R02902",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02903",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02904",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02905",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02906",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02907",
+   "twistPairs": 2,
+   "steps": 56,
+   "mismatches": 3,
+   "mismatchesWithUnusedTwist": 3,
+   "violations": 0
+  },
+  {
+   "id": "R02908",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02909",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02910",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02911",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02912",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02913",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02914",
+   "twistPairs": 2,
+   "steps": 78,
+   "mismatches": 6,
+   "mismatchesWithUnusedTwist": 6,
+   "violations": 0
+  },
+  {
+   "id": "R02915",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02916",
+   "twistPairs": 3,
+   "steps": 100,
+   "mismatches": 84,
+   "mismatchesWithUnusedTwist": 84,
+   "violations": 0
+  },
+  {
+   "id": "R02917",
+   "twistPairs": 4,
+   "steps": 116,
+   "mismatches": 56,
+   "mismatchesWithUnusedTwist": 56,
+   "violations": 0
+  },
+  {
+   "id": "R02918",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02919",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02920",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02921",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02922",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02923",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02924",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02925",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02926",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02927",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02928",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02929",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02930",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02931",
+   "twistPairs": 4,
+   "steps": 78,
+   "mismatches": 45,
+   "mismatchesWithUnusedTwist": 45,
+   "violations": 0
+  },
+  {
+   "id": "R02932",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02933",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02934",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02935",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02936",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02937",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02938",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02939",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02940",
+   "twistPairs": 1,
+   "steps": 82,
+   "mismatches": 73,
+   "mismatchesWithUnusedTwist": 73,
+   "violations": 0
+  },
+  {
+   "id": "R02941",
+   "twistPairs": 3,
+   "steps": 72,
+   "mismatches": 11,
+   "mismatchesWithUnusedTwist": 11,
+   "violations": 0
+  },
+  {
+   "id": "R02942",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02943",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02944",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02945",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02946",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02947",
+   "twistPairs": 4,
+   "steps": 76,
+   "mismatches": 39,
+   "mismatchesWithUnusedTwist": 39,
+   "violations": 0
+  },
+  {
+   "id": "R02948",
+   "twistPairs": 3,
+   "steps": 126,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R02949",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02950",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02951",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02952",
+   "twistPairs": 2,
+   "steps": 69,
+   "mismatches": 19,
+   "mismatchesWithUnusedTwist": 19,
+   "violations": 0
+  },
+  {
+   "id": "R02953",
+   "twistPairs": 3,
+   "steps": 88,
+   "mismatches": 61,
+   "mismatchesWithUnusedTwist": 61,
+   "violations": 0
+  },
+  {
+   "id": "R02954",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02955",
+   "twistPairs": 3,
+   "steps": 97,
+   "mismatches": 80,
+   "mismatchesWithUnusedTwist": 80,
+   "violations": 0
+  },
+  {
+   "id": "R02956",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02957",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02958",
+   "twistPairs": 4,
+   "steps": 95,
+   "mismatches": 15,
+   "mismatchesWithUnusedTwist": 15,
+   "violations": 0
+  },
+  {
+   "id": "R02959",
+   "twistPairs": 1,
+   "steps": 63,
+   "mismatches": 4,
+   "mismatchesWithUnusedTwist": 4,
+   "violations": 0
+  },
+  {
+   "id": "R02960",
+   "twistPairs": 3,
+   "steps": 61,
+   "mismatches": 39,
+   "mismatchesWithUnusedTwist": 39,
+   "violations": 0
+  },
+  {
+   "id": "R02961",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02962",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02963",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02964",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02965",
+   "twistPairs": 4,
+   "steps": 101,
+   "mismatches": 56,
+   "mismatchesWithUnusedTwist": 56,
+   "violations": 0
+  },
+  {
+   "id": "R02966",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02967",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02968",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02969",
+   "twistPairs": 2,
+   "steps": 56,
+   "mismatches": 8,
+   "mismatchesWithUnusedTwist": 8,
+   "violations": 0
+  },
+  {
+   "id": "R02970",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02971",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02972",
+   "twistPairs": 4,
+   "steps": 65,
+   "mismatches": 27,
+   "mismatchesWithUnusedTwist": 27,
+   "violations": 0
+  },
+  {
+   "id": "R02973",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02974",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02975",
+   "twistPairs": 3,
+   "steps": 64,
+   "mismatches": 10,
+   "mismatchesWithUnusedTwist": 10,
+   "violations": 0
+  },
+  {
+   "id": "R02976",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02977",
+   "twistPairs": 4,
+   "steps": 128,
+   "mismatches": 47,
+   "mismatchesWithUnusedTwist": 47,
+   "violations": 0
+  },
+  {
+   "id": "R02978",
+   "twistPairs": 2,
+   "steps": 80,
+   "mismatches": 33,
+   "mismatchesWithUnusedTwist": 33,
+   "violations": 0
+  },
+  {
+   "id": "R02979",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02980",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R02981",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02982",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02983",
+   "twistPairs": 2,
+   "steps": 99,
+   "mismatches": 13,
+   "mismatchesWithUnusedTwist": 13,
+   "violations": 0
+  },
+  {
+   "id": "R02984",
+   "twistPairs": 3,
+   "steps": 66,
+   "mismatches": 30,
+   "mismatchesWithUnusedTwist": 30,
+   "violations": 0
+  },
+  {
+   "id": "R02985",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02986",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R02987",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R02988",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02989",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02990",
+   "twistPairs": 2,
+   "steps": 65,
+   "mismatches": 54,
+   "mismatchesWithUnusedTwist": 54,
+   "violations": 0
+  },
+  {
+   "id": "R02991",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R02992",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02993",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02994",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02995",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02996",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R02997",
+   "twistPairs": 3,
+   "steps": 121,
+   "mismatches": 76,
+   "mismatchesWithUnusedTwist": 76,
+   "violations": 0
+  },
+  {
+   "id": "R02998",
+   "twistPairs": 3,
+   "steps": 109,
+   "mismatches": 8,
+   "mismatchesWithUnusedTwist": 8,
+   "violations": 0
+  },
+  {
+   "id": "R02999",
+   "twistPairs": 4,
+   "steps": 107,
+   "mismatches": 35,
+   "mismatchesWithUnusedTwist": 35,
+   "violations": 0
+  },
+  {
+   "id": "R03000",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03001",
+   "twistPairs": 2,
+   "steps": 62,
+   "mismatches": 10,
+   "mismatchesWithUnusedTwist": 10,
+   "violations": 0
+  },
+  {
+   "id": "R03002",
+   "twistPairs": 3,
+   "steps": 111,
+   "mismatches": 37,
+   "mismatchesWithUnusedTwist": 37,
+   "violations": 0
+  },
+  {
+   "id": "R03003",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03004",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03005",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03006",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03007",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03008",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03009",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03010",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03011",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03012",
+   "twistPairs": 4,
+   "steps": 63,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R03013",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R03014",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03015",
+   "twistPairs": 4,
+   "steps": 64,
+   "mismatches": 19,
+   "mismatchesWithUnusedTwist": 19,
+   "violations": 0
+  },
+  {
+   "id": "R03016",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03017",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03018",
+   "twistPairs": 3,
+   "steps": 53,
+   "mismatches": 34,
+   "mismatchesWithUnusedTwist": 34,
+   "violations": 0
+  },
+  {
+   "id": "R03019",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03020",
+   "twistPairs": 2,
+   "steps": 74,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R03021",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03022",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03023",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03024",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03025",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03026",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03027",
+   "twistPairs": 4,
+   "steps": 59,
+   "mismatches": 28,
+   "mismatchesWithUnusedTwist": 28,
+   "violations": 0
+  },
+  {
+   "id": "R03028",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03029",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03030",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03031",
+   "twistPairs": 3,
+   "steps": 68,
+   "mismatches": 26,
+   "mismatchesWithUnusedTwist": 26,
+   "violations": 0
+  },
+  {
+   "id": "R03032",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03033",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03034",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03035",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03036",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03037",
+   "skipped": "no-hint",
+   "twistPairs": 6
+  },
+  {
+   "id": "R03038",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03039",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03040",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03041",
+   "skipped": "no-hint",
+   "twistPairs": 6
+  },
+  {
+   "id": "R03042",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03043",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03044",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03045",
+   "twistPairs": 3,
+   "steps": 100,
+   "mismatches": 49,
+   "mismatchesWithUnusedTwist": 49,
+   "violations": 0
+  },
+  {
+   "id": "R03046",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03047",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03048",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03049",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03050",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03051",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03052",
+   "twistPairs": 1,
+   "steps": 129,
+   "mismatches": 20,
+   "mismatchesWithUnusedTwist": 20,
+   "violations": 0
+  },
+  {
+   "id": "R03053",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03054",
+   "twistPairs": 3,
+   "steps": 78,
+   "mismatches": 51,
+   "mismatchesWithUnusedTwist": 51,
+   "violations": 0
+  },
+  {
+   "id": "R03055",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03056",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03057",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03058",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03059",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03060",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03061",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03062",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03063",
+   "twistPairs": 4,
+   "steps": 77,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R03064",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03065",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03066",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03067",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03068",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03069",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03070",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R03071",
+   "twistPairs": 2,
+   "steps": 93,
+   "mismatches": 20,
+   "mismatchesWithUnusedTwist": 20,
+   "violations": 0
+  },
+  {
+   "id": "R03072",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03073",
+   "twistPairs": 2,
+   "steps": 116,
+   "mismatches": 32,
+   "mismatchesWithUnusedTwist": 32,
+   "violations": 0
+  },
+  {
+   "id": "R03074",
+   "twistPairs": 2,
+   "steps": 66,
+   "mismatches": 5,
+   "mismatchesWithUnusedTwist": 5,
+   "violations": 0
+  },
+  {
+   "id": "R03075",
+   "twistPairs": 3,
+   "steps": 75,
+   "mismatches": 18,
+   "mismatchesWithUnusedTwist": 18,
+   "violations": 0
+  },
+  {
+   "id": "R03076",
+   "twistPairs": 3,
+   "steps": 67,
+   "mismatches": 38,
+   "mismatchesWithUnusedTwist": 38,
+   "violations": 0
+  },
+  {
+   "id": "R03077",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03078",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03079",
+   "twistPairs": 2,
+   "steps": 89,
+   "mismatches": 55,
+   "mismatchesWithUnusedTwist": 55,
+   "violations": 0
+  },
+  {
+   "id": "R03080",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03081",
+   "twistPairs": 5,
+   "steps": 74,
+   "mismatches": 39,
+   "mismatchesWithUnusedTwist": 39,
+   "violations": 0
+  },
+  {
+   "id": "R03082",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03083",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R03084",
+   "twistPairs": 1,
+   "steps": 119,
+   "mismatches": 1,
+   "mismatchesWithUnusedTwist": 1,
+   "violations": 0
+  },
+  {
+   "id": "R03085",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03086",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03087",
+   "twistPairs": 2,
+   "steps": 82,
+   "mismatches": 1,
+   "mismatchesWithUnusedTwist": 1,
+   "violations": 0
+  },
+  {
+   "id": "R03088",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03089",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03090",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03091",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03092",
+   "twistPairs": 3,
+   "steps": 69,
+   "mismatches": 52,
+   "mismatchesWithUnusedTwist": 52,
+   "violations": 0
+  },
+  {
+   "id": "R03093",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03094",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03095",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03096",
+   "twistPairs": 5,
+   "steps": 93,
+   "mismatches": 8,
+   "mismatchesWithUnusedTwist": 8,
+   "violations": 0
+  },
+  {
+   "id": "R03097",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03098",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03099",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03100",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03101",
+   "twistPairs": 3,
+   "steps": 121,
+   "mismatches": 71,
+   "mismatchesWithUnusedTwist": 71,
+   "violations": 0
+  },
+  {
+   "id": "R03102",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03103",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03104",
+   "twistPairs": 1,
+   "steps": 77,
+   "mismatches": 12,
+   "mismatchesWithUnusedTwist": 12,
+   "violations": 0
+  },
+  {
+   "id": "R03105",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03106",
+   "twistPairs": 5,
+   "steps": 104,
+   "mismatches": 49,
+   "mismatchesWithUnusedTwist": 49,
+   "violations": 0
+  },
+  {
+   "id": "R03107",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03108",
+   "twistPairs": 2,
+   "steps": 72,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R03109",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03110",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03111",
+   "twistPairs": 3,
+   "steps": 62,
+   "mismatches": 39,
+   "mismatchesWithUnusedTwist": 39,
+   "violations": 0
+  },
+  {
+   "id": "R03112",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03113",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03114",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03115",
+   "twistPairs": 1,
+   "steps": 67,
+   "mismatches": 46,
+   "mismatchesWithUnusedTwist": 46,
+   "violations": 0
+  },
+  {
+   "id": "R03116",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03117",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03118",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03119",
+   "twistPairs": 3,
+   "steps": 122,
+   "mismatches": 96,
+   "mismatchesWithUnusedTwist": 96,
+   "violations": 0
+  },
+  {
+   "id": "R03120",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03121",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03122",
+   "twistPairs": 2,
+   "steps": 67,
+   "mismatches": 2,
+   "mismatchesWithUnusedTwist": 2,
+   "violations": 0
+  },
+  {
+   "id": "R03123",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03124",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03125",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03126",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03127",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03128",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03129",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R03130",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03131",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03132",
+   "twistPairs": 1,
+   "steps": 84,
+   "mismatches": 69,
+   "mismatchesWithUnusedTwist": 69,
+   "violations": 0
+  },
+  {
+   "id": "R03133",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03134",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03135",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03136",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03137",
+   "twistPairs": 2,
+   "steps": 123,
+   "mismatches": 39,
+   "mismatchesWithUnusedTwist": 39,
+   "violations": 0
+  },
+  {
+   "id": "R03138",
+   "twistPairs": 3,
+   "steps": 112,
+   "mismatches": 32,
+   "mismatchesWithUnusedTwist": 32,
+   "violations": 0
+  },
+  {
+   "id": "R03139",
+   "twistPairs": 1,
+   "steps": 74,
+   "mismatches": 34,
+   "mismatchesWithUnusedTwist": 34,
+   "violations": 0
+  },
+  {
+   "id": "R03140",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03141",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03142",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03143",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03144",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03145",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03146",
+   "twistPairs": 3,
+   "steps": 102,
+   "mismatches": 93,
+   "mismatchesWithUnusedTwist": 93,
+   "violations": 0
+  },
+  {
+   "id": "R03147",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03148",
+   "twistPairs": 3,
+   "steps": 80,
+   "mismatches": 77,
+   "mismatchesWithUnusedTwist": 77,
+   "violations": 0
+  },
+  {
+   "id": "R03149",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03150",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03151",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03152",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03153",
+   "twistPairs": 4,
+   "steps": 75,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R03154",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03155",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03156",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03157",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03158",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03159",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03160",
+   "twistPairs": 2,
+   "steps": 77,
+   "mismatches": 11,
+   "mismatchesWithUnusedTwist": 11,
+   "violations": 0
+  },
+  {
+   "id": "R03161",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03162",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03163",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03164",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03165",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03166",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R03167",
+   "twistPairs": 2,
+   "steps": 77,
+   "mismatches": 16,
+   "mismatchesWithUnusedTwist": 16,
+   "violations": 0
+  },
+  {
+   "id": "R03168",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03169",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03170",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03171",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03172",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03173",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03174",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03175",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03176",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03177",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03178",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03179",
+   "twistPairs": 2,
+   "steps": 78,
+   "mismatches": 1,
+   "mismatchesWithUnusedTwist": 1,
+   "violations": 0
+  },
+  {
+   "id": "R03180",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03181",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03182",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03183",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03184",
+   "twistPairs": 3,
+   "steps": 86,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R03185",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03186",
+   "twistPairs": 1,
+   "steps": 77,
+   "mismatches": 5,
+   "mismatchesWithUnusedTwist": 5,
+   "violations": 0
+  },
+  {
+   "id": "R03187",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03188",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03189",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03190",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03191",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03192",
+   "twistPairs": 6,
+   "steps": 86,
+   "mismatches": 19,
+   "mismatchesWithUnusedTwist": 19,
+   "violations": 0
+  },
+  {
+   "id": "R03193",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03194",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03195",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03196",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03197",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03198",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03199",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03200",
+   "twistPairs": 1,
+   "steps": 72,
+   "mismatches": 9,
+   "mismatchesWithUnusedTwist": 9,
+   "violations": 0
+  },
+  {
+   "id": "R03201",
+   "twistPairs": 3,
+   "steps": 72,
+   "mismatches": 41,
+   "mismatchesWithUnusedTwist": 41,
+   "violations": 0
+  },
+  {
+   "id": "R03202",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03203",
+   "twistPairs": 3,
+   "steps": 85,
+   "mismatches": 18,
+   "mismatchesWithUnusedTwist": 18,
+   "violations": 0
+  },
+  {
+   "id": "R03204",
+   "twistPairs": 4,
+   "steps": 97,
+   "mismatches": 13,
+   "mismatchesWithUnusedTwist": 13,
+   "violations": 0
+  },
+  {
+   "id": "R03205",
+   "twistPairs": 2,
+   "steps": 63,
+   "mismatches": 17,
+   "mismatchesWithUnusedTwist": 17,
+   "violations": 0
+  },
+  {
+   "id": "R03206",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03207",
+   "twistPairs": 3,
+   "steps": 59,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R03208",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03209",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03210",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03211",
+   "twistPairs": 1,
+   "steps": 107,
+   "mismatches": 24,
+   "mismatchesWithUnusedTwist": 24,
+   "violations": 0
+  },
+  {
+   "id": "R03212",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03213",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03214",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03215",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03216",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03217",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03218",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03219",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03220",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03221",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03222",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03223",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03224",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03225",
+   "twistPairs": 3,
+   "steps": 72,
+   "mismatches": 20,
+   "mismatchesWithUnusedTwist": 20,
+   "violations": 0
+  },
+  {
+   "id": "R03226",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03227",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03228",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03229",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03230",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03231",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03232",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03233",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03234",
+   "twistPairs": 2,
+   "steps": 103,
+   "mismatches": 35,
+   "mismatchesWithUnusedTwist": 35,
+   "violations": 0
+  },
+  {
+   "id": "R03235",
+   "twistPairs": 1,
+   "steps": 95,
+   "mismatches": 15,
+   "mismatchesWithUnusedTwist": 15,
+   "violations": 0
+  },
+  {
+   "id": "R03236",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03237",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03238",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03239",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03240",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03241",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03242",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03243",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03244",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03245",
+   "twistPairs": 3,
+   "steps": 118,
+   "mismatches": 14,
+   "mismatchesWithUnusedTwist": 14,
+   "violations": 0
+  },
+  {
+   "id": "R03246",
+   "twistPairs": 3,
+   "steps": 55,
+   "mismatches": 41,
+   "mismatchesWithUnusedTwist": 41,
+   "violations": 0
+  },
+  {
+   "id": "R03247",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03248",
+   "twistPairs": 4,
+   "steps": 89,
+   "mismatches": 26,
+   "mismatchesWithUnusedTwist": 26,
+   "violations": 0
+  },
+  {
+   "id": "R03249",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03250",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03251",
+   "twistPairs": 3,
+   "steps": 94,
+   "mismatches": 22,
+   "mismatchesWithUnusedTwist": 22,
+   "violations": 0
+  },
+  {
+   "id": "R03252",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R03253",
+   "twistPairs": 2,
+   "steps": 130,
+   "mismatches": 69,
+   "mismatchesWithUnusedTwist": 69,
+   "violations": 0
+  },
+  {
+   "id": "R03254",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03255",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03256",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03257",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03258",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03259",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R03260",
+   "twistPairs": 2,
+   "steps": 132,
+   "mismatches": 0,
+   "mismatchesWithUnusedTwist": 0,
+   "violations": 0
+  },
+  {
+   "id": "R03261",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03262",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03263",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03264",
+   "twistPairs": 3,
+   "steps": 90,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R03265",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03266",
+   "twistPairs": 1,
+   "steps": 74,
+   "mismatches": 33,
+   "mismatchesWithUnusedTwist": 33,
+   "violations": 0
+  },
+  {
+   "id": "R03267",
+   "twistPairs": 4,
+   "steps": 61,
+   "mismatches": 25,
+   "mismatchesWithUnusedTwist": 25,
+   "violations": 0
+  },
+  {
+   "id": "R03268",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03269",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03270",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03271",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03272",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03273",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03274",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03275",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03276",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03277",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03278",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03279",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03280",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03281",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03282",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03283",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03284",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03285",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03286",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03287",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03288",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03289",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03290",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03291",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03292",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03293",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03294",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03295",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03296",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03297",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03298",
+   "twistPairs": 1,
+   "steps": 104,
+   "mismatches": 75,
+   "mismatchesWithUnusedTwist": 75,
+   "violations": 0
+  },
+  {
+   "id": "R03299",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03300",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03301",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R03302",
+   "twistPairs": 3,
+   "steps": 68,
+   "mismatches": 52,
+   "mismatchesWithUnusedTwist": 52,
+   "violations": 0
+  },
+  {
+   "id": "R03303",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03304",
+   "twistPairs": 1,
+   "steps": 82,
+   "mismatches": 13,
+   "mismatchesWithUnusedTwist": 13,
+   "violations": 0
+  },
+  {
+   "id": "R03305",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03306",
+   "twistPairs": 2,
+   "steps": 95,
+   "mismatches": 8,
+   "mismatchesWithUnusedTwist": 8,
+   "violations": 0
+  },
+  {
+   "id": "R03307",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03308",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03309",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03310",
+   "twistPairs": 2,
+   "steps": 103,
+   "mismatches": 72,
+   "mismatchesWithUnusedTwist": 72,
+   "violations": 0
+  },
+  {
+   "id": "R03311",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03312",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03313",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03314",
+   "twistPairs": 2,
+   "steps": 61,
+   "mismatches": 6,
+   "mismatchesWithUnusedTwist": 6,
+   "violations": 0
+  },
+  {
+   "id": "R03315",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03316",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03317",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03318",
+   "twistPairs": 3,
+   "steps": 94,
+   "mismatches": 70,
+   "mismatchesWithUnusedTwist": 70,
+   "violations": 0
+  },
+  {
+   "id": "R03319",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03320",
+   "twistPairs": 1,
+   "steps": 76,
+   "mismatches": 51,
+   "mismatchesWithUnusedTwist": 51,
+   "violations": 0
+  },
+  {
+   "id": "R03321",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03322",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03323",
+   "twistPairs": 5,
+   "steps": 84,
+   "mismatches": 22,
+   "mismatchesWithUnusedTwist": 22,
+   "violations": 0
+  },
+  {
+   "id": "R03324",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03325",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03326",
+   "twistPairs": 4,
+   "steps": 115,
+   "mismatches": 54,
+   "mismatchesWithUnusedTwist": 54,
+   "violations": 0
+  },
+  {
+   "id": "R03327",
+   "twistPairs": 2,
+   "steps": 111,
+   "mismatches": 20,
+   "mismatchesWithUnusedTwist": 20,
+   "violations": 0
+  },
+  {
+   "id": "R03328",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03329",
+   "twistPairs": 1,
+   "steps": 75,
+   "mismatches": 55,
+   "mismatchesWithUnusedTwist": 55,
+   "violations": 0
+  },
+  {
+   "id": "R03330",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03331",
+   "twistPairs": 3,
+   "steps": 115,
+   "mismatches": 42,
+   "mismatchesWithUnusedTwist": 42,
+   "violations": 0
+  },
+  {
+   "id": "R03332",
+   "skipped": "no-hint",
+   "twistPairs": 2
+  },
+  {
+   "id": "R03333",
+   "twistPairs": 3,
+   "steps": 114,
+   "mismatches": 48,
+   "mismatchesWithUnusedTwist": 48,
+   "violations": 0
+  },
+  {
+   "id": "R03334",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03335",
+   "twistPairs": 1,
+   "steps": 87,
+   "mismatches": 3,
+   "mismatchesWithUnusedTwist": 3,
+   "violations": 0
+  },
+  {
+   "id": "R03336",
+   "twistPairs": 3,
+   "steps": 87,
+   "mismatches": 62,
+   "mismatchesWithUnusedTwist": 62,
+   "violations": 0
+  },
+  {
+   "id": "R03337",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03338",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03339",
+   "twistPairs": 2,
+   "steps": 120,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R03340",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03341",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03342",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03343",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03344",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03345",
+   "twistPairs": 2,
+   "steps": 54,
+   "mismatches": 21,
+   "mismatchesWithUnusedTwist": 21,
+   "violations": 0
+  },
+  {
+   "id": "R03346",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03347",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03348",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03349",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03350",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03351",
+   "skipped": "no-hint",
+   "twistPairs": 1
+  },
+  {
+   "id": "R03352",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03353",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03354",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03355",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03356",
+   "skipped": "no-hint",
+   "twistPairs": 5
+  },
+  {
+   "id": "R03357",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03358",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03359",
+   "twistPairs": 2,
+   "steps": 69,
+   "mismatches": 0,
+   "mismatchesWithUnusedTwist": 0,
+   "violations": 0
+  },
+  {
+   "id": "R03360",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03361",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03362",
+   "twistPairs": 4,
+   "steps": 61,
+   "mismatches": 34,
+   "mismatchesWithUnusedTwist": 34,
+   "violations": 0
+  },
+  {
+   "id": "R03363",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03364",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03365",
+   "skipped": "no-hint",
+   "twistPairs": 3
+  },
+  {
+   "id": "R03366",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R03367",
+   "twistPairs": 3,
+   "steps": 131,
+   "mismatches": 58,
+   "mismatchesWithUnusedTwist": 58,
+   "violations": 0
+  },
+  {
+   "id": "R03368",
+   "skipped": "no-hint",
+   "twistPairs": 4
+  },
+  {
+   "id": "R03369",
+   "twistPairs": 3,
+   "steps": 119,
+   "mismatches": 4,
+   "mismatchesWithUnusedTwist": 4,
+   "violations": 0
+  }
+ ]
+}

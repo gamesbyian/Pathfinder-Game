@@ -40,7 +40,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
-import { defaultConfig } from './ablation-config.mjs';
+import { defaultConfig } from '../modules/solver/ablation-config.js';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { parseLevelPositions } from './level-data-io.mjs';
 
@@ -55,7 +55,8 @@ const budgetMs = Number(argMap.get('--budget-ms') || 30000);
 const workBudget = Number(argMap.get('--work-budget') || 100_000_000);
 const deadlineMs = Math.max(budgetMs, Math.floor(budgetMs * 4));
 const order = argMap.get('--order') || 'default';
-const seed = Number(argMap.get('--seed') || 42);
+// Zero is a valid deterministic seed; default only when the option is absent.
+const seed = Number(argMap.get('--seed') ?? 42);
 const updateBaseline = flags.has('--update-baseline');
 
 const levelFilter = parseLevelPositions(argMap.get('--levels'));
@@ -90,6 +91,7 @@ console.log(`solver-bench: order=${order}${order === 'random' ? ` seed=${seed}` 
 
 const solved = [];
 const failed = [];
+const deadlineTruncatedLevels = [];
 let nodesExpanded = 0;
 const runStart = Date.now();
 for (const [i, n] of targets.entries()) {
@@ -102,6 +104,7 @@ for (const [i, n] of targets.entries()) {
         if (res?.deadlineTruncated) {
             // Indeterminate, not a negative — the deadline should never fire here (see the header).
             console.log(`  [!] L${n}: DEADLINE-TRUNCATED with work budget remaining; result is not reproducible`);
+            deadlineTruncatedLevels.push(n);
         }
         ok = !!res?.ok;
         nodesExpanded += res?.nodesExpanded || 0;
@@ -113,6 +116,14 @@ for (const [i, n] of targets.entries()) {
 }
 const totalMs = Date.now() - runStart;
 console.log(`Result: solved ${solved.length}/${targets.length}, failed [${failed.join(', ')}], ${(totalMs / 1000).toFixed(1)}s, ${nodesExpanded.toLocaleString()} nodes`);
+// Promoted to its own unmissable summary line (added 2026-08-15) rather than relying on the
+// per-level [!] lines above, which are easy to scroll past in a 100+-level run: this run's own
+// nodes/time totals — and any --check cost comparison built from them — are NOT wall-clock-free
+// (i.e. not purely work-budget-shaped, hence not machine-independent) whenever this list is
+// non-empty, regardless of how generous deadlineMs looks on paper.
+if (deadlineTruncatedLevels.length) {
+    console.log(`[!!] ${deadlineTruncatedLevels.length} level(s) hit the wall-clock deadline before exhausting their work budget: [${deadlineTruncatedLevels.join(', ')}]. This run's cost is NOT purely work-budget-shaped — do not treat nodes/time below as machine-independent.`);
+}
 
 const outFile = argMap.get('--out');
 if (outFile) {
@@ -138,6 +149,40 @@ const nowSolved = new Set(solved);
 const considered = new Set(targets);
 const regressions = [...baseSolved].filter(n => considered.has(n) && !nowSolved.has(n)).sort((a, b) => a - b);
 const improvements = [...nowSolved].filter(n => !baseSolved.has(n)).sort((a, b) => a - b);
+
+// Staleness check (added 2026-08-15 — see reports/2026-08-15-connectivity-axis-exhausted-
+// regression.md): the baseline is a point-in-time snapshot, not a rolling target, and nothing
+// previously flagged how far behind HEAD it had drifted. A comparison against a multi-week-stale
+// baseline silently attributes ALL solver evolution since then to whatever the current run happens
+// to be testing — a real, multi-hour misdiagnosis that motivated this check. Both signals are
+// best-effort: `generatedAt` age needs no git access; commits-behind needs `baseline.commit` to
+// still resolve, which a shallow clone (the default for CI/sandbox checkouts) can defeat entirely
+// — that failure mode is itself reported, not swallowed, since "can't even tell how stale this is"
+// is exactly the situation this check exists to prevent.
+{
+    const staleWarnings = [];
+    if (baseline.generatedAt) {
+        const ageDays = (Date.now() - new Date(baseline.generatedAt).getTime()) / 86_400_000;
+        if (ageDays > 3) staleWarnings.push(`generated ${ageDays.toFixed(1)} days ago`);
+    } else {
+        staleWarnings.push('no generatedAt recorded (pre-dates staleness tracking)');
+    }
+    if (baseline.commit) {
+        try {
+            const behind = execSync(`git rev-list --count ${baseline.commit}..HEAD`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+            const n = Number(behind);
+            if (Number.isFinite(n) && n > 20) staleWarnings.push(`${n} commits behind HEAD`);
+        } catch {
+            staleWarnings.push(`baseline commit ${baseline.commit} does not resolve locally (shallow clone? run "git fetch --deepen=1000" or similar to check properly)`);
+        }
+    }
+    if (staleWarnings.length) {
+        console.log(`\n  [!!] STALE BASELINE — ${staleWarnings.join('; ')}.`);
+        console.log(`       Cost/node deltas below may reflect unrelated solver evolution since the baseline was captured, not`);
+        console.log(`       anything about this run's own change. Re-run "npm run solver:bench -- --update-baseline" if the`);
+        console.log(`       working tree is otherwise clean, or treat the cost numbers below as unreliable until it is.`);
+    }
+}
 
 console.log(`\nvs baseline (workBudget=${baseline.workBudget ? baseline.workBudget.toLocaleString() : 'n/a (pre-work-budget baseline)'}, commit ${baseline.commit}):`);
 if (baseline.workBudget && baseline.workBudget !== workBudget) {

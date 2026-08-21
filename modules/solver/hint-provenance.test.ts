@@ -4,6 +4,67 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { deriveSolveAttemptInfo, provenanceFromSolveResult, hintsFromVarietyResult } from './hint-provenance.js';
+import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from './testing-fixtures.js';
+
+const PERSISTENT_ATTEMPT_FIELDS = new Set([
+  'profile', 'template', 'beamWidth', 'diverseBeam', 'gateKey', 'elapsedMs', 'nodesExpanded',
+  'allocatedBudgetMs', 'randomSeed', 'seedSalt', 'repairMustTurnBiased', 'repairTurnBiased',
+  'attractionDiversity',
+]);
+const TRANSIENT_FIELDS_WITH_DISTINCT_PROVENANCE_MEANING = new Set(['workSpent']);
+const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([
+  'stageId', 'ok', 'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'repair',
+  'timedOut', 'bestBadness', 'finalBadness', 'allocatedWorkCeiling', 'allocatedNodeCeiling',
+  'workSpent', 'dedupNearTieRetry', 'admissibleOrderNonDefaultRetry',
+  'connectivityAxisExhaustedRetry', 'repairElitePrefixDfsRetry', 'mcNeighborBudgetRetry',
+  'repairLateProbe', 'admissibleOrder', 'admissibleOrderNoTieBreak', 'admissibleOrderLds',
+  'mainLoopLateReserve', 'repairProbe', 'repairProbeShrinkRecovery',
+]);
+
+test('maximal Attempt has an explicit, complete provenance projection contract', () => {
+  const successfulAttempt = { ...MAXIMALLY_POPULATED_SOLVER_ATTEMPT, ok: true, outcome: 'success' as const };
+  assert.equal(PERSISTENT_ATTEMPT_FIELDS.size + INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS.size, Object.keys(successfulAttempt).length,
+    'field expectations must have neither stale entries nor omissions');
+  for (const field of Object.keys(successfulAttempt)) {
+    const memberships = Number(PERSISTENT_ATTEMPT_FIELDS.has(field)) + Number(INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS.has(field));
+    assert.equal(memberships, 1, `${field} must belong to exactly one provenance set`);
+  }
+
+  const info = deriveSolveAttemptInfo([successfulAttempt]);
+  const entry = provenanceFromSolveResult({
+    status: 'success', attempts: [successfulAttempt], nodesExpanded: 9000, totalMs: 654,
+  });
+  const destinations: Record<string, unknown> = {
+    profile: entry.solver.profile,
+    template: entry.solver.template,
+    beamWidth: entry.solver.beamWidth,
+    diverseBeam: entry.solver.diverseBeam,
+    gateKey: entry.solver.gateKey,
+    elapsedMs: entry.search.elapsedMs,
+    nodesExpanded: entry.search.nodesExpanded,
+    allocatedBudgetMs: entry.search.budgetMs,
+    randomSeed: entry.search.randomSeed,
+    seedSalt: entry.search.seedSalt,
+    repairMustTurnBiased: entry.solver.forcing?.repairMustTurnBiased,
+    repairTurnBiased: entry.solver.forcing?.repairTurnBiased,
+    attractionDiversity: info.attractionDiversity,
+  };
+  for (const field of PERSISTENT_ATTEMPT_FIELDS) {
+    assert.deepEqual(destinations[field], successfulAttempt[field as keyof typeof successfulAttempt], `${field} changed in provenance`);
+  }
+
+  // None of the raw scheduler/failure/dispatch bookkeeping is copied as an own provenance field.
+  // (repair/admissibleOrder are intentionally represented only by the normalized technique.)
+  for (const field of INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS) {
+    assert.equal(Object.hasOwn(entry, field), false, `${field} leaked into provenance`);
+    assert.equal(Object.hasOwn(entry.solver, field), false, `${field} leaked into solver provenance`);
+    if (!TRANSIENT_FIELDS_WITH_DISTINCT_PROVENANCE_MEANING.has(field)) {
+      assert.equal(Object.hasOwn(entry.search, field), false, `${field} leaked into search provenance`);
+    }
+  }
+  assert.equal(entry.search.workSpent, null, 'attempt workSpent is not whole-solve provenance workSpent');
+  assert.equal(entry.solver.technique, 'repair');
+});
 import { repairPrimarySeed } from './repair-search.js';
 
 test('hintsFromVarietyResult records the prefix-anchor seed on prefix-anchored finds only', () => {

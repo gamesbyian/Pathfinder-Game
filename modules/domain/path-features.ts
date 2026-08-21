@@ -118,6 +118,20 @@ export function buildPathFeatures(path: number[], mcKeys: number[] = []): PathFe
     return { edge: edgeSet(path), cross: crossingSet(path), len: path.length, mcFirst: mco.first, mcFull: mco.full };
 }
 
+/** Research/curation structural-family key. Unlike exact path identity, this deliberately ignores
+ * local edge-level detours and groups paths that share portal usage, crossing placement, and both
+ * established must-cross order axes. These are the same structural dimensions already used by
+ * hint diversity; this is an equivalence key, not a learned cluster or proof of homotopy. */
+export function structuralSolutionFamilySignature(path: number[], mcKeys: number[] = []): string {
+    const features = buildPathFeatures(path, mcKeys);
+    return JSON.stringify({
+        portal: portalSignature(path),
+        crossings: [...features.cross].sort(),
+        mustCrossFirst: features.mcFirst,
+        mustCrossFull: features.mcFull,
+    });
+}
+
 /** Distance between two paths' features — the max of every applicable variety axis. Edges (the drawn
  *  line) are always in play. On near-Hamiltonian levels (`useCrossings`) crossing *placement* is folded
  *  in. On must-cross levels the *order* the squares are crossed is folded in. Each term is inert when

@@ -1,5 +1,13 @@
 # Solver batch-run speed + hint provenance improvements (2026-07-23)
 
+> **Status:** concluded-positive
+> **Last evidence:** 2026-08-07 — remaining-work reconciliation against the later hot-path,
+> classifier, and corpus-refresh results
+> **Decision:** keep the shipped batch/provenance improvements, but do not use the deprecated
+> `--baseline-budget` experiment as a regression gate
+> **Remaining gate:** none; deferred solver work is tracked in
+> [`docs/future-work.md`](../docs/future-work.md)
+
 Session scope: the user asked for ideas on speeding up backend/batch solver testing (the real
 pain point: running the solver across hundreds–thousands of levels at 30+ s/level during
 solver-development iteration), which led into a parallel thread on hint provenance — what it can
@@ -258,6 +266,18 @@ Ranked roughly by how close each is to actionable, not by importance.
    repair on this level," a nuance worth keeping in mind when interpreting the eventual full
    30-level result. **Do not conclude either way from 9/30** — finish the sweep first.
 
+   **Resolution (2026-08-07 documentation reconciliation): cancelled as superseded, not silently
+   completed.** Later work answered the actual ordering/promotion question with stronger and more
+   relevant evidence: a 31-level cross-corpus sample compared historical
+   `repairMustTurnBiased`/`repairTurnBiased` winners, an exclusive feature selector was tested on a
+   full corpus-2 refresh and lost net 2 attributable solves, and the current flag-gated experiment
+   instead orders both techniques by the predictor while giving the predicted tier 75% of the shared
+   probe budget. See
+   [`2026-07-23-turnbias-corpus2-ab-validation.md`](2026-07-23-turnbias-corpus2-ab-validation.md)
+   and the history comments on `predictLikelyBiasedRepairTechnique` in `modules/solver/attempts.ts`.
+   Finishing the older stress-corpus-1-only 21 levels would no longer decide the implemented design,
+   so the paused sweep should not be resumed.
+
 ### ⏳ Investigated, not yet built
 
 2. **Fix `--baseline-budget`'s repair-winner soundness gap before re-attempting it.** Root-caused
@@ -319,6 +339,32 @@ Ranked roughly by how close each is to actionable, not by importance.
    again (attraction-diversity's feature-gate idea above is exactly this shape), it's worth
    promoting the pattern into real, committed tooling (`scripts/`) with documentation, rather than
    re-writing it from scratch each time.
+
+## Remaining-work reconciliation (2026-08-07)
+
+The numbered list above is historical brainstorming, not a current queue:
+
+- **Item 2 (`--baseline-budget`): closed in its proposed form.** The CLI option is now explicitly
+  deprecated for general regression use. The repository has since adopted machine-independent
+  `workBudget`/`workSpent`; any future adaptive budget must use recorded work, not add repair-specific
+  exceptions to a raw-node scheme already shown unsound at corpus scale.
+- **Item 3 (attraction-diversity feature gate): defer behind a new causal predictor.** The subsequent
+  repair-winner classifier rerun found that simple level-feature signals are weak or policy-confounded
+  at n=725. Do not schedule another feature-mining pass without a new variable or mechanism.
+- **Item 4 (repair-seed coverage): prerequisite complete.** All 188 current corpus-2 repair winners
+  have a winning attempt with `randomSeed`; 178 also fit a 30-second replay gate. Later refresh work
+  exposed prime-miss budget starvation separately and fixed the work-allocation bug. No seed backfill
+  campaign remains.
+- **Items 5–6 (old hot-loop profiling ideas): closed as stale leads.** The later full hot-path survey
+  implemented/measured Tier 1 and parts of Tier 2, including negative allocation-pooling results. Use
+  a fresh profile before naming another target; do not profile old commit `1042274` for bookkeeping.
+- **Item 7 (gate-level prediction): closed.** The designer-level review found gate choice depends on
+  many interacting factors and is not a credible standalone heuristic. Provenance remains useful for
+  explaining a concrete A/B, not for speculative gate mining.
+- **Item 8 (permanent comparison tool): defer until a second real use.** One throwaway script does not
+  justify permanent tooling; build it when another decision actually needs the same comparison.
+
+Current work belongs in [`docs/future-work.md`](../docs/future-work.md), not this dated report.
 
 ---
 

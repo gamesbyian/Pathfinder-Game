@@ -6,7 +6,7 @@ import { getDistanceFromArray } from './distance.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES, TEMPLATES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { buildCurUrgencyContext, computeTemplateBonus, scoreAndSort, scoreMove } from './scoring.js';
+import { MAX_POOLED_OBJECTIVES, __buildFreshCurUrgencyContextForTests, buildCurUrgencyContext, computeTemplateBonus, scoreAndSort, scoreMove } from './scoring.js';
 import { createState, applyMove } from './search-state.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState } from './types.js';
@@ -311,4 +311,43 @@ test('buildCurUrgencyContext(includeMcAxisFix=false) still populates mpCur but n
   const withScopedCtx = scoreMove(PACK(3, 2), mcKey, state, level, prep, POLICY_PROFILES.default, 6, null, ctx);
   const withNoCtx = scoreMove(PACK(3, 2), mcKey, state, level, prep, POLICY_PROFILES.default, 6, null);
   assert.equal(withScopedCtx, withNoCtx, 'must-cross scoring identical to the no-curCtx fallback when mcCur is null');
+});
+
+test('pooled urgency buffers fully overwrite large, zero, small, shifted, then original calls', () => {
+  const objectiveSets = [
+    Array.from({ length: 12 }, (_, i) => PACK(i % 5, (i / 5) | 0)),
+    [],
+    [PACK(4, 4), PACK(3, 1)],
+    [PACK(1, 4), PACK(4, 0), PACK(2, 3)],
+  ];
+  const snapshot = (keys: number[], pos = PACK(0, 2)) => {
+    const level = makeLevel({ mustPassKeys: keys, goalKey: PACK(4, 2) });
+    const prep = prepLevel(level);
+    const state = makeState(pos, { mustMask: (1 << keys.length) - 1 });
+    const pooled = buildCurUrgencyContext(pos, state, level, prep, true, POLICY_PROFILES.default);
+    const fresh = __buildFreshCurUrgencyContextForTests(pos, state, level, prep, true, POLICY_PROFILES.default);
+    const target = PACK(1, 2);
+    assert.equal(
+      scoreMove(target, pos, state, level, prep, POLICY_PROFILES.default, 3, null, pooled),
+      scoreMove(target, pos, state, level, prep, POLICY_PROFILES.default, 3, null, fresh),
+      'pooled scoring must match an allocation-fresh context',
+    );
+    return Array.from(pooled.mpCur.slice(0, keys.length));
+  };
+  const expected = objectiveSets.map(keys => snapshot(keys));
+  for (const i of [0, 1, 2, 3, 0, 2, 1, 0]) {
+    assert.deepEqual(snapshot(objectiveSets[i]), expected[i], `sequence entry ${i}`);
+  }
+});
+
+test('urgency pooling accepts its boundary and allocates fresh storage above it', () => {
+  const at = Array.from({ length: MAX_POOLED_OBJECTIVES }, (_, i) => PACK(i % 5, (i / 5) % 5 | 0));
+  const over = [...at, PACK(4, 4)];
+  const atLevel = makeLevel({ mustPassKeys: at });
+  const overLevel = makeLevel({ mustPassKeys: over });
+  const pooled = buildCurUrgencyContext(PACK(0, 2), makeState(PACK(0, 2)), atLevel, prepLevel(atLevel));
+  assert.equal(pooled.mpCur.length, MAX_POOLED_OBJECTIVES);
+  const fresh = buildCurUrgencyContext(PACK(0, 2), makeState(PACK(0, 2)), overLevel, prepLevel(overLevel));
+  assert.equal(fresh.mpCur.length, MAX_POOLED_OBJECTIVES + 1, 'overflow gets exact allocation, not truncated pool');
+  assert.notEqual(fresh.mpCur, pooled.mpCur);
 });

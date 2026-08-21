@@ -1,159 +1,83 @@
 # Pathfinder Architecture
 
-> **Status:** current-state reference. Describes how the app is wired *today*. Dated
-> refactor history lives in `docs/refactor-notes/`; lasting decisions are captured as ADRs
-> in `docs/adr/`. The (completed) modernization roadmap is `docs/archive/modernization-plan.md`.
+> **Status:** current state. Refactor history: `docs/refactor-notes/`; lasting decisions: `docs/adr/`; completed modernization plan: `docs/archive/modernization-plan.md`.
 
-Pathfinder is a browser game built with **Vite** and deployed as a static site to GitHub Pages
-(see ADR 0010, which supersedes the original no-build-step ADR 0001). The source is native ES
-modules + hand-maintained semantic CSS in `styles/`; the production build bundles/minifies them
-into `dist/`. Firebase (Firestore + Auth, modular SDK) and Tone.js are bundled by Vite (npm deps),
-not loaded from CDNs.
+Pathfinder is a Vite-built browser game deployed as a static GitHub Pages site. Source is native ES modules plus semantic CSS. Firebase (Firestore/Auth) and Tone.js are bundled npm dependencies, not CDN scripts.
 
-## Layered model
+## Layers
 
-The codebase is organized into four conceptual layers. New code should be placed by asking
-"which layer is this?":
-
-| Layer | Lives in | May depend on | Must NOT depend on |
+| Layer | Lives in | May depend on | Must not depend on |
 |---|---|---|---|
-| **Domain / services** | `modules/domain/`, `modules/solver/`, `modules/runtime/`, `modules/theme/*-normalizer*`, `modules/editor/editor-*` (pure helpers) | other domain modules | DOM, canvas, Firebase, Tone, `window`/`document`, timers, network |
-| **Browser adapters** | `modules/render/`, `modules/persistence/`, `modules/ui/` (DOM helpers), `core.js` SOUND_BUS, loader's browser shim | domain | application controllers (generally) |
-| **Controllers / application** | `modules/engine*`, `modules/engine/`, `modules/input/`, `modules/editor.js`, `modules/boot.js` | domain + adapters via injected ports | raw browser globals (use adapters) |
-| **Facade / debug** | `modules/app.js` (`createReadOnlyDiagnostics`, `createAppFacade`) | everything (built last) | — |
+| **Domain/services** | `modules/domain/`, `modules/solver/`, `modules/runtime/`, pure theme/editor helpers | domain | DOM, canvas, Firebase, Tone, browser globals, timers, network |
+| **Browser adapters** | `modules/render/`, `modules/persistence/`, `modules/ui/`, SOUND_BUS, loader shim | domain | controllers generally |
+| **Controllers/application** | `modules/engine*`, `modules/engine/`, `modules/input/`, `modules/editor.ts`, `modules/boot.ts` | domain + injected adapters | raw browser globals |
+| **Facade/debug** | `modules/app.ts` | everything, built last | — |
 
-> The layer boundary is enforced by static checks (ADR 0008), implemented as AST-based ESLint
-> rules under `check:lint` (tripwire-tested in `scripts/eslint-rules-unit-tests.mjs`): scoped
-> `no-restricted-globals`/`no-restricted-imports` keep `modules/domain/`, `modules/runtime/`, and
-> `modules/solver/` free of browser-host globals and adapter/controller imports (the two solver
-> Worker files are the explicit exempt boundary); the local `local/engine-state-boundary` rule
-> confines ENGINE mutation in the `engine`/`input`/`ui` layers to the state-action helpers; a
-> `no-restricted-syntax` rule bans raw HTML injection. See `docs/testing.md` for the full static-
-> checks tier.
+AST ESLint rules enforce browser-free `domain/runtime/solver`, ENGINE mutation through state actions, and no raw HTML injection. Solver worker files are explicit browser-boundary exceptions. See [`testing.md`](testing.md).
 
-## Composition root (`modules/app.js`)
+### Directory ownership
 
-`createApp()` constructs everything in labeled stages, **acyclically** — `const`s only, no
-mutable forward declarations, no post-construction init (ADR 0008):
+Directory names are part of the architecture contract, not just filing convention:
 
-- **Stage 1 — pure services:** `core`, `state`, `solverApi`, `data`, `debug`, plus the
-  **error-reporting seam** (`createErrorReporter` in `modules/error-reporting.ts`). Every
-  subsystem receives the same injected `reportError(context, err, meta?)`; failure paths
-  (`catch` blocks, `.catch` handlers, the loader's window `error`/`unhandledrejection` hooks)
-  route through it instead of ad-hoc `console.*`, so pointing the app at a real sink later is
-  a one-line change in the composition root. Factories default the dependency to a
-  console-logging fallback (`defaultReportError`) so tests can construct them without it.
-  `data` is a leaf service (the historical `data ↔ themes` cycle was removed; themes flow one
-  way: `loader → data.ingest({ themes }) → theme-registry reads data.getThemes()`).
-- **Stage 2 — browser subsystems:** `ui`, `renderer`, `levelUtils`, `persistence`, `themes`.
-  Both former cycles are gone: `ui → renderer` is one-way (`layout-ui` reads `#gameCanvas`
-  directly), and `persistence` is built **before** `themes` (it validates theme ids via a
-  `data`-sourced `themeExists` predicate, not the themes registry), so `themes` takes
-  `persistence` directly.
-- **Stage 3 — controllers:** `editor`, `engine`, `input`, `loader`, `boot`. `editor ↔ engine`
-  is a genuine mutual *runtime* collaboration with **no** construction cycle: the editor takes a
-  construction-time lazy `getEngineRuntime: () => createEditorEnginePort(engine)` (the **narrow**
-  9-member port) and memoizes it on first use — no `editor.init()`.
+- `modules/` owns executable application/runtime policy and reusable domain logic;
+- `scripts/` owns developer, batch, migration, research, and validation entry points;
+- `data/` owns serializable inputs, fixtures, corpora, and generated evidence;
+- `reports/` owns interpreted human-readable evidence; `logs/` owns raw generated run evidence.
 
-`bootstrapApp()` injects the SVG sprite sheet, editor palette, and modal icons, constructs
-the app, then exposes diagnostics (see Debug surface).
+Shared executable authority should live under `modules/` and be imported by tooling, rather than application/runtime code importing policy from `scripts/` or executable modules under `data/`. ESLint mechanically rejects executable `scripts/` or `data/` imports from `modules/`; serializable runtime data imports remain allowed. The shared solver ablation and portfolio policies therefore live in `modules/solver/` and tooling imports them.
 
-## State model
+## Composition root (`modules/app.ts`)
 
-A single mutable `ENGINE` tree (`modules/state-slices.js` `createEngineState`) holds all
-runtime state, organized into slices: `nav`, `hazards`, `solver`, `hinter`, `viewport`,
-`review`, `ui`, `runtime`, `gamepad`, `flags`, `editor`, `levelRating`, plus top-level
-scalars (mode, logicState, level, options, …). Each slice factory documents its owner and
-tags fields `authoritative` vs `derived`.
+`createApp()` builds acyclic stages with no mutable forward declarations or post-construction init:
 
-**All ENGINE mutations go through `modules/state-actions.js`** — a re-export barrel over
-per-slice modules in `modules/state/actions/*.js` (one file per slice + `shared.js` for the
-`resolveEngineState` helper). `check:engine-state-boundary` forbids direct `state.ENGINE`
-writes in the engine/input/ui consumer layers.
+- **Stage 1, pure services:** `core`, `state`, `solverApi`, `data`, `debug`, `createErrorReporter`. Failure paths use injected `reportError(context, err, meta?)`; factories may use `defaultReportError` in tests. `data` is a leaf service.
+- **Stage 2, browser subsystems:** `ui`, `renderer`, `levelUtils`, `persistence`, `themes`. Dependencies are one-way; `persistence` validates theme IDs through `data`, then `themes` consumes `persistence`.
+- **Stage 3, controllers:** `editor`, `engine`, `input`, `loader`, `boot`. Editor accesses engine through lazy `getEngineRuntime: () => createEditorEnginePort(engine)`, avoiding a construction cycle.
 
-## Runtime (commands & effects)
+`bootstrapApp()` installs SVG sprites, palette, and modal icons, builds the app, then exposes diagnostics.
 
-`modules/runtime/` holds the per-step engine:
-- `actions.js` / `effects.js` — frozen `ActionType` / `EffectType` constants + factories
-  (raw event-type strings are banned by ESLint).
-- `step-processor.js` — pure per-step computation; emits Action/Effect events.
-- `effect-runner.js` — central dispatcher executing `Effect[]` against injected adapters.
-- `game-rules.js`, `path-state.js`, `state-machine.js` — win metrics, path derivation,
-  legal logic-state transitions.
+## State
 
-Derived navigation fields (`visitedCounts`, `cellUsage`, `intersections`, `flipCount`,
-`crossedFlippingFilters`) are recomputed by `path-state.js`'s `rebuildDerivedState`, not
-authored directly. A cross-check invariant test (`test:path-state-invariants`) guarantees the
-incremental `pushStep` derivation and the full `rebuildDerivedState` recompute agree.
+`modules/state-slices.ts` owns the mutable `ENGINE` tree: `nav`, `hazards`, `solver`, `hinter`, `viewport`, `review`, `ui`, `runtime`, `gamepad`, `flags`, `editor`, `levelRating`, plus top-level state.
 
-**Correctness-sensitive flows have pure, unit-tested transition/decision cores** (modernization
--plan §2; see ADR 0006): move (`computeStep`), undo (`PathNavigator.applySnapshot`), win
-(`computeWinEffects`), hazard (`compute{JumpScare,FalseGoalDetonation}Effects`), the reset-streak cheat
-(`planResetCheat`), and the review approve/reject advance (`planSubmissionAdvance`). These return
-effects-as-data (run by `effect-runner`) or plain decision objects; controllers apply them. There
-is deliberately **no** single central command dispatcher — pushing every flow through one reducer
-would be the parallel system the plan's principles caution against. `replayMoves` replays a move
-sequence through the pure transition for declarative tests.
+All ENGINE mutations go through `modules/state-actions.ts` / `modules/state/actions/*.ts`. `check:engine-state-boundary` forbids direct writes in engine/input/ui consumers.
 
-## Engine facade (`modules/engine.js`)
+## Runtime commands/effects
 
-`createEngine()` coordinates sub-controllers in `modules/engine/` (level-flow, path-navigator,
-overlay-controller, hazard-controller, win-controller, solver-manager, review-mode,
-tap-router, step-dispatcher, render-loop, challenge-options, level-rating-manager).
+`modules/runtime/` contains:
+- `actions.ts` / `effects.ts`: frozen action/effect types and factories;
+- `step-processor.ts`: pure step computation;
+- `effect-runner.ts`: effect dispatcher over injected adapters;
+- `game-rules.ts`, `path-state.ts`, `state-machine.ts`: win metrics, path derivation, legal state transitions.
 
-It returns the flat methods **plus** grouped namespaces — `game`, `navigation`, `overlays`,
-`hints`, `solver`, `review`, `ratings` — where each grouped entry is the *same instance* as
-its flat counterpart (`engine-facade-unit-tests` guards this). Callers in `modules/input/`
-use the grouped namespaces; the flat surface remains as the implementation source (the groups
-are built from it) and the `window.APP.Engine` debug surface. The remaining flat-only methods
-(`setLogicState`, `switchMode`, `setMuted`, `setOption`, the pending-action trio, `toggleMute`,
-`updatePlayModeLayout`) have no group by design.
+`rebuildDerivedState` recomputes navigation derivatives (`visitedCounts`, `cellUsage`, `intersections`, `flipCount`, `crossedFlippingFilters`). `test:path-state-invariants` checks incremental and rebuilt state agree.
+
+Correctness-sensitive flows use pure tested decision/transition cores: `computeStep`, `PathNavigator.applySnapshot`, `computeWinEffects`, hazard-effect planners, `planResetCheat`, and `planSubmissionAdvance`. Controllers execute the returned decisions/effects. There is intentionally no universal command reducer. `replayMoves` supports declarative move tests.
+
+## Engine facade (`modules/engine.ts`)
+
+`createEngine()` coordinates `modules/engine/` subcontrollers and exposes flat methods plus grouped `game`, `navigation`, `overlays`, `hints`, `solver`, `review`, and `ratings` namespaces. Grouped entries are the same instances as their flat counterparts; unit tests enforce this. Input controllers prefer grouped namespaces. Flat-only methods remain for implementation/debug use.
 
 ## Solver
 
-`modules/Solver.ts` is a thin facade over `modules/solver/` (normalization, prep, search,
-scoring, attempts, archetype, lower-bounds, topology, orchestration, …). The test/analysis
-surface is the named `SOLVER_TESTING_API` export (no underscore aliases on the runtime
-instance). The solver also runs off-thread via `modules/solver/worker.js` +
-`solver-worker-client.ts` (used at runtime by the editor's trap scan;
-see docs/solver-architecture.md "Editor trap-scan runtime"). See [`docs/solver-architecture.md`](solver-architecture.md) and the
-CLAUDE.md solver section.
+`modules/Solver.ts` is a thin facade over `modules/solver/`. Test/analysis access is through `SOLVER_TESTING_API`. Runtime worker support is in `modules/solver/worker.js` and `modules/solver/solver-worker-client.ts`. See [`solver-architecture.md`](solver-architecture.md).
 
-## Persistence (`modules/persistence/`)
+## Persistence
 
-Firebase client wrapper + repositories for level submissions, player progress, reviews,
-Dev-Mode level ratings, and supplemental hints for locally-published levels, plus a
-local-session fallback. Firebase web config is public (`firebase-config.js`); see
-`docs/security.md` and, for the hints repository specifically, `docs/firestore-security-model.md`.
+`modules/persistence/` contains the Firebase client seam, submission/progress/review/rating/supplemental-hint repositories, and local-session fallback. `firebase-config.js` is public client config. See [`security.md`](security.md) and [`firestore-security-model.md`](firestore-security-model.md).
 
-## UI & styling (`modules/ui/`, `styles/`)
+## UI and styling
 
-DOM helpers, modal control (`modal-ui.js` with central focus-trapping), toast, layout,
-loading, solver overlay, plus boot-time DOM builders: `svg-defs.js` (icon sprite),
-`editor-palette.js` (data-driven palette tools), `modal-icons.js` (shared close-X). Styling
-is **one semantic-CSS system, no utility layer**: `styles/app.css` `@import`s three files —
-`reset.css` → `tokens.css` (`:root` design tokens + the `.type-*` scale) → `components.css`
-(semantic component/id rules, driven by `--theme-*` CSS variables). There is no Tailwind and
-no `utilities.css` (removed 2026-06-25); the only non-component classes kept by policy are the
-type scale and the display-state hooks `.hidden`/`.is-shown`/`.selected`. Because the old
-Tailwind-derived utilities were unlayered and ordered alphabetically, several were silently
-**inert** at equal specificity — the migration had to reproduce the *computed* value that
-actually applied, not the markup's apparent intent (e.g. a later same-property component rule
-silently overriding an earlier utility). Keep this in mind when reordering rules in
-`components.css`: two same-specificity rules for the same property is a latent bug, not just
-style. Design record: [`docs/archive/styling-semantic-migration-plan.md`](archive/styling-semantic-migration-plan.md).
-Accessibility conventions (dialog semantics, focus-trap, keyboard play, focus-visible) are in
-`docs/ui-accessibility.md`.
+`modules/ui/` owns DOM helpers, modals/focus trapping, toast/layout/loading/solver overlays, SVG defs, editor palette, and modal icons.
 
-## Where to put new code
+Styles are one semantic system: `styles/app.css` imports `reset.css` -> `tokens.css` -> `components.css`. No Tailwind or utility layer. Allowed non-component classes are the type scale and `.hidden` / `.is-shown` / `.selected` state hooks.
 
-- **A puzzle/solver rule or pure transformation** → `modules/domain/` or `modules/solver/`
-  (no browser deps; unit-test it directly).
-- **A new ENGINE field** → add to the right slice in `state-slices.js`, add a mutation helper
-  in the matching `modules/state/actions/*.js`, never mutate `state.ENGINE` directly.
-- **A new control/flow** → a controller in `modules/input/` (or an `engine/` sub-controller),
-  wired with narrow injected dependencies; call the grouped engine namespaces.
-- **A browser side effect** (DOM/audio/timer/network) → behind an adapter in
-  `modules/ui/`, `modules/render/`, `modules/persistence/`, or the runtime effect-runner.
-- **A new modal/UI primitive** → follow `docs/ui-accessibility.md`; build nodes via DOM
-  construction (no `innerHTML`).
+When changing cascade order, preserve computed behavior: old same-specificity utility/component conflicts sometimes made apparent markup intent differ from the actual applied value. Design record: [`archive/styling-semantic-migration-plan.md`](archive/styling-semantic-migration-plan.md). Accessibility conventions: [`ui-accessibility.md`](ui-accessibility.md).
+
+## Where new code goes
+
+- puzzle/solver rule or pure transform -> `modules/domain/` or `modules/solver/`;
+- ENGINE field -> correct state slice + matching state-action helper;
+- control/flow -> `modules/input/` or an `engine/` subcontroller with narrow injected dependencies;
+- browser side effect -> adapter in `ui/`, `render/`, `persistence/`, or runtime effect runner;
+- modal/UI primitive -> follow `ui-accessibility.md`; construct DOM nodes, never raw `innerHTML`.

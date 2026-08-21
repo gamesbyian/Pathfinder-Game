@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "viewId": "family-specific-complete-run",
+  "rule": "Retain the sole observation for unique edges. For repeated edges, select one declared complete, family-specific run for the whole parent/relation cohort; never pool or last-write.",
+  "overrides": [
+    {
+      "parentId": "P00110",
+      "preferredSource": "reports/families/2026-07-15-P00110-density-sweep-solve-portfolio-experiment.json",
+      "reason": "The portfolio experiment is the declared analysis arm; exclude its matched legacy control from this view."
+    },
+    {
+      "parentId": "R02248",
+      "preferredSource": "reports/families/2026-07-15-R02248-symmetry-family-solve.json",
+      "reason": "Use the complete family-specific 60-second symmetry run rather than mixing in the 20-second Phase-C cohort."
+    },
+    {
+      "parentId": "R03015",
+      "preferredSource": "reports/families/2026-07-15-R03015-symmetry-family-solve.json",
+      "reason": "Use the complete seven-orientation run; the retry contains only two observations at a different budget."
+    }
+  ],
+  "manifestOverrides": [
+    {
+      "parentId": "R01465",
+      "preferredManifest": "data/families/phaseB/R01465-symmetry-manifest.json",
+      "reason": "This family is observed only in the Phase-C source cohort."
+    },
+    {
+      "parentId": "R02248",
+      "preferredManifest": "data/families/family-R02248-symmetry-manifest.json",
+      "reason": "This view selects the standalone family-specific outcome source."
+    }
+  ]
+}

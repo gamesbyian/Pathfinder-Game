@@ -10,8 +10,9 @@ import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { PORTFOLIO_EXPERIMENT } from '../data/config/portfolio-experiment.js';
+import { PORTFOLIO_EXPERIMENT } from '../modules/solver/portfolio-experiment.js';
 import { parseLevelPositions } from './level-data-io.mjs';
+import { attemptConfigKey, attemptRecord } from './portfolio-solve-sweep-lib.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
@@ -53,16 +54,6 @@ function round(value, places = 3) {
     if (!Number.isFinite(value)) return null;
     const m = 10 ** places;
     return Math.round(value * m) / m;
-}
-
-function attemptConfigKey(attempt) {
-    const family = attempt?.beamWidth ? 'beam' : 'dfs';
-    const template = attempt?.template ? `/${attempt.template}` : '';
-    const beam = attempt?.beamWidth ? `@beam${attempt.beamWidth}` : '';
-    const diverse = attempt?.diverseBeam ? '(diverse)' : '';
-    const repair = attempt?.repair ? ':repair' : '';
-    const biased = attempt?.repairMustTurnBiased ? '(mustTurnBiased)' : '';
-    return `${family}:${attempt?.profile ?? 'unknown'}${template}${beam}${diverse}${repair}${biased}`;
 }
 
 function winningAttempt(result, phase = null) {
@@ -267,7 +258,9 @@ for (const [i, levelNumber] of targets.entries()) {
             gateKey: portfolioWinner?.gateKey ?? null,
             fallbackWinningAttemptElapsedMs: solvedByFallback ? portfolioWinner?.elapsedMs ?? null : null,
             fallbackCumulativeElapsedMs: solvedByFallback ? portfolio.totalMs : null,
-            passAttemptsAlreadyTried: portfolioAttempts.map(a => ({ passNumber: a.passNumber, configKey: a.configKey, gateKey: a.gateKey, elapsedMs: a.elapsedMs, nodesExpanded: a.nodesExpanded, ok: a.ok })),
+            // Use the canonical projection: this diagnostic used to be another hand-maintained
+            // Attempt whitelist and silently lagged every newly-added outcome/dispatch field.
+            passAttemptsAlreadyTried: portfolioAttempts.map(attemptRecord),
             featureSummary: {
                 reqLen: level.reqLen,
                 reqInt: level.reqInt,

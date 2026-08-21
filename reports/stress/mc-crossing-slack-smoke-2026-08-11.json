@@ -1,0 +1,1008 @@
+{
+  "generatedAt": "2026-08-11T09:12:44.390Z",
+  "definition": "crossingSlack = freeInt - forcedFutureNeighbourRevisits",
+  "proofScope": "exactly scripts/stress/lib/mc-neighbor-budget.mjs computeMcNeighborBudget; portal-level and documented local exclusions preserved",
+  "atlas": {
+    "atlasDir": "/tmp/empty-atlas",
+    "atlasFiles": 0,
+    "rows": [],
+    "overall": {},
+    "byDepthAndRemainingMustCross": {},
+    "thresholdContrastDeadResidualVsAlive": [
+      {
+        "threshold": 0,
+        "deadResidualRate": null,
+        "aliveRate": null,
+        "absoluteGap": null
+      },
+      {
+        "threshold": 1,
+        "deadResidualRate": null,
+        "aliveRate": null,
+        "absoluteGap": null
+      },
+      {
+        "threshold": 2,
+        "deadResidualRate": null,
+        "aliveRate": null,
+        "absoluteGap": null
+      },
+      {
+        "threshold": 3,
+        "deadResidualRate": null,
+        "aliveRate": null,
+        "absoluteGap": null
+      },
+      {
+        "threshold": 4,
+        "deadResidualRate": null,
+        "aliveRate": null,
+        "absoluteGap": null
+      },
+      {
+        "threshold": 5,
+        "deadResidualRate": null,
+        "aliveRate": null,
+        "absoluteGap": null
+      }
+    ],
+    "abstainedByReason": {},
+    "liveNegativeSlack": 0
+  },
+  "solutionPrefixes": {
+    "corpora": [
+      "corpus2"
+    ],
+    "limitLevelsPerCorpus": 10,
+    "levels": 5,
+    "uniquePaths": 289,
+    "pendingMustCrossPrefixes": 20583,
+    "applicablePrefixes": 7957,
+    "overallSampleWeighted": {
+      "count": 7957,
+      "meanSlack": 0,
+      "meanFreeInt": 0,
+      "meanExtraNeeded": 0,
+      "minSlack": 0,
+      "p10Slack": 0,
+      "p25Slack": 0,
+      "medianSlack": 0,
+      "p75Slack": 0,
+      "p90Slack": 0,
+      "maxSlack": 0,
+      "slackLe0Rate": 1,
+      "slackLe1Rate": 1,
+      "slackLe2Rate": 1,
+      "slackLe3Rate": 1,
+      "histogram": {
+        "0": 7957
+      }
+    },
+    "byDepthAndRemainingMustCrossSampleWeighted": {
+      "depth=0-10%|pendingMC=6": {
+        "count": 1308,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 1308
+        }
+      },
+      "depth=10-20%|pendingMC=5": {
+        "count": 108,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 108
+        }
+      },
+      "depth=10-20%|pendingMC=6": {
+        "count": 1200,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 1200
+        }
+      },
+      "depth=20-30%|pendingMC=3": {
+        "count": 61,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 61
+        }
+      },
+      "depth=20-30%|pendingMC=4": {
+        "count": 485,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 485
+        }
+      },
+      "depth=20-30%|pendingMC=5": {
+        "count": 402,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 402
+        }
+      },
+      "depth=20-30%|pendingMC=6": {
+        "count": 510,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 510
+        }
+      },
+      "depth=30-40%|pendingMC=1": {
+        "count": 407,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 407
+        }
+      },
+      "depth=30-40%|pendingMC=2": {
+        "count": 139,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 139
+        }
+      },
+      "depth=30-40%|pendingMC=3": {
+        "count": 380,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 380
+        }
+      },
+      "depth=30-40%|pendingMC=4": {
+        "count": 254,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 254
+        }
+      },
+      "depth=30-40%|pendingMC=5": {
+        "count": 112,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 112
+        }
+      },
+      "depth=30-40%|pendingMC=6": {
+        "count": 16,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 16
+        }
+      },
+      "depth=40-50%|pendingMC=1": {
+        "count": 1139,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 1139
+        }
+      },
+      "depth=40-50%|pendingMC=2": {
+        "count": 9,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 9
+        }
+      },
+      "depth=40-50%|pendingMC=3": {
+        "count": 3,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 3
+        }
+      },
+      "depth=40-50%|pendingMC=4": {
+        "count": 61,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 61
+        }
+      },
+      "depth=40-50%|pendingMC=5": {
+        "count": 56,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 56
+        }
+      },
+      "depth=40-50%|pendingMC=6": {
+        "count": 8,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 8
+        }
+      },
+      "depth=50-60%|pendingMC=1": {
+        "count": 494,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 494
+        }
+      },
+      "depth=50-60%|pendingMC=3": {
+        "count": 7,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 7
+        }
+      },
+      "depth=50-60%|pendingMC=4": {
+        "count": 115,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 115
+        }
+      },
+      "depth=50-60%|pendingMC=5": {
+        "count": 4,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 4
+        }
+      },
+      "depth=60-70%|pendingMC=1": {
+        "count": 119,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 119
+        }
+      },
+      "depth=60-70%|pendingMC=2": {
+        "count": 4,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 4
+        }
+      },
+      "depth=60-70%|pendingMC=3": {
+        "count": 1,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 1
+        }
+      },
+      "depth=60-70%|pendingMC=4": {
+        "count": 108,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 108
+        }
+      },
+      "depth=70-80%|pendingMC=1": {
+        "count": 121,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 121
+        }
+      },
+      "depth=70-80%|pendingMC=4": {
+        "count": 108,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 108
+        }
+      },
+      "depth=80-90%|pendingMC=1": {
+        "count": 14,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 14
+        }
+      },
+      "depth=80-90%|pendingMC=4": {
+        "count": 108,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 108
+        }
+      },
+      "depth=90-100%|pendingMC=1": {
+        "count": 12,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 12
+        }
+      },
+      "depth=90-100%|pendingMC=2": {
+        "count": 24,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 24
+        }
+      },
+      "depth=90-100%|pendingMC=3": {
+        "count": 60,
+        "meanSlack": 0,
+        "meanFreeInt": 0,
+        "meanExtraNeeded": 0,
+        "minSlack": 0,
+        "p10Slack": 0,
+        "p25Slack": 0,
+        "medianSlack": 0,
+        "p75Slack": 0,
+        "p90Slack": 0,
+        "maxSlack": 0,
+        "slackLe0Rate": 1,
+        "slackLe1Rate": 1,
+        "slackLe2Rate": 1,
+        "slackLe3Rate": 1,
+        "histogram": {
+          "0": 60
+        }
+      }
+    },
+    "byDepthAndRemainingMustCrossLevelBalanced": {
+      "depth=0-10%|pendingMC=6": {
+        "levels": 2,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=10-20%|pendingMC=5": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=10-20%|pendingMC=6": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=20-30%|pendingMC=3": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=20-30%|pendingMC=4": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=20-30%|pendingMC=5": {
+        "levels": 2,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=20-30%|pendingMC=6": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=30-40%|pendingMC=1": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=30-40%|pendingMC=2": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=30-40%|pendingMC=3": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=30-40%|pendingMC=4": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=30-40%|pendingMC=5": {
+        "levels": 2,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=30-40%|pendingMC=6": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=40-50%|pendingMC=1": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=40-50%|pendingMC=2": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=40-50%|pendingMC=3": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=40-50%|pendingMC=4": {
+        "levels": 2,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=40-50%|pendingMC=5": {
+        "levels": 2,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=40-50%|pendingMC=6": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=50-60%|pendingMC=1": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=50-60%|pendingMC=3": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=50-60%|pendingMC=4": {
+        "levels": 2,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=50-60%|pendingMC=5": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=60-70%|pendingMC=1": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=60-70%|pendingMC=2": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=60-70%|pendingMC=3": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=60-70%|pendingMC=4": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=70-80%|pendingMC=1": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=70-80%|pendingMC=4": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=80-90%|pendingMC=1": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=80-90%|pendingMC=4": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=90-100%|pendingMC=1": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=90-100%|pendingMC=2": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      },
+      "depth=90-100%|pendingMC=3": {
+        "levels": 1,
+        "meanOfLevelMeans": 0,
+        "p25OfLevelMeans": 0,
+        "medianOfLevelMeans": 0,
+        "p75OfLevelMeans": 0
+      }
+    },
+    "abstainedByReason": {
+      "portal levels out of scope (see file doc)": 12626
+    },
+    "negativeSlack": 0
+  }
+}

@@ -74,6 +74,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { buildSync } from 'esbuild';
+import { attemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
+import { withSolverStage } from '../../modules/solver/stage-policy.js';
 
 // process.cwd(), not import.meta.url-relative math: this module is usually loaded as a
 // dependency of some OTHER entry that scripts/run-bundled.mjs esbuild-bundles, which flattens
@@ -101,6 +103,39 @@ function ensureWorkerBundle() {
     });
     workerBundleReady = true;
     return WORKER_BUNDLE;
+}
+
+/** Materialize the dispatched configuration on a worker result without maintaining separate,
+ * drifting record shapes for the ordinary and attraction-diversity phases. */
+export function racedAttemptRecord(job, msg, extra = {}) {
+    const cfg = job?.attemptConfig;
+    return withSolverStage({
+        gateKey: job?.gateKey, profile: cfg?.profileName, template: cfg?.template?.id ?? null,
+        beamWidth: cfg?.beamWidth ?? null,
+        ...(cfg?.diverseBeam ? { diverseBeam: true } : {}),
+        ...(cfg?.repair ? { repair: true } : {}),
+        ...(cfg?.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
+        ...(cfg?.repairTurnBiased ? { repairTurnBiased: true } : {}),
+        ...(cfg?.admissibleOrder ? { admissibleOrder: true } : {}),
+        ...(cfg?.admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
+        ...(cfg?.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
+        ...extra,
+        ok: msg.ok, outcome: msg.outcome ?? (msg.ok ? 'success' : 'budget-starved'),
+        ...(msg.error ? { error: {
+            name: msg.error.name, message: msg.error.message, gateKey: job?.gateKey,
+            configKey: attemptConfigKey({
+                ...cfg,
+                profile: cfg?.profileName,
+                // attemptConfigKey consumes a persisted-attempt shape, where template is its ID;
+                // race jobs carry the live AttemptConfig object instead.
+                template: cfg?.template?.id ?? null,
+            }),
+            profile: cfg?.profileName ?? 'unknown',
+            template: cfg?.template?.id ?? null,
+        } } : {}),
+        ...(msg.allocatedBudgetMs !== undefined ? { allocatedBudgetMs: msg.allocatedBudgetMs } : {}),
+        elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
+    }, extra.stageId ?? (cfg?.repair ? 'repair-fallback' : 'main-loop'));
 }
 
 /**
@@ -175,11 +210,20 @@ export function createRacePool(opts = {}) {
         const { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } = await import('../../modules/solver/attempts.js');
         const { getActiveGates, REPAIR_EXTRA_BUDGET_FRACTION, ATTRACTION_DIVERSITY_BUDGET_FRACTION } = await import('../../modules/solver/orchestration.js');
         const { createSolver } = await import('../../modules/Solver.js');
-        const { defaultConfig } = await import('../ablation-config.mjs');
+        const { defaultConfig } = await import('../../modules/solver/ablation-config.js');
         const Solver = createSolver();
 
         const timeBudgetMs = Number(levelOpts.timeBudgetMs) > 0 ? Number(levelOpts.timeBudgetMs) : 20000;
-        const ablationCfg = levelOpts.ablation ?? null;
+        // Workers need a structured-cloneable plain object, so the sequential engine's Proxy
+        // normalizer cannot cross this boundary. Materialize production defaults first: passing a
+        // sparse `{FLAG:false}` object directly used to make every other `cfg.STRATEGY_*` read
+        // undefined/falsy, silently disabling unrelated raced phases and attempt tiers.
+        const ablationCfg = levelOpts.ablation == null
+            ? null
+            : {
+                ...defaultConfig(),
+                ...Object.fromEntries(Object.entries(levelOpts.ablation).filter(([, value]) => value !== undefined)),
+            };
         // levelOpts.repairBudgetFractionOverride (orchestration.ts's SolveOpts field, added for
         // offline batch-tooling cost control — see docs/solver-architecture.md's cost-gotcha
         // note): read here too so a caller's --repair-budget-fraction keeps working when composed
@@ -372,7 +416,7 @@ export function createRacePool(opts = {}) {
                     slot.busy = false;
                     inFlight--;
                     if (inFlight === 0 && queuesExhausted()) {
-                        finish({ ok: false, status: 'exhausted', solution: null, solutions: [], attempts, totalMs: Date.now() - startTime, nodesExpanded: totalNodes() });
+                        finish({ ok: false, status: attempts.some(a => a.outcome === 'error') ? 'attempt-error' : 'exhausted', solution: null, solutions: [], attempts, totalMs: Date.now() - startTime, nodesExpanded: totalNodes() });
                     }
                     return;
                 }
@@ -395,15 +439,7 @@ export function createRacePool(opts = {}) {
                 const onMessage = (msg) => {
                     if (msg?.type !== 'result') return;
                     const job = jobById.get(msg.jobId);
-                    const cfg = job?.attemptConfig;
-                    attempts.push({
-                        gateKey: job?.gateKey, profile: cfg?.profileName, template: cfg?.template?.id ?? null,
-                        beamWidth: cfg?.beamWidth ?? null,
-                        ...(cfg?.diverseBeam ? { diverseBeam: true } : {}),
-                        ...(cfg?.repair ? { repair: true } : {}),
-                        ...(cfg?.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
-                        ok: msg.ok, elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
-                    });
+                    attempts.push(racedAttemptRecord(job, msg));
                     slot.busy = false;
                     if (msg.ok && !settled) {
                         finish({ ok: true, status: 'success', solution: msg.path, solutions: [msg.path], attempts, totalMs: Date.now() - startTime, nodesExpanded: totalNodes() });
@@ -425,7 +461,7 @@ export function createRacePool(opts = {}) {
             }
 
             overallTimer = setTimeout(() => {
-                finish({ ok: false, status: 'timeout', solution: null, solutions: [], attempts, totalMs: Date.now() - startTime, nodesExpanded: totalNodes() });
+                finish({ ok: false, status: attempts.some(a => a.outcome === 'error') ? 'attempt-error' : 'timeout', solution: null, solutions: [], attempts, totalMs: Date.now() - startTime, nodesExpanded: totalNodes() });
             }, overallBudgetMs);
         });
 
@@ -530,7 +566,7 @@ export function createRacePool(opts = {}) {
                     slot.busy = false;
                     inFlight--;
                     if (inFlight === 0 && queueExhausted()) {
-                        finish({ ok: false, status: 'exhausted', solution: null, solutions: [], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
+                        finish({ ok: false, status: attempts.some(a => a.outcome === 'error') ? 'attempt-error' : 'exhausted', solution: null, solutions: [], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
                     }
                     return;
                 }
@@ -553,14 +589,7 @@ export function createRacePool(opts = {}) {
                 const onMessage = (msg) => {
                     if (msg?.type !== 'result') return;
                     const job = jobById.get(msg.jobId);
-                    const cfg = job?.attemptConfig;
-                    attempts.push({
-                        gateKey: job?.gateKey, profile: cfg?.profileName, template: cfg?.template?.id ?? null,
-                        beamWidth: cfg?.beamWidth ?? null,
-                        ...(cfg?.diverseBeam ? { diverseBeam: true } : {}),
-                        attractionDiversity: true,
-                        ok: msg.ok, elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
-                    });
+                    attempts.push(racedAttemptRecord(job, msg, { stageId: 'attraction-diversity' }));
                     slot.busy = false;
                     if (msg.ok && !settled) {
                         finish({ ok: true, status: 'success', solution: msg.path, solutions: [msg.path], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
@@ -582,13 +611,15 @@ export function createRacePool(opts = {}) {
             }
 
             overallTimer = setTimeout(() => {
-                finish({ ok: false, status: 'timeout', solution: null, solutions: [], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
+                finish({ ok: false, status: attempts.some(a => a.outcome === 'error') ? 'attempt-error' : 'timeout', solution: null, solutions: [], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
             }, Math.ceil(diversityBudgetMs));
         });
 
+        const combinedAttempts = [...phase1Result.attempts, ...phase2Result.attempts];
         return {
             ...phase2Result,
-            attempts: [...phase1Result.attempts, ...phase2Result.attempts],
+            status: !phase2Result.ok && combinedAttempts.some(a => a.outcome === 'error') ? 'attempt-error' : phase2Result.status,
+            attempts: combinedAttempts,
             totalMs: phase1Result.totalMs + phase2Result.totalMs,
             nodesExpanded: phase1Result.nodesExpanded + phase2Result.nodesExpanded,
         };

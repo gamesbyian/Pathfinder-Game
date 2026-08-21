@@ -1,0 +1,577 @@
+{
+ "summary": {
+  "corpus": "data/stress/stress-levels.json",
+  "levelsTotal": 102,
+  "levelsWithTwistPortal": 38,
+  "levelsWithNoHint": 0,
+  "levelsChecked": 38,
+  "totalSteps": 2908,
+  "mismatchSteps": 1060,
+  "mismatchWithUnusedTwist": 1060,
+  "mismatchWithPlausiblyReachableTwist": 1060,
+  "violations": 0,
+  "violationDetails": []
+ },
+ "levels": [
+  {
+   "id": "S00001",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00028",
+   "twistPairs": 1,
+   "steps": 90,
+   "mismatches": 0,
+   "mismatchesWithUnusedTwist": 0,
+   "violations": 0
+  },
+  {
+   "id": "S00030",
+   "twistPairs": 1,
+   "steps": 88,
+   "mismatches": 0,
+   "mismatchesWithUnusedTwist": 0,
+   "violations": 0
+  },
+  {
+   "id": "S00035",
+   "twistPairs": 2,
+   "steps": 85,
+   "mismatches": 45,
+   "mismatchesWithUnusedTwist": 45,
+   "violations": 0
+  },
+  {
+   "id": "S00048",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00055",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00057",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00064",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00065",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00069",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00087",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00095",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00099",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00103",
+   "twistPairs": 1,
+   "steps": 74,
+   "mismatches": 0,
+   "mismatchesWithUnusedTwist": 0,
+   "violations": 0
+  },
+  {
+   "id": "S00107",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00108",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00109",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00111",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00114",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00115",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00120",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00133",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "S00140",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00045",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00058",
+   "twistPairs": 3,
+   "steps": 95,
+   "mismatches": 23,
+   "mismatchesWithUnusedTwist": 23,
+   "violations": 0
+  },
+  {
+   "id": "R00060",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00064",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00087",
+   "twistPairs": 5,
+   "steps": 99,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R00104",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00134",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00191",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00197",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00226",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00253",
+   "twistPairs": 2,
+   "steps": 69,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R00375",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00392",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00408",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00432",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00522",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00525",
+   "twistPairs": 1,
+   "steps": 64,
+   "mismatches": 6,
+   "mismatchesWithUnusedTwist": 6,
+   "violations": 0
+  },
+  {
+   "id": "R00526",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00541",
+   "twistPairs": 2,
+   "steps": 87,
+   "mismatches": 57,
+   "mismatchesWithUnusedTwist": 57,
+   "violations": 0
+  },
+  {
+   "id": "R00578",
+   "twistPairs": 2,
+   "steps": 74,
+   "mismatches": 3,
+   "mismatchesWithUnusedTwist": 3,
+   "violations": 0
+  },
+  {
+   "id": "R00581",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00600",
+   "twistPairs": 1,
+   "steps": 64,
+   "mismatches": 42,
+   "mismatchesWithUnusedTwist": 42,
+   "violations": 0
+  },
+  {
+   "id": "R00631",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00649",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00699",
+   "twistPairs": 2,
+   "steps": 58,
+   "mismatches": 18,
+   "mismatchesWithUnusedTwist": 18,
+   "violations": 0
+  },
+  {
+   "id": "R00716",
+   "twistPairs": 5,
+   "steps": 59,
+   "mismatches": 22,
+   "mismatchesWithUnusedTwist": 22,
+   "violations": 0
+  },
+  {
+   "id": "R00729",
+   "twistPairs": 5,
+   "steps": 97,
+   "mismatches": 55,
+   "mismatchesWithUnusedTwist": 55,
+   "violations": 0
+  },
+  {
+   "id": "R00760",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00771",
+   "twistPairs": 2,
+   "steps": 71,
+   "mismatches": 11,
+   "mismatchesWithUnusedTwist": 11,
+   "violations": 0
+  },
+  {
+   "id": "R00789",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00792",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00822",
+   "twistPairs": 2,
+   "steps": 69,
+   "mismatches": 29,
+   "mismatchesWithUnusedTwist": 29,
+   "violations": 0
+  },
+  {
+   "id": "R00825",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00855",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00904",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00920",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R00928",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01014",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01075",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01083",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01152",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01189",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01195",
+   "twistPairs": 3,
+   "steps": 95,
+   "mismatches": 41,
+   "mismatchesWithUnusedTwist": 41,
+   "violations": 0
+  },
+  {
+   "id": "R01202",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01219",
+   "twistPairs": 4,
+   "steps": 83,
+   "mismatches": 27,
+   "mismatchesWithUnusedTwist": 27,
+   "violations": 0
+  },
+  {
+   "id": "R01227",
+   "twistPairs": 2,
+   "steps": 58,
+   "mismatches": 11,
+   "mismatchesWithUnusedTwist": 11,
+   "violations": 0
+  },
+  {
+   "id": "R01233",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01271",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01299",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01336",
+   "twistPairs": 5,
+   "steps": 98,
+   "mismatches": 43,
+   "mismatchesWithUnusedTwist": 43,
+   "violations": 0
+  },
+  {
+   "id": "R01349",
+   "twistPairs": 2,
+   "steps": 62,
+   "mismatches": 15,
+   "mismatchesWithUnusedTwist": 15,
+   "violations": 0
+  },
+  {
+   "id": "R01407",
+   "twistPairs": 4,
+   "steps": 100,
+   "mismatches": 56,
+   "mismatchesWithUnusedTwist": 56,
+   "violations": 0
+  },
+  {
+   "id": "R01455",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01478",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01480",
+   "twistPairs": 1,
+   "steps": 93,
+   "mismatches": 20,
+   "mismatchesWithUnusedTwist": 20,
+   "violations": 0
+  },
+  {
+   "id": "R01533",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01570",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01616",
+   "twistPairs": 2,
+   "steps": 65,
+   "mismatches": 10,
+   "mismatchesWithUnusedTwist": 10,
+   "violations": 0
+  },
+  {
+   "id": "R01620",
+   "twistPairs": 1,
+   "steps": 88,
+   "mismatches": 67,
+   "mismatchesWithUnusedTwist": 67,
+   "violations": 0
+  },
+  {
+   "id": "R01626",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01636",
+   "twistPairs": 2,
+   "steps": 56,
+   "mismatches": 12,
+   "mismatchesWithUnusedTwist": 12,
+   "violations": 0
+  },
+  {
+   "id": "R01670",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01674",
+   "twistPairs": 2,
+   "steps": 84,
+   "mismatches": 17,
+   "mismatchesWithUnusedTwist": 17,
+   "violations": 0
+  },
+  {
+   "id": "R01675",
+   "twistPairs": 4,
+   "steps": 67,
+   "mismatches": 15,
+   "mismatchesWithUnusedTwist": 15,
+   "violations": 0
+  },
+  {
+   "id": "R01685",
+   "twistPairs": 3,
+   "steps": 56,
+   "mismatches": 26,
+   "mismatchesWithUnusedTwist": 26,
+   "violations": 0
+  },
+  {
+   "id": "R01689",
+   "twistPairs": 4,
+   "steps": 89,
+   "mismatches": 31,
+   "mismatchesWithUnusedTwist": 31,
+   "violations": 0
+  },
+  {
+   "id": "R01696",
+   "twistPairs": 1,
+   "steps": 62,
+   "mismatches": 18,
+   "mismatchesWithUnusedTwist": 18,
+   "violations": 0
+  },
+  {
+   "id": "R01737",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01743",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01756",
+   "twistPairs": 4,
+   "steps": 76,
+   "mismatches": 36,
+   "mismatchesWithUnusedTwist": 36,
+   "violations": 0
+  },
+  {
+   "id": "R01830",
+   "twistPairs": 1,
+   "steps": 59,
+   "mismatches": 24,
+   "mismatchesWithUnusedTwist": 24,
+   "violations": 0
+  },
+  {
+   "id": "R01844",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01875",
+   "twistPairs": 4,
+   "steps": 103,
+   "mismatches": 32,
+   "mismatchesWithUnusedTwist": 32,
+   "violations": 0
+  },
+  {
+   "id": "R01889",
+   "twistPairs": 4,
+   "steps": 63,
+   "mismatches": 25,
+   "mismatchesWithUnusedTwist": 25,
+   "violations": 0
+  },
+  {
+   "id": "R01943",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R01944",
+   "twistPairs": 1,
+   "steps": 73,
+   "mismatches": 58,
+   "mismatchesWithUnusedTwist": 58,
+   "violations": 0
+  },
+  {
+   "id": "R01986",
+   "twistPairs": 2,
+   "steps": 57,
+   "mismatches": 41,
+   "mismatchesWithUnusedTwist": 41,
+   "violations": 0
+  },
+  {
+   "id": "R01993",
+   "skipped": "no-twist-portal"
+  },
+  {
+   "id": "R02000",
+   "twistPairs": 3,
+   "steps": 78,
+   "mismatches": 45,
+   "mismatchesWithUnusedTwist": 45,
+   "violations": 0
+  }
+ ]
+}

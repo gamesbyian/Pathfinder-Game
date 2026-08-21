@@ -84,7 +84,7 @@ const args = new Map(process.argv.slice(2).filter((a) => a.startsWith('--')).map
     return [k, v.join('=')];
 }));
 const COUNT = Number(args.get('--count') || 200);
-const SEED = Number(args.get('--seed') || 1);
+const SEED = Number(args.get('--seed') ?? 1);
 const MAX_STEPS = Number(args.get('--max-steps') || 60);
 const OUT_FILE = args.get('--out') || null;
 
@@ -95,6 +95,8 @@ const { parseRawLevel } = await import('../../modules/domain/level-codec.js');
 const { isValidMove } = await import('../../modules/domain/move-rules.js');
 const { MoveContext } = await import('../../modules/domain/move-context.js');
 const { rebuildDerivedState } = await import('../../modules/runtime/path-state.js');
+const { areWinMetricsSatisfied } = await import('../../modules/runtime/game-rules.js');
+const { validateCandidatePath } = await import('../../modules/domain/path-validator.ts');
 const Solver = createSolver();
 const { prepLevel, createState, getNeighbors, applyMove, isSolutionState, PACK } = SOLVER_TESTING_API;
 
@@ -122,7 +124,51 @@ function unpack(k) {
     return `${k & 0xFFFF},${(k >>> 16) & 0xFFFF}`;
 }
 
-function fuzzOneLevel(raw, seed, maxSteps) {
+const boundedReason = (verdict) => verdict?.ok ? null
+    : String(verdict?.reason || verdict?.error || 'rejected without a reason').slice(0, 240);
+
+/** Run all four final arbiters from the common level/path, rebuilding every arm's state. */
+function finalVerdicts(raw, pathKeys) {
+    const oracleLevel = parseOracleLevel(raw);
+    const prodLevel = Solver.prepareLevelForSolver(raw, { source: 'raw' });
+    const prep = prepLevel(prodLevel);
+    const domainLevel = parseRawLevel(raw);
+    const oracleState = createOracleState(oracleLevel, unpack(pathKeys[0]));
+    const solverState = createState(pathKeys[0], prodLevel, prep);
+
+    for (let i = 1; i < pathKeys.length; i++) {
+        const next = pathKeys[i];
+        const previous = pathKeys[i - 1];
+        const portal = prodLevel.portalMap.get(previous);
+        const portalJump = !!(portal && portal.dest === next);
+        applyOracleMove(oracleLevel, oracleState, unpack(next));
+        applyMove(next, solverState, prodLevel, prep, portalJump);
+    }
+
+    // Runtime state is deliberately reconstructed from only the path and portal-jump indexes.
+    const runtimeState = buildDomainState(pathKeys[0]);
+    runtimeState.path = [...pathKeys];
+    for (let i = 1; i < pathKeys.length; i++) {
+        const portal = domainLevel.portalMap.get(pathKeys[i - 1]);
+        if (portal?.dest === pathKeys[i]) runtimeState.isPortalJump.add(i);
+    }
+    rebuildDerivedState(runtimeState, domainLevel);
+    const referee = validateCandidatePath(domainLevel, [...pathKeys]);
+    return {
+        oracle: Boolean(isOracleSolution(oracleLevel, oracleState)),
+        solver: Boolean(isSolutionState(solverState, prodLevel)),
+        runtime: Boolean(pathKeys.at(-1) === domainLevel.goalKey
+            && areWinMetricsSatisfied(runtimeState, domainLevel)),
+        referee: Boolean(referee?.ok),
+        refereeReasons: boundedReason(referee),
+    };
+}
+
+function verdictsAgree(v) {
+    return new Set([v.oracle, v.solver, v.runtime, v.referee]).size === 1;
+}
+
+function fuzzOneLevel(raw, seed, maxSteps, trial) {
     const rng = mulberry32(seed);
 
     const validation = validateRawLevel(raw);
@@ -205,10 +251,13 @@ function fuzzOneLevel(raw, seed, maxSteps) {
             }
         }
 
-        const oSol = isOracleSolution(oracleLevel, oState);
-        const pSol = isSolutionState(pState, prodLevel);
-        if (oSol !== pSol) {
-            return { mismatch: true, step, reason: 'win-condition disagreement', pos: oPos, oracleSays: oSol, productionSays: pSol };
+        const oSol = Boolean(isOracleSolution(oracleLevel, oState));
+        if (atGoal) {
+            const verdicts = finalVerdicts(raw, [...pState.path]);
+            if (!verdictsAgree(verdicts)) {
+                return { mismatch: true, step, reason: 'final-acceptance disagreement', pos: oPos,
+                    seed, trial, path: [...pState.path].map(unpack), level: raw, verdicts };
+            }
         }
 
         if (oMoves.length === 0 || oSol || atGoal) break;
@@ -228,6 +277,48 @@ function fuzzOneLevel(raw, seed, maxSteps) {
     return { mismatch: false };
 }
 
+const W = (x, y) => PACK(x - 1, y - 1);
+const base = (overrides = {}) => ({
+    grid: { w: 4, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 4, y: 1 },
+    reqLen: 3, reqInt: 0, blocks: [], mustPass: [], mustCross: [], geese: [], falseGoals: [],
+    filters: [], flippingFilters: [], portals: [], landmarks: [], ...overrides,
+});
+const straight = [W(1, 1), W(2, 1), W(3, 1), W(4, 1)];
+const turn = [W(1, 1), W(2, 1), W(2, 2), W(3, 2)];
+const corner = [W(1, 1), W(2, 1), W(2, 2)];
+const cross = [W(1, 2), W(2, 2), W(3, 2), W(3, 1), W(2, 1), W(2, 2), W(2, 3), W(3, 3)];
+const ring = [W(1, 1), W(2, 1), W(3, 1), W(3, 2), W(3, 3), W(2, 3), W(1, 3), W(1, 2)];
+const fixtures = [
+    ['required length/intersections accepted', base(), straight, true],
+    ['required length rejected', base({ reqLen: 4 }), straight, false],
+    ['required intersections rejected', base({ reqInt: 1 }), straight, false],
+    ['must-pass accepted', base({ mustPass: [{ x: 2, y: 1 }] }), straight, true],
+    ['must-pass rejected', base({ mustPass: [{ x: 2, y: 2 }] }), straight, false],
+    ['must-cross accepted', base({ grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 2 }], goal: { x: 3, y: 3 }, reqLen: 7, reqInt: 1, mustCross: [{ x: 2, y: 2 }] }), cross, true],
+    ['must-cross rejected', base({ mustCross: [{ x: 2, y: 1 }] }), straight, false],
+    ['must-turn direction accepted', base({ grid: { w: 3, h: 2 }, goal: { x: 3, y: 2 }, landmarks: [{ x: 2, y: 1, objectType: 'park', role: 'mustTurn' }] }), turn, true],
+    ['must-turn direction rejected', base({ grid: { w: 3, h: 2 }, goal: { x: 3, y: 2 }, landmarks: [{ x: 2, y: 1, objectType: 'park', role: 'mustTurnCcw' }] }), turn, false],
+    ['adjacent-turn accepted', base({ grid: { w: 2, h: 2 }, goal: { x: 2, y: 2 }, reqLen: 2, landmarks: [{ x: 1, y: 2, objectType: 'park', role: 'adjacentTurn' }] }), corner, true],
+    ['adjacent-turn direction rejected', base({ grid: { w: 2, h: 2 }, goal: { x: 2, y: 2 }, reqLen: 2, landmarks: [{ x: 1, y: 2, objectType: 'park', role: 'adjacentTurnCcw' }] }), corner, false],
+    ['surround accepted', base({ grid: { w: 3, h: 3 }, goal: { x: 1, y: 2 }, reqLen: 7, landmarks: [{ x: 2, y: 2, objectType: 'park', role: 'surround' }] }), ring, true],
+    ['surround rejected', base({ grid: { w: 3, h: 3 }, goal: { x: 3, y: 1 }, reqLen: 2, landmarks: [{ x: 2, y: 2, objectType: 'park', role: 'surround' }] }), straight.slice(0, 3), false],
+    ['portals accepted', base({ goal: { x: 4, y: 3 }, reqLen: 2, portals: [{ x1: 2, y1: 1, x2: 4, y2: 2 }] }), [W(1, 1), W(2, 1), W(4, 2), W(4, 3)], true],
+    ['portals rejected', base({ goal: { x: 4, y: 3 }, reqLen: 3, portals: [{ x1: 2, y1: 1, x2: 4, y2: 2 }] }), [W(1, 1), W(2, 1), W(4, 2), W(4, 3)], false],
+    ['flipping filters accepted', base({ flippingFilters: [{ x: 2, y: 1, axis: 1 }] }), straight, true],
+    ['flipping filters rejected', base({ reqLen: 4, flippingFilters: [{ x: 2, y: 1, axis: 1 }] }), straight, false],
+];
+
+for (const [name, raw, fixturePath, expected] of fixtures) {
+    const verdicts = finalVerdicts(raw, fixturePath);
+    if (!verdictsAgree(verdicts) || verdicts.oracle !== expected) {
+        console.error(JSON.stringify({ reason: 'deterministic fixture disagreement', fixture: name,
+            seed: 'fixture', trial: name, step: fixturePath.length - 1, level: raw,
+            path: fixturePath.map(unpack), expected, verdicts }, null, 2));
+        process.exit(1);
+    }
+}
+console.log(`Final-acceptance fixtures: ${fixtures.length} passed (accepted and rejected goal arrivals).`);
+
 console.log(`Oracle differential fuzz: ${COUNT} levels, seed=${SEED}, max-steps=${MAX_STEPS}.`);
 
 let tested = 0, skipped = 0, mismatches = 0, landmarkLevelsTested = 0;
@@ -237,7 +328,7 @@ const seedRng = mulberry32(SEED);
 for (let i = 0; i < COUNT; i++) {
     const levelSeed = Math.floor(seedRng() * 0xFFFFFFFF);
     const raw = generateRandomLevel(mulberry32(levelSeed));
-    const result = fuzzOneLevel(raw, levelSeed, MAX_STEPS);
+    const result = fuzzOneLevel(raw, levelSeed, MAX_STEPS, i);
     if (result.skipped) { skipped++; continue; }
     tested++;
     if (Array.isArray(raw.landmarks) && raw.landmarks.length > 0) landmarkLevelsTested++;

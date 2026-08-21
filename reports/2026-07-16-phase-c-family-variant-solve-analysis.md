@@ -1,5 +1,10 @@
 # Phase C: solving Phase B's denser family/variant sets (2026-07-16)
 
+> **Status:** superseded
+> **Last evidence:** 2026-08-08 — intervention guidance reconciled with Phase D and the current synthesis
+> **Decision:** retain the fragile/robust classification, but do not act on this report's suggestion to temper `SCORE_INTERSECTION_SETUP`; later ablations found different rescuing terms across fragile families
+> **Remaining gate:** see [`2026-08-08-symmetry-orientation-sensitivity-synthesis.md`](2026-08-08-symmetry-orientation-sensitivity-synthesis.md)
+
 ## Setup
 
 Solved all 477 Phase B variants (11 seeds × {8 symmetry, 10 local-mutant, 10 swap, 8
@@ -62,8 +67,11 @@ mirroring how trivially R02248's own variants already flip. The **robust subgrou
 represented by R00440, 0/45) is not a good target for a scoring fix — no structural nudge helps, and
 many different techniques all fail at different distances, suggesting the puzzle is simply hard at
 its core. Any future work aimed at "solve more within a practical budget" should prioritize
-diagnosing what's fixable in the fragile group's shared mechanism over trying to force robust-group
-levels to solve faster; the robust group may be better addressed by accepting the difficulty (or
+diagnosing what's fixable in the fragile group's shared failure shape over trying to force robust-group
+levels to solve faster. **Later Phase D evidence supersedes the term-specific suggestion above:**
+five fragile families implicated five primary navigation/attraction terms, so the general candidate
+is bounded search diversity rather than tempering `SCORE_INTERSECTION_SETUP` globally. The robust
+group may be better addressed by accepting the difficulty (or
 flagging it for level-design review, since a level nothing short of exhaustive search can crack
 within a practical time budget may not be a good level to have shipped in the first place, regardless
 of the solver's own limitations).

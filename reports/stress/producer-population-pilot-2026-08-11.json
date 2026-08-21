@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-11T10:03:42.478Z",
+  "levelsFile": "data/stress/stress-levels-random.json",
+  "scope": "observation only; no cross-technique consumption",
+  "levels": [
+    {
+      "levelId": "R00001",
+      "gateKey": 655370,
+      "nodeBudget": 30000,
+      "beamWidth": 100,
+      "beamNodes": 6048,
+      "repairNodes": 30000,
+      "comparison": {
+        "beamCount": 42,
+        "repairCount": 55,
+        "exactPrefixOverlap": 0,
+        "metricProjectionOverlap": 0,
+        "caution": "Metric equality is structural similarity, not state equivalence."
+      },
+      "beamArtifactCount": 42,
+      "repairArtifactCount": 55
+    },
+    {
+      "levelId": "R00039",
+      "gateKey": 589833,
+      "nodeBudget": 30000,
+      "beamWidth": 100,
+      "beamNodes": 3605,
+      "repairNodes": 30000,
+      "comparison": {
+        "beamCount": 33,
+        "repairCount": 60,
+        "exactPrefixOverlap": 0,
+        "metricProjectionOverlap": 0,
+        "caution": "Metric equality is structural similarity, not state equivalence."
+      },
+      "beamArtifactCount": 33,
+      "repairArtifactCount": 60
+    },
+    {
+      "levelId": "R00044",
+      "gateKey": 327681,
+      "nodeBudget": 30000,
+      "beamWidth": 100,
+      "beamNodes": 4888,
+      "repairNodes": 30017,
+      "comparison": {
+        "beamCount": 32,
+        "repairCount": 76,
+        "exactPrefixOverlap": 0,
+        "metricProjectionOverlap": 0,
+        "caution": "Metric equality is structural similarity, not state equivalence."
+      },
+      "beamArtifactCount": 32,
+      "repairArtifactCount": 76
+    }
+  ],
+  "summary": {
+    "levels": 3,
+    "beamArtifacts": 107,
+    "repairArtifacts": 191,
+    "exactPrefixOverlap": 0,
+    "metricProjectionOverlap": 0
+  }
+}

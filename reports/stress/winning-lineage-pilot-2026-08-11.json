@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-11T16:42:07.611Z",
+  "levelsFile": "data/stress/stress-levels-random.json",
+  "selection": "stratified by logs/winning-path-archaeology/corpus2-sample.json coldSolved; solved first then unsolved; densest-label gate",
+  "retainAllRemovalDetails": false,
+  "limitLevels": 8,
+  "beamWidth": 100,
+  "nodeBudget": 50000,
+  "levels": [
+    {
+      "levelId": "R01172",
+      "coldSolved": true,
+      "gateKey": 655364,
+      "validLabels": 18,
+      "beamWidth": 100,
+      "nodeBudget": 50000,
+      "solved": false,
+      "nodesExpanded": 3866,
+      "behaviorIdentical": true,
+      "lineage": {
+        "schemaVersion": 1,
+        "solutionLabels": 18,
+        "firstSupportLoss": {
+          "stage": "post-production-dedup",
+          "depth": 30,
+          "work": 1942,
+          "candidateCount": 90,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "dedup-removed"
+        },
+        "finalSupportLoss": {
+          "stage": "post-production-dedup",
+          "depth": 30,
+          "work": 1942,
+          "candidateCount": 90,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "dedup-removed"
+        },
+        "lastSupportDepth": 30,
+        "normalizedLastSupportDepth": 0.39473684210526316,
+        "workAfterFinalKnownSupport": 1924,
+        "correctnessAlarms": [],
+        "caution": "Known support extinction does not prove that no valid solution remains."
+      }
+    },
+    {
+      "levelId": "R01535",
+      "coldSolved": true,
+      "gateKey": 655365,
+      "validLabels": 14,
+      "beamWidth": 100,
+      "nodeBudget": 50000,
+      "solved": false,
+      "nodesExpanded": 3962,
+      "behaviorIdentical": true,
+      "lineage": {
+        "schemaVersion": 1,
+        "solutionLabels": 14,
+        "firstSupportLoss": {
+          "stage": "post-production-dedup",
+          "depth": 11,
+          "work": 576,
+          "candidateCount": 230,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "dedup-removed"
+        },
+        "finalSupportLoss": {
+          "stage": "post-production-dedup",
+          "depth": 11,
+          "work": 576,
+          "candidateCount": 230,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "dedup-removed"
+        },
+        "lastSupportDepth": 11,
+        "normalizedLastSupportDepth": 0.14864864864864866,
+        "workAfterFinalKnownSupport": 3386,
+        "correctnessAlarms": [],
+        "caution": "Known support extinction does not prove that no valid solution remains."
+      }
+    },
+    {
+      "levelId": "R01849",
+      "coldSolved": true,
+      "gateKey": 655365,
+      "validLabels": 27,
+      "beamWidth": 100,
+      "nodeBudget": 50000,
+      "solved": false,
+      "nodesExpanded": 10968,
+      "behaviorIdentical": true,
+      "lineage": {
+        "schemaVersion": 1,
+        "solutionLabels": 27,
+        "firstSupportLoss": {
+          "stage": "post-score-width-cull",
+          "depth": 28,
+          "work": 2389,
+          "candidateCount": 100,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "score-width-culled"
+        },
+        "finalSupportLoss": {
+          "stage": "post-score-width-cull",
+          "depth": 28,
+          "work": 2389,
+          "candidateCount": 100,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "score-width-culled"
+        },
+        "lastSupportDepth": 28,
+        "normalizedLastSupportDepth": 0.2153846153846154,
+        "workAfterFinalKnownSupport": 8579,
+        "correctnessAlarms": [],
+        "caution": "Known support extinction does not prove that no valid solution remains."
+      }
+    },
+    {
+      "levelId": "R01936",
+      "coldSolved": true,
+      "gateKey": 720901,
+      "validLabels": 158,
+      "beamWidth": 100,
+      "nodeBudget": 50000,
+      "solved": false,
+      "nodesExpanded": 6698,
+      "behaviorIdentical": true,
+      "lineage": {
+        "schemaVersion": 1,
+        "solutionLabels": 158,
+        "firstSupportLoss": {
+          "stage": "post-score-width-cull",
+          "depth": 9,
+          "work": 413,
+          "candidateCount": 100,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "score-width-culled"
+        },
+        "finalSupportLoss": {
+          "stage": "post-score-width-cull",
+          "depth": 9,
+          "work": 413,
+          "candidateCount": 100,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "score-width-culled"
+        },
+        "lastSupportDepth": 9,
+        "normalizedLastSupportDepth": 0.09090909090909091,
+        "workAfterFinalKnownSupport": 6285,
+        "correctnessAlarms": [],
+        "caution": "Known support extinction does not prove that no valid solution remains."
+      }
+    },
+    {
+      "levelId": "R00080",
+      "coldSolved": false,
+      "gateKey": 65540,
+      "validLabels": 116,
+      "beamWidth": 100,
+      "nodeBudget": 50000,
+      "solved": false,
+      "nodesExpanded": 6651,
+      "behaviorIdentical": true,
+      "lineage": {
+        "schemaVersion": 1,
+        "solutionLabels": 116,
+        "firstSupportLoss": {
+          "stage": "post-score-width-cull",
+          "depth": 8,
+          "work": 238,
+          "candidateCount": 100,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "score-width-culled"
+        },
+        "finalSupportLoss": {
+          "stage": "post-score-width-cull",
+          "depth": 8,
+          "work": 238,
+          "candidateCount": 100,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "score-width-culled"
+        },
+        "lastSupportDepth": 8,
+        "normalizedLastSupportDepth": 0.07766990291262135,
+        "workAfterFinalKnownSupport": 6413,
+        "correctnessAlarms": [],
+        "caution": "Known support extinction does not prove that no valid solution remains."
+      }
+    },
+    {
+      "levelId": "R00108",
+      "coldSolved": false,
+      "gateKey": 458761,
+      "validLabels": 5,
+      "beamWidth": 100,
+      "nodeBudget": 50000,
+      "solved": false,
+      "nodesExpanded": 5047,
+      "behaviorIdentical": true,
+      "lineage": {
+        "schemaVersion": 1,
+        "solutionLabels": 5,
+        "firstSupportLoss": {
+          "stage": "post-production-dedup",
+          "depth": 9,
+          "work": 286,
+          "candidateCount": 92,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "dedup-removed"
+        },
+        "finalSupportLoss": {
+          "stage": "post-production-dedup",
+          "depth": 9,
+          "work": 286,
+          "candidateCount": 92,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "dedup-removed"
+        },
+        "lastSupportDepth": 9,
+        "normalizedLastSupportDepth": 0.0891089108910891,
+        "workAfterFinalKnownSupport": 4761,
+        "correctnessAlarms": [],
+        "caution": "Known support extinction does not prove that no valid solution remains."
+      }
+    },
+    {
+      "levelId": "R00350",
+      "coldSolved": false,
+      "gateKey": 655367,
+      "validLabels": 42,
+      "beamWidth": 100,
+      "nodeBudget": 50000,
+      "solved": false,
+      "nodesExpanded": 7006,
+      "behaviorIdentical": true,
+      "lineage": {
+        "schemaVersion": 1,
+        "solutionLabels": 42,
+        "firstSupportLoss": {
+          "stage": "post-score-width-cull",
+          "depth": 6,
+          "work": 128,
+          "candidateCount": 100,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "score-width-culled"
+        },
+        "finalSupportLoss": {
+          "stage": "post-score-width-cull",
+          "depth": 6,
+          "work": 128,
+          "candidateCount": 100,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "score-width-culled"
+        },
+        "lastSupportDepth": 6,
+        "normalizedLastSupportDepth": 0.05309734513274336,
+        "workAfterFinalKnownSupport": 6878,
+        "correctnessAlarms": [],
+        "caution": "Known support extinction does not prove that no valid solution remains."
+      }
+    },
+    {
+      "levelId": "R00434",
+      "coldSolved": false,
+      "gateKey": 589827,
+      "validLabels": 550,
+      "beamWidth": 100,
+      "nodeBudget": 50000,
+      "solved": false,
+      "nodesExpanded": 10992,
+      "behaviorIdentical": true,
+      "lineage": {
+        "schemaVersion": 1,
+        "solutionLabels": 550,
+        "firstSupportLoss": {
+          "stage": "post-score-width-cull",
+          "depth": 6,
+          "work": 192,
+          "candidateCount": 100,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "score-width-culled"
+        },
+        "finalSupportLoss": {
+          "stage": "post-score-width-cull",
+          "depth": 6,
+          "work": 192,
+          "candidateCount": 100,
+          "supportedCandidates": 0,
+          "supportedPaths": 0,
+          "supportedFamilies": 0,
+          "lossCause": "score-width-culled"
+        },
+        "lastSupportDepth": 6,
+        "normalizedLastSupportDepth": 0.05263157894736842,
+        "workAfterFinalKnownSupport": 10800,
+        "correctnessAlarms": [],
+        "caution": "Known support extinction does not prove that no valid solution remains."
+      }
+    }
+  ],
+  "summary": {
+    "levels": 8,
+    "solved": 0,
+    "behaviorIdentical": 8,
+    "correctnessAlarms": 0
+  }
+}

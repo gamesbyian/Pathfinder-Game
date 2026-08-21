@@ -56,6 +56,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
+import { loadProbeCorpora } from './probe-corpus-loader.mjs';
 
 installBrowserStubs();
 const { normalizeRawLevel } = await import('../../modules/solver/normalization.js');
@@ -73,11 +74,7 @@ const corpora = [
     ['data/stress/stress-levels.json', 'data/stress/hints'],
     ['data/levels.json', 'data/hints'],
 ];
-const levelById = new Map(), hintsDirById = new Map();
-for (const [lf, hd] of corpora) {
-    const raw = JSON.parse(readFileSync(path.join(ROOT, lf), 'utf8'));
-    for (const l of (Array.isArray(raw) ? raw : raw.levels)) if (l.id) { levelById.set(l.id, l); hintsDirById.set(l.id, hd); }
-}
+const { levelById, hintsDirById } = loadProbeCorpora(ROOT, corpora);
 
 /** Cells reachable from `pos` under a given wall rule. `zeroCost=true` -> maxVisit=0 with pending
  *  must-cross cells still open (Z0, the reserved wall's own fill). `zeroCost=false` -> maxVisit=2,

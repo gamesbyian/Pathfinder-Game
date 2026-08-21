@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { compareAblations, comparePathTraces, compareSemanticSnapshots, scoreFlagAblation, tracePathRanks } from './divergence-lib.mjs';
+const api={createState:start=>({path:[start]}),getNeighbors:(pos,_s,_l,prep)=>prep?._cfg?.SCORE_X===false?[pos+1,pos+2]:[pos+2,pos+1],scoreAndSort:()=>{},applyMove:(k,s)=>s.path.push(k),isSolutionState:s=>s.path.at(-1)===2};
+const level={portalMap:new Map()},prep={};
+const easy=tracePathRanks({api,level,prep,path:[0,1,2],profile:{}});
+const hard=tracePathRanks({api,level,prep,path:[0,2],profile:{}});
+assert.equal(easy.cumulativeDiscrepancy,2);assert.equal(hard.cumulativeDiscrepancy,0);
+const pair=comparePathTraces(easy,hard);assert.equal(pair.valid,true);assert.ok(pair.firstMeaningfulDivergence);assert.equal(pair.byStep[0].candidateDelta,0);
+const ab=scoreFlagAblation({trace:cfg=>tracePathRanks({api,level,prep,path:[0,1,2],profile:{},configOverride:cfg}),scoreFlags:['SCORE_X'],normalizeConfig:x=>x});
+assert.equal(ab.flags[0].delta,-2);assert.equal(compareAblations(ab,{...ab,flags:[{flag:'SCORE_X',delta:0}]})[0].differential,2);
+const invalid=tracePathRanks({api,level,prep,path:[0,9],profile:{}});assert.match(invalid.error,/not a candidate/);assert.equal(comparePathTraces(invalid,hard).valid,false);
+assert.equal(compareSemanticSnapshots({legalCandidates:[1],directionalPolicies:['cw']},{legalCandidates:[9]},()=>9).classification,'intentional-directional-strategy-asymmetry');
+console.log('divergence-lib: all tests passed');

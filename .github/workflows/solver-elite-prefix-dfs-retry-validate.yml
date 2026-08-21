@@ -1,0 +1,142 @@
+# One-off local-validation runner for STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY
+# (modules/solver/orchestration.ts, scripts/stress/elite-prefix-dfs-retry-validate.mjs).
+#
+# NOT a population A/B and NOT solver-stress-refresh.yml's canonical corpus workflow — this runs
+# scripts/stress/elite-prefix-dfs-retry-validate.mjs's own small, fixed 20-level closest-miss
+# sample (reports/2026-08-07-repair-elite-prefix-dfs.md's own sample), SHARDED across a 10-way
+# matrix (2 levels/shard) so the ~20 sequential multi-million-node runAttempt calls run in
+# parallel instead of one after another on a single runner — the whole point of moving this off
+# the interactive sandbox in the first place. Never commits to main, never touches any
+# baseline/heatmap file.
+name: Solver elite-prefix-dfs-retry local validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      protected_node_budget:
+        description: 'Node budget for the ordinary (flag-off) repair call.'
+        required: false
+        default: '15000000'
+      retry_node_budget:
+        description: 'Node budget for the retry (flag-on) repair call, only spent if the protected call fails.'
+        required: false
+        default: '15000000'
+      corpus_file:
+        description: 'Corpus JSON file the target ids are drawn from.'
+        required: false
+        default: 'data/stress/stress-levels-random.json'
+
+concurrency:
+  group: solver-elite-prefix-dfs-retry-validate
+  cancel-in-progress: false
+
+jobs:
+  validate-shard:
+    name: Shard ${{ matrix.shard.idx }}/10 (${{ matrix.shard.ids }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard:
+          - { idx: 1, ids: 'R00440,R01397' }
+          - { idx: 2, ids: 'R01698,R01860' }
+          - { idx: 3, ids: 'R02003,R02022' }
+          - { idx: 4, ids: 'R02088,R02123' }
+          - { idx: 5, ids: 'R02220,R02239' }
+          - { idx: 6, ids: 'R00342,R00786' }
+          - { idx: 7, ids: 'R00877,R00886' }
+          - { idx: 8, ids: 'R00893,R01341' }
+          - { idx: 9, ids: 'R02106,R02118' }
+          - { idx: 10, ids: 'R02137,R02275' }
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run the validation script on this shard
+        shell: bash
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/elite-prefix-dfs-retry-validate.mjs \
+            "${{ inputs.protected_node_budget }}" \
+            "${{ inputs.retry_node_budget }}" \
+            "${{ inputs.corpus_file }}" \
+            "${{ matrix.shard.ids }}" \
+            "shard-${{ matrix.shard.idx }}.json" \
+            | tee "shard-${{ matrix.shard.idx }}.log"
+
+      - name: Upload shard artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: elite-prefix-dfs-retry-validate-shard-${{ matrix.shard.idx }}
+          path: |
+            shard-${{ matrix.shard.idx }}.json
+            shard-${{ matrix.shard.idx }}.log
+          if-no-files-found: error
+          retention-days: 90
+
+  combine:
+    name: Combine shard results
+    needs: [validate-shard]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Download shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'elite-prefix-dfs-retry-validate-shard-*'
+          path: shards
+          merge-multiple: true
+
+      - name: Print combined summary
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const files = fs.readdirSync('shards').filter(f => f.endsWith('.json'));
+          let protectedSolved = 0, total = 0, retryAttempted = 0, retryRecovered = 0;
+          const recovered = [], invalid = [], rows = [];
+          for (const f of files) {
+            const d = JSON.parse(fs.readFileSync('shards/' + f, 'utf8'));
+            protectedSolved += d.protectedSolved; total += d.total;
+            retryAttempted += d.retryAttempted; retryRecovered += d.retryRecovered;
+            recovered.push(...d.recovered); invalid.push(...d.invalid); rows.push(...d.rows);
+          }
+          console.log('=== Combined result across ' + files.length + ' shards ===');
+          console.log('Protected (ordinary loop) solved: ' + protectedSolved + '/' + total);
+          console.log('Retry attempted (protected failed): ' + retryAttempted);
+          console.log('Retry recovered (referee-valid): ' + retryRecovered);
+          console.log('Recovered ids: ' + (recovered.join(',') || '(none)'));
+          if (invalid.length > 0) console.log('REFEREE-INVALID solves (bug -- must be zero): ' + JSON.stringify(invalid));
+          console.log('');
+          console.log('Per-level detail:');
+          for (const r of rows.sort((a,b) => a.id.localeCompare(b.id))) {
+            const line = r.id + ': protected=' + (r.offSolved ? 'SOLVED' : 'fail') + ' (' + r.offNodes + 'n, ' + r.offMs + 'ms)' +
+              (r.offSolved ? '' : ' retry=' + (r.retrySolved ? 'SOLVED' : 'fail') + ' (' + r.retryNodes + 'n, ' + r.retryMs + 'ms)' + (r.refereeInvalid ? ' [REFEREE-INVALID]' : (r.retrySolved ? ' [REFEREE-VALID]' : '')));
+            console.log(line);
+          }
+          "
+
+      - name: Upload combined artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: elite-prefix-dfs-retry-validate-combined
+          path: shards/
+          retention-days: 90

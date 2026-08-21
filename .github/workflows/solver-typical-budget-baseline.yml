@@ -58,9 +58,9 @@ on:
         required: false
         default: '26800000'
       corpus2_node_budget:
-        description: 'Corpus-2: CUMULATIVE node ceiling across every attempt — this is what actually caps a level (see the header). 20000000 matches solver-stress-refresh.yml, so cost stays comparable to the runs this is diffed against.'
+        description: 'Corpus-2: CUMULATIVE node ceiling across every attempt — this is what actually caps a level (see the header). Unified with corpus1_node_budget at 50000000 (2026-08-12) — previously 20000000, a value with no corpus-2-specific justification beyond an old, since-drifted wall-clock ratio; the solver should treat levels identically regardless of which corpus they came from. See corpus1_node_budget''s description for the unification rationale.'
         required: false
-        default: '20000000'
+        default: '50000000'
       corpus2_deadline_ms:
         description: 'Corpus-2: sizes attempt TIERS; does NOT cap per-level wall time (measured — see the header). 8000 matches the previous typical-budget run: tier sizing changes which solutions are found, so this is not a free knob.'
         required: false
@@ -70,7 +70,7 @@ on:
         required: false
         default: '67000000'
       corpus1_node_budget:
-        description: 'Corpus-1: CUMULATIVE node ceiling. solver-stress-refresh.yml passes none here (corpus-1 was bounded by wall clock alone, which is exactly the non-reproducibility this workflow exists to remove), so 50000000 is the analog of its 20000ms budget at corpus-2''s 8000ms/20M ratio.'
+        description: 'Corpus-1: CUMULATIVE node ceiling. Unified with corpus2_node_budget at 50000000 (2026-08-12): the two previously differed (corpus-1 50000000 vs corpus-2 20000000) purely because corpus-1''s number was mechanically derived from an old wall-clock ratio (20000ms corpus-1 : 8000ms corpus-2) applied to corpus-2''s node budget at the time — never independently justified. The solver should be corpus-agnostic: a level''s budget must not depend on which corpus it happens to live in. See reports/2026-08-12-main-loop-late-reserve-population-ab.md for the investigation that surfaced this.'
         required: false
         default: '50000000'
       corpus1_deadline_ms:
@@ -572,6 +572,19 @@ jobs:
             console.log(`SOLVED ${name}: ${ok}/${rows.length}  nodes=${nodes}  wallMs=${ms}`);
           }
           NODE
+
+      - name: Print repair-probe badness distribution
+        shell: bash
+        # Same console-log-only reasoning as the solved-count print above -- this is the workflow
+        # disable_flags's own description names as how to A/B whether a default-ON mechanism like
+        # STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET is load-bearing, so it's also the natural tool
+        # for the still-open BADNESS_GATE/MIN_SCALE recalibration
+        # (docs/solver-opt-in-experiment-ledger.md). See scripts/stress/repair-probe-badness-report.mjs.
+        run: |
+          set -euo pipefail
+          for f in reports/stress/typical-budget-corpus1.json reports/stress/typical-budget-corpus2.json; do
+            [ -f "$f" ] && node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in="$f"
+          done
 
       - name: Diff the new baseline against the one currently on main
         shell: bash

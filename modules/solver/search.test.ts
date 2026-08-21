@@ -4,11 +4,14 @@ import { test } from 'vitest';
 import { PACK } from './encoding.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { beamSearchFromGate, dfsFromGateLDS, getLdsProbeNodeBudget } from './search.js';
-import { createState } from './search-state.js';
+import { evaluatePrunedMove } from './prune-gauntlet.js';
+import { __pruneFirstStepNeighborsForTests, __reconstructBeamPathForTests, beamSearchFromGate, dfsFromGateLDS, getLdsProbeNodeBudget } from './search.js';
+import { applyMove, createState } from './search-state.js';
 import { findTrapSpots, classifyFalseGoals, isParityReachableEndpoint } from './trap-search.js';
 import { isConnected } from './topology.js';
 import type { NormalizedLevel } from '../domain/types.js';
+import type { PruneDiagnostics } from './prune-gauntlet.js';
+import type { PruneId } from './prune-gauntlet.js';
 
 function makeLevel(overrides = {}) {
   return {
@@ -29,6 +32,15 @@ function makeLevel(overrides = {}) {
   } as unknown as NormalizedLevel;
 }
 
+function diagnoseCandidate(level: NormalizedLevel, id: PruneId) {
+  const prep = prepLevel(level);
+  const state = createState(PACK(0, 0), level, prep);
+  applyMove(PACK(1, 0), state, level, prep, false);
+  const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+  const verdict = evaluatePrunedMove(PACK(1, 0), 1, state, level, prep, { [id]: true }, false, { diagnostics });
+  return { verdict, reached: diagnostics.reached[id] ?? 0, rejected: diagnostics.rejected[id] ?? 0 };
+}
+
 test('isConnected reports reachable goal and blocks disconnected regions', () => {
   const level = makeLevel();
   const prep = prepLevel(level);
@@ -37,6 +49,75 @@ test('isConnected reports reachable goal and blocks disconnected regions', () =>
   const blocked = makeLevel({ blockSet: new Set([PACK(1, 0)]) });
   const blockedPrep = prepLevel(blocked);
   assert.equal(isConnected(PACK(0, 0), createState(PACK(0, 0), blocked, blockedPrep), blocked, blockedPrep), false);
+});
+
+test('prune diagnostics prove the distance-bound branch passes a feasible control and fires first for an infeasible control', () => {
+  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 2 }), 'PRUNE_DISTANCE_BOUND'),
+    { verdict: 'pass', reached: 1, rejected: 0 }, 'oracle path 0→1→2 fits exactly');
+  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 1 }), 'PRUNE_DISTANCE_BOUND'),
+    { verdict: 'reject', reached: 1, rejected: 1 }, 'distance is the isolated first firing prune');
+});
+
+test('parity, MC-ceiling, and intersection-deficit diagnostics have isolated positive and feasible controls', () => {
+  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 2 }), 'PRUNE_PARITY'),
+    { verdict: 'pass', reached: 1, rejected: 0 }, 'exact two-edge path has compatible parity');
+  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 3 }), 'PRUNE_PARITY'),
+    { verdict: 'reject', reached: 1, rejected: 1 }, 'odd extra budget has impossible endpoint parity');
+
+  const mc = PACK(1, 0);
+  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 4, reqInt: 1, mustCrossKeys: [mc] }), 'PRUNE_MC_CEILING'),
+    { verdict: 'pass', reached: 1, rejected: 0 }, 'one reserved crossing fits one intersection');
+  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 4, reqInt: 0, mustCrossKeys: [mc] }), 'PRUNE_MC_CEILING'),
+    { verdict: 'reject', reached: 1, rejected: 1 }, 'reserved crossing exceeds the zero-intersection ceiling');
+
+  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 2, reqInt: 1 }), 'PRUNE_INTERSECTION_DEFICIT'),
+    { verdict: 'pass', reached: 1, rejected: 0 }, 'one remaining step can supply one intersection');
+  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 2, reqInt: 2 }), 'PRUNE_INTERSECTION_DEFICIT'),
+    { verdict: 'reject', reached: 1, rejected: 1 }, 'one step cannot supply a two-intersection deficit');
+});
+
+test('portal-parity envelope only fires after every parity-twisting portal is consumed', () => {
+  const a = PACK(1, 0), b = PACK(3, 1);
+  const level = makeLevel({
+    grid: { w: 5, h: 2 }, gateKeys: [PACK(0, 1)], goalKey: PACK(4, 0), reqLen: 2,
+    portalMap: new Map([[a, { dest: b }], [b, { dest: a }]]),
+  });
+  const prep = prepLevel(level);
+  assert.equal(prep.parityPortalDistMaps?.length, 1, 'fixture contains a parity-twisting portal pair');
+  const state = createState(PACK(0, 1), level, prep);
+  applyMove(PACK(0, 0), state, level, prep, false);
+  const run = () => {
+    const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+    const verdict = evaluatePrunedMove(PACK(0, 0), 1, state, level, prep,
+      { PRUNE_PORTAL_PARITY_ENVELOPE: true }, false, { diagnostics });
+    return { verdict, reached: diagnostics.reached.PRUNE_PORTAL_PARITY_ENVELOPE ?? 0,
+      rejected: diagnostics.rejected.PRUNE_PORTAL_PARITY_ENVELOPE ?? 0 };
+  };
+
+  state.visited[a] = 1;
+  assert.deepEqual(run(), { verdict: 'pass', reached: 1, rejected: 0 },
+    'an unconsumed twist portal keeps both endpoint parities feasible');
+  state.visited[b] = 1;
+  assert.deepEqual(run(), { verdict: 'reject', reached: 1, rejected: 1 },
+    'after both terminals are consumed the isolated envelope rule fires first');
+});
+
+test('forced-first-move diagnostics count rejected alternatives and preserve the forced candidate', () => {
+  const level = makeLevel({ grid: { w: 3, h: 2 }, gateKeys: [PACK(0, 0)] });
+  const prep = prepLevel(level);
+  prep._cfg = { PRUNE_MC_FORCED_FIRST_MOVE: true };
+  prep.gateForcedFirstStepKey.set(PACK(0, 0), PACK(1, 0));
+  const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+  assert.deepEqual(__pruneFirstStepNeighborsForTests(PACK(0, 0), [PACK(1, 0), PACK(0, 1)], prep, diagnostics),
+    [PACK(1, 0)]);
+  assert.equal(diagnostics.reached.PRUNE_MC_FORCED_FIRST_MOVE, 1);
+  assert.equal(diagnostics.rejected.PRUNE_MC_FORCED_FIRST_MOVE, 1);
+
+  const feasible: PruneDiagnostics = { reached: {}, rejected: {} };
+  assert.deepEqual(__pruneFirstStepNeighborsForTests(PACK(0, 0), [PACK(1, 0)], prep, feasible), [PACK(1, 0)],
+    'the forced candidate itself is a feasible negative control');
+  assert.equal(feasible.reached.PRUNE_MC_FORCED_FIRST_MOVE, 1, 'negative control reaches the rule');
+  assert.equal(feasible.rejected.PRUNE_MC_FORCED_FIRST_MOVE, undefined);
 });
 
 test('dfsFromGateLDS solves a simple line level through the extracted search module', async () => {
@@ -72,6 +153,54 @@ test('beamSearchFromGate solves a simple line level through the extracted search
   prep._metrics = { nodesExpanded: 0 };
   const path = await beamSearchFromGate(PACK(0, 0), level, prep, POLICY_PROFILES.default, 1000, Date.now(), null, 8, null, false);
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
+});
+
+test('beam research observation is behaviorally inert and sees real boundaries', async () => {
+  const level = makeLevel();
+  const off = prepLevel(level); off._cfg = null; off._metrics = { nodesExpanded: 0 };
+  const offPath = await beamSearchFromGate(PACK(0, 0), level, off, POLICY_PROFILES.default, 1000, Date.now(), null, 8, null, false);
+  const records: Array<{ stage: string; paths: number[][] }> = [];
+  const on = prepLevel(level); on._cfg = null; on._metrics = { nodesExpanded: 0 };
+  on._beamResearchObserver = { observe: record => records.push({ stage: record.stage, paths: record.paths }) };
+  const onPath = await beamSearchFromGate(PACK(0, 0), level, on, POLICY_PROFILES.default, 1000, Date.now(), null, 8, null, false);
+  assert.deepEqual(onPath, offPath);
+  assert.equal(on._metrics.nodesExpanded, off._metrics.nodesExpanded);
+  assert.ok(records.some(record => record.stage === 'incoming-frontier'));
+  assert.ok(records.some(record => record.stage === 'generated'));
+  assert.ok(records.every(record => record.paths.every(path => path[0] === PACK(0, 0))));
+});
+
+test('beam reconstruction scratch handles long, tiny, shifted, then long paths like fresh invariants', async () => {
+  type N = { key: number; prev: N | null; depth: number };
+  const chain = (keys: number[]): N => keys.reduce<N | null>((prev, key, depth) => ({ key, prev, depth }), null)!;
+  const scratch: number[] = [];
+  const sequences = [
+    Array.from({ length: 15 }, (_, i) => PACK(i, 0)),
+    [PACK(4, 2)],
+    [PACK(3, 1), PACK(2, 1), PACK(1, 1)],
+    Array.from({ length: 15 }, (_, i) => PACK(i, 0)),
+  ];
+  for (const expected of sequences) {
+    assert.equal(__reconstructBeamPathForTests(chain(expected), scratch), scratch);
+    assert.deepEqual(scratch, expected, 'reused reconstruction buffer must exactly match a fresh path');
+  }
+
+  const line = (length: number, reversed = false) => {
+    const start = PACK(reversed ? length - 1 : 0, 0);
+    const goal = PACK(reversed ? 0 : length - 1, 0);
+    return makeLevel({ grid: { w: length, h: 1 }, gateKeys: [start], goalKey: goal, reqLen: length - 1 });
+  };
+  for (const [length, reversed] of [[15, false], [2, false], [7, true], [15, false]] as const) {
+    const level = line(length, reversed);
+    const prep = prepLevel(level); prep._cfg = null;
+    const start = level.gateKeys[0];
+    const path = await beamSearchFromGate(start, level, prep, POLICY_PROFILES.default, 2000, Date.now(), null, 8, null, false);
+    assert.ok(path, `${length}-cell beam must solve`);
+    assert.equal(path.length, length, 'reconstruction length must not retain a prior longer tail');
+    assert.equal(path[0], start); assert.equal(path.at(-1), level.goalKey);
+    assert.equal(new Set(path).size, path.length, 'line reference has no revisits');
+    for (let i = 1; i < path.length; i++) assert.equal(Math.abs(path[i] - path[i - 1]), 1);
+  }
 });
 
 // Regression test for the 2026-07-16 nodesExpanded instrumentation gap (reports/

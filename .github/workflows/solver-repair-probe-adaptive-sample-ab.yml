@@ -1,0 +1,307 @@
+# Stratified-sample level-blind capability A/B for STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET
+# (modules/solver/orchestration.ts; see reports/2026-08-12-repair-probe-early-main-loop-starvation.md
+# and docs/solver-opt-in-experiment-ledger.md).
+#
+# Deliberately NOT a full-corpus refresh, and NOT solver-stress-refresh.yml's canonical full-1700
+# capability workflow: this flag can only ever change a level's outcome if the level is repair-gated
+# AND carries a must-turn cell (the only thing that makes a biased repair-probe tier exist at all) --
+# 512/1700 Corpus-2 levels as of 2026-08-12. A uniform random sample of the full corpus would waste
+# most of its compute re-confirming zero-effect on levels that are structurally guaranteed
+# byte-identical either way. This workflow instead draws a deterministic seeded subsample from the
+# ELIGIBLE population specifically (scripts/stress/select-repair-probe-adaptive-sample.mjs), plus a
+# small control sample from the ineligible remainder to empirically catch anything a code trace
+# missed. Same seed -> same sample, always (reproducible, matching scripts/stress/benchmark.mjs's
+# --sample=N --seed= convention).
+#
+# CORPUS INVARIANT: every arm also runs all of Corpus 1 and all published levels; the targeted
+# sample applies only to expensive Corpus 2. scripts/plan-ab-corpus-shards.mjs owns this shared policy.
+#
+# CAPABILITY INVARIANT (same as solver-stress-refresh.yml): uses scripts/level-blind-capability-
+# sweep.mjs, never the history-aware research sweep. Never persists hints, never touches
+# logs/stress-corpus2-baseline.json / data/level-heatmaps.json (those represent FULL-corpus truth --
+# overwriting them from a subset-only run would silently corrupt them, same reasoning as
+# solver-highbudget-unsolved-sweep.yml). Artifact-only: this workflow never commits to main.
+#
+# Usage: dispatch twice with identical inputs except enable_flags -- once blank (control), once
+# enable_flags=STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (treatment) -- then compare each run's
+# combined solved count/gains/losses (per-id, from each run's reports/stress/repair-probe-adaptive-
+# sample-ab.json artifact).
+#
+# GATE/MIN_SCALE RECALIBRATION REUSE (2026-08-13, docs/future-work.md item 4b,
+# reports/2026-08-13-existing-solve-data-tuning-opportunities.md): the same eligible population is
+# the only one REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE can ever affect, so this
+# workflow doubles as the gate-value sweep entrypoint via the repair_probe_adaptive_badness_gate /
+# repair_probe_adaptive_min_scale inputs (both blank = production defaults 10 / 0.35). Dispatch once
+# per candidate gate (blank baseline, then 8, then 6) with identical seed/sample/node_budget and
+# min_scale left blank throughout (the sweep holds MIN_SCALE fixed), then compare each run's combined
+# artifact the same way as the on/off A/B above.
+name: Solver repair-probe adaptive-budget sample A/B
+
+on:
+  workflow_dispatch:
+    inputs:
+      eligible_sample:
+        description: 'How many of the eligible (repair-gated AND has mustTurn) population to sample.'
+        required: false
+        default: '250'
+      control_sample:
+        description: 'How many ineligible (structurally guaranteed unaffected) levels to sample as a control.'
+        required: false
+        default: '50'
+      seed:
+        description: 'Deterministic sample seed. MUST be identical across both arms of a matched A/B -- fixed default so omitting this on both dispatches automatically matches.'
+        required: false
+        default: 'repair-probe-adaptive-sample-2026-08-12'
+      node_budget:
+        description: 'Corpus-2 cumulative node ceiling per level. Matches solver-stress-refresh.yml''s canonical corpus2_node_budget default.'
+        required: false
+        default: '50000000'
+      budget_ms:
+        description: 'Per-level wall budget. Default 24h is intentionally non-binding; node budget is the real ceiling.'
+        required: false
+        default: '86400000'
+      workers:
+        description: 'Cross-level worker processes per shard.'
+        required: false
+        default: '2'
+      shard_count:
+        description: 'Number of even shards to split the sample into.'
+        required: false
+        default: '20'
+      enable_flags:
+        description: 'Comma-separated ablation flags to turn ON. Leave blank for the control arm; set to STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET for the treatment arm.'
+        required: false
+        default: ''
+      disable_flags:
+        description: 'Comma-separated ablation flags to turn OFF.'
+        required: false
+        default: ''
+      deterministic:
+        description: 'true forces a 24h non-binding deadline so this run is reproducible (bit-identical nodes/work). Matched A/B arms should both use true.'
+        required: false
+        default: 'true'
+      repair_probe_adaptive_badness_gate:
+        description: 'Overrides REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE (production default 10) for this run only -- for the docs/future-work.md item 4b gate recalibration sweep (10/8/6). Leave blank to use the production default.'
+        required: false
+        default: ''
+      repair_probe_adaptive_min_scale:
+        description: 'Overrides REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE (production default 0.35) for this run only. Leave blank to use the production default -- the item 4b sweep holds this fixed at 0.35 across all gate arms.'
+        required: false
+        default: ''
+
+concurrency:
+  group: solver-repair-probe-adaptive-sample-ab
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Select stratified sample and plan shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+      shard_count: ${{ steps.plan.outputs.shard_count }}
+      total_levels: ${{ steps.plan.outputs.total_levels }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Select the deterministic stratified sample
+        shell: bash
+        run: |
+          mkdir -p logs/solver-repair-probe-adaptive-sample
+          node scripts/stress/select-repair-probe-adaptive-sample.mjs \
+            --corpus=data/stress/stress-levels-random.json \
+            --eligible-sample="${{ inputs.eligible_sample }}" \
+            --control-sample="${{ inputs.control_sample }}" \
+            --seed="${{ inputs.seed }}" \
+            --out=logs/solver-repair-probe-adaptive-sample/sample.txt
+
+      - name: Split into even shards
+        id: plan
+        shell: bash
+        run: |
+          node scripts/plan-ab-corpus-shards.mjs \
+            --corpus2-sample="logs/solver-repair-probe-adaptive-sample/sample.txt" \
+            --corpus2-shards="${{ inputs.shard_count }}"
+
+      - name: Upload the sample + shard plan for traceability
+        uses: actions/upload-artifact@v4
+        with:
+          name: repair-probe-adaptive-sample-plan
+          path: logs/solver-repair-probe-adaptive-sample/
+          retention-days: 90
+
+  solve-shards:
+    name: Sample shard ${{ matrix.shard.idx }}/${{ needs.plan.outputs.shard_count }}
+    needs: [plan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.plan.outputs.shards) }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run level-blind capability sweep on this shard
+        id: sweep
+        continue-on-error: true
+        shell: bash
+        env:
+          DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
+        run: |
+          set +e
+          mkdir -p logs/solver-repair-probe-adaptive-sample
+          extra=()
+          [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+          [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          [ -n "${{ inputs.repair_probe_adaptive_badness_gate }}" ] && extra+=("--repair-probe-adaptive-badness-gate=${{ inputs.repair_probe_adaptive_badness_gate }}")
+          [ -n "${{ inputs.repair_probe_adaptive_min_scale }}" ] && extra+=("--repair-probe-adaptive-min-scale=${{ inputs.repair_probe_adaptive_min_scale }}")
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="${{ matrix.shard.corpus }}" \
+            --levels="${{ matrix.shard.levels }}" \
+            --budget-ms="${DEADLINE}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --work-budget="${work}" \
+            --workers="${{ inputs.workers }}" \
+            "${extra[@]}" \
+            --out="logs/solver-repair-probe-adaptive-sample/batch-${{ matrix.shard.idx }}.json" \
+            --summary-out="logs/solver-repair-probe-adaptive-sample/batch-${{ matrix.shard.idx }}-summary.md"
+          status=$?
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload shard artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repair-probe-adaptive-sample-shard-${{ matrix.shard.idx }}
+          path: |
+            logs/solver-repair-probe-adaptive-sample/batch-${{ matrix.shard.idx }}.json
+            logs/solver-repair-probe-adaptive-sample/batch-${{ matrix.shard.idx }}-summary.md
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Fail on unexpected sweep error
+        if: >-
+          always() &&
+          (steps.sweep.outputs.exit_code != '0' && steps.sweep.outputs.exit_code != '124' && steps.sweep.outputs.exit_code != '143')
+        run: exit 1
+
+  combine:
+    name: Combine sample results
+    needs: [plan, solve-shards]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'repair-probe-adaptive-sample-shard-*'
+          path: artifact-staging/downloaded
+          merge-multiple: true
+
+      - name: Combine into one report (subset-shaped -- NEVER the full-corpus baseline)
+        shell: bash
+        run: |
+          mkdir -p logs/solver-repair-probe-adaptive-sample reports/stress
+          cp -a artifact-staging/downloaded/. logs/solver-repair-probe-adaptive-sample/
+          FILES=$(ls logs/solver-repair-probe-adaptive-sample/batch-*.json 2>/dev/null | paste -sd, -)
+          [ -n "$FILES" ] && npm run solver:combine-corpus2-batches -- --allow-mixed-corpora --in="${FILES}" --out=reports/stress/repair-probe-adaptive-sample-ab.json
+
+      - name: Verify complete coverage
+        id: coverage
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const expectedTotal = ${{ needs.plan.outputs.total_levels }};
+          const report = JSON.parse(fs.readFileSync('reports/stress/repair-probe-adaptive-sample-ab.json', 'utf8'));
+          const rows = report.levels ?? [];
+          if (rows.length !== expectedTotal) { console.error(\`incomplete: \${rows.length}/\${expectedTotal}\`); process.exit(1); }
+          console.log(\`complete: \${rows.length}/\${expectedTotal}\`);
+          "
+
+      - name: Print solved-count summary
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const r = JSON.parse(fs.readFileSync('reports/stress/repair-probe-adaptive-sample-ab.json', 'utf8'));
+          const rows = r.levels ?? [];
+          const solved = rows.filter(x => x.ok).length;
+          const nodes = rows.reduce((n,x) => n + (x.nodesExpanded || 0), 0);
+          const work = rows.reduce((n,x) => n + (x.workSpent || 0), 0);
+          console.log('enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} badness_gate=${{ inputs.repair_probe_adaptive_badness_gate }} min_scale=${{ inputs.repair_probe_adaptive_min_scale }}');
+          console.log(\`SOLVED sample: \${solved}/\${rows.length} nodes=\${nodes} work=\${work}\`);
+          console.log('Solved ids: ' + rows.filter(x => x.ok).map(x => x.id ?? String(x.level)).sort().join(','));
+          "
+
+      - name: Print repair-probe badness distribution
+        shell: bash
+        # Only the eligible (repair-gated AND has mustTurn) population ever runs a biased repair-probe
+        # tier, so this is a no-op summary (0 levels) on the control-only ineligible sample -- printed
+        # to the JOB CONSOLE LOG specifically (not just the uploaded artifact) because this session's
+        # egress policy has been observed blocking the artifact-download zip (Azure blob storage,
+        # 403) -- console output survives that. See scripts/stress/repair-probe-badness-report.mjs and
+        # REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE's own comment in orchestration.ts for why this
+        # data matters: recalibrating that constant needs the ordinaryBestBadness distribution, not
+        # just the solved-count this workflow already printed above.
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in=reports/stress/repair-probe-adaptive-sample-ab.json
+
+      - name: Upload combined results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repair-probe-adaptive-sample-ab-combined
+          path: |
+            reports/stress/repair-probe-adaptive-sample-ab.json
+            logs/solver-repair-probe-adaptive-sample/
+          if-no-files-found: error
+          retention-days: 90
