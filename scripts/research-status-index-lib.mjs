@@ -39,16 +39,31 @@ function repositoryPath(root, reportPath, destination) {
     return relative.startsWith('../') ? null : relative;
 }
 
+function reportTitle(source, fallback) {
+    return /^#\s+(.+)$/m.exec(source)?.[1]?.trim() || fallback;
+}
+
+function reportHeadings(source) {
+    return [...source.matchAll(/^##\s+(.+)$/gm)].map(match => match[1].trim()).slice(0, 16);
+}
+
 export function buildResearchStatusIndex(root) {
     const reportsRoot = path.join(root, 'reports');
     const topics = [];
+    const legacyEvidence = [];
     for (const name of readdirSync(reportsRoot).sort()) {
         const filename = REPORT_NAME.exec(name);
         if (!filename) continue;
         const reportPath = `reports/${name}`;
         const source = readFileSync(path.join(root, reportPath), 'utf8');
         const metadata = METADATA.exec(source);
-        if (!metadata) continue;
+        if (!metadata) {
+            legacyEvidence.push({
+                topicId: filename[2], date: filename[1], title: reportTitle(source, filename[2]),
+                headings: reportHeadings(source), report: reportPath,
+            });
+            continue;
+        }
         const linkedPaths = [...source.matchAll(MARKDOWN_LINK)]
             .map(match => repositoryPath(root, reportPath, match[1])).filter(Boolean);
         const currentAuthorities = linkedPaths.filter(link => link.startsWith('docs/') &&
@@ -78,9 +93,9 @@ export function buildResearchStatusIndex(root) {
             experimentId: flag.replace(/`/g, ''), status: normalizedState(disposition), disposition,
             latestEvidenceOrGate: evidence, authority: ledgerPath, authorityKind: 'opt-in-ledger',
         }));
-    return { schemaVersion: 2, scope: 'current-authority-and-structured-evidence',
-        authorityOrder: ['current-queue', 'opt-in-ledger', 'structured-report'], queue, experiments,
-        evidence: topics };
+    return { schemaVersion: 3, scope: 'current-authority-and-top-level-evidence',
+        authorityOrder: ['current-queue', 'opt-in-ledger', 'structured-report', 'legacy-report'], queue, experiments,
+        evidence: topics, legacyEvidence };
 }
 
 function compactEntry(kind, entry) {
@@ -88,6 +103,8 @@ function compactEntry(kind, entry) {
         question: entry.question, gate: entry.remainingGate, authority: entry.authority };
     if (kind === 'experiment') return { kind, id: entry.experimentId, status: entry.status,
         decision: entry.disposition, evidence: entry.latestEvidenceOrGate, authority: entry.authority };
+    if (kind === 'legacy-evidence') return { kind, id: entry.topicId, date: entry.date, title: entry.title,
+        headings: entry.headings, report: entry.report };
     return { kind, id: entry.topicId, status: entry.status, title: entry.title,
         date: entry.latestEvidence.date, decision: entry.decision, gate: entry.remainingGate,
         report: entry.latestEvidence.report, authorities: entry.authorities };
@@ -98,6 +115,7 @@ export function queryResearchStatusIndex(index, { query = '', status = '', kind 
         ...index.queue.map(entry => compactEntry('queue', entry)),
         ...index.experiments.map(entry => compactEntry('experiment', entry)),
         ...index.evidence.map(entry => compactEntry('evidence', entry)),
+        ...(index.legacyEvidence ?? []).map(entry => compactEntry('legacy-evidence', entry)),
     ];
     const q = query.trim().toLowerCase();
     const wantedStatus = status.trim().toLowerCase();
