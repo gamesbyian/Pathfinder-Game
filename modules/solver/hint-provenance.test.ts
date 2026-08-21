@@ -15,6 +15,10 @@ const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([
   'ok', 'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'repair',
   'timedOut', 'bestBadness', 'finalBadness', 'admissibleOrder', 'admissibleOrderNoTieBreak',
   'admissibleOrderLds', 'mainLoopLateReserve', 'repairProbe',
+  // Consulted by orchestration.ts's classifyAttemptTier to derive the single retryTier field
+  // (below), not copied onto provenance 1:1 under their own attempt-field names.
+  'dedupNearTieRetry', 'admissibleOrderNonDefaultRetry', 'connectivityAxisExhaustedRetry',
+  'mcNeighborBudgetRetry', 'repairElitePrefixDfsRetry', 'repairLateProbe',
 ]);
 
 test('maximal Attempt has an explicit, complete provenance projection contract', () => {
@@ -57,6 +61,11 @@ test('maximal Attempt has an explicit, complete provenance projection contract',
     assert.equal(Object.hasOwn(entry.search, field), false, `${field} leaked into search provenance`);
   }
   assert.equal(entry.solver.technique, 'repair');
+  // Every retry-tier flag is true on this fixture, so classifyAttemptTier's precedence chain
+  // (orchestration.ts) resolves to its most-specific category, 'repair-late-probe' — proving the
+  // derived retryTier field (not a raw copied attempt field, hence not in either Set above) is
+  // actually wired through to provenance.
+  assert.equal(entry.solver.forcing?.retryTier, 'repair-late-probe');
 });
 import { repairPrimarySeed } from './repair-search.js';
 
@@ -228,6 +237,60 @@ test('provenanceFromSolveResult maps an attraction-diversity winner onto forcing
   const entry = provenanceFromSolveResult(result);
   assert.ok(entry.solver.forcing, 'an AD-pass winner must carry forcing metadata');
   assert.deepEqual(entry.solver.forcing.disabledFeatures, ['SCORE_GOAL_ATTRACTION']);
+});
+
+// Regression coverage for the Priority 0 retry-tier attribution gap
+// (docs/solver-optimization-current-queue.md): before retryTier, a find from any of these
+// force-enabled last-resort passes carried the exact same provenance shape as an ordinary
+// main-ladder/repair-fallback win, with no way to tell them apart from the stored hint alone.
+test('deriveSolveAttemptInfo records which force-enabled retry tier won, distinct from an ordinary win', () => {
+  const dedupRetry = deriveSolveAttemptInfo([{ profile: 'objectiveFirst', beamWidth: 5000, dedupNearTieRetry: true, ok: true }]);
+  assert.equal(dedupRetry.retryTier, 'dedup-near-tie-retry');
+
+  const admissibleRetry = deriveSolveAttemptInfo([{ profile: 'none', admissibleOrder: true, admissibleOrderNonDefaultRetry: true, ok: true }]);
+  assert.equal(admissibleRetry.retryTier, 'admissible-order-non-default-retry');
+
+  // An ORDINARY admissible-order win (no retry flag) is not a retry tier at all.
+  const ordinaryAdmissible = deriveSolveAttemptInfo([{ profile: 'default', admissibleOrder: true, ok: true }]);
+  assert.equal(ordinaryAdmissible.retryTier, null);
+
+  // Attraction-diversity already has its own dedicated forcing field (disabledFeatures) and is
+  // deliberately NOT double-recorded as a retryTier.
+  const attractionDiversity = deriveSolveAttemptInfo([{ profile: 'perimeterSweep', beamWidth: 2000, attractionDiversity: true, ok: true }]);
+  assert.equal(attractionDiversity.retryTier, null);
+
+  // An ordinary main-ladder/repair-fallback win has no retry tier either.
+  const ordinaryRepair = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, ok: true }]);
+  assert.equal(ordinaryRepair.retryTier, null);
+  const ordinaryMain = deriveSolveAttemptInfo([{ profile: 'perimeterSweep', ok: true }]);
+  assert.equal(ordinaryMain.retryTier, null);
+});
+
+test('provenanceFromSolveResult records retryTier in forcing, and leaves forcing null when there is none', () => {
+  const retryResult = {
+    status: 'success',
+    attempts: [{ profile: 'perimeterSweep', beamWidth: 5000, connectivityAxisExhaustedRetry: true, ok: true }],
+  };
+  const retryEntry = provenanceFromSolveResult(retryResult);
+  assert.ok(retryEntry.solver.forcing, 'a retry-tier winner must carry forcing metadata');
+  assert.equal(retryEntry.solver.forcing.retryTier, 'connectivity-axis-exhausted-retry');
+
+  const ordinaryResult = { status: 'success', attempts: [{ profile: 'perimeterSweep', beamWidth: 5000, ok: true }] };
+  const ordinaryEntry = provenanceFromSolveResult(ordinaryResult);
+  assert.equal(ordinaryEntry.solver.forcing, null, 'an ordinary main-ladder winner has no forcing at all');
+});
+
+// Regression coverage for the OTHER half of Priority 0: an isolated single-technique run (e.g.
+// technique-census tooling, scripts/combine-technique-census-shards.mjs) must be marked as such,
+// or a persisted find is later misread as ordinary production-solver capability evidence — the
+// contamination that finding traced (e.g. R02900).
+test('provenanceFromSolveResult marks isolatedTechnique from ctx, defaulting to false', () => {
+  const result = { status: 'success', attempts: [{ profile: 'repair', repair: true, ok: true }] };
+  const isolated = provenanceFromSolveResult(result, { isolatedTechnique: true });
+  assert.equal(isolated.context.isolatedTechnique, true);
+
+  const production = provenanceFromSolveResult(result);
+  assert.equal(production.context.isolatedTechnique, false, 'omitted ctx.isolatedTechnique defaults to false, never undefined');
 });
 
 test('repairPrimarySeed is a stable, uint32, pure function of (startKey, seedSalt)', () => {

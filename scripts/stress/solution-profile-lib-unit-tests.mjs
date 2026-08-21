@@ -58,6 +58,15 @@ test('classifyProvenanceSource: unknown solver id -> other; null entry -> other'
     assert.equal(classifyProvenanceSource(null), 'other');
 });
 
+// The Priority 0 regression this bucket exists for (docs/solver-optimization-current-queue.md):
+// an isolated single-technique run (e.g. technique-census tooling) still carries
+// solver.id === SOLVER_ID, so without this check it would be misread as ordinary production-
+// solver capability evidence — the same contamination behind e.g. R02900.
+test('classifyProvenanceSource: isolatedTechnique overrides production-solver', () => {
+    assert.equal(classifyProvenanceSource(entry({ context: { isolatedTechnique: true } })), 'isolated-technique');
+    assert.equal(PROVENANCE_SOURCES.includes('isolated-technique'), true);
+});
+
 test('sourcesForHint: a hint rediscovered by two techniques belongs to both buckets', () => {
     const hint = { path: [1, 2, 3], provenance: [entry({ search: { randomSeed: 7 } }), entry({ context: { hintGuided: true } })] };
     const sources = sourcesForHint(hint);

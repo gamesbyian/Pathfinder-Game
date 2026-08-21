@@ -39,7 +39,7 @@ interface PortfolioExperimentDefinition {
     }>;
 }
 /** One recorded attempt's metadata. */
-interface Attempt {
+export interface Attempt {
     gateKey: number; profile: string; template: string | null; beamWidth: number | null;
     ok: boolean; elapsedMs: number; allocatedBudgetMs: number;
     /** Diagnostic-only ceilings visible at dispatch. Null denotes an uncapped currency. */
@@ -160,6 +160,45 @@ interface Attempt {
     /** Diagnostic-only: this ordinary main-loop attempt belongs to the late suffix allowed to
      *  consume the experimental reserved node slice. Never set when the experiment is disabled. */
     mainLoopLateReserve?: boolean;
+}
+/** The subset of Attempt's fields classifyAttemptTier actually reads — kept as its own minimal
+ *  structural type (rather than requiring the full Attempt interface) so a duck-typed caller like
+ *  hint-provenance.ts's AttemptLike can pass its own attempt objects straight through without
+ *  needing every one of Attempt's required fields (gateKey/elapsedMs/allocatedBudgetMs/outcome). */
+export interface AttemptTierFlags {
+    repairLateProbe?: boolean;
+    repairElitePrefixDfsRetry?: boolean;
+    mcNeighborBudgetRetry?: boolean;
+    connectivityAxisExhaustedRetry?: boolean;
+    dedupNearTieRetry?: boolean;
+    admissibleOrderNonDefaultRetry?: boolean;
+    admissibleOrder?: boolean;
+    repairProbe?: boolean;
+    repair?: boolean;
+    attractionDiversity?: boolean;
+}
+
+/** Which ladder tier an attempt actually belongs to, most-specific-first: several of the newer
+ *  retry tiers ALSO set `repair`/`admissibleOrder` on their attempts (they rerun repairConfigs/
+ *  admissibleOrderConfigs), so their own distinguishing field must be checked before the broader
+ *  bucket it would otherwise fall into, or it silently collapses into ordinary repair-fallback/
+ *  admissible-order/main-ladder activity. The single shared source of truth for "which tier won" —
+ *  used both for lifecycle-telemetry labeling (this file's own `finish()`) and for hint provenance
+ *  (hint-provenance.ts's `deriveSolveAttemptInfo`, which stores this as `forcing.retryTier` so a
+ *  persisted hint can be told apart from an ordinary main-ladder/repair-fallback/admissible-order
+ *  find — see docs/solver-optimization-current-queue.md's Priority 0). */
+export function classifyAttemptTier(attempt: AttemptTierFlags): string {
+    return attempt.repairLateProbe ? 'repair-late-probe'
+        : attempt.repairElitePrefixDfsRetry ? 'repair-elite-prefix-dfs-retry'
+            : attempt.mcNeighborBudgetRetry ? 'mc-neighbor-budget-retry'
+                : attempt.connectivityAxisExhaustedRetry ? 'connectivity-axis-exhausted-retry'
+                    : attempt.dedupNearTieRetry ? 'dedup-near-tie-retry'
+                        : attempt.admissibleOrderNonDefaultRetry ? 'admissible-order-non-default-retry'
+                            : attempt.admissibleOrder ? 'admissible-order'
+                                : attempt.repairProbe ? 'repair-probe'
+                                    : attempt.repair ? 'repair-fallback'
+                                        : attempt.attractionDiversity ? 'attraction-diversity'
+                                            : 'main-ladder';
 }
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
 interface SearchResult { solution: number[] | null; attempts: Attempt[]; earlyNodeBudgetReached?: boolean; shrunkBiased?: ShrunkBiasedTier[]; }
@@ -2223,24 +2262,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     const finish = (solveResult: SolveResult): SolveResult => {
         if (!opts.lifecycleTelemetry) return solveResult;
-        // Checked most-specific-first: several of the newer retry tiers ALSO set `repair`/
-        // `admissibleOrder` on their attempts (they rerun repairConfigs/admissibleOrderConfigs), so
-        // their own distinguishing field must be checked before the broader bucket it would
-        // otherwise fall into, or it silently collapses into ordinary repair-fallback/admissible-
-        // order/main-ladder activity — exactly the gap fixed 2026-08-20 (this classifier hadn't been
-        // extended since the original 5 categories; every retry tier added after that went
-        // unclassified). Order matters for `winningIndex`/`stoppedByDeadline` too, not just labeling.
-        const classify = (attempt: Attempt) => attempt.repairLateProbe ? 'repair-late-probe'
-            : attempt.repairElitePrefixDfsRetry ? 'repair-elite-prefix-dfs-retry'
-                : attempt.mcNeighborBudgetRetry ? 'mc-neighbor-budget-retry'
-                    : attempt.connectivityAxisExhaustedRetry ? 'connectivity-axis-exhausted-retry'
-                        : attempt.dedupNearTieRetry ? 'dedup-near-tie-retry'
-                            : attempt.admissibleOrderNonDefaultRetry ? 'admissible-order-non-default-retry'
-                                : attempt.admissibleOrder ? 'admissible-order'
-                                    : attempt.repairProbe ? 'repair-probe'
-                                        : attempt.repair ? 'repair-fallback'
-                                            : attempt.attractionDiversity ? 'attraction-diversity'
-                                                : 'main-ladder';
+        // Order matters for `winningIndex`/`stoppedByDeadline` too, not just labeling — see
+        // classifyAttemptTier's own doc comment for the precedence rationale.
+        const classify = classifyAttemptTier;
         const disabledExtras = opts.disableExtraBudgetPasses === true;
         const repairEnabled = !disabledExtras && Number(opts.repairBudgetFractionOverride ?? 1) !== 0;
         // NOTE on TDZ safety: this closure can be invoked from the primeAttempt early-return path

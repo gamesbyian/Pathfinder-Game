@@ -141,6 +141,22 @@ export interface HintSolverForcing {
      *  STRATEGY_REPAIR_TURN_BIAS turn-aware selective-bias variant) rather than the plain repair
      *  attempt. Same false-vs-null convention as repairMustTurnBiased above. */
     repairTurnBiased: boolean | null;
+    /** Which force-enabled last-resort retry tier of a solveLevel() ladder actually produced this
+     *  find, when that ladder has such a concept — orthogonal to `technique` on
+     *  HintSolverProvenance (dfs/beam/repair/admissible-order describes the search FAMILY; this
+     *  describes WHICH PASS of the ladder won). One of orchestration.ts's `classifyAttemptTier`
+     *  category strings (e.g. 'dedup-near-tie-retry', 'admissible-order-non-default-retry',
+     *  'connectivity-axis-exhausted-retry', 'mc-neighbor-budget-retry', 'repair-late-probe',
+     *  'repair-elite-prefix-dfs-retry') — each of these disables or reruns part of the ladder
+     *  outside its normal rules for that one pass, so a hint found only there is not evidence an
+     *  ordinary cold solve reaches it. null for an ordinary main-ladder/repair-fallback/admissible-
+     *  order/attraction-diversity/repair-probe win (`classifyAttemptTier` returned one of those,
+     *  or 'main-ladder') and for any technique that isn't a solveLevel() ladder attempt at all
+     *  (enumerate-*, prefix-anchored, witness, human-player). See
+     *  docs/solver-optimization-current-queue.md's Priority 0 for why this exists: before this
+     *  field, every retry-tier find collapsed into the same provenance shape as an ordinary
+     *  production solve, with no way to tell them apart from the stored hint alone. */
+    retryTier: string | null;
 }
 
 export interface HintSolverProvenance {
@@ -231,6 +247,18 @@ export interface HintContextProvenance {
     /** Canonical level fingerprint (domain/level-fingerprint.ts) at the time this hint was found,
      *  so a stored hint can't silently keep pointing at a level shape that has since been edited. */
     levelRevision: string | null;
+    /** True iff this find came from running ONE technique in isolation (e.g. the technique-census
+     *  tooling's per-cell sweep, scripts/combine-technique-census-shards.mjs), rather than the
+     *  real, full, competitively-budgeted `solveLevel()` production ladder every attempt shares a
+     *  cumulative node/work budget against. An isolated technique can solve a level the real
+     *  ladder cannot (it never has to compete for budget with every other tier), so a `true` here
+     *  means this entry is NOT evidence the production solver can find the level cold, even though
+     *  `solver.id` is still SOLVER_ID (the same underlying search code ran) — see
+     *  docs/solver-optimization-current-queue.md's Priority 0, which traces exactly this
+     *  contamination (a technique-census win persisted and later misread as ordinary
+     *  production-solver capability evidence, e.g. R02900). false for every real solveLevel()
+     *  caller (the two interactive solve UIs, hint-workbench, portfolio-solve-sweep). */
+    isolatedTechnique: boolean;
 }
 
 export interface HintProvenanceEntry {
@@ -268,6 +296,7 @@ export interface MakeProvenanceEntryOptions {
     forcingAnchorDepth?: number | null;
     forcingRepairMustTurnBiased?: boolean | null;
     forcingRepairTurnBiased?: boolean | null;
+    forcingRetryTier?: string | null;
     attemptIndex?: number | null;
     nodesExpanded?: number | null;
     elapsedMs?: number | null;
@@ -283,6 +312,7 @@ export interface MakeProvenanceEntryOptions {
     usedExistingHints?: boolean;
     hintGuided?: boolean;
     levelRevision?: string | null;
+    isolatedTechnique?: boolean;
     foundAt?: string;
 }
 
@@ -292,7 +322,8 @@ function forcingFromOpts(opts: MakeProvenanceEntryOptions): HintSolverForcing | 
         || opts.forcingReversed !== undefined || opts.forcingFlippedFilters !== undefined
         || opts.forcingDisabledFeatures !== undefined
         || opts.forcingAnchorSeed !== undefined || opts.forcingAnchorDepth !== undefined
-        || opts.forcingRepairMustTurnBiased !== undefined || opts.forcingRepairTurnBiased !== undefined;
+        || opts.forcingRepairMustTurnBiased !== undefined || opts.forcingRepairTurnBiased !== undefined
+        || opts.forcingRetryTier !== undefined;
     if (!hasForcing) return null;
     return {
         gateKey: opts.forcingGateKey ?? null,
@@ -306,6 +337,7 @@ function forcingFromOpts(opts: MakeProvenanceEntryOptions): HintSolverForcing | 
         anchorDepth: opts.forcingAnchorDepth ?? null,
         repairMustTurnBiased: opts.forcingRepairMustTurnBiased ?? null,
         repairTurnBiased: opts.forcingRepairTurnBiased ?? null,
+        retryTier: opts.forcingRetryTier ?? null,
     };
 }
 
@@ -340,6 +372,7 @@ export function makeProvenanceEntry(technique: string, opts: MakeProvenanceEntry
             usedExistingHints: opts.usedExistingHints ?? false,
             hintGuided: opts.hintGuided ?? false,
             levelRevision: opts.levelRevision ?? null,
+            isolatedTechnique: opts.isolatedTechnique ?? false,
         },
         foundAt: opts.foundAt ?? new Date().toISOString(),
     };

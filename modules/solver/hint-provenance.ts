@@ -6,6 +6,7 @@
 // attaches it the same way instead of re-deriving it ad hoc per call site.
 import { makeProvenanceEntry, toHint } from '../domain/hint-types.js';
 import { ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } from './attempts.js';
+import { classifyAttemptTier } from './orchestration.js';
 import type { Hint, HintProvenanceEntry } from '../domain/hint-types.js';
 
 interface AttemptLike {
@@ -26,6 +27,19 @@ interface AttemptLike {
      *  diversity rerun (orchestration.ts) — orthogonal to repair/beam/dfs, so a dfs OR beam OR
      *  repair winner can equally have this true. */
     attractionDiversity?: boolean;
+    /** The remaining force-enabled last-resort retry tiers (orchestration.ts's own doc comments on
+     *  the Attempt interface) — passed straight through to classifyAttemptTier alongside repair/
+     *  admissibleOrder/attractionDiversity above so `retryTier` below reflects the SAME precedence
+     *  orchestration.ts's own lifecycle-telemetry labeling uses, rather than a second hand-derived
+     *  copy of that chain going stale as new tiers are added (exactly how this gap arose the first
+     *  time — see docs/solver-optimization-current-queue.md's Priority 0). */
+    repairProbe?: boolean;
+    admissibleOrderNonDefaultRetry?: boolean;
+    dedupNearTieRetry?: boolean;
+    connectivityAxisExhaustedRetry?: boolean;
+    mcNeighborBudgetRetry?: boolean;
+    repairElitePrefixDfsRetry?: boolean;
+    repairLateProbe?: boolean;
     ok: boolean;
     outcome?: 'success' | 'exhausted' | 'timed-out' | 'budget-starved' | 'error';
     elapsedMs?: number | null;
@@ -68,6 +82,13 @@ export interface ProvenanceContext {
     /** Solver build identifier (git SHA) — callers pass modules/build-info.ts's SOLVER_VERSION
      *  (browser) or their own git-SHA lookup (Node scripts); null when unknown. */
     solverVersion?: string | null;
+    /** True iff this `result` came from running ONE technique in isolation rather than the real,
+     *  full, competitively-budgeted solveLevel() production ladder — see
+     *  HintContextProvenance.isolatedTechnique's own comment for why this matters and defaults to
+     *  false. Set true from tooling like scripts/combine-technique-census-shards.mjs; every real
+     *  solveLevel() caller (solver-controller.ts/review-controller.ts, hint-workbench.mjs,
+     *  portfolio-solve-sweep.mjs) leaves this unset. */
+    isolatedTechnique?: boolean;
 }
 
 interface SolveAttemptInfo {
@@ -96,7 +117,25 @@ interface SolveAttemptInfo {
      *  new field, since "which solver feature flags were deliberately disabled for this search" is
      *  exactly what that field already means and the AD pass IS precisely that. */
     attractionDiversity: boolean;
+    /** Which force-enabled last-resort retry tier won, if any — see
+     *  HintSolverForcing.retryTier's own comment. null for an ordinary main-ladder/repair-fallback/
+     *  admissible-order/attraction-diversity/repair-probe win (orchestration.ts's
+     *  classifyAttemptTier returned one of those, or its 'main-ladder' default). */
+    retryTier: string | null;
 }
+
+// The subset of classifyAttemptTier's categories that are genuine force-enabled last-resort
+// retries — mechanisms that change the ladder's own rules (extra/extended budget, a disabled
+// prune or retention feature, a rerun of profiles the main pass already tried) for one bounded
+// rerun after everything else has failed. Deliberately EXCLUDES 'admissible-order'/'repair-probe'/
+// 'repair-fallback'/'main-ladder' (ordinary tiers every solve can reach in its normal course) and
+// 'attraction-diversity' (already captured via its own dedicated forcingDisabledFeatures field —
+// see attractionDiversity's own comment above). See HintSolverForcing.retryTier's own comment for
+// why this distinction (and the whole field) exists.
+const RETRY_TIER_LABELS = new Set([
+    'repair-late-probe', 'repair-elite-prefix-dfs-retry', 'mc-neighbor-budget-retry',
+    'connectivity-axis-exhausted-retry', 'dedup-near-tie-retry', 'admissible-order-non-default-retry',
+]);
 
 /** Identifies the winning attempt from a single-hint solve (orchestration.ts's solveLevel): its
  *  search family (dfs/beam/repair/admissible-order) plus policy profile/structural template, kept
@@ -111,9 +150,11 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
             technique: 'solve-unknown', profile: null, template: null, beamWidth: null, diverseBeam: null,
             gateKey: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null,
             randomSeed: null, seedSalt: null, repairMustTurnBiased: null, repairTurnBiased: null, attractionDiversity: false,
+            retryTier: null,
         };
     }
     const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : (winner.admissibleOrder ? 'admissible-order' : 'dfs'));
+    const attemptTierLabel = classifyAttemptTier(winner);
     const attemptIndex = list.indexOf(winner);
     return {
         technique,
@@ -131,6 +172,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
         repairMustTurnBiased: winner.repair ? !!winner.repairMustTurnBiased : null,
         repairTurnBiased: winner.repair ? !!winner.repairTurnBiased : null,
         attractionDiversity: !!winner.attractionDiversity,
+        retryTier: RETRY_TIER_LABELS.has(attemptTierLabel) ? attemptTierLabel : null,
     };
 }
 
@@ -168,10 +210,11 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         usedExistingHints: ctx.usedExistingHints ?? false,
         hintGuided: false,
         levelRevision: ctx.levelRevision ?? null,
-        // Only set (non-null forcing) when the winner was actually a repair attempt or came from
-        // the attraction-diversity pass — see SolveAttemptInfo's own comments. The two are
-        // orthogonal (a repair winner CAN also be an AD-pass winner), so disabledFeatures and the
-        // repair-bias fields are independently gated, not mutually exclusive.
+        isolatedTechnique: ctx.isolatedTechnique ?? false,
+        // Only set (non-null forcing) when the winner was actually a repair attempt, came from the
+        // attraction-diversity pass, or won via a force-enabled last-resort retry tier — see
+        // SolveAttemptInfo's own comments. All three are orthogonal (a repair winner CAN also be an
+        // AD-pass or retry-tier winner), so these are independently gated, not mutually exclusive.
         ...(info.repairMustTurnBiased !== null ? {
             forcingRepairMustTurnBiased: info.repairMustTurnBiased,
             forcingRepairTurnBiased: info.repairTurnBiased,
@@ -179,6 +222,7 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         ...(info.attractionDiversity ? {
             forcingDisabledFeatures: [...ATTRACTION_DIVERSITY_CANDIDATE_FLAGS],
         } : {}),
+        ...(info.retryTier !== null ? { forcingRetryTier: info.retryTier } : {}),
     });
 }
 
