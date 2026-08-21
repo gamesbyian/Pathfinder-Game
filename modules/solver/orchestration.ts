@@ -351,8 +351,8 @@ export interface SolveOpts {
      *  fraction (see that constant's own comment for why this tier's budget shape deliberately
      *  differs from every whole-ladder-rerun tier above it). Undefined (production default)
      *  preserves the constant exactly; 0 disables the tier's own node room (the tier's run
-     *  condition also requires this to be > 0). Opt-in via STRATEGY_REPAIR_LATE_PROBE — this
-     *  override has no effect unless that flag is also set. */
+     *  condition also requires this to be > 0). STRATEGY_REPAIR_LATE_PROBE is default-on, so this
+     *  override takes effect unless that flag is explicitly disabled. */
     repairLateProbeNodeBudgetOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape and rationale as the two overrides above (NOT an ablation flag, a
@@ -1534,7 +1534,10 @@ export const MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION = 1.0;
  *  tier is ineligible/suppressed. */
 export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
 
-/** STRATEGY_REPAIR_LATE_PROBE (NEW, opt-in, default OFF — 2026-08-20). Priority 7 (docs/solver-
+/** STRATEGY_REPAIR_LATE_PROBE (default ON — promoted 2026-08-21 on a same-commit,
+ *  deterministic A/B at main@e5034e8c: GHA runs 32453248184 (flag on) vs 32459711208 (flag off)
+ *  read Corpus-1 96/102 vs 95/102 and Corpus-2 881/1700 vs 863/1700, i.e. +19 net gains and zero
+ *  losses across both corpora). Priority 7 (docs/solver-
  *  optimization-current-queue.md): the census found 94 of 158 currently-unsolved Corpus-2 levels
  *  where repair wins in isolation are structurally excluded from EVER trying repair, because
  *  `needsRepairFallback` (`mustCross >= 2 AND mustPass >= 3`, or very-high reqInt) never matches
@@ -1576,13 +1579,12 @@ export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  this one that still checks an unextended ceiling, or this tier's own additive extension would
  *  starve it.
  *
- *  Opt-in/default-OFF (unvalidated new mechanism, matching every other tier's pre-promotion
- *  lifecycle stage): the flag check at this tier's own run condition below uses the opt-in
- *  convention (`cfg && cfg.STRATEGY_REPAIR_LATE_PROBE === true`), so this block is a strict no-op
- *  for every production/interactive caller (cfg null) and any ordinary ablation config until
- *  explicitly enabled. NOT yet validated end-to-end or at population scale — local/isolated
- *  evidence only; needs the same `solver:bench --check` + full-corpus cost/benefit validation
- *  every other mechanism in this file went through before any promotion. */
+ *  Default-ON (promoted 2026-08-21, see the population-scale A/B cited above): the flag check at
+ *  this tier's own run condition below now uses the standard convention (`!cfg ||
+ *  cfg.STRATEGY_REPAIR_LATE_PROBE`), matching every other default-on tier, so it runs for every
+ *  production/interactive caller (cfg null) and any ablation config that doesn't explicitly
+ *  disable it. Disable via `STRATEGY_REPAIR_LATE_PROBE: false` to get the pre-promotion shape
+ *  back for an A/B. */
 export const REPAIR_LATE_PROBE_NODE_BUDGET = 2_000_000;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
@@ -2298,7 +2300,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             ['mc-neighbor-budget-retry', !disabledExtras && Number(opts.mcNeighborBudgetRetryBudgetFractionOverride ?? 1) !== 0
                 && !!(!cfg || cfg.STRATEGY_MC_NEIGHBOR_BUDGET_RETRY) && prep.initialMustCrossMask !== 0],
             ['repair-late-probe', Number(opts.repairLateProbeNodeBudgetOverride ?? (disabledExtras ? 0 : 1)) !== 0
-                && !!(cfg && cfg.STRATEGY_REPAIR_LATE_PROBE === true) && !hasRepairConfig
+                && !!(!cfg || cfg.STRATEGY_REPAIR_LATE_PROBE) && !hasRepairConfig
                 && !(cfg && 'STRATEGY_REPAIR_FALLBACK' in cfg && cfg.STRATEGY_REPAIR_FALLBACK === false)],
         ]);
         const instantiated = new Map<string, boolean>([
@@ -2667,8 +2669,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // rationale. `repairConfigs.length === 0` is USUALLY exactly "needsRepairFallback was false for
     // this level" (the same eligibility signal the early probe and ordinary fallback loop already
     // gate on) — this tier exists specifically FOR that population, so it is the opposite polarity
-    // of every other repairConfigs.length check in this function. Opt-in/default-OFF, unvalidated
-    // new mechanism — same convention as its five predecessors.
+    // of every other repairConfigs.length check in this function. Default-ON (promoted
+    // 2026-08-21) — same standard convention as its five predecessors.
     //
     // NOT a safe substitute for needsRepairFallback in general, though: `applyAttemptConfigOptions`
     // (attempts.ts) also empties `repairConfigs` when an ablation explicitly sets
@@ -2682,7 +2684,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         ? repairLateProbeNodeBudgetRaw
         : REPAIR_LATE_PROBE_NODE_BUDGET;
     const repairLateProbeTierWillRun = repairLateProbeNodeBudget > 0
-        && !!(cfg && cfg.STRATEGY_REPAIR_LATE_PROBE === true)
+        && !!(!cfg || cfg.STRATEGY_REPAIR_LATE_PROBE)
         && repairConfigs.length === 0
         && !(cfg && 'STRATEGY_REPAIR_FALLBACK' in cfg && cfg.STRATEGY_REPAIR_FALLBACK === false);
     // Flat additive reserve, NOT scaled by nodeBudget/the preceding tier's ceiling — see

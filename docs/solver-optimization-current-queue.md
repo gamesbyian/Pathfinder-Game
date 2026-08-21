@@ -28,7 +28,7 @@ Keep these failure classes distinct:
 4. **regression:** comparable production solve previously succeeded and now fails;
 5. **provenance/instrumentation:** stored evidence does not establish the claimed comparison.
 
-The first beam-routing expansion produced **+20 net Corpus-2 solves (828→848; 21 gained / 1 understood loss)**. A follow-up perimeter-beam expansion recovered all 29 newly routed local targets. `STRATEGY_REPAIR_LATE_PROBE` recovered 20/94 locally targeted gate-excluded repair winners and remains default-OFF pending population confirmation.
+The first beam-routing expansion produced **+20 net Corpus-2 solves (828→848; 21 gained / 1 understood loss)**. A follow-up perimeter-beam expansion recovered all 29 newly routed local targets. `STRATEGY_REPAIR_LATE_PROBE` was promoted to production default-ON 2026-08-21 after a same-commit deterministic A/B (GHA 32453248184 vs 32459711208, main@e5034e8c): Corpus-1 95→96, Corpus-2 863→881, +19 net with zero regressions on either corpus.
 
 **Current-HEAD caveat:** PR #1398 fixed work accounting, concurrent solve-state isolation, retry-tier flag proxying, adaptive gate weighting, lifecycle telemetry, and repair/late-probe budget handling. Older population counts remain evidence for their recorded commits, not a current-HEAD baseline. Promotion or population claims touching these paths need a fresh matched baseline.
 
@@ -45,7 +45,7 @@ Stable priority numbers remain citeable. CLOSED or gate-complete rows are dispos
 | 4 | CP-SAT-anchored deep repair editing | **ACTIVE RESEARCH** | Expand exact feasible/infeasible retreat boundaries; prototype deeper rollback/rebuild only after retreat depth is predictably state-conditioned. |
 | 5 | State-conditioned must-cross anchoring | **ACTIVE RESEARCH** | Continue read-only prefix diagnostics; require repeated separation across unrelated levels/families before changing scoring. |
 | 6 | Mechanics-conditioned admissible-order routing | **CLOSED NEGATIVE 2026-08-20** | None. The isolated census found too little unique admissible-order capability to justify meaningful reserve. |
-| 7 | Cheap isolated-technique wins the ladder does not route to | **ACTIVE / SHIPPING GATE** | Reconfirm the perimeter-beam expansion and `STRATEGY_REPAIR_LATE_PROBE` on current HEAD; investigate remaining high-intersection/must-cross-heavy beam gaps per archetype instead of adding broad configs. |
+| 7 | Cheap isolated-technique wins the ladder does not route to | **`STRATEGY_REPAIR_LATE_PROBE` PROMOTED 2026-08-21** | Investigate remaining high-intersection/must-cross-heavy beam gaps per archetype instead of adding broad configs. |
 
 ## 0. Regression and provenance integrity
 
