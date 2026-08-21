@@ -1,4 +1,3 @@
-import { workMeter } from './work-meter.js';
 import { STATE_BUF_BEAM, STATE_BUF_DFS, applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
@@ -128,7 +127,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         if ((++nodesExpanded & 255) === 0) {
             const now = Date.now();
             if (now - levelStartTime > levelBudgetMs || nodesExpanded >= nodeBudget
-                || workMeter.units >= (prep._workCap ?? Infinity)) {
+                || prep._workMeter.units >= (prep._workCap ?? Infinity)) {
                 // Credit prep._metrics BEFORE returning — the exact same instrumentation gap
                 // beamSearchFromGate's timeout paths had (see reports/2026-07-16-beam-
                 // nodesexpanded-instrumentation-gap.md): `out.nodesExpanded` was already set here,
@@ -549,7 +548,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         // (offline batch tooling only, same as dfsFromGate's). Counted in the exact quantity credited
         // to prep._metrics below (nodesExpandedTotal + frontierIndex), so the cap and the reported
         // node count stay consistent. timedOut=true matches dfsFromGate's node-budget exit.
-        if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || workMeter.units >= (prep._workCap ?? Infinity)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
+        if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || prep._workMeter.units >= (prep._workCap ?? Infinity)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
         if (phasesCompleted >= maxPhases) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('maxPhases'); if (out) out.timedOut = false; return null; }
         phasesCompleted++;
         if (yieldFn) {
@@ -588,7 +587,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // frontierIndex here is PARTIAL progress within the current (unfinished) phase --
                 // same rationale as the outer checks above, just crediting an in-progress phase
                 // instead of a fully-completed one.
-                if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || workMeter.units >= (prep._workCap ?? Infinity)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
+                if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || prep._workMeter.units >= (prep._workCap ?? Infinity)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
                 await yieldIfNeeded();
             }
             if (_BEAM_DEBUG) _dbgFrontierNodes++;

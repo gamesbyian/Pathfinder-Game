@@ -14,7 +14,8 @@ export function computeTurnDir(prev: number, from: number, target: number, entry
     return turnDirection(prev, from, target);
 }
 
-/** Reusable backing buffers for createState's two KEY_SPACE-sized arrays, one set per CALL SITE.
+/** Reusable backing buffers for createState's two KEY_SPACE-sized arrays, one set per CALL SITE,
+ *  scoped to THIS prep (`prep._stateBufs` — see PrepLevel's own comment) rather than module-global.
  *
  *  `visited` (2 MB) and `edgeUsage` (1 MB) are allocated per createState call — i.e. per attempt,
  *  dozens of times per level — for a grid that has at most 225 live cells. On a short-solve
@@ -25,12 +26,20 @@ export function computeTurnDir(prev: number, from: number, target: number, entry
  *  staticNeighborKeys or a portal destination, both grid-bounded.
  *
  *  Keyed per call site rather than globally pooled with checkout/release: a slot is only ever
- *  reused by its OWN call site's next call, and the three sites that opt in (DFS, beam, repair)
- *  each create one state, return a `.slice()` copy of the path, and never nest inside themselves.
- *  A site that does not pass a slot — every other caller, including the worker client and the
- *  hint-discovery paths — allocates fresh exactly as before, so opting in is incremental and the
- *  failure mode of leaving a site out is "no speedup", never shared state. */
-const _stateBufs: { visited: Uint16Array; edgeUsage: Uint8Array }[] = [];
+ *  reused by its OWN call site's next call within the SAME solve, and the three sites that opt in
+ *  (DFS, beam, repair) each create one state, return a `.slice()` copy of the path, and never nest
+ *  inside themselves. A site that does not pass a slot — every other caller, including the worker
+ *  client and the hint-discovery paths — allocates fresh exactly as before, so opting in is
+ *  incremental and the failure mode of leaving a site out is "no speedup", never shared state.
+ *
+ *  Fixed 2026-08-20 (moved from module-global to per-prep): a module-global pool meant two
+ *  concurrently-running attempts of the SAME technique in the same JS realm (e.g. two overlapping
+ *  DFS attempts from separate concurrent `solveLevel()` calls, both requesting `STATE_BUF_DFS`)
+ *  could have their live `visited`/`edgeUsage` arrays cleared out from under them by the other's
+ *  own `createState` call — the "never nest inside themselves" safety argument above only ever
+ *  covered ONE solve's own internal sequencing, not two independent solves sharing a realm. Scoping
+ *  the pool per-prep preserves the exact same reuse-across-attempts benefit (every attempt within
+ *  one solve still shares the one `prep` instance) while making concurrent solves safe. */
 export const STATE_BUF_DFS = 0;
 export const STATE_BUF_BEAM = 1;
 export const STATE_BUF_REPAIR = 2;
@@ -43,9 +52,10 @@ export function createState(startKey: number, level: NormalizedLevel, prep: Prep
         visited = new Uint16Array(KEY_SPACE);   // visit count per cell
         edgeUsage = new Uint8Array(KEY_SPACE);  // bit1=H used, bit2=V used
     } else {
-        let bufs = _stateBufs[bufSlot];
-        if (!bufs) bufs = _stateBufs[bufSlot] = { visited: new Uint16Array(KEY_SPACE), edgeUsage: new Uint8Array(KEY_SPACE) };
-        // Clear only the rows the grid actually occupies — see _stateBufs.
+        const stateBufs = prep._stateBufs ?? (prep._stateBufs = []);
+        let bufs = stateBufs[bufSlot];
+        if (!bufs) bufs = stateBufs[bufSlot] = { visited: new Uint16Array(KEY_SPACE), edgeUsage: new Uint8Array(KEY_SPACE) };
+        // Clear only the rows the grid actually occupies — see the buffer pool's own comment above.
         const { w: _w, h: _h } = level.grid;
         for (let y = 0; y < _h; y++) {
             const base = y << 16;
@@ -104,7 +114,12 @@ export function createState(startKey: number, level: NormalizedLevel, prep: Prep
 // Apply a step to state, return undo token.
 // isPortalJump: current cell has portal and target is portal.dest (0-cost step).
 export function applyMove(target: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, isPortalJump: boolean): UndoToken {
-    workMeter.units++;  // canonical work unit — see work-meter.ts
+    // Canonical work unit — see work-meter.ts. Dual increment: the module-global counter (legacy
+    // cross-solveLevel()-call cumulative tracking, still read directly by offline hint-discovery
+    // tooling) AND this solve's own isolated prep._workMeter (what every budget check inside the
+    // search techniques and the attempt ladder actually reads — see PrepLevel._workMeter's comment).
+    workMeter.units++;
+    prep._workMeter.units++;
     const from = state.path[state.path.length - 1];
     const prevVisited = state.visited[target];
 
