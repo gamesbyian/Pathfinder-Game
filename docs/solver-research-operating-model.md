@@ -12,6 +12,8 @@ Measurements belong in dated reports, ranked decisions in the optimization queue
 
 Correctness bugs may go directly to fix + regression/soundness validation. For speculative heuristics, test the premise first with existing observers, oracles, family comparisons, reducers, isolated-technique probes, or replay tools.
 
+Pathfinder generally represents local legality/progress more strongly than future opportunity cost. Use exact/shadow evidence to test future viability rather than inferring it from local progress alone.
+
 ## Capability boundary
 
 The product case is an unseen editor level. Cold solves may use mechanics, current search state/telemetry, and generic code/config only. Exact-level history may label offline research but may not steer capability solves.
@@ -45,7 +47,7 @@ Row count does not remove dependence; family research treats parents as independ
 
 Prefer existing infrastructure: deterministic work accounting; schema-v2 manifests/run identity; stress corpora/lifecycle telemetry; family/variant and hint/solution provenance; shadow probes; winning-lineage tools; explicit-prefix CP-SAT/reference labels; reducers/replay; isolated technique census/method probes.
 
-Start at [`tooling-catalog.md`](tooling-catalog.md). Add frameworks only when they replace repeated one-off work.
+Start at [`tooling-catalog.md`](tooling-catalog.md). Reuse experiment manifests/run identity, require comparability before aggregation, and keep derived analytics rebuildable rather than creating parallel truth. Add frameworks only when they replace repeated one-off work.
 
 ## Shadow first
 
@@ -66,7 +68,7 @@ A live handoff requires:
 6. positive shadow evidence;
 7. a level-blind matched-work verdict.
 
-Useful information can still hurt if consuming it displaces successful receptor work. Original design: [`archive/snapshots/solver-interoperability-and-cooperation-plan.md`](archive/snapshots/solver-interoperability-and-cooperation-plan.md).
+Useful information can still hurt if consuming it displaces successful receptor work. Evidence for individual handoffs does not imply a universal artifact blackboard. Original design: [`archive/snapshots/solver-interoperability-and-cooperation-plan.md`](archive/snapshots/solver-interoperability-and-cooperation-plan.md).
 
 ## Family/variant evidence
 
