@@ -19,10 +19,16 @@ Canonical compact entry point for coding/research agents. Load only task-relevan
 | Stress corpus | [`data/stress/README.md`](data/stress/README.md) |
 | Validation choice | [`docs/testing.md`](docs/testing.md) |
 
+## Autonomy and scope
+
+- **The prompt is a goal, not a hard file/task boundary.** If adjacent work materially advances the requested outcome, do it without waiting for separate permission. Keep the causal link to the prompt clear; avoid unrelated cleanup.
+- **Prefer complete, durable implementations over timid partial steps.** Substantial refactors, migrations, tooling, or other risky-looking work are acceptable when they are the strongest route to the goal. Use evidence, tests, and git history as safeguards rather than choosing a weaker design merely because it changes less.
+- **Merging to `main` is allowed when needed to exercise GitHub Actions.** If a workflow materially required for the work only runs meaningfully from `main`, an agent may merge the relevant work to trigger it. Keep the merge scoped to the work being validated, state why it was necessary, and report the resulting workflow evidence.
+
 ## Rules
 
 1. **Read current authority and implementation before editing.** Dated reports/archive are evidence/history, not current behavior or priority.
-2. **Keep diffs narrow.** Before adding tooling, check [`docs/tooling-catalog.md`](docs/tooling-catalog.md), `package.json`, [`scripts/README.md`](scripts/README.md), and [`.github/workflows/README.md`](.github/workflows/README.md).
+2. **Keep work coherent.** Do not pad a task with unrelated reformatting or speculative infrastructure, but do not artificially constrain a solution to a tiny diff when broader work is justified. Before adding tooling, check [`docs/tooling-catalog.md`](docs/tooling-catalog.md), `package.json`, [`scripts/README.md`](scripts/README.md), and [`.github/workflows/README.md`](.github/workflows/README.md).
 3. **Audit cross-boundary propagation.** Solver stages/results, mechanics, hints/provenance, app state, and generated schemas often have multiple consumers; use [`docs/change-recipes.md`](docs/change-recipes.md).
 4. **Solver priority is the live queue.** `future-work.md` is unranked deferred/reopen material; code presence does not imply an active hypothesis.
 5. **Cold solver policy is level-blind.** Mechanics/current state are allowed; exact identity, saved hints, winner configs, historical solve status/cost, per-level caches/budgets, and variant outcomes are not. See [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md).
