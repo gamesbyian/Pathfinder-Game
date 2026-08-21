@@ -6,6 +6,7 @@ import type { Attempt } from './orchestration.js';
  * The error outcome is intentional; provenance tests turn the same record into a successful win.
  */
 export const MAXIMALLY_POPULATED_SOLVER_ATTEMPT = Object.freeze({
+  stageId: 'repair-probe-shrink-recovery',
   gateKey: 589833,
   profile: 'perimeterSweep',
   template: 'perimeterCW',

@@ -5,6 +5,8 @@ import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { repairPrimarySeed } from './repair-search.js';
+import { withSolverStage } from './stage-policy.js';
+import type { SolverStageId } from './stage-policy.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit } from './types.js';
@@ -40,6 +42,8 @@ interface PortfolioExperimentDefinition {
 }
 /** One recorded attempt's metadata. */
 export interface Attempt {
+    /** Canonical policy-stage identity; legacy booleans below are compatibility projections. */
+    stageId: SolverStageId;
     gateKey: number; profile: string; template: string | null; beamWidth: number | null;
     ok: boolean; elapsedMs: number; allocatedBudgetMs: number;
     /** Diagnostic-only ceilings visible at dispatch. Null denotes an uncapped currency. */
@@ -531,7 +535,7 @@ export async function runAttempt(
         && (allocatedWorkCeiling === 0 || (Number.isFinite(nodeBudget) && nodeBudget === 0));
     return {
         path,
-        attempt: {
+        attempt: withSolverStage({
             gateKey,
             profile: profileName,
             template: template?.id ?? null,
@@ -560,7 +564,7 @@ export async function runAttempt(
             ...(admissibleOrder ? { admissibleOrder: true } : {}),
             ...(admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
             ...(admissibleOrderLds ? { admissibleOrderLds: true } : {}),
-        },
+        }, 'main-loop'),
     };
 }
 
@@ -1933,7 +1937,7 @@ async function runRepairProbe(
                 // repairProbe: true marks every attempt this function produces (see Attempt.repairProbe's
                 // own comment) so external tooling can distinguish a probe-phase repair attempt's
                 // bestBadness from the same repair config re-run later by the full-budget fallback loop.
-                attempts.push({ ...r.attempt, repairProbe: true });
+                attempts.push(withSolverStage(r.attempt, 'repair-probe'));
                 nodesUsed += nodesOut.nodesExpanded ?? gateNodeBudget;
                 if (r.path) return { solution: r.path, attempts, shrunkBiased };
             }
@@ -2066,6 +2070,7 @@ async function runAttemptSlice(
     const result = await runAttempt(gateKey, level, prep, attemptConfig, capMs, Date.now(), yieldFn);
     result.attempt.configKey = attemptConfigKey(attemptConfig);
     Object.assign(result.attempt, metadata);
+    if (metadata.schedulerPhase === 'portfolio') Object.assign(result.attempt, withSolverStage(result.attempt, 'portfolio-pass'));
     return result;
 }
 
@@ -2347,6 +2352,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             const primeNodeBudget = Number(opts.primeAttempt.nodeBudget) > 0 ? Number(opts.primeAttempt.nodeBudget) : nodeBudget;
             const primeSeedSalt = Number.isFinite(opts.primeAttempt.seedSalt) ? Number(opts.primeAttempt.seedSalt) : 0;
             const primeResult = await runAttempt(opts.primeAttempt.gateKey, level, prep, primeConfig, timeBudgetMs, Date.now(), yieldFn, primeNodeBudget, null, primeSeedSalt);
+            Object.assign(primeResult.attempt, withSolverStage(primeResult.attempt, 'prime'));
             primeResult.attempt.configKey = opts.primeAttempt.configKey;
             if (primeResult.path) {
                 const totalMs = Date.now() - levelStartTime;
@@ -3063,7 +3069,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 // of how many nodes earlier attempts already spent.
                 const remainingNodeBudget = repairFallbackNodeCeiling === Infinity ? Infinity : Math.max(0, repairFallbackNodeCeiling - prep._metrics.nodesExpanded);
                 const r = await runAttempt(gateKey, level, prep, repairConfig, repairBudget, Date.now(), yieldFn, remainingNodeBudget);
-                result.attempts.push(r.attempt);
+                result.attempts.push(withSolverStage(r.attempt, 'repair-fallback'));
                 if (r.path) { result.solution = r.path; break; }
             }
         }
@@ -3160,7 +3166,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, diversityNodeCeiling, workBudget, workStart, diversityStaircaseEntry, diversityStaircaseStart)
                 : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, diversityNodeCeiling, workBudget, workStart, diversityStaircaseEntry, diversityStaircaseStart);
             if (retryTierStaircase) for (const attempt of diversityResult.attempts) delete attempt.mainLoopLateReserve;
-            for (const attempt of diversityResult.attempts) attempt.attractionDiversity = true;
+            diversityResult.attempts = diversityResult.attempts.map(attempt => withSolverStage(attempt, 'attraction-diversity'));
             result.attempts.push(...diversityResult.attempts);
             if (diversityResult.solution) result.solution = diversityResult.solution;
         } finally {
@@ -3211,7 +3217,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 const nodesOut: { nodesExpanded?: number } = {};
                 const r = await runAttempt(activeGates[gi], level, prep, shrunk.config, REPAIR_PROBE_ATTEMPT_MS_CAP,
                     Date.now(), yieldFn, gateNodeBudget, nodesOut);
-                result.attempts.push({ ...r.attempt, repairProbe: true, repairProbeShrinkRecovery: true });
+                result.attempts.push(withSolverStage(r.attempt, 'repair-probe-shrink-recovery'));
                 if (r.path) result.solution = r.path;
             }
         }
@@ -3271,7 +3277,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 // Remaining GLOBAL node budget — see the repair fallback loop's identical recompute.
                 const remainingNodeBudget = profileCeiling === Infinity ? Infinity : Math.max(0, profileCeiling - prep._metrics.nodesExpanded);
                 const r = await runAttempt(gateKey, level, prep, admissibleOrderConfig, admissibleOrderBudget, Date.now(), yieldFn, remainingNodeBudget);
-                result.attempts.push(r.attempt);
+                result.attempts.push(withSolverStage(r.attempt, 'admissible-order'));
                 if (r.path) { result.solution = r.path; break; }
             }
         }
@@ -3354,7 +3360,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, dedupRetryNodeCeiling, dedupRetryWorkBudget, dedupRetryWorkStart, dedupRetryStaircaseEntry, dedupRetryStaircaseStart)
                 : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, dedupRetryTotalBudget, dedupRetryStart, yieldFn, dedupRetryNodeCeiling, dedupRetryWorkBudget, dedupRetryWorkStart, dedupRetryStaircaseEntry, dedupRetryStaircaseStart);
             if (retryTierStaircase) for (const attempt of dedupRetryResult.attempts) delete attempt.mainLoopLateReserve;
-            for (const attempt of dedupRetryResult.attempts) attempt.dedupNearTieRetry = true;
+            dedupRetryResult.attempts = dedupRetryResult.attempts.map(attempt => withSolverStage(attempt, 'dedup-near-tie-retry'));
             result.attempts.push(...dedupRetryResult.attempts);
             if (dedupRetryResult.solution) result.solution = dedupRetryResult.solution;
         } finally {
@@ -3416,7 +3422,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                         ? Infinity
                         : Math.max(0, nonDefaultRetryNodeCeiling - prep._metrics.nodesExpanded);
                     const r = await runAttempt(gateKey, level, prep, admissibleOrderConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
-                    result.attempts.push({ ...r.attempt, admissibleOrderNonDefaultRetry: true });
+                    result.attempts.push(withSolverStage(r.attempt, 'admissible-order-non-default-retry'));
                     if (r.path) { result.solution = r.path; break; }
                 }
             }
@@ -3471,7 +3477,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, connectivityRetryTotalBudget, connectivityRetryStart, yieldFn, connectivityRetryNodeCeiling, connectivityRetryWorkBudget, connectivityRetryWorkStart, connectivityRetryStaircaseEntry, connectivityRetryStaircaseStart)
                 : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, connectivityRetryTotalBudget, connectivityRetryStart, yieldFn, connectivityRetryNodeCeiling, connectivityRetryWorkBudget, connectivityRetryWorkStart, connectivityRetryStaircaseEntry, connectivityRetryStaircaseStart);
             if (retryTierStaircase) for (const attempt of connectivityRetryResult.attempts) delete attempt.mainLoopLateReserve;
-            for (const attempt of connectivityRetryResult.attempts) attempt.connectivityAxisExhaustedRetry = true;
+            connectivityRetryResult.attempts = connectivityRetryResult.attempts.map(attempt => withSolverStage(attempt, 'connectivity-axis-exhausted-retry'));
             result.attempts.push(...connectivityRetryResult.attempts);
             if (connectivityRetryResult.solution) result.solution = connectivityRetryResult.solution;
         } finally {
@@ -3537,7 +3543,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                         ? Infinity
                         : Math.max(0, repairElitePrefixDfsRetryNodeCeiling - prep._metrics.nodesExpanded);
                     const r = await runAttempt(gateKey, level, prep, repairConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
-                    result.attempts.push({ ...r.attempt, repairElitePrefixDfsRetry: true });
+                    result.attempts.push(withSolverStage(r.attempt, 'repair-elite-prefix-dfs-retry'));
                     if (r.path) { result.solution = r.path; break; }
                 }
             }
@@ -3626,7 +3632,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, mcNeighborBudgetRetryTotalBudget, mcNeighborBudgetRetryStart, yieldFn, mcNeighborBudgetRetryNodeCeiling, mcNeighborBudgetRetryWorkBudget, mcNeighborBudgetRetryWorkStart, mcNeighborBudgetRetryEntryNodes, 0)
                 : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, mcNeighborBudgetRetryTotalBudget, mcNeighborBudgetRetryStart, yieldFn, mcNeighborBudgetRetryNodeCeiling, mcNeighborBudgetRetryWorkBudget, mcNeighborBudgetRetryWorkStart, mcNeighborBudgetRetryEntryNodes, 0);
             for (const attempt of mcNeighborBudgetRetryResult.attempts) {
-                attempt.mcNeighborBudgetRetry = true;
+                Object.assign(attempt, withSolverStage(attempt, 'mc-neighbor-budget-retry'));
                 // `lateConfigStart = 0` makes both runners tag every attempt `mainLoopLateReserve`,
                 // which here means "took a staircase step", not "belongs to the main loop's late
                 // reserve experiment". Strip it so telemetry consumers of that field are not polluted.
@@ -3705,7 +3711,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                     : Math.max(0, repairLateProbeNodeCeiling - prep._metrics.nodesExpanded);
                 const remainingNodeBudget = Math.min(ownBudgetRemaining, outerCeilingRemaining);
                 const r = await runAttempt(gateKey, level, prep, repairLateProbeConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
-                result.attempts.push({ ...r.attempt, repairLateProbe: true });
+                result.attempts.push(withSolverStage(r.attempt, 'repair-late-probe'));
                 if (r.path) { result.solution = r.path; break; }
             }
         } finally {

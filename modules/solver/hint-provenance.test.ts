@@ -13,7 +13,7 @@ const PERSISTENT_ATTEMPT_FIELDS = new Set([
 ]);
 const TRANSIENT_FIELDS_WITH_DISTINCT_PROVENANCE_MEANING = new Set(['workSpent']);
 const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([
-  'ok', 'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'repair',
+  'stageId', 'ok', 'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'repair',
   'timedOut', 'bestBadness', 'finalBadness', 'allocatedWorkCeiling', 'allocatedNodeCeiling',
   'workSpent', 'dedupNearTieRetry', 'admissibleOrderNonDefaultRetry',
   'connectivityAxisExhaustedRetry', 'repairElitePrefixDfsRetry', 'mcNeighborBudgetRetry',

@@ -35,11 +35,12 @@ test('racedAttemptRecord preserves every dispatch-identity flag in every race ph
       admissibleOrder: true, admissibleOrderNoTieBreak: true, admissibleOrderLds: true,
     },
   };
-  assert.deepEqual(racedAttemptRecord(job, { ok: false, outcome: 'exhausted', elapsedMs: 12 }, { attractionDiversity: true }), {
+  assert.deepEqual(racedAttemptRecord(job, { ok: false, outcome: 'exhausted', elapsedMs: 12 }, { stageId: 'attraction-diversity' }), {
     gateKey: 7, profile: 'none', template: null, beamWidth: null,
     repair: true, repairTurnBiased: true,
     admissibleOrder: true, admissibleOrderNoTieBreak: true, admissibleOrderLds: true,
-    attractionDiversity: true, ok: false, outcome: 'exhausted', elapsedMs: 12, nodesExpanded: 0,
+    attractionDiversity: true, stageId: 'attraction-diversity',
+    ok: false, outcome: 'exhausted', elapsedMs: 12, nodesExpanded: 0,
   });
 });
 

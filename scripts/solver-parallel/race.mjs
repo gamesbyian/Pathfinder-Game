@@ -75,6 +75,7 @@ import path from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { buildSync } from 'esbuild';
 import { attemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
+import { withSolverStage } from '../../modules/solver/stage-policy.js';
 
 // process.cwd(), not import.meta.url-relative math: this module is usually loaded as a
 // dependency of some OTHER entry that scripts/run-bundled.mjs esbuild-bundles, which flattens
@@ -108,7 +109,7 @@ function ensureWorkerBundle() {
  * drifting record shapes for the ordinary and attraction-diversity phases. */
 export function racedAttemptRecord(job, msg, extra = {}) {
     const cfg = job?.attemptConfig;
-    return {
+    return withSolverStage({
         gateKey: job?.gateKey, profile: cfg?.profileName, template: cfg?.template?.id ?? null,
         beamWidth: cfg?.beamWidth ?? null,
         ...(cfg?.diverseBeam ? { diverseBeam: true } : {}),
@@ -134,7 +135,7 @@ export function racedAttemptRecord(job, msg, extra = {}) {
         } } : {}),
         ...(msg.allocatedBudgetMs !== undefined ? { allocatedBudgetMs: msg.allocatedBudgetMs } : {}),
         elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
-    };
+    }, extra.stageId ?? (cfg?.repair ? 'repair-fallback' : 'main-loop'));
 }
 
 /**
@@ -588,7 +589,7 @@ export function createRacePool(opts = {}) {
                 const onMessage = (msg) => {
                     if (msg?.type !== 'result') return;
                     const job = jobById.get(msg.jobId);
-                    attempts.push(racedAttemptRecord(job, msg, { attractionDiversity: true }));
+                    attempts.push(racedAttemptRecord(job, msg, { stageId: 'attraction-diversity' }));
                     slot.busy = false;
                     if (msg.ok && !settled) {
                         finish({ ok: true, status: 'success', solution: msg.path, solutions: [msg.path], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });

@@ -35,6 +35,47 @@ export function validateExperimentManifest(manifest) {
     return manifest;
 }
 
+const FAMILY_RUN_REQUIRED = ['schemaVersion', 'runId', 'solver', 'invocation', 'selection',
+    'trove', 'solverPolicy', 'budgets', 'seeds', 'shard', 'startedAt', 'completedAt',
+    'outputArtifacts', 'sourceGenerationArtifacts'];
+
+/** Canonical provenance for new family/variant solver evaluations. Historical census artifacts
+ * intentionally do not pass this validator and remain readable through the family index. */
+export function validateFamilyEvaluationRunManifest(manifest) {
+    for (const field of FAMILY_RUN_REQUIRED) if (!(field in manifest)) {
+        throw new Error(`family evaluation run manifest missing ${field}`);
+    }
+    if (manifest.schemaVersion !== 1) throw new Error(`unsupported family evaluation run manifest schema ${manifest.schemaVersion}`);
+    if (typeof manifest.runId !== 'string' || !manifest.runId) throw new Error('runId must be a non-empty string');
+    if (!manifest.solver || typeof manifest.solver.commit !== 'string' || !manifest.solver.commit ||
+        !('ref' in manifest.solver) || !('dirty' in manifest.solver) ||
+        (manifest.solver.dirty !== null && typeof manifest.solver.dirty !== 'boolean')) {
+        throw new Error('solver must record commit, ref, and boolean-or-null dirty state');
+    }
+    for (const field of ['tool', 'workflow']) if (!(field in manifest.invocation)) throw new Error(`invocation missing ${field}`);
+    for (const field of ['corpora', 'families']) if (!Array.isArray(manifest.selection?.[field])) throw new Error(`selection.${field} must be an array`);
+    for (const field of ['mode', 'profile', 'config', 'flags', 'strictTotalWorkBudget']) {
+        if (!(field in manifest.solverPolicy)) throw new Error(`solverPolicy missing ${field}`);
+    }
+    for (const field of ['workUnits', 'nodeCeiling', 'wallDeadlineMs']) {
+        const value = manifest.budgets?.[field];
+        if (value !== null && (!Number.isFinite(value) || value < 0)) throw new Error(`budgets.${field} must be a non-negative number or null`);
+    }
+    if (!Array.isArray(manifest.seeds) || manifest.seeds.some(seed => !Number.isFinite(seed))) throw new Error('seeds must be finite numbers');
+    if (!Number.isInteger(manifest.shard?.count) || manifest.shard.count < 1 ||
+        !Number.isInteger(manifest.shard?.index) || manifest.shard.index < 1 || manifest.shard.index > manifest.shard.count) {
+        throw new Error('shard must use a one-based index within count');
+    }
+    for (const field of ['outputArtifacts', 'sourceGenerationArtifacts']) {
+        if (!Array.isArray(manifest[field]) || manifest[field].some(value => typeof value !== 'string')) throw new Error(`${field} must be a string array`);
+    }
+    for (const field of ['startedAt', 'completedAt']) {
+        if (typeof manifest[field] !== 'string' || Number.isNaN(Date.parse(manifest[field]))) throw new Error(`${field} must be an ISO timestamp`);
+    }
+    if (Date.parse(manifest.completedAt) < Date.parse(manifest.startedAt)) throw new Error('completedAt precedes startedAt');
+    return manifest;
+}
+
 /** Reject every unexpected A/B mismatch. Only arm, run/output identity, the named solver flag,
  * and explicitly declared workflow-input treatment dimensions may differ. Workflow-level inputs
  * are deliberately independent from solverFlags because GitHub Actions has decision-relevant

@@ -72,6 +72,7 @@ export function passForWin(result) {
  *  the row level — see below). */
 export function attemptRecord(a) {
     return {
+        ...(a.stageId !== undefined ? { stageId: a.stageId } : {}),
         gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
         ok: a.ok, elapsedMs: a.elapsedMs,
         ...(a.outcome !== undefined ? { outcome: a.outcome } : {}),

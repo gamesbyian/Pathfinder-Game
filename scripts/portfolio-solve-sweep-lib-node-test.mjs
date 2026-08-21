@@ -14,7 +14,7 @@ import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from '../modules/solver/testing-fi
 import { buildSolveWorkerResult } from '../modules/solver/worker-result-serialization.mjs';
 
 const PERSISTENT_ATTEMPT_FIELDS = new Set([
-    'gateKey', 'profile', 'template', 'beamWidth', 'ok', 'elapsedMs', 'allocatedBudgetMs',
+    'stageId', 'gateKey', 'profile', 'template', 'beamWidth', 'ok', 'elapsedMs', 'allocatedBudgetMs',
     'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'diverseBeam',
     'repair', 'repairMustTurnBiased', 'repairTurnBiased', 'seedSalt', 'randomSeed',
     'nodesExpanded', 'timedOut', 'bestBadness', 'finalBadness', 'attractionDiversity',
