@@ -42,7 +42,6 @@
 import { getDistanceFromArray } from './distance.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
-import { workMeter } from './work-meter.js';
 import { getRealLengthFromState } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import { buildCurUrgencyContext, scoreMove } from './scoring.js';
@@ -189,7 +188,7 @@ export async function admissibleOrderSearch(
     // Experiment-only whole-solve enforcement. The historical admissible tier did not consult its
     // inherited work cap inside this loop at all; changing that unconditionally would silently
     // alter production scheduling. Strict mode opts into the corrected contract explicitly.
-    if (prep._strictWorkCap !== undefined && workMeter.units >= prep._strictWorkCap) {
+    if (prep._strictWorkCap !== undefined && prep._workMeter.units >= prep._strictWorkCap) {
         if (out) { out.timedOut = true; out.nodesExpanded = 0; }
         return null;
     }
@@ -213,7 +212,7 @@ export async function admissibleOrderSearch(
         if ((++nodesExpanded & 255) === 0) {
             const now = Date.now();
             if (now - levelStartTime > levelBudgetMs || nodesExpanded >= nodeBudget
-                || (prep._strictWorkCap !== undefined && workMeter.units >= prep._strictWorkCap)) {
+                || (prep._strictWorkCap !== undefined && prep._workMeter.units >= prep._strictWorkCap)) {
                 if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
                 if (out) { out.timedOut = true; out.nodesExpanded = nodesExpanded; }
                 return null;
@@ -317,7 +316,7 @@ export async function admissibleOrderSearchLDS(
         // move straight to the unbounded fallback, same short-circuit dfsFromGateLDS's loop uses.
         if (probeOut.timedOut) break;
     }
-    if (Date.now() - levelStartTime >= levelBudgetMs || workMeter.units >= (prep._workCap ?? Infinity)) { if (out) out.timedOut = true; return null; }
+    if (Date.now() - levelStartTime >= levelBudgetMs || prep._workMeter.units >= (prep._workCap ?? Infinity)) { if (out) out.timedOut = true; return null; }
     const finalNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - probeNodesUsed);
     if (finalNodeBudget <= 0) { if (out) out.timedOut = true; return null; }
     if (yieldFn) await yieldFn();

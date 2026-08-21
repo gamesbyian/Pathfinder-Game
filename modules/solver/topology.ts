@@ -341,7 +341,9 @@ const EMPTY_KEYS: ArrayLike<number> = [];
  *  must-cross cells reserve intersections and keep intNeeded above zero. Not worth the code. */
 // Permitted error: reachable-set over-approximation only; see property: topology connectivity over-approximates every truly reachable required cell.
 export function isConnected(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
-    workMeter.units += CONNECTIVITY_WORK_UNITS;  // see work-meter.ts
+    // Dual increment — see applyMove's identical comment in search-state.ts.
+    workMeter.units += CONNECTIVITY_WORK_UNITS;
+    prep._workMeter.units += CONNECTIVITY_WORK_UNITS;
     const intNeeded = level.reqInt - state.ints;
     // Threshold: visited count allowed to pass through.
     //   0 intersections remaining: only unvisited cells (path acts as hard walls).

@@ -1430,6 +1430,83 @@ test('strictTotalWorkBudget installs one remaining-work cap across every additiv
     assert.equal(legacy.techniqueLifecycle, undefined, 'omitting lifecycle telemetry preserves the result shape');
 });
 
+test('the ordinary repair fallback loop gets fresh work room, not a stale cap left by the main loop (regression, fixed 2026-08-20)', async () => {
+    // Unlike the repair PROBE (which runs before the main ladder and therefore never inherits a
+    // cap from it — see the previous test), the ordinary repair fallback loop runs AFTER the main
+    // ladder finishes. Its `runAttempt` calls used to leave `prep._workCap` untouched, silently
+    // inheriting whatever the main loop's LAST attempt left behind — which, once budget-share
+    // division has run through many configs, can be a small fraction of the real repair budget.
+    let repairAllocatedWorkCeiling: number | undefined;
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , , , , , out] = args;
+        if (prep._metrics) prep._metrics.nodesExpanded += 1;
+        if (out) out.nodesExpanded = 1;
+        if (config.repair) {
+            repairAllocatedWorkCeiling = prep._workCap == null ? undefined : prep._workCap - prep._workMeter.units;
+            return [0, 1];
+        }
+        return null;
+    };
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 5000,
+        workBudget: 100_000,
+        attemptBudgetTelemetry: true,
+        ablation: { STRATEGY_REPAIR_PROBE: false },
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, true, 'the mocked repair config must win');
+    assert.ok(repairAllocatedWorkCeiling !== undefined, 'the repair fallback attempt must have run');
+    // Before the fix this was whatever the main loop's last per-attempt slice happened to be
+    // (bounded by the external workBudget=100,000). After the fix it is REPAIR_EXTRA_BUDGET_FRACTION
+    // (6.0) * timeBudgetMs * DEFAULT_WORK_PER_MS, ~100.5M — three orders of magnitude larger, so a
+    // generous threshold well above workBudget cleanly distinguishes the two.
+    assert.ok(repairAllocatedWorkCeiling! > 1_000_000,
+        `repair fallback must see a fresh, generous work cap, got ${repairAllocatedWorkCeiling}`);
+});
+
+test('lifecycle telemetry classifies newer retry tiers as their own technique, not main-ladder/repair-fallback/admissible-order (regression, fixed 2026-08-20)', async () => {
+    // Before the fix, `classify()` only knew 5 categories (repair-probe/repair-fallback/attraction-
+    // diversity/admissible-order/main-ladder) -- every retry tier added since (dedup-near-tie,
+    // connectivity-axis-exhausted, repair-elite-prefix-dfs, mc-neighbor-budget, repair-late-probe,
+    // admissible-order-non-default) silently fell into whichever of those 5 buckets its OWN base
+    // config type happened to match (mc-neighbor-budget-retry reruns mainConfigs -> 'main-ladder';
+    // repair-elite-prefix-dfs-retry reruns repairConfigs -> 'repair-fallback'), misreporting which
+    // stage of the ladder actually ran or found a solution.
+    //
+    // Wins only via mcNeighborBudgetRetryCfg's own distinguishing override (PRUNE_MC_NEIGHBOR_BUDGET:
+    // false), which nothing else in the ladder ever sets -- so a win here can only have come from
+    // that specific tier. STRATEGY_REPAIR_PROBE disabled so the repair-gated level's genuine
+    // needsRepairFallback eligibility doesn't let an earlier repair attempt win first by accident.
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, , , prep] = args;
+        if (prep._cfg && prep._cfg.PRUNE_MC_NEIGHBOR_BUDGET === false) return [0, 1];
+        return null;
+    }) as typeof runAttemptSearch;
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 2000,
+        ablation: { STRATEGY_REPAIR_PROBE: false },
+        repairBudgetFractionOverride: 0,
+        lifecycleTelemetry: true,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, true, 'the mc-neighbor-budget-retry-only mock must win');
+    const winningAttempts = result.attempts.filter(a => a.ok);
+    assert.equal(winningAttempts.length, 1);
+    assert.equal(winningAttempts[0].mcNeighborBudgetRetry, true, 'the winning attempt must be tagged by its real tier');
+    const lifecycle = result.techniqueLifecycle as Record<string, any>;
+    assert.ok(lifecycle['mc-neighbor-budget-retry'], 'the new category must exist in the lifecycle map');
+    assert.equal(lifecycle['mc-neighbor-budget-retry'].reached, true);
+    assert.ok(lifecycle['mc-neighbor-budget-retry'].attempts > 0);
+    // The winning attempt must NOT also be double-counted into main-ladder, which is what every
+    // mcNeighborBudgetRetry attempt used to collapse into (it reruns mainConfigs, so attempt.repair
+    // and attempt.admissibleOrder are both unset -- exactly what the old classify()'s final
+    // fallback branch matched).
+    const mainLadderAttempts = result.attempts.filter(a => !a.repair && !a.admissibleOrder && !a.attractionDiversity
+        && !a.mcNeighborBudgetRetry && !a.connectivityAxisExhaustedRetry && !a.dedupNearTieRetry);
+    assert.equal(lifecycle['main-ladder'].attempts, mainLadderAttempts.length,
+        'main-ladder must not absorb attempts that belong to a newer retry tier');
+});
+
 test('lifecycle telemetry separates mechanical eligibility from disabled routing', async () => {
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
@@ -1465,7 +1542,10 @@ test('a zero dispatch-time work allowance is reported as budget starvation, not 
     prep._cfg = null;
     prep._metrics = { nodesExpanded: 0 };
     prep._attemptBudgetTelemetry = true;
-    prep._workCap = workMeter.units;
+    // prep._workMeter.units (not the module-global workMeter.units, which accumulates across every
+    // solve/test in this process and is no longer what any budget check reads — see PrepLevel's own
+    // comment) is this fresh prep's own baseline, 0 until something spends against it.
+    prep._workCap = prep._workMeter.units;
     const config = getConfiguredAttemptConfigs(level, null).find(candidate => !candidate.repair && !candidate.admissibleOrder)!;
     const result = await runAttempt(level.gateKeys[0], level, prep, config, 10_000, Date.now(), null, 1000);
     assert.equal(result.attempt.allocatedWorkCeiling, 0);
@@ -2098,6 +2178,78 @@ test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit t
     assert.ok(lateProbeOverridden.attempts.some(a => a.repairLateProbe === true));
 });
 
+test('repair-late-probe does not fire when repairConfigs is empty only because STRATEGY_REPAIR_FALLBACK was ablated off (regression, fixed 2026-08-20)', async () => {
+    // makeRepairGatedInfeasibleLevel() genuinely needs repair fallback (needsRepairFallback(f) is
+    // true for it), unlike makeAttractionDiversityGatedInfeasibleLevel() above, which the late
+    // probe's own eligibility gate targets. `repairConfigs.length === 0` here comes ONLY from the
+    // explicit STRATEGY_REPAIR_FALLBACK: false ablation (applyAttemptConfigOptions strips every
+    // repair config when that flag is off) -- an experiment deliberately routing away from repair,
+    // not a level repair was never eligible for. Before the fix, the late probe's eligibility check
+    // couldn't tell the two apart and would silently reintroduce repair anyway.
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_REPAIR_LATE_PROBE: true, STRATEGY_REPAIR_FALLBACK: false },
+        disableExtraBudgetPasses: true,
+        repairLateProbeNodeBudgetOverride: 100,
+    });
+    assert.equal(result.attempts.some(a => a.repairLateProbe === true), false,
+        'STRATEGY_REPAIR_FALLBACK: false must not be silently undone by the late-probe tier');
+    assert.equal(result.attempts.some(a => a.repair === true), false,
+        'no repair attempt of any kind should run when the fallback is explicitly disabled');
+});
+
+test('adaptive gate weighting cannot claim more than the remaining tier budget (regression, fixed 2026-08-20)', async () => {
+    // adaptiveGateWeight is unbounded above ((share*n)**2 for a gate that has accumulated more
+    // than its "fair" 1/n share of nodesExpanded progress) and used to multiply attBudget without
+    // ever being clamped back to budgetLeft -- every OTHER path through attemptBudgetShare (the
+    // plain even split, and the minBudgetFraction floor) already respects that bound. Only reachable
+    // on >= ADAPTIVE_GATE_THRESHOLD (4) gate levels via runInterleavedAttempts; the published corpus
+    // never has more than 3 gates (CLAUDE.md), so this is a stress-corpus-only path solver:bench
+    // --check cannot exercise.
+    //
+    // Many gates (20) so the weight's theoretical ceiling (n**2 when one gate holds ~100% of all
+    // progress) is large enough to exceed pairsLeft even many rounds in; gate 0 reports a huge
+    // nodesExpanded on EVERY round (not just the first) to keep its dominant share sustained as
+    // pairsLeft shrinks toward the end of the config list, where the unclamped product is most
+    // likely to overshoot. Scans every attempt's own allocatedWorkCeiling (attemptBudgetTelemetry)
+    // rather than tracking one specific round, since which round overflows first depends on the
+    // exact config-list length.
+    const gateCount = 10;
+    const gateKeys = Array.from({ length: gateCount }, (_, i) => PACK(i, 0));
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, gateKey, , prep, , , , , , out] = args;
+        const reported = gateKey === gateKeys[0] ? 200_000 : 1;
+        if (prep._metrics) prep._metrics.nodesExpanded += reported;
+        if (out) out.nodesExpanded = reported;
+        return null;
+    }) as typeof runAttemptSearch;
+    const level = {
+        ...makeRepairGatedInfeasibleLevel(), grid: { w: 15, h: 15 }, gateKeys,
+        goalKey: PACK(14, 14), mustPassKeys: [], mustCrossKeys: [],
+    };
+    const workBudget = 500_000;
+    const result = await solveLevel(level as unknown as NormalizedLevel, {
+        timeBudgetMs: 60_000,
+        workBudget,
+        nodeBudget: 50_000_000,
+        attemptBudgetTelemetry: true,
+        disableExtraBudgetPasses: true,
+        // Otherwise STRATEGY_PARITY_GATE_FILTER (getActiveGates) drops every gate whose parity
+        // relative to the goal/reqLen doesn't match, silently shrinking activeGates below what
+        // this test constructed — irrelevant to the scheduling behavior under test.
+        ablation: { STRATEGY_PARITY_GATE_FILTER: false },
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, false, 'the mocked dispatch never solves');
+    const gate0Attempts = result.attempts.filter(a => a.gateKey === gateKeys[0] && a.allocatedWorkCeiling != null);
+    assert.ok(gate0Attempts.length > gateCount, 'gate 0 must have run across several weighted rounds, not just round 0');
+    const maxCeiling = Math.max(...gate0Attempts.map(a => a.allocatedWorkCeiling as number));
+    // budgetLeft <= workBudget always, so this is a valid (if slightly loose) upper bound for any
+    // single attempt regardless of which round it came from.
+    assert.ok(maxCeiling <= workBudget,
+        `a single weighted attempt must not be granted more than the tier's own workBudget (${workBudget}), got ${maxCeiling}`);
+});
+
 test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses, and enables STRATEGY_REPAIR_ELITE_PREFIX_DFS while it runs', async () => {
     // Simulates the real mechanism's shape without depending on repair-search.ts's actual
     // elitePrefixDfsRepair internals: succeeds only once prep._cfg reflects
@@ -2106,14 +2258,14 @@ test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses,
     // opt-in-default-false) never does.
     //
     // Isolates every sibling default-on retry tier (attractionDiversity/admissibleOrder/dedupNearTieRetry/
-    // admissibleOrderNonDefaultRetry/connectivityAxisExhaustedRetry) via budget-fraction overrides:
-    // each of THEIR OWN Proxy overrides falls through to `true` for any prop it doesn't explicitly
-    // name (originalCfg has no own-key for an unrelated flag, since `normalizeAblationConfig` wraps
-    // the RAW sparse ablation object, not a fully-materialized one) — so without this isolation, an
-    // earlier sibling tier's own Proxy would satisfy this mock's `=== true` check first and this
-    // tier's own pass would never actually run. (The three PROMOTED siblings' own equivalent tests
-    // don't need this because their mocks check the OPPOSITE polarity — `=== false` — which the same
-    // fallback-to-true default can never accidentally satisfy.)
+    // admissibleOrderNonDefaultRetry/connectivityAxisExhaustedRetry) via budget-fraction overrides.
+    // Historically load-bearing: each sibling Proxy used to fall through to a blind `true` for any
+    // prop it didn't explicitly name, so an earlier sibling tier's own Proxy would satisfy this
+    // mock's `=== true` check on STRATEGY_REPAIR_ELITE_PREFIX_DFS (an opt-in flag) before this
+    // tier's own pass ever ran. Fixed 2026-08-20 (all 5 retry-tier Proxies now fall through to
+    // `!OPT_IN_FEATURES.has(prop)`, matching `normalizeAblationConfig`), so this isolation is no
+    // longer strictly required for this specific flag — kept anyway as good practice/defense in
+    // depth for whichever prop a future version of this test happens to check.
     const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
         const [, , , prep] = args;
         if (prep._cfg && prep._cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS === true) return [0, 1];
@@ -2132,4 +2284,34 @@ test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses,
     });
     assert.equal(result.ok, true, 'the elite-prefix-dfs-on retry wins');
     assert.equal(result.attempts.at(-1)?.repairElitePrefixDfsRetry, true);
+});
+
+test('retry-tier config Proxies do not leak unrelated opt-in flags to true (regression, fixed 2026-08-20)', async () => {
+    // Direct regression coverage for the bug the previous test's comment describes: every retry-tier
+    // Proxy (attractionDiversity/dedupNearTieRetry/connectivityAxisExhaustedRetry/
+    // repairElitePrefixDfsRetry/mcNeighborBudgetRetry) used to fall through to a blind `true` for any
+    // prop it didn't explicitly name — so with the real production default `cfg === null`, ANY
+    // unrelated opt-in/default-OFF flag (e.g. PRUNE_PORTAL_PARITY_ENVELOPE) would read `true` for the
+    // whole duration of the retry pass, silently activating an unvalidated experimental mechanism no
+    // caller asked for. Captures the observed value while repairElitePrefixDfsRetry's own Proxy is
+    // active (representative of all 5, which share the identical fixed fallback shape).
+    let observedPortalParity: unknown;
+    const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, , , prep] = args;
+        if (prep._cfg) observedPortalParity = prep._cfg.PRUNE_PORTAL_PARITY_ENVELOPE;
+        if (prep._cfg && prep._cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS === true) return [0, 1];
+        return null;
+    }) as typeof runAttemptSearch;
+    await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
+        attemptSearchForTesting: dispatch,
+    });
+    assert.notEqual(observedPortalParity, true, 'an unrelated opt-in flag must not read true under a retry-tier Proxy with cfg=null');
 });

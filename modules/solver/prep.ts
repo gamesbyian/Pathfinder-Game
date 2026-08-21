@@ -37,6 +37,9 @@ function buildIndexArr(keys: number[]): Int8Array {
 
 export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbors?: boolean } = {}): PrepLevel {
     const prep = {} as PrepLevel;
+    // Fresh, isolated per-solve work counter — see PrepLevel._workMeter's own comment. Always
+    // initialized here, unconditionally, so no consumer can ever observe an unset one.
+    prep._workMeter = { units: 0 };
     prep.gridW = level.grid.w;
     prep.distMap        = buildDistMap(level, [level.goalKey]);
     prep.mustPassIndex  = buildIndexArr(level.mustPassKeys);

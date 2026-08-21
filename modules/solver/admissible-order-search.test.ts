@@ -7,7 +7,6 @@ import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { normalizeRawLevel } from './normalization.js';
 import { createState, getNeighbors } from './search-state.js';
-import { workMeter } from './work-meter.js';
 import type { NormalizedLevel } from '../domain/types.js';
 
 function makeLevel(overrides = {}) {
@@ -43,7 +42,9 @@ test('admissibleOrderSearch honors an exhausted experiment-only strict work cap 
   const prep = prepLevel(level);
   prep._cfg = null;
   prep._metrics = { nodesExpanded: 0 };
-  prep._strictWorkCap = workMeter.units;
+  // prep._workMeter.units (this fresh prep's own baseline, 0), not the module-global workMeter.units
+  // which accumulates across every solve/test in this process — see PrepLevel's own comment.
+  prep._strictWorkCap = prep._workMeter.units;
   const out: { timedOut?: boolean; nodesExpanded?: number } = {};
   const path = await admissibleOrderSearch(PACK(0, 0), level, prep, 1000, Date.now(), null, out);
   assert.equal(path, null);

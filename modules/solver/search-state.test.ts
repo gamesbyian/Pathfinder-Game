@@ -158,6 +158,12 @@ test('isMoveDynamicallyValid enforces flipping filter entry orientation', () => 
 });
 
 test('createState resets every semantic field when a pooled slot is reused across levels', () => {
+  // Since the state-buf pool moved from module-global to per-prep (2026-08-20, see
+  // PrepLevel._stateBufs's own comment), largePrep/tinyPrep below each get their OWN buffer for
+  // STATE_BUF_BEAM rather than sharing one -- the "does reuse correctly reset" property this test
+  // checks is now exercised by the dirty -> again pair specifically (same prep, same slot, called
+  // twice), not by the intervening tinyPrep calls. See the dedicated cross-prep isolation test
+  // below for the property this test used to (incidentally) also cover.
   const large = makeLevel({ grid: { w: 5, h: 5 }, gateKeys: [PACK(0, 2)],
     mustPassKeys: [PACK(1, 2)], mustCrossKeys: [PACK(2, 2)] });
   const largePrep = prepLevel(large);
@@ -190,4 +196,71 @@ test('createState resets every semantic field when a pooled slot is reused acros
   assert.equal(again.visited[PACK(2, 2)], 0);
   assert.equal(again.edgeUsage[PACK(1, 2)], 0);
   assert.equal(again.edgeUsage[PACK(2, 2)], 0);
+});
+
+test('two concurrent solves cannot corrupt each other\'s pooled search-state buffer (regression, fixed 2026-08-20)', () => {
+  // Direct proof of the actual bug/fix, without needing real async interleaving: before the fix,
+  // STATE_BUF_BEAM's `visited`/`edgeUsage` arrays were a SINGLE module-global pair shared by every
+  // caller in the JS realm. Two concurrent solveLevel() calls both reaching for the same slot --
+  // e.g. two overlapping beam attempts, one from each solve -- would have the SECOND call's
+  // createState() clear out the buffer the FIRST call's still-live state object was still pointing
+  // at (same underlying TypedArray, not a copy), silently corrupting the first solve's in-progress
+  // search. Simulates the interleaving synchronously (no need for a real await race): create prepA's
+  // state, apply some moves, THEN create prepB's state on the SAME slot, and confirm prepA's state
+  // is completely unaffected.
+  const levelA = makeLevel({ gateKeys: [PACK(0, 2)], mustPassKeys: [PACK(2, 2)] });
+  const prepA = prepLevel(levelA);
+  const stateA = createState(PACK(0, 2), levelA, prepA, STATE_BUF_BEAM);
+  applyMove(PACK(1, 2), stateA, levelA, prepA, false);
+  applyMove(PACK(2, 2), stateA, levelA, prepA, false);
+  const visitedBeforeB = Array.from(stateA.visited.slice(0, 20));
+  const edgeUsageBeforeB = Array.from(stateA.edgeUsage.slice(0, 20));
+
+  // A DIFFERENT prep (a genuinely separate solveLevel() call would create one just like this),
+  // same slot. Under the old module-global pool this would clear prepA's live buffer out from
+  // under it.
+  const levelB = makeLevel({ grid: { w: 5, h: 5 }, gateKeys: [PACK(4, 0)], goalKey: PACK(0, 4) });
+  const prepB = prepLevel(levelB);
+  const stateB = createState(PACK(4, 0), levelB, prepB, STATE_BUF_BEAM);
+  applyMove(PACK(3, 0), stateB, levelB, prepB, false);
+
+  assert.deepEqual(Array.from(stateA.visited.slice(0, 20)), visitedBeforeB,
+    'prepB creating its own state must not touch prepA\'s live visited buffer');
+  assert.deepEqual(Array.from(stateA.edgeUsage.slice(0, 20)), edgeUsageBeforeB,
+    'prepB creating its own state must not touch prepA\'s live edgeUsage buffer');
+  // stateA's own path/mask bookkeeping (not backed by the pooled buffers) is unaffected regardless,
+  // but confirm it explicitly too -- the whole state object must stay coherent.
+  assert.deepEqual(stateA.path, [PACK(0, 2), PACK(1, 2), PACK(2, 2)]);
+  assert.equal(stateA.mpVisitedMask & 1, 1, 'prepA\'s own must-pass progress must survive prepB\'s createState call');
+
+  // And prepB's own state must be correctly initialized (not corrupted by prepA's prior writes,
+  // proving the isolation runs both directions).
+  assert.equal(stateB.visited[PACK(2, 2)], 0, 'prepB must not see prepA\'s visited cells');
+  assert.equal(stateB.path[0], PACK(4, 0));
+});
+
+test('two concurrent solves have independent work counters (regression, fixed 2026-08-20)', () => {
+  // Before the fix, prep._workMeter did not exist -- every budget check read the single
+  // module-global workMeter.units, so one solve's own `spent = units - workStart` delta could
+  // include work a completely unrelated concurrent solve did in between. Confirms prepA/prepB each
+  // start at their own 0 and only advance from their OWN applyMove/isConnected calls.
+  const levelA = makeLevel({ gateKeys: [PACK(0, 2)] });
+  const prepA = prepLevel(levelA);
+  assert.equal(prepA._workMeter.units, 0, 'a fresh prep starts at its own zero');
+  const stateA = createState(PACK(0, 2), levelA, prepA);
+  applyMove(PACK(1, 2), stateA, levelA, prepA, false);
+  const workAAfterOneMove = prepA._workMeter.units;
+  assert.ok(workAAfterOneMove > 0, 'prepA must have accrued its own work');
+
+  const levelB = makeLevel({ gateKeys: [PACK(0, 2)] });
+  const prepB = prepLevel(levelB);
+  assert.equal(prepB._workMeter.units, 0, 'prepB starts at its own zero too, unaffected by prepA\'s prior spend');
+  const stateB = createState(PACK(0, 2), levelB, prepB);
+  applyMove(PACK(1, 2), stateB, levelB, prepB, false);
+  applyMove(PACK(2, 2), stateB, levelB, prepB, false);
+
+  assert.equal(prepA._workMeter.units, workAAfterOneMove,
+    'prepB\'s own work must not leak into prepA\'s counter');
+  assert.ok(prepB._workMeter.units > workAAfterOneMove,
+    'prepB did strictly more work (two moves vs one) and must report strictly more');
 });

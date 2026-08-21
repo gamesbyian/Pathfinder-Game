@@ -250,13 +250,39 @@ export interface PrepLevel {
     _forcedFirstStepKey?: number | null;
     /** mutable node-count accumulator */
     _metrics?: { nodesExpanded: number };
-    /** Absolute `workMeter.units` value at which the CURRENT attempt must stop, set by the attempt
-     *  ladder before each attempt. Every search technique checks it in the same place it already
-     *  checks its own budget, so all four stop on the same machine-independent quantity.
+    /** This solve's OWN work counter, isolated from every other concurrent `solveLevel()` call in
+     *  the same JS realm. Always present (initialized fresh to `{ units: 0 }` by `prepLevel()`) —
+     *  never optional, so a caller can never accidentally read/write a shared fallback. Every
+     *  canonical work unit (`applyMove`, `isConnected` — see work-meter.ts) increments BOTH this
+     *  AND the legacy module-global `workMeter.units` (offline hint-discovery tooling that spans
+     *  many sequential `solveLevel()` calls, e.g. diversification.ts/hint-ablation-generator.ts,
+     *  still reads the module-global directly for cross-call cumulative tracking — that role is
+     *  unaffected). Every budget-check comparison and per-solve accounting computation inside the
+     *  attempt ladder and the four search techniques reads/derives from THIS field, not the module
+     *  global, precisely so two concurrent solves in the same realm cannot see or consume each
+     *  other's work. Fixed 2026-08-20 — see work-meter.ts's own comment for the incident this
+     *  closes (a real, confirmed race: `workMeter.units` was previously a single module singleton
+     *  every concurrent solve shared, so one solve's own `spent = workMeter.units - workStart`
+     *  delta could include work a DIFFERENT concurrent solve did in between). */
+    _workMeter: { units: number };
+    /** Absolute `prep._workMeter.units` value at which the CURRENT attempt must stop, set by the
+     *  attempt ladder before each attempt. Every search technique checks it in the same place it
+     *  already checks its own budget, so all four stop on the same machine-independent quantity.
      *  Infinity/undefined = uncapped. See work-meter.ts. */
     _workCap?: number;
     /** Experiment-only immutable whole-solve cap; per-attempt allocations may only reduce it. */
     _strictWorkCap?: number;
+    /** Reusable DFS/beam/repair search-state backing buffers (see search-state.ts's `createState`),
+     *  keyed by call-site slot (`STATE_BUF_DFS`/`STATE_BUF_BEAM`/`STATE_BUF_REPAIR`) and lazily
+     *  allocated on first use. Scoped to THIS prep (i.e. this one `solveLevel()` call) rather than
+     *  module-global: the reuse-across-attempts optimization these buffers exist for only ever
+     *  needs to span the attempts within one solve (same prep instance throughout), and scoping
+     *  them per-prep — instead of per-JS-realm — is what makes two concurrent solves safe to
+     *  interleave. Fixed 2026-08-20, same incident as `_workMeter` above: a module-global buffer
+     *  pool meant a concurrently-running technique of the same kind (two overlapping DFS attempts,
+     *  for example) could have its live `visited`/`edgeUsage` arrays cleared out from under it by
+     *  the other solve's own next `createState` call. */
+    _stateBufs?: ({ visited: Uint16Array; edgeUsage: Uint8Array } | undefined)[];
     /** Opt-in diagnostic output gate; never read by search policy. */
     _attemptBudgetTelemetry?: boolean;
     /** Research-only beam observer. Absent in every production call. The observer receives copied
