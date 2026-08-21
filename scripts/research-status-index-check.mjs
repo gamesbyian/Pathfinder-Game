@@ -29,11 +29,17 @@ writeFileSync(path.join(root, 'reports/2026-08-21-example.md'), `# Example inves
 
 Authority: [topic](../docs/topic.md). Artifact: \`logs/example/run.json\`.
 `);
-writeFileSync(path.join(root, 'reports/2026-01-01-legacy.md'), '# Legacy report without metadata\n');
+writeFileSync(path.join(root, 'reports/2026-01-01-legacy.md'), `# Legacy report without metadata
+
+## Orientation anomaly
+Details live here.
+`);
 const index = buildResearchStatusIndex(root);
 assert.equal(index.queue[0].authorityKind, 'current-queue', 'dated evidence cannot override the current queue authority');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x => x.id), ['FLAG_ONE']);
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'held-out' }).map(x => x.id), ['example']);
+assert.deepEqual(queryResearchStatusIndex(index, { query: 'orientation anomaly' }).map(x => x.id), ['legacy']);
+assert.deepEqual(queryResearchStatusIndex(index, { kind: 'legacy-evidence' }).map(x => x.report), ['reports/2026-01-01-legacy.md']);
 assert.deepEqual(queryResearchStatusIndex(index, { status: 'rejected' }).map(x => x.id), ['FLAG_ONE']);
 const compact = compactResearchStatusIndex(index, { query: 'current question' });
 assert.equal(compact.count, 1);
