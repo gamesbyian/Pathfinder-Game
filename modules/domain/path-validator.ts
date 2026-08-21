@@ -19,13 +19,14 @@ export function validateCandidatePath(
         if (typeof node === 'number') return node;
         if (Array.isArray(node) && node.length >= 2)
             return PACK(Number(node[0]) - 1, Number(node[1]) - 1);
-        if (node && typeof node === 'object' && Number.isFinite(node.x) && Number.isFinite(node.y)) {
-            const x = Number(node.x);
-            const y = Number(node.y);
-            if (x >= 1 && y >= 1 && (x > level.grid.w || y > level.grid.h))
-                return PACK(x - 1, y - 1);
-            return PACK(x, y);
-        }
+        // {x,y} objects are always already 0-indexed — unlike [x,y] pairs (1-indexed wire
+        // format), there is no ambiguous convention to guess here. A bounds-based heuristic
+        // previously tried to infer 1- vs 0-indexing from whether the coordinate overflowed the
+        // grid, but that guess is wrong exactly at the boundary: on an 8x8 grid, {x:8,y:8} is a
+        // valid 1-indexed corner, yet 8 is not `> w`, so the heuristic left it un-shifted and
+        // rejected a legitimate path. Representation determines indexing; it is never inferred.
+        if (node && typeof node === 'object' && Number.isFinite(node.x) && Number.isFinite(node.y))
+            return PACK(Number(node.x), Number(node.y));
         return NaN;
     };
 
@@ -150,7 +151,7 @@ export function validateCandidatePath(
                 const nx = sx + _dx8[d], ny = sy + _dy8[d];
                 if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
                 const nk = ((ny << 16) | nx) >>> 0;
-                if (level.blockSet.has(nk)) continue;
+                if (level.blockSet.has(nk) || level.gooseSet.has(nk)) continue;
                 if (!((counts.get(nk) ?? 0) > 0))
                     return { ok: false, reason: `Surround constraint not satisfied: neighbor at (${nx + 1},${ny + 1}) not visited.` };
             }

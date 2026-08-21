@@ -182,7 +182,7 @@ export function isValidMove(
                     const nx = sx + _dx8[d], ny = sy + _dy8[d];
                     if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
                     const nk = ((ny << 16) | nx) >>> 0;
-                    if (level.blockSet.has(nk)) continue;
+                    if (level.blockSet.has(nk) || level.gooseSet.has(nk)) continue;
                     if (!((nextCounts.get(nk) ?? 0) > 0) && nk !== targetKey)
                         return setReason('invalid-must-cross-impossibility');
                 }

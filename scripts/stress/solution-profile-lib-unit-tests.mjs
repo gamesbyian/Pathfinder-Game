@@ -98,6 +98,19 @@ test('extractObjectives: mustPass/mustCross/landmark roles resolve to the right 
     assert.equal(objectives[0].key, p(0, 0));
 });
 
+test('extractObjectives: a mustPass/mustTurn landmark\'s wire-format mustPass echo is not double-counted', () => {
+    // Mirrors buildWireLevelData's real output: a mustTurn-role landmark's cell is redeclared in
+    // `mustPass` too. That must yield exactly one objective for the cell (the landmark's), not
+    // an extra plain 'mustPass' entry for the same key.
+    const level = {
+        mustPass: [{ x: 1, y: 1 }, { x: 3, y: 3 }],
+        landmarks: [{ x: 3, y: 3, role: 'mustTurn', turn: 'either' }],
+    };
+    const objectives = extractObjectives(level);
+    assert.deepEqual(objectives.map(o => o.type), ['mustPass', 'mustTurn']);
+    assert.equal(objectives.filter(o => o.key === p(2, 2)).length, 1);
+});
+
 // ── turnEvents / objectiveSatisfactionDepths ───────────────────────────────────
 
 test('turnEvents: a straight line has no turns; an L-shape turns once', () => {

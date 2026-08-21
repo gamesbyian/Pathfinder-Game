@@ -403,6 +403,26 @@ test('findTrapSpots does not route through existing false goals before the endpo
   assert.equal(result.spots.has(beyondFalseGoal), false);
 });
 
+test('findTrapSpots rejects a length/intersection-matching endpoint that leaves a surround landmark unsatisfied', async () => {
+  // 3x3 grid, surround object at the center (1,1) — impassable, all 8 neighbors must be visited.
+  // Gate at (0,0); a single step to (1,0) matches reqLen/reqInt but visits only 1 of 8 required
+  // neighbors, so it must NOT be certified as a valid trap spot.
+  const center = PACK(1, 1);
+  const baseline = makeLevel({
+    grid: { w: 3, h: 3 }, reqLen: 1, reqInt: 0, goalKey: PACK(2, 2), gateKeys: [PACK(0, 0)],
+  });
+  const baselineResult = await findTrapSpots(baseline, { timeLimit: 1000 });
+  assert.equal(baselineResult.spots.has(PACK(1, 0)), true, 'sanity: (1,0) is a valid one-step endpoint without the landmark');
+
+  const withSurround = makeLevel({
+    grid: { w: 3, h: 3 }, reqLen: 1, reqInt: 0, goalKey: PACK(2, 2), gateKeys: [PACK(0, 0)],
+    blockSet: new Set([center]), surroundKeys: [center],
+  });
+  const result = await findTrapSpots(withSurround, { timeLimit: 1000 });
+  assert.equal(result.spots.has(PACK(1, 0)), false,
+    'a path that stops one step short must not certify as a trap spot while the surround landmark is unsatisfied');
+});
+
 test('findTrapSpots attempts every gate (per-gate budget, no break on a slow gate)', async () => {
   // Two gates; with even a tiny per-gate slice both are reached and fully enumerated.
   const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 2, goalKey: PACK(2, 0), gateKeys: [PACK(0, 0), PACK(4, 0)] });

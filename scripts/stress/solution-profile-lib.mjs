@@ -86,7 +86,21 @@ export function bucketHintsBySource(hints) {
  *  raw wire-format fields directly (1-indexed x/y), same convention as hint-novelty.ts. */
 export function extractObjectives(level) {
     const objectives = [];
-    for (const m of level.mustPass || []) objectives.push({ type: 'mustPass', key: PACK(m.x - 1, m.y - 1) });
+    // buildWireLevelData's wire output deliberately re-declares a mustPass/mustTurn-role
+    // landmark's own cell in `mustPass` alongside its `landmarks` entry (same cell, one
+    // conceptual object — see level-schema.ts's occupancy-check comments). Walking both arrays
+    // unconditionally would push two objectives for that one cell; skip the raw `mustPass` echo
+    // for any cell a landmark already covers below.
+    const landmarkMustPassKeys = new Set();
+    for (const lm of level.landmarks || []) {
+        const role = baseLandmarkRole(lm.role || '');
+        if (role === 'mustPass' || role === 'mustTurn') landmarkMustPassKeys.add(PACK(lm.x - 1, lm.y - 1));
+    }
+    for (const m of level.mustPass || []) {
+        const key = PACK(m.x - 1, m.y - 1);
+        if (landmarkMustPassKeys.has(key)) continue;
+        objectives.push({ type: 'mustPass', key });
+    }
     for (const m of level.mustCross || []) objectives.push({ type: 'mustCross', key: PACK(m.x - 1, m.y - 1) });
     for (const lm of level.landmarks || []) {
         const key = PACK(lm.x - 1, lm.y - 1);

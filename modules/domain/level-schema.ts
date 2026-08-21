@@ -271,8 +271,21 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
             errors.push(`${label} count (${count}) exceeds the maximum of ${MAX_MECHANIC_CARDINALITY} — its solver bitmask encoding is unsound beyond this bound (see docs/mechanic-state-contracts.md's "Cardinality risk")`);
         }
     };
+    // buildWireLevelData deliberately re-declares a mustPass/mustTurn landmark's own cell in
+    // `mustPass` alongside its `landmarks` entry (see the occupancy-check comment below) — the
+    // landmark and its derived mustPass entry are the SAME cell, not two. Summing raw.mustPass.length
+    // with the landmark role counts double-counts every such cell; count distinct cells instead.
+    const mustPassCardinalityKeys = new Set<string>();
+    (Array.isArray(raw.mustPass) ? raw.mustPass : []).forEach((m: any) => {
+        if (m && typeof m.x === 'number' && typeof m.y === 'number') mustPassCardinalityKeys.add(`${m.x},${m.y}`);
+    });
+    (raw.landmarks || []).forEach((lm: any) => {
+        if (!lm || typeof lm.x !== 'number' || typeof lm.y !== 'number' || !lm.role) return;
+        const role = baseLandmarkRole(String(lm.role));
+        if (role === 'mustPass' || role === 'mustTurn') mustPassCardinalityKeys.add(`${lm.x},${lm.y}`);
+    });
     checkCardinality('mustPass (including mustTurn-role landmarks, which are also must-pass cells)',
-        (Array.isArray(raw.mustPass) ? raw.mustPass.length : 0) + landmarkRoleCounts.mustPass + landmarkRoleCounts.mustTurn);
+        mustPassCardinalityKeys.size);
     checkCardinality('mustCross', Array.isArray(raw.mustCross) ? raw.mustCross.length : 0);
     checkCardinality('surround landmarks', landmarkRoleCounts.surround);
     checkCardinality('mustTurn landmarks', landmarkRoleCounts.mustTurn);

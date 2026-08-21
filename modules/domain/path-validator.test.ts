@@ -45,6 +45,16 @@ test('accepts a straight corridor solution in packed-key, [x,y], and {x,y} forma
     assert.equal(res.ok, true);
 });
 
+test('{x,y} objects resolve as literal 0-indexed coordinates all the way to the last row/column', () => {
+    // 8x8 grid: the last valid 0-indexed coordinate is (7,7). {x,y} objects are always taken
+    // as already 0-indexed (no 1-indexed guessing), so this must hold right up to the boundary.
+    const l = level({ grid: { w: 8, h: 8 }, gates: [{ x: 1, y: 1 }], goal: { x: 8, y: 8 }, reqLen: 14, reqInt: 0 });
+    const path: any[] = [];
+    for (let i = 0; i <= 7; i++) path.push({ x: 0, y: i });
+    for (let i = 1; i <= 7; i++) path.push({ x: i, y: 7 });
+    assert.equal(validateCandidatePath(l, path).ok, true);
+});
+
 test('rejects paths that are too short, malformed, or start off-gate', () => {
     const l = level({ grid: { w: 5, h: 1 }, reqLen: 4 });
     assert.match((validateCandidatePath(l, []) as any).reason, /at least 2 nodes/);
@@ -252,6 +262,13 @@ test('surround: the landmark cell is impassable and all reachable 8-neighbors mu
     const blockedNeighbor = mkSurround({ blocks: [{ x: 2, y: 3 }] });
     const r2 = validateCandidatePath(blockedNeighbor, cShape);
     assert.equal(r2.ok, true, (r2 as any).reason);
+
+    // A goose at (2,3) is just as impassable as a block, so it must be excluded from the
+    // required neighbor set the same way — otherwise the referee demands a visit to a cell
+    // no legal path can ever reach.
+    const goosedNeighbor = mkSurround({ geese: [{ x: 2, y: 3 }] });
+    const r3 = validateCandidatePath(goosedNeighbor, cShape);
+    assert.equal(r3.ok, true, (r3 as any).reason);
 });
 
 test('must-turn: requires a turn of the required direction at the cell', () => {

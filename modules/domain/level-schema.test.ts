@@ -402,6 +402,18 @@ test('counts mustTurn-role landmarks toward the mustPass bound too (they are als
     assert.ok(errors.some(e => /mustTurn landmarks.*exceeds the maximum of 30/.test(e)), errors.join('; '));
 });
 
+test('does not double-count a mustTurn landmark\'s own re-declared cell in mustPass', () => {
+    // buildWireLevelData's real wire output re-declares a mustTurn-role landmark's cell in
+    // `mustPass` alongside its own `landmarks` entry (same cell, one conceptual object — see
+    // the occupancy-check comments in level-schema.ts). Naively summing raw.mustPass.length with
+    // the landmark role counts would double every one of these cells; distinct-cell counting
+    // must see only 20 real mustPass-family cells here, well under the bound of 30.
+    const coords = manyCoords(20);
+    const landmarks = coords.map(c => ({ ...c, objectType: 'library', role: 'mustTurn', turn: 'either' }));
+    const { ok, errors } = validateRawLevel({ ...VALID, mustPass: coords, landmarks });
+    assert.equal(ok, true, errors.join('; '));
+});
+
 test('rejects two different portal pairs sharing a terminal', () => {
     const raw = { ...VALID, portals: [{ x1: 2, y1: 2, x2: 3, y2: 3 }, { x1: 3, y1: 3, x2: 4, y2: 4 }] };
     const { ok, errors } = validateRawLevel(raw);
