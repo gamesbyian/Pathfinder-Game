@@ -110,7 +110,7 @@ export interface HintSolverForcing {
     /** True iff flipping filters' starting parity was inverted for this reversed search (only
      *  meaningful when reversed is true — forward searches never flip). */
     flippedFilters: boolean | null;
-    /** Solver feature flag id(s) (scripts/ablation-config.mjs FEATURE_GROUPS) deliberately
+    /** Solver feature flag id(s) (modules/solver/ablation-config.ts FEATURE_GROUPS) deliberately
      *  disabled for this search, when the technique ablates solver features one at a time or
      *  cumulatively to find alternate solutions a fully-enabled solver wouldn't produce. */
     disabledFeatures: string[] | null;

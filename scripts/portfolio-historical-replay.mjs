@@ -8,7 +8,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { PORTFOLIO_EXPERIMENT } from '../data/config/portfolio-experiment.js';
+import { PORTFOLIO_EXPERIMENT } from '../modules/solver/portfolio-experiment.js';
 import { attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
 
 const args = process.argv.slice(2);

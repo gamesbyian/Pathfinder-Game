@@ -42,7 +42,7 @@ A PLAY-valid stored hint proves a valid solution, not cold solver capability. Us
 
 ## Unit, harness, and coverage topology
 
-Vitest discovers colocated `modules/**/*.test.ts` plus script suites explicitly included by `vitest.config.mjs`. Some historical files named `*-unit-tests.mjs` are actually standalone Node/CLI-driving harnesses and run through `npm run test:node`; filename alone is not runner authority. `package.json` and `vitest.config.mjs` define the current execution topology.
+Vitest discovers colocated `modules/**/*.test.ts` plus script suites explicitly included by `vitest.config.mjs`. Standalone Node/CLI-driving harnesses use `*-node-test.mjs` and run through `npm run test:node`; script-level `*-unit-tests.mjs` files are Vitest suites. `package.json` and `vitest.config.mjs` define the current execution topology.
 
 Use targeted filtering while editing:
 

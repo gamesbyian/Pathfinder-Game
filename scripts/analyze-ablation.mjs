@@ -19,7 +19,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { computeImportanceScore, classifyFeature,
-         TEMPLATE_CONFIG_KEY } from './ablation-config.mjs';
+         TEMPLATE_CONFIG_KEY } from '../modules/solver/ablation-config.js';
 
 // ─── Argument parsing ─────────────────────────────────────────────────────────
 

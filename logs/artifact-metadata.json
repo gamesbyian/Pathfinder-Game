@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "scope": "tracked raw evidence exceptions under logs/",
+  "artifacts": [
+    {
+      "selector": { "kind": "exact", "value": "logs/solver-workflow/latest.json" },
+      "role": "current-pointer",
+      "canonicalInput": false,
+      "generator": "scripts/run-audit-export.mjs",
+      "artifactSchemaVersion": null,
+      "sourceCommitOrRunId": "embedded in artifact",
+      "consumers": ["scripts/check-audit-output.mjs", "solver audit comparison"],
+      "regenerationCommand": "npm run audit:newhint:full",
+      "supersededBy": null,
+      "safeToDelete": false,
+      "safeToRegenerate": true
+    },
+    {
+      "selector": { "kind": "prefix", "value": "logs/solver-workflow/2026-" },
+      "role": "historical-snapshot",
+      "canonicalInput": false,
+      "generator": "scripts/run-audit-export.mjs",
+      "artifactSchemaVersion": null,
+      "sourceCommitOrRunId": "timestamp and commit in filename; run metadata embedded in artifact",
+      "consumers": ["historical solver audit comparison"],
+      "regenerationCommand": null,
+      "supersededBy": "logs/solver-workflow/latest.json for current comparisons",
+      "safeToDelete": false,
+      "safeToRegenerate": false
+    },
+    {
+      "selector": { "kind": "prefix", "value": "logs/solver-randoms-baseline/batch-" },
+      "role": "historical-source-evidence",
+      "canonicalInput": false,
+      "generator": "historical random-corpus solver batch",
+      "artifactSchemaVersion": null,
+      "sourceCommitOrRunId": "embedded in each batch artifact",
+      "consumers": ["Corpus 1 solve-result provenance", "scripts/stress/compile-baseline.mjs fallback input"],
+      "regenerationCommand": null,
+      "supersededBy": "complete sequential benchmark inputs for current baseline compilation",
+      "safeToDelete": false,
+      "safeToRegenerate": false
+    },
+    {
+      "selector": { "kind": "exact", "value": "logs/stress-corpus1-baseline.json" },
+      "role": "compatibility-baseline",
+      "canonicalInput": false,
+      "generator": "scripts/stress/compile-baseline.mjs",
+      "artifactSchemaVersion": null,
+      "sourceCommitOrRunId": "source benchmark metadata embedded in artifact",
+      "consumers": ["scripts/stress/diff-baseline.mjs", "stress regression analysis"],
+      "regenerationCommand": "npm run stress:compile-baseline",
+      "supersededBy": null,
+      "safeToDelete": false,
+      "safeToRegenerate": true
+    },
+    {
+      "selector": { "kind": "exact", "value": "logs/stress-corpus2-baseline.json" },
+      "role": "comparison-baseline",
+      "canonicalInput": false,
+      "generator": "scripts/stress/compile-baseline.mjs",
+      "artifactSchemaVersion": null,
+      "sourceCommitOrRunId": "source benchmark metadata embedded in artifact",
+      "consumers": ["scripts/stress/diff-baseline.mjs", "new-solve detection"],
+      "regenerationCommand": "npm run stress:compile-baseline -- --mode=corpus2 --official=reports/stress/benchmark-latest-random.json",
+      "supersededBy": null,
+      "safeToDelete": false,
+      "safeToRegenerate": true
+    },
+    {
+      "selector": { "kind": "exact", "value": "logs/solver-randoms-baseline/verify-sample-parallel2.json" },
+      "role": "superseded-historical-snapshot",
+      "canonicalInput": false,
+      "generator": "historical contention verification run",
+      "artifactSchemaVersion": null,
+      "sourceCommitOrRunId": "embedded in artifact",
+      "consumers": ["historical methodology only"],
+      "regenerationCommand": null,
+      "supersededBy": "logs/stress-corpus2-baseline.json",
+      "safeToDelete": false,
+      "safeToRegenerate": false
+    },
+    {
+      "selector": { "kind": "prefix", "value": "logs/solver-corpus2-batches/archive/" },
+      "role": "superseded-run-archive",
+      "canonicalInput": false,
+      "generator": "portfolio sweep batch tools",
+      "artifactSchemaVersion": null,
+      "sourceCommitOrRunId": "batch JSON/checkpoint metadata and dated archive directory",
+      "consumers": ["dated regression-investigation reports"],
+      "regenerationCommand": null,
+      "supersededBy": "corresponding non-archive rerun or dated report",
+      "safeToDelete": false,
+      "safeToRegenerate": false
+    }
+  ]
+}

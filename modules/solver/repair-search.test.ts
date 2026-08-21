@@ -10,7 +10,7 @@ import { createState, applyMove } from './search-state.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import type { PruneDiagnostics } from './prune-gauntlet.js';
-import { withFeatureDisabled } from '../../scripts/ablation-config.mjs';
+import { withFeatureDisabled } from './ablation-config.js';
 
 const K = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 

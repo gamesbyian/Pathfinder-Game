@@ -38,7 +38,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { FEATURES } from '../ablation-config.mjs';
+import { FEATURES } from '../../modules/solver/ablation-config.js';
 import { packedToPair, witnessDescriptors } from './features.mjs';
 import { tracePathRanks } from './divergence-lib.mjs';
 

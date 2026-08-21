@@ -10,7 +10,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { PORTFOLIO_EXPERIMENT } from '../data/config/portfolio-experiment.js';
+import { PORTFOLIO_EXPERIMENT } from '../modules/solver/portfolio-experiment.js';
 import { parseLevelPositions } from './level-data-io.mjs';
 import { attemptConfigKey, attemptRecord } from './portfolio-solve-sweep-lib.mjs';
 

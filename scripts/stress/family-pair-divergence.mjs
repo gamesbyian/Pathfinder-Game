@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { findFamilyResultRow } from '../family-edge-identity.mjs';
 import path from 'node:path';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { FEATURES } from '../ablation-config.mjs';
+import { FEATURES } from '../../modules/solver/ablation-config.js';
 import { inverseTransformPoint, transformPoint } from '../../modules/domain/geometry.ts';
 import { PACK, UNPACK } from '../../modules/domain/cell-key.ts';
 import { compareAblations, comparePathTraces, compareSemanticSnapshots, scoreFlagAblation, tracePathRanks } from './divergence-lib.mjs';

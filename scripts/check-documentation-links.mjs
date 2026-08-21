@@ -176,11 +176,11 @@ for (const required of [
 
 // OPT_IN_FEATURES is a polarity registry, not a backlog, but the disposition ledger must cover
 // every retained default-off switch so an agent never has to infer status from code comments.
-const ablationSource = readFileSync(resolve(ROOT, 'scripts/ablation-config.mjs'), 'utf8');
+const ablationSource = readFileSync(resolve(ROOT, 'modules/solver/ablation-config.ts'), 'utf8');
 const optInStart = ablationSource.indexOf('export const OPT_IN_FEATURES = new Set([');
 const optInEnd = optInStart < 0 ? -1 : ablationSource.indexOf(']);', optInStart);
 if (optInStart < 0 || optInEnd < 0) {
-  failures.push('scripts/ablation-config.mjs: could not locate OPT_IN_FEATURES for ledger coverage check');
+  failures.push('modules/solver/ablation-config.ts: could not locate OPT_IN_FEATURES for ledger coverage check');
 } else {
   const optInBlock = ablationSource.slice(optInStart, optInEnd);
   const optInFlags = [...optInBlock.matchAll(/'([A-Z0-9_]+)'/g)].map((match) => match[1]);

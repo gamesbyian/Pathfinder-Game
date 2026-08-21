@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { compareExperimentArms, levelSelectionHash, validateExperimentManifest } from './experiment-manifest-lib.mjs';
-import { defaultConfig } from './ablation-config.mjs';
+import { defaultConfig } from '../modules/solver/ablation-config.js';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => {
     const [key, ...value] = x.split('='); return [key, value.join('=')];

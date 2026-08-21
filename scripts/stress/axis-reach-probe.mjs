@@ -39,7 +39,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { defaultConfig } from '../ablation-config.mjs';
+import { defaultConfig } from '../../modules/solver/ablation-config.js';
 import { loadProbeCorpora } from './probe-corpus-loader.mjs';
 
 installBrowserStubs();

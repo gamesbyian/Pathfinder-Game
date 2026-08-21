@@ -21,7 +21,7 @@ installBrowserStubs();
 
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
 const { createState, getNeighbors } = await import('../modules/solver/search-state.js');
-const { FEATURE_GROUPS, withFeatureDisabled } = await import('./ablation-config.mjs');
+const { FEATURE_GROUPS, withFeatureDisabled } = await import('../modules/solver/ablation-config.js');
 const { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } = await import('./level-data-io.mjs');
 
 const Solver = createSolver();

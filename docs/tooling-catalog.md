@@ -23,6 +23,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 | Existing generated variant trove | separate worktree of branch `claude/variant-levels-solver-insights-tpk4qg`; verify with `node scripts/family-trove-doctor.mjs --root=<path>`; see [`variant-level-research.md`](variant-level-research.md) |
 | Prior experiment evidence | [`../reports/README.md`](../reports/README.md), current queue, opt-in ledger |
 | Machine-readable investigation status | `npm run research:index` derives JSON from structured report metadata; queue and ledger remain separate current authorities; [`investigation-report-conventions.md`](investigation-report-conventions.md) |
+| Tracked raw-artifact meaning | [`../logs/artifact-metadata.json`](../logs/artifact-metadata.json); validated by `npm run check:audit-artifacts` |
 
 ## Command families
 
@@ -34,7 +35,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 | Stress | `stress:generate*`, `stress:validate-witnesses`, `stress:benchmark*`, `stress:regression`, `stress:solve-one`, `stress:reduce-level`, `stress:rank-levels`, `stress:failure-inbox`, `stress:lifecycle-failure-map`, `stress:solution-profile*`, `stress:provenance-coverage`; [`../data/stress/README.md`](../data/stress/README.md) |
 | Families | `family:generate`, `family:index`, `family:show`, `family:query`, `family:coverage`, `family:analyze`, `family:boundary-report`, `family:parent-hint-replay`, `stress:family-pair-divergence`, `solver:winning-attempts`; index and wide parent-replay batch accept `--trove-root`; safe boundary check: `family:trove:doctor`; [`variant-level-research.md`](variant-level-research.md) |
 | Hints | `hints:workbench`, `hints:workbench-parallel`, `hints:expansion-audit`, `hints:discover-candidates`, `hints:expand`, `hints:diversify`, `hints:calibrate-weights`, `hints:complete-sharded`; [`hint-workbench.md`](hint-workbench.md) |
-| Level/data | `levels:import-published`, `levels:generate-heatmaps`, `levels:heatmap-report`, `levels:ratings-report`, `check:hint-validity`, `check:level-provenance`, `check:corpus-level-formatting` |
+| Level/data | `levels:import-published`, `levels:generate-heatmaps`, `levels:heatmap-report`, `levels:ratings-report`, `check:hint-validity`, `check:level-provenance`, `check:corpus-level-formatting`, `facts:levels` / `check:current-level-facts` |
 | Remote research | [`.github/workflows/README.md`](../.github/workflows/README.md) |
 | Research status | `research:index`; deterministic structured-investigation JSON on stdout or `--out=<path>`, never a second maintained backlog |
 

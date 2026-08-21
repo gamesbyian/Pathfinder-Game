@@ -209,7 +209,7 @@ export function createRacePool(opts = {}) {
         const { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } = await import('../../modules/solver/attempts.js');
         const { getActiveGates, REPAIR_EXTRA_BUDGET_FRACTION, ATTRACTION_DIVERSITY_BUDGET_FRACTION } = await import('../../modules/solver/orchestration.js');
         const { createSolver } = await import('../../modules/Solver.js');
-        const { defaultConfig } = await import('../ablation-config.mjs');
+        const { defaultConfig } = await import('../../modules/solver/ablation-config.js');
         const Solver = createSolver();
 
         const timeBudgetMs = Number(levelOpts.timeBudgetMs) > 0 ? Number(levelOpts.timeBudgetMs) : 20000;

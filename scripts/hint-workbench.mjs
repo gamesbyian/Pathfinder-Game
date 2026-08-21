@@ -32,7 +32,7 @@ import { createHintAblationGenerator } from '../modules/solver/hint-ablation-gen
 import { deriveSolveAttemptInfo } from '../modules/solver/hint-provenance.ts';
 import { makeProvenanceEntry, mergeHints, toHint } from '../modules/domain/hint-types.ts';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
-import { FEATURE_GROUPS, withFeatureDisabled } from './ablation-config.mjs';
+import { FEATURE_GROUPS, withFeatureDisabled } from '../modules/solver/ablation-config.js';
 
 installBrowserStubs();
 

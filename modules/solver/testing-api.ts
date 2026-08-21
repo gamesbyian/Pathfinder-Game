@@ -46,7 +46,7 @@ export function createSolverTestingApi() {
         // so external tooling that needs to set prep._cfg directly — e.g. hint-divergence.mjs's
         // per-flag SCORE_* sweep — reuses the same mechanism production itself funnels every
         // opts.ablation through, instead of separately reconstructing "every flag defaults true"
-        // by hand-listing scripts/ablation-config.mjs's FEATURES (easy to get subtly wrong: an
+        // by hand-listing modules/solver/ablation-config.ts's FEATURES (easy to get subtly wrong: an
         // earlier version of hint-divergence.mjs did, complete only for the flags its own call
         // path happened to read).
         normalizeAblationConfig,

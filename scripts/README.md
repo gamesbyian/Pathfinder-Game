@@ -10,7 +10,9 @@ Use [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md) before scanning f
 - top-level `hint-*`: hint discovery/enumeration/provenance.
 - top-level `family-*`: variant/family generation and analysis.
 - `check-*`: repository/data/documentation invariants.
-- `*-unit-tests.mjs`: historical naming shared by both Vitest suites and standalone Node/CLI harnesses. Do not infer the runner from the filename; `vitest.config.mjs` and `package.json` are authoritative.
+- `current-level-facts.mjs`: derives the current level/count/maxima snapshot; `--check` guards the generated developer-reference block and `--write` refreshes it.
+- `*-unit-tests.mjs`: Vitest-owned unit suites.
+- `*-node-test.mjs`: standalone Node/CLI-driving harnesses owned by `npm run test:node` aliases.
 
 ## Before adding a script
 

@@ -53,7 +53,7 @@ See [`Solver Architecture`](DEVELOPER_REFERENCE.md#solver-architecture).
 See [`Common gotchas`](DEVELOPER_REFERENCE.md#common-gotchas).
 
 ## Level Stats
-See [`Level Stats`](DEVELOPER_REFERENCE.md#level-stats).
+See [`Level Stats`](DEVELOPER_REFERENCE.md#level-stats-currentgenerated-facts).
 
 ## Provenance
 See [`Provenance`](DEVELOPER_REFERENCE.md#provenance).

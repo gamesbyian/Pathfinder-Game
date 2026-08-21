@@ -7,6 +7,7 @@ Terse implementation map for work inside `modules/solver/`. Read [`../../docs/so
 | Change | Start here |
 |---|---|
 | Attempt ladder, stage eligibility, budgets, retries, result assembly | `orchestration.ts`, then `attempts.ts` / `attempt-dispatch.ts` |
+| Production defaults, ablation flags, portfolio experiment tiers | `ablation-config.ts`, `portfolio-experiment.ts` |
 | Core beam/DFS traversal or candidate expansion | `search.ts`, `search-state.ts`, `prep.ts` |
 | Candidate ranking / badness / ordering | `scoring.ts`, `diversification.ts` |
 | Lower bounds, hard feasibility, prune logic | `lower-bounds.ts` and its tests |

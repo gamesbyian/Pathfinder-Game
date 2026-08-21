@@ -10,7 +10,7 @@
  */
 import assert from 'node:assert/strict';
 import { buildRow, attemptConfigKey, attemptRecord } from './portfolio-solve-sweep-lib.mjs';
-import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from './test-lib/fixtures.mjs';
+import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from '../modules/solver/testing-fixtures.js';
 import { buildSolveWorkerResult } from '../modules/solver/worker-result-serialization.mjs';
 
 const PERSISTENT_ATTEMPT_FIELDS = new Set([
@@ -19,7 +19,10 @@ const PERSISTENT_ATTEMPT_FIELDS = new Set([
     'repair', 'repairMustTurnBiased', 'repairTurnBiased', 'seedSalt', 'randomSeed',
     'nodesExpanded', 'timedOut', 'bestBadness', 'finalBadness', 'attractionDiversity',
     'admissibleOrder', 'admissibleOrderNoTieBreak', 'admissibleOrderLds',
-    'mainLoopLateReserve', 'repairProbe',
+    'mainLoopLateReserve', 'repairProbe', 'repairProbeShrinkRecovery',
+    'allocatedWorkCeiling', 'allocatedNodeCeiling', 'workSpent', 'dedupNearTieRetry',
+    'admissibleOrderNonDefaultRetry', 'connectivityAxisExhaustedRetry',
+    'repairElitePrefixDfsRetry', 'mcNeighborBudgetRetry', 'repairLateProbe',
 ]);
 const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([]);
 
