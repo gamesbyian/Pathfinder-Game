@@ -5,6 +5,10 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
+
+// Fast/deep test-tier gate (see docs/testing.md's "Fast and deep gates" and
+// modules/solver/lower-bounds.test.ts's identical gate for the full rationale).
+const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 import { createSolver } from '../Solver.js';
 import { normalizeRawLevel } from './normalization.js';
 import {
@@ -37,7 +41,10 @@ test('hint helpers: signatures, dedup merge, counts, button label', () => {
     assert.equal(hintButtonLabel(3), 'Hints (3)');
 });
 
-test('a full session run finds novel validated hints across phases and completes', async () => {
+// Full-session integration tests: real solver search across real diversification phases is the
+// point (proving the plumbing actually finds/dedupes/halts on real work), not something a stub
+// could stand in for.
+deepTest('a full session run finds novel validated hints across phases and completes', async () => {
     const level = portalLevel();
     const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
     const events: string[] = [];
@@ -62,7 +69,7 @@ test('a full session run finds novel validated hints across phases and completes
     assert.equal(report.haltedByCancel, false);
 });
 
-test('already-known hints are not re-reported as novel', async () => {
+deepTest('already-known hints are not re-reported as novel', async () => {
     const level = portalLevel();
     // First session harvests everything within budget…
     const first = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
@@ -77,7 +84,7 @@ test('already-known hints are not re-reported as novel', async () => {
     }
 });
 
-test('an exhausted work ceiling halts the session early and marks it resumable (not complete)', async () => {
+deepTest('an exhausted work ceiling halts the session early and marks it resumable (not complete)', async () => {
     const level = portalLevel();
     const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 500, baselineBudgetMs: 500 });
     // runUntil now takes an absolute workMeter.units ceiling, not a Date.now() deadline — the
@@ -121,7 +128,7 @@ test('cancellation is observed and reported without an error entry', async () =>
 // admissibleOrder field nothing downstream ever read, so it was silently dropped before reaching
 // persisted provenance. Uses a mock solverApi for the same reason that file's test does — the real
 // solver only reaches admissible-order-search on levels everything else already fails.
-test('a baseline win with admissibleOrder: true gets a distinguishing phase in its provenance event', async () => {
+deepTest('a baseline win with admissibleOrder: true gets a distinguishing phase in its provenance event', async () => {
     const level = portalLevel();
     const real = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
     const realRun = await real.runUntil(() => workMeter.units + 500_000_000, {});

@@ -49,9 +49,9 @@ async function main() {
         const result = await runDiversification([
             `--levels-json=${fixtureLevelsPathRelative}`,
             '--levels=pos:1',
-            '--attempt-budget-ms=300',
-            '--baseline-budget-ms=500',
-            '--max-wall-ms=5000',
+            '--attempt-budget-ms=30',
+            '--baseline-budget-ms=100',
+            '--max-wall-ms=2000',
             `--output=${outputPath}`,
         ]);
         assert.match(result.stdout, /Hint diversification sweep: 1 level\(s\)/);
@@ -84,9 +84,9 @@ async function main() {
             `--levels-json=${fixtureLevelsPathRelative}`,
             '--levels=pos:1',
             '--combined-only',
-            '--attempt-budget-ms=300',
-            '--baseline-budget-ms=500',
-            '--max-wall-ms=5000',
+            '--attempt-budget-ms=30',
+            '--baseline-budget-ms=100',
+            '--max-wall-ms=2000',
             `--output=${combinedOnlyOutput}`,
         ]);
         assert.match(combinedOnlyResult.stdout, /Hint diversification sweep: 1 level\(s\)/);

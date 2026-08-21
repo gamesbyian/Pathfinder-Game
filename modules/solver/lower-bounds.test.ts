@@ -1,6 +1,14 @@
 /** Unit tests for Solver lower-bound pruning helpers. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
+
+// Fast/deep test-tier gate (see docs/testing.md's "Fast and deep gates"): this file's one
+// exhaustive-search property test is expensive because exhaustiveness IS the proof, not something
+// a smaller fixture could establish just as well. `deepTest` runs it exactly like `test` everywhere
+// (locally, `npm run ci`, the CI deep-verification job) except the fast CI job, which sets
+// SOLVER_DEEP_TESTS=0 to skip it for quicker signal — a relocation to a parallel job, not a
+// coverage cut.
+const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 import { AXIS_H, KEY_SPACE, PACK } from './encoding.js';
 import { getDistanceFromArray } from './distance.js';
 import { IntHashMap } from './int-hash-map.js';
@@ -753,7 +761,10 @@ test('property: topology connectivity over-approximates every truly reachable re
   assert.ok(reachableRequiredCells > 0, 'property exercised truly reachable required cells');
 });
 
-test('property: deadlock helpers only report independently unsatisfiable reachable states', () => {
+// By far the most expensive test in this file (~80s of the file's ~85s): an exhaustive DFS over
+// every reachable state of two small fixture levels, independently re-deriving exact remaining
+// cost at each state via a brute-force reference search.
+deepTest('property: deadlock helpers only report independently unsatisfiable reachable states', () => {
   const levels = [mustTurnLevel('cw'), mcForcedNeighborLevel()];
   const reportedDeadStates = [0, 0, 0];
   const diagnosedDeadStates = [0, 0, 0];
