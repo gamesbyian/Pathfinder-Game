@@ -6,6 +6,32 @@ const METADATA = /^# (.+)\r?\n\r?\n> \*\*Status:\*\* ([a-z-]+)\r?\n> \*\*Last ev
 const MARKDOWN_LINK = /\[[^\]]*\]\(([^)#]+)(?:#[^)]+)?\)/g;
 const ARTIFACT_PATH = /`((?:data|logs|reports)\/[A-Za-z0-9_./*{}<>-]+)`/g;
 
+function tableRows(source, heading) {
+    const start = source.indexOf(heading);
+    if (start < 0) return [];
+    const lines = source.slice(start).split(/\r?\n/).slice(1);
+    const rows = [];
+    let entered = false;
+    for (const line of lines) {
+        if (line.startsWith('## ')) break;
+        if (!line.startsWith('|')) { if (entered && line.trim()) break; continue; }
+        entered = true;
+        if (/^\|[ :|-]+\|$/u.test(line)) continue;
+        rows.push(line.split('|').slice(1, -1).map(cell => cell.trim()));
+    }
+    return rows.slice(1);
+}
+
+const normalizedState = value => {
+    const state = value.replace(/\*\*/g, '').toLowerCase();
+    if (state.includes('superseded')) return 'superseded';
+    if (state.includes('active') || state.includes('shipping') || state.includes('promotion gate')) return 'active';
+    if (state.includes('promoted') || state.includes('default-on')) return 'promoted';
+    if (state.includes('negative') || state.includes('negligible') || state.includes('closed')) return 'rejected';
+    if (state.includes('complete')) return 'completed';
+    return 'pending';
+};
+
 function repositoryPath(root, reportPath, destination) {
     if (/^[a-z][a-z0-9+.-]*:/i.test(destination)) return null;
     const resolved = path.resolve(root, path.dirname(reportPath), destination);
@@ -38,7 +64,23 @@ export function buildResearchStatusIndex(root) {
             decision: metadata[5], remainingGate: metadata[6], artifacts: [...artifacts].sort(),
         });
     }
-    return { schemaVersion: 1, scope: 'structured-investigation-reports', topics };
+    const queuePath = 'docs/solver-optimization-current-queue.md';
+    const queueSource = existsSync(path.join(root, queuePath)) ? readFileSync(path.join(root, queuePath), 'utf8') : '';
+    const queue = tableRows(queueSource, '## Ranked queue').map(([priority, question, state, gate]) => ({
+        topicId: `queue-${priority}`, priority: Number(priority), question,
+        status: normalizedState(state), authority: queuePath, authorityKind: 'current-queue',
+        state, remainingGate: gate,
+    }));
+    const ledgerPath = 'docs/solver-opt-in-experiment-ledger.md';
+    const ledgerSource = existsSync(path.join(root, ledgerPath)) ? readFileSync(path.join(root, ledgerPath), 'utf8') : '';
+    const experiments = tableRows(ledgerSource, '## Current production-default-OFF flags')
+        .map(([flag, disposition, evidence]) => ({
+            experimentId: flag.replace(/`/g, ''), status: normalizedState(disposition), disposition,
+            latestEvidenceOrGate: evidence, authority: ledgerPath, authorityKind: 'opt-in-ledger',
+        }));
+    return { schemaVersion: 2, scope: 'current-authority-and-structured-evidence',
+        authorityOrder: ['current-queue', 'opt-in-ledger', 'structured-report'], queue, experiments,
+        evidence: topics };
 }
 
 export function writeResearchStatusIndex(index, output) {

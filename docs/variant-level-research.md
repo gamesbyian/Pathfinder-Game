@@ -54,11 +54,24 @@ The wide parent-hint replay batch also accepts `--trove-root=<path>` for read-on
 variant hints while continuing to read/write canonical parent corpora in the current-main checkout.
 `--save-hints` remains the explicit mutation gate; omission is a dry run.
 
-### Evaluation-run provenance limitation
+### Evaluation-run provenance
 
-Generation provenance is normalized for new family manifests, but historical **solver evaluation runs are not yet governed by one universal run-manifest schema**. The family index exposes `runId`, `solverCommit`, budget, winning configuration, and related fields when the source census/report artifact contains them; absence means unknown, not that the run had no such property. Do not infer a uniform invocation contract across old `logs/family-census/` and wide-trove artifacts from the normalized index rows alone.
+Generation provenance is normalized for new family manifests. New decision-bearing solver
+evaluation runs use the family run contract validated by
+`scripts/experiment-manifest-lib.mjs::validateFamilyEvaluationRunManifest`. It records solver
+commit/ref/dirty state, tool and workflow, corpus/family selection, external-trove identity, solver
+mode/profile/config/flags, work/node/wall budgets, strict-total-work mode, seeds, one-based shard
+identity, timestamps, outputs, and source generation artifacts. Put each shard manifest under
+`logs/family-census/**/manifest.json` and list repository-relative output paths.
 
-For new decision-bearing family evaluations, preserve solver commit, run/workflow identity, selection/population, relevant flags/profile, deterministic work budget and wall deadline, seeds/sharding, timestamps, and output paths in the run artifact or an accompanying manifest. Prefer the repository's existing experiment/run-manifest machinery when it fits rather than creating an investigation-specific provenance format. A future consolidation may normalize these heterogeneous historical run headers, but must not rewrite old evidence merely to make it look uniform.
+The disposable family index groups valid shards by `runId`, reports whether all declared shards are
+present, and attaches normalized provenance to listed output evidence. A manifest with a declared
+schema that fails validation is an explicit index diagnostic. Pre-schema historical run notes and
+historical evidence remain readable: missing provenance stays `null`/unknown rather than being
+guessed. Do not infer a uniform invocation contract across old census and wide-trove artifacts.
+
+This contract extends the existing experiment-manifest helper rather than creating a parallel
+family-only provenance subsystem. Historical artifacts are not rewritten merely to look uniform.
 
 When citing trove evidence, record the branch/commit or artifact hash used. Generation manifests are durable evidence about the generated family; they do not make historical solver results current. Re-test decision-bearing solver cliffs on current code.
 

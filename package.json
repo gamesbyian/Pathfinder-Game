@@ -133,7 +133,7 @@
     "test:divergence-lib": "node scripts/stress/divergence-lib-node-test.mjs",
     "test:research-analysis-lib": "node scripts/stress/research-analysis-lib-check.mjs",
     "test:experiment-manifest": "node scripts/experiment-manifest-lib-check.mjs",
-    "solver:experiment-preflight": "node scripts/solver-experiment-preflight.mjs",
+    "solver:experiment-preflight": "tsx scripts/solver-experiment-preflight.mjs",
     "solver:winning-lineage-pilot": "node scripts/run-bundled.mjs scripts/stress/winning-lineage-pilot.mjs",
     "solver:winning-prefix-atlas-pilot": "node scripts/run-bundled.mjs scripts/stress/winning-prefix-atlas-pilot.mjs",
     "solver:producer-population-pilot": "node scripts/run-bundled.mjs scripts/stress/producer-population-pilot.mjs",

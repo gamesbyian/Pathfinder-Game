@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { familyArtifactRoots } from './family-paths.mjs';
+import { validateFamilyEvaluationRunManifest } from './experiment-manifest-lib.mjs';
 
 function filesBelow(root, accept) {
     if (!existsSync(root)) return [];
@@ -43,6 +44,11 @@ function evidenceRows(value, source, run = {}) {
                 work: item.workSpent ?? item.work ?? item.nodesExpanded ?? null,
                 budget: item.workBudget ?? item.budget ?? run.workBudget ?? null,
                 runId: item.runId ?? run.runId ?? null, solverCommit: item.solverCommit ?? run.solverCommit ?? null,
+                nodeBudget: item.nodeBudget ?? run.nodeBudget ?? null,
+                wallDeadlineMs: item.wallDeadlineMs ?? run.wallDeadlineMs ?? null,
+                strictTotalWorkBudget: item.strictTotalWorkBudget ?? run.strictTotalWorkBudget ?? null,
+                runManifestPath: item.runManifestPath ?? run.runManifestPath ?? null,
+                shard: item.shard ?? run.shard ?? null,
                 evidencePath: source,
             });
         }
@@ -55,13 +61,14 @@ function evidenceRows(value, source, run = {}) {
     return rows;
 }
 
-function readEvidence(file, source) {
+function readEvidence(file, source, normalizedRun = null) {
     try {
         const text = readFileSync(file, 'utf8');
         const context = artifactContext(source);
-        if (file.endsWith('.jsonl')) return text.split(/\r?\n/).filter(Boolean).flatMap(line => evidenceRows(JSON.parse(line), source, context));
+        if (file.endsWith('.jsonl')) return text.split(/\r?\n/).filter(Boolean)
+            .flatMap(line => evidenceRows(JSON.parse(line), source, { ...context, ...(normalizedRun ?? {}) }));
         const parsed = JSON.parse(text);
-        return evidenceRows(parsed, source, { ...context, ...parsed });
+        return evidenceRows(parsed, source, { ...context, ...parsed, ...(normalizedRun ?? {}) });
     } catch (error) {
         return [{ parseError: String(error.message), evidencePath: source }];
     }
@@ -110,6 +117,72 @@ export function buildFamilyIndex(troveRoot) {
             manifestPath,
         });
     }
+    const runManifestFiles = filesBelow(roots.census, file => path.basename(file) === 'manifest.json');
+    const runManifestDiagnostics = [];
+    const runShards = [];
+    for (const file of runManifestFiles) {
+        const manifestPath = relative(roots.root, file);
+        try {
+            const parsed = JSON.parse(readFileSync(file, 'utf8'));
+            // Pre-schema historical run notes are evidence with unknown fields, not malformed
+            // instances of the new contract.
+            if (!('schemaVersion' in parsed)) continue;
+            const manifest = validateFamilyEvaluationRunManifest(parsed);
+            runShards.push({ ...manifest, manifestPath });
+        } catch (error) {
+            runManifestDiagnostics.push({ path: manifestPath, reason: 'invalid-run-manifest', error: String(error.message) });
+        }
+    }
+    const runsById = new Map();
+    const invariantFields = ['schemaVersion', 'solver', 'invocation', 'selection', 'trove', 'solverPolicy', 'budgets', 'seeds'];
+    for (const shard of runShards) {
+        const row = runsById.get(shard.runId) ?? { runId: shard.runId, schemaVersion: shard.schemaVersion,
+            solver: shard.solver, invocation: shard.invocation, selection: shard.selection, trove: shard.trove,
+            solverPolicy: shard.solverPolicy, budgets: shard.budgets, seeds: shard.seeds,
+            shardCount: shard.shard.count, shards: [], startedAt: shard.startedAt, completedAt: shard.completedAt,
+            outputArtifacts: [], sourceGenerationArtifacts: [], manifestPaths: [], valid: true };
+        const conflictingFields = invariantFields.filter(field => JSON.stringify(row[field]) !== JSON.stringify(shard[field]));
+        if (row.shardCount !== shard.shard.count) conflictingFields.push('shard.count');
+        if (conflictingFields.length) {
+            row.valid = false;
+            runManifestDiagnostics.push({ path: shard.manifestPath, reason: 'inconsistent-run-shard',
+                runId: shard.runId, fields: conflictingFields });
+        }
+        if (row.shards.includes(shard.shard.index)) {
+            row.valid = false;
+            runManifestDiagnostics.push({ path: shard.manifestPath, reason: 'duplicate-run-shard',
+                runId: shard.runId, shardIndex: shard.shard.index });
+        }
+        row.shards.push(shard.shard.index); row.outputArtifacts.push(...shard.outputArtifacts);
+        row.sourceGenerationArtifacts.push(...shard.sourceGenerationArtifacts); row.manifestPaths.push(shard.manifestPath);
+        if (Date.parse(shard.startedAt) < Date.parse(row.startedAt)) row.startedAt = shard.startedAt;
+        if (Date.parse(shard.completedAt) > Date.parse(row.completedAt)) row.completedAt = shard.completedAt;
+        runsById.set(shard.runId, row);
+    }
+    const runs = [...runsById.values()].map(run => ({ ...run, shards: [...new Set(run.shards)].sort((a, b) => a - b),
+        outputArtifacts: [...new Set(run.outputArtifacts)].sort(), sourceGenerationArtifacts: [...new Set(run.sourceGenerationArtifacts)].sort(),
+        manifestPaths: run.manifestPaths.sort(), complete: run.valid && new Set(run.shards).size === run.shardCount })).sort((a, b) => a.runId.localeCompare(b.runId));
+    const runByOutput = new Map();
+    for (const shard of runShards) {
+        const run = runsById.get(shard.runId);
+        if (!run?.valid) continue;
+        for (const output of shard.outputArtifacts) {
+            const normalized = path.posix.normalize(output);
+            if (runByOutput.has(normalized)) {
+                run.valid = false;
+                const indexedRun = runs.find(candidate => candidate.runId === shard.runId);
+                if (indexedRun) { indexedRun.valid = false; indexedRun.complete = false; }
+                runManifestDiagnostics.push({ path: shard.manifestPath, reason: 'duplicate-output-artifact',
+                    output: normalized, runId: shard.runId });
+                runByOutput.delete(normalized);
+                continue;
+            }
+            runByOutput.set(normalized, { runId: shard.runId, solverCommit: shard.solver.commit,
+                workBudget: shard.budgets.workUnits, nodeBudget: shard.budgets.nodeCeiling,
+                wallDeadlineMs: shard.budgets.wallDeadlineMs, strictTotalWorkBudget: shard.solverPolicy.strictTotalWorkBudget,
+                runManifestPath: shard.manifestPath, shard: shard.shard });
+        }
+    }
     const evidenceCandidates = [
         ...filesBelow(roots.census, file => /\.(json|jsonl)$/.test(file)),
         ...filesBelow(roots.reports, file => /wide-trove-attempts-.+\.json$/.test(path.basename(file))),
@@ -118,7 +191,10 @@ export function buildFamilyIndex(troveRoot) {
     const evidenceFiles = evidenceCandidates.filter(file => statSync(file).size <= maximumEvidenceBytes);
     const skippedEvidenceArtifacts = evidenceCandidates.filter(file => statSync(file).size > maximumEvidenceBytes)
         .map(file => ({ path: relative(roots.root, file), bytes: statSync(file).size, reason: 'exceeds-parser-limit' }));
-    const parsedEvidence = evidenceFiles.flatMap(file => readEvidence(file, relative(roots.root, file)));
+    const parsedEvidence = evidenceFiles.filter(file => path.basename(file) !== 'manifest.json').flatMap(file => {
+        const source = relative(roots.root, file);
+        return readEvidence(file, source, runByOutput.get(source));
+    });
     const parseFailures = parsedEvidence.filter(row => row.parseError).map(row => ({ path: row.evidencePath, error: row.parseError }));
     const evidence = parsedEvidence.filter(row => !row.parseError);
     const identitiesByVariantId = new Map();
@@ -147,15 +223,16 @@ export function buildFamilyIndex(troveRoot) {
     return {
         // Deliberately exclude timestamps and absolute roots so equal canonical inputs produce a
         // byte-identical disposable index in different worktrees.
-        schemaVersion: 3,
+        schemaVersion: 4,
         counts: { families: families.length, variants: variants.length,
             parents: new Set(families.map(f => `${f.parentCorpus ?? f.corpus}\0${f.parentId}`)).size,
             variantsWithEvidence: variants.filter(v => v.evaluated).length,
             evidenceArtifacts: evidenceFiles.length, evidenceParseFailures: parseFailures.length,
             skippedEvidenceArtifacts: skippedEvidenceArtifacts.length,
-            manifestDiagnostics: manifestDiagnostics.length },
-        diagnostics: { manifests: manifestDiagnostics, evidenceParseFailures: parseFailures, skippedEvidenceArtifacts },
-        families, variants,
+            manifestDiagnostics: manifestDiagnostics.length, normalizedRuns: runs.length,
+            runManifestDiagnostics: runManifestDiagnostics.length },
+        diagnostics: { manifests: manifestDiagnostics, runManifests: runManifestDiagnostics, evidenceParseFailures: parseFailures, skippedEvidenceArtifacts },
+        runs, families, variants,
     };
 }
 

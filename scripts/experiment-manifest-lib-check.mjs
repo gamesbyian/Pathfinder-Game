@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { compareExperimentArms, levelSelectionHash, validateExperimentManifest } from './experiment-manifest-lib.mjs';
+import { compareExperimentArms, levelSelectionHash, validateExperimentManifest, validateFamilyEvaluationRunManifest } from './experiment-manifest-lib.mjs';
 
 const workflowInputs = {
     corpus2_budget_ms: '86400000', corpus2_node_budget: '36000000', corpus2_workers: '2',
@@ -16,6 +16,16 @@ const base = { schemaVersion: 2, experimentId: 'e', solverRef: 'abc', corpus: 'c
     profile: 'default', instrumentation: 'off', workflow: 'solver-stress-refresh', workflowInputs };
 const control = { ...base, runId: 'c', arm: 'control', solverFlags: { TARGET: false, OTHER: true }, output: 'c.json' };
 const treatment = { ...base, runId: 't', arm: 'treatment', solverFlags: { TARGET: true, OTHER: true }, output: 't.json' };
+const familyRun = { schemaVersion: 1, runId: 'family-run', solver: { commit: 'abc', ref: 'main', dirty: false },
+    invocation: { tool: 'family-evaluate', workflow: null }, selection: { corpora: ['corpus2'], families: [] },
+    trove: { branch: null, commit: null, artifactSha256: '123' },
+    solverPolicy: { mode: 'cold', profile: 'default', config: null, flags: {}, strictTotalWorkBudget: true },
+    budgets: { workUnits: 100, nodeCeiling: null, wallDeadlineMs: 1000 }, seeds: [1],
+    shard: { count: 1, index: 1 }, startedAt: '2026-08-21T00:00:00Z', completedAt: '2026-08-21T00:01:00Z',
+    outputArtifacts: ['logs/run.json'], sourceGenerationArtifacts: ['data/family-manifest.json'] };
+assert.equal(validateFamilyEvaluationRunManifest(familyRun), familyRun);
+assert.throws(() => validateFamilyEvaluationRunManifest({ ...familyRun, shard: { count: 2, index: 3 } }), /shard/);
+assert.throws(() => validateFamilyEvaluationRunManifest({ ...familyRun, solver: { commit: 'abc' } }), /solver/);
 assert.equal(validateExperimentManifest(control), control);
 assert.deepEqual(compareExperimentArms(control, treatment, 'TARGET'), {
     matched: true, targetFlag: 'TARGET', levels: 2, allowedWorkflowInputDifferences: [],
@@ -70,7 +80,7 @@ const workflowInputString = inputs => Object.entries(inputs).map(([key, value]) 
 // "off" and an explicit enable_flags means "on" -- exactly what PRUNE_MC_NEIGHBOR_BUDGET stopped
 // being once it was promoted to default-on (2026-08-12). This test validates the preflight tool's
 // consistency-checking mechanism in general, not that specific flag's disposition.
-const runPreflight = ({ runId, flagValue, inputs }) => spawnSync(process.execPath, [
+const runPreflight = ({ runId, flagValue, inputs }) => spawnSync(process.execPath, ['--import', 'tsx',
     'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-test', `--run-id=${runId}`, `--corpus=${corpus}`,
     '--arm=control', `--flags=PRUNE_PORTAL_PARITY_ENVELOPE=${flagValue}`, '--workflow=solver-stress-refresh',
     `--workflow-inputs=${workflowInputString(inputs)}`, '--seeds=', '--work-budget=10', '--wall-deadline-ms=100',

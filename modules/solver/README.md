@@ -6,6 +6,7 @@ Terse implementation map for work inside `modules/solver/`. Read [`../../docs/so
 
 | Change | Start here |
 |---|---|
+| Stage identity and budget vocabulary | `stage-policy.ts`, then the executor in `orchestration.ts` |
 | Attempt ladder, stage eligibility, budgets, retries, result assembly | `orchestration.ts`, then `attempts.ts` / `attempt-dispatch.ts` |
 | Production defaults, ablation flags, portfolio experiment tiers | `ablation-config.ts`, `portfolio-experiment.ts` |
 | Core beam/DFS traversal or candidate expansion | `search.ts`, `search-state.ts`, `prep.ts` |
@@ -20,7 +21,12 @@ Terse implementation map for work inside `modules/solver/`. Read [`../../docs/so
 
 ## Large files
 
-`orchestration.ts` is intentionally the first place to inspect for policy flow, but it is large. Do not read it wholesale by default. Search for the stage/flag/result field named by the task, then follow the local helper calls. `repair-search.ts`, `search.ts`, and their tests are also large enough that targeted symbol reads are preferable.
+Start stage work at `stage-policy.ts`: it owns stable policy-stage IDs, ordering metadata, canonical
+telemetry labels, budget-policy vocabulary, and the compatibility projection to older boolean
+report markers. `orchestration.ts` remains the execution authority; the first-class descriptors are
+an intentionally behavior-neutral seam, not yet a declarative executor.
+
+`orchestration.ts` is intentionally the first place to inspect for execution flow, but it is large. Do not read it wholesale by default. Search for the canonical stage ID, then follow the local helper calls. `repair-search.ts`, `search.ts`, and their tests are also large enough that targeted symbol reads are preferable.
 
 When changing orchestration, check every representation of the same fact. Attempt/stage identity, budgets, telemetry, provenance, reporter projection, sequential execution, and raced execution have historically drifted when updated independently. [`../../docs/architecture-unification-audit.md`](../../docs/architecture-unification-audit.md) tracks the structural consolidation direction.
 
