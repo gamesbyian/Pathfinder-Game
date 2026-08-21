@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
+
+// Fast/deep test-tier gate (see docs/testing.md's "Fast and deep gates" and
+// modules/solver/lower-bounds.test.ts's identical gate for the full rationale).
+const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 import { PACK } from './encoding.js';
 import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
@@ -80,6 +84,7 @@ test('primeAttempt.seedSalt threads through to the underlying repair search PRNG
     const result = await solveLevel(level, {
         timeBudgetMs: 50,
         primeAttempt: { gateKey, configKey, seedSalt, nodeBudget: 1000 },
+        attemptSearchForTesting: exhaustingDispatch,
     });
     assert.equal(result.attempts[0]?.repair, true, 'the prime attempt itself should be recorded first');
     assert.equal(result.attempts[0]?.seedSalt, seedSalt);
@@ -316,12 +321,32 @@ function makeRepairGatedInfeasibleLevel() {
     } as unknown as NormalizedLevel;
 }
 
+// A stub attempt dispatcher for tests whose assertion is about orchestration bookkeeping (attempt
+// scheduling, seed/flag routing, node-budget capping) rather than an actual solve outcome: it never
+// finds a solution, but honestly reports nodesExpanded as whatever nodeBudget it was granted
+// (simulating a search that exhausts its allotted round rather than idling), so real accounting
+// logic under test — orchestration.ts's own budget apportionment, not this file's search cost —
+// still sees genuine numbers. Using this in place of a real repair/DFS search turns a multi-second
+// node-budget-bound solve into a sub-millisecond one without touching the orchestration code being
+// tested; see the sibling STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET tests above for the same
+// pattern applied by hand.
+const exhaustingDispatch: typeof runAttemptSearch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+    const prep = args[3];
+    const nodeBudget = args[8];
+    const out = args[9];
+    const spent = Number.isFinite(nodeBudget) ? Number(nodeBudget) : 1;
+    if (prep._metrics) prep._metrics.nodesExpanded += spent;
+    if (out) out.nodesExpanded = spent;
+    return null;
+}) as typeof runAttemptSearch;
+
 test('repair probe retries the ordinary tier across REPAIR_PROBE_ORDINARY_SEED_SALTS', async () => {
     // timeBudgetMs is tiny on purpose: the probe ignores it entirely (its own node budgets
-    // decide its cost — see runRepairProbe's own comment), so this only shrinks the main
-    // loop/full repair fallback that runs afterward, keeping the test's wall time close to the
-    // probe's own (unavoidable) cost of exhausting 5 seeds x 2,000,000 nodes.
-    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 50 });
+    // decide its cost — see runRepairProbe's own comment). The dispatch is stubbed to report
+    // exhausting whatever node budget each round grants (see exhaustingDispatch above) instead of
+    // actually running 5 seeds x 2,000,000 real search nodes — this test is about the probe's own
+    // scheduling (attempt count, recorded seedSalt values), not about real search cost.
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 50, attemptSearchForTesting: exhaustingDispatch });
     assert.equal(result.ok, false);
     const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === REPAIR_PROBE_ATTEMPT_MS_CAP);
     assert.equal(probeAttempts.length, 2);
@@ -337,6 +362,7 @@ test('STRATEGY_REPAIR_PROBE_MULTI_SEED: false restricts the probe to a single se
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 50,
         ablation: { STRATEGY_REPAIR_PROBE: true, STRATEGY_REPAIR_PROBE_MULTI_SEED: false },
+        attemptSearchForTesting: exhaustingDispatch,
     });
     assert.equal(result.ok, false);
     const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === REPAIR_PROBE_ATTEMPT_MS_CAP);
@@ -570,7 +596,7 @@ test('repairBudgetFractionOverride: undefined (production default) still runs th
     // Guards against the fix above accidentally widening beyond exactly-0 (e.g. treating any
     // falsy/undefined override as "skip") — the production default (no override at all) must
     // reach the probe exactly as before this fix.
-    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 50 });
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 50, attemptSearchForTesting: exhaustingDispatch });
     assert.equal(result.ok, false);
     assert.equal(result.attempts.some(a => a.repair), true);
 });
@@ -584,7 +610,13 @@ test('repairBudgetFractionOverride: undefined (production default) still runs th
 // zero chance to ever run. Fixed by capping each seed-salt round's own node budget by whatever's
 // left of the external ceiling — confirms the probe now stays close to a small external nodeBudget
 // instead of overshooting by a full round's worth (2,000,000 here).
-test('the repair probe caps itself to a small external nodeBudget instead of running its full internal worst case', async () => {
+// The one deliberately-not-stubbed test in this section (see the comment inside it): a real
+// search, so real cross-tier node-budget capping arithmetic is what's actually exercised.
+deepTest('the repair probe caps itself to a small external nodeBudget instead of running its full internal worst case', async () => {
+    // Uses the real search, not exhaustingDispatch: this test's whole point is the cross-tier node-
+    // budget capping arithmetic that decides how much of the external ceiling each round actually
+    // gets to spend — a stub that reports "spent = whatever it was granted" would just replay that
+    // same arithmetic back at itself and could never catch a regression in it.
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 50,
         nodeBudget: 2_500_000, // < 4,000,000 (both ordinary seeds' combined worst case)
@@ -2121,6 +2153,7 @@ test('repair-elite-prefix-dfs-retry pass reruns the repair ladder once more afte
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
+        attemptSearchForTesting: exhaustingDispatch,
     });
     assert.equal(result.ok, false);
     const retryAttempts = result.attempts.filter(a => a.repairElitePrefixDfsRetry === true);
@@ -2133,7 +2166,7 @@ test('repair-elite-prefix-dfs-retry pass reruns the repair ladder once more afte
 });
 
 test('repair-elite-prefix-dfs-retry pass is inert by default (cfg=null): no retry attempt is ever run', async () => {
-    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 1000 });
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 1000, attemptSearchForTesting: exhaustingDispatch });
     assert.equal(result.ok, false);
     assert.equal(result.attempts.some(a => a.repairElitePrefixDfsRetry === true), false);
 });
@@ -2143,7 +2176,7 @@ test('repair-elite-prefix-dfs-retry pass stays off under an explicit { STRATEGY_
         { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: false },
         { STRATEGY_REPAIR_ELITE_PREFIX_DFS: false },
     ]) {
-        const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 1000, ablation });
+        const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 1000, ablation, attemptSearchForTesting: exhaustingDispatch });
         assert.equal(result.ok, false);
         assert.equal(result.attempts.some(a => a.repairElitePrefixDfsRetry === true), false);
     }
@@ -2154,6 +2187,7 @@ test('repairElitePrefixDfsRetryBudgetFractionOverride: 0 suppresses the pass eve
         timeBudgetMs: 1000,
         ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
         repairElitePrefixDfsRetryBudgetFractionOverride: 0,
+        attemptSearchForTesting: exhaustingDispatch,
     });
     assert.equal(result.attempts.some(a => a.repairElitePrefixDfsRetry === true), false);
 });

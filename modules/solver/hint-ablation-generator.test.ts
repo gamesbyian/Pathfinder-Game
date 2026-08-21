@@ -14,6 +14,10 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
+
+// Fast/deep test-tier gate (see docs/testing.md's "Fast and deep gates" and
+// modules/solver/lower-bounds.test.ts's identical gate for the full rationale).
+const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 import { createSolver } from '../Solver.js';
 import { pathSignature } from '../domain/hint-novelty.js';
 import { createHintAblationGenerator } from './hint-ablation-generator.js';
@@ -39,7 +43,8 @@ function rawForcedPortalLevel(hints: number[][] = []): any {
 const PHASES_ALL = { baseline: true, cascade: true, swap: true, portalCascade: true, swapPortal: true, combined: true, swapCombined: true };
 const BUDGETS = { attemptBudgetMs: 400, baselineBudgetMs: 2000, wallClockDeadlineMs: 20_000 };
 
-test('a full run finds novel validated hints across phases, all of which use the required portal', async () => {
+// Full-run integration tests: real solver search across real ablation phases is the point.
+deepTest('a full run finds novel validated hints across phases, all of which use the required portal', async () => {
     const raw = rawForcedPortalLevel();
     const result = await createHintAblationGenerator(raw, 1, { solverApi, ...BUDGETS, phases: PHASES_ALL });
 
@@ -78,7 +83,7 @@ test('a full run finds novel validated hints across phases, all of which use the
     for (const h of result.novel) assert.ok(result.discoveries.has(pathSignature(h)));
 });
 
-test('already-known hints are not re-reported as novel on a second run', async () => {
+deepTest('already-known hints are not re-reported as novel on a second run', async () => {
     const raw = rawForcedPortalLevel();
     const first = await createHintAblationGenerator(raw, 1, { solverApi, ...BUDGETS, phases: PHASES_ALL });
     assert.ok(first.novel.length > 0);

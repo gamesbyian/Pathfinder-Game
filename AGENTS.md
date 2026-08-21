@@ -38,9 +38,9 @@ Shortest reliable entry point for AI coding and research agents. Load only the r
 
 Use the cheapest check that answers the iteration question, then run the relevant finish-line validation locally when the task requires it. GitHub Actions is optional remote execution, not a prerequisite for pushing or merging.
 
-- Normal code: targeted tests while iterating, then local `npm run ci` for completion confidence.
+- Normal code: targeted tests while iterating, then local `npm run ci:fast` for completion confidence — it's the default finish-line gate (~1 min) and covers the same code the full gate does, minus only the handful of tests whose own subject is deep solver-search cost. Use full `npm run ci` instead when the change touches solver search/orchestration/repair/diversification/hint-ablation code, when a deep test's own assertion is directly relevant, when the change plausibly shifts coverage thresholds, or as final validation before a high-stakes completeness claim — see [`docs/testing.md`](docs/testing.md)'s "Core commands" for the exact defensibility rule.
 - Browser/UI: relevant Playwright subset; `npm run ci:full` for broad browser confidence when warranted.
-- Solver hot path: targeted probes, then the solved-set and cost requirements in [`docs/testing.md`](docs/testing.md). `solver:bench --check` does not measure performance.
+- Solver hot path: targeted probes, then the solved-set and cost requirements in [`docs/testing.md`](docs/testing.md). Use full `npm run ci`, not `ci:fast`. `solver:bench --check` does not measure performance.
 - Hard prune/cache/correctness: use the stronger soundness/referee/differential requirements in the solver docs.
 - Documentation: run `npm run check:documentation-links` when possible.
 

@@ -1,6 +1,10 @@
 /** Unit tests for the iterated-local-search repair fallback (repair-search.ts). */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
+
+// Fast/deep test-tier gate (see docs/testing.md's "Fast and deep gates" and
+// modules/solver/lower-bounds.test.ts's identical gate for the full rationale).
+const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES } from './policy.js';
@@ -587,7 +591,10 @@ function r02560Level() {
 }
 const R02560_NODE_BUDGET = 900_000;
 
-test('closeLengthGap (default-enabled) rescues R02560 within a node budget the disabled path cannot', async () => {
+// The single most expensive test in this file (~15s): a real regression rescue against a real
+// published level within a real node budget. The cost of actually spending that budget is what's
+// under test, so it stays full-strength rather than being sped up.
+deepTest('closeLengthGap (default-enabled) rescues R02560 within a node budget the disabled path cannot', async () => {
     const level = r02560Level();
     const gateKey = K(11, 5);
 

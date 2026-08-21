@@ -1,17 +1,25 @@
 #!/usr/bin/env node
 /**
  * Runs independent package.json scripts concurrently, buffering each script's
- * output and printing it whole as each finishes (no interleaving).
+ * output and printing it whole as each finishes (no interleaving), tagged
+ * with its own elapsed time — a per-command timing report as a side effect of
+ * running things in parallel, not an extra step.
  *
- * Used by `npm run ci` to run its three phases (`check`, `test:coverage`,
- * `test:node`) in parallel: the phases are mutually independent — static
- * checks, the vitest coverage run, and the node validators share no writable
- * paths (`.solver-tools/` bundling only happens inside `test:node`, which
- * stays internally sequential) — so the gate's wall time is max(phase) instead
- * of sum(phase). Unlike the old `&&` chain, every phase runs to completion
- * even when another fails (strictly more failure signal per run); the exit
- * code is still nonzero if any phase failed, so nothing passes that the
- * sequential form would have caught.
+ * Used by `check` and `test:node` to fan out their own independent
+ * sub-checks/sub-validators (replacing `run-p`, which gives none of that
+ * timing/output attribution — see the "parallel run summary" each produces).
+ *
+ * Deliberately NOT used to run `check`/`test:coverage`/`test:node` themselves
+ * in parallel inside `npm run ci`: each of those three already saturates a
+ * typical 4-core box on its own (`test:node` alone fans out ~30 concurrent
+ * child processes; `check` fans out over a dozen; vitest spawns its own
+ * worker pool), so stacking all three at once oversubscribes the machine
+ * several times over and made a timing-sensitive solver test fail under the
+ * resulting contention in local testing — not a flaky test, a real
+ * scheduling artifact of demanding 40+-way concurrency from 4 cores. Real
+ * three-way parallelism for those phases needs three separate runners (see
+ * .github/workflows/ci.yml's parallel jobs), not one process fanning out
+ * further on the same box.
  */
 import { spawn } from 'node:child_process';
 import process from 'node:process';

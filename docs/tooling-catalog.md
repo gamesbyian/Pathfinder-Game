@@ -6,7 +6,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 
 | Question | Preferred entry point |
 |---|---|
-| Repository checks | `npm run ci`; [`testing.md`](testing.md) |
+| Repository checks | `npm run ci:fast` (default); full `npm run ci` for solver-core changes or a final completeness claim — [`testing.md`](testing.md) |
 | Browser flows | focused `test:e2e:*`; `npm run ci:full` for release confidence |
 | Production solver on named levels | `npm run solver:direct -- --levels=...` |
 | Published solved-set regression | `npm run solver:bench -- --check` |
@@ -29,7 +29,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 
 | Area | Main commands / references |
 |---|---|
-| Validation | `check`, `ci`, `ci:full`, `test:unit`, `test:coverage`, `test:node`, `test:e2e*`, `test:visual`, `check:documentation-links`, `check:types*`, `check:lint`; [`testing.md`](testing.md) |
+| Validation | `check`, `ci`, `ci:fast`, `ci:full`, `test:unit`, `test:unit:fast`, `test:coverage`, `test:node`, `test:node:fast`, `test:e2e*`, `test:visual`, `check:documentation-links`, `check:types*`, `check:lint`; [`testing.md`](testing.md) |
 | Solver | `solver:direct`, `solver:bench`, `solver:speed-probe`, `solver:fingerprint*`, `solver:req-length-sweep`, `solver:trap-audit`, `solver:winning-attempts`, `solver:experiment-preflight`; [`solver-architecture.md`](solver-architecture.md) |
 | Ablation | `ablation:*`; [`ablation.md`](ablation.md), [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) |
 | Stress | `stress:generate*`, `stress:validate-witnesses`, `stress:benchmark*`, `stress:regression`, `stress:solve-one`, `stress:reduce-level`, `stress:rank-levels`, `stress:failure-inbox`, `stress:lifecycle-failure-map`, `stress:solution-profile*`, `stress:provenance-coverage`; [`../data/stress/README.md`](../data/stress/README.md) |

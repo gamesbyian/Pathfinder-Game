@@ -24,10 +24,10 @@ Use the live solver queue for current priorities, not dated reports. Check the e
 ```bash
 npm ci
 npm run dev
-npm run ci
+npm run ci:fast     # default per-change gate (~1 min); see docs/testing.md for when to run full `ci` instead
 ```
 
-`npm run ci:full` adds browser/release confidence. Solver hot-path changes have additional gates in [`docs/testing.md`](docs/testing.md).
+`npm run ci` is the full gate (adds coverage and the deep solver-proof tests); `ci:full` adds browser/release confidence on top of that. Solver hot-path changes have additional gates in [`docs/testing.md`](docs/testing.md).
 
 ## Repository map
 
