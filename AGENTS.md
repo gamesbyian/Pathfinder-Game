@@ -7,6 +7,7 @@ Shortest reliable entry point for AI coding and research agents. Load only the r
 | Task | Read first |
 |---|---|
 | Ordinary product/code change | [`docs/architecture.md`](docs/architecture.md), then the files being changed |
+| Cross-cutting schema/state/telemetry change | [`docs/change-recipes.md`](docs/change-recipes.md), then the owning topic doc |
 | UI, input, accessibility, rendering | [`docs/architecture.md`](docs/architecture.md), [`docs/ui-accessibility.md`](docs/ui-accessibility.md), [`docs/testing.md`](docs/testing.md) |
 | Solver implementation change | [`docs/solver-architecture.md`](docs/solver-architecture.md), [`modules/solver/README.md`](modules/solver/README.md), [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md), [`docs/testing.md`](docs/testing.md) |
 | Solver optimization/research selection | [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md), then [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md) |
@@ -22,27 +23,28 @@ Shortest reliable entry point for AI coding and research agents. Load only the r
 
 1. **Read before editing.** Inspect the current topic reference and implementation. Prefer existing patterns to new abstractions.
 2. **Keep diffs narrow.** Do not reformat unrelated code or build speculative infrastructure. Check [`docs/tooling-catalog.md`](docs/tooling-catalog.md), `package.json`, `scripts/`, and `.github/workflows/` before adding tools.
-3. **Separate current contracts from historical evidence.** Current behavior belongs in topic docs. Dated reports and archive snapshots preserve evidence. A historical result may not hold on current `main`.
-4. **Use the current solver queue for priority.** [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md) is authoritative. [`docs/future-work.md`](docs/future-work.md) is deferred/reopen material, not another ranking or run notebook.
-5. **Know the variant-trove boundary.** The ~2.5 GB generated family dataset is retained on `claude/variant-levels-solver-insights-tpk4qg`, not `main`; reusable family tooling is on main. Keep **current `main` as the code/instruction environment** and mount the trove through a separate worktree/path. Do not check out the trove branch as the working codebase: its source, docs, root prompts, counts, and task state are historical. Read [`docs/variant-level-research.md`](docs/variant-level-research.md) before generating more variants or designing family analytics.
-6. **Solver policy is level-blind.** Cold production behavior may use mechanics and current state, never exact level identity, saved hints, known winning configs, historical solve status, or other exact-level knowledge. See [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md).
-7. **Preserve provenance distinctions.** A valid stored hint is not automatically cold-capability evidence. Witness, human-solved, hint-guided, variant-derived, and cold production-solver finds have different research meanings.
-8. **Source files are TypeScript.** `modules/` source files use `.ts`; import specifiers intentionally use `.js` and resolve to `.ts`. Docs should name the actual `.ts` source path. See [`docs/typing.md`](docs/typing.md).
-9. **Respect architecture boundaries.** `domain/`, `runtime/`, and `solver/` are the browser-free logic core. ENGINE mutations use state actions. Root-cause architecture-lint failures instead of bypassing them.
-10. **Do not weaken validation to make a change pass.** Root-cause unexpected `null`, failed invariants, CSP complaints, architecture-lint errors, and solver-referee failures.
-11. **Report evidence precisely.** State what ran, population/budget when relevant, and whether a result is measured, inferred, historical, or pending.
+3. **Audit propagation when a contract crosses boundaries.** For solver stages/results, level mechanics, hints/provenance, application state, and generated artifact schemas, use [`docs/change-recipes.md`](docs/change-recipes.md). Do not stop after fixing the first producer/consumer pair.
+4. **Separate current contracts from historical evidence.** Current behavior belongs in topic docs. Dated reports and archive snapshots preserve evidence. A historical result may not hold on current `main`.
+5. **Use the current solver queue for priority.** [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md) is authoritative. [`docs/future-work.md`](docs/future-work.md) is deferred/reopen material, not another ranking or run notebook.
+6. **Know the variant-trove boundary.** The ~2.5 GB generated family dataset is retained on `claude/variant-levels-solver-insights-tpk4qg`, not `main`; reusable family tooling is on main. Keep **current `main` as the code/instruction environment** and mount the trove through a separate worktree/path. Do not check out the trove branch as the working codebase: its source, docs, root prompts, counts, and task state are historical. Read [`docs/variant-level-research.md`](docs/variant-level-research.md) before generating more variants or designing family analytics.
+7. **Solver policy is level-blind.** Cold production behavior may use mechanics and current state, never exact level identity, saved hints, known winning configs, historical solve status, or other exact-level knowledge. See [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md).
+8. **Preserve provenance distinctions.** A valid stored hint is not automatically cold-capability evidence. Witness, human-solved, hint-guided, variant-derived, and cold production-solver finds have different research meanings.
+9. **Source files are TypeScript.** `modules/` source files use `.ts`; import specifiers intentionally use `.js` and resolve to `.ts`. Docs should name the actual `.ts` source path. See [`docs/typing.md`](docs/typing.md).
+10. **Respect architecture boundaries.** `domain/`, `runtime/`, and `solver/` are the browser-free logic core. ENGINE mutations use state actions. Root-cause architecture-lint failures instead of bypassing them.
+11. **Do not weaken validation to make a change pass.** Root-cause unexpected `null`, failed invariants, CSP complaints, architecture-lint errors, and solver-referee failures.
+12. **Report evidence precisely.** State what ran, population/budget when relevant, and whether a result is measured, inferred, historical, or pending.
 
 ## Verification
 
-Use the cheapest check that answers the iteration question, then the required finish gate.
+Use the cheapest check that answers the iteration question, then run the relevant finish-line validation locally when the task requires it. GitHub Actions is optional remote execution, not a prerequisite for pushing or merging.
 
-- Normal code: targeted tests while iterating, then `npm run ci`.
-- Browser/UI: relevant Playwright subset; `npm run ci:full` for release confidence.
+- Normal code: targeted tests while iterating, then local `npm run ci` for completion confidence.
+- Browser/UI: relevant Playwright subset; `npm run ci:full` for broad browser confidence when warranted.
 - Solver hot path: targeted probes, then the solved-set and cost requirements in [`docs/testing.md`](docs/testing.md). `solver:bench --check` does not measure performance.
 - Hard prune/cache/correctness: use the stronger soundness/referee/differential requirements in the solver docs.
 - Documentation: run `npm run check:documentation-links` when possible.
 
-Never claim an unrun check passed.
+Never claim an unrun check passed. If remote CI later finds a problem, fix it normally; do not distort local development around Actions queue time.
 
 ## Research authority
 
