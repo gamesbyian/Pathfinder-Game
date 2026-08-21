@@ -116,7 +116,7 @@ AXIS_H = 1; AXIS_V = 2; AXIS_NONE = 0
 
 - 160 published levels, IDs `P00001`–`P00161` with `P00153` withdrawn; ID != array position after 152. Landmark mechanics: `P00148`–`P00150`, `P00160`, `P00161`.
 - Published maxima: must-pass 4; must-cross 4; portals 3 pairs/6 keys; flipping filters 22 (`P00159`); grids up to 15x15 and always square. Published maxima are not solver bounds.
-- Stress generators can exceed published maxima; square grids are schema-enforced. See [`data/stress/README.md`](data/stress/README.md).
+- Stress-generation maxima in the established corpora: must-pass 8; must-cross 8; portals 7 pairs; flipping filters 8. The schema permits up to 32 flippers. Square grids are schema-enforced. See [`data/stress/README.md`](data/stress/README.md).
 - Wire coordinates are 1-indexed; solver internals are 0-indexed.
 - Published hints live in `data/hints/<id>.json`, lazy-load by persistent ID, and merge Firestore supplemental hints. Stress corpora do not merge Firestore hints. Play curation selects a display subset; heatmaps use all hints.
 - Published IDs are persistent and non-reused. `P00001`–`P00156` were backfilled 2026-07-15; `P00157+` are minted at import. Firestore staging uses opaque doc IDs until graduation.
@@ -135,6 +135,7 @@ Hint and level provenance are independent append-only schemas and do not affect 
 - Valid hint corpus != cold solver capability. Witness, human, prefix-anchored, and other hint-guided paths are valid solutions but not evidence that production `Solver.solve()` finds them cold. `check:hint-validity` proves PLAY validity only.
 - Path-only `.hints`/`.foundHintsSinceLoad` coexist with canonical `.hintRecords`/`foundHintsSinceLoadRecords`. Reconcile only with `reconcileHints`/`mergeHints`.
 - On disk all three corpora use schemaVersion 3 through `scripts/level-data-io.mjs`: `data/hints/<id>.json`, `data/stress/hints/<id>.json`, `data/stress/hints-random/<id>.json`.
+- Attempt-level provenance can carry `beamWidth`, `diverseBeam`, winner `gateKey`, `seedSalt`, and repair forcing such as `repairMustTurnBiased`/`repairTurnBiased`; older hints can legitimately lack fields added after their discovery.
 - Intermediate provenance can be lost before persistence. A 2026-07-25 bug carried admissible-order fields through search but dropped them before persistence. When adding provenance, trace it to `makeProvenanceEntry`/`hintProvenanceEntryForEvent`; technique suffixes are valid, so consumers may need prefix matching.
 - Published supplemental hints also live in Firestore and merge through `data.getHints`; see [`docs/firestore-security-model.md`](docs/firestore-security-model.md).
 
