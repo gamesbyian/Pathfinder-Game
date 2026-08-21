@@ -15,6 +15,17 @@ Pathfinder is a Vite-built browser game deployed as a static GitHub Pages site. 
 
 AST ESLint rules enforce browser-free `domain/runtime/solver`, ENGINE mutation through state actions, and no raw HTML injection. Solver worker files are explicit browser-boundary exceptions. See [`testing.md`](testing.md).
 
+### Directory ownership
+
+Directory names are part of the architecture contract, not just filing convention:
+
+- `modules/` owns executable application/runtime policy and reusable domain logic;
+- `scripts/` owns developer, batch, migration, research, and validation entry points;
+- `data/` owns serializable inputs, fixtures, corpora, and generated evidence;
+- `reports/` owns interpreted human-readable evidence; `logs/` owns raw generated run evidence.
+
+Shared executable authority should live under `modules/` and be imported by tooling, rather than application/runtime code importing policy from `scripts/` or executable modules under `data/`. Existing solver exceptions are migration debt tracked in [`architecture-unification-audit.md`](architecture-unification-audit.md); do not copy that dependency direction into new code.
+
 ## Composition root (`modules/app.ts`)
 
 `createApp()` builds acyclic stages with no mutable forward declarations or post-construction init:
