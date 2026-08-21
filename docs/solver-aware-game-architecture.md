@@ -1,117 +1,85 @@
 # Solver-aware game architecture and rule alignment
 
-> **Status:** current architectural contract. The 2026 investigation/campaign narrative is preserved at [`archive/snapshots/solver-aware-game-architecture-2026-08-20.md`](archive/snapshots/solver-aware-game-architecture-2026-08-20.md).
-> **Current solver priority:** [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
-
-This document records the durable architectural lessons from the solver-aware game/rule investigations. It is not a backlog and should not accumulate run chronology.
+> **Status:** current contract. Historical campaign: [`archive/snapshots/solver-aware-game-architecture-2026-08-20.md`](archive/snapshots/solver-aware-game-architecture-2026-08-20.md). Current priority: [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
 
 ## Core semantic rule
 
-Pathfinder is history-sensitive. Two paths at the same cell with the same length and intersection count can have different legal futures because their histories differ in visited cells, used axes, portal/flipper state, incoming direction, or satisfied obligations.
+Pathfinder is history-sensitive. Same cell/length/intersection count does not imply the same future: legality may differ because of visited cells, used axes, portal/flipper state, incoming direction, or satisfied obligations.
 
-Any cache, deduplication key, transposition table, oracle abstraction, or state comparison must answer:
+Any cache, dedup key, transposition table, oracle abstraction, or state comparison must prove which fields are sufficient for equivalent future behavior. Correlation is not proof.
 
-> Which state fields are sufficient to prove that the two histories have the same relevant future?
+## Exact state identity vs coarse grouping
 
-Do not infer that a compact key is sound because it correlates with future behavior. Prove the represented equivalence, then measure whether exploiting it is economically useful.
+General sound transposition caching has already been measured: exact signatures found few revisits and were expensive; realistic exact MITM frontiers remained large. Reopen only with materially cheaper sound identity or new evidence.
 
-## State identity versus useful coarse grouping
+Production beam dedup is intentionally coarse width/diversity control, not semantic equivalence. Removing it lost solves. Its former fixed-width packing became unsafe when mechanic cardinalities increased; the current delimited key avoids collisions among its intended fields without claiming exact history identity.
 
-General fully-sound transposition caching has already been measured and is not a fresh opportunity. A sound DFS state signature found far fewer revisits than a crude signature and was costly to compute. Realistic exact MITM frontiers likewise remained enormous. Reopen only with materially new evidence, such as a much cheaper sound incremental identity.
+Rules:
+- do not replace coarse beam grouping with exact identity merely for neatness;
+- do not treat coarse grouping as interchangeable-state proof;
+- fixed-width mechanic slots require enforced cardinality proof;
+- benchmark representation changes.
 
-Beam deduplication is deliberately different. The production beam groups candidates coarsely to manage width/diversity; the grouping is **not** a claim that the underlying histories have identical futures. Removing it cost solves. The old fixed-width bit packing was separately unsafe when mechanic cardinalities increased, so the grouping key was changed to a collision-free delimited representation of its intended fields without making the grouping more semantically exact.
+Evidence: `reports/2026-08-06-beam-state-dedup-sound-signature-audit.md` and the archived campaign.
 
-Consequences:
+## Mechanic contracts
 
-- do not replace the coarse beam grouping with a fully sound identity merely for conceptual neatness;
-- do not use the coarse grouping as proof that two states are interchangeable;
-- do not encode mechanic fields into fixed-width slots unless current enforced cardinality makes the width provably sufficient;
-- benchmark representation changes rather than assuming compactness is faster.
+[`mechanic-state-contracts.md`](mechanic-state-contracts.md) records each dynamic mechanic's state shape, cardinality, monotonicity, legality/connectivity/win effects, direction dependence, and external-model support.
 
-Detailed measurements are in `reports/2026-08-06-beam-state-dedup-sound-signature-audit.md` and the archived campaign document above.
+New/changed mechanics must also identify every cache/key/snapshot/telemetry/worker message carrying relevant state. Schema caps mask-backed must-pass, must-cross, surround, must-turn, and adjacent-turn counts at 30. If a cap changes, audit all consumers.
 
-## Mechanic state contracts
+## Independent rule implementations
 
-[`mechanic-state-contracts.md`](mechanic-state-contracts.md) is the current per-mechanic state/reference contract. New mechanics and changes to existing ones should explicitly state:
+Move/win semantics intentionally exist in multiple arbiters:
+- live/domain rules;
+- candidate-path referee;
+- solver transitions;
+- independent differential oracle.
 
-- state cardinality and enforced limits;
-- whether state is monotonic;
-- whether it affects move legality, connectivity, or the win condition;
-- whether incoming direction matters;
-- whether different histories can merge again;
-- exact/relaxed/unsupported status in external models;
-- which caches, keys, snapshots, telemetry, and worker messages must include the state.
+Read-through is insufficient. The 2026 alignment work found real drift in flipping-filter entry axis, pending must-cross lock, and must-turn win handling.
 
-The schema currently rejects more than 30 must-pass, must-cross, surround, must-turn, or adjacent-turn objects because the solver's initial masks rely on the safe range of the JavaScript bit-mask representation. If a cap changes, audit every consumer rather than updating only the generator/schema.
+`scripts/solver-oracle/fuzz.mjs` differentially checks the oracle, solver move generation, and `isValidMove`. Preserve oracle independence; sharing solver implementation would weaken the test.
 
-## Independent rule implementations must be compared
+## Flipping filters
 
-Move legality and win semantics intentionally exist in several places:
+Flipping filters are single-use. Effective orientation depends on the level-wide order of distinct flipper crossings. This global parity is intentional game semantics. A per-filter successive-use model would require a rule change.
 
-- live/domain move rules;
-- the candidate-path referee;
-- solver move generation/state transitions;
-- an independent solver oracle used for differential checking.
+## Stress envelopes
 
-Previous read-throughs missed real drift. The 2026 alignment investigation found and fixed live-play/referee differences involving flipping-filter entry axis, the pending must-cross straight-through lock, and must-turn win-metric handling.
+The hard stress generator intentionally exceeds several published mechanic maxima. Use the in-envelope stratum for current-player-envelope transfer questions and the broader corpus for robustness. See [`../data/stress/README.md`](../data/stress/README.md).
 
-The durable safeguard is differential execution. `scripts/solver-oracle/fuzz.mjs` cross-checks the independent oracle, production solver move generation, and `isValidMove` under the appropriate move context. Preserve the oracle's implementation independence: sharing solver implementation merely to create a common compiled graph would weaken the test.
+## Generation history
 
-## Flipping-filter contract
+Witness paths, parent families, mutations/symmetries, intended regions, and construction order are useful provenance for offline family analysis, diagnostics, hint diversification, routing/scoring labels, and oracle/reducer selection.
 
-Flipping filters are single-use. Their effective orientation is coupled to the level-wide order in which distinct flippers are crossed. That global crossing-order parity is intentional game design, not accidental solver entanglement.
+They are not cold-solve inputs. See [`solver-level-blindness.md`](solver-level-blindness.md) and [`variant-level-research.md`](variant-level-research.md).
 
-Do not reopen a per-filter successive-use interpretation without a game-rule change; single-use means such a local toggle would never toggle.
+## Shared compiled graph
 
-## Stress envelopes are intentionally different
+Do not build a domain-owned compiled graph as housekeeping. Reopen only for a concrete consumer that removes duplicated semantics without weakening the independent oracle. Solver-specific typed/hot-path structures should remain layered above it.
 
-The hard stress generator deliberately exceeds several published-game mechanic maxima. This is useful because it prevents research from fitting only the shipped envelope, but it means Corpus 2 is not a proxy for "levels players will see."
+## New mechanic checklist
 
-Use the separately generated in-envelope stress stratum when the question is transfer to current game limits. Keep both populations: one tests the player envelope, the other tests robustness beyond it.
+Before shipping a mechanic, define:
+1. added history and bounds;
+2. local/global/per-object/ordered state shape;
+3. when histories may safely merge;
+4. effects on topology, move legality, and win condition;
+5. incoming-direction dependence;
+6. exact/relaxed external-model support;
+7. representation/cardinality limits;
+8. required telemetry/provenance;
+9. independent arbiters and differential tests;
+10. whether any solver-friendly reformulation exactly preserves player-facing semantics.
 
-See [`../data/stress/README.md`](../data/stress/README.md) for current corpus contracts and provenance.
-
-## Generation history is evidence, not capability input
-
-Procedural generation may know a witness path, parent family, mutation/symmetry history, intended region, or construction order. Preserve this as provenance because it is useful for:
-
-- family/variant analysis;
-- diagnostics and benchmark selection;
-- hint diversification;
-- offline labels for routing/scoring research;
-- choosing expensive oracle/reducer targets.
-
-It must not become hidden exact-level guidance in a cold production solve. See [`solver-level-blindness.md`](solver-level-blindness.md) and [`variant-level-research.md`](variant-level-research.md).
-
-## Shared compiled graph: reopen only for a real consumer
-
-A domain-owned compiled puzzle graph could reduce semantic duplication across editor validation, procedural generation, solver prep, or external models. The obvious first consumers did not justify it: the independent oracle should not share solver implementation, and the editor lacked a low-risk extraction point.
-
-Do not build a common graph as architecture housekeeping. Revisit when a concrete new consumer would remove duplicated semantics without weakening independence, and keep solver-specific typed/hot-path structures layered above it.
-
-## Future mechanic design checklist
-
-Before shipping a mechanic, answer:
-
-1. What history does it add, and is that history bounded and explicit?
-2. Is its state local, global, per object, or ordered across objects?
-3. When can two histories safely merge again?
-4. Does it change topology, transition legality, or only the win condition?
-5. Does incoming direction matter?
-6. Can the reference/oracle models represent it exactly? If not, what relaxation is safe?
-7. What cardinality limits are required by packed/masked representations?
-8. Which provenance and telemetry fields are needed to compare solver behavior?
-9. Which independent rule implementations need matching tests?
-10. Does a solver-friendly reformulation preserve the intended player-facing rule exactly?
-
-Rich finite-state mechanics are not a problem by themselves. Hidden or unbounded history and unenforced representation assumptions are.
+Finite state is fine; hidden/unbounded history and unenforced representation assumptions are not.
 
 ## Non-goals
 
-- Do not make gameplay depend on solver hot-path code or browser/controller machinery leak into the solver core.
-- Do not treat advisory topology/region facts as hard prunes without proof.
-- Do not count construction-guided, hint-guided, or family-history-guided solving as cold capability.
-- Do not redesign a player-facing rule solely for solver convenience unless the formulations are genuinely equivalent.
-- Do not infer that independent rule implementations agree because each looks locally plausible. Differentially test them.
+- No gameplay dependence on solver hot-path code or controller/browser leakage into solver core.
+- No advisory topology/region fact promoted to hard prune without proof.
+- No construction/hint/family-history-guided result counted as cold capability.
+- No player-rule redesign solely for solver convenience unless behavior is equivalent.
+- No assumption that independent arbiters agree without differential tests.
 
-Unranked research descendants from the original campaign are retained in [`future-work.md`](future-work.md); completed measurements and reasoning remain in the frozen snapshot and dated reports.
+Unranked descendants are in [`future-work.md`](future-work.md); measurements and chronology remain in the archived snapshot and dated reports.
