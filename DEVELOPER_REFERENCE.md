@@ -135,7 +135,7 @@ Hint and level provenance are independent append-only schemas and do not affect 
 - All corpora use schemaVersion 3 through `scripts/level-data-io.mjs`: `data/hints/<id>.json`, `data/stress/hints/<id>.json`, `data/stress/hints-random/<id>.json`.
 - Attempt provenance may include `beamWidth`, `diverseBeam`, winner `gateKey`, `seedSalt`, `repairMustTurnBiased`/`repairTurnBiased`; old hints may lack later fields.
 - Provenance can be lost before persistence. A 2026-07-25 admissible-order bug did so. Trace additions through `makeProvenanceEntry`/`hintProvenanceEntryForEvent`; technique suffixes mean consumers may need prefix matching.
-- Published supplemental hints also live in Firestore and merge through `data.getHints`; see [`docs/firestore-security-model.md`](docs/firestore-security-model.md).
+- Published supplemental hints also live in Firestore and merge through `data.getHints`; see [`docs/security.md#supplemental-published-level-hints`](docs/security.md#supplemental-published-level-hints).
 
 ### Level provenance
 
@@ -147,7 +147,7 @@ Hint and level provenance are independent append-only schemas and do not affect 
 
 ## Firebase
 
-Contracts: [`docs/security.md`](docs/security.md), [`docs/firestore-security-model.md`](docs/firestore-security-model.md), [`docs/firebase-config-and-secret-hygiene.md`](docs/firebase-config-and-secret-hygiene.md).
+Contract: [`docs/security.md`](docs/security.md). CSP remains separate at [`docs/content-security-policy.md`](docs/content-security-policy.md).
 
 ## Testing cautions
 
