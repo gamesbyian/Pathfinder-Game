@@ -1,7 +1,4 @@
-// Solver policy profiles and structural templates.
-// Kept separate from Solver's search implementation so tuning data can be
-// documented, tested, and eventually versioned independently.
-
+// Solver scoring profiles and structural templates, separate from search implementation.
 import type { ScoringProfile, StructuralTemplate } from './types.js';
 
 export const POLICY_PROFILES: Readonly<Record<string, ScoringProfile>> = Object.freeze({
@@ -17,29 +14,9 @@ export const POLICY_PROFILES: Readonly<Record<string, ScoringProfile>> = Object.
     mustCrossFirst:      Object.freeze({ goalAttractionWeight: 0.65, objectiveAttractionWeight: 1.5,  finishCommitmentWeight: 0.6,  perimeterBiasWeight: 1.1,  mustPassUrgencyWeight: 1.6,  mustCrossUrgencyWeight: 2.4,  intersectionSetupWeight: 1.1,  antiDitherWeight: 0.9,  revisitPenaltyWeight: 0.85 }),
     intersectionHarvest: Object.freeze({ goalAttractionWeight: 0.5,  objectiveAttractionWeight: 0.9,  finishCommitmentWeight: 0.45, perimeterBiasWeight: 1.15, mustPassUrgencyWeight: 0.45, mustCrossUrgencyWeight: 0.55, intersectionSetupWeight: 3.0,  antiDitherWeight: 0.65, revisitPenaltyWeight: 0.6  }),
     closureCommitment:   Object.freeze({ goalAttractionWeight: 1.5,  objectiveAttractionWeight: 1.3,  finishCommitmentWeight: 2.0,  perimeterBiasWeight: 0.8,  mustPassUrgencyWeight: 2.0,  mustCrossUrgencyWeight: 2.0,  intersectionSetupWeight: 0.8,  antiDitherWeight: 0.4,  revisitPenaltyWeight: 0.4  }),
-    // Used only by repair-search.ts's iterated-local-search fallback — a copy of objectiveFirst
-    // (already tuned for must-pass/must-cross-heavy levels, the repair attempt's feature gate).
-    // A distinct name (rather than reusing 'objectiveFirst' directly) makes audit/attempt output
-    // self-documenting: `profile: 'repair'` unambiguously identifies which attempts were the
-    // randomized-restart fallback, not the deterministic DFS/beam search using the same weights.
-    // mustTurnUrgencyWeight: 0 (every other profile defaults to 1, i.e. the term is on) —
-    // repair's randomized-restart exploration was measured to be sensitive to scoreMove's exact
-    // balance in a way DFS/beam are not: adding must-turn urgency at any tried weight fixed one
-    // repair-search plateau but broke a different one on the same corpus run. Opting repair out
-    // entirely keeps its already fully-validated cluster performance untouched while DFS/beam
-    // still get the fix. See scoring.ts's must-turn urgency term and data/stress/README.md.
-    //
-    // mustTurnExitGuidanceWeight: 0, same rationale as mustTurnUrgencyWeight above — a real bug
-    // fix in scoring.ts made this term (previously silently inert for repair/beam's post-apply
-    // calling convention — see scoring.ts and data/stress/README.md's S043 writeup) actually fire, but
-    // giving it ANY nonzero weight under repair's profile balance (confirmed down to the default
-    // weight of 1, not just an aggressively tuned value) regresses S030 from solved to a 120s
-    // repair timeout — a clean, reproducible A/B, not tuning noise. Repair's exploration is
-    // measurably more sensitive to scoreMove's balance than DFS/beam (same lesson as
-    // mustTurnUrgencyWeight); DFS/beam keep the bug fix at full strength (still default 1) since
-    // it's the one thing S028 needed. S043's own fix lives entirely in repair-search.ts's
-    // exploration sampling instead (see EXIT_GUIDANCE_EPSILON_BOOST below), which never touches
-    // this shared weight and so can't re-open the S030 regression.
+    // Repair uses objectiveFirst-like weights but a distinct name for provenance. Must-turn distance
+    // and exit-guidance scoring stay disabled because nonzero repair weights regress validated cases;
+    // repair-specific guidance lives in repair-search.ts instead.
     repair:              Object.freeze({ goalAttractionWeight: 0.7,  objectiveAttractionWeight: 1.65, finishCommitmentWeight: 0.65, perimeterBiasWeight: 1.1,  mustPassUrgencyWeight: 1.85, mustCrossUrgencyWeight: 1.8,  intersectionSetupWeight: 1.2,  antiDitherWeight: 1,    revisitPenaltyWeight: 0.9, mustTurnUrgencyWeight: 0, mustTurnExitGuidanceWeight: 0 }),
 });
 

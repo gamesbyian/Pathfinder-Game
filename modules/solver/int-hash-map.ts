@@ -1,20 +1,6 @@
-// A minimal open-addressing hash map for non-negative integer keys -> non-negative number
-// values, used by lower-bounds.ts's mustPassLowerBound/mustCrossLowerBound memoization caches
-// (see docs/solver-architecture.md's memory-bandwidth section). Backed by parallel TypedArrays
-// instead of a native Map, avoiding the per-entry bookkeeping (insertion-order-preserving
-// linked structure) V8's Map maintains that a pure memoization cache doesn't need.
-//
-// Why not a plain flat array indexed directly by key: the cache keys are a (pos, mask)
-// composite (see lower-bounds.ts's cacheKey formulas) that can reach ~1.76e13 — a dense
-// array at that size is obviously not viable. A hash table maps that sparse key space down
-// to a small number of buckets, same as Map does internally, but without Map's per-entry
-// object/bookkeeping overhead.
-//
-// Keys must be non-negative integers representable exactly as a JS double (safe up to 2^53;
-// the largest cache key in practice is ~1.76e13, well within that). -1 is the empty-slot
-// sentinel (no real key is ever negative). Values may be any non-negative finite number or
-// Infinity (used for provably-unreachable bounds) — never NaN or negative, not needed by any
-// caller. Grows (full rehash, doubling capacity) once the load factor would exceed 0.7.
+// Minimal open-addressing map for non-negative integer keys/values, used by lower-bound memoization.
+// Float64 keys support the sparse composite-key range exactly; -1 is the empty sentinel. TypedArrays
+// avoid native Map bookkeeping. Grows at 0.7 load factor.
 const EMPTY_KEY = -1;
 const MAX_LOAD_FACTOR = 0.7;
 
@@ -24,9 +10,7 @@ function nextPow2(n: number): number {
     return p;
 }
 
-// key can exceed 32 bits (up to ~1.76e13) — split into low/high 32-bit halves and mix both
-// with Math.imul, since a plain `key | 0` would silently truncate the high bits and cluster
-// unrelated keys into the same bucket. Standard finalizer-style bit mixing (fmix32-ish).
+/** Mix both 32-bit halves because memo keys exceed 32 bits. */
 function hashIndex(key: number, mask: number): number {
     const lo = (key % 4294967296) | 0;
     const hi = Math.floor(key / 4294967296) | 0;
