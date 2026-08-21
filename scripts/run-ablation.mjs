@@ -61,7 +61,7 @@ installBrowserStubs();
 // ─── Load solver + levels ─────────────────────────────────────────────────────
 
 const { createSolver }  = await import('../modules/Solver.js');
-const { buildExperimentList } = await import('./ablation-config.mjs');
+const { buildExperimentList } = await import('../modules/solver/ablation-config.js');
 
 const Solver = createSolver();
 

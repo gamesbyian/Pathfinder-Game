@@ -96,7 +96,7 @@ characterized a level's full difficulty profile.
 
 Implementation status (updated 2026-07-15)
 
-Generation (`scripts/family-generate.mjs`, tested in `scripts/family-generate-unit-tests.mjs`
+Generation (`scripts/family-generate.mjs`, tested in `scripts/family-generate-node-test.mjs`
 — `npm run test:family-generate`) covers 6 of the 7 sibling/cousin relations named in section 1,
 plus one experimental mode outside that taxonomy:
 
@@ -168,7 +168,7 @@ following it — see the gap called out below)**:
   none of it became part of the levels' own permanent hint/provenance record the way section 11a's
   design intends. Treat that as the gap this policy exists to close, not as a precedent.
 
-Reporting: `scripts/family-analyze.mjs` (tested in `scripts/family-analyze-unit-tests.mjs` —
+Reporting: `scripts/family-analyze.mjs` (tested in `scripts/family-analyze-node-test.mjs` —
 `npm run test:family-analyze`) joins a family manifest against `portfolio-solve-sweep.mjs`
 solve-result JSON into a per-variant mutation-effect delta table (section 18's mutation-effect
 analysis, a first slice of section 22's variant-ledger/local-mutation-report concepts) — solve

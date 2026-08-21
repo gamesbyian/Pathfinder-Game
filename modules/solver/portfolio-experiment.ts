@@ -1,5 +1,5 @@
-// Shared fast-portfolio scheduler experiment definition. Kept in data/config so runtime
-// orchestration and offline replay/report tools consume the same tier thresholds and config sets.
+// Shared fast-portfolio scheduler experiment definition. Runtime orchestration and offline
+// replay/report tools consume the same tier thresholds and config sets from this module.
 
 /**
  * @typedef {Readonly<{

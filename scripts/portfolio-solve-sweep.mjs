@@ -118,7 +118,7 @@
  *   --enable-flags=FLAG1,FLAG2   turn the named ablation flags ON for the whole run (via
  *                                 SolveOpts.ablation, a SPARSE object — normalizeAblationConfig's
  *                                 normalizer restores each unset flag's production default).
- *                                 Names validated against ablation-config.mjs FEATURES. The A/B lever
+ *                                 Names validated against modules/solver/ablation-config.ts FEATURES. The A/B lever
  *                                 for an ablation-gated attempt like STRATEGY_REPAIR_TURN_BIAS:
  *                                 baseline run (omit) vs on run (--enable-flags=STRATEGY_REPAIR_TURN_BIAS).
  *                                 Threaded through every solve path (main, worker, race pool).
@@ -194,13 +194,13 @@ import os from 'node:os';
 import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { PORTFOLIO_EXPERIMENT } from '../data/config/portfolio-experiment.js';
+import { PORTFOLIO_EXPERIMENT } from '../modules/solver/portfolio-experiment.js';
 import { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } from './level-data-io.mjs';
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
 import { createRacePool } from './solver-parallel/race.mjs';
-import { FEATURES } from './ablation-config.mjs';
+import { FEATURES } from '../modules/solver/ablation-config.js';
 import {
     computeCurrentFamilyHashes, loadFamilyCache, saveFamilyCache, relevantFamiliesFor, familiesUnchanged,
 } from './solver-attempt-family-cache.mjs';
@@ -274,7 +274,7 @@ const enableFlags = argMap.has('--enable-flags')
     ? argMap.get('--enable-flags').split(',').map(s => s.trim()).filter(Boolean)
     : [];
 for (const f of enableFlags) {
-    if (!(f in FEATURES)) { console.error(`--enable-flags: unknown ablation flag "${f}" (see scripts/ablation-config.mjs FEATURES).`); process.exit(2); }
+    if (!(f in FEATURES)) { console.error(`--enable-flags: unknown ablation flag "${f}" (see modules/solver/ablation-config.ts FEATURES).`); process.exit(2); }
 }
 // --disable-flags=FLAG1,FLAG2 is the exact counterpart: it turns the named flags OFF, leaving every
 // other flag at its default. Needed because most flags DEFAULT to on, so --enable-flags cannot test
@@ -285,7 +285,7 @@ const disableFlags = argMap.has('--disable-flags')
     ? argMap.get('--disable-flags').split(',').map(s => s.trim()).filter(Boolean)
     : [];
 for (const f of disableFlags) {
-    if (!(f in FEATURES)) { console.error(`--disable-flags: unknown ablation flag "${f}" (see scripts/ablation-config.mjs FEATURES).`); process.exit(2); }
+    if (!(f in FEATURES)) { console.error(`--disable-flags: unknown ablation flag "${f}" (see modules/solver/ablation-config.ts FEATURES).`); process.exit(2); }
     if (enableFlags.includes(f)) { console.error(`--disable-flags: "${f}" is also in --enable-flags; pick one.`); process.exit(2); }
 }
 const ablation = (enableFlags.length > 0 || disableFlags.length > 0)

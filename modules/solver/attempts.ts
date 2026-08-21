@@ -2,7 +2,7 @@ import { detectArchetype, getNavigableDensity } from './archetype.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER, TEMPLATE_CONFIG_KEYS, TEMPLATES } from './policy.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, AttemptConfig, StructuralTemplate } from './types.js';
-import { defaultConfig } from '../../scripts/ablation-config.mjs';
+import { defaultConfig } from './ablation-config.js';
 
 /**
  * Attempt-policy selection is a **pure function of level features** — never of level identity.

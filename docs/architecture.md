@@ -24,7 +24,7 @@ Directory names are part of the architecture contract, not just filing conventio
 - `data/` owns serializable inputs, fixtures, corpora, and generated evidence;
 - `reports/` owns interpreted human-readable evidence; `logs/` owns raw generated run evidence.
 
-Shared executable authority should live under `modules/` and be imported by tooling, rather than application/runtime code importing policy from `scripts/` or executable modules under `data/`. Existing solver exceptions are migration debt tracked in [`architecture-unification-audit.md`](architecture-unification-audit.md); do not copy that dependency direction into new code.
+Shared executable authority should live under `modules/` and be imported by tooling, rather than application/runtime code importing policy from `scripts/` or executable modules under `data/`. ESLint mechanically rejects executable `scripts/` or `data/` imports from `modules/`; serializable runtime data imports remain allowed. The shared solver ablation and portfolio policies therefore live in `modules/solver/` and tooling imports them.
 
 ## Composition root (`modules/app.ts`)
 

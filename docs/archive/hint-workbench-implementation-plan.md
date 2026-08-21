@@ -30,7 +30,7 @@ Session history, oldest to newest:
    cascade+strategy; forward/reverse evidence-bounded combined forcing), `scripts/hint-diversification.mjs`
    was migrated onto it (deleting ~460 lines of duplicated phase logic), and unit tests were added for
    both the engine (`hint-ablation-generator.test.ts`) and the migrated CLI
-   (`hint-diversification-unit-tests.mjs`).
+   (`hint-diversification-node-test.mjs`).
 3. With Component 4 unblocking downstream work, Component 5's `--directions`/`--combined` became real
    options (translated into phase toggles), Component 7 gained the missing per-axis coverage counts
    (`axisCoverage.ablation`), Component 9 task 6 was closed (`.gitignore` entry added), Component 10
@@ -330,7 +330,7 @@ script rather than a reusable generator. The workbench only used the browser-saf
   `full-practical` (`enumerate-targeted -> ablation-full`) presets.
 - Unit tests added: `modules/solver/hint-ablation-generator.test.ts` (5 tests against a fixture level
   whose only route runs through a portal, so portal/combined phases are deterministically exercised, not
-  merely possible) plus workbench-level coverage in `scripts/hint-workbench-unit-tests.mjs`.
+  merely possible) plus workbench-level coverage in `scripts/hint-workbench-node-test.mjs`.
 
 ### Tasks
 
@@ -589,7 +589,7 @@ parallel exhaustive audits.
   same test, plus a CLI-level check (the new sharded script's 3x3 fixture reproduces the hand-countable
   6-solution oracle both sequentially and with `--parallel=3`).
 - [x] Parallel and sequential runs with the same seed/options produce byte-stable reports except for
-  timing fields — verified by `scripts/hint-complete-enumeration-sharded-unit-tests.mjs`'s
+  timing fields — verified by `scripts/hint-complete-enumeration-sharded-node-test.mjs`'s
   `assert.deepEqual(parReport.levels, seqReport.levels, ...)`.
 - [x] A cancelled or interrupted sharded run is resumable without duplicating accepted candidates —
   verified: a `--max-wall-ms=1` run halts after exactly 1 of 2 jobs, and resuming with the same
@@ -648,7 +648,7 @@ review, is now also closed: `reports/hint-workbench/` was added to `.gitignore`.
 
 ### What has been done
 
-- Added `scripts/hint-workbench-unit-tests.mjs` and `npm run test:hint-workbench`.
+- Added `scripts/hint-workbench-node-test.mjs` and `npm run test:hint-workbench`.
 - Wired the workbench unit test into `npm run test:node` so it runs with the existing Node smoke suite.
 - Covered help text, deprecated preset alias resolution, compact report schema fields, audit policy
   evaluation metadata, run exhaustion fields, the read-only no-mutation guarantee for
@@ -660,7 +660,7 @@ review, is now also closed: `reports/hint-workbench/` was added to `.gitignore`.
 - Added `modules/solver/hint-ablation-generator.test.ts` (Component 4): 5 vitest tests against a real
   solver run on a fixture level whose only route is forced through a portal, so every phase (including
   portal-exit and evidence-bounded combined forcing) is deterministically exercised.
-- Added `scripts/hint-diversification-unit-tests.mjs` and `npm run test:hint-diversification`, wired into
+- Added `scripts/hint-diversification-node-test.mjs` and `npm run test:hint-diversification`, wired into
   `test:node`: CLI smoke coverage for the now-migrated `hint-diversification.mjs` — argument parsing,
   fixture-directory read/write (never touches real `data/`), report shape (including the legacy
   `combosTried`/`swapCombosTried`/... field names, preserved across the Component 4 migration), and
@@ -670,7 +670,7 @@ review, is now also closed: `reports/hint-workbench/` was added to `.gitignore`.
 
 1. Add unit tests for:
    - [x] argument parsing (exercised end-to-end via the CLI smoke tests in both
-     `hint-workbench-unit-tests.mjs` and `hint-diversification-unit-tests.mjs`);
+     `hint-workbench-node-test.mjs` and `hint-diversification-node-test.mjs`);
    - [x] level spec parsing;
    - [x] preset expansion;
    - [x] policy validation;
@@ -684,7 +684,7 @@ review, is now also closed: `reports/hint-workbench/` was added to `.gitignore`.
    migrating `hint-diversification.mjs` onto the shared engine rather than keeping two implementations to
    diff (there is no longer a separate "legacy" implementation to compare against) — coverage instead
    comes from `hint-ablation-generator.test.ts` (engine correctness) plus
-   `hint-diversification-unit-tests.mjs` (CLI wrapper still produces the legacy report shape/semantics
+   `hint-diversification-node-test.mjs` (CLI wrapper still produces the legacy report shape/semantics
    end to end, including `--combined-only`).
 6. [x] Add package-script entrypoint validation coverage if needed.
 
@@ -776,7 +776,7 @@ review, is now also closed: `reports/hint-workbench/` was added to `.gitignore`.
   when `p` was already absolute. Added a `resolveFromRoot()` helper (mirrors `hint-workbench.mjs`'s
   existing `path.isAbsolute` check) at all three call sites.
 - Added `modules/domain/hint-acceptance-pipeline.test.ts` (7 tests) and
-  `scripts/hint-corpus-expand-unit-tests.mjs` (`npm run test:hint-corpus-expand`, wired into `test:node`)
+  `scripts/hint-corpus-expand-node-test.mjs` (`npm run test:hint-corpus-expand`, wired into `test:node`)
   — the latter is `hint-corpus-expand.mjs`'s first-ever test coverage, and is what caught the path bug
   above.
 - **Follow-on (2026-07-11): rediscovered-duplicate provenance was still silently lost even after the

@@ -6,6 +6,8 @@ Pathfinder is a browser grid puzzle. The player draws a continuous gate-to-goal 
 
 This file preserves rare game-rule, solver-gotcha, level-data, and provenance facts. Start with [`AGENTS.md`](AGENTS.md) and [`docs/README.md`](docs/README.md); use topic docs for current workflow and architecture. Dated history lives in [`docs/history/development-journal.md`](docs/history/development-journal.md) and [`reports/`](reports/README.md).
 
+> **Durable contracts vs. measurements:** Rules, wire formats, and named invariants below are durable contracts unless an owning topic document supersedes them. Counts, maxima, percentages, performance figures, and dated bug/experiment results are **current/generated facts or historical measurements**, not architecture. Regenerate cheap facts from canonical data and consult the linked report before using a measurement for a decision.
+
 ## Working in This Codebase
 
 Current working rules are owned by [`AGENTS.md`](AGENTS.md), [`docs/architecture.md`](docs/architecture.md), [`docs/testing.md`](docs/testing.md), and [`docs/tooling-catalog.md`](docs/tooling-catalog.md). This file is not a competing workflow authority.
@@ -112,11 +114,17 @@ AXIS_H = 1; AXIS_V = 2; AXIS_NONE = 0
 - **Used-axis does not always mean blocked.** After entry via an already-used axis, continuing straight can remain legal even when both `edgeUsage` bits are set. This caused 261 false rejections and falsified proposed forced-edge derivations with 63,496/1.1M and 5,206/225K violations. Hard unusability proofs must rule this out against stored solutions.
 - Prep indexes use index+1, zero=absent. `mustPassIndex`, `mustCrossIndex`, and `flipperIndexMap` do not use `-1`. A stale comment once made `gateForcedFirstStepKey` treat every cell as must-cross; a 90-instance/0-violation check was vacuous because the gate neighbor was forced independently.
 
-## Level Stats
+## Level Stats (current/generated facts)
 
-- 160 published levels, IDs `P00001`–`P00161` with `P00153` withdrawn; ID != array position after 152. Landmark mechanics: `P00148`–`P00150`, `P00160`, `P00161`.
+> Snapshot only. Re-check canonical level/corpus data before decision-bearing use; these values are not solver or schema bounds.
+
+<!-- generated: current-level-facts; npm run facts:levels -- --write -->
+- 160 published levels, IDs `P00001`–`P00161` with `P00153` withdrawn; ID != array position after 152. Landmark mechanics: `P00148`, `P00149`, `P00150`, `P00160`, `P00161`.
 - Published maxima: must-pass 4; must-cross 4; portals 3 pairs/6 keys; flipping filters 22 (`P00159`); grids up to 15x15 and always square. Published maxima are not solver bounds.
-- Stress-generation maxima in the established corpora: must-pass 8; must-cross 8; portals 7 pairs; flipping filters 8. The schema permits up to 32 flippers. Square grids are schema-enforced. See [`data/stress/README.md`](data/stress/README.md).
+- Stress-corpus maxima: must-pass 8; must-cross 8; portals 7 pairs; flipping filters 8. See [`data/stress/README.md`](data/stress/README.md).
+<!-- /generated: current-level-facts -->
+
+The schema permits up to 32 flippers, and square grids are schema-enforced; those are durable schema contracts rather than corpus measurements.
 - Wire coordinates are 1-indexed; solver internals are 0-indexed.
 - Published hints live in `data/hints/<id>.json`, lazy-load by persistent ID, and merge Firestore supplemental hints. Stress corpora do not merge Firestore hints. Play curation selects a display subset; heatmaps use all hints.
 - Published IDs are persistent and non-reused. `P00001`–`P00156` were backfilled 2026-07-15; `P00157+` are minted at import. Firestore staging uses opaque doc IDs until graduation.
