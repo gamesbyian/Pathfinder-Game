@@ -22,8 +22,8 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 | Hint/provenance evidence for one level | `npx tsx scripts/hint-query.mjs --id=<ID> [--levels=<corpus>]`; compact by default, exact paths/provenance only with `--full` |
 | Family/variant research | [`variant-level-research.md`](variant-level-research.md); `family:index` then `family:show`, `family:query`, or `family:coverage` |
 | Existing variant trove | worktree branch `claude/variant-levels-solver-insights-tpk4qg`; verify with `node scripts/family-trove-doctor.mjs --root=<path>`; [`variant-level-research.md`](variant-level-research.md) |
-| Prior experiment evidence | `node scripts/research-status-index.mjs --compact --query=<term>` before opening reports; [`../reports/README.md`](../reports/README.md) |
-| Machine-readable investigation status | `npm run research:index`; compact/filter with `node scripts/research-status-index.mjs --compact [--query=...] [--status=...] [--kind=...]` |
+| Prior experiment evidence | `node scripts/research-status-index.mjs --compact --query=<term>` before opening reports; includes title/heading discovery for older top-level reports |
+| Machine-readable investigation status | `npm run research:index`; compact/filter with `node scripts/research-status-index.mjs --compact [--query=...] [--status=...] [--kind=queue|experiment|evidence|legacy-evidence]` |
 | Corpus shape / matching levels | `node scripts/corpus-query.mjs --corpus=stress2`; filters/list/sample are compact by default; `--full` emits exact matched level payloads |
 | Raw-artifact meaning | `node scripts/artifact-query.mjs [--query=...] [--role=...]`; source metadata: [`../logs/artifact-metadata.json`](../logs/artifact-metadata.json) |
 
@@ -39,7 +39,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 | Hints | `hints:workbench`, `hints:workbench-parallel`, `hints:expansion-audit`, `hints:discover-candidates`, `hints:expand`, `hints:diversify`, `hints:calibrate-weights`, `hints:complete-sharded`; compact inspection: `npx tsx scripts/hint-query.mjs`; [`hint-workbench.md`](hint-workbench.md) |
 | Level/data | `levels:import-published`, `levels:generate-heatmaps`, `levels:heatmap-report`, `levels:ratings-report`, `check:hint-validity`, `check:level-provenance`, `check:corpus-level-formatting`, `facts:levels` / `check:current-level-facts`; compact corpus query: `scripts/corpus-query.mjs` |
 | Remote research | [`.github/workflows/README.md`](../.github/workflows/README.md) |
-| Research status | `research:index`; use its compact query mode for discovery, full JSON only when needed |
+| Research status | `research:index`; compact mode includes structured current evidence plus non-authoritative discovery metadata for older loose reports |
 | Artifact provenance | `scripts/artifact-query.mjs`; compact view over tracked exception metadata |
 
 Historical portfolio tools (`solver:portfolio-report`, `solver:portfolio-replay`) and pilots remain available; code presence does not imply an active hypothesis. Check reports before rerunning them.
