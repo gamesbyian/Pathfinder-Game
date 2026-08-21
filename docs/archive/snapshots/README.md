@@ -2,7 +2,7 @@
 
 These files preserve exact pre-consolidation text from historical, concluded, superseded, or notebook-style documents. Snapshots are evidence, not current instructions. Use [`../../README.md`](../../README.md) for current navigation.
 
-Relative links inside snapshots were preserved as originally written and may not resolve from this archive directory.
+Historical top-level compatibility stubs were retired once current guidance was absorbed into canonical docs. Use this index to find old concepts directly. Relative links inside snapshots were preserved as originally written and may not resolve from this archive directory.
 
 | Snapshot | Why preserved |
 |---|---|
