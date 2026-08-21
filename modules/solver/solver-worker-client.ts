@@ -8,14 +8,28 @@
 //   // Pass a constructed Worker so Vite statically bundles the worker module:
 //   const client = createSolverWorkerClient(new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }));
 //   const result = await client.solve(rawLevel, { timeBudgetMs: 30000, yieldFn });
-//   // result: { ok, solution, elapsedMs, nodesExpanded, attempts }
+//   // result: the full SolveResult shape (orchestration.ts) plus `type`/`id` — ok, status,
+//   // solution, solutions, elapsedMs, nodesExpanded, attempts, deadlineTruncated,
+//   // nodeBudgetReached, workSpent, workBudget, solvedByPrime, techniqueLifecycle,
+//   // schedulerMode, portfolio. See worker-result-serialization.mjs's buildSolveWorkerResult.
 //   (A URL argument is also accepted and constructed here — used by tests.)
 //
 // solve()'s levelRaw must be in wire format (1-indexed coords); normalization
 // happens inside the worker. findTrapSpots() takes a NORMALIZED level —
 // postMessage's structured clone carries its Sets/Maps intact.
+//
+// solve() accepts the FULL SolveOpts the direct/on-thread solver does (fixed 2026-08-20 — it used
+// to silently forward only timeBudgetMs/yieldFn, dropping ablation/nodeBudget/workBudget/
+// disableExtraBudgetPasses/lifecycleTelemetry/every *BudgetFractionOverride field/etc., breaking
+// the "drop-in swap" promise above for any caller relying on them). timeBudgetMs and yieldFn stay
+// specially handled (a dedicated postMessage field and client-side polling, respectively) since
+// neither can cross structured-clone as-is; every other option is forwarded verbatim. Function-
+// valued options besides yieldFn (e.g. attemptSearchForTesting — explicitly test-only/internal per
+// its own doc comment in orchestration.ts, never meant to cross a real worker boundary) are
+// stripped before postMessage rather than left to throw a DataCloneError.
 
-interface SolveWorkerOpts { timeBudgetMs?: number; yieldFn?: () => void; }
+import type { SolveOpts } from './orchestration.js';
+
 interface TrapWorkerOpts {
     timeLimit?: number;
     onProgress?: (p: any) => void;
@@ -57,27 +71,49 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
     };
 
     return {
-        solve(levelRaw: any, opts: SolveWorkerOpts = {}) {
+        solve(levelRaw: any, opts: SolveOpts = {}) {
             const id = _nextId++;
             const budgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
+            // Forward everything EXCEPT timeBudgetMs/yieldFn (specially handled below) and any
+            // other function-valued option — structured clone throws a DataCloneError on a
+            // function rather than silently dropping it, and a function-shaped option (like the
+            // test-only attemptSearchForTesting) wouldn't mean anything across a real worker
+            // boundary anyway. Everything else (ablation, nodeBudget, workBudget,
+            // disableExtraBudgetPasses, lifecycleTelemetry, every *BudgetFractionOverride field,
+            // primeAttempt, portfolioExperiment, schedulerMode, ...) is plain data and forwarded
+            // as-is — see this file's own header comment for why this exists.
+            const solveOpts: Record<string, unknown> = {};
+            for (const [key, value] of Object.entries(opts)) {
+                if (key === 'timeBudgetMs' || key === 'yieldFn') continue;
+                if (typeof value === 'function') continue;
+                solveOpts[key] = value;
+            }
 
             return new Promise((resolve, reject) => {
                 let pollTimer: any = null;
 
                 if (typeof opts.yieldFn === 'function') {
-                    // Poll the caller's yieldFn; if it throws, send CANCEL to the worker.
+                    // Poll the caller's yieldFn; if it throws (or its returned promise rejects —
+                    // SolveOpts.yieldFn is typed `() => Promise<void>`, so a real caller's yieldFn
+                    // may do either), send CANCEL to the worker. The async IIFE + await is required
+                    // for correctness, not just to satisfy the linter: the previous plain
+                    // `try { opts.yieldFn!(); } catch {}` never actually caught anything from a
+                    // genuinely async yieldFn, since an async function's internal throw becomes a
+                    // rejected promise, not a synchronous exception to the caller.
                     pollTimer = setInterval(() => {
-                        try { opts.yieldFn!(); }
-                        catch (_) {
-                            clearInterval(pollTimer);
-                            pollTimer = null;
-                            worker.postMessage({ type: 'CANCEL', id });
-                        }
+                        void (async () => {
+                            try { await opts.yieldFn!(); }
+                            catch (_) {
+                                clearInterval(pollTimer);
+                                pollTimer = null;
+                                worker.postMessage({ type: 'CANCEL', id });
+                            }
+                        })();
                     }, 50);
                 }
 
                 _pending.set(id, { resolve, reject, pollTimer });
-                worker.postMessage({ type: 'SOLVE', id, levelRaw, budgetMs });
+                worker.postMessage({ type: 'SOLVE', id, levelRaw, budgetMs, solveOpts });
             });
         },
 
