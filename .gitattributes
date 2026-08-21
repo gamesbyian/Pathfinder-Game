@@ -3,9 +3,9 @@
 
 # Large machine-produced evidence/data: keep tracked and exact, but let GitHub collapse generated
 # diffs and exclude them from source-language statistics. Do not mark authored level definitions.
-data/hints/*.json linguist-generated=true
+data/hints/** linguist-generated=true
 data/level-heatmaps.json linguist-generated=true
 data/stress/stress-levels*.json linguist-generated=true
-data/stress/hints/**/*.json linguist-generated=true
-data/stress/hints-*/**/*.json linguist-generated=true
+data/stress/hints/** linguist-generated=true
+data/stress/hints-*/** linguist-generated=true
 logs/**/*.json linguist-generated=true
