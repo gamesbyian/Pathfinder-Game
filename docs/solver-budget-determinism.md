@@ -15,6 +15,27 @@ work = applyMove calls + 12 * isConnected calls
 
 The fitted connectivity weight reduced measured DFS/beam/repair work-rate spread from ~11x under `nodesExpanded` to ~1.02x under `workSpent`. Use raw nodes only within a technique.
 
+### Work is an allocation currency, not a literal CPU-cost model
+
+The fitted connectivity weight answers a specific question: **how should a finite search budget be divided fairly among techniques that count very different native primitives?** It is not a claim that every `isConnected()` call always consumes exactly twelve times the CPU of every `applyMove()` call.
+
+That distinction matters for pure speed work. An optimization can make each connectivity flood fill substantially cheaper while leaving the number of metered calls unchanged, so `workSpent` can stay flat (or even rise because the faster search performs more useful search) while wall time falls. Conversely, a policy change can reduce `workSpent` without making the same primitive operations intrinsically faster.
+
+Use pinned work for deterministic **search-effort/policy** comparisons. For **hot-path/runtime-speed** comparisons, report wall time as well and explain whether the treatment changes the cost of a metered primitive. A matched-work A/B can deliberately hold search effort constant, but it is not sufficient by itself to detect a pure implementation speedup.
+
+## Two scopes of the same work unit
+
+The current solver deliberately tracks the canonical work unit in two scopes. This is separate from the work-vs-nodes-vs-time distinction above: both counters below count the **same** unit.
+
+| Counter | Scope / authority |
+|---|---|
+| `prep._workMeter.units` | Fresh per `solveLevel()` call. This is the authoritative counter for internal work caps, attempt allocations, and per-solve `workSpent`. Concurrent solves in one JS realm therefore cannot consume each other's budgets. |
+| module-global `workMeter.units` | Monotonic realm/process cumulative counter retained for discovery tooling that spans many sequential black-box `solverApi.solve()` calls and needs one cross-call work ceiling. It is not a solve-budget authority. |
+
+`applyMove()` and `isConnected()` increment both counters. The duplication is intentional: the per-solve scope fixed a real same-realm concurrency bug, while the cumulative scope preserves the existing hint-discovery/session contract without requiring those callers to reach into a solve's internal `prep`.
+
+Do not replace internal budget checks with the module-global counter. Also do not assume the cumulative counter is an isolated session budget if unrelated solves can run concurrently in the same realm; callers that need an isolated multi-solve budget should eventually use an explicit caller-owned/session scope or account `SolveResult.workSpent` across nested solves. See [`architecture-unification-audit.md`](architecture-unification-audit.md) for the migration proposal.
+
 ## Budget roles
 
 | Field | Role |

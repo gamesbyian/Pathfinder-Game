@@ -7,6 +7,7 @@ Use [`../AGENTS.md`](../AGENTS.md) first when it already routes the task.
 | Need | Start here |
 |---|---|
 | Application architecture | [`architecture.md`](architecture.md) |
+| Architecture cleanup / compatibility / duplicate-authority review | [`architecture-unification-audit.md`](architecture-unification-audit.md) |
 | Tests / finish-line validation | [`testing.md`](testing.md) |
 | CLI, probe, or workflow discovery | [`tooling-catalog.md`](tooling-catalog.md) |
 | Solver implementation | [`solver-architecture.md`](solver-architecture.md) |
@@ -24,6 +25,7 @@ Use [`../AGENTS.md`](../AGENTS.md) first when it already routes the task.
 | Doc | Role |
 |---|---|
 | [`architecture.md`](architecture.md) | Layering, runtime/state, engine facade, UI structure, code placement. |
+| [`architecture-unification-audit.md`](architecture-unification-audit.md) | Current review of intentional plurality, legacy compatibility, duplicate authorities, and behavior-preserving unification priorities. |
 | [`testing.md`](testing.md) | Test tiers and required validation. |
 | [`tooling-catalog.md`](tooling-catalog.md) | Tool/workflow discovery. |
 | [`typing.md`](typing.md) | TypeScript model and `.ts` source / `.js` import rule. |
