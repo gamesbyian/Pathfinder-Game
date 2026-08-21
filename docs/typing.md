@@ -1,11 +1,12 @@
 # Static typing
 
-All first-class source under `modules/` is TypeScript and strict-checked, except the two solver Web Worker boundary files (`solver/worker.js`, `solver/solver-worker-client.js`). Vite owns emit; `tsc` is check-only.
+All first-class source under `modules/` is TypeScript and strict-checked, except the solver Web Worker host boundary `modules/solver/worker.js`. `modules/solver/solver-worker-client.ts` is TypeScript. Vite owns emit; `tsc` is check-only.
 
 ## Contract
 
 - `npm run check:types` runs `tsc --noEmit -p tsconfig.json` over `modules/**/*.ts` under `strict`; it is part of `npm run check`.
 - Source imports keep `.js` specifiers (`import './foo.js'`); tsc/Vite/tsx resolve them to `.ts` source.
+- Documentation names actual repository source paths (`.ts`) rather than their `.js` import specifiers.
 - Module-graph CLI tools that need source loading use `tsx` unless their hot solver path is deliberately bundled through `scripts/run-bundled.mjs`.
 - TypeScript ESLint applies to `modules/**/*.ts`. `no-explicit-any` is intentionally off because adapter/DOM boundaries use explicit `any` where precise typing would be false confidence.
 
@@ -17,7 +18,7 @@ All first-class source under `modules/` is TypeScript and strict-checked, except
 | State core | `EngineState` plus typed slice interfaces; state actions are typed end to end. |
 | Domain-bearing ports | `modules/ports.ts` types `LevelUtils`, `DataService`, `SolverApi`, and domain-object results. |
 | UI/render/input/controllers/persistence integration | Typed state/domain values, but dynamic DOM handles, subsystem dependencies, third-party SDK objects, and other adapter glue may use `any`. |
-| Worker boundary | Two `.js` host files remain intentionally outside the normal `.ts` surface. |
+| Worker boundary | `modules/solver/worker.js` remains intentionally outside the normal `.ts` surface. |
 
 `state-slices.ts` contains a compile-time guard against `EngineState` collapsing to `any`. ENGINE writes must still flow through state actions; typing complements rather than replaces architecture checks.
 
