@@ -58,6 +58,15 @@ test('classifyProvenanceSource: unknown solver id -> other; null entry -> other'
     assert.equal(classifyProvenanceSource(null), 'other');
 });
 
+// The Priority 0 regression this bucket exists for (docs/solver-optimization-current-queue.md):
+// an isolated single-technique run (e.g. technique-census tooling) still carries
+// solver.id === SOLVER_ID, so without this check it would be misread as ordinary production-
+// solver capability evidence — the same contamination behind e.g. R02900.
+test('classifyProvenanceSource: isolatedTechnique overrides production-solver', () => {
+    assert.equal(classifyProvenanceSource(entry({ context: { isolatedTechnique: true } })), 'isolated-technique');
+    assert.equal(PROVENANCE_SOURCES.includes('isolated-technique'), true);
+});
+
 test('sourcesForHint: a hint rediscovered by two techniques belongs to both buckets', () => {
     const hint = { path: [1, 2, 3], provenance: [entry({ search: { randomSeed: 7 } }), entry({ context: { hintGuided: true } })] };
     const sources = sourcesForHint(hint);
@@ -96,6 +105,19 @@ test('extractObjectives: mustPass/mustCross/landmark roles resolve to the right 
     assert.equal(objectives.find(o => o.type === 'adjacentTurn').turnDir, 'ccw');
     // 1-indexed wire coords -> 0-indexed packed keys.
     assert.equal(objectives[0].key, p(0, 0));
+});
+
+test('extractObjectives: a mustPass/mustTurn landmark\'s wire-format mustPass echo is not double-counted', () => {
+    // Mirrors buildWireLevelData's real output: a mustTurn-role landmark's cell is redeclared in
+    // `mustPass` too. That must yield exactly one objective for the cell (the landmark's), not
+    // an extra plain 'mustPass' entry for the same key.
+    const level = {
+        mustPass: [{ x: 1, y: 1 }, { x: 3, y: 3 }],
+        landmarks: [{ x: 3, y: 3, role: 'mustTurn', turn: 'either' }],
+    };
+    const objectives = extractObjectives(level);
+    assert.deepEqual(objectives.map(o => o.type), ['mustPass', 'mustTurn']);
+    assert.equal(objectives.filter(o => o.key === p(2, 2)).length, 1);
 });
 
 // ── turnEvents / objectiveSatisfactionDepths ───────────────────────────────────

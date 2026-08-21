@@ -1,7 +1,11 @@
 // Client-side adapter that runs the Pathfinder solver in a Web Worker.
-// Exposes a solve() method compatible with Solver.solve() plus a
-// findTrapSpots() method compatible with Solver.findTrapSpots(), making it
-// a drop-in swap for on-thread solving.
+// Exposes solve()/findTrapSpots() methods that run the same search as
+// Solver.solve()/Solver.findTrapSpots(), but this is NOT a drop-in swap: it
+// implements only these two methods (not the full SolverApi surface), and
+// its solve() takes a differently-shaped level than Solver.solve() does —
+// see the input-format note below. A caller switching between the on-thread
+// solverApi and this client must adapt the level it passes, not just the
+// call site.
 //
 // Usage:
 //   import { createSolverWorkerClient } from './modules/solver/solver-worker-client.js';
@@ -14,9 +18,13 @@
 //   // schedulerMode, portfolio. See worker-result-serialization.mjs's buildSolveWorkerResult.
 //   (A URL argument is also accepted and constructed here — used by tests.)
 //
-// solve()'s levelRaw must be in wire format (1-indexed coords); normalization
-// happens inside the worker. findTrapSpots() takes a NORMALIZED level —
-// postMessage's structured clone carries its Sets/Maps intact.
+// Input-format note: this solve()'s levelRaw must be RAW wire format (1-indexed coords) —
+// normalization happens inside the worker. Solver.solve() (createSolver() in Solver.ts), by
+// contrast, expects an ALREADY-NORMALIZED level and does no raw normalization itself (that's a
+// separate prepareLevelForSolver() call on that facade) — so a raw level that's correct for
+// THIS client's solve() is the wrong shape for the on-thread solverApi.solve(), and vice versa.
+// findTrapSpots() here takes a NORMALIZED level either way — postMessage's structured clone
+// carries its Sets/Maps intact.
 //
 // solve() accepts the FULL SolveOpts the direct/on-thread solver does (fixed 2026-08-20 — it used
 // to silently forward only timeBudgetMs/yieldFn, dropping ablation/nodeBudget/workBudget/

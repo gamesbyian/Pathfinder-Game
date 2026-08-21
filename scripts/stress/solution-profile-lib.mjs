@@ -33,20 +33,30 @@ import { readLevelsWithHints, parseLevelSelector } from '../level-data-io.mjs';
 
 // ─── Provenance-source classification ────────────────────────────────────────
 //
-// Maps the existing HintProvenanceEntry shape onto six source categories WITHOUT any new schema —
-// every field read here already exists on every stored hint. Precedence matters: checked top to
-// bottom, first match wins. A hint found independently by two techniques belongs to BOTH buckets
-// (see sourcesForHint) — that's the point: structure appearing in both is more likely level-forced
-// than generator-tic. `human-solved` sits above every algorithmic category (alongside `witness`,
-// for the same reason: neither is a solver "technique", so the technique-specific fields below —
-// termination/hintGuided/randomSeed — are meaningless for them and must not be consulted first) —
-// a human independently solving a level, with zero connection to any solver heuristic, is the
-// single strongest cross-validation signal this bucketing scheme has: stronger than two
-// algorithmic techniques agreeing, since neither is running the solver's search at all.
+// Maps the existing HintProvenanceEntry shape onto source categories WITHOUT any new schema for
+// this module — every field read here already exists on every stored hint (isolatedTechnique was
+// added directly to HintContextProvenance for exactly this consumer, see its own doc comment).
+// Precedence matters: checked top to bottom, first match wins. A hint found independently by two
+// techniques belongs to BOTH buckets (see sourcesForHint) — that's the point: structure appearing
+// in both is more likely level-forced than generator-tic. `human-solved` sits above every
+// algorithmic category (alongside `witness`, for the same reason: neither is a solver "technique",
+// so the technique-specific fields below — termination/hintGuided/randomSeed — are meaningless for
+// them and must not be consulted first) — a human independently solving a level, with zero
+// connection to any solver heuristic, is the single strongest cross-validation signal this
+// bucketing scheme has: stronger than two algorithmic techniques agreeing, since neither is running
+// the solver's search at all.
+//
+// `isolated-technique` sits directly above `production-solver`, checked last among the
+// non-`other` categories: an isolated single-technique run (e.g. technique-census tooling) still
+// carries `solver.id === SOLVER_ID` (the same search code ran), so without this check it would
+// silently fall into `production-solver` — the exact contamination
+// docs/solver-optimization-current-queue.md's Priority 0 traced (e.g. R02900: a technique-census
+// win persisted and later misread as evidence the real competitively-budgeted ladder can solve the
+// level, when `Solver.solve(level,{})` still failed after hundreds of millions of nodes).
 
 export const PROVENANCE_SOURCES = [
     'witness', 'human-solved', 'complete-enumeration', 'prefix-anchored-completion',
-    'randomized-enumeration', 'production-solver', 'other',
+    'randomized-enumeration', 'isolated-technique', 'production-solver', 'other',
 ];
 
 /** One provenance entry → one source category. See module doc for the precedence rationale. */
@@ -57,6 +67,7 @@ export function classifyProvenanceSource(entry) {
     if (entry.search?.termination === 'exhaustive') return 'complete-enumeration';
     if (entry.context?.hintGuided) return 'prefix-anchored-completion';
     if (entry.search?.randomSeed !== null && entry.search?.randomSeed !== undefined) return 'randomized-enumeration';
+    if (entry.context?.isolatedTechnique === true) return 'isolated-technique';
     if (entry.solver?.id === SOLVER_ID) return 'production-solver';
     return 'other';
 }
@@ -86,7 +97,21 @@ export function bucketHintsBySource(hints) {
  *  raw wire-format fields directly (1-indexed x/y), same convention as hint-novelty.ts. */
 export function extractObjectives(level) {
     const objectives = [];
-    for (const m of level.mustPass || []) objectives.push({ type: 'mustPass', key: PACK(m.x - 1, m.y - 1) });
+    // buildWireLevelData's wire output deliberately re-declares a mustPass/mustTurn-role
+    // landmark's own cell in `mustPass` alongside its `landmarks` entry (same cell, one
+    // conceptual object — see level-schema.ts's occupancy-check comments). Walking both arrays
+    // unconditionally would push two objectives for that one cell; skip the raw `mustPass` echo
+    // for any cell a landmark already covers below.
+    const landmarkMustPassKeys = new Set();
+    for (const lm of level.landmarks || []) {
+        const role = baseLandmarkRole(lm.role || '');
+        if (role === 'mustPass' || role === 'mustTurn') landmarkMustPassKeys.add(PACK(lm.x - 1, lm.y - 1));
+    }
+    for (const m of level.mustPass || []) {
+        const key = PACK(m.x - 1, m.y - 1);
+        if (landmarkMustPassKeys.has(key)) continue;
+        objectives.push({ type: 'mustPass', key });
+    }
     for (const m of level.mustCross || []) objectives.push({ type: 'mustCross', key: PACK(m.x - 1, m.y - 1) });
     for (const lm of level.landmarks || []) {
         const key = PACK(lm.x - 1, lm.y - 1);

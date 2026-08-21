@@ -30,8 +30,16 @@
 
 import { provenanceEventIdentity } from './hint-provenance-identity.mjs';
 
-/** Loads the solver-side helpers. Async because these are TS modules resolved by the bundler. */
-export async function createHintCapture({ solverVersion, budgetMs, enabled = true }) {
+/** Loads the solver-side helpers. Async because these are TS modules resolved by the bundler.
+ *  `isolatedTechnique`: true iff every result passed to `record()` comes from running ONE
+ *  technique in isolation rather than the real, full, competitively-budgeted solveLevel()
+ *  production ladder (e.g. technique-census tooling) — see
+ *  modules/domain/hint-types.ts's HintContextProvenance.isolatedTechnique for why this must be
+ *  set correctly: an isolated technique can solve a level the real ladder cannot, so persisting
+ *  its find without this flag would misrepresent it as ordinary production-solver capability
+ *  evidence (docs/solver-optimization-current-queue.md's Priority 0). Defaults false — every
+ *  existing caller (portfolio-solve-sweep.mjs) already runs the real ladder. */
+export async function createHintCapture({ solverVersion, budgetMs, enabled = true, isolatedTechnique = false }) {
     if (!enabled) {
         return {
             enabled: false,
@@ -77,6 +85,7 @@ export async function createHintCapture({ solverVersion, budgetMs, enabled = tru
                 usedExistingHints: false,
                 randomSeed: null,
                 levelRevision: levelRevisions.get(level) ?? null,
+                isolatedTechnique,
             });
             const before = level.hintRecords ?? [];
             const beforeCount = before.length;

@@ -12,6 +12,8 @@ function makeLevel(overrides = {}) {
     blockSet: new Set(),
     portalMap: new Map(),
     gooseSet: new Set(),
+    gateKeys: [],
+    falseGoalKeys: new Set(),
     ...overrides,
   } as unknown as NormalizedLevel;
 }
@@ -85,4 +87,38 @@ test('the extracted distance map primitive computes BFS distances', () => {
   const source = PACK(0, 0);
   const level = makeLevel();
   assert.equal(buildDistMap(level, [source]).get(PACK(3, 3)), 6);
+});
+
+test('buildDistMap treats a gate as a reachable sink: assignable a distance, but not a through-node', () => {
+  // 3x1 corridor (0,0)-(1,0)-(2,0), a gate sits in the middle. No real path can route THROUGH a
+  // gate mid-walk ("invalid-gate-reentry"), so from the goal-side source at (2,0), the gate at
+  // (1,0) must still get a real distance (a real path CAN start there), but (0,0) must be
+  // unreachable — the only grid route to it passes through the gate.
+  const gate = PACK(1, 0);
+  const level = makeLevel({ grid: { w: 3, h: 1 }, gateKeys: [gate] });
+  const dist = buildDistMap(level, [PACK(2, 0)]);
+  assert.equal(dist.get(gate), 1, 'the gate itself is a reachable position');
+  assert.equal(dist.has(PACK(0, 0)), false, 'no route to the far side without stepping through the gate');
+
+  // But used as an explicit SOURCE (not discovered via a move), the same gate propagates
+  // normally — starting there and walking away is exactly what every real solve does.
+  const fromGate = buildDistMap(level, [gate]);
+  assert.equal(fromGate.get(PACK(2, 0)), 1);
+  assert.equal(fromGate.get(PACK(0, 0)), 1);
+});
+
+test('buildDistMap treats an unarmed false goal the same way, and allowFalseGoalNeighbors lifts it', () => {
+  // Same corridor shape, but with a false goal instead of a gate in the middle. Landing on an
+  // unarmed false goal locks the path from moving further ("invalid-false-goal-lock"), so by
+  // default it's a sink too: reachable, but not a through-node.
+  const fg = PACK(1, 0);
+  const level = makeLevel({ grid: { w: 3, h: 1 }, falseGoalKeys: new Set([fg]) });
+  const dist = buildDistMap(level, [PACK(2, 0)]);
+  assert.equal(dist.get(fg), 1);
+  assert.equal(dist.has(PACK(0, 0)), false);
+
+  // Trap search's own prep opts in via allowFalseGoalNeighbors, matching staticNeighborKeys'
+  // allowance — with it set, the false goal is a normal passable cell, not a sink.
+  const allowed = buildDistMap(level, [PACK(2, 0)], { allowFalseGoalNeighbors: true });
+  assert.equal(allowed.get(PACK(0, 0)), 2);
 });

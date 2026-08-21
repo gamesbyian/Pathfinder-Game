@@ -1,5 +1,6 @@
 import { getNavigableDensity } from './archetype.js';
 import { buildAxisApproachMap, buildDistMap, distMapToArray } from './distance.js';
+import type { DistMapOpts } from './distance.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, NEIGHBOR_DX, NEIGHBOR_DY, PACK } from './encoding.js';
 import { MAX_BITROW_DIM } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
@@ -41,11 +42,17 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // initialized here, unconditionally, so no consumer can ever observe an unset one.
     prep._workMeter = { units: 0 };
     prep.gridW = level.grid.w;
-    prep.distMap        = buildDistMap(level, [level.goalKey]);
+    // Threaded through every buildDistMap/buildAxisApproachMap call below so these distance
+    // heuristics agree with staticNeighborKeys' own false-goal allowance (same opts field) —
+    // trap search's prep (prepLevel(level, { allowFalseGoalNeighbors: true })) needs its distance
+    // maps to treat false goals as passable exactly where its move generation does, or its own
+    // lower-bound pruning would reject reachable false-goal candidates as a false negative.
+    const distOpts: DistMapOpts = { allowFalseGoalNeighbors: opts.allowFalseGoalNeighbors };
+    prep.distMap        = buildDistMap(level, [level.goalKey], distOpts);
     prep.mustPassIndex  = buildIndexArr(level.mustPassKeys);
     prep.mustCrossIndex = buildIndexArr(level.mustCrossKeys);
-    prep.mustPassDistMaps  = level.mustPassKeys.map(k => buildDistMap(level, [k]));
-    prep.mustCrossDistMaps = level.mustCrossKeys.map(k => buildDistMap(level, [k]));
+    prep.mustPassDistMaps  = level.mustPassKeys.map(k => buildDistMap(level, [k], distOpts));
+    prep.mustCrossDistMaps = level.mustCrossKeys.map(k => buildDistMap(level, [k], distOpts));
     // Flat presence flag instead of Set<number>: read per-candidate in scoreMove/applyMove
     // hot loops (intersection-setup scoring, "was this an intersection" check), same
     // "typed array beats Set.has()" rationale as reachBlockedArr below. Gate counts are
@@ -118,7 +125,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     prep.mustCrossToGoalDist = level.mustCrossKeys.map(k => prep.distMap.get(k) ?? Infinity);
     // Objectives = must-pass + must-cross (for scoring)
     prep.objectiveKeys = Array.from(new Set([...level.mustPassKeys, ...level.mustCrossKeys]));
-    prep.objectiveDistMaps = prep.objectiveKeys.map(k => buildDistMap(level, [k]));
+    prep.objectiveDistMaps = prep.objectiveKeys.map(k => buildDistMap(level, [k], distOpts));
 
     // Fast typed-array mirrors of the most-accessed dist maps.
     // Uint16Array[packedKey] instead of Map.get() cuts per-lookup cost ~10x.
@@ -140,11 +147,16 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // edge / all-blocked) — distinct from "sources exist but this particular query is unreachable"
     // (an all-0xFFFF array can't tell those apart on its own; the read sites branch on this exact
     // distinction, so it's computed once here rather than reconstructed per read).
-    const _mcFilter = (k: number) => !level.blockSet.has(k) && !level.gooseSet.has(k);
+    // Excludes gates too (matching _ffFilter below): a gate can't be re-entered mid-route, so it
+    // can never actually serve as a second-visit approach side, the same reason _ffFilter already
+    // excludes gates for flippers. False goals are excluded for the same reason buildDistMap's own
+    // isImpassable does — landing on one locks the path, so it can't be an approach side either.
+    const _mcFilter = (k: number) => !level.blockSet.has(k) && !level.gooseSet.has(k) &&
+        !level.gateKeys.includes(k) && (!!distOpts.allowFalseGoalNeighbors || !level.falseGoalKeys.has(k));
     prep.mcApproachDistMaps = level.mustCrossKeys.map(mcKey => {
         const mcX = mcKey & 0xFFFF, mcY = (mcKey >>> 16) & 0xFFFF;
-        const vMap = buildAxisApproachMap(level, mcX, mcY, AXIS_V, _mcFilter);
-        const hMap = buildAxisApproachMap(level, mcX, mcY, AXIS_H, _mcFilter);
+        const vMap = buildAxisApproachMap(level, mcX, mcY, AXIS_V, _mcFilter, distOpts);
+        const hMap = buildAxisApproachMap(level, mcX, mcY, AXIS_H, _mcFilter, distOpts);
         return {
             v: distMapToArray(vMap, level.grid.w, level.grid.h), vEmpty: vMap.size === 0,
             h: distMapToArray(hMap, level.grid.w, level.grid.h), hEmpty: hMap.size === 0,
@@ -171,7 +183,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         if (_seenPortalPairs.has(b)) continue; // each pair appears as both a→b and b→a
         _seenPortalPairs.add(a);
         if (keyParity(a) === keyParity(b)) continue; // twist=0: doesn't fix a parity mismatch
-        prep.parityPortalDistMaps.push({ a, b, dist: distMapToArray(buildDistMap(level, [a, b]), level.grid.w, level.grid.h) });
+        prep.parityPortalDistMaps.push({ a, b, dist: distMapToArray(buildDistMap(level, [a, b], distOpts), level.grid.w, level.grid.h) });
     }
 
     // Pairwise BFS distances between must-cross cells (for MST lower bound). Flat row-major
@@ -232,14 +244,17 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     prep.flipperApproachOdd  = [];
     if (_fKeys.length > 0) {
         const _fGateSet = new Set(level.gateKeys);
-        const _ffFilter = (k: number) => !level.blockSet.has(k) && !level.flippingFilterMap.has(k) && !_fGateSet.has(k);
+        // False goals excluded for the same reason _mcFilter above now is: landing on one locks
+        // the path, so it can never serve as a second-visit approach side.
+        const _ffFilter = (k: number) => !level.blockSet.has(k) && !level.flippingFilterMap.has(k) && !_fGateSet.has(k) &&
+            (!!distOpts.allowFalseGoalNeighbors || !level.falseGoalKeys.has(k));
         for (let fi = 0; fi < _fKeys.length; fi++) {
             const fKey = _fKeys[fi];
             const fx = fKey & 0xFFFF, fy = (fKey >>> 16) & 0xFFFF;
             const initAx = prep.flipperInitAxes[fi];
             for (const parityOdd of [false, true]) {
                 const ax = parityOdd ? (initAx === AXIS_H ? AXIS_V : AXIS_H) : initAx;
-                const dmap = buildAxisApproachMap(level, fx, fy, ax, _ffFilter);
+                const dmap = buildAxisApproachMap(level, fx, fy, ax, _ffFilter, distOpts);
                 const entry = { dist: distMapToArray(dmap, level.grid.w, level.grid.h), empty: dmap.size === 0 };
                 if (parityOdd) prep.flipperApproachOdd.push(entry);
                 else           prep.flipperApproachEven.push(entry);
@@ -292,7 +307,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
             prep.surroundNeighborIndex.set(nk, existing);
             nbrKeys.push(nk);
             nbrGoalDists.push(prep.distMap.get(nk) ?? Infinity);
-            nbrDistMaps.push(distMapToArray(buildDistMap(level, [nk]), level.grid.w, level.grid.h));
+            nbrDistMaps.push(distMapToArray(buildDistMap(level, [nk], distOpts), level.grid.w, level.grid.h));
         }
         // initMask: all dense-index bits set (one per valid neighbor)
         prep.surroundInitNeighborMasks[i] = nbrKeys.length > 0 ? (1 << nbrKeys.length) - 1 : 0;
@@ -331,7 +346,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
             if (gd < minGoal) minGoal = gd;
         }
         // Multi-source BFS from all valid adjacent cells → approachDist[pos] = dist to nearest adj cell
-        prep.adjTurnDistMaps.push(distMapToArray(adjSources.length > 0 ? buildDistMap(level, adjSources) : new Map(), level.grid.w, level.grid.h));
+        prep.adjTurnDistMaps.push(distMapToArray(adjSources.length > 0 ? buildDistMap(level, adjSources, distOpts) : new Map(), level.grid.w, level.grid.h));
         prep.adjTurnGoalDist.push(minGoal);
     }
 
@@ -348,7 +363,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // it scoreMove had literally no guidance toward must-turn landmarks at all (unlike every
     // other landmark type, which all have a dedicated urgency term) — stress-corpus finding,
     // see data/stress/README.md. Flattened to Uint16Array — see surroundNeighborDistMaps' comment above.
-    prep.mustTurnDistMaps = prep.mustTurnKeys.map(k => distMapToArray(buildDistMap(level, [k]), level.grid.w, level.grid.h));
+    prep.mustTurnDistMaps = prep.mustTurnKeys.map(k => distMapToArray(buildDistMap(level, [k], distOpts), level.grid.w, level.grid.h));
 
     // Fast path flag: true only when the level has any landmark constraints.
     // Avoids overhead in applyMove/undoMove for the 147 existing non-landmark levels.

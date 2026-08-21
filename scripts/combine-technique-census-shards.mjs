@@ -333,7 +333,12 @@ if (SAVE_HINTS) {
         // rewritten regardless of whether it changed, discovered locally: a 1-level test run
         // rewrote all 160 published hint files before this fix.
         const levels = readLevelsWithHints(path.resolve(corpusPath));
-        const capture = await createHintCapture({ solverVersion: SOLVER_VERSION, budgetMs: null, enabled: true });
+        // isolatedTechnique: true — every cell here ran ONE technique alone (T1's isolated-
+        // technique census), never the real competitively-budgeted solveLevel() ladder, so a find
+        // persisted from this tool must not be misread as ordinary production-solver capability
+        // evidence (docs/solver-optimization-current-queue.md's Priority 0 — this is the exact
+        // contamination path that finding traced, e.g. R02900).
+        const capture = await createHintCapture({ solverVersion: SOLVER_VERSION, budgetMs: null, enabled: true, isolatedTechnique: true });
         const touchedLevels = [...new Set(cellResults.map(r => levels[r.levelPos - 1]))];
         await capture.prepare(touchedLevels);
         // Deterministic order (sorted by cellId) so a re-run of the same combine step against the

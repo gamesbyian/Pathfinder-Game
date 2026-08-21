@@ -96,6 +96,16 @@ test('clause 5 — surround: every reachable 8-neighbor visited; blocks excluded
         landmarks: [{ x: 2, y: 2, objectType: 'park', role: 'surround' }],
     });
     assert.equal(areWinMetricsSatisfied(walk(ring), blocked), true, 'blocked neighbor is not required');
+
+    // A goose is just as impassable as a block, so a goose-occupied neighbor must be excluded
+    // from "every reachable neighbor visited" the same way a blocked one is — otherwise the
+    // win condition demands a visit to a cell no legal path can ever reach.
+    const goosed = level({
+        grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 3 }], goal: { x: 3, y: 3 }, reqLen: 6,
+        geese: [{ x: 2, y: 3 }],
+        landmarks: [{ x: 2, y: 2, objectType: 'park', role: 'surround' }],
+    });
+    assert.equal(areWinMetricsSatisfied(walk(ring), goosed), true, 'goosed neighbor is not required');
 });
 
 test('clause 6 — must-turn: turn of the required direction at the cell', () => {

@@ -74,7 +74,7 @@ export const FEATURES: Record<string, string> = {
     STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: 'Production default-OFF; closed retained opt-in: dead-last additive repair retry with elite-prefix DFS enabled. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_RETRY_TIER_NODE_STAIRCASE: "Production default-OFF; retained experiment: divide a ladder-rerun tier's node reserve into cumulative per-config steps so its first non-terminating config cannot starve later configs. Current disposition: docs/solver-opt-in-experiment-ledger.md.",
     STRATEGY_MC_NEIGHBOR_BUDGET_RETRY: 'Production default-ON: dead-last additive whole-ladder retry with PRUNE_MC_NEIGHBOR_BUDGET disabled, eligible only for levels with must-cross mechanics. Runs after the ordinary flag-on ladder fails.',
-    STRATEGY_REPAIR_LATE_PROBE: 'Production default-OFF; retained experiment: one tightly node-capped plain repair attempt, dead last, for levels whose earlier routing did not populate repair fallback configs. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
+    STRATEGY_REPAIR_LATE_PROBE: 'Production default-ON: one tightly node-capped plain repair attempt, dead last, for levels whose earlier routing did not populate repair fallback configs. Promoted 2026-08-21 after a same-commit deterministic A/B (GHA 32453248184 vs 32459711208, main@e5034e8c): Corpus-1 95→96, Corpus-2 863→881, +19 net with zero regressions. Disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_REPAIR_NOGOOD_CACHE: 'Repair: per-call cache of exact dead-end states, short-circuiting a restart the moment it re-enters a state already proven fruitless earlier in the same call (see modules/solver/nogood-cache.ts)',
     STRATEGY_GATE_INTERLEAVING: 'Config-outer gate-inner scheduling for multi-gate levels',
     STRATEGY_PARITY_GATE_FILTER:'Pre-filter infeasible gates by parity (portal-free levels)',
@@ -141,7 +141,6 @@ export const OPT_IN_FEATURES = new Set([
     'STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY',
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY',
     'STRATEGY_RETRY_TIER_NODE_STAIRCASE',
-    'STRATEGY_REPAIR_LATE_PROBE',
 ]);
 
 // ─── Template → config key mapping ───────────────────────────────────────────

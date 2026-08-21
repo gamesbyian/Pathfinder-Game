@@ -22,8 +22,8 @@
 // Finding 5 sets for decision-bearing capability claims.
 import { WITNESS_GENERATOR_ID, HUMAN_PLAYER_ID } from '../../modules/domain/hint-types.ts';
 
-/** Finding 5's three admissibility classes, plus `unknown` for entry-free hints. */
-export const PROVENANCE_CLASSES = ['cold-capability', 'hint-guided', 'inherited-witness', 'unknown'];
+/** Finding 5's three admissibility classes, plus `isolated-technique` and `unknown`. */
+export const PROVENANCE_CLASSES = ['cold-capability', 'hint-guided', 'inherited-witness', 'isolated-technique', 'unknown'];
 
 /**
  * STRICT (default): the run had no hint contamination available at all. Required for
@@ -42,13 +42,20 @@ const isInheritedWitness = entry =>
 /**
  * One provenance entry → one admissibility class. Precedence matters and mirrors
  * classifyProvenanceSource's: an inherited witness/human solve is not a solver technique at all,
- * so its technique-specific flags are meaningless and must not be consulted first.
+ * so its technique-specific flags are meaningless and must not be consulted first. An isolated
+ * single-technique run (context.isolatedTechnique — e.g. technique-census tooling) is checked
+ * next, ahead of hint-guided/cold: it ran outside the real competitively-budgeted solveLevel()
+ * ladder entirely, so it is not admissible as "the solver can find this cold" evidence regardless
+ * of whether it also happened to be hint-guided — see
+ * docs/solver-optimization-current-queue.md's Priority 0 (the same contamination
+ * classifyProvenanceSource's `isolated-technique` bucket exists to catch).
  */
 export function classifyProvenanceClass(entry, { standard = 'strict' } = {}) {
     if (!entry) return 'unknown';
     if (!COLD_EVIDENCE_STANDARDS.includes(standard)) throw new Error(`unknown cold-evidence standard: ${standard}`);
     if (isInheritedWitness(entry)) return 'inherited-witness';
     const context = entry.context ?? {};
+    if (context.isolatedTechnique === true) return 'isolated-technique';
     if (context.hintGuided === true) return 'hint-guided';
     if (standard === 'strict' && context.usedExistingHints === true) return 'hint-guided';
     return 'cold-capability';
@@ -83,7 +90,7 @@ export function hasColdCapabilityEvidence(hint, options) {
 export function summarizeProvenanceClasses(hints, options) {
     const summary = {
         hints: 0, entries: 0, noProvenanceHints: 0, coldHints: 0, hintGuidedHints: 0,
-        inheritedWitnessHints: 0, coldEntries: 0,
+        inheritedWitnessHints: 0, isolatedTechniqueHints: 0, coldEntries: 0,
     };
     for (const hint of hints) {
         summary.hints++;
@@ -94,6 +101,7 @@ export function summarizeProvenanceClasses(hints, options) {
         if (classes.has('cold-capability')) summary.coldHints++;
         if (classes.has('hint-guided')) summary.hintGuidedHints++;
         if (classes.has('inherited-witness')) summary.inheritedWitnessHints++;
+        if (classes.has('isolated-technique')) summary.isolatedTechniqueHints++;
         summary.coldEntries += entries.filter(entry => isColdCapabilityEvidence(entry, options)).length;
     }
     return summary;

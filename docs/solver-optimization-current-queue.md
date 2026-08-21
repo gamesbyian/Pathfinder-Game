@@ -28,7 +28,7 @@ Keep these failure classes distinct:
 4. **regression:** comparable production solve previously succeeded and now fails;
 5. **provenance/instrumentation:** stored evidence does not establish the claimed comparison.
 
-The first beam-routing expansion produced **+20 net Corpus-2 solves (828→848; 21 gained / 1 understood loss)**. A follow-up perimeter-beam expansion recovered all 29 newly routed local targets. `STRATEGY_REPAIR_LATE_PROBE` recovered 20/94 locally targeted gate-excluded repair winners and remains default-OFF pending population confirmation.
+The first beam-routing expansion produced **+20 net Corpus-2 solves (828→848; 21 gained / 1 understood loss)**. A follow-up perimeter-beam expansion recovered all 29 newly routed local targets. `STRATEGY_REPAIR_LATE_PROBE` was promoted to production default-ON 2026-08-21 after a same-commit deterministic A/B (GHA 32453248184 vs 32459711208, main@e5034e8c): Corpus-1 95→96, Corpus-2 863→881, +19 net with zero regressions on either corpus.
 
 **Current-HEAD caveat:** PR #1398 fixed work accounting, concurrent solve-state isolation, retry-tier flag proxying, adaptive gate weighting, lifecycle telemetry, and repair/late-probe budget handling. Older population counts remain evidence for their recorded commits, not a current-HEAD baseline. Promotion or population claims touching these paths need a fresh matched baseline.
 
@@ -45,7 +45,7 @@ Stable priority numbers remain citeable. CLOSED or gate-complete rows are dispos
 | 4 | CP-SAT-anchored deep repair editing | **ACTIVE RESEARCH** | Expand exact feasible/infeasible retreat boundaries; prototype deeper rollback/rebuild only after retreat depth is predictably state-conditioned. |
 | 5 | State-conditioned must-cross anchoring | **ACTIVE RESEARCH** | Continue read-only prefix diagnostics; require repeated separation across unrelated levels/families before changing scoring. |
 | 6 | Mechanics-conditioned admissible-order routing | **CLOSED NEGATIVE 2026-08-20** | None. The isolated census found too little unique admissible-order capability to justify meaningful reserve. |
-| 7 | Cheap isolated-technique wins the ladder does not route to | **ACTIVE / SHIPPING GATE** | Reconfirm the perimeter-beam expansion and `STRATEGY_REPAIR_LATE_PROBE` on current HEAD; investigate remaining high-intersection/must-cross-heavy beam gaps per archetype instead of adding broad configs. |
+| 7 | Cheap isolated-technique wins the ladder does not route to | **`STRATEGY_REPAIR_LATE_PROBE` PROMOTED 2026-08-21** | Investigate remaining high-intersection/must-cross-heavy beam gaps per archetype instead of adding broad configs. |
 
 ## 0. Regression and provenance integrity
 
@@ -55,7 +55,8 @@ Established from the late 2026-08-20 investigation:
 - `R02516` is explained by three individually sound must-cross forced-structure prunes (`PRUNE_MC_RESERVED_WALL`, `PRUNE_MC_FORCED_NEIGHBOR`, `PRUNE_MC_FORCED_FIRST_MOVE`) jointly removing its former winning branch;
 - `R00632` was a false positive: its stored historical win used default-OFF `STRATEGY_REPAIR_TURN_BIAS`, unreachable by the normal production ladder;
 - `R02900` exposed a broader attribution bug: `classifyProvenanceSource` labels a solver ID “production-solver” without proving the call used the full `solveLevel()` ladder. At its recorded-good commit, default `Solver.solve(level,{})` still failed after hundreds of millions of nodes, so the stored small isolated repair win is not regression evidence;
-- `R03205` and `R03329` may share that attribution problem but were not individually settled;
+- `R03205` is now individually settled as the same attribution artifact: its recorded win (`gateKey` fixed, `forcing` object present, `randomSeed`/`seedSalt` fixed, identical `nodesExpanded:6792911` repeated verbatim across five separate commits) is the signature of a forced/anchored replay tool (e.g. `repair-direct-probe.mjs`, which bypasses `solveLevel`'s ladder by design), not a cold ladder win. Direct verification at the recorded-good commit (`86bdd133`) confirms this: an unconstrained `Solver.solve(level, {})` call there fails identically at ~20M nodes across three repeated deterministic runs — over 3x the win's claimed node count — so the cold ladder never actually had this capability at that commit;
+- `R03329` is likewise settled as a non-regression on the same grounds: besides the same forced-replay `repair` signature seen in `R03205`, its only unforced-looking wins are `admissible-order` technique entries dated 2026-08-20, which line up with Priority 6's isolated technique-census sweep (explicitly out-of-ladder) rather than the production ladder;
 - `R02424` and `R01229` remain plausible beam residuals matching the corrected beam-key-width signature, without independent bisection.
 
 Therefore first fix the evidence contract to record enough invocation context to distinguish full production ladder, isolated-technique tooling, and force-enabled experimental flags; then re-mine the regression population. Do not build a recovery mechanism for the old “four repair regressions” category.

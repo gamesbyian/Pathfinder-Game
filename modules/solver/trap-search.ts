@@ -2,7 +2,7 @@ import { getDistanceFromArray } from './distance.js';
 import { popcount } from './encoding.js';
 import { prepLevel } from './prep.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
-import { getRealLengthFromState } from './solution.js';
+import { getRealLengthFromState, structuralDeficit } from './solution.js';
 import { isConnectedForTrap } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -75,8 +75,7 @@ async function dfsEnumerateTrapSpots(
         if (state.mustCrossMask !== 0 && mcN > 0 &&
             state.ints + popcount(state.mustCrossMask) > level.reqInt) { undoMove(undo, state); continue; }
         if (curRealLen === level.reqLen) {
-            if (state.ints === level.reqInt && state.mustCrossMask === 0 &&
-                (mpAllMask === 0 || (state.mpVisitedMask & mpAllMask) === mpAllMask) &&
+            if (state.ints === level.reqInt && structuralDeficit(state, level) === 0 &&
                 !prep.trapInvalidSet.has(next)) recordSpot(next);
             undoMove(undo, state);
             continue;
@@ -143,8 +142,7 @@ async function dfsEnumerateTrapSpots(
                 undoMove(forcedUndo, state); chainDone = true; break;
             }
             if (curRealLen === level.reqLen) {
-                if (state.ints === level.reqInt && state.mustCrossMask === 0 &&
-                    (mpAllMask === 0 || (state.mpVisitedMask & mpAllMask) === mpAllMask) &&
+                if (state.ints === level.reqInt && structuralDeficit(state, level) === 0 &&
                     !prep.trapInvalidSet.has(forcedNext)) recordSpot(forcedNext);
                 undoMove(forcedUndo, state); chainDone = true; break;
             }

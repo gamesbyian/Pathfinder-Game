@@ -24,7 +24,6 @@ Capability decisions obey [`solver-level-blindness.md`](solver-level-blindness.m
 | `STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY` | **RETAINED, NO CURRENT PROMOTION GATE** | The mechanism can restore a budget shrunken by adaptive repair-probe control and reproduced the known R00408 recovery. It has not earned a current ranked promotion lane. Keep default-OFF unless current evidence again shows the shrink controller causing a meaningful population regression that this recovery fixes without unacceptable cost. |
 | `STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY` | **CLOSED** | Additive dead-last retry removed the original displacement concern, but the original 20-level closest-miss sample produced **zero recoveries** at both tested retry budgets. More budget did not turn intermediate badness improvement into solves. |
 | `STRATEGY_RETRY_TIER_NODE_STAIRCASE` | **CLOSED NEGATIVE** | Per-config node redistribution fixed a real first-config monopolization shape but traded away load-bearing early-config work; measured wall time also rose sharply despite slightly lower nodes. Reopen only with a mechanism that protects later configs without simply capping the first winner-producing config. |
-| `STRATEGY_REPAIR_LATE_PROBE` | **ACTIVE PROMOTION GATE** | Priority 7. Dead-last flat 2M-node repair probe targets levels structurally excluded from ordinary repair routing. Local end-to-end validation found **20 net recoveries** from the gate-excluded repair-winner population, referee-valid, with no marginal cost on repair-eligible controls and unchanged default-OFF published behavior. **Next gate: full population GHA confirmation** before promotion. |
 
 ## Recently promoted/default-ON mechanisms relevant to this ledger
 
@@ -37,6 +36,7 @@ These are listed only to stop an old experiment name from being mistaken for a d
 | `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` | Promoted default-ON after population validation produced +45 with zero regressions against its baseline. |
 | `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` | Promoted default-ON after population validation produced +10 with zero regressions. |
 | `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` | Promoted default-ON 2026-08-19 after Corpus-2 819 -> 828, +9 with zero regressions; cost increased materially and remains part of the production price. |
+| `STRATEGY_REPAIR_LATE_PROBE` | Promoted default-ON 2026-08-21 (one day after being built) after a same-commit deterministic A/B (GHA 32453248184 vs 32459711208, main@e5034e8c): Corpus-1 95 -> 96, Corpus-2 863 -> 881, +19 net with zero regressions on either corpus. |
 | `STRATEGY_MAIN_LOOP_LATE_RESERVE` | Default-ON historically; its original broad “give late repair more of the same search” research interpretation is now closed by the isolated-technique census. Do not infer an active optimization lane from the retained mechanism. |
 
 This table is intentionally not an exhaustive list of every production feature. Use code for polarity and the current queue for active work.

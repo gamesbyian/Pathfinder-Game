@@ -52,6 +52,16 @@ describe('classifyProvenanceClass', () => {
     test('an unknown standard is rejected rather than silently defaulting', () => {
         assert.throws(() => classifyProvenanceClass(entry(), { standard: 'loose' }), /unknown cold-evidence standard/);
     });
+
+    // The Priority 0 regression this field exists for (docs/solver-optimization-current-queue.md):
+    // an isolated single-technique run (e.g. technique-census tooling) still carries
+    // solver.id === SOLVER_ID, so without this check it would be misread as ordinary cold
+    // production-solver capability evidence.
+    test('an isolated-technique run is never cold-capability evidence, even if also hint-guided', () => {
+        assert.equal(classifyProvenanceClass(entry({ isolatedTechnique: true, hintGuided: false, usedExistingHints: false })), 'isolated-technique');
+        assert.equal(classifyProvenanceClass(entry({ isolatedTechnique: true, hintGuided: true })), 'isolated-technique');
+        assert.equal(isColdCapabilityEvidence(entry({ isolatedTechnique: true })), false);
+    });
 });
 
 // isColdCapabilityEvidence is the name CLAUDE.md directs callers to, so it is covered directly
@@ -101,7 +111,7 @@ describe('summarizeProvenanceClasses', () => {
         ];
         assert.deepEqual(summarizeProvenanceClasses(hints), {
             hints: 5, entries: 4, noProvenanceHints: 1, coldHints: 1, hintGuidedHints: 2,
-            inheritedWitnessHints: 1, coldEntries: 1,
+            inheritedWitnessHints: 1, isolatedTechniqueHints: 0, coldEntries: 1,
         });
     });
 
