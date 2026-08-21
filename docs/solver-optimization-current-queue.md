@@ -1,7 +1,7 @@
 # Solver optimization: current priority queue
 
 > **Status:** canonical live entry point for tuning and optimizing existing solver techniques.
-> **Last reconciled:** 2026-08-20, through PR #1398 and the subsequent audit refresh.
+> **Last reconciled:** 2026-08-21, through PR #1399 (completed the work-accounting/concurrency/proxy/telemetry fixes PR #1398 only started) and the `STRATEGY_REPAIR_LATE_PROBE` promotion that followed it.
 > **Scope:** improve cold, level-blind solve count or reduce machine-independent work without losing solved levels. Exact-level history may label research data but may not control a production solve.
 
 This page answers **what solver work is live now**. It is intentionally compact. Detailed experiment chronology is preserved in dated reports and two same-directory queue snapshots:
@@ -28,9 +28,9 @@ That evidence separates several failure classes that must not be collapsed into 
 4. **regression:** a genuinely comparable production solve used to succeed and no longer does;
 5. **provenance/instrumentation:** the stored evidence does not actually establish the comparison being claimed.
 
-The first beam-routing expansion produced a population result of **+20 net Corpus-2 solves (828→848; 21 gained / 1 understood loss)**. A follow-up perimeter-beam expansion recovered all 29 of its newly routed local targets. `STRATEGY_REPAIR_LATE_PROBE` recovered 20 of 94 locally targeted gate-excluded repair winners while remaining default-OFF pending population confirmation.
+The first beam-routing expansion produced a population result of **+20 net Corpus-2 solves (828→848; 21 gained / 1 understood loss)**. A follow-up perimeter-beam expansion recovered all 29 of its newly routed local targets (population confirmation still pending — see Priority 7). `STRATEGY_REPAIR_LATE_PROBE` recovered 20 of 94 locally targeted gate-excluded repair winners, was confirmed at population scale (GHA run 32418694112, Corpus-2 828 → 868, **+20 gained / 0 lost**), and was **promoted to production default-ON 2026-08-20/21** — see [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md).
 
-**Important current-HEAD caveat:** PR #1398 also fixed solver work accounting, concurrent solve-state isolation, retry-tier flag proxying, adaptive gate weighting, lifecycle telemetry, and repair/late-probe budget handling. Therefore older population counts are evidence about their recorded commits, not a freshly verified baseline for current HEAD. Any promotion or population delta that depends on these paths should obtain a fresh matched current-HEAD baseline.
+**Current-HEAD accounting status (resolved 2026-08-21):** PR #1398 started, and PR #1399 completed, a set of fixes to solver work accounting, concurrent solve-state isolation, retry-tier flag proxying, adaptive gate weighting, lifecycle telemetry, and repair/late-probe budget handling (`prep._workCap` staleness, an ablated-`repairConfigs` eligibility gate equivalence bug). Population counts recorded **before** PR #1399 landed are evidence about their recorded commits, not current HEAD, and any *new* promotion or population delta that depends on these paths should obtain a fresh matched current-HEAD baseline. The one exception already checked: `STRATEGY_REPAIR_LATE_PROBE`'s own confirming GHA run (32418694112) predates PR #1399, but its dispatch config (a generous 24h non-binding deadline, 50,000,000-node cap, no `STRATEGY_REPAIR_FALLBACK` ablation) means neither fix could have altered that specific run's outcome — see the ledger entry for the full reasoning.
 
 ## Ranked queue
 
@@ -45,7 +45,7 @@ Stable priority numbers are retained so reports can cite them. A CLOSED or gate-
 | 4 | CP-SAT-anchored deep repair editing | **ACTIVE RESEARCH** | Expand exact feasible/infeasible retreat boundaries; prototype deeper rollback/rebuild only after retreat depth is predictably state-conditioned. |
 | 5 | State-conditioned must-cross anchoring | **ACTIVE RESEARCH** | Continue read-only prefix diagnostics; require repeated separation across unrelated levels/families before changing scoring. |
 | 6 | Mechanics-conditioned admissible-order routing | **CLOSED NEGATIVE 2026-08-20** | None. The isolated census found too little unique admissible-order capability to justify a meaningful reserve. |
-| 7 | Cheap isolated-technique wins the ladder does not route to | **ACTIVE / SHIPPING GATE** | Reconfirm the perimeter-beam expansion and `STRATEGY_REPAIR_LATE_PROBE` on current HEAD; investigate remaining high-intersection/must-cross-heavy beam gaps per archetype rather than adding broad configs indiscriminately. |
+| 7 | Cheap isolated-technique wins the ladder does not route to | **ACTIVE / SHIPPING GATE** | `STRATEGY_REPAIR_LATE_PROBE` promoted 2026-08-20/21 (population-confirmed +20/0). Reconfirm the perimeter-beam expansion on current HEAD; investigate remaining high-intersection/must-cross-heavy beam gaps per archetype rather than adding broad configs indiscriminately. |
 
 ## 0. Regression and provenance integrity
 
@@ -100,7 +100,7 @@ This remains the strongest production-facing opportunity from the census, but it
 
 - the first beam-routing expansion already population-confirmed +20 net solves;
 - the follow-up perimeter-beam expansion recovered all 29 local newly routed targets but needs a decision-bearing population result on a current, correctly-accounted baseline;
-- `STRATEGY_REPAIR_LATE_PROBE` is default-OFF and locally recovered 20/94 gate-excluded repair winners. Recent `workCap` and eligibility fixes directly touch this path, so promotion evidence should be regenerated on current HEAD rather than inherited from pre-fix assumptions.
+- `STRATEGY_REPAIR_LATE_PROBE` was **promoted to production default-ON 2026-08-20/21**: population-confirmed via GHA run 32418694112, Corpus-2 828 → 868 (+20 gained / 0 lost). The `prep._workCap` staleness and ablated-`repairConfigs` eligibility fixes that directly touch this path landed in PR #1399 after that run; they were checked and found unable to change its outcome (see [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) for the full reasoning), so the evidence stands without needing a rerun.
 
 **Next research population:** remaining cheap unrouted beam wins are concentrated in high-intersection-burden and must-cross-heavy levels spread across several existing archetype rules. Those rules already have calibrated beam choices; no one missing config covers more than a handful. Treat this as a fresh per-rule routing investigation, not another broad “append every useful beam config” pass.
 

@@ -634,7 +634,7 @@ test('attraction-diversity pass reruns the main ladder once more after both prio
     // admissible-order-search last-resort tier (orchestration.ts), which also runs by default after
     // this pass and would otherwise inflate "mainLoopAttempts" below (its attempts carry neither
     // marker, since it's a distinct search primitive, not a rerun of mainConfigs).
-    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, dedupNearTieRetryBudgetFractionOverride: 0, admissibleOrderNonDefaultRetryBudgetFractionOverride: 0, connectivityAxisExhaustedRetryBudgetFractionOverride: 0, mcNeighborBudgetRetryBudgetFractionOverride: 0 });
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, dedupNearTieRetryBudgetFractionOverride: 0, admissibleOrderNonDefaultRetryBudgetFractionOverride: 0, connectivityAxisExhaustedRetryBudgetFractionOverride: 0, mcNeighborBudgetRetryBudgetFractionOverride: 0, repairLateProbeNodeBudgetOverride: 0 });
     assert.equal(result.ok, false);
     const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
     const mainLoopAttempts = result.attempts.filter(a => a.attractionDiversity !== true);
@@ -756,6 +756,7 @@ test('a nodeBudget with room left after the main loop lets the diversity pass st
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
+        repairLateProbeNodeBudgetOverride: 0,
     });
     assert.equal(result.ok, false);
     assert.equal(result.status, 'node-budget-reached');
@@ -774,10 +775,17 @@ test('the node reserve is a strict no-op when no external nodeBudget is set', as
     // The reserve is a share of an EXTERNAL ceiling; with none there is nothing to withhold, so
     // every production path (which passes no nodeBudget) is unaffected. Same level/budget as the
     // first diversity test above, whose attempt counts are therefore reproduced exactly.
-    const withDefault = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000 });
+    // repairLateProbeNodeBudgetOverride: 0 isolates both runs from the promoted default-ON
+    // repair-late-probe tier, which is unrelated to the reserve mechanism under test here and would
+    // otherwise burn its own flat 2,000,000-node cap on this infeasible level.
+    const withDefault = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
+    });
     const withReserveOff = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         admissibleOrderNodeReserveFractionOverride: 0,
+        repairLateProbeNodeBudgetOverride: 0,
     });
     assert.equal(withDefault.nodesExpanded, withReserveOff.nodesExpanded);
     assert.equal(withDefault.attempts.length, withReserveOff.attempts.length);
@@ -814,6 +822,7 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
+        repairLateProbeNodeBudgetOverride: 0,
     });
     const on = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
@@ -822,6 +831,7 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
+        repairLateProbeNodeBudgetOverride: 0,
     });
     assert.equal(off.nodesExpanded, 402, 'reserve off reproduces the pre-reserve total exactly');
     assert.ok(on.nodesExpanded < off.nodesExpanded, 'the reserve must hold the early tiers below the full ceiling');
@@ -1739,9 +1749,10 @@ test('shrink recovery is inert when the shrink mechanism itself is disabled', as
 // don't depend on the mechanism's own real rescue behavior.
 
 test('dedup-near-tie-retry pass reruns the main ladder once more after main loop and repair fallback fail', async () => {
-    // attractionDiversityBudgetFractionOverride/admissibleOrderBudgetFractionOverride: 0 isolate the
-    // pass under test from its sibling last-resort tiers, which also run by default and would
-    // otherwise inflate "mainLoopAttempts" below (their attempts carry none of these three markers).
+    // attractionDiversityBudgetFractionOverride/admissibleOrderBudgetFractionOverride/
+    // repairLateProbeNodeBudgetOverride: 0 isolate the pass under test from its sibling last-resort
+    // tiers, which also run by default and would otherwise inflate "mainLoopAttempts" below (their
+    // attempts carry none of these markers, so they'd land in the mainLoopAttempts bucket only).
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true },
@@ -1750,6 +1761,7 @@ test('dedup-near-tie-retry pass reruns the main ladder once more after main loop
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
+        repairLateProbeNodeBudgetOverride: 0,
     });
     assert.equal(result.ok, false);
     const retryAttempts = result.attempts.filter(a => a.dedupNearTieRetry === true);
@@ -1975,6 +1987,7 @@ test('connectivity-axis-exhausted-retry pass reruns the main ladder once more af
         admissibleOrderBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        repairLateProbeNodeBudgetOverride: 0,
     });
     assert.equal(result.ok, false);
     const retryAttempts = result.attempts.filter(a => a.connectivityAxisExhaustedRetry === true);
