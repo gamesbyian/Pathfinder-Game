@@ -29,6 +29,7 @@ Canonical compact entry point for coding/research agents. Load only task-relevan
 
 - **Keep the active task visible.** Do not silently replace an authorized task with a newly noticed one; finish it, block it explicitly, or state why adjacent work is required.
 - **Optimize for the underlying objective, not literal prompt completion.** Follow useful discoveries through to their consequences.
+- **Use evidence proportional to the decision.** Prefer statistically reliable samples over automatic full-population runs when they answer the question with enough confidence; scale coverage with effect size, instability, regression risk, and the intended use of the result. Full coverage is for claims or decisions that need it, not a default virtue.
 - **Null result ≠ exhausted idea.** Check implementation quality, budgets, routing, instrumentation, and confounds before closing a direction.
 - **Investigate surprises.** Unexpected gains, losses, contradictions, and regressions are evidence to explain, not noise to smooth over.
 - **Prefer causal evidence to stories.** Separate measurement, inference, hypothesis, and speculation; isolate mechanisms when practical.
