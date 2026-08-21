@@ -1,322 +1,133 @@
 # Solve Button: "Find N Varied Hints"
 
-The Editor/Review **Solve** flow uses **count-based variety tiers** powered by the enumeration +
-curation engine also used for back-end corpus expansion, replacing an older time-based diverse
-search that could report a false "all found" (the fixed bias-combination space it explored was
-not the same as the solution space).
+The Editor/Review **Solve** flow uses count-based variety tiers backed by the same enumeration + curation engine used for corpus expansion. It replaced the old timed bias-replay search, which exhausted a finite bias-combination space and could falsely imply that all solution variety had been found.
 
-Related reading: [`hint-curation.md`](hint-curation.md) (display curation) and the corpus-expansion
-design record in [`docs/archive/`](archive/) (the shared generators this reuses).
+Related: [`hint-curation.md`](hint-curation.md) for display curation; [`archive/`](archive/) for the corpus-expansion design record.
 
-> **Status: complete, in production.** Engine (`modules/solver/hint-enumeration.ts`), session
-> (`modules/solver/variety-search.ts`), Solver-facade API, tier/summary logic
-> (`modules/input/solver-core.ts`), and the Solve Options UI (`solver-controller.ts` + `index.html`)
-> are done, unit-tested, and browser-verified — including the two "Find all" variants (capped 1,000 /
-> no-cap 2,500→5,000 with the mid-run "keep going?" prompt) and the pre-flight `navDensity`-aware
-> warning copy. `submission-controller.ts` and `review-controller.ts` both depend on this engine (see
-> "Follow-on work" below) — **this document is the only reference for how it works**, not just a
-> historical design record. Tier-ceiling values (decision 1) are a fixed, deliberate choice, not a gap
-> — they're only worth revisiting if real-world usage ever surfaces actual slowness.
+> **Status: complete, in production.** Current implementation: `modules/solver/hint-enumeration.ts`, `modules/solver/variety-search.ts`, Solver facade, `modules/input/solver-core.ts`, `solver-controller.ts`, and `index.html`. Unit- and browser-verified. `submission-controller.ts` and `review-controller.ts` also use this engine. Tier ceilings are deliberate defaults; revisit only if real usage shows slowness.
 
----
+## UX and semantics
 
-## Why (current state)
+`solveOptionsModal` offers:
 
-- The Solve button (`solveLevelBtn`) opens `solveOptionsModal` with **Find 1 Hint** + timed diverse
-  searches (`solveDiverse5Btn`/`10Btn`/`20Btn` + custom minutes), driven by
-  `modules/input/solver-controller.ts` → `createDiversificationSession` (`modules/solver/diversification.ts`).
-- That session is **bias-replay**: it re-runs the greedy solver under a *fixed, finite* set of biases
-  (gate × first-step direction, portal-exit direction) cascaded through profile/strategy disables. It
-  finds a handful, exhausts the **combinations**, and reports (`solver-core.ts` `buildDiverseSearchSummary`)
-  *"Every gate, direction, and strategy combination was explored — this level's existing hints already
-  cover its solution variety."*
-- That claim is false: the combination space ≠ the solution space. The back-end randomized enumerator
-  found **thousands** more solutions on levels this reports "done" for. So: few results, fast, then a
-  misleading "all found."
+- **Find 1 solution**: existing single 30 s solve.
+- **Find a few (~5 varied)**, **many (~25)**, **lots (~100)**, plus custom target.
+- **Find all (up to 1,000)**: complete deterministic DFS, hard cap 1,000.
+- **Find all — no cap**: same engine, soft stop at 2,500 with a “keep going?” prompt, then hard cap 5,000.
 
-## UX
+Both Find-all variants warn that runs can take **20+ minutes**, stream progress, are cancellable, and keep partial results.
 
-`solveOptionsModal` offers **effort/variety tiers** instead of durations:
+The tier number is a **curator-confidence target and effort dial**, not a save count or hard display count. Search continues until `selectDisplayHints` can present about N distinct approaches, variety saturates, or budget/cap ends. UI wording must say “aim for up to N varied,” not guarantee N. Coverage rules may make the shown set exceed N slightly.
 
-- **Find 1 solution** (unchanged — the existing single 30 s solve).
-- **Find a few (~5 varied)**, **Find many (~25 varied)**, **Find lots (~100 varied)**, + a custom number.
-- **Find all possible hints** — exhaustive: enumerates the *entire* solution space. Two variants share
-  one complete-DFS engine: **Find all (up to 1,000)** and **Find all — no cap** (soft-stops at 2,500 to
-  ask the user whether to keep going; hard ceiling 5,000). Both warn up front that this can take **20+
-  minutes** depending on the level and device, and are cancellable at any time (partial results are kept
-  — see decision 6).
+Every valid exact-deduped solution found is saved in Editor and Review, up to the run cap. Saves are not filtered by distinctiveness or `decideCandidateAcceptance`; that novelty gate is for unattended batch control. The operator sees the `selectDisplayHints` subset, while persistence receives the full validated pool. Report both counts: saved M, curator K varied.
 
-Each tier runs the enumeration engine within a **scaled effort/time budget**, streams valid solutions
-into an accumulating pool, and **saves every valid solution it finds** (exact-deduped, up to that run's
-cap — 1,000 for every tier except "Find all — no cap," which stages 2,500 → 5,000) — in both Editor and
-Review. The tier *number* controls how hard it searches, expressed in curator
-terms: keep going until `selectDisplayHints` over the pool can confidently present ~N varied approaches,
-or variety saturates, or the budget is hit. It returns the curator's varied subset (to show) **and** the
-full saved pool (to persist), reporting both counts.
+Targeted runs classify completion as:
 
----
+- **exhaustive**: complete deterministic enumeration drained the tree within budget;
+- **saturated**: more raw finds stopped increasing the curated set;
+- **budget**: effort ceiling reached before either condition.
 
-## Key design decisions (resolve these the same way everywhere)
+Complete mode additionally uses:
 
-1. **The number is a curator-confidence target, not a count of results.** "Find 25 varied" means:
-   search until the accumulated pool is rich enough that the display curator (`selectDisplayHints`) can
-   confidently surface ~25 *distinct* approaches. It is a **stopping target and an effort dial** — not
-   the number saved and not (directly) the number shown. It is bounded by the level's real
-   distinctiveness: on a level with 9 genuinely-different approaches, every tier ≥9 converges to the
-   same 9 and the search stops early (saturated). Higher tiers just search harder before giving up. UI
-   copy must convey "aim for up to N varied," never a guarantee.
+- **capped**: 1,000, 2,500 user-stop, or 5,000 ceiling reached before exhaustion;
+- **cancelled**: user stopped the run; partial results are saved and UI must say full search did not finish.
 
-2. **Save everything, always — in both Editor AND Review.** Every valid, exact-deduped solution the
-   search finds is saved, because saved solutions are valuable data: they feed the heat map and give the
-   curator more raw material. Saving is **not** filtered by distinctiveness or heatmap-novelty here — the
-   back-end `decideCandidateAcceptance` gate exists to stop an *unattended batch* from bloating; an
-   operator-driven Solve wants the data. The only bounds on saves are exact-dedupe and the run's cap
-   (1,000, or 2,500 → 5,000 for "Find all — no cap"). Display variety is the curator's job at play time;
-   the corpus keeps the solutions.
+“Exhaustive” is valid only when the complete DFS actually drains the tree. Randomized-restart and seeded-mutation generators approximate that search and are not needed for completeness.
 
-3. **Two views of one pool** (show ≠ save): **show** the operator the distinctiveness-curated subset —
-   the exact `selectDisplayHints` a player would cycle (coverage guarantees included) — as the variety
-   preview; **save** the whole validated pool. The result must report both: "saved M solutions; the
-   curator can present K varied approaches."
+Coverage guarantees from play-mode curation remain: the shown set includes at least one per gate, portal-use class, and must-cross order when available, even if that exceeds the target slightly.
 
-4. **Honest completion, three outcomes** (replace the single false "variety covered"), phrased in both
-   curator and data terms:
-   - **Exhaustive** — a *complete* deterministic enumeration finished within the node budget (feasible on
-     small levels): "Found and saved all M solutions; the curator can present K varied approaches."
-   - **Saturated** — the curated set stopped growing after many more raw finds: "The curator can present
-     K varied approaches — that's all the meaningfully-different ones; saved M solutions."
-   - **Budget-limited** — the effort ceiling hit first: "Saved M solutions so far (curator: K varied);
-     more may exist — search again to keep looking." Keep the resumable "extend" affordance here.
+## Architecture
 
-5. **Coverage guarantees carry over and may exceed the target.** As in play-mode curation, the shown set
-   always includes ≥1 per gate, per portal-usage, per must-cross order — even if that nudges slightly
-   above the tier number. (This bounds only the *shown* preview; saves are unaffected.)
+### Shared enumeration core
 
-6. **"Find all" is complete enumeration, which subsumes the sampling techniques — offered as two variants
-   sharing one engine.** There is no bag of separate "techniques" to combine for completeness: a single
-   **complete deterministic DFS** with the sound pruning visits the *entire* solution space and finds
-   every solution — the randomized-restart and seeded-mutation generators are only *approximations* of it
-   for when you can't afford the whole tree. So "Find all" runs the enumerator in complete mode (no random
-   order needed, no curator target, no time ceiling), in one of two capped variants:
-   - **Find all (up to 1,000)** — hard cap 1,000, as originally designed.
-   - **Find all — no cap** — labelled uncapped to the user, but actually soft-stops at **2,500**: the
-     modal pauses and asks whether to keep searching. If the user continues, the session resumes toward a
-     hard ceiling of **5,000** (never truly unbounded). This is also the resolution of the complete-DFS
-     hard safety ceiling flagged below: the cap itself *is* the ceiling, so a pathological level cannot
-     run forever even if the user never cancels.
+`modules/solver/hint-enumeration.ts` contains the browser-safe System A randomized-restart and System B prefix-anchored generators formerly in `scripts/hint-corpus-expand.mjs`, using shared solver primitives (`createState`, `getNeighbors`, `applyMove`, `undoMove`, `prepLevel`, `getDistanceFromArray`, `isSolutionState`). It exposes streaming enumeration plus deterministic complete mode.
 
-   Each variant stops on one of:
-   - **the tree is exhausted** → provably ALL solutions found (bounded only by that variant's cap);
-   - **the cap is reached** — 1,000 for the capped variant, or the 2,500 soft-stop / 5,000 hard-stop for
-     the no-cap variant → saved the maximum for that stage; the level has more (not truly "all"). At
-     2,500 specifically this is a **prompt to continue**, not a silent terminal `capped` report;
-   - **the user cancels** → stop, keep everything found so far (decision 2), and **alert explicitly**:
-     "Full search stopped early — a complete search was not finished, but the N solutions found so far
-     were saved."
+`scripts/hint-corpus-expand.mjs` imports the same module, so batch expansion and the Solve button share one search engine.
 
-   Because open levels can have hundreds of thousands of solutions, both "Find all" variants must show the
-   20+ minute warning before starting, stay fully cancellable, and stream progress (running found-count) so
-   the user can make an informed stop decision.
+### Curation
 
----
+`selectDisplayHints(pool, { cap, navDensity, mustCrossKeys })` in `modules/domain/` produces the shown varied subset. Distance/coverage primitives remain in `path-features.ts`. `decideCandidateAcceptance` does not filter Solve saves.
 
-## Architecture / where code goes
+### Variety session
 
-**The generators live in a shared browser-safe core** (the central reuse win):
+`modules/solver/variety-search.ts` provides a resumable, cooperatively-yielding session with **targeted** and **complete** modes.
 
-- `modules/solver/hint-enumeration.ts` holds the System A (randomized-restart enumeration) + System B
-  (prefix-anchored completion) generators, lifted from `scripts/hint-corpus-expand.mjs`. They use only
-  browser-safe solver primitives (`createState`/`getNeighbors`/`applyMove`/`undoMove`/`prepLevel`/
-  `getDistanceFromArray`/`isSolutionState`), so this was a move, not a rewrite. It exposes a streaming
-  API: `for await (const solution of enumerateSolutions(level, prep, { rng, nodeBudget, restarts, seeds,
-  yieldFn, shouldStop }))`, plus a **complete-enumeration** mode (deterministic, no shuffle, exhausts all
-  branches) that reports whether it finished (→ the "exhaustive" outcome).
-- `scripts/hint-corpus-expand.mjs` imports from `hint-enumeration.ts` too — **one engine** behind both
-  the back-end batch run and the in-editor Solve button. No second copy.
+Pipeline: enumerate -> PLAY-validate with `validateCandidatePath` -> exact-dedupe -> add every valid find to the saved pool.
 
-**The curation in `modules/domain/` is reused as-is:**
-- `selectDisplayHints(pool, { cap, navDensity, mustCrossKeys })` produces the shown varied subset (the
-  curator-confidence measure). This is a *view* over the pool, not a save filter.
-- All the distance/coverage primitives are in `path-features.ts` (shared source of truth).
-- The back-end's `decideCandidateAcceptance` heatmap-novelty gate is deliberately **not** used to filter
-  saves here — this flow saves the full validated pool (see decision 2).
+Targeted mode periodically recomputes `selectDisplayHints`, stopping on target, saturation, time ceiling, complete-enumeration finish, or `maxHints`.
 
-**The session** (`modules/solver/variety-search.ts`) replaced `createDiversificationSession` for this
-flow: a resumable, cooperatively-yielding session with two modes — **targeted** (the tiers) and
-**complete** ("Find all"):
-- streams solutions → PLAY-validates (`validateCandidatePath`) → exact-dedupes → **adds to the saved
-  pool** (this pool IS what gets persisted — every valid find);
-- *targeted mode*: periodically recomputes `selectDisplayHints(pool, { cap: target })`, tracks curated
-  size K, and stops on K ≥ target, curator saturation, time ceiling, complete-enumeration finished, or
-  the run's `maxHints` cap;
-- *complete mode ("Find all")*: no curator target, no time ceiling — runs the deterministic complete DFS
-  to exhaustion; stops only on tree-exhausted (`exhaustive`), the run's `maxHints` cap (`capped`), or
-  user cancel (`cancelled`). Still recomputes `shown` at the end for the preview. A caller can resume a
-  capped run at a higher `maxHints` without losing the pool — this is how the no-cap variant's 2,500 →
-  5,000 stages work.
-- returns `{ shown, newlySaved, newlySavedMeta, rediscovered, curatedCount: K, savedCount: M, outcome:
-  'exhaustive'|'saturated'|'budget'|'capped'|'cancelled' }` — `newlySaved` is the full validated pool
-  found this session (`newlySavedMeta` carries each one's nodesExpanded/elapsedMs/technique).
-  `rediscovered` (added for the hint-workbench's provenance-consolidation work — see CLAUDE.md's
-  Provenance section) is a separate list of paths the search independently found again that already
-  matched an existing hint: never added to the pool (not novel), but each one is a real discovery
-  event carrying its own technique/cost, so a caller that cares about hint provenance (only
-  `scripts/hint-workbench.mjs` today) can still attribute it instead of the find being silently
-  dropped. The in-game UI ignores this field — no behavior change for players.
-- Runs on the main thread with the existing `yieldFn` cooperative pattern (mirrors `executeSearch` in
-  `solver-controller.ts`); keeps cancel + progress + resumable-extend. **On cancel or ceiling the pool
-  found so far is always saved** — for `cancelled` in complete mode, the UI states explicitly that a
-  full search was not completed but partial results were preserved. This main-thread path is what
-  targeted-mode tiers always use, and what complete mode ("Find all") falls back to when the parallel
-  enumeration pool below isn't available — see that section for when complete mode instead runs there.
+Complete mode has no curator target or time ceiling. It runs deterministic DFS until exhaustion, cap, or cancel. A capped session can resume with a higher `maxHints`, enabling the 2,500 -> 5,000 no-cap flow.
 
-**Performance: profiling found two different bottlenecks, fixed differently.** Instrumenting a real
-session against real levels found the two modes are *not* bottlenecked the same way:
-- **Targeted tiers** (few/many/lots/custom): on solution-rich levels, the periodic curation recompute
-  (`selectDisplayHints` rescans the *entire* pool every check — measured ~2ms at pool=50, ~41ms at
-  pool=1950) ate **44-71% of wall time**, sometimes more than the DFS itself, because a fixed
-  every-20-finds recheck cadence makes total curation cost grow with pool size squared. **Fixed**:
-  `curationCheckInterval()` in `variety-search.ts` scales the recheck interval with the current pool
-  size (`max(20, pool.length / 10)`), keeping rechecks roughly geometrically spaced as the pool grows —
-  bounds total curation cost close to O(pool) instead of O(pool²/20). Verified on a real level: same
-  outcome/saved/curated counts, ~27% faster wall time for an identical workload. Single-threaded,
-  zero architecture change, benefits every targeted-tier search on a solution-rich level.
-- **Complete mode** ("Find all"): 84-92% raw DFS time on real levels, ~7-8% each for validate/dedupe and
-  `yieldFn` overhead — genuinely single-thread CPU-bound, unlike targeted mode. **Fixed** by giving it
-  somewhere else to run those CPU cycles: a browser Web Worker pool (below), not an algorithmic change.
+Result shape:
 
-**Parallel enumeration pool ("Find all" only):** complete mode's CPU-bound profile is exactly the case
-multiple cores can help — so it now runs, when available, on a pool of Web Workers instead of the main
-thread, accumulating every worker's finds (not racing for the first, unlike the unrelated Node-only
-`scripts/solver-parallel/` CLI tooling — see full detail and the correctness argument in
-[`docs/solver-architecture.md`](solver-architecture.md#parallel-find-all-enumeration-browser-web-worker-pool)).
-In short: one job per (gate, root-child) shard, `modules/solver/hint-enumeration.ts`'s new
-`rootChildren` option partitions a gate's tree with the DFS itself unchanged, PLAY validation/dedupe
-still happen on the main thread exactly as in the single-thread path, and
-`modules/solver/solver-worker-client.ts`'s `createEnumerationPoolClient` returns the same
-`VarietyResult` shape the main-thread session does — so `solver-controller.ts` doesn't need to know or
-care which one ran. Falls back permanently to the main-thread session for the rest of the browser
-session if the pool can't be built or a run throws (mirrors `trap-scan-controller.ts`'s worker
-fallback). Live-verified in a real browser (Playwright + Chromium): a real 3-worker pool completing
-both "Find all" variants (including the no-cap 2,500→5,000 mid-run prompt) with correct results, and
-the fallback producing an identical result when `Worker` construction was made to fail.
+```js
+{
+  shown,
+  newlySaved,
+  newlySavedMeta,
+  rediscovered,
+  curatedCount: K,
+  savedCount: M,
+  outcome: 'exhaustive'|'saturated'|'budget'|'capped'|'cancelled'
+}
+```
 
-**UI:** `solveOptionsModal` (`modules/ui/dom.ts` id registrations + the modal template) has the tier
-buttons + custom number + two **Find all** buttons (**up to 1,000** and **no cap**), both carrying the
-"can take 20+ minutes, cancellable" warning behind a confirm step (`solver-controller.ts`'s
-`confirmFindAll`) before either starts; Find 1 and the running overlay (timer/progress/cancel) are
-unchanged, with a live found-count, the extend affordance for the budget-limited outcome, and — for
-**no cap** only — the 2,500-solution "keep going?" prompt (decision 6). When the level's `navDensity` is
-at/above `DENSE_LEVEL_NAV_DENSITY` (0.70, near-Hamiltonian — see the Design decisions log), the pre-start
-confirm says completion is unlikely and leans the user toward **no cap** over **up to 1,000**.
+`newlySavedMeta` records `nodesExpanded`, `elapsedMs`, and technique. `rediscovered` records independently re-found paths already present as hints, with discovery provenance but without adding duplicates to the pool. `scripts/hint-workbench.mjs` uses it; the in-game UI ignores it.
 
-**Persistence (both modes save):** Editor merges the full found pool into `foundHintsSinceLoad` (via
-`setFoundHintsSinceLoad` + `mergeUniqueHints`); those flow into the working level's hints and heat map
-and persist when the level is saved. **Review mode also saves** — the found pool routes to wherever the
-reviewed level persists its hints (the submission record / working level for that mode); nothing is
-discarded. See "Follow-on work" below for exactly how review persistence is wired.
+Targeted mode runs on the main thread with the existing `yieldFn` pattern. Cancel, progress, resume/extend, and partial-result preservation remain available. Complete mode uses the worker pool when possible and otherwise falls back to the same main-thread session.
 
----
+### Performance
 
-## Build history (all shipped)
+Profiling found different bottlenecks by mode.
 
-**Phase 1 — Extracted `hint-enumeration.ts` (no behavior change).** Moved System A/B out of
-`hint-corpus-expand.mjs` into the shared module with a streaming API + complete-enumeration mode; pointed
-the script at it; proved parity (the script's full run reproduces the same accepts). Unit-tested the
-generators on a couple of small levels (exhaustive mode enumerates the known solution count).
+**Targeted tiers:** repeated full-pool `selectDisplayHints` scans consumed **44–71%** of wall time on solution-rich levels (~2 ms at pool 50, ~41 ms at 1,950) under a fixed every-20-finds cadence. `curationCheckInterval()` now scales the interval as `max(20, pool.length / 10)`, making checks roughly geometric and total curation cost near O(pool) instead of O(pool²/20). A real-level matched run kept the same outcome/saved/curated counts and was ~27% faster.
 
-**Phase 2 — Variety-search session.** Built the target-driven, resumable session that composes
-enumeration + `selectDisplayHints`, saving the full validated pool and classifying the outcomes, in both
-**targeted** and **complete ("Find all")** modes. Pure core, DOM-free, unit-tested (target reached /
-saturated / exhaustive / capped / cancelled on constructed levels; complete mode on a small level
-enumerates exactly the known solution count; the saved pool = all validated finds, not the curated
-subset).
+**Complete mode:** 84–92% of real-level time was raw DFS, with ~7–8% each for validation/dedupe and `yieldFn`. It is CPU-bound and therefore uses parallel Web Workers rather than an algorithmic rewrite.
 
-**Phase 3 — Wired the Solve Options UI.** Replaced timed buttons with tiers + the two **Find all**
-variants — **up to 1,000** and **no cap** (soft-stop 2,500 / hard ceiling 5,000) — each with its 20+
-minute confirm, in `solveOptionsModal`; rewrote `solver-controller.ts`'s diverse-search half to drive the
-session in both modes, including the no-cap variant's mid-run "found 2,500 — keep going?" prompt that
-resumes the same session toward 5,000; rewrote `buildDiverseSearchSummary` (`solver-core.ts`) for all
-five outcomes (`exhaustive`/`saturated`/`budget`/`capped`/`cancelled`), reporting **both** the saved
-count M and the curator count K, in "up to N" language — and, for `cancelled`, the explicit "full search
-not completed, partial results preserved" alert. Kept Find 1, cancel, progress, and the resumable extend
-(budget outcome only). Wired Review's Solve to the same session.
+### Parallel Find-all pool
 
-**Phase 4 — Save policy (both modes).** On completion — and on cancel/ceiling — persists the **entire**
-validated found pool (exact-deduped, ≤ each variant's cap): Editor via `foundHintsSinceLoad`, Review via
-its level-persistence target. Surfaces "saved M (curator: K varied)." Never filters saves by
-distinctiveness or heatmap-novelty.
+When available, complete mode uses a browser Web Worker pool. Each job handles one `(gate, root-child)` shard via `hint-enumeration.ts`'s `rootChildren` option; DFS semantics are unchanged. PLAY validation and dedupe remain on the main thread. `modules/solver/solver-worker-client.ts`'s `createEnumerationPoolClient` returns the same `VarietyResult` shape as the single-thread session.
 
-Tier → (node budget, restarts, seeds, time ceiling) calibration was deliberately left at its first-pass
-defaults rather than tuned further (decision 1) — Solve is already fast on published levels across every
-tier, so there's nothing to tune against. Worth another look only if real-world usage ever surfaces
-actual slowness.
+If pool creation or a run fails, complete mode falls back to the main-thread implementation for the rest of the browser session, matching the `trap-scan-controller.ts` fallback pattern. Browser verification covered a real 3-worker pool, both Find-all variants including the 2,500 -> 5,000 prompt, and identical fallback results when `Worker` construction was forced to fail.
 
----
+Full pool correctness/details: [`solver-architecture.md`](solver-architecture.md#parallel-find-all-enumeration-browser-web-worker-pool).
+
+### UI and persistence
+
+`solveOptionsModal` contains tier/custom controls and both Find-all buttons. Find-all requires `confirmFindAll`; Find 1 and the running overlay remain unchanged. The overlay shows live count/progress/cancel, budget-limited runs can extend, and the no-cap variant prompts at 2,500.
+
+When `navDensity >= DENSE_LEVEL_NAV_DENSITY` (0.70), pre-start copy warns that exhaustive completion is unlikely and favors **no cap** over **up to 1,000**. This is UX only; complete mode is not feature-gated.
+
+Editor merges the full found pool into `foundHintsSinceLoad` via `setFoundHintsSinceLoad` + `mergeUniqueHints`; those hints feed the working level and heat map and persist on save. Review uses the same pool and persists it through approval/submission handling described below.
+
+## Build history
+
+All phases shipped:
+
+1. **Shared enumeration core:** moved System A/B from `hint-corpus-expand.mjs` into `hint-enumeration.ts`; added streaming + complete mode; batch parity and small-level exhaustive counts tested.
+2. **Variety session:** added targeted/complete resumable session, PLAY validation, full-pool saving, curated preview, and all outcome classes; unit-tested target/saturation/exhaustion/cap/cancel and known complete counts.
+3. **Solve UI:** replaced timed diverse buttons with tiers and both Find-all variants; added 20+ minute confirms, 2,500 continuation prompt, five-outcome summaries, saved/curated counts, explicit cancel wording, Review reuse, and preserved Find 1/cancel/progress/extend behavior.
+4. **Save policy:** Editor and Review persist the entire validated exact-deduped pool on completion, cancel, or ceiling. Distinctiveness/heatmap novelty never filters operator-run saves.
+
+Tier node/restart/seed/time defaults were left at first-pass values because published levels were already fast across tiers. Tune only if real usage exposes slowness.
 
 ## Invariants
 
-- Every returned/saved hint passes `validateCandidatePath` in **PLAY** context (never `isSolutionState`
-  alone) — geese/false-goal safety, same as `check:hint-validity`.
-- **Every valid solution found is saved** (exact-dedupe + the run's cap the only filters), in both modes,
-  including partial results on cancel/ceiling. The tier number governs *when to stop searching*, not
-  *what to keep*.
-- **"Exhaustive" is only claimed when the complete DFS actually drained the tree.** A `capped` or
-  `cancelled` "Find all" run must never say "all solutions found"; `cancelled` must explicitly say the
-  full search did not finish but partial results were saved. Complete mode is a single deterministic
-  complete DFS — it needs no randomized/seeded generators to be exhaustive (they are subsets of it).
-- The **shown** set is exactly `selectDisplayHints` output — identical metric, floor, cap semantics, and
-  coverage guarantees as the player's Hint display. Discovery and display never diverge (both go through
-  `path-features.ts`).
-- One generator engine (`hint-enumeration.ts`) backs both the back-end script and the Solve button —
-  no duplicated search logic.
-- The UI never freezes: all search is cooperative (`yieldFn`) and cancellable; partial results are
-  always returned on cancel/ceiling.
-- Completion messaging never claims exhaustiveness unless a complete enumeration actually finished.
+- Every returned/saved hint passes `validateCandidatePath` in **PLAY** context; `isSolutionState` alone is insufficient because of geese/false goals.
+- Every valid exact-deduped find is saved up to the run cap, including partial cancel/ceiling results. Tier target controls stopping, not retention.
+- Claim `exhaustive` only after complete DFS drains the tree. Capped/cancelled runs never claim all solutions; cancelled copy explicitly says the full search did not finish.
+- The shown set is exactly `selectDisplayHints` output, with the same metrics, caps, floors, and coverage guarantees as player hints. Discovery/display features share `path-features.ts`.
+- `hint-enumeration.ts` is the single generator core for batch expansion and Solve.
+- Search remains cooperative/cancellable; the UI must not freeze.
 
-## Follow-on work (shipped after Phase 4)
+## Follow-on work already shipped
 
-- **Submission flow reuses the variety search.** The editor's submit step no longer does a one-shot
-  single-solution solve; it runs a 10 s targeted variety search (`createVarietySearch`) with a live
-  countdown and a running found-count, and submits *every* distinct solution found (partial results
-  preserved on cancel). Same engine as the Solve button — see `modules/input/submission-controller.ts`.
-- **Reviewer-found solutions fold into approvals.** Solutions a reviewer discovers via the Solve button
-  land in `foundHintsSinceLoad` (the Review/editor Hints button counts and cycles them). Approval now
-  merges that set into the persisted hints for both the hint-addition and full-submission paths, and
-  re-validates the combined set when the level was modified during review
-  (`modules/input/review-controller.ts`).
+- **Submission:** editor submit runs a 10 s targeted `createVarietySearch` with countdown/live count and submits every distinct solution found, preserving partial results on cancel. See `modules/input/submission-controller.ts`.
+- **Review:** Solve discoveries enter `foundHintsSinceLoad`; approval merges them into persisted hints for hint-addition and full-submission paths and re-validates the combined set if the level changed during review. See `modules/input/review-controller.ts`.
 
-## Design decisions log
+## Settled design decisions (2026-07-10)
 
-Record of how each design question was settled (2026-07-10). Nothing here is open; kept for context on
-*why* the shipped behavior is what it is.
-
-- **Tier numbers + ceilings:** left at their first-pass defaults. Solve is already fast on published
-  levels across every tier, including "Find all," so there was no observed problem to tune against.
-  Tuning is not planned work — it would only be worth another look if real-world usage ever surfaces
-  actual slowness.
-- **Review-mode persistence target:** Review/editor saves land on the in-memory working level plus
-  `foundHintsSinceLoad`, and are persisted when the reviewer approves (see Follow-on work above) or the
-  maker submits — there is no separate Firestore write for a solve-only session.
-- **Does the 1,000 cap lift for "Find all"? / complete-DFS hard safety ceiling:** split "Find all" into
-  two UI options over the same engine:
-  - **Find all (up to 1,000)** — unchanged, hard cap 1,000.
-  - **Find all — no cap** — labelled uncapped to the user, but is actually a soft cap of **2,500**: on
-    reaching 2,500 saved solutions, the solver modal pauses and asks the user whether there may be more
-    and whether to keep going. If they do, the session resumes with a **hard total ceiling of 5,000**.
-    This *is* the complete-DFS hard safety ceiling — 1,000 / 5,000 are real, unconditional stops, so no
-    level can run truly unbounded even if the user never cancels. The 2,500 pause is an interim UI state
-    (not one of the five `VarietyOutcome` values — the session literally continues after the prompt if
-    the user says yes; if they say no, it terminates as `capped` at 2,500).
-- **Complete-enumeration size threshold:** no pre-flight gate on *whether* to attempt complete mode —
-  the session runs it unconditionally on any level and self-reports honestly via
-  `exhaustive`/`capped`/`cancelled`, so gating would only add complexity without a correctness need. The
-  threshold is used for pre-flight **UX copy** instead: it reuses the existing `DENSE_LEVEL_NAV_DENSITY`
-  constant (0.70, `modules/solver/prep.ts`) rather than inventing a new tunable. Below it, exhaustive
-  completion is plausible in reasonable time — the standard 20+ minute warning shows. At/above it
-  (near-Hamiltonian: the path must cover most of the board, so the count of simple paths blows up
-  combinatorially regardless of grid size), the warning is more specific that exhaustive completion is
-  unlikely and steers the user toward **no cap** over **up to 1,000**, since the capped variant will
-  almost certainly just report `capped` without having explored meaningfully more of the space. This
-  matches the codebase convention of keying solver behavior on level *features* (navDensity), not a
-  per-level guess.
+- **Tier ceilings:** keep current first-pass defaults unless real usage shows slowness.
+- **Review persistence:** findings live on the working level + `foundHintsSinceLoad` and persist on approval or maker submission; no separate Firestore write occurs for a solve-only session.
+- **Find-all caps:** up-to-1,000 hard-stops at 1,000. No-cap pauses at 2,500; declining ends as `capped`, continuing resumes to a hard total 5,000. The 2,500 pause is an interim UI state, not a separate `VarietyOutcome`.
+- **Complete-mode preflight:** no gate on whether complete DFS may run. `DENSE_LEVEL_NAV_DENSITY` 0.70 changes warning copy only. Below it, the standard 20+ minute warning applies; at/above it, copy says exhaustive completion is unlikely and steers toward no-cap. This keeps behavior feature-based rather than level-specific.
