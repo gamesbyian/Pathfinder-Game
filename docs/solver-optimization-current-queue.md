@@ -33,7 +33,7 @@ Priority numbers remain citeable; CLOSED/GATE COMPLETE rows are dispositions.
 | 4 | CP-SAT-anchored deep repair editing | **ACTIVE RESEARCH** | Expand feasible/infeasible retreat boundaries; edit deeper only when depth becomes predictably state-conditioned. |
 | 5 | State-conditioned must-cross anchoring | **ACTIVE RESEARCH** | Read-only prefix diagnostics; require recurrence across unrelated levels/families before scoring changes. |
 | 6 | Mechanics-conditioned admissible-order routing | **CLOSED NEGATIVE 2026-08-20** | Too little unique isolated capability for meaningful reserve. |
-| 7 | Cheap isolated-technique wins the ladder misses | **LATE PROBE PROMOTED 2026-08-21; ARCHETYPE-ROUTING FIXES PENDING FULL-POPULATION A/B 2026-08-22** | Awaiting the deterministic Corpus-1/2 A/B for the high-intersection-burden fix (control run `32544545256`, treatment `32544546461`); must-cross-heavy fix not yet in that A/B's treatment commit. |
+| 7 | Cheap isolated-technique wins the ladder misses | **LATE PROBE PROMOTED 2026-08-21; ARCHETYPE-ROUTING FIXES VALIDATED + MERGED 2026-08-22 (`#1436`)** | 104/151 census gap levels (>2M isolated nodes) not yet mined; two must-cross diverse-beam gaps (`R02299`/`R02159`) still blocked on reserve-slot budget — see [`solver-future-work.md`](solver-future-work.md). |
 
 ## 0. Regression and provenance integrity
 
