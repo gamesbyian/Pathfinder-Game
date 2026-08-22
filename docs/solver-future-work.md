@@ -25,7 +25,7 @@ Use named **producer -> receptor** hypotheses with a measured receptor failure, 
 
 ### Broader scaling research
 
-Controlled variants can test navigable area, required length, intersection pressure, mechanic density, portal load, and related structure. Existing exact-length work: [`req-length-sweep.md`](req-length-sweep.md). Methods: [`variant-level-research.md`](variant-level-research.md). Treat parent families as statistical units.
+Controlled variants can test navigable area, required length, intersection pressure, mechanic density, portal load, and related structure. Existing exact-length work: [`solver-required-length-sweep.md`](solver-required-length-sweep.md). Methods: [`variant-level-research.md`](variant-level-research.md). Treat parent families as statistical units.
 
 ### Recipe cousins / generated families
 
