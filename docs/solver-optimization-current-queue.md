@@ -61,6 +61,8 @@ Established from the late 2026-08-20 investigation:
 
 Therefore first fix the evidence contract to record enough invocation context to distinguish full production ladder, isolated-technique tooling, and force-enabled experimental flags; then re-mine the regression population. Do not build a recovery mechanism for the old “four repair regressions” category.
 
+**New unbisected candidate population (2026-08-22):** [`../reports/2026-08-22-corpus2-node-budget-losses.md`](../reports/2026-08-22-corpus2-node-budget-losses.md) lists 73 Corpus-2 IDs solved on capability run `32459711208` (commit `e5034e8c`) but node-budget-exhausted on `32526927206` (commit `ce4fc98a`, post solver-authority-consolidation). All 73 fail identically (`node-budget-reached`, no crash); 57 of them had comfortable node margin on the prior run (one, `R02975`, solved in 8,486 nodes before and doesn't solve within 150M+ nodes now), which argues for a real regression rather than budget-boundary sensitivity. Four non-consolidation commits in range are the suspects (`0b2da5f` repair-late-probe promotion, `c4569ef` provenance fix, `6f00baf` buildDistMap fix, `d21b4fb` trap-search/pruning fixes) — not yet bisected. This population is separate from and not yet reconciled with the `R02516`/`R02900`/`R03205`/`R03329`/`R02424`/`R01229` items above.
+
 Full chronology: [`solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md`](solver-optimization-current-queue-2026-08-20-post-1398-snapshot.md).
 
 ## 1. Failure-conditioned late-tier allocation
