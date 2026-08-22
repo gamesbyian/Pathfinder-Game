@@ -1,0 +1,19 @@
+name: Audit technique census duplicates
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/audit-technique-census-duplicates.mjs
+      - .github/workflows/audit-technique-census-duplicates.yml
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Audit duplicate census rows
+        run: node scripts/audit-technique-census-duplicates.mjs
