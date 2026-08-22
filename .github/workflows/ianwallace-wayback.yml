@@ -1,0 +1,71 @@
+name: IanWallace Wayback Archive
+
+on:
+  workflow_dispatch:
+    inputs:
+      census_only:
+        description: "Inventory captures without downloading payloads"
+        required: true
+        type: boolean
+        default: true
+      request_delay:
+        description: "Seconds between Wayback payload requests"
+        required: true
+        type: choice
+        options:
+          - "1.0"
+          - "2.0"
+          - "3.0"
+        default: "1.0"
+
+jobs:
+  archive:
+    name: Archive ianwallace.com
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Census / download Wayback captures
+        id: harvest
+        continue-on-error: true
+        env:
+          CENSUS_ONLY: ${{ inputs.census_only }}
+          REQUEST_DELAY: ${{ inputs.request_delay }}
+        run: |
+          args=(
+            --domain ianwallace.com
+            --output tools/ianwallace-wayback/output
+            --delay "$REQUEST_DELAY"
+          )
+          if [[ "$CENSUS_ONLY" == "true" ]]; then
+            args+=(--census-only)
+          fi
+          python3 tools/ianwallace-wayback/download_wayback.py "${args[@]}"
+
+      - name: Show summary
+        if: always()
+        run: |
+          if [[ -f tools/ianwallace-wayback/output/summary.json ]]; then
+            cat tools/ianwallace-wayback/output/summary.json
+          else
+            echo "No summary was produced."
+          fi
+
+      - name: Upload Wayback archive artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ianwallace-wayback-${{ github.run_id }}
+          path: tools/ianwallace-wayback/output/
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 30
+
+      - name: Report harvest failure
+        if: steps.harvest.outcome == 'failure'
+        run: |
+          echo "The harvester reported one or more failures. Any successfully produced files were still uploaded above."
+          exit 1
