@@ -8,8 +8,8 @@ import csv
 import hashlib
 import json
 import mimetypes
-import os
 import re
+import socket
 import sys
 import time
 import urllib.error
@@ -21,7 +21,7 @@ from pathlib import Path
 CDX_ENDPOINT = "https://web.archive.org/cdx/search/cdx"
 WAYBACK_BASE = "https://web.archive.org/web"
 ALLOWED_DOMAIN = "ianwallace.com"
-USER_AGENT = "ianwallace-wayback-archive/1.0 (personal archival use)"
+USER_AGENT = "ianwallace-wayback-archive/1.1 (personal archival use)"
 
 MIME_EXTENSIONS = {
     "text/html": ".html",
@@ -41,25 +41,33 @@ MIME_EXTENSIONS = {
 }
 
 FIELDS = ["timestamp", "original", "mimetype", "statuscode", "digest", "length"]
+RETRYABLE_HTTP_CODES = {408, 425, 429, 500, 502, 503, 504}
 
 
-def request_bytes(url: str, retries: int = 5) -> bytes:
+def request_bytes(url: str, retries: int = 3, timeout: float = 20.0) -> bytes:
+    """Fetch bytes without letting one sluggish capture monopolize the harvest."""
     delay = 2.0
-    last_error = None
-    for attempt in range(retries):
+    last_error: Exception | None = None
+
+    for attempt in range(1, retries + 1):
         req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
         try:
-            with urllib.request.urlopen(req, timeout=90) as response:
+            with urllib.request.urlopen(req, timeout=timeout) as response:
                 return response.read()
-        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as exc:
+        except urllib.error.HTTPError as exc:
             last_error = exc
-            code = getattr(exc, "code", None)
-            if code not in (429, 500, 502, 503, 504) and attempt == 0:
+            if exc.code not in RETRYABLE_HTTP_CODES:
                 raise
-            if attempt + 1 < retries:
-                time.sleep(delay)
-                delay = min(delay * 2, 30)
-    raise RuntimeError(f"Request failed after {retries} attempts: {url}: {last_error}")
+        except (urllib.error.URLError, TimeoutError, socket.timeout) as exc:
+            last_error = exc
+
+        if attempt < retries:
+            time.sleep(delay)
+            delay = min(delay * 2, 15)
+
+    raise RuntimeError(
+        f"Request failed after {retries} attempts (timeout {timeout:g}s): {url}: {last_error}"
+    )
 
 
 def fetch_cdx(domain: str) -> list[dict[str, str]]:
@@ -73,7 +81,7 @@ def fetch_cdx(domain: str) -> list[dict[str, str]]:
     ]
     url = CDX_ENDPOINT + "?" + urllib.parse.urlencode(params)
     print(f"Querying Wayback CDX index for {domain} ...")
-    payload = request_bytes(url)
+    payload = request_bytes(url, retries=5, timeout=45)
     rows = json.loads(payload.decode("utf-8"))
     if not rows:
         return []
@@ -85,8 +93,6 @@ def unique_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     seen: set[tuple[str, str]] = set()
     out = []
     for row in rows:
-        # Digest is content identity; scope it to URL so identical shared assets at
-        # different original URLs are still represented independently.
         digest = row.get("digest") or f"timestamp:{row.get('timestamp', '')}"
         key = (row.get("original", ""), digest)
         if key in seen:
@@ -167,38 +173,70 @@ def make_summary(rows: list[dict[str, str]], unique: list[dict[str, str]]) -> di
     }
 
 
-def download(unique: list[dict[str, str]], output: Path, delay: float) -> tuple[int, int]:
-    success = 0
-    failed = 0
-    total = len(unique)
-    failures_path = output / "failures.csv"
-    failures = []
+def archive_url(row: dict[str, str]) -> str:
+    return f"{WAYBACK_BASE}/{row['timestamp']}id_/{row['original']}"
 
+
+def download_one(row: dict[str, str], output: Path, retries: int, timeout: float) -> None:
+    target = local_path(row, output)
+    row["local_file"] = str(target.relative_to(output))
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(request_bytes(archive_url(row), retries=retries, timeout=timeout))
+
+
+def download(unique: list[dict[str, str]], output: Path, delay: float) -> tuple[int, int]:
+    total = len(unique)
+    succeeded: set[int] = set()
+    first_pass_failures: list[tuple[int, dict[str, str], str]] = []
+
+    # First pass: move briskly through the archive. A bad replay should cost about
+    # a minute at worst, rather than the old several-minute stall.
     for index, row in enumerate(unique, 1):
-        target = local_path(row, output)
-        row["local_file"] = str(target.relative_to(output))
-        target.parent.mkdir(parents=True, exist_ok=True)
-        archive_url = f"{WAYBACK_BASE}/{row['timestamp']}id_/{row['original']}"
         print(f"[{index}/{total}] {row['timestamp']} {row['original']}")
         try:
-            target.write_bytes(request_bytes(archive_url))
-            success += 1
-        except Exception as exc:  # keep harvesting despite individual failures
-            failed += 1
-            failures.append({
-                "timestamp": row.get("timestamp", ""),
-                "original": row.get("original", ""),
-                "error": str(exc),
-            })
-            print(f"  FAILED: {exc}", file=sys.stderr)
+            download_one(row, output, retries=3, timeout=20)
+            succeeded.add(index)
+        except Exception as exc:
+            first_pass_failures.append((index, row, str(exc)))
+            print(f"  DEFERRED: {exc}", file=sys.stderr)
         time.sleep(delay)
 
-    if failures:
+    # Second pass: give only the stragglers a somewhat more patient retry.
+    final_failures: list[dict[str, str]] = []
+    if first_pass_failures:
+        print(f"Retrying {len(first_pass_failures)} deferred captures ...")
+
+    for retry_index, (index, row, first_error) in enumerate(first_pass_failures, 1):
+        print(
+            f"[retry {retry_index}/{len(first_pass_failures)}] "
+            f"{row['timestamp']} {row['original']}"
+        )
+        try:
+            download_one(row, output, retries=2, timeout=45)
+            succeeded.add(index)
+        except Exception as exc:
+            final_failures.append({
+                "timestamp": row.get("timestamp", ""),
+                "original": row.get("original", ""),
+                "first_pass_error": first_error,
+                "retry_error": str(exc),
+            })
+            print(f"  FAILED FINALLY: {exc}", file=sys.stderr)
+        time.sleep(max(delay, 1.0))
+
+    failures_path = output / "failures.csv"
+    if final_failures:
         with failures_path.open("w", newline="", encoding="utf-8") as fh:
-            writer = csv.DictWriter(fh, fieldnames=["timestamp", "original", "error"])
+            writer = csv.DictWriter(
+                fh,
+                fieldnames=["timestamp", "original", "first_pass_error", "retry_error"],
+            )
             writer.writeheader()
-            writer.writerows(failures)
-    return success, failed
+            writer.writerows(final_failures)
+    elif failures_path.exists():
+        failures_path.unlink()
+
+    return len(succeeded), len(final_failures)
 
 
 def main() -> int:
@@ -235,9 +273,13 @@ def main() -> int:
     write_csv(output / "manifest-unique.csv", unique, include_local=True)
     summary["downloads_succeeded"] = success
     summary["downloads_failed"] = failed
+    summary["complete"] = failed == 0
     (output / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    print(f"Finished: {success} downloaded, {failed} failed.")
-    return 0 if failed == 0 else 2
+    print(f"Finished: {success} downloaded, {failed} unavailable after retry.")
+
+    # Individual missing Wayback replays are expected archival imperfections, not
+    # a reason to discard the useful artifact. Fatal setup/CDX errors still fail.
+    return 0
 
 
 if __name__ == "__main__":
