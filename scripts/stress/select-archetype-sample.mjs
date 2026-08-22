@@ -44,7 +44,7 @@ import { fileURLToPath } from 'node:url';
 
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 
-// This script imports modules/Solver.js (detectArchetype needs the real TS solver code, unlike
+// This script imports modules/solver.js (detectArchetype needs the real TS solver code, unlike
 // select-repair-probe-adaptive-sample.mjs's raw-JSON-only looksRepairGated approximation), so it
 // must run through scripts/run-bundled.mjs, not plain node. run-bundled.mjs bundles the entry into
 // .solver-tools/ (ONE level under the repo root — see its own header comment), so ROOT is one
@@ -100,7 +100,7 @@ function sampleDeterministic(items, n, seed) {
 }
 
 installBrowserStubs();
-const { SOLVER_TESTING_API } = await import('../../modules/Solver.js');
+const { SOLVER_TESTING_API } = await import('../../modules/solver.js');
 const { normalizeRawLevel, detectArchetype } = SOLVER_TESTING_API;
 
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, corpusFile), 'utf8'));
