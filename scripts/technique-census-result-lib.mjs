@@ -22,9 +22,15 @@ function comparablePayload(result) {
     const {
         totalMs: _totalMs,
         variantLabel: _variantLabel,
+        attempts: _attempts,
         ...stable
     } = result;
-    return stable;
+    return {
+        ...stable,
+        // Per-attempt wall time, like totalMs, varies with runner load for identical deterministic
+        // work and is deliberately excluded from duplicate equality.
+        attempts: result.attempts?.map(({ elapsedMs: _elapsedMs, ...rest }) => rest),
+    };
 }
 
 export function dedupeTechniqueCensusResults(results) {
