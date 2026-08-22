@@ -55,7 +55,7 @@ const parentPath = transform === null ? variantPath : variantPath.map(key => {
 });
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.js');
+const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.js');
 const Solver = createSolver();
 const parent = Solver.prepareLevelForSolver(parentRaw, { source: 'raw' });
 const variant = Solver.prepareLevelForSolver(variantRaw, { source: 'raw' });

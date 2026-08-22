@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 
 installBrowserStubs();
-const { createSolver } = await import('../../modules/Solver.js');
+const { createSolver } = await import('../../modules/solver.js');
 const Solver = createSolver();
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));

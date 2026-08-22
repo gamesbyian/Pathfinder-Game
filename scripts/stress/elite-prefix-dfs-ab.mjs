@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API } = await import('../../modules/Solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../../modules/solver.js');
 const Solver = createSolver();
 const { prepLevel, getAttemptConfigs, runAttempt, normalizeAblationConfig } = SOLVER_TESTING_API;
 

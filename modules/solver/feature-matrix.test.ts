@@ -7,7 +7,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createSolver } from '../Solver.js';
+import { createSolver } from '../solver.js';
 import { validateCandidatePath } from '../domain/path-validator.js';
 import { parseRawLevel } from '../domain/level-codec.js';
 import { PACK } from './encoding.js';

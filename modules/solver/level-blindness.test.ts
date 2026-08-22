@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createSolver } from '../Solver.js';
+import { createSolver } from '../solver.js';
 
 const solver = createSolver();
 

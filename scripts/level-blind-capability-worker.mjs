@@ -10,7 +10,7 @@ import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { runWorkerMain } from './solver-worker-pool.mjs';
 
 installBrowserStubs();
-const { createSolver } = await import('../modules/Solver.js');
+const { createSolver } = await import('../modules/solver.js');
 const Solver = createSolver();
 const corpusCache = new Map();
 

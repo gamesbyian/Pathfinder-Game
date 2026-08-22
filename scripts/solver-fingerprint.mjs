@@ -103,7 +103,7 @@ const getCommitSha = () => {
 };
 
 installBrowserStubs();
-const { createSolver } = await import('../modules/Solver.js');
+const { createSolver } = await import('../modules/solver.js');
 const sharedSolver = createSolver();
 
 const root = new URL('..', import.meta.url).pathname;

@@ -558,7 +558,7 @@ const run = async () => {
   const directOutPath = path.join(process.cwd(), 'logs', 'local-direct', '.audit-export-tmp.json');
   console.log('[audit-export] running Solver direct on all levels');
   // Route through run-bundled.mjs (esbuild bundle), like `npm run solver:direct`: run-solverv2-direct
-  // imports modules/Solver.js, which is TypeScript post-migration and cannot be resolved by plain
+  // imports modules/solver.js, which is TypeScript post-migration and cannot be resolved by plain
   // `node` (ERR_MODULE_NOT_FOUND). The bundler transforms the .ts entry the same way production does.
   // --save-hints (opt-in, passed by audit-export.yml) makes this pass RECORD what it finds instead
   // of discarding it. This run already solves all 160 published levels on every merge that touches

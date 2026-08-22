@@ -10,7 +10,7 @@ import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 
 installBrowserStubs();
 const { solveLevelRaced, createRacePool, racedAttemptRecord } = await import('./solver-parallel/race.mjs');
-const { createSolver } = await import('../modules/Solver.js');
+const { createSolver } = await import('../modules/solver.js');
 const Solver = createSolver();
 
 function rawLevel(overrides = {}) {

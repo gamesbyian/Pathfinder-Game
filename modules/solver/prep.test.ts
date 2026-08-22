@@ -1,7 +1,7 @@
 /** Unit tests for Solver level precomputation. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { SOLVER_TESTING_API } from '../Solver.js';
+import { SOLVER_TESTING_API } from '../solver.js';
 import {AXIS_H, AXIS_V, PACK } from './encoding.js';
 import { getDistanceFromArray } from './distance.js';
 import { prepLevel } from './prep.js';
