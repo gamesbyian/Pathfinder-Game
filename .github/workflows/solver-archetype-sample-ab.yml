@@ -72,6 +72,10 @@ on:
         description: 'Comma-separated ablation flags to turn OFF for this arm.'
         required: false
         default: ''
+      repair_late_probe_node_budget:
+        description: 'Optional STRATEGY_REPAIR_LATE_PROBE node cap override (production default 2000000, stage-budget.ts REPAIR_LATE_PROBE_NODE_BUDGET); blank for control.'
+        required: false
+        default: ''
       deterministic:
         description: 'true forces a 24h non-binding deadline so this run is reproducible (bit-identical nodes/work). Matched A/B arms should both use true.'
         required: false
@@ -172,6 +176,7 @@ jobs:
           extra=()
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          [ -n "${{ inputs.repair_late_probe_node_budget }}" ] && extra+=("--repair-late-probe-node-budget=${{ inputs.repair_late_probe_node_budget }}")
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus="${{ matrix.shard.corpus }}" \
