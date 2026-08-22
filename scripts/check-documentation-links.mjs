@@ -43,12 +43,12 @@ function markdownAnchors(target) {
   return anchors;
 }
 
-const historicalDocumentation = file => file.startsWith('reports/') ||
+const historicalDocumentation = file => file.startsWith('reports/') || file.startsWith('docs/history/') ||
   (file.startsWith('docs/archive/snapshots/') && file !== 'docs/archive/snapshots/README.md');
 
 for (const file of markdownFiles) {
-  // Frozen snapshots preserve byte-for-byte historical text from another directory. Their relative
-  // links intentionally describe the original location; current navigation lives in their stubs.
+  // Frozen history preserves text from its original context; current navigation lives in indexed
+  // authorities. Do not force archival prose to chase later path renames.
   if (historicalDocumentation(file)) continue;
 
   const source = readFileSync(resolve(ROOT, file), 'utf8');
