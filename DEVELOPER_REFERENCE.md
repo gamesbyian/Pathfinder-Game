@@ -91,7 +91,7 @@ AXIS_H = 1; AXIS_V = 2; AXIS_NONE = 0
 - Flipper axis depends on global `flipperUsedMask` parity; never precompute statically.
 - For `navDensity >= DENSE_LEVEL_NAV_DENSITY`, `mustMaskForDFS = 0`; correctness still uses `mpVisitedMask`.
 - `validateLevelDetailed()` is heuristic; use the solver for solvability.
-- Memo keys need every future dependency. `mustCrossLowerBound` depends on `crossCounts` and first-visit axis plus position/mask; undersized MST scratch once made the bound unsound. See [`docs/solver-correctness-archaeology.md`](docs/solver-correctness-archaeology.md).
+- Memo keys need every future dependency. `mustCrossLowerBound` depends on `crossCounts` and first-visit axis plus position/mask; undersized MST scratch once made the bound unsound. See [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md).
 - Outcome regression does not prove cost. One repair-probe retry preserved solves but made published corpus ~14% slower. `hint-cost-drift.mjs` (2026-07-29) found 949 same-config/same-solution cross-commit pairs: 800 byte-identical, 149 drifted.
 - A shared prune refactor dropped repair's near-miss/elite trigger; extending bookkeeping to `deadend` recovered ~20% corpus performance. Audit consumers when falling-through cases become rejected. See [`reports/2026-07-16-repair-search-elite-splice-regression.md`](reports/2026-07-16-repair-search-elite-splice-regression.md).
 - Dense high-`reqInt` scoring can be orientation-sensitive; treat this as search/representation weakness, not a production rotate/mirror retry policy.
