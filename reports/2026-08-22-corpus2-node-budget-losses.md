@@ -1,9 +1,9 @@
 # Corpus-2 node-budget losses between capability runs 32459711208 and 32526927206
 
-> **Status:** inconclusive
-> **Last evidence:** 2026-08-22 — capability runs `32459711208` (commit `e5034e8c`) and `32526927206` (commit `ce4fc98a`)
-> **Decision:** treat the 73 IDs below as candidate regressions from one of four intervening solver-behavior commits, not as noise; do not promote/rely on any config change in that commit range for these levels without re-checking them individually
-> **Remaining gate:** bisect the 4 candidate commits (listed below) against a representative sample of the 73 IDs (start with the 57 "comfortable margin" ones) to isolate which commit(s) actually cause the loss
+> **Status:** bisected and resolved — root cause identified, not recoverable via revert
+> **Last evidence:** 2026-08-22 — local worktree bisection at commits `d21b4fb0`, `6f00bafd`, `c4569ef0` against 20/73 IDs (see Bisection below)
+> **Decision:** `6f00baf` (the `buildDistMap` gates/geese/false-goal fix) is confirmed as the cause. It is a genuine correctness fix, independently verified safe and net-positive on the published 160-level corpus (identical 160/160 solved, nodes down 4.1%), and this population is itself net +17 (90 gained/73 lost) on Corpus-2. Do not revert it or treat these 73 as a live recovery target via config/revert — same disposition class as the `dd001dd5c` beam-dedup finding above ("accept search-order collateral, do not restore broken identity"). `0b2da5f` (LATE_PROBE promotion) and `d21b4fb` (trap-search fix) are cleared as causes.
+> **Remaining gate:** none for attribution. A genuine recovery would require search-quality work on how `scoring.ts` consumes `distMap` for move-ordering guidance (see Mechanism/Recovery below) — logged as a future-work candidate, not pursued here.
 
 ## Origin
 
@@ -84,9 +84,35 @@ No single winning technique dominates, so the cause is unlikely to be "one strat
 - **`6f00baf` (buildDistMap fix) and `d21b4fb` (trap-search/pruning fixes) are the leading suspects.** Both correct pruning/bound logic that had previously been under-strength (ignoring gates/geese/false-goals; landmark/goose-exemption/path-coordinate bugs). A bound or prune that becomes more conservative — because it was previously wrong in a way that happened to cut search space aggressively — can turn a fast prior solve into a budget-exhausted one on affected levels while also *fixing* correctness elsewhere (consistent with the 90 gained IDs on the same run). `0b2da5f` (`STRATEGY_REPAIR_LATE_PROBE` default-ON) is a secondary suspect: it changes budget allocation across the ladder, which could starve a technique that used to get enough budget.
 - **Not yet isolated to a single commit.** This report characterizes the failure mode but does not bisect it — see Remaining gate.
 
-## Suggested next step
+## `0b2da5f` cleared directly (same-commit flag A/B)
 
-Bisect: re-run the level-blind capability sweep for a sample of the 57 "comfortable margin" lost IDs (start with `R02975`, `R02302`, `R02707`, `R02173`, `R03101`) at each of the four candidate commits individually (`0b2da5f`, `c4569ef`, `6f00baf`, `d21b4fb`), same level-blind/deterministic/matched-budget protocol, to find which commit(s) actually flip these levels from solved to node-budget-reached. `scripts/level-blind-capability-sweep.mjs` / `level-blind-capability-worker.mjs` can run a small manual ID subset outside the full 20-shard GHA matrix for this.
+Before bisecting, checked whether the LATE_PROBE promotion alone could explain any of the 73 using data already on hand: `32453248184` (`e5034e8c` + `--enable-flags=STRATEGY_REPAIR_LATE_PROBE`, 881 solved) vs `32459711208` (`e5034e8c`, flag off, 863 solved) is a same-commit, flag-only A/B. The diff is a **strict superset** — 18 gained on Corpus-2, zero lost, matching the promotion commit's own claimed "+19 net, zero regressions." All 5 of this report's "extreme margin" IDs (`R02975`, `R02302`, `R02707`, `R02173`, `R03101`) solve in **both** arms. `0b2da5f` cannot be the cause of any loss in a population defined by "solved before, not solved after" — it only ever adds solves at a fixed commit.
+
+## Bisection
+
+Method: `git worktree add` at `e5034e8c` (`npm ci` once), then `git checkout -f <commit>` through the candidate sequence — `d21b4fb0` is `e5034e8c`'s direct child, then `6f00bafd`, then `c4569ef0`, confirming there are no gaps between candidates. Ran `scripts/level-blind-capability-sweep.mjs` at each stop with a **reduced** deterministic node budget (5,000,000 — well above every prior `nodesExpanded` in the tested sample except the near-ceiling ones) against two batches:
+
+- **Batch A (5 IDs):** the "extreme margin" examples above (prior `nodesExpanded` 8,486–270,020).
+- **Batch B (15 IDs):** a seeded-random sample of the remaining 68 lost IDs, spanning the full `R00050`–`R03357` range (positions 183, 218, 258, 306, 369, 499, 560, 758, 765, 783, 977, 1114, 1129, 1376, 1565) — not filtered to the "comfortable margin" 57, so includes some near-ceiling levels that don't cleanly resolve even in the good state at this reduced budget.
+
+| Commit | Batch A (5) | Batch B (15) |
+|---|---|---|
+| `d21b4fb0` (trap-search fix) | 5/5 solved | 11/15 solved (4 near-ceiling levels need >5M nodes even here) |
+| `6f00bafd` (buildDistMap fix) | **0/5 solved** | **0/15 solved** |
+| `c4569ef0` (provenance fix, next commit) | 0/5 solved | not re-run (expected unchanged; provenance-only diff) |
+
+All 20 tested IDs flip from solved to `node-budget-reached` at exactly `6f00bafd`, including all 11 that were comfortably solved at `d21b4fb0` under the same reduced budget. `d21b4fb0` and `0b2da5f` are cleared.
+
+## Mechanism
+
+`6f00bafd` is used in two places (`modules/solver/lower-bounds.ts`, `modules/solver/scoring.ts`), with different safety properties:
+
+- **`lower-bounds.ts` (admissible pruning):** tightening a lower bound can only prune more search space, never cut a valid solution — the commit's own evidence (160/160 published corpus solved, nodes down 4.1%) confirms this is a pure win here.
+- **`scoring.ts` (move-ordering/attractor guidance):** distances also feed heuristic scoring that steers a budget-limited, non-optimal search toward promising cells. Making a heuristic "more correct" is **not** safety-monotonic here the way pruning is — the old (technically wrong) distances that routed through geese/gates/false goals apparently pointed several of these 73 levels toward their winning branch early by coincidence; the corrected distances point the same budget-limited search into a different, much larger region of the tree instead. `R02975` (8,486 nodes before, no solution within 150M+ after) is the clearest example: this is a large behavioral change in search direction, not a boundary-sensitivity artifact.
+
+## Recovery
+
+Not pursued here. `6f00bafd` fixes a real, previously undocumented modeling bug (distance estimates silently routing through cells no real path can pass through or use as a through-node) and is independently proven safe/beneficial on the published corpus; reverting it to chase this population's solve count would knowingly reintroduce that bug for a trade that's already net-positive on Corpus-2 (90 gained vs 73 lost, +17 net) — disallowed by the project's "do not weaken a correctness fix to pass" rule. A legitimate recovery path exists but is genuine search-quality research, not a quick fix: investigate whether `scoring.ts`'s consumption of `distMap` should treat sink-adjacent/gate/false-goal proximity differently for move-ordering than for pruning (the two roles no longer need the same underlying map), or whether a secondary diversification/tie-break could prevent full-budget starvation when the primary distance-based heuristic misdirects on a level's early moves. Logged for `docs/future-work.md` rather than attempted in this session.
 
 ## Related
 

@@ -19,6 +19,10 @@ Before implementing an idea below, check current code, the queue, ledger, report
 
 If joins among level structure, run identity, attempt telemetry, hints/provenance, families, oracle labels, and experiment arms keep spawning one-off scripts, add a derived analytical layer. Require comparability rather than a particular database: reuse `scripts/experiment-manifest-lib.mjs`, keep JSON/JSONL canonical where useful, reject incomparable runs, and keep analytical data out of production policy.
 
+### Distance-guidance/pruning split for scoring
+
+`6f00baf` (2026-08-21) tightened `buildDistMap`'s treatment of gates/geese/false-goals, which is safety-monotonic for `lower-bounds.ts`'s admissible pruning but not for `scoring.ts`'s move-ordering guidance — a more accurate distance can misdirect a budget-limited, non-optimal search on a per-instance basis. Bisection ([`../reports/2026-08-22-corpus2-node-budget-losses.md`](../reports/2026-08-22-corpus2-node-budget-losses.md)) traced 73 Corpus-2 node-budget losses to exactly this commit, net +17 against 90 gains — accepted, not reverted. Reopen only with a concrete proposal for how `scoring.ts` should consume distance information differently from `lower-bounds.ts` (e.g. a separate, unmodified distance map for guidance, or a secondary tie-break/diversification when the primary heuristic's top-ranked branch stalls) and matched-work evidence that it recovers solves without new losses elsewhere.
+
 ### Cross-technique cooperation
 
 Use named **producer -> receptor** hypotheses with a measured receptor failure, producer information the receptor cannot cheaply rediscover, timely/bounded consumption, protected independent search, positive shadow evidence, and a level-blind matched-work verdict. Method: [`solver-research-operating-model.md`](solver-research-operating-model.md#producer--receptor-cooperation). Historical design: [`archive/snapshots/solver-interoperability-and-cooperation-plan.md`](archive/snapshots/solver-interoperability-and-cooperation-plan.md).
