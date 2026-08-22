@@ -1,10 +1,5 @@
-/**
- * Generic child_process worker pool for offline solver batch tooling. Real OS-level parallelism
- * (child_process.fork, separate V8 isolates) — not Promise concurrency, which would only
- * interleave CPU-bound solver work on a single core. Two callers use this: portfolio-solve-sweep's
- * --workers (parallelize across levels) and repair-direct-probe's --races (parallelize across
- * seeds for one level). Node-tooling only; never imported by any browser/production code path.
- */
+// Generic child-process pool for offline solver tooling. Uses separate V8 isolates for real CPU
+// parallelism; tasks are dynamically scheduled so fast workers immediately take more work.
 import { fork } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
@@ -14,12 +9,7 @@ import { buildSync } from 'esbuild';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 
-/** Bundles a worker entry the same way scripts/run-bundled.mjs bundles a CLI entry (local .ts
- *  source inlined, npm deps left external) — required because child_process.fork() launches the
- *  given file path directly under plain node, bypassing whatever bundling/loader ran the PARENT
- *  script. Without this, a worker that imports modules/*.ts fails with ERR_MODULE_NOT_FOUND (no
- *  loader present to resolve TypeScript at runtime in the child process). Cached per workerScript
- *  path for the lifetime of the process — one bundle serves every worker instance in the pool. */
+/** Bundle a worker entry for plain-node fork(); cached by workerScript for this process. */
 const bundleCache = new Map();
 function bundleWorkerScript(workerScript) {
     const resolved = path.resolve(repoRoot, workerScript);
@@ -36,18 +26,8 @@ function bundleWorkerScript(workerScript) {
     return outFile;
 }
 
-/**
- * Runs `tasks` across a pool of `concurrency` child processes running `workerScript` (a module
- * that calls `runWorkerMain` below). Tasks are dispatched on-demand (a worker that finishes early
- * immediately gets the next task, not a fixed static partition), so uneven per-task cost doesn't
- * leave workers idle. `onResult(index, result)` fires as each result arrives, in whatever order
- * workers finish (NOT task order) — callers needing task order should index into the final
- * returned array instead. Resolves with a full `results` array, indexed by original task order.
- *
- * `stopAfter(index, result)` — optional; if it returns true, every other in-flight/pending task is
- * cancelled and the pool shuts down immediately (used for first-to-succeed racing). Untouched
- * task slots stay `undefined` in the returned array.
- */
+/** Run tasks dynamically across child workers. Results are indexed by original task order;
+ * `onResult` fires in completion order. `stopAfter` may cancel the remaining pool early. */
 export function runWorkerPool({ workerScript, workerArgs = [], tasks, concurrency, onResult, stopAfter }) {
     return new Promise((resolve, reject) => {
         if (tasks.length === 0) { resolve([]); return; }
@@ -106,12 +86,7 @@ export function runWorkerPool({ workerScript, workerArgs = [], tasks, concurrenc
     });
 }
 
-/** Worker-side harness: call once at the top of a worker script. `handler(task)` runs one task
- *  and returns its result (may be async); throwing fails the whole pool run (see runWorkerPool's
- *  'error' handling) rather than silently dropping a task. `onShutdown` (optional, may be async)
- *  is awaited before the process exits — for a worker that opened its own nested resource (e.g.
- *  a race.mjs createRacePool of worker_threads for within-level racing) to terminate it cleanly
- *  instead of relying on the OS to reap it when the process dies. */
+/** Worker-side IPC harness. Handler errors fail the pool; optional shutdown cleanup is awaited. */
 export function runWorkerMain(handler, onShutdown = null) {
     process.send({ type: 'ready' });
     process.on('message', async (msg) => {
