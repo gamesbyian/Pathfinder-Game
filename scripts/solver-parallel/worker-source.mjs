@@ -1,11 +1,6 @@
-// Persistent solver worker: installs browser stubs once, then processes "job" messages — one
-// job = one (gate, attemptConfig) pair run to completion or its own budget. Reused across many
-// jobs (not spawned per-job) so the solver bundle's own load cost, and repeat BFS precomputation
-// for the same level, are paid once per worker rather than once per attempt.
-//
-// This file is NOT run directly by plain node (it imports .js-specifier paths that actually point
-// to .ts source, same as every other CLI entry in this repo) — race.mjs esbuild-bundles it first,
-// mirroring scripts/run-bundled.mjs's own rationale (tsx runs the solver hot path ~5x slower).
+// Persistent raced-solver worker. Jobs are (gate, attemptConfig) pairs; level prep is reused within
+// the worker. race.mjs bundles this file first because plain node cannot resolve the TS-source .js
+// specifiers efficiently/correctly for this hot path.
 import { parentPort } from 'node:worker_threads';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 
@@ -13,20 +8,11 @@ installBrowserStubs();
 const { createSolver } = await import('../../modules/Solver.js');
 const { prepLevel } = await import('../../modules/solver/prep.js');
 const { POLICY_PROFILES } = await import('../../modules/solver/policy.js');
-// Dispatch to the right search primitive via the ONE shared dispatcher orchestration.ts's
-// runAttempt() also uses (modules/solver/attempt-dispatch.ts) — never a hand-rolled repair/beam/DFS
-// branch here, so this raced path can't drift from the sequential ladder on config routing or
-// argument threading. See CLAUDE.md's "behavior leaked into scripts" audit.
 const { runAttemptSearch } = await import('../../modules/solver/attempt-dispatch.js');
 
 const Solver = createSolver();
 
-// Cache the last-seen level's normalized+prepped form, keyed by the caller-supplied levelKey
-// (one solveLevelRaced() call uses one constant key for every job in that batch) — repeated jobs
-// for the SAME level within one worker's lifetime (different gate/config) reuse the BFS
-// precomputation instead of redoing it per job. Deliberately NOT a shared/pooled buffer across
-// levelKeys (a fresh prepLevel() per distinct key) — see CLAUDE.md's memoization gotcha; this is
-// a size-1 cache with a simple equality check, not a state-keyed correctness-sensitive one.
+// Size-1 level cache: same levelKey reuses prep; a new key replaces it.
 let cachedLevelKey = null, cachedLevel = null, cachedPrep = null;
 
 function getPrepped(levelKey, rawLevel, ablationCfg) {
@@ -50,10 +36,7 @@ parentPort.on('message', async (msg) => {
         const level = prepared.level;
         prep = prepared.prep;
         const profile = POLICY_PROFILES[attemptConfig.profileName] ?? POLICY_PROFILES.default;
-        // yieldFn: null — no cooperative-yield/cancellation needed inside a worker (blocking the
-        // worker's own event loop doesn't block anything else); the race orchestrator cancels
-        // losers via Worker.terminate() instead. nodeBudget/out/seedSalt left at defaults: the
-        // race path is wall-clock-budgeted and reads nodesExpanded back off prep._metrics below.
+        // Workers do not cooperatively yield; race cancellation terminates losing workers.
         const out = {};
         const solved = await runAttemptSearch(attemptConfig, gateKey, level, prep, profile, budgetMs, Date.now(), null, Infinity, out);
         parentPort.postMessage({
