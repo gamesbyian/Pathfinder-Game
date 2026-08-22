@@ -1,20 +1,8 @@
-/** Shared pure helpers between scripts/portfolio-solve-sweep.mjs (sequential/main-process path)
- *  and scripts/portfolio-solve-sweep-worker.mjs (parallel worker path) — kept in one place so the
- *  two never compute a row's fields differently. */
+/** Shared pure helpers for sequential and worker portfolio-sweep paths. */
 
 import { formatAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
-/** Reconstructs an attempt's config-identity string from a PERSISTED Attempt record (this file's
- *  own reports/telemetry shape), not a live AttemptConfig — normalizes to AttemptIdentityFields
- *  and defers the actual string-building to attempt-identity.mjs's formatAttemptIdentityKey, the
- *  same canonical logic orchestration.ts's own attemptConfigKey uses. Kept as a separate function
- *  (rather than importing orchestration.ts's attemptConfigKey directly) because the two start from
- *  different shapes: a persisted Attempt's `template` is already a bare id string, and its
- *  `profile` field is named differently from AttemptConfig's `profileName`. Two copies of this
- *  reconstruction previously drifted from orchestration.ts's own format independently (a missing
- *  admissibleOrder branch, then a missing repairTurnBiased suffix — see git history) — routing both
- *  through one shared formatter closes that class of bug at the source instead of by inspection.
- */
+/** Reconstruct canonical config identity from a persisted Attempt shape. */
 export function attemptConfigKey(attempt) {
     return formatAttemptIdentityKey({
         profileName: attempt?.profile ?? 'unknown', templateId: attempt?.template ?? null,
@@ -47,12 +35,7 @@ function projectedAttemptError(error) {
     };
 }
 
-/** Portfolio-experiment attempts carry schedulerPhase ('portfolio'/'fallback'); plain legacy-mode
- *  attempts and race.mjs's raced attempts never do (confirmed: scripts/solver-parallel/
- *  benchmark.mjs finds its own winner the same phase-free way, `attempts.find(a => a.ok)`) — so a
- *  phase-scoped lookup alone leaves winningConfig/gateKey null for both of those. Try the
- *  phase-scoped winner first (it's more informative — which pass/phase won), then fall back to
- *  "any ok attempt" so every scheduler mode reports a winner when one exists. */
+/** Prefer phase-specific portfolio/fallback winner, then any successful attempt for legacy/race modes. */
 export function anyWinningAttempt(result) {
     return winningAttempt(result, 'portfolio') ?? winningAttempt(result, 'fallback') ?? winningAttempt(result, null);
 }
@@ -62,27 +45,19 @@ export function passForWin(result) {
     return Number.isFinite(Number(winner?.passNumber)) ? Number(winner.passNumber) : null;
 }
 
-/** Maps one raw solver Attempt into the same shape scripts/stress/benchmark.mjs's solveEntry
- *  records, so a portfolio-solve-sweep report and a stress:benchmark report are both consumable
- *  by the same downstream badness/stability tooling (rank-levels.mjs's levelBadness needs
- *  bestBadness/finalBadness per attempt; classify-stability.mjs needs elapsedMs/refereeValid at
- *  the row level — see below). */
+/** Project one raw Attempt into the stress-benchmark-compatible persisted shape. */
 export function attemptRecord(a) {
     return {
         ...(a.stageId !== undefined ? { stageId: a.stageId } : {}),
         gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
         ok: a.ok, elapsedMs: a.elapsedMs,
         ...(a.outcome !== undefined ? { outcome: a.outcome } : {}),
-        // Re-project an explicit whitelist instead of retaining an arbitrary thrown object or a
-        // future accidental `stack` field from an upstream transport.
+        // Whitelist error fields; never persist arbitrary thrown objects/stacks.
         ...(a.error !== undefined ? { error: projectedAttemptError(a.error) } : {}),
         ...(a.passNumber !== undefined ? { passNumber: a.passNumber } : {}),
         ...(a.configKey !== undefined ? { configKey: a.configKey } : {}),
         ...(a.restart !== undefined ? { restart: a.restart } : {}),
         ...(a.schedulerPhase !== undefined ? { schedulerPhase: a.schedulerPhase } : {}),
-        // How much budget this attempt was actually GIVEN. Without it, an attempt that exhausted its
-        // search and one that got a sliver of a divided budget are indistinguishable in a report --
-        // which is exactly the question "did the last-resort tier get room to run?" needs answered.
         ...(a.allocatedBudgetMs !== undefined ? { allocatedBudgetMs: a.allocatedBudgetMs } : {}),
         ...(a.nodesExpanded !== undefined ? { nodesExpanded: a.nodesExpanded } : {}),
         ...(a.timedOut !== undefined ? { timedOut: a.timedOut } : {}),
@@ -92,22 +67,8 @@ export function attemptRecord(a) {
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
         ...(a.repairTurnBiased ? { repairTurnBiased: true } : {}),
-        // Distinguishes a runRepairProbe attempt from the same repair config re-run later by the
-        // full-budget repair fallback loop -- see orchestration.ts's Attempt.repairProbe comment.
         ...(a.repairProbe ? { repairProbe: true } : {}),
-        // Separates a STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY re-run from the original shrunken
-        // probe attempt (both carry repairProbe) -- without this the recovery tier is invisible in
-        // every persisted report, the same drop-before-persist gap CLAUDE.md's provenance section
-        // documents for admissibleOrder.
         ...(a.repairProbeShrinkRecovery ? { repairProbeShrinkRecovery: true } : {}),
-        // The admissible-order-search last-resort tier's dispatch flags. Omitting these made every
-        // one of its attempts indistinguishable from a plain DFS attempt in every persisted report
-        // (measured: 0 attempts carrying these flags across the whole corpus-2 baseline and the
-        // 240-shard high-budget sweep, despite 486 of that sweep's levels demonstrably reaching the
-        // tier -- detectable only via the accident that its no-tie-break entry uses the otherwise
-        // unused profile name 'none'). Hint provenance was never affected: deriveSolveAttemptInfo
-        // reads the raw solver Attempt, not this projection, which is why the hint corpus does carry
-        // admissible-order finds while every report claimed zero.
         ...(a.admissibleOrder ? { admissibleOrder: true } : {}),
         ...(a.admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
         ...(a.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
@@ -123,21 +84,12 @@ export function attemptRecord(a) {
         ...(a.allocatedNodeCeiling !== undefined ? { allocatedNodeCeiling: a.allocatedNodeCeiling } : {}),
         ...(a.workSpent !== undefined ? { workSpent: a.workSpent } : {}),
         ...(a.randomSeed !== undefined ? { randomSeed: a.randomSeed } : {}),
-        // seedSalt is the value to REPLAY a repair winner directly (repairPrimarySeed(gateKey,
-        // seedSalt) derives randomSeed from it, not the other way around) -- only set on the
-        // attempt when nonzero (orchestration.ts), so its absence on a repair attempt means salt 0,
-        // not "unknown"; distinguish via the `repair` flag above, not this field's presence.
+        // On repair attempts, absent seedSalt means 0; randomSeed is derived from gateKey + salt.
         ...(a.seedSalt !== undefined ? { seedSalt: a.seedSalt } : {}),
     };
 }
 
-/** Builds the per-level report row from a raw SolveResult. Does NOT do hint-saving (that stays
- *  in the main process only — see portfolio-solve-sweep.mjs). Does NOT compute refereeValid
- *  itself (needs a live Solver + prepared level, which this pure-helpers module intentionally
- *  doesn't depend on) — callers set `result.refereeValid` before calling buildRow when they want
- *  it recorded; both call paths (portfolio-solve-sweep.mjs's main process, and
- *  portfolio-solve-sweep-worker.mjs's worker process) already have Solver in scope right where
- *  they get `result` back from Solver.solve()/racePool.solveLevel(). */
+/** Build one persisted row. Hint saving and referee computation remain caller-owned. */
 export function buildRow(levelNumber, id, result, schedulerMode) {
     const pass = passForWin(result);
     const solvedBeforeFallback = !!result?.portfolio?.solvedBeforeFallback;
@@ -155,10 +107,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         totalMs: result?.totalMs ?? null,
         elapsedMs: result?.totalMs ?? null,
         nodesExpanded: result?.nodesExpanded ?? null,
-        // Host-independent cost, and the flag that says a "failure" was really indeterminate. Only
-        // workSpent is comparable across a speed change (nodesExpanded is not, and dfs/beam/repair
-        // count 11-17x different work per "node" anyway) — see modules/solver/work-meter.ts and
-        // docs/solver-budget-determinism.md. A deadlineTruncated row is NOT evidence of unsolvable.
+        // Cross-technique host-independent cost; deadline-truncated failure is indeterminate.
         workSpent: result?.workSpent ?? null,
         deadlineTruncated: !!result?.deadlineTruncated,
         techniqueLifecycle: result?.techniqueLifecycle ?? null,
@@ -179,12 +128,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
     };
 }
 
-/** child_process IPC serializes messages as JSON, which drops Set objects (they arrive as `{}`).
- *  portfolioExperiment carries pass2Configs/pass3Configs/conditionalPasses[].configs as Sets, so
- *  worker tasks must serialize them to arrays before `worker.send()` and reconstruct them on the
- *  worker side before passing solveOpts to Solver.solve — otherwise runPortfolioExperiment's
- *  `.has()` calls throw. Sequential (non-worker) runs never go through this, so they're
- *  unaffected either way. */
+/** JSON IPC drops Set objects; serialize config Sets to arrays and restore them in workers. */
 export function serializePortfolioExperiment(experiment) {
     if (!experiment) return experiment;
     return {
@@ -204,7 +148,7 @@ export function deserializePortfolioExperiment(experiment) {
     };
 }
 
-/** Bucket a row into the pass-distribution counters object (mutated in place). */
+/** Mutate pass-distribution counters for one row. */
 export function tallyPass(passCounts, row, schedulerMode) {
     if (row.pass === 1) passCounts.pass1 += 1;
     else if (row.pass === 2) passCounts.pass2 += 1;

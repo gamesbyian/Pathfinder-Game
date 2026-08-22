@@ -1,22 +1,10 @@
 #!/usr/bin/env node
 /**
- * Stress-corpus benchmark using worker-thread attempt racing (scripts/solver-parallel/race.mjs's
- * createRacePool) instead of the production sequential solveLevel(). Mirrors
- * scripts/stress/benchmark.mjs's structure/output so the two are directly comparable, but this is
- * NOT the official benchmark: it measures a different (multi-core, Node-only) execution model
- * than what ships to players, so its numbers must never be committed as
- * reports/stress/benchmark-latest.json or used as a solver:bench regression baseline — see
- * docs/solver-architecture.md's "Parallel attempt racing" section.
+ * Stress benchmark using persistent worker-thread attempt racing. Output mirrors stress:benchmark
+ * but is NOT the official sequential baseline and must not replace benchmark-latest.json.
+ * Across-level `--parallel` is a separate stress:benchmark feature; this races within each level.
  *
- * The worker pool is created ONCE for the whole run and shared across every level (see
- * createRacePool's doc comment) rather than spun up/torn down per level — this tool is now
- * equivalent to `stress:benchmark --engine=raced` with a raced-specific default output path;
- * kept as a separate entrypoint mainly for its distinct default --out and always-raced (no
- * --engine flag) behaviour. This is orthogonal to, and does not combine with, stress:benchmark's
- * own --parallel flag (which parallelizes ACROSS levels instead of within one level's attempt
- * ladder).
- *
- * Usage (via the esbuild wrapper — tsx runs the solver hot path ~5x slower):
+ * Usage:
  *   node scripts/run-bundled.mjs scripts/solver-parallel/benchmark.mjs
  *       [--corpus=data/stress/stress-levels.json] [--budget-ms=20000]
  *       [--out=reports/stress/benchmark-raced-latest.json] [--levels=S001,S005|id:1-20]
