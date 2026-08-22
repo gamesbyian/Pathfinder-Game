@@ -1,0 +1,56 @@
+name: Temporary log output migration
+
+on:
+  push:
+    branches:
+      - agent/log-output-naming-2026-08-21
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Normalize live solver output paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          doc = Path('docs/solver-architecture.md')
+          text = doc.read_text()
+          old = 'logs/Solver/'
+          new = 'logs/solver-direct/'
+          if old not in text:
+              raise SystemExit('expected legacy solver log examples not found')
+          doc.write_text(text.replace(old, new))
+
+          checker = Path('scripts/check-documentation-links.mjs')
+          text = checker.read_text()
+          marker = "// Commands presented as runnable documentation should continue to exist."
+          guard = """// Current authority docs must not route new raw output into the frozen legacy solver-log attic.\nfor (const file of currentAuthorityFiles) {\n  if (!existsSync(resolve(ROOT, file))) continue;\n  const source = readFileSync(resolve(ROOT, file), 'utf8');\n  if (source.includes('logs/Solver/')) {\n    failures.push(`${file}: routes current output to frozen legacy logs/Solver/; use a lowercase owning directory`);\n  }\n}\n\n"""
+          if guard.strip() not in text:
+              if marker not in text:
+                  raise SystemExit('documentation-check insertion marker not found')
+              text = text.replace(marker, guard + marker)
+              checker.write_text(text)
+          PY
+          git diff --check
+      - name: Commit migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/solver-architecture.md scripts/check-documentation-links.mjs
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'docs: retire legacy solver log destination'
+          git push origin HEAD:${{ github.ref_name }}
