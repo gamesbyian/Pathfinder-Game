@@ -1,33 +1,8 @@
-/**
- * Separator-state resource-spectrum probe — the harness-pluggable prototype implementation of
- * docs/solver-next-frontier-multilingual-research-update-2026-08-02.md section 3 ("separator-state
- * resource dynamic programming"), scoped down to the single case explicitly recommended as the
- * first cut in section 3.2/3.5: opportunistic single-articulation-point pendant chambers, not a
- * general treewidth solver.
- *
- * WHAT IT PROVES (soundness argument). For each in-scope pendant chamber with a pending must-pass
- * obligation, `enumerateChamberSpectrum` exhaustively finds every (extra steps, extra
- * intersections) pair achievable by a single excursion — gateway out, cover every mandatory cell,
- * gateway back in — using the real move-legality primitives, with the excursion depth bounded by
- * the TRUE remaining step budget (not an arbitrary cutoff), so an empty, non-truncated spectrum is
- * a genuine proof that the chamber's obligations can never be satisfied at all.
- *
- * With 2+ mandatory chambers, `convolveSpectra` combines their spectra additively (visiting one
- * doesn't affect another's cost, since each is a self-contained excursion through its own gateway).
- * The cheapest combined (steps, intersections) pair is then checked against the CURRENT position's
- * existing admissible goal-distance bound: any real solution needs at least
- * `goalDist(pos) + comboSteps` total steps (the excursion is a pure round-trip detour, so it's
- * additive regardless of when it happens) and at least `comboInts` additional intersections. Both
- * of those are already-sound quantities (goalDistArr is the solver's own admissible distance
- * bound), so failing either is a real, provable rejection — not a heuristic.
- *
- * WHAT IT DOES NOT PROVE (scope limits — see design doc for the honest accounting):
- * - Multiple separate excursions into the SAME chamber are not modeled (only one covering
- *   excursion is searched for). A level whose only solutions dip into a chamber twice will not be
- *   caught as dead by this probe even if it truly is — that's a missed catch, not a false reject.
- * - A chamber whose enumeration hits the node cap ABSTAINS rather than asserting anything — see
- *   `truncated` handling below. Never treat a truncated chamber's partial spectrum as complete.
- */
+// Sound pendant-chamber resource probe. For each in-scope mandatory chamber, exhaustively enumerate
+// one covering gateway-to-gateway excursion using real move legality, then convolve chamber spectra.
+// Empty non-truncated spectrum proves death. Otherwise goalDist + minimum excursion steps and minimum
+// excursion intersections are necessary resource bounds. Any truncated chamber forces abstention.
+// Multiple excursions into the same chamber are out of scope, causing missed catches only.
 import { getDistanceFromArray } from '../../../modules/solver/distance.ts';
 import { getRealLengthFromState } from '../../../modules/solver/solution.ts';
 import { computeResidualChambers, enumerateChamberSpectrum, convolveSpectra, decodeSpectrumEntry } from '../lib/residual-decomposition.mjs';
@@ -59,9 +34,6 @@ export function evaluate({ level, prep, state, pos }) {
         spectra.push(spectrum);
     }
 
-    // A chamber that fully enumerated (not truncated) and found ZERO covering excursions is a
-    // standalone, unconditional proof of death: no assignment of the OTHER chambers or the trunk
-    // can rescue a level requiring a physically-impossible chamber visit.
     if (anyProvenEmpty) {
         return {
             verdict: 'reject', abstained: false,
@@ -69,8 +41,6 @@ export function evaluate({ level, prep, state, pos }) {
             chambers: chambers.length, chamberReports,
         };
     }
-    // Any OTHER chamber truncating means we can't trust the combined spectrum (see file doc) —
-    // abstain rather than risk an unsound reject built on an incomplete spectrum.
     if (anyTruncated) {
         return { verdict: 'pass', abstained: true, reason: 'chamber enumeration truncated (node cap)', chambers: chambers.length, chamberReports };
     }
