@@ -33,7 +33,7 @@ Priority numbers remain citeable; CLOSED/GATE COMPLETE rows are dispositions.
 | 4 | CP-SAT-anchored deep repair editing | **ACTIVE RESEARCH** | Expand feasible/infeasible retreat boundaries; edit deeper only when depth becomes predictably state-conditioned. |
 | 5 | State-conditioned must-cross anchoring | **ACTIVE RESEARCH** | Read-only prefix diagnostics; require recurrence across unrelated levels/families before scoring changes. |
 | 6 | Mechanics-conditioned admissible-order routing | **CLOSED NEGATIVE 2026-08-20** | Too little unique isolated capability for meaningful reserve. |
-| 7 | Cheap isolated-technique wins the ladder misses | **LATE PROBE PROMOTED 2026-08-21; BEAM OPEN** | Investigate remaining high-intersection/must-cross-heavy beam gaps by archetype, not broad configs. |
+| 7 | Cheap isolated-technique wins the ladder misses | **LATE PROBE PROMOTED 2026-08-21; ARCHETYPE-ROUTING FIXES PENDING FULL-POPULATION A/B 2026-08-22** | Awaiting the deterministic Corpus-1/2 A/B for the high-intersection-burden fix (control run `32544545256`, treatment `32544546461`); must-cross-heavy fix not yet in that A/B's treatment commit. |
 
 ## 0. Regression and provenance integrity
 
@@ -80,6 +80,14 @@ Unconditional attraction is closed. Open form: use live prefix state for target/
 ## 7. Unrouted cheap capability
 
 Confirmed: beam-routing **+20 net Corpus-2**; perimeter-beam recovered all 29 local targets; `STRATEGY_REPAIR_LATE_PROBE` promoted with **+19 net**, zero regressions. Remaining cheap beam wins span high-intersection and must-cross-heavy archetypes with no broadly covering config. Investigate rule-specific routing instead of appending generic beams.
+
+**2026-08-22 archetype-routing fixes (branch `claude/corpus-regression-solve-count-c9ewdo`, commits `7ad7cd2e`/`53fe5f41`):** cross-referenced the 2026-08-20 census against the 2026-08-21 capability run (`32526927206`, 880/1700) to find 151 Corpus-2 levels an isolated T1 technique solves within budget that the production ladder still misses — 47 of them cheaply (≤2M isolated nodes). Traced through `getAttemptConfigs()` directly (not inferred): 46/47 were never offered the winning config at all, concentrated in `high-intersection-burden`'s four sub-rules (35) and `must-cross-heavy`'s (6); `portal-heavy` had zero gaps (already fully covered by earlier fixes). Added the missing configs as trailing, `MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT`-protected additions — same placement discipline as every prior beam-added-here fix in `attempts.ts` (leading placement measured +94% wall time on the published corpus in earlier work; never repeated).
+
+- `high-intersection-burden` (all 4 sub-rules: near-Hamiltonian, very-high-reqInt ×2, medium-high-reqInt catch-all): added `beam:objectiveFirst@WIDE`/`intersectionHarvest@WIDE` and perimeter beams/DFS where missing. GHA-validated at production 50M node budget: **14/47 targeted gap levels recovered** (vs 6/47 at an earlier under-budgeted 10M test — the late-reserve fraction needs real budget headroom to pay off).
+- `must-cross-heavy` (3 of 4 sub-rules: flipper-heavy, must-pass-heavy, default catch-all): added the missing perimeter beam/DFS direction each was missing relative to its siblings. Locally validated at 50M: **3/4 targeted gap levels recovered** (the 4th, R02162, needs 23.5M nodes even in isolation and still exhausts budget within the full ladder).
+- Two must-cross gaps left open (diverse-WIDE-beam misses on the must-pass-heavy and default rules) — not threshold-gated, genuinely never offered, but both rules' reserve window is already fully spent on the validated perimeter fix; see [`future-work.md`](future-work.md).
+- Regression check: `solver:bench --check` 160/160 published corpus, no regressions; a 40-level local sample of already-solving Corpus-2 levels found zero regressions (all 6 "unsolved-within-5M-test-budget" cases match levels already known to need 4.7M–70M nodes, not new slowdowns).
+- **Not yet validated at full-population scale.** A matched deterministic A/B via `solver-stress-refresh.yml` is in flight for the high-intersection-burden fix alone (control `32544545256` pre-fix vs treatment `32544546461` at commit `7ad7cd2e`, must-cross fix not included in that treatment commit) — this is the evidence needed before either fix can be called a validated net Corpus-2 gain, since the fix touches shared archetype rules and could affect levels outside the 47/4 targeted samples.
 
 ## Promotion contract
 
