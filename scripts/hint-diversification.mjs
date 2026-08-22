@@ -44,7 +44,7 @@ const combinedOnly      = argFlags.has('--combined-only');
 
 installBrowserStubs();
 
-const { createSolver } = await import('../modules/Solver.js');
+const { createSolver } = await import('../modules/solver.js');
 const { createHintAblationGenerator } = await import('../modules/solver/hint-ablation-generator.ts');
 const { pathSignature } = await import('../modules/domain/hint-novelty.ts');
 const { toHint, makeProvenanceEntry, mergeHints } = await import('../modules/domain/hint-types.ts');
