@@ -63,7 +63,11 @@ on:
         required: false
         default: 'false'
       shard_count:
-        description: 'Shard count (fixed 20 before 2026-08-22). Fewer, larger shards use fewer concurrent runner slots -- e.g. 10 lets a control/treatment A/B pair (each capped at this many concurrent jobs) fit the account concurrent-job limit alongside other work, or lets a same-sized second sweep run at the same time. Corpus-2''s per-shard timeout scales inversely (fewer shards -> more levels/shard -> more time/shard), clamped to the GitHub-hosted 360min/job hard ceiling -- do not go far below 10 without also raising node/work budgets down, or a shard risks not finishing its slice inside that ceiling. Must not exceed 102 (corpus-1''s level count) or some shards get zero corpus-1 coverage.'
+        description: 'Shard count (fixed 20 before 2026-08-22). Two independent uses, both via max_parallel below: (1) set shard_count = max_parallel for the old fixed-20-style behavior at a smaller footprint -- e.g. both 10 lets an A/B pair fit the account concurrent-job limit alongside other work; (2) raise shard_count WELL above max_parallel (e.g. 60 shards at max_parallel=15) for the same total footprint but finer, self-balancing scheduling -- see max_parallel''s own description for why this cuts wall-clock tail latency on a genuinely full sweep. Corpus-2''s per-shard timeout scales inversely (fewer shards -> more levels/shard -> more time/shard), clamped to the GitHub-hosted 360min/job hard ceiling -- do not go far below 10 without also lowering node/work budgets, or a shard risks not finishing its slice inside that ceiling. Must not exceed 102 (corpus-1''s level count) or some shards get zero corpus-1 coverage.'
+        required: false
+        default: '20'
+      max_parallel:
+        description: 'Shards running concurrently (same solver-typical-budget-baseline.yml pattern). Keeping this well below shard_count (e.g. shard_count=60, max_parallel=15) is what actually fixes long-tail wall time on a full sweep: with shard_count == max_parallel (the old fixed-20 behavior), every shard starts at once and the whole run waits on whichever one drew the unluckiest cluster of expensive-to-exhaust unsolved levels -- observed taking 2+ hours even though most shards finish in well under half that. Many small shards queued behind a smaller number of concurrent lanes self-balance instead: a lane that finishes early immediately pulls the next queued shard rather than idling, so bad luck in one shard''s slice no longer stalls the whole run. Default 20 (== the shard_count default) reproduces pre-2026-08-22 behavior exactly (no throttling) when both are left at their defaults.'
         required: false
         default: '20'
 
@@ -116,6 +120,7 @@ jobs:
       contents: read
     strategy:
       fail-fast: false
+      max-parallel: ${{ fromJson(inputs.max_parallel) }}
       matrix:
         shard: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
