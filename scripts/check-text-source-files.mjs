@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Keep source/config/docs textual so Git hosting and PR tooling can render their diffs. */
+/** Keep source/config/docs textual and `modules/` paths canonically named. */
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { extname } from 'node:path';
@@ -16,4 +16,29 @@ if (invalid.length) {
   for (const file of invalid) console.error(`  - ${file}`);
   process.exit(1);
 }
-console.log(`Tracked text-file check passed (${tracked.filter(file => textExtensions.has(extname(file).toLowerCase())).length} files).`);
+
+const kebab = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const lowercaseToken = /^[a-z0-9]+$/;
+const invalidModulePaths = [];
+for (const file of tracked.filter(file => file.startsWith('modules/'))) {
+  const parts = file.split('/');
+  const badDir = parts.slice(1, -1).find(part => !kebab.test(part));
+  if (badDir) {
+    invalidModulePaths.push(`${file} (directory '${badDir}')`);
+    continue;
+  }
+
+  const filename = parts.at(-1);
+  if (filename === 'README.md') continue;
+  const [stem, ...suffixes] = filename.split('.');
+  if (!kebab.test(stem) || suffixes.length === 0 || suffixes.some(suffix => !lowercaseToken.test(suffix))) {
+    invalidModulePaths.push(file);
+  }
+}
+if (invalidModulePaths.length) {
+  console.error('modules/ paths must use lowercase kebab-case; conventional README.md is exempt:');
+  for (const file of invalidModulePaths) console.error(`  - ${file}`);
+  process.exit(1);
+}
+
+console.log(`Tracked text-file check passed (${tracked.filter(file => textExtensions.has(extname(file).toLowerCase())).length} files); modules/ path naming is canonical.`);
