@@ -35,7 +35,7 @@ For top-level dated reports created on or after **2026-08-20**, `npm run check:d
 | Current product/solver behavior | Topic reference under `docs/` |
 | Ranked solver optimization work | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) |
 | Solver research method/promotion rules | [`solver-research-operating-model.md`](solver-research-operating-model.md) |
-| Broader deferred/reopen ideas | [`future-work.md`](future-work.md) |
+| Broader deferred/reopen ideas | [`solver-future-work.md`](solver-future-work.md) |
 | Retained/default-off dispositions | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) |
 | Family/variant method/resource | [`variant-level-research.md`](variant-level-research.md) |
 | One experiment's evidence | Dated file under `reports/` |

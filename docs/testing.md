@@ -100,7 +100,7 @@ Functional e2e blocks third-party requests through the shared fixture. Visual te
 Use the smallest representative sample that can falsify an idea; pay full-population cost for validated results/promotion.
 
 - **Soft mechanisms:** scoring/order/bias/default-off attempts may lose solves or work, but referee validation protects returned paths.
-- **Hard mechanisms:** pruning/bounds/caches/state equivalence can remove valid states; require proof-oriented, differential, and counterexample tests. See [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md).
+- **Hard mechanisms:** pruning/bounds/caches/state equivalence can remove valid states; require proof-oriented, differential, and counterexample tests. See [`solver-correctness-hardening.md`](solver-correctness-hardening.md).
 
 A reverted experiment may discover a valid new solution; preserve novel finds through shared hint/provenance machinery before discarding the code.
 

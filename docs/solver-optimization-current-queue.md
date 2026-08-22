@@ -4,7 +4,7 @@
 > **Reconciled:** 2026-08-21 through solver-authority consolidation and `STRATEGY_REPAIR_LATE_PROBE` promotion.
 > **Scope:** improve cold, level-blind solve count or machine-independent work without losing solves. Exact-level history may label research, never control production solves.
 
-Chronology: [`archive/snapshots/solver-optimization-current-queue-2026-08-20.md`](archive/snapshots/solver-optimization-current-queue-2026-08-20.md), [`archive/snapshots/solver-optimization-current-queue-2026-08-20-post-1398.md`](archive/snapshots/solver-optimization-current-queue-2026-08-20-post-1398.md). Deferred ideas: [`future-work.md`](future-work.md). Default-off mechanisms: [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Method: [`solver-research-operating-model.md`](solver-research-operating-model.md).
+Chronology: [`archive/snapshots/solver-optimization-current-queue-2026-08-20.md`](archive/snapshots/solver-optimization-current-queue-2026-08-20.md), [`archive/snapshots/solver-optimization-current-queue-2026-08-20-post-1398.md`](archive/snapshots/solver-optimization-current-queue-2026-08-20-post-1398.md). Deferred ideas: [`solver-future-work.md`](solver-future-work.md). Default-off mechanisms: [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Method: [`solver-research-operating-model.md`](solver-research-operating-model.md).
 
 ## Evidence reset
 
@@ -93,7 +93,7 @@ A descendant is new only if mechanism or information boundary materially changes
 - [`archive/snapshots/solver-optimization-current-queue-2026-08-20.md`](archive/snapshots/solver-optimization-current-queue-2026-08-20.md): earlier chronology.
 - [`../reports/2026-08-20-technique-census-reconciliation.md`](../reports/2026-08-20-technique-census-reconciliation.md), [`../reports/stress/technique-census/32240161854/`](../reports/stress/technique-census/32240161854/): census.
 - [`../reports/2026-08-15-connectivity-axis-exhausted-regression.md`](../reports/2026-08-15-connectivity-axis-exhausted-regression.md): regression/beam history.
-- [`winning-lineage-survival-analysis.md`](winning-lineage-survival-analysis.md): lineage observation.
+- [`solver-winning-lineage-survival-analysis.md`](solver-winning-lineage-survival-analysis.md): lineage observation.
 - [`../reports/2026-08-12-repair-retreat-cpsat.md`](../reports/2026-08-12-repair-retreat-cpsat.md): exact repair-retreat evidence.
 - [`variant-level-research.md`](variant-level-research.md): family/variant research.
 - [`solver-research-operating-model.md`](solver-research-operating-model.md): method/evidence routing.

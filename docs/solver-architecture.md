@@ -62,7 +62,7 @@ const ATTEMPT_CONFIGS = [
 // 16 total
 ```
 
-The ladder is hand-tuned. Historical corpus1 analysis found 79% of solved-level time before the winning attempt; `navDensity` predicted repair wins only weakly. Re-test current corpus2 evidence before further hand-ordering. See [`solver-improvement-research-notes.md`](solver-improvement-research-notes.md).
+The ladder is hand-tuned. Historical corpus1 analysis found 79% of solved-level time before the winning attempt; `navDensity` predicted repair wins only weakly. Re-test current corpus2 evidence before further hand-ordering. See [`archive/snapshots/solver-improvement-research-notes.md`](archive/snapshots/solver-improvement-research-notes.md).
 
 ## DFS (`dfsFromGate`)
 
@@ -134,7 +134,7 @@ AXIS_NONE = 0
 
 ## Ablation
 
-57 togglable flags; see [`ablation.md`](ablation.md). Quick start: `ablation:baseline`, `ablation:single`, `ablation:analyze`.
+57 togglable flags; see [`solver-ablation.md`](solver-ablation.md). Quick start: `ablation:baseline`, `ablation:single`, `ablation:analyze`.
 
 `normalizeAblationConfig()` normalizes sparse external configs: supplied keys pass through, missing booleans read `true`, absent `ATTEMPT_ORDER`/`_randomSeed` stay `undefined`; null/absent keeps the fast path. `race.mjs` normalizes before `postMessage` because `Proxy` cannot cross workers.
 
@@ -179,7 +179,7 @@ False-goal timeouts are `inconclusive`, never invalid. `worker.js` handles `TRAP
 
 ## Parallel Find-all enumeration (browser)
 
-Complete-mode Find-all alone uses this pool; targeted tiers stay main-thread. See [`solve-button-variety.md`](solve-button-variety.md).
+Complete-mode Find-all alone uses this pool; targeted tiers stay main-thread. See [`hint-variety-search.md`](hint-variety-search.md).
 
 - One `(gate, root-child)` shard/job via `EnumOptions.rootChildren`; union tests prove coverage.
 - Workers stream `ENUMERATE_PROGRESS`; PLAY validation/dedup stay main-thread in `createEnumerationPoolClient`.
@@ -274,7 +274,7 @@ Report: [`reports/2026-07-30-admissible-order-node-reserve.md`](../reports/2026-
 
 ## AI/manual diagnosis
 
-[`ai-assisted-manual-solving.md`](ai-assisted-manual-solving.md): useful human/AI input is a canonically accepted path for differential diagnosis against solver trace, not narrative strategy. Manual provenance needs a distinct solver ID, never `SOLVER_ID`/`HUMAN_PLAYER_ID`.
+[`archive/snapshots/ai-assisted-manual-solving.md`](archive/snapshots/ai-assisted-manual-solving.md): useful human/AI input is a canonically accepted path for differential diagnosis against solver trace, not narrative strategy. Manual provenance needs a distinct solver ID, never `SOLVER_ID`/`HUMAN_PLAYER_ID`.
 
 ## Remaining speed work
 

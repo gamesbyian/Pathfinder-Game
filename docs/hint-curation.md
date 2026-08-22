@@ -1,6 +1,6 @@
 # Hint-display curation
 
-How Play mode chooses a small, varied subset from a level's stored solutions. Hint generation/saving is separate; see [`hint-workbench.md`](hint-workbench.md) and [`solve-button-variety.md`](solve-button-variety.md).
+How Play mode chooses a small, varied subset from a level's stored solutions. Hint generation/saving is separate; see [`hint-workbench.md`](hint-workbench.md) and [`hint-variety-search.md`](hint-variety-search.md).
 
 ## Implementation
 
@@ -63,7 +63,7 @@ When `moreSolutionsSimilar` is true, the final hint message notes that other sol
 
 ## Discovery relationship
 
-Discovery decides what enters the stored hint corpus; curation decides what the player sees. Current discovery engines, policies, caps, auditing, write behavior, and exhaustive enumeration are documented in [`hint-workbench.md`](hint-workbench.md) and [`solve-button-variety.md`](solve-button-variety.md). Do not duplicate those contracts here.
+Discovery decides what enters the stored hint corpus; curation decides what the player sees. Current discovery engines, policies, caps, auditing, write behavior, and exhaustive enumeration are documented in [`hint-workbench.md`](hint-workbench.md) and [`hint-variety-search.md`](hint-variety-search.md). Do not duplicate those contracts here.
 
 ## Tests
 
