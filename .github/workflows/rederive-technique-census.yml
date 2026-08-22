@@ -1,11 +1,12 @@
 name: Re-derive technique census reports
 
 on:
-  push:
+  pull_request:
     branches:
-      - chatgpt/rederive-technique-census
+      - main
     paths:
       - .github/rederive-technique-census-trigger
+      - .github/workflows/rederive-technique-census.yml
 
 permissions:
   contents: write
@@ -15,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
