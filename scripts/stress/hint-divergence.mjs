@@ -57,7 +57,7 @@ const TARGET_GROUP = argMap.get('--target-group') || 'no-provenance';
 const TARGET_PATH_ARG = argMap.get('--target-path');
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API } = await import('../../modules/Solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../../modules/solver.js');
 const Solver = createSolver();
 const {
     prepLevel, createState, getNeighbors, applyMove, scoreAndSort, isSolutionState,

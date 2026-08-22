@@ -53,7 +53,7 @@ const FILTER_MECHANIC = args.get('--filter-mechanic') || null;
 const TOP_N = Number(args.get('--top') || 30);
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API } = await import('../../modules/Solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../../modules/solver.js');
 const Solver = createSolver();
 const { prepLevel, createState, getNeighbors, applyMove, scoreAndSort, isSolutionState, POLICY_PROFILES, PACK } = SOLVER_TESTING_API;
 

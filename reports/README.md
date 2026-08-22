@@ -4,6 +4,12 @@ Human-readable analysis and investigation output. Raw per-run material belongs i
 
 New or materially revised human-authored investigations use the [`Status / Last evidence / Decision / Remaining gate` convention](../docs/investigation-report-conventions.md). Generated summaries use their generator/run metadata instead.
 
+## Naming
+
+New loose human-authored investigations use `YYYY-MM-DD-<topic>-<kind>.md`. Prefer a small kind vocabulary such as `design`, `experiment`, `diagnosis`, `analysis`, `reconciliation`, `decision`, or `summary`; do not encode transient status such as `active` or `negative` when the report metadata already owns it. Use canonical corpus terms `published`, `corpus1`, and `corpus2` rather than `random`/`randoms` for new names.
+
+Generated current pointers may use `*-latest.*`; dated snapshots must not also be named `latest`. Do not mass-rename historical reports merely to enforce the current convention: their filenames are provenance, and the research index provides discovery across older vocabulary.
+
 ## Dated solver investigations
 
 Loose `YYYY-MM-DD-<topic>.md` files are evidence, not a live queue. Do not reconstruct current priorities chronologically from them. Use [`docs/README.md`](../docs/README.md) to route to the current topic authority, especially:
@@ -11,7 +17,7 @@ Loose `YYYY-MM-DD-<topic>.md` files are evidence, not a live queue. Do not recon
 - [`solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md): ranked optimization queue.
 - [`solver-research-operating-model.md`](../docs/solver-research-operating-model.md): research method and promotion rules.
 - [`solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md): retained/default-off mechanism dispositions.
-- [`future-work.md`](../docs/future-work.md): broader deferred/reopen ideas.
+- [`solver-future-work.md`](../docs/solver-future-work.md): broader deferred/reopen ideas.
 - [`variant-level-research.md`](../docs/variant-level-research.md): family/variant evidence.
 - [`solver-architecture.md`](../docs/solver-architecture.md): durable implementation reference.
 

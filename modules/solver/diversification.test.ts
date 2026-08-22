@@ -9,7 +9,7 @@ import { test } from 'vitest';
 // Fast/deep test-tier gate (see docs/testing.md's "Fast and deep gates" and
 // modules/solver/lower-bounds.test.ts's identical gate for the full rationale).
 const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
-import { createSolver } from '../Solver.js';
+import { createSolver } from '../solver.js';
 import { normalizeRawLevel } from './normalization.js';
 import {
     pathSignature, mergeUniqueHints, knownHintCount, hintButtonLabel,

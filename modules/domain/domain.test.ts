@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { createCore } from '../core.js';
 import { createState } from '../state.js';
-import { createLevelUtils } from '../levelutils.js';
+import { createLevelUtils } from '../level-utils.js';
 import { createEngine } from '../engine.js';
 import { createData, validateDataSources } from '../data.js';
 import { VALID_LOGIC_TRANSITIONS, isValidLogicTransition } from '../runtime/state-machine.js';

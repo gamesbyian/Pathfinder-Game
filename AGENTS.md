@@ -14,7 +14,7 @@ Canonical compact entry point for coding/research agents. Load only task-relevan
 | Variant/family research | [`docs/variant-level-research.md`](docs/variant-level-research.md) |
 | Existing probe/batch/workflow | [`docs/tooling-catalog.md`](docs/tooling-catalog.md) |
 | Prior experiment | [`reports/README.md`](reports/README.md), its report, then current topic doc |
-| Deferred/reopen idea | [`docs/future-work.md`](docs/future-work.md) |
+| Deferred/reopen idea | [`docs/solver-future-work.md`](docs/solver-future-work.md) |
 | Default-off disposition | [`docs/solver-opt-in-experiment-ledger.md`](docs/solver-opt-in-experiment-ledger.md) |
 | Stress corpus | [`data/stress/README.md`](data/stress/README.md) |
 | Validation choice | [`docs/testing.md`](docs/testing.md) |
@@ -40,9 +40,9 @@ Canonical compact entry point for coding/research agents. Load only task-relevan
 ## Rules
 
 1. **Read current authority and implementation before editing.** Dated reports/archive are evidence/history, not current behavior or priority.
-2. **Keep work coherent.** Do not pad a task with unrelated reformatting or speculative infrastructure, but do not artificially constrain a justified solution. Before adding tooling, check [`docs/tooling-catalog.md`](docs/tooling-catalog.md), `package.json`, [`scripts/README.md`](scripts/README.md), and [`.github/workflows/README.md`](.github/workflows/README.md).
+2. **Keep work coherent.** Do not pad a task with unrelated reformatting or speculative infrastructure, but do not artificially constrain a justified solution. Before adding tooling, check [`docs/tooling-catalog.md`](docs/tooling-catalog.md), `package.json`, [`scripts/README.md`](scripts/README.md), and [`.github/workflows/README.md`](.github/workflows/README.md). Follow the naming conventions in [`docs/README.md`](docs/README.md), [`reports/README.md`](reports/README.md), and [`logs/README.md`](logs/README.md); do not mint near-synonym paths casually.
 3. **Audit cross-boundary propagation.** Solver stages/results, mechanics, hints/provenance, app state, and generated schemas often have multiple consumers; use [`docs/change-recipes.md`](docs/change-recipes.md).
-4. **Solver priority is the live queue.** `future-work.md` is unranked deferred/reopen material; code presence does not imply an active hypothesis.
+4. **Solver priority is the live queue.** `solver-future-work.md` is unranked deferred/reopen material; code presence does not imply an active hypothesis.
 5. **Cold solver policy is level-blind.** Mechanics/current state are allowed; exact identity, saved hints, winner configs, historical solve status/cost, per-level caches/budgets, and variant outcomes are not. See [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md).
 6. **Respect the variant-trove boundary.** The ~2.5 GB trove is on `claude/variant-levels-solver-insights-tpk4qg`; use current `main` code/instructions with the trove mounted separately. See [`docs/variant-level-research.md`](docs/variant-level-research.md).
 7. **Preserve provenance classes.** Stored-valid, witness, human, hint-guided, variant-derived, and cold production solves have different research meanings.
@@ -70,4 +70,4 @@ Use the cheapest check that answers the iteration question, then the relevant fi
 
 ## Authority map
 
-Current behavior comes from implementation/topic docs. Solver priority: [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md); research method: [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md); families: [`docs/variant-level-research.md`](docs/variant-level-research.md); default-off mechanisms: [`docs/solver-opt-in-experiment-ledger.md`](docs/solver-opt-in-experiment-ledger.md); deferred ideas: [`docs/future-work.md`](docs/future-work.md). Experiments/history: [`reports/`](reports/README.md) and [`docs/archive/`](docs/archive/README.md).
+Current behavior comes from implementation/topic docs. Solver priority: [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md); research method: [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md); families: [`docs/variant-level-research.md`](docs/variant-level-research.md); default-off mechanisms: [`docs/solver-opt-in-experiment-ledger.md`](docs/solver-opt-in-experiment-ledger.md); deferred ideas: [`docs/solver-future-work.md`](docs/solver-future-work.md). Experiments/history: [`reports/`](reports/README.md) and [`docs/archive/`](docs/archive/README.md).

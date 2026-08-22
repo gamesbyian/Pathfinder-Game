@@ -224,7 +224,7 @@ export function createRacePool(opts = {}) {
         if (shutdownCalled) throw new Error('createRacePool: solveLevel() called after shutdown()');
         const { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } = await import('../../modules/solver/attempts.js');
         const { getActiveGates, REPAIR_EXTRA_BUDGET_FRACTION, ATTRACTION_DIVERSITY_BUDGET_FRACTION } = await import('../../modules/solver/orchestration.js');
-        const { createSolver } = await import('../../modules/Solver.js');
+        const { createSolver } = await import('../../modules/solver.js');
         const { defaultConfig } = await import('../../modules/solver/ablation-config.js');
         const Solver = createSolver();
 

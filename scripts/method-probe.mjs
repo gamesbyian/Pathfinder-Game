@@ -57,7 +57,7 @@ const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map
 }));
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
 const { PROFILE_ORDER, TEMPLATES, POLICY_PROFILES } = await import('../modules/solver/policy.js');
 const Solver = createSolver();
 const { prepLevel, runAttempt, attemptConfigKey } = SOLVER_TESTING_API;

@@ -177,7 +177,7 @@ function addMapCount(map, key, amount = 1) {
 }
 
 installBrowserStubs();
-const { createSolver } = await import('../modules/Solver.js');
+const { createSolver } = await import('../modules/solver.js');
 const Solver = createSolver();
 const corpus = JSON.parse(readFileSync(corpusPath, 'utf8'));
 const rawLevels = levelsFrom(corpus);

@@ -1,7 +1,7 @@
 /** Unit tests for Solver raw-level normalization. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createSolver, SOLVER_TESTING_API } from '../Solver.js';
+import { createSolver, SOLVER_TESTING_API } from '../solver.js';
 import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 

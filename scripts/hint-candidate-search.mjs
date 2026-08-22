@@ -19,7 +19,7 @@ import { decideCandidateAcceptance, isDrawnStep, pathSignature } from '../module
 
 installBrowserStubs();
 
-const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
 const { createState, getNeighbors } = await import('../modules/solver/search-state.js');
 const { FEATURE_GROUPS, withFeatureDisabled } = await import('../modules/solver/ablation-config.js');
 const { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } = await import('./level-data-io.mjs');

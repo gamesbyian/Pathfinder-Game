@@ -57,7 +57,7 @@ const noExtras = !argMap.has('--extras');
 const outFile = argMap.get('--out');
 
 installBrowserStubs();
-const { createSolver } = await import('../modules/Solver.js');
+const { createSolver } = await import('../modules/solver.js');
 const Solver = createSolver();
 
 const root = new URL('..', import.meta.url).pathname;

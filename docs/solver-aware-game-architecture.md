@@ -67,4 +67,4 @@ Finite state is fine; hidden/unbounded history and unenforced representation ass
 - No player-rule redesign solely for solver convenience unless equivalent.
 - No assumption independent arbiters agree without differential tests.
 
-Unranked descendants: [`future-work.md`](future-work.md). Measurements/chronology remain in the archived snapshot and dated reports.
+Unranked descendants: [`solver-future-work.md`](solver-future-work.md). Measurements/chronology remain in the archived snapshot and dated reports.

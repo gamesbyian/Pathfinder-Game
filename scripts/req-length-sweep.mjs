@@ -40,7 +40,7 @@ if (!['legacy', 'portfolio-experiment'].includes(schedulerMode)) {
 const levelFilter = parseLevelPositions(args.get('--levels') || 'pos:1');
 
 installBrowserStubs();
-const { createSolver } = await import('../modules/Solver.js');
+const { createSolver } = await import('../modules/solver.js');
 const Solver = createSolver();
 const rawLevels = readLevelsWithHints(levelsPath);
 const positions = [...levelFilter].filter(position => position >= 1 && position <= rawLevels.length).sort((a, b) => a - b);

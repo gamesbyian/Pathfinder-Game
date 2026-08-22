@@ -10,7 +10,7 @@ Use this index and [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.
 | `deploy-pages.yml` | Vite/GitHub Pages deployment. |
 | `deploy-firestore-rules.yml` | Firestore rules/index deployment. |
 | `audit-export.yml` | Audit export. |
-| `solver-stress-refresh.yml` | Canonical sharded level-blind stress refresh; [`README-solver-stress-refresh.md`](README-solver-stress-refresh.md). |
+| `solver-stress-refresh.yml` | Canonical sharded level-blind stress refresh; [`solver-stress-refresh.md`](solver-stress-refresh.md). |
 | `solver-typical-budget-baseline.yml` | Level-blind baseline or matched deterministic experiment. |
 | `technique-census.yml` | Expensive isolated technique × level census; check existing census first. |
 | `method-probe-sweep.yml` | One technique or short technique list over a population. |

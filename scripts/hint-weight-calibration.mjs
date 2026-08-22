@@ -45,7 +45,7 @@ const verbose      = argFlags.has('--verbose');
 
 installBrowserStubs();
 
-const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
 const { POLICY_PROFILES } = await import('../modules/solver/policy.js');
 const { scoreMove } = await import('../modules/solver/scoring.js');
 const { createState, applyMove, getNeighbors } = await import('../modules/solver/search-state.js');

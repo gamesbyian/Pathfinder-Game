@@ -32,7 +32,7 @@ const LEVEL_SPEC = args.get('--levels') || null;
 const POOL_SIZE = args.get('--pool-size') ? Number(args.get('--pool-size')) : undefined;
 
 installBrowserStubs();
-const { createSolver } = await import('../../modules/Solver.js');
+const { createSolver } = await import('../../modules/solver.js');
 const Solver = createSolver();
 
 const getCommitSha = () => {

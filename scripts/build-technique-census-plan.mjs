@@ -99,7 +99,7 @@ const ATTEMPT_BUDGET_MS = Number(args.get('--attempt-budget-ms') || 600000);
 const COMMIT_SHA = (() => { try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
 // getAttemptConfigs, not getConfiguredAttemptConfigs: the latter additionally applies
 // applyAttemptConfigOptions (ablation filtering/reordering), which is a no-op for a null cfg
 // (`if (!cfg) return baseConfigs;`) -- equivalent here, and getAttemptConfigs is the one exposed on

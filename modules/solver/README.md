@@ -17,7 +17,7 @@ Terse implementation map for work inside `modules/solver/`. Read [`../../docs/so
 | Geometry/topology/distance helpers | `topology.ts`, `distance.ts` |
 | Shared solver contracts | `types.ts` |
 | Worker integration | `worker.js`, `solver-worker-client.ts`; browser boundary only |
-| Public runtime facade | `../Solver.ts`; keep it thin |
+| Public runtime facade | `../solver.ts`; keep it thin |
 
 ## Large files
 
@@ -28,7 +28,7 @@ an intentionally behavior-neutral seam, not yet a declarative executor.
 
 `orchestration.ts` is intentionally the first place to inspect for execution flow, but it is large. Do not read it wholesale by default. Search for the canonical stage ID, then follow the local helper calls. `repair-search.ts`, `search.ts`, and their tests are also large enough that targeted symbol reads are preferable.
 
-When changing orchestration, check every representation of the same fact. Attempt/stage identity, budgets, telemetry, provenance, reporter projection, sequential execution, and raced execution have historically drifted when updated independently. [`../../docs/architecture-unification-audit.md`](../../docs/architecture-unification-audit.md) tracks the structural consolidation direction.
+When changing orchestration, check every representation of the same fact. Attempt/stage identity, budgets, telemetry, provenance, reporter projection, sequential execution, and raced execution have historically drifted when updated independently. [`../../docs/architecture-unification-debt.md`](../../docs/architecture-unification-debt.md) tracks the structural consolidation direction.
 
 ## Research versus production
 

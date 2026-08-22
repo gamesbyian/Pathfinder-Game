@@ -100,7 +100,7 @@ Functional e2e blocks third-party requests through the shared fixture. Visual te
 Use the smallest representative sample that can falsify an idea; pay full-population cost for validated results/promotion.
 
 - **Soft mechanisms:** scoring/order/bias/default-off attempts may lose solves or work, but referee validation protects returned paths.
-- **Hard mechanisms:** pruning/bounds/caches/state equivalence can remove valid states; require proof-oriented, differential, and counterexample tests. See [`solver-correctness-archaeology.md`](solver-correctness-archaeology.md).
+- **Hard mechanisms:** pruning/bounds/caches/state equivalence can remove valid states; require proof-oriented, differential, and counterexample tests. See [`solver-correctness-hardening.md`](solver-correctness-hardening.md).
 
 A reverted experiment may discover a valid new solution; preserve novel finds through shared hint/provenance machinery before discarding the code.
 
@@ -137,7 +137,7 @@ Budget-edge/deadline-truncated results are not clean negatives. Recheck unstable
 
 Headline capability work must obey [`solver-level-blindness.md`](solver-level-blindness.md): exact hints, winner replay, historical status, IDs, caches, or per-level budgets cannot steer cold solves.
 
-For decision-bearing remote A/Bs use deterministic mode in [`../.github/workflows/README-solver-stress-refresh.md`](../.github/workflows/README-solver-stress-refresh.md). Require complete current-run coverage and preserve gained/lost rows, not only net count.
+For decision-bearing remote A/Bs use deterministic mode in [`../.github/workflows/solver-stress-refresh.md`](../.github/workflows/solver-stress-refresh.md). Require complete current-run coverage and preserve gained/lost rows, not only net count.
 
 ## Firestore rules
 

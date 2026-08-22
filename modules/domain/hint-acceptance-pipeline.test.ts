@@ -6,7 +6,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createSolver } from '../Solver.js';
+import { createSolver } from '../solver.js';
 import { PACK } from './cell-key.js';
 import { evaluateCandidateAcceptance } from './hint-acceptance-pipeline.js';
 import { pathSignature } from './hint-novelty.js';

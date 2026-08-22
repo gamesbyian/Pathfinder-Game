@@ -28,7 +28,7 @@ Both counters use the same work unit:
 | `prep._workMeter.units` | Fresh per `solveLevel()`. Authority for internal caps, attempt allocation, and `SolveResult.workSpent`; concurrent solves cannot consume each other's budgets. |
 | module-global `workMeter.units` | Monotonic realm/process total for discovery tooling spanning sequential black-box solves. Not a solve-budget authority. |
 
-`applyMove()` and `isConnected()` increment both. Keep internal checks on `prep._workMeter`; cumulative tooling must not assume the global counter is session-isolated when unrelated solves can coexist. Isolated multi-solve budgets should use caller-owned scope or sum `SolveResult.workSpent`. Migration direction: [`architecture-unification-audit.md`](architecture-unification-audit.md).
+`applyMove()` and `isConnected()` increment both. Keep internal checks on `prep._workMeter`; cumulative tooling must not assume the global counter is session-isolated when unrelated solves can coexist. Isolated multi-solve budgets should use caller-owned scope or sum `SolveResult.workSpent`. Migration direction: [`architecture-unification-debt.md`](architecture-unification-debt.md).
 
 ## Budget roles
 

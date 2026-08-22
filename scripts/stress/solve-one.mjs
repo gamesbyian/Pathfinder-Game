@@ -31,7 +31,7 @@ if (!CORPUS_FILE || !LEVEL_ID) {
 }
 
 installBrowserStubs();
-const { createSolver } = await import('../../modules/Solver.js');
+const { createSolver } = await import('../../modules/solver.js');
 const Solver = createSolver();
 
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, CORPUS_FILE), 'utf8'));

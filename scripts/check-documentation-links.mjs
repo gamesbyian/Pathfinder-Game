@@ -43,12 +43,12 @@ function markdownAnchors(target) {
   return anchors;
 }
 
-const historicalDocumentation = file => file.startsWith('reports/') ||
+const historicalDocumentation = file => file.startsWith('reports/') || file.startsWith('docs/history/') ||
   (file.startsWith('docs/archive/snapshots/') && file !== 'docs/archive/snapshots/README.md');
 
 for (const file of markdownFiles) {
-  // Frozen snapshots preserve byte-for-byte historical text from another directory. Their relative
-  // links intentionally describe the original location; current navigation lives in their stubs.
+  // Frozen history preserves text from its original context; current navigation lives in indexed
+  // authorities. Do not force archival prose to chase later path renames.
   if (historicalDocumentation(file)) continue;
 
   const source = readFileSync(resolve(ROOT, file), 'utf8');
@@ -148,6 +148,15 @@ for (const file of [...currentAuthorityFiles].filter(file => existsSync(resolve(
     } else {
       failures.push(`${file}: missing documented source path ${documented}`);
     }
+  }
+}
+
+// Current authority docs must not route new raw output into the frozen legacy solver-log attic.
+for (const file of currentAuthorityFiles) {
+  if (!existsSync(resolve(ROOT, file))) continue;
+  const source = readFileSync(resolve(ROOT, file), 'utf8');
+  if (source.includes('logs/Solver/')) {
+    failures.push(`${file}: routes current output to frozen legacy logs/Solver/; use a lowercase owning directory`);
   }
 }
 

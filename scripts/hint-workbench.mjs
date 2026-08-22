@@ -36,7 +36,7 @@ import { FEATURE_GROUPS, withFeatureDisabled } from '../modules/solver/ablation-
 
 installBrowserStubs();
 
-const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
 const { createState, getNeighbors } = await import('../modules/solver/search-state.js');
 const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;

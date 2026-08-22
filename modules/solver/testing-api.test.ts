@@ -1,7 +1,7 @@
 /** Unit tests for the documented Solver testing/analysis import path. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createSolver, SOLVER_TESTING_API as SOLVER_TESTING_API_FROM_FACADE } from '../Solver.js';
+import { createSolver, SOLVER_TESTING_API as SOLVER_TESTING_API_FROM_FACADE } from '../solver.js';
 import { PACK } from './encoding.js';
 import { SOLVER_TESTING_API, createSolverTestingApi } from './testing-api.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -40,7 +40,7 @@ test('SOLVER_TESTING_API exposes stable analysis helpers', () => {
     assert.equal(Object.isFrozen(SOLVER_TESTING_API), true);
 });
 
-test('Solver.js re-exports the canonical SOLVER_TESTING_API surface', () => {
+test('solver.js re-exports the canonical SOLVER_TESTING_API surface', () => {
     assert.equal(SOLVER_TESTING_API_FROM_FACADE, SOLVER_TESTING_API);
 });
 
