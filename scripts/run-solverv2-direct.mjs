@@ -33,7 +33,7 @@ const saveHints    = argFlags.has('--save-hints');
 
 installBrowserStubs();
 
-const { createSolver } = await import('../modules/Solver.js');
+const { createSolver } = await import('../modules/solver.js');
 
 const budgetMs = Number(budgetMsArg || 30000);
 const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined;

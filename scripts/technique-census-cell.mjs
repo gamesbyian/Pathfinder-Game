@@ -21,7 +21,7 @@ import { makeAttemptConfigKeyParser } from './attempt-config-key.mjs';
 
 export async function createCellRunner() {
     installBrowserStubs();
-    const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
+    const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
     const { TEMPLATES, POLICY_PROFILES } = await import('../modules/solver/policy.js');
     const Solver = createSolver();
     const { prepLevel, runAttempt, attemptConfigKey, normalizeAblationConfig } = SOLVER_TESTING_API;

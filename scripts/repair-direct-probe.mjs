@@ -43,7 +43,7 @@ const mustTurnBiased = flags.has('--must-turn-biased');
 const races = Number(argMap.get('--races') || 1);
 
 installBrowserStubs();
-const { createSolver } = await import('../modules/Solver.js');
+const { createSolver } = await import('../modules/solver.js');
 const { prepLevel } = await import('../modules/solver/prep.js');
 const { repairSearchFromGate } = await import('../modules/solver/repair-search.js');
 const { POLICY_PROFILES } = await import('../modules/solver/policy.js');

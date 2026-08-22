@@ -3,7 +3,7 @@
  * Differential fuzzing harness for the reference oracle (docs/solver-dev-tooling-plan.md
  * Component F). Cross-checks THREE independent implementations of move legality against each
  * other on many small random levels (generate.mjs): the reference oracle (oracle.mjs), the
- * production solver's move-generator (via modules/Solver.js's SOLVER_TESTING_API —
+ * production solver's move-generator (via modules/solver.js's SOLVER_TESTING_API —
  * createState/getNeighbors/applyMove/isSolutionState/prepLevel, the exact code the production
  * solver runs), and — added 2026-08-06 — LIVE PLAY's own `isValidMove`
  * (modules/domain/move-rules.js), the exact code the browser game and the submission/hint
@@ -89,7 +89,7 @@ const MAX_STEPS = Number(args.get('--max-steps') || 60);
 const OUT_FILE = args.get('--out') || null;
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API } = await import('../../modules/Solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../../modules/solver.js');
 const { validateRawLevel } = await import('../../modules/domain/level-schema.js');
 const { parseRawLevel } = await import('../../modules/domain/level-codec.js');
 const { isValidMove } = await import('../../modules/domain/move-rules.js');

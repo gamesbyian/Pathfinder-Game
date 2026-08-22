@@ -1,4 +1,4 @@
-import { createSolver }    from './Solver.js';
+import { createSolver }    from './solver.js';
 import { createCore }        from './core.js';
 import { createDebug }       from './debug.js';
 import { createUI }          from './ui.js';
@@ -9,7 +9,7 @@ import { createRenderer }    from './renderer.js';
 import { createEngine }      from './engine.js';
 import { createEditor }      from './editor.js';
 import { createPersistence } from './persistence.js';
-import { createLevelUtils }  from './levelutils.js';
+import { createLevelUtils }  from './level-utils.js';
 import { createThemes }      from './themes.js';
 import { createInput }       from './input.js';
 import { createBoot, createOnloadHandler } from './boot.js';

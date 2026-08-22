@@ -41,7 +41,7 @@ const RETRY_ON_FAILURE = !args.has('--no-retry');
 const UPDATE_BASELINES = args.has('--update-baselines');
 
 installBrowserStubs();
-const { createSolver } = await import('../../modules/Solver.js');
+const { createSolver } = await import('../../modules/solver.js');
 const Solver = createSolver();
 
 const pin = JSON.parse(readFileSync(path.resolve(ROOT, SET_FILE), 'utf8'));

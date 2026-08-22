@@ -5,7 +5,7 @@ import { parentPort } from 'node:worker_threads';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 
 installBrowserStubs();
-const { createSolver } = await import('../../modules/Solver.js');
+const { createSolver } = await import('../../modules/solver.js');
 const { prepLevel } = await import('../../modules/solver/prep.js');
 const { POLICY_PROFILES } = await import('../../modules/solver/policy.js');
 const { runAttemptSearch } = await import('../../modules/solver/attempt-dispatch.js');

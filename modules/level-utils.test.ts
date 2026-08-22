@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createLevelUtils } from './levelutils.js';
+import { createLevelUtils } from './level-utils.js';
 
 const playableButSchemaDiagnosticLevel = {
   grid: { w: 4, h: 5 },

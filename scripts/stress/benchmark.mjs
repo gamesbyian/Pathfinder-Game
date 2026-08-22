@@ -122,7 +122,7 @@ const cfg = isMainThread
     : workerData;
 
 installBrowserStubs();
-const { createSolver } = await import('../../modules/Solver.js');
+const { createSolver } = await import('../../modules/solver.js');
 const Solver = createSolver();
 
 /** Keeps only levels touching ANY of the named mechanics (see stressMeta.mechanicCounts) — a

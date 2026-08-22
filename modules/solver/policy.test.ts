@@ -1,7 +1,7 @@
 /** Unit tests for extracted Solver policy/template data. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createSolver, SOLVER_TESTING_API } from '../Solver.js';
+import { createSolver, SOLVER_TESTING_API } from '../solver.js';
 import { ATTEMPT_CONFIGS, POLICY_PROFILES, PROFILE_ORDER, TEMPLATES, TEMPLATE_CONFIG_KEYS } from './policy.js';
 
 

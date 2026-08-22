@@ -17,7 +17,7 @@ Terse implementation map for work inside `modules/solver/`. Read [`../../docs/so
 | Geometry/topology/distance helpers | `topology.ts`, `distance.ts` |
 | Shared solver contracts | `types.ts` |
 | Worker integration | `worker.js`, `solver-worker-client.ts`; browser boundary only |
-| Public runtime facade | `../Solver.ts`; keep it thin |
+| Public runtime facade | `../solver.ts`; keep it thin |
 
 ## Large files
 

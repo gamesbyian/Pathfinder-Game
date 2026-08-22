@@ -7,7 +7,7 @@ import { runWorkerMain } from './solver-worker-pool.mjs';
 import { deserializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 
 installBrowserStubs();
-const { createSolver } = await import('../modules/Solver.js');
+const { createSolver } = await import('../modules/solver.js');
 const { createRacePool } = await import('./solver-parallel/race.mjs');
 const Solver = createSolver();
 

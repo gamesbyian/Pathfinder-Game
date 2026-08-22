@@ -417,7 +417,7 @@ function appendCheckpoint(checkpointFile, row, signature) {
 }
 
 installBrowserStubs();
-const { createSolver } = await import('../modules/Solver.js');
+const { createSolver } = await import('../modules/solver.js');
 // provenanceFromSolveResult / toHint / mergeHints / hintPaths / getLevelFingerprint are deliberately
 // NOT imported here any more — the whole hint-merge path lives in scripts/hint-capture-lib.mjs, so
 // there is exactly one implementation of it shared with run-solverv2-direct.mjs's CI audit pass.

@@ -36,7 +36,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 const SET_FILE = args.get('--set') || 'data/stress/smoke-set.json';
 
 installBrowserStubs();
-const { createSolver } = await import('../../modules/Solver.js');
+const { createSolver } = await import('../../modules/solver.js');
 const Solver = createSolver();
 
 const pin = JSON.parse(readFileSync(path.resolve(ROOT, SET_FILE), 'utf8'));

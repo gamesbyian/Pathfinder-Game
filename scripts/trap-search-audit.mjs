@@ -26,7 +26,7 @@ import { parseLevelPositions } from './level-data-io.mjs';
 
 installBrowserStubs();
 
-const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
 
 const Solver = createSolver();
 

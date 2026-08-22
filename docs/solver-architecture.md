@@ -1,6 +1,6 @@
 # Solver Architecture
 
-`modules/Solver.ts` is the public facade over `modules/solver/*`. This doc covers solution generation; hint display/cycling: [`hint-curation.md`](hint-curation.md).
+`modules/solver.ts` is the public facade over `modules/solver/*`. This doc covers solution generation; hint display/cycling: [`hint-curation.md`](hint-curation.md).
 
 > **Level-blind:** strategy may use mechanics/current state (`reqInt`, `navDensity`, counts, gates, `reqLen`, etc.), never level identity. `check:no-solver-level-numbers` enforces this.
 >
