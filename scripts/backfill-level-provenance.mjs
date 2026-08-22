@@ -1,32 +1,7 @@
 #!/usr/bin/env node
-/**
- * One-shot backfill: stamps modules/domain/level-provenance-types.js provenance
- * onto every level in the 3 real corpora that predates the provenance invariant
- * (see CLAUDE.md's "Provenance" section). Idempotent — skips any level that
- * already has a non-empty provenance.history.
- *
- * Published corpus (data/levels.json): sourced from the pre-existing classifier
- * report (reports/level-corpus-provenance-latest.json), which already encodes
- * real Firestore-tag-informed classifications. Tier -> {actor, confidence}:
- *   certain-human       -> human,      certain
- *   certain-ai          -> ai,         certain
- *   uncertain-likely-ai -> ai,         likely   (the report's own ~80%-confidence
- *                                                 conclusion for untagged levels <=130)
- *   unknown             -> unknown,    unverified
- *
- * Stress corpora (data/stress/stress-levels.json, stress-levels-random.json):
- * each level's own `stressMeta` already records the generator/batch/seed data,
- * so the backfilled entry is built directly from it rather than the report --
- * this is strictly known (these ARE generator output), hence actor: 'procedural',
- * confidence: 'certain'.
- *
- * This already ran once; the classifier report it read (reports/level-corpus-provenance-latest.json)
- * and the rest of that read-side tooling have since been retired (level-provenance now lives on
- * the level data itself, not a separate report). Kept for the record alongside
- * scripts/migrate-hint-schema-v2.mjs's precedent of keeping one-shot migrations around
- * post-hoc. Safe to re-run: every real level already has provenance, so the published-corpus
- * step (the only one that reads the now-gone report) short-circuits without touching the file.
- */
+// Completed, idempotent provenance backfill for the published and two stress corpora. Published
+// levels use the retired classifier report only when provenance is still missing; stress levels
+// derive certain procedural provenance from stressMeta. Existing non-empty provenance is preserved.
 import path from 'node:path';
 import fs from 'node:fs';
 import { stringifyCorpusJson } from './level-json-format.mjs';
@@ -100,7 +75,7 @@ function backfillStressCorpus(file, label, methodName) {
         if (hasProvenance(level)) continue;
         const meta = level.stressMeta ?? {};
         const detail = { ...meta, backfilled: true };
-        delete detail.witnessSolution; // large, and not provenance-relevant
+        delete detail.witnessSolution; // large and irrelevant to provenance
         const entry = makeProvenanceEntry('procedural', 'generated', {
             method: methodName,
             detail,
