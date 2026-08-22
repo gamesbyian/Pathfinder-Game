@@ -1,34 +1,7 @@
 #!/usr/bin/env node
-/**
- * One-off data repair: drops provenance entries that record the SAME discovery event twice.
- *
- * WHAT COUNTS AS REDUNDANT (deliberately narrow)
- *
- *   Only entries identical in EVERY field except `foundAt`. Measured 2026-07-29 across all three
- *   corpora: 24 such entries out of 88,451 (0.03%), every one of them `prefix-anchored`, from a
- *   single 2026-07-11 run at one commit, with `foundAt` timestamps 1-4ms apart. That is one
- *   discovery run appending its result twice — not two independent rediscoveries — so removing them
- *   UPHOLDS the documented "one entry per discovery event" invariant rather than violating the
- *   append-only rule. No recurrence after 2026-07-11.
- *
- * WHAT IS *NOT* REDUNDANT, AND MUST NOT BE REMOVED
- *
- *   Entries that differ only by `solver.version` (311 across the corpora) look redundant under a
- *   looser reading — same technique, same profile, same budget, often the same nodesExpanded — but
- *   the commit is exactly what makes them valuable: they are the same search re-run at a different
- *   code version, which is the entire input to scripts/stress/hint-cost-drift.mjs. Collapsing them
- *   would delete the only retroactive cross-commit cost signal the repo has (800 stable / 149
- *   drifted comparisons). Likewise a same-technique entry at a different attemptIndex, budget, or
- *   node count is a genuinely distinct run.
- *
- *   More broadly: same-technique rediscovery is NOT noise. Of 6,570 same-technique multi-entry
- *   hints, only ~5% involved a different config; the rest are repeat runs whose value is precisely
- *   the comparison between them.
- *
- * Usage:
- *   node scripts/dedupe-hint-provenance.mjs            # dry run — reports, writes nothing
- *   node scripts/dedupe-hint-provenance.mjs --apply    # rewrite the affected hint artifacts
- */
+// One-off repair for duplicate provenance discovery events. Only entries identical in every field
+// except foundAt are deduped; version/config/budget/node differences remain distinct evidence.
+// Dry-run by default. `provenanceEventIdentity` is the same write-time identity guard used elsewhere.
 import path from 'node:path';
 import process from 'node:process';
 import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
@@ -43,9 +16,6 @@ const CORPORA = [
     ['corpus2', 'data/stress/stress-levels-random.json'],
 ];
 
-/** Shared with scripts/hint-capture-lib.mjs's write-time guard — see that module for the rule and
- *  why wall-clock is excluded. This script now only cleans up entries stored BEFORE that guard
- *  existed; a fresh corpus should never accumulate new ones. */
 const eventIdentity = provenanceEventIdentity;
 
 let totalRemoved = 0;
@@ -78,9 +48,7 @@ for (const [name, levelsPath] of CORPORA) {
                 seen.add(id);
                 kept.push(entry);
             }
-            // Reassign only when something changed: writeLevelsWithHints treats an untouched
-            // (reference-identical) hintRecords array as "do not rewrite this file", which is what
-            // keeps this from re-serializing all ~2,900 artifacts for a 24-entry fix.
+            // Preserve reference identity when unchanged so writeLevelsWithHints skips that artifact.
             return kept.length === prov.length ? hint : { ...hint, provenance: kept };
         });
         if (levelChanged) {
