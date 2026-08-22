@@ -1,6 +1,6 @@
 # Corpus-2 node-budget losses between capability runs 32459711208 and 32526927206
 
-> **Status:** bisected and resolved — root cause identified, not recoverable via revert
+> **Status:** concluded-negative
 > **Last evidence:** 2026-08-22 — local worktree bisection at commits `d21b4fb0`, `6f00bafd`, `c4569ef0` against 20/73 IDs (see Bisection below)
 > **Decision:** `6f00baf` (the `buildDistMap` gates/geese/false-goal fix) is confirmed as the cause. It is a genuine correctness fix, independently verified safe and net-positive on the published 160-level corpus (identical 160/160 solved, nodes down 4.1%), and this population is itself net +17 (90 gained/73 lost) on Corpus-2. Do not revert it or treat these 73 as a live recovery target via config/revert — same disposition class as the `dd001dd5c` beam-dedup finding above ("accept search-order collateral, do not restore broken identity"). `0b2da5f` (LATE_PROBE promotion) and `d21b4fb` (trap-search fix) are cleared as causes.
 > **Remaining gate:** none for attribution. A genuine recovery would require search-quality work on how `scoring.ts` consumes `distMap` for move-ordering guidance (see Mechanism/Recovery below) — logged as a future-work candidate, not pursued here.
