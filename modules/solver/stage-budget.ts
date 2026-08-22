@@ -795,8 +795,29 @@ export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  cfg.STRATEGY_REPAIR_LATE_PROBE`), matching every other default-on tier, so it runs for every
  *  production/interactive caller (cfg null) and any ablation config that doesn't explicitly
  *  disable it. Disable via `STRATEGY_REPAIR_LATE_PROBE: false` to get the pre-promotion shape
- *  back for an A/B. */
-export const REPAIR_LATE_PROBE_NODE_BUDGET = 2_000_000;
+ *  back for an A/B.
+ *
+ *  CAP RAISED 2,000,000 -> 5,000,000 (2026-08-22, docs/solver-optimization-current-queue.md
+ *  Priority 7's "REPAIR_LATE_PROBE_NODE_BUDGET" lead): a local 13-level hand-picked sample of
+ *  confirmed-still-unsolved `hi:medium-high-catchall` Corpus-2 levels found 1/13 newly solved at
+ *  2.5x the shipped cap, consistent with but not sufficient evidence beyond this tier's own
+ *  original 8.3% figure to promote a corpus-wide constant change. Ran the real population-scale A/B
+ *  the queue entry called for instead of promoting on that sample alone: `solver-archetype-sample-
+ *  ab.yml` dispatched twice (same seed `repair-late-probe-budget-ab`, same ref, differing only in
+ *  `--repair-late-probe-node-budget`) with every `detectArchetype()` value listed as "eligible" —
+ *  this tier isn't archetype-scoped, so that reduces to a genuine uniform-random 300-level Corpus-2
+ *  sample plus the full Corpus-1 (102) and published (160) invariant, 562 levels total. Control (GHA
+ *  32564849428, cap 2,000,000): 421/562 solved, nodes=22,027,848,723, work=26,971,498,356. Treatment
+ *  (GHA 32564853928, cap 5,000,000): 424/562 solved, nodes=22,147,270,137, work=27,365,379,188. Exact
+ *  per-level diff: **+3 net gains (R00477, R02271, R03045), zero losses** — R02271 independently
+ *  reproduces the local sample's own single hit. Cost: +0.54% nodes, +1.46% work across the full
+ *  562-level sample, confined entirely to levels already failing either way (this tier's dead-last
+ *  placement guarantees a level solved by any earlier technique is completely unaffected by this
+ *  cap, at any size). Zero losses is the meaningful result here, not just the gain count: this tier
+ *  is purely additive by construction (see WHY DEAD LAST above), so a loss would have meant a bug
+ *  in that invariant, not ordinary variance — finding none confirms the mechanism works as designed
+ *  at the larger cap too. */
+export const REPAIR_LATE_PROBE_NODE_BUDGET = 5_000_000;
 
 
 // ─── Stage budget plan: the canonical cascade ────────────────────────────────
