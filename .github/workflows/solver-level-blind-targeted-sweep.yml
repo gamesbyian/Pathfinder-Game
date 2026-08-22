@@ -1,0 +1,294 @@
+# On-demand level-blind capability sweep over an EXPLICIT, caller-supplied id list, sharded with
+# the same dynamic runtime-balanced bin-packing as solver-highbudget-unsolved-sweep.yml
+# (scripts/plan-highbudget-shards.mjs, reused as-is -- it only ever needed an ids-file + corpus +
+# node-budget, nothing sibling-workflow-specific).
+#
+# Why this exists: before it, nothing in .github/workflows/ covered "run these N specific ids,
+# level-blind, at one budget, right now." solver-stress-refresh.yml is fixed to the full corpus in
+# 20 static ranges; solver-repair-*-sample-ab.yml are each wired to one flag's bespoke eligible-
+# population selector; solver-highbudget-unsolved-sweep.yml has the right dynamic-sharding shape but
+# uses portfolio-solve-sweep.mjs (history-aware -- saved hints/prior solutions are real input there,
+# see docs/solver-level-blindness.md) against two ids-file paths frozen in the repo. This workflow
+# is that dynamic-sharding shape pointed at scripts/level-blind-capability-sweep.mjs instead, with
+# the target id list supplied at dispatch time rather than committed beforehand -- for one-off
+# research questions like "does this routing/config change actually recover these specific levels
+# at production budget," not a recurring named experiment.
+#
+# CAPABILITY INVARIANT (same as solver-stress-refresh.yml): level-blind-capability-sweep.mjs only,
+# never portfolio-solve-sweep.mjs -- no saved hint, prior solution, or historical status reaches the
+# solve. Artifact-only, like the sample-A/B workflows: never commits to main, never touches
+# logs/stress-corpusN-baseline.json or data/level-heatmaps.json, never saves hints (no --save-hints
+# passed) -- this is diagnostic evidence for a specific question, not a baseline-shaping run.
+#
+# Usage: dispatch with `ids` (comma/whitespace/newline-separated corpus ids, e.g. "R00118,R02075")
+# and the corpus file they live in. Optionally pass enable_flags/disable_flags for an ablation
+# arm. Combined results land in the `combine` job's uploaded `targeted-sweep-combined` artifact and
+# its job-log summary; per-shard raw output is in each `targeted-shard-NNN` artifact.
+name: Solver level-blind targeted sweep
+
+on:
+  workflow_dispatch:
+    inputs:
+      ids:
+        description: 'Explicit corpus ids to sweep, comma/whitespace/newline-separated (e.g. "R00118, R02075, R02696"). Mutually exclusive with ids_file -- set one.'
+        required: false
+        default: ''
+      ids_file:
+        description: 'Path (in-repo) to a newline-separated ids file, for a target list too large for the ids field. Mutually exclusive with ids.'
+        required: false
+        default: ''
+      corpus:
+        description: 'Corpus file the ids above live in.'
+        required: false
+        default: 'data/stress/stress-levels-random.json'
+      node_budget:
+        description: 'Per-level cumulative node ceiling.'
+        required: false
+        default: '50000000'
+      budget_ms:
+        description: 'Per-level wall budget. Default 24h is intentionally non-binding; node budget is the real ceiling.'
+        required: false
+        default: '86400000'
+      workers:
+        description: 'Cross-level worker processes per shard (GH-hosted ubuntu-latest runners have 4 vCPUs).'
+        required: false
+        default: '4'
+      target_wall_minutes:
+        description: 'Target wall-clock minutes per shard (shard count is derived from this, not fixed).'
+        required: false
+        default: '20'
+      solo_threshold_multiplier:
+        description: 'An id predicted to take >= target_wall_minutes * this multiplier gets its own dedicated shard instead of being packed with others.'
+        required: false
+        default: '2.5'
+      seed:
+        description: "Shard-packing tie-break shuffle seed (blank = derived from this run's id)."
+        required: false
+        default: ''
+      enable_flags:
+        description: 'Comma-separated ablation flags to force ON (see modules/solver/ablation-config.ts FEATURES).'
+        required: false
+        default: ''
+      disable_flags:
+        description: 'Comma-separated ablation flags to force OFF.'
+        required: false
+        default: ''
+
+concurrency:
+  group: solver-level-blind-targeted-sweep
+  cancel-in-progress: false
+
+jobs:
+  # Writes the dispatch-time id list to a file (ids_file input, if given, is used as-is; ids is
+  # split on comma/whitespace/newline into one), then runs the same dynamic bin-packing planner
+  # solver-highbudget-unsolved-sweep.yml uses -- no --telemetry, since a targeted ad-hoc list has no
+  # standing EMA history to draw on; every id falls back to the planner's own median/target-wall
+  # estimate, which is enough for a reasonable shard split on a one-off list.
+  plan:
+    name: Plan weighted shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+      shard_count: ${{ steps.plan.outputs.shard_count }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve the id list to a plain ids-file
+        id: ids
+        shell: bash
+        run: |
+          mkdir -p logs/solver-targeted-sweep
+          if [ -n "${{ inputs.ids_file }}" ]; then
+            cp "${{ inputs.ids_file }}" logs/solver-targeted-sweep/ids.txt
+          elif [ -n "${{ inputs.ids }}" ]; then
+            printf '%s' "${{ inputs.ids }}" | tr ',' '\n' | tr -s ' \t' '\n' | sed '/^\s*$/d' > logs/solver-targeted-sweep/ids.txt
+          else
+            echo "One of ids / ids_file is required." >&2
+            exit 2
+          fi
+          count=$(wc -l < logs/solver-targeted-sweep/ids.txt | tr -d ' ')
+          echo "Resolved ${count} id(s):"
+          cat logs/solver-targeted-sweep/ids.txt
+
+      - name: Run the shard planner
+        id: plan
+        shell: bash
+        run: |
+          node scripts/plan-highbudget-shards.mjs \
+            --ids-file=logs/solver-targeted-sweep/ids.txt \
+            --corpus2="${{ inputs.corpus }}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --workers="${{ inputs.workers }}" \
+            --target-wall-minutes="${{ inputs.target_wall_minutes }}" \
+            --solo-threshold-multiplier="${{ inputs.solo_threshold_multiplier }}" \
+            --seed="${{ inputs.seed || github.run_id }}" \
+            --max-shards=250 \
+            --out=logs/solver-targeted-sweep/shard-plan.json
+          shards_json=$(jq -c . logs/solver-targeted-sweep/shard-plan.json)
+          echo "shards=${shards_json}" >> "$GITHUB_OUTPUT"
+          echo "shard_count=$(jq '.shard | length' logs/solver-targeted-sweep/shard-plan.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the shard plan for traceability
+        uses: actions/upload-artifact@v4
+        with:
+          name: targeted-shard-plan
+          path: logs/solver-targeted-sweep/shard-plan.json
+          retention-days: 90
+
+  # One job instance per planned shard, up to 20 running concurrently.
+  solve-shards:
+    name: Targeted shard ${{ matrix.shard.idx }}/${{ needs.plan.outputs.shard_count }}
+    needs: [plan]
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.shard.jobTimeoutMinutes }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJson(needs.plan.outputs.shards) }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run level-blind-capability-sweep on this shard's slice
+        id: sweep
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          mkdir -p logs/solver-targeted-sweep
+          extra=()
+          [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+          [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          timeout -k 30s --preserve-status "${{ matrix.shard.timeoutMinutes }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="${{ inputs.corpus }}" \
+            --levels="${{ matrix.shard.levels }}" \
+            --budget-ms="${{ inputs.budget_ms }}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --work-budget="${work}" \
+            --workers="${{ inputs.workers }}" \
+            "${extra[@]}" \
+            --out="logs/solver-targeted-sweep/batch-${{ matrix.shard.idx }}.json" \
+            --summary-out="logs/solver-targeted-sweep/batch-${{ matrix.shard.idx }}-summary.md" \
+            2>&1 | tee -a "logs/solver-targeted-sweep/batch-${{ matrix.shard.idx }}.console.log"
+          status=${PIPESTATUS[0]}
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload this shard's raw results as an artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: targeted-shard-${{ matrix.shard.idx }}
+          path: |
+            logs/solver-targeted-sweep/batch-${{ matrix.shard.idx }}.json
+            logs/solver-targeted-sweep/batch-${{ matrix.shard.idx }}-summary.md
+            logs/solver-targeted-sweep/batch-${{ matrix.shard.idx }}.console.log
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Fail the job if the sweep failed for a reason other than its own timeout wrapper
+        if: >-
+          always() &&
+          steps.sweep.outputs.exit_code != '0' &&
+          steps.sweep.outputs.exit_code != '124' &&
+          steps.sweep.outputs.exit_code != '143'
+        run: |
+          echo "sweep exit_code=${{ steps.sweep.outputs.exit_code }}"
+          exit 1
+
+  # Combines every shard's report into one {summary, levels} file (portfolio-sweep-reports-to-
+  # benchmark.mjs -- level-blind-capability-sweep.mjs shares portfolio-solve-sweep-lib.mjs's
+  # buildRow()/wrapper shape, so the same combiner applies unmodified) and prints a solved-count
+  # summary. Artifact-only: no commit, no baseline/telemetry file touched.
+  combine:
+    name: Combine shard results
+    needs: [plan, solve-shards]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download every shard's artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'targeted-shard-[0-9]*'
+          path: artifact-staging/downloaded
+          merge-multiple: true
+
+      - name: Lay the downloaded shard results onto the working tree
+        shell: bash
+        run: |
+          mkdir -p logs/solver-targeted-sweep
+          cp -a artifact-staging/downloaded/. logs/solver-targeted-sweep/ 2>/dev/null || true
+
+      - name: Combine each shard's report into one
+        shell: bash
+        run: |
+          if ! ls logs/solver-targeted-sweep/batch-*.json >/dev/null 2>&1; then
+            echo "No shard result files found -- every shard likely failed before writing output." >&2
+            exit 1
+          fi
+          FILES=$(ls logs/solver-targeted-sweep/batch-*.json | paste -sd, -)
+          npm run solver:combine-corpus2-batches -- --in="${FILES}" --out=logs/solver-targeted-sweep/combined.json
+
+      - name: Print a solved-count summary to the job log
+        shell: bash
+        run: |
+          node -e "
+          const d = JSON.parse(require('fs').readFileSync('logs/solver-targeted-sweep/combined.json', 'utf8'));
+          const solved = d.levels.filter(l => l.ok).length;
+          console.log('Targeted sweep: ' + solved + '/' + d.levels.length + ' solved.');
+          console.log('Solved: ' + d.levels.filter(l => l.ok).map(l => l.id).join(', '));
+          console.log('Unsolved: ' + d.levels.filter(l => !l.ok).map(l => l.id + ' (' + l.status + ')').join(', '));
+          "
+
+      - name: Upload the combined result as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: targeted-sweep-combined
+          path: logs/solver-targeted-sweep/combined.json
+          retention-days: 90
