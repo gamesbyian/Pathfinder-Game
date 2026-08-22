@@ -1,57 +1,13 @@
-/**
- * Goal-approach envelope probe — the harness-pluggable prototype implementation of
- * docs/solver-next-frontier-multilingual-research-update-2026-08-02.md section 13 ("backward
- * multi-resolution compatibility envelopes"), scoped down to the narrowest sound instance of the
- * B1/B2 layers (exact-resource-and-arrival-axis / local obligation envelope): a level whose goal
- * has exactly ONE structurally-viable grid-adjacent entry cell forces every solution's
- * second-to-last cell to be that one neighbor. If that neighbor has already been visited by the
- * current partial path (and isn't a gate, whose revisits are exempt from intersection counting),
- * reaching the goal later necessarily means re-entering it — a forced future intersection the
- * production solver's own intersection-deficit check (`PRUNE_INTERSECTION_DEFICIT`, a coarse
- * "deficit vs. remaining steps" comparison) has no way to know about, since it never reasons about
- * a SPECIFIC forthcoming forced revisit tied to level topology.
- *
- * SOUNDNESS ARGUMENT.
- * 1. `computeGoalViableEntryNeighbors` finds every grid-adjacent cell from which stepping onto the
- *    goal would be structurally legal — in-bounds, not a block/goose/false-goal, and (if the
- *    neighbor carries a regular filter) axis-compatible with the neighbor-to-goal move. This is a
- *    STATIC, state-independent fact about the level (computed fresh per call for simplicity, not
- *    cached — cheap, at most 4 neighbor checks). If a portal's destination is the goal itself, this
- *    probe abstains unconditionally: a portal-jump arrival doesn't have a "neighbor cell" in the
- *    ordinary sense, and its presence means the goal is NOT exclusively reachable via grid
- *    adjacency, invalidating the single-neighbor forcing argument below.
- * 2. If more than one (or zero) grid neighbor is viable, there is no forcing to exploit — abstain.
- * 3. With exactly one viable neighbor G', every real solution's path is `... -> G' -> goal`
- *    (G' is not itself a gate — checked separately, since a gate revisit is exempt from
- *    intersection counting and would invalidate the deduction). If the CURRENT state has already
- *    visited G' at least once (`state.visited[G'] > 0`) and is not currently standing on it, the
- *    path must leave and later return to G' before finishing — a genuine re-entry, which
- *    unconditionally counts as an intersection under the game's own rule ("entering a previously
- *    visited cell, excluding gate and goal revisits" — G' is neither). This holds regardless of how
- *    many more times the path visits G' before then (each additional visit only adds MORE forced
- *    intersections, never fewer), so "at least 1 more intersection than the current count" is a
- *    valid necessary condition, not merely a heuristic guess.
- * 4. If the level's remaining intersection budget (`level.reqInt - state.ints`) is already 0 (or
- *    negative), that forced future intersection cannot be paid for — a real, sound rejection.
- *
- * SCOPE LIMITS (honest). This is the single-neighbor, one-forced-revisit case only — it says
- * nothing about levels where the goal has 2+ viable neighbors (the common case), nor does it
- * attempt the fuller B1 envelope (joint length + intersections + arrival-axis reachable-tuple set)
- * the research doc describes; that would need an actual backward BFS/DP layer this prototype
- * doesn't build. A goal this constrained may simply be rare on the corpus this harness measures
- * against — if so, that is itself the honest, valuable result the shadow-eval harness is designed
- * to surface (see docs/solver-shadow-eval-harness.md's Part 4 for the established precedent of a
- * real, sound, narrow-population probe being a legitimate outcome).
- */
+// Sound single-neighbor goal-approach probe. If exactly one structurally viable grid neighbor can
+// enter the goal, every grid-arrival solution must use it. If that non-gate neighbor was already
+// visited and is not the current position, finishing forces at least one future intersection.
+// Abstain when a portal can enter the goal or when the grid entry is not uniquely forced.
 
 const AXIS_H = 1;
 const AXIS_V = 2;
 const DIRS = [[1, 0, AXIS_H], [-1, 0, AXIS_H], [0, 1, AXIS_V], [0, -1, AXIS_V]];
 
 function computeGoalViableEntryNeighbors(level) {
-    // Any portal jumping directly INTO the goal invalidates the "grid-adjacency-only" forcing
-    // argument entirely — signal this back to the caller via a sentinel rather than silently
-    // omitting it from the neighbor count.
     for (const entry of level.portalMap.values()) {
         if (entry.dest === level.goalKey) return null;
     }

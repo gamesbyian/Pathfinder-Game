@@ -1,27 +1,7 @@
-/**
- * Residual block-cut decomposition — shared primitive behind the "separator-state resource
- * spectrum" prototype (docs/solver-next-frontier-multilingual-research-update-2026-08-02.md
- * section 3) and the residual-separator census (that doc's Stage 3 / Tier-1 prerequisite).
- *
- * SCOPE. Deliberately narrow, matching the sibling oracle-comparison probes
- * (axis-reach-probe.mjs, backward-exact-probe.mjs, pocket-bridge-probe.mjs): no portals, filters,
- * flipping filters, must-cross, or turn-obligation cells inside a reported chamber. Impassable
- * landmarks (surround/adjacentTurn/decorative) are already excluded via blockSet/reachBlockedArr,
- * same as everywhere else in the solver. A chamber containing the goal or a gate is never reported
- * (see computeResidualChambers' outOfScopeKeys) — those aren't bounded excursions, they're the
- * continuation of the puzzle itself.
- *
- * WHAT A "CHAMBER" IS. A maximal set of residual (unblocked, not-yet-fully-used) cells reachable
- * from the current head position ONLY through one gateway cell — i.e. a pendant subtree of the
- * block-cut tree rooted at the current position. Removing the gateway disconnects the chamber from
- * the rest of the residual graph, so any path that visits the chamber must enter and leave through
- * that one cell.
- *
- * ROOT SPECIAL CASE. The classic articulation-point condition (`low[child] >= disc[u]`) is
- * vacuously true at the DFS root (disc[root] = 0), so every direct branch off the current position
- * would otherwise be misreported as its own "chamber" even when there's only one way out. The
- * standard fix applies: the root only splits into separate chambers when it has 2+ DFS children.
- */
+// Residual block-cut decomposition for separator/chamber probes.
+// A chamber is a pendant residual component reachable through one gateway. Report only small
+// chambers containing pending must-pass obligations and no goal/gate/portal/filter/flipper/
+// must-cross/turn-obligation cells. The DFS root is an articulation split only with 2+ children.
 import { UNPACK } from '../../../modules/domain/cell-key.ts';
 import { getNeighbors, applyMove, undoMove } from '../../../modules/solver/search-state.ts';
 import { getRealLengthFromState } from '../../../modules/solver/solution.ts';
@@ -49,15 +29,7 @@ function neighbors4(k, W, H) {
     return out;
 }
 
-/**
- * Finds pendant chambers hanging off the residual graph reachable from `pos`, restricted to ones
- * that (a) stay fully in-scope (see file doc), (b) are at most `maxChamberSize` cells, and (c)
- * contain at least one still-pending must-pass obligation (a chamber with nothing mandatory inside
- * isn't a constraint on anything and is silently dropped — the path is free to skip it).
- *
- * Returns `[{ gateway, cells: Set<key>, mustPassIdxs: number[] }, ...]`. `cells` is the chamber's
- * INTERIOR only (excludes the gateway itself), matching how the block-cut tree names components.
- */
+/** Find in-scope pendant chambers up to `maxChamberSize`; `cells` excludes the gateway. */
 export function computeResidualChambers({ pos, level, prep, state, maxChamberSize = 10 }) {
     const W = level.grid.w, H = level.grid.h;
     const outOfScope = outOfScopeKeys(level);
@@ -119,23 +91,9 @@ export function computeResidualChambers({ pos, level, prep, state, maxChamberSiz
 const encode = (steps, ints) => steps * 4096 + ints;
 export const decodeSpectrumEntry = (e) => ({ steps: Math.floor(e / 4096), ints: e % 4096 });
 
-/**
- * Exhaustively enumerates every closed excursion from `chamber.gateway` back to itself that stays
- * within the chamber's interior, using the REAL search-state primitives (getNeighbors/applyMove/
- * undoMove) so edge-usage/turn/intersection legality exactly matches production — this is why the
- * function mutates and restores `state` in place rather than reimplementing move rules (see
- * CLAUDE.md's "leaving along a used axis is legal when going straight" gotcha for why hand-rolling
- * this kind of check is the single most repeat-offending trap in this codebase).
- *
- * Only records an excursion once EVERY must-pass cell that was pending in the chamber at entry has
- * been visited (see file doc's "single covering excursion" simplification: a chamber that needs
- * two separate dips to cover all its obligations is out of scope for this prototype — see the
- * design doc's soundness note on why that's a coverage gap, not an unsoundness).
- *
- * `truncated: true` means the node/step caps were hit before enumeration completed — the caller
- * MUST treat this chamber's spectrum as unknown (abstain), not as the complete achievable set,
- * or a reject built on it could be unsound.
- */
+/** Enumerate closed gateway-to-gateway excursions with real move state. Record only excursions
+ * covering all chamber must-pass obligations. `truncated` means the spectrum is incomplete and
+ * callers must abstain from rejection. */
 export function enumerateChamberSpectrum({ chamber, level, prep, state, maxSteps, nodeCap = 50000 }) {
     const { gateway, cells, mustPassIdxs } = chamber;
     const mandatoryMask = mustPassIdxs.reduce((m, i) => m | (1 << i), 0);
@@ -174,13 +132,7 @@ export function enumerateChamberSpectrum({ chamber, level, prep, state, maxSteps
     return { spectrum, truncated, gateway, mandatoryMask };
 }
 
-/**
- * Bitset convolution (Pathfinder's resource dimensions are small enough that a Set works fine)
- * combining several chambers' "must cover this chamber's obligations in one excursion" spectra
- * into the set of achievable (total steps, total intersections) pairs across ALL of them —
- * i.e. one entry per chamber is mandatory-consumed exactly once (see design doc for why multiple
- * excursions into the same chamber are out of scope here).
- */
+/** Convolve mandatory one-excursion-per-chamber spectra into achievable total (steps, ints) pairs. */
 export function convolveSpectra(spectra) {
     let combined = new Set([encode(0, 0)]);
     for (const spec of spectra) {
