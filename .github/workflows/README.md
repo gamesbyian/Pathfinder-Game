@@ -16,6 +16,7 @@ Use this index and [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.
 | `method-probe-sweep.yml` | One technique or short technique list over a population. |
 | `solver-highbudget-unsolved-sweep.yml` | Additional-compute study on unresolved levels. |
 | `solver-level-blind-targeted-sweep.yml` | On-demand level-blind sweep over a caller-supplied id list, dynamically sharded; artifact-only. |
+| `solver-archetype-sample-ab.yml` | Stratified-sample A/B for an archetype-gated `attempts.ts` routing change; general form of the retained per-flag sample-A/B workflows below. |
 | `family-wide-trove.yml` | Population-scale family work; check the existing ~2.5 GB trove first. |
 | `atlas-sweep.yml` | Atlas research sweep. |
 | `mitm-frontier-sweep.yml` | Meet-in-the-middle/frontier experiment. |
