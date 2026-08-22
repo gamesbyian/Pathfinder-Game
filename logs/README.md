@@ -8,6 +8,8 @@ Use lowercase kebab-case for tracked log directories and filenames. Prefer a sta
 
 A current convenience pointer may use `latest`; a dated snapshot must use a date/run identity and must not also claim to be `latest`. Names such as `new`, `final`, `after-all`, `diag`, or bare `big-budget` are historical vocabulary, not patterns for new artifacts. Preserve old evidence until its consumers are checked; classify legacy names in artifact metadata or archive them rather than silently repurposing them.
 
+`logs/Solver/` is a frozen legacy raw-evidence attic, not a current output destination. Do not add new files there or normalize its historical filenames in place. New ad hoc `solver:direct --output` files belong under untracked `logs/solver-direct/`; established tracked collections keep their owning lowercase directory. Move old `logs/Solver/` evidence only in an explicit migration after auditing consumers and provenance.
+
 ## Tracked versus untracked output
 
 Commit raw output only when it is a small test fixture, a deliberate compatibility/comparison baseline, or irreplaceable provenance for a documented investigation. Do not commit routine `logs/solver-workflow/*.json`, exploratory runs, or CI output that can remain a workflow artifact.
