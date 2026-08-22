@@ -24,6 +24,10 @@ ESLint enforces browser-free `domain/runtime/solver`, ENGINE mutation via state 
 
 Shared executable authority belongs in `modules/` and tooling imports it. ESLint rejects executable `scripts/`/`data/` imports from `modules/` while allowing serializable runtime data. Shared solver ablation/portfolio policy therefore lives in `modules/solver/`.
 
+### Source filenames
+
+Use lowercase kebab-case for `modules/` filenames. A package entrypoint may share its lowercase stem with a same-named implementation directory (`engine.ts` + `engine/`, `solver.ts` + `solver/`); avoid case-only distinctions and fused multiword names. Import specifiers still use `.js` and resolve to `.ts` source as documented in [`typing.md`](typing.md).
+
 ## Composition root (`modules/app.ts`)
 
 `createApp()` builds acyclic stages without mutable forward declarations/post-init:
@@ -57,7 +61,7 @@ Correctness-sensitive flows use pure tested cores (`computeStep`, `PathNavigator
 
 ## Solver and persistence
 
-`modules/Solver.ts` is a thin facade over `modules/solver/`; test/analysis access uses `SOLVER_TESTING_API`; runtime workers live in `modules/solver/worker.js` and `solver-worker-client.ts`. See [`solver-architecture.md`](solver-architecture.md).
+`modules/solver.ts` is a thin facade over `modules/solver/`; test/analysis access uses `SOLVER_TESTING_API`; runtime workers live in `modules/solver/worker.js` and `solver-worker-client.ts`. See [`solver-architecture.md`](solver-architecture.md).
 
 `modules/persistence/` contains Firebase client seam, submission/progress/review/rating/supplemental-hint repositories, and local-session fallback. `firebase-config.js` is public client config. See [`security.md`](security.md).
 
