@@ -1,0 +1,48 @@
+name: Temporary workflow guide rename
+
+on:
+  push:
+    branches:
+      - agent/workflow-guide-naming-2026-08-21
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Rename canonical stress refresh guide
+        shell: bash
+        run: |
+          set -euo pipefail
+          git mv .github/workflows/README-solver-stress-refresh.md .github/workflows/solver-stress-refresh.md
+          python - <<'PY'
+          from pathlib import Path
+          old = 'README-solver-stress-refresh.md'
+          new = 'solver-stress-refresh.md'
+          for name in [
+              '.github/workflows/README.md',
+              '.github/workflows/README-solver-corpus2-batches.md',
+              'docs/testing.md',
+          ]:
+              p = Path(name)
+              text = p.read_text()
+              if old not in text:
+                  raise SystemExit(f'expected reference not found in {name}')
+              p.write_text(text.replace(old, new))
+          PY
+          git diff --check
+      - name: Commit migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows docs/testing.md
+          git commit -m 'docs: normalize stress refresh guide name'
+          git push origin HEAD:${{ github.ref_name }}
