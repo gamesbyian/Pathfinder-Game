@@ -33,6 +33,14 @@ on:
         description: 'Total level count in the chosen corpus (used to compute shard ranges — 1700 for stress-levels-random.json, 102 for stress-levels.json)'
         required: false
         default: '1700'
+      shard_count:
+        description: 'Shard count (fixed 20 before 2026-08-22). Raise well above max_parallel (e.g. 60 shards at max_parallel=15, same total footprint) for finer, self-balancing scheduling instead of every shard starting at once and the whole run waiting on whichever one drew the slowest levels -- see solver-stress-refresh.yml''s own shard_count/max_parallel input descriptions for the full mechanism this mirrors. Very small shard_count (bigger per-shard slices) may need this workflow''s fixed 120m per-shard timeout raised by hand; it is not auto-scaled here the way solver-stress-refresh.yml''s is.'
+        required: false
+        default: '20'
+      max_parallel:
+        description: 'Shards running concurrently. Default 20 (== shard_count default) reproduces pre-2026-08-22 behavior exactly (no throttling) when both are left at their defaults.'
+        required: false
+        default: '20'
 
 concurrency:
   # Scoped by `only`, not a single shared group: unlike solver-stress-refresh.yml, this workflow
@@ -42,16 +50,35 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Tiny job so probe-shards' matrix can size itself to shard_count instead of a fixed [1..20]
+  # array — GitHub Actions matrices must be a static list or fromJson() of a previous job's output.
+  plan:
+    name: Plan shard count
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - name: Compute the shard list
+        id: plan
+        shell: bash
+        run: |
+          n="${{ inputs.shard_count }}"
+          shards=$(node -e "console.log(JSON.stringify(Array.from({length:Number(process.argv[1])},(_,i)=>i+1)))" "$n")
+          echo "shards=${shards}" >> "$GITHUB_OUTPUT"
+
   probe-shards:
-    name: method-probe shard ${{ matrix.shard }}/20
+    name: method-probe shard ${{ matrix.shard }}/${{ inputs.shard_count }}
+    needs: [plan]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
       contents: read
     strategy:
       fail-fast: false
+      max-parallel: ${{ fromJson(inputs.max_parallel) }}
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        shard: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
       - name: Check out main
         uses: actions/checkout@v4
@@ -73,8 +100,9 @@ jobs:
         run: |
           nn=$(printf '%02d' "${{ matrix.shard }}")
           total="${{ inputs.total_levels }}"
-          start=$(( ( (${{ matrix.shard }} - 1) * total ) / 20 + 1 ))
-          end=$(( ( ${{ matrix.shard }} * total ) / 20 ))
+          n="${{ inputs.shard_count }}"
+          start=$(( ( (${{ matrix.shard }} - 1) * total ) / n + 1 ))
+          end=$(( ( ${{ matrix.shard }} * total ) / n ))
           echo "nn=${nn}" >> "$GITHUB_OUTPUT"
           echo "start=${start}" >> "$GITHUB_OUTPUT"
           echo "end=${end}" >> "$GITHUB_OUTPUT"

@@ -62,22 +62,67 @@ on:
         description: 'true adds --lifecycle-telemetry to both corpus solves (per-technique eligible/reached/starved/exhausted record on every row -- see modules/solver/orchestration.ts finish()) and has the combine job emit a mass-weighted failure map (scripts/stress/lifecycle-failure-map.mjs) over the full unsolved population. Opt-in: adds negligible per-level overhead (post-processing only) but the resulting combined benchmark files carry a techniqueLifecycle field on every row, which older analysis tooling does not expect.'
         required: false
         default: 'false'
+      shard_count:
+        description: 'Shard count (fixed 20 before 2026-08-22). Two independent uses, both via max_parallel below: (1) set shard_count = max_parallel for the old fixed-20-style behavior at a smaller footprint -- e.g. both 10 lets an A/B pair fit the account concurrent-job limit alongside other work; (2) raise shard_count WELL above max_parallel (e.g. 60 shards at max_parallel=15) for the same total footprint but finer, self-balancing scheduling -- see max_parallel''s own description for why this cuts wall-clock tail latency on a genuinely full sweep. Corpus-2''s per-shard timeout scales inversely (fewer shards -> more levels/shard -> more time/shard), clamped to the GitHub-hosted 360min/job hard ceiling -- do not go far below 10 without also lowering node/work budgets, or a shard risks not finishing its slice inside that ceiling. Must not exceed 102 (corpus-1''s level count) or some shards get zero corpus-1 coverage.'
+        required: false
+        default: '20'
+      max_parallel:
+        description: 'Shards running concurrently (same solver-typical-budget-baseline.yml pattern). Keeping this well below shard_count (e.g. shard_count=60, max_parallel=15) is what actually fixes long-tail wall time on a full sweep: with shard_count == max_parallel (the old fixed-20 behavior), every shard starts at once and the whole run waits on whichever one drew the unluckiest cluster of expensive-to-exhaust unsolved levels -- observed taking 2+ hours even though most shards finish in well under half that. Many small shards queued behind a smaller number of concurrent lanes self-balance instead: a lane that finishes early immediately pulls the next queued shard rather than idling, so bad luck in one shard''s slice no longer stalls the whole run. Default 20 (== the shard_count default) reproduces pre-2026-08-22 behavior exactly (no throttling) when both are left at their defaults.'
+        required: false
+        default: '20'
 
 concurrency:
-  group: solver-stress-refresh
+  # Matched-A/B arms (deterministic=true, persist_hints=false) touch no shared repo state beyond
+  # their own run-id-namespaced reports/stress/capability-runs/<run_id>/ directory (see the persist
+  # step's own comment) -- data/stress/hints*/ and the canonical baseline/report files are only
+  # staged when persist_hints=true / deterministic=false respectively, so two such arms can safely
+  # run at once instead of queuing behind each other. Anything that CAN mutate shared state
+  # (deterministic=false or persist_hints=true) still serializes under the single shared group, as
+  # before -- against every other run of this workflow, mutating or not, so it can never race a
+  # concurrently-running A/B arm's persist step either.
+  group: ${{ (github.event.inputs.deterministic == 'true' && github.event.inputs.persist_hints == 'false') && format('solver-stress-refresh-ab-{0}', github.run_id) || 'solver-stress-refresh' }}
   cancel-in-progress: false
 
 jobs:
+  # Tiny job so `solve-shards`' matrix can size itself to shard_count instead of a fixed [1..20]
+  # array -- GitHub Actions matrices must be a static list or fromJson() of a previous job's output.
+  plan:
+    name: Plan shard count
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+      c1_timeout_min: ${{ steps.plan.outputs.c1_timeout_min }}
+      c2_timeout_min: ${{ steps.plan.outputs.c2_timeout_min }}
+    steps:
+      - name: Compute the shard list and per-shard timeouts
+        id: plan
+        shell: bash
+        run: |
+          n="${{ inputs.shard_count }}"
+          shards=$(node -e "console.log(JSON.stringify(Array.from({length:Number(process.argv[1])},(_,i)=>i+1)))" "$n")
+          echo "shards=${shards}" >> "$GITHUB_OUTPUT"
+          # Baseline 45m/300m at the default 20 shards; scale inversely with shard_count (fewer,
+          # bigger shards need more time each), clamped so corpus1's + corpus2's wrapper timeouts
+          # together leave margin under the GitHub-hosted 360min/job hard ceiling (solve-shards' own
+          # timeout-minutes below).
+          c1=$(( 45 * 20 / n )); [ "$c1" -gt 60 ] && c1=60; [ "$c1" -lt 10 ] && c1=10
+          c2=$(( 300 * 20 / n )); [ "$c2" -gt 340 ] && c2=340; [ "$c2" -lt 45 ] && c2=45
+          echo "c1_timeout_min=${c1}" >> "$GITHUB_OUTPUT"
+          echo "c2_timeout_min=${c2}" >> "$GITHUB_OUTPUT"
+
   solve-shards:
-    name: Capability shard ${{ matrix.shard }}/20
+    name: Capability shard ${{ matrix.shard }}/${{ inputs.shard_count }}
+    needs: [plan]
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
       contents: read
     strategy:
       fail-fast: false
+      max-parallel: ${{ fromJson(inputs.max_parallel) }}
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        shard: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
       - name: Check out the dispatched commit exactly
         uses: actions/checkout@v4
@@ -99,11 +144,15 @@ jobs:
         id: range
         shell: bash
         run: |
+          n="${{ inputs.shard_count }}"
           nn=$(printf '%02d' "${{ matrix.shard }}")
-          c2start=$(( (${{ matrix.shard }} - 1) * 85 + 1 ))
-          c2end=$(( ${{ matrix.shard }} * 85 ))
-          c1start=$(( ( (${{ matrix.shard }} - 1) * 102 ) / 20 + 1 ))
-          c1end=$(( ( ${{ matrix.shard }} * 102 ) / 20 ))
+          # Standard "evenly distribute N items into shard_count groups" tiling via floor division --
+          # identical to the pre-2026-08-22 hardcoded (shard-1)*85+1..shard*85 when shard_count=20
+          # (1700/20=85 exactly), and to corpus-1's own always-parameterized formula below.
+          c2start=$(( ( (${{ matrix.shard }} - 1) * 1700 ) / n + 1 ))
+          c2end=$(( ( ${{ matrix.shard }} * 1700 ) / n ))
+          c1start=$(( ( (${{ matrix.shard }} - 1) * 102 ) / n + 1 ))
+          c1end=$(( ( ${{ matrix.shard }} * 102 ) / n ))
           echo "nn=${nn}" >> "$GITHUB_OUTPUT"
           echo "c2start=${c2start}" >> "$GITHUB_OUTPUT"
           echo "c2end=${c2end}" >> "$GITHUB_OUTPUT"
@@ -119,6 +168,14 @@ jobs:
         run: |
           set +e
           mkdir -p logs/solver-corpus2-batches
+          # shard_count > 102 (corpus-1's level count) leaves some shards with an empty corpus-1
+          # range (c1start > c1end); skip rather than let parseLevelSpec's min/max range handling
+          # silently re-select an adjacent shard's already-covered ids.
+          if [ "${{ steps.range.outputs.c1start }}" -gt "${{ steps.range.outputs.c1end }}" ]; then
+            echo "No corpus-1 levels in this shard's range (shard_count > 102); skipping."
+            echo "exit_code=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           extra=()
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
@@ -127,7 +184,7 @@ jobs:
           [ "${{ inputs.persist_hints }}" = "true" ] && extra+=("--save-hints")
           [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
           work=$(( ${{ inputs.corpus1_node_budget }} * 134 / 100 ))
-          timeout -k 30s --preserve-status 45m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+          timeout -k 30s --preserve-status "${{ needs.plan.outputs.c1_timeout_min }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus=data/stress/stress-levels.json \
             --levels="pos:${{ steps.range.outputs.c1start }}-${{ steps.range.outputs.c1end }}" \
             --budget-ms="${DEADLINE}" \
@@ -157,7 +214,7 @@ jobs:
           [ "${{ inputs.persist_hints }}" = "true" ] && extra+=("--save-hints")
           [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
           work=$(( ${{ inputs.corpus2_node_budget }} * 134 / 100 ))
-          timeout -k 30s --preserve-status 300m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+          timeout -k 30s --preserve-status "${{ needs.plan.outputs.c2_timeout_min }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus=data/stress/stress-levels-random.json \
             --levels="pos:${{ steps.range.outputs.c2start }}-${{ steps.range.outputs.c2end }}" \
             --budget-ms="${DEADLINE}" \
