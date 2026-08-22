@@ -401,6 +401,13 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // archetype via its own early probe before this main loop even runs.
             beam('intersectionHarvest', BEAM.WIDE, null, { diverseBeam: true }),
             dfs('objectiveFirst'), dfs('intersectionHarvest'),
+            // Cross-referencing the 2026-08-20 technique census against the 2026-08-21 capability
+            // run (docs/solver-optimization-current-queue.md Priority 7) found this rule offers no
+            // perimeter beam at all, unlike every sibling must-cross rule — R02515's cheap
+            // (120,635-node) isolated win here was perimeterSweep/perimeterCW@beam2000. Trailing,
+            // protected-reserve placement, same reasoning as the other beam-added-here fixes in this
+            // file.
+            beam('perimeterSweep', BEAM.STANDARD, perimeterCW),
         ],
     },
     {
@@ -411,6 +418,11 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             beam('perimeterSweep', BEAM.STANDARD, perimeterCCW), beam('intersectionHarvest', BEAM.STANDARD),
             beam('harvestThenFinish', BEAM.STANDARD), beam('knotBuilder', BEAM.STANDARD),
             dfs('objectiveFirst'), dfs('intersectionHarvest'),
+            // Same census cross-reference as this rule's flipper-heavy sibling above: this rule has
+            // a perimeter BEAM (CCW) but no perimeter DFS at all in either direction, unlike the
+            // default/combo must-cross rules below — R02788's cheap (1,483,636-node) isolated win
+            // here was plain dfs:perimeterSweep/perimeterCW. Trailing, protected-reserve placement.
+            dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW),
         ],
     },
     {
@@ -431,6 +443,12 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             beam('mustCrossFirst', BEAM.STANDARD), beam('objectiveFirst', BEAM.STANDARD),
             dfs('mustCrossFirst'), dfs('objectiveFirst'), dfs('harvestThenFinish'),
             beam('perimeterSweep', BEAM.STANDARD, perimeterCW),
+            // Same census cross-reference as the flipper-heavy/must-pass-heavy must-cross rules
+            // above (docs/solver-optimization-current-queue.md Priority 7): this catch-all offers
+            // perimeterCW but never perimeterCCW, unlike most other archetype rules that offer both
+            // directions — R02131's cheap (106,547-node) isolated win here was
+            // perimeterSweep/perimeterCCW@beam2000. Trailing, protected-reserve placement.
+            beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
         ],
     },
     {
