@@ -1,6 +1,6 @@
 # Technique capability census — pair synergy (T3)
 
-"neither alone" = the pair solved a level where T1's data shows NEITHER member solved it by itself — the genuine synergy signal.
+"neither alone" = the pair solved a level where T1 data shows neither member solved it alone.
 
 | pair | pair solved | neither alone | total | synergy rate |
 |---|---:|---:|---:|---:|
