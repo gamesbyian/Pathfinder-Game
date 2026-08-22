@@ -1,33 +1,13 @@
-/**
- * Shared parser for attemptConfigKey()'s canonical string format (see orchestration.ts) back into
- * an AttemptConfig — round-tripped through attemptConfigKey() again to confirm an exact match, so a
- * parser bug that silently builds the WRONG config is never invisible.
- *
- * Extracted from method-probe.mjs (2026-08-19) when scripts/technique-census.mjs needed the exact
- * same parsing — this is real, non-trivial logic (regex parsing + round-trip validation across
- * dfs/beam/repair/ida shapes), so it is a shared module rather than a second hand-maintained copy.
- * method-probe.mjs's own behavior is unchanged; this is a pure code move.
- *
- * Usage:
- *   import { makeAttemptConfigKeyParser } from './attempt-config-key.mjs';
- *   const parseAttemptConfigKey = makeAttemptConfigKeyParser({ TEMPLATES, POLICY_PROFILES, attemptConfigKey });
- *   const config = parseAttemptConfigKey('beam:intersectionHarvest@beam5000(diverse)');
- */
+/** Canonical attempt-key parser. Every parse is round-tripped through `attemptConfigKey`; mismatch throws. */
 
-/** Builds the parser, closed over the solver's own template/profile registries and its
- *  attemptConfigKey() re-serializer — passed in rather than imported directly so this module stays
- *  a plain, dependency-free .mjs file callable from either a bundled (Solver.js) or TS-source
- *  import context. */
+/** Dependency injection keeps this plain .mjs usable from bundled and TS-source contexts. */
 export function makeAttemptConfigKeyParser({ TEMPLATES, POLICY_PROFILES, attemptConfigKey }) {
     return function parseAttemptConfigKey(key) {
         const idaMatch = /^ida:([A-Za-z]+)(\(lds\))?$/.exec(key);
         if (idaMatch) {
             const [, profileName, ldsMarker] = idaMatch;
             const lds = !!ldsMarker;
-            // 'none' is a sentinel, not a POLICY_PROFILES lookup: skips the soft-score tie-break
-            // entirely (admissible-order-search.ts's rankByAdmissibleSlack gets tieBreakProfile:
-            // null), reproducing the technique's original no-tie-break ordering. See
-            // AttemptConfig.admissibleOrderNoTieBreak's own doc for why this exists.
+            // `none` means admissible-order with no soft-score tie-break.
             if (profileName === 'none') {
                 const config = { profileName: 'none', template: null, admissibleOrder: true, admissibleOrderNoTieBreak: true, ...(lds ? { admissibleOrderLds: true } : {}) };
                 const roundTrip = attemptConfigKey(config);
