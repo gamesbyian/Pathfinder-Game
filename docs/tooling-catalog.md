@@ -17,6 +17,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 | Lifecycle/budget diagnosis | `npm run stress:lifecycle-failure-map` |
 | Known-solution comparison | `npm run stress:solution-profile-compare` |
 | Isolated technique × level census | `technique-census.yml`; expensive, check existing census first |
+| Second-order technique-census analysis | `node scripts/technique-census-second-order.mjs [run-directory] [--production-run=<dir>] [--frozen-production-run=<dir>]`; rebuilds phenotype, multiplicity, router-bound, conditional-value, and cover outputs from committed cells |
 | One technique over a population | `scripts/method-probe.mjs` / `method-probe-sweep.yml` |
 | Validate/promote an archetype-gated `ATTEMPT_POLICY` routing change | `solver-archetype-sample-ab.yml` (preferred over a full-population `solver-stress-refresh.yml` sweep — same evidence via a deterministic stratified sample, a fraction of the wall time; [`../.github/workflows/README.md`](../.github/workflows/README.md)) |
 | One-off level-blind check over a specific id list | `solver-level-blind-targeted-sweep.yml` (dynamically sharded, artifact-only) |
