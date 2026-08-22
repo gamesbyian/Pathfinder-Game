@@ -62,5 +62,3 @@ CSP is enforced through `index.html` from `security/csp-policy.json`; `check:csp
 - `check:secret-hygiene`, `check:third-party`, and `check:csp` run in `npm run ci`.
 - Firestore access changes must keep `firestore.rules`, `scripts/firestore-rules-test.mjs`, and this document aligned.
 - New external browser origins require both the dependency allowlist and `security/csp-policy.json` to change.
-
-Remaining security work is tracked in [`solver-future-work.md`](solver-future-work.md).
