@@ -17,7 +17,7 @@ Loose `YYYY-MM-DD-<topic>.md` files are evidence, not a live queue. Do not recon
 - [`solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md): ranked optimization queue.
 - [`solver-research-operating-model.md`](../docs/solver-research-operating-model.md): research method and promotion rules.
 - [`solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md): retained/default-off mechanism dispositions.
-- [`future-work.md`](../docs/future-work.md): broader deferred/reopen ideas.
+- [`solver-future-work.md`](../docs/solver-future-work.md): broader deferred/reopen ideas.
 - [`variant-level-research.md`](../docs/variant-level-research.md): family/variant evidence.
 - [`solver-architecture.md`](../docs/solver-architecture.md): durable implementation reference.
 
