@@ -1,6 +1,6 @@
 # Retired Corpus-2 batch workflows
 
-**Status: retired 2026-07-17.** The 20 persistent-branch `solver-corpus2-batch-*.yml` workflows and their generator were removed. Use [`solver-stress-refresh.yml`](solver-stress-refresh.yml) and [`README-solver-stress-refresh.md`](README-solver-stress-refresh.md) for current population refreshes.
+**Status: retired 2026-07-17.** The 20 persistent-branch `solver-corpus2-batch-*.yml` workflows and their generator were removed. Use [`solver-stress-refresh.yml`](solver-stress-refresh.yml) and [`solver-stress-refresh.md`](solver-stress-refresh.md) for current population refreshes.
 
 This file remains only so old links resolve and the failure modes of the retired design stay visible.
 
