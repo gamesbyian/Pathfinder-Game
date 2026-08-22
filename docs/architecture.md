@@ -59,7 +59,7 @@ Correctness-sensitive flows use pure tested cores (`computeStep`, `PathNavigator
 
 `modules/Solver.ts` is a thin facade over `modules/solver/`; test/analysis access uses `SOLVER_TESTING_API`; runtime workers live in `modules/solver/worker.js` and `solver-worker-client.ts`. See [`solver-architecture.md`](solver-architecture.md).
 
-`modules/persistence/` contains Firebase client seam, submission/progress/review/rating/supplemental-hint repositories, and local-session fallback. `firebase-config.js` is public client config. See [`security.md`](security.md), [`firestore-security-model.md`](firestore-security-model.md).
+`modules/persistence/` contains Firebase client seam, submission/progress/review/rating/supplemental-hint repositories, and local-session fallback. `firebase-config.js` is public client config. See [`security.md`](security.md).
 
 ## UI and styling
 
