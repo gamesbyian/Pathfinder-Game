@@ -1,0 +1,41 @@
+name: Temporary module filename migration
+
+on:
+  push:
+    branches:
+      - agent/normalize-module-filenames-2026-08-21
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Repoint renamed module imports
+        shell: bash
+        run: |
+          set -euo pipefail
+          find modules scripts -type f \( -name '*.ts' -o -name '*.mjs' -o -name '*.js' \) -print0 \
+            | xargs -0 sed -i 's#Solver\.js#solver.js#g; s#levelutils\.js#level-utils.js#g'
+          if [[ -f modules/levelutils.test.ts ]]; then
+            git mv modules/levelutils.test.ts modules/level-utils.test.ts
+          fi
+          git diff --check
+      - name: Commit migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add modules scripts
+          if git diff --cached --quiet; then
+            echo 'No migration changes needed.'
+            exit 0
+          fi
+          git commit -m 'refactor: repoint renamed module imports'
+          git push origin HEAD:${{ github.ref_name }}
