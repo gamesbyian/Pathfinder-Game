@@ -188,9 +188,15 @@ jobs:
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          # plan-highbudget-shards.mjs emits "pos:" per comma-token (its native consumer,
+          # portfolio-solve-sweep.mjs's stripPositionPrefix, tolerates that) -- but level-blind-
+          # capability-sweep.mjs's own parseLevelSpec only strips ONE leading "pos:" for the whole
+          # spec. Collapse to that shape here rather than touching either shared script.
+          levels="${{ matrix.shard.levels }}"
+          levels="pos:$(echo "$levels" | sed 's/pos://g')"
           timeout -k 30s --preserve-status "${{ matrix.shard.timeoutMinutes }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus="${{ inputs.corpus }}" \
-            --levels="${{ matrix.shard.levels }}" \
+            --levels="${levels}" \
             --budget-ms="${{ inputs.budget_ms }}" \
             --node-budget="${{ inputs.node_budget }}" \
             --work-budget="${work}" \
