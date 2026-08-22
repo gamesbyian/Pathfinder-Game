@@ -4,7 +4,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file is the current-r
 
 ## Naming
 
-Current docs use lowercase kebab-case and stable, undated names. Prefer `<domain>-<subject>-role.md` when the domain or role helps scanning; omit redundant prefixes for repo-wide authorities such as `architecture.md`, `testing.md`, and `security.md`. Name a live document for what it is now, not the audit, plan, experiment, or investigation that created it. Use canonical repository terms rather than abbreviations or near-synonyms.
+Current docs use lowercase kebab-case and stable, undated names. Prefer `<domain>-<subject>-<role>.md` when the domain or role helps scanning; omit redundant prefixes for repo-wide authorities such as `architecture.md`, `testing.md`, and `security.md`. Name a live document for what it is now, not the audit, plan, experiment, or investigation that created it. Use canonical repository terms rather than abbreviations or near-synonyms.
 
 Dates and narrative experiment names belong in `reports/`, `archive/`, `history/`, or `refactor-notes/`. When renaming a live authority, update current links/imports/workflows/metadata and run `npm run check:documentation-links`; do not rewrite frozen reports or snapshots merely to modernize paths.
 
