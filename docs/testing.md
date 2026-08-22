@@ -137,7 +137,7 @@ Budget-edge/deadline-truncated results are not clean negatives. Recheck unstable
 
 Headline capability work must obey [`solver-level-blindness.md`](solver-level-blindness.md): exact hints, winner replay, historical status, IDs, caches, or per-level budgets cannot steer cold solves.
 
-For decision-bearing remote A/Bs use deterministic mode in [`../.github/workflows/README-solver-stress-refresh.md`](../.github/workflows/README-solver-stress-refresh.md). Require complete current-run coverage and preserve gained/lost rows, not only net count.
+For decision-bearing remote A/Bs use deterministic mode in [`../.github/workflows/solver-stress-refresh.md`](../.github/workflows/solver-stress-refresh.md). Require complete current-run coverage and preserve gained/lost rows, not only net count.
 
 ## Firestore rules
 
