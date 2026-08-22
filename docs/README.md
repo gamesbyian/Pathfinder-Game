@@ -2,12 +2,18 @@
 
 Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file is the current-reference inventory, not a second agent guide.
 
+## Naming
+
+Current docs use lowercase kebab-case and stable, undated names. Prefer `<domain>-<subject>-<role>.md` when the domain or role helps scanning; omit redundant prefixes for repo-wide authorities such as `architecture.md`, `testing.md`, and `security.md`. Name a live document for what it is now, not the audit, plan, experiment, or investigation that created it. Use canonical repository terms rather than abbreviations or near-synonyms.
+
+Dates and narrative experiment names belong in `reports/`, `archive/`, `history/`, or `refactor-notes/`. When renaming a live authority, update current links/imports/workflows/metadata and run `npm run check:documentation-links`; do not rewrite frozen reports or snapshots merely to modernize paths.
+
 ## Current references
 
 | Doc | Role |
 |---|---|
 | [`architecture.md`](architecture.md) | Application structure and code ownership. |
-| [`architecture-unification-audit.md`](architecture-unification-audit.md) | Remaining duplicate-authority/architecture debt. |
+| [`architecture-unification-debt.md`](architecture-unification-debt.md) | Remaining duplicate-authority/architecture debt. |
 | [`change-recipes.md`](change-recipes.md) | Cross-boundary schema/state/telemetry changes. |
 | [`testing.md`](testing.md) | Validation and finish-line gates. |
 | [`tooling-catalog.md`](tooling-catalog.md) | CLI, probe, batch, and workflow discovery. |
