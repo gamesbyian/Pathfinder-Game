@@ -151,6 +151,15 @@ for (const file of [...currentAuthorityFiles].filter(file => existsSync(resolve(
   }
 }
 
+// Current authority docs must not route new raw output into the frozen legacy solver-log attic.
+for (const file of currentAuthorityFiles) {
+  if (!existsSync(resolve(ROOT, file))) continue;
+  const source = readFileSync(resolve(ROOT, file), 'utf8');
+  if (source.includes('logs/Solver/')) {
+    failures.push(`${file}: routes current output to frozen legacy logs/Solver/; use a lowercase owning directory`);
+  }
+}
+
 // Commands presented as runnable documentation should continue to exist. This deliberately checks
 // only `npm run <alias>` forms; arbitrary shell snippets may invoke binaries or temporary scripts.
 const packageScripts = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8')).scripts ?? {};

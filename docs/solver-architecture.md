@@ -148,9 +148,9 @@ AXIS_NONE = 0
 - `solver:direct`: debugging with `--verbose`/structured `--output`; no baseline comparison.
 
 ```bash
-npm run solver:direct -- --levels=pos:133,pos:146 --budget-ms=30000 --output=logs/Solver/out.json
-npm run solver:direct -- --levels=all --budget-ms=30000 --output=logs/Solver/full.json
-npm run check:audit-output -- logs/Solver/full.json
+npm run solver:direct -- --levels=pos:133,pos:146 --budget-ms=30000 --output=logs/solver-direct/out.json
+npm run solver:direct -- --levels=all --budget-ms=30000 --output=logs/solver-direct/full.json
+npm run check:audit-output -- logs/solver-direct/full.json
 ```
 
 | Flag | Default | Meaning |
