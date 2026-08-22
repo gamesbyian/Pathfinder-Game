@@ -17,6 +17,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 | Lifecycle/budget diagnosis | `npm run stress:lifecycle-failure-map` |
 | Known-solution comparison | `npm run stress:solution-profile-compare` |
 | Isolated technique × level census | `technique-census.yml`; expensive, check existing census first |
+| Second-order technique-census analysis | `node scripts/technique-census-second-order.mjs [run-directory] [--production-run=<dir>] [--frozen-production-run=<dir>]`; rebuilds phenotype, multiplicity, router-bound, conditional-value, and cover outputs from committed cells |
 | One technique over a population | `scripts/method-probe.mjs` / `method-probe-sweep.yml` |
 | Hint generation/diversification | `npm run hints:workbench`; [`hint-workbench.md`](hint-workbench.md) |
 | Hint/provenance evidence for one level | `npx tsx scripts/hint-query.mjs --id=<ID> [--levels=<corpus>]`; compact by default, exact paths/provenance only with `--full` |
