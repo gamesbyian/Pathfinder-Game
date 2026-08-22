@@ -91,6 +91,8 @@ Narrative explanations are not causal evidence; accepted path + trace is. Histor
 
 Production-facing treatments normally require level-blind execution; identifiable code/protocol state; complete intended population or explicit sample; non-binding deadlines when work comparability matters; comparable arms with declared treatments; gains and losses; `workSpent`, nodes, errors, and deadline truncation where relevant; Corpus 1/2 and published transfer/cost checks as appropriate; no hidden hint/data mutation; and queue/ledger updates when disposition changes.
 
+"Complete intended population or explicit sample" does not default to a full 1700-level `solver-stress-refresh.yml` sweep. For an archetype-gated `ATTEMPT_POLICY` routing change, `solver-archetype-sample-ab.yml`'s deterministic stratified sample (the affected archetype(s) plus a small cross-archetype control) is the explicit sample that answers this contract for that class of change, at a fraction of the wall time — see [`tooling-catalog.md`](tooling-catalog.md) and [`../.github/workflows/README.md`](../.github/workflows/README.md).
+
 A direct small negative may close an unchanged mechanism. A promising small result normally nominates a broader gate rather than promotion.
 
 ## Documentation handoff

@@ -18,6 +18,9 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 | Known-solution comparison | `npm run stress:solution-profile-compare` |
 | Isolated technique × level census | `technique-census.yml`; expensive, check existing census first |
 | One technique over a population | `scripts/method-probe.mjs` / `method-probe-sweep.yml` |
+| Validate/promote an archetype-gated `ATTEMPT_POLICY` routing change | `solver-archetype-sample-ab.yml` (preferred over a full-population `solver-stress-refresh.yml` sweep — same evidence via a deterministic stratified sample, a fraction of the wall time; [`../.github/workflows/README.md`](../.github/workflows/README.md)) |
+| One-off level-blind check over a specific id list | `solver-level-blind-targeted-sweep.yml` (dynamically sharded, artifact-only) |
+| Full-population level-blind capability baseline | `solver-stress-refresh.yml`; [`../.github/workflows/solver-stress-refresh.md`](../.github/workflows/solver-stress-refresh.md) |
 | Hint generation/diversification | `npm run hints:workbench`; [`hint-workbench.md`](hint-workbench.md) |
 | Hint/provenance evidence for one level | `npx tsx scripts/hint-query.mjs --id=<ID> [--levels=<corpus>]`; compact by default, exact paths/provenance only with `--full` |
 | Family/variant research | [`variant-level-research.md`](variant-level-research.md); `family:index` then `family:show`, `family:query`, or `family:coverage` |
@@ -47,6 +50,8 @@ Historical portfolio tools (`solver:portfolio-report`, `solver:portfolio-replay`
 ## Rules
 
 - Use the smallest population/tool that decides the next gate.
+- For an archetype-gated `ATTEMPT_POLICY` change, default to `solver-archetype-sample-ab.yml` over a full-corpus `solver-stress-refresh.yml` sweep; reach for full-population coverage only when the change's blast radius isn't cleanly archetype-bounded or the decision needs complete coverage.
+- Tune `shard_count`/`max_parallel` on GHA sweeps (`solver-stress-refresh.yml`, `method-probe-sweep.yml`, `solver-archetype-sample-ab.yml`) before dispatching, especially alongside other in-flight runs — `max_parallel`, not `shard_count` alone, is what actually bounds wall time.
 - Prefer compact query/summary views over opening large reports, logs, corpora, or hint files wholesale.
 - Preserve [`solver-level-blindness.md`](solver-level-blindness.md) for capability research.
 - Check queue/report status before expensive workflows or repeated flag experiments.
