@@ -331,6 +331,16 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // reasoning as every other beam-added-here fix in this file: costs nothing where the DFS/
             // perimeter-beam attempts above already win, only reached where they exhaust first.
             beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE),
+            // Follow-up (2026-08-22 mining pass, docs/solver-optimization-current-queue.md
+            // Priority 7): this rule offers `sideCommitment` nowhere — neither as DFS nor beam —
+            // unlike the default archetype rules, which both include it. `dfs:perimeterSweep/
+            // sideCommitment` was independently the cheap-to-moderate isolated winner on multiple
+            // still-unsolved levels of this archetype (R02858, R03226, R02903), the single best-
+            // coverage candidate technique found for this rule. Trailing, protected-reserve
+            // placement — lands in the 5th slot the MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT 4->5
+            // increase opened up, so it adds coverage without evicting anything protected before
+            // this session's changes (see stage-budget.ts's own comment on that increase).
+            dfs('perimeterSweep', sideCommitment),
         ],
     },
     {
@@ -366,7 +376,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // gap (43 of 69 zero-beam oracle-union levels, vs. 26 across the two sibling default rules
         // fixed above) — profilesFirst() built this archetype's list purely from DFS profiles and
         // templates too, with no beam offered at all. Placed as the LAST two configs deliberately
-        // (not first): mainConfigs' last MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (orchestration.ts, 4)
+        // (not first): mainConfigs' last MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (stage-budget.ts, 5)
         // entries get a protected node-budget reserve regardless of what earlier configs consume, so
         // this placement recovers previously-unsolved levels (where earlier DFS attempts can burn
         // their full allocated time without concluding) while costing nothing on already-solving
@@ -423,6 +433,15 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // default/combo must-cross rules below — R02788's cheap (1,483,636-node) isolated win
             // here was plain dfs:perimeterSweep/perimeterCW. Trailing, protected-reserve placement.
             dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW),
+            // Follow-up (docs/solver-optimization-current-queue.md Priority 7 / solver-future-work.md
+            // "must-cross-heavy diverse-beam gaps"): this rule never offers a diverse WIDE beam at all
+            // (mcDiverseThread isn't used here) — R02299's cheap (281,990-node) isolated win was
+            // beam:objectiveFirst@beam5000(diverse). Previously left open because this rule's
+            // MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT-4 reserve window was already fully spent on the
+            // perimeter-DFS fix directly above; landed together with the reserve count's validated
+            // 4->5 increase (stage-budget.ts) so this 5th trailing config gets the same protection
+            // without displacing dfs:perimeterSweep/perimeterCW out of the window.
+            beam('objectiveFirst', BEAM.WIDE, null, { diverseBeam: true }),
         ],
     },
     {
@@ -449,6 +468,13 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // directions — R02131's cheap (106,547-node) isolated win here was
             // perimeterSweep/perimeterCCW@beam2000. Trailing, protected-reserve placement.
             beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
+            // Follow-up (docs/solver-optimization-current-queue.md Priority 7 / solver-future-work.md
+            // "must-cross-heavy diverse-beam gaps"): this catch-all never offers a diverse WIDE beam
+            // either (mcDiverseThread isn't used here) — R02159's cheap (578,428-node) isolated win
+            // was beam:intersectionHarvest@beam5000(diverse). Previously left open for the same
+            // full-reserve-window reason as this rule's must-pass-heavy sibling above; landed together
+            // with the validated MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT 4->5 increase.
+            beam('intersectionHarvest', BEAM.WIDE, null, { diverseBeam: true }),
         ],
     },
     {
@@ -457,7 +483,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // profiles, so it never offered beam search at all — a real capability gap on exactly the
         // open, low-constraint levels this rule matches, where beam disproportionately wins cheaply.
         // Placed as the LAST two configs deliberately (not first, not right after the templates):
-        // mainConfigs' last MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (orchestration.ts, 4) entries get a
+        // mainConfigs' last MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (stage-budget.ts, 5) entries get a
         // protected node-budget reserve regardless of what earlier configs consume, so this placement
         // recovers previously-unsolved levels (where the 4 template DFS attempts can each burn their
         // full ~20-30s allocated slice without concluding, otherwise starving anything placed right

@@ -171,9 +171,23 @@ export const ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION = 0.15;
  *  still a strict no-op unless a finite `nodeBudget` is supplied (offline batch tooling only —
  *  see mainLoopLateReserveEligible below), so this changed no interactive Play/Editor/Review
  *  behavior. 0.15 is the frozen level-blind population A/B's winning arm — see
- *  docs/main-loop-late-reserve-experiment.md and reports/2026-08-12-main-loop-late-reserve-population-ab.md. */
+ *  docs/main-loop-late-reserve-experiment.md and reports/2026-08-12-main-loop-late-reserve-population-ab.md.
+ *
+ *  CONFIG_COUNT raised 4->5 (2026-08-22, docs/solver-optimization-current-queue.md Priority 7 /
+ *  solver-future-work.md's "must-cross-heavy diverse-beam gaps blocked on reserve-slot budget"):
+ *  two must-cross-heavy sub-rules' 4-slot trailing reserve was already fully occupied by an
+ *  already-validated perimeter-direction fix, leaving no room to add a missing diverse-WIDE-beam
+ *  config (R02299/R02159, both genuinely never offered, not budget-starved) without evicting an
+ *  already-solving level's protected config. Since this is a FRACTION of `earlyTierNodeBudget`
+ *  (MAIN_LOOP_LATE_RESERVE_FRACTION, unchanged), not a fixed per-config amount, widening the
+ *  protected window to 5 spreads the SAME reserve pool one slot thinner rather than growing it —
+ *  confirmed a strict no-op on the published corpus with no rule content changed (160/160
+ *  identical solved set, byte-identical nodesExpanded per level, count=4 vs count=5, node-budget
+ *  50,000,000: see the 2026-08-22 queue entry for the local portfolio-solve-sweep evidence). Only
+ *  the two must-cross-heavy rules gained a genuine 5th trailing config as part of this change;
+ *  every other rule's existing last-4 configs merely gained one more protected neighbor. */
 export const MAIN_LOOP_LATE_RESERVE_FRACTION = 0.15;
-export const MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT = 4;
+export const MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT = 5;
 
 /** STRATEGY_REPAIR_FALLBACK_NODE_RESERVE (opt-in, default OFF — NEW, unvalidated mechanism, landed
  *  2026-08-13). Withholds a slice of `earlyTierNodeBudget` from the probe and the whole main loop
