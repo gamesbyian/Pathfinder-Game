@@ -285,6 +285,16 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             ...mcDiverseThread(f),
             beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
             dfs('objectiveFirst'), dfs('intersectionHarvest'),
+            // Cross-referencing the 2026-08-20 technique census (run 32240161854) against the
+            // 2026-08-21 capability run (32526927206) surfaced a residual beam-routing gap on this
+            // archetype (docs/solver-optimization-current-queue.md Priority 7): this rule offered no
+            // perimeter beam at all, and `beam:perimeterSweep/perimeterCCW@beam2000` was the cheap
+            // (sub-200K-node) isolated-technique winner on several still-unsolved levels here. Trailing
+            // placement (not leading) for the same protected-late-reserve reason documented on the
+            // sibling rules below — this is a genuinely different technique family from the two beams
+            // already above, not a width variant of them, so it costs nothing on levels those beams
+            // already solve.
+            beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
         ],
     },
     {
@@ -298,6 +308,12 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             ...mcDiverseThread(f),
             beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE),
             dfs('intersectionHarvest'), dfs('objectiveFirst'),
+            // Same residual beam-routing gap as this rule's portal-dense sibling above (see its
+            // comment) — cross-referencing the 2026-08-20 census against the 2026-08-21 capability
+            // run found perimeterSweep@beam2000 (both directions) as the cheap isolated winner on
+            // several still-unsolved levels this rule never offered any perimeter beam for. Trailing,
+            // protected-reserve placement; a different technique family from the two beams above.
+            beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
         ],
     },
     {
@@ -307,6 +323,14 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW),
             dfs('objectiveFirst'), dfs('intersectionHarvest'), dfs('knotBuilder'),
             beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
+            // Cross-referencing the 2026-08-20 census against the 2026-08-21 capability run
+            // (docs/solver-optimization-current-queue.md Priority 7) found this rule offers only
+            // perimeter beams — objectiveFirst/intersectionHarvest appear only in DFS form here, and
+            // their WIDE beam counterparts were the cheap isolated-technique winner on several
+            // still-unsolved levels of this archetype. Trailing, protected-reserve placement — same
+            // reasoning as every other beam-added-here fix in this file: costs nothing where the DFS/
+            // perimeter-beam attempts above already win, only reached where they exhaust first.
+            beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE),
         ],
     },
     {
@@ -324,6 +348,15 @@ const ATTEMPT_POLICY: PolicyRule[] = [
                 beam('intersectionHarvest', BEAM.STANDARD),
                 beam('objectiveFirst', BEAM.STANDARD),
                 ...mediumHighIntDfsOrder(f),
+                // Cross-referencing the 2026-08-20 census against the 2026-08-21 capability run
+                // (docs/solver-optimization-current-queue.md Priority 7): this catch-all only offered
+                // STANDARD-width intersectionHarvest/objectiveFirst beams, but their WIDE counterparts
+                // were independently the cheap isolated-technique winner (well under 1M nodes) on
+                // several still-unsolved levels of this archetype — a genuinely different technique
+                // from the STANDARD beams above, not a retry of them. Trailing, protected-reserve
+                // placement (same reasoning as every other beam-added-here fix in this file): reached
+                // only after the STANDARD beams and DFS fallbacks above have already exhausted.
+                beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE),
             ];
         },
     },
