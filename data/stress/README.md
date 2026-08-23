@@ -7,8 +7,8 @@ these corpora.
 
 This README is the **current corpus contract and workflow reference**. The former long-form README,
 including the dated benchmark progression, bug investigations, and solver-development diary through
-2026-08-20, is preserved verbatim as
-[`README-2026-08-20-snapshot.md`](README-2026-08-20-snapshot.md). Do not use historical solve counts
+2026-08-20, is preserved verbatim at
+[`../../docs/archive/snapshots/data-stress-README-2026-08-20.md`](../../docs/archive/snapshots/data-stress-README-2026-08-20.md). Do not use historical solve counts
 from that snapshot as current capability evidence; use the current solver queue and generated reports.
 
 ## Corpus map
@@ -46,7 +46,7 @@ capability evidence and may not guide production solving. See
 [`../../docs/solver-level-blindness.md`](../../docs/solver-level-blindness.md).
 
 Static filters are deliberately absent from these generated stress corpora; flipping filters are
-supported. Historical generation defects and their fixes are recorded in the dated README snapshot
+supported. Historical generation defects and their fixes are recorded in the archived README snapshot
 and relevant reports rather than repeated here.
 
 ## Corpus 1: hypothesis-driven
@@ -131,6 +131,6 @@ The old README accumulated many dated sections such as "Future solver work," shi
 snapshots, individual root-cause investigations, benchmark progressions, and retired batch workflow
 notes. They remain valuable provenance but are not the corpus contract.
 
-Use [`README-2026-08-20-snapshot.md`](README-2026-08-20-snapshot.md) when reconstructing that history,
+Use [`../../docs/archive/snapshots/data-stress-README-2026-08-20.md`](../../docs/archive/snapshots/data-stress-README-2026-08-20.md) when reconstructing that history,
 then reconcile any conclusion against current code, the live solver queue, and the relevant dated
 report before acting on it.
