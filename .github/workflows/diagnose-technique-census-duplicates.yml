@@ -1,0 +1,102 @@
+name: Diagnose technique census duplicates
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/diagnose-technique-census-duplicates.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Inspect duplicate census cells
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const p = 'reports/stress/technique-census/32240161854/combined-cells.json';
+          const raw = JSON.parse(fs.readFileSync(p, 'utf8'));
+          const rows = Array.isArray(raw) ? raw : (raw.results ?? raw.cells ?? []);
+          const by = new Map();
+          for (const r of rows) {
+            const a = by.get(r.cellId) ?? [];
+            a.push(r);
+            by.set(r.cellId, a);
+          }
+          const dup = [...by.entries()].filter(([,a]) => a.length > 1);
+          console.log(JSON.stringify({rawRows: rows.length, uniqueCellIds: by.size, duplicateIds: dup.length, extraRows: rows.length - by.size}, null, 2));
+
+          const timingKey = /^(?:totalMs|elapsedMs|durationMs|wallMs|ms)$/i;
+          function stripTiming(v) {
+            if (Array.isArray(v)) return v.map(stripTiming);
+            if (!v || typeof v !== 'object') return v;
+            const out = {};
+            for (const [k,x] of Object.entries(v)) {
+              if (k === 'variantLabel' || timingKey.test(k)) continue;
+              out[k] = stripTiming(x);
+            }
+            return out;
+          }
+          function core(r) {
+            const { attempts, totalMs, variantLabel, ...rest } = r;
+            return rest;
+          }
+          function eq(a,b) { return JSON.stringify(a) === JSON.stringify(b); }
+          let exact = 0, timingOnly = 0, attemptsOnly = 0, semantic = 0;
+          const semanticIds = [];
+          for (const [id,a] of dup) {
+            const first = a[0];
+            for (let i=1;i<a.length;i++) {
+              const other = a[i];
+              if (eq(first, other)) exact++;
+              else if (eq(stripTiming(first), stripTiming(other))) timingOnly++;
+              else if (eq(core(first), core(other))) attemptsOnly++;
+              else { semantic++; semanticIds.push(id); }
+            }
+          }
+          console.log(JSON.stringify({duplicatePairComparisons:{exact,timingOnly,attemptsOnly,semantic}, semanticIds:[...new Set(semanticIds)]}, null, 2));
+
+          function summarize(v) {
+            if (typeof v === 'string' && v.length > 300) return v.slice(0,300)+'…';
+            if (Array.isArray(v) && v.length > 20) return `[array len=${v.length}]`;
+            return v;
+          }
+          function diffs(a,b,path='',out=[]) {
+            if (eq(a,b)) return out;
+            if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) {
+              for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) diffs(a[k],b[k],path ? path+'.'+k : k,out);
+              return out;
+            }
+            if (Array.isArray(a) && Array.isArray(b) && a.length <= 20 && b.length <= 20) {
+              const n=Math.max(a.length,b.length); for(let i=0;i<n;i++) diffs(a[i],b[i],`${path}[${i}]`,out); return out;
+            }
+            out.push({path,a:summarize(a),b:summarize(b)}); return out;
+          }
+          for (const id of [...new Set(['T1-0054957', ...semanticIds])].slice(0,60)) {
+            const a = by.get(id);
+            if (!a || a.length < 2) continue;
+            console.log(`\n=== ${id} (${a.length} rows) ===`);
+            for (let i=1;i<a.length;i++) console.log(JSON.stringify(diffs(a[0],a[i]).slice(0,100), null, 2));
+          }
+
+          console.log('\nDuplicate IDs:');
+          console.log(dup.map(([id,a]) => `${id} x${a.length}`).join('\n'));
+          NODE
+
+          node scripts/run-bundled.mjs scripts/build-technique-census-plan.mjs -- \
+            --baseline=reports/stress/capability-runs/31918095910/summary.json \
+            --out=/tmp/technique-census-plan.json
+          node <<'NODE'
+          const p=JSON.parse(require('fs').readFileSync('/tmp/technique-census-plan.json','utf8'));
+          const cells=p.cells ?? p.plan ?? [];
+          console.log(JSON.stringify({planCells:cells.length,target:cells.find(c=>c.cellId==='T1-0054957')},null,2));
+          NODE
