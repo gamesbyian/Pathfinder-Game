@@ -129,4 +129,4 @@ A 2026-07-25 audit fixed `rankByAdmissibleSlack` sorting negative-slack dead can
 - `hint-diversification.mjs` and the workbench share `hint-ablation-generator.ts`, but outer-CLI byte parity is untested.
 - Default `reports/hint-workbench/latest.json` overwrites; pass `--output` when history matters.
 - Within-level worker-parallel exhaustive enumeration remains `hint-complete-enumeration-sharded.mjs`; `enumerate-complete` is sequential.
-- `hint-candidate-search.mjs` remains supported until parity/migration proves every documented use is covered; `candidate-grid` overlap alone is insufficient.
+- `hint-candidate-search.mjs` remains supported for targeted controlled runs. Coexistence with the workbench is intentional and is not itself a migration task; add new orchestration to the workbench and revisit removal only for a concrete maintenance or parity need.
