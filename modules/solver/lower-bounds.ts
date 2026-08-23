@@ -65,12 +65,15 @@ export function mustCrossForcedNeighborDeadlocked(pos: number, state: SolverSear
     const mcKeys = level.mustCrossKeys;
     const eu = state.edgeUsage;
     const staticNeighborKeys = prep.staticNeighborKeys;
+    const cellDenseIndex = prep.cellDenseIndex;
     const flipperIndexMap = prep.flipperIndexMap;
     for (let i = 0; i < mcKeys.length; i++) {
         if ((state.mustCrossMask & (1 << i)) === 0) continue;
         const mcKey = mcKeys[i];
         const usedAxes = eu[mcKey];
-        const base = mcKey * 4;
+        // staticNeighborKeys is dense-indexed — see prep.ts's own comment. mcKey is always a live
+        // cell (a must-cross cell is always a valid traversable cell), so this is always nonzero.
+        const base = (cellDenseIndex[mcKey] - 1) * 4;
         for (let d = 0; d < 4; d++) {
             if (usedAxes & NEIGHBOR_AXIS[d]) continue;   // that pass is already done
             const nk = staticNeighborKeys[base + d] - 1; // -1 bias undone; -1 itself means absent
@@ -123,6 +126,7 @@ export function mustCrossNeighborBudgetDeadlocked(pos: number, state: SolverSear
     const mcKeys = level.mustCrossKeys;
     const eu = state.edgeUsage;
     const staticNeighborKeys = prep.staticNeighborKeys;
+    const cellDenseIndex = prep.cellDenseIndex;
     const flipperIndexMap = prep.flipperIndexMap;
     const mustCrossIndex = prep.mustCrossIndex;
 
@@ -135,7 +139,8 @@ export function mustCrossNeighborBudgetDeadlocked(pos: number, state: SolverSear
         if ((state.mustCrossMask & (1 << i)) === 0) continue;
         const mcKey = mcKeys[i];
         const usedAxes = eu[mcKey];
-        const base = mcKey * 4;
+        // staticNeighborKeys is dense-indexed — see prep.ts's own comment. mcKey is always live.
+        const base = (cellDenseIndex[mcKey] - 1) * 4;
         for (let d = 0; d < 4; d++) {
             if (usedAxes & NEIGHBOR_AXIS[d]) continue; // that pass is already satisfied
             const nk = staticNeighborKeys[base + d] - 1; // undo the +1 "absent" bias

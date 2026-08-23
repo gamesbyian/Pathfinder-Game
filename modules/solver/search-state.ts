@@ -328,9 +328,12 @@ export function getNeighbors(pos: number, state: SolverSearchState, level: Norma
     }
 
     const candidates: number[] = [];
-    const base = pos * 4;
+    // staticNeighborKeys is dense-indexed (cellDenseIndex[pos] - 1) * 4 + d, not packed-key-
+    // indexed — see prep.ts's own comment. pos is always a live cell here (the search only ever
+    // moves onto cells getNeighbors itself returned), so cellDenseIndex[pos] is always nonzero.
+    const base = (prep.cellDenseIndex[pos] - 1) * 4;
     for (let d = 0; d < 4; d++) {
-        // +1-biased so 0 can mean "no neighbour" and prep can skip a 4.2M-entry fill — see prep.ts.
+        // +1-biased so 0 can mean "no neighbour" — see prep.ts.
         const nkPlus1 = prep.staticNeighborKeys[base + d];
         if (nkPlus1 === 0) continue;
         const nk = nkPlus1 - 1;

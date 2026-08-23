@@ -96,7 +96,8 @@ test('prepLevel marks only flippers with neither axis traversable as dead', () =
   assert.equal(prep.reachBlockedArr[edge], 0);
   // ...but deliberately still reachable in move generation: excluding them there was measured
   // net-negative (see prep.ts). Slot 1 is "left", so PACK(1,0)'s left neighbour is the dead corner.
-  assert.equal(prep.staticNeighborKeys[PACK(1, 0) * 4 + 1], corner + 1,
+  // staticNeighborKeys is dense-indexed via cellDenseIndex, not directly by packed key.
+  assert.equal(prep.staticNeighborKeys[(prep.cellDenseIndex[PACK(1, 0)] - 1) * 4 + 1], corner + 1,
     'dead flippers stay in staticNeighborKeys');
 });
 
@@ -116,9 +117,10 @@ test('prepLevel static neighbors respect blocks, gates, and filter axes', () => 
   });
   const prep = prepLevel(level);
   // Fixed direction order (encoding.ts's NEIGHBOR_DX/DY): 0=right, 1=left, 2=down, 3=up.
-  const base = center * 4;
+  // staticNeighborKeys is dense-indexed via cellDenseIndex, not directly by packed key.
+  const base = (prep.cellDenseIndex[center] - 1) * 4;
   // Entries are the neighbour key PLUS ONE, with 0 meaning "no neighbour" — the +1 bias is what
-  // lets prepLevel skip a 4.2M-entry fill(-1) per level (see prep.ts / distance.ts).
+  // lets prepLevel skip a fill(-1) per level (see prep.ts / distance.ts).
   assert.equal(prep.staticNeighborKeys[base + 0], 0); // right: blocked
   assert.equal(prep.staticNeighborKeys[base + 1], 0); // left (0,1): a gate cell
   assert.equal(prep.staticNeighborKeys[base + 2], down + 1); // down: filter axis matches on both ends
