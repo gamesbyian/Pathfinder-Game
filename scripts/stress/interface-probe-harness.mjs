@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 /**
- * Shared evaluation harness for "middle-layer" solver reasoners — implements
- * docs/solver-next-frontier-multilingual-research-update-2026-08-02.md section 18 ("Shared
- * evaluation harness"): every candidate reasoner (separator-state resource DP, a future bounded
- * obligation-compatibility MDD, a future CEGAR-derived abstraction, ...) runs against the SAME
- * labelled states and is scored on the SAME telemetry, instead of each probe script growing its
- * own bespoke comparison harness (the pattern axis-reach-probe.mjs / backward-exact-probe.mjs /
- * pocket-bridge-probe.mjs had each independently repeated).
+ * Shared evaluation harness for "middle-layer" solver reasoners. The current contract is
+ * docs/solver-shadow-eval-harness.md; historical prototype context is frozen under
+ * docs/archive/snapshots/solver-shadow-eval-harness-2026-08-20.md. Every candidate reasoner
+ * runs against the SAME labelled states and is scored on the SAME telemetry, instead of each
+ * probe script growing its own bespoke comparison harness (the pattern axis-reach-probe.mjs /
+ * backward-exact-probe.mjs / pocket-bridge-probe.mjs had each independently repeated).
  *
  * DATA SOURCE. Consumes the labelled-branch atlas ALREADY produced by
  * scripts/stress/prune-gap-probe.mjs (reports/stress/prune-gap-*.json — 16 levels / ~623
@@ -19,7 +18,7 @@
  *
  * PROBE CONTRACT. A probe module exports:
  *   export const name = '<short id>';
- *   export const soundnessClass = '<one of the section-18 classes, e.g. "sound prune">';
+ *   export const soundnessClass = '<class, e.g. "sound prune">';
  *   export function evaluate({ level, prep, state, pos }) -> {
  *     verdict: 'reject' | 'pass',
  *     abstained?: boolean,   // true = "couldn't decide", counted separately from a real 'pass'
@@ -29,14 +28,14 @@
  * evaluatePrunedMove itself is invoked (prune-gauntlet.ts), so a probe reads state the same way the
  * real gauntlet would.
  *
- * TELEMETRY (section 18). Per probe: catch-on-dead, false-reject-on-live (must be zero to claim
- * "sound"), unique catch beyond the existing gauntlet's own verdict (branch.pruned), overlap with
- * the existing gauntlet, abstain rate, and per-branch depth (branch.step) so catches can be
- * weighted by how early they fire. Deliberately NOT reduced to one leaderboard number — see the
- * doc's "do not compare only raw dead-prefix catch counts" note.
+ * TELEMETRY. Per probe: catch-on-dead, false-reject-on-live (must be zero to claim "sound"),
+ * unique catch beyond the existing gauntlet's own verdict (branch.pruned), overlap with the
+ * existing gauntlet, abstain rate, and per-branch depth (branch.step) so catches can be weighted by
+ * how early they fire. Deliberately NOT reduced to one leaderboard number; see
+ * docs/solver-shadow-eval-harness.md.
  *
- * PERSISTENCE. Writes --out after EVERY atlas file (batch-tool rule: report between levels, not
- * only at the end — see CLAUDE.md's "Two requirements for any batch tool").
+ * PERSISTENCE. Writes --out after EVERY atlas file, following scripts/README.md's rule that long
+ * batch tools persist recoverable progress incrementally.
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/interface-probe-harness.mjs -- \
@@ -49,7 +48,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { readLevelsWithHints } from '../level-data-io.mjs';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { createSolver, SOLVER_TESTING_API } from '../../modules/Solver.ts';
+import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { undoMove } from '../../modules/solver/search-state.ts';
 import { PROBE_REGISTRY } from './probes/index.mjs';
 
