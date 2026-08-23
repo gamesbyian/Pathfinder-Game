@@ -2390,10 +2390,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // ONLY after every earlier tier — including repair-late-probe, the previous true end of the
     // ladder — has already failed, so it structurally cannot touch that loss population: a level
     // that solves earlier never reaches this tier. Same `runWholeLadderRetryTier`/`proxyOverrides`
-    // shape as STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY. Opt-in/default-OFF (NEW, unvalidated
-    // mechanism) — the flag check below (`cfg &&` ... `=== true`) is the opt-in convention, so this
-    // block is a strict no-op for every production/interactive caller (cfg null) until explicitly
-    // enabled.
+    // shape as STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY. Promoted default-ON 2026-08-23 after a
+    // population-scale A/B (73-level loss population +3/-0; 90-level gain population 0/-0;
+    // published corpus unchanged — see docs/solver-opt-in-experiment-ledger.md); the flag check
+    // below (`!cfg ||` ... ) is the default-ON convention.
     //
     // Positioned dead last — AFTER the repair-late-probe tier above, the current true end of the
     // ladder — for the identical reason every tier above it is placed there: nothing may run after

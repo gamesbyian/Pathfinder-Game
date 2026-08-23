@@ -31,7 +31,7 @@ const rows = [
     ['repair-elite-prefix-dfs-retry', 100, 'opt-in', 'retry', 'elite-prefix repair retry enabled', 'configured-repair', 'additive-node-headroom', 'repair-elite-prefix-dfs-retry'],
     ['mc-neighbor-budget-retry', 110, 'promoted', 'retry', 'must-cross neighbor retry enabled', 'configured-main', 'additive-node-headroom', 'mc-neighbor-budget-retry'],
     ['repair-late-probe', 120, 'opt-in', 'retry', 'late repair probe enabled', 'configured-repair', 'fixed-node-cap', 'repair-late-probe'],
-    ['goal-attraction-legacy-distance-retry', 125, 'opt-in', 'retry', 'goal-attraction legacy-distance retry enabled', 'configured-main', 'additive-node-headroom', 'goal-attraction-legacy-distance-retry'],
+    ['goal-attraction-legacy-distance-retry', 125, 'promoted', 'retry', 'goal-attraction legacy-distance retry enabled', 'configured-main', 'additive-node-headroom', 'goal-attraction-legacy-distance-retry'],
     ['portfolio-pass', 20, 'experiment-only', 'portfolio', 'portfolio pass includes config', 'portfolio', 'portfolio-pass', null],
     ['portfolio-fallback', 130, 'experiment-only', 'portfolio', 'portfolio passes did not solve', 'configured-main', 'caller-main', null],
 ] as const;

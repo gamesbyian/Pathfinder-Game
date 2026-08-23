@@ -819,19 +819,23 @@ export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  at the larger cap too. */
 export const REPAIR_LATE_PROBE_NODE_BUDGET = 5_000_000;
 
-/** STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY (opt-in, default OFF — NEW, unvalidated
- *  mechanism, 2026-08-23). Dead-last additive whole-ladder retry (same `runWholeLadderRetryTier`
- *  shape as STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY) forcing SCORE_GOAL_ATTRACTION_LEGACY_
- *  DISTANCE on for its own rerun of `mainConfigs`, positioned AFTER `repair-late-probe`, the
- *  current true end of the ladder. See docs/solver-optimization-current-queue.md Priority 7 and
- *  ablation-config.ts's own comment on the flag for the full rationale: the plain global form of
- *  that flag measured net -5 (73-level loss population +9/-3; 90-level gain population 0/-11;
- *  published corpus unchanged) because it forces the legacy distance map even on levels the
- *  corrected map already solves early in the ordinary ladder. This dead-last placement cannot
- *  touch that loss population by construction — a level solving earlier never reaches this tier —
- *  so it is purely additive, same reasoning as every other dead-last retry tier in this file.
- *  1.0/0.5 starting constants match STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own (the closest
- *  structural analog); unvalidated, do not treat as tuned. */
+/** STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY (promoted default-ON 2026-08-23). Dead-last
+ *  additive whole-ladder retry (same `runWholeLadderRetryTier` shape as
+ *  STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY) forcing SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE on
+ *  for its own rerun of `mainConfigs`, positioned AFTER `repair-late-probe`, the current true end
+ *  of the ladder. See docs/solver-optimization-current-queue.md Priority 7 and ablation-config.ts's
+ *  own comment on the flag for the full rationale: the plain global form of that flag measured net
+ *  -5 (73-level loss population +9/-3; 90-level gain population 0/-11; published corpus unchanged)
+ *  because it forces the legacy distance map even on levels the corrected map already solves early
+ *  in the ordinary ladder. This dead-last placement cannot touch that loss population by
+ *  construction — a level solving earlier never reaches this tier — so it is purely additive, same
+ *  reasoning as every other dead-last retry tier in this file. Promoted after a population-scale
+ *  A/B (solver-level-blind-targeted-sweep.yml, commit 95927c6df): 73-level loss population
+ *  15/73 -> 18/73 (+3/-0); 90-level gain population 90/90 -> 90/90 (0/-0); published corpus
+ *  unchanged. 1.0/0.5 constants match STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own (the
+ *  closest structural analog); recovers only 3 of the global form's 9 gains since this tier only
+ *  gets a fraction of the node ceiling the global form had from move zero — see
+ *  docs/solver-opt-in-experiment-ledger.md before raising the reserve fraction further. */
 export const GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION = 1.0;
 export const GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_NODE_RESERVE_FRACTION = 0.5;
 
@@ -1171,14 +1175,16 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
         ? Infinity
         : mcNeighborBudgetRetryNodeCeiling + repairLateProbeNodeReserve;
 
-    // STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY (opt-in, default OFF) — see
+    // STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY (promoted default-ON 2026-08-23: population-
+    // scale A/B produced +3 net with zero regressions across the 73-loss/90-gain/published
+    // populations — see docs/solver-opt-in-experiment-ledger.md) — see
     // GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION's own comment above. No override
-    // plumbing yet (unvalidated, first-landing scope) — always the two constants below, subject
-    // only to the flag itself and disableExtraBudgetPasses.
+    // plumbing yet (first-landing scope) — always the two constants below, subject only to the
+    // flag itself and disableExtraBudgetPasses.
     const goalAttractionLegacyDistanceRetryBudgetFraction = opts.disableExtraBudgetPasses
         ? 0 : GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION;
     const goalAttractionLegacyDistanceRetryTierWillRun = goalAttractionLegacyDistanceRetryBudgetFraction > 0
-        && !!(cfg && cfg.STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY === true);
+        && !!(!cfg || cfg.STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY);
     const goalAttractionLegacyDistanceRetryNodeReserve = (goalAttractionLegacyDistanceRetryTierWillRun && nodeBudget !== Infinity)
         ? Math.floor(repairLateProbeNodeCeiling * GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_NODE_RESERVE_FRACTION)
         : 0;

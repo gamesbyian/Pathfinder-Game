@@ -32,6 +32,7 @@ function budgetPlanEligibility(id: SolverStageId, plan: StageBudgetPlan): boolea
         case 'repair-elite-prefix-dfs-retry': return !!plan.repairElitePrefixDfsRetryTierWillRun;
         case 'mc-neighbor-budget-retry': return !!plan.mcNeighborBudgetRetryTierWillRun;
         case 'repair-late-probe': return !!plan.repairLateProbeTierWillRun;
+        case 'goal-attraction-legacy-distance-retry': return !!plan.goalAttractionLegacyDistanceRetryTierWillRun;
         default: return undefined;
     }
 }
