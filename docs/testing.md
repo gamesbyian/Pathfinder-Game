@@ -93,6 +93,8 @@ For search behavior, separate correctness, solved-set, and performance questions
 - For heuristic/routing/policy changes, use level-blind matched-work evidence on an explicit affected population plus controls; follow [`solver-research-operating-model.md`](solver-research-operating-model.md).
 - Referee-validate returned paths; do not infer correctness from solve count.
 - A binding wall deadline makes an unsolved result indeterminate for reproducible capability evidence; classify `deadlineTruncated` separately.
+- For connectivity/topology hard-prune changes, replay known-valid solution prefixes with `node scripts/run-bundled.mjs scripts/stress/connectivity-soundness-check.mjs`; a hard prune must never reject a state with a stored valid completion.
+- For must-cross rejection changes, use `scripts/stress/mc-prune-soundness-check.mjs`; for `mustCrossNeighborBudgetDeadlocked`, use the narrower `scripts/stress/mc-neighbor-budget-soundness-check.mjs`. These are proof-oriented on-demand gates, not ordinary CI.
 
 Use the narrowest population that decides the question while iterating, then the relevant population-scale gate before promotion. Do not spend full-corpus compute merely to reconfirm a locally falsified premise.
 
