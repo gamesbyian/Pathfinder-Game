@@ -1,6 +1,9 @@
 # Solver architectural speed opportunities
 
-Architecture-level runtime opportunities that are not the ranked live solve queue. Use with [`solver-architecture.md`](solver-architecture.md), [`solver-budget-determinism.md`](solver-budget-determinism.md), and [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+> **Status:** **ASAP / HIGH PRIORITY ACTIVE PROGRAM**.
+> **Peer priority:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md) is also **ASAP / HIGH PRIORITY**. Scheduling reduces wasted search work; this program reduces the cost of the work the scheduler chooses to execute.
+
+Architecture-level runtime opportunities complement the ranked live solve queue. Use with [`solver-architecture.md`](solver-architecture.md), [`solver-budget-determinism.md`](solver-budget-determinism.md), [`solver-scheduling-policy.md`](solver-scheduling-policy.md), and [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
 
 ## Working rule
 
@@ -12,7 +15,7 @@ Prefer directly testing a reversible high-upside refactor over spending comparab
 
 The 2026-07-30 hot-path campaign found large constant-factor wins: order-preserving changes cut published-corpus wall time 27.1% and a Corpus-2 sample 13.2%; beam tree-order walking was worth roughly 16-30% on measured populations. Later state-buffer reuse, urgency-context pooling, and dense distance storage added further double-digit batch wins. See [`../reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md).
 
-The lesson is not that the current kernel is poor; it is that representation-level work has repeatedly paid enough to justify larger experiments.
+The lesson is not that the current kernel is poor; it is that representation-level work has repeatedly paid enough to justify larger experiments. This is therefore near-term execution work, not a passive idea list.
 
 ## Already tested: do not rediscover unchanged forms
 
@@ -72,6 +75,12 @@ The canonical work currency is a contract; its per-operation implementation is n
 4. Work-meter write cleanup only if profiling nominates it.
 
 The first pair has the strongest architectural leverage because it removes representation overhead shared by several later ideas.
+
+## Interaction with scheduling work
+
+Keep the two programs experimentally separable. Scheduler comparisons use machine-independent work so faster or slower hosts do not alter allocation. Pure implementation-speed experiments should preserve search work and decisions when claiming order preservation. If an architectural refactor intentionally changes search order, evaluate it as a behavior change under matched work.
+
+A scheduler gain must not be described as a kernel speedup merely because it performs less work; a kernel speedup must not silently change scheduler action shares because wall speed is not an allocation input.
 
 ## Evaluation
 
