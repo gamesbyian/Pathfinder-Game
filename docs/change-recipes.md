@@ -98,6 +98,22 @@ Check:
 
 A generated filename is not sufficient authority metadata. Prefer explicit run/schema/provenance fields.
 
+## Current documentation / authority change
+
+Documentation drift is usually duplicated **volatile facts**, not broken links. File modification time is weak evidence of freshness: a consolidation/edit can preserve an already-stale paragraph verbatim.
+
+When changing a current authority, implementation contract, workflow, default, or measured constant:
+
+1. name the canonical source of truth;
+2. search current docs, local READMEs, source comments, and adapters for the changed symbol/name plus old terminology;
+3. distinguish links/routing from repeated semantics: links usually age safely; copied counts, statuses, representations, ownership, defaults, timings, and workflow policy do not;
+4. derive/check volatile facts mechanically where practical instead of hand-copying them;
+5. if a satellite must restate a volatile fact, add a sentinel/check or make its measurement/date/status explicitly non-authoritative;
+6. do not use a recent doc edit as evidence that every section was reconciled;
+7. run `npm run check:documentation-links`, then separately review semantic dependants that a link checker cannot understand.
+
+High-risk examples are solver stage/default disposition, budget ownership, mutable-storage lifetime, mechanic cardinality, workflow selection, test-suite timing, and current experiment status. Prefer one executable authority plus projections over parallel hand-maintained descriptions.
+
 ## When this document applies
 
-Use these recipes when a patch crosses representations, transports, persistence, or duplicated optimized implementations. Ordinary local changes should stay local. The goal is to prevent plausible 80%-complete patches, not to make every edit ceremonious.
+Use these recipes when a patch crosses representations, transports, persistence, duplicated policy, documentation authorities, or optimized implementations. Ordinary local changes should stay local. The goal is to prevent plausible 80%-complete patches, not to make every edit ceremonious.
