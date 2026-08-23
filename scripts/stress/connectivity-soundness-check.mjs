@@ -25,7 +25,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { readLevelsWithHints } from '../level-data-io.mjs';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { createSolver, SOLVER_TESTING_API } from '../../modules/Solver.ts';
+import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { isConnected } from '../../modules/solver/topology.ts';
 
 installBrowserStubs();
