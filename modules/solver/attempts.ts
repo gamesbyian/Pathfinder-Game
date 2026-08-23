@@ -167,8 +167,10 @@ const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= PO
  *  `solver-future-work.md`'s "repair-fallback gate widening" entry. `STRATEGY_REPAIR_FALLBACK_GATE_WIDEN`
  *  (default OFF, ablation-config.ts) below is that experiment's gate: OFF reproduces this function's
  *  pre-2026-08-23 behavior byte-for-byte; ON adds unconditional `isHighInt(f)` (dropping the
- *  VERY_HIGH_REQINT floor) and `f.arch === 'portal-heavy'`. Do not flip the default without the A/B
- *  evidence this comment asks for. */
+ *  VERY_HIGH_REQINT floor) and `f.arch === 'portal-heavy'`. **CLOSED NEGATIVE 2026-08-23:**
+ *  population-scale GHA A/B (562-level sample, `solver-archetype-sample-ab.yml`) found 0 gains, 2
+ *  losses (`R01944`, `R02474`) — see `docs/solver-opt-in-experiment-ledger.md`. Keep default OFF;
+ *  do not repeat this unchanged broad form. */
 const needsRepairFallback = (f: LevelFeatures, cfg: AblationConfig | null = null): boolean =>
     (f.mustCross >= POLICY.REPAIR_MC_MIN && f.mustPass >= POLICY.REPAIR_MP_MIN)
     || (isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT)
