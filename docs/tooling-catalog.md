@@ -18,6 +18,8 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 | Known-solution comparison | `npm run stress:solution-profile-compare` |
 | Isolated technique × level census | `technique-census.yml`; expensive, check existing census first |
 | Second-order technique-census analysis | `node scripts/technique-census-second-order.mjs [run-directory] [--production-run=<dir>] [--frozen-production-run=<dir>]`; rebuilds phenotype, multiplicity, router-bound, conditional-value, and cover outputs from committed cells |
+| Evidence-driven scheduling/allocation | **ASAP:** read [`solver-scheduling-policy.md`](solver-scheduling-policy.md); extend the second-order census/lifecycle/family analysis substrate before creating new storage, then validate with matched-work/shadow or level-blind A/B tooling |
+| Architectural solver speed | **ASAP:** [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md), `npm run solver:speed-probe`, deterministic pinned-work comparisons |
 | One technique over a population | `scripts/method-probe.mjs` / `method-probe-sweep.yml` |
 | Validate/promote an archetype-gated `ATTEMPT_POLICY` routing change | `solver-archetype-sample-ab.yml` (preferred over a full-population `solver-stress-refresh.yml` sweep — same evidence via a deterministic stratified sample, a fraction of the wall time; [`../.github/workflows/README.md`](../.github/workflows/README.md)) |
 | One-off level-blind check over a specific id list | `solver-level-blind-targeted-sweep.yml` (dynamically sharded, artifact-only) |
@@ -36,7 +38,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 | Area | Main commands / references |
 |---|---|
 | Validation | `check`, `ci`, `ci:fast`, `ci:full`, `test:unit`, `test:unit:fast`, `test:coverage`, `test:node`, `test:node:fast`, `test:e2e*`, `test:visual`, `check:documentation-links`, `check:types*`, `check:lint`; [`testing.md`](testing.md) |
-| Solver | `solver:direct`, `solver:bench`, `solver:speed-probe`, `solver:fingerprint*`, `solver:req-length-sweep`, `solver:trap-audit`, `solver:winning-attempts`, `solver:experiment-preflight`; [`solver-architecture.md`](solver-architecture.md) |
+| Solver | `solver:direct`, `solver:bench`, `solver:speed-probe`, `solver:fingerprint*`, `solver:req-length-sweep`, `solver:trap-audit`, `solver:winning-attempts`, `solver:experiment-preflight`; [`solver-architecture.md`](solver-architecture.md), scheduling program: [`solver-scheduling-policy.md`](solver-scheduling-policy.md), speed program: [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) |
 | Ablation | `ablation:*`; [`solver-ablation.md`](solver-ablation.md), [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) |
 | Stress | `stress:generate*`, `stress:validate-witnesses`, `stress:benchmark*`, `stress:regression`, `stress:solve-one`, `stress:reduce-level`, `stress:rank-levels`, `stress:failure-inbox`, `stress:lifecycle-failure-map`, `stress:solution-profile*`, `stress:provenance-coverage`; compact corpus discovery: `scripts/corpus-query.mjs`; [`../data/stress/README.md`](../data/stress/README.md) |
 | Families | `family:generate`, `family:index`, `family:show`, `family:query`, `family:coverage`, `family:analyze`, `family:boundary-report`, `family:parent-hint-replay`, `stress:family-pair-divergence`, `solver:winning-attempts`; `--trove-root` for index/wide parent replay; `family:trove:doctor`; [`variant-level-research.md`](variant-level-research.md) |
@@ -46,11 +48,13 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 | Research status | `research:index`; compact mode includes structured current evidence plus non-authoritative discovery metadata for older loose reports |
 | Artifact provenance | `scripts/artifact-query.mjs`; compact view over tracked exception metadata |
 
-Historical portfolio tools (`solver:portfolio-report`, `solver:portfolio-replay`) and pilots remain available; code presence does not imply an active hypothesis. Check reports before rerunning them.
+Historical portfolio tools (`solver:portfolio-report`, `solver:portfolio-replay`) and pilots remain available; code presence does not imply an active hypothesis. The old broad cold-start portfolio experiment is closed; reuse plumbing only if it serves the new scheduling design and current baselines.
 
 ## Rules
 
 - Use the smallest population/tool that decides the next gate.
+- For scheduler work, begin with the existing census second-order outputs, lifecycle telemetry, current capability baselines, family index, solution-profile tools, and research-status index. Add a new analyzer only when these cannot express the required rebuildable view; do not create a second canonical evidence store.
+- Scheduler experiments must declare the shared total-work envelope. Prefer `strictTotalWorkBudget` when additive tail tiers would make treatment/control incomparable; see [`solver-budget-determinism.md`](solver-budget-determinism.md).
 - For an archetype-gated `ATTEMPT_POLICY` change, default to `solver-archetype-sample-ab.yml` over a full-corpus `solver-stress-refresh.yml` sweep; reach for full-population coverage only when the change's blast radius isn't cleanly archetype-bounded or the decision needs complete coverage.
 - Tune `shard_count`/`max_parallel` on GHA sweeps (`solver-stress-refresh.yml`, `method-probe-sweep.yml`, `solver-archetype-sample-ab.yml`) before dispatching, especially alongside other in-flight runs — `max_parallel`, not `shard_count` alone, is what actually bounds wall time.
 - Prefer compact query/summary views over opening large reports, logs, corpora, or hint files wholesale.
