@@ -1,6 +1,6 @@
 # Solver code map
 
-Terse implementation map for work inside `modules/solver/`. Read [`../../docs/solver-architecture.md`](../../docs/solver-architecture.md) for the durable architecture contract, [`../../docs/solver-level-blindness.md`](../../docs/solver-level-blindness.md) for production-policy constraints, and [`../../docs/solver-optimization-current-queue.md`](../../docs/solver-optimization-current-queue.md) before choosing research work.
+Terse implementation map for work inside `modules/solver/`. Read [`../../docs/solver-architecture.md`](../../docs/solver-architecture.md) for the durable architecture contract, [`../../docs/solver-technique-operational-taxonomy.md`](../../docs/solver-technique-operational-taxonomy.md) before treating named profiles/configs as independent techniques, [`../../docs/solver-level-blindness.md`](../../docs/solver-level-blindness.md) for production-policy constraints, and [`../../docs/solver-optimization-current-queue.md`](../../docs/solver-optimization-current-queue.md) before choosing research work.
 
 ## Start by change type
 
@@ -12,6 +12,7 @@ Terse implementation map for work inside `modules/solver/`. Read [`../../docs/so
 | Shared stage execution helpers | `stage-executors.ts` |
 | Attempt ladder coordination, gates, retries, result assembly | `orchestration.ts`, then `attempts.ts` / `attempt-dispatch.ts` |
 | Production defaults, ablation flags, portfolio experiment tiers | `ablation-config.ts`, `portfolio-experiment.ts` |
+| Understand how profiles/templates/search families differ operationally | [`../../docs/solver-technique-operational-taxonomy.md`](../../docs/solver-technique-operational-taxonomy.md), then `policy.ts`, `scoring.ts`, `search.ts`, `admissible-order-search.ts`, `repair-search.ts` |
 | Core beam/DFS traversal or candidate expansion | `search.ts`, `search-state.ts`, `prep.ts` |
 | Candidate ranking / badness / ordering | `scoring.ts`, `diversification.ts` |
 | Lower bounds, hard feasibility, prune logic | `lower-bounds.ts` and its tests |
