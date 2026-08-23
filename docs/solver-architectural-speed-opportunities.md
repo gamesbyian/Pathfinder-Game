@@ -39,13 +39,11 @@ This extends an already successful migration. Reuse the distance-array safety pa
 
 **2026-08-23 first step: `staticNeighborKeys` converted to dense per-level indexing.** A microbenchmark confirmed the KEY_SPACE-sized `Int32Array(KEY_SPACE * 4)` (16.8 MB) was costing ~2ms per allocation purely from its size (not from filling it — only real cells were ever written either way); it's now a compact per-level array addressed via a new `cellDenseIndex: Uint8Array(KEY_SPACE)` (1 MB, same size class as the existing `mustPassIndex`/`mustCrossIndex`/`flipperIndexMap`), ~30x cheaper to allocate. Order-preserving (`nodesExpanded` bit-identical, `solver:bench --check` byte-identical baseline), −2.7% published wall time (consistent, 3/3 rounds), ≈−1% Corpus-2 (noise-level — this specific array's fixed per-solve cost matters far more for many-quick-solves workloads than for individual long hard-level solves). `visited`, `edgeUsage`, `gateFlags`, and `reachBlockedArr` remain packed-key-indexed — not attempted this pass; `gateFlags`/`reachBlockedArr` are 16x smaller than the old `staticNeighborKeys` so the same conversion there would need to independently earn its complexity, and `visited`/`edgeUsage` are already pooled/reused across attempts within one solve (search-state.ts's `STATE_BUF_*` slots) rather than reallocated per prepLevel call, so their allocation-cost profile is different. See [`../reports/2026-08-23-dense-static-neighbor-keys.md`](../reports/2026-08-23-dense-static-neighbor-keys.md).
 
-### 2. Beam candidate arena and cheaper coarse dedup
+### 2. Beam coarse-dedup representation: optimized; arena/hash form closed
 
-Current beam phases allocate `BeamNode` objects, construct string state signatures, build native `Map<string, BeamNode>` tables (plus a near-tie map), sort arrays, and optionally build diversity `Map`/`Set` structures. Preserve the **current coarse merge semantics** exactly; do not replace them with fully sound state equivalence, whose ceiling is already measured as negligible.
+Current beam phases allocate `BeamNode` objects, build native dedup maps (plus a near-tie map), sort arrays, and optionally build diversity `Map`/`Set` structures. Preserve the **current coarse merge semantics** exactly; do not replace them with fully sound state equivalence, whose ceiling is already measured as negligible.
 
-Prototype parallel typed arrays / an arena for candidate fields and a custom hash table over the existing scalar tuple, with equality verification on hash collision. Parent indices can replace object references. Compare against the current beam at pinned work with a non-binding deadline; an order-preserving implementation should reproduce decisions exactly.
-
-This is the most obvious place to combine with the dense-native core: dense cell IDs shrink keys and simplify hashing.
+The documented proposal was to prototype parallel typed arrays / an arena for candidate fields and a custom hash table over the existing scalar tuple, with parent indices replacing object references. The 2026-08-23 work below found that the important cost was string-key construction, removed it with lazy construction and collision-free numeric keys, and found a hand-rolled custom hash table no faster than native numeric-keyed `Map`. The custom-hash-table/typed-array-arena form is therefore closed for now; do not treat it as an outstanding task without new profile evidence. Further dominant beam hot-path work is in items 4/5, while dense-native conversion remains separately open where profiling supports it.
 
 **2026-08-23 partial progress:** the two per-candidate delimited-string dedup/diversity keys (`sc`/`sk`) used to be built unconditionally for every accepted beam candidate, even in the (common) phases that never reach the `cands.length > beamWidth` branch that consumes them. `BeamNode` now stores the underlying 7 numeric fields as scalars and builds the strings lazily, only where actually consumed — order-preserving (`nodesExpanded` bit-identical, `solver:bench --check` byte-identical baseline node count), −7.8% published / −11.2% Corpus-2-sample wall time on interleaved node-budgeted medians. See [`../reports/2026-08-23-beam-dedup-key-lazy-build-experiment.md`](../reports/2026-08-23-beam-dedup-key-lazy-build-experiment.md).
 
@@ -75,12 +73,12 @@ The canonical work currency is a contract; its per-operation implementation is n
 
 ## Suggested order
 
-1. Dense-native core plus beam arena/dedup prototype.
-2. Compiled scoring and fused move generation/state mutation.
+1. Continue dense-native conversion only where profiling shows worthwhile packed-key allocation/lookup cost.
+2. Compiled scoring and fused move generation/state mutation, now the dominant documented beam hot-path opportunity.
 3. Alternative beam-state materialization.
 4. Work-meter write cleanup only if profiling nominates it.
 
-The first pair has the strongest architectural leverage because it removes representation overhead shared by several later ideas.
+The scoring/move kernel has the strongest immediate profile evidence; dense-native work remains attractive when it removes measured representation/allocation cost rather than as a blanket conversion project.
 
 ## Interaction with scheduling work
 
