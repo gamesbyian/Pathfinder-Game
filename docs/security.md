@@ -1,7 +1,7 @@
 # Pathfinder security model
 
 > **Read for:** Firestore authorization, Firebase config/secrets, debug exposure, and security-change workflow.
-> **Separate contract:** [`content-security-policy.md`](content-security-policy.md) for CSP; [`third-party-dependencies.md`](third-party-dependencies.md) for allowed browser dependencies/origins.
+> **Separate contract:** [`content-security-policy.md`](content-security-policy.md) for CSP; allowed browser dependencies are enforced by `check:third-party` (`scripts/check-third-party-dependencies.mjs`).
 
 Pathfinder is a static browser app with Firebase Auth/Firestore and no private application server. Firestore rules are the backend authorization boundary; client-side checks are UX only.
 
