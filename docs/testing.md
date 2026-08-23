@@ -86,10 +86,13 @@ Run e2e for user-visible controller/state/persistence changes. Run visual only w
 
 ## Solver changes
 
-For search behavior, separate correctness, solved-set, and performance questions:
+For search behavior, separate correctness, solved-set, performance, and stability questions:
 
 - `npm run solver:bench -- --check` checks the published solved set; it is not a speed benchmark.
 - For implementation speed, use the deterministic work/node protocol in [`solver-architecture.md`](solver-architecture.md#speed-only-optimization).
+- `node scripts/stress/hint-cost-drift.mjs` is a cheap retrospective signal for search-cost changes when hint provenance contains same-config/same-budget rediscoveries at multiple commits. It prefers `workSpent`, but coverage is opportunistic and drift is an attribution lead, not a regression verdict.
+- `node scripts/stress/classify-stability.mjs --in=<benchmark>` distinguishes comfortable solves from budget-edge solves; add `--compare=<second-run>` to flag outcome/status flakiness. This helps decide how much confidence to place in a nominally preserved solve.
+- Neither retrospective signal replaces a controlled deterministic before/after benchmark when making a promotion or performance claim.
 - For heuristic/routing/policy changes, use level-blind matched-work evidence on an explicit affected population plus controls; follow [`solver-research-operating-model.md`](solver-research-operating-model.md).
 - Referee-validate returned paths; do not infer correctness from solve count.
 - A binding wall deadline makes an unsolved result indeterminate for reproducible capability evidence; classify `deadlineTruncated` separately.
