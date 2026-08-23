@@ -5,8 +5,8 @@ Current test tiers and finish-line rules.
 ## Core commands
 
 ```bash
-npm run ci:fast     # default local gate: checks + fast unit/node suites (~1 min)
-npm run ci          # full local gate: coverage + deep solver/slow harnesses (~4 min)
+npm run ci:fast     # default local gate: checks + fast unit/node suites
+npm run ci          # full local gate: coverage + deep solver/slow harnesses
 npm run test:unit   # Vitest unit/integration
 npm run ci:full     # ci + Playwright e2e
 npm run test:e2e    # Playwright functional browser tests
@@ -21,6 +21,8 @@ Use `ci:fast` by default. It skips only `deepTest` tests and coverage instrument
 - making a high-stakes completeness claim on a broad change.
 
 `ci` is browser-free; `ci:full` adds browser tests. Visual tests stay separate because rendering varies by environment. GitHub Actions is execution convenience, not evidence unless you report what ran.
+
+Test-wall-time figures are measurements, not contracts: fixture changes, runner load, hardware, and suite composition can move them sharply. Measure current timings from the command/workflow when runtime itself matters rather than copying a historical minute estimate into another authority.
 
 ## Tier map
 
@@ -78,67 +80,22 @@ Playwright runs against `npm run build && vite preview`.
 ```bash
 npm run test:e2e
 npm run test:e2e:smoke
-npm run test:e2e:a11y
-npm run test:e2e:editor
-npm run test:e2e:security
-npm run test:e2e:theme
 ```
 
-Functional e2e blocks third-party requests through the shared fixture. Visual tests use their own real-font environment. For repeated local e2e, keep build + preview running; Playwright reuses the server outside CI.
+Run e2e for user-visible controller/state/persistence changes. Run visual only when rendering/layout itself changes.
 
-## What to run
+## Solver changes
 
-- **Editing:** targeted Vitest/e2e or small solver sample.
-- **Normal completion:** `ci:fast` when feasible; otherwise report narrower checks and why.
-- **UI/controller:** focused e2e; `ci:full` for broad browser confidence.
-- **Modal/markup:** `test:visual`; update baselines intentionally only.
-- **Level/hint:** `test:hint-path-oracle` + relevant validators.
-- **Solver hot path:** full `ci`, then solver gates below.
+For search behavior, separate correctness, solved-set, and performance questions:
 
-## Solver iteration and promotion
+- `npm run solver:bench -- --check` checks the published solved set; it is not a speed benchmark.
+- For implementation speed, use the deterministic work/node protocol in [`solver-architecture.md`](solver-architecture.md#speed-only-optimization).
+- For heuristic/routing/policy changes, use level-blind matched-work evidence on an explicit affected population plus controls; follow [`solver-research-operating-model.md`](solver-research-operating-model.md).
+- Referee-validate returned paths; do not infer correctness from solve count.
+- A binding wall deadline makes an unsolved result indeterminate for reproducible capability evidence; classify `deadlineTruncated` separately.
 
-Use the smallest representative sample that can falsify an idea; pay full-population cost for validated results/promotion.
+Use the narrowest population that decides the question while iterating, then the relevant population-scale gate before promotion. Do not spend full-corpus compute merely to reconfirm a locally falsified premise.
 
-- **Soft mechanisms:** scoring/order/bias/default-off attempts may lose solves or work, but referee validation protects returned paths.
-- **Hard mechanisms:** pruning/bounds/caches/state equivalence can remove valid states; require proof-oriented, differential, and counterexample tests. See [`solver-correctness-hardening.md`](solver-correctness-hardening.md).
+## Documentation changes
 
-A reverted experiment may discover a valid new solution; preserve novel finds through shared hint/provenance machinery before discarding the code.
-
-## Solver finish-line gates
-
-| Change | Minimum evidence |
-|---|---|
-| Mechanic-local scoring/pruning | targeted unit/differential + stress smoke/mechanic sample |
-| Attempt policy/order/threshold | smoke + pinned regression + `solver:bench --check` |
-| Shared orchestration/search/repair/scoring/prune behavior | `solver:bench --check` + relevant stress population |
-| Budget/allocation semantics | published regression + matched deterministic/work-budget evidence |
-| Hard prune/cache/bound | soundness proof/tests + stored-witness differential + regression gates |
-
-Stress definitions: [`../data/stress/README.md`](../data/stress/README.md). Tool choice: [`tooling-catalog.md`](tooling-catalog.md).
-
-### Stress tiers
-
-| Tier | Entry point | Use |
-|---|---|---|
-| Smoke | `stress:smoke` | fast mechanic/historical canaries |
-| Pinned regression | `stress:regression` | solved canaries + known-hard targets |
-| Published | `solver:bench -- --check` | player-corpus solved/failed regression |
-| Corpus 1 | `stress:benchmark` on `stress-levels.json` | hypothesis-driven frontier |
-| Corpus 2 | `stress:benchmark` / `solver-stress-refresh.yml` | large solver-blind population |
-| Sample/curated | `stress:benchmark -- --sample=...` or dev benchmark | cheaper iteration |
-
-Budget-edge/deadline-truncated results are not clean negatives. Recheck unstable cases alone and follow [`solver-budget-determinism.md`](solver-budget-determinism.md).
-
-## Solvability vs speed
-
-`solver:bench --check` protects outcomes, not cost. For hot-path changes, pin `workBudget`, make wall deadline non-binding, compare `workSpent`, and use interleaved wall timing when cost per metered operation changes. Wall-bounded arms are not equivalent search because faster code searches farther. See [`solver-budget-determinism.md`](solver-budget-determinism.md).
-
-## Capability experiments
-
-Headline capability work must obey [`solver-level-blindness.md`](solver-level-blindness.md): exact hints, winner replay, historical status, IDs, caches, or per-level budgets cannot steer cold solves.
-
-For decision-bearing remote A/Bs use deterministic mode in [`../.github/workflows/solver-stress-refresh.md`](../.github/workflows/solver-stress-refresh.md). Require complete current-run coverage and preserve gained/lost rows, not only net count.
-
-## Firestore rules
-
-Firestore tests are currently source-level/harness checks. Emulator-backed rule tests remain deferred until a rules change justifies the infrastructure.
+Run `npm run check:documentation-links` (included in `check`) after renames, current-authority edits, command/path changes, or navigation changes. A passing link check proves structural discoverability, not semantic freshness; [`change-recipes.md`](change-recipes.md) covers drift-prone cross-authority changes.
