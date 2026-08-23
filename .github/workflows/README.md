@@ -13,8 +13,6 @@ Use this index and [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.
 | `solver-stress-refresh.yml` | Canonical **full-population** sharded level-blind stress refresh; [`solver-stress-refresh.md`](solver-stress-refresh.md). Use for baseline refreshes and non-archetype-scoped questions — for an `ATTEMPT_POLICY` routing-change A/B, prefer `solver-archetype-sample-ab.yml` below instead (same evidence, a fraction of the wall time). |
 | `solver-typical-budget-baseline.yml` | Level-blind baseline or matched deterministic experiment. |
 | `technique-census.yml` | Expensive isolated technique × level census; check existing census first. |
-| `audit-technique-census-duplicates.yml` | Audits duplicate isolated-census cells before evidence is combined. |
-| `diagnose-technique-census-duplicates.yml` | Produces bounded diagnostics for conflicting duplicate census cells. |
 | `method-probe-sweep.yml` | One technique or short technique list over a population. |
 | `solver-highbudget-unsolved-sweep.yml` | Additional-compute study on unresolved levels. |
 | `solver-level-blind-targeted-sweep.yml` | **Preferred for a one-off check over a specific, caller-supplied id list** (not a full refresh, not archetype-scoped) — dynamically sharded, artifact-only, no baseline/hint persistence. |
@@ -38,6 +36,11 @@ Oracle output is research evidence, not cold production capability by itself.
 ## Retained focused experiments
 
 `solver-repair-fallback-reserve-sample-ab.yml`, `solver-repair-probe-adaptive-sample-ab.yml`, and `solver-elite-prefix-dfs-retry-validate.yml` remain available. Confirm the question is still open and the wiring still matches current code before reuse.
+
+## Specialist diagnostics
+
+- `audit-technique-census-duplicates.yml`: path-triggered audit of duplicate technique-census rows using the retained forensic script.
+- `diagnose-technique-census-duplicates.yml`: path-triggered deeper duplicate-cell diagnosis and plan inspection; specialist investigation workflow, not a general census entry point.
 
 Retired workflow designs, naming history, and migration incidents are preserved in git history and dated reports; do not use old fixed Corpus-2 batch commands for current dispatches.
 
