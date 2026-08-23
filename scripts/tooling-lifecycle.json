@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "entries": {
+    "scripts/backfill-level-ids.mjs": {
+      "lifecycle": "completed-migration",
+      "note": "One-time permanent published-level ID backfill; retained for provenance and reproducibility."
+    },
+    "scripts/backfill-level-provenance.mjs": {
+      "lifecycle": "completed-migration",
+      "note": "Completed provenance backfill; its published-level fallback depends on a retired classifier report."
+    },
+    "scripts/audit-family-boundary-inputs.mjs": {
+      "lifecycle": "specialist-forensic",
+      "note": "Checks whether historical/tracked family evidence has enough identity and provenance for boundary analysis."
+    },
+    "scripts/audit-family-result-identity.mjs": {
+      "lifecycle": "specialist-forensic",
+      "note": "Diagnoses ambiguous or unmatched family-result identity before migration or namespacing."
+    },
+    "scripts/audit-technique-census-duplicates.mjs": {
+      "lifecycle": "specialist-forensic",
+      "note": "Diagnoses duplicate cells in a specific technique-census artifact; not a standard census entry point."
+    },
+    "scripts/stress/axis-reach-probe.mjs": {
+      "lifecycle": "cold-research",
+      "note": "Axis-aware connectivity candidate was implemented and reverted twice after matched-budget regressions; retain as reproducible negative evidence/template, not a live optimization direction."
+    },
+    "scripts/stress/main-loop-starvation-census.mjs": {
+      "lifecycle": "cold-research",
+      "note": "Reproduces the August 8 main-loop zero-allocation census from historical baseline/hint provenance. Its report later weakened 'provably recoverable' to 'historically matched', and newer techniqueLifecycle telemetry is the default allocation diagnostic."
+    },
+    "scripts/stress/winning-path-archaeology.mjs": {
+      "lifecycle": "cold-research",
+      "note": "Early local-child-rank proxy retained for reproducibility; current winning-lineage instrumentation and methodology supersede it for lineage-survival research."
+    },
+    "scripts/stress/turnbias-churn-check.mjs": {
+      "lifecycle": "cold-research",
+      "note": "Scratch local churn check for the historical repair-turn-bias experiment; its own header points to deterministic GitHub Actions sweeps for authoritative evidence."
+    }
+  }
+}
