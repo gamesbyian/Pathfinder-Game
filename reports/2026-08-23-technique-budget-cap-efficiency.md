@@ -1,7 +1,7 @@
 # Technique budget-cap efficiency from the census
 
 > **Status:** scheduler input / production-change nomination; not production policy
-> **Evidence:** re-derived technique census `32240161854` (`76,614` unique eligible T1 cells) plus its second-order analysis
+> **Last evidence:** 2026-08-23 — re-derived technique census `32240161854` (`76,614` unique eligible T1 cells) plus its second-order analysis
 > **Decision:** do **not** globally lower deep-search caps. Treat cheap self-exhausting beams as screens, preserve a protected deep repair continuation, and make deep ordinary DFS/IDA continuations compete for residual budget because much of their measured capability is substitutable.
 > **Remaining gate:** extend the rebuildable census analysis with per-technique cap-retention/tranche economics for all techniques, then test a current-code level-blind scheduler under a strict shared work envelope.
 
