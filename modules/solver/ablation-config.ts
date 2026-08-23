@@ -41,6 +41,7 @@ export const FEATURES: Record<string, string> = {
     SCORE_MUST_TURN_URGENCY:    'Distance-to-cell reward toward unsatisfied must-turn landmark cells',
     SCORE_MUST_TURN_EXIT_GUIDANCE: 'Reward for choosing the specific exit that satisfies a pending must-turn direction (independent of distance urgency toward the cell itself)',
     SCORE_PORTAL_PARITY_GUIDANCE: 'Guidance toward a mismatched-parity portal when reqLen parity requires one',
+    SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE: 'Production default-OFF; NEW unvalidated experiment (2026-08-23): makes SCORE_GOAL_ATTRACTION read prep.guidanceGoalDistArr (pre-6f00baf routing: geese/gates/false-goals treated as ordinary passable cells) instead of the corrected prep.goalDistArr, for move-ordering guidance only — pruning/admissible bounds are unaffected. See distance.ts\'s DistMapOpts.legacyGuidanceRouting and docs/solver-optimization-current-queue.md\'s "Distance-guidance/pruning split" entry. Do not promote without matched-work evidence that it recovers solves without new losses.',
 
     // ── Pruning rules (dfsFromGate + beamSearchFromGate) ─────────────────────
     PRUNE_MC_CEILING:           'Intersection ceiling: ints + pending-MC-crossings > reqInt',
@@ -136,6 +137,7 @@ export const OPT_IN_FEATURES = new Set([
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS',
     'STRATEGY_REPAIR_TURN_BIAS',
     'STRATEGY_REPAIR_FALLBACK_GATE_WIDEN',
+    'SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE',
     'STRATEGY_REPAIR_FALLBACK_NODE_RESERVE',
     'STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE',
     'STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE',

@@ -4,11 +4,24 @@ import type { NormalizedLevel } from '../domain/types.js';
 export interface DistMapOpts {
     /** Trap search may route to existing false goals as candidate endpoints. */
     allowFalseGoalNeighbors?: boolean;
+    /** GUIDANCE-ONLY escape hatch: recreates the pre-6f00baf routing (geese/gates/false-goals
+     *  treated as ordinary passable through-nodes, not excluded/sinks at all). This can
+     *  UNDERESTIMATE true distance — it is NOT a sound lower bound and must never feed pruning
+     *  (lower-bounds.ts/prune-gauntlet.ts) or an admissible heuristic (admissible-order-search.ts).
+     *  It exists only because scoring.ts's move-ordering guidance is not safety-monotonic the way
+     *  pruning is: the technically-wrong pre-fix distances empirically routed several budget-
+     *  limited searches toward their winning branch by coincidence (see
+     *  docs/solver-optimization-current-queue.md's "Distance-guidance/pruning split" entry and
+     *  reports/2026-08-22-corpus2-node-budget-losses.md). Use only for a dedicated guidance-only
+     *  distance map, never to replace the corrected default. */
+    legacyGuidanceRouting?: boolean;
 }
 
 // 0-1 BFS: portal jumps cost 0, regular moves cost 1. Blocks/geese are never passable. Gates and
 // (normally) false goals are sinks: they may have finite distance or be sources, but are not through-nodes.
 // Any new exclusion must be equally unconditional or the resulting distance can cease to be a sound lower bound.
+// (legacyGuidanceRouting disables both exclusions entirely — see its own doc comment above; it
+// deliberately breaks the lower-bound soundness this comment otherwise guarantees.)
 export function buildDistMap(level: NormalizedLevel, sourceKeys: Iterable<number>, opts: DistMapOpts = {}): Map<number, number> {
     const { w, h } = level.grid;
     const blockSet = level.blockSet;
@@ -16,8 +29,9 @@ export function buildDistMap(level: NormalizedLevel, sourceKeys: Iterable<number
     const falseGoalKeys = level.falseGoalKeys;
     const gateKeys = level.gateKeys;
     const allowFalseGoals = !!opts.allowFalseGoalNeighbors;
-    const neverPassable = (k: number) => blockSet.has(k) || gooseSet.has(k);
-    const isSink = (k: number) => gateKeys.includes(k) || (!allowFalseGoals && falseGoalKeys.has(k));
+    const legacyRouting = !!opts.legacyGuidanceRouting;
+    const neverPassable = (k: number) => blockSet.has(k) || (!legacyRouting && gooseSet.has(k));
+    const isSink = (k: number) => !legacyRouting && (gateKeys.includes(k) || (!allowFalseGoals && falseGoalKeys.has(k)));
     const portalMap = level.portalMap;
     const map = new Map<number, number>();
     const cap = Math.max(64, (w * h) * 2);

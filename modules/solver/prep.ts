@@ -49,6 +49,14 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // lower-bound pruning would reject reachable false-goal candidates as a false negative.
     const distOpts: DistMapOpts = { allowFalseGoalNeighbors: opts.allowFalseGoalNeighbors };
     prep.distMap        = buildDistMap(level, [level.goalKey], distOpts);
+    // Guidance-only sibling of distMap/goalDistArr: same sources, but with legacyGuidanceRouting
+    // so geese/gates/false-goals are ordinary passable through-nodes again (the pre-6f00baf
+    // behavior) — see DistMapOpts.legacyGuidanceRouting's own comment. Gated by
+    // SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE (scoring.ts); always computed (one extra cheap
+    // per-level BFS) so the ablation flag can be flipped without changing prep's shape.
+    prep.guidanceGoalDistArr = distMapToArray(
+        buildDistMap(level, [level.goalKey], { ...distOpts, legacyGuidanceRouting: true }),
+        level.grid.w, level.grid.h);
     prep.mustPassIndex  = buildIndexArr(level.mustPassKeys);
     prep.mustCrossIndex = buildIndexArr(level.mustCrossKeys);
     prep.mustPassDistMaps  = level.mustPassKeys.map(k => buildDistMap(level, [k], distOpts));

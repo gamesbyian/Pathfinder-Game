@@ -323,6 +323,10 @@ export interface PrepLevel {
     mustCrossToGoalDist: number[];
     /** BFS dist-to-goal per cell */
     goalDistArr: Uint16Array;
+    /** Guidance-only sibling of goalDistArr — see DistMapOpts.legacyGuidanceRouting's own comment
+     *  in distance.ts. NOT a sound lower bound; scoring.ts only, gated by
+     *  SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE. */
+    guidanceGoalDistArr: Uint16Array;
     /** must-pass ∪ must-cross keys */
     objectiveKeys: number[];
     /** per objective: dist array */
