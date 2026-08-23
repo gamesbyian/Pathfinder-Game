@@ -115,18 +115,20 @@ export const FEATURES: Record<string, string> = {
     TEMPLATE_SIDE_Y_HIGH:       'sideYHigh — bias toward y > midY',
 
     // ── Profiles ──────────────────────────────────────────────────────────────
-    PROFILE_default:             'default profile — all weights = 1.0',
-    PROFILE_perimeterSweep:      'perimeterSweep — high perimeter bias, low goal pull',
-    PROFILE_harvestThenFinish:   'harvestThenFinish — objective-then-goal two-phase strategy',
-    PROFILE_portalFirstTransfer: 'portalFirstTransfer — portal-activation priority',
-    PROFILE_objectiveFirst:      'objectiveFirst — strong MP/MC urgency, low goal pull',
-    PROFILE_finishFirst:         'finishFirst — high goal + finish commitment, low perimeter',
-    PROFILE_nearClosureRescue:   'nearClosureRescue — near-loop recovery, very high finish',
-    PROFILE_knotBuilder:         'knotBuilder — intersection-focused, high intersectionSetup',
-    PROFILE_portalCommitted:     'portalCommitted — balanced portal-aware weights',
-    PROFILE_mustCrossFirst:      'mustCrossFirst — very high MC urgency (2.4×)',
-    PROFILE_intersectionHarvest: 'intersectionHarvest — pure intersection farming (3.0×)',
-    PROFILE_closureCommitment:   'closureCommitment — maximum finish + MP/MC urgency (2.0×)',
+    // These are scoreMove weight vectors, not independent search algorithms. Exact current
+    // values live in policy.ts; keep these labels descriptive and non-procedural.
+    PROFILE_default:             'default scoring profile — tuned mixed weights from policy.ts (not an all-1.0 vector)',
+    PROFILE_perimeterSweep:      'perimeterSweep scoring profile — stronger perimeter preference with reduced anti-dither/revisit pressure',
+    PROFILE_harvestThenFinish:   'harvestThenFinish scoring profile — balanced objective/intersection guidance with moderate goal/finish pull; not a separate two-phase algorithm',
+    PROFILE_portalFirstTransfer: 'portalFirstTransfer scoring profile — balanced objective/MC guidance with lower perimeter/revisit weighting; no dedicated portal procedure',
+    PROFILE_objectiveFirst:      'objectiveFirst scoring profile — strong objective, must-pass, and must-cross urgency',
+    PROFILE_finishFirst:         'finishFirst scoring profile — high goal/finish commitment with lower perimeter/intersection emphasis',
+    PROFILE_nearClosureRescue:   'nearClosureRescue scoring profile — very high goal/finish commitment plus stronger objective urgency',
+    PROFILE_knotBuilder:         'knotBuilder scoring profile — elevated intersection-setup weight',
+    PROFILE_portalCommitted:     'portalCommitted scoring profile — balanced goal/objective/MC weights; no dedicated portal procedure',
+    PROFILE_mustCrossFirst:      'mustCrossFirst scoring profile — very high must-cross urgency',
+    PROFILE_intersectionHarvest: 'intersectionHarvest scoring profile — very high intersection setup with weak objective urgency',
+    PROFILE_closureCommitment:   'closureCommitment scoring profile — very high finish and MP/MC urgency with low anti-dither/revisit weights',
 };
 
 /** Features whose production default is off. Shared by experiment constructors and the solver's
@@ -149,7 +151,7 @@ export const OPT_IN_FEATURES = new Set([
     'STRATEGY_RETRY_TIER_NODE_STAIRCASE',
 ]);
 
-// ─── Template → config key mapping ───────────────────────────────────────────
+// ─── Template → config key mapping ────────────────────────────────────────────
 
 /** @type {Record<string, string>} */
 export const TEMPLATE_CONFIG_KEY: Record<string, string> = {
@@ -419,7 +421,7 @@ export function computeImportanceScore(ablation: any, baseline: any): number {
     const runtimeRatio = Math.max(0, (ablMs - baseMs) / baseMs);
 
     const baseNodes = baseline.summary.nodesExpanded || 1;
-    const ablNodes  = ablation.summary.nodesExpanded  || 1;
+    const ablNodes  = ablation.summary.nodesExpanded || 1;
     const nodeRatio = Math.max(0, (ablNodes - baseNodes) / baseNodes);
 
     return solveLoss * 100 + runtimeRatio * 50 + nodeRatio * 20 - solveGain * 20;
