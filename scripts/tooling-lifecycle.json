@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "entries": {
+    "scripts/backfill-level-ids.mjs": {
+      "lifecycle": "completed-migration",
+      "note": "One-time permanent published-level ID backfill; retained for provenance and reproducibility."
+    },
+    "scripts/backfill-level-provenance.mjs": {
+      "lifecycle": "completed-migration",
+      "note": "Completed provenance backfill; its published-level fallback depends on a retired classifier report."
+    },
+    "scripts/audit-family-boundary-inputs.mjs": {
+      "lifecycle": "specialist-forensic",
+      "note": "Checks whether historical/tracked family evidence has enough identity and provenance for boundary analysis."
+    },
+    "scripts/audit-family-result-identity.mjs": {
+      "lifecycle": "specialist-forensic",
+      "note": "Diagnoses ambiguous or unmatched family-result identity before migration or namespacing."
+    },
+    "scripts/audit-technique-census-duplicates.mjs": {
+      "lifecycle": "specialist-forensic",
+      "note": "Diagnoses duplicate cells in a specific technique-census artifact; not a standard census entry point."
+    }
+  }
+}
