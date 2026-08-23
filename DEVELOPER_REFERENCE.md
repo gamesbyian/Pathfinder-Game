@@ -8,7 +8,7 @@ This file preserves rare rule, solver-gotcha, level-data, and provenance facts. 
 
 ## Deployment
 
-Vite builds the static GitHub Pages app; Firebase Hosting is unused; runtime dependencies are bundled. See [`docs/architecture.md`](docs/architecture.md), [`docs/content-security-policy.md`](docs/content-security-policy.md), [`docs/third-party-dependencies.md`](docs/third-party-dependencies.md). `npm run dev` is not production-CSP-clean because Vite HMR needs development-only behavior; CI/e2e/deployment exercise the production build.
+Vite builds the static GitHub Pages app; Firebase Hosting is unused; runtime dependencies are bundled. See [`docs/architecture.md`](docs/architecture.md) and [`docs/content-security-policy.md`](docs/content-security-policy.md). `npm run dev` is not production-CSP-clean because Vite HMR needs development-only behavior; CI/e2e/deployment exercise the production build.
 
 ## Game rules
 
