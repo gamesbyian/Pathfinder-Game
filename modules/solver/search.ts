@@ -1,4 +1,5 @@
 import { STATE_BUF_BEAM, STATE_BUF_DFS, applyMove, createState, getNeighbors, undoMove } from './search-state.js';
+import { KEY_SPACE } from './encoding.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
@@ -19,7 +20,29 @@ interface DfsFrame { key: number; children: number[]; childIdx: number; undoInfo
  *  is what makes repositioning the shared working state cheap. Keeping them separate is the point:
  *  walk order and cull order are decoupled. */
 interface BeamPathNode { key: number; prev: BeamPathNode | null; depth: number }
-interface BeamNode extends BeamPathNode { prev: BeamNode | null; score: number; sc: string; insOrd: number; treeOrd: number; sk?: string; }
+/** Raw constraint-state fields a candidate carried right after its move (snapshotted from `ws`
+ *  at candidate-generation time, since `ws` is shared/mutable and gets undone before the next
+ *  candidate). Stored as scalars rather than the joined delimited string dedup/diversity actually
+ *  key on: `beamNumericDedupKey`/the diverse-select key (built inline in `beamSearchFromGate`/
+ *  `_diverseSelect`) read these fields directly, or `beamStateKey` below builds the equivalent
+ *  delimited string as a fallback for the rare level where the numeric key would not fit — either
+ *  way only for candidates that reach the dedup branch (`cands.length > beamWidth`); most phases
+ *  in most solves stay under beamWidth, where nothing beyond this scalar snapshot is ever built.
+ *  See beamNumericDedupKey's own comment for the field list and safety argument. */
+interface BeamNode extends BeamPathNode {
+    prev: BeamNode | null; score: number; insOrd: number; treeOrd: number;
+    ints: number; mpVisitedMask: number; mustCrossMask: number; flipperUsedMask: number;
+    surroundMask: number; mustTurnMask: number; adjTurnMask: number;
+}
+// String fallback for beamNumericDedupKey (see its comment): used only on the rare level where
+// the numeric encoding would not fit under Number.MAX_SAFE_INTEGER. Delimited, not a bit-packed
+// integer — a fixed-width packing silently overflowed on any level with more than 4 must-pass/
+// must-cross/flipper cells (stress-corpus-2's generator raises those caps to 8); see
+// reports/2026-08-06-beam-state-dedup-sound-signature-audit.md. Collision-free regardless of any
+// mechanic's cardinality since every field is delimited, not shifted.
+function beamStateKey(c: BeamNode): string {
+    return `${c.ints}|${c.mpVisitedMask}|${c.mustCrossMask}|${c.flipperUsedMask}|${c.surroundMask}|${c.mustTurnMask}|${c.adjTurnMask}`;
+}
 
 /** Single implementation of the pre-move forced-first-step prune shared by DFS and beam. */
 function pruneFirstStepNeighbors(startKey: number, neighbors: number[], prep: PrepLevel, diagnostics?: PruneDiagnostics): number[] {
@@ -419,24 +442,28 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
 // Diverse beam selection: guarantee each (flipperUsedMask, mustCrossMask) bucket
 // retains at least floor(beamWidth/numBuckets) candidates. The remaining slots
 // are filled from the global top of the score-sorted list.
-// `sorted` must already be sorted descending by score; each entry carries `.sk`
-// (stateKey = `${flipperUsedMask}|${mustCrossMask}`, built at candidate creation — a delimited
-// string, not a bit-packed integer, for the same reason `sc` is one: see sc's own comment.
-// Used to be `(flipperUsedMask << 4) | (mustCrossMask & 0xF)` — a narrower defect than sc's
-// (mustCrossMask's `&0xF` mask sits below flipperUsedMask's shifted range, so it can't corrupt
-// flipperUsedMask's bits the way sc's fields corrupted each other), but still the same root
-// cause: mustCrossMask silently ALIASES (bits above the 4th discarded, not shifted anywhere) on
-// any level with more than 4 must-cross cells (stress-corpus-2 raises the cap to 8) — e.g.
-// mustCrossMask=1 and mustCrossMask=17 (a 5th must-cross cell pending) both truncated to the same
-// bucket. Same class of bug as sc's, just feeding a soft diversity heuristic rather than a hard
-// merge/discard decision, so it degraded bucketing precision rather than
-// costing solves outright. Fixed alongside sc, 2026-08-06 — see
-// reports/2026-08-06-beam-state-dedup-sound-signature-audit.md.
-function _diverseSelect(sorted: BeamNode[], beamWidth: number): BeamNode[] {
-    const buckets = new Map<string | undefined, BeamNode[]>();
+// `sorted` must already be sorted descending by score; bucketed by a numeric stateKey
+// (`mustCrossMask * flipperBase + flipperUsedMask`, `flipperBase` the caller's precomputed
+// `1 << flipperCount` — always strictly larger than any real `flipperUsedMask`, so this is an
+// exact, always-collision-free positional encoding, same reasoning as beamNumericDedupKey's own
+// comment). Used to be `(flipperUsedMask << 4) | (mustCrossMask & 0xF)` — a narrower defect than
+// the dedup key's old bug (mustCrossMask's `&0xF` mask sits below flipperUsedMask's shifted
+// range, so it can't corrupt flipperUsedMask's bits the way the old dedup key's fields corrupted
+// each other), but still the same root cause: mustCrossMask silently ALIASES (bits above the 4th
+// discarded, not shifted anywhere) on any level with more than 4 must-cross cells (stress-corpus-2
+// raises the cap to 8) — e.g. mustCrossMask=1 and mustCrossMask=17 (a 5th must-cross cell pending)
+// both truncated to the same bucket. Same class of bug, just feeding a soft diversity heuristic
+// rather than a hard merge/discard decision, so it degraded bucketing precision rather than
+// costing solves outright. Fixed alongside the dedup key, 2026-08-06 — see
+// reports/2026-08-06-beam-state-dedup-sound-signature-audit.md. `flipperBase` is always small
+// (well under 2^16 even at stress-corpus-2's raised 8-cell caps), so unlike the dedup key this
+// needs no per-level overflow fallback.
+function _diverseSelect(sorted: BeamNode[], beamWidth: number, flipperBase: number): BeamNode[] {
+    const buckets = new Map<number, BeamNode[]>();
     for (const c of sorted) {
-        let b = buckets.get(c.sk);
-        if (!b) { b = []; buckets.set(c.sk, b); }
+        const key = c.mustCrossMask * flipperBase + c.flipperUsedMask;
+        let b = buckets.get(key);
+        if (!b) { b = []; buckets.set(key, b); }
         b.push(c);
     }
     const nb = buckets.size;
@@ -487,8 +514,38 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     const useStateDedup = level.portalMap.size === 0 && (!cfg || cfg.STRATEGY_STATE_DEDUP);
     // Ablation: STRATEGY_DIVERSE_BEAM can disable diverse selection even when the config requests it.
     const effectiveDiverseBeam = diverseBeam && (!cfg || cfg.STRATEGY_DIVERSE_BEAM);
+    // Fast numeric dedup/diversity keys, computed once per call (not per candidate/phase) from
+    // this level's OWN mechanic cardinalities — never a fixed-width assumption, which is exactly
+    // what made the old bit-packed signature silently unsound (see beamStateKey's comment). Each
+    // field's multiplier is its true maximum possible VALUE COUNT for this specific level, so the
+    // mixed-radix encoding below is a provably exact bijection with the (key, 7-field) tuple, not
+    // a heuristic. `_numericDedupSafe` gates it: whenever the full product would not fit under
+    // Number.MAX_SAFE_INTEGER (needs several landmark mechanic types simultaneously present, each
+    // near its per-level maximum, plus a long reqInt — measured never to occur on the published or
+    // stress-corpus-2 corpora, but not provably impossible), every site below falls back to the
+    // exact same delimited-string key it always used. Correctness never depends on this fitting —
+    // only speed does. See reports/2026-08-23-beam-dedup-numeric-key-arena.md.
+    const _mpBase = 1 << level.mustPassKeys.length;
+    const _mcBase = 1 << level.mustCrossKeys.length;
+    const _flipperBase = 1 << prep.flipperKeys.length;
+    const _surroundBase = (prep.initialSurroundMask ?? 0) + 1;
+    const _turnBase = (prep.initialMustTurnMask ?? 0) + 1;
+    const _adjBase = (prep.initialAdjTurnMask ?? 0) + 1;
+    const _intsBase = level.reqInt + 1;
+    const _dedupKeyProduct = KEY_SPACE * _intsBase * _mpBase * _mcBase * _flipperBase * _surroundBase * _turnBase * _adjBase;
+    const _numericDedupSafe = Number.isSafeInteger(_dedupKeyProduct) && !prep._forceBeamDedupStringKeyForTests;
+    // Numeric dedup key: strict positional (mixed-radix) encoding — every field is strictly
+    // smaller than its own base by construction (masks are `< 2^bitCount`; `ints` is bounded by
+    // `evaluatePrunedMove`'s own `state.ints > level.reqInt` reject, so always `<= reqInt`;
+    // packed cell keys are always `< KEY_SPACE` for a `<=15x15` grid), so distinct tuples can never
+    // collide to the same number. Order of composition is arbitrary but must stay internally
+    // consistent (it is: this is the only place either key is built).
+    const beamNumericDedupKey = (c: BeamNode): number =>
+        (((((((c.adjTurnMask) * _turnBase + c.mustTurnMask) * _surroundBase + c.surroundMask)
+            * _flipperBase + c.flipperUsedMask) * _mcBase + c.mustCrossMask)
+            * _mpBase + c.mpVisitedMask) * _intsBase + c.ints) * KEY_SPACE + c.key;
     // Root node: prev=null, key=startKey, depth=0
-    let frontier: BeamNode[] = [{ key: startKey, prev: null, depth: 0, score: 0, sc: '', insOrd: 0, treeOrd: 0 }];
+    let frontier: BeamNode[] = [{ key: startKey, prev: null, depth: 0, score: 0, ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0 }];
     let lastYield = startTime;
     // Work-based budget: beam search terminates in at most reqLen + portal-pair phases.
     const maxPhases = level.reqLen + Math.floor(level.portalMap.size / 2);
@@ -634,7 +691,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 if (beforeForced && beforeForced.length !== neighbors.length) for (const removed of beforeForced) {
                     if (neighbors.includes(removed)) continue;
                     const diagnosticNode: BeamNode = { key: removed, prev: node, depth: node.depth + 1, score: node.score,
-                        sc: '', insOrd: 0, treeOrd: 0 };
+                        ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0 };
                     hardPrunedForResearch!.push(diagnosticNode);
                     hardPruneContexts!.push({ path: [..._reconstructBeamPath(diagnosticNode, [])],
                         cause: '_forced-first-step', diagnostics });
@@ -645,8 +702,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             // been tentatively applied yet (that happens per-candidate below, then gets undone).
             // See CurUrgencyContext's doc comment.
             const curCtx = buildCurUrgencyContext(pos, ws, level, prep, true, profile);
+            // Loop-invariant: pos is fixed for this whole candidate batch, same as curCtx above.
+            const pAtPos = level.portalMap.get(pos);
             for (const next of neighbors) {
-                const pAtPos = level.portalMap.get(pos);
                 const isJump = !!(pAtPos && !ws.lastWasPortalJump && pAtPos.dest === next);
                 const undo = applyMove(next, ws, level, prep, isJump);
                 const realLen = getRealLengthFromState(ws);
@@ -671,7 +729,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 const ok = verdict === 'pass';
                 if (research) {
                     const diagnosticNode: BeamNode = { key: next, prev: node, depth: node.depth + 1, score: node.score,
-                        sc: '', insOrd: 0, treeOrd: 0 };
+                        ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0 };
                     generatedForResearch!.push(diagnosticNode);
                     if (!ok) {
                         hardPrunedForResearch!.push(diagnosticNode);
@@ -682,17 +740,19 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 }
                 if (ok) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template, curCtx);
-                    // sc: constraint-state key for beam dedup, one delimited field per mask —
-                    // NOT a bit-packed integer. It used to pack each field into a fixed 4-bit slot
-                    // by shift amount alone, with nothing actually masking a field to 4 bits before
-                    // shifting it into place. That was silently unsound on any level with more than
-                    // 4 must-pass/must-cross/flipper cells (stress-corpus-2's generator deliberately
-                    // raises those caps to 8 — see generate-random.mjs's own header comment): a 5th–
-                    // 8th bit overflowed into the NEXT field's designated range and corrupted both.
-                    // Confirmed on real data, not just arithmetic: 671 non-portal stress-corpus-2
-                    // levels exceed 4 of at least one of these mechanic counts, 211 of those with a
-                    // second, adjacent field simultaneously nonzero — a structurally guaranteed key
-                    // collision, not a theoretical edge case. See
+                    // Constraint-state fields snapshotted from ws right after this candidate's move —
+                    // used by beamStateKey (dedup) and beamDiverseKey (_diverseSelect) below. Stored as
+                    // scalars, not the joined delimited string, because most phases never reach the
+                    // dedup branch (cands.length <= beamWidth) and building that string per candidate
+                    // regardless was pure waste on those phases — see BeamNode's own doc comment.
+                    // Delimited-string, not bit-packed-integer, is a correctness requirement, not a
+                    // style choice: a prior fixed-width packing silently overflowed and corrupted
+                    // adjacent fields on any level with more than 4 must-pass/must-cross/flipper cells
+                    // (stress-corpus-2's generator deliberately raises those caps to 8 — see
+                    // generate-random.mjs's own header comment). Confirmed on real data: 671 non-portal
+                    // stress-corpus-2 levels exceed 4 of at least one of these mechanic counts, 211 of
+                    // those with a second, adjacent field simultaneously nonzero — a structurally
+                    // guaranteed key collision, not a theoretical edge case. See
                     // reports/2026-08-06-beam-state-dedup-sound-signature-audit.md.
                     //
                     // This is intentionally NOT a fully sound future-state signature either (it
@@ -707,25 +767,16 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     // unsoundness (true duplicates are too rare to cull anything). The fix here is
                     // narrower: keep the exact same (cell, mask-tuple) merge granularity, just make
                     // the key itself collision-free regardless of any mechanic's cardinality.
-                    const sc = `${ws.ints}|${ws.mpVisitedMask}|${ws.mustCrossMask}|${ws.flipperUsedMask}|${ws.surroundMask}|${ws.mustTurnMask}|${ws.adjTurnMask}`;
                     // Parent-pointer node — O(1) instead of O(depth) path copy.
-                    // sk = stateKey: `${flipperUsedMask}|${mustCrossMask}` — used by _diverseSelect
-                    // to bucket candidates and prevent beam collapse to one constraint-state mode.
-                    // See _diverseSelect's own comment: string, not bit-packed, for the same reason
-                    // sc is — the old `(flipperUsedMask<<4)|(mustCrossMask&0xF)` silently overflowed
-                    // on any level with >4 flippers/must-cross cells.
                     // <= 4 children per node (4-directional grid; a portal cell yields exactly 1),
                     // so scoreRank*4 + childIdx is a collision-free key for "the index this
                     // candidate would have had under a score-order walk".
                     const _ci = _childIdx++;
-                    if (effectiveDiverseBeam) {
-                        cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
-                                     sk: `${ws.flipperUsedMask}|${ws.mustCrossMask}`, sc,
-                                     insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci });
-                    } else {
-                        cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv, sc,
-                                     insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci });
-                    }
+                    cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
+                                 ints: ws.ints, mpVisitedMask: ws.mpVisitedMask, mustCrossMask: ws.mustCrossMask,
+                                 flipperUsedMask: ws.flipperUsedMask, surroundMask: ws.surroundMask,
+                                 mustTurnMask: ws.mustTurnMask, adjTurnMask: ws.adjTurnMask,
+                                 insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci });
                 }
                 undoMove(undo, ws);
             }
@@ -755,56 +806,70 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // DEDUP_NEAR_TIE_MARGIN) — undefined for the overwhelming majority of keys, so this
                 // second map stays empty and costs nothing when no near-ties occur. Kept fully
                 // separate from `dm` (rather than a union-typed single map) specifically so `dm`
-                // itself is monomorphic (Map<string, BeamNode>, exactly as before) — a prior version
-                // that stored `BeamNode | BeamNode[]` in one map measured a genuine ~30% per-op
-                // slowdown from that alone, even with retention disabled, apparently from losing
-                // this map's monomorphic V8 shape. See reports/2026-08-15-connectivity-axis-
-                // exhausted-regression.md.
-                const dm = new Map<string, BeamNode>();
-                // STRATEGY_DEDUP_NEAR_TIE_RETENTION (production default-ON, 2026-08-15): lets a
-                // last-resort retry pass (orchestration.ts's DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION)
-                // rerun the same ladder with retention off — see that pass's own comment for why: a
-                // full-corpus A/B found this margin nets +27/-34 corpus-2 flips (not a rare edge
-                // case), all sharing the same beam5000-family signature, so the two directions need
-                // to be reachable independently rather than picking one as the permanent default.
+                // itself is monomorphic — a prior version that stored `BeamNode | BeamNode[]` in one
+                // map measured a genuine ~30% per-op slowdown from that alone, even with retention
+                // disabled, apparently from losing this map's monomorphic V8 shape. See
+                // reports/2026-08-15-connectivity-axis-exhausted-regression.md. For the same
+                // monomorphism reason, the numeric-key and string-key forms below are two fully
+                // separate code paths (never one map holding a `string | number` union key) — see
+                // beamNumericDedupKey's own comment for why the numeric form is usually available
+                // and reports/2026-08-23-beam-dedup-numeric-key-arena.md for the measured win.
                 const nearTieRetentionEnabled = DEDUP_NEAR_TIE_MARGIN > 0 && (!cfg || cfg.STRATEGY_DEDUP_NEAR_TIE_RETENTION);
-                const dm2: Map<string, BeamNode> | null = nearTieRetentionEnabled ? new Map() : null;
                 const dedupRemoved: BeamNode[] | null = research ? [] : null;
                 const dedupContexts: Record<string, unknown>[] | null = research ? [] : null;
-                for (const c of cands) {
-                    const dk = `${c.key}|${c.sc}`;
-                    const p = dm.get(dk);
-                    if (!p || c.score > p.score) {
-                        if (p) {
-                            if (research) { dedupRemoved!.push(p); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(p, [])], competitorPath: [..._reconstructBeamPath(c, [])], removedScore: p.score, keptScore: c.score, key: dk }); }
-                            // p is being displaced by a strictly-better c. If p was itself within
-                            // margin of whatever it beat to get here, it's a near-tie runner-up worth
-                            // keeping alongside the new winner — same rationale as the direct branch
-                            // below, just reached via the demotion path instead.
-                            if (dm2 && p.score >= c.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(c.score)) dm2.set(dk, p);
-                            else if (dm2) dm2.delete(dk);
-                        }
-                        dm.set(dk, c);
-                    } else {
-                        if (research) { dedupRemoved!.push(c); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(c, [])], competitorPath: [..._reconstructBeamPath(p, [])], removedScore: c.score, keptScore: p.score, key: dk }); }
-                        // c lost to p, but only just — within margin, so retain it as p's runner-up
-                        // (rescues a genuinely-winning-but-locally-lower-scoring lineage from being
-                        // discarded outright on a single close comparison; see the report above for
-                        // the real level this was measured against). A THIRD near-tie candidate at
-                        // the same key simply competes for this one runner-up slot on score, same as
-                        // dm's own single-winner rule — deliberately not a general top-K, to keep the
-                        // per-candidate cost close to the original algorithm's.
-                        if (dm2 && c.score >= p.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(p.score)) {
-                            const runnerUp = dm2.get(dk);
-                            if (!runnerUp || c.score > runnerUp.score) dm2.set(dk, c);
+                if (_numericDedupSafe) {
+                    const dm = new Map<number, BeamNode>();
+                    const dm2: Map<number, BeamNode> | null = nearTieRetentionEnabled ? new Map() : null;
+                    for (const c of cands) {
+                        const dk = beamNumericDedupKey(c);
+                        const p = dm.get(dk);
+                        if (!p || c.score > p.score) {
+                            if (p) {
+                                if (research) { dedupRemoved!.push(p); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(p, [])], competitorPath: [..._reconstructBeamPath(c, [])], removedScore: p.score, keptScore: c.score, key: dk }); }
+                                if (dm2 && p.score >= c.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(c.score)) dm2.set(dk, p);
+                                else if (dm2) dm2.delete(dk);
+                            }
+                            dm.set(dk, c);
+                        } else {
+                            if (research) { dedupRemoved!.push(c); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(c, [])], competitorPath: [..._reconstructBeamPath(p, [])], removedScore: c.score, keptScore: p.score, key: dk }); }
+                            if (dm2 && c.score >= p.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(p.score)) {
+                                const runnerUp = dm2.get(dk);
+                                if (!runnerUp || c.score > runnerUp.score) dm2.set(dk, c);
+                            }
                         }
                     }
+                    if (dedupRemoved) emit('dedup-removed', dedupRemoved, { removals: dedupContexts });
+                    if (dm2 && dm2.size > 0) {
+                        pool = [...dm.values()];
+                        for (const [dk, runnerUp] of dm2) if (dm.get(dk) !== runnerUp) pool.push(runnerUp);
+                    } else if (dm.size < cands.length) pool = [...dm.values()];
+                } else {
+                    const dm = new Map<string, BeamNode>();
+                    const dm2: Map<string, BeamNode> | null = nearTieRetentionEnabled ? new Map() : null;
+                    for (const c of cands) {
+                        const dk = `${c.key}|${beamStateKey(c)}`;
+                        const p = dm.get(dk);
+                        if (!p || c.score > p.score) {
+                            if (p) {
+                                if (research) { dedupRemoved!.push(p); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(p, [])], competitorPath: [..._reconstructBeamPath(c, [])], removedScore: p.score, keptScore: c.score, key: dk }); }
+                                if (dm2 && p.score >= c.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(c.score)) dm2.set(dk, p);
+                                else if (dm2) dm2.delete(dk);
+                            }
+                            dm.set(dk, c);
+                        } else {
+                            if (research) { dedupRemoved!.push(c); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(c, [])], competitorPath: [..._reconstructBeamPath(p, [])], removedScore: c.score, keptScore: p.score, key: dk }); }
+                            if (dm2 && c.score >= p.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(p.score)) {
+                                const runnerUp = dm2.get(dk);
+                                if (!runnerUp || c.score > runnerUp.score) dm2.set(dk, c);
+                            }
+                        }
+                    }
+                    if (dedupRemoved) emit('dedup-removed', dedupRemoved, { removals: dedupContexts });
+                    if (dm2 && dm2.size > 0) {
+                        pool = [...dm.values()];
+                        for (const [dk, runnerUp] of dm2) if (dm.get(dk) !== runnerUp) pool.push(runnerUp);
+                    } else if (dm.size < cands.length) pool = [...dm.values()];
                 }
-                if (dedupRemoved) emit('dedup-removed', dedupRemoved, { removals: dedupContexts });
-                if (dm2 && dm2.size > 0) {
-                    pool = [...dm.values()];
-                    for (const [dk, runnerUp] of dm2) if (dm.get(dk) !== runnerUp) pool.push(runnerUp);
-                } else if (dm.size < cands.length) pool = [...dm.values()];
             }
             if (research) emit('post-production-dedup', pool);
             if (_BEAM_DEBUG) { _dbgDedupNs += _hrtNow() - _t2; }
@@ -813,7 +878,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             if (_BEAM_DEBUG) { _dbgSortNs += _hrtNow() - _t3; }
             await yieldIfNeeded();
             const widthSelected = pool.slice(0, beamWidth);
-            frontier = effectiveDiverseBeam ? _diverseSelect(pool, beamWidth) : widthSelected;
+            frontier = effectiveDiverseBeam ? _diverseSelect(pool, beamWidth, _flipperBase) : widthSelected;
             // Diverse selection is the production retention decision, not a score-width cull
             // followed by a second chance. Report only candidates absent from the actual result;
             // otherwise support would falsely disappear at the provisional slice and reappear.

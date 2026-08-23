@@ -345,6 +345,59 @@ test('beamSearchFromGate honors a finite nodeBudget (caps below solve cost stop 
   assert.equal(slack._metrics!.nodesExpanded, solveNodes, 'a slack cap must not change the node count (production stays byte-identical)');
 });
 
+// Differential test for the fast numeric dedup/diversity key (search.ts's beamNumericDedupKey):
+// exercises must-pass/must-cross/flipper mechanics together (all 7 dedup fields nonzero at some
+// point) on an open grid wide enough to blow past a small beamWidth every phase, forcing the
+// dedup/near-tie-retention/diverse-select machinery to run repeatedly. Runs the identical search
+// twice -- once through the default numeric path, once forced onto the delimited-string fallback
+// via prep._forceBeamDedupStringKeyForTests -- and asserts byte-identical nodesExpanded and an
+// identical solved path, proving the numeric encoding reproduces the string encoding's dedup/
+// diversity decisions exactly, not just "solves the same level." See beamNumericDedupKey's own
+// comment in search.ts and reports/2026-08-23-beam-dedup-numeric-key-arena.md.
+test('beamSearchFromGate numeric dedup key reproduces the string-key fallback exactly (diverseBeam off)', async () => {
+  const level = makeLevel({
+    grid: { w: 9, h: 9 }, reqLen: 40, reqInt: 0, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)],
+    mustPassKeys: [PACK(2, 2), PACK(4, 4), PACK(6, 6)],
+    flippingFilterMap: new Map([[PACK(3, 3), 1], [PACK(5, 5), 2]]),
+  });
+  const beamWidth = 16;
+
+  const numeric = prepLevel(level); numeric._cfg = null; numeric._metrics = { nodesExpanded: 0 };
+  const numericPath = await beamSearchFromGate(PACK(0, 0), level, numeric, POLICY_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
+
+  const stringKey = prepLevel(level); stringKey._cfg = null; stringKey._metrics = { nodesExpanded: 0 };
+  stringKey._forceBeamDedupStringKeyForTests = true;
+  const stringPath = await beamSearchFromGate(PACK(0, 0), level, stringKey, POLICY_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
+
+  assert.ok(numericPath, 'expected the beam to solve within the generous budget');
+  assert.deepEqual(numericPath, stringPath, 'numeric and string dedup keys must reach an identical solution path');
+  assert.equal(numeric._metrics!.nodesExpanded, stringKey._metrics!.nodesExpanded,
+    'numeric and string dedup keys must expand an identical number of nodes (proves identical merge decisions, not just identical final answer)');
+});
+
+// Same differential, with diverseBeam on: exercises _diverseSelect's numeric (flipperUsedMask,
+// mustCrossMask) bucketing key together with the dedup key in the same run.
+test('beamSearchFromGate numeric dedup key reproduces the string-key fallback exactly (diverseBeam on)', async () => {
+  const level = makeLevel({
+    grid: { w: 9, h: 9 }, reqLen: 40, reqInt: 0, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)],
+    mustPassKeys: [PACK(2, 2), PACK(4, 4), PACK(6, 6)],
+    flippingFilterMap: new Map([[PACK(3, 3), 1], [PACK(5, 5), 2]]),
+  });
+  const beamWidth = 16;
+
+  const numeric = prepLevel(level); numeric._cfg = null; numeric._metrics = { nodesExpanded: 0 };
+  const numericPath = await beamSearchFromGate(PACK(0, 0), level, numeric, POLICY_PROFILES.default, 5000, Date.now(), null, beamWidth, null, true);
+
+  const stringKey = prepLevel(level); stringKey._cfg = null; stringKey._metrics = { nodesExpanded: 0 };
+  stringKey._forceBeamDedupStringKeyForTests = true;
+  const stringPath = await beamSearchFromGate(PACK(0, 0), level, stringKey, POLICY_PROFILES.default, 5000, Date.now(), null, beamWidth, null, true);
+
+  assert.ok(numericPath, 'expected the beam to solve within the generous budget');
+  assert.deepEqual(numericPath, stringPath, 'numeric and string dedup keys must reach an identical solution path with diverseBeam on');
+  assert.equal(numeric._metrics!.nodesExpanded, stringKey._metrics!.nodesExpanded,
+    'numeric and string dedup keys must expand an identical number of nodes with diverseBeam on');
+});
+
 test('dfsFromGateLDS honors a finite nodeBudget (it bounds the otherwise-unbounded final DFS wave)', async () => {
   const level = makeLevel({ grid: { w: 9, h: 9 }, reqLen: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
   const base = prepLevel(level); base._cfg = null; base._metrics = { nodesExpanded: 0 };

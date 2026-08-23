@@ -217,8 +217,20 @@ export interface PrepLevel {
      *  "-1 if not," which was stale and wrong the same way theirs was). */
     flipperIndexMap: Int8Array;
     flipperInitAxes: Uint8Array;
-    /** packed key * 4 + direction → neighbor's packed key, or -1 if no static neighbor in
-     *  that direction (direction order/axis: see encoding.ts's NEIGHBOR_DX/DY/AXIS). */
+    /** packed key → dense per-level cell index PLUS ONE, 0 meaning "not a live (non-block/goose)
+     *  grid cell" — same zero-means-absent bias as mustPassIndex etc. A grid has at most a few
+     *  hundred live cells while KEY_SPACE is 1,048,576; this is the one KEY_SPACE-sized array
+     *  `staticNeighborKeys` below still needs to resolve a packed key to its dense row. See
+     *  staticNeighborKeys' own comment for why this indirection exists. */
+    cellDenseIndex: Uint8Array;
+    /** `(cellDenseIndex[packedKey] - 1) * 4 + direction` → neighbor's packed key PLUS ONE, 0 if no
+     *  static neighbor in that direction (direction order/axis: see encoding.ts's
+     *  NEIGHBOR_DX/DY/AXIS). Dense-indexed (via cellDenseIndex above), not packed-key-indexed:
+     *  sized `liveCellCount * 4` instead of `KEY_SPACE * 4` — the difference between allocating a
+     *  ~900-slot array and a 4.2M-slot (16.8 MB) one, microbenchmarked at ~2ms per allocation for
+     *  the old form purely from array size, not from filling it (only real cells were ever
+     *  written either way). Every read site resolves the dense row via cellDenseIndex first. See
+     *  reports/2026-08-23-dense-static-neighbor-keys.md. */
     staticNeighborKeys: Int32Array;
     /** gate key → forced first-move target key, only present when that gate is orthogonally
      *  adjacent to EXACTLY ONE must-cross cell (reports/2026-07-31-mustcross-forced-structure.md's
@@ -288,6 +300,12 @@ export interface PrepLevel {
     /** Research-only beam observer. Absent in every production call. The observer receives copied
      * replay-complete paths and may label them, but cannot affect search decisions. */
     _beamResearchObserver?: BeamResearchObserver | null;
+    /** Test-only: force beamSearchFromGate's dedup/diversity keying onto the delimited-string
+     *  fallback path even when the fast numeric encoding would fit — see beamNumericDedupKey's own
+     *  comment in search.ts. Lets a differential test run the SAME level/search through both key
+     *  representations and assert byte-identical results. Never read by production code paths;
+     *  absent (falsy) preserves the default numeric-when-safe behavior. */
+    _forceBeamDedupStringKeyForTests?: boolean;
     /** Research/test-only repair seed control. When absent, the long-standing gate/salt-derived
      * production seeds are used byte-for-byte. Both independent repair streams derive from it. */
     _repairResearchSeed?: number | null;

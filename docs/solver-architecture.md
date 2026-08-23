@@ -6,6 +6,8 @@
 >
 > **Corpus caveat:** before stress pass-rate tuning, read [`data/stress/README.md`](../data/stress/README.md) “Batches.” Some batches target historical weaknesses and are not independent generalization evidence.
 
+Technique/config names do not by themselves imply distinct search behavior. See [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) when comparing profiles, templates, beam retention modes, admissible-order, repair, retries, or budget contexts.
+
 ## Core flow
 
 1. `normalizeRawLevel()` converts 1-indexed wire data to 0-indexed packed-key form.
@@ -74,20 +76,15 @@ The ladder is hand-tuned. Historical corpus1 analysis found 79% of solved-level 
 
 ## Beam search (`beamSearchFromGate`)
 
-- Parent-pointer frontier `{ key, prev, depth, score, sc, insOrd, treeOrd, sk? }`.
+- Parent-pointer frontier nodes store `{ key, prev, depth, score, ...constraintState, insOrd, treeOrd }`. The constraint-state scalars (`ints`, MP/MC/flipper/surround/must-turn/adj-turn masks) are snapshotted only so dedup/diversity can key candidates without eagerly constructing strings.
 - One mutable working state `ws` is moved between frontier nodes: `_reconstructBeamPath()` fills reusable scratch, then the solver undoes/replays only the divergent suffix from the currently loaded path.
 - Frontier walking is parent-tree ordered to reduce replay. `insOrd` restores the generation order that score-order walking would have produced before dedup/cull; mid-phase terminal/budget checks still occur in tree order.
 - Uses DFS pruning; `scoreAndSort` uses `_sas[4]` `Float64Array` scratch + insertion sort.
 - Default width 2000; hard width 5000.
-- **Dedup:** non-portal beams merge the deliberately coarse `(key, sc)` bucket, keeping the highest score plus an optional near-tie runner-up. This is width/diversity management, not exact future-state equivalence. `sc` is a collision-free delimited tuple:
+- **Dedup:** non-portal beams merge the deliberately coarse tuple `(key, ints, mpVisitedMask, mustCrossMask, flipperUsedMask, surroundMask, mustTurnMask, adjTurnMask)`, keeping the highest score plus an optional near-tie runner-up. This is width/diversity management, not exact future-state equivalence. The tuple is normally encoded as a collision-free per-level mixed-radix `number`; if the full product would exceed `Number.MAX_SAFE_INTEGER`, search falls back to the equivalently collision-free delimited-string key. The representation is a pure speed choice; merge semantics are unchanged.
 
-```js
-sc = `${ints}|${mpVisitedMask}|${mustCrossMask}|${flipperUsedMask}|${surroundMask}|${mustTurnMask}|${adjTurnMask}`
-dedupKey = `${key}|${sc}`
-```
-
-  The former fixed-width numeric packing was removed after real Corpus-2 masks exceeded four bits and corrupted adjacent fields. Fully sound beam-state dedup was separately measured at only ~0.019% true-duplicate slots; removing the coarse mechanism cost real solves. See [`../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md).
-- **Diverse beam:** `_diverseSelect` buckets by the collision-free `flipperUsedMask|mustCrossMask` string, guarantees `floor(beamWidth/numBuckets)` per bucket, then fills globally.
+  The older fixed-width numeric packing was removed after real Corpus-2 masks exceeded four bits and corrupted adjacent fields. The 2026-08-23 mixed-radix form is not that packing: every field uses the level's actual cardinality as its radix and has an exact string fallback. Fully sound beam-state dedup was separately measured at only ~0.019% true-duplicate slots; removing the coarse mechanism cost real solves. See [`../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md) and [`../reports/2026-08-23-beam-dedup-numeric-key-arena.md`](../reports/2026-08-23-beam-dedup-numeric-key-arena.md).
+- **Diverse beam:** `_diverseSelect` still buckets by the exact `(flipperUsedMask, mustCrossMask)` tuple, now represented by a collision-free per-level positional numeric key; it guarantees `floor(beamWidth/numBuckets)` per bucket, then fills globally. This is representation-only and preserves the prior bucketing semantics.
 - Must-cross+flipper fallback is diverse bw=5000.
 
 ## Key state
@@ -110,7 +107,8 @@ state = {
 
 - `distMap`, `goalDistArr` (`0xFFFF = unreachable/Infinity`).
 - `mpDistArrs[]`, `mcDistArrs[]`, `objDistArrs[]`.
-- `staticNeighborKeys`: flat fixed-stride `Int32Array`; `staticNeighborKeys[packedKey*4+d]` stores `neighborKey+1`, with 0 meaning no static neighbor. It excludes blocks/geese/false-goals/gates/wrong regular-filter axis.
+- `cellDenseIndex`: packed key -> dense live-cell row + 1 (`0` means no live non-block/non-goose cell).
+- `staticNeighborKeys`: flat fixed-stride `Int32Array` sized `liveCellCount * 4`; `staticNeighborKeys[(cellDenseIndex[packedKey]-1)*4+d]` stores `neighborKey+1`, with 0 meaning no static neighbor. It excludes blocks/geese/false-goals/gates/wrong regular-filter axis. This replaces the former `KEY_SPACE * 4` adjacency allocation without changing neighbor semantics. See [`../reports/2026-08-23-dense-static-neighbor-keys.md`](../reports/2026-08-23-dense-static-neighbor-keys.md).
 - `mustPassIndex`, `mustCrossIndex`, `flipperIndexMap`, `flipperInitAxes`.
 - `mcPairDist`, `mpPairDist`, `mcApproachDistMaps`.
 - `surroundNeighborIndex`, `surroundInitNeighborMasks`, `surroundNeighborDistMaps`.
@@ -240,7 +238,7 @@ Tools: `solver:portfolio-report`, `solver:portfolio-replay`, `portfolio-solve-sw
 
 - **Flattening done:** MP/MC caches, `staticNeighbors -> staticNeighborKeys`, flipper approach distances, `mustTurnCellIndex`, `gateSet -> gateFlags`; removed `objectiveKeyToIndex`. Multi-value `adjTurnCellIndex`/`surroundNeighborIndex` remain Maps.
 - **Allocation:** `buildCurUrgencyContext` pooling won ~11–12% full-corpus wall; `UndoToken` pooling was **4.6% slower** at identical nodes and is closed absent a materially different representation. `getNeighbors` scratch / beam-phase allocations remain measurable.
-- **Dense indexing:** cache-locality hypothesis was weak (15×15 456 vs 449 ms), but allocation cost was large. Distance arrays now use `gridW*gridH` via `denseIndex`; with state reuse/zero-absent encoding, batch work improved ~40%. Bounds guard saw **1.63B reads, zero violations**. Still sparse: `staticNeighborKeys`, state `visited`/`edgeUsage`, `buildIndexArr`, `gateFlags`/`reachBlockedArr`.
+- **Dense indexing:** cache-locality hypothesis was weak (15×15 456 vs 449 ms), but allocation cost was large. Distance arrays use `gridW*gridH` via `denseIndex`; `staticNeighborKeys` now uses `liveCellCount*4` via `cellDenseIndex`, removing the former 16.8 MB per-level adjacency allocation while preserving packed-key neighbor values. With state reuse/zero-absent encoding, prior batch work improved ~40%; the adjacency conversion adds a further measured speed win, strongest on many-quick-solves workloads. Still packed-key-indexed: state `visited`/`edgeUsage`, `buildIndexArr`, `gateFlags`/`reachBlockedArr`.
 - Architecture-level continuations, prior negatives, and evaluation rules: [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md).
 
 ## Work-budget determinism

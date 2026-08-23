@@ -395,8 +395,9 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         ...level.portalMap.keys(),
     ]);
 
-    // Precompute static adjacency per cell. Stored as a flat, fixed-stride Int32Array —
-    // `staticNeighborKeys[pos * 4 + d]` = that direction's neighbor key PLUS ONE, or 0 if none —
+    // Precompute static adjacency per cell. Stored as a flat, fixed-stride Int32Array, DENSE-
+    // indexed via cellDenseIndex rather than directly by packed key — `staticNeighborKeys[(
+    // cellDenseIndex[pos] - 1) * 4 + d]` = that direction's neighbor key PLUS ONE, or 0 if none —
     // instead of a Map<pos, Int32Array>, eliminating a per-node hash lookup in the hot
     // getNeighbors loop (direct array indexing instead). The per-direction axis (H for d=0,1;
     // V for d=2,3) doesn't need its own storage slot since it's implied by the fixed
@@ -405,21 +406,42 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // false goals (unless trap search needs existing false goals as endpoint candidates),
     // gate cells, and neighbors that violate static (regular) filter constraints. Flipping-
     // filter and portal constraints remain dynamic.
+    //
+    // Dense indexing (2026-08-23): this used to be a flat KEY_SPACE * 4 Int32Array (16.8 MB),
+    // directly packed-key-indexed. A grid has at most a few hundred live (non-block/non-goose)
+    // cells while KEY_SPACE is 1,048,576, so the array was >99.9% permanently-zero padding —
+    // microbenchmarked at ~2ms per allocation from the array's SIZE alone (not from filling it;
+    // only real cells were ever written either way, same as the "+1 bias avoids fill(-1)" note
+    // below always meant). `cellDenseIndex` is the one remaining KEY_SPACE-sized array (a
+    // Uint8Array, 1 MB — grid cell counts fit comfortably under 256): every packed key that is a
+    // live cell maps to a dense row 0..N-1; `staticNeighborKeys` itself shrinks to N*4 slots.
+    // Every direct-index consumer (prep.ts's own gateForcedFirstStepKey below, search-state.ts's
+    // getNeighbors, lower-bounds.ts's two must-cross deadlock checks) resolves the dense row via
+    // cellDenseIndex first. See reports/2026-08-23-dense-static-neighbor-keys.md.
     {
         const { w, h } = level.grid;
         // Stores neighbourKey+1 so that ZERO means "no neighbour in this direction" — the same
         // zero-means-absent trick distance.ts's distMapToArray uses, and for the same reason: the
-        // old -1 sentinel forced `.fill(-1)` over 4,194,304 entries (16 MB) on every level, for a
-        // grid with at most 225 live cells. A packed key of 0 is the legitimate cell (0,0), so the
-        // sentinel cannot simply be 0 — hence the +1 bias, undone at the single read site
-        // (search-state.ts's getNeighbors).
-        prep.staticNeighborKeys = new Int32Array(KEY_SPACE * 4);
+        // old -1 sentinel forced `.fill(-1)` over every entry, for a grid with at most a few
+        // hundred live cells. A packed key of 0 is the legitimate cell (0,0), so the sentinel
+        // cannot simply be 0 — hence the +1 bias, undone at every read site.
+        prep.cellDenseIndex = new Uint8Array(KEY_SPACE);
+        let _liveCellCount = 0;
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
                 const k = PACK(x, y);
                 if (level.blockSet.has(k) || level.gooseSet.has(k)) continue;
+                prep.cellDenseIndex[k] = ++_liveCellCount;
+            }
+        }
+        prep.staticNeighborKeys = new Int32Array(_liveCellCount * 4);
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const k = PACK(x, y);
+                const denseIdx = prep.cellDenseIndex[k];
+                if (denseIdx === 0) continue; // block/goose: no adjacency row (matches skip above)
                 const filterFrom = level.filterMap.get(k);
-                const base = k * 4;
+                const base = (denseIdx - 1) * 4;
                 for (let d = 0; d < 4; d++) {
                     const nx = x + NEIGHBOR_DX[d], ny = y + NEIGHBOR_DY[d];
                     if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
@@ -451,7 +473,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     {
         prep.gateForcedFirstStepKey = new Map();
         for (const g of level.gateKeys) {
-            const base = g * 4;
+            const base = (prep.cellDenseIndex[g] - 1) * 4;
             let forced = -1, count = 0;
             for (let d = 0; d < 4; d++) {
                 const nk = prep.staticNeighborKeys[base + d] - 1;

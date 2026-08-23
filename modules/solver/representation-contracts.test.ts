@@ -55,7 +55,8 @@ test('staticNeighborKeys uses neighborKey+1 with zero as no-neighbor', () => {
     const level = makeLevel({ grid: { w: 3, h: 2 }, goal: { x: 3, y: 2 }, reqLen: 3 });
     const prep = prepLevel(level);
     const origin = K(1, 1);
-    const base = origin * 4;
+    // staticNeighborKeys is dense-indexed via cellDenseIndex, not directly by packed key.
+    const base = (prep.cellDenseIndex[origin] - 1) * 4;
 
     const rightDir = NEIGHBOR_DX.findIndex((dx, i) => dx === 1 && NEIGHBOR_DY[i] === 0);
     const leftDir = NEIGHBOR_DX.findIndex((dx, i) => dx === -1 && NEIGHBOR_DY[i] === 0);
