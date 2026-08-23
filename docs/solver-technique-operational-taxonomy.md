@@ -112,7 +112,7 @@ The analysis should compare applicable configurations on shared encountered stat
 - **beam candidate/frontier overlap:** generated-candidate and retained-frontier Jaccard, lineage survival, dedup collisions, near-tie survival, bucket pressure and churn;
 - **width/diversity delta:** distinguish "same ranking, more survivors" from genuinely different retained structural modes;
 - **admissible-versus-soft disagreement:** how often least-slack ordering disagrees with each soft profile, and whether `ida:none`'s candidate-order ties are the decisive divergence;
-- **template intervention rate:** how often a template actually changes the child ranking relative to its untamplated base profile, including CW/CCW mirror comparisons;
+- **template intervention rate:** how often a template actually changes the child ranking relative to its untemplated base profile, including CW/CCW mirror comparisons;
 - **repair fingerprints:** restart/elite/splice source, greedy-vs-exploratory choice rates, badness trajectories, repeated-attractor states and seed sensitivity rather than pretending repair has a directly comparable deterministic tree.
 
 Use canonical `workSpent` only when comparing production cost across search families. Nodes and state-count overlap are appropriate within a family but are not portable cross-technique currency.
@@ -162,3 +162,5 @@ The production scheduler remains level-blind. Offline pair labels and exact hist
 ## Documentation rule
 
 When describing a profile, template, retry or technique, say **which operational layer changes**. Avoid prose that makes a scoring profile sound like an independent algorithm or a retry tier sound like new search capability. For exact current weight values, `modules/solver/policy.ts` is authoritative; descriptive registry strings are convenience labels and must not contradict it.
+
+One stale registry label found in this audit illustrates the rule: `modules/solver/ablation-config.ts` currently describes `PROFILE_default` as "all weights = 1.0", but current `POLICY_PROFILES.default` uses a non-uniform tuned vector. Treat `policy.ts` as truth. Correct that convenience label rather than propagating it into analysis or documentation.
