@@ -56,6 +56,12 @@ const repairProbeAdaptiveBadnessGate = argMap.has('--repair-probe-adaptive-badne
     ? Number(argMap.get('--repair-probe-adaptive-badness-gate')) : undefined;
 const repairProbeAdaptiveMinScale = argMap.has('--repair-probe-adaptive-min-scale')
     ? Number(argMap.get('--repair-probe-adaptive-min-scale')) : undefined;
+// 2026-08-22 (docs/solver-future-work.md's "repair-fallback gate widening" reconciliation): lets a
+// matched sweep compare a candidate STRATEGY_REPAIR_LATE_PROBE node cap against the shipped
+// REPAIR_LATE_PROBE_NODE_BUDGET default (2,000,000, stage-budget.ts) without editing that constant.
+// Same optional/omitted-means-production-default shape as the flags above.
+const repairLateProbeNodeBudget = argMap.has('--repair-late-probe-node-budget')
+    ? Number(argMap.get('--repair-late-probe-node-budget')) : undefined;
 
 if (admissibleOrderNodeReserveFraction !== undefined &&
     (!Number.isFinite(admissibleOrderNodeReserveFraction) || admissibleOrderNodeReserveFraction < 0 || admissibleOrderNodeReserveFraction > 1)) {
@@ -146,6 +152,7 @@ if (Number.isFinite(mainLoopLateReserveConfigCount)) solveOpts.mainLoopLateReser
 if (Number.isFinite(admissibleOrderNodeReserveFraction)) solveOpts.admissibleOrderNodeReserveFractionOverride = admissibleOrderNodeReserveFraction;
 if (Number.isFinite(repairProbeAdaptiveBadnessGate)) solveOpts.repairProbeAdaptiveBiasedBadnessGateOverride = repairProbeAdaptiveBadnessGate;
 if (Number.isFinite(repairProbeAdaptiveMinScale)) solveOpts.repairProbeAdaptiveBiasedMinScaleOverride = repairProbeAdaptiveMinScale;
+if (Number.isFinite(repairLateProbeNodeBudget)) solveOpts.repairLateProbeNodeBudgetOverride = repairLateProbeNodeBudget;
 if (ablation) solveOpts.ablation = ablation;
 
 // Output-side hint state is deliberately distinct from mechanicsOnlyCorpus. Never pass hintLevels
@@ -172,6 +179,7 @@ function writeReport() {
         admissibleOrderNodeReserveFraction: Number.isFinite(admissibleOrderNodeReserveFraction) ? admissibleOrderNodeReserveFraction : null,
         repairProbeAdaptiveBadnessGate: Number.isFinite(repairProbeAdaptiveBadnessGate) ? repairProbeAdaptiveBadnessGate : null,
         repairProbeAdaptiveMinScale: Number.isFinite(repairProbeAdaptiveMinScale) ? repairProbeAdaptiveMinScale : null,
+        repairLateProbeNodeBudget: Number.isFinite(repairLateProbeNodeBudget) ? repairLateProbeNodeBudget : null,
         levelsRequested: targets.length, levelsRun: levels.length, solvedCount: solved,
         unsolvedCount: levels.length - solved, saveHints, hintChanges,
         artifactCompletedAt: new Date().toISOString(),

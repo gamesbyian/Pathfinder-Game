@@ -38,6 +38,10 @@ on:
         description: 'Optional late-reserve suffix config count; frozen experiment uses 4.'
         required: false
         default: ''
+      repair_late_probe_node_budget:
+        description: 'Optional STRATEGY_REPAIR_LATE_PROBE node cap override (production default 2000000, stage-budget.ts REPAIR_LATE_PROBE_NODE_BUDGET); blank for control.'
+        required: false
+        default: ''
       persist_hints:
         description: 'Save newly discovered valid solutions/provenance after solving, into data/stress/hints*/. Output-only: saved hints never enter the solve. Independent of the per-run analysis summary under reports/stress/capability-runs/RUN_ID/, which is always committed regardless of this flag -- see the combine job''s "Persist capability outputs" step.'
         required: false
@@ -181,6 +185,7 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-loop-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
           [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ] && extra+=("--main-loop-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}")
+          [ -n "${{ inputs.repair_late_probe_node_budget }}" ] && extra+=("--repair-late-probe-node-budget=${{ inputs.repair_late_probe_node_budget }}")
           [ "${{ inputs.persist_hints }}" = "true" ] && extra+=("--save-hints")
           [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
           work=$(( ${{ inputs.corpus1_node_budget }} * 134 / 100 ))
@@ -211,6 +216,7 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-loop-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
           [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ] && extra+=("--main-loop-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}")
+          [ -n "${{ inputs.repair_late_probe_node_budget }}" ] && extra+=("--repair-late-probe-node-budget=${{ inputs.repair_late_probe_node_budget }}")
           [ "${{ inputs.persist_hints }}" = "true" ] && extra+=("--save-hints")
           [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
           work=$(( ${{ inputs.corpus2_node_budget }} * 134 / 100 ))
