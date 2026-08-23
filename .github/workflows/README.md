@@ -37,7 +37,7 @@ Oracle output is research evidence, not cold production capability by itself.
 
 `solver-repair-fallback-reserve-sample-ab.yml`, `solver-repair-probe-adaptive-sample-ab.yml`, and `solver-elite-prefix-dfs-retry-validate.yml` remain available. Confirm the question is still open and the wiring still matches current code before reuse.
 
-The retired persistent-branch Corpus-2 design is summarized in [`README-solver-corpus2-batches.md`](README-solver-corpus2-batches.md).
+Retired workflow designs, naming history, and migration incidents are preserved in git history and dated reports; do not use old fixed Corpus-2 batch commands for current dispatches.
 
 ## Before dispatching or adding a workflow
 
