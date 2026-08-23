@@ -669,7 +669,7 @@ test('attraction-diversity pass reruns the main ladder once more after both prio
     // repairLateProbeNodeBudgetOverride: 0 similarly isolates this pass from the default-on
     // repair-late-probe tier, which targets the same repair-ineligible fixture and would otherwise
     // spend its own flat 2,000,000-node reserve on top of the tiny budget this test measures.
-    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, dedupNearTieRetryBudgetFractionOverride: 0, admissibleOrderNonDefaultRetryBudgetFractionOverride: 0, connectivityAxisExhaustedRetryBudgetFractionOverride: 0, mcNeighborBudgetRetryBudgetFractionOverride: 0, repairLateProbeNodeBudgetOverride: 0 });
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, dedupNearTieRetryBudgetFractionOverride: 0, admissibleOrderNonDefaultRetryBudgetFractionOverride: 0, connectivityAxisExhaustedRetryBudgetFractionOverride: 0, mcNeighborBudgetRetryBudgetFractionOverride: 0, repairLateProbeNodeBudgetOverride: 0, ablation: { STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false } });
     assert.equal(result.ok, false);
     const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
     const mainLoopAttempts = result.attempts.filter(a => a.attractionDiversity !== true);
@@ -792,6 +792,7 @@ test('a nodeBudget with room left after the main loop lets the diversity pass st
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
         repairLateProbeNodeBudgetOverride: 0,
+        ablation: { STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
     });
     assert.equal(result.ok, false);
     assert.equal(result.status, 'node-budget-reached');
@@ -855,6 +856,7 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
         repairLateProbeNodeBudgetOverride: 0,
+        ablation: { STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
     });
     const on = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
@@ -864,6 +866,7 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
         repairLateProbeNodeBudgetOverride: 0,
+        ablation: { STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
     });
     assert.equal(off.nodesExpanded, 402, 'reserve off reproduces the pre-reserve total exactly');
     assert.ok(on.nodesExpanded < off.nodesExpanded, 'the reserve must hold the early tiers below the full ceiling');
@@ -1035,7 +1038,7 @@ test('repair-fallback reserve is inert by default (cfg=null) even with a finite 
     const level = makeRepairGatedInfeasibleLevel();
     const withoutFlag = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
-        ablation: { STRATEGY_REPAIR_PROBE: false },
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
@@ -1046,6 +1049,7 @@ test('repair-fallback reserve is inert by default (cfg=null) even with a finite 
         mainLoopLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
         attemptSearchForTesting: repairFallbackReserveDispatch(),
+        repairLateProbeNodeBudgetOverride: 0,
     });
     // cfg is non-null here (STRATEGY_REPAIR_PROBE: false is set), but this flag is unset within it —
     // the opt-in Proxy must resolve it to false regardless of what else is in the object.
@@ -1069,12 +1073,12 @@ test('repair-fallback reserve gives the fallback loop room without touching the 
     };
     const off = await solveLevel(level, {
         ...opts,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: false },
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: false, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     const on = await solveLevel(level, {
         ...opts,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true },
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     // earlyTierNodeBudget=1000 (no admissible-order reserve), mainLoopLateReserve=floor(1000*0.3)=300,
@@ -1103,7 +1107,7 @@ test('repair-fallback reserve is a no-op when mainLoopLateReserve is 0 (accepted
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_MAIN_LOOP_LATE_RESERVE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true },
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_MAIN_LOOP_LATE_RESERVE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
@@ -1129,7 +1133,7 @@ test('attraction-diversity reserve is inert by default (cfg=null) even with its 
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true },
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
@@ -1168,12 +1172,12 @@ test('attraction-diversity reserve gives the diversity pass room without touchin
     };
     const off = await solveLevel(level, {
         ...opts,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: false },
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: false, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     const on = await solveLevel(level, {
         ...opts,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: true },
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     // earlyTierNodeBudget=1000, mainLoopLateReserve=floor(1000*0.3)=300, mainLoopEarlyNodeBudget=700
@@ -1215,7 +1219,7 @@ test('attraction-diversity reserve is a no-op when repairFallbackNodeReserve alr
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: true },
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
@@ -1284,12 +1288,12 @@ test('admissible-order profile reserve gives non-default profiles room without s
     };
     const off = await solveLevel(level, {
         ...opts,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: false },
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: false, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     const on = await solveLevel(level, {
         ...opts,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true },
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     // nodeBudget=1000, admissibleOrderNodeReserve=floor(1000*0.4)=400, earlyTierNodeBudget=600 (main
@@ -1319,7 +1323,7 @@ test('admissible-order profile reserve is a no-op when admissibleOrderNodeReserv
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true },
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         repairBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
@@ -1786,7 +1790,7 @@ test('dedup-near-tie-retry pass reruns the main ladder once more after main loop
     // otherwise inflate "mainLoopAttempts" below (their attempts carry none of these three markers).
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
-        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true },
+        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
@@ -2013,7 +2017,7 @@ test('disableExtraBudgetPasses: true suppresses the admissible-order-non-default
 test('connectivity-axis-exhausted-retry pass reruns the main ladder once more after everything else fails', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
-        ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true },
+        ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,

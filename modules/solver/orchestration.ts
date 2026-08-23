@@ -887,6 +887,10 @@ export {
 // them locally (every real use lives inside stage-budget.ts's own computeStageBudgetPlan now);
 // the `export { ... } from` statement is self-contained and needs no paired import.
 import { computeStageBudgetPlan, computeShrinkRecoveryBudget, buildStageBudgetEnvelopes } from './stage-budget.js';
+// Genuinely imported (not just re-exported): this file's own repair-late-probe-multi-seed-retry
+// block iterates the array directly, unlike the fraction constants above which are only ever
+// consumed inside stage-budget.ts's computeStageBudgetPlan.
+import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from './stage-budget.js';
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
@@ -1617,6 +1621,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         repairElitePrefixDfsRetryTierWillRun, repairElitePrefixDfsRetryNodeCeiling,
         mcNeighborBudgetRetryTierWillRun, mcNeighborBudgetRetryNodeCeiling,
         repairLateProbeNodeBudget, repairLateProbeTierWillRun, repairLateProbeNodeCeiling,
+        goalAttractionLegacyDistanceRetryBudgetFraction, goalAttractionLegacyDistanceRetryTierWillRun,
+        goalAttractionLegacyDistanceRetryNodeCeiling,
+        repairLateProbeMultiSeedRetryTierWillRun, repairLateProbeMultiSeedRetryNodeCeiling,
         retryTierStaircase, earlyTierNodeBudget, admissibleOrderDefaultProfileCeiling,
         mainLoopLateReserve, mainLoopEarlyNodeBudget, mainLoopLateConfigStart,
         repairFallbackNodeReserve, attractionDiversityNodeReserve,
@@ -2371,6 +2378,93 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 const r = await runAttempt(gateKey, level, prep, repairLateProbeConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
                 result.attempts.push(withSolverStage(r.attempt, 'repair-late-probe'));
                 if (r.path) { result.solution = r.path; break; }
+            }
+        } finally {
+            prep._workCap = originalWorkCap;
+        }
+    }
+
+    // Last-resort SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE retry pass (GOAL_ATTRACTION_LEGACY_
+    // DISTANCE_RETRY_BUDGET_FRACTION, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY) — see that
+    // constant's own comment in stage-budget.ts and docs/solver-optimization-current-queue.md
+    // Priority 7 for the full rationale. The plain global SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE
+    // flag (attempts.ts/scoring.ts) was measured net -5 across three populations (73-level loss
+    // population +9/-3; 90-level gain population 0/-11; published corpus unchanged) because it
+    // forces the legacy (pre-6f00baf) distance map even on levels the corrected map already solves
+    // early. This tier instead reruns the whole `mainConfigs` ladder with that flag forced ON, but
+    // ONLY after every earlier tier — including repair-late-probe, the previous true end of the
+    // ladder — has already failed, so it structurally cannot touch that loss population: a level
+    // that solves earlier never reaches this tier. Same `runWholeLadderRetryTier`/`proxyOverrides`
+    // shape as STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY. Promoted default-ON 2026-08-23 after a
+    // population-scale A/B (73-level loss population +3/-0; 90-level gain population 0/-0;
+    // published corpus unchanged — see docs/solver-opt-in-experiment-ledger.md); the flag check
+    // below (`!cfg ||` ... ) is the default-ON convention.
+    //
+    // Positioned dead last — AFTER the repair-late-probe tier above, the current true end of the
+    // ladder — for the identical reason every tier above it is placed there: nothing may run after
+    // this one that still checks an unextended ceiling, or this tier's own additive extension would
+    // starve it.
+    //
+    // `goalAttractionLegacyDistanceRetryTierWillRun` is the SAME predicate
+    // goalAttractionLegacyDistanceRetryNodeReserve is derived from (stage-budget.ts) — the two must
+    // stay in lockstep.
+    if (!result.solution && goalAttractionLegacyDistanceRetryTierWillRun && prep._metrics.nodesExpanded < goalAttractionLegacyDistanceRetryNodeCeiling) {
+        const goalAttractionLegacyDistanceRetryTotalBudget = Math.floor(timeBudgetMs * goalAttractionLegacyDistanceRetryBudgetFraction);
+        const goalAttractionLegacyDistanceRetryResult = await runWholeLadderRetryTier({
+            stageId: 'goal-attraction-legacy-distance-retry', proxyOverrides: { SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE: true },
+            activeGates, mainConfigs, level, prep, yieldFn,
+            runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
+            totalBudgetMs: goalAttractionLegacyDistanceRetryTotalBudget, nodeCeiling: goalAttractionLegacyDistanceRetryNodeCeiling,
+            workBudget: Math.max(MIN_ATTEMPT_WORK, Math.floor(goalAttractionLegacyDistanceRetryTotalBudget * DEFAULT_WORK_PER_MS)),
+            workStart: prep._workMeter.units,
+            staircase: retryTierStaircase,
+        });
+        result.attempts.push(...goalAttractionLegacyDistanceRetryResult.attempts);
+        if (goalAttractionLegacyDistanceRetryResult.solution) result.solution = goalAttractionLegacyDistanceRetryResult.solution;
+    }
+
+    // Last-resort repair-late-probe MULTI-SEED retry (REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_
+    // SALTS, STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY, promoted default-ON 2026-08-23) — see
+    // that constant's own comment in stage-budget.ts for the full rationale and validated
+    // evidence. Dead-last additive extension of repair-late-probe:
+    // for the exact same repairConfigsCount===0 population, retry the SAME repairAttempt() builder
+    // across several more PRNG seeds (repair-late-probe itself already tried seed salt 0), each
+    // seed getting its own full REPAIR_LATE_PROBE_NODE_BUDGET reserve. Structurally identical to
+    // the repair-late-probe block above (same per-gate manual loop, same builder), just looped over
+    // seeds and positioned after goal-attraction-legacy-distance-retry, the current true end of the
+    // ladder.
+    //
+    // `repairLateProbeMultiSeedRetryTierWillRun` is the SAME predicate
+    // repairLateProbeMultiSeedRetryNodeReserve is derived from (stage-budget.ts) — the two must
+    // stay in lockstep.
+    if (!result.solution && repairLateProbeMultiSeedRetryTierWillRun && prep._metrics.nodesExpanded < repairLateProbeMultiSeedRetryNodeCeiling) {
+        const repairLateProbeMultiSeedConfig = repairAttempt();
+        const originalWorkCap = prep._workCap;
+        try {
+            seedLoop:
+            for (const seedSalt of REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS) {
+                if (prep._metrics.nodesExpanded >= repairLateProbeMultiSeedRetryNodeCeiling) break;
+                const roundStart = Date.now();
+                const roundEntryNodes = prep._metrics.nodesExpanded;
+                const roundWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(timeBudgetMs * DEFAULT_WORK_PER_MS));
+                prep._workCap = Math.min(prep._workMeter.units + roundWorkBudget, prep._strictWorkCap ?? Infinity);
+                for (let gi = 0; gi < activeGates.length; gi++) {
+                    if (prep._metrics.nodesExpanded >= repairLateProbeMultiSeedRetryNodeCeiling) break;
+                    const ownBudgetRemaining = repairLateProbeNodeBudget - (prep._metrics.nodesExpanded - roundEntryNodes);
+                    if (ownBudgetRemaining <= 0) break;
+                    const gateKey = activeGates[gi];
+                    const elapsed = Date.now() - roundStart;
+                    const gatesLeft = activeGates.length - gi;
+                    const retryBudget = Math.floor((timeBudgetMs - elapsed) / gatesLeft);
+                    if (retryBudget < 50) break;
+                    const outerCeilingRemaining = repairLateProbeMultiSeedRetryNodeCeiling === Infinity
+                        ? Infinity
+                        : Math.max(0, repairLateProbeMultiSeedRetryNodeCeiling - prep._metrics.nodesExpanded);
+                    const remainingNodeBudget = Math.min(ownBudgetRemaining, outerCeilingRemaining);
+                    const r = await runAttempt(gateKey, level, prep, repairLateProbeMultiSeedConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget, null, seedSalt);
+                    result.attempts.push(withSolverStage(r.attempt, 'repair-late-probe-multi-seed-retry'));
+                    if (r.path) { result.solution = r.path; break seedLoop; }
+                }
             }
         } finally {
             prep._workCap = originalWorkCap;

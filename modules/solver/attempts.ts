@@ -152,10 +152,29 @@ const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= PO
  *  above already uses for this archetype/difficulty regime — not a threshold invented for these
  *  two levels specifically. Purely additive and risk-free for every other level exactly as the
  *  must-cross/must-pass clause is: repair only ever runs after the entire existing bundle has
- *  already failed, so a level that solves via any earlier attempt is completely unaffected. */
-const needsRepairFallback = (f: LevelFeatures): boolean =>
+ *  already failed, so a level that solves via any earlier attempt is completely unaffected.
+ *
+ *  This gate is NOT purely additive, though: `orchestration.ts`'s `runRepairProbe` runs
+ *  unconditionally, win-or-lose, on every solve of any level this predicate matches, BEFORE the
+ *  main loop (`repairConfigs.length > 0` is its own eligibility check, driven directly by this
+ *  function). A level that never solves via repair still pays the probe's full bounded node cost
+ *  every time — `REPAIR_PROBE_ORDINARY_NODE_BUDGET`'s own comment documents ~10.7s of measured
+ *  dead-search overhead on one such level. `docs/solver-optimization-current-queue.md` Priority 7's
+ *  2026-08-22 follow-up mining pass found the CURRENT (narrow) gate already taxes more levels than
+ *  it helps (48 fast-solving vs 13 repair-needing, full-corpus scan) and left widening this gate to
+ *  cover `portal-heavy` and the rest of `high-intersection-burden` (55 more genuinely-gapped rows)
+ *  explicitly unlanded pending a population-scale/stratified-sample wall-time check — see
+ *  `solver-future-work.md`'s "repair-fallback gate widening" entry. `STRATEGY_REPAIR_FALLBACK_GATE_WIDEN`
+ *  (default OFF, ablation-config.ts) below is that experiment's gate: OFF reproduces this function's
+ *  pre-2026-08-23 behavior byte-for-byte; ON adds unconditional `isHighInt(f)` (dropping the
+ *  VERY_HIGH_REQINT floor) and `f.arch === 'portal-heavy'`. **CLOSED NEGATIVE 2026-08-23:**
+ *  population-scale GHA A/B (562-level sample, `solver-archetype-sample-ab.yml`) found 0 gains, 2
+ *  losses (`R01944`, `R02474`) — see `docs/solver-opt-in-experiment-ledger.md`. Keep default OFF;
+ *  do not repeat this unchanged broad form. */
+const needsRepairFallback = (f: LevelFeatures, cfg: AblationConfig | null = null): boolean =>
     (f.mustCross >= POLICY.REPAIR_MC_MIN && f.mustPass >= POLICY.REPAIR_MP_MIN)
-    || (isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT);
+    || (isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT)
+    || (!!(cfg && cfg.STRATEGY_REPAIR_FALLBACK_GATE_WIDEN === true) && (isHighInt(f) || f.arch === 'portal-heavy'));
 // Exported for orchestration.ts's STRATEGY_REPAIR_LATE_PROBE tier, which needs to build a plain
 // repair AttemptConfig itself when repairConfigs is empty (needsRepairFallback was false) — see
 // that tier's own comment.
@@ -543,7 +562,7 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     // Applied centrally (not per-rule) since the feature gate cuts across several archetypes
     // (must-cross-heavy and high-intersection-burden rules both match batch-B cluster levels —
     // see POLICY.REPAIR_MC_MIN/REPAIR_MP_MIN).
-    if (needsRepairFallback(f)) {
+    if (needsRepairFallback(f, cfg)) {
         // Experimental turn-aware bias attempt: default-OFF (production passes null cfg → not added),
         // so this is byte-identical to before unless a caller explicitly enables
         // STRATEGY_REPAIR_TURN_BIAS. The shared opt-in registry keeps it off in both production and

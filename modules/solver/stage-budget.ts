@@ -819,6 +819,59 @@ export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  at the larger cap too. */
 export const REPAIR_LATE_PROBE_NODE_BUDGET = 5_000_000;
 
+/** STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY (promoted default-ON 2026-08-23). Dead-last
+ *  additive whole-ladder retry (same `runWholeLadderRetryTier` shape as
+ *  STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY) forcing SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE on
+ *  for its own rerun of `mainConfigs`, positioned AFTER `repair-late-probe`, the current true end
+ *  of the ladder. See docs/solver-optimization-current-queue.md Priority 7 and ablation-config.ts's
+ *  own comment on the flag for the full rationale: the plain global form of that flag measured net
+ *  -5 (73-level loss population +9/-3; 90-level gain population 0/-11; published corpus unchanged)
+ *  because it forces the legacy distance map even on levels the corrected map already solves early
+ *  in the ordinary ladder. This dead-last placement cannot touch that loss population by
+ *  construction — a level solving earlier never reaches this tier — so it is purely additive, same
+ *  reasoning as every other dead-last retry tier in this file. Promoted after a population-scale
+ *  A/B (solver-level-blind-targeted-sweep.yml, commit 95927c6df): 73-level loss population
+ *  15/73 -> 18/73 (+3/-0); 90-level gain population 90/90 -> 90/90 (0/-0); published corpus
+ *  unchanged. 1.0/0.5 constants match STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own (the
+ *  closest structural analog); recovers only 3 of the global form's 9 gains since this tier only
+ *  gets a fraction of the node ceiling the global form had from move zero — see
+ *  docs/solver-opt-in-experiment-ledger.md before raising the reserve fraction further. */
+export const GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION = 1.0;
+export const GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_NODE_RESERVE_FRACTION = 0.5;
+
+/** STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY (promoted, default ON — 2026-08-23). Dead-last
+ *  additive extension of STRATEGY_REPAIR_LATE_PROBE, positioned AFTER
+ *  goal-attraction-legacy-distance-retry (the current true end of the ladder). For the exact same
+ *  `repairConfigsCount === 0` population repair-late-probe already targets (levels attempts.ts's
+ *  routing never even offered a repair config to), retry `repairAttempt()` across
+ *  REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS extra PRNG seeds — repair-late-probe itself
+ *  always uses seed salt 0, so this tier starts at salt 1 — each seed getting its OWN full
+ *  REPAIR_LATE_PROBE_NODE_BUDGET reserve, stacked additively.
+ *
+ *  Two established findings motivate spending a genuinely large amount of extra budget here
+ *  specifically, rather than on yet another routing/reserve tweak: (1)
+ *  REPAIR_PROBE_ORDINARY_SEED_SALTS (orchestration.ts) already found real, if modest, additional
+ *  rescues from extra seeds on the EARLY small-budget probe (n=9, calibrated carefully); (2) the
+ *  2026-08-12 CP-SAT repair-retreat investigation
+ *  (reports/2026-08-12-repair-retreat-cpsat.md) found that in every case it could resolve, a
+ *  repair elite has ZERO rollback slack once its trajectory diverges from every valid solution —
+ *  CP-SAT proves the very next cell is already infeasible. That rules out "backtrack further after
+ *  the fact" as a fix (STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY tried exactly that shape and found
+ *  zero recoveries — see the opt-in ledger). It does NOT rule out a fix at the commitment point
+ *  itself: a different PRNG seed makes a different choice at that same decision point, which is a
+ *  different commitment, not a recovery from the same one. This tier is the cheapest way to test
+ *  that hypothesis at real scale — reusing the exact same full-budget plain-repair primitive
+ *  repair-late-probe already validated, just sampled from more independent starting points.
+ *
+ *  Reached only after repair-late-probe's own single seed has already failed, so a level that
+ *  solves on the first seed (or reaches this tier via any other, e.g. repairConfigsCount > 0) is
+ *  completely unaffected — purely additive by construction, same reasoning as every other
+ *  dead-last tier in this file. Promoted 2026-08-23 after a population-scale A/B
+ *  (solver-level-blind-targeted-sweep.yml): 73-level loss population 18→23 (+5/-0, control's
+ *  solved set a strict subset of treatment's), 90-level gain population 90/90 unaffected,
+ *  published corpus 160/160 unaffected. See docs/solver-opt-in-experiment-ledger.md. */
+export const REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS = [1, 2, 3, 4, 5, 6, 7];
+
 
 // ─── Stage budget plan: the canonical cascade ────────────────────────────────
 //
@@ -1155,6 +1208,43 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
         ? Infinity
         : mcNeighborBudgetRetryNodeCeiling + repairLateProbeNodeReserve;
 
+    // STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY (promoted default-ON 2026-08-23: population-
+    // scale A/B produced +3 net with zero regressions across the 73-loss/90-gain/published
+    // populations — see docs/solver-opt-in-experiment-ledger.md) — see
+    // GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION's own comment above. No override
+    // plumbing yet (first-landing scope) — always the two constants below, subject only to the
+    // flag itself and disableExtraBudgetPasses.
+    const goalAttractionLegacyDistanceRetryBudgetFraction = opts.disableExtraBudgetPasses
+        ? 0 : GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION;
+    const goalAttractionLegacyDistanceRetryTierWillRun = goalAttractionLegacyDistanceRetryBudgetFraction > 0
+        && !!(!cfg || cfg.STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY);
+    const goalAttractionLegacyDistanceRetryNodeReserve = (goalAttractionLegacyDistanceRetryTierWillRun && nodeBudget !== Infinity)
+        ? Math.floor(repairLateProbeNodeCeiling * GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_NODE_RESERVE_FRACTION)
+        : 0;
+    const goalAttractionLegacyDistanceRetryNodeCeiling = repairLateProbeNodeCeiling === Infinity
+        ? Infinity
+        : repairLateProbeNodeCeiling + goalAttractionLegacyDistanceRetryNodeReserve;
+
+    // STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY (promoted, default ON) — see
+    // REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS's own comment above. Requires
+    // repairLateProbeTierWillRun itself (running more seeds of a tier that wouldn't even run once
+    // makes no sense, and this transitively respects opts.disableExtraBudgetPasses /
+    // repairLateProbeNodeBudgetOverride, both of which repairLateProbeTierWillRun already checks).
+    // Stacked on goalAttractionLegacyDistanceRetryNodeCeiling, the current true end of the ladder —
+    // NOT on repairLateProbeNodeCeiling directly, so it never contends with that tier's own budget.
+    const repairLateProbeMultiSeedRetryTierWillRun = repairLateProbeTierWillRun
+        && !!(!cfg || cfg.STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY);
+    // Flat additive reserve (like repairLateProbeNodeReserve itself): each seed gets its own full
+    // REPAIR_LATE_PROBE_NODE_BUDGET, not a fraction split across seeds — diluting an already-
+    // calibrated per-seed budget would confound "does more seeds help" with "does less budget per
+    // seed hurt."
+    const repairLateProbeMultiSeedRetryNodeReserve = repairLateProbeMultiSeedRetryTierWillRun
+        ? repairLateProbeNodeBudget * REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS.length
+        : 0;
+    const repairLateProbeMultiSeedRetryNodeCeiling = goalAttractionLegacyDistanceRetryNodeCeiling === Infinity
+        ? Infinity
+        : goalAttractionLegacyDistanceRetryNodeCeiling + repairLateProbeMultiSeedRetryNodeReserve;
+
     // STRATEGY_RETRY_TIER_NODE_STAIRCASE (opt-in, default OFF) — whether the attraction-diversity pass
     // and the two promoted whole-ladder retry tiers subdivide their node reserve per config instead of
     // letting the first config consume all of it. See the flag's own comment in ablation-config.ts
@@ -1452,6 +1542,10 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
         repairElitePrefixDfsRetryTierWillRun, repairElitePrefixDfsRetryNodeReserve, repairElitePrefixDfsRetryNodeCeiling,
         mcNeighborBudgetRetryTierWillRun, mcNeighborBudgetRetryNodeReserve, mcNeighborBudgetRetryNodeCeiling,
         repairLateProbeNodeBudget, repairLateProbeTierWillRun, repairLateProbeNodeReserve, repairLateProbeNodeCeiling,
+        goalAttractionLegacyDistanceRetryBudgetFraction, goalAttractionLegacyDistanceRetryTierWillRun,
+        goalAttractionLegacyDistanceRetryNodeReserve, goalAttractionLegacyDistanceRetryNodeCeiling,
+        repairLateProbeMultiSeedRetryTierWillRun, repairLateProbeMultiSeedRetryNodeReserve,
+        repairLateProbeMultiSeedRetryNodeCeiling,
         retryTierStaircase, earlyTierNodeBudget,
         admissibleOrderProfileNodeReserveEligible, admissibleOrderProfileNodeReserve, admissibleOrderDefaultProfileCeiling,
         mainLoopLateReserveEnabled, mainLoopLateReserveFraction, mainLoopLateReserveConfigCount,
@@ -1531,6 +1625,10 @@ export function buildStageBudgetEnvelopes(plan: StageBudgetPlan, input: { timeBu
             plan.mcNeighborBudgetRetryNodeReserve > 0 ? { kind: 'additive', amount: plan.mcNeighborBudgetRetryNodeReserve, sourceStageId: 'repair-elite-prefix-dfs-retry' } : none),
         'repair-late-probe': envelope('repair-late-probe', timeBudgetMs, plan.repairLateProbeNodeCeiling,
             plan.repairLateProbeNodeReserve > 0 ? { kind: 'additive', amount: plan.repairLateProbeNodeReserve, sourceStageId: 'mc-neighbor-budget-retry' } : none),
+        'goal-attraction-legacy-distance-retry': envelope('goal-attraction-legacy-distance-retry', Math.floor(timeBudgetMs * plan.goalAttractionLegacyDistanceRetryBudgetFraction), plan.goalAttractionLegacyDistanceRetryNodeCeiling,
+            plan.goalAttractionLegacyDistanceRetryNodeReserve > 0 ? { kind: 'additive', amount: plan.goalAttractionLegacyDistanceRetryNodeReserve, sourceStageId: 'repair-late-probe' } : none),
+        'repair-late-probe-multi-seed-retry': envelope('repair-late-probe-multi-seed-retry', timeBudgetMs, plan.repairLateProbeMultiSeedRetryNodeCeiling,
+            plan.repairLateProbeMultiSeedRetryNodeReserve > 0 ? { kind: 'additive', amount: plan.repairLateProbeMultiSeedRetryNodeReserve, sourceStageId: 'goal-attraction-legacy-distance-retry' } : none),
         'repair-probe-shrink-recovery': envelope('repair-probe-shrink-recovery', undefined, plan.earlyTierNodeBudget, none),
     };
 }
