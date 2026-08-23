@@ -45,6 +45,8 @@ Prototype parallel typed arrays / an arena for candidate fields and a custom has
 
 This is the most obvious place to combine with the dense-native core: dense cell IDs shrink keys and simplify hashing.
 
+**2026-08-23 partial progress:** the two per-candidate delimited-string dedup/diversity keys (`sc`/`sk`) used to be built unconditionally for every accepted beam candidate, even in the (common) phases that never reach the `cands.length > beamWidth` branch that consumes them. `BeamNode` now stores the underlying 7 numeric fields as scalars and builds the strings lazily, only where actually consumed — order-preserving (`nodesExpanded` bit-identical, `solver:bench --check` byte-identical baseline node count), −7.8% published / −11.2% Corpus-2-sample wall time on interleaved node-budgeted medians. See [`../reports/2026-08-23-beam-dedup-key-lazy-build-experiment.md`](../reports/2026-08-23-beam-dedup-key-lazy-build-experiment.md). The full arena/typed-array/custom-hash-table prototype described above is still open — this only removed wasted string construction on the branch-skip path, it did not change the `Map<string, BeamNode>` structure itself.
+
 ### 3. Alternative beam-state materialization
 
 Parent pointers plus one mutable replay state have already been optimized heavily. Tree-order walking reduced replay from 9.78M to 2.08M steps in one measured case, so "walk related paths together" is not new.
