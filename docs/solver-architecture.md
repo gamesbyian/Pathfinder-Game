@@ -131,7 +131,7 @@ AXIS_NONE = 0
 
 ## Ablation
 
-76 togglable flags; see [`solver-ablation.md`](solver-ablation.md). Quick start: `ablation:baseline`, `ablation:single`, `ablation:analyze`.
+The feature registry lives in `modules/solver/ablation-config.ts`; see [`solver-ablation.md`](solver-ablation.md). Quick start: `ablation:baseline`, `ablation:single`, `ablation:analyze`.
 
 `normalizeAblationConfig()` normalizes sparse external configs: supplied keys pass through, missing booleans read `true`, absent `ATTEMPT_ORDER`/`_randomSeed` stay `undefined`; null/absent keeps the fast path. `race.mjs` normalizes before `postMessage` because `Proxy` cannot cross workers.
 
@@ -222,7 +222,7 @@ Shared `level-data-io.mjs` parsers reject bare numeric ambiguity:
 - full ID such as `R00237`: unambiguous.
 - `all` / omitted: all.
 
-Known gap: `stress:benchmark` assumes wrapped `{levels:[...]}` and crashes on bare-array corpora.
+`stress:benchmark` accepts both wrapped `{levels:[...]}` corpora and bare-array corpora.
 
 ## Offline portfolio experiment
 

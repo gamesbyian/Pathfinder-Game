@@ -1,15 +1,12 @@
 #!/usr/bin/env node
 /**
- * Winning-path archaeology (Tier 1, item 2 of
- * docs/solver-next-frontier-multilingual-research-update-2026-08-02.md's section 16 revised
- * ranking) — "establish the evidence engine" before Tier 2 item 7 (depth-reservoir beam /
- * Rectangle Search), which that same ranking explicitly gates on this measurement existing first.
+ * Winning-path archaeology — an early local-child-rank evidence tool. Current winning-lineage
+ * instrumentation and follow-up methodology live in docs/solver-winning-lineage-survival-analysis.md.
  *
- * WHAT THIS MEASURES (a deliberately narrower v1 than section 9.1's full spec — see SCOPE below):
- * for each sampled level with a known, PLAY-valid winning path (a stored hint, any provenance),
- * replay the path step by step through the REAL production primitives (getNeighbors/scoreMove/
- * applyMove/undoMove, POLICY_PROFILES.default — the exact functions dfsFromGate/beamSearchFromGate
- * themselves call) and record, at each step:
+ * WHAT THIS MEASURES: for each sampled level with a known, PLAY-valid winning path (a stored hint,
+ * any provenance), replay the path step by step through the REAL production primitives
+ * (getNeighbors/scoreMove/applyMove/undoMove, POLICY_PROFILES.default — the exact functions
+ * dfsFromGate/beamSearchFromGate themselves call) and record, at each step:
  *   - candidateCount: how many legal moves scoreMove was asked to rank from this position;
  *   - rank: the known winning move's 1-indexed rank among those candidates sorted by score
  *     descending (matching production's own `pool.sort((a, b) => b.score - a.score)` convention);
@@ -18,30 +15,21 @@
  * exploratory budget — see BUDGET below, NOT the authoritative corpus baseline) so results can be
  * bucketed by solved-vs-unsolved and compared.
  *
- * SCOPE (why this is "local child rank," not full section 9.1). Section 9.1 additionally asks for
- * "beam admission" (survival within a WIDTH-limited GLOBAL frontier pooled across every parent, not
- * just this one path's own local children) and "first extinction depth" in a real multi-restart
- * beam. Faithfully replaying that would mean instrumenting beamSearchFromGate's actual frontier
- * internals (a hot, optimized function) rather than calling its exported primitives from outside —
- * a materially bigger and riskier undertaking. This tool answers the narrower, still-useful
- * question section 9.1 also names first ("correct-child rank at each depth," "score gap"): does
- * the HEURISTIC ITSELF prefer the correct move, independent of beam width or pruning? A low local
- * rank does not guarantee beam survival (other parents' children could still crowd the frontier),
- * and a high local rank does not guarantee beam death (width could still be generous enough) — this
- * is a proxy, not a beam-survival simulator, and is reported as such.
+ * SCOPE. This is local child rank, not full beam-lineage survival: "beam admission" depends on a
+ * width-limited GLOBAL frontier pooled across every parent. Faithfully measuring that requires the
+ * production beam observer/instrumentation documented in solver-winning-lineage-survival-analysis.md.
+ * A low local rank does not guarantee beam survival, and a high local rank does not guarantee beam
+ * death. This is a heuristic-preference proxy, not a beam-survival simulator.
  *
- * A further scope choice: candidates come straight from getNeighbors (move-LEGALITY only), not
- * post-prune-gauntlet survivors — i.e. this measures the scorer's raw preference among everything
- * legal, not "rank among what the search would have actually scored after PRUNE_MUST_PASS_LB etc.
- * already rejected some". This is the simpler, more directly diagnostic question ("does the
- * heuristic like the right move") and avoids re-implementing the full prune gauntlet a second time
- * outside search.ts.
+ * Candidates come straight from getNeighbors (move legality only), not post-prune-gauntlet
+ * survivors. The tool therefore asks "does the heuristic like the right move?" rather than
+ * re-implementing the full prune gauntlet outside search.ts.
  *
  * BUDGET. The cold-solve check uses a modest, fixed budget (see COLD_SOLVE_* below) purely to
- * bucket results into solved/unsolved for THIS report — it is explicitly NOT the corpus's
- * authoritative solved count (see data/stress/README.md for that), which uses much larger budgets.
+ * bucket results into solved/unsolved for THIS report. It is explicitly NOT the corpus's
+ * authoritative solved count; see data/stress/README.md.
  *
- * Persists --out after EVERY level (CLAUDE.md's batch-tool rule), not only at the end.
+ * Persists --out after every level, following scripts/README.md's long-batch persistence rule.
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/winning-path-archaeology.mjs -- \
@@ -55,7 +43,7 @@ import { readLevelsWithHints } from '../level-data-io.mjs';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API } = await import('../../modules/Solver.ts');
+const { createSolver, SOLVER_TESTING_API } = await import('../../modules/solver.ts');
 const { undoMove } = await import('../../modules/solver/search-state.ts');
 const { scoreMove } = await import('../../modules/solver/scoring.ts');
 const { POLICY_PROFILES } = await import('../../modules/solver/policy.ts');

@@ -1,8 +1,6 @@
 #!/usr/bin/env node
-// Portal-parity census -- Stage 0 of gap-analysis item 1
-// (docs/solver-heuristic-capability-gap-analysis.md's "Portal parity: guidance without
-// inference"): before writing any new prune, measure whether the candidate necessary
-// condition actually holds on real stored solutions.
+// Portal-parity census -- Stage 0 of the historical portal-parity gap analysis: before writing any
+// new prune, measure whether the candidate necessary condition actually holds on real stored solutions.
 //
 // BACKGROUND. On a portal-free grid, every move flips (x+y)%2, so prune-gauntlet.ts's existing
 // PRUNE_PARITY check rejects a state whose parity can't reach the goal in exactly the remaining
@@ -49,7 +47,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { readLevelsWithHints, selectLevelsBySpec } from '../level-data-io.mjs';
-import { createSolver, SOLVER_TESTING_API } from '../../modules/Solver.ts';
+import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { keyParity } from '../../modules/domain/cell-key.ts';
 import { getDistanceFromArray } from '../../modules/solver/distance.ts';
 

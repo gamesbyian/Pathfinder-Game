@@ -17,7 +17,7 @@
  * over-approximation discipline the connectivity fill already relies on.
  *
  * This is the "backward search as an ORACLE rather than a stored frontier" variant recorded in
- * docs/future-work.md — it stores O(K x cells) layers, not a meet-in-the-middle frontier, so none of
+ * docs/solver-future-work.md — it stores O(K x cells) layers, not a meet-in-the-middle frontier, so none of
  * the frontier-size objection applies. Portal-free only: a jump advances position at zero path
  * length, which breaks the layer/length correspondence.
  *

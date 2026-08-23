@@ -15,7 +15,7 @@ const solutionLimit = Number(args.get('--limit-solutions') ?? 3);
 const outFile = args.get('--out') ?? 'reports/stress/winning-prefix-atlas-pilot.json';
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.ts');
+const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const Solver = createSolver();
 const selected = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 0).slice(0, levelLimit);
 const levels = [];

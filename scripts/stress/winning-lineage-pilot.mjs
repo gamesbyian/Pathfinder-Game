@@ -26,7 +26,7 @@ if (![limit, beamWidth, nodeBudget].every(Number.isFinite) || limit < 1 || beamW
 }
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.ts');
+const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const Solver = createSolver();
 const rawLevels = readLevelsWithHints(levelsFile);
 const solutionBearing = rawLevels.filter(level => level.hints?.length > 0);
