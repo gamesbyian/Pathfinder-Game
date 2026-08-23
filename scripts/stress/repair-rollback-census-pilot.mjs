@@ -48,7 +48,7 @@ function sampleDeterministic(items, n, seed) {
 }
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.ts');
+const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const { repairSearchFromGate } = await import('../../modules/solver/repair-search.ts');
 const Solver = createSolver();
 const hintBearing = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 0);
