@@ -45,6 +45,8 @@ const scriptFiles = tracked.filter(file => file.startsWith('scripts/') && /\.(?:
 const workflowFiles = tracked.filter(file => /^\.github\/workflows\/.*\.ya?ml$/u.test(file));
 const docFiles = tracked.filter(file => /(?:^|\/)(?:README|AGENTS|CLAUDE|DEVELOPER_REFERENCE)\.md$/u.test(file)
     || file.startsWith('docs/') && file.endsWith('.md'));
+const historicalDoc = file => file.startsWith('docs/history/') || file.startsWith('docs/archive/');
+const currentDocFiles = docFiles.filter(file => !historicalDoc(file));
 const searchableFiles = [...new Set([
     ...scriptFiles,
     ...workflowFiles,
@@ -122,10 +124,12 @@ const rows = scriptFiles.map(file => {
     const refs = referenceFiles(file);
     const workflowRefs = refs.filter(ref => workflowFiles.includes(ref));
     const docRefs = refs.filter(ref => docFiles.includes(ref));
+    const currentDocRefs = docRefs.filter(ref => currentDocFiles.includes(ref));
+    const historicalDocRefs = docRefs.filter(ref => historicalDoc(ref));
     const codeRefs = refs.filter(ref => scriptFiles.includes(ref));
     const changedAt = lastChanged.get(file) ?? null;
     const kind = classifyKind(file, source);
-    const surfaced = aliases.length > 0 || workflowRefs.length > 0 || docRefs.length > 0;
+    const surfaced = aliases.length > 0 || workflowRefs.length > 0 || currentDocRefs.length > 0;
     const lifecycleInfo = lifecycle[file] ?? { lifecycle: 'unclassified', note: null };
     const hiddenEntrypoint = kind === 'entrypoint' && !surfaced && codeRefs.length === 0;
     const orphanCandidate = hiddenEntrypoint && lifecycleInfo.lifecycle === 'unclassified';
@@ -136,7 +140,8 @@ const rows = scriptFiles.map(file => {
         lifecycleNote: lifecycleInfo.note ?? null,
         packageAliases: aliases,
         workflowRefs,
-        docRefs,
+        currentDocRefs,
+        historicalDocRefs,
         codeRefs,
         lastChanged: changedAt,
         ageDays: ageDays(changedAt),
@@ -235,7 +240,7 @@ const summary = {
     orphanCandidates: rows.filter(row => row.orphanCandidate).length,
     ...(health ? { supportedImportFailures: health.failures.length } : {}),
 };
-const result = { schemaVersion: 3, generatedAt: new Date().toISOString(), summary, rows: selected, ...(health ? { health } : {}) };
+const result = { schemaVersion: 4, generatedAt: new Date().toISOString(), summary, rows: selected, ...(health ? { health } : {}) };
 
 if (JSON_MODE) {
     const rendered = `${JSON.stringify(result, null, 2)}\n`;
@@ -250,9 +255,9 @@ if (health) {
     for (const failure of health.failures) console.log(`  BROKEN ${failure.importer} -> ${failure.specifier}`);
     console.log('');
 }
-console.log('Legend: P=package alias, W=workflow reference, D=current-doc reference, C=script/code reference.');
+console.log('Legend: P=package alias, W=workflow reference, D=current-doc reference, C=script/code reference. Historical doc references are retained in JSON but do not count as D/support.');
 for (const row of selected) {
-    const signals = `${row.packageAliases.length ? 'P' : '-'}${row.workflowRefs.length ? 'W' : '-'}${row.docRefs.length ? 'D' : '-'}${row.codeRefs.length ? 'C' : '-'}`;
+    const signals = `${row.packageAliases.length ? 'P' : '-'}${row.workflowRefs.length ? 'W' : '-'}${row.currentDocRefs.length ? 'D' : '-'}${row.codeRefs.length ? 'C' : '-'}`;
     const age = row.ageDays == null ? '?' : `${row.ageDays}d`;
     const lifecycleLabel = row.lifecycle === 'unclassified' ? '' : ` [${row.lifecycle}]`;
     const marker = row.orphanCandidate ? ' ORPHAN?' : '';
