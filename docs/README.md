@@ -28,8 +28,7 @@ Dates and narrative experiment names belong in `reports/`, `archive/`, `history/
 | [`command-glossary.md`](command-glossary.md) | Runtime flow names and implementation locations. |
 | [`ui-accessibility.md`](ui-accessibility.md) | Dialog/focus/keyboard/accessibility conventions. |
 | [`security.md`](security.md) | Firestore authorization, Firebase config/secrets, debug exposure, security workflow. |
-| [`content-security-policy.md`](content-security-policy.md) | Production CSP contract. |
-| [`third-party-dependencies.md`](third-party-dependencies.md) | External dependency/origin allowlist. |
+| [`content-security-policy.md`](content-security-policy.md) | Production CSP and external browser-origin/dependency policy. |
 | [`hint-curation.md`](hint-curation.md) | Player hint selection/diversity. |
 | [`hint-variety-search.md`](hint-variety-search.md) | Varied-hint search behavior. |
 | [`hint-workbench.md`](hint-workbench.md) | Hint research CLI. |
@@ -48,7 +47,6 @@ Presence does not imply current priority.
 
 | Doc | Role |
 |---|---|
-| [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md) | Second-order census mining: behavior, redundancy, routing, and cost. |
 | [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) | Read-only exact/oracle-labelled probes. |
 | [`solver-winning-lineage-survival-analysis.md`](solver-winning-lineage-survival-analysis.md) | Beam lineage observation. |
 | [`solver-ablation.md`](solver-ablation.md) | Feature-flag ablation lab. |
