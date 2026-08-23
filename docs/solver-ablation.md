@@ -14,7 +14,9 @@ Features toggle through `opts.ablation`: production-default features default on,
 | templates | 8 | structural traversal templates |
 | profiles | 12 | `PROFILE_<name>` attempt eligibility |
 
-Exact names/defaults: `modules/solver/ablation-config.ts`.
+Exact names/defaults: `modules/solver/ablation-config.ts`. Exact scoring-profile weights: `modules/solver/policy.ts`.
+
+`PROFILE_<name>` flags enable/disable named **scoring weight vectors**, not independent search algorithms. Ordinary DFS/beam profiles share `scoreMove()` and differ mainly in those weights; templates, beam retention, admissible-order, repair, pruning, retry context, and budget depth are separate operational layers. See [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) before interpreting profile-ablation overlap or independence.
 
 Important distinctions:
 - `STRATEGY_REPAIR_FALLBACK`: removes repair configs and early probe.
