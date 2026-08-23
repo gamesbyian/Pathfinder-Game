@@ -819,6 +819,22 @@ export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  at the larger cap too. */
 export const REPAIR_LATE_PROBE_NODE_BUDGET = 5_000_000;
 
+/** STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY (opt-in, default OFF — NEW, unvalidated
+ *  mechanism, 2026-08-23). Dead-last additive whole-ladder retry (same `runWholeLadderRetryTier`
+ *  shape as STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY) forcing SCORE_GOAL_ATTRACTION_LEGACY_
+ *  DISTANCE on for its own rerun of `mainConfigs`, positioned AFTER `repair-late-probe`, the
+ *  current true end of the ladder. See docs/solver-optimization-current-queue.md Priority 7 and
+ *  ablation-config.ts's own comment on the flag for the full rationale: the plain global form of
+ *  that flag measured net -5 (73-level loss population +9/-3; 90-level gain population 0/-11;
+ *  published corpus unchanged) because it forces the legacy distance map even on levels the
+ *  corrected map already solves early in the ordinary ladder. This dead-last placement cannot
+ *  touch that loss population by construction — a level solving earlier never reaches this tier —
+ *  so it is purely additive, same reasoning as every other dead-last retry tier in this file.
+ *  1.0/0.5 starting constants match STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own (the closest
+ *  structural analog); unvalidated, do not treat as tuned. */
+export const GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION = 1.0;
+export const GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_NODE_RESERVE_FRACTION = 0.5;
+
 
 // ─── Stage budget plan: the canonical cascade ────────────────────────────────
 //
@@ -1155,6 +1171,21 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
         ? Infinity
         : mcNeighborBudgetRetryNodeCeiling + repairLateProbeNodeReserve;
 
+    // STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY (opt-in, default OFF) — see
+    // GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION's own comment above. No override
+    // plumbing yet (unvalidated, first-landing scope) — always the two constants below, subject
+    // only to the flag itself and disableExtraBudgetPasses.
+    const goalAttractionLegacyDistanceRetryBudgetFraction = opts.disableExtraBudgetPasses
+        ? 0 : GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION;
+    const goalAttractionLegacyDistanceRetryTierWillRun = goalAttractionLegacyDistanceRetryBudgetFraction > 0
+        && !!(cfg && cfg.STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY === true);
+    const goalAttractionLegacyDistanceRetryNodeReserve = (goalAttractionLegacyDistanceRetryTierWillRun && nodeBudget !== Infinity)
+        ? Math.floor(repairLateProbeNodeCeiling * GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_NODE_RESERVE_FRACTION)
+        : 0;
+    const goalAttractionLegacyDistanceRetryNodeCeiling = repairLateProbeNodeCeiling === Infinity
+        ? Infinity
+        : repairLateProbeNodeCeiling + goalAttractionLegacyDistanceRetryNodeReserve;
+
     // STRATEGY_RETRY_TIER_NODE_STAIRCASE (opt-in, default OFF) — whether the attraction-diversity pass
     // and the two promoted whole-ladder retry tiers subdivide their node reserve per config instead of
     // letting the first config consume all of it. See the flag's own comment in ablation-config.ts
@@ -1452,6 +1483,8 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
         repairElitePrefixDfsRetryTierWillRun, repairElitePrefixDfsRetryNodeReserve, repairElitePrefixDfsRetryNodeCeiling,
         mcNeighborBudgetRetryTierWillRun, mcNeighborBudgetRetryNodeReserve, mcNeighborBudgetRetryNodeCeiling,
         repairLateProbeNodeBudget, repairLateProbeTierWillRun, repairLateProbeNodeReserve, repairLateProbeNodeCeiling,
+        goalAttractionLegacyDistanceRetryBudgetFraction, goalAttractionLegacyDistanceRetryTierWillRun,
+        goalAttractionLegacyDistanceRetryNodeReserve, goalAttractionLegacyDistanceRetryNodeCeiling,
         retryTierStaircase, earlyTierNodeBudget,
         admissibleOrderProfileNodeReserveEligible, admissibleOrderProfileNodeReserve, admissibleOrderDefaultProfileCeiling,
         mainLoopLateReserveEnabled, mainLoopLateReserveFraction, mainLoopLateReserveConfigCount,
@@ -1531,6 +1564,8 @@ export function buildStageBudgetEnvelopes(plan: StageBudgetPlan, input: { timeBu
             plan.mcNeighborBudgetRetryNodeReserve > 0 ? { kind: 'additive', amount: plan.mcNeighborBudgetRetryNodeReserve, sourceStageId: 'repair-elite-prefix-dfs-retry' } : none),
         'repair-late-probe': envelope('repair-late-probe', timeBudgetMs, plan.repairLateProbeNodeCeiling,
             plan.repairLateProbeNodeReserve > 0 ? { kind: 'additive', amount: plan.repairLateProbeNodeReserve, sourceStageId: 'mc-neighbor-budget-retry' } : none),
+        'goal-attraction-legacy-distance-retry': envelope('goal-attraction-legacy-distance-retry', Math.floor(timeBudgetMs * plan.goalAttractionLegacyDistanceRetryBudgetFraction), plan.goalAttractionLegacyDistanceRetryNodeCeiling,
+            plan.goalAttractionLegacyDistanceRetryNodeReserve > 0 ? { kind: 'additive', amount: plan.goalAttractionLegacyDistanceRetryNodeReserve, sourceStageId: 'repair-late-probe' } : none),
         'repair-probe-shrink-recovery': envelope('repair-probe-shrink-recovery', undefined, plan.earlyTierNodeBudget, none),
     };
 }
