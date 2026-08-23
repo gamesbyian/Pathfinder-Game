@@ -83,4 +83,4 @@ A run is not accepted as a capability baseline unless combine receives full curr
 
 The 2026-08-11 level-blind `PRUNE_MC_NEIGHBOR_BUDGET` A/B produced **611/1700 control → 665/1700 treatment** on Corpus 2, with Corpus 1 at 94/102 in both arms. The older **725/1700** figure used exact-level winner replay and is re-verification, not capability. See [`../../reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md`](../../reports/2026-08-11-remote-neighbor-cpsat-and-level-blindness-reconciliation.md).
 
-The retired persistent-branch workflow and its stale-code/checkpoint incidents are summarized in [`README-solver-corpus2-batches.md`](README-solver-corpus2-batches.md).
+The retired persistent-branch workflow's stale-code/checkpoint incidents remain in git history and the dated 2026-07-17 reports; they are not current dispatch guidance.
