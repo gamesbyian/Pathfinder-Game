@@ -60,6 +60,8 @@ for (const raw of selected) {
     for (const label of valid) {
         const list = byGate.get(label.path[0]) ?? []; list.push(label); byGate.set(label.path[0], list);
     }
+    // One deterministic gate per level keeps the pilot cheap. Labels from other gates cannot
+    // support this cold search and are deliberately excluded rather than counted as extinct.
     const [gateKey, labels] = [...byGate.entries()].sort((a, b) => b[1].length - a[1].length || a[0] - b[0])[0];
     const offPrep = api.prepLevel(level); offPrep._cfg = null; offPrep._metrics = { nodesExpanded: 0 };
     const offPath = await api.beamSearchFromGate(gateKey, level, offPrep, api.POLICY_PROFILES.default,
@@ -85,6 +87,9 @@ const forensic = rows.map(row => {
     const ranks = supported.map(x => x.rank), scores = supported.map(x => x.score);
     const margin = scores.length ? Math.min(...scores.map(score => removal.details.cutoffScore - score)) : null;
     const tied = margin === 0;
+    // D is deliberately narrow: saturation alone must not hide a materially mis-ranked path.
+    // Require a >2x pool, a best rank still close to the boundary, and a modest (but not B-small)
+    // score miss. Far-below-cutoff candidates remain A even when the pool is crowded.
     const widthSaturated = removal?.details?.poolCandidateCount >= beamWidth * 2;
     const classification = classifyScoreWidthExtinction({ margin, tied,
         stableOrderAdmission: removal.details.stableOrderAdmission,
