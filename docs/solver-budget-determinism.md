@@ -1,6 +1,7 @@
 # Solver work budgets and determinism
 
 > **Status:** current contract; migration complete.
+> **Active allocation program:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md) is **ASAP / HIGH PRIORITY** and must preserve this document's machine-independent budget rules.
 > **History:** [`archive/snapshots/solver-budget-determinism-2026-08-20.md`](archive/snapshots/solver-budget-determinism-2026-08-20.md).
 
 Solver allocation uses one machine-independent work currency; wall clock is only an outer latency deadline.
@@ -41,6 +42,19 @@ Both counters use the same work unit:
 
 If `workBudget` is omitted, ms-shaped callers convert at the run boundary using committed work-per-ms calibration; live host speed never controls allocation.
 
+## Scheduler portfolio contract
+
+Evidence-driven scheduling changes the division of work, not the definition of work.
+
+- The default scheduler experiment uses a **fixed aggregate work envelope**. Adding a candidate action expands the menu; it does not automatically increase total permitted work.
+- Search actions may have budget quanta or protected minima when evidence shows useful deep hazard, but those reservations must be visible within the shared envelope.
+- A new retry/tail action must normally displace weaker work, be conditionally routed, or explicitly justify a larger total envelope. Do not hide a solve gain inside additive budget growth.
+- Compare conditional/marginal value on the population that reaches the action. An old retry's historical unique wins do not prove it still merits the same allocation after upstream policy changes.
+- Scheduler decisions must never depend on live host speed, elapsed-time throughput, or wall-derived calibration. Static level features and current solve telemetry may alter allocation; machine performance may not.
+- During scheduler A/Bs, prefer `strictTotalWorkBudget` when legacy additive tiers would otherwise make treatment/control envelopes incomparable. If strict containment is intentionally not used, report the total-work difference as part of the treatment.
+
+See [`solver-scheduling-policy.md`](solver-scheduling-policy.md) for action identity, residual-value analysis, shadow planning, and promotion rules.
+
 ## Reproducible comparison
 
 For decision-bearing offline work:
@@ -73,6 +87,8 @@ Label units in old/new provenance; never mix nodes and work silently.
 
 Declare whether additive retries/passes are inside the envelope. If treatment can spend extra work, use `strictTotalWorkBudget` or report extra cost. Equal `nodeBudget` does not imply equal work when technique mixes differ.
 
+For scheduling experiments, also report which actions were selected/reached, their allocated work bands, paired gains/losses, and residual unique wins. This distinguishes a better policy from a larger search purchase.
+
 ## Non-regression rules
 
 - No wall-clock-derived attempt shares/escalation thresholds.
@@ -80,6 +96,7 @@ Declare whether additive retries/passes are inside the envelope. If treatment ca
 - No raw nodes as portable cross-technique cost.
 - No deadline-truncated failure recorded as ordinary unsolved capability.
 - No hidden total-work increase behind retry/reserve mechanisms.
+- No scheduler candidate that obtains its apparent advantage solely by escaping the declared shared envelope.
 - Work-meter weight changes are budget-unit migrations requiring cross-technique calibration plus reproducibility/regression validation.
 
 The archived snapshot preserves nondeterminism measurements, raw-node prototype failure, fitting, migration, hint-workbench diagnosis, and tool-conversion history.
