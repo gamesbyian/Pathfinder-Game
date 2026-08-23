@@ -4,6 +4,7 @@
 > **Objective:** replace continued fixed-ladder accretion with level-blind, evidence-driven ordering and bounded allocation that increases solves per unit work while preserving current capability.
 > **Peer priority:** [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) is also **ASAP / HIGH PRIORITY**. Scheduling reduces wasted search work; architectural speed work reduces the cost of the work we still choose to do. Neither substitutes for the other.
 > **Authority:** current implementation behavior remains [`solver-architecture.md`](solver-architecture.md); research/promotion rules remain [`solver-research-operating-model.md`](solver-research-operating-model.md); cold-policy legality remains [`solver-level-blindness.md`](solver-level-blindness.md).
+> **Current budget-depth evidence:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
 
 ## Why this is urgent
 
@@ -54,6 +55,18 @@ Forbidden runtime steering remains: IDs/corpus position, saved hints/solutions, 
 | Null/closed research | Removes dominated actions and prevents rediscovery of failed predictors or unchanged mechanisms. |
 
 Use the existing tooling and canonical artifacts rather than building a parallel research database. Extend rebuildable census/family/lifecycle analysis where needed.
+
+## Current census budget-depth conclusions
+
+The 2026-08-23 budget-cap analysis is now a direct input to this program. Its durable conclusion is **budget entitlement by residual value, not a universal lower cap**. See [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md) for the measurements.
+
+- **Beams are cheap/self-exhausting screens.** The measured 2K/5K beam frontiers typically exhaust around roughly 0.12M–0.34M nodes, and the currently emitted gap-population beam hazard rows place all recorded wins by 1M and most by 500K. Their nominal 50M census ceiling is therefore not the real cost problem; running them after expensive searches is.
+- **Plain repair has real deep capability.** Of 121 frozen-gap plain-repair wins, 37 occur only in the 20M–50M interval. Its conditional solve hazard rises to 4.6% in that final band. A blanket 5M/10M/20M repair cap would destroy material capability.
+- **Deep ordinary DFS/IDA is the stronger overspend nomination.** Many ordinary DFS profiles average almost the full 50M isolated allowance on the hard-gap population while their recorded wins are highly or completely reproduced by cheaper-mean techniques. This is not a deletion proof, but it means deep continuations should compete for residual work rather than inherit a full-depth entitlement automatically.
+- **Admissible-order profiles should not all be presumed equally entitled to deep budget.** Isolated results show large overlap and unequal cost/yield, while reverse-oracle evidence also shows sequence dependence. Tune/order them through the real ladder, not by blindly shrinking isolated caps.
+- **The hard residual population is fundamentally different from the easy population.** A perfect isolated router reaches only 171/253 gap solves by 10M and 202/253 by 20M; all 253 require allowing up to 50M somewhere. Median winning depth on already-solved levels is therefore not a safe basis for hard-level caps.
+
+The first scheduler should explicitly represent budget tranches. For example, repair can be analyzed as an early probe, medium continuation, deep continuation, and protected tail rather than one indivisible action. The exact band boundaries are evidence-analysis bins, not production constants until matched-work validation establishes them.
 
 ## Schedule search actions, not technique names
 
@@ -153,7 +166,7 @@ Use census overlap/cover analyses to nominate actions that can be delayed or rem
 
 First production-shaped experiment: rank eligible actions at `prepLevel()`/plan time using only static level-blind features, with a fixed aggregate work envelope. Keep the policy deterministic and inspectable.
 
-This alone may recover substantial waste: census analysis already shows cheap isolated winners missed by production, parameter inversions, strongly substitutable techniques, and cheap perimeter beams sometimes ordered behind expensive failures.
+This alone may recover substantial waste: census analysis already shows cheap isolated winners missed by production, parameter inversions, strongly substitutable techniques, cheap perimeter beams sometimes ordered behind expensive failures, and deep budget entitlements whose residual value differs sharply by family/profile.
 
 ### Generation B: dynamic re-ranking
 
@@ -224,8 +237,8 @@ For an archetype-bounded static rule, use the existing stratified sample workflo
 
 ## ASAP execution order
 
-1. **Extend existing second-order census/lifecycle analysis into a rebuildable scheduler evidence view.** Do not create a parallel truth store. Join current census cells, production attempt/lifecycle telemetry, static features, provenance/freshness, family identity for split control, and current regression/sensitive cohorts.
-2. **Define stable action IDs and budget bands.** Start with current main configs plus material retry/tail configurations. Distinguish cheap probes from deep continuations.
+1. **Extend existing second-order census/lifecycle analysis into a rebuildable scheduler evidence view.** Do not create a parallel truth store. Join current census cells, production attempt/lifecycle telemetry, static features, provenance/freshness, family identity for split control, and current regression/sensitive cohorts. The first extension should include per-technique cap-retention/tranche economics at `100K/250K/500K/1M/2M/5M/10M/20M/30M/40M/50M`, simulated capped spend, tranche hazards, and clearly defined marginal/exclusive solves.
+2. **Define stable action IDs and budget bands.** Start with current main configs plus material retry/tail configurations. Distinguish cheap probes from deep continuations; preserve a deep repair action rather than flattening it into the same cap rule as ordinary DFS/IDA.
 3. **Compute fixed-budget oracle frontiers and tail audits.** Quantify how much solve/work headroom exists, current tail reach, unique residual wins, conditional value, and substitutability. Audit whole-ladder retries first because one named stage can fan out into many actual attempts.
 4. **Prototype the static scheduler under strict total work.** Prefer compact deterministic rules/score tables first. Preserve the legacy scheduler as control/fallback during experimentation.
 5. **Shadow and A/B it.** Require matched-work evidence, not “gains solves when appended.”
