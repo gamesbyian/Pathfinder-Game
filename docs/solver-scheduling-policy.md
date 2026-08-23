@@ -3,7 +3,7 @@
 > **Status:** **ASAP / HIGH PRIORITY ACTIVE PROGRAM**.
 > **Objective:** replace continued fixed-ladder accretion with level-blind, evidence-driven ordering and bounded allocation that increases solves per unit work while preserving current capability.
 > **Peer priority:** [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) is also **ASAP / HIGH PRIORITY**. Scheduling reduces wasted search work; architectural speed work reduces the cost of the work we still choose to do. Neither substitutes for the other.
-> **Authority:** current implementation behavior remains [`solver-architecture.md`](solver-architecture.md); research/promotion rules remain [`solver-research-operating-model.md`](solver-research-operating-model.md); cold-policy legality remains [`solver-level-blindness.md`](solver-level-blindness.md).
+> **Authority:** current implementation behavior remains [`solver-architecture.md`](solver-architecture.md); operational technique/config interpretation lives in [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md); research/promotion rules remain [`solver-research-operating-model.md`](solver-research-operating-model.md); cold-policy legality remains [`solver-level-blindness.md`](solver-level-blindness.md).
 > **Current budget-depth evidence:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
 
 ## Why this is urgent
@@ -43,6 +43,7 @@ Forbidden runtime steering remains: IDs/corpus position, saved hints/solutions, 
 | Evidence | Scheduler use |
 |---|---|
 | Technique census | Technique/config success-vs-work curves, unique residual capability, overlap/substitutability, cheap screens, useful deep budgets, conditional value after another action fails. |
+| Operational-similarity analysis | Distinguish genuinely different search behavior from shared-engine weight/template/retention variants; cluster near-duplicate actions and protect complementary ones. See [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md). |
 | Current production/capability/lifecycle runs | Real ladder reach populations, actual starvation/overspend, residual populations, attempt order, stage cost, and current marginal wins. |
 | Static level features | Initial prior over useful actions and budget depths. Existing archetypes are a first coarse feature set, not the final representation. |
 | Level fingerprints | Dedup/leakage control, structural similarity research, and discovery of richer generic routing descriptors. |
@@ -62,8 +63,10 @@ The 2026-08-23 budget-cap analysis is now a direct input to this program. Its du
 
 - **Beams are cheap/self-exhausting screens.** The measured 2K/5K beam frontiers typically exhaust around roughly 0.12M–0.34M nodes, and the currently emitted gap-population beam hazard rows place all recorded wins by 1M and most by 500K. Their nominal 50M census ceiling is therefore not the real cost problem; running them after expensive searches is.
 - **Plain repair has real deep capability.** Of 121 frozen-gap plain-repair wins, 37 occur only in the 20M–50M interval. Its conditional solve hazard rises to 4.6% in that final band. A blanket 5M/10M/20M repair cap would destroy material capability.
+- **Repair's final 40M–50M tranche is a scrutiny tranche, not an automatic cut.** The rebuilt curve adds 13 solves at 20M–30M, 16 at 30M–40M, and eight at 40M–50M; simulated isolated nodes per incremental solve are roughly 613M, 490M, and 961M. The last band is the weakest measured repair segment but still contains real capability, so price it using current residual `workSpent` before changing production depth.
 - **Deep ordinary DFS/IDA is the stronger overspend nomination.** Many ordinary DFS profiles average almost the full 50M isolated allowance on the hard-gap population while their recorded wins are highly or completely reproduced by cheaper-mean techniques. This is not a deletion proof, but it means deep continuations should compete for residual work rather than inherit a full-depth entitlement automatically.
 - **Admissible-order profiles should not all be presumed equally entitled to deep budget.** Isolated results show large overlap and unequal cost/yield, while reverse-oracle evidence also shows sequence dependence. Tune/order them through the real ladder, not by blindly shrinking isolated caps.
+- **`ida:none` remains a distinct deep candidate.** It has 22 frozen-gap wins, none by 10M, eight by 20M, and five equal-cap-exclusive wins at 50M among fully sampled comparators. The other canonical IDA profiles have one or zero such exclusives. Do not collapse this into a generic “deep IDA is redundant” policy before current-lifecycle residual validation.
 - **The hard residual population is fundamentally different from the easy population.** A perfect isolated router reaches only 171/253 gap solves by 10M and 202/253 by 20M; all 253 require allowing up to 50M somewhere. Median winning depth on already-solved levels is therefore not a safe basis for hard-level caps.
 
 The first scheduler should explicitly represent budget tranches. For example, repair can be analyzed as an early probe, medium continuation, deep continuation, and protected tail rather than one indivisible action. The exact band boundaries are evidence-analysis bins, not production constants until matched-work validation establishes them.
@@ -84,6 +87,8 @@ Examples:
 - an admissible-order profile at a bounded work band.
 
 Budget depth matters. A technique can be a strong cheap screen, a weak cheap screen but strong deep search, or have a bimodal hazard curve. Treating a 500K probe and a 20M continuation as the same action hides useful evidence.
+
+Names alone do not establish diversity. Many ordinary DFS/beam names are the same search engine with different `scoreMove()` weight vectors; admissible-order profile names primarily alter tie-breaking; beam width/diversity changes retention; repair changes the exploration paradigm. Use [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) and measured operational overlap when deciding whether several candidate actions are truly complementary.
 
 Whole-ladder retries should be decomposed where evidence permits. If disabling one prune only adds value for a few configs on a recognizable residual population, those actions should compete directly for residual budget instead of rerunning every main config under the changed flag.
 
@@ -135,7 +140,7 @@ Before changing live search, build/rebuild an offline policy view from current e
 
 ### 1. Action registry
 
-Give stable IDs to meaningful technique/config/budget-band actions. Reuse stage/config vocabulary where possible. Attach eligibility, dependencies, incompatible modes, and current default disposition.
+Give stable IDs to meaningful technique/config/budget-band actions. Reuse stage/config vocabulary where possible. Attach eligibility, dependencies, incompatible modes, current default disposition, and an operational-family/cluster label when measured. Do not assume different profile names imply different search modes.
 
 ### 2. Residual-value table
 
@@ -147,6 +152,7 @@ For each action and relevant population/context, report:
 - mean/median/quantile work on solved and failed cases;
 - conditional success after common predecessor failures;
 - overlap/substitution with other actions;
+- operational overlap/difference where measured;
 - current production reach and whether the action is omitted, starved, or already receives substantial work;
 - provenance/freshness of the evidence.
 
@@ -158,7 +164,7 @@ This is an upper-bound/value-of-information test. If an oracle scheduler cannot 
 
 ### 4. Substitutability and pruning
 
-Use census overlap/cover analyses to nominate actions that can be delayed or removed because their residual wins are reproduced more cheaply. Prefer pruning/delaying redundant work before adding more ladder entries.
+Use census overlap/cover analyses to nominate actions that can be delayed or removed because their residual wins are reproduced more cheaply. Operational similarity strengthens a redundancy case; operational difference warns that equal solve sets may be alternative/resilient routes rather than identical search. Prefer pruning/delaying redundant work before adding more ladder entries.
 
 ## Implementation generations
 
@@ -237,13 +243,14 @@ For an archetype-bounded static rule, use the existing stratified sample workflo
 
 ## ASAP execution order
 
-1. **Extend existing second-order census/lifecycle analysis into a rebuildable scheduler evidence view.** Do not create a parallel truth store. Join current census cells, production attempt/lifecycle telemetry, static features, provenance/freshness, family identity for split control, and current regression/sensitive cohorts. The first extension should include per-technique cap-retention/tranche economics at `100K/250K/500K/1M/2M/5M/10M/20M/30M/40M/50M`, simulated capped spend, tranche hazards, and clearly defined marginal/exclusive solves.
-2. **Define stable action IDs and budget bands.** Start with current main configs plus material retry/tail configurations. Distinguish cheap probes from deep continuations; preserve a deep repair action rather than flattening it into the same cap rule as ordinary DFS/IDA.
-3. **Compute fixed-budget oracle frontiers and tail audits.** Quantify how much solve/work headroom exists, current tail reach, unique residual wins, conditional value, and substitutability. Audit whole-ladder retries first because one named stage can fan out into many actual attempts.
-4. **Prototype the static scheduler under strict total work.** Prefer compact deterministic rules/score tables first. Preserve the legacy scheduler as control/fallback during experimentation.
-5. **Shadow and A/B it.** Require matched-work evidence, not “gains solves when appended.”
-6. **Add dynamic telemetry only after the static version establishes value.** Prioritize existing telemetry before adding new instrumentation.
-7. **Continuously prune/reorder.** New actions compete with current portfolio members; periodically remeasure once-upstream-dependent retries because their unique value can decay.
+1. **Join the now-complete cap/tranche curves to current production lifecycle reach and `workSpent`.** The rebuildable per-technique checkpoints at `100K/250K/500K/1M/2M/5M/10M/20M/30M/40M/50M` are implemented in `scripts/technique-census-second-order.mjs`; do not rebuild them. Reconcile current census cells with production attempt/lifecycle telemetry, static features, provenance/freshness, family identity for split control, and current regression/sensitive cohorts.
+2. **Build the bounded operational-similarity view defined in [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).** Reuse existing method-probe/census/lineage/beam/debug instrumentation where possible. Start with inversion/discordance and representative control cohorts, not a full expensive census. Use the resulting clusters as evidence about redundancy/complementarity; do not make this a prerequisite for every basic scheduler experiment.
+3. **Define stable action IDs and budget bands.** Start with current main configs plus material retry/tail configurations. Distinguish cheap probes from deep continuations; preserve a deep repair action rather than flattening it into the same cap rule as ordinary DFS/IDA. Record operational family/cluster separately from the human-readable profile name.
+4. **Compute fixed-budget oracle frontiers and tail audits.** Quantify how much solve/work headroom exists, current tail reach, unique residual wins, conditional value, and substitutability. Audit whole-ladder retries first because one named stage can fan out into many actual attempts.
+5. **Prototype the static scheduler under strict total work.** Prefer compact deterministic rules/score tables first. Preserve the legacy scheduler as control/fallback during experimentation.
+6. **Shadow and A/B it.** Require matched-work evidence, not “gains solves when appended.”
+7. **Add dynamic telemetry only after the static version establishes value.** Prioritize existing telemetry before adding new instrumentation.
+8. **Continuously prune/reorder.** New actions compete with current portfolio members; periodically remeasure once-upstream-dependent retries because their unique value can decay.
 
 Do not let implementation of this program become a months-long scheduler framework project before the oracle-frontier and static-policy gates establish that the value is real.
 
