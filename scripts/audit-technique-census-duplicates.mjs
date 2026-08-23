@@ -26,7 +26,7 @@ function diffPaths(a, b, prefix = '', out = []) {
 }
 
 function without(row, keys) {
-    const copy = globalThis.structuredClone(row);
+    const copy = { ...row };
     for (const key of keys) delete copy[key];
     return copy;
 }
