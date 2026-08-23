@@ -160,14 +160,23 @@ for (const file of currentAuthorityFiles) {
   }
 }
 
-// Commands presented as runnable documentation should continue to exist. This deliberately checks
-// only `npm run <alias>` forms; arbitrary shell snippets may invoke binaries or temporary scripts.
+// Commands presented as runnable documentation should continue to exist. Explicit `npm run <alias>`
+// forms are checked directly. Bare backticked aliases are also checked when their namespace belongs
+// to the current package-script vocabulary, catching stale references such as removed test/check aliases
+// without treating arbitrary colon-bearing prose as npm commands.
 const packageScripts = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8')).scripts ?? {};
+const packageScriptNames = new Set(Object.keys(packageScripts));
+const packageScriptNamespaces = new Set([...packageScriptNames].map((name) => name.split(':', 1)[0]));
 for (const file of currentAuthorityFiles) {
   if (!existsSync(resolve(ROOT, file))) continue;
   const source = readFileSync(resolve(ROOT, file), 'utf8');
   for (const match of source.matchAll(/npm run ([A-Za-z0-9:_-]+)/g)) {
-    if (!(match[1] in packageScripts)) failures.push(`${file}: documented npm alias does not exist: npm run ${match[1]}`);
+    if (!packageScriptNames.has(match[1])) failures.push(`${file}: documented npm alias does not exist: npm run ${match[1]}`);
+  }
+  for (const match of source.matchAll(/`([A-Za-z0-9][A-Za-z0-9_-]*:[A-Za-z0-9:_-]+)`/g)) {
+    const alias = match[1];
+    if (!packageScriptNamespaces.has(alias.split(':', 1)[0])) continue;
+    if (!packageScriptNames.has(alias)) failures.push(`${file}: documented bare npm alias does not exist: ${alias}`);
   }
 }
 

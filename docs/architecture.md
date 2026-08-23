@@ -40,7 +40,7 @@ Use lowercase kebab-case for `modules/` filenames. A package entrypoint may shar
 
 ## State
 
-`state-slices.ts` owns mutable `ENGINE`: `nav`, `hazards`, `solver`, `hinter`, `viewport`, `review`, `ui`, `runtime`, `gamepad`, `flags`, `editor`, `levelRating`, plus top-level state. All mutations use `state-actions.ts` / `state/actions/*.ts`; `check:engine-state-boundary` forbids direct writes in engine/input/ui consumers.
+`state-slices.ts` owns mutable `ENGINE`: `nav`, `hazards`, `solver`, `hinter`, `viewport`, `review`, `ui`, `runtime`, `gamepad`, `flags`, `editor`, `levelRating`, plus top-level state. All mutations use `state-actions.ts` / `state/actions/*.ts`; the ESLint state-boundary rules run through `npm run check:lint` and reject direct writes in engine/input/ui consumers.
 
 ## Runtime commands/effects
 
@@ -51,7 +51,7 @@ Use lowercase kebab-case for `modules/` filenames. A package entrypoint may shar
 - `effect-runner.ts`: dispatcher over injected adapters;
 - `game-rules.ts`, `path-state.ts`, `state-machine.ts`: win metrics, path derivation, legal transitions.
 
-`rebuildDerivedState` recomputes `visitedCounts`, `cellUsage`, `intersections`, `flipCount`, `crossedFlippingFilters`; `test:path-state-invariants` checks parity with incremental state.
+`rebuildDerivedState` recomputes `visitedCounts`, `cellUsage`, `intersections`, `flipCount`, `crossedFlippingFilters`; runtime/navigation behavior, including rebuild and replay paths, is covered by the Vitest unit suite (`npm run test:unit`).
 
 Correctness-sensitive flows use pure tested cores (`computeStep`, `PathNavigator.applySnapshot`, `computeWinEffects`, hazard planners, `planResetCheat`, `planSubmissionAdvance`); controllers execute their decisions/effects. There is intentionally no universal command reducer. `replayMoves` supports declarative move tests.
 

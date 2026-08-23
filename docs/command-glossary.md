@@ -74,4 +74,4 @@ core; **ctrl** = controller method (orchestration).
   the DOM.
 - `replayMoves(baseState, targetKeys, level)` (`modules/runtime/path-state.ts`) replays a `MOVE` sequence
   through the real transition for declarative tests.
-- `test:path-state-invariants` guarantees the incremental and recomputed derived nav state agree.
+- Runtime/navigation behavior, including rebuild and replay paths, is covered by the Vitest unit suite (`npm run test:unit`).
