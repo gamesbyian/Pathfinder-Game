@@ -288,6 +288,12 @@ export interface PrepLevel {
     /** Research-only beam observer. Absent in every production call. The observer receives copied
      * replay-complete paths and may label them, but cannot affect search decisions. */
     _beamResearchObserver?: BeamResearchObserver | null;
+    /** Test-only: force beamSearchFromGate's dedup/diversity keying onto the delimited-string
+     *  fallback path even when the fast numeric encoding would fit — see beamNumericDedupKey's own
+     *  comment in search.ts. Lets a differential test run the SAME level/search through both key
+     *  representations and assert byte-identical results. Never read by production code paths;
+     *  absent (falsy) preserves the default numeric-when-safe behavior. */
+    _forceBeamDedupStringKeyForTests?: boolean;
     /** Research/test-only repair seed control. When absent, the long-standing gate/salt-derived
      * production seeds are used byte-for-byte. Both independent repair streams derive from it. */
     _repairResearchSeed?: number | null;
