@@ -23,12 +23,6 @@ If joins among level structure, run identity, attempt telemetry, hints/provenanc
 
 `6f00baf` (2026-08-21) tightened `buildDistMap`'s treatment of gates/geese/false-goals, which is safety-monotonic for `lower-bounds.ts`'s admissible pruning but not for `scoring.ts`'s move-ordering guidance. Bisection ([`../reports/2026-08-22-corpus2-node-budget-losses.md`](../reports/2026-08-22-corpus2-node-budget-losses.md)) traced 73 Corpus-2 node-budget losses to that commit, against 90 gains. Reopen only with a concrete proposal for how scoring should consume distance differently from pruning and matched-work evidence that it recovers solves without new losses.
 
-### Attempt-history-dependent admissible-order wins
-
-The 2026-08-22 reverse-oracle diagnosis found eight historical production wins in the `admissible-order` stage that cannot be reproduced by the same plausible profiles from fresh preparation even at 50M nodes. Admissible-order has no seed input, so preceding ladder activity is causally necessary. The source audit found no prior frontier/elite/buffer dependency; the obvious earlier-attempt-populated value inputs are the must-pass and must-cross lower-bound memo tables, whose contract says they are exact pure memoization.
-
-Next discriminating test: reproduce a historical full-ladder winner at its measured commit, then clear `_mpLowerBoundCache` and `_mcLowerBoundCache` immediately before admissible-order. If the solve disappears, audit memo keys/values; if it persists, diff the remaining mutable prep/config/forced-step/static-preparation state and prime progressively longer historical prefixes. Evidence: [`../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md`](../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md).
-
 ### Repair-fallback gate widening
 
 Recent census mining found many isolated repair wins on levels excluded by `attempts.ts`'s `needsRepairFallback` gate, especially `portal-heavy` and medium/near-Hamiltonian `high-intersection-burden` sub-rules. A plain threshold widening is not a fresh quick fix: prior population evidence found no clean single/pair feature separating cheap repair winners from the much larger ineligible population that never wins, which is why `STRATEGY_REPAIR_LATE_PROBE` was built as an unconditional dead-last shot instead. Raising that late probe from 2M to 5M nodes was separately population-validated and promoted on 2026-08-22 (+3 net, zero losses).
