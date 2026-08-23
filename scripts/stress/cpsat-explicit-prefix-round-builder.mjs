@@ -23,7 +23,7 @@ const eliteById = new Map();
 for (const lvl of dump.levels) for (const e of lvl.elites) eliteById.set(e.id, { ...e, levelId: lvl.levelId, reqLen: lvl.reqLen });
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.ts');
+const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const Solver = createSolver();
 const levelCache = new Map();
 const prepCache = new Map();
