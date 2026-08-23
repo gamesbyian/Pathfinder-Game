@@ -6,8 +6,11 @@ Terse implementation map for work inside `modules/solver/`. Read [`../../docs/so
 
 | Change | Start here |
 |---|---|
-| Stage identity and budget vocabulary | `stage-policy.ts`, then the executor in `orchestration.ts` |
-| Attempt ladder, stage eligibility, budgets, retries, result assembly | `orchestration.ts`, then `attempts.ts` / `attempt-dispatch.ts` |
+| Stable stage IDs, telemetry labels, budget vocabulary | `stage-policy.ts` |
+| Stage eligibility / ordered execution plan | `stage-plan.ts` |
+| Tuned stage budget constants, reserves, and budget-plan cascade | `stage-budget.ts` |
+| Shared stage execution helpers | `stage-executors.ts` |
+| Attempt ladder coordination, gates, retries, result assembly | `orchestration.ts`, then `attempts.ts` / `attempt-dispatch.ts` |
 | Production defaults, ablation flags, portfolio experiment tiers | `ablation-config.ts`, `portfolio-experiment.ts` |
 | Core beam/DFS traversal or candidate expansion | `search.ts`, `search-state.ts`, `prep.ts` |
 | Candidate ranking / badness / ordering | `scoring.ts`, `diversification.ts` |
@@ -19,16 +22,13 @@ Terse implementation map for work inside `modules/solver/`. Read [`../../docs/so
 | Worker integration | `worker.js`, `solver-worker-client.ts`; browser boundary only |
 | Public runtime facade | `../solver.ts`; keep it thin |
 
-## Large files
+## Large files and authority
 
-Start stage work at `stage-policy.ts`: it owns stable policy-stage IDs, ordering metadata, canonical
-telemetry labels, budget-policy vocabulary, and the compatibility projection to older boolean
-report markers. `orchestration.ts` remains the execution authority; the first-class descriptors are
-an intentionally behavior-neutral seam, not yet a declarative executor.
+Solver stage policy was consolidated after this code map was first created. `stage-policy.ts`, `stage-plan.ts`, `stage-budget.ts`, and `stage-executors.ts` now own the reusable policy/plan/budget/execution vocabulary; `orchestration.ts` coordinates those pieces and remains the place to follow the full sequential solve flow. Do not recreate stage eligibility or budget arithmetic in `orchestration.ts` merely because that file dispatches the work. See [`../../docs/architecture-unification-debt.md`](../../docs/architecture-unification-debt.md) for the current authority boundary.
 
-`orchestration.ts` is intentionally the first place to inspect for execution flow, but it is large. Do not read it wholesale by default. Search for the canonical stage ID, then follow the local helper calls. `repair-search.ts`, `search.ts`, and their tests are also large enough that targeted symbol reads are preferable.
+`orchestration.ts`, `repair-search.ts`, `search.ts`, and their tests are large enough that targeted symbol reads are preferable to opening them wholesale. For stage work, start from the stage ID or authority above and follow its consumers.
 
-When changing orchestration, check every representation of the same fact. Attempt/stage identity, budgets, telemetry, provenance, reporter projection, sequential execution, and raced execution have historically drifted when updated independently. [`../../docs/architecture-unification-debt.md`](../../docs/architecture-unification-debt.md) tracks the structural consolidation direction.
+When changing orchestration, check every representation of the same fact. Attempt/stage identity, budgets, telemetry, provenance, reporter projection, sequential execution, and raced execution have historically drifted when updated independently. [`../../docs/change-recipes.md`](../../docs/change-recipes.md) gives the cross-boundary checklist.
 
 ## Research versus production
 
