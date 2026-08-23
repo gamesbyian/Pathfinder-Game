@@ -143,3 +143,23 @@ Median 11.33s → 11.20s, **≈−1.1%** — small, as expected for hoisting a s
 loop that runs at most 4 times, but consistently in the same direction across all three rounds and
 zero-risk (byte-identical semantics). Folded into the same disposition as the change above: landed
 directly, no flag.
+
+## Tried and reverted (same day): hoisting `scoreMove`'s `goalDistCur` into `CurUrgencyContext`
+
+`scoreMove`'s `goalDistCur = getDistanceFromArray(prep.goalDistArr, pos, prep.gridW)` depends only
+on `pos`, fixed for a whole candidate batch — the same loop-invariant shape `CurUrgencyContext`
+already hoists for `mpCur`/`mcCur`. Implemented the equivalent: a new `goalDistCur` field on
+`CurUrgencyContext`, computed once in `buildCurUrgencyContext`, read via the same
+`curCtx ? curCtx.goalDistCur : getDistanceFromArray(...)` fallback pattern `scoreMove` already uses
+for `mpCur`. Verified order-preserving first (`nodesExpanded` bit-identical, `solver:bench --check`
+byte-identical baseline node count, 200 targeted tests pass) — but **measured no real wall-time
+win**: 5 interleaved node-budgeted rounds on a Corpus-2 sample gave medians 63.26s → 63.01s
+(≈−0.4%), not consistently directional (faster in 3/5 rounds, slower in 2/5) — indistinguishable
+from run-to-run noise, unlike the two changes above which were faster in every single round
+measured. `getDistanceFromArray` is evidently cheap enough (an array read plus a sentinel check,
+not the `Map.get()`+string-key-build cost the other two changes removed) that skipping one
+redundant call per candidate doesn't pay for the added field. Reverted rather than landed for zero
+measured benefit — same lesson as the 2026-07-30 report's `UndoToken` pooling negative result:
+"looks obviously wasteful" is not sufficient justification without a wall-clock measurement, even
+for changes that reuse an already-established, already-safe pattern. Not worth a flag or further
+investigation; noted here so a future pass doesn't re-attempt it without new evidence.
