@@ -15,6 +15,8 @@ Generated current pointers may use `*-latest.*`; dated snapshots must not also b
 Loose `YYYY-MM-DD-<topic>.md` files are evidence, not a live queue. Do not reconstruct current priorities chronologically from them. Use [`docs/README.md`](../docs/README.md) to route to the current topic authority, especially:
 
 - [`solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md): ranked optimization queue.
+- [`solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md): **ASAP / HIGH PRIORITY** evidence-driven scheduling/allocation program.
+- [`solver-budget-determinism.md`](../docs/solver-budget-determinism.md): shared-work budget and deterministic comparison contract.
 - [`solver-research-operating-model.md`](../docs/solver-research-operating-model.md): research method and promotion rules.
 - [`solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md): retained/default-off mechanism dispositions.
 - [`solver-future-work.md`](../docs/solver-future-work.md): broader deferred/reopen ideas.
@@ -23,7 +25,10 @@ Loose `YYYY-MM-DD-<topic>.md` files are evidence, not a live queue. Do not recon
 
 A dated report can remain valid evidence after its recommendation is superseded. Prefer its explicit status/decision block, then reconcile with the current topic reference before acting.
 
-Current reconciliation note: [`2026-08-20-technique-census-reconciliation.md`](2026-08-20-technique-census-reconciliation.md) records successful population census run `32240161854`; [`2026-08-19-technique-census-design.md`](2026-08-19-technique-census-design.md) is its design/calibration record. Older pre-dispatch wording there is historical.
+Current census/scheduler evidence:
+
+- [`2026-08-20-technique-census-reconciliation.md`](2026-08-20-technique-census-reconciliation.md) records successful population census run `32240161854`; [`2026-08-19-technique-census-design.md`](2026-08-19-technique-census-design.md) is its design/calibration record. Older pre-dispatch wording there is historical.
+- [`2026-08-23-technique-budget-cap-efficiency.md`](2026-08-23-technique-budget-cap-efficiency.md) is the current budget-depth interpretation of that census for the scheduling program: beam searches are cheap/self-exhausting screens, plain repair has material deep 20M–50M yield, and deep ordinary DFS/IDA continuations should compete for residual work rather than receive automatic full-depth entitlement. Durable policy lives in [`solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md) and [`solver-budget-determinism.md`](../docs/solver-budget-determinism.md).
 
 Repository-wide older loose-thread inventory: [`2026-08-06-documentation-loose-threads-audit.md`](2026-08-06-documentation-loose-threads-audit.md), itself dated evidence.
 
