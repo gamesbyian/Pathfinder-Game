@@ -18,8 +18,9 @@ Dates and narrative experiment names belong in `reports/`, `archive/`, `history/
 | [`testing.md`](testing.md) | Validation and finish-line gates. |
 | [`tooling-catalog.md`](tooling-catalog.md) | CLI, probe, batch, and workflow discovery. |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy. |
-| [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | Open architecture-level runtime refactors and already-tested negatives. |
-| [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) | Ranked live solver priority. |
+| [`solver-scheduling-policy.md`](solver-scheduling-policy.md) | **ASAP / HIGH PRIORITY:** evidence-driven ordering, bounded portfolio allocation, and dynamic scheduling program. |
+| [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | **ASAP / HIGH PRIORITY:** architecture-level runtime refactors and already-tested negatives. |
+| [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) | Ranked live solver priority and current experiment dispositions. |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Solver research/evidence method. |
 | [`variant-level-research.md`](variant-level-research.md) | Variant/family research and trove use. |
 | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) | Default-off mechanism dispositions. |
