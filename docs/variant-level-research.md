@@ -2,6 +2,8 @@
 
 Canonical reference for controlled level-family/variant research.
 
+> **Active use:** the evidence-driven scheduling/allocation program in [`solver-scheduling-policy.md`](solver-scheduling-policy.md) is **ASAP / HIGH PRIORITY**. Family data is especially valuable for discovering generic routing boundaries, but family identity/outcomes remain offline evidence only.
+
 ## Research trove
 
 The bulk dataset is **not on `main`**. Branch `claude/variant-levels-solver-insights-tpk4qg` holds roughly **2.5 GB** under `data/families/`, `logs/family-census/`, and `reports/families/`; `main` keeps reusable generators, analyzers, and workflows.
@@ -56,6 +58,7 @@ Scientific unit: **parent + controlled transformation + solver-behavior change**
 | Why canonical fails | Close solved siblings/local mutants isolating a boundary. |
 | Fix robustness | Inspiring parent + held-out siblings + unrelated families. |
 | Technique routing | Family-conditioned DFS/beam/repair/admissible-order outcomes and isolated probes. |
+| Scheduler routing/allocation | Controlled feature changes that flip action value or useful budget depth; train/tune/test by parent family and convert findings into legal generic runtime descriptors. |
 | Beam loss boundary | Parent/sibling pair + lineage/pair-divergence trace. |
 | Repair behavior | Badness, retreat depth, seeds/operators across close relatives. |
 | Open-space effects | Re-embedded cousins/density sweeps. |
@@ -66,6 +69,20 @@ Scientific unit: **parent + controlled transformation + solver-behavior change**
 | Benchmark selection | Sample by parent/family, not raw variant count. |
 
 For exact-length scaling use `npm run solver:req-length-sweep`; broader multi-feature scaling remains open.
+
+## Scheduler-specific family discipline
+
+Variants are a counterfactual feature-discovery resource, not a runtime lookup table. For scheduler work:
+
+- compare close siblings to identify what generic structural change flips technique/config success, failure mode, or useful budget depth;
+- look for boundaries such as density/open-space changes, must-cross/objective changes, portal structure, orientation-dependent search bias, and retention/diversity changes;
+- hold out whole parents when fitting/tuning any classifier, threshold, score, or rule;
+- validate discovered rules on unrelated canonical parents, not merely additional siblings;
+- guard against accidental family identification through overly specific geometric fingerprints;
+- re-run decision-bearing historical cliffs on current code before using them to tune policy;
+- never expose parent/variant IDs, family outcome, or historical winner labels to the cold scheduler.
+
+A family-derived rule earns production consideration only after it can be stated in legal level/state features and survives held-out-parent, matched-work validation. See [`solver-scheduling-policy.md`](solver-scheduling-policy.md).
 
 ## Experimental rules
 
@@ -99,4 +116,4 @@ The family index is the canonical disposable query layer; extend it rather than 
 
 ## Research priority
 
-The trove is evidence, not backlog. Use [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) for priorities, [`solver-research-operating-model.md`](solver-research-operating-model.md) for method, and [`../reports/README.md`](../reports/README.md) for dated evidence.
+The trove is evidence, not backlog. **Near-term family work should preferentially support the ASAP scheduler program when it can sharpen a real routing/allocation boundary**, while still following the ranked solver queue and evidence gates. Use [`solver-scheduling-policy.md`](solver-scheduling-policy.md) for the active scheduling program, [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) for current solver priorities/dispositions, [`solver-research-operating-model.md`](solver-research-operating-model.md) for method, and [`../reports/README.md`](../reports/README.md) for dated evidence.
