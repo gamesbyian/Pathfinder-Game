@@ -87,7 +87,7 @@ dedupKey = `${key}|${sc}`
 ```
 
   The former fixed-width numeric packing was removed after real Corpus-2 masks exceeded four bits and corrupted adjacent fields. Fully sound beam-state dedup was separately measured at only ~0.019% true-duplicate slots; removing the coarse mechanism cost real solves. See [`../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md).
-- **Diverse beam:** `_diverseSelect` buckets by the collision-free string `sk = `${flipperUsedMask}|${mustCrossMask}``, guarantees `floor(beamWidth/numBuckets)` per bucket, then fills globally.
+- **Diverse beam:** `_diverseSelect` buckets by the collision-free `flipperUsedMask|mustCrossMask` string, guarantees `floor(beamWidth/numBuckets)` per bucket, then fills globally.
 - Must-cross+flipper fallback is diverse bw=5000.
 
 ## Key state
@@ -131,7 +131,7 @@ AXIS_NONE = 0
 
 ## Ablation
 
-57 togglable flags; see [`solver-ablation.md`](solver-ablation.md). Quick start: `ablation:baseline`, `ablation:single`, `ablation:analyze`.
+76 togglable flags; see [`solver-ablation.md`](solver-ablation.md). Quick start: `ablation:baseline`, `ablation:single`, `ablation:analyze`.
 
 `normalizeAblationConfig()` normalizes sparse external configs: supplied keys pass through, missing booleans read `true`, absent `ATTEMPT_ORDER`/`_randomSeed` stay `undefined`; null/absent keeps the fast path. `race.mjs` normalizes before `postMessage` because `Proxy` cannot cross workers.
 
