@@ -669,8 +669,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             // been tentatively applied yet (that happens per-candidate below, then gets undone).
             // See CurUrgencyContext's doc comment.
             const curCtx = buildCurUrgencyContext(pos, ws, level, prep, true, profile);
+            // Loop-invariant: pos is fixed for this whole candidate batch, same as curCtx above.
+            const pAtPos = level.portalMap.get(pos);
             for (const next of neighbors) {
-                const pAtPos = level.portalMap.get(pos);
                 const isJump = !!(pAtPos && !ws.lastWasPortalJump && pAtPos.dest === next);
                 const undo = applyMove(next, ws, level, prep, isJump);
                 const realLen = getRealLengthFromState(ws);

@@ -104,3 +104,42 @@ node count across all three rounds is the load-bearing signal here, not the solv
 
 Strictly order-preserving speed win, no scoring/pruning/ordering change. Landed directly (not gated
 behind a flag) — same disposition class as the 2026-07-30 report's order-preserving changes 1–3.
+
+## Addendum (same day): loop-invariant portal lookup hoisted out of beam's candidate loop
+
+A re-profile after the change above (fresh `--cpu-prof` plus `PF_BEAM_DEBUG=1`) confirms it worked
+as designed: the `candGen` segment (`PF_BEAM_DEBUG`'s per-candidate bucket) dropped from 5,397ms to
+4,768ms summed over the published corpus, with the now-lazy string build correctly showing up
+instead inside the `dedup` bucket (476ms → 662ms) only for the candidates that actually reach it.
+`beamSearchFromGate` remains the largest single self-time entry (~24%) on a fresh profile; the
+connectivity flood fill (`_floodFillBits`/`_buildPassableRow`, ~16% combined) is the next largest
+but was already heavily bit-parallelized and lazily row-banded by the 2026-07-30 campaign, with its
+one plausible remaining idea (dense per-level cell indices) refuted for this specific access pattern
+in that same report — not revisited here.
+
+One further one-line fix, found while re-reading the candidate loop: `level.portalMap.get(pos)` was
+re-looked-up on every candidate inside `for (const next of neighbors)`, even though `pos` (the
+parent node) is fixed for the whole loop — identical to how `curCtx` right above it is already
+computed once per node, not per candidate. Hoisted the lookup out, matching `takePly`'s existing
+convention in `repair-search.ts` (which already hoists the same lookup outside its own per-candidate
+loop). A parallel opportunity in `dfsFromGate`'s iterative stack (`level.portalMap.get(top.key)`
+re-run on every child pop even though a stack frame's `key` is fixed across its own children) was
+**deliberately not touched**: the surrounding code has an explicit comment arguing against adding
+fields to the hot-path `DfsFrame` shape "so there is zero allocation-shape/hidden-class risk," and
+caching the lookup there would require exactly that. Left as a documented candidate rather than
+overridden without measurement.
+
+Verification, same protocol as above: `solver:bench --check` 160/160, byte-identical 45,859,097
+nodes; 176 targeted solver tests pass; 3 interleaved node-budgeted rounds on the published corpus,
+`nodesExpanded` bit-identical every round (order preserved):
+
+| round | before (this addendum) | after |
+|---|---|---|
+| 1 | 11.33s | 11.20s |
+| 2 | 11.32s | 11.00s |
+| 3 | 11.42s | 11.33s |
+
+Median 11.33s → 11.20s, **≈−1.1%** — small, as expected for hoisting a single `Map.get()` out of a
+loop that runs at most 4 times, but consistently in the same direction across all three rounds and
+zero-risk (byte-identical semantics). Folded into the same disposition as the change above: landed
+directly, no flag.
