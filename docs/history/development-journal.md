@@ -213,8 +213,8 @@ day. Full original account: `docs/refactor-notes/2026-06-20-app-architecture-ref
   default; the mutable `window.APP` facade gated behind `?debug`.
 - **Solver testing API** surfaced as a named `SOLVER_TESTING_API` export; five deprecated
   underscore-alias properties were kept temporarily then removed once all consumers migrated.
-- **`ci` script grouped** into `check`/`test:core`/`test:app`/`test:solver` (later further
-  collapsed — see the Modernization Plan entry below).
+- **`ci` script grouped** into check and subsystem test stages (later further collapsed — see the
+  Modernization Plan entry below).
 - **`state-actions.js` split** into one file per state slice under `modules/state/actions/`,
   re-exported through a compatibility barrel.
 - **Grouped engine facade** — `createEngine()` returns flat methods plus grouped namespaces
@@ -262,7 +262,7 @@ current-state facts already captured in `docs/architecture.md`, `docs/typing.md`
   review-advance navigation — each following the established `computeWinEffects`-style pure-core
   pattern, each backed by new unit tests. Declared **done** (ADR 0006): every correctness-sensitive
   flow now has a pure, tested transition/decision core, deliberately with no central dispatcher.
-- **§1 architecture boundary** — `check:domain-purity` added as a real CI gate (previously
+- **§1 architecture boundary** — a domain-purity check added as a real CI gate (previously
   convention-only); the last three composition-root cycles (`ui↔renderer`, `themes↔persistence`,
   `editor↔engine`) removed, making `createApp()` fully acyclic. Declared **done** (ADR 0008).
 - **§3 UI component layer** — two more data-driven builders (guide cards, submit steps). Declared

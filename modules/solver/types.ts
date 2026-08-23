@@ -288,6 +288,9 @@ export interface PrepLevel {
     /** Research-only beam observer. Absent in every production call. The observer receives copied
      * replay-complete paths and may label them, but cannot affect search decisions. */
     _beamResearchObserver?: BeamResearchObserver | null;
+    /** Research-only sibling-order observer. Absent in production; receives copied scalar
+     * rankings only and cannot alter candidate arrays or search decisions. */
+    _orderingResearchObserver?: OrderingResearchObserver | null;
     /** Research/test-only repair seed control. When absent, the long-standing gate/salt-derived
      * production seeds are used byte-for-byte. Both independent repair streams derive from it. */
     _repairResearchSeed?: number | null;
@@ -372,6 +375,30 @@ export interface BeamResearchRecord {
 }
 
 export interface BeamResearchObserver { observe(record: BeamResearchRecord): void; }
+
+export interface OrderingResearchPolicy {
+    id: string;
+    /** null means the true no-soft-tie-break admissible ordering; DFS ignores null policies. */
+    profile: ScoringProfile | null;
+    template?: StructuralTemplate | null;
+}
+export interface OrderingResearchRecord {
+    family: 'dfs' | 'admissible-order';
+    depth: number;
+    candidates: number[];
+    rankings: { policyId: string; order: number[]; scores: number[] }[];
+    admissibleSlack?: { candidate: number; slack: number }[];
+    pairwiseDivergences?: {
+        leftPolicyId: string; rightPolicyId: string; leftTop: number; rightTop: number;
+        leftMargin: number; rightMargin: number;
+        scoringWeightContributions: { term: string; marginDelta: number }[];
+        contributionSum: number;
+    }[];
+}
+export interface OrderingResearchObserver {
+    policies?: readonly OrderingResearchPolicy[];
+    observe(record: OrderingResearchRecord): void;
+}
 
 export interface RepairEliteResearchRecord {
     producer: 'repair'; path: number[]; badness: number; arrivalNodes: number; restart: number;

@@ -33,6 +33,7 @@ test('race.mjs intentionally supports a documented SUBSET of the full sequential
         'prime', 'repair-probe', 'repair-probe-shrink-recovery', 'admissible-order',
         'dedup-near-tie-retry', 'admissible-order-non-default-retry', 'connectivity-axis-exhausted-retry',
         'repair-elite-prefix-dfs-retry', 'mc-neighbor-budget-retry', 'repair-late-probe',
+        'goal-attraction-legacy-distance-retry', 'repair-late-probe-multi-seed-retry',
         'portfolio-pass', 'portfolio-fallback',
     ]);
 });

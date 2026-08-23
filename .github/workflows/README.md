@@ -13,6 +13,8 @@ Use this index and [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.
 | `solver-stress-refresh.yml` | Canonical **full-population** sharded level-blind stress refresh; [`solver-stress-refresh.md`](solver-stress-refresh.md). Use for baseline refreshes and non-archetype-scoped questions — for an `ATTEMPT_POLICY` routing-change A/B, prefer `solver-archetype-sample-ab.yml` below instead (same evidence, a fraction of the wall time). |
 | `solver-typical-budget-baseline.yml` | Level-blind baseline or matched deterministic experiment. |
 | `technique-census.yml` | Expensive isolated technique × level census; check existing census first. |
+| `audit-technique-census-duplicates.yml` | Audits duplicate isolated-census cells before evidence is combined. |
+| `diagnose-technique-census-duplicates.yml` | Produces bounded diagnostics for conflicting duplicate census cells. |
 | `method-probe-sweep.yml` | One technique or short technique list over a population. |
 | `solver-highbudget-unsolved-sweep.yml` | Additional-compute study on unresolved levels. |
 | `solver-level-blind-targeted-sweep.yml` | **Preferred for a one-off check over a specific, caller-supplied id list** (not a full refresh, not archetype-scoped) — dynamically sharded, artifact-only, no baseline/hint persistence. |
