@@ -3,6 +3,7 @@
 > **Status:** current research-method/evidence-routing contract.
 > **Priority:** [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
 > **ASAP programs:** evidence-driven scheduling/allocation ([`solver-scheduling-policy.md`](solver-scheduling-policy.md)) and architectural solver speed ([`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md)) are both **HIGH PRIORITY**.
+> **Current scheduler budget evidence:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
 > **Capability boundary:** [`solver-level-blindness.md`](solver-level-blindness.md).
 
 Measurements belong in dated reports, ranked decisions in the optimization queue, and retained/default-off dispositions in the opt-in ledger. Pre-consolidation notebook: [`archive/snapshots/solver-research-operating-model-2026-08-20.md`](archive/snapshots/solver-research-operating-model-2026-08-20.md).
@@ -36,7 +37,7 @@ Do not call both routing and search-quality failures “starvation”: a ladder-
 
 ## Scheduling and allocation research
 
-The active scheduling program is [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Treat it as an evidence-integration problem, not permission to replace one fixed ladder with another.
+The active scheduling program is [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Treat it as an evidence-integration problem, not permission to replace one fixed ladder with another. The current census budget-depth analysis is [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
 
 For ordering/allocation work:
 
@@ -45,6 +46,9 @@ For ordering/allocation work:
 - prefer conditional success after observed predecessor failure over unconditional winner counts;
 - compare actions inside a fixed shared work envelope by default; a new action expands the candidate menu rather than silently increasing total work;
 - audit whole-ladder retries and additive tail stages for current unique residual wins and substitutability before adding more;
+- do **not** infer a safe cap from easy-population median winning depth alone: use censored solve hazard, cap-retention, residual unique capability, and current stage reach; the census shows beams self-exhaust cheaply while plain repair retains substantial 20M–50M yield;
+- treat “continue this technique for the next budget tranche” as a separable scheduling action when evidence supports it, so later work must re-earn priority rather than follow automatically from an earlier tranche;
+- validate sequence-dependent stages through the real ladder when isolated runs do not reproduce lifecycle wins; admissible-order reverse-oracle evidence is a concrete warning against cap decisions from isolated rows alone;
 - keep known solutions, variant outcomes, regression history, and exact-level winners offline as labels; distill them into generic level/state descriptors before runtime use;
 - use parent-family splits for variant-trained/tuned routing rules;
 - begin with offline oracle/frontier analysis and shadow planning before a live scheduler changes production order.
@@ -67,7 +71,7 @@ Prefer existing infrastructure: deterministic work accounting; schema-v2 manifes
 
 Start at [`tooling-catalog.md`](tooling-catalog.md). Reuse experiment manifests/run identity, require comparability before aggregation, and keep derived analytics rebuildable rather than creating parallel truth. Add frameworks only when they replace repeated one-off work.
 
-For the scheduling program specifically, extend the existing technique-census second-order/lifecycle/family query substrate before creating a new store. Historical portfolio code may be reused as plumbing only after checking its closed decision record; the old broad cold-start portfolio result is not an active hypothesis.
+For the scheduling program specifically, extend the existing technique-census second-order/lifecycle/family query substrate before creating a new store. The next census extension should make per-technique cap-retention/tranche economics rebuildable rather than maintaining hand-derived budget tables. Historical portfolio code may be reused as plumbing only after checking its closed decision record; the old broad cold-start portfolio result is not an active hypothesis.
 
 ## Shadow first
 
@@ -114,6 +118,8 @@ Narrative explanations are not causal evidence; accepted path + trace is. Histor
 Production-facing treatments normally require level-blind execution; identifiable code/protocol state; complete intended population or explicit sample; non-binding deadlines when work comparability matters; comparable arms with declared treatments; gains and losses; `workSpent`, nodes, errors, and deadline truncation where relevant; Corpus 1/2 and published transfer/cost checks as appropriate; no hidden hint/data mutation; and queue/ledger updates when disposition changes.
 
 Scheduling/allocation treatments additionally require the total-work envelope to be explicit. If the treatment can spend more total work than control, either enforce `strictTotalWorkBudget` or report the increased envelope as part of the treatment; do not count additive tail budget as a free solve gain. Report action reach/selection and residual unique wins so a scheduler improvement can be distinguished from simply buying more search.
+
+Cap/tranche treatments additionally report the population reaching each band, solves retained/lost at the candidate cutoff, measured or simulated capped work, late conditional hazard, and any known sequence dependency. A low median solve depth is nomination evidence only, not a production cap justification.
 
 "Complete intended population or explicit sample" does not default to a full 1700-level `solver-stress-refresh.yml` sweep. For an archetype-gated `ATTEMPT_POLICY` routing change, `solver-archetype-sample-ab.yml`'s deterministic stratified sample (the affected archetype(s) plus a small cross-archetype control) is the explicit sample that answers this contract for that class of change, at a fraction of the wall time — see [`tooling-catalog.md`](tooling-catalog.md) and [`../.github/workflows/README.md`](../.github/workflows/README.md).
 
