@@ -29,6 +29,12 @@ Directive rationale is maintained in `security/csp-policy.json`. Important curre
 
 Strict `script-src` is possible because `index.html` contains no inline JavaScript; boot logic lives in `modules/boot-entry.ts`.
 
+## Dependency / external-origin policy
+
+`package.json` and the lockfile are the dependency authority. Shipped Firebase and Tone code is bundled by Vite; Google Fonts are the only ordinary external browser asset origins.
+
+Prefer bundling or self-hosting over adding a CDN/runtime origin. When a shipped browser dependency or external origin changes, update `package.json`/lockfile as applicable, assess whether browser/network/CSP behavior changes, keep `scripts/check-third-party-dependencies.mjs` and `security/csp-policy.json` aligned, and run the relevant checks. Do not add an origin merely because CSP can permit it.
+
 ## Verification
 
 `check:csp` fails if:
