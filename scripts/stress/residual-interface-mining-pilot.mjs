@@ -21,7 +21,7 @@ const solverRef = process.env.GITHUB_SHA ?? execSync('git rev-parse HEAD', { enc
 const familyDefinitionVersion = 'structural-solution-family-v1';
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.ts');
+const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const Solver = createSolver();
 const selected = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 1).slice(0, levelLimit);
 const rows = [];
