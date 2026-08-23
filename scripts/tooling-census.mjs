@@ -13,7 +13,7 @@
  *   node scripts/tooling-census.mjs --json --out=tmp/tooling-census.json
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -56,7 +56,6 @@ const packageJson = JSON.parse(readFileSync(path.join(ROOT, 'package.json'), 'ut
 const packageScripts = Object.entries(packageJson.scripts ?? {});
 const packageText = JSON.stringify(packageJson.scripts ?? {});
 const workflowText = workflowFiles.map(file => textByFile.get(file) ?? '').join('\n');
-const docsText = docFiles.map(file => textByFile.get(file) ?? '').join('\n');
 
 function newestCommitDates() {
     const raw = git('log', '--format=@@%cI', '--name-only', '--', 'scripts', '.github/workflows');
