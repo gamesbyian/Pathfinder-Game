@@ -670,6 +670,50 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
         const nRSteps = level.reqLen - realLen - (isJump ? 0 : 1);
         _sas[i] = scoreMove(nk, pos, state, level, prep, profile, nRSteps, template, curCtx);
     }
+    const research = prep._orderingResearchObserver;
+    if (research) {
+        const candidates = [...neighbors];
+        const policies = (research.policies ?? [{ id: 'active', profile, template }])
+            .filter((policy): policy is typeof policy & { profile: ScoringProfile } => policy.profile !== null);
+        const rankings = policies.map(policy => {
+            const ctx = buildCurUrgencyContext(pos, state, level, prep, true, policy.profile);
+            const scored = candidates.map((candidate, index) => {
+                const isJump = !!(portalEntry && portalEntry.dest === candidate);
+                const remaining = level.reqLen - realLen - (isJump ? 0 : 1);
+                return { candidate, index, score: scoreMove(candidate, pos, state, level, prep,
+                    policy.profile, remaining, policy.template, ctx) };
+            }).sort((a, b) => b.score - a.score || a.index - b.index);
+            return { policyId: policy.id, order: scored.map(row => row.candidate), scores: scored.map(row => row.score) };
+        });
+        const pairwiseDivergences: NonNullable<import('./types.js').OrderingResearchRecord['pairwiseDivergences']> = [];
+        for (let leftIndex = 0; leftIndex < policies.length; leftIndex++) for (let rightIndex = leftIndex + 1; rightIndex < policies.length; rightIndex++) {
+            const leftRanking = rankings[leftIndex], rightRanking = rankings[rightIndex];
+            if (leftRanking.order[0] === rightRanking.order[0]) continue;
+            const leftPolicy = policies[leftIndex], rightPolicy = policies[rightIndex];
+            if (leftPolicy.template !== rightPolicy.template) continue;
+            const leftTop = leftRanking.order[0], rightTop = rightRanking.order[0];
+            const margin = (policy: ScoringProfile): number => {
+                const ctx = buildCurUrgencyContext(pos, state, level, prep, true, policy);
+                const remaining = (candidate: number) => level.reqLen - realLen
+                    - (portalEntry?.dest === candidate ? 0 : 1);
+                return scoreMove(leftTop, pos, state, level, prep, policy, remaining(leftTop), leftPolicy.template, ctx)
+                    - scoreMove(rightTop, pos, state, level, prep, policy, remaining(rightTop), leftPolicy.template, ctx);
+            };
+            const leftMargin = margin(leftPolicy.profile), rightMargin = margin(rightPolicy.profile);
+            const terms = [...new Set([...Object.keys(leftPolicy.profile), ...Object.keys(rightPolicy.profile)])].sort();
+            const scoringWeightContributions = terms.map(term => {
+                const leftValue = leftPolicy.profile[term as keyof ScoringProfile] ?? 1;
+                const rightValue = rightPolicy.profile[term as keyof ScoringProfile] ?? 1;
+                if (leftValue === rightValue) return { term, marginDelta: 0 };
+                const hybrid = { ...leftPolicy.profile, [term]: rightValue };
+                return { term, marginDelta: margin(hybrid) - leftMargin };
+            }).filter(row => Math.abs(row.marginDelta) > 1e-10);
+            pairwiseDivergences.push({ leftPolicyId: leftPolicy.id, rightPolicyId: rightPolicy.id,
+                leftTop, rightTop, leftMargin, rightMargin, scoringWeightContributions,
+                contributionSum: scoringWeightContributions.reduce((sum, row) => sum + row.marginDelta, 0) });
+        }
+        research.observe({ family: 'dfs', depth: state.path.length - 1, candidates, rankings, pairwiseDivergences });
+    }
     // Insertion sort (tiny arrays ≤4)
     for (let i = 1; i < n; i++) {
         const si = _sas[i], ki = neighbors[i];

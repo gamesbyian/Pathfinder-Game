@@ -1,0 +1,2410 @@
+{
+ "corpus": "data/stress/stress-levels.json",
+ "only": [
+  "ida:default"
+ ],
+ "budgetMs": 30000,
+ "nodeBudget": 50000,
+ "levels": [
+  {
+   "id": "S00001",
+   "ok": false,
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 358,
+   "nodesExpanded": 50176,
+   "attempts": [
+    {
+     "configKey": "ida:default",
+     "gateKey": 589833,
+     "profile": "default",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 358,
+     "allocatedBudgetMs": 30000,
+     "nodesExpanded": 50176,
+     "timedOut": true,
+     "admissibleOrder": true,
+     "stageId": "main-loop"
+    }
+   ],
+   "orderingResearch": {
+    "observedCandidateSets": 10805,
+    "retainedCandidateSets": 4096,
+    "truncated": true,
+    "pairs": [
+     {
+      "left": "none",
+      "right": "default",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.781982421875,
+      "fullRankingAgreementRate": 0.48388671875,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.5872395833333333,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 2,
+       "depth": 2,
+       "candidates": [
+        589830,
+        524295
+       ],
+       "left": {
+        "order": [
+         589830,
+         524295
+        ],
+        "scores": [
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         524295,
+         589830
+        ],
+        "scores": [
+         54.993589743589745,
+         31.326923076923077
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.776123046875,
+      "fullRankingAgreementRate": 0.47705078125,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.5808919270833325,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 2,
+       "depth": 2,
+       "candidates": [
+        589830,
+        524295
+       ],
+       "left": {
+        "order": [
+         589830,
+         524295
+        ],
+        "scores": [
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         524295,
+         589830
+        ],
+        "scores": [
+         76.55833333333334,
+         45.858333333333334
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.7998046875,
+      "fullRankingAgreementRate": 0.530029296875,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.6232096354166712,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 2,
+       "depth": 2,
+       "candidates": [
+        589830,
+        524295
+       ],
+       "left": {
+        "order": [
+         589830,
+         524295
+        ],
+        "scores": [
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         524295,
+         589830
+        ],
+        "scores": [
+         28.67948717948718,
+         20.629487179487178
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.773681640625,
+      "fullRankingAgreementRate": 0.47705078125,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.5792643229166654,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 2,
+       "depth": 2,
+       "candidates": [
+        589830,
+        524295
+       ],
+       "left": {
+        "order": [
+         589830,
+         524295
+        ],
+        "scores": [
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         524295,
+         589830
+        ],
+        "scores": [
+         66.33141025641025,
+         43.39807692307692
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.994140625,
+      "fullRankingAgreementRate": 0.992431640625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9936523437500001,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 182,
+       "depth": 53,
+       "candidates": [
+        458759,
+        524294,
+        393222
+       ],
+       "left": {
+        "order": [
+         458759,
+         393222,
+         524294
+        ],
+        "scores": [
+         -37.93076923076923,
+         -38.31923076923077,
+         59.06923076923077
+        ]
+       },
+       "right": {
+        "order": [
+         393222,
+         458759,
+         524294
+        ],
+        "scores": [
+         -107.95,
+         -113.3,
+         121.39999999999999
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.96728515625,
+      "fullRankingAgreementRate": 0.92822265625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9458007812500026,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 102,
+       "depth": 54,
+       "candidates": [
+        524293,
+        589828,
+        458756
+       ],
+       "left": {
+        "order": [
+         524293,
+         458756,
+         589828
+        ],
+        "scores": [
+         32.20384615384615,
+         19.79615384615385,
+         -3.962820512820514
+        ]
+       },
+       "right": {
+        "order": [
+         458756,
+         524293,
+         589828
+        ],
+        "scores": [
+         13.30769230769231,
+         10.69230769230769,
+         -1.8576923076923104
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.99169921875,
+      "fullRankingAgreementRate": 0.989990234375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9920247395833333,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 102,
+       "depth": 54,
+       "candidates": [
+        524293,
+        589828,
+        458756
+       ],
+       "left": {
+        "order": [
+         524293,
+         458756,
+         589828
+        ],
+        "scores": [
+         32.20384615384615,
+         19.79615384615385,
+         -3.962820512820514
+        ]
+       },
+       "right": {
+        "order": [
+         458756,
+         524293,
+         589828
+        ],
+        "scores": [
+         26.503846153846165,
+         10.646153846153833,
+         -28.287179487179493
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "mustCrossFirst",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.96240234375,
+      "fullRankingAgreementRate": 0.923583984375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9427083333333359,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 102,
+       "depth": 54,
+       "candidates": [
+        524293,
+        589828,
+        458756
+       ],
+       "left": {
+        "order": [
+         524293,
+         458756,
+         589828
+        ],
+        "scores": [
+         27.9,
+         12.800000000000002,
+         -18.8
+        ]
+       },
+       "right": {
+        "order": [
+         458756,
+         524293,
+         589828
+        ],
+        "scores": [
+         13.30769230769231,
+         10.69230769230769,
+         -1.8576923076923104
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "mustCrossFirst",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.99755859375,
+      "fullRankingAgreementRate": 0.99755859375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9983723958333333,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 102,
+       "depth": 54,
+       "candidates": [
+        524293,
+        589828,
+        458756
+       ],
+       "left": {
+        "order": [
+         524293,
+         458756,
+         589828
+        ],
+        "scores": [
+         27.9,
+         12.800000000000002,
+         -18.8
+        ]
+       },
+       "right": {
+        "order": [
+         458756,
+         524293,
+         589828
+        ],
+        "scores": [
+         26.503846153846165,
+         10.646153846153833,
+         -28.287179487179493
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "intersectionHarvest",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.962890625,
+      "fullRankingAgreementRate": 0.924072265625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9430338541666692,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 136,
+       "depth": 52,
+       "candidates": [
+        393223,
+        458758,
+        327686
+       ],
+       "left": {
+        "order": [
+         393223,
+         327686,
+         458758
+        ],
+        "scores": [
+         10.45,
+         -8.5,
+         21.25
+        ]
+       },
+       "right": {
+        "order": [
+         327686,
+         393223,
+         458758
+        ],
+        "scores": [
+         -39.175,
+         -64.73333333333333,
+         50.95
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     }
+    ],
+    "admissibleSlackAnatomy": {
+     "candidateSets": 4096,
+     "setsWithEqualSlack": 3261,
+     "equalSlackSetRate": 0.796142578125,
+     "allDistinctSlackSets": 835,
+     "meanEqualSlackPairs": 1.114501953125
+    }
+   }
+  },
+  {
+   "id": "R00408",
+   "ok": false,
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 409,
+   "nodesExpanded": 50176,
+   "attempts": [
+    {
+     "configKey": "ida:default",
+     "gateKey": 0,
+     "profile": "default",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 409,
+     "allocatedBudgetMs": 30000,
+     "nodesExpanded": 50176,
+     "timedOut": true,
+     "admissibleOrder": true,
+     "stageId": "main-loop"
+    }
+   ],
+   "orderingResearch": {
+    "observedCandidateSets": 11038,
+    "retainedCandidateSets": 4096,
+    "truncated": true,
+    "pairs": [
+     {
+      "left": "none",
+      "right": "default",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.760498046875,
+      "fullRankingAgreementRate": 0.693359375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.5947265625000007,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 3,
+       "depth": 5,
+       "candidates": [
+        131072,
+        196609
+       ],
+       "left": {
+        "order": [
+         131072,
+         196609
+        ],
+        "scores": [
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         196609,
+         131072
+        ],
+        "scores": [
+         104.67894736842105,
+         -23.34561403508772
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.7578125,
+      "fullRankingAgreementRate": 0.681884765625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.5849609375000002,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 3,
+       "depth": 5,
+       "candidates": [
+        131072,
+        196609
+       ],
+       "left": {
+        "order": [
+         131072,
+         196609
+        ],
+        "scores": [
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         196609,
+         131072
+        ],
+        "scores": [
+         134.72412280701755,
+         -65.22412280701755
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.776123046875,
+      "fullRankingAgreementRate": 0.7060546875,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.6036783854166676,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 3,
+       "depth": 5,
+       "candidates": [
+        131072,
+        196609
+       ],
+       "left": {
+        "order": [
+         131072,
+         196609
+        ],
+        "scores": [
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         196609,
+         131072
+        ],
+        "scores": [
+         85.05701754385964,
+         -19.307017543859647
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.774169921875,
+      "fullRankingAgreementRate": 0.705810546875,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.6110026041666681,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 3,
+       "depth": 5,
+       "candidates": [
+        131072,
+        196609
+       ],
+       "left": {
+        "order": [
+         131072,
+         196609
+        ],
+        "scores": [
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         196609,
+         131072
+        ],
+        "scores": [
+         126.39342105263158,
+         -51.92675438596492
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.98291015625,
+      "fullRankingAgreementRate": 0.96630859375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9671223958333346,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 171,
+       "depth": 45,
+       "candidates": [
+        196615,
+        131078
+       ],
+       "left": {
+        "order": [
+         131078,
+         196615
+        ],
+        "scores": [
+         -17.5,
+         -21
+        ]
+       },
+       "right": {
+        "order": [
+         196615,
+         131078
+        ],
+        "scores": [
+         -54.9,
+         -59.099999999999994
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.967041015625,
+      "fullRankingAgreementRate": 0.954345703125,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9594726562500014,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 43,
+       "depth": 47,
+       "candidates": [
+        131078,
+        131076,
+        196613
+       ],
+       "left": {
+        "order": [
+         131076,
+         131078,
+         196613
+        ],
+        "scores": [
+         28.833333333333336,
+         -20.5,
+         10.833333333333336
+        ]
+       },
+       "right": {
+        "order": [
+         131078,
+         131076,
+         196613
+        ],
+        "scores": [
+         15.45,
+         14.25,
+         11.75
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.98095703125,
+      "fullRankingAgreementRate": 0.96728515625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9648437500000017,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 127,
+       "depth": 41,
+       "candidates": [
+        131078,
+        196615
+       ],
+       "left": {
+        "order": [
+         131078,
+         196615
+        ],
+        "scores": [
+         50.5,
+         40
+        ]
+       },
+       "right": {
+        "order": [
+         196615,
+         131078
+        ],
+        "scores": [
+         48.95,
+         37.2
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "mustCrossFirst",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.973876953125,
+      "fullRankingAgreementRate": 0.962158203125,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9685872395833348,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 43,
+       "depth": 47,
+       "candidates": [
+        131078,
+        131076,
+        196613
+       ],
+       "left": {
+        "order": [
+         131076,
+         131078,
+         196613
+        ],
+        "scores": [
+         33.6,
+         -78.1,
+         -21.4
+        ]
+       },
+       "right": {
+        "order": [
+         131078,
+         131076,
+         196613
+        ],
+        "scores": [
+         15.45,
+         14.25,
+         11.75
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "mustCrossFirst",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.9814453125,
+      "fullRankingAgreementRate": 0.9716796875,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9710286458333339,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 127,
+       "depth": 41,
+       "candidates": [
+        131078,
+        196615
+       ],
+       "left": {
+        "order": [
+         131078,
+         196615
+        ],
+        "scores": [
+         55.6,
+         41.1
+        ]
+       },
+       "right": {
+        "order": [
+         196615,
+         131078
+        ],
+        "scores": [
+         48.95,
+         37.2
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "intersectionHarvest",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.965576171875,
+      "fullRankingAgreementRate": 0.95166015625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9581705729166676,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 43,
+       "depth": 47,
+       "candidates": [
+        131078,
+        131076,
+        196613
+       ],
+       "left": {
+        "order": [
+         131078,
+         131076,
+         196613
+        ],
+        "scores": [
+         15.45,
+         14.25,
+         11.75
+        ]
+       },
+       "right": {
+        "order": [
+         131076,
+         131078,
+         196613
+        ],
+        "scores": [
+         20.36666666666667,
+         -47.900000000000006,
+         4.366666666666668
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     }
+    ],
+    "admissibleSlackAnatomy": {
+     "candidateSets": 4096,
+     "setsWithEqualSlack": 1927,
+     "equalSlackSetRate": 0.470458984375,
+     "allDistinctSlackSets": 2169,
+     "meanEqualSlackPairs": 0.584228515625
+    }
+   }
+  },
+  {
+   "id": "R01336",
+   "ok": false,
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 184,
+   "nodesExpanded": 50176,
+   "attempts": [
+    {
+     "configKey": "ida:default",
+     "gateKey": 393218,
+     "profile": "default",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 184,
+     "allocatedBudgetMs": 30000,
+     "nodesExpanded": 50176,
+     "timedOut": true,
+     "admissibleOrder": true,
+     "stageId": "main-loop"
+    }
+   ],
+   "orderingResearch": {
+    "observedCandidateSets": 10509,
+    "retainedCandidateSets": 4096,
+    "truncated": true,
+    "pairs": [
+     {
+      "left": "none",
+      "right": "default",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.81787109375,
+      "fullRankingAgreementRate": 0.774658203125,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.6550292968749997,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 2,
+       "depth": 2,
+       "candidates": [
+        393221,
+        458756,
+        327684
+       ],
+       "left": {
+        "order": [
+         393221,
+         458756,
+         327684
+        ],
+        "scores": [
+         0,
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         458756,
+         393221,
+         327684
+        ],
+        "scores": [
+         37.440614886731396,
+         32.059385113268604,
+         19.559385113268608
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.834716796875,
+      "fullRankingAgreementRate": 0.7841796875,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.6781412760416656,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 2,
+       "depth": 2,
+       "candidates": [
+        393221,
+        458756,
+        327684
+       ],
+       "left": {
+        "order": [
+         393221,
+         458756,
+         327684
+        ],
+        "scores": [
+         0,
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         458756,
+         393221,
+         327684
+        ],
+        "scores": [
+         44.47224919093851,
+         35.72775080906149,
+         19.72775080906149
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.851318359375,
+      "fullRankingAgreementRate": 0.80126953125,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.7146809895833324,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 2,
+       "depth": 2,
+       "candidates": [
+        393221,
+        458756,
+        327684
+       ],
+       "left": {
+        "order": [
+         393221,
+         458756,
+         327684
+        ],
+        "scores": [
+         0,
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         458756,
+         393221,
+         327684
+        ],
+        "scores": [
+         28.113268608414238,
+         21.386731391585762,
+         16.886731391585762
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.840576171875,
+      "fullRankingAgreementRate": 0.791015625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.6924641927083325,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 2,
+       "depth": 2,
+       "candidates": [
+        393221,
+        458756,
+        327684
+       ],
+       "left": {
+        "order": [
+         393221,
+         458756,
+         327684
+        ],
+        "scores": [
+         0,
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         458756,
+         393221,
+         327684
+        ],
+        "scores": [
+         50.62613268608415,
+         29.773867313915858,
+         13.773867313915858
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.959716796875,
+      "fullRankingAgreementRate": 0.9580078125,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9326171875000003,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 14,
+       "depth": 18,
+       "candidates": [
+        327680,
+        393217,
+        262145
+       ],
+       "left": {
+        "order": [
+         327680,
+         393217,
+         262145
+        ],
+        "scores": [
+         -2.9238942826321477,
+         -8.326105717367852,
+         37.92389428263215
+        ]
+       },
+       "right": {
+        "order": [
+         393217,
+         327680,
+         262145
+        ],
+        "scores": [
+         -9.742421790722762,
+         -9.757578209277238,
+         45.25757820927724
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.925537109375,
+      "fullRankingAgreementRate": 0.912353515625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.8667805989583341,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 5,
+       "depth": 5,
+       "candidates": [
+        589829,
+        589827,
+        655364
+       ],
+       "left": {
+        "order": [
+         589829,
+         655364,
+         589827
+        ],
+        "scores": [
+         31.968770226537217,
+         31.968770226537217,
+         18.781229773462783
+        ]
+       },
+       "right": {
+        "order": [
+         589827,
+         589829,
+         655364
+        ],
+        "scores": [
+         21.47653721682848,
+         21.27346278317152,
+         21.27346278317152
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.93994140625,
+      "fullRankingAgreementRate": 0.92919921875,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.8950195312500007,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 14,
+       "depth": 18,
+       "candidates": [
+        327680,
+        393217,
+        262145
+       ],
+       "left": {
+        "order": [
+         327680,
+         393217,
+         262145
+        ],
+        "scores": [
+         -2.9238942826321477,
+         -8.326105717367852,
+         37.92389428263215
+        ]
+       },
+       "right": {
+        "order": [
+         393217,
+         327680,
+         262145
+        ],
+        "scores": [
+         -2.501159654800431,
+         -17.69884034519957,
+         52.49884034519957
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "mustCrossFirst",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.96484375,
+      "fullRankingAgreementRate": 0.9501953125,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9335123697916679,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 5,
+       "depth": 5,
+       "candidates": [
+        589829,
+        589827,
+        655364
+       ],
+       "left": {
+        "order": [
+         589829,
+         655364,
+         589827
+        ],
+        "scores": [
+         35.58050161812298,
+         35.58050161812298,
+         20.619498381877023
+        ]
+       },
+       "right": {
+        "order": [
+         589827,
+         589829,
+         655364
+        ],
+        "scores": [
+         21.47653721682848,
+         21.27346278317152,
+         21.27346278317152
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "mustCrossFirst",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.980224609375,
+      "fullRankingAgreementRate": 0.9677734375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9624023437500007,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 16,
+       "depth": 21,
+       "candidates": [
+        458753,
+        327681
+       ],
+       "left": {
+        "order": [
+         327681,
+         458753
+        ],
+        "scores": [
+         40.095172599784256,
+         29.40482740021575
+        ]
+       },
+       "right": {
+        "order": [
+         458753,
+         327681
+        ],
+        "scores": [
+         36.84997303128372,
+         31.950026968716283
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "intersectionHarvest",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.98388671875,
+      "fullRankingAgreementRate": 0.97998046875,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9701334635416671,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 5,
+       "depth": 5,
+       "candidates": [
+        589829,
+        589827,
+        655364
+       ],
+       "left": {
+        "order": [
+         589827,
+         589829,
+         655364
+        ],
+        "scores": [
+         21.47653721682848,
+         21.27346278317152,
+         21.27346278317152
+        ]
+       },
+       "right": {
+        "order": [
+         589829,
+         655364,
+         589827
+        ],
+        "scores": [
+         29.422734627831712,
+         29.422734627831712,
+         26.977265372168286
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     }
+    ],
+    "admissibleSlackAnatomy": {
+     "candidateSets": 4096,
+     "setsWithEqualSlack": 2012,
+     "equalSlackSetRate": 0.4912109375,
+     "allDistinctSlackSets": 2084,
+     "meanEqualSlackPairs": 0.748046875
+    }
+   }
+  },
+  {
+   "id": "R01675",
+   "ok": false,
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 180,
+   "nodesExpanded": 50176,
+   "attempts": [
+    {
+     "configKey": "ida:default",
+     "gateKey": 393221,
+     "profile": "default",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 180,
+     "allocatedBudgetMs": 30000,
+     "nodesExpanded": 50176,
+     "timedOut": true,
+     "admissibleOrder": true,
+     "stageId": "main-loop"
+    }
+   ],
+   "orderingResearch": {
+    "observedCandidateSets": 9018,
+    "retainedCandidateSets": 4096,
+    "truncated": true,
+    "pairs": [
+     {
+      "left": "none",
+      "right": "default",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.7802734375,
+      "fullRankingAgreementRate": 0.771240234375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.6025390625000001,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 0,
+       "depth": 0,
+       "candidates": [
+        393222,
+        393220,
+        458757,
+        327685
+       ],
+       "left": {
+        "order": [
+         393220,
+         458757,
+         327685,
+         393222
+        ],
+        "scores": [
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         458757,
+         327685,
+         393220,
+         393222
+        ],
+        "scores": [
+         17.39261796042618,
+         8.07214611872146,
+         -9.142617960426179,
+         34.60738203957382
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.7783203125,
+      "fullRankingAgreementRate": 0.769287109375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.5962727864583333,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 0,
+       "depth": 0,
+       "candidates": [
+        393222,
+        393220,
+        458757,
+        327685
+       ],
+       "left": {
+        "order": [
+         393220,
+         458757,
+         327685,
+         393222
+        ],
+        "scores": [
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         327685,
+         458757,
+         393220,
+         393222
+        ],
+        "scores": [
+         15.717237442922373,
+         13.144254185692544,
+         -11.444254185692543,
+         40.30574581430746
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.8095703125,
+      "fullRankingAgreementRate": 0.800537109375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.663411458333334,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 0,
+       "depth": 0,
+       "candidates": [
+        393222,
+        393220,
+        458757,
+        327685
+       ],
+       "left": {
+        "order": [
+         393220,
+         458757,
+         327685,
+         393222
+        ],
+        "scores": [
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         458757,
+         327685,
+         393220,
+         393222
+        ],
+        "scores": [
+         10.303272450532724,
+         -12.409817351598175,
+         -15.803272450532724,
+         13.696727549467276
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.771728515625,
+      "fullRankingAgreementRate": 0.762451171875,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.5916341145833334,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 0,
+       "depth": 0,
+       "candidates": [
+        393222,
+        393220,
+        458757,
+        327685
+       ],
+       "left": {
+        "order": [
+         393220,
+         458757,
+         327685,
+         393222
+        ],
+        "scores": [
+         0,
+         0,
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         458757,
+         327685,
+         393220,
+         393222
+        ],
+        "scores": [
+         22.065144596651447,
+         -10.270433789954346,
+         -17.915144596651448,
+         29.709855403348552
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.989501953125,
+      "fullRankingAgreementRate": 0.989501953125,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9829915364583336,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 0,
+       "depth": 0,
+       "candidates": [
+        393222,
+        393220,
+        458757,
+        327685
+       ],
+       "left": {
+        "order": [
+         458757,
+         327685,
+         393220,
+         393222
+        ],
+        "scores": [
+         17.39261796042618,
+         8.07214611872146,
+         -9.142617960426179,
+         34.60738203957382
+        ]
+       },
+       "right": {
+        "order": [
+         327685,
+         458757,
+         393220,
+         393222
+        ],
+        "scores": [
+         15.717237442922373,
+         13.144254185692544,
+         -11.444254185692543,
+         40.30574581430746
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.955078125,
+      "fullRankingAgreementRate": 0.95458984375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9124348958333335,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 17,
+       "depth": 27,
+       "candidates": [
+        655363,
+        589828
+       ],
+       "left": {
+        "order": [
+         589828,
+         655363
+        ],
+        "scores": [
+         -21.41544901065449,
+         -34.417884322678844
+        ]
+       },
+       "right": {
+        "order": [
+         655363,
+         589828
+        ],
+        "scores": [
+         -25.21818873668189,
+         -27.53181126331811
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.986083984375,
+      "fullRankingAgreementRate": 0.985595703125,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9783528645833331,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 19,
+       "depth": 29,
+       "candidates": [
+        589830,
+        524293
+       ],
+       "left": {
+        "order": [
+         589830,
+         524293
+        ],
+        "scores": [
+         28.082648401826486,
+         16.00068493150685
+        ]
+       },
+       "right": {
+        "order": [
+         524293,
+         589830
+        ],
+        "scores": [
+         26.233904109589037,
+         23.832762557077626
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "mustCrossFirst",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.949951171875,
+      "fullRankingAgreementRate": 0.949462890625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9048665364583336,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 0,
+       "depth": 0,
+       "candidates": [
+        393222,
+        393220,
+        458757,
+        327685
+       ],
+       "left": {
+        "order": [
+         327685,
+         458757,
+         393220,
+         393222
+        ],
+        "scores": [
+         15.717237442922373,
+         13.144254185692544,
+         -11.444254185692543,
+         40.30574581430746
+        ]
+       },
+       "right": {
+        "order": [
+         458757,
+         327685,
+         393220,
+         393222
+        ],
+        "scores": [
+         10.303272450532724,
+         -12.409817351598175,
+         -15.803272450532724,
+         13.696727549467276
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "mustCrossFirst",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.98095703125,
+      "fullRankingAgreementRate": 0.98046875,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9707845052083331,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 0,
+       "depth": 0,
+       "candidates": [
+        393222,
+        393220,
+        458757,
+        327685
+       ],
+       "left": {
+        "order": [
+         327685,
+         458757,
+         393220,
+         393222
+        ],
+        "scores": [
+         15.717237442922373,
+         13.144254185692544,
+         -11.444254185692543,
+         40.30574581430746
+        ]
+       },
+       "right": {
+        "order": [
+         458757,
+         327685,
+         393220,
+         393222
+        ],
+        "scores": [
+         22.065144596651447,
+         -10.270433789954346,
+         -17.915144596651448,
+         29.709855403348552
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "intersectionHarvest",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.956298828125,
+      "fullRankingAgreementRate": 0.955810546875,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9174804687499998,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 17,
+       "depth": 27,
+       "candidates": [
+        655363,
+        589828
+       ],
+       "left": {
+        "order": [
+         655363,
+         589828
+        ],
+        "scores": [
+         -25.21818873668189,
+         -27.53181126331811
+        ]
+       },
+       "right": {
+        "order": [
+         589828,
+         655363
+        ],
+        "scores": [
+         -32.503614916286146,
+         -35.113051750380514
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     }
+    ],
+    "admissibleSlackAnatomy": {
+     "candidateSets": 4096,
+     "setsWithEqualSlack": 1559,
+     "equalSlackSetRate": 0.380615234375,
+     "allDistinctSlackSets": 2537,
+     "meanEqualSlackPairs": 0.428955078125
+    }
+   }
+  },
+  {
+   "id": "R01696",
+   "ok": false,
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 214,
+   "nodesExpanded": 50176,
+   "attempts": [
+    {
+     "configKey": "ida:default",
+     "gateKey": 131076,
+     "profile": "default",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 214,
+     "allocatedBudgetMs": 30000,
+     "nodesExpanded": 50176,
+     "timedOut": true,
+     "admissibleOrder": true,
+     "stageId": "main-loop"
+    }
+   ],
+   "orderingResearch": {
+    "observedCandidateSets": 10203,
+    "retainedCandidateSets": 4096,
+    "truncated": true,
+    "pairs": [
+     {
+      "left": "none",
+      "right": "default",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.794921875,
+      "fullRankingAgreementRate": 0.713134765625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.6477864583333344,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 6,
+       "depth": 6,
+       "candidates": [
+        196612,
+        262149,
+        131077
+       ],
+       "left": {
+        "order": [
+         196612,
+         131077,
+         262149
+        ],
+        "scores": [
+         0,
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         131077,
+         196612,
+         262149
+        ],
+        "scores": [
+         20.1482905982906,
+         12.018376068376071,
+         -17.685042735042735
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.80029296875,
+      "fullRankingAgreementRate": 0.70458984375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.6569010416666685,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 6,
+       "depth": 6,
+       "candidates": [
+        196612,
+        262149,
+        131077
+       ],
+       "left": {
+        "order": [
+         196612,
+         131077,
+         262149
+        ],
+        "scores": [
+         0,
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         131077,
+         196612,
+         262149
+        ],
+        "scores": [
+         29.630555555555556,
+         -12.130555555555555,
+         -41.669444444444444
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.779296875,
+      "fullRankingAgreementRate": 0.697509765625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.6282552083333345,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 0,
+       "depth": 0,
+       "candidates": [
+        131077,
+        131075,
+        196612
+       ],
+       "left": {
+        "order": [
+         131077,
+         131075,
+         196612
+        ],
+        "scores": [
+         0,
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         196612,
+         131077,
+         131075
+        ],
+        "scores": [
+         42.809829059829056,
+         22.19017094017094,
+         8.05982905982906
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "none",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.768310546875,
+      "fullRankingAgreementRate": 0.690673828125,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.6142578125000006,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 6,
+       "depth": 6,
+       "candidates": [
+        196612,
+        262149,
+        131077
+       ],
+       "left": {
+        "order": [
+         196612,
+         131077,
+         262149
+        ],
+        "scores": [
+         0,
+         0,
+         0
+        ]
+       },
+       "right": {
+        "order": [
+         131077,
+         196612,
+         262149
+        ],
+        "scores": [
+         17.893376068376067,
+         4.239957264957266,
+         -47.17329059829059
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.93798828125,
+      "fullRankingAgreementRate": 0.915283203125,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9179687500000031,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 14,
+       "depth": 20,
+       "candidates": [
+        262148,
+        262146
+       ],
+       "left": {
+        "order": [
+         262146,
+         262148
+        ],
+        "scores": [
+         -47.259401709401715,
+         -50.00940170940171
+        ]
+       },
+       "right": {
+        "order": [
+         262148,
+         262146
+        ],
+        "scores": [
+         -99.10277777777779,
+         -114.85277777777779
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.9453125,
+      "fullRankingAgreementRate": 0.9248046875,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9039713541666692,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 0,
+       "depth": 0,
+       "candidates": [
+        131077,
+        131075,
+        196612
+       ],
+       "left": {
+        "order": [
+         131077,
+         196612,
+         131075
+        ],
+        "scores": [
+         68.93547008547009,
+         63.231196581196585,
+         -18.268803418803415
+        ]
+       },
+       "right": {
+        "order": [
+         196612,
+         131077,
+         131075
+        ],
+        "scores": [
+         42.809829059829056,
+         22.19017094017094,
+         8.05982905982906
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "default",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.960205078125,
+      "fullRankingAgreementRate": 0.9462890625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9394531250000023,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 14,
+       "depth": 20,
+       "candidates": [
+        262148,
+        262146
+       ],
+       "left": {
+        "order": [
+         262146,
+         262148
+        ],
+        "scores": [
+         -47.259401709401715,
+         -50.00940170940171
+        ]
+       },
+       "right": {
+        "order": [
+         262148,
+         262146
+        ],
+        "scores": [
+         -90.64893162393163,
+         -98.77393162393163
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "mustCrossFirst",
+      "right": "intersectionHarvest",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.89453125,
+      "fullRankingAgreementRate": 0.857177734375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.8417968750000047,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 0,
+       "depth": 0,
+       "candidates": [
+        131077,
+        131075,
+        196612
+       ],
+       "left": {
+        "order": [
+         131077,
+         196612,
+         131075
+        ],
+        "scores": [
+         100.79722222222222,
+         63.40277777777778,
+         -56.597222222222236
+        ]
+       },
+       "right": {
+        "order": [
+         196612,
+         131077,
+         131075
+        ],
+        "scores": [
+         42.809829059829056,
+         22.19017094017094,
+         8.05982905982906
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "mustCrossFirst",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.946533203125,
+      "fullRankingAgreementRate": 0.931396484375,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.9358723958333355,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 48,
+       "depth": 35,
+       "candidates": [
+        393223,
+        458760,
+        327688
+       ],
+       "left": {
+        "order": [
+         458760,
+         327688,
+         393223
+        ],
+        "scores": [
+         -18.4,
+         -55.099999999999994,
+         154.1
+        ]
+       },
+       "right": {
+        "order": [
+         327688,
+         458760,
+         393223
+        ],
+        "scores": [
+         -34.233333333333334,
+         -40.3,
+         112.45
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     },
+     {
+      "left": "intersectionHarvest",
+      "right": "nearClosureRescue",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.937255859375,
+      "fullRankingAgreementRate": 0.9140625,
+      "tieRate": 0,
+      "meanKendallAgreement": 0.8909505208333369,
+      "meanLeftTopMargin": 1,
+      "meanRightTopMargin": 1,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 0,
+       "depth": 0,
+       "candidates": [
+        131077,
+        131075,
+        196612
+       ],
+       "left": {
+        "order": [
+         196612,
+         131077,
+         131075
+        ],
+        "scores": [
+         42.809829059829056,
+         22.19017094017094,
+         8.05982905982906
+        ]
+       },
+       "right": {
+        "order": [
+         131077,
+         196612,
+         131075
+        ],
+        "scores": [
+         83.60619658119658,
+         72.12713675213676,
+         -37.37286324786325
+        ]
+       },
+       "scoringWeightDecomposition": null
+      }
+     }
+    ],
+    "admissibleSlackAnatomy": {
+     "candidateSets": 4096,
+     "setsWithEqualSlack": 2264,
+     "equalSlackSetRate": 0.552734375,
+     "allDistinctSlackSets": 1832,
+     "meanEqualSlackPairs": 0.77490234375
+    }
+   }
+  }
+ ]
+}

@@ -47,6 +47,7 @@ import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { selectLevelsBySpec } from './level-data-io.mjs';
 import { makeAttemptConfigKeyParser } from './attempt-config-key.mjs';
+import { compareSiblingRankings } from './operational-similarity-lib.mjs';
 
 const ROOT = process.cwd();
 const argv = process.argv.slice(2);
@@ -104,6 +105,96 @@ const BUDGET_MS = Number(args.get('--budget-ms') || 8000);
 const NODE_BUDGET = args.has('--node-budget') ? Number(args.get('--node-budget')) : Infinity;
 const OUT_FILE = args.get('--out') || null;
 const SUMMARY_OUT_FILE = args.get('--summary-out') || null;
+const ORDERING_PROFILES = (args.get('--ordering-profiles') || '').split(',').map(value => value.trim()).filter(Boolean);
+const ORDERING_LIMIT = Number(args.get('--ordering-limit') || 4096);
+const BEAM_TRACE_LIMIT = Number(args.get('--beam-trace-limit') || 0);
+for (const profile of ORDERING_PROFILES) if (profile !== 'none' && !POLICY_PROFILES[profile]) {
+    console.error(`--ordering-profiles: unknown profile ${profile}`); process.exit(1);
+}
+
+function summarizeOrdering(records, observed) {
+    const pairs = [];
+    for (let i = 0; i < ORDERING_PROFILES.length; i++) for (let j = i + 1; j < ORDERING_PROFILES.length; j++) {
+        const left = ORDERING_PROFILES[i], right = ORDERING_PROFILES[j];
+        const comparisons = records.map(record => {
+            const a = record.rankings.find(row => row.policyId === left);
+            const b = record.rankings.find(row => row.policyId === right);
+            if (!a || !b) return null;
+            // Admissible policies are ranked by the (slack, soft-score) tuple, so replaying only
+            // their soft scores would silently discard the primary slack ordering. Encode their
+            // already-observed final order as ordinal scores for the generic order reducer.
+            const scoreByCandidate = ranking => new Map(ranking.order.map((id, index) =>
+                [id, record.family === 'admissible-order' ? ranking.order.length - index : ranking.scores[index]]));
+            const aScores = scoreByCandidate(a), bScores = scoreByCandidate(b);
+            return compareSiblingRankings(record.candidates.map(id => ({ id, score: aScores.get(id) })),
+                record.candidates.map(id => ({ id, score: bScores.get(id) })));
+        }).filter(Boolean);
+        const firstDivergenceIndex = comparisons.findIndex(row => !row.topChoiceAgreement);
+        const firstRecord = firstDivergenceIndex >= 0 ? records[firstDivergenceIndex] : null;
+        const firstLeft = firstRecord?.rankings.find(row => row.policyId === left);
+        const firstRight = firstRecord?.rankings.find(row => row.policyId === right);
+        pairs.push({ left, right, candidateSets: comparisons.length,
+            topChoiceAgreementRate: comparisons.length ? comparisons.filter(row => row.topChoiceAgreement).length / comparisons.length : null,
+            fullRankingAgreementRate: comparisons.length ? comparisons.filter(row => row.fullRankingAgreement).length / comparisons.length : null,
+            tieRate: comparisons.length ? comparisons.filter(row => row.tiedPairCount > 0).length / comparisons.length : null,
+            meanKendallAgreement: comparisons.length ? comparisons.reduce((sum, row) => sum + (row.kendallAgreement ?? 0), 0) / comparisons.length : null,
+            meanLeftTopMargin: comparisons.length ? comparisons.reduce((sum, row) => sum + row.leftTopMargin, 0) / comparisons.length : null,
+            meanRightTopMargin: comparisons.length ? comparisons.reduce((sum, row) => sum + row.rightTopMargin, 0) / comparisons.length : null,
+            firstTopChoiceDivergence: firstRecord ? { retainedIndex: firstDivergenceIndex,
+                depth: firstRecord.depth, candidates: firstRecord.candidates,
+                left: { order: firstLeft.order, scores: firstLeft.scores },
+                right: { order: firstRight.order, scores: firstRight.scores },
+                scoringWeightDecomposition: firstRecord.pairwiseDivergences?.find(row =>
+                    row.leftPolicyId === left && row.rightPolicyId === right) ?? null } : null });
+    }
+    const admissible = records.filter(record => record.family === 'admissible-order' && record.admissibleSlack);
+    const slackTieCounts = admissible.map(record => {
+        let ties = 0;
+        for (let i = 0; i < record.admissibleSlack.length; i++) for (let j = i + 1; j < record.admissibleSlack.length; j++)
+            if (record.admissibleSlack[i].slack === record.admissibleSlack[j].slack) ties++;
+        return ties;
+    });
+    return { observedCandidateSets: observed, retainedCandidateSets: records.length,
+        truncated: observed > records.length, pairs,
+        ...(admissible.length ? { admissibleSlackAnatomy: {
+            candidateSets: admissible.length,
+            setsWithEqualSlack: slackTieCounts.filter(count => count > 0).length,
+            equalSlackSetRate: slackTieCounts.filter(count => count > 0).length / admissible.length,
+            allDistinctSlackSets: slackTieCounts.filter(count => count === 0).length,
+            meanEqualSlackPairs: slackTieCounts.reduce((sum, count) => sum + count, 0) / admissible.length,
+        } } : {}) };
+}
+
+function createBeamTraceCollector(limit) {
+    const buckets = new Map();
+    const hashPath = pathKeys => {
+        let hash = 2166136261;
+        for (const key of pathKeys) { hash ^= key; hash = Math.imul(hash, 16777619); }
+        return (hash >>> 0).toString(16).padStart(8, '0');
+    };
+    return {
+        observe(record) {
+            const key = `${record.stage}@${record.depth}`;
+            let bucket = buckets.get(key);
+            if (!bucket) { bucket = { stage: record.stage, depth: record.depth, observed: 0, overflowed: false, signatures: new Set() }; buckets.set(key, bucket); }
+            bucket.observed += record.paths.length;
+            for (const pathKeys of record.paths) {
+                const signature = hashPath(pathKeys);
+                if (bucket.signatures.has(signature)) continue;
+                if (bucket.signatures.size < limit) { bucket.signatures.add(signature); continue; }
+                bucket.overflowed = true;
+                let largest = '';
+                for (const retained of bucket.signatures) if (retained > largest) largest = retained;
+                if (signature < largest) { bucket.signatures.delete(largest); bucket.signatures.add(signature); }
+            }
+        },
+        snapshot() { return { signatureLimitPerStageDepth: limit, buckets: [...buckets.values()].map(bucket => ({
+            stage: bucket.stage, depth: bucket.depth, observed: bucket.observed,
+            retainedUnique: bucket.signatures.size, truncated: bucket.overflowed,
+            signatures: [...bucket.signatures].sort(),
+        })) }; },
+    };
+}
 
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, CORPUS_FILE), 'utf8'));
 const corpusLevels = Array.isArray(corpus) ? corpus : corpus.levels;
@@ -119,6 +210,12 @@ async function probeLevel(entry) {
     prep._metrics = { nodesExpanded: 0 };
     prep._forcedFirstStepKey = null;
     prep._forcedPortalExitKey = null;
+    const orderingRecords = [];
+    let orderingObserved = 0;
+    if (ORDERING_PROFILES.length) prep._orderingResearchObserver = {
+        policies: ORDERING_PROFILES.map(id => ({ id, profile: id === 'none' ? null : POLICY_PROFILES[id] })),
+        observe(record) { if (record.candidates.length >= 2) { orderingObserved++; if (orderingRecords.length < ORDERING_LIMIT) orderingRecords.push(record); } },
+    };
 
     const attempts = [];
     let solution = null;
@@ -130,8 +227,12 @@ async function probeLevel(entry) {
         for (const { key, config } of configs) {
             if (prep._metrics.nodesExpanded >= NODE_BUDGET) break outer;
             const remaining = NODE_BUDGET === Infinity ? Infinity : Math.max(0, NODE_BUDGET - prep._metrics.nodesExpanded);
+            const beamTrace = BEAM_TRACE_LIMIT > 0 ? createBeamTraceCollector(BEAM_TRACE_LIMIT) : null;
+            prep._beamResearchObserver = beamTrace;
             const r = await runAttempt(gateKey, level, prep, config, BUDGET_MS, Date.now(), null, remaining);
-            attempts.push({ configKey: key, gateKey, ...r.attempt });
+            prep._beamResearchObserver = null;
+            attempts.push({ configKey: key, gateKey, ...r.attempt,
+                ...(beamTrace ? { beamOperationalTrace: beamTrace.snapshot() } : {}) });
             if (r.path) { solution = r.path; winningKey = key; winningGate = gateKey; break outer; }
         }
     }
@@ -144,6 +245,7 @@ async function probeLevel(entry) {
         totalMs: Date.now() - startTime,
         nodesExpanded: prep._metrics.nodesExpanded,
         attempts,
+        ...(ORDERING_PROFILES.length ? { orderingResearch: summarizeOrdering(orderingRecords, orderingObserved) } : {}),
     };
 }
 

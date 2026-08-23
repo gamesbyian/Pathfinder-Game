@@ -1,6 +1,6 @@
 # Solver technique operational taxonomy
 
-> **Status:** current implementation interpretation and active research proposal; not production scheduling policy.
+> **Status:** current implementation interpretation and active research program; taxonomy/cohorts plus DFS, admissible-order, and bounded beam-width pilots are implemented, while paired causal traces/diversity/repair measurements remain pending; not production scheduling policy.
 > **Purpose:** distinguish techniques that are genuinely different search mechanisms from configs that merely alter ordering, retention, pruning, or budget context, then define the missing operational-similarity analysis.
 > **Implementation authority:** [`solver-architecture.md`](solver-architecture.md) and `modules/solver/*`.
 > **Outcome evidence:** [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md).
@@ -98,6 +98,8 @@ Source inspection establishes several strong operational relationships without a
 What is **not** yet known quantitatively is which ordinary profiles/configs actually make equivalent decisions on the states the solver encounters, where each pair first diverges, how much of their explored search tree/frontier overlaps, and whether outcome differences are caused by broad strategic differences or a tiny number of load-bearing ordering flips.
 
 ## Missing analysis: operational similarity census
+
+The first bounded substrate is rebuildable with `scripts/technique-operational-similarity.mjs`. It describes all 35 census techniques, preserves per-term scoring-weight differences as source proxies, joins the eight controlled outcome comparisons, and emits deterministic cohorts capped at eight fixtures per outcome cell. `scripts/operational-similarity-lib.mjs` supplies tested ranking, slack, and bounded-signature reducers. DFS profiles cluster tightly; equal-slack states occupied 38.062%–79.614% of admissible candidate sets and made `ida:none` substantially more divergent; and an objective beam 2K/5K pilot found median retained-frontier bottom-hash-sample Jaccard near 0.24 on two width inversions, falling below 0.09 late. These censored measurements nominate clusters and show that width can move search into different residual regions; they do not justify scheduler changes. See [`../reports/2026-08-23-operational-similarity-substrate.md`](../reports/2026-08-23-operational-similarity-substrate.md).
 
 Build a rebuildable operational-similarity view that complements the existing outcome census. Prefer extending existing probe/census infrastructure and telemetry over creating another canonical evidence store.
 

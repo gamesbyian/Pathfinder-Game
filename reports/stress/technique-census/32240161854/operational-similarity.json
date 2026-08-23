@@ -1,0 +1,2783 @@
+{
+  "schemaVersion": 1,
+  "distinction": {
+    "implementation": "source/config description only",
+    "operational": "encountered-state/search behavior",
+    "outcome": "level success-vector relationship"
+  },
+  "provenance": {
+    "census": "reports/stress/technique-census/32240161854/second-order-analysis.json",
+    "cells": "reports/stress/technique-census/32240161854/combined-cells.json",
+    "policy": "modules/solver/policy.ts",
+    "samplePerOutcome": 8
+  },
+  "taxonomy": {
+    "beam:harvestThenFinish@beam2000": {
+      "searchFamily": "beam",
+      "scoringProfile": "harvestThenFinish",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.82,
+        "objectiveAttractionWeight": 1.35,
+        "finishCommitmentWeight": 0.72,
+        "perimeterBiasWeight": 1.15,
+        "mustPassUrgencyWeight": 1.35,
+        "mustCrossUrgencyWeight": 1.4,
+        "intersectionSetupWeight": 1.15,
+        "antiDitherWeight": 0.85,
+        "revisitPenaltyWeight": 0.85
+      },
+      "structuralTemplate": null,
+      "beamWidth": 2000,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "beam:intersectionHarvest@beam2000": {
+      "searchFamily": "beam",
+      "scoringProfile": "intersectionHarvest",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.5,
+        "objectiveAttractionWeight": 0.9,
+        "finishCommitmentWeight": 0.45,
+        "perimeterBiasWeight": 1.15,
+        "mustPassUrgencyWeight": 0.45,
+        "mustCrossUrgencyWeight": 0.55,
+        "intersectionSetupWeight": 3,
+        "antiDitherWeight": 0.65,
+        "revisitPenaltyWeight": 0.6
+      },
+      "structuralTemplate": null,
+      "beamWidth": 2000,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "beam:intersectionHarvest@beam5000": {
+      "searchFamily": "beam",
+      "scoringProfile": "intersectionHarvest",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.5,
+        "objectiveAttractionWeight": 0.9,
+        "finishCommitmentWeight": 0.45,
+        "perimeterBiasWeight": 1.15,
+        "mustPassUrgencyWeight": 0.45,
+        "mustCrossUrgencyWeight": 0.55,
+        "intersectionSetupWeight": 3,
+        "antiDitherWeight": 0.65,
+        "revisitPenaltyWeight": 0.6
+      },
+      "structuralTemplate": null,
+      "beamWidth": 5000,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "beam:intersectionHarvest@beam5000(diverse)": {
+      "searchFamily": "beam",
+      "scoringProfile": "intersectionHarvest",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.5,
+        "objectiveAttractionWeight": 0.9,
+        "finishCommitmentWeight": 0.45,
+        "perimeterBiasWeight": 1.15,
+        "mustPassUrgencyWeight": 0.45,
+        "mustCrossUrgencyWeight": 0.55,
+        "intersectionSetupWeight": 3,
+        "antiDitherWeight": 0.65,
+        "revisitPenaltyWeight": 0.6
+      },
+      "structuralTemplate": null,
+      "beamWidth": 5000,
+      "diverseBeamRetention": true,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "beam:knotBuilder@beam2000": {
+      "searchFamily": "beam",
+      "scoringProfile": "knotBuilder",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.8,
+        "objectiveAttractionWeight": 1,
+        "finishCommitmentWeight": 0.7,
+        "perimeterBiasWeight": 1.1,
+        "mustPassUrgencyWeight": 1.1,
+        "mustCrossUrgencyWeight": 1.35,
+        "intersectionSetupWeight": 1.9,
+        "antiDitherWeight": 0.9,
+        "revisitPenaltyWeight": 0.8
+      },
+      "structuralTemplate": null,
+      "beamWidth": 2000,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "beam:mustCrossFirst@beam2000": {
+      "searchFamily": "beam",
+      "scoringProfile": "mustCrossFirst",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.65,
+        "objectiveAttractionWeight": 1.5,
+        "finishCommitmentWeight": 0.6,
+        "perimeterBiasWeight": 1.1,
+        "mustPassUrgencyWeight": 1.6,
+        "mustCrossUrgencyWeight": 2.4,
+        "intersectionSetupWeight": 1.1,
+        "antiDitherWeight": 0.9,
+        "revisitPenaltyWeight": 0.85
+      },
+      "structuralTemplate": null,
+      "beamWidth": 2000,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "beam:objectiveFirst@beam2000": {
+      "searchFamily": "beam",
+      "scoringProfile": "objectiveFirst",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.7,
+        "objectiveAttractionWeight": 1.65,
+        "finishCommitmentWeight": 0.65,
+        "perimeterBiasWeight": 1.1,
+        "mustPassUrgencyWeight": 1.85,
+        "mustCrossUrgencyWeight": 1.8,
+        "intersectionSetupWeight": 1.2,
+        "antiDitherWeight": 1,
+        "revisitPenaltyWeight": 0.9
+      },
+      "structuralTemplate": null,
+      "beamWidth": 2000,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "beam:objectiveFirst@beam5000": {
+      "searchFamily": "beam",
+      "scoringProfile": "objectiveFirst",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.7,
+        "objectiveAttractionWeight": 1.65,
+        "finishCommitmentWeight": 0.65,
+        "perimeterBiasWeight": 1.1,
+        "mustPassUrgencyWeight": 1.85,
+        "mustCrossUrgencyWeight": 1.8,
+        "intersectionSetupWeight": 1.2,
+        "antiDitherWeight": 1,
+        "revisitPenaltyWeight": 0.9
+      },
+      "structuralTemplate": null,
+      "beamWidth": 5000,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "beam:objectiveFirst@beam5000(diverse)": {
+      "searchFamily": "beam",
+      "scoringProfile": "objectiveFirst",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.7,
+        "objectiveAttractionWeight": 1.65,
+        "finishCommitmentWeight": 0.65,
+        "perimeterBiasWeight": 1.1,
+        "mustPassUrgencyWeight": 1.85,
+        "mustCrossUrgencyWeight": 1.8,
+        "intersectionSetupWeight": 1.2,
+        "antiDitherWeight": 1,
+        "revisitPenaltyWeight": 0.9
+      },
+      "structuralTemplate": null,
+      "beamWidth": 5000,
+      "diverseBeamRetention": true,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "beam:perimeterSweep/perimeterCCW@beam2000": {
+      "searchFamily": "beam",
+      "scoringProfile": "perimeterSweep",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.6,
+        "objectiveAttractionWeight": 0.95,
+        "finishCommitmentWeight": 0.45,
+        "perimeterBiasWeight": 2.05,
+        "mustPassUrgencyWeight": 1.1,
+        "mustCrossUrgencyWeight": 1.15,
+        "intersectionSetupWeight": 1.1,
+        "antiDitherWeight": 0.55,
+        "revisitPenaltyWeight": 0.65
+      },
+      "structuralTemplate": "perimeterCCW",
+      "beamWidth": 2000,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "beam:perimeterSweep/perimeterCW@beam2000": {
+      "searchFamily": "beam",
+      "scoringProfile": "perimeterSweep",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.6,
+        "objectiveAttractionWeight": 0.95,
+        "finishCommitmentWeight": 0.45,
+        "perimeterBiasWeight": 2.05,
+        "mustPassUrgencyWeight": 1.1,
+        "mustCrossUrgencyWeight": 1.15,
+        "intersectionSetupWeight": 1.1,
+        "antiDitherWeight": 0.55,
+        "revisitPenaltyWeight": 0.65
+      },
+      "structuralTemplate": "perimeterCW",
+      "beamWidth": 2000,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:closureCommitment": {
+      "searchFamily": "dfs",
+      "scoringProfile": "closureCommitment",
+      "scoringWeights": {
+        "goalAttractionWeight": 1.5,
+        "objectiveAttractionWeight": 1.3,
+        "finishCommitmentWeight": 2,
+        "perimeterBiasWeight": 0.8,
+        "mustPassUrgencyWeight": 2,
+        "mustCrossUrgencyWeight": 2,
+        "intersectionSetupWeight": 0.8,
+        "antiDitherWeight": 0.4,
+        "revisitPenaltyWeight": 0.4
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:default": {
+      "searchFamily": "dfs",
+      "scoringProfile": "default",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.4,
+        "objectiveAttractionWeight": 2.5,
+        "finishCommitmentWeight": 0.6,
+        "perimeterBiasWeight": 1,
+        "mustPassUrgencyWeight": 1.25,
+        "mustCrossUrgencyWeight": 1,
+        "intersectionSetupWeight": 1,
+        "antiDitherWeight": 1,
+        "revisitPenaltyWeight": 1
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:finishFirst": {
+      "searchFamily": "dfs",
+      "scoringProfile": "finishFirst",
+      "scoringWeights": {
+        "goalAttractionWeight": 1.45,
+        "objectiveAttractionWeight": 0.85,
+        "finishCommitmentWeight": 1.75,
+        "perimeterBiasWeight": 0.75,
+        "mustPassUrgencyWeight": 1.05,
+        "mustCrossUrgencyWeight": 1.05,
+        "intersectionSetupWeight": 0.8,
+        "antiDitherWeight": 1.3,
+        "revisitPenaltyWeight": 1.3
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:harvestThenFinish": {
+      "searchFamily": "dfs",
+      "scoringProfile": "harvestThenFinish",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.82,
+        "objectiveAttractionWeight": 1.35,
+        "finishCommitmentWeight": 0.72,
+        "perimeterBiasWeight": 1.15,
+        "mustPassUrgencyWeight": 1.35,
+        "mustCrossUrgencyWeight": 1.4,
+        "intersectionSetupWeight": 1.15,
+        "antiDitherWeight": 0.85,
+        "revisitPenaltyWeight": 0.85
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:intersectionHarvest": {
+      "searchFamily": "dfs",
+      "scoringProfile": "intersectionHarvest",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.5,
+        "objectiveAttractionWeight": 0.9,
+        "finishCommitmentWeight": 0.45,
+        "perimeterBiasWeight": 1.15,
+        "mustPassUrgencyWeight": 0.45,
+        "mustCrossUrgencyWeight": 0.55,
+        "intersectionSetupWeight": 3,
+        "antiDitherWeight": 0.65,
+        "revisitPenaltyWeight": 0.6
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:knotBuilder": {
+      "searchFamily": "dfs",
+      "scoringProfile": "knotBuilder",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.8,
+        "objectiveAttractionWeight": 1,
+        "finishCommitmentWeight": 0.7,
+        "perimeterBiasWeight": 1.1,
+        "mustPassUrgencyWeight": 1.1,
+        "mustCrossUrgencyWeight": 1.35,
+        "intersectionSetupWeight": 1.9,
+        "antiDitherWeight": 0.9,
+        "revisitPenaltyWeight": 0.8
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:mustCrossFirst": {
+      "searchFamily": "dfs",
+      "scoringProfile": "mustCrossFirst",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.65,
+        "objectiveAttractionWeight": 1.5,
+        "finishCommitmentWeight": 0.6,
+        "perimeterBiasWeight": 1.1,
+        "mustPassUrgencyWeight": 1.6,
+        "mustCrossUrgencyWeight": 2.4,
+        "intersectionSetupWeight": 1.1,
+        "antiDitherWeight": 0.9,
+        "revisitPenaltyWeight": 0.85
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:nearClosureRescue": {
+      "searchFamily": "dfs",
+      "scoringProfile": "nearClosureRescue",
+      "scoringWeights": {
+        "goalAttractionWeight": 1.55,
+        "objectiveAttractionWeight": 1.25,
+        "finishCommitmentWeight": 1.9,
+        "perimeterBiasWeight": 0.8,
+        "mustPassUrgencyWeight": 1.6,
+        "mustCrossUrgencyWeight": 1.7,
+        "intersectionSetupWeight": 1.2,
+        "antiDitherWeight": 1.2,
+        "revisitPenaltyWeight": 1.1
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:objectiveFirst": {
+      "searchFamily": "dfs",
+      "scoringProfile": "objectiveFirst",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.7,
+        "objectiveAttractionWeight": 1.65,
+        "finishCommitmentWeight": 0.65,
+        "perimeterBiasWeight": 1.1,
+        "mustPassUrgencyWeight": 1.85,
+        "mustCrossUrgencyWeight": 1.8,
+        "intersectionSetupWeight": 1.2,
+        "antiDitherWeight": 1,
+        "revisitPenaltyWeight": 0.9
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:perimeterSweep": {
+      "searchFamily": "dfs",
+      "scoringProfile": "perimeterSweep",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.6,
+        "objectiveAttractionWeight": 0.95,
+        "finishCommitmentWeight": 0.45,
+        "perimeterBiasWeight": 2.05,
+        "mustPassUrgencyWeight": 1.1,
+        "mustCrossUrgencyWeight": 1.15,
+        "intersectionSetupWeight": 1.1,
+        "antiDitherWeight": 0.55,
+        "revisitPenaltyWeight": 0.65
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:perimeterSweep/cornerHarvest": {
+      "searchFamily": "dfs",
+      "scoringProfile": "perimeterSweep",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.6,
+        "objectiveAttractionWeight": 0.95,
+        "finishCommitmentWeight": 0.45,
+        "perimeterBiasWeight": 2.05,
+        "mustPassUrgencyWeight": 1.1,
+        "mustCrossUrgencyWeight": 1.15,
+        "intersectionSetupWeight": 1.1,
+        "antiDitherWeight": 0.55,
+        "revisitPenaltyWeight": 0.65
+      },
+      "structuralTemplate": "cornerHarvest",
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:perimeterSweep/perimeterCCW": {
+      "searchFamily": "dfs",
+      "scoringProfile": "perimeterSweep",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.6,
+        "objectiveAttractionWeight": 0.95,
+        "finishCommitmentWeight": 0.45,
+        "perimeterBiasWeight": 2.05,
+        "mustPassUrgencyWeight": 1.1,
+        "mustCrossUrgencyWeight": 1.15,
+        "intersectionSetupWeight": 1.1,
+        "antiDitherWeight": 0.55,
+        "revisitPenaltyWeight": 0.65
+      },
+      "structuralTemplate": "perimeterCCW",
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:perimeterSweep/perimeterCW": {
+      "searchFamily": "dfs",
+      "scoringProfile": "perimeterSweep",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.6,
+        "objectiveAttractionWeight": 0.95,
+        "finishCommitmentWeight": 0.45,
+        "perimeterBiasWeight": 2.05,
+        "mustPassUrgencyWeight": 1.1,
+        "mustCrossUrgencyWeight": 1.15,
+        "intersectionSetupWeight": 1.1,
+        "antiDitherWeight": 0.55,
+        "revisitPenaltyWeight": 0.65
+      },
+      "structuralTemplate": "perimeterCW",
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:perimeterSweep/sideCommitment": {
+      "searchFamily": "dfs",
+      "scoringProfile": "perimeterSweep",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.6,
+        "objectiveAttractionWeight": 0.95,
+        "finishCommitmentWeight": 0.45,
+        "perimeterBiasWeight": 2.05,
+        "mustPassUrgencyWeight": 1.1,
+        "mustCrossUrgencyWeight": 1.15,
+        "intersectionSetupWeight": 1.1,
+        "antiDitherWeight": 0.55,
+        "revisitPenaltyWeight": 0.65
+      },
+      "structuralTemplate": "sideCommitment",
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:portalCommitted": {
+      "searchFamily": "dfs",
+      "scoringProfile": "portalCommitted",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.95,
+        "objectiveAttractionWeight": 1.2,
+        "finishCommitmentWeight": 1,
+        "perimeterBiasWeight": 0.9,
+        "mustPassUrgencyWeight": 1.2,
+        "mustCrossUrgencyWeight": 1.3,
+        "intersectionSetupWeight": 1,
+        "antiDitherWeight": 1.25,
+        "revisitPenaltyWeight": 1.1
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:portalFirstTransfer": {
+      "searchFamily": "dfs",
+      "scoringProfile": "portalFirstTransfer",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.72,
+        "objectiveAttractionWeight": 1.2,
+        "finishCommitmentWeight": 0.7,
+        "perimeterBiasWeight": 0.85,
+        "mustPassUrgencyWeight": 1.25,
+        "mustCrossUrgencyWeight": 1.35,
+        "intersectionSetupWeight": 1.05,
+        "antiDitherWeight": 0.95,
+        "revisitPenaltyWeight": 0.8
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:repair:repair": {
+      "searchFamily": "repair",
+      "scoringProfile": "repair",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.7,
+        "objectiveAttractionWeight": 1.65,
+        "finishCommitmentWeight": 0.65,
+        "perimeterBiasWeight": 1.1,
+        "mustPassUrgencyWeight": 1.85,
+        "mustCrossUrgencyWeight": 1.8,
+        "intersectionSetupWeight": 1.2,
+        "antiDitherWeight": 1,
+        "revisitPenaltyWeight": 0.9,
+        "mustTurnUrgencyWeight": 0,
+        "mustTurnExitGuidanceWeight": 0
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": "repair",
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:repair:repair(mustTurnBiased)": {
+      "searchFamily": "repair",
+      "scoringProfile": "repair",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.7,
+        "objectiveAttractionWeight": 1.65,
+        "finishCommitmentWeight": 0.65,
+        "perimeterBiasWeight": 1.1,
+        "mustPassUrgencyWeight": 1.85,
+        "mustCrossUrgencyWeight": 1.8,
+        "intersectionSetupWeight": 1.2,
+        "antiDitherWeight": 1,
+        "revisitPenaltyWeight": 0.9,
+        "mustTurnUrgencyWeight": 0,
+        "mustTurnExitGuidanceWeight": 0
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": "repair(mustTurnBiased)",
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "dfs:repair:repair(turnBiased)": {
+      "searchFamily": "repair",
+      "scoringProfile": "repair",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.7,
+        "objectiveAttractionWeight": 1.65,
+        "finishCommitmentWeight": 0.65,
+        "perimeterBiasWeight": 1.1,
+        "mustPassUrgencyWeight": 1.85,
+        "mustCrossUrgencyWeight": 1.8,
+        "intersectionSetupWeight": 1.2,
+        "antiDitherWeight": 1,
+        "revisitPenaltyWeight": 0.9,
+        "mustTurnUrgencyWeight": 0,
+        "mustTurnExitGuidanceWeight": 0
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": null,
+      "repairVariantBiasSeedMode": "repair(turnBiased)",
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "ida:default": {
+      "searchFamily": "admissible-order",
+      "scoringProfile": "default",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.4,
+        "objectiveAttractionWeight": 2.5,
+        "finishCommitmentWeight": 0.6,
+        "perimeterBiasWeight": 1,
+        "mustPassUrgencyWeight": 1.25,
+        "mustCrossUrgencyWeight": 1,
+        "intersectionSetupWeight": 1,
+        "antiDitherWeight": 1,
+        "revisitPenaltyWeight": 1
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": "default",
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "ida:intersectionHarvest": {
+      "searchFamily": "admissible-order",
+      "scoringProfile": "intersectionHarvest",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.5,
+        "objectiveAttractionWeight": 0.9,
+        "finishCommitmentWeight": 0.45,
+        "perimeterBiasWeight": 1.15,
+        "mustPassUrgencyWeight": 0.45,
+        "mustCrossUrgencyWeight": 0.55,
+        "intersectionSetupWeight": 3,
+        "antiDitherWeight": 0.65,
+        "revisitPenaltyWeight": 0.6
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": "intersectionHarvest",
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "ida:mustCrossFirst": {
+      "searchFamily": "admissible-order",
+      "scoringProfile": "mustCrossFirst",
+      "scoringWeights": {
+        "goalAttractionWeight": 0.65,
+        "objectiveAttractionWeight": 1.5,
+        "finishCommitmentWeight": 0.6,
+        "perimeterBiasWeight": 1.1,
+        "mustPassUrgencyWeight": 1.6,
+        "mustCrossUrgencyWeight": 2.4,
+        "intersectionSetupWeight": 1.1,
+        "antiDitherWeight": 0.9,
+        "revisitPenaltyWeight": 0.85
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": "mustCrossFirst",
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "ida:nearClosureRescue": {
+      "searchFamily": "admissible-order",
+      "scoringProfile": "nearClosureRescue",
+      "scoringWeights": {
+        "goalAttractionWeight": 1.55,
+        "objectiveAttractionWeight": 1.25,
+        "finishCommitmentWeight": 1.9,
+        "perimeterBiasWeight": 0.8,
+        "mustPassUrgencyWeight": 1.6,
+        "mustCrossUrgencyWeight": 1.7,
+        "intersectionSetupWeight": 1.2,
+        "antiDitherWeight": 1.2,
+        "revisitPenaltyWeight": 1.1
+      },
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": "nearClosureRescue",
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    },
+    "ida:none": {
+      "searchFamily": "admissible-order",
+      "scoringProfile": null,
+      "scoringWeights": null,
+      "structuralTemplate": null,
+      "beamWidth": null,
+      "diverseBeamRetention": false,
+      "dedupNearTieMode": "default",
+      "pruneChanges": [],
+      "admissibleTieBreakMode": "none",
+      "repairVariantBiasSeedMode": null,
+      "retryContext": null,
+      "budgetBand": null
+    }
+  },
+  "controlledPairs": [
+    {
+      "label": "objective beam width",
+      "leftTechnique": "beam:objectiveFirst@beam2000",
+      "rightTechnique": "beam:objectiveFirst@beam5000",
+      "implementation": {
+        "left": {
+          "searchFamily": "beam",
+          "scoringProfile": "objectiveFirst",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.7,
+            "objectiveAttractionWeight": 1.65,
+            "finishCommitmentWeight": 0.65,
+            "perimeterBiasWeight": 1.1,
+            "mustPassUrgencyWeight": 1.85,
+            "mustCrossUrgencyWeight": 1.8,
+            "intersectionSetupWeight": 1.2,
+            "antiDitherWeight": 1,
+            "revisitPenaltyWeight": 0.9
+          },
+          "structuralTemplate": null,
+          "beamWidth": 2000,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": null,
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "right": {
+          "searchFamily": "beam",
+          "scoringProfile": "objectiveFirst",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.7,
+            "objectiveAttractionWeight": 1.65,
+            "finishCommitmentWeight": 0.65,
+            "perimeterBiasWeight": 1.1,
+            "mustPassUrgencyWeight": 1.85,
+            "mustCrossUrgencyWeight": 1.8,
+            "intersectionSetupWeight": 1.2,
+            "antiDitherWeight": 1,
+            "revisitPenaltyWeight": 0.9
+          },
+          "structuralTemplate": null,
+          "beamWidth": 5000,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": null,
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "perTermScoringWeightDifferences": {
+          "antiDitherWeight": {
+            "left": 1,
+            "right": 1,
+            "delta": 0
+          },
+          "finishCommitmentWeight": {
+            "left": 0.65,
+            "right": 0.65,
+            "delta": 0
+          },
+          "goalAttractionWeight": {
+            "left": 0.7,
+            "right": 0.7,
+            "delta": 0
+          },
+          "intersectionSetupWeight": {
+            "left": 1.2,
+            "right": 1.2,
+            "delta": 0
+          },
+          "mustCrossUrgencyWeight": {
+            "left": 1.8,
+            "right": 1.8,
+            "delta": 0
+          },
+          "mustPassUrgencyWeight": {
+            "left": 1.85,
+            "right": 1.85,
+            "delta": 0
+          },
+          "objectiveAttractionWeight": {
+            "left": 1.65,
+            "right": 1.65,
+            "delta": 0
+          },
+          "perimeterBiasWeight": {
+            "left": 1.1,
+            "right": 1.1,
+            "delta": 0
+          },
+          "revisitPenaltyWeight": {
+            "left": 0.9,
+            "right": 0.9,
+            "delta": 0
+          }
+        },
+        "sourceProxyOnly": true
+      },
+      "outcomeSimilarity": {
+        "jaccard": 0.7052631578947368,
+        "mutualInformationBits": null,
+        "disagreement": 196,
+        "common": 1962
+      },
+      "diagnosticCohort": {
+        "leftOnly": [
+          {
+            "levelKey": "corpus2/1617",
+            "levelId": "R03286"
+          },
+          {
+            "levelKey": "corpus2/40",
+            "levelId": "R00314"
+          },
+          {
+            "levelKey": "corpus1/14",
+            "levelId": "S00103"
+          },
+          {
+            "levelKey": "corpus2/1018",
+            "levelId": "R02687"
+          },
+          {
+            "levelKey": "corpus2/1232",
+            "levelId": "R02901"
+          },
+          {
+            "levelKey": "published/50",
+            "levelId": "P00050"
+          },
+          {
+            "levelKey": "corpus2/843",
+            "levelId": "R02512"
+          },
+          {
+            "levelKey": "corpus2/1248",
+            "levelId": "R02917"
+          }
+        ],
+        "rightOnly": [
+          {
+            "levelKey": "corpus2/450",
+            "levelId": "R02119"
+          },
+          {
+            "levelKey": "corpus2/709",
+            "levelId": "R02378"
+          },
+          {
+            "levelKey": "corpus2/584",
+            "levelId": "R02253"
+          },
+          {
+            "levelKey": "corpus2/521",
+            "levelId": "R02190"
+          },
+          {
+            "levelKey": "corpus2/798",
+            "levelId": "R02467"
+          },
+          {
+            "levelKey": "corpus2/24",
+            "levelId": "R00181"
+          },
+          {
+            "levelKey": "corpus2/344",
+            "levelId": "R02013"
+          },
+          {
+            "levelKey": "corpus2/1196",
+            "levelId": "R02865"
+          }
+        ],
+        "both": [
+          {
+            "levelKey": "corpus2/12",
+            "levelId": "R00094"
+          },
+          {
+            "levelKey": "published/152",
+            "levelId": "P00152"
+          },
+          {
+            "levelKey": "corpus2/863",
+            "levelId": "R02532"
+          },
+          {
+            "levelKey": "corpus1/1",
+            "levelId": "S00001"
+          },
+          {
+            "levelKey": "corpus2/256",
+            "levelId": "R01558"
+          },
+          {
+            "levelKey": "corpus2/559",
+            "levelId": "R02228"
+          },
+          {
+            "levelKey": "published/9",
+            "levelId": "P00009"
+          },
+          {
+            "levelKey": "published/32",
+            "levelId": "P00032"
+          }
+        ],
+        "neither": [
+          {
+            "levelKey": "corpus1/37",
+            "levelId": "R00408"
+          },
+          {
+            "levelKey": "corpus1/66",
+            "levelId": "R01195"
+          },
+          {
+            "levelKey": "corpus1/75",
+            "levelId": "R01407"
+          },
+          {
+            "levelKey": "corpus1/82",
+            "levelId": "R01620"
+          },
+          {
+            "levelKey": "corpus1/87",
+            "levelId": "R01675"
+          },
+          {
+            "levelKey": "corpus1/96",
+            "levelId": "R01875"
+          },
+          {
+            "levelKey": "corpus1/99",
+            "levelId": "R01944"
+          },
+          {
+            "levelKey": "corpus2/753",
+            "levelId": "R02422"
+          }
+        ]
+      },
+      "operationalSimilarity": {
+        "status": "not-measured-by-source-proxy",
+        "localRanking": null,
+        "boundedTrace": null,
+        "beamFrontier": null,
+        "admissibleSlack": null,
+        "repairFingerprint": null
+      }
+    },
+    {
+      "label": "intersection beam width",
+      "leftTechnique": "beam:intersectionHarvest@beam2000",
+      "rightTechnique": "beam:intersectionHarvest@beam5000",
+      "implementation": {
+        "left": {
+          "searchFamily": "beam",
+          "scoringProfile": "intersectionHarvest",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.5,
+            "objectiveAttractionWeight": 0.9,
+            "finishCommitmentWeight": 0.45,
+            "perimeterBiasWeight": 1.15,
+            "mustPassUrgencyWeight": 0.45,
+            "mustCrossUrgencyWeight": 0.55,
+            "intersectionSetupWeight": 3,
+            "antiDitherWeight": 0.65,
+            "revisitPenaltyWeight": 0.6
+          },
+          "structuralTemplate": null,
+          "beamWidth": 2000,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": null,
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "right": {
+          "searchFamily": "beam",
+          "scoringProfile": "intersectionHarvest",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.5,
+            "objectiveAttractionWeight": 0.9,
+            "finishCommitmentWeight": 0.45,
+            "perimeterBiasWeight": 1.15,
+            "mustPassUrgencyWeight": 0.45,
+            "mustCrossUrgencyWeight": 0.55,
+            "intersectionSetupWeight": 3,
+            "antiDitherWeight": 0.65,
+            "revisitPenaltyWeight": 0.6
+          },
+          "structuralTemplate": null,
+          "beamWidth": 5000,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": null,
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "perTermScoringWeightDifferences": {
+          "antiDitherWeight": {
+            "left": 0.65,
+            "right": 0.65,
+            "delta": 0
+          },
+          "finishCommitmentWeight": {
+            "left": 0.45,
+            "right": 0.45,
+            "delta": 0
+          },
+          "goalAttractionWeight": {
+            "left": 0.5,
+            "right": 0.5,
+            "delta": 0
+          },
+          "intersectionSetupWeight": {
+            "left": 3,
+            "right": 3,
+            "delta": 0
+          },
+          "mustCrossUrgencyWeight": {
+            "left": 0.55,
+            "right": 0.55,
+            "delta": 0
+          },
+          "mustPassUrgencyWeight": {
+            "left": 0.45,
+            "right": 0.45,
+            "delta": 0
+          },
+          "objectiveAttractionWeight": {
+            "left": 0.9,
+            "right": 0.9,
+            "delta": 0
+          },
+          "perimeterBiasWeight": {
+            "left": 1.15,
+            "right": 1.15,
+            "delta": 0
+          },
+          "revisitPenaltyWeight": {
+            "left": 0.6,
+            "right": 0.6,
+            "delta": 0
+          }
+        },
+        "sourceProxyOnly": true
+      },
+      "outcomeSimilarity": {
+        "jaccard": 0.7190839694656489,
+        "mutualInformationBits": null,
+        "disagreement": 184,
+        "common": 1962
+      },
+      "diagnosticCohort": {
+        "leftOnly": [
+          {
+            "levelKey": "corpus2/524",
+            "levelId": "R02193"
+          },
+          {
+            "levelKey": "corpus1/14",
+            "levelId": "S00103"
+          },
+          {
+            "levelKey": "corpus2/1693",
+            "levelId": "R03362"
+          },
+          {
+            "levelKey": "corpus2/894",
+            "levelId": "R02563"
+          },
+          {
+            "levelKey": "corpus2/1136",
+            "levelId": "R02805"
+          },
+          {
+            "levelKey": "corpus2/120",
+            "levelId": "R00741"
+          },
+          {
+            "levelKey": "corpus2/1104",
+            "levelId": "R02773"
+          },
+          {
+            "levelKey": "corpus2/425",
+            "levelId": "R02094"
+          }
+        ],
+        "rightOnly": [
+          {
+            "levelKey": "corpus1/37",
+            "levelId": "R00408"
+          },
+          {
+            "levelKey": "corpus2/450",
+            "levelId": "R02119"
+          },
+          {
+            "levelKey": "corpus2/743",
+            "levelId": "R02412"
+          },
+          {
+            "levelKey": "corpus2/1048",
+            "levelId": "R02717"
+          },
+          {
+            "levelKey": "corpus2/994",
+            "levelId": "R02663"
+          },
+          {
+            "levelKey": "corpus2/584",
+            "levelId": "R02253"
+          },
+          {
+            "levelKey": "corpus2/521",
+            "levelId": "R02190"
+          },
+          {
+            "levelKey": "corpus2/742",
+            "levelId": "R02411"
+          }
+        ],
+        "both": [
+          {
+            "levelKey": "corpus2/12",
+            "levelId": "R00094"
+          },
+          {
+            "levelKey": "published/152",
+            "levelId": "P00152"
+          },
+          {
+            "levelKey": "corpus2/863",
+            "levelId": "R02532"
+          },
+          {
+            "levelKey": "corpus1/1",
+            "levelId": "S00001"
+          },
+          {
+            "levelKey": "corpus2/256",
+            "levelId": "R01558"
+          },
+          {
+            "levelKey": "corpus2/559",
+            "levelId": "R02228"
+          },
+          {
+            "levelKey": "published/9",
+            "levelId": "P00009"
+          },
+          {
+            "levelKey": "published/32",
+            "levelId": "P00032"
+          }
+        ],
+        "neither": [
+          {
+            "levelKey": "corpus1/66",
+            "levelId": "R01195"
+          },
+          {
+            "levelKey": "corpus1/75",
+            "levelId": "R01407"
+          },
+          {
+            "levelKey": "corpus1/82",
+            "levelId": "R01620"
+          },
+          {
+            "levelKey": "corpus1/87",
+            "levelId": "R01675"
+          },
+          {
+            "levelKey": "corpus1/96",
+            "levelId": "R01875"
+          },
+          {
+            "levelKey": "corpus1/99",
+            "levelId": "R01944"
+          },
+          {
+            "levelKey": "corpus2/753",
+            "levelId": "R02422"
+          },
+          {
+            "levelKey": "corpus2/975",
+            "levelId": "R02644"
+          }
+        ]
+      },
+      "operationalSimilarity": {
+        "status": "not-measured-by-source-proxy",
+        "localRanking": null,
+        "boundedTrace": null,
+        "beamFrontier": null,
+        "admissibleSlack": null,
+        "repairFingerprint": null
+      }
+    },
+    {
+      "label": "objective diversity",
+      "leftTechnique": "beam:objectiveFirst@beam5000",
+      "rightTechnique": "beam:objectiveFirst@beam5000(diverse)",
+      "implementation": {
+        "left": {
+          "searchFamily": "beam",
+          "scoringProfile": "objectiveFirst",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.7,
+            "objectiveAttractionWeight": 1.65,
+            "finishCommitmentWeight": 0.65,
+            "perimeterBiasWeight": 1.1,
+            "mustPassUrgencyWeight": 1.85,
+            "mustCrossUrgencyWeight": 1.8,
+            "intersectionSetupWeight": 1.2,
+            "antiDitherWeight": 1,
+            "revisitPenaltyWeight": 0.9
+          },
+          "structuralTemplate": null,
+          "beamWidth": 5000,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": null,
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "right": {
+          "searchFamily": "beam",
+          "scoringProfile": "objectiveFirst",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.7,
+            "objectiveAttractionWeight": 1.65,
+            "finishCommitmentWeight": 0.65,
+            "perimeterBiasWeight": 1.1,
+            "mustPassUrgencyWeight": 1.85,
+            "mustCrossUrgencyWeight": 1.8,
+            "intersectionSetupWeight": 1.2,
+            "antiDitherWeight": 1,
+            "revisitPenaltyWeight": 0.9
+          },
+          "structuralTemplate": null,
+          "beamWidth": 5000,
+          "diverseBeamRetention": true,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": null,
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "perTermScoringWeightDifferences": {
+          "antiDitherWeight": {
+            "left": 1,
+            "right": 1,
+            "delta": 0
+          },
+          "finishCommitmentWeight": {
+            "left": 0.65,
+            "right": 0.65,
+            "delta": 0
+          },
+          "goalAttractionWeight": {
+            "left": 0.7,
+            "right": 0.7,
+            "delta": 0
+          },
+          "intersectionSetupWeight": {
+            "left": 1.2,
+            "right": 1.2,
+            "delta": 0
+          },
+          "mustCrossUrgencyWeight": {
+            "left": 1.8,
+            "right": 1.8,
+            "delta": 0
+          },
+          "mustPassUrgencyWeight": {
+            "left": 1.85,
+            "right": 1.85,
+            "delta": 0
+          },
+          "objectiveAttractionWeight": {
+            "left": 1.65,
+            "right": 1.65,
+            "delta": 0
+          },
+          "perimeterBiasWeight": {
+            "left": 1.1,
+            "right": 1.1,
+            "delta": 0
+          },
+          "revisitPenaltyWeight": {
+            "left": 0.9,
+            "right": 0.9,
+            "delta": 0
+          }
+        },
+        "sourceProxyOnly": true
+      },
+      "outcomeSimilarity": {
+        "jaccard": 0.7684210526315789,
+        "mutualInformationBits": null,
+        "disagreement": 176,
+        "common": 1962
+      },
+      "diagnosticCohort": {
+        "leftOnly": [
+          {
+            "levelKey": "corpus2/584",
+            "levelId": "R02253"
+          },
+          {
+            "levelKey": "published/125",
+            "levelId": "P00125"
+          },
+          {
+            "levelKey": "corpus1/69",
+            "levelId": "R01227"
+          },
+          {
+            "levelKey": "corpus2/383",
+            "levelId": "R02052"
+          },
+          {
+            "levelKey": "corpus2/1050",
+            "levelId": "R02719"
+          },
+          {
+            "levelKey": "corpus2/524",
+            "levelId": "R02193"
+          },
+          {
+            "levelKey": "corpus2/968",
+            "levelId": "R02637"
+          },
+          {
+            "levelKey": "corpus2/1331",
+            "levelId": "R03000"
+          }
+        ],
+        "rightOnly": [
+          {
+            "levelKey": "corpus2/1321",
+            "levelId": "R02990"
+          },
+          {
+            "levelKey": "corpus2/905",
+            "levelId": "R02574"
+          },
+          {
+            "levelKey": "corpus2/683",
+            "levelId": "R02352"
+          },
+          {
+            "levelKey": "corpus1/90",
+            "levelId": "R01696"
+          },
+          {
+            "levelKey": "corpus2/543",
+            "levelId": "R02212"
+          },
+          {
+            "levelKey": "corpus2/610",
+            "levelId": "R02279"
+          },
+          {
+            "levelKey": "corpus2/752",
+            "levelId": "R02421"
+          },
+          {
+            "levelKey": "corpus2/287",
+            "levelId": "R01725"
+          }
+        ],
+        "both": [
+          {
+            "levelKey": "corpus2/450",
+            "levelId": "R02119"
+          },
+          {
+            "levelKey": "corpus2/12",
+            "levelId": "R00094"
+          },
+          {
+            "levelKey": "published/152",
+            "levelId": "P00152"
+          },
+          {
+            "levelKey": "corpus2/863",
+            "levelId": "R02532"
+          },
+          {
+            "levelKey": "corpus1/1",
+            "levelId": "S00001"
+          },
+          {
+            "levelKey": "corpus2/256",
+            "levelId": "R01558"
+          },
+          {
+            "levelKey": "corpus2/559",
+            "levelId": "R02228"
+          },
+          {
+            "levelKey": "published/9",
+            "levelId": "P00009"
+          }
+        ],
+        "neither": [
+          {
+            "levelKey": "corpus1/37",
+            "levelId": "R00408"
+          },
+          {
+            "levelKey": "corpus1/66",
+            "levelId": "R01195"
+          },
+          {
+            "levelKey": "corpus1/75",
+            "levelId": "R01407"
+          },
+          {
+            "levelKey": "corpus1/82",
+            "levelId": "R01620"
+          },
+          {
+            "levelKey": "corpus1/87",
+            "levelId": "R01675"
+          },
+          {
+            "levelKey": "corpus1/96",
+            "levelId": "R01875"
+          },
+          {
+            "levelKey": "corpus1/99",
+            "levelId": "R01944"
+          },
+          {
+            "levelKey": "corpus2/753",
+            "levelId": "R02422"
+          }
+        ]
+      },
+      "operationalSimilarity": {
+        "status": "not-measured-by-source-proxy",
+        "localRanking": null,
+        "boundedTrace": null,
+        "beamFrontier": null,
+        "admissibleSlack": null,
+        "repairFingerprint": null
+      }
+    },
+    {
+      "label": "intersection diversity",
+      "leftTechnique": "beam:intersectionHarvest@beam5000",
+      "rightTechnique": "beam:intersectionHarvest@beam5000(diverse)",
+      "implementation": {
+        "left": {
+          "searchFamily": "beam",
+          "scoringProfile": "intersectionHarvest",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.5,
+            "objectiveAttractionWeight": 0.9,
+            "finishCommitmentWeight": 0.45,
+            "perimeterBiasWeight": 1.15,
+            "mustPassUrgencyWeight": 0.45,
+            "mustCrossUrgencyWeight": 0.55,
+            "intersectionSetupWeight": 3,
+            "antiDitherWeight": 0.65,
+            "revisitPenaltyWeight": 0.6
+          },
+          "structuralTemplate": null,
+          "beamWidth": 5000,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": null,
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "right": {
+          "searchFamily": "beam",
+          "scoringProfile": "intersectionHarvest",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.5,
+            "objectiveAttractionWeight": 0.9,
+            "finishCommitmentWeight": 0.45,
+            "perimeterBiasWeight": 1.15,
+            "mustPassUrgencyWeight": 0.45,
+            "mustCrossUrgencyWeight": 0.55,
+            "intersectionSetupWeight": 3,
+            "antiDitherWeight": 0.65,
+            "revisitPenaltyWeight": 0.6
+          },
+          "structuralTemplate": null,
+          "beamWidth": 5000,
+          "diverseBeamRetention": true,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": null,
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "perTermScoringWeightDifferences": {
+          "antiDitherWeight": {
+            "left": 0.65,
+            "right": 0.65,
+            "delta": 0
+          },
+          "finishCommitmentWeight": {
+            "left": 0.45,
+            "right": 0.45,
+            "delta": 0
+          },
+          "goalAttractionWeight": {
+            "left": 0.5,
+            "right": 0.5,
+            "delta": 0
+          },
+          "intersectionSetupWeight": {
+            "left": 3,
+            "right": 3,
+            "delta": 0
+          },
+          "mustCrossUrgencyWeight": {
+            "left": 0.55,
+            "right": 0.55,
+            "delta": 0
+          },
+          "mustPassUrgencyWeight": {
+            "left": 0.45,
+            "right": 0.45,
+            "delta": 0
+          },
+          "objectiveAttractionWeight": {
+            "left": 0.9,
+            "right": 0.9,
+            "delta": 0
+          },
+          "perimeterBiasWeight": {
+            "left": 1.15,
+            "right": 1.15,
+            "delta": 0
+          },
+          "revisitPenaltyWeight": {
+            "left": 0.6,
+            "right": 0.6,
+            "delta": 0
+          }
+        },
+        "sourceProxyOnly": true
+      },
+      "outcomeSimilarity": {
+        "jaccard": 0.7675962815405046,
+        "mutualInformationBits": null,
+        "disagreement": 175,
+        "common": 1962
+      },
+      "diagnosticCohort": {
+        "leftOnly": [
+          {
+            "levelKey": "corpus1/37",
+            "levelId": "R00408"
+          },
+          {
+            "levelKey": "corpus2/994",
+            "levelId": "R02663"
+          },
+          {
+            "levelKey": "corpus2/798",
+            "levelId": "R02467"
+          },
+          {
+            "levelKey": "corpus2/680",
+            "levelId": "R02349"
+          },
+          {
+            "levelKey": "corpus2/383",
+            "levelId": "R02052"
+          },
+          {
+            "levelKey": "corpus2/976",
+            "levelId": "R02645"
+          },
+          {
+            "levelKey": "corpus2/555",
+            "levelId": "R02224"
+          },
+          {
+            "levelKey": "corpus2/1094",
+            "levelId": "R02763"
+          }
+        ],
+        "rightOnly": [
+          {
+            "levelKey": "corpus2/1321",
+            "levelId": "R02990"
+          },
+          {
+            "levelKey": "corpus2/905",
+            "levelId": "R02574"
+          },
+          {
+            "levelKey": "corpus2/1468",
+            "levelId": "R03137"
+          },
+          {
+            "levelKey": "corpus2/724",
+            "levelId": "R02393"
+          },
+          {
+            "levelKey": "corpus2/1209",
+            "levelId": "R02878"
+          },
+          {
+            "levelKey": "corpus2/459",
+            "levelId": "R02128"
+          },
+          {
+            "levelKey": "corpus2/287",
+            "levelId": "R01725"
+          },
+          {
+            "levelKey": "corpus2/860",
+            "levelId": "R02529"
+          }
+        ],
+        "both": [
+          {
+            "levelKey": "corpus2/450",
+            "levelId": "R02119"
+          },
+          {
+            "levelKey": "corpus2/12",
+            "levelId": "R00094"
+          },
+          {
+            "levelKey": "published/152",
+            "levelId": "P00152"
+          },
+          {
+            "levelKey": "corpus2/863",
+            "levelId": "R02532"
+          },
+          {
+            "levelKey": "corpus2/457",
+            "levelId": "R02126"
+          },
+          {
+            "levelKey": "corpus1/1",
+            "levelId": "S00001"
+          },
+          {
+            "levelKey": "corpus2/256",
+            "levelId": "R01558"
+          },
+          {
+            "levelKey": "corpus2/559",
+            "levelId": "R02228"
+          }
+        ],
+        "neither": [
+          {
+            "levelKey": "corpus1/66",
+            "levelId": "R01195"
+          },
+          {
+            "levelKey": "corpus1/75",
+            "levelId": "R01407"
+          },
+          {
+            "levelKey": "corpus1/82",
+            "levelId": "R01620"
+          },
+          {
+            "levelKey": "corpus1/87",
+            "levelId": "R01675"
+          },
+          {
+            "levelKey": "corpus1/96",
+            "levelId": "R01875"
+          },
+          {
+            "levelKey": "corpus1/99",
+            "levelId": "R01944"
+          },
+          {
+            "levelKey": "corpus2/753",
+            "levelId": "R02422"
+          },
+          {
+            "levelKey": "corpus2/975",
+            "levelId": "R02644"
+          }
+        ]
+      },
+      "operationalSimilarity": {
+        "status": "not-measured-by-source-proxy",
+        "localRanking": null,
+        "boundedTrace": null,
+        "beamFrontier": null,
+        "admissibleSlack": null,
+        "repairFingerprint": null
+      }
+    },
+    {
+      "label": "IDA default vs none",
+      "leftTechnique": "ida:none",
+      "rightTechnique": "ida:default",
+      "implementation": {
+        "left": {
+          "searchFamily": "admissible-order",
+          "scoringProfile": null,
+          "scoringWeights": null,
+          "structuralTemplate": null,
+          "beamWidth": null,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": "none",
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "right": {
+          "searchFamily": "admissible-order",
+          "scoringProfile": "default",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.4,
+            "objectiveAttractionWeight": 2.5,
+            "finishCommitmentWeight": 0.6,
+            "perimeterBiasWeight": 1,
+            "mustPassUrgencyWeight": 1.25,
+            "mustCrossUrgencyWeight": 1,
+            "intersectionSetupWeight": 1,
+            "antiDitherWeight": 1,
+            "revisitPenaltyWeight": 1
+          },
+          "structuralTemplate": null,
+          "beamWidth": null,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": "default",
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "perTermScoringWeightDifferences": null,
+        "sourceProxyOnly": true
+      },
+      "outcomeSimilarity": {
+        "jaccard": 0.6187050359712231,
+        "mutualInformationBits": null,
+        "disagreement": 212,
+        "common": 1962
+      },
+      "diagnosticCohort": {
+        "leftOnly": [
+          {
+            "levelKey": "corpus2/991",
+            "levelId": "R02660"
+          },
+          {
+            "levelKey": "corpus2/808",
+            "levelId": "R02477"
+          },
+          {
+            "levelKey": "corpus2/837",
+            "levelId": "R02506"
+          },
+          {
+            "levelKey": "corpus1/73",
+            "levelId": "R01336"
+          },
+          {
+            "levelKey": "corpus2/1577",
+            "levelId": "R03246"
+          },
+          {
+            "levelKey": "corpus2/267",
+            "levelId": "R01614"
+          },
+          {
+            "levelKey": "corpus2/14",
+            "levelId": "R00112"
+          },
+          {
+            "levelKey": "corpus2/1030",
+            "levelId": "R02699"
+          }
+        ],
+        "rightOnly": [
+          {
+            "levelKey": "corpus2/975",
+            "levelId": "R02644"
+          },
+          {
+            "levelKey": "corpus2/1321",
+            "levelId": "R02990"
+          },
+          {
+            "levelKey": "corpus1/1",
+            "levelId": "S00001"
+          },
+          {
+            "levelKey": "corpus1/90",
+            "levelId": "R01696"
+          },
+          {
+            "levelKey": "corpus2/855",
+            "levelId": "R02524"
+          },
+          {
+            "levelKey": "corpus2/572",
+            "levelId": "R02241"
+          },
+          {
+            "levelKey": "corpus2/1134",
+            "levelId": "R02803"
+          },
+          {
+            "levelKey": "corpus2/608",
+            "levelId": "R02277"
+          }
+        ],
+        "both": [
+          {
+            "levelKey": "corpus1/37",
+            "levelId": "R00408"
+          },
+          {
+            "levelKey": "corpus1/87",
+            "levelId": "R01675"
+          },
+          {
+            "levelKey": "published/152",
+            "levelId": "P00152"
+          },
+          {
+            "levelKey": "published/9",
+            "levelId": "P00009"
+          },
+          {
+            "levelKey": "published/32",
+            "levelId": "P00032"
+          },
+          {
+            "levelKey": "corpus1/46",
+            "levelId": "R00631"
+          },
+          {
+            "levelKey": "published/28",
+            "levelId": "P00028"
+          },
+          {
+            "levelKey": "corpus1/54",
+            "levelId": "R00792"
+          }
+        ],
+        "neither": [
+          {
+            "levelKey": "corpus1/66",
+            "levelId": "R01195"
+          },
+          {
+            "levelKey": "corpus1/75",
+            "levelId": "R01407"
+          },
+          {
+            "levelKey": "corpus1/82",
+            "levelId": "R01620"
+          },
+          {
+            "levelKey": "corpus1/96",
+            "levelId": "R01875"
+          },
+          {
+            "levelKey": "corpus1/99",
+            "levelId": "R01944"
+          },
+          {
+            "levelKey": "corpus2/450",
+            "levelId": "R02119"
+          },
+          {
+            "levelKey": "corpus2/753",
+            "levelId": "R02422"
+          },
+          {
+            "levelKey": "corpus2/12",
+            "levelId": "R00094"
+          }
+        ]
+      },
+      "operationalSimilarity": {
+        "status": "not-measured-by-source-proxy",
+        "localRanking": null,
+        "boundedTrace": null,
+        "beamFrontier": null,
+        "admissibleSlack": null,
+        "repairFingerprint": null
+      }
+    },
+    {
+      "label": "IDA must-cross vs none",
+      "leftTechnique": "ida:none",
+      "rightTechnique": "ida:mustCrossFirst",
+      "implementation": {
+        "left": {
+          "searchFamily": "admissible-order",
+          "scoringProfile": null,
+          "scoringWeights": null,
+          "structuralTemplate": null,
+          "beamWidth": null,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": "none",
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "right": {
+          "searchFamily": "admissible-order",
+          "scoringProfile": "mustCrossFirst",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.65,
+            "objectiveAttractionWeight": 1.5,
+            "finishCommitmentWeight": 0.6,
+            "perimeterBiasWeight": 1.1,
+            "mustPassUrgencyWeight": 1.6,
+            "mustCrossUrgencyWeight": 2.4,
+            "intersectionSetupWeight": 1.1,
+            "antiDitherWeight": 0.9,
+            "revisitPenaltyWeight": 0.85
+          },
+          "structuralTemplate": null,
+          "beamWidth": null,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": "mustCrossFirst",
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "perTermScoringWeightDifferences": null,
+        "sourceProxyOnly": true
+      },
+      "outcomeSimilarity": {
+        "jaccard": 0.6162162162162163,
+        "mutualInformationBits": null,
+        "disagreement": 213,
+        "common": 1962
+      },
+      "diagnosticCohort": {
+        "leftOnly": [
+          {
+            "levelKey": "corpus2/743",
+            "levelId": "R02412"
+          },
+          {
+            "levelKey": "corpus2/991",
+            "levelId": "R02660"
+          },
+          {
+            "levelKey": "corpus2/808",
+            "levelId": "R02477"
+          },
+          {
+            "levelKey": "corpus2/837",
+            "levelId": "R02506"
+          },
+          {
+            "levelKey": "corpus1/73",
+            "levelId": "R01336"
+          },
+          {
+            "levelKey": "corpus2/1577",
+            "levelId": "R03246"
+          },
+          {
+            "levelKey": "corpus2/267",
+            "levelId": "R01614"
+          },
+          {
+            "levelKey": "corpus2/14",
+            "levelId": "R00112"
+          }
+        ],
+        "rightOnly": [
+          {
+            "levelKey": "corpus2/975",
+            "levelId": "R02644"
+          },
+          {
+            "levelKey": "corpus2/1321",
+            "levelId": "R02990"
+          },
+          {
+            "levelKey": "corpus1/1",
+            "levelId": "S00001"
+          },
+          {
+            "levelKey": "corpus2/855",
+            "levelId": "R02524"
+          },
+          {
+            "levelKey": "corpus2/572",
+            "levelId": "R02241"
+          },
+          {
+            "levelKey": "corpus2/1134",
+            "levelId": "R02803"
+          },
+          {
+            "levelKey": "corpus2/608",
+            "levelId": "R02277"
+          },
+          {
+            "levelKey": "corpus2/155",
+            "levelId": "R00988"
+          }
+        ],
+        "both": [
+          {
+            "levelKey": "corpus1/37",
+            "levelId": "R00408"
+          },
+          {
+            "levelKey": "corpus1/87",
+            "levelId": "R01675"
+          },
+          {
+            "levelKey": "published/152",
+            "levelId": "P00152"
+          },
+          {
+            "levelKey": "published/9",
+            "levelId": "P00009"
+          },
+          {
+            "levelKey": "published/32",
+            "levelId": "P00032"
+          },
+          {
+            "levelKey": "corpus1/46",
+            "levelId": "R00631"
+          },
+          {
+            "levelKey": "published/28",
+            "levelId": "P00028"
+          },
+          {
+            "levelKey": "corpus1/54",
+            "levelId": "R00792"
+          }
+        ],
+        "neither": [
+          {
+            "levelKey": "corpus1/66",
+            "levelId": "R01195"
+          },
+          {
+            "levelKey": "corpus1/75",
+            "levelId": "R01407"
+          },
+          {
+            "levelKey": "corpus1/82",
+            "levelId": "R01620"
+          },
+          {
+            "levelKey": "corpus1/96",
+            "levelId": "R01875"
+          },
+          {
+            "levelKey": "corpus1/99",
+            "levelId": "R01944"
+          },
+          {
+            "levelKey": "corpus2/450",
+            "levelId": "R02119"
+          },
+          {
+            "levelKey": "corpus2/753",
+            "levelId": "R02422"
+          },
+          {
+            "levelKey": "corpus2/12",
+            "levelId": "R00094"
+          }
+        ]
+      },
+      "operationalSimilarity": {
+        "status": "not-measured-by-source-proxy",
+        "localRanking": null,
+        "boundedTrace": null,
+        "beamFrontier": null,
+        "admissibleSlack": null,
+        "repairFingerprint": null
+      }
+    },
+    {
+      "label": "beam direction",
+      "leftTechnique": "beam:perimeterSweep/perimeterCCW@beam2000",
+      "rightTechnique": "beam:perimeterSweep/perimeterCW@beam2000",
+      "implementation": {
+        "left": {
+          "searchFamily": "beam",
+          "scoringProfile": "perimeterSweep",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.6,
+            "objectiveAttractionWeight": 0.95,
+            "finishCommitmentWeight": 0.45,
+            "perimeterBiasWeight": 2.05,
+            "mustPassUrgencyWeight": 1.1,
+            "mustCrossUrgencyWeight": 1.15,
+            "intersectionSetupWeight": 1.1,
+            "antiDitherWeight": 0.55,
+            "revisitPenaltyWeight": 0.65
+          },
+          "structuralTemplate": "perimeterCCW",
+          "beamWidth": 2000,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": null,
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "right": {
+          "searchFamily": "beam",
+          "scoringProfile": "perimeterSweep",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.6,
+            "objectiveAttractionWeight": 0.95,
+            "finishCommitmentWeight": 0.45,
+            "perimeterBiasWeight": 2.05,
+            "mustPassUrgencyWeight": 1.1,
+            "mustCrossUrgencyWeight": 1.15,
+            "intersectionSetupWeight": 1.1,
+            "antiDitherWeight": 0.55,
+            "revisitPenaltyWeight": 0.65
+          },
+          "structuralTemplate": "perimeterCW",
+          "beamWidth": 2000,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": null,
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "perTermScoringWeightDifferences": {
+          "antiDitherWeight": {
+            "left": 0.55,
+            "right": 0.55,
+            "delta": 0
+          },
+          "finishCommitmentWeight": {
+            "left": 0.45,
+            "right": 0.45,
+            "delta": 0
+          },
+          "goalAttractionWeight": {
+            "left": 0.6,
+            "right": 0.6,
+            "delta": 0
+          },
+          "intersectionSetupWeight": {
+            "left": 1.1,
+            "right": 1.1,
+            "delta": 0
+          },
+          "mustCrossUrgencyWeight": {
+            "left": 1.15,
+            "right": 1.15,
+            "delta": 0
+          },
+          "mustPassUrgencyWeight": {
+            "left": 1.1,
+            "right": 1.1,
+            "delta": 0
+          },
+          "objectiveAttractionWeight": {
+            "left": 0.95,
+            "right": 0.95,
+            "delta": 0
+          },
+          "perimeterBiasWeight": {
+            "left": 2.05,
+            "right": 2.05,
+            "delta": 0
+          },
+          "revisitPenaltyWeight": {
+            "left": 0.65,
+            "right": 0.65,
+            "delta": 0
+          }
+        },
+        "sourceProxyOnly": true
+      },
+      "outcomeSimilarity": {
+        "jaccard": 0.6304700162074555,
+        "mutualInformationBits": null,
+        "disagreement": 228,
+        "common": 1962
+      },
+      "diagnosticCohort": {
+        "leftOnly": [
+          {
+            "levelKey": "corpus2/12",
+            "levelId": "R00094"
+          },
+          {
+            "levelKey": "corpus2/261",
+            "levelId": "R01584"
+          },
+          {
+            "levelKey": "corpus2/131",
+            "levelId": "R00851"
+          },
+          {
+            "levelKey": "corpus2/851",
+            "levelId": "R02520"
+          },
+          {
+            "levelKey": "corpus1/90",
+            "levelId": "R01696"
+          },
+          {
+            "levelKey": "corpus2/584",
+            "levelId": "R02253"
+          },
+          {
+            "levelKey": "corpus2/724",
+            "levelId": "R02393"
+          },
+          {
+            "levelKey": "corpus2/1083",
+            "levelId": "R02752"
+          }
+        ],
+        "rightOnly": [
+          {
+            "levelKey": "corpus2/559",
+            "levelId": "R02228"
+          },
+          {
+            "levelKey": "corpus2/743",
+            "levelId": "R02412"
+          },
+          {
+            "levelKey": "corpus2/1048",
+            "levelId": "R02717"
+          },
+          {
+            "levelKey": "corpus2/680",
+            "levelId": "R02349"
+          },
+          {
+            "levelKey": "corpus2/860",
+            "levelId": "R02529"
+          },
+          {
+            "levelKey": "corpus2/130",
+            "levelId": "R00850"
+          },
+          {
+            "levelKey": "corpus2/214",
+            "levelId": "R01318"
+          },
+          {
+            "levelKey": "corpus2/524",
+            "levelId": "R02193"
+          }
+        ],
+        "both": [
+          {
+            "levelKey": "corpus2/975",
+            "levelId": "R02644"
+          },
+          {
+            "levelKey": "published/152",
+            "levelId": "P00152"
+          },
+          {
+            "levelKey": "corpus2/863",
+            "levelId": "R02532"
+          },
+          {
+            "levelKey": "corpus1/1",
+            "levelId": "S00001"
+          },
+          {
+            "levelKey": "corpus2/256",
+            "levelId": "R01558"
+          },
+          {
+            "levelKey": "published/9",
+            "levelId": "P00009"
+          },
+          {
+            "levelKey": "published/32",
+            "levelId": "P00032"
+          },
+          {
+            "levelKey": "corpus1/46",
+            "levelId": "R00631"
+          }
+        ],
+        "neither": [
+          {
+            "levelKey": "corpus1/37",
+            "levelId": "R00408"
+          },
+          {
+            "levelKey": "corpus1/66",
+            "levelId": "R01195"
+          },
+          {
+            "levelKey": "corpus1/75",
+            "levelId": "R01407"
+          },
+          {
+            "levelKey": "corpus1/82",
+            "levelId": "R01620"
+          },
+          {
+            "levelKey": "corpus1/87",
+            "levelId": "R01675"
+          },
+          {
+            "levelKey": "corpus1/96",
+            "levelId": "R01875"
+          },
+          {
+            "levelKey": "corpus1/99",
+            "levelId": "R01944"
+          },
+          {
+            "levelKey": "corpus2/450",
+            "levelId": "R02119"
+          }
+        ]
+      },
+      "operationalSimilarity": {
+        "status": "not-measured-by-source-proxy",
+        "localRanking": null,
+        "boundedTrace": null,
+        "beamFrontier": null,
+        "admissibleSlack": null,
+        "repairFingerprint": null
+      }
+    },
+    {
+      "label": "DFS direction",
+      "leftTechnique": "dfs:perimeterSweep/perimeterCCW",
+      "rightTechnique": "dfs:perimeterSweep/perimeterCW",
+      "implementation": {
+        "left": {
+          "searchFamily": "dfs",
+          "scoringProfile": "perimeterSweep",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.6,
+            "objectiveAttractionWeight": 0.95,
+            "finishCommitmentWeight": 0.45,
+            "perimeterBiasWeight": 2.05,
+            "mustPassUrgencyWeight": 1.1,
+            "mustCrossUrgencyWeight": 1.15,
+            "intersectionSetupWeight": 1.1,
+            "antiDitherWeight": 0.55,
+            "revisitPenaltyWeight": 0.65
+          },
+          "structuralTemplate": "perimeterCCW",
+          "beamWidth": null,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": null,
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "right": {
+          "searchFamily": "dfs",
+          "scoringProfile": "perimeterSweep",
+          "scoringWeights": {
+            "goalAttractionWeight": 0.6,
+            "objectiveAttractionWeight": 0.95,
+            "finishCommitmentWeight": 0.45,
+            "perimeterBiasWeight": 2.05,
+            "mustPassUrgencyWeight": 1.1,
+            "mustCrossUrgencyWeight": 1.15,
+            "intersectionSetupWeight": 1.1,
+            "antiDitherWeight": 0.55,
+            "revisitPenaltyWeight": 0.65
+          },
+          "structuralTemplate": "perimeterCW",
+          "beamWidth": null,
+          "diverseBeamRetention": false,
+          "dedupNearTieMode": "default",
+          "pruneChanges": [],
+          "admissibleTieBreakMode": null,
+          "repairVariantBiasSeedMode": null,
+          "retryContext": null,
+          "budgetBand": null
+        },
+        "perTermScoringWeightDifferences": {
+          "antiDitherWeight": {
+            "left": 0.55,
+            "right": 0.55,
+            "delta": 0
+          },
+          "finishCommitmentWeight": {
+            "left": 0.45,
+            "right": 0.45,
+            "delta": 0
+          },
+          "goalAttractionWeight": {
+            "left": 0.6,
+            "right": 0.6,
+            "delta": 0
+          },
+          "intersectionSetupWeight": {
+            "left": 1.1,
+            "right": 1.1,
+            "delta": 0
+          },
+          "mustCrossUrgencyWeight": {
+            "left": 1.15,
+            "right": 1.15,
+            "delta": 0
+          },
+          "mustPassUrgencyWeight": {
+            "left": 1.1,
+            "right": 1.1,
+            "delta": 0
+          },
+          "objectiveAttractionWeight": {
+            "left": 0.95,
+            "right": 0.95,
+            "delta": 0
+          },
+          "perimeterBiasWeight": {
+            "left": 2.05,
+            "right": 2.05,
+            "delta": 0
+          },
+          "revisitPenaltyWeight": {
+            "left": 0.65,
+            "right": 0.65,
+            "delta": 0
+          }
+        },
+        "sourceProxyOnly": true
+      },
+      "outcomeSimilarity": {
+        "jaccard": 0.7844444444444445,
+        "mutualInformationBits": null,
+        "disagreement": 97,
+        "common": 1962
+      },
+      "diagnosticCohort": {
+        "leftOnly": [
+          {
+            "levelKey": "corpus1/99",
+            "levelId": "R01944"
+          },
+          {
+            "levelKey": "corpus2/790",
+            "levelId": "R02459"
+          },
+          {
+            "levelKey": "corpus2/1083",
+            "levelId": "R02752"
+          },
+          {
+            "levelKey": "corpus2/287",
+            "levelId": "R01725"
+          },
+          {
+            "levelKey": "corpus2/155",
+            "levelId": "R00988"
+          },
+          {
+            "levelKey": "corpus2/725",
+            "levelId": "R02394"
+          },
+          {
+            "levelKey": "corpus2/826",
+            "levelId": "R02495"
+          },
+          {
+            "levelKey": "corpus2/517",
+            "levelId": "R02186"
+          }
+        ],
+        "rightOnly": [
+          {
+            "levelKey": "corpus2/610",
+            "levelId": "R02279"
+          },
+          {
+            "levelKey": "corpus2/1226",
+            "levelId": "R02895"
+          },
+          {
+            "levelKey": "corpus2/1518",
+            "levelId": "R03187"
+          },
+          {
+            "levelKey": "corpus2/1295",
+            "levelId": "R02964"
+          },
+          {
+            "levelKey": "corpus2/1030",
+            "levelId": "R02699"
+          },
+          {
+            "levelKey": "corpus1/50",
+            "levelId": "R00729"
+          },
+          {
+            "levelKey": "corpus1/97",
+            "levelId": "R01889"
+          },
+          {
+            "levelKey": "corpus2/1238",
+            "levelId": "R02907"
+          }
+        ],
+        "both": [
+          {
+            "levelKey": "corpus1/87",
+            "levelId": "R01675"
+          },
+          {
+            "levelKey": "corpus2/975",
+            "levelId": "R02644"
+          },
+          {
+            "levelKey": "published/152",
+            "levelId": "P00152"
+          },
+          {
+            "levelKey": "corpus1/1",
+            "levelId": "S00001"
+          },
+          {
+            "levelKey": "corpus2/256",
+            "levelId": "R01558"
+          },
+          {
+            "levelKey": "published/9",
+            "levelId": "P00009"
+          },
+          {
+            "levelKey": "published/32",
+            "levelId": "P00032"
+          },
+          {
+            "levelKey": "published/28",
+            "levelId": "P00028"
+          }
+        ],
+        "neither": [
+          {
+            "levelKey": "corpus1/37",
+            "levelId": "R00408"
+          },
+          {
+            "levelKey": "corpus1/66",
+            "levelId": "R01195"
+          },
+          {
+            "levelKey": "corpus1/75",
+            "levelId": "R01407"
+          },
+          {
+            "levelKey": "corpus1/82",
+            "levelId": "R01620"
+          },
+          {
+            "levelKey": "corpus1/96",
+            "levelId": "R01875"
+          },
+          {
+            "levelKey": "corpus2/450",
+            "levelId": "R02119"
+          },
+          {
+            "levelKey": "corpus2/753",
+            "levelId": "R02422"
+          },
+          {
+            "levelKey": "corpus2/12",
+            "levelId": "R00094"
+          }
+        ]
+      },
+      "operationalSimilarity": {
+        "status": "not-measured-by-source-proxy",
+        "localRanking": null,
+        "boundedTrace": null,
+        "beamFrontier": null,
+        "admissibleSlack": null,
+        "repairFingerprint": null
+      }
+    }
+  ],
+  "censoring": "Cohorts are deterministic bounded fixture nominations. Null operational fields are deliberate: source distance and outcome overlap must not masquerade as measured search behavior."
+}
