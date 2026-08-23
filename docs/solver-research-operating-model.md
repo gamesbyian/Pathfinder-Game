@@ -4,6 +4,7 @@
 > **Priority:** [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
 > **ASAP programs:** evidence-driven scheduling/allocation ([`solver-scheduling-policy.md`](solver-scheduling-policy.md)) and architectural solver speed ([`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md)) are both **HIGH PRIORITY**.
 > **Current scheduler budget evidence:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
+> **Technique-operation taxonomy:** [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
 > **Capability boundary:** [`solver-level-blindness.md`](solver-level-blindness.md).
 
 Measurements belong in dated reports, ranked decisions in the optimization queue, and retained/default-off dispositions in the opt-in ledger. Pre-consolidation notebook: [`archive/snapshots/solver-research-operating-model-2026-08-20.md`](archive/snapshots/solver-research-operating-model-2026-08-20.md).
@@ -35,6 +36,16 @@ Forbidden steering includes saved hints/solutions; prior winning config/gate/see
 
 Do not call both routing and search-quality failures “starvation”: a ladder-starved technique can still fail at full isolated budget.
 
+## Outcome, source, and operational similarity
+
+Keep three forms of technique comparison distinct:
+
+- **Outcome similarity:** techniques solve/fail the same levels or have similar cost/result vectors. Census Jaccard, mutual information, overlap, substitutability, and ablation result overlap belong here.
+- **Source/config similarity:** techniques share an engine, scoring equation, weight vector neighborhood, template, retention rule, prune set, or retry context. This describes implementation structure, not necessarily encountered behavior.
+- **Operational similarity:** techniques actually make similar choices or traverse/preserve similar search material on shared encountered states, measured through ranking agreement, branch/frontier overlap, first divergence, retention/churn, admissible-slack behavior, or repair-native fingerprints.
+
+Do not call outcome-vector similarity “behavioral similarity,” and do not infer operational redundancy solely from solve-set overlap. Conversely, operationally near-identical techniques can have different outcomes when a small load-bearing ordering or retention divergence cascades through combinatorial search. See [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
+
 ## Scheduling and allocation research
 
 The active scheduling program is [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Treat it as an evidence-integration problem, not permission to replace one fixed ladder with another. The current census budget-depth analysis is [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
@@ -45,7 +56,8 @@ For ordering/allocation work:
 - use stable action/config identities and explicit budget bands where budget depth changes value;
 - prefer conditional success after observed predecessor failure over unconditional winner counts;
 - compare actions inside a fixed shared work envelope by default; a new action expands the candidate menu rather than silently increasing total work;
-- audit whole-ladder retries and additive tail stages for current unique residual wins and substitutability before adding more;
+- audit whole-ladder retries and additive tail stages for current unique residual wins and **outcome substitutability** before adding more; treat that as a scheduler value screen, not proof that their search operation is redundant;
+- use operational similarity, when measured, as complementary evidence about whether multiple actions are spending work in the same search region or providing genuinely different exploration;
 - do **not** infer a safe cap from easy-population median winning depth alone: use censored solve hazard, cap-retention, residual unique capability, and current stage reach; the census shows beams self-exhaust cheaply while plain repair retains substantial 20M–50M yield;
 - treat “continue this technique for the next budget tranche” as a separable scheduling action when evidence supports it, so later work must re-earn priority rather than follow automatically from an earlier tranche;
 - validate sequence-dependent stages through the real ladder when isolated runs do not reproduce lifecycle wins; admissible-order reverse-oracle evidence is a concrete warning against cap decisions from isolated rows alone;
@@ -71,7 +83,7 @@ Prefer existing infrastructure: deterministic work accounting; schema-v2 manifes
 
 Start at [`tooling-catalog.md`](tooling-catalog.md). Reuse experiment manifests/run identity, require comparability before aggregation, and keep derived analytics rebuildable rather than creating parallel truth. Add frameworks only when they replace repeated one-off work.
 
-For the scheduling program specifically, extend the existing technique-census second-order/lifecycle/family query substrate before creating a new store. The next census extension should make per-technique cap-retention/tranche economics rebuildable rather than maintaining hand-derived budget tables. Historical portfolio code may be reused as plumbing only after checking its closed decision record; the old broad cold-start portfolio result is not an active hypothesis.
+For the scheduling program specifically, extend the existing technique-census second-order/lifecycle/family query substrate before creating a new store. Per-technique cap-retention/tranche economics are already rebuildable in `scripts/technique-census-second-order.mjs`; do not rebuild them. The next census-adjacent evidence tasks are the current production lifecycle reach/`workSpent` join and the bounded operational-similarity analysis in [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md). Historical portfolio code may be reused as plumbing only after checking its closed decision record; the old broad cold-start portfolio result is not an active hypothesis.
 
 ## Shadow first
 
@@ -131,5 +143,6 @@ A direct small negative may close an unchanged mechanism. A promising small resu
 - ranked state -> [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md);
 - durable scheduler policy/program contract -> [`solver-scheduling-policy.md`](solver-scheduling-policy.md);
 - retained/default-off disposition -> [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md);
-- durable behavior/interpretation -> topic/tool contract;
+- durable technique operation/similarity interpretation -> [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md);
+- other durable behavior/interpretation -> topic/tool contract;
 - concluded plans -> archive.
