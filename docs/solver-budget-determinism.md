@@ -2,6 +2,7 @@
 
 > **Status:** current contract; migration complete.
 > **Active allocation program:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md) is **ASAP / HIGH PRIORITY** and must preserve this document's machine-independent budget rules.
+> **Current budget-depth evidence:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
 > **History:** [`archive/snapshots/solver-budget-determinism-2026-08-20.md`](archive/snapshots/solver-budget-determinism-2026-08-20.md).
 
 Solver allocation uses one machine-independent work currency; wall clock is only an outer latency deadline.
@@ -55,6 +56,21 @@ Evidence-driven scheduling changes the division of work, not the definition of w
 
 See [`solver-scheduling-policy.md`](solver-scheduling-policy.md) for action identity, residual-value analysis, shadow planning, and promotion rules.
 
+## Cap and tranche discipline
+
+Do not infer a technique's safe production cap from the median depth of its successful easy levels. The census shows materially different depth distributions on the hard residual population. The dated measurements are in [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md); the scheduling consequences live in [`solver-scheduling-policy.md`](solver-scheduling-policy.md).
+
+Current rules:
+
+- **No universal low cap from “wins early” intuition.** The perfect isolated router retains only 171/253 frozen-gap oracle solves at 10M nodes and 202/253 at 20M; some useful action therefore needs access to deeper search.
+- **Self-exhausting techniques do not need artificial entitlement just because a high outer cap exists.** Beam searches generally exhaust their frontier in the sub-million range. Their budget problem is ordering/reach, not a 50M burn.
+- **Protect deep continuations only where measured late yield exists.** Plain repair earns this treatment: 37/121 frozen-gap wins occur in the 20M–50M interval and the measured conditional hazard rises in that band. A scheduler may split repair into successive quanta, but must not assume the late tranche is dead work.
+- **Deep budget is not hereditary.** Ordinary DFS/IDA profiles with high overlap/substitutability must compete for later quanta by current residual value. Historical existence in the ladder or historical wins do not confer a permanent full-depth allowance.
+- **Sequence-dependent stages require live-ladder validation.** Admissible-order reverse-oracle evidence shows that isolated cap curves can miss preceding-ladder effects. Budget reductions for such stages must be tested through the real sequential path.
+- **Node-band evidence is diagnostic, not cross-technique currency.** Use node curves to decide where a technique's own useful depth lies; use `workSpent` to compare whether that tranche deserves shared portfolio budget against another technique.
+
+For scheduler analysis, a budget tranche should be treated as an action extension: “continue technique X for the next q work” competes with starting/continuing other eligible actions. Reaching an earlier tranche does not automatically reserve all later tranches.
+
 ## Reproducible comparison
 
 For decision-bearing offline work:
@@ -89,6 +105,8 @@ Declare whether additive retries/passes are inside the envelope. If treatment ca
 
 For scheduling experiments, also report which actions were selected/reached, their allocated work bands, paired gains/losses, and residual unique wins. This distinguishes a better policy from a larger search purchase.
 
+A cap/tranche experiment must additionally report solves retained/lost at each candidate band, the population reaching the band, simulated or measured capped spend, and any sequence dependency that makes isolated curves non-causal. Do not promote a lower cap merely because the median successful attempt lies far below it.
+
 ## Non-regression rules
 
 - No wall-clock-derived attempt shares/escalation thresholds.
@@ -97,6 +115,7 @@ For scheduling experiments, also report which actions were selected/reached, the
 - No deadline-truncated failure recorded as ordinary unsolved capability.
 - No hidden total-work increase behind retry/reserve mechanisms.
 - No scheduler candidate that obtains its apparent advantage solely by escaping the declared shared envelope.
+- No deep-cap reduction justified solely by easy-population medians when hard-residual hazard/retention evidence exists.
 - Work-meter weight changes are budget-unit migrations requiring cross-technique calibration plus reproducibility/regression validation.
 
 The archived snapshot preserves nondeterminism measurements, raw-node prototype failure, fitting, migration, hint-workbench diagnosis, and tool-conversion history.
