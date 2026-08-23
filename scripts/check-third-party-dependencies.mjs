@@ -24,7 +24,7 @@ const unexpected = urls.filter(url => !allowed.has(url));
 if (unexpected.length > 0) {
   console.error('Unexpected external browser dependency URL(s) in index.html:');
   for (const url of unexpected) console.error(`  - ${url}`);
-  console.error('\nDocument intentional additions in docs/third-party-dependencies.md and update this allowlist.');
+  console.error('\nDocument intentional runtime-origin policy changes in docs/content-security-policy.md and update this allowlist.');
   process.exit(1);
 }
 
