@@ -110,3 +110,35 @@ Strictly order-preserving (unchanged move-generation semantics, only the storage
 Landed directly, no flag. `gateFlags`/`reachBlockedArr` remain open for a future pass if profiling
 ever nominates them specifically; the doc's own suggested order groups this with a future beam
 arena, not as a standalone campaign.
+
+## Cumulative effect of all five changes landed this session
+
+Direct interleaved node-budgeted A/B, original session baseline (`6a2dc24`) vs this commit,
+superseding the earlier reports' compounded-estimate figures with one directly-measured number
+covering all of: lazy beam dedup/diversity string keys, the portal-lookup hoist, the numeric
+dedup/diversity key encoding, and this dense `staticNeighborKeys` change (the `goalDistCur` idea
+was tried and reverted, contributing nothing to this number).
+
+**Published corpus**, 3 rounds: `nodesExpanded` bit-identical every round (6,344,576) — order fully
+preserved across the whole stack of changes, not just each individual step.
+
+| round | original baseline | current HEAD |
+|---|---|---|
+| 1 | 11.59s | 10.56s |
+| 2 | 11.87s | 10.40s |
+| 3 | 11.57s | 10.51s |
+
+Median 11.59s → 10.51s, **−9.3%**.
+
+**Corpus-2 sample**, 3 rounds: `nodesExpanded` bit-identical every round (14,870,405).
+
+| round | original baseline | current HEAD |
+|---|---|---|
+| 1 | 71.40s | 60.20s |
+| 2 | 71.13s | 59.24s |
+| 3 | 71.16s | 59.60s |
+
+Median 71.16s → 59.60s, **−16.2%**.
+
+Both populations faster in every single round (6/6) against the original baseline, with zero
+search-decision divergence anywhere in the stack.

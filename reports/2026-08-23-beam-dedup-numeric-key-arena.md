@@ -131,12 +131,12 @@ Strictly order-preserving. Landed directly (no flag): both the mathematical safe
 bijection, runtime-checked overflow fallback) and the differential test give stronger correctness
 assurance than a typical order-preserving change, on top of the usual node-budgeted A/B evidence.
 
-## Combined effect of this branch's three landed changes so far
+## Combined effect so far this session
 
 Published corpus, 160 levels, node-budgeted: baseline → lazy string keys (−7.8%) → portal-lookup
-hoist (−1.1%) → numeric key (−5.9%), each measured against the immediately preceding state.
-Compounding these (not independently re-measured against the original baseline in one pass, but
-multiplicatively consistent with each stage's own interleaved measurement): roughly **−14% to −15%**
-published wall time so far this session, plus a similarly-shaped Corpus-2 improvement. A fourth idea
-(hoisting `scoreMove`'s `goalDistCur`) was tried and reverted — see the lazy-string-key report's
-addendum — for measuring no real benefit.
+hoist (−1.1%) → numeric key (−5.9%), each measured against the immediately preceding state. A
+fourth idea (hoisting `scoreMove`'s `goalDistCur`) was tried and reverted for measuring no real
+benefit — see the lazy-string-key report's addendum. A fifth change (dense `staticNeighborKeys`
+indexing) landed after this report was first written — see
+[`2026-08-23-dense-static-neighbor-keys.md`](2026-08-23-dense-static-neighbor-keys.md) for the
+directly-measured (not compounded-estimate) cumulative baseline-to-HEAD number covering all five.
