@@ -24,6 +24,10 @@
     "scripts/stress/axis-reach-probe.mjs": {
       "lifecycle": "cold-research",
       "note": "Axis-aware connectivity candidate was implemented and reverted twice after matched-budget regressions; retain as reproducible negative evidence/template, not a live optimization direction."
+    },
+    "scripts/stress/main-loop-starvation-census.mjs": {
+      "lifecycle": "cold-research",
+      "note": "Reproduces the August 8 main-loop zero-allocation census from historical baseline/hint provenance. Its report later weakened 'provably recoverable' to 'historically matched', and newer techniqueLifecycle telemetry is the default allocation diagnostic."
     }
   }
 }
