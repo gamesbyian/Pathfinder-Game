@@ -90,6 +90,8 @@ Reuse a baseline with `--baseline=logs/ablation/baseline.json`.
 
 `analyze-ablation.mjs` emits `featureRanking[]`, `tierSummary`, `profileRanking[]`, `templateRanking[]`, `attemptOrderSensitivity[]`, `redundancyAnalysis[]`, `recommendations[]`.
 
+`redundancyAnalysis[]` is an **outcome/effect** comparison: it can show that disabling or retaining mechanisms produces overlapping solve/performance consequences. It does not establish operational redundancy, shared branch/frontier traversal, or equivalent move ordering. Use [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) and the operational-similarity instrumentation for those claims.
+
 ```text
 score = (baselineSolved - ablationSolved) * 100
       + max(0, (ablationMs - baselineMs) / baselineMs) * 50
