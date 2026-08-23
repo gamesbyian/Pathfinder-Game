@@ -33,7 +33,7 @@ const mapVariantBack = key => { const { x, y } = UNPACK(key); const p = inverseT
 const parentGate = mapVariantBack(result.solution[0]);
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.ts');
+const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const { repairSearchFromGate } = await import('../../modules/solver/repair-search.ts');
 const Solver = createSolver();
 const parent = Solver.prepareLevelForSolver(parentRaw, { source: 'raw' });
