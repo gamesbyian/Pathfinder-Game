@@ -2,6 +2,7 @@
 
 > **Status:** current research-method/evidence-routing contract.
 > **Priority:** [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+> **ASAP programs:** evidence-driven scheduling/allocation ([`solver-scheduling-policy.md`](solver-scheduling-policy.md)) and architectural solver speed ([`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md)) are both **HIGH PRIORITY**.
 > **Capability boundary:** [`solver-level-blindness.md`](solver-level-blindness.md).
 
 Measurements belong in dated reports, ranked decisions in the optimization queue, and retained/default-off dispositions in the opt-in ledger. Pre-consolidation notebook: [`archive/snapshots/solver-research-operating-model-2026-08-20.md`](archive/snapshots/solver-research-operating-model-2026-08-20.md).
@@ -33,6 +34,23 @@ Forbidden steering includes saved hints/solutions; prior winning config/gate/see
 
 Do not call both routing and search-quality failures “starvation”: a ladder-starved technique can still fail at full isolated budget.
 
+## Scheduling and allocation research
+
+The active scheduling program is [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Treat it as an evidence-integration problem, not permission to replace one fixed ladder with another.
+
+For ordering/allocation work:
+
+- optimize **marginal value on the population that actually reaches the decision point**, not total historical solve rate;
+- use stable action/config identities and explicit budget bands where budget depth changes value;
+- prefer conditional success after observed predecessor failure over unconditional winner counts;
+- compare actions inside a fixed shared work envelope by default; a new action expands the candidate menu rather than silently increasing total work;
+- audit whole-ladder retries and additive tail stages for current unique residual wins and substitutability before adding more;
+- keep known solutions, variant outcomes, regression history, and exact-level winners offline as labels; distill them into generic level/state descriptors before runtime use;
+- use parent-family splits for variant-trained/tuned routing rules;
+- begin with offline oracle/frontier analysis and shadow planning before a live scheduler changes production order.
+
+A scheduler policy can be simple and deterministic. Statistical or ML models may discover candidate rules offline, but promotion evidence must still identify the legal runtime features and matched-work behavior being changed.
+
 ## Evidence hierarchy
 
 1. **Canonical referee truth** for legality/correctness.
@@ -49,11 +67,13 @@ Prefer existing infrastructure: deterministic work accounting; schema-v2 manifes
 
 Start at [`tooling-catalog.md`](tooling-catalog.md). Reuse experiment manifests/run identity, require comparability before aggregation, and keep derived analytics rebuildable rather than creating parallel truth. Add frameworks only when they replace repeated one-off work.
 
+For the scheduling program specifically, extend the existing technique-census second-order/lifecycle/family query substrate before creating a new store. Historical portfolio code may be reused as plumbing only after checking its closed decision record; the old broad cold-start portfolio result is not an active hypothesis.
+
 ## Shadow first
 
-For scoring, retention, routing, or information-sharing hypotheses, observe before changing search. Ask whether a descriptor separates exact-live/dead siblings, a reasoner catches extra dead branches without false rejects, a producer emits novel useful information, or a routing feature predicts isolated capability rather than historical winners.
+For scoring, retention, routing, scheduling, or information-sharing hypotheses, observe before changing search. Ask whether a descriptor separates exact-live/dead siblings, a reasoner catches extra dead branches without false rejects, a producer emits novel useful information, a routing feature predicts isolated capability rather than historical winners, or a proposed scheduler chooses higher-value residual work than the live ladder at the same envelope.
 
-Unless parity is the experiment, shadow instrumentation must preserve OFF/ON solution, work, ordering, and randomness.
+Unless parity is the experiment, shadow instrumentation must preserve OFF/ON solution, work, ordering, and randomness. A scheduler shadow mode must not alter execution merely by recording its counterfactual next action.
 
 <a id="producer--receptor-cooperation"></a>
 ## Producer -> receptor cooperation
@@ -74,6 +94,8 @@ Useful information can still hurt if consuming it displaces successful receptor 
 
 Use the off-main trove for controlled diagnosis, not production retries or independent-row bulk statistics. Useful patterns include symmetry cliffs, local solved/unsolved boundaries, technique changes across relatives, re-embedding/density effects, and held-out-parent generalization. See [`variant-level-research.md`](variant-level-research.md).
 
+For scheduling/classifier rules, split by parent family. A rule that separates siblings it was trained on but fails on held-out families is family memorization, not a production routing result.
+
 <a id="accepted-path-differential-diagnosis"></a>
 ## Accepted-path differential diagnosis
 
@@ -91,6 +113,8 @@ Narrative explanations are not causal evidence; accepted path + trace is. Histor
 
 Production-facing treatments normally require level-blind execution; identifiable code/protocol state; complete intended population or explicit sample; non-binding deadlines when work comparability matters; comparable arms with declared treatments; gains and losses; `workSpent`, nodes, errors, and deadline truncation where relevant; Corpus 1/2 and published transfer/cost checks as appropriate; no hidden hint/data mutation; and queue/ledger updates when disposition changes.
 
+Scheduling/allocation treatments additionally require the total-work envelope to be explicit. If the treatment can spend more total work than control, either enforce `strictTotalWorkBudget` or report the increased envelope as part of the treatment; do not count additive tail budget as a free solve gain. Report action reach/selection and residual unique wins so a scheduler improvement can be distinguished from simply buying more search.
+
 "Complete intended population or explicit sample" does not default to a full 1700-level `solver-stress-refresh.yml` sweep. For an archetype-gated `ATTEMPT_POLICY` routing change, `solver-archetype-sample-ab.yml`'s deterministic stratified sample (the affected archetype(s) plus a small cross-archetype control) is the explicit sample that answers this contract for that class of change, at a fraction of the wall time — see [`tooling-catalog.md`](tooling-catalog.md) and [`../.github/workflows/README.md`](../.github/workflows/README.md).
 
 A direct small negative may close an unchanged mechanism. A promising small result normally nominates a broader gate rather than promotion.
@@ -99,6 +123,7 @@ A direct small negative may close an unchanged mechanism. A promising small resu
 
 - measurements/chronology -> dated report;
 - ranked state -> [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md);
+- durable scheduler policy/program contract -> [`solver-scheduling-policy.md`](solver-scheduling-policy.md);
 - retained/default-off disposition -> [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md);
 - durable behavior/interpretation -> topic/tool contract;
 - concluded plans -> archive.
