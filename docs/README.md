@@ -47,6 +47,7 @@ Presence does not imply current priority.
 
 | Doc | Role |
 |---|---|
+| [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md) | Active second-order census questions, findings, and follow-up analyses. |
 | [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) | Read-only exact/oracle-labelled probes. |
 | [`solver-winning-lineage-survival-analysis.md`](solver-winning-lineage-survival-analysis.md) | Beam lineage observation. |
 | [`solver-ablation.md`](solver-ablation.md) | Feature-flag ablation lab. |
