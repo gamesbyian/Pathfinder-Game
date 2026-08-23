@@ -10,7 +10,7 @@ const DEFAULT_DIRECTORY = 'reports/stress/technique-census/32240161854';
 const DEFAULT_PRODUCTION_RUN = 'reports/stress/capability-runs/32526927206';
 const FROZEN_PRODUCTION_RUN = 'reports/stress/capability-runs/32459711208';
 const DEFAULT_THRESHOLDS = [100_000, 250_000, 500_000, 1_000_000, 2_000_000, 5_000_000,
-    10_000_000, 20_000_000, 50_000_000];
+    10_000_000, 20_000_000, 30_000_000, 40_000_000, 50_000_000];
 
 const levelKey = row => `${row.corpus}/${row.levelPos}`;
 const pct = (value, denominator) => denominator ? `${(100 * value / denominator).toFixed(1)}%` : '—';
@@ -22,6 +22,65 @@ const median = values => {
 };
 const techniqueFamily = technique => technique.startsWith('dfs:repair:') ? 'repair'
     : technique.split(':', 1)[0];
+const assertIncreasingCaps = thresholds => {
+    if (!thresholds.length || thresholds.some((cap, index) => !Number.isSafeInteger(cap) || cap <= 0
+        || (index > 0 && cap <= thresholds[index - 1]))) {
+        throw new Error('Technique-census cap thresholds must be positive, strictly increasing safe integers');
+    }
+};
+export function validateTechniqueBudgetCurves(result) {
+    assertIncreasingCaps(result.thresholds);
+    for (const [populationName, population] of Object.entries(result.populations)) {
+        const comparatorSet = new Set(population.comparisonUniverse.techniques);
+        const partialSet = new Set(population.comparisonUniverse.excludedPartiallySampledTechniques);
+        for (const technique of population.techniques) {
+            if (technique.caps.length !== result.thresholds.length
+                || technique.tranches.length !== result.thresholds.length
+                || technique.evaluatedLevels > technique.populationLevels
+                || comparatorSet.has(technique.technique) !== technique.fullySampled
+                || partialSet.has(technique.technique) === technique.fullySampled
+                || technique.comparisonEligibility !== (technique.fullySampled
+                    ? 'fully-sampled-equal-cap-universe' : 'excluded-partial-sample')) {
+                throw new Error(`Incomplete budget curve for ${populationName}/${technique.technique}`);
+            }
+            let retained = 0;
+            let spend = 0;
+            let risk = Infinity;
+            for (let index = 0; index < result.thresholds.length; index++) {
+                const cap = technique.caps[index];
+                const tranche = technique.tranches[index];
+                spend += tranche.simulatedIncrementalCappedNodeSpend;
+                if (cap.nodeCap !== result.thresholds[index]
+                    || tranche.upperNodeCap !== result.thresholds[index]
+                    || tranche.lowerNodeCap !== (result.thresholds[index - 1] ?? 0)
+                    || cap.evaluatedLevels !== technique.evaluatedLevels
+                    || cap.fullBudgetSolves !== technique.fullBudgetSolves
+                    || cap.solvesLost !== technique.fullBudgetSolves - cap.solvesRetained
+                    || cap.retainedFraction !== (technique.fullBudgetSolves
+                        ? cap.solvesRetained / technique.fullBudgetSolves : null)
+                    || cap.fullObservedNodeSpend !== technique.fullObservedNodeSpend
+                    || cap.simulatedNodesSaved !== technique.fullObservedNodeSpend
+                        - cap.simulatedCappedNodeSpend
+                    || cap.simulatedNodesSavedPerLostSolve !== (cap.solvesLost
+                        ? cap.simulatedNodesSaved / cap.solvesLost : null)
+                    || cap.solvesRetained < retained
+                    || tranche.atRiskAtStart > risk
+                    || tranche.incrementalSolvesBought !== tranche.solvesInTranche
+                    || tranche.conditionalSolveHazard !== (tranche.atRiskAtStart
+                        ? tranche.solvesInTranche / tranche.atRiskAtStart : null)
+                    || tranche.simulatedIncrementalNodesPerSolve !== (tranche.solvesInTranche
+                        ? tranche.simulatedIncrementalCappedNodeSpend / tranche.solvesInTranche : null)
+                    || spend !== cap.simulatedCappedNodeSpend
+                    || technique.fullySampled !== (cap.exclusiveSolvesAtEqualCap !== null)) {
+                    throw new Error(`Invalid budget curve at ${populationName}/${technique.technique}/${cap.nodeCap}`);
+                }
+                retained = cap.solvesRetained;
+                risk = tranche.atRiskAtStart;
+            }
+        }
+    }
+    return result;
+}
 export const binaryMutualInformation = (both, aOnly, bOnly, neither) => {
     const total = both + aOnly + bOnly + neither;
     if (!total) return null;
@@ -57,6 +116,7 @@ export const exactDiscordancePValue = (leftOnly, rightOnly) => {
 };
 
 export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFAULT_THRESHOLDS, descriptors = [], productionRows = [], frozenProductionRows = []) {
+    assertIncreasingCaps(thresholds);
     const production = new Map(coverageRows.map(row => [`${row.corpus}/${row.levelId}`, row.wasSolvedByProduction]));
     const descriptorsById = new Map(descriptors.map(row => [row.id, row]));
     const cells = new Map();
@@ -405,6 +465,98 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
     }).filter(row => row.solved).sort((a, b) => b.substitutionRate - a.substitutionRate
         || b.meanAttemptNodes - a.meanAttemptNodes);
 
+    // These curves deliberately remain in isolated nodes. They simulate truncating each recorded
+    // attempt; they neither predict a restarted capped search nor provide a portable currency for
+    // allocating production work between technique families.
+    const buildBudgetCurves = (populationName, populationKeys) => {
+        const population = new Set(populationKeys);
+        const completeComparators = techniques.filter(technique => new Set(byTechnique.get(technique)
+            .filter(row => population.has(levelKey(row))).map(levelKey)).size === population.size);
+        const cappedWinners = new Map(completeComparators.map(technique => [technique,
+            new Map(thresholds.map(cap => [cap, new Set(byTechnique.get(technique)
+                .filter(row => population.has(levelKey(row)) && row.ok && row.nodesExpanded <= cap)
+                .map(levelKey))]))]));
+        const curves = techniques.map(technique => {
+            const techniqueRows = byTechnique.get(technique).filter(row => population.has(levelKey(row)));
+            const evaluatedKeys = new Set(techniqueRows.map(levelKey));
+            const fullySampled = evaluatedKeys.size === population.size;
+            const fullBudgetSolves = techniqueRows.filter(row => row.ok).length;
+            const fullObservedNodeSpend = techniqueRows.reduce((sum, row) =>
+                sum + Number(row.nodesExpanded ?? 0), 0);
+            const terminationCounts = Object.fromEntries([...new Set(techniqueRows.map(row => row.status))]
+                .sort().map(status => [status, techniqueRows.filter(row => row.status === status).length]));
+            const maxObservedNodes = techniqueRows.length
+                ? Math.max(...techniqueRows.map(row => Number(row.nodesExpanded ?? 0))) : null;
+            const solvedNodes = techniqueRows.filter(row => row.ok).map(row => Number(row.nodesExpanded ?? 0));
+            const caps = thresholds.map(nodeCap => {
+                const retainedKeys = new Set(techniqueRows.filter(row => row.ok
+                    && row.nodesExpanded <= nodeCap).map(levelKey));
+                const solvesRetained = retainedKeys.size;
+                const simulatedCappedNodeSpend = techniqueRows.reduce((sum, row) =>
+                    sum + Math.min(Number(row.nodesExpanded ?? 0), nodeCap), 0);
+                let exclusiveSolvesAtEqualCap = null;
+                if (fullySampled) exclusiveSolvesAtEqualCap = [...retainedKeys].filter(key =>
+                    completeComparators.every(other => other === technique
+                        || !cappedWinners.get(other).get(nodeCap).has(key))).length;
+                const solvesLost = fullBudgetSolves - solvesRetained;
+                const simulatedNodesSaved = fullObservedNodeSpend - simulatedCappedNodeSpend;
+                return {
+                    nodeCap, evaluatedLevels: evaluatedKeys.size, fullBudgetSolves,
+                    solvesRetained, solvesLost,
+                    retainedFraction: fullBudgetSolves ? solvesRetained / fullBudgetSolves : null,
+                    simulatedCappedNodeSpend, fullObservedNodeSpend, simulatedNodesSaved,
+                    simulatedNodesSavedPerLostSolve: solvesLost ? simulatedNodesSaved / solvesLost : null,
+                    exclusiveSolvesAtEqualCap,
+                };
+            });
+            const tranches = thresholds.map((upperNodeCap, index) => {
+                const lowerNodeCap = index ? thresholds[index - 1] : 0;
+                const atRiskAtStart = techniqueRows.filter(row => row.nodesExpanded > lowerNodeCap).length;
+                const solvesInTranche = techniqueRows.filter(row => row.ok
+                    && row.nodesExpanded > lowerNodeCap && row.nodesExpanded <= upperNodeCap).length;
+                const simulatedIncrementalCappedNodeSpend = techniqueRows.reduce((sum, row) => sum
+                    + Math.max(0, Math.min(Number(row.nodesExpanded ?? 0), upperNodeCap) - lowerNodeCap), 0);
+                return {
+                    lowerNodeCap, upperNodeCap, atRiskAtStart, solvesInTranche,
+                    conditionalSolveHazard: atRiskAtStart ? solvesInTranche / atRiskAtStart : null,
+                    simulatedIncrementalCappedNodeSpend,
+                    incrementalSolvesBought: solvesInTranche,
+                    simulatedIncrementalNodesPerSolve: solvesInTranche
+                        ? simulatedIncrementalCappedNodeSpend / solvesInTranche : null,
+                };
+            });
+            return {
+                technique, family: techniqueFamily(technique), evaluatedLevels: evaluatedKeys.size,
+                populationLevels: population.size, fullySampled,
+                comparisonEligibility: fullySampled
+                    ? 'fully-sampled-equal-cap-universe' : 'excluded-partial-sample',
+                fullBudgetSolves, fullObservedNodeSpend, terminationCounts, maxObservedNodes,
+                maxSolvedNodes: solvedNodes.length ? Math.max(...solvedNodes) : null,
+                caps, tranches,
+            };
+        });
+        return {
+            population: populationName, levels: population.size,
+            comparisonUniverse: {
+                rule: 'techniques evaluated on every level in this population; exclusive solves compare success at the same node cap',
+                techniques: completeComparators,
+                excludedPartiallySampledTechniques: techniques.filter(technique =>
+                    !completeComparators.includes(technique)),
+            },
+            techniques: curves,
+        };
+    };
+    const techniqueBudgetCurves = {
+        thresholds,
+        costSemantics: 'isolated nodesExpanded; cap spend is sum(min(observed nodesExpanded, cap)); use production workSpent for cross-technique allocation',
+        censoringSemantics: 'a row is at risk at tranche start only when observed nodesExpanded exceeds the lower bound; exhausted rows leave at their observed frontier and budget-limited rows are censored at their observed cap',
+        populations: {
+            productionUnsolved: buildBudgetCurves('productionUnsolved', populations.productionUnsolved),
+            productionSolved: buildBudgetCurves('productionSolved', populations.productionSolved),
+        },
+    };
+    validateTechniqueBudgetCurves(techniqueBudgetCurves);
+
     const hazardBounds = [0, ...thresholds];
     const solveHazards = completeTechniques.map(technique => {
         const techniqueRows = byTechnique.get(technique).filter(row => !row.solvedByProduction);
@@ -587,6 +739,7 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
         greedyCoverageFirstCover: coverageCover,
         populationCovers,
         isolatedTechniqueEconomics: techniqueEconomics,
+        techniqueBudgetCurves,
         solveHazards,
         productionCrossRun,
         productionMultiplicityRelationship,
@@ -605,6 +758,11 @@ export function renderTechniqueCensusSecondOrder(result, sourceDirectory, source
     const rows = (items, formatter) => items.map(formatter).join('\n');
     const productionRun = sources.productionRun ?? path.basename(DEFAULT_PRODUCTION_RUN);
     const frozenProductionRun = sources.frozenProductionRun ?? path.basename(FROZEN_PRODUCTION_RUN);
+    const gapBudgetCurves = result.techniqueBudgetCurves.populations.productionUnsolved;
+    const repairBudgetCurve = gapBudgetCurves.techniques.find(row => row.technique === 'dfs:repair:repair');
+    const repairLateTranches = repairBudgetCurve?.tranches.filter(row => row.lowerNodeCap >= 20_000_000) ?? [];
+    const repairLateRisk = repairLateTranches[0]?.atRiskAtStart ?? 0;
+    const repairLateSolves = repairLateTranches.reduce((sum, row) => sum + row.solvesInTranche, 0);
     const coverMilestones = (population, strategy) => {
         const cover = result.populationCovers[population][strategy];
         return [1, 3, 5, 10, cover.length].filter((step, index, all) => step >= 1 && step <= cover.length
@@ -777,6 +935,21 @@ This is an isolated-work screen, not production substitutability. A solve is “
 |---|---:|---:|---:|---:|---:|---:|
 ${rows(result.isolatedTechniqueEconomics.slice(0, 15), row => `| \`${row.technique}\` | ${row.solved} | ${row.meanAttemptNodes} | ${row.cheaperTechniques} | ${row.substitutedByCheaper} | ${row.unsharedWithCheaper} | ${pct(row.substitutedByCheaper, row.solved)} |`)}
 
+## Per-technique cap retention and tranche economics
+
+The JSON output contains complete cap and tranche curves for every T1 technique in both production populations. Spend is the **simulated isolated-node diagnostic** \`sum(min(observed nodesExpanded, cap))\`; it is not measured production spend and cannot compare allocation across technique families. Production scheduler experiments must use \`workSpent\`. Exhausted attempts stop spending and leave the risk set at their observed frontier. Node-budget failures are censored at their observed depth, and no behavior is inferred beyond the census ceiling.
+
+Formal \`exclusiveSolvesAtEqualCap\` compares only techniques evaluated on every level in the population, at the same cap. Partially sampled techniques retain their own descriptive curves but have \`null\` exclusivity and are excluded from the comparator universe. On the gap population, ${gapBudgetCurves.comparisonUniverse.techniques.length} techniques are fully sampled and ${gapBudgetCurves.comparisonUniverse.excludedPartiallySampledTechniques.length} are excluded as partial samples; this preserves the warning that partial repair variants contribute capability without having full-population cost evidence.
+
+Compact frozen-gap view (the machine-readable output has all eleven checkpoints and every tranche):
+
+| technique | sample | full solves | retained @10M | @20M | @50M | exclusive @50M | deepest observed attempt | simulated spend @20M / full |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+${rows(gapBudgetCurves.techniques, row => {
+    const cap = value => row.caps.find(item => item.nodeCap === value);
+    return `| \`${row.technique}\` | ${row.evaluatedLevels}/${row.populationLevels}${row.fullySampled ? '' : ' (partial)'} | ${row.fullBudgetSolves} | ${cap(10_000_000)?.solvesRetained ?? '—'} | ${cap(20_000_000)?.solvesRetained ?? '—'} | ${cap(50_000_000)?.solvesRetained ?? '—'} | ${cap(50_000_000)?.exclusiveSolvesAtEqualCap ?? '—'} | ${row.maxObservedNodes?.toLocaleString('en-US') ?? '—'} | ${cap(20_000_000)?.simulatedCappedNodeSpend?.toLocaleString('en-US') ?? '—'} / ${row.fullObservedNodeSpend.toLocaleString('en-US')} |`;
+})}
+
 ## Solve-hazard curves
 
 The T1 matrix supports a censored node-band estimate: a row remains at risk only while its reported search has expanded beyond the lower bound. Exhausted beams therefore leave the risk set rather than being treated as 50M-node failures. These are isolated-node hazards, not production-stage hazards.
@@ -787,7 +960,7 @@ ${rows(result.solveHazards.flatMap(row => row.intervals
     .filter(interval => interval.solves > 0).map(interval => ({ technique: row.technique, ...interval }))),
 row => `| \`${row.technique}\` | ${row.lower.toLocaleString('en-US')}–${row.upper.toLocaleString('en-US')} | ${row.atRisk} | ${row.solves} | ${pct(row.solves, row.atRisk)} |`)}
 
-The curve distinguishes cheap beam screens, whose risk sets disappear on exhaustion, from repair/IDA searches that retain a large censored population into deep bands. Plain repair's conditional hazard rises from 1.7% at 2–5M to 2.6% at 5–10M, 2.4% at 10–20M, and 4.6% at 20–50M. That supports protecting a genuinely deep repair pass but provides no “dead middle” interval to remove. Any cap change still needs matched-work validation because changing a stage budget also changes downstream allocation.
+The curve distinguishes cheap beam screens, whose risk sets disappear on exhaustion, from repair/IDA searches that retain a large censored population into deep bands. Plain repair buys ${repairLateSolves}/${repairBudgetCurve?.fullBudgetSolves ?? 0} solves after 20M; aggregated across the three emitted 20M–50M tranches, its conditional hazard is ${pct(repairLateSolves, repairLateRisk)} (${repairLateSolves}/${repairLateRisk}). That late aggregate is shown for continuity with the earlier broad band; the JSON preserves the 20M–30M, 30M–40M, and 40M–50M economics separately. This supports protecting a genuinely deep repair pass but does not by itself identify a tranche to remove. Any cap change still needs matched-work validation because changing a stage budget also changes downstream allocation.
 
 ## Multiplicity versus later production outcome
 

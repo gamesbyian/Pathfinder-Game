@@ -1,9 +1,9 @@
 # Technique budget-cap efficiency from the census
 
-> **Status:** scheduler input / production-change nomination; not production policy
-> **Last evidence:** 2026-08-23 — re-derived technique census `32240161854` (`76,614` unique eligible T1 cells) plus its second-order analysis
+> **Status:** active
+> **Last evidence:** 2026-08-23 — rebuilt complete per-technique cap/tranche curves from census `32240161854` (`76,614` unique eligible T1 cells)
 > **Decision:** do **not** globally lower deep-search caps. Treat cheap self-exhausting beams as screens, preserve a protected deep repair continuation, and make deep ordinary DFS/IDA continuations compete for residual budget because much of their measured capability is substitutable.
-> **Remaining gate:** extend the rebuildable census analysis with per-technique cap-retention/tranche economics for all techniques, then test a current-code level-blind scheduler under a strict shared work envelope.
+> **Remaining gate:** join the now-rebuildable per-technique curves to current production lifecycle reach/`workSpent`, then test a current-code level-blind scheduler under a strict shared work envelope.
 
 **Current authorities:** [`../docs/solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md) owns the active scheduling/allocation program; [`../docs/solver-budget-determinism.md`](../docs/solver-budget-determinism.md) owns shared-work budget rules; [`../docs/technique-census-second-order-analysis.md`](../docs/technique-census-second-order-analysis.md) owns current census interpretation/questions; [`../docs/solver-research-operating-model.md`](../docs/solver-research-operating-model.md) owns promotion/evidence rules. This report supplies dated measurements to those documents rather than acting as a competing policy authority.
 
@@ -89,6 +89,8 @@ Plain repair is the clearest counterexample to a simplistic early cutoff. Its 12
 | 5M | 42 | 34.7% |
 | 10M | 64 | 52.9% |
 | 20M | 84 | 69.4% |
+| 30M | 97 | 80.2% |
+| 40M | 113 | 93.4% |
 | 50M | 121 | 100% |
 
 Its censored conditional solve hazard also does not decay monotonically:
@@ -103,25 +105,29 @@ Its censored conditional solve hazard also does not decay monotonically:
 | 2M–5M | 861 | 15 | 1.7% |
 | 5M–10M | 846 | 22 | 2.6% |
 | 10M–20M | 824 | 20 | 2.4% |
-| 20M–50M | 804 | 37 | **4.6%** |
+| 20M–30M | 804 | 13 | 1.6% |
+| 30M–40M | 791 | 16 | 2.0% |
+| 40M–50M | 775 | 8 | 1.0% |
 
-So **37/121 repair wins, 30.6%, occur only after 20M nodes**, and **57/121, 47.1%, occur after 10M**. A hard repair cutoff in the usual "a few million" range would destroy much of repair's distinct hard-level capability.
+Aggregating the three emitted late tranches preserves the earlier broad-band result: **37/804 = 4.6%** conditional hazard from 20M–50M. Thus **37/121 repair wins, 30.6%, occur only after 20M nodes**, and **57/121, 47.1%, occur after 10M**. The split also shows that late yield is not concentrated in a single 10M interval: 13, 16, and 8 solves arrive successively. A hard repair cutoff in the usual "a few million" range would destroy much of repair's distinct hard-level capability.
 
-Deep repair is expensive, though. A deliberately conservative upper-bound exposure calculation, treating every still-at-risk attempt as if it consumed the entire next tranche, gives:
+Deep repair is expensive, though. The rebuilt analyzer can now replace the former full-risk-set upper bounds with exact **simulated incremental capped spend over the recorded rows**. Each value is the increase in `sum(min(observed nodesExpanded, cap))` when admitting that tranche:
 
-| tranche | maximum tranche exposure | solves | max exposure / solve |
+| tranche | simulated incremental capped nodes | solves | simulated nodes / incremental solve |
 |---|---:|---:|---:|
-| 0–100K | 88.8M | 9 | 9.9M |
-| 100K–250K | 131.9M | 2 | 65.9M |
-| 250K–500K | 219.3M | 3 | 73.1M |
-| 500K–1M | 437M | 4 | 109.3M |
-| 1M–2M | 870M | 9 | 96.7M |
-| 2M–5M | 2.583B | 15 | 172.2M |
-| 5M–10M | 4.230B | 22 | 192.3M |
-| 10M–20M | 8.240B | 20 | 412M |
-| 20M–50M | 24.120B | 37 | 651.9M |
+| 0–100K | 88.3M | 9 | 9.8M |
+| 100K–250K | 131.7M | 2 | 65.8M |
+| 250K–500K | 218.9M | 3 | 73.0M |
+| 500K–1M | 435.9M | 4 | 109.0M |
+| 1M–2M | 864.3M | 9 | 96.0M |
+| 2M–5M | 2.556B | 15 | 170.4M |
+| 5M–10M | 4.166B | 22 | 189.4M |
+| 10M–20M | 8.120B | 20 | 406.0M |
+| 20M–30M | 7.970B | 13 | 613.1M |
+| 30M–40M | 7.835B | 16 | 489.7M |
+| 40M–50M | 7.689B | 8 | 961.1M |
 
-These are **upper bounds**, not actual measured tranche costs: successful/exhausted runs leave the risk set inside a tranche, and raw nodes are not the cross-technique production work currency. They nevertheless show the correct scheduler shape: deep repair has real yield, but its tail should be a **protected continuation for a residual population**, not something placed casually ahead of cheap screens.
+These are exact for the stated truncation simulation, but they remain **simulated isolated-node expenditure**, not actually measured production tranche cost. Successful and exhausted attempts stop at their recorded depth; raw nodes are still not the cross-technique production work currency. The sharper curve shows a relatively stronger 30M–40M repair interval than its neighbors, but the whole tail remains expensive enough that it should be a **protected continuation for a residual population**, not something placed casually ahead of cheap screens.
 
 ## 5. The strongest irrational-allocation signal is deep ordinary DFS/IDA redundancy
 
@@ -144,7 +150,7 @@ The generated table currently contains the following deep ordinary DFS rows at 1
 
 Two cautions matter here:
 
-1. The current high-level second-order doc summarizes this as **nine** ordinary DFS profiles, while the generated table visibly contains ten 100%-substituted DFS rows. Reconcile that counting/classification convention before publishing a formal removal list.
+1. The exact count is **ten** ordinary DFS profiles. The former count of nine omitted `dfs:default`; it is an ordinary DFS profile under the analyzer’s family naming and its 11/11 gap solves are reproduced by cheaper-mean fully sampled techniques.
 2. "Substituted by any cheaper-mean technique" is not the same as "redundant after the exact production predecessors." The cost-weighted greedy cover can still select a globally substitutable technique late because its substitutes may themselves have been displaced by earlier choices. This is precisely why the scheduler must optimize **conditional residual value**, not delete rows from a global-overlap table.
 
 Still, the signal is too large to ignore. Spending near-50M mean isolated nodes on a family whose measured gap wins are all reproducible elsewhere is a much stronger budget concern than repair's expensive but genuinely distinctive tail.
@@ -204,12 +210,7 @@ Those are evidence-analysis bands, **not proposed production constants**. The sc
 
 Do not change production caps directly from this frozen-node analysis. The next production-shaped experiment should be the first scheduler tranche test:
 
-1. **Extend `scripts/technique-census-second-order.mjs`** to emit the cap-retention curve for every fully sampled technique at `100K/250K/500K/1M/2M/5M/10M/20M/30M/40M/50M`, including:
-   - solves retained and lost at each cap;
-   - simulated capped node spend (`sum(min(observedNodes, cap))`) versus full observed spend;
-   - tranche solve hazard and at-risk count;
-   - exclusive/marginal solves under clearly stated comparator rules;
-   - provenance/freshness and partial-sampling warnings.
+1. **Use the generated curves as the rebuildable offline input.** `second-order-analysis.json` now includes all eleven checkpoints for every T1 technique, exact simulated capped spend from recorded rows, censored tranche risk/cost/yield, and equal-cap exclusive solves over the 37 fully sampled gap comparators. Four partial variants are labelled and excluded from formal comparison.
 2. **Join current production lifecycle reach.** Frozen isolated efficiency matters only where current production actually reaches the action. Measure current residual work spent before/inside each relevant stage.
 3. **Build a static bounded scheduler arm** that:
    - schedules cheap self-exhausting beams before expensive searches when evidence supports both;

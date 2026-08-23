@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import { analyzeTechniqueCensus, binaryMutualInformation,
-    exactDiscordancePValue, renderTechniqueCensusSecondOrder } from './technique-census-second-order.mjs';
+    exactDiscordancePValue, renderTechniqueCensusSecondOrder,
+    validateTechniqueBudgetCurves } from './technique-census-second-order.mjs';
 
 const result = analyzeTechniqueCensus({ results: [
     { tier: 'T1', corpus: 'corpus2', levelId: 'a', levelPos: 1, techniqueKeys: ['beam:a'], ok: true, status: 'success', nodesExpanded: 90 },
@@ -61,6 +63,46 @@ assert.equal(result.productionCrossRun.medianProductionToIsolatedNodeRatio, 451)
 assert.deepEqual(result.solveHazards.find(row => row.technique === 'beam:a').intervals[0], {
     lower: 0, upper: 100, atRisk: 3, solves: 1, hazard: 1 / 3,
 });
+const gapCurves = result.techniqueBudgetCurves.populations.productionUnsolved;
+const beamCurve = gapCurves.techniques.find(row => row.technique === 'beam:a');
+const dfsCurve = gapCurves.techniques.find(row => row.technique === 'dfs:b');
+const partialCurve = gapCurves.techniques.find(row => row.technique === 'beam:partial');
+assert.deepEqual(beamCurve.terminationCounts, { exhausted: 2, success: 1 });
+assert.equal(beamCurve.maxObservedNodes, 90);
+assert.equal(beamCurve.maxSolvedNodes, 90);
+assert.deepEqual(beamCurve.caps.map(row => [row.nodeCap, row.solvesRetained, row.solvesLost]), [
+    [100, 1, 0], [250, 1, 0],
+], 'a success before the first cap remains retained');
+assert.deepEqual(dfsCurve.caps.map(row => [row.nodeCap, row.solvesRetained, row.solvesLost]), [
+    [100, 0, 1], [250, 1, 0],
+], 'a later success is lost at the early cap and retained later');
+assert.equal(dfsCurve.caps[0].simulatedCappedNodeSpend, 300,
+    'node-capped failures contribute min(observed nodes, cap)');
+assert.deepEqual(dfsCurve.tranches.map(row => row.simulatedIncrementalCappedNodeSpend), [300, 400],
+    'incremental tranche spend is the exact change in simulated capped spend');
+assert.equal(dfsCurve.tranches.reduce((sum, row) => sum + row.simulatedIncrementalCappedNodeSpend, 0),
+    dfsCurve.caps.at(-1).simulatedCappedNodeSpend,
+    'successive tranche expenditures reconcile to the final simulated capped spend');
+assert.deepEqual(beamCurve.tranches.map(row => [row.atRiskAtStart, row.solvesInTranche]), [
+    [3, 1], [0, 0],
+], 'exhausted searches leave later risk sets at their actual frontier');
+assert.deepEqual(dfsCurve.tranches.map(row => [row.atRiskAtStart, row.solvesInTranche]), [
+    [3, 0], [3, 1],
+], 'tranche hazards use only rows still at risk at the tranche start');
+assert.equal(partialCurve.fullySampled, false);
+assert.equal(partialCurve.caps[0].exclusiveSolvesAtEqualCap, null,
+    'partial techniques are not treated as full-population equal-cap competitors');
+assert.deepEqual(beamCurve.caps.map(row => row.exclusiveSolvesAtEqualCap), [1, 1],
+    'equal-cap exclusivity ignores excluded partial cells but compares every complete technique');
+assert.deepEqual(gapCurves.comparisonUniverse.excludedPartiallySampledTechniques, ['beam:partial']);
+assert.equal(validateTechniqueBudgetCurves(result.techniqueBudgetCurves), result.techniqueBudgetCurves);
+assert.throws(() => analyzeTechniqueCensus({ results: [] }, [], [250, 100]),
+    /positive, strictly increasing safe integers/);
+const invalidCurves = JSON.parse(JSON.stringify(result.techniqueBudgetCurves));
+invalidCurves.populations.productionUnsolved.techniques[0].tranches[1]
+    .simulatedIncrementalCappedNodeSpend++;
+assert.throws(() => validateTechniqueBudgetCurves(invalidCurves), /Invalid budget curve/,
+    'curve validation detects cumulative spend that no longer reconciles');
 assert.deepEqual(result.productionMultiplicityRelationship.map(row => [row.multiplicity, row.productionSolveRate]), [
     ['1', 1], ['2', 0],
 ]);
@@ -71,6 +113,16 @@ assert.deepEqual(result.productionFragilityMatrix.map(row =>
     [row.cheapestCost, row.multiplicity, row.productionSolveRate]), [
     ['≤500K', '1', 1], ['≤500K', '2', 0],
 ]);
+const renderedFixture = renderTechniqueCensusSecondOrder(result, 'fixture');
+assert.equal(renderTechniqueCensusSecondOrder(result, 'fixture'), renderedFixture,
+    'deterministic input produces deterministic Markdown');
+assert.equal(JSON.stringify(analyzeTechniqueCensus({ results: [
+    { tier: 'T1', corpus: 'corpus2', levelId: 'x', levelPos: 1, techniqueKeys: ['beam:x'], ok: true, status: 'success', nodesExpanded: 5 },
+] }, [{ corpus: 'corpus2', levelId: 'x', wasSolvedByProduction: false }], [10])),
+JSON.stringify(analyzeTechniqueCensus({ results: [
+    { tier: 'T1', corpus: 'corpus2', levelId: 'x', levelPos: 1, techniqueKeys: ['beam:x'], ok: true, status: 'success', nodesExpanded: 5 },
+] }, [{ corpus: 'corpus2', levelId: 'x', wasSolvedByProduction: false }], [10])),
+'deterministic input produces deterministic derived JSON');
 
 const pathology = analyzeTechniqueCensus({ results: [
     { tier: 'T1', corpus: 'corpus2', levelId: 'gain', levelPos: 1, techniqueKeys: ['beam:x'], ok: false, status: 'exhausted', nodesExpanded: 10 },
@@ -120,4 +172,39 @@ assert.match(renderedReverse, /exact-production-commit fresh controls/i);
 assert.match(renderedReverse, /lower-bound-cache clearing and progressively shorter attempt prefixes/);
 assert.doesNotMatch(renderedReverse, /still need exact winning-attempt isolated controls/,
     'generated follow-up must not regress behind the completed exact-commit controls');
+
+// Fixture-level regression checks intentionally protect the committed census findings named in
+// the scheduling program. The following `--check` half of the package script proves that these
+// derived values still correspond byte-for-byte to the committed raw cells rather than hand edits.
+const committed = JSON.parse(readFileSync(
+    'reports/stress/technique-census/32240161854/second-order-analysis.json', 'utf8'));
+const committedGap = committed.techniqueBudgetCurves.populations.productionUnsolved;
+const committedRepair = committedGap.techniques.find(row => row.technique === 'dfs:repair:repair');
+const committedCap = (technique, cap) => technique.caps.find(row => row.nodeCap === cap);
+assert.deepEqual(committed.perfectRouter.filter(row => [10_000_000, 20_000_000, 50_000_000]
+    .includes(row.nodeCap)).map(row => [row.nodeCap, row.productionUnsolved]), [
+    [10_000_000, 171], [20_000_000, 202], [50_000_000, 253],
+], 'the committed perfect-router fixture retains its established hard-gap curve');
+assert.deepEqual([10_000_000, 20_000_000, 50_000_000]
+    .map(cap => committedCap(committedRepair, cap).solvesRetained), [64, 84, 121]);
+const committedRepairLate = committedRepair.tranches.filter(row => row.lowerNodeCap >= 20_000_000);
+assert.equal(committedRepairLate.reduce((sum, row) => sum + row.solvesInTranche, 0), 37);
+assert.equal(committedRepairLate[0].atRiskAtStart, 804);
+assert.equal(Number((37 / committedRepairLate[0].atRiskAtStart).toFixed(3)), 0.046,
+    'plain repair preserves the established aggregate 20M–50M conditional hazard');
+const committedBeams = committedGap.techniques.filter(row => row.family === 'beam');
+assert.ok(committedBeams.every(row => row.maxObservedNodes < 1_000_000
+    && !Object.hasOwn(row.terminationCounts, 'node-budget-reached')),
+'every observed beam frontier self-exhausts below one million nodes');
+assert.equal(committedGap.techniques.length, 41);
+assert.equal(committedGap.techniques.filter(row => row.fullySampled).length, 37);
+assert.equal(committedGap.comparisonUniverse.excludedPartiallySampledTechniques.length, 4);
+assert.equal(committed.multiplicity.productionUnsolved.oracleSolved
+    - committed.completeTechniqueCover.coverableLevels, 34,
+'partial variants account for the established 34-level complete-comparator coverage gap');
+const fullySubstitutedOrdinaryDfs = committed.isolatedTechniqueEconomics.filter(row =>
+    row.technique.startsWith('dfs:') && !row.technique.startsWith('dfs:repair:')
+    && !row.technique.includes('/') && row.substitutionRate === 1);
+assert.equal(fullySubstitutedOrdinaryDfs.length, 10,
+    'the ordinary-DFS discrepancy remains reconciled at ten, including dfs:default');
 console.log('technique-census second-order analysis checks passed');

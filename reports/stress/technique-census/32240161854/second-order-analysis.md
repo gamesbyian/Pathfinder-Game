@@ -29,6 +29,8 @@ Low multiplicity is common in the capability-gap population: 161/253 (63.6%) ora
 | 5,000,000 | 141 | 1036 |
 | 10,000,000 | 171 | 1049 |
 | 20,000,000 | 202 | 1059 |
+| 30,000,000 | 217 | 1059 |
+| 40,000,000 | 241 | 1060 |
 | 50,000,000 | 253 | 1060 |
 
 The curve is an oracle bound, not implementable routing: it chooses the cheapest winning technique using hindsight. It nevertheless separates cheap routing opportunity from deep-search capability.
@@ -334,6 +336,58 @@ This is an isolated-work screen, not production substitutability. A solve is “
 | `ida:mustCrossFirst` | 23 | 49424228 | 20 | 22 | 1 | 95.7% |
 | `beam:objectiveFirst@beam5000+connectivity-axis-exhausted-off` | 19 | 333748 | 11 | 18 | 1 | 94.7% |
 
+## Per-technique cap retention and tranche economics
+
+The JSON output contains complete cap and tranche curves for every T1 technique in both production populations. Spend is the **simulated isolated-node diagnostic** `sum(min(observed nodesExpanded, cap))`; it is not measured production spend and cannot compare allocation across technique families. Production scheduler experiments must use `workSpent`. Exhausted attempts stop spending and leave the risk set at their observed frontier. Node-budget failures are censored at their observed depth, and no behavior is inferred beyond the census ceiling.
+
+Formal `exclusiveSolvesAtEqualCap` compares only techniques evaluated on every level in the population, at the same cap. Partially sampled techniques retain their own descriptive curves but have `null` exclusivity and are excluded from the comparator universe. On the gap population, 37 techniques are fully sampled and 4 are excluded as partial samples; this preserves the warning that partial repair variants contribute capability without having full-population cost evidence.
+
+Compact frozen-gap view (the machine-readable output has all eleven checkpoints and every tranche):
+
+| technique | sample | full solves | retained @10M | @20M | @50M | exclusive @50M | deepest observed attempt | simulated spend @20M / full |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `beam:harvestThenFinish@beam2000` | 888/888 | 16 | 16 | 16 | 16 | 2 | 252,226 | 114,245,882 / 114,245,882 |
+| `beam:intersectionHarvest@beam2000` | 888/888 | 13 | 13 | 13 | 13 | 2 | 246,526 | 114,347,622 / 114,347,622 |
+| `beam:intersectionHarvest@beam5000` | 888/888 | 23 | 23 | 23 | 23 | 0 | 629,645 | 288,500,140 / 288,500,140 |
+| `beam:intersectionHarvest@beam5000(diverse)` | 888/888 | 37 | 37 | 37 | 37 | 1 | 681,557 | 309,191,994 / 309,191,994 |
+| `beam:intersectionHarvest@beam5000+connectivity-axis-exhausted-off` | 888/888 | 18 | 18 | 18 | 18 | 0 | 647,174 | 297,666,849 / 297,666,849 |
+| `beam:intersectionHarvest@beam5000+dedup-near-tie-retention-off` | 888/888 | 28 | 28 | 28 | 28 | 3 | 629,645 | 287,778,462 / 287,778,462 |
+| `beam:knotBuilder@beam2000` | 888/888 | 13 | 13 | 13 | 13 | 1 | 253,641 | 114,663,195 / 114,663,195 |
+| `beam:mustCrossFirst@beam2000` | 888/888 | 13 | 13 | 13 | 13 | 2 | 265,956 | 115,014,829 / 115,014,829 |
+| `beam:mustCrossFirst@beam2000+mc-neighbor-budget-off` | 497/888 (partial) | 5 | 5 | 5 | 5 | — | 265,956 | 61,647,761 / 61,647,761 |
+| `beam:objectiveFirst@beam2000` | 888/888 | 10 | 10 | 10 | 10 | 1 | 274,674 | 114,204,582 / 114,204,582 |
+| `beam:objectiveFirst@beam5000` | 888/888 | 29 | 29 | 29 | 29 | 0 | 686,933 | 288,001,669 / 288,001,669 |
+| `beam:objectiveFirst@beam5000(diverse)` | 888/888 | 40 | 40 | 40 | 40 | 5 | 657,241 | 307,023,337 / 307,023,337 |
+| `beam:objectiveFirst@beam5000+connectivity-axis-exhausted-off` | 888/888 | 19 | 19 | 19 | 19 | 0 | 691,226 | 296,367,917 / 296,367,917 |
+| `beam:objectiveFirst@beam5000+dedup-near-tie-retention-off` | 888/888 | 31 | 31 | 31 | 31 | 3 | 686,933 | 286,804,690 / 286,804,690 |
+| `beam:perimeterSweep/perimeterCCW@beam2000` | 888/888 | 28 | 28 | 28 | 28 | 6 | 272,846 | 133,277,632 / 133,277,632 |
+| `beam:perimeterSweep/perimeterCW@beam2000` | 888/888 | 27 | 27 | 27 | 27 | 6 | 270,857 | 132,790,742 / 132,790,742 |
+| `dfs:closureCommitment` | 888/888 | 10 | 1 | 2 | 10 | 0 | 50,000,255 | 17,737,733,361 / 44,199,010,649 |
+| `dfs:default` | 888/888 | 11 | 4 | 5 | 11 | 0 | 50,000,255 | 17,690,672,199 / 44,088,856,273 |
+| `dfs:finishFirst` | 888/888 | 11 | 1 | 2 | 11 | 1 | 50,000,255 | 17,736,343,580 / 44,206,018,782 |
+| `dfs:harvestThenFinish` | 888/888 | 12 | 1 | 3 | 12 | 0 | 50,000,255 | 17,734,283,144 / 44,147,911,337 |
+| `dfs:intersectionHarvest` | 888/888 | 12 | 2 | 3 | 12 | 0 | 50,000,255 | 17,726,982,929 / 44,163,331,115 |
+| `dfs:knotBuilder` | 888/888 | 15 | 3 | 5 | 15 | 1 | 50,000,255 | 17,703,563,888 / 44,037,950,558 |
+| `dfs:mustCrossFirst` | 888/888 | 11 | 2 | 3 | 11 | 0 | 50,000,255 | 17,727,718,916 / 44,182,094,666 |
+| `dfs:mustCrossFirst+mc-neighbor-budget-off` | 497/888 (partial) | 5 | 1 | 2 | 5 | — | 50,000,255 | 9,926,310,933 / 24,732,404,581 |
+| `dfs:nearClosureRescue` | 888/888 | 11 | 1 | 3 | 11 | 0 | 50,000,255 | 17,739,419,997 / 44,190,649,352 |
+| `dfs:objectiveFirst` | 888/888 | 11 | 3 | 4 | 11 | 0 | 50,000,254 | 17,714,947,680 / 44,128,738,643 |
+| `dfs:perimeterSweep` | 888/888 | 11 | 2 | 3 | 11 | 0 | 50,000,255 | 17,725,496,322 / 44,143,528,420 |
+| `dfs:perimeterSweep/cornerHarvest` | 888/888 | 15 | 6 | 7 | 15 | 1 | 50,000,255 | 17,675,614,716 / 43,977,752,095 |
+| `dfs:perimeterSweep/perimeterCCW` | 888/888 | 26 | 9 | 13 | 26 | 3 | 50,000,255 | 17,589,055,140 / 43,645,122,657 |
+| `dfs:perimeterSweep/perimeterCW` | 888/888 | 24 | 10 | 12 | 24 | 1 | 50,000,255 | 17,605,015,910 / 43,696,068,743 |
+| `dfs:perimeterSweep/sideCommitment` | 888/888 | 13 | 3 | 4 | 13 | 2 | 50,000,255 | 17,712,840,075 / 44,099,602,698 |
+| `dfs:portalCommitted` | 888/888 | 10 | 2 | 3 | 10 | 0 | 50,000,255 | 17,720,320,453 / 44,168,998,011 |
+| `dfs:portalFirstTransfer` | 888/888 | 10 | 2 | 2 | 10 | 0 | 50,000,255 | 17,730,347,156 / 44,174,261,505 |
+| `dfs:repair:repair` | 888/888 | 121 | 64 | 84 | 121 | 56 | 50,000,090 | 16,581,050,001 / 40,074,839,782 |
+| `dfs:repair:repair(mustTurnBiased)` | 596/888 (partial) | 38 | 19 | 26 | 38 | — | 50,000,087 | 11,596,485,459 / 28,527,692,266 |
+| `dfs:repair:repair(turnBiased)` | 596/888 (partial) | 45 | 26 | 35 | 45 | — | 50,000,067 | 11,466,964,524 / 28,107,286,901 |
+| `ida:default` | 888/888 | 17 | 0 | 5 | 17 | 0 | 50,000,128 | 17,736,670,837 / 44,060,905,381 |
+| `ida:intersectionHarvest` | 888/888 | 20 | 4 | 9 | 20 | 1 | 50,000,128 | 17,671,888,926 / 43,886,050,998 |
+| `ida:mustCrossFirst` | 888/888 | 23 | 4 | 8 | 23 | 0 | 50,000,128 | 17,667,284,468 / 43,888,714,580 |
+| `ida:nearClosureRescue` | 888/888 | 22 | 4 | 9 | 22 | 0 | 50,000,128 | 17,661,121,673 / 43,864,696,044 |
+| `ida:none` | 888/888 | 22 | 0 | 8 | 22 | 5 | 50,000,128 | 17,731,000,664 / 43,953,458,488 |
+
 ## Solve-hazard curves
 
 The T1 matrix supports a censored node-band estimate: a row remains at risk only while its reported search has expanded beyond the lower bound. Exhausted beams therefore leave the risk set rather than being treated as 50M-node failures. These are isolated-node hazards, not production-stage hazards.
@@ -348,7 +402,9 @@ The T1 matrix supports a censored node-band estimate: a row remains at risk only
 | `dfs:repair:repair` | 2,000,000–5,000,000 | 861 | 15 | 1.7% |
 | `dfs:repair:repair` | 5,000,000–10,000,000 | 846 | 22 | 2.6% |
 | `dfs:repair:repair` | 10,000,000–20,000,000 | 824 | 20 | 2.4% |
-| `dfs:repair:repair` | 20,000,000–50,000,000 | 804 | 37 | 4.6% |
+| `dfs:repair:repair` | 20,000,000–30,000,000 | 804 | 13 | 1.6% |
+| `dfs:repair:repair` | 30,000,000–40,000,000 | 791 | 16 | 2.0% |
+| `dfs:repair:repair` | 40,000,000–50,000,000 | 775 | 8 | 1.0% |
 | `beam:objectiveFirst@beam5000(diverse)` | 0–100,000 | 888 | 1 | 0.1% |
 | `beam:objectiveFirst@beam5000(diverse)` | 100,000–250,000 | 884 | 9 | 1.0% |
 | `beam:objectiveFirst@beam5000(diverse)` | 250,000–500,000 | 709 | 27 | 3.8% |
@@ -372,7 +428,7 @@ The T1 matrix supports a censored node-band estimate: a row remains at risk only
 | `beam:perimeterSweep/perimeterCW@beam2000` | 0–100,000 | 888 | 7 | 0.8% |
 | `beam:perimeterSweep/perimeterCW@beam2000` | 100,000–250,000 | 784 | 20 | 2.6% |
 
-The curve distinguishes cheap beam screens, whose risk sets disappear on exhaustion, from repair/IDA searches that retain a large censored population into deep bands. Plain repair's conditional hazard rises from 1.7% at 2–5M to 2.6% at 5–10M, 2.4% at 10–20M, and 4.6% at 20–50M. That supports protecting a genuinely deep repair pass but provides no “dead middle” interval to remove. Any cap change still needs matched-work validation because changing a stage budget also changes downstream allocation.
+The curve distinguishes cheap beam screens, whose risk sets disappear on exhaustion, from repair/IDA searches that retain a large censored population into deep bands. Plain repair buys 37/121 solves after 20M; aggregated across the three emitted 20M–50M tranches, its conditional hazard is 4.6% (37/804). That late aggregate is shown for continuity with the earlier broad band; the JSON preserves the 20M–30M, 30M–40M, and 40M–50M economics separately. This supports protecting a genuinely deep repair pass but does not by itself identify a tranche to remove. Any cap change still needs matched-work validation because changing a stage budget also changes downstream allocation.
 
 ## Multiplicity versus later production outcome
 
