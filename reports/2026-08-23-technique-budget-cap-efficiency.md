@@ -5,6 +5,8 @@
 > **Decision:** do **not** globally lower deep-search caps. Treat cheap self-exhausting beams as screens, preserve a protected deep repair continuation, and make deep ordinary DFS/IDA continuations compete for residual budget because much of their measured capability is substitutable.
 > **Remaining gate:** extend the rebuildable census analysis with per-technique cap-retention/tranche economics for all techniques, then test a current-code level-blind scheduler under a strict shared work envelope.
 
+**Current authorities:** [`../docs/solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md) owns the active scheduling/allocation program; [`../docs/solver-budget-determinism.md`](../docs/solver-budget-determinism.md) owns shared-work budget rules; [`../docs/technique-census-second-order-analysis.md`](../docs/technique-census-second-order-analysis.md) owns current census interpretation/questions; [`../docs/solver-research-operating-model.md`](../docs/solver-research-operating-model.md) owns promotion/evidence rules. This report supplies dated measurements to those documents rather than acting as a competing policy authority.
+
 This report answers a narrower question than the general scheduling program in [`../docs/solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md): **are current search techniques receiving budgets far beyond the depth at which they ever succeed?**
 
 The answer is mixed. The frozen census does not support a universal "wins early or never" rule on the hard residual population. It does expose a strong difference between cheap self-exhausting beams, genuinely deep repair, and deep DFS/IDA work whose marginal capability is often duplicated elsewhere.
