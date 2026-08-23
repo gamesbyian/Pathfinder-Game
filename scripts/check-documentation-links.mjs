@@ -119,7 +119,8 @@ for (const [file, requiredStrings] of routerRequirements) {
 
 // Explicit current authorities are checked more strictly than retained evidence. The docs index is
 // the authority boundary: unindexed legacy design notes and dated reports remain searchable, but
-// do not make historical commands/paths current contracts merely by existing in Git.
+// do not make historical commands/paths current contracts merely by existing in Git. An index may
+// still link to history for navigation; that does not promote the historical file into current truth.
 const docsIndex = readFileSync(resolve(ROOT, 'docs/README.md'), 'utf8');
 const currentAuthorityFiles = new Set([
   'AGENTS.md', 'CLAUDE.md', 'DEVELOPER_REFERENCE.md', 'docs/README.md', 'reports/README.md',
@@ -129,7 +130,7 @@ for (const match of docsIndex.matchAll(markdownLink)) {
   const destination = match[1].split('#', 1)[0];
   if (destination && !/^[a-z][a-z0-9+.-]*:/i.test(destination)) {
     const target = relative(ROOT, resolve(ROOT, 'docs', destination)).split('\\').join('/');
-    if (target.endsWith('.md')) currentAuthorityFiles.add(target);
+    if (target.endsWith('.md') && !historicalDocumentation(target)) currentAuthorityFiles.add(target);
   }
 }
 
