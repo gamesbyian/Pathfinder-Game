@@ -32,7 +32,7 @@ const rows = [
     ['mc-neighbor-budget-retry', 110, 'promoted', 'retry', 'must-cross neighbor retry enabled', 'configured-main', 'additive-node-headroom', 'mc-neighbor-budget-retry'],
     ['repair-late-probe', 120, 'opt-in', 'retry', 'late repair probe enabled', 'configured-repair', 'fixed-node-cap', 'repair-late-probe'],
     ['goal-attraction-legacy-distance-retry', 125, 'promoted', 'retry', 'goal-attraction legacy-distance retry enabled', 'configured-main', 'additive-node-headroom', 'goal-attraction-legacy-distance-retry'],
-    ['repair-late-probe-multi-seed-retry', 128, 'opt-in', 'retry', 'repair-late-probe multi-seed retry enabled and repair-late-probe itself eligible', 'configured-repair', 'additive-node-headroom', 'repair-late-probe-multi-seed-retry'],
+    ['repair-late-probe-multi-seed-retry', 128, 'promoted', 'retry', 'repair-late-probe multi-seed retry enabled and repair-late-probe itself eligible', 'configured-repair', 'additive-node-headroom', 'repair-late-probe-multi-seed-retry'],
     ['portfolio-pass', 20, 'experiment-only', 'portfolio', 'portfolio pass includes config', 'portfolio', 'portfolio-pass', null],
     ['portfolio-fallback', 130, 'experiment-only', 'portfolio', 'portfolio passes did not solve', 'configured-main', 'caller-main', null],
 ] as const;

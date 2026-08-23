@@ -839,8 +839,8 @@ export const REPAIR_LATE_PROBE_NODE_BUDGET = 5_000_000;
 export const GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION = 1.0;
 export const GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_NODE_RESERVE_FRACTION = 0.5;
 
-/** STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY (opt-in, default OFF — NEW, unvalidated mechanism,
- *  2026-08-23). Dead-last additive extension of STRATEGY_REPAIR_LATE_PROBE, positioned AFTER
+/** STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY (promoted, default ON — 2026-08-23). Dead-last
+ *  additive extension of STRATEGY_REPAIR_LATE_PROBE, positioned AFTER
  *  goal-attraction-legacy-distance-retry (the current true end of the ladder). For the exact same
  *  `repairConfigsCount === 0` population repair-late-probe already targets (levels attempts.ts's
  *  routing never even offered a repair config to), retry `repairAttempt()` across
@@ -866,10 +866,10 @@ export const GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  Reached only after repair-late-probe's own single seed has already failed, so a level that
  *  solves on the first seed (or reaches this tier via any other, e.g. repairConfigsCount > 0) is
  *  completely unaffected — purely additive by construction, same reasoning as every other
- *  dead-last tier in this file. The seed count below is deliberately large and untested; validate
- *  at population scale (both solve-count gain and wall-time cost on the population that reaches
- *  it) before considering promotion or narrowing — see docs/solver-optimization-current-queue.md
- *  Priority 7 and docs/solver-opt-in-experiment-ledger.md for evidence status. */
+ *  dead-last tier in this file. Promoted 2026-08-23 after a population-scale A/B
+ *  (solver-level-blind-targeted-sweep.yml): 73-level loss population 18→23 (+5/-0, control's
+ *  solved set a strict subset of treatment's), 90-level gain population 90/90 unaffected,
+ *  published corpus 160/160 unaffected. See docs/solver-opt-in-experiment-ledger.md. */
 export const REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS = [1, 2, 3, 4, 5, 6, 7];
 
 
@@ -1225,7 +1225,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
         ? Infinity
         : repairLateProbeNodeCeiling + goalAttractionLegacyDistanceRetryNodeReserve;
 
-    // STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY (opt-in, default OFF) — see
+    // STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY (promoted, default ON) — see
     // REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS's own comment above. Requires
     // repairLateProbeTierWillRun itself (running more seeds of a tier that wouldn't even run once
     // makes no sense, and this transitively respects opts.disableExtraBudgetPasses /
@@ -1233,7 +1233,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // Stacked on goalAttractionLegacyDistanceRetryNodeCeiling, the current true end of the ladder —
     // NOT on repairLateProbeNodeCeiling directly, so it never contends with that tier's own budget.
     const repairLateProbeMultiSeedRetryTierWillRun = repairLateProbeTierWillRun
-        && !!(cfg && cfg.STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY === true);
+        && !!(!cfg || cfg.STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY);
     // Flat additive reserve (like repairLateProbeNodeReserve itself): each seed gets its own full
     // REPAIR_LATE_PROBE_NODE_BUDGET, not a fraction split across seeds — diluting an already-
     // calibrated per-seed budget would confound "does more seeds help" with "does less budget per

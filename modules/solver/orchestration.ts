@@ -2424,8 +2424,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     }
 
     // Last-resort repair-late-probe MULTI-SEED retry (REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_
-    // SALTS, STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY) — see that constant's own comment in
-    // stage-budget.ts for the full rationale. Dead-last additive extension of repair-late-probe:
+    // SALTS, STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY, promoted default-ON 2026-08-23) — see
+    // that constant's own comment in stage-budget.ts for the full rationale and validated
+    // evidence. Dead-last additive extension of repair-late-probe:
     // for the exact same repairConfigsCount===0 population, retry the SAME repairAttempt() builder
     // across several more PRNG seeds (repair-late-probe itself already tried seed salt 0), each
     // seed getting its own full REPAIR_LATE_PROBE_NODE_BUDGET reserve. Structurally identical to
