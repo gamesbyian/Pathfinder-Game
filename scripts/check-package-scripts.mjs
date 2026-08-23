@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Verifies that package.json scripts do not reference missing local Node entrypoints.
+ * Verifies that package.json scripts and tooling lifecycle overrides do not reference missing
+ * local entrypoints.
  *
  * This intentionally checks the drift pattern that has hurt this repo: scripts such
  * as `node scripts/foo.mjs` or `node LegacySolver/foo.mjs` surviving after the
@@ -13,6 +14,8 @@ import process from 'node:process';
 
 const ROOT = process.cwd();
 const PACKAGE_PATH = path.join(ROOT, 'package.json');
+const TOOLING_LIFECYCLE_PATH = path.join(ROOT, 'scripts', 'tooling-lifecycle.json');
+const VALID_TOOLING_LIFECYCLES = new Set(['completed-migration', 'specialist-forensic', 'cold-research']);
 const NODE_FLAGS_WITH_VALUES = new Set([
   '--conditions',
   '--diagnostic-dir',
@@ -92,4 +95,29 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-console.log('Package script entrypoints exist.');
+if (fs.existsSync(TOOLING_LIFECYCLE_PATH)) {
+  const lifecycleDoc = JSON.parse(fs.readFileSync(TOOLING_LIFECYCLE_PATH, 'utf8'));
+  const lifecycleErrors = [];
+  if (lifecycleDoc.schemaVersion !== 1 || !lifecycleDoc.entries || typeof lifecycleDoc.entries !== 'object') {
+    lifecycleErrors.push('scripts/tooling-lifecycle.json must have schemaVersion 1 and an entries object.');
+  } else {
+    for (const [file, info] of Object.entries(lifecycleDoc.entries)) {
+      if (!file.startsWith('scripts/') || !fs.existsSync(path.join(ROOT, file))) {
+        lifecycleErrors.push(`${file}: lifecycle override points to a missing/non-script path.`);
+      }
+      if (!VALID_TOOLING_LIFECYCLES.has(info?.lifecycle)) {
+        lifecycleErrors.push(`${file}: unknown lifecycle ${JSON.stringify(info?.lifecycle)}.`);
+      }
+      if (typeof info?.note !== 'string' || info.note.trim() === '') {
+        lifecycleErrors.push(`${file}: lifecycle override needs a non-empty note.`);
+      }
+    }
+  }
+  if (lifecycleErrors.length) {
+    console.error('Invalid tooling lifecycle overrides:');
+    for (const error of lifecycleErrors) console.error(`  - ${error}`);
+    process.exit(1);
+  }
+}
+
+console.log('Package script entrypoints and tooling lifecycle references exist.');
