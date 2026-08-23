@@ -13,6 +13,10 @@
  * boundary that the old broad source-reference checker lacked. The mode is observational for now;
  * it reports failures but does not make ordinary CI depend on them.
  *
+ * Git history fields describe maintenance activity (commits touching a file), not runtime usage.
+ * They are lifecycle clues only: a one-shot migration and a heavily maintained operator command can
+ * have very different histories, but commit frequency does not prove how often a tool was executed.
+ *
  * Usage:
  *   node scripts/tooling-census.mjs
  *   node scripts/tooling-census.mjs --orphans
@@ -71,21 +75,35 @@ const workflowText = workflowFiles.map(file => textByFile.get(file) ?? '').join(
 const lifecyclePath = path.join(ROOT, 'scripts', 'tooling-lifecycle.json');
 const lifecycle = JSON.parse(readFileSync(lifecyclePath, 'utf8')).entries ?? {};
 
-function newestCommitDates() {
+function commitHistoryStats() {
     const raw = git('log', '--format=@@%cI', '--name-only', '--', 'scripts', '.github/workflows');
     const result = new Map();
     let date = null;
+    let seenThisCommit = new Set();
+    const recentCutoff = Date.now() - 90 * 86_400_000;
     for (const line of raw.split('\n')) {
         if (line.startsWith('@@')) {
             date = line.slice(2);
+            seenThisCommit = new Set();
             continue;
         }
         const file = line.trim();
-        if (date && file && !result.has(file)) result.set(file, date);
+        if (!date || !file || seenThisCommit.has(file)) continue;
+        seenThisCommit.add(file);
+        const stats = result.get(file) ?? {
+            lastChanged: date,
+            firstChanged: date,
+            commitTouches: 0,
+            recent90dTouches: 0,
+        };
+        stats.firstChanged = date;
+        stats.commitTouches++;
+        if (new Date(date).getTime() >= recentCutoff) stats.recent90dTouches++;
+        result.set(file, stats);
     }
     return result;
 }
-const lastChanged = newestCommitDates();
+const historyByFile = commitHistoryStats();
 
 function directPackageAliases(file) {
     return packageScripts
@@ -127,7 +145,8 @@ const rows = scriptFiles.map(file => {
     const currentDocRefs = docRefs.filter(ref => currentDocFiles.includes(ref));
     const historicalDocRefs = docRefs.filter(ref => historicalDoc(ref));
     const codeRefs = refs.filter(ref => scriptFiles.includes(ref));
-    const changedAt = lastChanged.get(file) ?? null;
+    const history = historyByFile.get(file) ?? null;
+    const changedAt = history?.lastChanged ?? null;
     const kind = classifyKind(file, source);
     const surfaced = aliases.length > 0 || workflowRefs.length > 0 || currentDocRefs.length > 0;
     const lifecycleInfo = lifecycle[file] ?? { lifecycle: 'unclassified', note: null };
@@ -144,7 +163,10 @@ const rows = scriptFiles.map(file => {
         historicalDocRefs,
         codeRefs,
         lastChanged: changedAt,
+        firstChanged: history?.firstChanged ?? null,
         ageDays: ageDays(changedAt),
+        commitTouches: history?.commitTouches ?? 0,
+        recent90dTouches: history?.recent90dTouches ?? 0,
         surfaced,
         hiddenEntrypoint,
         orphanCandidate,
@@ -240,7 +262,7 @@ const summary = {
     orphanCandidates: rows.filter(row => row.orphanCandidate).length,
     ...(health ? { supportedImportFailures: health.failures.length } : {}),
 };
-const result = { schemaVersion: 4, generatedAt: new Date().toISOString(), summary, rows: selected, ...(health ? { health } : {}) };
+const result = { schemaVersion: 5, generatedAt: new Date().toISOString(), summary, rows: selected, ...(health ? { health } : {}) };
 
 if (JSON_MODE) {
     const rendered = `${JSON.stringify(result, null, 2)}\n`;
@@ -255,13 +277,14 @@ if (health) {
     for (const failure of health.failures) console.log(`  BROKEN ${failure.importer} -> ${failure.specifier}`);
     console.log('');
 }
-console.log('Legend: P=package alias, W=workflow reference, D=current-doc reference, C=script/code reference. Historical doc references are retained in JSON but do not count as D/support.');
+console.log('Legend: P=package alias, W=workflow reference, D=current-doc reference, C=script/code reference. Historical doc references are retained in JSON but do not count as D/support. History columns are maintenance activity, not runtime use.');
 for (const row of selected) {
     const signals = `${row.packageAliases.length ? 'P' : '-'}${row.workflowRefs.length ? 'W' : '-'}${row.currentDocRefs.length ? 'D' : '-'}${row.codeRefs.length ? 'C' : '-'}`;
     const age = row.ageDays == null ? '?' : `${row.ageDays}d`;
+    const touches = `${row.commitTouches}c/${row.recent90dTouches}r`;
     const lifecycleLabel = row.lifecycle === 'unclassified' ? '' : ` [${row.lifecycle}]`;
     const marker = row.orphanCandidate ? ' ORPHAN?' : '';
-    console.log(`${signals} ${row.kind.padEnd(10)} ${age.padStart(5)}  ${row.file}${lifecycleLabel}${marker}`);
+    console.log(`${signals} ${row.kind.padEnd(10)} ${age.padStart(5)} ${touches.padStart(9)}  ${row.file}${lifecycleLabel}${marker}`);
 }
 
 if (!ORPHANS_ONLY && summary.orphanCandidates) {
