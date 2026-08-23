@@ -18,6 +18,7 @@ Dates and narrative experiment names belong in `reports/`, `archive/`, `history/
 | [`testing.md`](testing.md) | Validation and finish-line gates. |
 | [`tooling-catalog.md`](tooling-catalog.md) | CLI, probe, batch, and workflow discovery. |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy. |
+| [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) | What solver technique/config names actually change in operation, how the major search families relate, and the active operational-similarity census proposal. |
 | [`solver-scheduling-policy.md`](solver-scheduling-policy.md) | **ASAP / HIGH PRIORITY:** evidence-driven ordering, bounded portfolio allocation, dynamic scheduling, and current budget-tranche conclusions. |
 | [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | **ASAP / HIGH PRIORITY:** architecture-level runtime refactors and already-tested negatives. |
 | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) | Ranked live solver priority and current experiment dispositions. |
@@ -48,13 +49,15 @@ Presence does not imply current priority.
 
 | Doc | Role |
 |---|---|
-| [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md) | Active second-order census questions, findings, and follow-up analyses; current scheduler-facing budget-cap evidence is in [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md). |
+| [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md) | Active second-order census questions, findings, and follow-up analyses; pair outcome similarity with the implementation-side taxonomy in [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md). Current scheduler-facing budget-cap evidence is in [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md). |
 | [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) | Read-only exact/oracle-labelled probes. |
 | [`solver-winning-lineage-survival-analysis.md`](solver-winning-lineage-survival-analysis.md) | Beam lineage observation. |
 | [`solver-ablation.md`](solver-ablation.md) | Feature-flag ablation lab. |
 | [`solver-required-length-sweep.md`](solver-required-length-sweep.md) | Required-length scaling. |
 
 Current scheduler budget evidence: [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md) establishes that beam searches are cheap/self-exhausting screens, plain repair has material late 20M–50M capability, and deep ordinary DFS/IDA work should compete for residual budget rather than receive automatic full-depth entitlement. Policy consequences live in [`solver-scheduling-policy.md`](solver-scheduling-policy.md) and [`solver-budget-determinism.md`](solver-budget-determinism.md).
+
+Operational-similarity research: [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) records that many named techniques are shared-engine weight/config variants rather than independent algorithms and defines the missing pairwise operational census. Use it with the outcome matrix, not instead of it.
 
 Prior experiment evidence: [`../reports/README.md`](../reports/README.md). Stress corpora: [`../data/stress/README.md`](../data/stress/README.md). Broad rules/gotchas: [`../DEVELOPER_REFERENCE.md`](../DEVELOPER_REFERENCE.md), load selectively.
 
