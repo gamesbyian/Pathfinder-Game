@@ -887,6 +887,10 @@ export {
 // them locally (every real use lives inside stage-budget.ts's own computeStageBudgetPlan now);
 // the `export { ... } from` statement is self-contained and needs no paired import.
 import { computeStageBudgetPlan, computeShrinkRecoveryBudget, buildStageBudgetEnvelopes } from './stage-budget.js';
+// Genuinely imported (not just re-exported): this file's own repair-late-probe-multi-seed-retry
+// block iterates the array directly, unlike the fraction constants above which are only ever
+// consumed inside stage-budget.ts's computeStageBudgetPlan.
+import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from './stage-budget.js';
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
@@ -1619,6 +1623,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         repairLateProbeNodeBudget, repairLateProbeTierWillRun, repairLateProbeNodeCeiling,
         goalAttractionLegacyDistanceRetryBudgetFraction, goalAttractionLegacyDistanceRetryTierWillRun,
         goalAttractionLegacyDistanceRetryNodeCeiling,
+        repairLateProbeMultiSeedRetryTierWillRun, repairLateProbeMultiSeedRetryNodeCeiling,
         retryTierStaircase, earlyTierNodeBudget, admissibleOrderDefaultProfileCeiling,
         mainLoopLateReserve, mainLoopEarlyNodeBudget, mainLoopLateConfigStart,
         repairFallbackNodeReserve, attractionDiversityNodeReserve,
@@ -2416,6 +2421,53 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         });
         result.attempts.push(...goalAttractionLegacyDistanceRetryResult.attempts);
         if (goalAttractionLegacyDistanceRetryResult.solution) result.solution = goalAttractionLegacyDistanceRetryResult.solution;
+    }
+
+    // Last-resort repair-late-probe MULTI-SEED retry (REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_
+    // SALTS, STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY) — see that constant's own comment in
+    // stage-budget.ts for the full rationale. Dead-last additive extension of repair-late-probe:
+    // for the exact same repairConfigsCount===0 population, retry the SAME repairAttempt() builder
+    // across several more PRNG seeds (repair-late-probe itself already tried seed salt 0), each
+    // seed getting its own full REPAIR_LATE_PROBE_NODE_BUDGET reserve. Structurally identical to
+    // the repair-late-probe block above (same per-gate manual loop, same builder), just looped over
+    // seeds and positioned after goal-attraction-legacy-distance-retry, the current true end of the
+    // ladder.
+    //
+    // `repairLateProbeMultiSeedRetryTierWillRun` is the SAME predicate
+    // repairLateProbeMultiSeedRetryNodeReserve is derived from (stage-budget.ts) — the two must
+    // stay in lockstep.
+    if (!result.solution && repairLateProbeMultiSeedRetryTierWillRun && prep._metrics.nodesExpanded < repairLateProbeMultiSeedRetryNodeCeiling) {
+        const repairLateProbeMultiSeedConfig = repairAttempt();
+        const originalWorkCap = prep._workCap;
+        try {
+            seedLoop:
+            for (const seedSalt of REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS) {
+                if (prep._metrics.nodesExpanded >= repairLateProbeMultiSeedRetryNodeCeiling) break;
+                const roundStart = Date.now();
+                const roundEntryNodes = prep._metrics.nodesExpanded;
+                const roundWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(timeBudgetMs * DEFAULT_WORK_PER_MS));
+                prep._workCap = Math.min(prep._workMeter.units + roundWorkBudget, prep._strictWorkCap ?? Infinity);
+                for (let gi = 0; gi < activeGates.length; gi++) {
+                    if (prep._metrics.nodesExpanded >= repairLateProbeMultiSeedRetryNodeCeiling) break;
+                    const ownBudgetRemaining = repairLateProbeNodeBudget - (prep._metrics.nodesExpanded - roundEntryNodes);
+                    if (ownBudgetRemaining <= 0) break;
+                    const gateKey = activeGates[gi];
+                    const elapsed = Date.now() - roundStart;
+                    const gatesLeft = activeGates.length - gi;
+                    const retryBudget = Math.floor((timeBudgetMs - elapsed) / gatesLeft);
+                    if (retryBudget < 50) break;
+                    const outerCeilingRemaining = repairLateProbeMultiSeedRetryNodeCeiling === Infinity
+                        ? Infinity
+                        : Math.max(0, repairLateProbeMultiSeedRetryNodeCeiling - prep._metrics.nodesExpanded);
+                    const remainingNodeBudget = Math.min(ownBudgetRemaining, outerCeilingRemaining);
+                    const r = await runAttempt(gateKey, level, prep, repairLateProbeMultiSeedConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget, null, seedSalt);
+                    result.attempts.push(withSolverStage(r.attempt, 'repair-late-probe-multi-seed-retry'));
+                    if (r.path) { result.solution = r.path; break seedLoop; }
+                }
+            }
+        } finally {
+            prep._workCap = originalWorkCap;
+        }
     }
 
     const totalMs = Date.now() - levelStartTime;
