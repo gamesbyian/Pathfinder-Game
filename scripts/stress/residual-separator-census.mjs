@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 /**
- * Residual-separator census — Stage 3 of the "Residual Interface Discovery" campaign
- * (docs/solver-next-frontier-multilingual-research-update-2026-08-02.md section 17): before
- * building any separator-conditioned resource DP, measure whether the corpus actually HAS the
- * terrain that technique needs — small articulation-separated chambers with mandatory obligations
+ * Residual-separator census — Stage 3 of the historical "Residual Interface Discovery" campaign:
+ * before building any separator-conditioned resource DP, measure whether the corpus actually HAS
+ * the terrain that technique needs — small articulation-separated chambers with mandatory obligations
  * inside — rather than assuming it and finding out only after building the DP.
  *
  * METHOD. Walk each level's own stored (referee-valid) hint solution — no CP-SAT, no new oracle
@@ -14,8 +13,8 @@
  *     population interface-probe-harness.mjs scores probes against).
  * These are not expected to agree — an early local run of this tool found ~0% on-solution
  * (unsurprising: a solved path doesn't usually walk itself next to a dead-end pocket it has no
- * plan to enter) vs. a real, nonzero rate off-solution (see the design doc for the actual numbers)
- * — so reporting only the on-solution rate would understate the terrain by a wide margin.
+ * plan to enter) vs. a real, nonzero rate off-solution — so reporting only the on-solution rate
+ * would understate the terrain by a wide margin.
  *
  * SCOPE. Same as residual-decomposition.mjs: no portals/filters/flipping filters/must-cross/
  * must-turn cells inside a counted chamber (see that file's doc). A level using any of those
@@ -32,7 +31,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { readLevelsWithHints, selectLevelsBySpec } from '../level-data-io.mjs';
-import { createSolver, SOLVER_TESTING_API } from '../../modules/Solver.ts';
+import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { undoMove } from '../../modules/solver/search-state.ts';
 import { computeResidualChambers } from './lib/residual-decomposition.mjs';
 
