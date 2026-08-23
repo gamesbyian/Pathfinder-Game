@@ -30,7 +30,7 @@ Current census/scheduler evidence:
 - [`2026-08-20-technique-census-reconciliation.md`](2026-08-20-technique-census-reconciliation.md) records successful population census run `32240161854`; [`2026-08-19-technique-census-design.md`](2026-08-19-technique-census-design.md) is its design/calibration record. Older pre-dispatch wording there is historical.
 - [`2026-08-23-technique-budget-cap-efficiency.md`](2026-08-23-technique-budget-cap-efficiency.md) is the current budget-depth interpretation of that census for the scheduling program: beam searches are cheap/self-exhausting screens, plain repair has material deep 20M–50M yield, and deep ordinary DFS/IDA continuations should compete for residual work rather than receive automatic full-depth entitlement. Durable policy lives in [`solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md) and [`solver-budget-determinism.md`](../docs/solver-budget-determinism.md).
 
-Repository-wide older loose-thread inventory: [`2026-08-06-documentation-loose-threads-audit.md`](2026-08-06-documentation-loose-threads-audit.md), itself dated evidence.
+Repository-wide current open-question reconciliation: [`2026-08-23-documentation-open-question-reconciliation.md`](2026-08-23-documentation-open-question-reconciliation.md). Older loose-thread inventory: [`2026-08-06-documentation-loose-threads-audit.md`](2026-08-06-documentation-loose-threads-audit.md), itself dated evidence.
 
 ## Subdirectories
 
