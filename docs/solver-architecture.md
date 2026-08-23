@@ -68,29 +68,26 @@ The ladder is hand-tuned. Historical corpus1 analysis found 79% of solved-level 
 
 - Iterative with undo tokens; no recursion.
 - `applyMove()` mutates/returns undo; `undoMove()` restores.
-- LDS probes `k = 0,1,2,4,8`, then unbounded. Each wave has `probeCapMs = min(floor(levelBudgetMs*0.5), 4000)` plus deterministic node limits.
+- LDS probes `k = 0,1,2,4,8`, then unbounded. Each wave also honors deterministic node/work limits and the outer deadline.
 - Prunes: over-length/intersection, must-cross ceiling, goal distance, parity, MP/MC MST bounds, connectivity.
 - `mustPassLowerBound`/`mustCrossLowerBound` memoize under `STRATEGY_LOWER_BOUND_MEMO`; keys must include every dependency. See MST bug below.
 
 ## Beam search (`beamSearchFromGate`)
 
-- Parent-pointer frontier `{ key, prev, depth, score, sc, sk? }`.
-- Reconstruction uses reusable `_scratch[]`; replay uses `_beamResetState()` + `applyMove()`.
+- Parent-pointer frontier `{ key, prev, depth, score, sc, insOrd, treeOrd, sk? }`.
+- One mutable working state `ws` is moved between frontier nodes: `_reconstructBeamPath()` fills reusable scratch, then the solver undoes/replays only the divergent suffix from the currently loaded path.
+- Frontier walking is parent-tree ordered to reduce replay. `insOrd` restores the generation order that score-order walking would have produced before dedup/cull; mid-phase terminal/budget checks still occur in tree order.
 - Uses DFS pruning; `scoreAndSort` uses `_sas[4]` `Float64Array` scratch + insertion sort.
 - Default width 2000; hard width 5000.
-- **Dedup:** equal `(key, sc)` keeps highest score; key = `c.key + c.sc * KEY_SPACE` as exact float64. Disabled for portals because `sc` omits portal usage.
+- **Dedup:** non-portal beams merge the deliberately coarse `(key, sc)` bucket, keeping the highest score plus an optional near-tie runner-up. This is width/diversity management, not exact future-state equivalence. `sc` is a collision-free delimited tuple:
 
 ```js
-sc = (adjTurnMask&0xF)<<24 |
-     (mustTurnMask&0xF)<<20 |
-     (surroundMask&0xF)<<16 |
-     (flipperUsedMask<<12) |
-     (mustCrossMask<<8) |
-     (mpVisitedMask<<4) |
-     (ints&0xF)
+sc = `${ints}|${mpVisitedMask}|${mustCrossMask}|${flipperUsedMask}|${surroundMask}|${mustTurnMask}|${adjTurnMask}`
+dedupKey = `${key}|${sc}`
 ```
 
-- **Diverse beam:** `_diverseSelect` buckets by `sk = (flipperUsedMask<<4)|(mustCrossMask&0xF)`, guarantees `floor(beamWidth/numBuckets)` per bucket, then fills globally.
+  The former fixed-width numeric packing was removed after real Corpus-2 masks exceeded four bits and corrupted adjacent fields. Fully sound beam-state dedup was separately measured at only ~0.019% true-duplicate slots; removing the coarse mechanism cost real solves. See [`../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md).
+- **Diverse beam:** `_diverseSelect` buckets by the collision-free string `sk = `${flipperUsedMask}|${mustCrossMask}``, guarantees `floor(beamWidth/numBuckets)` per bucket, then fills globally.
 - Must-cross+flipper fallback is diverse bw=5000.
 
 ## Key state
@@ -113,7 +110,7 @@ state = {
 
 - `distMap`, `goalDistArr` (`0xFFFF = unreachable/Infinity`).
 - `mpDistArrs[]`, `mcDistArrs[]`, `objDistArrs[]`.
-- `staticNeighbors`: valid `[nk, axis, ...]`, excluding blocks/geese/false-goals/gates/wrong regular-filter axis.
+- `staticNeighborKeys`: flat fixed-stride `Int32Array`; `staticNeighborKeys[packedKey*4+d]` stores `neighborKey+1`, with 0 meaning no static neighbor. It excludes blocks/geese/false-goals/gates/wrong regular-filter axis.
 - `mustPassIndex`, `mustCrossIndex`, `flipperIndexMap`, `flipperInitAxes`.
 - `mcPairDist`, `mpPairDist`, `mcApproachDistMaps`.
 - `surroundNeighborIndex`, `surroundInitNeighborMasks`, `surroundNeighborDistMaps`.
@@ -166,7 +163,7 @@ Use `solver:direct` to inspect attempt order/winner/budget/nodes; if policy is a
 
 ### Speed-only optimization
 
-With wall-bounded runs, faster code searches farther. Pin a non-binding wall deadline and deterministic node/work budget; pure speed changes should produce identical search work. Compare interleaved wall medians; shared hosts vary ±5–10%. See [`reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md).
+With wall-bounded runs, faster code searches farther. Pin a non-binding wall deadline and deterministic node/work budget; an order-preserving pure speed change should produce identical search work. Compare interleaved wall medians; shared hosts vary ±5–10%. See [`reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md) and [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md).
 
 ### Trap audits/runtime
 
@@ -242,15 +239,13 @@ Tools: `solver:portfolio-report`, `solver:portfolio-replay`, `portfolio-solve-sw
 ## Memory / hot path
 
 - **Flattening done:** MP/MC caches, `staticNeighbors -> staticNeighborKeys`, flipper approach distances, `mustTurnCellIndex`, `gateSet -> gateFlags`; removed `objectiveKeyToIndex`. Multi-value `adjTurnCellIndex`/`surroundNeighborIndex` remain Maps.
-- **Allocation:** `buildCurUrgencyContext` pooling won ~11–12% full-corpus wall; `UndoToken` pooling was **4.6% slower** at identical nodes and is closed absent a contrary microbenchmark. `getNeighbors` scratch / beam-phase allocations remain measurable.
-- **Dense indexing:** cache-locality hypothesis was weak (15×15 456 vs 449 ms), but allocation cost was large. Distance arrays now use `gridW*gridH` via `denseIndex`; with state reuse/zero-absent encoding, batch work improved ~40%. Bounds guard saw **1.63B reads, zero violations**. Still sparse: `staticNeighborKeys`, state `visited`/`edgeUsage`, `buildIndexArr`, `gateFlags`/`reachBlockedArr`; convert only with per-site audit/guards.
+- **Allocation:** `buildCurUrgencyContext` pooling won ~11–12% full-corpus wall; `UndoToken` pooling was **4.6% slower** at identical nodes and is closed absent a materially different representation. `getNeighbors` scratch / beam-phase allocations remain measurable.
+- **Dense indexing:** cache-locality hypothesis was weak (15×15 456 vs 449 ms), but allocation cost was large. Distance arrays now use `gridW*gridH` via `denseIndex`; with state reuse/zero-absent encoding, batch work improved ~40%. Bounds guard saw **1.63B reads, zero violations**. Still sparse: `staticNeighborKeys`, state `visited`/`edgeUsage`, `buildIndexArr`, `gateFlags`/`reachBlockedArr`.
+- Architecture-level continuations, prior negatives, and evaluation rules: [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md).
 
-## Wall-clock-gated probes
+## Work-budget determinism
 
-Top-level `orchestration.ts` still derives attempt shares from remaining wall time; same-code/config/budget/seed provenance groups historically differed in `nodesExpanded` 84.2% of the time (median 3.18×). See [`solver-budget-determinism.md`](solver-budget-determinism.md).
-
-- `runRepairProbe`: calibrated `REPAIR_PROBE_ORDINARY_NODE_BUDGET` / `_BIASED_NODE_BUDGET` plus outer ms cap; prior pure wall race changed winners. Landed `92f6bf9` after repeated fingerprints/regression/CI.
-- `dfsFromGateLDS`: feature-scaled `getLdsProbeNodeBudget` + `probeCapMs`, accumulating nodes across waves. Calibration covered 144/156 published probe solves and 71/150 stress; hardest published case 1,926,137 nodes with ~1.64× headroom.
+Solver allocation uses the machine-independent work currency `applyMove + 12 * isConnected`; wall clock is an outer latency/safety deadline and must not size attempt shares or escalation decisions. Internal search loops may also honor technique/node caps, but cross-technique allocation authority is `prep._workMeter` / `workBudget`. See [`solver-budget-determinism.md`](solver-budget-determinism.md).
 
 ## Attraction-diversity pass
 
@@ -278,7 +273,7 @@ Report: [`reports/2026-07-30-admissible-order-node-reserve.md`](../reports/2026-
 
 ## Remaining speed work
 
-Measurable: `getNeighbors` scratch reuse, beam-phase allocation cleanup, remaining dense-array conversions with safety guards. `UndoToken` pooling is closed negative. Current solver priority belongs in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+See [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) for the current architecture-level list and closed negatives. The shortest known open forms are `getNeighbors` allocation removal, beam-phase representation/allocation cleanup, and completing dense indexing with safety guards. Current solve-capability priority belongs in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
 
 ## MST-bound scratch-buffer bug
 
