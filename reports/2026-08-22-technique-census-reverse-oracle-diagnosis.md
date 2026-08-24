@@ -1,9 +1,9 @@
 # Technique census reverse-oracle diagnosis
 
 > **Status:** active
-> **Last evidence:** 2026-08-22 — current-code sequential provenance pilot, fresh-prep `R01936` replay, bounded salt-1/2 checks on the other five historical repair-probe rows at commit `e60a846`, a 40-cell current admissible-order screen, and exact-production-commit fresh controls for all eight historical admissible rows at commit `e5034e8`
-> **Decision:** `R01936` is causally explained by the production repair probe's second seed; the other five historical repair-probe wins do not reproduce on current code at salt 1 or 2 within 2M nodes; all eight beam-labelled historical rows were actually admissible-order wins, but every inferred/plausible historical winning profile fails from fresh preparation at the exact production commit even at 50M nodes
-> **Remaining gate:** instrument mutable preparation/search state around the historical admissible winning attempts and locate the minimal preceding ladder prefix that enables each win; reopen the five non-reproducing repair rows only with a historical-commit replay or a current production win
+> **Last evidence:** 2026-08-24 — cardinality check against the authoritative eight historical admissible rows rules out the fixed 24-bit must-pass memo-key collision as their enabling mechanism; earlier evidence includes current-code sequential provenance, fresh-prep repair replay, bounded repair-salt controls, a current admissible-order screen, and exact-production-commit fresh controls at `e5034e8`
+> **Decision:** `R01936` is causally explained by the production repair probe's second seed; the other five historical repair-probe wins do not reproduce on current code at salt 1 or 2 within 2M nodes; all eight beam-labelled historical rows were actually admissible-order wins and remain genuinely predecessor-dependent at the exact historical commit; the later-discovered must-pass memo-key collision cannot cause those eight because none has enough passable objectives to set bit 24
+> **Remaining gate:** reproduce an unmodified historical full-ladder winner locally, then clear the must-pass/must-cross memo tables immediately before the admissible tier and progressively shorten/prime predecessor prefixes; if cache clearing is inert, snapshot the remaining prepared/config/accounting state around the minimal enabling prefix
 
 ## Why the original category was misleading
 
@@ -131,6 +131,27 @@ A source audit at the exact production commit narrows the prefix experiment furt
 
 The two lower-bound memo tables are therefore the only obvious persistent *value-bearing* search inputs populated by earlier attempts. Their documented contract says they are exact pure memoization, so warm-versus-empty behavior should be identical. That makes the first discriminating prefix control precise: reproduce a historical full-ladder winner while clearing `_mpLowerBoundCache` and `_mcLowerBoundCache` immediately before the admissible tier. A loss would localize the mechanism to memo-key/value behavior; a preserved win would rule out the caches and require snapshotting configuration/forced-step/static-preparation identity plus the exact successful attempt rather than broadly diffing every `PrepLevel` field. This is a code-derived hypothesis and proposed control, not measured causal evidence yet.
 
+### Later must-pass cache bug is not the historical mechanism
+
+The 2026-08-24 packing audit found a genuine, independent defect in current/historical `mustPassLowerBound` memoization: the composite cache key reserved only 24 bits for `mpVisitedMask` even though normalized must-pass plus must-turn objectives are schema-valid through 30. That defect requires bit 24 to be reachable, therefore at least **25** normalized passable objectives.
+
+The authoritative eight historical admissible-order rows have normalized passable-objective counts of only:
+
+| level | normalized must-pass + must-turn objectives |
+|---|---:|
+| `R02493` | 5 |
+| `R02088` | 6 |
+| `R02536` | 12 |
+| `R01356` | 7 |
+| `R03195` | 14 |
+| `R02690` | 13 |
+| `R03230` | 11 |
+| `R03238` | 13 |
+
+The cohort maximum is 14. None can set mask bit 24, so the former `(pos, mask)` alias is unreachable on every one of these levels. The bug was worth fixing on its own, but it **cannot** explain the P0 predecessor dependence. Do not interpret the correctness fix as having resolved or even weakened the need for the historical cache-clear/prefix experiment.
+
+The sibling must-cross memo packing was also re-audited against its supported boundary. It caches only when `mustCrossKeys.length <= 8`; its key allocates 16 base-4 bits for per-cell first-cross axis state plus 8 pending-mask bits below a `2^25` position radix, and 9+ cells bypass memoization. Boundary tests now compare warm-vs-fresh values with opposite first-cross axes at `n=8` and verify the `n=9` uncached fallback. This makes must-cross key collision less plausible, but it does not substitute for the historical warm-cache control.
+
 The audit also identifies a necessary baseline check omitted by the earlier fresh controls: replay the unmodified historical full ladder locally under the preserved 100M-node protocol before interpreting any patched prefix arm. The committed production artifact is valid historical evidence, but an environment-local baseline is needed to distinguish a treatment effect from build/runtime or deadline drift.
 
 ## Decision and next measurement
@@ -141,6 +162,7 @@ The 14-level question is no longer a single mystery:
 2. **Historical stage-attribution defect:** all eight beam-labelled frozen wins belong to `admissible-order` lifecycle, not the beam stage.
 3. **Non-transferring historical repair rows:** the remaining five fail with salts 1 and 2 on current code at 2M nodes; no current mechanism claim is warranted.
 4. **Confirmed attempt-history dependence:** every inferred or plausible admissible winner fails fresh at the exact production commit/config/gate even at 50M nodes; preceding ladder activity is necessary across all eight rows.
-5. **Still unresolved:** which mutable state and minimal preceding attempt prefix enables each historical admissible win.
+5. **Specific current cache collision eliminated as cause:** the fixed must-pass key bug needs 25+ passable objectives; the eight historical rows have 5–14.
+6. **Still unresolved:** which mutable state and minimal preceding attempt prefix enables each historical admissible win.
 
-The next run should prime each inferred attempt after progressively longer prefixes of the historical ladder and diff mutable prepared-state/search telemetry before the attempt. It should retain `stageId`, `gateKey`, canonical config identity, node/work ceilings, and attempt outcome so the enabling prefix and state mutation are attributable rather than merely reproduced.
+The next run should first reproduce an unmodified historical full-ladder winner under the preserved protocol. Then clear the two lower-bound memo tables immediately before the inferred winning admissible action; if the win survives, progressively prime the action after longer predecessor prefixes while snapshotting the remaining mutable prepared/config/accounting state. Retain `stageId`, `gateKey`, canonical `configKey`, canonical `actionKey` where available, seed, node/work ceilings, and outcome so the enabling prefix and state mutation are attributable rather than merely reproduced.
