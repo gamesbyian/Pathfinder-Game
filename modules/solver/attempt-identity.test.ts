@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { formatAttemptIdentityKey } from './attempt-identity.mjs';
+import { formatAttemptActionKey, formatAttemptIdentityKey } from './attempt-identity.mjs';
 import { attemptConfigKey } from './orchestration.js';
 import type { AttemptConfig } from './types.js';
 
@@ -17,6 +17,19 @@ test('formatAttemptIdentityKey covers every supported attempt family', () => {
     assert.equal(formatAttemptIdentityKey({ profileName: 'default', templateId: null, admissibleOrder: true }), 'ida:default');
     assert.equal(formatAttemptIdentityKey({ profileName: 'none', templateId: null, admissibleOrder: true, admissibleOrderNoTieBreak: true }), 'ida:none');
     assert.equal(formatAttemptIdentityKey({ profileName: 'default', templateId: null, admissibleOrder: true, admissibleOrderLds: true }), 'ida:default(lds)');
+});
+
+test('formatAttemptActionKey separates stage and deterministic repair seed without changing config identity', () => {
+    const repair = { profileName: 'repair', templateId: null, repair: true };
+    assert.equal(formatAttemptIdentityKey(repair), 'dfs:repair:repair');
+    assert.equal(formatAttemptActionKey({ ...repair, stageId: 'repair-probe' }), 'repair-probe|dfs:repair:repair|seedSalt=0');
+    assert.equal(formatAttemptActionKey({ ...repair, stageId: 'repair-probe', seedSalt: 1 }), 'repair-probe|dfs:repair:repair|seedSalt=1');
+    assert.equal(formatAttemptActionKey({ ...repair, stageId: 'repair-fallback', seedSalt: 1 }), 'repair-fallback|dfs:repair:repair|seedSalt=1');
+
+    // Non-randomized searches have no meaningless seed suffix, but stage remains part of action identity.
+    assert.equal(formatAttemptActionKey({ profileName: 'default', templateId: null, stageId: 'main-loop' }), 'main-loop|dfs:default');
+    assert.equal(formatAttemptActionKey({ profileName: 'default', templateId: null, stageId: 'dedup-near-tie-retry' }), 'dedup-near-tie-retry|dfs:default');
+    assert.throws(() => formatAttemptActionKey({ profileName: 'default', templateId: null, stageId: '' }), /requires stageId/);
 });
 
 test('orchestration.ts attemptConfigKey (live AttemptConfig) agrees with formatAttemptIdentityKey for every family', () => {

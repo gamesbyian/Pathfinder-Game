@@ -19,7 +19,7 @@ Definitions:
 - `affectsMoveLegality`: can reject an otherwise geometric move as illegal; pruning-only checks are distinct.
 - `affectsConnectivity`: can remove/change an available graph edge as state changes.
 - `requiresIncomingDirection`: needs how the path arrived, not only the proposed move axis.
-- `externalModelSupport`: `exact` is straightforward; `relaxed` needs extra state/constraints; `unsupported` has no known straightforward exact encoding.
+- `externalModelSupport`: `exact` means the current maintained external model can express the solver/game semantics needed for the mechanic when its stated supporting constraints are enabled; `relaxed` needs extra state/constraints; `unsupported` has no current exact encoding.
 
 ## Summary
 
@@ -28,9 +28,9 @@ Definitions:
 | **Edge usage** | per-cell H/V bits | grid ≤225 | yes | yes: used axis cannot be reused | yes | indirect | yes | exact |
 | **Visited/intersection** | per-cell count | grid | yes | no | no | yes: exact `reqInt` | no | exact |
 | **Must-pass** | per-object visited bit | published max 4; schema ≤30 | yes | no | no | yes | no | exact; bound memoizable on `(pos, mpVisitedMask)` |
-| **Must-cross** | per-object count + first axis | published max 4; schema ≤30 | count yes; substate matters | yes: first-pass turn can lock required second crossing | yes | yes | yes | relaxed unless first-cross axis/lock is modeled |
+| **Must-cross** | per-object count + first-axis consequence through edge usage | published max 4; schema ≤30 | count yes; axis resource matters | yes: first-pass turn would consume both axes and block required second crossing | yes | yes | yes | exact in current CP-SAT when combined with exact edge-axis-touch reuse and `visits == 2` |
 | **Regular filter** | static | n/a | n/a | yes, precompiled | yes, static | no | no | exact |
-| **Flipping filter** | global crossing parity + per-object used bit | published max 22; stress max 8; schema ≤32 | used bits yes; parity derived | yes: legal axis depends on global flipper order | yes, dynamic | no | yes | relaxed/unsupported naively; exact model needs shared order/parity state |
+| **Flipping filter** | global crossing parity + per-object used bit | published max 22; stress max 8; schema ≤32 | used bits yes; parity derived | yes: legal axis depends on global flipper order | yes, dynamic | no | yes | relaxed/unsupported naively; current full CP-SAT has an exact order/parity encoding validated separately |
 | **Portal** | per-terminal used bit + `lastWasPortalJump` | published max 3 pairs / 6 keys; stress max 7 pairs | yes | yes: forces destination | yes | affects counted length | yes | exact with paired zero-cost, one-use edges |
 | **Gate** | static | n/a | n/a | yes: no re-entry | yes, static | no | no | exact |
 | **Goose / false goal** | static for solver | n/a | n/a | excluded from solver graph | yes, static | no | no | exact for solver scope; PLAY hazard effects are separate |
@@ -40,7 +40,7 @@ Definitions:
 | **Decorative landmark** | static block | n/a | n/a | yes, static | yes, static | no | no | exact |
 
 Notes:
-- Must-cross cannot be represented only by visit count: first-cross axis affects future legality. A naive “visited twice” model is unsound. This mismatch existed in live play until 2026-08-06; see `reports/2026-08-06-game-rules-solver-alignment-plan.md`.
+- Must-cross **cannot be represented by visit count alone**. Native legality uses edge-axis state: after the first visit, turning on exit would consume the other axis and permanently prevent the second required crossing, so `isMoveDynamicallyValid` rejects that lock. The current full CP-SAT model can nevertheless encode must-cross exactly without a separate first-axis variable because it combines `visits == 2` with exact per-visit edge-axis-touch reuse: any first-visit turn touches both axes and makes a second visit infeasible, while two legal visits must therefore be straight crossings on opposite axes. Removing/weaking the edge-axis constraints would make the visit-count encoding relaxed/unsound. This contract was reconciled against `search-state.ts` and `cpsat-full-probe.py` on 2026-08-23; see [`../reports/2026-08-23-solver-reference-model-capability-audit.md`](../reports/2026-08-23-solver-reference-model-capability-audit.md).
 - Flipper parity is `popcount(flipperUsedMask) % 2`, derived from the used mask; no separate parity state is needed. Flipper cardinality uses a different representation from the `(1 << n) - 1` initial masks below; do not reuse the ≤30 mask bound for it.
 - Portals subtract jumps from counted length and use `lastWasPortalJump` to prevent forced bounce-back.
 - Published/stress maxima are measurements, not schema contracts. Regenerate current dataset facts via `npm run facts:levels`; [`../DEVELOPER_REFERENCE.md`](../DEVELOPER_REFERENCE.md) carries the checked generated snapshot.

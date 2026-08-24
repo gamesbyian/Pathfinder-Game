@@ -48,19 +48,44 @@ For labelled branches it can report:
 - abstain rate;
 - decision depth and probe-specific explanation fields.
 
-A claimed **sound prune** must have zero live false rejects on the tested supported population and still requires the repository's broader soundness validation before production use.
+A claimed **sound prune** must have zero live false rejects on the tested supported population and still requires proof-oriented validation beyond the selected atlas. Zero observed false rejects is not a proof if the model, population, or state coverage is incomplete.
 
 Do not rank candidates by raw catch count alone. Early rare catches can be more valuable than common late catches, and the harness does not automatically know avoided-subtree cost.
+
+## Evidence discipline
+
+The atlas is a labelled research sample, not an automatically representative distribution of solver states.
+
+- State how atlas states were selected. If they were chosen because a failure/prune looked interesting, treat the result as targeted discovery/forensic evidence.
+- If several probes or thresholds are tried on the same atlas, disclose the search. The best probe on that atlas requires confirmation on independently selected labelled states before a broad claim.
+- Separate **classification quality** from **production value**. A perfect dead/live separator can still be too expensive or fire too late to help search.
+- Report denominator and coverage: supported live/dead states, abstentions, model timeouts/unsupported mechanics, duplicate/related states, and independent parent families where relevant.
+- Prefer exact/reference labels generated independently of the candidate reasoner. Do not define “dead” using the same heuristic being evaluated.
+- A probe may nominate a score/retention/scheduler signal without being eligible for hard pruning. Soundness class and intended receptor must remain explicit.
 
 ## Invariants
 
 - Reconstruct state through the real solver transition machinery rather than a simplified model.
-- Keep observation/probe mode production-inert.
+- Keep observation/probe mode production-inert, including work, cache/memo state, ordering, tie behavior, and randomness.
 - Preserve `live`, `dead`, and `abstain` distinctly.
 - Treat CP-SAT/model coverage limits as coverage limits, not negative labels.
-- Reuse the atlas rather than buying new oracle calls when existing labels answer the question.
+- Reuse the atlas rather than buying new oracle calls when existing labels answer the discovery question; buy fresh labels when independent confirmation is the question.
 - Write recoverable outputs during long runs.
 - Keep offline oracle/research information outside production cold-solver policy.
+
+## Promotion path
+
+A shadow success is a gate, not a production verdict:
+
+1. show the candidate separates the intended exact/live-dead or other labelled condition;
+2. confirm that the signal recurs outside the cases used to design/select it;
+3. measure probe cost and firing depth;
+4. wire the narrowest live counterfactual behind an opt-in treatment;
+5. compare actual cold solves/work at matched aggregate work where search policy changes;
+6. run the relevant soundness/referee/differential checks if the treatment can reject states;
+7. keep exact labels and historical identities out of the production decision path.
+
+If the live result is null, do not keep tuning thresholds indefinitely on the same atlas. Reopen only when the failure shows a materially different receptor/cost problem or new labels change the premise.
 
 ## When to use something else
 
@@ -73,3 +98,5 @@ Do not rank candidates by raw catch count alone. Early rare catches can be more 
 ## Extending shadow evaluation
 
 Share replay, oracle labels, run identity, and reporting infrastructure where semantics match. Do not force fundamentally different artifacts into `reject|pass` merely to reuse this API. Producer/receptor information-sharing experiments may need richer typed artifacts; follow [`solver-research-operating-model.md`](solver-research-operating-model.md#producer--receptor-cooperation) rather than building a parallel generic “shadow mode” platform.
+
+Do not grow the harness into a general research framework merely because many experiments can be expressed as observation. Extend it only when the shared replay/label semantics genuinely reduce repeated work.

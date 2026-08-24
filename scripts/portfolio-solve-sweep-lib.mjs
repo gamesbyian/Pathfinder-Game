@@ -1,6 +1,6 @@
 /** Shared pure helpers for sequential and worker portfolio-sweep paths. */
 
-import { formatAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
+import { formatAttemptActionKey, formatAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
 /** Reconstruct canonical config identity from a persisted Attempt shape. */
 export function attemptConfigKey(attempt) {
@@ -10,6 +10,24 @@ export function attemptConfigKey(attempt) {
         repairMustTurnBiased: attempt?.repairMustTurnBiased, repairTurnBiased: attempt?.repairTurnBiased,
         admissibleOrder: attempt?.admissibleOrder, admissibleOrderNoTieBreak: attempt?.admissibleOrderNoTieBreak,
         admissibleOrderLds: attempt?.admissibleOrderLds,
+    });
+}
+
+/**
+ * Reconstruct scheduler/research action identity from an Attempt. Returns null for historical
+ * records that predate canonical stageId rather than inventing a stage from compatibility flags.
+ * Gate and budget remain separate dimensions; repair salt 0 is made explicit by the formatter.
+ */
+export function attemptActionKey(attempt) {
+    if (!attempt?.stageId) return null;
+    return formatAttemptActionKey({
+        stageId: attempt.stageId,
+        profileName: attempt?.profile ?? 'unknown', templateId: attempt?.template ?? null,
+        beamWidth: attempt?.beamWidth, diverseBeam: attempt?.diverseBeam, repair: attempt?.repair,
+        repairMustTurnBiased: attempt?.repairMustTurnBiased, repairTurnBiased: attempt?.repairTurnBiased,
+        admissibleOrder: attempt?.admissibleOrder, admissibleOrderNoTieBreak: attempt?.admissibleOrderNoTieBreak,
+        admissibleOrderLds: attempt?.admissibleOrderLds,
+        seedSalt: attempt?.seedSalt,
     });
 }
 
@@ -47,8 +65,10 @@ export function passForWin(result) {
 
 /** Project one raw Attempt into the stress-benchmark-compatible persisted shape. */
 export function attemptRecord(a) {
+    const actionKey = attemptActionKey(a);
     return {
         ...(a.stageId !== undefined ? { stageId: a.stageId } : {}),
+        ...(actionKey !== null ? { actionKey } : {}),
         gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
         ok: a.ok, elapsedMs: a.elapsedMs,
         ...(a.outcome !== undefined ? { outcome: a.outcome } : {}),
@@ -97,6 +117,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
     const winner = anyWinningAttempt(result);
     const phaseLabel = pass ? `pass${pass}` : (solvedByFallback ? (schedulerMode === 'legacy' ? 'legacy' : 'fallback') : '');
     const attempts = (Array.isArray(result?.attempts) ? result.attempts : []).map(attemptRecord);
+    const persistedWinner = attempts.find(attempt => attempt.ok) ?? null;
     return {
         level: levelNumber,
         id: id ?? null,
@@ -117,12 +138,15 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         solvedByPrime: !!result?.solvedByPrime,
         pass,
         phaseLabel,
+        // Compatibility family identity remains unchanged; action identity preserves stage + seed.
         winningConfig: winner ? (winner.configKey ?? attemptConfigKey(winner)) : null,
+        winningActionKey: persistedWinner?.actionKey ?? null,
         gateKey: winner?.gateKey ?? null,
         solution: result?.solution ?? null,
         attemptCount: attempts.length,
         attempts,
         failedStrategies: attempts.filter(a => !a.ok).map(a => a.configKey ?? attemptConfigKey(a)),
+        failedActionKeys: attempts.filter(a => !a.ok && a.actionKey).map(a => a.actionKey),
         hintAppended: false,
         skippedCached: false,
     };

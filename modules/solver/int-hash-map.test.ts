@@ -1,6 +1,7 @@
 /** Unit tests for IntHashMap, the flat-array open-addressing cache used by lower-bounds.ts. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
+import { PACK } from './encoding.js';
 import { IntHashMap } from './int-hash-map.js';
 
 test('get/set round-trips basic values', () => {
@@ -31,14 +32,22 @@ test('get on an absent key returns undefined, including after other inserts', ()
   assert.equal(m.get(999999), undefined);
 });
 
-test('supports large keys (~1.76e13, matching must-cross cache key formula range)', () => {
+test('supports actual packed-key magnitudes for both lower-bound memo tables', () => {
   const m = new IntHashMap();
-  const bigKey1 = 1.7e13 + 12345;
-  const bigKey2 = 1.76e13;
-  m.set(bigKey1, 11);
-  m.set(bigKey2, 22);
-  assert.equal(m.get(bigKey1), 11);
-  assert.equal(m.get(bigKey2), 22);
+  const maxPackedCell = PACK(14, 14);
+
+  // must-cross: pos*2^25 + mask*2^17 + 16-bit base-4 substate, n<=8.
+  const mcKey = maxPackedCell * (1 << 25) + 0xff * (1 << 17) + 0xffff;
+  // must-pass: pos*2^30 + the full schema-valid 30-bit visited mask.
+  const mpKey = maxPackedCell * 0x40000000 + 0x3fffffff;
+
+  assert.ok(Number.isSafeInteger(mcKey));
+  assert.ok(Number.isSafeInteger(mpKey));
+  assert.ok(mpKey > 1e14, 'must-pass fixture should exercise the post-fix near-2^50 key range');
+  m.set(mcKey, 11);
+  m.set(mpKey, 22);
+  assert.equal(m.get(mcKey), 11);
+  assert.equal(m.get(mpKey), 22);
 });
 
 test('supports Infinity as a value (unreachable-bound sentinel)', () => {
@@ -68,7 +77,7 @@ test('handles hash collisions via linear probing correctly', () => {
   keys.forEach((k, i) => assert.equal(m.get(k), i * 100));
 });
 
-test('randomized differential test against a plain JS Map, including realistic large keys', () => {
+test('randomized differential test against a plain JS Map across real memo-key representations', () => {
   const reference = new Map<number, number>();
   const m = new IntHashMap();
 
@@ -79,27 +88,29 @@ test('randomized differential test against a plain JS Map, including realistic l
     return seed / 0x7fffffff;
   };
 
-  const POS_MULT = 1 << 25;
-  const MASK_MULT = 1 << 17;
+  const MC_POS_MULT = 1 << 25;
+  const MC_MASK_MULT = 1 << 17;
+  const MP_MASK_SPACE = 0x40000000;
   const trials = 20000;
   const sampledKeys: number[] = [];
 
   for (let i = 0; i < trials; i++) {
-    // Mimic the real mustCrossLowerBound cache key formula's magnitude:
-    // pos * (1<<25) + mask * (1<<17) + subState, which can reach ~1.76e13 for
-    // 15x15 grids (pos up to 225) with large masks/substates.
-    const pos = Math.floor(rand() * 225);
-    const mask = Math.floor(rand() * 4096);
-    const subState = Math.floor(rand() * 65536);
-    const key = pos * POS_MULT + mask * MASK_MULT + subState;
+    // Use the solver's PACK representation, not a dense 0..224 cell index. Half the trials mimic
+    // the n<=8 must-cross key; half mimic the full 30-bit must-pass key introduced by the
+    // cardinality fix. Both stay below Number.MAX_SAFE_INTEGER by construction.
+    const pos = PACK(Math.floor(rand() * 15), Math.floor(rand() * 15));
+    const key = (i & 1) === 0
+      ? pos * MC_POS_MULT + Math.floor(rand() * 256) * MC_MASK_MULT + Math.floor(rand() * 65536)
+      : pos * MP_MASK_SPACE + Math.floor(rand() * MP_MASK_SPACE);
     const value = Math.floor(rand() * 1000);
 
+    assert.ok(Number.isSafeInteger(key));
     if (rand() < 0.7 || sampledKeys.length === 0) {
       m.set(key, value);
       reference.set(key, value);
       sampledKeys.push(key);
     } else {
-      // Occasionally probe a previously-seen key to exercise the update path.
+      // Occasionally probe a previously-seen key to exercise the update/read path.
       const probeKey = sampledKeys[Math.floor(rand() * sampledKeys.length)];
       assert.equal(m.get(probeKey), reference.get(probeKey));
     }
@@ -110,9 +121,9 @@ test('randomized differential test against a plain JS Map, including realistic l
     assert.equal(m.get(k), v, `mismatch for key ${k}`);
   }
 
-  // Also probe a batch of definitely-absent keys.
+  // Also probe a batch of definitely-absent high keys.
   for (let i = 0; i < 500; i++) {
-    const probeKey = 999_000_000_000 + i;
+    const probeKey = 1_000_000_000_000_000 + i;
     assert.equal(m.get(probeKey), reference.get(probeKey));
   }
 });

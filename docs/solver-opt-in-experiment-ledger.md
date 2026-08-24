@@ -8,7 +8,21 @@ It is not a priority queue. Current ranked solver work lives in [`solver-optimiz
 
 `OPT_IN_FEATURES` in [`../modules/solver/ablation-config.ts`](../modules/solver/ablation-config.ts) is the source of truth for **default polarity**, not experiment status. Documentation checks require every current member of that set to appear below.
 
-Capability decisions obey [`solver-level-blindness.md`](solver-level-blindness.md). Historical winners, hints, and exact-level outcomes may label research; they may not guide a headline cold-capability solve.
+Capability decisions obey [`solver-level-blindness.md`](solver-level-blindness.md). Historical winners, hints, and exact-level outcomes may label research; they may not guide a headline cold-capability solve. Research/promotion stop rules live in [`solver-research-operating-model.md`](solver-research-operating-model.md).
+
+## Retention is an exception, not an archive policy
+
+Git history and dated reports preserve failed implementations. Main solver code does not need to preserve every experiment forever.
+
+A CLOSED/default-OFF mechanism should remain invokable only when at least one current reason is named:
+
+- shared generic plumbing is actively reused by a live or plausible descendant;
+- it is an unusually valuable diagnostic/counterfactual that existing tooling cannot cheaply recreate;
+- removal would cost more complexity than the retained, isolated mechanism and the read sites remain low-risk.
+
+“Could be useful someday,” “the code already exists,” and “it documents the experiment” are not sufficient retention reasons. When a closed mechanism has no concrete reuse role, remove the flag/read sites after its report/ledger disposition is durable. Periodic ledger/tooling cleanup should nominate such code for deletion rather than treating the ledger as a museum inventory.
+
+Likewise, a default-ON retry or reserve has no permanent budget entitlement merely because it once added solves. The evidence-driven scheduler must periodically reprice its **current residual marginal value** inside a fixed aggregate work envelope. Historical zero-regression dead-last placement is a safety fact, not evidence that the stage still deserves its current work forever.
 
 ## Current production-default-OFF flags
 
@@ -29,18 +43,18 @@ Capability decisions obey [`solver-level-blindness.md`](solver-level-blindness.m
 
 ## Recently promoted/default-ON mechanisms relevant to this ledger
 
-These are listed only to stop an old experiment name from being mistaken for a dangling opt-in task. Production polarity is defined in code.
+These are listed only to stop an old experiment name from being mistaken for a dangling opt-in task. Production polarity is defined in code. Their historical promotion verdict does **not** exempt them from future scheduler repricing under fixed aggregate work.
 
 | Mechanism | Current status |
 |---|---|
 | `PRUNE_MC_NEIGHBOR_BUDGET` | Promoted default-ON after level-blind population gain; later retry-tier work handles part of its double-edged search-order effect. |
-| `STRATEGY_DEDUP_NEAR_TIE_RETRY` | Promoted default-ON after the additive dead-last design produced a strict solved-set superset at population scale. |
-| `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` | Promoted default-ON after population validation produced +45 with zero regressions against its baseline. |
-| `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` | Promoted default-ON after population validation produced +10 with zero regressions. |
-| `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` | Promoted default-ON 2026-08-19 after Corpus-2 819 -> 828, +9 with zero regressions; cost increased materially and remains part of the production price. |
-| `STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY` | Promoted default-ON 2026-08-23 after a population-scale A/B (`solver-level-blind-targeted-sweep.yml`, commit `95927c6df`): 73-level loss population 15/73 -> 18/73 (+3/-0, R02158/R02575/R03211); 90-level gain population 90/90 -> 90/90 (0/-0, confirming the dead-last placement structurally never fires on already-solving levels); published corpus unchanged. Smaller recovery than the closed-negative global-swap form's +9 since this tier only gets a fraction of the node ceiling the global form had from move zero — a larger reserve fraction could recover more but needs its own matched-work check first. |
-| `STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY` | Promoted default-ON 2026-08-23 (same day as built) after a population-scale A/B (`solver-level-blind-targeted-sweep.yml`, commit `6406ea92e`): 73-level loss population 18/73 -> 23/73 (**+5/-0**: R02505, R02646, R02439, R02670, R02198; control's solved set a strict subset of treatment's); 90-level gain population 90/90 -> 90/90 (0/-0, dead-last placement structurally cannot touch already-solving levels); published corpus 160/160 unaffected (byte-identical node count to the flag-off baseline, confirming the mechanism never fires on the published corpus). Extends `STRATEGY_REPAIR_LATE_PROBE`'s single-seed dead-last plain-repair attempt across `REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS = [1..7]` extra PRNG seeds, motivated by the 2026-08-12 CP-SAT repair-retreat finding that repair elites have zero rollback slack once diverged (ruling out "backtrack further," already closed via `STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY`) — a different seed commits differently at the same decision point instead of trying to recover from the same one. |
-| `STRATEGY_REPAIR_LATE_PROBE` | Promoted default-ON 2026-08-21 (one day after being built) after a same-commit deterministic A/B (GHA 32453248184 vs 32459711208, main@e5034e8c): Corpus-1 95 -> 96, Corpus-2 863 -> 881, +19 net with zero regressions on either corpus. |
+| `STRATEGY_DEDUP_NEAR_TIE_RETRY` | Promoted default-ON after the additive dead-last design produced a strict solved-set superset at population scale. Historical promotion predates the current fixed-total-work guardrail; audit its residual value in scheduler work rather than treating additive work as free. |
+| `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` | Promoted default-ON after population validation produced +45 with zero regressions against its baseline. Historical promotion predates the current fixed-total-work guardrail; retain as baseline, but require current residual value for future budget entitlement. |
+| `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` | Promoted default-ON after population validation produced +10 with zero regressions. Historical promotion predates the current fixed-total-work guardrail; retain as baseline, but require current residual value for future budget entitlement. |
+| `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` | Promoted default-ON 2026-08-19 after Corpus-2 819 -> 828, +9 with zero regressions; cost increased materially and remains part of the production price. This is explicitly a scheduler tail-audit candidate. |
+| `STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY` | Promoted default-ON 2026-08-23 after a population-scale A/B (`solver-level-blind-targeted-sweep.yml`, commit `95927c6df`): 73-level loss population 15/73 -> 18/73 (+3/-0, R02158/R02575/R03211); 90-level gain population 90/90 -> 90/90 (0/-0, confirming the dead-last placement structurally never fires on already-solving levels); published corpus unchanged. Smaller recovery than the closed-negative global-swap form's +9 since this tier only gets a fraction of the node ceiling the global form had from move zero. Its zero-regression result proves safe placement, not free cost; reprice this stage in the scheduler rather than increasing its reserve in isolation. |
+| `STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY` | Promoted default-ON 2026-08-23 after a population-scale A/B (`solver-level-blind-targeted-sweep.yml`, commit `6406ea92e`): 73-level loss population 18/73 -> 23/73 (**+5/-0**: R02505/R02646/R02439/R02670/R02198); 90-level gain population 90/90 -> 90/90 (0/-0); published corpus 160/160 unaffected. Extends `STRATEGY_REPAIR_LATE_PROBE` across seven extra PRNG seed salts. The treatment can buy substantial additive tail work on hard failures; scheduler repricing is mandatory before further seed/budget expansion. |
+| `STRATEGY_REPAIR_LATE_PROBE` | Promoted default-ON 2026-08-21 after a same-commit deterministic A/B (GHA 32453248184 vs 32459711208, main@e5034e8c): Corpus-1 95 -> 96, Corpus-2 863 -> 881, +19 net with zero regressions on either corpus. Retain as production baseline; future cap growth competes with other actions under shared work. |
 | `STRATEGY_MAIN_LOOP_LATE_RESERVE` | Default-ON historically; its original broad “give late repair more of the same search” research interpretation is now closed by the isolated-technique census. Do not infer an active optimization lane from the retained mechanism. |
 
 This table is intentionally not an exhaustive list of every production feature. Use code for polarity and the current queue for active work.
@@ -55,6 +69,10 @@ This table is intentionally not an exhaustive list of every production feature. 
 6. **Isolated-technique wins are nominations, not promotions.** Confirm through the real ladder before trusting a treatment whose receptor receives a different effective budget there.
 7. **Promotion checks both halves of a flag.** Changing `OPT_IN_FEATURES` is insufficient if read sites still implement the old polarity convention.
 8. **Compare gains, losses, work, and wall cost.** Node/work meters can miss changes in the cost of an operation; a redistribution can lower nodes while becoming much slower.
+9. **Future dead-last promotion requires budget evidence.** “Cannot regress because it runs after all existing winners” proves placement safety only. New additive retries/tails normally require matched total work or an explicit decision to enlarge the product budget.
+10. **Closed code must justify retention.** If a closed mechanism has no current descendant/plumbing/diagnostic role, remove it after preserving evidence. Git is the archive.
+11. **Promoted retries are repriced, not grandfathered.** Scheduler audits may reorder, shrink, condition, decompose, or remove a historically positive retry when upstream changes reduce its present marginal value.
+12. **The selected best arm is still tuned evidence.** When a flag/seed/threshold was chosen after trying alternatives on the same population, use independent confirmation before treating that selected result as general evidence; see [`solver-research-operating-model.md`](solver-research-operating-model.md).
 
 ## Historical evidence
 
