@@ -13,7 +13,7 @@ Deferred or exploratory solver work that is **not currently the top-ranked execu
 | What did the 2026-08-24 external literature change? | [`../reports/2026-08-24-external-research-pathfinder-synthesis.md`](../reports/2026-08-24-external-research-pathfinder-synthesis.md) |
 | Historical future-work ledger | [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md) |
 
-This file is intentionally a **short research backlog**, not an experiment diary. Completed measurements belong in dated reports; closed mechanisms belong in the opt-in ledger; current ranked work belongs in the queue. Before implementing anything here, check current code, the research-status index, [`tooling-catalog.md`](tooling-catalog.md), the queue, the ledger, and the 2026-08-24 synthesis where beam/repair/learning work is concerned.
+This file is intentionally a **short research backlog**, not an experiment diary. Completed measurements belong in dated reports; closed mechanisms belong in the opt-in ledger; current ranked work belongs in the queue. Before implementing anything here, check current code, the research-status index, [`tooling-catalog.md`](tooling-catalog.md), the queue, the ledger, and the 2026-08-24 synthesis where scheduler/beam/repair/learning/feasibility/symmetry work is concerned.
 
 ## Entry contract for future-work ideas
 
@@ -42,12 +42,13 @@ Do not turn a deferred idea into a framework project before the pilot demonstrat
 - A technique that already fails at substantial/full isolated budget has a search-quality problem until contrary evidence shows useful late hazard.
 - Do not optimize a research proxy after it becomes easy to measure. Lineage survival, badness, profile similarity, exact-label catch rate, and scheduler prediction accuracy matter only insofar as they improve actual solve/work/correctness outcomes.
 - Prefer a Pareto view where capability and cost trade off. A scalar score can hide rare exclusive solves or expensive tails.
+- For exact-resource constraints, do not assume “less used is better.” A dominance/prune needs a proof that one state's possible completions subsume another's.
 
 ## High-value deferred programs
 
 ### Maintained exact/reference formulation
 
-**Why it matters:** many current questions are being answered by observing the heuristic solver's failures. An independent exact or bounded reference provides cleaner labels for whether a prefix, retreat, mechanic commitment, or reduced instance is genuinely completable.
+**Why it matters:** many current questions are being answered by observing the heuristic solver's failures. An independent exact or bounded reference provides cleaner labels for whether a prefix, retreat, mechanic commitment, residual resource target, or reduced instance is genuinely completable.
 
 CP-SAT/reference tooling already exists and has been useful for repair retreat and prefix feasibility. The missing step is to make it a maintained research instrument rather than an occasional side experiment.
 
@@ -58,7 +59,7 @@ Useful increments:
 3. add small-instance differential tests against the canonical referee in **both directions**;
 4. support explicit-prefix completion queries and reduced-instance exact controls;
 5. record model limitations, timeout/unknown states, and approximation direction explicitly;
-6. use it to produce exact-live/dead labels for beam/DFS lineage, repair interfaces, and new propagator tests;
+6. use it to produce exact-live/dead labels for beam/DFS lineage, repair interfaces, residual opportunity, and new propagator/reason tests;
 7. only expand toward full-level competition if measurements justify the engineering cost.
 
 **Hard guardrail:** never report `UNSAT`/dead as puzzle truth from a model that contains a relaxation, omitted mechanic, timeout, or unproven encoding. Approximate models may prove only what their direction logically supports.
@@ -104,6 +105,8 @@ The remaining question is narrower and more interesting:
 
 > Do expensive **sound** failures, across different exact states, share a compact structural reason that becomes knowable materially earlier than the solver currently rejects them?
 
+Candidate reason vocabulary from feasibility literature includes exact resource no longer attainable, residual maximum capacity below the remaining target, obligation isolation behind a cut, and joint resource/topology incompatibility. These are hypotheses, not preapproved hard prunes.
+
 Investigate observation-first:
 
 1. collect a bounded sample of soundly dead situations from existing prune proofs, systematic exhaustion where proof scope is clear, and/or exact-prefix labels; keep these separate from repair's merely unproductive randomized dead ends;
@@ -133,7 +136,8 @@ Deferred work beyond the scheduler's first static version:
 - bound ranges before searching them; do not let an external configurator invent an effectively unbounded policy language;
 - add bounded racing/successive-elimination support so poor configs die early;
 - optionally integrate an external configurator offline if the plumbing cost is justified;
-- optimize marginal portfolio coverage/work and rare exclusive capability rather than standalone solve count;
+- optimize **marginal** portfolio coverage/work and rare exclusive capability rather than standalone solve count;
+- treat continuation tranches as candidate actions rather than permanent entitlement;
 - use grouped/held-out validation and report the number/range of configurations searched;
 - compare against simple baselines so complexity must earn its place;
 - distill successful configurations into a small understandable production action set rather than preserving the entire search space as named profiles.
@@ -141,6 +145,8 @@ Deferred work beyond the scheduler's first static version:
 **Pilot gate:** demonstrate that systematic search finds configurations/portfolio combinations materially better than the best existing hand-authored candidates on development data, then retain improvement on independent confirmation.
 
 **Stop gate:** if a simple current-action subset/reorder captures nearly all measured headroom, do not build a large configurator integration merely because the parameter space is interesting.
+
+Survival/hazard, bandit, or explicit value-of-computation scheduling belongs **after** the simple static-tranche scheduler demonstrates held-out value and leaves material residual headroom. See [`solver-scheduling-policy.md`](solver-scheduling-policy.md).
 
 ### Generalization/challenge corpus maintenance
 
@@ -164,6 +170,34 @@ This program is about claim quality, not runtime capability, but it protects eve
 
 ## Search-quality directions that remain plausible
 
+### Residual future opportunity beyond current prunes
+
+The solver already uses length/intersection overflow, goal distance, parity, MP/MC lower bounds, connectivity, and related hard checks. Do **not** start a generic RCSP/label-setting rewrite or assume ordinary resource dominance transfers to exact targets.
+
+The open feasibility question is narrower:
+
+> Among states that pass the current prune gauntlet, is there a cheap residual quantity that separates exact-live from exact-dead states materially earlier than current rejection?
+
+Prespecify only a few families:
+
+- **upper** residual capacity, complementing existing lower bounds;
+- parity/congruence or small attainable-value summaries for exact length/intersections;
+- residual component capacity and cut/bridge/corridor scarcity;
+- joint obligation/topology summaries.
+
+Possible roles must remain separate:
+
+- proved one-sided condition -> candidate hard prune;
+- predictive but unsound -> ranking/beam/repair descriptor only;
+- expensive exact/relaxed computation -> offline diagnostic/reference label;
+- recurrent compact impossibility -> candidate learned-failure reason.
+
+For exact targets, “less resource used” does not automatically dominate “more resource used.” A hard dominance relation needs a proof that one state's attainable completion set subsumes another's.
+
+**Pilot gate:** a descriptor adds reproducible early exact-live/dead separation beyond existing prune outcomes on unrelated parents and has plausible check cost.
+
+**Stop gate:** if proposed summaries mostly duplicate existing prunes, rarely separate exact labels, or require near-exact residual solving to compute, do not expand generic completion-bound machinery.
+
 ### Beam retention and survivor selection
 
 Exact-prefix evidence now distinguishes at least two failure shapes:
@@ -175,7 +209,7 @@ The next question is not generic “make beam more diverse.” It is:
 
 > At proven A/D extinction parents, does a small set of cheap level-blind descriptors reveal that the current survivor set spends multiple slots on states with effectively similar futures while an exact-live alternative occupies an underrepresented structural class?
 
-Start offline on existing lineage/exact-label material. Prespecify a **small** descriptor set drawn from already-available or cheap runtime state, such as remaining length/intersection resources, outstanding objective/mechanic masks, existing MustCross/flipper diversity state, and simple residual topology/connectivity summaries where cheap and legal. Do not launch a broad learned-feature search merely because many descriptors are available.
+Start offline on existing lineage/exact-label material. Prespecify a **small** descriptor set drawn from already-available or cheap runtime state, including remaining length/intersection resources, outstanding objective/mechanic masks, existing MustCross/flipper diversity state, and selected residual opportunity summaries from the preceding section where they add information beyond current prunes. Do not launch a broad learned-feature search merely because many descriptors are available.
 
 A descriptor is interesting only if it recurs across unrelated parents and separates useful future coverage better than score alone **and** a neutral random-reserve control.
 
@@ -208,7 +242,7 @@ So do **not** run another generic rollback census or indiscriminately tune ruin 
 1. **reachability:** how far back must the prefix be relaxed before an exact completion exists?
 2. **reconstructability by current repair:** from an exact-live prefix, how much viable basin does current repair expose before dying?
 
-Then ask whether cheap, hint-free runtime state can distinguish early-broken states from exact-live-but-repair-hostile residuals. Topology/connectivity is especially worth testing because existing provenance analysis found obstacle density correlated with admissible-order versus repair wins even after removing the MustCross confound. Known-solution common-prefix distance remains discovery evidence only and is illegal as a production feature.
+Then ask whether cheap, hint-free runtime state can distinguish early-broken states from exact-live-but-repair-hostile residuals. Topology/connectivity is especially worth testing because existing provenance analysis found obstacle density correlated with admissible-order versus repair wins even after removing the MustCross confound. Also test only a few residual-opportunity summaries that survive the preceding section's incremental-information gate. Known-solution common-prefix distance remains discovery evidence only and is illegal as a production feature.
 
 Only after a recurring legal descriptor separates regimes should implementation branch:
 
@@ -240,6 +274,16 @@ A genuinely open form would derive a better **guidance-specific** distance or op
 **Stop gate:** do not continue trying blended/legacy distance formulas merely because some threshold somewhere recovers a selected regression population.
 
 ## Representation and interoperability ideas
+
+### Orientation equivariance diagnosis
+
+Detailed policy lives in [`variant-level-research.md`](variant-level-research.md). The durable research question is not “make every rotated trace identical.” It is to locate recurring **harmful** first non-equivariant decisions on transform-controlled parent pairs.
+
+Heuristic invariance does not imply search equivariance: equal corresponding scores can still diverge through successor order, tie-breaking, retention/dedup, coordinate-derived identifiers, or PRNG-consumption order. Current direction inversions are aggregate-balanced, so there is no evidence for a universal directional correction.
+
+**Pilot gate:** the same first-divergence mechanism recurs across unrelated parent-level cliffs and materially changes solve/work.
+
+**Stop gate:** if cliffs are mechanism-heterogeneous, directionally balanced, and provide complementary coverage, treat them as finite-budget diversification and do not pursue global canonicalization/invariance engineering.
 
 ### Typed producer -> receptor artifacts
 
@@ -289,7 +333,9 @@ Do not treat these as open research directions without materially new evidence:
 - DPP/MAP-Elites/large novelty-archive beam machinery before a simple descriptor-aware policy shows unexplained headroom;
 - exact DFS transposition-table work absent new sound recurrence evidence;
 - full CDCL/LCG-style learning architecture absent a compact recurring sound reason class;
-- production rotate/mirror retries instead of diagnosing symmetry bias;
+- generic RCSP/label-setting infrastructure or exact-resource dominance without a sound subsumption proof;
+- broad graph canonicalization or production rotate/mirror retries instead of diagnosing symmetry bias;
+- survival/hazard/bandit/VOC scheduler infrastructure before simple conditional-tranche scheduling shows residual headroom;
 - giant variant generation before defining the unanswered question and analysis plan;
 - full-corpus A/Bs for ideas already falsified by a narrow causal test;
 - retaining closed experimental code solely as an archive;
