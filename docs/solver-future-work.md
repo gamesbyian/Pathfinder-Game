@@ -10,9 +10,10 @@ Deferred or exploratory solver work that is **not currently the top-ranked execu
 | Does retained/default-off code await promotion? | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) |
 | How can variants help? | [`variant-level-research.md`](variant-level-research.md) |
 | What did an experiment measure? | [`../reports/README.md`](../reports/README.md) + dated report |
+| What did the 2026-08-24 external literature change? | [`../reports/2026-08-24-external-research-pathfinder-synthesis.md`](../reports/2026-08-24-external-research-pathfinder-synthesis.md) |
 | Historical future-work ledger | [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md) |
 
-This file is intentionally a **short research backlog**, not an experiment diary. Completed measurements belong in dated reports; closed mechanisms belong in the opt-in ledger; current ranked work belongs in the queue. Before implementing anything here, check current code, the research-status index, [`tooling-catalog.md`](tooling-catalog.md), the queue, and the ledger.
+This file is intentionally a **short research backlog**, not an experiment diary. Completed measurements belong in dated reports; closed mechanisms belong in the opt-in ledger; current ranked work belongs in the queue. Before implementing anything here, check current code, the research-status index, [`tooling-catalog.md`](tooling-catalog.md), the queue, the ledger, and the 2026-08-24 synthesis where beam/repair/learning work is concerned.
 
 ## Entry contract for future-work ideas
 
@@ -93,25 +94,34 @@ A positive result would justify a generic restart action for the scheduler. A ne
 
 ### Learned failure / reason-producing propagation
 
-Current pruning mostly asks whether generic bounds prove a state dead. It does little to explain a conflict and reuse that explanation later in the same solve.
+The broad “does search revisit failures?” premise has already split by search paradigm and should **not** be rerun generically.
 
-Investigate incrementally rather than attempting a SAT-style rewrite:
+- Repair already has a shipped per-call exact-signature dead-end cache. On hard repair-close cases, exact repeated dead-end signatures were common enough to save work. Its semantics are deliberately local and weak: a hit means that the randomized repair continuation previously dead-ended from that exact state/context, **not** that the state is logically unsatisfiable.
+- Systematic DFS exact transposition was separately measured with a sound full-state signature and found weak, roughly 0.5–16% repeated-state opportunity rather than the misleading 92–99% seen under a loose unsound abstraction. Another exact DFS transposition-table push is therefore closed absent materially new evidence.
+- Existing cheap sound prune reasons already cover many obvious dead states, so a learned reason that merely restates them late is unlikely to pay.
 
-1. identify common dead-state detections whose reason can be represented as a small set of commitments/resources;
-2. prove the reason sound and determine exactly which future-state fields its validity depends on;
-3. instrument repeated encounters first to estimate theoretical reuse opportunity;
-4. memoize/reuse those reasons as local nogoods inside one solve;
-5. cap memory/storage and measure lookup/bookkeeping overhead;
-6. measure whether they actually prevent repeated exploration rather than merely add bookkeeping;
-7. if successful, explore non-chronological backtracking or richer reason-producing propagators.
+The remaining question is narrower and more interesting:
 
-The existing repair-scoped exact-state nogood cache is precedent, not completion of this idea. Avoid unsound global keys that omit future-relevant state.
+> Do expensive **sound** failures, across different exact states, share a compact structural reason that becomes knowable materially earlier than the solver currently rejects them?
+
+Investigate observation-first:
+
+1. collect a bounded sample of soundly dead situations from existing prune proofs, systematic exhaustion where proof scope is clear, and/or exact-prefix labels; keep these separate from repair's merely unproductive randomized dead ends;
+2. group only candidate reason classes that arise from observed repeated structure, rather than inventing a large hand-written nogood language up front;
+3. for every candidate class, state the proof scope and every state field its validity depends on;
+4. measure recurrence across distinct exact states and unrelated parents;
+5. measure the earliest point the reason could be known, the current rejection point, and work performed in between;
+6. measure overlap with existing cheap prunes and exact-state caches;
+7. estimate checking/storage cost before adding a hard reject;
+8. only if one compact class earns its keep, prototype a bounded per-solve reason store or reason-producing prune for that class.
+
+Conflict-directed backjumping is a separate later branch. It is warranted only if systematic-search failures demonstrably depend on a small subset of earlier decisions. Do not attach CBJ to randomized repair merely because both appear in conflict-learning literature.
 
 **Hard guardrails:** no cross-level persistent learning in cold capability; no approximate “reason” may become a hard reject; every nogood identity must include all state needed for its proof scope.
 
-**Pilot gate:** show that an exact/sound reason recurs often enough on real hard searches to repay storage/lookups and saves measured work without solve loss.
+**Pilot gate:** at least one compact reason class must be sound, recur across distinct states and unrelated parents, become available appreciably before current rejection, and plausibly save more work than it costs to check/store.
 
-**Stop gate:** if repeated-conflict opportunity is rare or bookkeeping exceeds avoided work, close that reason class before building a general conflict-learning architecture.
+**Stop gate:** if abstractions collapse toward full-state identity, rarely recur, overlap almost entirely with current cheap prunes, or become recognizable only when the solver already rejects, close abstract nogood learning before building general conflict infrastructure.
 
 ### Automatic algorithm configuration and portfolio construction
 
@@ -156,38 +166,60 @@ This program is about claim quality, not runtime capability, but it protects eve
 
 ### Beam retention and survivor selection
 
-Exact-prefix evidence shows viable candidates can be generated and then lose to higher-ranked dead material. Continue with causal retention research:
+Exact-prefix evidence now distinguishes at least two failure shapes:
 
-- first-divergence and live/dead sibling labels;
-- frontier churn and exact-live survival probability;
-- dedup/near-tie/diversity interactions;
-- state-conditioned width or retention only when the descriptor predicts extinction;
-- simple controls such as width-only/random-neutral retention;
-- held-out family confirmation.
+- **A/D-class extinction:** exact labels have repeatedly shown score-preferred dead material surviving while a lower-ranked exact-live sibling is lost, including width-saturated D cases;
+- **B-class near-ties:** resolved cases have been live/live, so they should not automatically receive the same treatment.
 
-Do not treat larger width as monotonically better; current evidence already shows width/diversity inversions. Do not optimize known-lineage survival as an end in itself; a treatment must improve actual cold solve/work.
+The next question is not generic “make beam more diverse.” It is:
 
-**Pilot gate:** identify a recurring exact-live/exact-dead retention mistake and a neutral descriptor/intervention that changes that boundary without simply buying more width.
+> At proven A/D extinction parents, does a small set of cheap level-blind descriptors reveal that the current survivor set spends multiple slots on states with effectively similar futures while an exact-live alternative occupies an underrepresented structural class?
 
-**Stop gate:** if candidate descriptors only separate the hand-picked extinction fixtures that inspired them, close/demote rather than adding another scoring dimension.
+Start offline on existing lineage/exact-label material. Prespecify a **small** descriptor set drawn from already-available or cheap runtime state, such as remaining length/intersection resources, outstanding objective/mechanic masks, existing MustCross/flipper diversity state, and simple residual topology/connectivity summaries where cheap and legal. Do not launch a broad learned-feature search merely because many descriptors are available.
 
-### Repair operator quality
+A descriptor is interesting only if it recurs across unrelated parents and separates useful future coverage better than score alone **and** a neutral random-reserve control.
 
-Plain repair has unique deep capability, but most hard residual levels still fail after large isolated budgets. Open questions should therefore change the trajectory or edit operator rather than simply extend it:
+If that premise holds, test the simplest expression first:
 
-- exact-informed choice of retreat/edit interface;
-- initialization diversity and restart policy;
-- state-conditioned ruin size;
-- alternative elite diversity/selection;
-- operators that preserve scarce must-cross/portal/length resources.
+- a bucket/quota or crowding rule over the descriptor; or
+- one small reserve slot, with a random reserve as neutral control.
 
-The CP-SAT retreat finding that some diverged elites have zero rollback slack is a warning against indiscriminate deeper backtracking.
+Keep beam width unchanged for the primary comparison and match total `workSpent`; include ordinary width increase as the “just buy more beam” control. Known-lineage or exact-live survival is still only diagnostic. Promotion requires actual cold solve/work improvement.
 
-Any initialization/seed-diversity proposal must compare against the same total work spent on baseline repair. “One of N seeds solves” is not enough if N multiplies the budget.
+**Pilot gate:** recurring A/D future-coverage structure on unrelated parents plus a simple descriptor-aware treatment that beats score-only, random-reserve, and width-only explanations at the relevant boundary.
 
-**Pilot gate:** show a changed operator/initialization produces a different and measurably more productive trajectory on exact/diagnosed failure cases at equal work.
+**Stop gate:** if descriptor structure does not recur, random reserve performs equally well, or better exact-live retention fails to become solve/work improvement, close broad diversity work rather than escalating.
 
-**Stop gate:** if the new operator only improves intermediate badness or lineage/proxy metrics without increasing cold solves/work, close that form.
+Do not jump to DPP subset selection, MAP-Elites, large novelty archives, or NLP-specific diverse-beam machinery unless a simple policy first proves there is real retained headroom that it cannot capture. Coarse beam dedup is already an intentional population-shaping policy, not an exact-equivalence mechanism; prior mechanical refinements should not be resurrected as “better dedup.”
+
+### Repair reachability, reconstructability, and operator quality
+
+Plain repair has unique deep capability, but most hard residual levels still fail after large isolated budgets. The external LNS literature is useful mainly as a diagnostic vocabulary; Pathfinder repair is not textbook routing ALNS and should not mechanically import destroy/reinsert machinery.
+
+Exact repair-retreat work already answers the crude rollback question by showing **both regimes**:
+
+1. some retained elites become provably unrecoverable at an early choice, so useful repair would have to reopen substantial earlier structure;
+2. other elites remain exactly completable until only 1–2 moves before their observed dead end, yet current randomized repair and `closeLengthGap`-style reconstruction can still fail from those exact-live states.
+
+The second regime matters because a state can be **reachable in principle but effectively unreconstructable by the current repair paradigm**. On the strongest observed example, CP-SAT proved a long exact completion from a late prefix while thousands of repair-style randomized continuations all died quickly and a vastly enlarged `closeLengthGap` search still failed. More rollback depth or more of the same local search is not the obvious remedy there.
+
+So do **not** run another generic rollback census or indiscriminately tune ruin size. Instead classify a bounded unrelated-parent sample on two independent axes:
+
+1. **reachability:** how far back must the prefix be relaxed before an exact completion exists?
+2. **reconstructability by current repair:** from an exact-live prefix, how much viable basin does current repair expose before dying?
+
+Then ask whether cheap, hint-free runtime state can distinguish early-broken states from exact-live-but-repair-hostile residuals. Topology/connectivity is especially worth testing because existing provenance analysis found obstacle density correlated with admissible-order versus repair wins even after removing the MustCross confound. Known-solution common-prefix distance remains discovery evidence only and is illegal as a production feature.
+
+Only after a recurring legal descriptor separates regimes should implementation branch:
+
+- **early-broken:** one deeper or dependency-targeted prefix/splice reopening mechanism;
+- **late-live but repair-hostile:** one stronger bounded reconstruction mechanism, plausibly exact/constraint-assisted on a deliberately small residual, rather than more random rollout or another copy of ordinary DFS.
+
+Do not bundle these into an adaptive-repair framework first. Do not build operator weighting, bandits, or RL selection until at least two complementary operators independently demonstrate conditional value. A selector cannot manufacture useful operators.
+
+**Pilot gate:** cheap legal descriptors separate reachability/reconstructability regimes across unrelated parents strongly enough to nominate one regime-specific treatment.
+
+**Stop gate:** if cheap descriptors do not predict the regimes beyond already-known coarse correlations, close static regime routing; if a treatment only improves badness or exact-prefix survival without cold solve/work gain, close that operator form.
 
 ### State-conditioned must-cross reasoning
 
@@ -251,7 +283,12 @@ Do not treat these as open research directions without materially new evidence:
 - another hand-authored scoring profile whose novelty is only weights/name;
 - widening an existing coarse repair gate by trying nearby thresholds;
 - broad extra repair budget after full-budget failures;
+- generic repair elite-pool diversification/relinking without a newly diagnosed conditional failure mode;
+- a general ALNS/adaptive-operator framework before complementary operators earn it;
 - universal beam-width increases;
+- DPP/MAP-Elites/large novelty-archive beam machinery before a simple descriptor-aware policy shows unexplained headroom;
+- exact DFS transposition-table work absent new sound recurrence evidence;
+- full CDCL/LCG-style learning architecture absent a compact recurring sound reason class;
 - production rotate/mirror retries instead of diagnosing symmetry bias;
 - giant variant generation before defining the unanswered question and analysis plan;
 - full-corpus A/Bs for ideas already falsified by a narrow causal test;
