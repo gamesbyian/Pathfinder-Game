@@ -28,6 +28,22 @@ Use when changing hard prunes, state identity, solver/runtime rules, reusable sc
 | 17 | Stale documentation | Current behavior belongs in current contracts/queues; reports/snapshots preserve evidence. Update/archive status when implementation or promotion state changes. |
 | 18 | Unmodelled stage-history dependence | Given the same explicit level/action/config/seed and deterministic work budget, unrelated predecessor stages must not silently change search semantics, ordering, randomness, or capability. Any intended handoff must be explicit typed action state. Cache warming may change wall cost only unless a different contract is documented. Add fresh-vs-preceded differential tests for affected stages before treating sequence effects as causal evidence. |
 
+## Open correctness defect: 31-32 flipping-filter beam identity
+
+`validateRawLevel` permits up to 32 flipping filters because `flipperUsedMask` legitimately uses all 32 int32 bits. The underlying transition state is sound at that boundary: bit 31 is a negative signed int32 value but nonzero membership checks, `popcount`, apply, and undo handle it correctly; `flipper-cardinality.test.ts` pins that behavior.
+
+Beam's numeric state-identity fast path does **not** currently share that full-domain guarantee. `search.ts` derives `_flipperBase` as `1 << prep.flipperKeys.length`. JavaScript bitwise shifts are int32: at 31 filters this becomes `-2147483648`, and at 32 the shift count wraps so it becomes `1`. `flipperUsedMask` itself is also signed when bit 31 is set. Therefore the mixed-radix beam dedup key and diverse-beam `(mustCrossMask, flipperUsedMask)` bucket encoding are not collision-free on schema-valid 31/32-filter levels even though their comments claim cardinality-derived exactness.
+
+Required repair before claiming solver correctness over that domain:
+
+1. derive the radix arithmetically (`2 ** flipperCount`), never with a bitwise shift;
+2. normalize the 32-bit flipper mask to its unsigned value (`>>> 0`) before numeric composition;
+3. use numeric dedup/bucketing only when the complete composed key is a safe integer; otherwise use an exact delimited/string representation;
+4. add 31- and 32-filter counterexamples proving distinct high-bit states remain distinct in both dedup and diverse-beam bucketing;
+5. preserve the ordinary small-cardinality numeric path byte-for-byte except for representation arithmetic.
+
+This is a representation correctness bug, not evidence that any existing corpus result was wrong: no affected production/corpus population has yet been established. Do not reduce the validator's 32-filter contract merely to protect the fast path; fix or bypass the representation instead.
+
 ## Open research-integrity blocker: fresh vs preceded stage behavior
 
 Historical reverse-oracle/admissible-order evidence has cases where an isolated action does not reproduce a win that occurred after earlier ladder activity. Until a specific explicit handoff, mutable field, cache semantic, randomness path, or work-accounting effect explains such a difference, treat it as an **unresolved correctness/experimental-integrity issue**, not as a useful scheduler feature.
@@ -56,9 +72,9 @@ Do not tune scheduler caps or technique value around unexplained stage-history d
 ## Closed work not to rediscover unchanged
 
 - Exact DFS/beam transposition caching with sound identity had poor payoff; coarse beam dedup is width/diversity policy, not exact equivalence.
-- Composite bit-packing siblings were audited after the beam-key overflow; reopen for new packed representations/cardinality changes. **2026-08-23 addendum:** that rule caught a separate must-pass lower-bound memo-key collision: the cache reserved only 24 mask bits although normalized must-pass/must-turn cardinality is schema-valid through 30. The key now reserves the full 30-bit mask space and a 25-objective regression fixture deliberately exercises the former `(pos=0, mask=1<<24)` / `(pos=1, mask=0)` alias. This is a fixed latent correctness defect, not an explanation of the historical P0 ladder-only admissible-order wins.
+- Do **not** treat an earlier packing audit as blanket closure. The 2026-08 hardening pass found two later counterexamples created by domain/representation drift: (a) must-pass lower-bound memoization reserved only 24 mask bits although normalized must-pass/must-turn cardinality is schema-valid through 30; the fixed key now reserves 30 bits and a 25-objective fixture exercises the former alias; (b) beam's later cardinality-derived numeric flipper radix still uses an int32 shift and is unsound at the validator's 31/32-filter boundary (open above). Re-audit consumers whenever cardinality or encoding contracts change.
 - The MITM frontier key was fixed for missing future state and rerun; exact frontier growth is now the conclusion.
-- Flipping-filter single-use/global crossing-order parity is settled semantics.
+- Flipping-filter single-use/global crossing-order parity is settled semantics; the open beam bug above is representation identity, not mechanic semantics.
 - Sparse ablation normalization is centralized; extend its registry/tests instead of adding default logic.
 - Repair-scoped exact-state nogood caching exists; the naive global key is a soundness counterexample, not pending work.
 - Portal-parity hard pruning was implemented and measured effectively inert in its tested form.
