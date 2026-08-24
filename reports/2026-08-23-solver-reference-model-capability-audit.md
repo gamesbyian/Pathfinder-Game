@@ -1,8 +1,8 @@
 # Solver exact/reference-model capability audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-23 — current `cpsat-full-probe.py`, mechanic-state contracts, CP-SAT flipping-filter validation, repair-retreat prefix work, and canonical-referee validation practice
-> **Decision:** treat the existing CP-SAT/reference stack as a serious but bounded research oracle now; do not expand it yet. First reconcile mechanic-support claims, summarize bidirectional validation by mechanic combination, and demonstrate turnaround/value on one current ranked question
+> **Last evidence:** 2026-08-23 — current `cpsat-full-probe.py`, native must-cross legality, reconciled mechanic-state contract, CP-SAT flipping-filter validation, repair-retreat prefix work, and canonical-referee validation practice
+> **Decision:** treat the existing CP-SAT/reference stack as a serious but bounded research oracle now; do not expand it yet. First summarize bidirectional validation by mechanic combination and demonstrate turnaround/value on one current ranked question
 > **Remaining gate:** produce a bounded support/validation suite that classifies each relevant mechanic combination as exact-validated, encoded-but-insufficiently-validated, one-sided/relaxed, unsupported, or timeout-prone, with every emitted witness checked by the canonical referee
 > **Evidence role:** forensic
 > **Selection:** observational — audit follows prior targeted CP-SAT work and current reference-program reprioritization
@@ -102,7 +102,7 @@ The table below deliberately separates *encoding presence* from *validated exact
 | Exact counted length / intersections | encoded; length bug fixed 2026-08-15 | encoded with known cold/referee validation after fix | include portal and non-portal cases in suite |
 | Edge-axis reuse | encoded; prior under-constraint bug fixed after referee rejection | encoded with substantial witness/cold coverage | targeted adversarial fixtures for turns/revisits |
 | Must-pass | encoded directly | encoded; likely straightforward | explicit witness + cold cases in suite |
-| Must-cross | model claims exact satisfaction from two visits + global edge-axis reuse | **reconciliation required**: model/code claim exactness, while [`docs/mechanic-state-contracts.md`](../docs/mechanic-state-contracts.md) still labels generic external support “relaxed unless first-cross axis/lock is modeled” | prove/document why edge-axis-touch semantics make the CP-SAT encoding exact, or amend model/contract; add adversarial first-pass-turn fixtures |
+| Must-cross | `visits == 2` plus exact per-visit edge-axis-touch reuse | **encoding logic reconciled as exact** with native first-pass lock semantics; broad targeted validation still desirable | adversarial first-pass-turn / axis-reuse fixtures plus cold/referee cases |
 | Must-turn / adjacent-turn chirality | turn variables and landmark families present | encoded; validation depth not yet summarized centrally | targeted witness + cold/referee fixtures for each chirality/portal-boundary interaction |
 | Surround | encoded in full model | encoded; validation depth not yet summarized centrally | targeted suite |
 | Portals | encoded, including padded horizon/jump typing; several bugs already found/fixed | strongest current exact candidate after flipper-free witness batches + cold referee checks | include pair counts and unused-pair/padding edge cases in suite |
@@ -110,20 +110,15 @@ The table below deliberately separates *encoding presence* from *validated exact
 | Static filters | explicit skip | unsupported in current full model | no action until a real decision-bearing population/question exists |
 | Goose / false goal / decorative exclusions | represented as impassable for solver scope where applicable | encoded for solver scope; not a PLAY simulation | bounded fixtures only if a research question depends on them |
 
-### Must-cross documentation discrepancy
+### Must-cross support reconciliation
 
-This audit should not silently choose a winner between two current descriptions.
+The audit initially found a real documentation discrepancy: `cpsat-full-probe.py` described must-cross as exactly enforceable through `visits == 2` plus edge-axis reuse, while [`docs/mechanic-state-contracts.md`](../docs/mechanic-state-contracts.md) still said an external model was relaxed unless it explicitly tracked the first-cross axis/lock state.
 
-`cpsat-full-probe.py` explicitly argues that must-cross is exact with:
+Reading the native legality path resolves the apparent disagreement. `search-state.ts` has an explicit **must-cross lock prevention** rule: on the unsatisfied first pass, turning would consume the other axis at that cell and permanently block the required second crossing. The CP-SAT model already encodes the equivalent resource consequence globally: a visit that turns touches both axes, while its exact edge-axis-touch constraints permit each axis at most once. Therefore requiring two visits makes a first-pass turn infeasible automatically; two legal visits must be straight crossings on opposite axes.
 
-- two visits; and
-- the same edge-axis-reuse rule that prevents using an axis twice.
+So a separate first-axis variable is not required **in this model while the exact edge-axis-touch constraints are present**. Visit count by itself would still be insufficient. The durable mechanic contract has been corrected accordingly.
 
-The durable mechanic contract still says external-model support is relaxed unless first-cross axis/lock is explicitly modeled.
-
-Those statements may be reconcilable: if a turn on the first visit consumes both axis resources, a second legal visit is impossible, so “two visits + exact axis-touch reuse” may already enforce two straight crossings on opposite axes without a separate first-axis state variable. But that should be demonstrated with targeted referee-valid/adversarial fixtures and then documented consistently, not inferred from reassuring prose.
-
-Until reconciled, must-cross-sensitive `INFEASIBLE` results should be treated with extra caution when they are decision-bearing.
+This closes the documentation-logic discrepancy, not the broader validation gate. Targeted adversarial must-cross fixtures remain useful because a hand-written equivalence should be exercised directly before broad `INFEASIBLE` claims rely on it.
 
 ## What the model may prove
 
@@ -255,7 +250,7 @@ A smaller trustworthy oracle is better than a grand “full solver” whose supp
 
 When the bounded suite closes:
 
-1. update [`docs/mechanic-state-contracts.md`](../docs/mechanic-state-contracts.md) so `externalModelSupport` matches the verified model semantics rather than historical expectation;
+1. keep [`docs/mechanic-state-contracts.md`](../docs/mechanic-state-contracts.md) aligned with verified model semantics as support changes;
 2. add the reference-model validation/support entry point to [`docs/tooling-catalog.md`](../docs/tooling-catalog.md) if repeated use justifies a stable command;
 3. keep detailed validation counts and bugs in dated reports;
 4. keep unsupported/one-sided limitations explicit in every consumer report.
