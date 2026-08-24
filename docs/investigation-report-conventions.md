@@ -47,9 +47,11 @@ The same artifact can support different claims at different roles, but the repor
 - An A/B applies to the implementation it tested. If participation, budget, ordering, applicability, candidate set, or interactions materially change, state whether the old verdict still applies.
 - A positive result selected from many alternatives is normally **nomination evidence** until confirmed independently. Do not report the maximum observed arm as though it were a prespecified single test.
 - A negative result closes the tested form, not every imaginable descendant. Conversely, do not indefinitely rescue a null hypothesis by changing one more threshold, budget, seed, or cohort. Reopen only when new evidence changes the mechanism premise or the original treatment was demonstrably invalid.
+- **Absence of a solve gain is not automatically evidence of no mechanism.** If participation/activation was near zero, classify the treatment as non-participating/inconclusive for the intended mechanism rather than “negative.” Once participation is demonstrated and the outcome remains null/negative, close that form unless new evidence changes the premise.
 - Report the intended population, actual coverage, exclusions/missing rows, deadline truncation/errors, and whether the population itself was selected because it showed the effect.
 - Family/variant rows are correlated. State the independent unit and group/split by parent when the claim depends on generalization.
 - Cross-technique cost comparisons use `workSpent`; raw nodes remain within-technique diagnostics. If treatment buys additive work, report the larger envelope rather than describing the gain as free.
+- External algorithms/frameworks are comparators or hypothesis sources, not automatic gold standards. Report encoding/feature/support differences and compare at a meaningful resource/correctness boundary before concluding a custom approach is inferior/superior.
 - Retained default-off solver code is not automatically active work. Reconcile against [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md); code polarity is not promotion status.
 
 ## Before buying broad compute
@@ -62,7 +64,8 @@ For expensive decision-bearing work, write down enough of the intended test befo
 4. primary outcome and work/cost envelope;
 5. smallest result that would close the form, nominate follow-up, or justify confirmation;
 6. planned handling of multiple candidates/thresholds if the run is a sweep;
-7. stop condition for escalating to a larger population.
+7. stop condition for escalating to a larger population;
+8. any external/reference baseline and what differences make the comparison fair or limited.
 
 This is lightweight precommitment, not ceremony. It exists to prevent broad sweeps from becoming retrospective threshold-fishing exercises.
 
@@ -91,13 +94,14 @@ Before calling an investigation complete:
 1. Set the final status and remove stale active wording.
 2. Link final evidence and separate measurement from inference.
 3. State evidence role, selection procedure, intended/actual population, and material alternatives tried for decision-bearing solver work.
-4. Update the current surface that owns the decision: queue, opt-in ledger, or deferred-work index as appropriate.
-5. Ensure feature/flag descriptions do not advertise a stale gate.
-6. Update the authoritative topic/tool contract if reusable behavior changed.
-7. Add predecessor/successor links for follow-ups.
-8. If implementation changed after the decisive A/B, explicitly decide whether the verdict still applies; otherwise record a new gate.
-9. If a selected/tuned positive is being promoted broadly, point to independent confirmation or explicitly limit the claim.
-10. Archive concluded plans/notebooks when they make current-state retrieval harder.
-11. Run `npm run check:documentation-links`.
+4. State whether the treatment actually participated enough to support the claimed positive/negative mechanism verdict.
+5. Update the current surface that owns the decision: queue, opt-in ledger, or deferred-work index as appropriate.
+6. Ensure feature/flag descriptions do not advertise a stale gate.
+7. Update the authoritative topic/tool contract if reusable behavior changed.
+8. Add predecessor/successor links for follow-ups.
+9. If implementation changed after the decisive A/B, explicitly decide whether the verdict still applies; otherwise record a new gate.
+10. If a selected/tuned positive is being promoted broadly, point to independent confirmation or explicitly limit the claim.
+11. Archive concluded plans/notebooks when they make current-state retrieval harder.
+12. Run `npm run check:documentation-links`.
 
 This convention is prospective. Older reports need not be reformatted unless revised, but stale status discovered in them must still be reconciled with current authorities.
