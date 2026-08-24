@@ -1,384 +1,265 @@
 # External research → Pathfinder development synthesis
 
 **Date:** 2026-08-24  
-**Scope:** reconcile six external literature reviews against Pathfinder's existing solver evidence and convert them into bounded research decisions without treating named academic methods as an implementation backlog.
+**Scope:** reconcile eleven compact external-literature reviews against Pathfinder's existing solver evidence. Literature supplies mechanisms, abstractions and diagnostic distinctions; it is not an implementation backlog.
 
-External inputs:
+## External inputs
 
-- [`deep-research-report.md`](deep-research-report.md) — repair/LNS
-- [`nogood-deep-research-report.md`](nogood-deep-research-report.md) — learned failure
-- [`beam-deep-research-report.md`](beam-deep-research-report.md) — beam survivor selection
-- [`portfolios-deep-research-report.md`](portfolios-deep-research-report.md) — sequential portfolios/continuation value
-- [`heuristic-symmetry-deep-research-report.md`](heuristic-symmetry-deep-research-report.md) — symmetry/equivariance/representation bias
-- [`feasibility-deep-research-report.md`](feasibility-deep-research-report.md) — residual future-opportunity reasoning
+First wave:
+- [`deep-research-report.md`](deep-research-report.md) — repair/LNS;
+- [`nogood-deep-research-report.md`](nogood-deep-research-report.md) — learned failure;
+- [`beam-deep-research-report.md`](beam-deep-research-report.md) — beam survivor selection;
+- [`portfolios-deep-research-report.md`](portfolios-deep-research-report.md) — sequential portfolios;
+- [`heuristic-symmetry-deep-research-report.md`](heuristic-symmetry-deep-research-report.md) — symmetry/equivariance;
+- [`feasibility-deep-research-report.md`](feasibility-deep-research-report.md) — residual feasibility.
 
-Canonical priority remains [`../docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md). This synthesis **sharpens** existing queue items; it does not displace P0 cross-stage-state diagnosis, scheduler repricing, or generalization work.
+Second wave:
+- [`exact-attainability-upper-capacity-deep-research.md`](exact-attainability-upper-capacity-deep-research.md) — exact attainable resource sets and upper residual capacity;
+- [`future-equivalence-basin-width-deep-research.md`](future-equivalence-basin-width-deep-research.md) — continuation equivalence and feasible-basin width;
+- [`structured-repair-reconstruction-deep-research.md`](structured-repair-reconstruction-deep-research.md) — plan/sequence repair and narrow residual reconstruction;
+- [`infeasibility-certificates-deep-research.md`](infeasibility-certificates-deep-research.md) — structural certificates, cores and explanation minimization;
+- [`censored-continuation-symmetry-randomization-deep-research.md`](censored-continuation-symmetry-randomization-deep-research.md) — censored continuation value and randomized equivariance.
+
+Canonical priority remains [`../docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md). The second wave sharpens existing queue items rather than creating five new projects.
 
 ## Executive decision
 
-Do **not** implement general ALNS, CDCL/LCG, novelty/DPP/MAP-Elites beam selection, graph canonicalization, a survival-model scheduler, bandit control, or a new RCSP label-setting engine merely because those frameworks appear in the literature.
+Do **not** respond to the literature by building a new RCSP engine, ALNS framework, CDCL/LCG system, model counter, decision-diagram compiler, graph canonicalizer, survival/bandit scheduler, or generic plan-repair framework.
 
-The six reports are most valuable as a diagnostic vocabulary. Together they reduce the development problem to five questions:
+The useful convergence is more specific:
 
-1. **Allocation:** after an action has already failed through work `t`, what is the conditional value of its next work tranche versus another action?
-2. **Beam:** which partial states represent meaningfully different future possibilities, and is the beam wasting slots on redundant futures?
-3. **Repair:** is a stuck state broken because the wrong earlier commitment is frozen, or because the residual is live but hostile to current reconstruction?
-4. **Failure learning:** do distinct exact states repeatedly fail for the same compact, sound reason early enough for reuse to save work?
-5. **Representation:** when symmetric puzzle orientations diverge, where does search first cease to transform equivariantly, and is that divergence harmful or useful diversification?
+1. **Allocation:** continuation tranches should be valued conditionally among comparable unsolved risk sets, while distinguishing censoring, exhaustion, overlap and latent instance hardness.
+2. **Future opportunity:** exact-resource feasibility is membership in a continuation set, not merely `LB <= target <= UB`; cheap residues, upper capacity, cuts and small interface signatures can carry information between scalar bounds and exact solving.
+3. **Beam:** finite slots should cover materially different futures; the most promising abstraction family is an interface/context signature of the unresolved problem, not raw path/history distance.
+4. **Repair:** neighborhood reachability and residual reconstructability are separate failure modes. Plan-repair literature reinforces unrefinement/window expansion and dependency-guided reopening rather than generic ruin size.
+5. **Failure learning:** useful reasons should be compact **certificates** such as cut/resource/obligation conflicts or assumption cores, not arbitrary approximate patterns.
+6. **Symmetry:** randomized robustness is distributional equivariance. Same raw seed does not control semantic randomness once transformed executions consume draws differently.
 
-The feasibility literature supplies candidate **future-opportunity descriptors** for questions 2–4 rather than creating a separate solver architecture: lower/upper residual capacity, attainable exact-resource classes, parity/congruence, residual components/cuts/bridges, and joint obligation/topology state.
+Across beam, repair and learned failure, the strongest shared hypothesis is now **residual interface state**: a compact description of how the unresolved future connects to the already-committed past, carrying exact resources, obligations, topology/cut state and finite mechanic state across that interface.
 
----
-
-## Track A — Continuation-value repricing for the scheduler
-
-**Queue mapping:** #1 scheduler/fixed-work portfolio repricing.  
-**Priority among research-derived work:** highest because the program is already active and the required evidence largely exists.
-
-### What is already known
-
-The census already contains capped/tranche observations and censored solve-hazard curves. Beam often exhausts cheaply; plain repair retains real late yield; some deep DFS/IDA work is heavily substitutable; rare configurations retain exclusive capability. The current scheduler plan already calls for joining those curves to actual production reach and machine-independent `workSpent`.
-
-The portfolio literature sharpens the target quantity:
-
-> **Among runs that are still unsolved at the start of a tranche, what additional solve probability/capability does that tranche buy per unit work, and what would the same work buy from another fresh or continuing action?**
-
-A budget stop is right-censoring, not proof that the action would never solve. A naturally exhausted search is different and should leave the risk set rather than be treated as an ordinary timeout.
-
-### Smallest useful analysis
-
-For each material action and work band, compute on current comparable data:
-
-- reached/eligible risk set at tranche start;
-- incremental solves in the tranche conditional on surviving unsolved to it;
-- `workSpent` consumed by successful and failed tranche continuations;
-- exhaustion versus censoring;
-- marginal/exclusive solves not cheaply reproduced elsewhere;
-- overlap/substitution with candidate alternative actions;
-- uncertainty, especially in late rare cohorts;
-- sequence provenance so historical predecessor effects are not mistaken for causal continuation value.
-
-Then compute fixed-envelope portfolio frontiers using these tranche actions rather than treating a 50M algorithm as one indivisible arm.
-
-### What this does **not** justify yet
-
-Do not jump from “hazard curves exist” to “run the action with maximum hazard.” Hazard is a useful local summary, not a generally optimal finite-budget policy. Remaining budget, correlation among actions, continuation-vs-restart semantics, rare exclusive solves, and future choices matter.
-
-Likewise, bandits and value-of-computation control are later complexity layers. They become plausible only if:
-
-1. a simple static tranche schedule leaves material oracle headroom;
-2. conditional current-run telemetry predicts residual value beyond legal static features;
-3. the extra policy complexity survives held-out validation.
-
-### Immediate development consequence
-
-The existing scheduler work should explicitly treat **continuations as actions that must re-earn each tranche**. This is a refinement of current policy, not a new project.
+This is a research hypothesis, not authorization to build a grand unified state representation.
 
 ---
 
-## Track B — Beam future-equivalence at exact A/D extinction boundaries
+## Track A — Scheduler continuation value remains first
 
-**Queue mapping:** #4 beam score/retention.
+**Queue:** #1.
 
-### What is already known
+Pathfinder already has capped/tranche census data, `workSpent`, natural beam exhaustion, deep repair yield and action overlap. The second-wave survival review adds two cautions.
 
-Exact CP-SAT prefix labeling has repeatedly found score-preferred dead candidates while lower-ranked siblings are live at real A-class and D-class extinctions. Resolved B-class near-ties instead showed live/live alternatives. Exact/sound beam duplicate states are extremely rare; the existing coarse dedup is intentional width/diversity management and removing it costs solves.
+First, the correct empirical object for tranche `t -> t+Δ` is the incremental success/work distribution **among runs that are genuinely still at risk at `t`**. Natural exhaustion leaves the risk set; a budget stop is right censoring.
 
-Therefore generic “increase width,” “improve dedup,” and “make beam diverse” are already too vague.
+Second, `P(B solves | A failed to t)` mixes B's complementarity with information that A's failure reveals about the instance. Shared latent difficulty can depress all algorithms simultaneously. Historical ladder conditioning can additionally contain predecessor state, reach-selection and code/provenance effects.
 
-### New contribution from the feasibility literature
+Therefore:
+- empirical tranche tables remain the first model;
+- report independent denominators and uncertainty for sparse late tranches;
+- pair/cluster by independent level/parent where repeated runs exist;
+- do not extrapolate beyond observed tails without explicit modeling assumptions;
+- treat survival/frailty models as escalation only when simple tables leave material predictive uncertainty/headroom;
+- bandit/value-of-computation control remains later still.
 
-The beam report asked what state abstraction corresponds to different futures. The feasibility report provides a more concrete candidate vocabulary:
+The existing [`2026-08-23-solver-portfolio-repricing-design.md`](2026-08-23-solver-portfolio-repricing-design.md) is already the correct first implementation-facing design. P0 unexplained stage-history dependence still blocks causal-looking sequence conclusions for affected actions.
 
-- remaining exact length/intersection resources;
-- **lower and upper** residual resource capacity;
-- parity/congruence or small attainable-value summaries;
-- outstanding objective/mechanic obligations;
-- residual connectivity/component structure;
-- scarce bridges/cuts/corridors connecting future obligations;
+---
+
+## Track B — Residual future opportunity beyond current prunes
+
+**Queue:** feeds #4, #5, #6 and #7; no new ranked item.
+
+Pathfinder already hard-prunes length/intersection overflow, distance, parity, MP/MC lower bounds and connectivity. Do not rediscover those under academic names.
+
+The genuinely new candidate information is:
+
+- **upper residual capacity**, not only minimum required resource;
+- small exact/relaxed attainable-resource spectra or residue sets;
+- component capacity rather than reachability alone;
+- bipartite/color/degree restrictions;
+- articulation/bridge/block-cut structure;
+- separator/corridor traversal capacity;
+- matching/Hall/path-cover style incompatibility where a necessary relaxation fits;
+- joint resource + obligation + topology conditions.
+
+The strongest exact formulation is continuation-set membership. For state `s`, target resource must belong to `R(s)`, the set of resource vectors of legal completions. Safe equality-resource dominance requires continuation-set inclusion; “less resource used is better” remains forbidden unless a monotonicity proof exists.
+
+The cheapest plausible summaries sit between current scalar bounds and a full oracle: parity/modulo residues, small attainable-value bitsets on bounded subproblems, upper-capacity relaxations, and small structural interfaces.
+
+**Gate:** a new summary must add early exact-live/dead information beyond current prune outcomes at plausible cost. A predictor is not a hard prune unless its one-sided proof is explicit.
+
+---
+
+## Track C — Beam future equivalence and survivor-set quality
+
+**Queue:** #4.
+
+Existing exact labels already show A/D extinctions where a score-preferred state is dead while a lower-ranked sibling is live. B-class near-ties have resolved live/live. True exact beam duplicates are negligible; coarse dedup is useful population shaping.
+
+The second-wave abstraction literature sharpens “same future”:
+
+- exact equivalence means equal continuation languages/outcomes;
+- one-way simulation/substitutability means every useful continuation of B can be matched from A;
+- practical approximation often comes from **interface/context signatures** used in treewidth DP, AND/OR search, planning abstractions and decision diagrams.
+
+Candidate signature ingredients should remain small and prespecified:
+- current endpoint/finite mechanic state;
+- remaining exact-resource slack plus cheap attainable residues/capacity;
+- unresolved obligations;
+- residual component/cut/interface structure;
 - existing MustCross/flipper state.
 
-Pathfinder already has several hard versions of these ideas: goal distance, parity, MP/MC lower bounds, and connectivity. The question is therefore **incremental information beyond the current prune gauntlet**, not reimplementing classical bounds.
+Basin-width literature adds a separate dimension: two states can expose different amounts of future mass even when both are live. Useful diagnostic quantities include viable next-action count, forced-choice fraction, limited-depth viable branching, propagation closure and, offline only where tractable, conditional completion counts/entropy.
 
-### Smallest useful diagnostic
-
-At existing exact-labeled A/D extinction parents, compute a **small prespecified set** of cheap level-blind future-opportunity descriptors offline and ask:
-
-> Does the retained beam repeatedly spend multiple slots on candidates with similar residual opportunity while an exact-live alternative lies in a structurally distinct, underrepresented class?
-
-For every descriptor, record whether it adds information beyond current score, existing diversity buckets, and existing prune outcomes.
-
-### Positive branch
-
-Only if the same descriptor separates useful survivor coverage across unrelated parents:
-
-1. test the simplest quota/crowding/bucket expression at unchanged width;
-2. compare with one neutral random-reserve slot;
-3. compare with simply buying more width;
-4. hold total `workSpent` fixed;
-5. require cold solve/work improvement, not just exact-live lineage survival.
-
-### Stop gate
-
-If descriptor structure does not recur, random reserve performs equally well, or improved live retention fails to create solve/work value, close broad diversity work. Do not escalate to DPP, MAP-Elites, or large novelty archives.
+**Gate:** at unrelated exact-labeled A/D parents, a descriptor must distinguish useful future coverage beyond score, current diversity state and a neutral random-reserve explanation. If not, do not escalate to DPP/QD/novelty machinery.
 
 ---
 
-## Track C — Repair reachability versus reconstructability
+## Track D — Repair as unrefinement + reconstruction
 
-**Queue mapping:** #7 repair/CP-SAT-anchored operators.
+**Queue:** #7.
 
-### What is already known
+Exact retreat work already establishes two regimes: some repair elites require reopening much earlier structure; other late prefixes remain exactly live yet current repair/`closeLengthGap` fails to reconstruct them.
 
-Pathfinder repair is not textbook destroy/reinsert ALNS. Existing broad extra budget, gate widening, generic elite diversification, and additive elite-prefix DFS have already been weak or negative.
+The structured-plan-repair literature gives this distinction mature names and mechanisms:
 
-Exact repair-retreat work has demonstrated two qualitatively different regimes:
+- **unrefinement/refinement:** remove obstructing commitments, then solve the resulting partial plan;
+- **repair windows:** solve a bounded region, expanding the window if the preserved context makes it infeasible;
+- **dependency-guided repair:** use causal, threat, resource or conflict structure rather than sequence adjacency alone;
+- **exact residual reconstruction:** distinguish “no solution in this neighborhood” from “heuristic reconstruction missed one.”
 
-1. **early-broken:** a retained elite becomes provably unrecoverable at an early decision, so meaningful repair must reopen earlier structure;
-2. **late-live but repair-hostile:** a prefix remains exactly completable until very near the observed dead end, yet randomized rollout and enlarged `closeLengthGap` still fail badly.
+This supports a sharper diagnostic decomposition:
 
-The latter proves that rollback depth alone is not the issue. A residual can be feasible but have a tiny viable basin for the available repair paradigm.
+1. neighborhood excludes every solution;
+2. neighborhood contains a solution but has a narrow/frozen residual basin;
+3. reconstruction paradigm is mismatched;
+4. suitable method is budget-limited;
+5. stochastic reconstruction simply misses.
 
-### New contribution from feasibility reasoning
+Useful external proxies for narrowness include forced-variable fraction, viable branching, residual treewidth/interface width, propagation closure and discrepancy from the incumbent/default policy. Raw solution count alone is not enough.
 
-Residual opportunity should be treated as more than distance to the goal. Cheap descriptors worth evaluating include:
-
-- minimum and maximum remaining length/crossing capacity;
-- parity/attainable-resource restrictions;
-- residual component/cut structure;
-- corridor/bridge scarcity;
-- unresolved objective distribution across components;
-- current exact resource slack plus topology, not slack alone.
-
-Prior population evidence already suggests obstacle density/topology helps distinguish admissible-order from repair capability even after controlling for MustCross. Raw mechanic count is therefore a weaker starting explanation.
-
-### Smallest useful diagnostic
-
-Do not run another generic rollback census. On a bounded unrelated-parent sample of stuck repair states, measure two axes independently:
-
-1. **Reachability:** how far back must the prefix be relaxed before an exact completion exists?
-2. **Reconstructability by current repair:** from an exact-live prefix, how much viable continuation basin does current repair expose before dying?
-
-Ask whether a few cheap hint-free residual descriptors separate these regimes.
-
-### Positive branch
-
-Only after a recurring legal descriptor exists:
-
-- early-broken cases may justify one deeper/dependency-targeted splice or reopening mechanism;
-- live-but-repair-hostile cases may justify one bounded stronger reconstruction mechanism, potentially exact/constraint-assisted on a deliberately small residual.
-
-Do not build adaptive ALNS weighting/bandits/RL until at least two complementary operators independently demonstrate conditional value. A selector cannot manufacture useful operators.
-
-### Stop gate
-
-If cheap runtime descriptors do not predict the regimes across unrelated parents, close static regime routing. If an operator improves badness/exact-prefix survival but not cold solve/work, close that operator form.
+**Gate:** first distinguish reachability from reconstructability with existing exact/shadow tools. Only then does one dependency-targeted reopening or stronger bounded residual reconstructor deserve a treatment test. Adaptive operator selection still waits until at least two complementary operators independently earn value.
 
 ---
 
-## Track D — Sound structural failure reasons beyond existing caches/prunes
+## Track E — Structural failure certificates before generic nogoods
 
-**Queue mapping:** #6 learned failure.
+**Queue:** #6, supported by #5 exact/reference.
 
-### What is already known
+Pathfinder already knows that repair exact-state repetition is useful while sound DFS exact-state recurrence is usually weak. The second-wave certificate literature provides a better reason vocabulary than arbitrary clauses:
 
-Do not repeat a generic recurrence census.
+- connectivity/separator/cut-capacity witnesses;
+- degree, parity/color and matching/Hall obstructions;
+- exact-resource lower/upper/residue/nonattainment contradictions;
+- assumption-based UNSAT cores from an exact residual model;
+- CP global-constraint explanations;
+- IIS/Farkas/Benders-style projected infeasibility where a suitable formulation exists.
 
-- Repair's per-call exact-state dead-end memory already found high recurrence and shipped useful work savings, but its semantics are only “this randomized continuation dead-ended before,” not logical UNSAT.
-- Systematic DFS exact-state transposition was measured with a sound signature and found weak enough to close as a major lever.
-- Current systematic search already uses hard length/intersection overflow, goal distance, parity, MP/MC lower bounds, connectivity, and related sound checks.
+Important distinctions:
+- an UNSAT core need not be minimal;
+- a MUS is subset-minimal, not minimum-cardinality;
+- an MCS describes a minimal set whose removal restores satisfiability;
+- smaller explanations are not automatically better search knowledge;
+- safe generalization requires the projected commitments themselves to imply infeasibility.
 
-### New contribution from feasibility reasoning
+The practical value criterion is:
 
-The most plausible reusable reason classes are not arbitrary clauses but **structural impossibility statements** such as:
+`work avoided by early/recurrent reason > discovery + checking + storage cost`.
 
-- required exact resource value no longer attainable;
-- residual maximum capacity below the remaining target;
-- an obligation isolated behind an exhausted cut;
-- a scarce bridge/corridor commitment makes remaining obligations mutually incompatible;
-- a joint resource/topology condition fails even though each scalar bound passes alone.
+A reason that merely restates a current cheap prune, fires only at the existing rejection point, or requires almost the full state should be rejected.
 
-These are examples of reason languages, not implementation recommendations.
-
-### Smallest useful diagnostic
-
-Collect bounded examples of **soundly dead** states from existing prune proofs, systematic exhaustion where proof scope is clear, and exact-prefix labels. Keep them separate from randomized repair dead ends.
-
-For each observed candidate reason class measure:
-
-- recurrence across distinct exact states and unrelated parents;
-- proof scope and every state field required for soundness;
-- earliest point the reason could have been known;
-- current rejection point and work performed between them;
-- overlap with existing cheap prunes/caches;
-- checking/storage cost.
-
-### Positive branch
-
-A bounded per-solve learned reason or reason-producing prune is justified only if one compact class is sound, recurrent, available materially earlier, and saves enough work to repay bookkeeping.
-
-Conflict-directed backjumping is a later, separate branch and only makes sense if failures depend on small subsets of earlier **systematic-search** decisions.
-
-### Stop gate
-
-Close abstract nogood learning if reasons collapse toward full-state identity, rarely recur, mostly restate existing prunes, or become detectable only when current search already rejects.
+**Gate:** before conflict-learning infrastructure, find at least one compact sound reason class that recurs across distinct states/parents and becomes knowable materially earlier. Core minimization is secondary; a nonminimal cheap recurring core may be more useful than an expensive minimum explanation.
 
 ---
 
-## Track E — Orientation/symmetry as a representation-bias diagnostic
+## Track F — Symmetry and semantic randomness
 
-**Queue mapping:** supporting variant/family research; no new ranked queue item.
+**Queue:** supporting variant research, not a new ranked item.
 
-### What is already known
+The existing orientation policy is conceptually correct: locate the first non-equivariant decision and distinguish harmful bias from useful diversification.
 
-The frozen technique census contains real directional inversions, but aggregate beam/DFS direction discordance is balanced rather than showing a global CW/CCW winner. Existing structural summaries did not reveal a shared static predictor. Production rotate/mirror retries are already disfavored as a substitute for diagnosis.
+The second-wave randomized-search review adds a critical experimental distinction:
 
-The symmetry literature clarifies why this is not contradictory:
+- **independent randomness** tests equality of outcome distributions;
+- **same raw seed** only synchronizes PRNG position and may cease to align semantic choices as soon as execution order diverges;
+- **equivariant coupling** assigns corresponding random variates to corresponding transformed state/action events and is the right tool for pathwise first-divergence diagnosis.
 
-> **heuristic invariance does not imply search equivariance.**
+Distributional equivariance is:
 
-Corresponding states may receive identical scores while successor ordering, tie-breaking, beam truncation, dedup, stable-sort order, coordinate-derived IDs, or PRNG-consumption order produce different finite-budget traces.
+`Law[A(gx)] = g_* Law[A(x)]`.
 
-Canonicalizing symmetry orbits addresses redundant equivalent states; it does not automatically remove orientation dependence in ranking/retention. Given Pathfinder's negligible true beam-duplicate rate, broad symmetry canonicalization has no demonstrated capability premise here.
+It requires the whole randomized transition policy to commute with the symmetry in distribution. Invariant scalar scores or uniform tie-breaking alone are insufficient.
 
-### Smallest useful diagnostic
+Common-random-number coupling is a variance-reduction design, not a correctness theorem; it reduces variance only when the induced pairing is favorably correlated. Counter-based/stateless RNG enables addressable reproducible randomness but does not automatically make a policy equivariant.
 
-Use selected current-code parent-level rotate/reflect cliffs from the existing variant trove. Align traces through the inverse transformation and identify the **first non-equivariant decision**:
+Balanced orientation inversions may represent useful diversification. A robust equivariant base and deliberately sampled symmetry breaking are conceptually different from accidental coordinate/order bias.
 
-1. legal successor set differs → semantic/correctness issue;
-2. corresponding heuristic/prune value differs unexpectedly → representation/heuristic issue;
-3. values agree but rank/order differs → tie-break/ordering issue;
-4. ranks agree but survivor sets differ → retention/dedup/truncation issue;
-5. deterministic structure agrees but random sequence diverges → PRNG-consumption/order issue.
-
-Then ask whether the same mechanism recurs across unrelated parents.
-
-### Interpretation
-
-Classify findings as:
-
-- harmless trace difference;
-- useful diversification;
-- arbitrary representation bias;
-- systematic harmful bias.
-
-Balanced directional wins may be useful diversification rather than something to “fix.” Only a recurring harmful mechanism earns an intervention. Any production directional diversification still competes through the scheduler at fixed work.
-
-### Stop gate
-
-If cliffs arise from different local mechanisms with balanced parent-level effects and no recurring harmful bias, keep orientation variants as diagnostic evidence and do not pursue global invariance engineering.
+**Gate:** first-divergence traces should distinguish deterministic representation bias from random-call-order divergence. Do not infer anything from “same seed” alone.
 
 ---
 
-## Cross-cutting future-opportunity audit
+## Cross-cutting interface hypothesis
 
-The feasibility report's most useful contribution is a common vocabulary that may feed beam, repair, and learned failure. It should **not** become a “build an RCSP solver” task.
+The two research waves repeatedly converge on one abstraction family:
 
-Pathfinder already implements several classic completion checks. Before adding any new bound, run an opportunity audit on exact-labeled states that currently survive the prune gauntlet:
+> **Residual interface signature:** the smallest state through which the committed past can affect the unresolved future.
 
-> **Is there a cheap residual quantity that separates exact-live from exact-dead states materially earlier than current rejection?**
+Possible fields include:
+- endpoint / boundary occupancy;
+- finite mechanic/product state;
+- exact-resource slack and cheap attainable residue/capacity summaries;
+- outstanding obligations;
+- separator/cut traversal state;
+- local boundary connectivity.
 
-Candidate families, kept deliberately small:
+This has precedent across separator/treewidth DP, AND/OR context caching, decision diagrams, planning abstractions, repair windows and structural conflict explanations.
 
-- residual **upper** capacity, complementing existing lower bounds;
-- parity/congruence or small attainable-value sets for exact length/intersections;
-- component capacity and cut/bridge scarcity;
-- joint obligation/topology summaries.
+If a small signature independently helps:
+- distinguish beam futures;
+- predict repair residual narrowness/reachability;
+- express recurring failure certificates;
+- predict action continuation value,
 
-Possible roles depend on evidence:
+then it may deserve a shared research representation. Until that convergence is measured, keep each use local and cheap.
 
-- proven one-sided condition → candidate hard prune;
-- predictive but not sound → heuristic ranking/beam-retention descriptor;
-- expensive exact/relaxed calculation → offline diagnostic/reference label;
-- recurrent compact impossibility → candidate learned-failure reason.
-
-Do not conflate these roles. A useful predictor is not automatically a safe prune.
+Do **not** build a general interface engine in advance.
 
 ---
 
-## Unified conditional development DAG
+## Current development DAG
 
-| Premise test | Positive result unlocks | Negative result closes/demotes |
+| Premise | Positive result unlocks | Negative result closes/demotes |
 |---|---|---|
-| Conditional tranche value + fixed-envelope scheduler headroom | simpler repriced static schedule; later dynamic telemetry if needed | survival/bandit/VOC scheduler complexity |
-| A/D beam future-equivalence descriptor | simple quota/crowding/reserve treatment | broad diversity frameworks |
-| Repair reachability/reconstructability descriptor | one regime-specific reopening or stronger reconstruction operator | generic adaptive repair routing |
-| Early recurrent sound structural failure reason | one bounded reason-store/propagator; later CBJ only if local conflict sets exist | broad nogood/CDCL architecture |
-| Recurrent harmful first-divergence mechanism across symmetry cliffs | smallest orientation-neutral ordering/retention fix | global invariance/canonicalization work |
-| New residual opportunity beyond current prunes | role-specific prune/heuristic/reason experiment | generic completion-bound expansion |
-
-If the **same cheap residual descriptors** independently matter for beam future coverage, repair reconstructability, and failure explanations, then consider exposing them as a shared research feature substrate. Do not build a grand unified state abstraction in advance.
-
----
-
-## Existing tooling to reuse
-
-Most premise tests already have a home:
-
-- lifecycle reach and machine-independent `workSpent`;
-- cap/tranche census and censored hazard outputs;
-- exact-prefix CP-SAT labeling;
-- winning-lineage/beam shadow traces;
-- repair-retreat CP-SAT and elite-path tools;
-- repair rollout/stagnation tools;
-- repair exact-state nogood A/B harness;
-- prune IDs/shadow-evaluation harness;
-- family/variant index and transform-controlled pair tools.
-
-Extend outputs narrowly before creating frameworks.
-
-The CP-SAT model remains a **research microscope**, not a production truth oracle outside validated scope. Unsupported, timeout, and UNKNOWN remain abstentions; SAT witnesses must pass the canonical referee.
-
----
+| Fixed-work tranche/oracle headroom after proper risk-set accounting | simple repriced schedule; later dynamic modeling only if needed | survival/bandit/VOC complexity |
+| New residual bound/spectrum/interface adds early exact separation | role-specific prune/heuristic/reason work | generic feasibility machinery |
+| A/D future signature carries real survivor-set information | simple quota/crowding/reserve treatment | broad beam-diversity frameworks |
+| Repair failure can be classified as neighborhood vs reconstruction | one regime-specific reopening/reconstruction treatment | generic adaptive repair |
+| Compact structural certificate recurs and is early | one bounded reason-producing prune/store | broad CDCL/LCG/nogood architecture |
+| Recurrent harmful non-equivariant mechanism | smallest ordering/retention/randomness correction | global canonicalization/invariance work |
 
 ## Explicit non-actions
 
-The six external reports do **not** currently justify:
+The expanded literature still does **not** justify:
 
-- a general ALNS framework;
+- a general RCSP/label-setting rewrite;
+- exact multidimensional attainable spectra in the hot loop;
+- exact model counting as a production feature;
+- a general ALNS/plan-repair framework;
 - adaptive repair bandits/RL before complementary operators exist;
-- more generic repair elite diversity/relinking/budget expansion;
-- DPP/MAP-Elites/large novelty beam machinery;
-- universal beam-width increases;
-- exact/sound beam dedup as a major capability lever;
-- full CDCL/LCG conversion;
-- another exact DFS transposition-table push;
-- approximate conflict patterns used as hard prunes;
-- a new generic RCSP/label-setting engine;
-- ordinary “less resource used is better” dominance for exact targets without a proof of completion-set subsumption;
-- broad graph canonicalization as a response to orientation cliffs;
-- production rotate/mirror retries as a substitute for bias diagnosis;
-- survival/hazard/bandit/VOC scheduler infrastructure before simple fixed-work repricing demonstrates remaining headroom;
-- optimization of proxy metrics after cold solve/work value fails;
-- appending any specialist as permanent tail work without scheduler competition.
-
----
-
-## Relation to the canonical queue
-
-The literature does not reorder the queue.
-
-1. **P0** cross-stage dependence still blocks some allocation conclusions.
-2. **#1 scheduler:** explicitly model continuation tranches as conditional residual-value actions and distinguish exhaustion from censoring.
-3. **#2 generalization:** remains necessary because every descriptor, selector, operator, and reason class is vulnerable to repeated-corpus/family overfitting.
-4. **#3 configuration:** Hydra/portfolio literature reinforces marginal contribution and portfolio-size overfit; systematic racing remains the correct first complexity step.
-5. **#4 beam:** use future-opportunity descriptors at proven A/D extinction boundaries.
-6. **#5 exact/reference:** use the independent model to label future opportunity, retreat, and candidate sound reasons where supported.
-7. **#6 learned failure:** search for recurrent early **structural** reasons beyond existing exact caches/prunes, not another generic state-revisit study.
-8. **#7 repair:** distinguish reachability from reconstructability before designing another operator.
-9. **Variant research:** symmetry cliffs remain a lower-priority diagnostic for first non-equivariant search decisions, not a production retry strategy.
-
-Offline analyses that do not depend on unexplained stage history can proceed while P0 is resolved. Production changes still require matched work, correctness, independent confirmation, and scheduler repricing.
+- DPP/MAP-Elites/large novelty archives;
+- broad CDCL/LCG conversion;
+- minimum-core/MUS enumeration as routine search work;
+- a survival/frailty/bandit scheduler before simple tranche repricing leaves proven headroom;
+- treating same-seed transformed runs as semantically coupled;
+- graph/state canonicalization merely because orientations differ;
+- any new hard prune derived from a merely predictive descriptor.
 
 ## Bottom line
 
-Across six literatures, the strongest common theme is **option value under representation**:
+The second wave did not add five algorithms. It sharpened the project's core research object.
 
-- scheduler: which algorithm still has valuable future work;
-- beam: which frontier states preserve distinct futures;
-- repair: which commitments must be reopened and which live futures are reconstructable;
-- learning: which failures share a reusable structural cause;
-- feasibility: which exact resource/topology futures remain attainable;
-- symmetry: which behavior differences are real search information versus arbitrary representation effects.
+The most promising general concept is now **future opportunity through a compact residual interface**, with three rigor levels:
 
-The research has therefore narrowed Pathfinder's development agenda rather than expanding it. The next gains should come from measuring these distinctions with existing tooling, then implementing only the smallest mechanism whose premise survives.
+1. **proof:** sound bounds, attainable-resource exclusions and structural certificates;
+2. **representation:** approximate future signatures and basin-width descriptors for ranking/retention/repair diagnosis;
+3. **allocation:** conditional value of spending more work on a search process given what its trajectory has already revealed.
+
+The next useful Pathfinder work remains the current queue. The literature mainly improves what those queue items should measure and what evidence is required before larger mechanisms are allowed.
