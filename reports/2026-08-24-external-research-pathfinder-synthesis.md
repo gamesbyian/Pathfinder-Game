@@ -3,6 +3,8 @@
 **Date:** 2026-08-24  
 **Scope:** reconcile eleven compact external-literature reviews against Pathfinder's existing solver evidence. Literature supplies mechanisms, abstractions and diagnostic distinctions; it is not an implementation backlog.
 
+Second-order pairwise audit: [`2026-08-24-external-research-cross-pollination-audit.md`](2026-08-24-external-research-cross-pollination-audit.md). That audit asks whether ideas from each research area materially change how the other ten should be understood, rather than reading the reports only vertically by topic.
+
 ## External inputs
 
 First wave:
@@ -20,7 +22,7 @@ Second wave:
 - [`infeasibility-certificates-deep-research.md`](infeasibility-certificates-deep-research.md) — structural certificates, cores and explanation minimization;
 - [`censored-continuation-symmetry-randomization-deep-research.md`](censored-continuation-symmetry-randomization-deep-research.md) — censored continuation value and randomized equivariance.
 
-Canonical priority remains [`../docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md). The second wave sharpens existing queue items rather than creating five new projects.
+Canonical priority remains [`../docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md). The second wave and cross-pollination audit sharpen existing queue items rather than creating new top-level projects.
 
 ## Executive decision
 
@@ -109,6 +111,8 @@ Candidate signature ingredients should remain small and prespecified:
 
 Basin-width literature adds a separate dimension: two states can expose different amounts of future mass even when both are live. Useful diagnostic quantities include viable next-action count, forced-choice fraction, limited-depth viable branching, propagation closure and, offline only where tractable, conditional completion counts/entropy.
 
+Portfolio research adds a useful set-level interpretation: a beam candidate is valuable partly by the **marginal future capability it adds beyond survivors already retained**, analogous to a rare specialist algorithm adding portfolio coverage. This sharpens the descriptor objective but does not justify a complex portfolio/DPP optimizer.
+
 **Gate:** at unrelated exact-labeled A/D parents, a descriptor must distinguish useful future coverage beyond score, current diversity state and a neutral random-reserve explanation. If not, do not escalate to DPP/QD/novelty machinery.
 
 ---
@@ -136,7 +140,11 @@ This supports a sharper diagnostic decomposition:
 
 Useful external proxies for narrowness include forced-variable fraction, viable branching, residual treewidth/interface width, propagation closure and discrepancy from the incumbent/default policy. Raw solution count alone is not enough.
 
-**Gate:** first distinguish reachability from reconstructability with existing exact/shadow tools. Only then does one dependency-targeted reopening or stronger bounded residual reconstructor deserve a treatment test. Adaptive operator selection still waits until at least two complementary operators independently earn value.
+The certificate literature adds a new offline diagnostic path: when an exact residual model proves a frozen neighborhood UNSAT, an assumption core can identify preserved commitments already sufficient for impossibility, while correction-set/diagnosis concepts formalize which assumptions might need relaxing to restore satisfiability. This is stronger than geometric rollback as causal evidence, but minimum correction is expensive and one core is not a unique cause.
+
+Future-equivalence literature adds a complementary view: a repair-window boundary is strongest when the frozen exterior interacts with the reopened interior only through a small sufficient interface. “What may remain frozen?” and “what past history may be forgotten?” are dual questions.
+
+**Gate:** first distinguish reachability from reconstructability with existing exact/shadow tools. Core/correction-set or interface evidence is diagnostic only until a recurring simple legal descriptor exists. Only then does one dependency-targeted reopening or stronger bounded residual reconstructor deserve a treatment test. Adaptive operator selection still waits until at least two complementary operators independently earn value.
 
 ---
 
@@ -166,7 +174,9 @@ The practical value criterion is:
 
 A reason that merely restates a current cheap prune, fires only at the existing rejection point, or requires almost the full state should be rejected.
 
-**Gate:** before conflict-learning infrastructure, find at least one compact sound reason class that recurs across distinct states/parents and becomes knowable materially earlier. Core minimization is secondary; a nonminimal cheap recurring core may be more useful than an expensive minimum explanation.
+Future-equivalence research creates one important deferred distinction. Low **full-state** recurrence does not imply low recurrence of **exactly equivalent residual subproblems**. AND/OR context caching and separator DP merge different histories only when a boundary/context is proven future-sufficient. If Pathfinder ever discovers such a sufficient interface independently, context-equivalent caching would be a different question from the already-weak exact DFS transposition work. Without that proof, it remains the same unsafe abstraction trap in new clothing.
+
+**Gate:** before conflict-learning infrastructure, find at least one compact sound reason class that recurs across distinct states/parents and becomes knowable materially earlier. Core minimization is secondary; a nonminimal cheap recurring core may be more useful than an expensive minimum explanation. Do not pursue context caching unless a future-sufficient interface has first been established.
 
 ---
 
@@ -192,7 +202,9 @@ Common-random-number coupling is a variance-reduction design, not a correctness 
 
 Balanced orientation inversions may represent useful diversification. A robust equivariant base and deliberately sampled symmetry breaking are conceptually different from accidental coordinate/order bias.
 
-**Gate:** first-divergence traces should distinguish deterministic representation bias from random-call-order divergence. Do not infer anything from “same seed” alone.
+The cross-pollination audit makes symmetry a broader representation-quality check: any descriptor claimed to encode intrinsic puzzle structure should state whether it should be invariant or equivariant under exact puzzle transforms. Unexpected coordinate/orientation dependence can indicate representation leakage even when that descriptor was invented for beam, repair, learned failure or scheduling rather than symmetry research.
+
+**Gate:** first-divergence traces should distinguish deterministic representation bias from random-call-order divergence. Do not infer anything from “same seed” alone. Structural descriptors need a declared symmetry expectation before being treated as generic features.
 
 ---
 
@@ -222,6 +234,29 @@ then it may deserve a shared research representation. Until that convergence is 
 
 Do **not** build a general interface engine in advance.
 
+### What the horizontal audit adds
+
+The pairwise audit strengthens the interface hypothesis in five ways:
+
+1. **Repair and certificates:** a residual proof can potentially say not only that a repair window is impossible, but which frozen assumptions participate in the obstruction and which relaxations restore satisfiability.
+2. **Equivalence and caching:** a proven sufficient interface could let distinct histories share exact residual results even when full-state recurrence is rare. This is a new deferred question, not a reopening of loose transposition caching.
+3. **Beam and portfolios:** survivor value can be framed as marginal coverage of future capability already absent from the retained set, rather than generic pairwise diversity.
+4. **Symmetry and representation:** every purportedly structural interface field should have an explicit invariance/equivariance expectation.
+5. **Basin width and scheduling:** cheap forced-choice/interface/viable-branching signals may later become dynamic continuation-value features if static scheduling leaves headroom.
+
+A sixth, more speculative transfer is **certificate-to-scheduler telemetry**: if a search stage emits a cheap structural failure class that another action can exploit, it could become a typed producer-to-scheduler signal. Existing typed-handoff rules already impose the correct evidence gate, so this does not justify new plumbing now.
+
+### Four roles for the same interface
+
+The same abstract object can have different rigor requirements:
+
+- **proof interface:** sufficient for sound pruning, certification or exact context caching;
+- **predictive interface:** correlated with future opportunity and usable for ranking/repair/scheduling, but not hard rejection;
+- **diagnostic interface:** expensive/oracle-derived representation used to understand failures;
+- **allocation interface:** cheap current-run summary that predicts which computation has marginal continuation value.
+
+Do not silently promote a predictive or diagnostic interface into a proof interface.
+
 ---
 
 ## Current development DAG
@@ -231,8 +266,9 @@ Do **not** build a general interface engine in advance.
 | Fixed-work tranche/oracle headroom after proper risk-set accounting | simple repriced schedule; later dynamic modeling only if needed | survival/bandit/VOC complexity |
 | New residual bound/spectrum/interface adds early exact separation | role-specific prune/heuristic/reason work | generic feasibility machinery |
 | A/D future signature carries real survivor-set information | simple quota/crowding/reserve treatment | broad beam-diversity frameworks |
-| Repair failure can be classified as neighborhood vs reconstruction | one regime-specific reopening/reconstruction treatment | generic adaptive repair |
+| Repair failure can be classified as neighborhood vs reconstruction | one regime-specific reopening/reconstruction treatment; core/correction-set evidence only if it clarifies what must reopen | generic adaptive repair |
 | Compact structural certificate recurs and is early | one bounded reason-producing prune/store | broad CDCL/LCG/nogood architecture |
+| A compact interface is independently proven future-sufficient | bounded context-equivalence/cache question becomes legitimate | loose/approximate residual-state caching remains closed |
 | Recurrent harmful non-equivariant mechanism | smallest ordering/retention/randomness correction | global canonicalization/invariance work |
 
 ## Explicit non-actions
@@ -244,9 +280,12 @@ The expanded literature still does **not** justify:
 - exact model counting as a production feature;
 - a general ALNS/plan-repair framework;
 - adaptive repair bandits/RL before complementary operators exist;
+- automatic destroy sets from one UNSAT core or expensive minimum-correction search before diagnostic value is established;
 - DPP/MAP-Elites/large novelty archives;
+- a portfolio-style complex beam optimizer before a useful future signature exists;
 - broad CDCL/LCG conversion;
 - minimum-core/MUS enumeration as routine search work;
+- context-equivalent caching from an approximate interface that lacks a future-sufficiency proof;
 - a survival/frailty/bandit scheduler before simple tranche repricing leaves proven headroom;
 - treating same-seed transformed runs as semantically coupled;
 - graph/state canonicalization merely because orientations differ;
@@ -254,12 +293,15 @@ The expanded literature still does **not** justify:
 
 ## Bottom line
 
-The second wave did not add five algorithms. It sharpened the project's core research object.
+The second wave did not add five algorithms, and the horizontal audit did not add another eleven. It sharpened the project's core research object.
 
-The most promising general concept is now **future opportunity through a compact residual interface**, with three rigor levels:
+The most promising general concept is now **future opportunity through a compact residual interface**, with four rigor levels:
 
-1. **proof:** sound bounds, attainable-resource exclusions and structural certificates;
+1. **proof:** sound bounds, attainable-resource exclusions, structural certificates and only then any exact context caching;
 2. **representation:** approximate future signatures and basin-width descriptors for ranking/retention/repair diagnosis;
-3. **allocation:** conditional value of spending more work on a search process given what its trajectory has already revealed.
+3. **diagnosis:** exact/oracle labels, cores and counterexamples used to understand boundaries without becoming runtime features;
+4. **allocation:** conditional value of spending more work on a search process given what its trajectory has already revealed.
+
+The strongest new cross-topic ideas are certificate-guided repair unrefinement, context-equivalent residual caching behind a strict sufficiency proof, portfolio-style marginal beam coverage, symmetry as a general descriptor audit, and basin-width signals as later scheduler telemetry.
 
 The next useful Pathfinder work remains the current queue. The literature mainly improves what those queue items should measure and what evidence is required before larger mechanisms are allowed.
