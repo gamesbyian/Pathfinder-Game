@@ -116,6 +116,18 @@ For the second question, the key theoretical distinction is:
 
 Corresponding rotated/reflected states can receive identical heuristic values while successor order, secondary ties, coordinate-derived ordering, beam truncation, dedup, stable-sort fallbacks, or PRNG-consumption order produce different finite-budget traces.
 
+For randomized search, use a second distinction:
+
+> **same raw seed is not semantic random coupling.**
+
+If transformed executions enumerate branches in a different order, they can consume the same PRNG stream at different semantic decisions. Three experimental questions require different randomness designs:
+
+- **independent randomness** tests whether outcome/runtime distributions are transformation-invariant;
+- **same raw seed/stream** controls only execution-order random draws and can lose correspondence after the first ordering divergence;
+- **equivariant coupling** assigns corresponding random variates to corresponding transformed state/action events and is the right control when diagnosing pathwise first divergence.
+
+Counter-based/stateless RNG can make semantic random keys addressable and reproducible, but it does not itself make the whole search equivariant. Every scoring, legality, ordering, retention and key-mapping step still has to transform consistently. Common-random-number coupling is an experimental variance-reduction device, not a correctness guarantee.
+
 The current technique census already shows real directional inversions but **balanced aggregate beam/DFS discordance**, with no simple shared static predictor. That argues against assuming a universal CW/CCW defect or building a global directional correction from aggregate means.
 
 For selected current-code symmetry cliffs, align traces through the inverse transform and locate the **first non-equivariant decision**:
@@ -124,7 +136,7 @@ For selected current-code symmetry cliffs, align traces through the inverse tran
 2. corresponding hard-prune or heuristic value differs unexpectedly -> representation/heuristic issue;
 3. values agree but rank/order differs -> tie-break/ordering issue;
 4. ranks agree but retained beam set differs -> retention/dedup/truncation issue;
-5. deterministic structure agrees but random trajectory diverges -> PRNG-consumption/order issue.
+5. deterministic structure agrees but random trajectory diverges -> distinguish semantic random-key mismatch from ordinary PRNG-consumption-order mismatch before attributing the cause.
 
 Then ask whether that same mechanism recurs across unrelated parents. Classify outcomes as:
 
@@ -137,7 +149,7 @@ A rotate/mirror production retry requires a separate fixed-work scheduler case; 
 
 Do not overinterpret perfect puzzle isomorphism as a requirement that finite-budget heuristic search take identical paths. The research target is **recurring harmful arbitrary bias**, not cosmetic trace symmetry. If balanced directional differences provide complementary coverage, they may be useful diversification and should be valued through the scheduler rather than “fixed” on principle.
 
-See [`../reports/heuristic-symmetry-deep-research-report.md`](../reports/heuristic-symmetry-deep-research-report.md) and [`../reports/2026-08-24-external-research-pathfinder-synthesis.md`](../reports/2026-08-24-external-research-pathfinder-synthesis.md).
+See [`../reports/heuristic-symmetry-deep-research-report.md`](../reports/heuristic-symmetry-deep-research-report.md), [`../reports/censored-continuation-symmetry-randomization-deep-research.md`](../reports/censored-continuation-symmetry-randomization-deep-research.md), and [`../reports/2026-08-24-external-research-pathfinder-synthesis.md`](../reports/2026-08-24-external-research-pathfinder-synthesis.md).
 
 ## Generation gate
 
@@ -187,7 +199,7 @@ The trove is **evidence, not backlog**. Current family work should support ranke
 
 1. held-out validation for scheduler/configuration rules;
 2. beam extinction/retention boundaries;
-3. first-divergence diagnosis for symmetry cliffs;
+3. first-divergence diagnosis for symmetry cliffs, with semantic RNG coupling only when randomness is part of the question;
 4. exact/reference labels around causal boundaries;
 5. repair/restart/operator behavior across controlled relatives.
 
