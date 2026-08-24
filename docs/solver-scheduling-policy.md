@@ -30,6 +30,8 @@ Do not reduce that question to one naive scalar if doing so sacrifices rare but 
 10. **Prefer simple policies when performance is statistically indistinguishable.** Extra rules/features create overfit surface, maintenance cost, and harder causal interpretation. Complexity must buy held-out value.
 11. **Observational conditional value is nomination evidence unless sequence is controlled.** `P(B solves | A failed)` from historical ladders can reflect who reached B, predecessor budget depletion, hidden state, code drift, or selection. Validate important sequence rules through controlled current-code execution.
 12. **Scheduler infrastructure has its own stop condition.** If oracle-frontier headroom is small or a simple static policy captures it, do not build a sophisticated dynamic/ML system for elegance.
+13. **Keep a safe fallback while evidence is immature.** A new scheduler should be able to reproduce or defer to a known-good baseline policy during rollout/debugging. Fallback existence is not permission to ship an under-validated scheduler; it is damage containment and causal isolation.
+14. **Prediction quality must be calibrated to decisions.** A model/rule that ranks actions well globally can still be badly calibrated on rare late-stage cohorts. Measure decision-specific lift/coverage, not only generic classifier accuracy.
 
 ## Runtime information boundary
 
@@ -68,6 +70,8 @@ Create one stable registry of meaningful candidate actions. Each action should i
 - evidence freshness and whether value estimates are isolated, historical-sequential, or controlled-current.
 
 Do not proliferate permanent profile names simply to encode combinations. The registry should make the parameter space machine-readable enough for analysis and configuration search without turning every explored configuration into production API.
+
+Stable action IDs are research identity, not permanent API compatibility. Remove or consolidate actions when evidence says they no longer deserve production candidacy; preserve historical mappings in reports/manifests where needed.
 
 ## Automatic configuration and racing
 
@@ -127,6 +131,8 @@ Report a **frontier**, not only one chosen operating point. Include:
 
 This is a value-of-information gate. If even an oracle selector cannot materially beat the live policy at fixed work, do not build a complicated scheduler.
 
+An oracle built from the same mined matrix used to define candidate actions is an optimistic ceiling, not a forecast. Missing cells, sequence dependence, selected configurations, and current-code drift must be visible in the bound.
+
 ### Tail audit
 
 Audit all current additive/retry stages on the current baseline. For each, ask:
@@ -159,7 +165,9 @@ For model/rule selection:
 - nested validation is preferable when both feature/config selection and performance estimation occur;
 - compare against simple baselines such as current archetypes, global action order, and a small score table;
 - report feature count/policy complexity and ablate whether the extra complexity actually adds held-out value;
-- avoid repeated peeking at the transfer set while iterating.
+- avoid repeated peeking at the transfer set while iterating;
+- inspect calibration/decision quality across rare action cohorts rather than only aggregate accuracy/AUC-like summaries;
+- when possible, bootstrap/resample by independent level/parent units to see whether policy ranking is stable to sample composition.
 
 Until a locked transfer population exists, report Corpus-specific improvements as such.
 
@@ -170,6 +178,8 @@ Until a locked transfer population exists, report Corpus-specific improvements a
 Use only legal static level features and a fixed aggregate work envelope. Rank candidate actions and budget bands deterministically. Existing archetypes are baseline features, not the final routing language.
 
 Start simple: a small score/rule table or empirically ordered action list is preferable to a learned model if it captures most oracle headroom. Generation A should already answer whether current cheap screens, repair depth, redundant deep DFS/IDA, and retry-tail work can be better allocated.
+
+A useful first baseline is not necessarily “predict the winning technique.” It may simply reorder cheap high-value screens, split deep continuations into tranches, and remove obviously dominated tail work. This avoids turning scheduler design into a classification problem more complicated than the allocation problem itself.
 
 ### Generation B: dynamic re-ranking
 
@@ -187,6 +197,19 @@ The target quantity is conditional marginal value with uncertainty, not global t
 ### Generation C: typed producer -> scheduler signals
 
 Only after measured evidence shows one stage emits information another action can exploit should a typed artifact enter scheduler state. Follow the producer/receptor contract in [`solver-research-operating-model.md`](solver-research-operating-model.md); do not create an unconstrained blackboard.
+
+## Failure behavior and fallback
+
+A scheduler must define what happens when its evidence is weak or inputs are outside the calibrated region.
+
+Prefer conservative behavior such as:
+
+- fall back to the current baseline order for unsupported/unknown feature combinations;
+- preserve a small set of complementary protected actions when uncertainty is high;
+- avoid extrapolating sharp threshold rules far outside development ranges;
+- emit telemetry identifying fallback/low-confidence decisions so they can be studied offline.
+
+Do not use confidence as a magic scalar unless it is itself calibrated. The goal is graceful degradation, not decorative probability output.
 
 ## Architecture seam
 
@@ -206,12 +229,13 @@ The migration should reduce first-match hand-authored bundle logic rather than p
 1. **Preflight:** verify run identity, population, action IDs, deterministic work envelope, evidence role, and selection procedure.
 2. **Offline oracle/frontier:** establish plausible value before framework work.
 3. **Simple baseline:** ask how much headroom a trivial reorder/rule table captures before adding model complexity.
-4. **Shadow plan:** legacy scheduler still executes while the candidate scheduler records its choices without changing search/order/randomness/work.
-5. **Matched-work A/B:** scheduler drives an explicit population under `strictTotalWorkBudget` or another declared fixed envelope.
-6. **Confirmation:** use data not involved in selecting the policy/configuration; family-group when relevant.
-7. **Transfer:** check published/Corpus 1/2 and locked/fresh challenge data appropriate to the claim.
-8. **Report:** paired gains/losses, `workSpent`, wall time, reach, selected actions, budget bands, truncation/errors, rare unique losses, policy complexity, and residual unique wins.
-9. **Reprice continuously:** an action's historical win count is not permanent budget entitlement.
+4. **Stability/calibration check:** verify the candidate policy/action ranking is not driven by one tiny cohort or one data split; examine rare capability and uncertainty.
+5. **Shadow plan:** legacy scheduler still executes while the candidate scheduler records its choices without changing search/order/randomness/work.
+6. **Matched-work A/B:** scheduler drives an explicit population under `strictTotalWorkBudget` or another declared fixed envelope.
+7. **Confirmation:** use data not involved in selecting the policy/configuration; family-group when relevant.
+8. **Transfer:** check published/Corpus 1/2 and locked/fresh challenge data appropriate to the claim.
+9. **Report:** paired gains/losses, `workSpent`, wall time, reach, selected actions, budget bands, truncation/errors, rare unique losses, policy complexity, fallback frequency, and residual unique wins.
+10. **Reprice continuously:** an action's historical win count is not permanent budget entitlement.
 
 ## Immediate execution order
 
@@ -222,9 +246,10 @@ The migration should reduce first-match hand-authored bundle logic rather than p
 5. Test how much oracle headroom a simple static policy can capture.
 6. Build only the minimum racing/successive-elimination plumbing needed to prune existing action/config candidates offline.
 7. Prototype Generation A static scheduling under strict total work.
-8. Shadow and matched-work A/B it.
-9. Establish untouched confirmation/transfer evaluation before claiming broad generalization.
-10. Add dynamic telemetry only if static scheduling leaves measured headroom that the telemetry can plausibly recover.
+8. Check policy stability/calibration and fallback behavior before adding dynamic features.
+9. Shadow and matched-work A/B it.
+10. Establish untouched confirmation/transfer evaluation before claiming broad generalization.
+11. Add dynamic telemetry only if static scheduling leaves measured headroom that the telemetry can plausibly recover.
 
 Do not let scheduler infrastructure become a large project before oracle-frontier and simple-policy gates prove both headroom and need.
 
