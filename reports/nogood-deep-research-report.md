@@ -1,121 +1,181 @@
 # Nogood Learning and Conflict Analysis in Search
 
-Effective search algorithms can learn from failure by recording information about *why* a branch failed rather than only recording that one particular state is dead. In SAT this is central to conflict-driven clause learning (CDCL); in constraint programming (CP), related traditions include nogood recording, explanation-based propagation, lazy clause generation (LCG), and conflict-directed backjumping (CBJ). The potential advantage over exact-state memoization is **generalization**: a sound explanation may apply to many states that share the same conflicting conditions.
+## Core question
 
-That advantage is conditional. Exact-state memoization, including transposition tables, can be extremely effective when the same logical state is reached through many trajectories. It is therefore incorrect to say that exact states almost never recur in general. Abstract nogoods become especially valuable when exact transpositions are uncommon but *structurally similar failures* recur across distinct states.
+Failure learning records **why** a branch failed rather than only that one exact state is dead. SAT/CDCL, CP explanations, Lazy Clause Generation (LCG), nogood recording, and conflict-directed backjumping (CBJ) are different forms of this idea.
 
-Early work on dynamic CSPs showed that recorded nogoods can allow substantial reuse of search effort when a problem changes and related conflicts would otherwise be rediscovered. The broader SAT and CP literature subsequently established that failure learning can transform difficult search, but also that explanation quality, propagation strength, retention policy, and representation determine whether the extra machinery pays for itself.
+The key comparison is conditional:
 
-- **What is learned.** A nogood is a partial condition that cannot occur in any solution, often represented as a forbidden conjunction of variable assignments or, equivalently, as a clause. SAT solvers learn clauses obtained by conflict analysis. CP solvers may learn clausal nogoods, constraints, or other reason objects. Exact-state memoization records a dead state without necessarily explaining which subset of its conditions caused failure. Neither representation dominates categorically: exact memoization is strongest when transpositions are common and equality is cheap to test; abstract learning is strongest when a reusable conflict can be expressed more compactly than the states in which it appears.
+- **Exact-state memoization/transposition tables** are excellent when many trajectories reach the same logical state.
+- **Abstract nogoods** win when different exact states repeatedly fail for the same structural reason.
 
-- **Logical validity.** A learned object must be a consequence of the original constraints together with any assumptions under whose scope it is retained. In CDCL, conflict analysis derives a learned clause by resolution from clauses that justify the current implication graph. In LCG, CP propagators provide explanations for deductions; these explanations allow SAT-style conflict analysis to derive clausal nogoods. The crucial requirement is not merely that some variables were present near a failure, but that the recorded reason is sufficient to entail the failure or deduction. An aggressively generalized pattern that lacks such justification is unsound.
+Useful learning therefore depends less on “how hard is the instance?” than on **whether the chosen failure language exposes recurring structure**.
 
-- **Scope.** Standard CDCL learned clauses are globally valid consequences of the current formula and can survive backtracking and restarts, although solvers may later delete them for performance reasons. LCG similarly derives globally valid clausal consequences of the modeled constraints. Other search methods may maintain reasons or conflict sets whose usefulness is local to a subtree, a restart, or a particular set of assumptions. Locality must therefore be distinguished from deletion: a globally valid clause may be deleted because it is not useful, whereas a genuinely local reason is not valid outside its scope.
+## What is learned
 
-- **Recurrence likelihood.** Abstract learning pays when a reason recurs often enough, or cuts enough search when it does recur, to offset explanation, storage, and propagation costs. Smaller explanations often cover more assignments, but smaller is not automatically better: the learned constraint must remain valid, and its propagation behavior matters. Likewise, difficult instances do not guarantee useful recurrence. Some hard searches generate highly reusable conflicts; others generate a long sequence of nearly unique ones. The empirical question is therefore not simply whether an instance is hard, but whether the chosen explanation language exposes recurring structure.
+A nogood is a sound partial condition that cannot occur in any solution, often represented as a forbidden conjunction or clause. It generalizes beyond the exact state where it was discovered.
 
-- **Storage and lookup.** Learned information can become enormous. Modern SAT solvers use watched-literal propagation, clause activity and quality measures such as literal block distance (LBD), and periodic database reduction rather than treating the learned database as a simple hash table. CP and bespoke search systems use different structures depending on the learned object. Exact-state tables can also be large, but they have a different cost profile: hashing or canonicalizing a state can be cheap compared with running an additional propagator over many learned clauses. Any comparison should include both memory and per-node lookup/propagation cost.
+Examples of learning regimes:
 
-- **Interaction with search and propagation.** CDCL tightly couples learning, unit propagation, variable activity, and nonchronological backtracking. A learned clause can immediately become unit, force a deduction, or cause earlier failure in another branch. LCG extends that interaction to high-level CP propagation by requiring deductions to be explainable in the Boolean learning language. Search ordering matters: strong branching or variable ordering can sometimes avoid conflicts that backjumping would otherwise skip, while learned clauses can themselves change which variables become attractive to search.
+- **Exact dead state:** stores state identity; no explanation.
+- **Nogood/clause:** stores a partial conflicting condition.
+- **LCG explanation:** CP propagators explain deductions in a Boolean language, enabling SAT-style conflict analysis.
+- **Conflict set/CBJ:** records which earlier decisions contributed to a dead end so search can jump over irrelevant decisions; this need not create a persistent database.
+
+No representation dominates automatically. Exact states are cheap and powerful when transpositions are common. Abstract learning pays only when generalization is sound, reusable, and cheaper than rediscovering the failures it prevents.
+
+## Soundness and scope
+
+A learned object must be implied by the original constraints plus any assumptions under which it is retained. Merely observing that several variables were present near a failure does not justify a nogood.
+
+- Standard CDCL learned clauses are globally valid logical consequences, though solvers may later delete them for performance.
+- LCG derives clausal consequences from explanations supplied by propagators.
+- Some bespoke or CP reasons may be valid only within a subtree, restart, or assumption set.
+
+**Logical scope and retention are different:** a globally valid clause can still be deleted because it is useless; a local reason cannot safely be applied outside its scope.
+
+## Representation is the central problem
+
+Too-specific explanations behave like expensive exact-state caches. Useful learning usually requires a vocabulary that captures the **structural cause** of failure.
+
+Potential explanation languages may refer to:
+
+- variable assignments or decisions;
+- remaining resources;
+- obligation combinations;
+- reachability/connectivity conditions;
+- global-constraint state;
+- auxiliary variables that summarize higher-level structure.
+
+Richer languages can produce more reusable reasons, but they can also increase derivation, storage, and propagation cost. Explanation minimization may improve reuse, yet smaller is not automatically better: the reason must remain sound and useful for propagation.
+
+LCG illustrates the general principle. High-level CP propagators retain their domain reasoning while supplying Boolean explanations that can be learned and reused. Its success is evidence for **reason-producing propagation**, not evidence that every bespoke solver should become a SAT solver.
+
+## Recurrence and value
+
+Learning is valuable when a learned reason:
+
+1. recurs often enough, or
+2. prevents enough downstream work when it does recur,
+
+that these savings exceed explanation, lookup, memory, and propagation overhead.
+
+Hard instances can have either highly repetitive or nearly unique conflicts. Difficulty alone does not predict reuse.
+
+Useful empirical signals include:
+
+- learned reasons firing on later branches;
+- earlier pruning/propagation caused by learned reasons;
+- fewer repeated failures or consistency checks;
+- reduced search-tree size;
+- longer nonchronological backjumps where appropriate;
+- high work avoided per retained reason;
+- compact reasons with repeated activation.
+
+Warning signals include:
+
+- most reasons never fire again;
+- reasons are nearly full states;
+- learned database grows much faster than reuse;
+- propagation/lookup cost rises with little search reduction;
+- conflicts implicate almost every prior decision.
 
 ## Conflict-directed backjumping
 
-CBJ should be distinguished from persistent nogood learning. It is primarily a **nonchronological backtracking method based on conflict sets gathered during search**. When a variable has no legal value, the algorithm identifies earlier variables implicated in the dead end and jumps to the deepest relevant one, propagating conflict information backward as appropriate. Classic formulations maintain conflict or jumpback sets so that irrelevant intervening decisions can be skipped.
+CBJ is primarily **nonchronological backtracking using conflict sets**, not persistent nogood learning.
 
-CBJ therefore uses information about causes of failure, but it need not create a persistent reusable constraint database. Calling it a lightweight form of learning is defensible only in a broad sense; operationally it is clearer to treat CBJ and nogood recording as separable mechanisms that can be combined.
+When a variable has no legal value, search identifies earlier decisions implicated in the dead end and jumps to the deepest relevant one, skipping intervening irrelevant choices. Conflict information is propagated backward as needed.
 
-CBJ is most useful when dead ends depend on a relatively small subset of earlier assignments and chronological backtracking would revisit many irrelevant choices. If conflict sets tend to include nearly every preceding decision, the jump distance collapses toward ordinary chronological backtracking. Strong propagation and good variable ordering can also reduce CBJ's marginal benefit, although empirical studies have found cases where CBJ remains useful even with substantial consistency enforcement.
+CBJ helps when failures depend on a small subset of past decisions. It degenerates toward chronological backtracking when conflict sets contain almost every earlier decision. Strong propagation or good variable ordering can also reduce its marginal benefit.
+
+CBJ and persistent nogood recording are separable and can be combined.
+
+## Interaction with propagation and search
+
+CDCL tightly couples:
+
+- learned clauses;
+- unit propagation;
+- nonchronological backtracking;
+- branching/activity heuristics;
+- restarts.
+
+A learned clause can therefore affect search before the exact conflict reappears by becoming unit and forcing a deduction.
+
+LCG extends this interaction to CP propagators. This is why measuring only “exact conflict recurrence” understates learning value: a learned reason may be useful through propagation without reproducing the original dead end exactly.
+
+Search ordering matters. Good branching can avoid some conflicts that learning would otherwise exploit; learned reasons can in turn change which branches look attractive.
 
 ## Retention and bounded learning
 
-Unrestricted learning can consume prohibitive memory and increase propagation cost, so practical systems delete or bound learned information. SAT solvers typically retain especially useful short/high-quality clauses while periodically removing less active clauses. Clause quality is not reducible to length alone.
+Unlimited learning can hurt. Large databases consume memory and slow propagation, especially when reasons are long, stale, or rarely active.
 
-Bayardo and Miranker's 1996 analysis is often cited here, but its conclusion should be stated narrowly. They compared size-bounded and relevance-bounded learning for structurally restricted CSPs and showed that, in the settings analyzed, relevance-bounded learning could obtain runtime bounds close to unrestricted learning with much lower space consumption and offered a better space/runtime trade-off than simple size bounds. This is important evidence for relevance-sensitive retention, not a universal theorem that relevance-bounded learning is always preferable in every solver or problem class.
+Common controls include:
 
-Krüger, Lorenz, and Wörz (2022) provide a complementary SAT result. Their empirical analysis shows that accumulating learned clauses can itself alter runtime distributions and contribute to deterioration, offering an explanation for why forgetting is useful beyond merely reducing the cost of unit propagation. That result supports active database management. It does **not** by itself establish the stronger claim that deterioration occurs specifically because conflicts rarely recur; poor reuse is one plausible mechanism among several reasons a learned database may have low value.
+- clause/reason size limits;
+- activity/usefulness scores;
+- age;
+- LBD-like quality measures in SAT;
+- periodic database reduction;
+- relevance-bounded retention tied to current search context.
 
-## Representation and explanation language
-
-Representation is central because a solver can learn only distinctions expressible in its explanation language. LCG is important precisely because it combines high-level CP propagation with a Boolean language in which reasons and conflicts can be analyzed. Modern LCG work emphasizes that the choice of literals, auxiliary variables, and explanations can substantially affect what the solver is able to learn.
-
-This should not be simplified into “richer explanations are always better” or “smaller nogoods are always better.” A richer language may permit a compact structural reason that would otherwise require a large low-level clause, but it can also enlarge the model and propagation machinery. Likewise, minimizing a reason can increase generality, yet the best clause for future propagation is not always the absolutely smallest logical explanation. Explanation generation, reason selection, and reason minimization are therefore optimization problems rather than monotone improvements.
-
-A useful distinction is between:
-
-1. **state identity**, which asks whether this exact logical state has already been proved dead;
-2. **conflict identity**, which asks whether this state contains a previously proved incompatible combination;
-3. **structural explanation**, which asks whether several superficially different low-level conflicts can be represented by the same higher-level reason.
-
-The third category has the greatest generalization potential but also the highest soundness burden. Any higher-level condition must be proved sufficient for failure, not merely correlated with it.
+The important principle is not one universal deletion rule, but **retain reasons according to demonstrated or plausible future value**. A sound reason need not be worth storing.
 
 ## Explanation overhead
 
-Explanation-producing propagation has real overhead. Propagators must either construct reasons eagerly or retain enough information to reconstruct them lazily during conflict analysis, and learned clauses then participate in propagation and database management. The magnitude is highly implementation- and problem-dependent; a blanket numerical claim such as “explanations slow propagation by 2–10×” is not justified as a general statement.
+Reason production is not free. Propagators may need additional bookkeeping, conflict analysis costs work, and every retained reason adds lookup or propagation burden.
 
-Modern LCG systems use several architectures. Some explanations are generated eagerly at propagation time, some lazily only when needed during conflict resolution, and some implied clauses are never permanently inserted into the clause database. The 2026 retrospective by Ohrimenko, Stuckey, and Codish stresses that these design choices materially affect performance. Thus “lazy clause generation” should not be read literally as meaning that every propagation event necessarily creates and stores a permanent learned clause.
+Learning tends to pay when it substantially reduces repeated search. It can lose when:
 
-The payoff condition is straightforward: explanation work must save more subsequent search than it costs. That can happen through earlier propagation, nonchronological backtracking, conflict reuse, or better search guidance. On easy instances, or in regions already solved almost entirely by propagation, explanation and database overhead may have little opportunity to repay itself.
+- instances are easy;
+- conflicts are rare;
+- conflicts are almost unique;
+- existing propagation already eliminates most bad branches;
+- explanation language produces long weak reasons;
+- retention is uncontrolled.
 
-## Empirical evidence and limits
+## Exact memoization vs abstract learning
 
-The broad empirical record strongly supports conflict learning in SAT and supports LCG as a highly effective CP architecture. Modern high-performance CP solvers such as Chuffed demonstrate that explanation-based learning can be extremely competitive, particularly on combinatorial optimization and scheduling problems. It is nevertheless too strong to say that LCG “consistently outperforms pure CP” as a universal result. Performance depends on model structure, propagators, search, objective handling, encoding choices, and benchmark family; even the 2026 LCG retrospective discusses cases where pure or hybrid search choices matter.
+| Search structure | Likely stronger mechanism |
+|---|---|
+| Many paths reach identical logical states | Exact-state memoization |
+| Exact states differ but failures share small causes | Abstract nogoods |
+| Failures involve few earlier decisions but seldom recur | CBJ may help without large database |
+| Learned reasons often become propagating constraints | CDCL/LCG-style learning has extra value |
+| Conflicts are nearly unique or huge | Learning likely low-value |
+| State equality is difficult but structural failure summaries are cheap | Abstract learning may have advantage |
 
-Negative or weak cases include:
+The practical question is not “learning or memoization?” but **what repeated equivalence exists in the search: state equivalence, failure equivalence, or neither?**
 
-- conflicts whose useful reasons almost never recur;
-- explanations so large or weak that they rarely propagate;
-- high explanation cost relative to the remaining search;
-- large learned databases that slow propagation or distort search behavior;
-- very strong native propagation or ordering that already prevents most redundant failure;
-- explanation languages that omit the structural concept needed to generalize the failure;
-- overgeneralized patterns that are not logically justified and are therefore unsound.
+## Lightweight forms relevant to bespoke combinatorial search
 
-The important contrast with exact-state memoization is consequently empirical rather than doctrinal. If many trajectories converge to identical dead states, exact memoization may already capture most reusable failure. If exact states rarely repeat but the same small conflict conditions repeatedly occur inside different states, abstract nogoods have much more headroom. If neither exact states nor abstract reasons recur, learning is unlikely to repay substantial machinery.
+Without adopting full CDCL, the literature supports considering conceptually lighter mechanisms such as:
 
-## Empirical signatures of useful learning
+- conflict sets for backjumping;
+- small sound nogoods over existing state variables;
+- bounded stores of frequently reused failure summaries;
+- explanations emitted only by selected expensive/important pruning rules;
+- auxiliary structural variables that make otherwise unique failures recur in a common vocabulary;
+- local reasons when global validity would require an overly detailed state description.
 
-Researchers use several observables to understand whether learned information is doing useful work. No single metric is sufficient.
+These are categories, not implementation prescriptions. Their value depends on whether recurring structural failures actually exist.
 
-- **Learned-object activation or propagation:** how often a learned clause/nogood later becomes unit, causes a failure, or otherwise prunes search.
-- **Conflict reuse across distinct contexts:** whether the same learned reason matters in branches that are not exact-state repeats.
-- **Backjump distance:** whether conflict analysis skips meaningful amounts of irrelevant search.
-- **Search reduction:** changes in failures, nodes, propagations, or consistency checks at comparable solution/proof strength.
-- **Database utility:** the relationship between retained-clause quality/activity and propagation cost.
-- **Explanation size and language:** whether reasons remain compact enough to recur and propagate, and whether auxiliary concepts make important structural conflicts expressible.
-- **Effect across restarts or related solves:** whether learned information survives changes in trajectory and remains useful rather than merely describing one local branch.
+## Diagnostic questions
 
-A learned clause that is rarely activated can still be valuable if each activation removes a huge subtree, while a frequently touched clause can be harmful if it performs little useful pruning. Reuse counts therefore need to be interpreted alongside saved search and propagation cost.
+A failure-learning direction is promising when the answers trend toward “yes”:
 
-## Relevance to bespoke constrained path search
+1. Do materially different exact states fail for the same reason?
+2. Can that reason be expressed with much less information than the full state?
+3. Is the abstraction provably sound?
+4. Does it recur before the solver would cheaply rediscover it anyway?
+5. Does matching it prevent substantial downstream work?
+6. Can reasons be checked incrementally/cheaply?
+7. Can low-value reasons be retired safely?
 
-For a stateful constrained path solver, the literature supports a **conditional opportunity**, not a ready-made implementation prescription. The decisive question is whether different branches repeatedly rediscover the same logically expressible failure for reasons that are substantially smaller or more structural than the complete path state.
+If not, exact-state caching or ordinary pruning is probably the better abstraction.
 
-Potentially relevant reason languages could involve resources, obligations, topology, mechanic state, or combinations of earlier decisions, but those are only conceptual categories. A research report without access to the solver cannot know which such abstractions are sound, available, cheap, or recurrent. In particular, examples such as “remaining resource at a location” should not be treated as valid nogoods unless the full state dependencies needed for the implication have been established.
+## Bottom line
 
-The literature therefore suggests the following evidence questions rather than a specific design:
+The highest-value lesson from CDCL, CP explanations, and LCG is not “store more failures.” It is **find a sound language in which important failures recur**.
 
-- Do exact dead states recur often enough that ordinary memoization already captures most reuse?
-- Do failures recur across different exact states for a common reason?
-- Can those reasons be expressed compactly and soundly in terms already represented by the solver?
-- Do learned reasons trigger early enough to save substantial work?
-- Does the saved work exceed explanation, lookup, propagation, and retention cost?
-- Are useful reasons global, or do they depend on assumptions that restrict their scope?
-
-If the answers are mostly negative, exact-state caching may be the better engineering trade-off. If exact recurrence is low but compact structural conflicts recur frequently, the case for abstract nogoods becomes much stronger.
-
-## Synthesis
-
-The strongest conclusion from SAT, CP, CBJ, and LCG is not simply “learn failures.” It is that **the language in which failure is represented determines how much reusable structure search can discover**. Exact-state memoization and abstract learning solve different redundancy problems. The former exploits repeated states; the latter exploits repeated reasons.
-
-Three cautions follow. First, abstraction must remain logically sound. Second, learning has recurring operational costs, so retention and explanation strategies matter. Third, persistent nogood learning, conflict-directed backjumping, and explanation-producing propagation are distinct mechanisms even though modern systems often combine them.
-
-For a bespoke path solver, the external literature is therefore most informative when framed as a testable structural question: *are many expensive dead ends different surface manifestations of a small number of recurring, soundly expressible conflicts?* If so, explanation-based learning has a plausible advantage over exact-state memoization. If not, the sophistication of CDCL or LCG does not by itself create reusable information.
-
-## Selected sources
-
-- Bayardo, R. J. Jr. & Miranker, D. P. (1996). **A Complexity Analysis of Space-Bounded Learning Algorithms for the Constraint Satisfaction Problem.** AAAI-96.
-- Prosser, P. (1993). **Hybrid Algorithms for the Constraint Satisfaction Problem.** *Computational Intelligence* 9(3), 268–299.
-- Ohrimenko, O., Stuckey, P. J. & Codish, M. (2007). **Propagation = Lazy Clause Generation.** CP 2007, LNCS 4741, 544–558.
-- Ohrimenko, O., Stuckey, P. J. & Codish, M. (2009). **Propagation via Lazy Clause Generation.** *Constraints* 14(3), 357–391.
-- Ohrimenko, O., Stuckey, P. J. & Codish, M. (2026). **Lazy clause generation in retrospect.** *Constraints*. https://doi.org/10.1007/s10601-026-09390-9
-- Krüger, T., Lorenz, J.-H. & Wörz, F. (2022). **Too much information: Why CDCL solvers need to forget learned clauses.** *PLOS ONE* 17(8), e0272967. https://doi.org/10.1371/journal.pone.0272967
+Exact-state memoization remembers *where* search died. Conflict learning tries to remember *why*. The latter wins only when “why” generalizes enough to repay the cost of deriving, storing, and applying it.
