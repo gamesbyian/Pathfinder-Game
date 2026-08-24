@@ -54,18 +54,26 @@ Three active dated designs turn the highest-leverage criticisms into falsifiable
 - [`2026-08-23-solver-confirmation-transfer-protocol-design.md`](2026-08-23-solver-confirmation-transfer-protocol-design.md): first renewable development → confirmation → transfer/challenge protocol, including population reclassification after exact failure inspection and parent-family grouping.
 - [`2026-08-23-solver-reference-model-capability-audit.md`](2026-08-23-solver-reference-model-capability-audit.md): current CP-SAT/reference capability and validation audit; it also reconciles the previously stale must-cross external-model support description against native legality and the CP-SAT edge-axis encoding.
 
-The 2026-08-24 [`external-research-pathfinder-synthesis`](2026-08-24-external-research-pathfinder-synthesis.md) is a **narrowing rationale**, not a fourth live roadmap. It now reconciles all six external research reviews against Pathfinder's existing experiments and sharpens current work around continuation value, beam future-equivalence, repair reachability/reconstructability, structural failure reasons, symmetry first-divergence, and residual future opportunity. Durable next-work language lives in the queue, scheduler policy, `solver-future-work.md`, and `variant-level-research.md`.
+The 2026-08-24 [`external-research-pathfinder-synthesis`](2026-08-24-external-research-pathfinder-synthesis.md) is a **narrowing rationale**, not a fourth live roadmap. It now reconciles eleven external research memos against Pathfinder's existing experiments. The second wave sharpens residual-interface/future-opportunity reasoning, structured repair, structural failure certificates, censored continuation value, and randomized symmetry diagnosis without creating new queue items. Durable next-work language remains in the queue, scheduler policy, `solver-future-work.md`, and `variant-level-research.md`.
 
 ### External literature reference memos
 
-These are compact, corrected research references. They are inputs to the synthesis, not implementation instructions:
+These are compact, corrected research references. They are inputs to the synthesis, not implementation instructions.
 
+First wave:
 - [`deep-research-report.md`](deep-research-report.md): LNS/ALNS/repair, emphasizing reachability, reconstruction, effective neighborhood size, and feasibility restoration.
 - [`nogood-deep-research-report.md`](nogood-deep-research-report.md): exact-state memory versus reusable structural failure explanations.
 - [`beam-deep-research-report.md`](beam-deep-research-report.md): survivor-set quality, diversity, novelty, and the state-abstraction problem.
 - [`portfolios-deep-research-report.md`](portfolios-deep-research-report.md): sequential portfolios, censoring, continuation value, marginal contribution, and complexity ladder.
 - [`heuristic-symmetry-deep-research-report.md`](heuristic-symmetry-deep-research-report.md): heuristic invariance versus search equivariance and representation-induced finite-budget bias.
 - [`feasibility-deep-research-report.md`](feasibility-deep-research-report.md): exact-resource attainability, lower/upper residual capacity, topology/cuts, relaxations, and soundness cautions for exact targets.
+
+Second wave:
+- [`exact-attainability-upper-capacity-deep-research.md`](exact-attainability-upper-capacity-deep-research.md): attainable-resource spectra, residue summaries, equality-resource dominance, and structural upper-capacity bounds.
+- [`future-equivalence-basin-width-deep-research.md`](future-equivalence-basin-width-deep-research.md): continuation equivalence/substitutability, interface/context abstractions, completion counts, frozen structure, and basin-width proxies.
+- [`structured-repair-reconstruction-deep-research.md`](structured-repair-reconstruction-deep-research.md): plan-repair unrefinement/refinement, repair windows, dependency-guided reopening, and residual reconstruction regimes.
+- [`infeasibility-certificates-deep-research.md`](infeasibility-certificates-deep-research.md): structural/resource certificates, UNSAT cores, MUS/MCS/IIS distinctions, minimization, and safe explanation generalization.
+- [`censored-continuation-symmetry-randomization-deep-research.md`](censored-continuation-symmetry-randomization-deep-research.md): conditional residual runtime, latent instance hardness, censoring, randomized equivariance, and semantic RNG coupling.
 
 The P0 cross-stage dependency did **not** receive a duplicate report: [`2026-08-22-technique-census-reverse-oracle-diagnosis.md`](2026-08-22-technique-census-reverse-oracle-diagnosis.md) remains the active evidence record and already owns its enabling-prefix/lower-bound-cache next gate.
 
