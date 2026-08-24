@@ -54,6 +54,8 @@ Three active dated designs turn the highest-leverage criticisms into falsifiable
 - [`2026-08-23-solver-confirmation-transfer-protocol-design.md`](2026-08-23-solver-confirmation-transfer-protocol-design.md): first renewable development → confirmation → transfer/challenge protocol, including population reclassification after exact failure inspection and parent-family grouping.
 - [`2026-08-23-solver-reference-model-capability-audit.md`](2026-08-23-solver-reference-model-capability-audit.md): current CP-SAT/reference capability and validation audit; it also reconciles the previously stale must-cross external-model support description against native legality and the CP-SAT edge-axis encoding.
 
+The 2026-08-24 [`external-research-pathfinder-synthesis`](2026-08-24-external-research-pathfinder-synthesis.md) is a **narrowing rationale**, not a fourth live roadmap. It reconciles external literature on survivor selection, repair/LNS, and learned failure against Pathfinder's existing experiments, and sharpens queue items #4, #6, and #7 into three premise-first tracks: A/D beam future-equivalence, repair reachability vs reconstructability, and sound structural failure reasons beyond existing exact-state caches/prunes. Durable next-work language lives in the queue and `solver-future-work.md`.
+
 The P0 cross-stage dependency did **not** receive a duplicate report: [`2026-08-22-technique-census-reverse-oracle-diagnosis.md`](2026-08-22-technique-census-reverse-oracle-diagnosis.md) remains the active evidence record and already owns its enabling-prefix/lower-bound-cache next gate.
 
 ## Current census/scheduler evidence
