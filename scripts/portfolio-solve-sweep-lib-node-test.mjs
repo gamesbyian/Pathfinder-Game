@@ -9,7 +9,7 @@
  * doc comment) — runs under plain node.
  */
 import assert from 'node:assert/strict';
-import { buildRow, attemptConfigKey, attemptRecord } from './portfolio-solve-sweep-lib.mjs';
+import { buildRow, attemptActionKey, attemptConfigKey, attemptRecord } from './portfolio-solve-sweep-lib.mjs';
 import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from '../modules/solver/testing-fixtures.js';
 import { buildSolveWorkerResult } from '../modules/solver/worker-result-serialization.mjs';
 
@@ -73,6 +73,8 @@ test('buildRow defaults attempts/refereeValid safely when result has neither', (
     assert.equal(row.attempts.length, 0);
     assert.equal(row.attemptCount, 0);
     assert.deepEqual(row.failedStrategies, []);
+    assert.deepEqual(row.failedActionKeys, []);
+    assert.equal(row.winningActionKey, null);
     assert.equal(row.refereeValid, null);
     assert.equal(row.elapsedMs, null);
 });
@@ -92,6 +94,29 @@ test('failedStrategies only lists non-winning attempts, using the same key as wi
     const row = buildRow(1, 'R00001', result, 'legacy');
     assert.equal(row.winningConfig, 'dfs:c');
     assert.deepEqual(row.failedStrategies, ['dfs:a', 'dfs:b:repair']);
+});
+
+test('action identity separates stage and repair seed while config identity remains compatible', () => {
+    const salt0 = { stageId: 'repair-probe', gateKey: 10, profile: 'repair', template: null, beamWidth: null, repair: true, ok: false, elapsedMs: 1 };
+    const salt1 = { ...salt0, seedSalt: 1, ok: true };
+    assert.equal(attemptConfigKey(salt0), 'dfs:repair:repair');
+    assert.equal(attemptConfigKey(salt1), 'dfs:repair:repair');
+    assert.equal(attemptActionKey(salt0), 'repair-probe|dfs:repair:repair|seedSalt=0');
+    assert.equal(attemptActionKey(salt1), 'repair-probe|dfs:repair:repair|seedSalt=1');
+
+    const row = buildRow(1, 'R00001', { ok: true, status: 'success', attempts: [salt0, salt1] }, 'legacy');
+    assert.equal(row.winningConfig, 'dfs:repair:repair', 'legacy config-family summary stays unchanged');
+    assert.equal(row.winningActionKey, 'repair-probe|dfs:repair:repair|seedSalt=1');
+    assert.deepEqual(row.failedActionKeys, ['repair-probe|dfs:repair:repair|seedSalt=0']);
+    assert.equal(row.attempts[0].actionKey, 'repair-probe|dfs:repair:repair|seedSalt=0');
+    assert.equal(row.attempts[1].actionKey, 'repair-probe|dfs:repair:repair|seedSalt=1');
+});
+
+test('historical attempts without stageId do not get a fabricated action identity', () => {
+    const legacy = { gateKey: 1, profile: 'repair', repair: true, ok: false, elapsedMs: 1, seedSalt: 2 };
+    assert.equal(attemptActionKey(legacy), null);
+    const rec = attemptRecord(legacy);
+    assert.ok(!('actionKey' in rec));
 });
 
 // Regression test (2026-07-23): attemptConfigKey previously checked ONLY repairMustTurnBiased for
@@ -161,7 +186,7 @@ test('attemptRecord preserves allocatedBudgetMs, randomSeed and seedSalt', () =>
 
 test('attemptRecord omits absent optional fields rather than emitting undefined', () => {
     const rec = attemptRecord({ gateKey: 1, profile: 'default', template: null, beamWidth: null, ok: true, elapsedMs: 5 });
-    for (const k of ['allocatedBudgetMs', 'admissibleOrder', 'randomSeed', 'seedSalt', 'repair', 'timedOut']) {
+    for (const k of ['stageId', 'actionKey', 'allocatedBudgetMs', 'admissibleOrder', 'randomSeed', 'seedSalt', 'repair', 'timedOut']) {
         assert.ok(!(k in rec), `${k} should be absent, not undefined`);
     }
 });
@@ -203,6 +228,7 @@ test('maximal Attempt round-trips completely through attemptRecord and buildRow'
         for (const field of INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS) {
             assert.ok(!(field in projected), `${field} is intentionally transient`);
         }
+        assert.equal(projected.actionKey, 'repair-late-probe|ida:none(lds)|seedSalt=7', 'derived action identity must survive projection');
     }
     assert.equal(row.hadAttemptError, true);
 });
