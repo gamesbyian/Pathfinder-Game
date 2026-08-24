@@ -44,6 +44,18 @@ When reusing an older result, ask:
 
 If these cannot be established, use the result for nomination/forensics and rerun a current narrow test before a production decision.
 
+## Current research reset and execution designs
+
+The 2026-08-23 process review is preserved in [`2026-08-23-solver-research-process-critique-and-reprioritization.md`](2026-08-23-solver-research-process-critique-and-reprioritization.md). It is historical rationale, **not** a second live roadmap: it maps the project's main process/engineering criticisms to the current queue and operating-model corrections.
+
+Three active dated designs turn the highest-leverage criticisms into falsifiable next work without creating new permanent authorities:
+
+- [`2026-08-23-solver-portfolio-repricing-design.md`](2026-08-23-solver-portfolio-repricing-design.md): first scheduler experiment — current action/reach/`workSpent` join, tail audit, cap/tranche repricing, fixed-envelope oracle/Pareto headroom, then a deliberately simple static-policy baseline before dynamic scheduler infrastructure.
+- [`2026-08-23-solver-confirmation-transfer-protocol-design.md`](2026-08-23-solver-confirmation-transfer-protocol-design.md): first renewable development → confirmation → transfer/challenge protocol, including population reclassification after exact failure inspection and parent-family grouping.
+- [`2026-08-23-solver-reference-model-capability-audit.md`](2026-08-23-solver-reference-model-capability-audit.md): current CP-SAT/reference capability and validation audit, including the explicit must-cross support-description discrepancy that must be reconciled before broad exactness claims.
+
+The P0 cross-stage dependency did **not** receive a duplicate report: [`2026-08-22-technique-census-reverse-oracle-diagnosis.md`](2026-08-22-technique-census-reverse-oracle-diagnosis.md) remains the active evidence record and already owns its enabling-prefix/lower-bound-cache next gate.
+
 ## Current census/scheduler evidence
 
 - [`2026-08-20-technique-census-reconciliation.md`](2026-08-20-technique-census-reconciliation.md) records successful population census run `32240161854`; [`2026-08-19-technique-census-design.md`](2026-08-19-technique-census-design.md) is its design/calibration record. The census matrix is heavily mined **development evidence**, not a fresh confirmation set.
