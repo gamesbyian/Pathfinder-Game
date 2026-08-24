@@ -53,12 +53,27 @@ A population can move only toward more contaminated roles. Once exact failures f
 
 Variant siblings are correlated. Split/group by parent family for learned/tuned rules and transfer claims.
 
+## Holdout visibility
+
+A useful holdout protocol should reduce the temptation to tune against the holdout while still making decisions possible.
+
+Where tooling permits during iteration:
+
+- expose aggregate confirmation/transfer metrics first rather than exact level IDs, paths, winning configs, or failure traces;
+- freeze the treatment/decision before opening exact failures for forensic learning;
+- once exact failures are opened and influence the next design, mark those cases/population as development data for future iterations;
+- record the generator/version/split so a replacement holdout can be created reproducibly;
+- do not repeatedly create “fresh” siblings of already-inspected parents and call them independent transfer data.
+
+This need not become a security system or elaborate blind leaderboard. The goal is procedural friction against accidental repeated peeking, not secrecy for its own sake.
+
 ## Claim discipline
 
 Use language that matches the evidence:
 
 - “+N on the current Corpus-2 sample” is a valid corpus result even if that corpus inspired the treatment.
 - “improves level-blind capability on Corpus 2” requires a level-blind run but not necessarily an untouched holdout.
+- “selected treatment confirmed on held-out parents” requires that those parents did not choose the treatment/threshold.
 - “generalizes to unseen Pathfinder levels” requires independent confirmation/transfer evidence beyond the development population.
 - “zero regressions” means zero observed losses on the stated population/protocol, not proof of universal monotonicity.
 
