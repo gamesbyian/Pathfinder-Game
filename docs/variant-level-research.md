@@ -2,7 +2,7 @@
 
 Canonical reference for controlled level-family/variant research.
 
-> **Current role:** family data supports scheduler/configuration discovery, causal search diagnosis, invariance testing, and held-out generalization. It is **not** a reason to generate more variants by default and is never a runtime lookup table.
+> **Current role:** family data supports scheduler/configuration discovery, causal search diagnosis, invariance/equivariance testing, and held-out generalization. It is **not** a reason to generate more variants by default and is never a runtime lookup table.
 
 ## Existing trove
 
@@ -77,7 +77,7 @@ Once exact outcomes from a holdout have influenced design, reclassify it as deve
 | Beam retention | Parent/sibling boundary + lineage/first-divergence/frontier trace. |
 | Repair behavior | Seed/operator/badness/retreat changes across close relatives. |
 | Open-space/density effects | Controlled re-embedding rather than unrelated-level correlation. |
-| Invariant falsification | Symmetry/local-mutant counterexamples. |
+| Invariant/equivariant falsification | Symmetry/local-mutant counterexamples locating the first decision that fails to transform as expected. |
 | Exact/oracle targeting | Families that bracket feasible/infeasible prefixes or reduced instances. |
 | Generalization tests | Whole-parent held-out confirmation, followed by unrelated transfer data. |
 
@@ -103,19 +103,41 @@ See [`solver-scheduling-policy.md`](solver-scheduling-policy.md) and [`solver-re
 
 ## Orientation and symmetry policy
 
-Rotation/reflection dependence is usually evidence of solver search bias, not a product feature to exploit with production rotate/retry loops.
+Rotation/reflection dependence is usually evidence about **finite-budget representation bias or diversification**, not a product feature to exploit with production rotate/retry loops.
 
-Use symmetric families to locate:
+Keep two symmetry questions separate:
 
-- first ordering divergence;
-- tie-break asymmetry;
-- retention/dedup asymmetry;
-- geometry encoding bias;
-- direction/template dependence.
+1. **redundant symmetric states inside one search**, where canonicalization/symmetry pruning may avoid repeated equivalent exploration;
+2. **representation dependence across isomorphic orientations**, where the question is whether scoring, ordering, retention, randomness, or truncation behaves differently for arbitrary encoding reasons.
 
-A rotate/mirror production retry requires a separate fixed-work scheduler case; it is not the default response to discovering a symmetry cliff.
+For the second question, the key theoretical distinction is:
 
-Do not overinterpret perfect puzzle isomorphism as a requirement that finite-budget heuristic search take identical paths. The research target is avoidable representation/order bias that harms capability, not cosmetic trace symmetry.
+> **heuristic invariance is not search equivariance.**
+
+Corresponding rotated/reflected states can receive identical heuristic values while successor order, secondary ties, coordinate-derived ordering, beam truncation, dedup, stable-sort fallbacks, or PRNG-consumption order produce different finite-budget traces.
+
+The current technique census already shows real directional inversions but **balanced aggregate beam/DFS discordance**, with no simple shared static predictor. That argues against assuming a universal CW/CCW defect or building a global directional correction from aggregate means.
+
+For selected current-code symmetry cliffs, align traces through the inverse transform and locate the **first non-equivariant decision**:
+
+1. legal successor set differs -> semantic/correctness issue;
+2. corresponding hard-prune or heuristic value differs unexpectedly -> representation/heuristic issue;
+3. values agree but rank/order differs -> tie-break/ordering issue;
+4. ranks agree but retained beam set differs -> retention/dedup/truncation issue;
+5. deterministic structure agrees but random trajectory diverges -> PRNG-consumption/order issue.
+
+Then ask whether that same mechanism recurs across unrelated parents. Classify outcomes as:
+
+- harmless trace difference;
+- useful diversification;
+- arbitrary representation bias;
+- systematic harmful bias.
+
+A rotate/mirror production retry requires a separate fixed-work scheduler case; it is not the default response to discovering a symmetry cliff. Likewise, broad graph/state canonicalization is not justified merely because orientation outcomes differ; it mainly addresses redundant orbit exploration and does not automatically make search representation-equivariant.
+
+Do not overinterpret perfect puzzle isomorphism as a requirement that finite-budget heuristic search take identical paths. The research target is **recurring harmful arbitrary bias**, not cosmetic trace symmetry. If balanced directional differences provide complementary coverage, they may be useful diversification and should be valued through the scheduler rather than “fixed” on principle.
+
+See [`../reports/heuristic-symmetry-deep-research-report.md`](../reports/heuristic-symmetry-deep-research-report.md) and [`../reports/2026-08-24-external-research-pathfinder-synthesis.md`](../reports/2026-08-24-external-research-pathfinder-synthesis.md).
 
 ## Generation gate
 
@@ -165,7 +187,7 @@ The trove is **evidence, not backlog**. Current family work should support ranke
 
 1. held-out validation for scheduler/configuration rules;
 2. beam extinction/retention boundaries;
-3. search-bias diagnosis for symmetry cliffs;
+3. first-divergence diagnosis for symmetry cliffs;
 4. exact/reference labels around causal boundaries;
 5. repair/restart/operator behavior across controlled relatives.
 
