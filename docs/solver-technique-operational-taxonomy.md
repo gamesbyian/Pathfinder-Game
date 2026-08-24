@@ -15,6 +15,8 @@ Technique names can overstate diversity. Many Pathfinder “techniques” are co
 
 Do not infer diversity from different names. Do not infer operational redundancy from solve-set overlap alone. A tiny ordering difference can cascade into a large outcome difference; conversely, very different searches can end with the same coverage.
 
+Operational similarity is itself a **diagnostic proxy**, not an optimization objective. The project does not benefit merely because two searches have a low/high Jaccard, ranking correlation, or divergence depth. A measurement is useful only when it changes a portfolio/configuration or causal-search decision.
+
 ## Operational layers
 
 | Layer | What actually changes |
@@ -47,6 +49,8 @@ The bounded operational-similarity substrate is implemented through `scripts/tec
 
 See [`../reports/2026-08-23-operational-similarity-substrate.md`](../reports/2026-08-23-operational-similarity-substrate.md).
 
+These findings came from bounded selected cohorts and are evidence about those operational questions, not population prevalence estimates.
+
 ## Research objective
 
 Operational-similarity work should answer one of two concrete questions:
@@ -55,6 +59,8 @@ Operational-similarity work should answer one of two concrete questions:
 2. **Causal question:** two close configurations have different outcomes; what is the first load-bearing ordering/retention/pruning divergence?
 
 If a proposed trace/metric cannot inform one of those questions, it is lower priority than scheduler, holdout, exact-reference, restart, or search-quality work in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+
+Before collecting a new trace, write down which concrete scheduling/configuration/causal decision can change depending on the result and what result would stop further tracing.
 
 ## Useful bounded metrics
 
@@ -72,6 +78,8 @@ Use only the metrics needed for the current pair/cohort:
 
 Raw weight-vector distance is a source-level proxy only. Terms have different scales/activation conditions, so Euclidean closeness is not behavioral equivalence.
 
+Metrics themselves can be sensitive to sampling/truncation. A censored frontier Jaccard or a top-choice agreement measured only on states reached by one policy is not a universal distance between algorithms. Record encounter/sampling conditions and censoring.
+
 ## Sampling rule
 
 Do **not** run an all-techniques × all-levels operational census by default. Start with reusable bounded cohorts:
@@ -87,6 +95,8 @@ Do **not** run an all-techniques × all-levels operational census by default. St
 
 Use the smallest trace budget that establishes the mechanism. Family-derived cohorts are grouped by parent. Exact IDs may select offline diagnostic fixtures but never enter production steering.
 
+If pairs/cohorts are chosen because their census outcomes are especially dramatic, call the trace **selected diagnostic evidence**. Do not extrapolate the frequency or magnitude of the operational pattern without an independently sampled confirmation cohort.
+
 ## Crossing operational and outcome evidence
 
 | Operational behavior | Outcomes | Interpretation |
@@ -98,6 +108,8 @@ Use the smallest trace budget that establishes the mechanism. Family-derived coh
 
 The **similar operation / different outcome** cell is especially useful for capability diagnosis. The **similar operation / similar outcome** cell is especially useful for pruning the scheduler/configuration search space.
 
+None of these cells is a deletion/promotion verdict alone. A candidate action's present residual solves/work and held-out behavior still decide production value.
+
 ## Relationship to automatic configuration
 
 Automatic configuration should not blindly treat every named profile as an independent dimension. Use this taxonomy to define conditional parameter families and reduce obviously redundant candidate regions.
@@ -106,11 +118,13 @@ Conversely, do not demand complete operational traces before racing configuratio
 
 The efficient order is:
 
-> cheap configuration racing → marginal outcome/work screen → bounded operational diagnosis of survivors/inversions → held-out confirmation
+> cheap configuration racing -> marginal outcome/work screen -> bounded operational diagnosis of survivors/inversions -> held-out confirmation
 
 not:
 
-> exhaustively trace everything → then decide what was worth evaluating.
+> exhaustively trace everything -> then decide what was worth evaluating.
+
+If configuration racing already removes a candidate as dominated with comfortable held-out margin, do not trace it merely to understand why unless the mechanism itself is a ranked research question.
 
 ## Scheduler use
 
@@ -123,6 +137,20 @@ Operational similarity is supporting evidence, not a runtime historical lookup. 
 - identify live telemetry that distinguishes exhausted versus still-novel exploration.
 
 Production decisions remain level-blind and use legal static/current-solve features only.
+
+A scheduler should not spend meaningful production overhead computing an operational-similarity descriptor unless shadow/current-code evidence shows that descriptor improves action selection beyond simpler signals.
+
+## Stop conditions
+
+Close or pause an operational-similarity thread when any of these holds:
+
+- the pair is already economically dominated and understanding it will not affect another active causal question;
+- the chosen metric does not distinguish the outcome inversion/control cases;
+- a distinction is found but cannot be translated into a generic legal runtime/search intervention;
+- the proposed production signal costs more than the residual work it can plausibly save;
+- repeated metric refinement improves descriptive fit without changing solve/work decisions.
+
+Operational understanding is valuable, but it is not an unlimited research entitlement.
 
 ## Documentation rule
 
