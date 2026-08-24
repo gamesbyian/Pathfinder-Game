@@ -52,7 +52,7 @@ Three active dated designs turn the highest-leverage criticisms into falsifiable
 
 - [`2026-08-23-solver-portfolio-repricing-design.md`](2026-08-23-solver-portfolio-repricing-design.md): first scheduler experiment — current action/reach/`workSpent` join, tail audit, cap/tranche repricing, fixed-envelope oracle/Pareto headroom, then a deliberately simple static-policy baseline before dynamic scheduler infrastructure.
 - [`2026-08-23-solver-confirmation-transfer-protocol-design.md`](2026-08-23-solver-confirmation-transfer-protocol-design.md): first renewable development → confirmation → transfer/challenge protocol, including population reclassification after exact failure inspection and parent-family grouping.
-- [`2026-08-23-solver-reference-model-capability-audit.md`](2026-08-23-solver-reference-model-capability-audit.md): current CP-SAT/reference capability and validation audit, including the explicit must-cross support-description discrepancy that must be reconciled before broad exactness claims.
+- [`2026-08-23-solver-reference-model-capability-audit.md`](2026-08-23-solver-reference-model-capability-audit.md): current CP-SAT/reference capability and validation audit; it also reconciles the previously stale must-cross external-model support description against native legality and the CP-SAT edge-axis encoding.
 
 The P0 cross-stage dependency did **not** receive a duplicate report: [`2026-08-22-technique-census-reverse-oracle-diagnosis.md`](2026-08-22-technique-census-reverse-oracle-diagnosis.md) remains the active evidence record and already owns its enabling-prefix/lower-bound-cache next gate.
 
