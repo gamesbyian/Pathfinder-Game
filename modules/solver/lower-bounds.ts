@@ -412,12 +412,13 @@ export function mpMSTLowerBound(pos: number, remain: ArrayLike<number>, remainLe
     return Number.isFinite(minGoal) ? mstW + minGoal : Infinity;
 }
 
-// Cache key for mustPassLowerBound's memoization: packs (pos, mpVisitedMask) into one integer.
-// `pos` is a packed cell key (< KEY_SPACE = 1<<20 per CLAUDE.md); multiplying by 0x1000000
-// (1<<24) leaves 24 bits for the mask, comfortably more than any realistic mustPassKeys.length
-// (bounded to 32 by the mask's own `1 << i` width elsewhere) could ever produce — collision-free
-// and safely within Number.MAX_SAFE_INTEGER (pos_max * 2^24 ≈ 2^44).
-const _MP_LB_CACHE_MASK_BITS = 0x1000000;
+// Cache key for mustPassLowerBound's memoization: packs (pos, mpVisitedMask) into one exact integer.
+// `validateRawLevel` caps the normalized must-pass/must-turn union at 30 cells, so the visited mask
+// occupies at most bits 0..29. A previous 2^24 multiplier overlapped mask bit 24 with the next
+// packed position: `(pos=0, mask=1<<24)` and `(pos=1, mask=0)` produced the same key. Reserve the
+// full 30-bit mask space instead. Current packed positions are < 2^20, so the largest composite
+// remains < 2^50 and therefore exactly representable by JavaScript Number.
+const _MP_LB_CACHE_MASK_SPACE = 0x40000000; // 2^30
 
 // Lower bound: must visit every unsatisfied must-pass then reach goal.
 // Uses per-cell max bound, upgraded to MST joint bound when ≥2 MPs remain
@@ -445,7 +446,7 @@ export function mustPassLowerBound(pos: number, state: SolverSearchState, level:
     // the memoization's pure-speed contribution can be measured on its own.
     const _lbCfg = prep._cfg;
     const cache = (!_lbCfg || _lbCfg.STRATEGY_LOWER_BOUND_MEMO) ? (prep._mpLowerBoundCache ??= new IntHashMap()) : null;
-    const cacheKey = pos * _MP_LB_CACHE_MASK_BITS + state.mpVisitedMask;
+    const cacheKey = pos * _MP_LB_CACHE_MASK_SPACE + state.mpVisitedMask;
     if (cache) {
         const cached = cache.get(cacheKey);
         if (cached !== undefined) return cached;
