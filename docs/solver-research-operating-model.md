@@ -37,6 +37,7 @@ These are gates, not suggestions. If proposed work violates one, reformulate the
 15. **Do not hide rare capability inside an average.** Use uncertainty, denominators, paired gains/losses, unique residual solves, and Pareto tradeoffs. A high average solve/work ratio does not by itself justify deleting the only action that solves a rare hard phenotype. Conversely, one selected spectacular level does not justify broad entitlement.
 16. **Frameworks must earn implementation.** Scheduler, configurator, reference-model, analytics, shadow, lineage, and learning infrastructure begin with a value-of-information pilot and a stop condition. If a simple rule/helper/prototype answers the question, do not build a general framework because the architecture is appealing.
 17. **Do not make `main` the experiment scratchpad.** Prefer branch/PR execution and artifacted results. Merge before decision-bearing validation only when the required workflow/data path cannot exercise the branch, and record why the merge was necessary.
+18. **External best practices are hypotheses, not authority.** SAT/CP/optimization literature can nominate restarts, conflict learning, configuration methods, portfolio scheduling, data splits, or implementation strategies. Pathfinder still needs a problem-specific pilot at comparable work/correctness. Do not cargo-cult a technique because mature solvers use it, and do not reject it merely because a naive first port is weak.
 
 ## Capability boundary and generalization scope
 
