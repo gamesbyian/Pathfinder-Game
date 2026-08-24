@@ -17,6 +17,10 @@ export interface SolverStageSpec {
     attemptSource: 'configured-main' | 'configured-repair' | 'admissible-order-profiles' | 'prime' | 'portfolio';
     budgetPolicy: StageBudgetPolicyId; telemetryLabel: SolverStageId; retryIdentity: string | null;
 }
+// Disposition is current policy status, not historical origin. In particular, a retry promoted to
+// production default must say `promoted` here even if its feature began life as an opt-in. Keep this
+// aligned with ablation-config.ts's OPT_IN_FEATURES/default polarity and the opt-in experiment ledger;
+// schedulers/reports consume this registry as metadata and must not resurrect stale pre-promotion state.
 const rows = [
     ['prime', 0, 'experiment-only', 'prime', 'explicit primeAttempt option', 'prime', 'fixed-node-cap', null],
     ['repair-probe', 10, 'production-default', 'probe', 'repair configs and repair probe enabled', 'configured-repair', 'fixed-probe', null],
@@ -25,12 +29,12 @@ const rows = [
     ['attraction-diversity', 40, 'promoted', 'retry', 'candidate flag active and extra passes enabled', 'configured-main', 'withheld-node-reserve', 'attraction-diversity'],
     ['repair-probe-shrink-recovery', 50, 'opt-in', 'retry', 'a biased probe was shrunk and recovery enabled', 'configured-repair', 'withheld-node-reserve', 'repair-probe-shrink-recovery'],
     ['admissible-order', 60, 'production-default', 'fallback', 'admissible-order tier enabled', 'admissible-order-profiles', 'withheld-node-reserve', null],
-    ['dedup-near-tie-retry', 70, 'opt-in', 'retry', 'dedup retry flag and budget enabled', 'configured-main', 'additive-node-headroom', 'dedup-near-tie-retry'],
-    ['admissible-order-non-default-retry', 80, 'opt-in', 'retry', 'non-default admissible retry enabled', 'admissible-order-profiles', 'additive-node-headroom', 'admissible-order-non-default-retry'],
+    ['dedup-near-tie-retry', 70, 'promoted', 'retry', 'dedup retry flag and budget enabled', 'configured-main', 'additive-node-headroom', 'dedup-near-tie-retry'],
+    ['admissible-order-non-default-retry', 80, 'promoted', 'retry', 'non-default admissible retry enabled', 'admissible-order-profiles', 'additive-node-headroom', 'admissible-order-non-default-retry'],
     ['connectivity-axis-exhausted-retry', 90, 'promoted', 'retry', 'connectivity retry enabled', 'configured-main', 'additive-node-headroom', 'connectivity-axis-exhausted-retry'],
     ['repair-elite-prefix-dfs-retry', 100, 'opt-in', 'retry', 'elite-prefix repair retry enabled', 'configured-repair', 'additive-node-headroom', 'repair-elite-prefix-dfs-retry'],
     ['mc-neighbor-budget-retry', 110, 'promoted', 'retry', 'must-cross neighbor retry enabled', 'configured-main', 'additive-node-headroom', 'mc-neighbor-budget-retry'],
-    ['repair-late-probe', 120, 'opt-in', 'retry', 'late repair probe enabled', 'configured-repair', 'fixed-node-cap', 'repair-late-probe'],
+    ['repair-late-probe', 120, 'promoted', 'retry', 'late repair probe enabled', 'configured-repair', 'fixed-node-cap', 'repair-late-probe'],
     ['goal-attraction-legacy-distance-retry', 125, 'promoted', 'retry', 'goal-attraction legacy-distance retry enabled', 'configured-main', 'additive-node-headroom', 'goal-attraction-legacy-distance-retry'],
     ['repair-late-probe-multi-seed-retry', 128, 'promoted', 'retry', 'repair-late-probe multi-seed retry enabled and repair-late-probe itself eligible', 'configured-repair', 'additive-node-headroom', 'repair-late-probe-multi-seed-retry'],
     ['portfolio-pass', 20, 'experiment-only', 'portfolio', 'portfolio pass includes config', 'portfolio', 'portfolio-pass', null],
