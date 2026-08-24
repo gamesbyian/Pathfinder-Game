@@ -19,6 +19,7 @@ Loose `YYYY-MM-DD-<topic>.md` files are evidence, not a live queue. Do not recon
 - [`solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md): **canonical ranked research priority**, including the P0 stage-dependence blocker and current scheduler/generalization/configuration/reference/restart work.
 - [`solver-research-operating-model.md`](../docs/solver-research-operating-model.md): research method, stop rules, evidence roles, selection/generalization and promotion contract.
 - [`solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md): bounded action selection, continuation-value/tranche repricing, portfolio construction, configuration/racing and scheduler complexity gates.
+- [`solver-residual-state-representation.md`](../docs/solver-residual-state-representation.md): durable vocabulary for exact/residual interfaces, representative families, restricted/relaxed future representations, automaton-resource propagation, abstraction refinement and distance to tractability.
 - [`solver-budget-determinism.md`](../docs/solver-budget-determinism.md): shared-work budget and deterministic comparison contract.
 - [`solver-level-blindness.md`](../docs/solver-level-blindness.md): runtime information boundary and distinction between level-blindness and statistical generalization.
 - [`solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md): retained/default-off mechanism dispositions.
@@ -54,13 +55,14 @@ Three active dated designs turn the highest-leverage criticisms into falsifiable
 - [`2026-08-23-solver-confirmation-transfer-protocol-design.md`](2026-08-23-solver-confirmation-transfer-protocol-design.md): first renewable development → confirmation → transfer/challenge protocol, including population reclassification after exact failure inspection and parent-family grouping.
 - [`2026-08-23-solver-reference-model-capability-audit.md`](2026-08-23-solver-reference-model-capability-audit.md): current CP-SAT/reference capability and validation audit; it also reconciles the previously stale must-cross external-model support description against native legality and the CP-SAT edge-axis encoding.
 
-The 2026-08-24 [`external-research-pathfinder-synthesis`](2026-08-24-external-research-pathfinder-synthesis.md) is a **narrowing rationale**, not a fourth live roadmap. It now reconciles eleven external research memos against Pathfinder's existing experiments. The second wave sharpens residual-interface/future-opportunity reasoning, structured repair, structural failure certificates, censored continuation value, and randomized symmetry diagnosis without creating new queue items. Durable next-work language remains in the queue, scheduler policy, `solver-future-work.md`, and `variant-level-research.md`.
+The 2026-08-24 [`external-research-pathfinder-synthesis`](2026-08-24-external-research-pathfinder-synthesis.md) is a **narrowing rationale**, not another live roadmap. It now reconciles **fourteen** external research memos against Pathfinder's existing evidence. The original pairwise horizontal audit is [`2026-08-24-external-research-cross-pollination-audit.md`](2026-08-24-external-research-cross-pollination-audit.md); the final three-review cross-links are recorded separately in [`2026-08-24-third-wave-cross-pollination-addendum.md`](2026-08-24-third-wave-cross-pollination-addendum.md). Durable residual-representation vocabulary is promoted into [`../docs/solver-residual-state-representation.md`](../docs/solver-residual-state-representation.md).
 
 ### External literature reference memos
 
 These are compact, corrected research references. They are inputs to the synthesis, not implementation instructions.
 
-First wave:
+#### First wave
+
 - [`deep-research-report.md`](deep-research-report.md): LNS/ALNS/repair, emphasizing reachability, reconstruction, effective neighborhood size, and feasibility restoration.
 - [`nogood-deep-research-report.md`](nogood-deep-research-report.md): exact-state memory versus reusable structural failure explanations.
 - [`beam-deep-research-report.md`](beam-deep-research-report.md): survivor-set quality, diversity, novelty, and the state-abstraction problem.
@@ -68,12 +70,33 @@ First wave:
 - [`heuristic-symmetry-deep-research-report.md`](heuristic-symmetry-deep-research-report.md): heuristic invariance versus search equivariance and representation-induced finite-budget bias.
 - [`feasibility-deep-research-report.md`](feasibility-deep-research-report.md): exact-resource attainability, lower/upper residual capacity, topology/cuts, relaxations, and soundness cautions for exact targets.
 
-Second wave:
+#### Second wave
+
 - [`exact-attainability-upper-capacity-deep-research.md`](exact-attainability-upper-capacity-deep-research.md): attainable-resource spectra, residue summaries, equality-resource dominance, and structural upper-capacity bounds.
 - [`future-equivalence-basin-width-deep-research.md`](future-equivalence-basin-width-deep-research.md): continuation equivalence/substitutability, interface/context abstractions, completion counts, frozen structure, and basin-width proxies.
 - [`structured-repair-reconstruction-deep-research.md`](structured-repair-reconstruction-deep-research.md): plan-repair unrefinement/refinement, repair windows, dependency-guided reopening, and residual reconstruction regimes.
 - [`infeasibility-certificates-deep-research.md`](infeasibility-certificates-deep-research.md): structural/resource certificates, UNSAT cores, MUS/MCS/IIS distinctions, minimization, and safe explanation generalization.
 - [`censored-continuation-symmetry-randomization-deep-research.md`](censored-continuation-symmetry-randomization-deep-research.md): conditional residual runtime, latent instance hardness, censoring, randomized equivariance, and semantic RNG coupling.
+
+#### Third wave
+
+- [`frontier-zdd-decision-diagrams-deep-research.md`](frontier-zdd-decision-diagrams-deep-research.md): exact frontier interfaces, interface width/order, representative families, and exact/restricted/relaxed decision diagrams.
+- [`automaton-resource-global-constraints-deep-research.md`](automaton-resource-global-constraints-deep-research.md): `REGULAR`, `COST-REGULAR`, `MULTICOST-REGULAR`, exact-count hardness, solution-density search, and lazy target-membership/Parikh resource reasoning.
+- [`abstraction-refinement-backdoors-core-guided-deep-research.md`](abstraction-refinement-backdoors-core-guided-deep-research.md): CEGAR/interpolation, backdoor size/depth/treewidth, and core/MCS-guided repair/diagnosis.
+
+### Third-wave durable concepts
+
+Use [`../docs/solver-residual-state-representation.md`](../docs/solver-residual-state-representation.md) when the question is not “what did one paper say?” but “what vocabulary should current solver research use?” It consolidates:
+
+- exact/proof interfaces;
+- representative families;
+- restricted under-approximations and relaxed over-approximations;
+- predictive abstractions;
+- interface width versus basin width versus backdoor depth;
+- automaton/resource propagation as a middle layer;
+- solution-density/abstract future-mass ideas;
+- CEGAR/interpolation for refining overcoarse future signatures;
+- cores/MCSs as separate failure-explanation and repair-unrefinement objects.
 
 The P0 cross-stage dependency did **not** receive a duplicate report: [`2026-08-22-technique-census-reverse-oracle-diagnosis.md`](2026-08-22-technique-census-reverse-oracle-diagnosis.md) remains the active evidence record and already owns its enabling-prefix/lower-bound-cache next gate.
 
