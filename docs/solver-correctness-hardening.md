@@ -26,6 +26,21 @@ Use when changing hard prunes, state identity, solver/runtime rules, reusable sc
 | 15 | External-model validation in only one direction | Validate real witnesses in the model and model witnesses with the real referee; include a positive search control. UNSAT/proof claims require explicit approximation-direction reasoning. |
 | 16 | Identifier/namespace ambiguity | Corpus identity is part of level identity for files, caches, reports, checkpoints, and cross-corpus analysis. Reuse shared selectors/parsers. |
 | 17 | Stale documentation | Current behavior belongs in current contracts/queues; reports/snapshots preserve evidence. Update/archive status when implementation or promotion state changes. |
+| 18 | Unmodelled stage-history dependence | Given the same explicit level/action/config/seed and deterministic work budget, unrelated predecessor stages must not silently change search semantics, ordering, randomness, or capability. Any intended handoff must be explicit typed action state. Cache warming may change wall cost only unless a different contract is documented. Add fresh-vs-preceded differential tests for affected stages before treating sequence effects as causal evidence. |
+
+## Open research-integrity blocker: fresh vs preceded stage behavior
+
+Historical reverse-oracle/admissible-order evidence has cases where an isolated action does not reproduce a win that occurred after earlier ladder activity. Until a specific explicit handoff, mutable field, cache semantic, randomness path, or work-accounting effect explains such a difference, treat it as an **unresolved correctness/experimental-integrity issue**, not as a useful scheduler feature.
+
+Required handling:
+
+1. reproduce the action from a freshly prepared state and from the predecessor-stage sequence with identical explicit action/config/seed/work limits;
+2. diff every mutable/prepared field or generation-owned cache reachable by the action, plus work-meter and PRNG state;
+3. identify whether the difference is wall-only, work-accounting, search-order, legality, cached-value, or randomness behavior;
+4. if the predecessor contributes useful information intentionally, promote that information into a bounded typed producer -> receptor contract and add an independent control path;
+5. otherwise reset/isolate the leaked state and re-derive any isolated cap/routing conclusions that depended on the contaminated behavior.
+
+Do not tune scheduler caps or technique value around unexplained stage-history dependence. See [`solver-research-operating-model.md`](solver-research-operating-model.md) and [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md).
 
 ## Supporting contracts
 
@@ -35,6 +50,7 @@ Use when changing hard prunes, state identity, solver/runtime rules, reusable sc
 - [`solver-budget-determinism.md`](solver-budget-determinism.md): work currency, deadlines, matched-work rules.
 - [`solver-level-blindness.md`](solver-level-blindness.md): production information boundary.
 - [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md): retained prototype dispositions.
+- [`solver-research-operating-model.md`](solver-research-operating-model.md): research stop rules, generalization, and promotion discipline.
 - [`investigation-report-conventions.md`](investigation-report-conventions.md): evidence status vs current instruction.
 
 ## Closed work not to rediscover unchanged
