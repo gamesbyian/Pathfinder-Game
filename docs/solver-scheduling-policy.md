@@ -14,24 +14,28 @@ The runtime question should become:
 
 > Given this unseen level's legal features, what has happened in this solve so far, the candidate actions still available, and the remaining shared work budget, which action or continuation is worth the next quantum of work?
 
+The 2026-08-24 portfolio literature review sharpens this as a **continuation-value** problem. If an action has already consumed work `t` without solving, its next tranche should be valued conditional on having survived unsolved to `t`, not by the action's unconditional average success. A budget stop is right-censoring; natural search exhaustion is a different state and must not be treated as an ordinary timeout.
+
 Do not reduce that question to one naive scalar if doing so sacrifices rare but genuine capability. The scheduler should expose a solve/work **Pareto tradeoff**, uncertainty, and protected long-tail actions where evidence supports them.
 
 ## Governance rules
 
 1. **Adding an action expands the menu, not the default total budget.** New actions normally displace weaker residual work or are conditionally selected.
 2. **Schedule actions, not names.** The unit is `technique/config + flags/mode + budget quantum + eligibility/dependencies`, not a marketing label for a profile.
-3. **A continuation must re-earn its budget.** Reaching an early tranche does not automatically entitle the same technique to every later tranche.
-4. **Use `workSpent` across techniques.** Raw nodes remain within-technique diagnostics.
-5. **Dead-last zero-regression placement is not economic evidence.** Existing retry tiers remain current baselines but are subject to repricing, decomposition, shrinking, conditioning, reordering, or removal.
-6. **Level-blindness is necessary but not sufficient.** Scheduler rules tuned on Corpus 2 or a family trove require untouched/grouped confirmation before broad generalization claims.
-7. **Unexplained predecessor-stage dependence blocks scheduler inference.** If an action behaves differently fresh vs after unrelated stages, diagnose mutable state/accounting first.
-8. **Do not hand-author a large configuration family when systematic configuration can answer the question more efficiently.** Use racing/successive elimination or an offline configurator where feasible.
-9. **Do not optimize only the mean.** Track rare unique capability, tail cost, uncertainty, and worst-case/regression-sensitive cohorts. A high average ratio can still erase the only action capable of solving a hard phenotype.
-10. **Prefer simple policies when performance is statistically indistinguishable.** Extra rules/features create overfit surface, maintenance cost, and harder causal interpretation. Complexity must buy held-out value.
-11. **Observational conditional value is nomination evidence unless sequence is controlled.** `P(B solves | A failed)` from historical ladders can reflect who reached B, predecessor budget depletion, hidden state, code drift, or selection. Validate important sequence rules through controlled current-code execution.
-12. **Scheduler infrastructure has its own stop condition.** If oracle-frontier headroom is small or a simple static policy captures it, do not build a sophisticated dynamic/ML system for elegance.
-13. **Keep a safe fallback while evidence is immature.** A new scheduler should be able to reproduce or defer to a known-good baseline policy during rollout/debugging. Fallback existence is not permission to ship an under-validated scheduler; it is damage containment and causal isolation.
-14. **Prediction quality must be calibrated to decisions.** A model/rule that ranks actions well globally can still be badly calibrated on rare late-stage cohorts. Measure decision-specific lift/coverage, not only generic classifier accuracy.
+3. **A continuation must re-earn its budget.** Reaching an early tranche does not automatically entitle the same technique to every later tranche. Evaluate incremental solve value among runs still unsolved at tranche start.
+4. **Distinguish exhaustion from censoring.** A naturally exhausted beam/action has no continuation value in that state; a node/work-capped run only establishes that it did not solve by the cutoff.
+5. **Use `workSpent` across techniques.** Raw nodes remain within-technique diagnostics.
+6. **Dead-last zero-regression placement is not economic evidence.** Existing retry tiers remain current baselines but are subject to repricing, decomposition, shrinking, conditioning, reordering, or removal.
+7. **Level-blindness is necessary but not sufficient.** Scheduler rules tuned on Corpus 2 or a family trove require untouched/grouped confirmation before broad generalization claims.
+8. **Unexplained predecessor-stage dependence blocks scheduler inference.** If an action behaves differently fresh vs after unrelated stages, diagnose mutable state/accounting first.
+9. **Do not hand-author a large configuration family when systematic configuration can answer the question more efficiently.** Use racing/successive elimination or an offline configurator where feasible.
+10. **Do not optimize only the mean.** Track rare unique capability, tail cost, uncertainty, and worst-case/regression-sensitive cohorts. A high average ratio can still erase the only action capable of solving a hard phenotype.
+11. **Prefer simple policies when performance is statistically indistinguishable.** Extra rules/features create overfit surface, maintenance cost, and harder causal interpretation. Complexity must buy held-out value.
+12. **Observational conditional value is nomination evidence unless sequence is controlled.** `P(B solves | A failed)` from historical ladders can reflect who reached B, predecessor budget depletion, hidden state, code drift, or selection. Validate important sequence rules through controlled current-code execution.
+13. **Scheduler infrastructure has its own stop condition.** If oracle-frontier headroom is small or a simple static policy captures it, do not build a sophisticated dynamic/ML system for elegance.
+14. **Keep a safe fallback while evidence is immature.** A new scheduler should be able to reproduce or defer to a known-good baseline policy during rollout/debugging. Fallback existence is not permission to ship an under-validated scheduler; it is damage containment and causal isolation.
+15. **Prediction quality must be calibrated to decisions.** A model/rule that ranks actions well globally can still be badly calibrated on rare late-stage cohorts. Measure decision-specific lift/coverage, not only generic classifier accuracy.
+16. **Hazard/survival models are downstream tools, not default policy.** Conditional tranche yield can be estimated empirically first. “Choose highest hazard” is not generally optimal when remaining budget, action overlap, restart semantics, uncertainty, and rare exclusive solves matter.
 
 ## Runtime information boundary
 
@@ -51,9 +55,10 @@ The 2026-08-23 census/budget analysis establishes several durable facts:
 - admissible-order profiles have unequal value and some historical sequence dependence, so cap changes need real-ladder validation;
 - `ida:none` appears more distinct at deep budgets than the other canonical admissible profiles;
 - the hard residual population has materially deeper required budgets than the easy/production-solved population;
-- cheap isolated winners being omitted by production proves that routing/allocation can matter as much as new search capability.
+- cheap isolated winners being omitted by production proves that routing/allocation can matter as much as new search capability;
+- capped census data already contain the raw ingredients for conditional tranche-value analysis, including natural exhaustion for beam and censored deep runs for other families.
 
-See [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md) and [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md).
+See [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md), [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md), and [`../reports/portfolios-deep-research-report.md`](../reports/portfolios-deep-research-report.md).
 
 ## Action registry
 
@@ -68,6 +73,8 @@ Create one stable registry of meaningful candidate actions. Each action should i
 - operational family/cluster when measured;
 - current production status;
 - evidence freshness and whether value estimates are isolated, historical-sequential, or controlled-current.
+
+A continuation tranche is its own action for valuation purposes. `repair 20M→30M` need not have the same residual value as `repair 0→10M`.
 
 Do not proliferate permanent profile names simply to encode combinations. The registry should make the parameter space machine-readable enough for analysis and configuration search without turning every explored configuration into production API.
 
@@ -87,11 +94,13 @@ Candidate dimensions include scoring weights/profiles, template geometry, direct
 2. choose a bounded development population before looking at candidate outcomes;
 3. group correlated variant rows by parent;
 4. use racing/successive elimination so clearly inferior configs stop receiving levels/budget;
-5. optimize marginal portfolio contribution and solve/work Pareto behavior, not standalone solve count;
-6. account for censoring, failures, rare unique solves, and uncertainty, not just wins;
+5. optimize **marginal portfolio contribution** and solve/work Pareto behavior, not standalone solve count;
+6. account for censoring, exhaustion, failures, rare unique solves, and uncertainty, not just wins;
 7. record how many configurations/thresholds were searched and how the survivor was selected;
 8. confirm selected candidates on data not used to select them;
 9. prefer a compact production action set over retaining every explored configuration.
+
+Portfolio construction should preserve reproducible rare specialists when they add capability unavailable from cheaper actions. Conversely, many similar arms increase selection/overfit surface without adding real portfolio value.
 
 An external configurator is optional. The required idea is systematic search, early elimination, and honest selection accounting, not a particular package.
 
@@ -101,16 +110,19 @@ Do not report the best development configuration's effect size as though it were
 
 Before a live scheduler changes production order, build the following views from current evidence.
 
-### Residual-value table
+### Residual-value / continuation table
 
-For every material action/context report:
+For every material action/context and continuation tranche report:
 
 - eligible/reached population;
-- solves and unique marginal solves;
-- solve hazard by work band;
-- work quantiles on solved and failed cases;
+- **risk set at tranche start:** runs still unsolved and actually capable of receiving the tranche;
+- solves and unique marginal solves in the tranche;
+- conditional tranche success `P(t < T <= t+Δ | T > t)` where the data support that interpretation;
+- natural exhaustion versus budget/right-censored stop;
+- `workSpent` quantiles on solved and failed cases;
+- expected failed-work tax when the tranche is reached;
 - conditional success after common predecessor failures;
-- outcome overlap/substitution;
+- outcome overlap/substitution with fresh or continuing alternatives;
 - operational similarity/difference where measured;
 - current production reach and starvation/overspend status;
 - evidence freshness/provenance;
@@ -118,9 +130,11 @@ For every material action/context report:
 
 Do not compare a 3/5 niche action to a 40/500 broad action only by raw rate. Small denominators and selected cohorts need uncertainty/confirmation.
 
+Do not convert timeouts into fictional exact runtimes. Censored observations say the action survived unsolved through the cutoff. Do not keep naturally exhausted rows in a later-tranche risk set.
+
 ### Oracle frontier
 
-Estimate the best solve-vs-work frontier possible from measured action cells under fixed envelopes. Start with perfect static routing; add sequential residual routing only where the data are causally comparable.
+Estimate the best solve-vs-work frontier possible from measured action/tranche cells under fixed envelopes. Start with perfect static routing; add sequential residual routing only where the data are causally comparable.
 
 Report a **frontier**, not only one chosen operating point. Include:
 
@@ -143,7 +157,8 @@ Audit all current additive/retry stages on the current baseline. For each, ask:
 - which narrower actions actually produce those wins;
 - whether upstream improvements have made it redundant;
 - what earlier work could replace it at equal cost;
-- whether its unique solves are robust or a tiny historically selected cohort needing fresh confirmation.
+- whether its unique solves are robust or a tiny historically selected cohort needing fresh confirmation;
+- whether the stage's later tranches retain conditional value after earlier failure or merely inherit old budget entitlement.
 
 Whole-ladder retries deserve special scrutiny because one stage name can fan out into many expensive attempts.
 
@@ -194,6 +209,8 @@ Dynamic features multiply the policy search space. Add one only when:
 
 The target quantity is conditional marginal value with uncertainty, not global technique strength.
 
+Empirical tranche tables come first. Survival/hazard modeling is justified only if censoring is substantial and a model predicts continuation value better than simple tranche estimates on held-out data. Bandit or explicit value-of-computation control is a later layer still, appropriate only if repeated online decisions leave material headroom after simpler static/dynamic policies.
+
 ### Generation C: typed producer -> scheduler signals
 
 Only after measured evidence shows one stage emits information another action can exploit should a typed artifact enter scheduler state. Follow the producer/receptor contract in [`solver-research-operating-model.md`](solver-research-operating-model.md); do not create an unconstrained blackboard.
@@ -227,7 +244,7 @@ The migration should reduce first-match hand-authored bundle logic rather than p
 ## Promotion path
 
 1. **Preflight:** verify run identity, population, action IDs, deterministic work envelope, evidence role, and selection procedure.
-2. **Offline oracle/frontier:** establish plausible value before framework work.
+2. **Offline conditional-value/oracle frontier:** establish plausible value before framework work; distinguish exhaustion from censoring and value continuations by tranche.
 3. **Simple baseline:** ask how much headroom a trivial reorder/rule table captures before adding model complexity.
 4. **Stability/calibration check:** verify the candidate policy/action ranking is not driven by one tiny cohort or one data split; examine rare capability and uncertainty.
 5. **Shadow plan:** legacy scheduler still executes while the candidate scheduler records its choices without changing search/order/randomness/work.
@@ -241,15 +258,17 @@ The migration should reduce first-match hand-authored bundle logic rather than p
 
 1. Resolve the P0 fresh-vs-predecessor stage-dependence issue for any action whose isolated/live evidence conflicts.
 2. Join current production lifecycle reach and `workSpent` to existing cap/tranche census outputs.
-3. Define stable action IDs and expose the current configuration space without creating new named profiles.
-4. Compute fixed-work oracle frontiers, uncertainty, and current retry/tail economics.
-5. Test how much oracle headroom a simple static policy can capture.
-6. Build only the minimum racing/successive-elimination plumbing needed to prune existing action/config candidates offline.
-7. Prototype Generation A static scheduling under strict total work.
-8. Check policy stability/calibration and fallback behavior before adding dynamic features.
-9. Shadow and matched-work A/B it.
-10. Establish untouched confirmation/transfer evaluation before claiming broad generalization.
-11. Add dynamic telemetry only if static scheduling leaves measured headroom that the telemetry can plausibly recover.
+3. Build explicit tranche risk sets, separating natural exhaustion from right-censored budget stops, and compute conditional incremental solve/work value.
+4. Define stable action IDs and expose the current configuration space without creating new named profiles.
+5. Compute fixed-work oracle frontiers, uncertainty, and current retry/tail economics using action/tranche cells.
+6. Test how much oracle headroom a simple static policy can capture.
+7. Build only the minimum racing/successive-elimination plumbing needed to prune existing action/config candidates offline.
+8. Prototype Generation A static scheduling under strict total work.
+9. Check policy stability/calibration and fallback behavior before adding dynamic features.
+10. Shadow and matched-work A/B it.
+11. Establish untouched confirmation/transfer evaluation before claiming broad generalization.
+12. Add dynamic telemetry only if static scheduling leaves measured headroom that the telemetry can plausibly recover.
+13. Consider survival/hazard, bandit, or explicit metareasoning only if simpler conditional-value scheduling leaves demonstrated held-out headroom.
 
 Do not let scheduler infrastructure become a large project before oracle-frontier and simple-policy gates prove both headroom and need.
 
