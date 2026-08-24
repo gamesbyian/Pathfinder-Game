@@ -8,7 +8,7 @@ Canonical reference for controlled level-family/variant research.
 
 The bulk dataset is off `main` on branch `claude/variant-levels-solver-insights-tpk4qg`, roughly 2.5 GB under `data/families/`, `logs/family-census/`, and `reports/families/`. One audited artifact contains 1,962 parents, 72,965 variants, 36,622 cold solves, and 78,429 attempt records; other campaigns bring the collection to roughly 96,000 variants.
 
-That is already enough data that **new bulk generation has a presumption against it**. Before generating another large campaign, query the existing trove and state the unanswered question, why current families cannot answer it, the planned analysis, and the pilot size. Prefer small pilot → analysis → targeted expansion.
+That is already enough data that **new bulk generation has a presumption against it**. Before generating another large campaign, query the existing trove and state the unanswered question, why current families cannot answer it, the planned analysis, and the pilot size. Prefer small pilot -> analysis -> targeted expansion.
 
 Historical solver outcomes are nomination evidence until rechecked on current code. Cite the specific campaign/artifact rather than treating all variants as one homogeneous table.
 
@@ -40,20 +40,24 @@ The scientific unit is:
 
 > **parent + controlled transformation + solver-behavior change**
 
-Sibling rows are correlated. Large row count does not create independent evidence.
+Sibling rows are correlated. Large row count does not create independent evidence, and a parent with 200 variants must not silently count 200 times more than a parent with two variants when the claim is about generalization across levels/families.
 
 Rules:
 
-1. report both row count and parent-family count;
-2. split training/tuning/confirmation by **whole parent family**;
+1. report both row count and **unique parent-family count**;
+2. split training/tuning/confirmation by whole parent family;
 3. never scatter siblings across folds and call the result held out;
-4. guard against overly specific geometry/fingerprints acting as family identifiers;
-5. re-run decision-bearing historical cliffs on current code;
-6. preserve full `(parentCorpus, parentId, variantId)` identity and generation/evaluation provenance.
+4. for population summaries, state whether rows or parents are weighted and justify the choice;
+5. use parent-clustered/grouped uncertainty or parent-level summaries when inference treats families as the independent unit;
+6. guard against overly specific geometry/fingerprints acting as family identifiers;
+7. re-run decision-bearing historical cliffs on current code;
+8. preserve full `(parentCorpus, parentId, variantId)` identity and generation/evaluation provenance.
+
+A thousand near-duplicate siblings can be excellent causal evidence for one parent and terrible evidence that a rule generalizes to a thousand unrelated puzzles. Keep those uses separate.
 
 ## Discovery, confirmation, transfer
 
-Family research now uses explicit evidence roles:
+Family research uses explicit evidence roles:
 
 - **discovery/tuning families:** may be inspected freely to find boundaries, choose descriptors, fit thresholds, or select configurations;
 - **confirmation families:** held out while the candidate rule/configuration is chosen;
@@ -61,7 +65,7 @@ Family research now uses explicit evidence roles:
 
 A rule that generalizes across siblings but fails on unrelated parents is family memorization. A rule that survives held-out parents but was tuned repeatedly on the same overall stress distribution is still not proof of universal Pathfinder generalization.
 
-Once exact outcomes from a holdout have repeatedly influenced design, reclassify it as development data and replenish/replace the holdout.
+Once exact outcomes from a holdout have influenced design, reclassify it as development data and replenish/replace the holdout. Where tooling permits, prefer aggregate holdout results during iteration and defer exact failure inspection until the treatment/decision is frozen.
 
 ## What variants are for
 
@@ -93,6 +97,8 @@ Good questions include:
 
 For configuration search, use whole-parent splits and racing/successive elimination. Do not give every candidate every sibling merely because the data exist. Optimize marginal portfolio value at fixed `workSpent`, not total wins over correlated rows.
 
+If a configuration wins because one prolific family contributes dozens of sibling successes, report that concentration. Require held-out-parent value before treating it as a general scheduler action.
+
 See [`solver-scheduling-policy.md`](solver-scheduling-policy.md) and [`solver-research-operating-model.md`](solver-research-operating-model.md).
 
 ## Orientation and symmetry policy
@@ -109,6 +115,8 @@ Use symmetric families to locate:
 
 A rotate/mirror production retry requires a separate fixed-work scheduler case; it is not the default response to discovering a symmetry cliff.
 
+Do not overinterpret perfect puzzle isomorphism as a requirement that finite-budget heuristic search take identical paths. The research target is avoidable representation/order bias that harms capability, not cosmetic trace symmetry.
+
 ## Generation gate
 
 Before a new family campaign larger than a small pilot, record:
@@ -116,12 +124,14 @@ Before a new family campaign larger than a small pilot, record:
 1. the precise unanswered question;
 2. existing trove queries showing the gap;
 3. transformation/operator needed;
-4. independent unit and intended sample size;
+4. independent unit and intended number of **parents** as well as rows;
 5. analysis to be run before expansion;
 6. stop criterion if the pilot is uninformative;
-7. how confirmation families will remain untouched during tuning.
+7. expansion rule if the pilot is informative;
+8. how confirmation families will remain untouched during tuning;
+9. how parent weighting/pseudo-replication will be handled.
 
-Do not generate tens of thousands of variants merely to “have more data.”
+Do not generate tens of thousands of variants merely to “have more data.” Do not expand a campaign because the first few interesting cliffs make additional data emotionally tempting; expansion should answer a prespecified uncertainty or mechanism question.
 
 ## Evaluation-run provenance
 
@@ -129,7 +139,7 @@ Decision-bearing family solver runs use the shared experiment-manifest system an
 
 The family index checks shard completeness and attaches provenance to evidence. Historical artifacts remain readable but missing fields remain unknown; do not infer a uniform invocation contract retroactively.
 
-Generation provenance does not make old solver results current.
+Generation provenance does not make old solver results current. A current re-evaluation of selected historical cliffs should record how those cliffs were selected; it is forensic/confirmation evidence for the mechanism, not an unbiased estimate of cliff prevalence.
 
 ## Tools
 
@@ -159,4 +169,4 @@ The trove is **evidence, not backlog**. Current family work should support ranke
 4. exact/reference labels around causal boundaries;
 5. repair/restart/operator behavior across controlled relatives.
 
-Bulk census-generation for its own sake is deprioritized.
+Bulk census-generation for its own sake is deprioritized. If family analysis is no longer changing a ranked decision, stop mining it merely because the trove is large.
