@@ -1,157 +1,211 @@
-# Beam-Search Variants with Explicit Diversity
+# Beam Search with Explicit Diversity
 
-This report reviews survivor-selection methods that deliberately preserve diversity, novelty, or multiple objective trade-offs under a finite frontier. The motivating use case is constrained path construction, but most of the mature literature comes from sequence decoding, AI planning, evolutionary search, and quality-diversity optimization. Transfer claims therefore need to distinguish **evidence that a mechanism works in its native domain** from **evidence that it will preserve completable partial paths in a constrained beam search**. The latter is much less established.
+## Core problem
 
-## Diverse beam search
+Finite-width search must choose a **set** of survivors, not merely rank individual states. A beam can contain many high-scoring states yet collectively cover only one narrow region of future search space.
 
-**Diverse Beam Search (DBS)**, introduced by Vijayakumar et al., partitions a beam into groups and augments the normal sequence score with a diversity term that discourages later groups from duplicating structures already selected by earlier groups. The diversity function is user-defined and can depend on token overlap or other sequence features. Selection remains depth-local: there is no persistent archive across the whole run.
+Diversity methods ask whether some slots should be preserved for states that are meaningfully different from those already retained. The hard part is not adding diversity pressure; it is defining **difference that correlates with distinct future possibilities**.
 
-The main empirical result is real but domain-specific. The authors reported improved diversity and quality on image captioning, visual question generation, and machine translation, with relatively modest computational and memory overhead. Their strongest motivation was that ordinary neural decoding often spends many beam slots on near-paraphrases of one another. That supports the proposition that **finite beam capacity can be wasted on redundant candidates**.
+Most mature evidence comes from sequence decoding, planning, evolutionary search, and quality-diversity optimization. Success there establishes mechanisms, not direct transfer to constrained path feasibility.
 
-It does not establish that DBS is generally superior for combinatorial feasibility search. In language generation, several alternative continuations can all be acceptable outputs, and similarity is naturally defined over sequences. In constrained path search, two geometrically or historically different prefixes may have nearly identical future possibilities, while two superficially similar prefixes may differ critically in residual topology or mechanic state. Thus DBS transfers mainly as a survivor-selection principle: penalize redundant occupancy only if the similarity representation corresponds to future search opportunity.
+## Survivor-selection families
 
-## Determinantal beam search
+### Diverse Beam Search (DBS)
 
-**Determinantal Beam Search**, by Meister, Forster, and Cotterell (ACL 2021), reformulates each beam-selection step as a diverse subset-selection problem related to determinantal point processes (DPPs). A positive semidefinite kernel expresses candidate quality and pairwise similarity; subdeterminant maximization favors sets that are simultaneously high-quality and mutually dissimilar.
+DBS partitions the beam into groups. Later groups receive a penalty for resembling states already selected by earlier groups.
 
-The original report overstated two points. First, determinantal beam search should not be described as simply computing the exact maximum-determinant subset at each step without qualification: the underlying subset problem is combinatorial, and practical methods use structured/approximate optimization. Second, its empirical evidence is primarily a **language-generation case study**, not evidence of broad transfer to arbitrary search domains. The authors found competitive sequence quality while increasing diversity and presented the method as a more general framework for diverse set generation.
+- **Similarity:** user-defined sequence/feature overlap.
+- **Scope:** local to the current depth; no persistent archive required.
+- **Cost:** modest relative to ordinary beam search.
+- **Evidence:** improves output-set diversity and sometimes top output quality in neural sequence generation, where ordinary beams often waste slots on near-duplicates.
+- **Risk:** excessive diversity can displace genuinely superior states.
 
-The conceptual attraction for constrained search is that diversity is assessed at the level of the **whole survivor set**, rather than by independently perturbing candidate scores. The cost is a substantially more elaborate similarity model and subset-selection procedure. Its usefulness would depend almost entirely on whether a meaningful kernel over partial states captures distinct future possibilities rather than cosmetic path differences.
+Transferable principle: **do not spend many beam slots on candidates that are different only cosmetically**. Transfer depends entirely on whether the similarity representation reflects future search opportunity.
 
-## Stochastic beam search and conditional Poisson sampling
+### Determinantal/DPP-style subset selection
 
-Randomized survivor selection provides another route to diversity. **Conditional Poisson Stochastic Beam Search (CPSBS)**, by Meister, Amini, Vieira, and Cotterell (EMNLP 2021), replaces the deterministic top-K operation with conditional-Poisson sampling without replacement. The method was developed chiefly as a stochastic decoder and sampling scheme for sequence models.
+Determinantal Beam Search scores the survivor set jointly using a kernel encoding candidate quality and similarity. It favors high-quality sets whose members are mutually dissimilar.
 
-Its validated strengths should be stated precisely. CPSBS can produce diverse samples and supports statistically consistent estimators of expectations under the model; in neural machine-translation experiments it produced lower-variance and more efficient estimators than the stochastic-beam comparator used by the authors, including in high-entropy settings. Those are **sampling and estimation results**, not evidence that stochastic retention improves top-1 combinatorial search success.
+- **Scope:** global within one depth’s survivor set.
+- **Cost:** materially higher; subset optimization is combinatorial and practical methods require structured/approximate optimization.
+- **Evidence:** strong for diversity-quality trade-offs in language generation, not arbitrary combinatorial search.
 
-For a feasibility beam, the transferable principle is weaker but useful: deterministic score cutoffs can permanently eliminate lower-ranked states, whereas stochastic selection gives some probability of survival to states whose heuristic score may underestimate their future value. The cost is equally clear: stochasticity can discard genuinely superior states. Random retention is therefore an exploration mechanism, not a free improvement in beam quality.
+Its main conceptual value is **set-level selection**: candidate value depends partly on what else has already survived.
 
-“Reservoir sampling” should not be treated as synonymous with stochastic beam search. Reservoir sampling solves a different streaming-sampling problem. A beam algorithm could certainly reserve slots by random or reservoir-like rules, but that would be an analogy or new design choice rather than an established equivalence in the literature.
+### Stochastic retention
 
-## Pareto and multicriteria survivor selection
+Stochastic beam methods sample survivors rather than always taking deterministic top-K. Conditional-Poisson beam sampling is one principled example; reservoir-like retention is a related but different idea.
 
-A finite frontier need not be ordered by one scalar. Candidates can instead carry a vector of criteria and be selected using Pareto dominance, non-dominated sorting, crowding, lexicographic rules, or related multiobjective mechanisms.
+- **Benefit:** gives lower-ranked states some survival probability and increases coverage.
+- **Cost:** usually modest.
+- **Risk:** can discard the best-scoring candidate; diversity may be random rather than useful.
+- **Evidence:** strongest for sampling/estimation and output diversity, not improved top-1 combinatorial feasibility.
 
-The previous version gave too much evidentiary weight to a 2026 item called **Pareto Beam Search**. That item is an anonymous Technical Disclosure Commons publication describing Pareto pruning for generative retrieval, not a mature peer-reviewed research line establishing the superiority of Pareto beam search. It is useful as a concrete example of how Pareto fronts and crowding distance can be inserted into beam pruning, but it should not carry the same weight as established multiobjective evolutionary optimization or classical beam-search work.
+Useful as a baseline for asking whether deterministic ranking itself causes premature extinction.
 
-The better-supported general principle comes from multiobjective optimization: scalarization can hide candidates that are strong on different dimensions, while Pareto-based survivor selection can preserve multiple trade-offs. The limitation is also well known. As the number of objectives grows, large fractions of the population can become mutually non-dominated, reducing selection pressure and pushing the burden onto secondary rules such as crowding distance. There is also no guarantee that the chosen objectives correspond to actual completion probability.
+### Multiobjective/Pareto selection
 
-For constrained path construction, Pareto selection is therefore conceptually relevant when distinct state attributes genuinely represent different kinds of future opportunity. It is not, by itself, evidence that replacing a scalar beam score with several components will improve solves.
+States can be evaluated on several axes rather than collapsed immediately to one scalar score. Pareto fronts plus crowding/spread rules are standard in multiobjective optimization.
 
-# Exploration-focused algorithms
+- **Benefit:** preserves states strong on different dimensions.
+- **Cost:** nondominated sorting and tie-breaking grow with population and objective count.
+- **Risk:** weak states can survive because they are extreme on an irrelevant objective.
 
-## Novelty search
+The specific recent “Pareto Beam Search” example has weak evidentiary status; the mature support comes from multiobjective evolutionary selection more broadly. The transferable idea is **survival without premature scalarization**.
 
-**Novelty Search**, associated especially with Lehman and Stanley, rewards behavioral novelty rather than progress on a conventional objective. Individuals are represented by a behavior characterization, and novelty is commonly estimated from distances to nearby behaviors in the current population and/or an archive.
+## Novelty and width-based search
 
-The method has strong evidence in deceptive evolutionary-search domains, including maze navigation, where objective-driven search can be attracted toward regions that do not lead to the goal. Its central lesson is that **stepping stones need not look objectively promising when they are first encountered**.
+### Novelty search
 
-However, novelty search is not naturally a finite-width beam algorithm, and pure novelty can be wasteful when the objective is informative. It also inherits a severe representation problem: novelty is only as meaningful as the behavior descriptor and distance function. High novelty in an irrelevant descriptor space can simply force search to spend resources on unusual but useless states.
+Novelty search rewards behavioral difference from current and archived states, usually via distance in a behavior descriptor space.
 
-The transfer to constrained path search is therefore conceptual rather than algorithmic. It supports considering whether the ordinary heuristic is deceptive and whether some low-scoring prefixes should survive because they occupy genuinely different future-opportunity regions. It does not establish that an ever-growing novelty archive or k-nearest-neighbor calculation is appropriate for a beam solver.
+- **Scope:** global/archive-based.
+- **Strength:** can escape deceptive objectives by seeking new behavior rather than better score.
+- **Cost:** archive storage and repeated distance calculations.
+- **Risk:** pure novelty can wander and ignore genuine quality.
+- **Dependency:** feature/descriptor design is decisive.
 
-## Width-based search
+Evidence is strongest in deceptive evolutionary domains and robotics. It supports novelty as an exploration mechanism, not a conclusion that pure novelty should replace heuristic quality in beam search.
 
-**Width-based search** from AI planning is particularly relevant because it gives novelty an explicit search-theoretic role. In Iterated Width, IW(k), a state is retained when it makes true some tuple of up to k propositional features that has not previously been observed in the relevant novelty table. IW(1) therefore retains states that make at least one atom newly true; IW(2) uses pairs, and so on. Best-First Width Search (BFWS) combines novelty with heuristic information rather than relying on novelty alone.
+### Width-based search (IW/BFWS)
 
-The previous report incorrectly discussed IW as though larger **beam width** or “depth allowance” were its native control parameter. IW is not a beam-search algorithm. Its defining parameter is the novelty width k, together with the state-feature representation and the novelty tables used by a particular variant. Increasing k can increase completeness/coverage but also increases the combinatorial cost of tracking feature tuples.
+Width-based planning defines novelty from propositional features. A state has novelty \(k\) if some \(k\)-tuple of features becomes true for the first time. IW(k) prunes states whose novelty exceeds the bound; BFWS combines novelty with heuristic guidance.
 
-Width-based methods have substantial empirical support in classical planning and game playing. Work on Atari showed IW(1) performing at the level of strong planning baselines, and subsequent width-based methods achieved state-of-the-art or highly competitive results in several planning/game settings. These successes are especially interesting because the methods can work with weak conventional heuristics when the problem has low effective width under a useful feature representation.
+Important correction: **IW is not a beam algorithm and has no beam-width parameter**. Its controlling width is novelty tuple size \(k\).
 
-The strongest transfer lesson is not “use IW inside the beam.” It is that novelty over **factored state features** can reveal useful search directions that scalar heuristic quality misses. For a constrained path solver, the key unknown is whether there exists a compact feature vocabulary for residual obligations, topology, mechanics, and resource state whose first-seen combinations correlate with genuinely different completion opportunities.
+- **Strength:** strong planning results when relevant solutions have low structural width and ordinary heuristics are weak/deceptive.
+- **Cost:** novelty tracking; tuple cost grows rapidly with \(k\).
+- **Failure mode:** poor features or high-width problems erase the advantage.
 
-# Quality-diversity and archive-based methods
+This literature is particularly relevant conceptually because it preserves states for introducing **new feature combinations**, closer to “new future possibilities” than raw geometric dissimilarity.
 
-## Quality-diversity and MAP-Elites
+## Quality-diversity and archives
 
-**Quality-Diversity (QD)** algorithms seek a collection of high-quality solutions spread across a user-defined behavioral or feature space. In MAP-Elites, the descriptor space is discretized into cells and each occupied cell stores the best individual found for that niche.
+### MAP-Elites / quality-diversity
 
-The previous report contained a definite error: MAP-Elites does **not** guarantee that every reachable niche will be filled. Mouret and Clune explicitly note that cells can remain empty either because no solution maps to them or because the search simply fails to discover one even though one exists.
+Quality-diversity (QD) methods define a low-dimensional behavior/structure descriptor space and retain high-quality elites in many niches.
 
-QD has strong empirical support in robotics, design optimization, and evolutionary search as a way to illuminate many qualitatively different high-performing solutions. Its archive can also provide stepping stones and robustness when one solution class fails. But its native goal is usually to build a repertoire or map, not to maximize the probability of finding one exact feasible solution under a tight beam budget.
+- **Similarity:** same/near descriptor cell.
+- **Scope:** persistent global archive.
+- **Strength:** preserves multiple high-quality structural types.
+- **Risk:** bad descriptors fill the archive with irrelevant distinctions; large archives cost memory/work.
 
-Computational overhead also should not be characterized uniformly as “large.” Archive insertion in MAP-Elites can be cheap once descriptors are computed; the dominant cost may instead be evaluating candidates, generating enough trials to cover the descriptor space, or handling high-dimensional/adaptive archives. What grows rapidly is the *search burden* when descriptors produce many niches, not necessarily the cost of each archive lookup.
+MAP-Elites does **not** guarantee that every reachable niche will be discovered. Its contribution is an explicit mechanism for maintaining quality across a chosen diversity map.
 
-For constrained beam search, the transferable principle is **quality within niches**: do not let one heavily populated state class consume the entire survivor budget if other descriptor classes may preserve different futures. The difficult part is selecting descriptors whose niches have predictive meaning.
+### Archive-based novelty/elite selection
 
-## Archive-based novelty and elite selection
+Persistent archives make diversity global across time rather than only within the current beam. They can prevent repeated rediscovery of already explored behavioral regions.
 
-Archives can preserve long-term information that a depth-local beam would otherwise forget. Novelty archives retain unusual behaviors; Pareto archives preserve non-dominated solutions; QD archives retain elites within niches.
+Costs and risks:
 
-The benefit is persistence. A state or behavior can continue influencing selection after leaving the current population. The cost is that archive membership and similarity tests can increasingly dominate computation, and stale archive entries can suppress exploration if the novelty definition is poorly calibrated.
+- memory growth;
+- expensive similarity checks;
+- stale/redundant archive entries;
+- suppressing states that look similar under an abstraction but have importantly different futures.
 
-For partial-path search, archiving exact paths purely for difference is unlikely to be useful at scale. The literature instead points toward **abstraction**: archives usually operate on descriptors, objectives, or behavioral features rather than treating every trajectory as semantically unique.
+## Niching, crowding, and population diversity
 
-# Niching, crowding, and population diversity
+Evolutionary niching preserves multiple subpopulations by reducing the advantage of crowded regions or by making replacement local to similar individuals.
 
-**Fitness sharing, niching, restricted tournaments, deterministic crowding, and related evolutionary mechanisms** preserve multiple subpopulations by reducing competition between sufficiently different candidates or penalizing dense regions. They are well established in multimodal evolutionary optimization.
+Examples include fitness sharing, deterministic crowding, restricted tournaments, and quality-plus-distance pool management.
 
-The previous report overstated the dependence of these ideas on crossover and mutation. Niching and crowding are survivor-selection principles; although much of their literature is evolutionary, the underlying mechanisms do not logically require genetic recombination. Their transfer to beam search is therefore not blocked by the absence of breeding operators. The more important issue is whether their distance or niche definition corresponds to distinct search possibilities.
+Main lessons:
 
-Pairwise-distance methods can become expensive for large candidate sets, and niche radii or sharing functions can be sensitive parameters. They can also preserve diversity that is irrelevant to the objective. A population may be diverse geometrically or historically while remaining homogeneous with respect to the decisions that determine eventual feasibility.
+- diversity can preserve multiple optima/basins;
+- tuning niche radius/distance matters;
+- genotypic or geometric diversity can be useless if it does not correspond to behavioral/search diversity;
+- diversity alone often slows early convergence;
+- quality and diversity generally need balancing.
 
-## Population-diversity metrics
+These mechanisms do not inherently require crossover/mutation, but much of their empirical literature comes from evolutionary populations rather than beam search.
 
-Entropy, mean pairwise distance, minimum pairwise distance, coverage, and related statistics are useful diagnostics but should not be confused with survivor objectives. Maximizing a diversity statistic alone commonly sacrifices quality.
+## Diversity metrics are not success metrics
 
-The previous report also blurred distinct subset-selection families by saying max-min diversity is “essentially” a special case of determinantal or multiobjective selection. These approaches are related by a broad common goal but are mathematically different objectives. Max-min selection maximizes a worst pairwise-distance criterion; DPP-style selection uses determinants/volume; multiobjective selection works with dominance or trade-offs among several objectives. They should be compared rather than collapsed into one another.
+High entropy, mean pairwise distance, archive coverage, or novelty do not establish better search. Diversity is useful only if it improves end-to-end outcomes such as:
 
-# What counts as evidence that diversity helps?
+- success probability;
+- best objective/feasibility reached;
+- survival of later-useful states;
+- escape from plateaus;
+- coverage of distinct successful solution classes;
+- work to solution.
 
-The most important distinction is between **diversity as a measured property** and **diversity as useful search coverage**. A method can dramatically increase pairwise distance or archive coverage while reducing solution probability.
+A diversity mechanism that merely increases a metric while reducing solves is harmful.
 
-Research therefore evaluates diversity mechanisms against end-to-end task outcomes as well as internal diversity metrics. Depending on the domain, useful measures include:
+## The central representation problem
 
-- top-1 quality or success rate;
-- best-of-set or oracle quality;
-- time/work to first acceptable solution;
-- coverage of qualitatively distinct solution classes;
-- escape from plateaus or deceptive basins;
-- survival of candidates that later become high-quality or feasible;
-- marginal benefit of additional population/beam slots;
-- quality-diversity trade-off curves rather than diversity alone.
+For constrained path search, several notions of difference may disagree:
 
-Ablations are especially important. If a diversity mechanism raises entropy but leaves final success unchanged, it may merely be decorative. Conversely, a mechanism can help even if a generic diversity statistic barely moves, provided it preserves the *right* rare alternatives.
+- geometric path shape;
+- exact path history;
+- endpoint/location;
+- mechanic state;
+- remaining length/crossing resources;
+- outstanding obligations;
+- residual topology/connectivity;
+- future completion options.
 
-For finite-width feasibility search, the most discriminating observable is conceptually **future value of survivors**: does a selection rule preserve states that remain completable and would otherwise have been culled? This is a stronger criterion than whether the survivors look different according to a convenient metric.
+Two visually different paths can have essentially the same remaining possibilities. Two superficially similar states can differ critically because one has consumed a unique future option.
 
-# Comparison of principles
+Therefore the most important research question is not “which diversity algorithm?” but:
 
-The external evidence supports several principles, but not the strong ranking in the previous version.
+> **Which state abstraction makes similarity correspond to interchangeable future possibilities, and difference correspond to genuinely different completion opportunities?**
 
-1. **State abstraction is foundational.** Every diversity method depends on a definition of similarity, novelty, niche, or objective. In constrained path search this representation may matter more than the downstream selection algorithm. Geometric path difference, trajectory difference, residual obligations, mechanic state, and residual topology are not interchangeable notions.
+Once that representation exists, many survivor mechanisms become plausible: buckets, quotas, novelty, crowding, stochastic reserve slots, multiobjective fronts, or set-level optimization.
 
-2. **Width-based novelty has the strongest directly search-oriented precedent.** IW/BFWS demonstrates that first-seen fact combinations can be powerful search signals in planning. The transfer still depends on finding a suitable factored representation.
+## Local vs global diversity
 
-3. **Quality plus diversity is better supported than pure diversity when a meaningful quality signal exists.** DBS, DPP selection, QD, and multiobjective methods all embody different forms of this balance. None has general evidence of superiority for constrained path feasibility.
+| Method family | Diversity scope | Typical memory |
+|---|---|---|
+| DBS / crowding within beam | Current depth/population | Low |
+| DPP/set selection | Whole survivor set at current depth | Low-medium |
+| Stochastic retention | Implicit/current depth | Low |
+| Pareto/multiobjective beam | Current depth | Low-medium |
+| IW/BFWS novelty | Search history of feature tuples | Medium |
+| Novelty archive | Across run | Medium-high |
+| MAP-Elites/QD archive | Across run/niches | Medium-high |
 
-4. **Stochastic retention is a cheap conceptual hedge against heuristic error.** Its virtue is that it does not require a sophisticated diversity metric; its weakness is that randomness can consume scarce frontier capacity without preserving specifically useful alternatives.
+Local methods are cheaper and adapt quickly. Global archives can prevent long-term repetition but risk stale abstractions and memory growth.
 
-5. **Global archives are powerful but qualitatively different from local beam management.** Novelty Search and MAP-Elites show what persistent diversity can accomplish, but their memory/search budgets and objectives differ substantially from a finite-depth beam.
+## When diversity helps or hurts
 
-6. **DPP and Pareto methods are principled subset selectors, but their current transfer evidence is weak.** DPP beam search is supported mainly by language-generation experiments; the named 2026 Pareto Beam Search example is a technical disclosure rather than mature empirical literature.
+Likely to help when:
 
-7. **Niching and crowding remain relevant survivor-selection analogues.** Their main limitation is not lack of genetic operators but the same representation problem faced by every diversity mechanism.
+- heuristic score is imperfect/deceptive;
+- many beam slots contain near-equivalent futures;
+- rare solution paths require temporarily lower-scoring states;
+- multiple distinct structural basins exist;
+- wider beams otherwise collapse into more copies of the same phenotype.
 
-# Synthesis for constrained path construction
+Likely to hurt when:
 
-The literature does support the general concern that score-only beam selection can waste capacity on candidates that are individually attractive but collectively redundant. It does **not** establish that novelty search, Pareto pruning, DPPs, MAP-Elites, or any other named diversity mechanism is likely to improve a constrained path solver without knowing how partial-state similarity maps to future feasibility.
+- score is already strongly predictive;
+- diversity descriptor tracks irrelevant differences;
+- beam is so small that every diverted slot is costly;
+- archive/selection overhead consumes more work than exploration saves;
+- forced spread preserves states with little completion value.
 
-The central transferable question is therefore:
+## Relative relevance of the literature
 
-> **What representation of a partial state distinguishes genuinely different future completion possibilities?**
+**Most conceptually relevant:**
 
-Once that representation exists, many survivor-selection mechanisms become plausible: bucket quotas, novelty bonuses, crowding penalties, Pareto fronts, stochastic slots, archives, or set-level diversity objectives. Without it, sophisticated diversity machinery can simply preserve different histories that lead to the same future, or eliminate superficially redundant states whose residual possibilities are actually distinct.
+1. **State novelty/width-based reasoning:** preserves new structural feature combinations; strong planning evidence.
+2. **Quality + diversity survivor selection:** emphasizes population quality rather than individual rank alone.
+3. **Simple diversity buckets/crowding/quotas:** cheap mechanisms once a useful abstraction exists.
+4. **Multiobjective survival:** avoids premature scalarization where several partial-state qualities matter.
+5. **Stochastic reserve capacity:** cheap test of whether deterministic top-K causes extinction.
 
-The external literature is strongest as evidence for **population shaping under heuristic uncertainty**, not as evidence for a particular algorithm. For a finite-width feasibility search, diversity should ultimately be judged by whether it preserves useful future possibilities at a better solve/work trade-off than score-only retention or simply increasing the beam.
+**More speculative for constrained path search:**
 
-## Selected sources
+- full novelty archives;
+- MAP-Elites-style large QD archives;
+- determinantal/DPP selection;
+- specialized NLP beam-diversification schemes.
 
-- Vijayakumar, A. et al. (2018). **Diverse Beam Search for Improved Description of Complex Scenes.** AAAI 2018. https://doi.org/10.1609/aaai.v32i1.12340
-- Meister, C., Forster, M. & Cotterell, R. (2021). **Determinantal Beam Search.** ACL-IJCNLP 2021, 6551–6562. https://doi.org/10.18653/v1/2021.acl-long.512
-- Meister, C., Amini, A., Vieira, T. & Cotterell, R. (2021). **Conditional Poisson Stochastic Beam Search.** EMNLP 2021, 664–681. https://doi.org/10.18653/v1/2021.emnlp-main.52
-- Lipovetzky, N. & Geffner, H. (2012). Work introducing Iterated Width and planning width.
-- Bandres, W., Bonet, B. & Geffner, H. (2018). **Planning With Pixels in (Almost) Real Time.** AAAI 2018. https://doi.org/10.1609/aaai.v32i1.12095
-- Lehman, J. & Stanley, K. O. (2011). **Abandoning Objectives: Evolution Through the Search for Novelty Alone.** *Evolutionary Computation* 19(2), 189–223.
-- Mouret, J.-B. & Clune, J. (2015). **Illuminating search spaces by mapping elites.** arXiv:1504.04909.
-- Anonymous (2026). **Pareto Beam Search.** Technical Disclosure Commons. Useful as an implementation example, not treated here as mature peer-reviewed evidence.
+Their native-domain results are real, but transfer evidence is weak.
+
+## Bottom line
+
+Finite-width search should be judged on the **quality of the survivor set**, not merely the scores of its members. Diversity is valuable when it preserves different useful futures that score-only selection would erase.
+
+The crucial design object is the state abstraction. A sophisticated diversity selector over the wrong representation can preserve cosmetic variety while still losing every important completion path. Conversely, a simple bucket or quota scheme over the right structural vocabulary may capture most of the benefit.
