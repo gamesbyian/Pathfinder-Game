@@ -1,266 +1,150 @@
-# Large-Neighbourhood Search and Repair-Based Metaheuristics for Constrained Path Feasibility
+# Large-Neighbourhood Search and Repair Metaheuristics for Constrained Path Feasibility
 
-## Scope, lineage, and the central feasibility distinction
+## Core distinction
 
-Large Neighbourhood Search (LNS) is best understood as **partial destruction followed by comparatively powerful reconstruction**. Instead of making one small local move, an LNS iteration fixes part of an incumbent solution, relaxes a substantial subset of decisions, and searches the resulting subproblem. Shaw’s 1998 constraint-programming work on vehicle routing is generally treated as the foundational modern LNS reference; Schrimpf, Schneider, Stamm-Wilbrandt, and Dueck’s 2000 “ruin and recreate” work independently crystallized the closely related principle of significantly damaging a solution and rebuilding it. Pisinger and Ropke’s later synthesis places these techniques in the same broad family of large-neighbourhood metaheuristics. citeturn0search0turn22search0turn1search4
+Large Neighbourhood Search (LNS) repeatedly **destroys part of a candidate and reconstructs it with a stronger search than a small local move**. Adaptive LNS (ALNS) adds multiple destroy/repair operators and changes how often they are used. CP-LNS fixes part of a solution and lets constraint propagation plus bounded search rebuild the relaxed part.
 
-Adaptive Large Neighbourhood Search (ALNS) adds a portfolio and a control layer. Ropke and Pisinger’s canonical 2006 formulation uses multiple removal and insertion heuristics and changes their sampling frequencies according to historical performance. On more than 350 pickup-and-delivery-with-time-windows instances, their ALNS improved the best-known solution on more than half of the test set; their experiments also supported the central ALNS proposition that combining several competing subheuristics was more robust than committing to one. Pisinger and Ropke then generalized the framework across five vehicle-routing variants and reported 183 improved best-known results among 486 benchmarks, arguing that the adaptive portfolio could accommodate differing instance structure with relatively little retuning. citeturn3view0turn3view1
+For constrained path feasibility, the key distinction is between ordinary LNS and **repair toward feasibility**:
 
-Constraint-programming LNS, or CP-LNS, changes the meaning of “repair.” Once some incumbent assignments are relaxed, a CP solver performs propagation and bounded or complete search over the relaxed variables. CP is therefore not merely checking a heuristic reconstruction after the fact: propagation can eliminate inconsistent partial assignments and the search can jointly resolve strongly interacting variables. Perron, Shaw, and Furnon’s propagation-guided LNS was explicitly motivated by automatically constructing nontrivial neighbourhoods whose actual search-space size remains useful after propagation, rather than choosing a nominal number of relaxed variables that propagation immediately fixes again. citeturn3view2
-
-That distinction is unusually important for the motivating grid-path problem. Exact path length, exact self-intersection count, repeated-crossing requirements, portals, direction-dependent mechanics and turn requirements create **nonlocal dependencies**: changing one portion of a path can alter the admissibility or required state of later portions. The closest external analogue is therefore not just routing ALNS, where removed customers are independently reinsertable to a significant degree, but the CP-LNS literature on selecting groups of interacting variables and performing globally consistent reconstruction. Recent generic CP-LNS work reinforces this: improved Variable-Relationship Guided LNS combines static model structure with dynamic search information, while Dependency-Curated LNS explicitly uses variable relationships to constrain which freeze sets are sensible. citeturn4view1turn11view7
-
-There is, however, an even more fundamental issue: **ordinary LNS normally assumes that a feasible incumbent already exists. Repair toward feasibility does not.** Björdal, Flener, Pearson, Stuckey, and Tack make the point explicitly: conventional LNS “improves an initial solution” and hence is not directly applicable to a pure satisfaction problem. Their CP work turns difficult hard constraints into penalties, then seeks zero penalty; critically, they find that penalties alone can perform poorly because softened constraints cease providing useful propagation. Their non-failing propagators retain safe propagation from such constraints while preventing them from causing immediate failure, substantially improving LNS over penalty-only formulations in their experiments. citeturn14search2turn13search2
-
-This creates two distinct search regimes:
-
-| Regime | Search state | Meaning of destroy | Meaning of repair | Natural success signal |
-|---|---|---|---|---|
-| **Feasible-incumbent optimisation** | Every incumbent satisfies hard constraints | Free decisions that may yield a better feasible solution | Restore a feasible completion, preferably improving cost | Objective improvement per time, accepted moves, primal gap |
-| **Repair toward feasibility** | Candidate may violate one or more hard constraints | Free decisions implicated in violations or blocking restoration | Find a candidate with fewer violations or, ultimately, zero violations | Probability/time to first feasible solution, violation reduction, escape from violation plateaus |
-| **Satisfaction-oriented CP-LNS** | Partial or softened assignment | Relax variables/constraints so a previously impossible completion can become possible | Solver-assisted completion with propagation | Feasible-solution discovery, backtracks/failures/time |
-| **Feasible–infeasible strategic search** | Both states are permitted | Move between basins, sometimes intentionally crossing infeasible regions | Restore or improve feasibility according to penalties | Frequency and duration of feasible/infeasible excursions |
-
-The last regime has a long history outside LNS. Gendreau, Hertz, and Laporte’s TABUROUTE allowed infeasible vehicle-routing solutions during tabu search and obtained stronger benchmark results than the then-current heuristics. Modern Hybrid Genetic Search likewise deliberately maintains search mechanisms in which infeasible solutions and diversity contribute to exploration rather than treating every constraint violation as a terminal condition. citeturn18search11turn21search1
-
-For the target problem, that means empirical claims from conventional ALNS must be transferred carefully. Results showing that a destroy operator improves *objective optimisation among feasible tours* do not automatically establish that it is good at *crossing the boundary from an imperfect path into the feasible set*. The latter is closer to over-constrained CP, satisfaction LNS, feasibility-pump methods and metaheuristics that deliberately traverse infeasible regions. citeturn14search2turn11view5turn18search11
-
-The multilingual search used native terminology rather than only English translations—for example Chinese **自适应大邻域搜索 / 自适应大规模邻域搜索**, French **recherche à grand voisinage / recherche adaptative à grand voisinage**, Japanese **大規模近傍探索**, Russian **поиск в большой окрестности**, Korean **대규모 이웃 탐색**, Spanish **búsqueda de gran vecindario**, Portuguese **busca em grande vizinhança**, Italian **ricerca a grande vicinanza**, Polish **przeszukiwanie dużego sąsiedztwa**, together with native destroy–repair vocabulary. The search surfaced substantial application-oriented work and theses, including Chinese ALNS research reporting improvements over ALNS/LNS/VNS variants and Francophone data-driven-LNS doctoral work, but it did **not** reveal a separate non-English theoretical tradition that overturns the Shaw–Schrimpf–Ropke/Pisinger–CP-LNS lineage. The distinctive mechanisms found in those literatures overwhelmingly build on the same international LNS/ALNS framework. That conclusion is necessarily a literature-search inference rather than a claim of exhaustive bibliographic coverage. citeturn8search5turn8search12
-
-## Destroy and reconstruction mechanisms
-
-### Destroy or removal operators
-
-The destroy operator determines **which commitments the next subproblem is allowed to reconsider**. In many LNS systems this choice matters more than the nominal label “large neighbourhood,” because fixing the wrong variables can make the desired transition literally unreachable irrespective of how good the repair procedure is. Lombardi and Schaus characterize good LNS neighbourhood design as an art: domain-independent techniques are attractive precisely because beating random relaxation reliably without domain knowledge is difficult. Their Cost Impact Guided LNS was superior to pure random relaxation on some Steel Mill Slab experiments, but the broader lesson is not that cost impact universally wins; rather, useful variable selection is highly problem- and structure-dependent. citeturn11view1
-
-**Random removal** is the crucial baseline. It simply releases randomly chosen decisions, usually according to a target destruction size. Its assumptions are minimal, its selection cost is negligible compared with reconstruction, and it supplies unbiased diversification. The weakness is equally obvious: when feasibility violations involve tightly coupled variables, random sampling wastes many neighbourhoods on decisions that have little causal connection to the obstruction. Yet random destruction is much harder to dominate consistently than its simplicity suggests. Thomas and Schaus found random relaxation generally competitive across their heterogeneous CP benchmark set, although it was comparatively poor on the scheduling instances; Dependency-Curated LNS later found that even random freeze-set selection became competitive after the candidate dependency structure had first been curated. citeturn17view0turn11view7
-
-That latter result is an important negative finding for sophisticated operator-selection schemes: sometimes **choosing the right universe of variables matters more than using a clever selector inside that universe**. In Dependency-Curated LNS, exploiting variable relations to reduce the candidate freeze sets improved generic LNS enough that simple random selection after curation could compete with more elaborate generic heuristics. citeturn11view7
-
-**Related or Shaw removal** destroys a cluster of decisions that are mutually “similar” under a problem-specific relation. In pickup-and-delivery routing, Ropke and Pisinger-style relatedness incorporates such properties as geographic distance, service-time similarity, load and vehicle compatibility. The intention is to release a coherent piece of solution structure so that reconstruction can reorganize it globally rather than merely undo one isolated assignment. citeturn23search22
-
-Its assumption is significant: there must be a similarity metric whose proximity correlates with useful joint reconsideration. The mechanism is therefore highly transferable conceptually to a path problem **only if “relatedness” reflects actual path-state dependency rather than physical grid distance alone**. Two spatially adjacent cells may have little search relationship, while distant path positions can be tightly coupled through a portal, an exact crossing count or downstream direction state. That is an inference from the combination of Shaw-style removal and the CP literature showing the value of explicit variable-dependency information. citeturn23search22turn4view1turn11view7
-
-**Worst-, cost- or impact-based removal** preferentially releases elements with a high estimated marginal contribution to the current objective or constraint difficulty. This is an intensification mechanism: rather than asking where the search can move, it asks where the present candidate looks most defective. Cost Impact Guided LNS formalizes a related idea using solver cost and propagation information. Its natural failure mode in feasibility repair is attribution error: exact global constraints often do not have additive local blame. A self-intersection count that is one too high, for example, need not imply that a single visibly “bad” local segment can be identified independently of the rest of the path. Cost-impact results also have not shown universal superiority over random relaxation. citeturn11view1
-
-**Block, route, segment and decomposition destruction** releases an entire coherent substructure. Routing implementations commonly remove whole routes or neighbourhoods of routes; a modern systematic study of CVRP decomposition found route-based subproblems generally superior to path-based clustering alternatives, and its best barycentre-based decomposition substantially improved both ALNS and Hybrid Genetic Search relative to their undecomposed forms. This evidence is application-specific but supports a broader principle: boundaries should preferably be placed where the resulting subproblem is internally coupled yet has a manageable interface with the frozen remainder. citeturn18search6turn20search6
-
-For an ordered path, contiguous path portions are an obvious conceptual analogue, but the transfer is only medium-to-high confidence because stateful mechanics can make the true dependency graph non-contiguous. The most promising generalization from the literature is therefore **structural blocks rather than necessarily geometric blocks**. citeturn18search6turn4view1turn11view7
-
-**Propagation-guided destruction** uses information generated by the constraint solver itself. Perron, Shaw and Furnon track domain reductions during propagation to build neighbourhoods whose effective size remains near a desired level; the basic insight is that relaxing \(k\) variables does not mean that \(k\) variables remain free after propagation. If the frozen assignments force most relaxed variables immediately, the nominally large neighbourhood collapses to a tiny one. Their propagation history produces more informative neighbourhoods than counting relaxed variables alone. citeturn3view2
-
-**Explanation- and conflict-guided destruction** uses explanations of domain reductions or conflicts to identify decisions implicated in the current obstruction. Prud’homme, Lorca and Jussien developed explanation-based LNS partly because ordinary generic relaxation requires careful instance-level parameterisation and domain-specific LNS can be expensive to engineer. Their explanation-driven neighbourhoods were competitive with or superior to other state-of-the-art neighbourhoods over multiple constraint-optimisation problems and could be combined with other operators. citeturn11view2
-
-**Relationship-guided destruction** sits between pure model-based and search-history approaches. Souza, Grimes and O’Sullivan’s 2024 iVRG method combines static variable relationships in the model with dynamic performance information; on car sequencing and steel-mill-slab benchmarks it outperformed the generic approaches compared in that study. Their ablations explicitly investigate contributions from the static and dynamic information and the selection mechanism. citeturn4view0turn4view1
-
-The 2025 Dependency-Curated LNS work goes further by deriving a low-cardinality set of relevant relationships from the constraint model before neighbourhood selection. Its result that curation can make even random subsequent selection competitive is especially relevant to diagnosing poor repair search: an apparently bad “operator selector” can really be suffering from a bad **representation of neighbourhood candidates**. citeturn11view7
-
-**Learned destroy operators** replace handcrafted relatedness with a policy learned from instances. Wu, Song, Cao and Zhang’s NeurIPS 2021 method represents an integer program as a variable–constraint graph and learns, by actor–critic reinforcement learning, parallel binary decisions indicating which variables should be released; the chosen variables are then reoptimised by an IP solver. Across four IP problem classes it outperformed the authors’ LNS baselines at equal runtime and retained advantages when transferred to larger instances; experiments with Gurobi also showed benefits within the tested time budgets. citeturn19view1
-
-The evidence is strong that learned neighbourhoods **can** work, but weaker that learning is a generally superior first-line mechanism. Training cost, feature design and distribution shift are real assumptions. Recent online-bandit work has explicitly been motivated by avoiding costly offline training and limited generalisation of learned MIP policies. citeturn19view0
-
-### Reconstruction or insertion operators
-
-Destroy operators determine reachability; reconstruction determines whether the newly reachable region is actually exploited. A poor repair method can make an excellent neighbourhood appear useless because the experiment observes only the final destroyed-and-repaired pair.
-
-**Greedy insertion/reconstruction** repeatedly chooses the locally cheapest or least damaging feasible restoration. It is cheap and exploits obvious structure well, but it is myopic: early insertions can consume the degrees of freedom required for later hard elements. Ruin-and-recreate methods deliberately rely on reconstruction powerful enough to exploit the freedom created by destruction, while ALNS portfolios generally include multiple insertion rules because no single ordering reliably handles all reconstruction contexts. citeturn22search0turn3view0
-
-**Regret-\(k\) insertion** addresses that ordering problem by asking not only which item has the best current insertion, but how badly the item would suffer if its best option disappeared. A request with one excellent position and only very poor alternatives receives high regret and is inserted early. Regret insertion is explicitly associated with the Ropke–Pisinger ALNS tradition and remains a standard reconstruction heuristic in subsequent exact/metaheuristic routing work. citeturn23search4turn3view0
-
-Its conceptual transferability to a path problem depends on decomposition. If an imperfect path can be meaningfully represented as a collection of pieces for which several alternative insertion/completion locations can be evaluated, regret is attractive. If the reconstruction variables are strongly sequential and there is no meaningful independent “item insertion,” the routing formulation of regret has much less direct relevance. This is a structural limitation, not evidence that regret itself is weak. citeturn23search4turn4view1
-
-**Randomised or noisy reconstruction** intentionally refuses to take the deterministically best insertion every time. Its function is diversity rather than immediate quality: repeated destruction of similar structures does not inevitably reconstruct the same local optimum. The broader ALNS and ruin-and-recreate literature consistently couples stochastic reconstruction, stochastic destruction or non-greedy acceptance with large neighbourhoods to prevent deterministic return to the same basin. citeturn3view0turn22search0
-
-**Constraint-assisted reconstruction** delegates the completion to CP, MIP, ASP or another exact solver. It is the defining idea behind CP-LNS and matheuristic LNS: retain much of the incumbent, then use a complete search technology as a “slave” neighbourhood optimiser. Thomas and Schaus describe CP-LNS explicitly this way, with relaxation followed by bounded search over the remaining variables. citeturn15view0
-
-There are several closely related exact traditions. Fischetti and Lodi’s **local branching** constrains a MIP solver to a Hamming-distance-defined neighbourhood around an incumbent and lets the exact solver search that subspace. Danna, Rothberg and Le Pape’s **RINS** defines a neighbourhood using agreement between an incumbent integer solution and the LP relaxation and recursively optimises that region as a MIP; their experiments on difficult MIPs found RINS and guided dives superior to default CPLEX and local branching on several measures. citeturn11view3turn11view4
-
-ASP provides another reconstruction substrate. Eiter and colleagues use destroy/reconstruct LNS in Answer Set Programming, including declaratively specified neighbourhoods and solver multi-shot capabilities that avoid rebuilding the entire reasoning context each iteration; they demonstrated the approach on shift planning and semiconductor scheduling. citeturn11view6
-
-Exact repair assumes that the remaining subproblem is substantially easier than the original problem. Its principal cost is therefore **heavy-tailed reconstruction time**: a well-chosen neighbourhood can be solved cheaply and coordinate many interacting decisions, while an overly large or weakly constrained neighbourhood can turn into another instance of the original exponential search. Thomas and Schaus’s experiments make the trade-off concrete by treating both relaxation percentage and reconstruction backtrack limit as operator parameters; their portfolio contained relaxation sizes of 10%, 30% and 70% and search limits of 50, 500 and 5,000 backtracks. citeturn17view0
-
-For the motivating path feasibility problem, constraint-assisted reconstruction has **high conceptual transferability** because exact cardinalities and stateful transition rules are exactly the sort of interactions for which jointly solving a relaxed subproblem can dominate sequential greedy repair. That judgment is conceptual: it does not imply that any particular CP, SAT, ASP or MIP encoding would be efficient, since no implementation or model is available here. citeturn3view2turn11view6turn14search2
-
-## Adaptive size, operator selection, and acceptance
-
-### Neighbourhood size is an effective search-space size, not a percentage
-
-Nominal destruction size and effective neighbourhood size can diverge dramatically. A 30% relaxation whose variables are forced by propagation can behave like a tiny local move; another 30% relaxation can break enough constraints to expose an enormous combinatorial subproblem. Propagation-Guided LNS was specifically designed to control this discrepancy and build neighbourhoods whose post-propagation size remains close to a target. citeturn3view2
-
-This explains the classic LNS size trade-off. **Too small** a neighbourhood preserves useful incumbent structure and is cheap to repair, but tends to reproduce the same local basin. **Too large** a neighbourhood creates genuine structural alternatives but throws away information and makes reconstruction expensive, unreliable or effectively equivalent to restarting the original problem. The literature treats the appropriate relaxation scale as problem- and search-state-dependent rather than universal. citeturn3view2turn15view0
-
-Self-adaptive LNS therefore treats relaxation size and/or search effort as selectable parameters. Thomas and Schaus evaluated relaxation and reconstruction configurations jointly across job shop, QAP, RCPSP, steel, TSP, VRPTW, cutting stock, graph colouring, lot sizing and warehouse location. Their time-window-based weighting reduced average relative distance to best-known solutions from 0.18 for their implementation of the earlier adaptation rule to 0.12, but an exhaustive oracle-like baseline was still stronger overall. This is a particularly useful negative result: adaptation improved the practical selector without eliminating the cost of imperfect online learning. citeturn17view0turn17view1
-
-Recent DR-ALNS work controls destruction severity explicitly as part of the state-dependent policy. Reijnen and collaborators let the policy select destroy operator, repair operator, destruction fraction and acceptance temperature from generic search-state features. Their ablation showed that learned operator selection improved over the tuned conventional baseline and that adding adaptive destruction severity and acceptance control produced further gains; on their orienteering-with-time-windows benchmark the method significantly outperformed the compared approaches except one comparator at the largest tested size. citeturn4view3turn5view0
-
-Its cross-domain evidence needs restraint. The same DR-ALNS controller also improved vanilla ALNS on CVRP, TSP and multiple-TSP experiments, and the authors report especially substantial iteration-efficiency gains on CVRP. Transfer between related routing domains therefore has evidence; transfer to unrelated CSP-style path feasibility remains unestablished. citeturn5view1
-
-### Classical adaptive weighting
-
-Canonical ALNS gives each operator a weight, selects operators probabilistically according to those weights, awards scores for successful outcomes, and periodically or exponentially blends new scores into past weights. The point is not to identify a globally best operator once; the point is to preserve exploration while concentrating effort on operators that are productive for the current instance. Ropke and Pisinger’s original experiments are among the strongest classical pieces of evidence for this portfolio idea. citeturn3view0turn3view1
-
-A subtle problem is **operator runtime bias**. If one operator takes much longer than another, updating weights per call can compare them unfairly: the fast operator is evaluated and decayed many times while the slow operator retains stale information. Thomas and Schaus therefore proposed evaluation over a time window and reward in terms of objective progress per unit time. Their observed selection heat maps are informative: preferred operators differed strongly by problem class, correlated between instances of the same class, and in some classes selection stayed much more uniform. Cost-impact relaxation was nearly useless for their job-shop makespan cases, while maximum-value and precedence-based relaxations were strongly preferred; random relaxation was broadly useful but weak on the scheduling cases. citeturn15view0turn17view1
-
-Those heat maps illustrate how adaptation is validated experimentally. Successful adaptation should produce **selective concentration when real performance differences exist, but not arbitrary concentration when operators are statistically indistinguishable**. Uniform weights are therefore not inherently evidence of failure; uniformity becomes suspicious when independently measured operator yields differ sharply. citeturn17view1
-
-### Bandit-based selection
-
-Adaptive operator selection can be cast as a multi-armed bandit: each operator or neighbourhood family is an arm, and observed improvement supplies reward. Fialho, Da Costa, Schoenauer and Sebag emphasize a crucial complication: operator rewards during search are non-stationary, whereas textbook bandits often assume stationary reward distributions. Their work analyses sliding-window/dynamic UCB-type mechanisms specifically because the best operator can change as the search moves between regimes. citeturn4view2
-
-This non-stationarity matters acutely in feasibility restoration. An operator useful when a path violates length badly may be irrelevant once length is exact and only a rare crossing/state interaction remains. A selector trained on lifetime-average reward can therefore become systematically stale. This is an inference from dynamic-AOS results and the user-specified heterogeneous feasibility constraints. citeturn4view2
-
-Balans provides strong recent evidence that bandits can work at LNS scale without offline learning. Cai, Kadioğlu and Dilkina’s 2025 MIP meta-solver uses online multi-armed bandits to choose among neighbourhood definitions while an underlying MIP solver performs repair. On hard MIP benchmarks it outperformed the default MIP solver, outperformed committing to any one best single neighbourhood, and improved on the state-of-the-art MIP LNS comparator used by the authors, while requiring no supervised pretraining. citeturn19view0
-
-The 2026 Automatic Relaxation and Multi-Armed Bandit LNS work extends the idea directly into generic CP. It derives alternative relaxations from variable sharing and constraint semantics, uses these to produce several CP-LNS variants, and employs MAB selection among them. Notably, the framework is also aimed at satisfaction: it can transform a CSP into a temporary optimisation problem and was reported to accelerate first-incumbent discovery on difficult constrained optimisation. This is very recent evidence and therefore merits somewhat less confidence than the mature ALNS literature, but its conceptual match to feasibility search is unusually close. citeturn12view0
-
-### Full reinforcement learning
-
-RL can model more context than a scalar operator weight. Wu et al. learn the variables to destroy from the current IP graph; DR-ALNS uses a compact problem-agnostic search-state vector containing information about recent improvement, acceptance, gap, stagnation and remaining budget, and jointly controls operator selection, neighbourhood severity and acceptance temperature. citeturn19view1turn4view3
-
-The price is considerably greater complexity. Reijnen et al. report nontrivial training budgets that increase with problem size, and explicitly identify static tuning cost, problem-specific learned operators and scalability/generalisation as problems in preceding work. Their transfer experiments remain predominantly within routing. Balans deliberately positions online bandits as an alternative to offline-trained policies because offline learning can require expensive datasets/training and generalise poorly to unseen larger instances. citeturn5view0turn5view3turn19view0
-
-Consequently, the current evidence says **learning can improve neighbourhood choice**, not that deep learning is generally required for successful adaptation. Low-overhead weights and online bandits have stronger evidence-to-complexity ratios for a new problem class, while deep RL has the stronger ability to model contextual interactions once enough training distribution and computation exist. citeturn4view2turn19view0turn19view1
-
-### Acceptance and diversification
-
-Destruction and reconstruction specify which candidate appears; an acceptance rule determines whether search moves to it. Santini, Ropke and Hvattum compared a broad set of ALNS acceptance criteria across capacitated vehicle routing, capacitated minimum spanning tree and quadratic assignment. The alternatives separated into performance groups; strong variants included simulated annealing, threshold acceptance and record-to-record travel, with one record-to-record variant consistently undominated in their comparisons. Their study also analysed search behaviour rather than only terminal objective values. citeturn22search6turn14search3
-
-The important conclusion is not that one criterion universally wins. The result shows that **occasionally moving away from the current local optimum is important enough to be measurable across distinct problem classes**, while several different mechanisms for controlling that movement can work. It also supplies a useful negative lesson: acceptance is not a negligible implementation detail, yet no evidence establishes one universally dominant rule. citeturn22search6
-
-Transfer to pure feasibility restoration is less direct. In feasible optimisation, “worse” has a scalar objective meaning. In repair search, a candidate can exchange one violation type for another, and a scalar weighted violation score may fail to represent real progress toward the feasible manifold. Acceptance ideas remain conceptually relevant for crossing local attractors, but their routing/QAP evidence should not be interpreted as direct validation for exact-constraint feasibility. Björdal et al.’s finding that simple penalties can provide poor guidance in satisfaction LNS is precisely the warning. citeturn22search6turn14search2
-
-## Feasibility restoration and exact or constraint-assisted LNS
-
-The feasibility-restoration literature changes the objective of search from “find something better” to “find anything satisfying all hard conditions.” That sounds like a small change, but it invalidates several standard LNS assumptions.
-
-A feasible-incumbent LNS neighbourhood inherits a powerful guarantee: the fixed portion came from a valid solution, so reconstruction need only find another valid completion of a partially relaxed valid assignment. In repair-toward-feasibility, the frozen portion may itself contain the reason no feasible completion exists. An overly conservative destroy operator can therefore create a neighbourhood containing **zero feasible solutions**. Increasing reconstruction effort cannot solve that failure; only changing what is relaxed can. Björdal et al.’s satisfaction-LNS formulation and modern automatic-relaxation work directly confront this issue. citeturn14search2turn12view0
-
-### Penalty-based feasibility restoration
-
-The straightforward approach is to soften hard constraints, attach violation penalties and optimise the total penalty toward zero. Schaus’s Variable Objective LNS was explicitly proposed as a practical LNS approach for over-constrained problems, and penalty-based satisfaction formulations are the starting point of Björdal et al.’s later work. citeturn23search0turn14search2
-
-The main assumption is that the violation objective provides a useful gradient toward feasibility. That assumption frequently fails for discrete global constraints. Björdal et al. identify the concrete CP failure: replacing a difficult constraint with a penalty can remove its propagator, so the solver discovers that the constraint is difficult to satisfy only late in each reconstruction search. Penalty reduction then supplies an objective signal while simultaneously weakening the inference mechanism that could guide the search. citeturn14search2
-
-Their **non-failing propagator** preserves all propagation that can occur before a hard constraint would fail and suppresses the propagator only at the point where it would force backtracking. Combined with penalties, this significantly outperformed using penalties alone in their experimental evaluation, enabling LNS to attack hard satisfaction problems and difficult first-feasible-solution phases of optimisation. citeturn14search2
-
-This is one of the strongest conceptual matches to a constrained path feasibility search in the literature. Exact length, exact crossing count and state-machine constraints can all create candidates that are “nearly right” numerically but structurally incapable of completion. The general lesson is that a violation score and structural inference are complementary; one should not assume that a smoother numerical objective compensates for losing hard-constraint reasoning. That is an inference from the CP evidence rather than a claim about any particular path representation. citeturn14search2
-
-### Feasibility Pump and projection-style repair
-
-The MIP **Feasibility Pump** provides another important repair paradigm. Fischetti, Glover and Lodi alternate between an integer-like point obtained by rounding and a continuous LP solution obtained by minimising distance to that rounded point. In their original study of 83 difficult 0–1 MIPs, Feasibility Pump was competitive with CPLEX for first-feasible-solution speed and quality; CPLEX failed to obtain a root-level feasible solution on 19 cases, whereas the reported Feasibility Pump failures numbered three. citeturn11view5
-
-Conceptually, Feasibility Pump is a repeated **projection between two spaces**, neither of which alone satisfies all requirements. That has clear affinity with randomized repair of an imperfect combinatorial object. Its specific mechanics, however, depend strongly on a useful continuous relaxation and a meaningful distance between continuous and discrete points. Transferability to a grid path is therefore conceptual rather than direct unless the underlying formulation possesses a comparably informative relaxation. citeturn11view5
-
-A common failure of projection-style feasibility search is cycling between incompatible representations or repeatedly returning to the same rounded point; the broader Feasibility Pump literature consequently introduced perturbation and improved rounding/projection variants. The key transferable idea is that repair can be viewed as alternating between constraint systems rather than greedily eliminating violations one at a time. citeturn11view5
-
-### Exact neighbourhood optimisation
-
-Local Branching and RINS demonstrate that a generic exact solver can be useful **inside** a metaheuristic even when solving the full problem exactly is expensive. Local branching imposes an explicit neighbourhood constraint around an incumbent and invokes a black-box MIP solver on that restricted region; RINS constructs the region from agreement between the incumbent and the LP relaxation. citeturn11view3turn11view4
-
-Their assumptions differ from heuristic insertion. Exact repair does not require a reliable greedy insertion order, but it requires the selected subproblem to be tractable under a resource limit. It gains most when constraints are strongly interacting and the neighbourhood boundary leaves enough useful information fixed to make exact reasoning dramatically easier than solving from scratch. citeturn11view3turn11view4
-
-CP-LNS is particularly well suited to this arrangement because propagation naturally transfers all frozen decisions into domain reductions before search starts. Propagation Guided LNS, Cost Impact Guided LNS, Explanation-Based LNS, Variable-Relationship Guided LNS and Dependency-Curated LNS can be viewed as successive attempts to answer the same question: **which variables should remain frozen so that the residual exact subproblem is simultaneously relevant and tractable?** citeturn3view2turn11view1turn11view2turn4view1turn11view7
-
-The consistency of their results is mixed in a scientifically useful way. All demonstrate benefits on at least some benchmark families, but no generic neighbourhood generator dominates everywhere. Lombardi and Schaus explicitly note the difficulty of beating random relaxation; Thomas and Schaus find sharply different operator preferences across problem classes; Souza et al. improve generic LNS by combining model and search information; Dependency-Curated LNS shows that simplifying the candidate dependency structure can matter more than sophisticated subsequent selection. citeturn11view1turn17view1turn4view1turn11view7
-
-The evidence therefore supports **portfolio and adaptive neighbourhood generation more strongly than a universal “best” destroy rule**.
-
-### Automatic constraint relaxation
-
-The 2026 CP work on automatic relaxation is especially relevant to a search with several qualitatively different hard constraints. Rather than merely releasing variables, it analyses variable sharing and constraint semantics to identify sets of constraints that can conveniently remain enforced together while others are relaxed. The resulting neighbourhood portfolio is then controlled by a multi-armed bandit. The authors report competitive results on difficult CP optimisation and use the same framework to attack satisfaction problems and accelerate first-incumbent discovery. citeturn12view0
-
-This is conceptually distinct from ordinary removal ALNS. Sometimes the useful degree of freedom is not “which path positions are destroyed?” but “which **constraint interactions** are temporarily permitted to vary?” For a problem whose defining difficulty lies in simultaneous exact length, exact crossings and stateful mechanics, this is a high-value line of external research. Its empirical maturity is currently lower than that of classical ALNS because the principal evidence is recent. citeturn12view0
-
-## Diversity, elite pools, restarts, and stagnation
-
-ALNS is usually a single-trajectory method, but the neighbouring metaheuristic literature makes a strong case that **preserving several structurally distinct high-quality states can prevent repeated convergence into the same basin**.
-
-Vidal, Crainic, Gendreau, Lahrichi and Rei’s Hybrid Genetic Search combines aggressive local improvement with explicit adaptive population-diversity management. Their 2012 method successfully handled multidepot and periodic vehicle-routing problems and became the basis for a large family of HGS algorithms. The key conceptual departure from single-incumbent LNS is that survival is based on both solution quality and contribution to population diversity rather than objective value alone. citeturn21search1turn20search3
-
-Later routing work provides more direct evidence for **quality-and-distance pool management**. He and Hao’s split-delivery VRP memetic algorithm combines feasibility restoration, diversification-oriented mutation and a pool-update criterion based jointly on quality and distance. On 324 benchmark instances it improved 143 published upper bounds and matched the best result on another 156; the paper also reports dedicated experiments analysing the roles of its search ingredients. citeturn20search7
-
-This evidence supports elite/diversity mechanisms strongly within routing and population-based search, but only indirectly within repair-LNS. Their transferability to constrained path feasibility is nevertheless plausible: if many imperfect candidates occupy distinct structural basins—different crossing layouts, different visit orders or different state histories—maintaining only the numerically “least violated” one can erase alternative structures that are closer to an actual feasible completion in ways the violation metric does not capture. That is an inference from diversity-managed search and the non-scalar structure of the target constraints. citeturn21search1turn20search7turn14search2
-
-Elite pools have three costs. They require memory proportional to the number and representation size of stored solutions; meaningful structural-distance computation can itself be nontrivial; and diversity selection introduces another control problem, because excessive diversity can preserve objectively poor states while excessive elitism collapses the pool. HGS treats this tension explicitly through combined quality/diversity fitness rather than maintaining a simple list of best objective values. citeturn21search1
-
-### Diversity is different from randomness
-
-A randomized search can still have almost no effective diversity. If every destroy–repair sequence maps a broad range of starting points back to the same attractor, random choices merely create many trajectories with the same endpoint. Conversely, deterministic reconstruction can coexist with good global diversity if multiple distinct incumbents or neighbourhood definitions repeatedly expose different basins. Population-diversity work and ALNS operator-selection heat maps both demonstrate the importance of observing **where search actually goes**, not merely whether stochastic choices were made. citeturn21search1turn17view1
-
-Observable indicators of healthy diversity include persistent structural distance between elite solutions, different operator families leading to different basins, nontrivial distributions of outcomes across random seeds and the ability of search to leave previously dominant regions. A low number of unique structural states despite high nominal randomness is evidence that the randomness is not producing search-space diversity. These are standard interpretations of diversity-managed metaheuristic behaviour rather than properties of one particular algorithm. citeturn20search7turn21search1
-
-### Restart and stagnation handling
-
-Restarts are less standardized in the core ALNS literature than destroy/reconstruct adaptation. Classical ALNS often handles stagnation indirectly through large destruction, stochastic acceptance and operator variation rather than a hard reset. The acceptance study of Santini et al. demonstrates that controlled moves away from the incumbent matter, while population methods use explicit diversification mechanisms when search loses useful diversity. citeturn22search6turn20search7
-
-A restart is therefore best interpreted as an extreme neighbourhood: almost all incumbent information is discarded. Its attraction is that it is independent of the geometry of the local attractor; its weakness is that it also discards information that may have required substantial computation to discover. In exact LNS, an excessively large neighbourhood has essentially the same pathology—reconstruction degenerates toward solving the original problem again. citeturn3view2turn15view0
-
-Elite-based restart avoids part of that information loss by restarting from another previously promising but structurally distant state. The direct evidence comes more from adaptive-memory and population metaheuristics than from canonical ALNS, so confidence in transfer is moderate rather than very high. citeturn21search1turn20search7
-
-Stagnation itself should not be identified simply by “iterations since improvement.” A sequence of expensive exact neighbourhoods can contain fewer iterations but much more search than a sequence of cheap greedy repairs. Thomas and Schaus’s time-normalized operator analysis demonstrates why wall-clock progress and improvement per unit computation are often more meaningful than raw iteration counts. citeturn15view0turn17view0
-
-## How the literature tells what is actually failing
-
-The most informative LNS studies do more than compare final best objective values. They use **anytime curves, ablations, operator-selection frequencies, per-operator reward, multiple random seeds, time-normalised progress, neighbourhood success/failure rates and structural-diversity measures** to determine why a mechanism helps. Thomas and Schaus explicitly plot relative distance to the best-known result over time and operator-frequency heat maps; DR-ALNS uses component ablations; Wu et al. compare learned destruction against equal-time LNS baselines; Balans compares online selection against single-neighbourhood commitments; HGS-style work analyses diversity-management components. citeturn17view0turn17view1turn5view0turn19view1turn19view0turn20search7
-
-For a pure feasibility problem, terminal objective quality is replaced by **time or probability to first feasible solution**, together with intermediate quantities such as violation reduction and the fraction of neighbourhood reconstructions that remain extendable. Björdal et al.’s satisfaction-LNS work is particularly important here because it demonstrates that an apparently sensible penalty trajectory can conceal weak underlying propagation. citeturn14search2
-
-The following signatures are useful for interpreting results in the literature. They are diagnostics, not logically unique proofs; several pathologies can coexist.
-
-| Observed search behaviour | Most consistent interpretation | Why | Evidence analogue |
+| Regime | Candidate | Goal | Main difficulty |
 |---|---|---|---|
-| Many neighbourhoods repair successfully and quickly, but candidates remain extremely close to the incumbent and progress plateaus | **Neighbourhood too small or too conservative** | Reconstruction is easy because little meaningful structure is being reconsidered | PG-LNS’s distinction between nominal and effective neighbourhood size. citeturn3view2 |
-| Repair success is very low, searches routinely exhaust their resource limits and iteration throughput collapses as destruction increases | **Neighbourhood too destructive** | Each residual subproblem has become nearly as difficult as solving from scratch | CP-LNS reconstruction-size/backtrack trade-offs. citeturn15view0turn17view0 |
-| At equal size and repair budget, some destroy operators reliably produce improvements or feasible completions while others almost never do | **Poor neighbourhood choice** | Size is controlled; reachability differs according to what is released | Thomas–Schaus selection heat maps; generic-LNS studies. citeturn17view1turn4view1 |
-| Random selection becomes competitive only after dependency curation | **Neighbourhood representation/candidate set is the main problem** | Sophisticated selection was previously choosing among badly defined possibilities | Dependency-Curated LNS. citeturn11view7 |
-| Many different destroys fail in reconstruction at roughly the same stage or return similarly defective completions | **Poor reconstruction or insufficient inference** | The common factor is repair, not neighbourhood selection | Penalty-only versus non-failing-propagator satisfaction LNS. citeturn14search2 |
-| Stronger exact reconstruction dramatically increases success from the same relaxed states, despite higher per-iteration cost | **Heuristic reconstruction was leaving exploitable neighbourhoods unsolved** | Same neighbourhood, stronger search, different completion yield | CP-LNS, RINS and local-branching tradition. citeturn11view4turn15view0 |
-| Increasing exact-repair effort barely changes success, while changing the destroy set does | **Neighbourhood excludes the needed transition** | More search cannot find a feasible point outside the current neighbourhood | Satisfaction-LNS/automatic-relaxation logic. citeturn14search2turn12view0 |
-| Many random seeds converge to structurally similar candidates and repeated repair reconstructs similar patterns | **Insufficient effective diversity** | Nominal stochasticity is mapping into the same basin | Diversity-managed HGS and quality–distance pools. citeturn21search1turn20search7 |
-| A distant elite/restart state immediately produces a new search trajectory after a long plateau | **Basin entrapment/diversity deficit** is more plausible than pure budget shortage | Qualitatively different initialization changes progress discontinuously | Population/diversification evidence. citeturn20search7turn21search1 |
-| Adaptive weights remain nearly uniform although controlled measurements show large, stable operator-performance differences | **Ineffective operator adaptation** | Selector is failing to learn an observable signal | Thomas–Schaus operator-frequency analysis. citeturn17view1 |
-| Selection overreacts to fast operators and neglects slower operators with better improvement per wall-clock time | **Reward/update bias** | Per-call rewards conflate operator quality with evaluation frequency | Thomas–Schaus time-window adaptation. citeturn15view0 |
-| Operator rankings change as search progresses and a lifetime-average selector responds slowly | **Non-stationary adaptation problem** | Reward distributions are state-dependent | Dynamic bandit AOS. citeturn4view2 |
-| A bandit/ALNS selector beats every fixed neighbourhood strategy | **Real complementarity among operators** | No single static neighbourhood captures all useful search regimes | Balans; Ropke–Pisinger. citeturn19view0turn3view0 |
-| A single fixed operator equals or beats adaptive selection | **Adaptation overhead/noise may exceed portfolio value**, or one operator genuinely dominates | Adaptation is useful only when operator quality differs enough or changes over time | Thomas–Schaus’s gap to their exhaustive baseline is a cautionary example. citeturn17view0 |
-| Search is still finding new best states at substantial frequency at the cutoff, and success probability rises smoothly when runtime increases | **Insufficient budget remains plausible** | No empirical plateau has formed | Anytime-curve methodology used in self-adaptive and learned ALNS. citeturn17view0turn5view0 |
-| Best state stopped changing long ago, diversity collapsed, and additional time reproduces the same basin | **More budget alone is unlikely to be the principal remedy** | The marginal value of additional iterations has empirically approached zero | Diversity/stagnation interpretation from HGS and ALNS trajectory analyses. citeturn21search1turn17view1 |
+| Feasible-incumbent LNS | Already satisfies hard constraints | Improve objective | Find better feasible neighbour |
+| Repair toward feasibility | May violate hard constraints | Reach zero violations | Frozen structure may itself make feasibility impossible |
+| Satisfaction/CP-LNS | Partial or softened assignment | Find any completion | Keep useful propagation while permitting temporary violation |
 
-Several of these distinctions deserve emphasis.
+This matters because exact length, exact self-intersection count, repeated-crossing requirements, portals, directional/stateful mechanics, and turn requirements create nonlocal dependencies. A candidate can be numerically “closer” to feasibility while becoming structurally impossible. Results from routing ALNS therefore transfer only partially: improving feasible tours is not the same problem as crossing from an imperfect path into the feasible set.
 
-**Poor neighbourhood choice versus poor reconstruction.** A strong diagnostic is conditional repair performance. If identical reconstruction succeeds after some destroy operators and systematically fails after others of similar size, destruction is implicated. If every destroy family creates apparently promising partial states but the same repair procedure fails across them, reconstruction is implicated. Generic CP-LNS research routinely separates neighbourhood generation from the subsequent exact search precisely so these effects can be studied independently. citeturn3view2turn4view1
+A particularly important CP result is that **penalty-only feasibility repair can weaken search by removing propagation from softened hard constraints**. Satisfaction-oriented LNS performs better when it keeps safe structural inference while preventing the relaxed constraint from immediately killing the candidate. The general lesson is that violation score and structural feasibility reasoning are complementary.
 
-**Too small versus poor choice.** Small neighbourhoods often have high reconstruction success and low diversity; badly chosen neighbourhoods can be large yet still omit the variables whose joint change is required. Dependency-guided and explanation-guided methods exist because “release more variables” is not equivalent to “release the relevant variables.” citeturn11view2turn11view7
+## Destroy/neighbourhood selection
 
-**Too destructive versus poor reconstruction.** Both produce failed repairs, but their scaling is different. If modest relaxations reconstruct reliably and success collapses rapidly as size grows, subproblem complexity is implicated. If even small, apparently well-focused relaxations fail, reconstruction quality or an impossible frozen context is more likely. Propagation Guided LNS was expressly designed around this effective-size phenomenon. citeturn3view2
+Destroy choice determines which transitions are reachable. More destruction is not automatically better.
 
-**Insufficient diversity versus insufficient budget.** A budget-limited search continues exploring or improving at the deadline; a diversity-limited search recycles the same structural patterns. Measuring only the final violation score confounds these cases. HGS’s explicit distance-aware population management is evidence that structurally distinct solutions can possess algorithmic value beyond their immediate objective quality. citeturn21search1turn20search7
+- **Random relaxation:** essential baseline; cheap and often surprisingly competitive. Weak when the critical dependencies are rare or tightly coupled.
+- **Related/Shaw-style removal:** relax decisions judged structurally related. Useful only if the relation reflects real dependency, not merely geometric closeness.
+- **Worst/cost/impact removal:** target apparently damaging decisions. Can fail when global exact constraints have no reliable local blame assignment.
+- **Block/segment/decomposition removal:** relax coherent substructures. Good boundaries expose internally coupled decisions while keeping the interface to frozen structure manageable. For stateful paths, useful blocks need not be spatially or sequentially contiguous.
+- **Propagation-guided relaxation:** choose neighbourhoods by their **effective size after propagation**, not nominal number/percentage of relaxed decisions. A nominally large neighbourhood may collapse because frozen assignments force most relaxed variables.
+- **Explanation/conflict-guided relaxation:** relax decisions implicated in conflicts or propagation explanations.
+- **Relationship/dependency-guided relaxation:** use model or search relationships to define sensible freeze/relax sets.
+- **Learned destroy policies:** can outperform hand-designed policies in trained domains, but add training cost and distribution-shift risk.
 
-**Ineffective adaptation versus intrinsically weak operators.** Adaptation can only redistribute effort among available choices. If none of the operators has meaningful conditional success, better bandits merely identify several bad arms more efficiently. Conversely, if an offline oracle or controlled per-operator analysis identifies a strong operator but the adaptive algorithm rarely selects it, the control mechanism is implicated. Thomas and Schaus explicitly use an oracle-style baseline for this reason; their adaptive methods improved one another but remained weaker than the baseline overall. citeturn17view0
+A strong recurring finding is that **the representation of candidate neighbourhoods can matter more than sophisticated selection among them**. Dependency-curated LNS has shown that simple random selection can become competitive once the candidate dependency structure is improved.
 
-**Violation-score improvement versus true feasibility progress.** This distinction is especially dangerous in a repair problem with several exact global constraints. Penalty functions can decrease smoothly while the candidate remains in a region having no feasible completion, and softening a hard constraint can remove propagation that would expose that impossibility early. Satisfaction-LNS results provide direct empirical evidence for this failure mode. citeturn14search2
+## Reconstruction
 
-## Ranked synthesis for constrained grid-path repair
+Destroy determines reachability; repair determines whether the new region is actually exploited.
 
-The ranking below is about **external conceptual relevance**, not a recommendation for implementation. Confidence combines the directness of the literature to feasibility search, breadth of empirical support and closeness of the mechanism’s assumptions to an orthogonal-path CSP with exact global and stateful constraints.
+- **Greedy reconstruction:** cheap but myopic; early choices can consume scarce options needed later.
+- **Regret/foresight reconstruction:** prioritizes items or decisions whose good alternatives may disappear. Strong in routing, but transfer depends on whether the path representation admits meaningful alternative insertions.
+- **Random/noisy reconstruction:** prevents repeated return to the same basin.
+- **Constraint-assisted reconstruction:** CP, MIP, SAT/ASP, or another exact method solves the relaxed subproblem jointly. This is attractive when many decisions interact through exact global constraints.
 
-| Priority | External idea | Transferability | Evidence and rationale |
-|---|---|---|---|
-| **1** | **Treat feasibility restoration as a distinct LNS regime, retaining useful hard-constraint inference rather than relying only on scalar violation penalties** | **Very high confidence** | This is the most direct match. Björdal et al. show explicitly that ordinary incumbent-improvement LNS does not directly apply to satisfaction and that penalties alone can cripple propagation; non-failing propagation plus penalties substantially improves performance. Automatic-relaxation CP-LNS extends the same line toward first-feasible-solution discovery. Exact length/intersection/state constraints have precisely the kind of coupled structure for which “almost feasible” need not imply “extendable.” citeturn14search2turn12view0 |
-| **2** | **Constraint-assisted reconstruction of genuinely large subproblems** | **Very high confidence** | Shaw-style CP-LNS, propagation-guided LNS, local branching, RINS and ASP-LNS all support the principle of using a powerful solver to coordinate many relaxed decisions simultaneously. The mechanism is especially relevant where sequential repair can make locally attractive decisions that jointly violate global exact constraints. The main uncertainty is computational cost, which depends entirely on the unavailable representation/model. citeturn3view2turn11view3turn11view4turn11view6 |
-| **3** | **Dependency-, explanation- or propagation-guided destroy neighbourhoods rather than purely geometric/random destruction** | **Very high confidence** | Several generations of generic CP-LNS independently find value in using propagation history, explanations, model relationships and dependency curation. Stateful path mechanics make non-geometric dependencies particularly plausible. The important negative result is that no one generic selector dominates universally; curation itself can matter more than sophisticated selection. citeturn3view2turn11view2turn4view1turn11view7 |
-| **4** | **Adaptive effective neighbourhood size, including sensitivity to reconstruction cost** | **High confidence** | The small-versus-destructive trade-off is foundational to LNS. PG-LNS shows that post-propagation effective size matters more than nominal size; self-adaptive LNS and DR-ALNS show gains from treating destruction size/search effort as controllable parameters. Thomas–Schaus also demonstrate that operator runtime must be accounted for. citeturn3view2turn17view0turn5view0 |
-| **5** | **A heterogeneous destroy/repair portfolio with low-overhead online adaptation, especially time-aware weights or bandits** | **High confidence** | Canonical ALNS shows strong benefits from competing operators; Thomas–Schaus show that preferred operators vary by problem class; Balans shows an online bandit beating fixed-neighbourhood choices on hard MIPs; 2026 CP-LNS applies bandits directly to automatic relaxations. The mechanism assumes there actually are complementary operators—adaptation cannot rescue a uniformly poor portfolio. citeturn3view0turn17view1turn19view0turn12view0 |
-| **6** | **Structure-aware block/related destruction together with reconstruction rules that protect scarce completion options** | **Medium-high confidence** | Shaw relatedness, route-based decomposition and regret insertion are strongly supported in routing. The broad principles—release coherent interacting structure and deal early with decisions having few alternatives—are transferable; their standard routing implementations are less directly applicable because an exact stateful path may not decompose into independently insertable objects. citeturn23search22turn18search6turn23search4 |
-| **7** | **Explicit elite/diversity management rather than a single “best imperfect candidate” trajectory** | **Medium-high confidence** | HGS and quality–distance pool methods provide substantial empirical evidence that structural diversity and objective quality are complementary. This is particularly attractive where different imperfect paths can embody incompatible but individually valuable partial structures. Direct evidence in satisfaction-oriented path LNS is absent, so the transfer judgement is inferential. citeturn21search1turn20search7 |
-| **8** | **Controlled acceptance of regressions and other basin-escape mechanisms** | **Medium confidence** | Santini et al. find simulated annealing, threshold and record-to-record criteria among the strongest ALNS acceptance families across several optimisation classes. The evidence for escaping optimisation local optima is good; the mapping from “worse objective” to “temporarily worse feasibility” is much weaker because multidimensional constraint violations need not possess a faithful scalar ordering. citeturn22search6turn14search2 |
-| **9** | **Stagnation-triggered restart or movement to structurally distant elite states** | **Medium confidence** | Diversity-managed metaheuristics strongly support diversification after basin collapse, but canonical ALNS supplies less clean, universal evidence for hard restart schedules. A restart can also duplicate the pathological effect of an excessively destructive neighbourhood by discarding useful partial structure. citeturn20search7turn21search1turn3view2 |
-| **10** | **Deep-RL neighbourhood or controller learning** | **Medium-low confidence as a transferable first-line idea; high confidence that it can work in trained domains** | Wu et al. demonstrate learned destroy policies across four IP classes and larger-instance generalisation; DR-ALNS demonstrates contextual joint control of operators, severity and acceptance across routing variants. But training expense, distribution shift and limited cross-domain evidence remain material, while online bandits obtain significant benefits without offline training. citeturn19view1turn5view0turn5view1turn19view0 |
+Exact repair works only when the relaxed subproblem is materially easier than the original. Too-large neighbourhoods can simply recreate the original exponential search.
 
-The strongest overall conclusion is that the literature does **not** support a story in which repair search succeeds merely by “making bigger random edits.” Successful LNS systems manage a three-way interaction among **reachability, reconstructability and diversity**. The destroy mechanism must expose variables whose joint change can escape the current attractor; the neighbourhood must remain small or structured enough that reconstruction can exploit it; and the outer search must avoid repeatedly reconstructing the same basin. Propagation-guided, relationship-guided and adaptive approaches attack the first two problems, while ALNS portfolios, non-greedy acceptance and population/elite mechanisms attack the third. citeturn3view2turn4view1turn3view0turn21search1
+## Neighbourhood size
 
-For an exact constrained-path **feasibility** problem, the most consequential qualification is that progress toward zero violation is not equivalent to ordinary incumbent improvement. Standard routing ALNS begins with a feasible solution and uses destroy/reconstruct to search for a better one; satisfaction LNS must confront neighbourhoods containing no feasible completion, weak or deceptive penalty gradients and the possible loss of useful constraint propagation. The external evidence therefore makes feasibility-restoration CP-LNS, propagation/dependency-aware neighbourhoods and exact reconstruction substantially more directly relevant than conclusions drawn solely from conventional feasible-tour ALNS. citeturn3view0turn14search2turn12view0
+The useful quantity is **effective search-space size**, not percent destroyed.
 
-The second major conclusion is that **search-trajectory observables are necessary to identify the bottleneck**. A low solution probability by itself cannot distinguish a poor destroy rule, an oversized neighbourhood, weak reconstruction, diversity collapse, bad operator adaptation or an insufficient time budget. The literature distinguishes those hypotheses through repair success conditioned on operator and size, effective neighbourhood size after propagation, improvement or feasibility yield per wall-clock time, operator-selection trajectories, structural distances between states, ablations and anytime success curves. These measurements have repeatedly exposed counterintuitive results—for example random relaxation remaining competitive, sophisticated adaptation failing to reach an oracle baseline, or simple random selection becoming competitive once dependency curation fixes the underlying neighbourhood representation. citeturn11view1turn17view0turn11view7
+- Too small: cheap repair, high success, little structural change, repeated local basin.
+- Too large: real alternatives, but expensive repair and loss of useful incumbent structure.
+- Good size depends on both current search state and reconstruction strength.
 
-Finally, the evidence for **adaptation is positive but conditional**. Ropke and Pisinger establish the value of heterogeneous operator portfolios in routing; Thomas and Schaus demonstrate problem-dependent operator preferences and the importance of time-normalised learning; Fialho et al. show why nonstationarity matters; Balans shows that an online bandit can beat fixed neighbourhood policies on difficult MIPs; DR-ALNS and learned IP-LNS show additional gains from richer contextual policies. Yet adaptation cannot manufacture a useful neighbourhood or competent reconstruction from nothing. Across the literature, getting the *structural decomposition of the search problem* right remains at least as important as learning which named operator to call. citeturn3view0turn17view1turn4view2turn19view0turn19view1turn11view7
+Adaptive LNS therefore often treats destruction severity and reconstruction effort as controllable parameters. Empirical work supports adaptation, but also shows that imperfect online selectors can remain below an oracle that already knows which operator/size to use.
+
+## Operator adaptation
+
+Classical ALNS assigns weights to operators and updates them from recent performance. Bandit formulations treat operators/neighbourhoods as arms. More contextual RL controllers can jointly choose operator, severity, and acceptance policy.
+
+Important findings:
+
+- Operator preferences often differ strongly by problem class and search phase.
+- Reward is non-stationary: an operator useful early may become useless later.
+- Per-call reward can bias selection toward fast operators; progress per unit time/work is often more meaningful.
+- Adaptation helps only when the operator portfolio contains genuinely complementary useful choices.
+- Online weighting/bandits have a better evidence-to-complexity ratio for a new domain than deep RL; deep learning can help but requires training data and generalization evidence.
+
+## Acceptance, infeasible states, and diversification
+
+ALNS commonly permits non-improving moves through simulated annealing, threshold acceptance, record-to-record travel, or related rules. Across optimization domains, controlled regression helps escape local optima.
+
+Transfer to feasibility search is less direct because “worse” may be multidimensional. Trading a length violation for a topology violation is not necessarily progress. A scalar violation score can be deceptive.
+
+Feasible-infeasible strategic search and feasibility-pump-style methods reinforce the broader point: repair may need to move through states that are not monotonically closer under one scalar objective.
+
+## Diversity and elite pools
+
+Population and elite-pool methods show that **quality and structural diversity can both matter**. Maintaining only the numerically best imperfect candidate can erase structurally different candidates that occupy other basins.
+
+Useful distinction:
+
+- **Randomness**: different random choices were made.
+- **Effective diversity**: search actually reaches structurally different regions.
+
+Randomized repair can still collapse repeatedly to the same attractor. Diversity should therefore be assessed from resulting candidate structure, not from the presence of random seeds or stochastic operators.
+
+Elite pools cost memory and require a meaningful distance/descriptor. Excessive diversity can preserve weak states; excessive elitism collapses the pool.
+
+## Restart and stagnation
+
+Hard restart is an extreme destroy operation. It escapes basin-specific structure but also discards useful information and can resemble an over-large neighbourhood.
+
+Stagnation should not be defined only by iterations since improvement when operators have very different costs. Work- or time-normalized progress is more meaningful. Moving to a structurally distant elite is a softer alternative to full restart.
+
+## Diagnosing what is failing
+
+Terminal failure alone cannot distinguish destroy, repair, diversity, adaptation, or budget problems. Literature commonly uses conditional repair success, anytime curves, operator yields, neighbourhood size, structural diversity, and ablations.
+
+| Observation | Most consistent interpretation |
+|---|---|
+| Repairs are fast/successful but remain very close to incumbent | Neighbourhood too small/conservative |
+| Repair cost/exhaustion rises sharply with destruction | Neighbourhood too large |
+| Similar-size destroy operators have very different yields | Neighbourhood choice matters |
+| Random selection becomes strong only after dependency curation | Neighbourhood representation was poor |
+| Same relaxed states improve greatly under stronger reconstruction | Repair was too weak |
+| More repair effort does little, but changing destroy set helps | Needed transition lies outside neighbourhood |
+| Many seeds converge to similar structures | Effective diversity is low |
+| Distant elite changes trajectory immediately after plateau | Basin entrapment/diversity deficit is plausible |
+| Measured operator yields differ but adaptive weights do not | Selector is failing to learn signal |
+| Fast operators dominate despite worse progress/work | Reward/update bias |
+| Operator ranking changes over search | Non-stationary adaptation problem |
+| One fixed operator matches adaptive selector | Adaptation overhead/noise may exceed portfolio value |
+| New best states continue arriving near cutoff | More budget remains plausible |
+| Long plateau plus structural collapse/repetition | More budget alone is unlikely to fix principal problem |
+
+### Critical diagnostic distinctions
+
+**Destroy vs repair:** if the same repair works after some similarly sized destroy operators but not others, neighbourhood choice is implicated. If many apparently useful relaxed states all fail under the same reconstruction, repair/inference is implicated.
+
+**Too small vs wrong:** a large neighbourhood can still omit the decisions that must jointly change. Releasing more variables is not the same as releasing relevant variables.
+
+**Too large vs weak repair:** if reconstruction works at modest size and collapses as size grows, subproblem complexity is implicated. If even small focused neighbourhoods fail, repair or frozen impossibility is more plausible.
+
+**Diversity vs budget:** budget-limited search keeps discovering/improving; diversity-limited search increasingly recycles the same structures.
+
+**Adaptation vs weak portfolio:** selection cannot rescue a set of uniformly bad operators. First establish that useful operator complementarity exists.
+
+**Violation score vs feasibility:** smooth score improvement can occur inside a region with no feasible completion.
+
+## Ranked external ideas by conceptual relevance
+
+1. **Treat feasibility restoration as distinct from feasible-incumbent optimization.** Preserve useful hard-constraint inference; do not rely on scalar penalties alone.
+2. **Constraint-assisted reconstruction.** Joint reasoning is well matched to strongly interacting exact constraints, subject to subproblem cost.
+3. **Dependency/explanation/propagation-guided neighbourhoods.** Strong evidence that what is relaxed matters as much as how much.
+4. **Adaptive effective neighbourhood size.** Size should reflect residual search complexity and reconstruction cost.
+5. **Heterogeneous operator portfolios with low-overhead online adaptation.** Useful when complementary operators actually exist.
+6. **Structure-aware blocks and foresight in reconstruction.** Strong principle, but standard routing formulations transfer imperfectly to stateful paths.
+7. **Explicit structural diversity/elite management.** Strong external evidence, but mostly indirect for path-feasibility LNS.
+8. **Controlled acceptance of regressions.** Useful for basin escape; scalar feasibility ordering is a major caveat.
+9. **Restart or movement to distant elites.** Plausible after diversity collapse; full restart discards information.
+10. **Deep learned controllers.** Can work, but currently weaker as a first-line transfer than simpler adaptive mechanisms.
+
+## Bottom line
+
+Successful repair search balances **reachability, reconstructability, and diversity**:
+
+- destroy must expose decisions whose joint change can escape the current attractor;
+- the residual subproblem must remain tractable enough to reconstruct;
+- repeated repair must not collapse into the same basin.
+
+The deepest recurring lesson is representation: defining the right dependency structure and neighbourhood candidates may matter more than choosing a sophisticated selector over poorly represented alternatives.
