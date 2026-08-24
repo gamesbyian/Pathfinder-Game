@@ -40,13 +40,13 @@ Required handling:
 4. if the predecessor contributes useful information intentionally, promote that information into a bounded typed producer -> receptor contract and add an independent control path;
 5. otherwise reset/isolate the leaked state and re-derive any isolated cap/routing conclusions that depended on the contaminated behavior.
 
-Do not tune scheduler caps or technique value around unexplained stage-history dependence. See [`solver-research-operating-model.md`](solver-research-operating-model.md) and [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md).
+Do not tune scheduler caps or technique value around unexplained stage-history dependence. See [`solver-research-operating-model.md`](solver-research-operating-model.md), [`solver-mutable-storage-inventory.md`](solver-mutable-storage-inventory.md), and [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md).
 
 ## Supporting contracts
 
 - [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md): history-sensitive semantics and rule alignment.
 - [`mechanic-state-contracts.md`](mechanic-state-contracts.md): dynamic mechanic cardinality/state/model assumptions.
-- [`solver-mutable-storage-inventory.md`](solver-mutable-storage-inventory.md): scratch/pool ownership and lifecycle.
+- [`solver-mutable-storage-inventory.md`](solver-mutable-storage-inventory.md): scratch/pool ownership and lifetime, including per-solve cross-attempt memo tables.
 - [`solver-budget-determinism.md`](solver-budget-determinism.md): work currency, deadlines, matched-work rules.
 - [`solver-level-blindness.md`](solver-level-blindness.md): production information boundary.
 - [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md): retained prototype dispositions.
@@ -56,7 +56,7 @@ Do not tune scheduler caps or technique value around unexplained stage-history d
 ## Closed work not to rediscover unchanged
 
 - Exact DFS/beam transposition caching with sound identity had poor payoff; coarse beam dedup is width/diversity policy, not exact equivalence.
-- Composite bit-packing siblings were audited after the beam-key overflow; reopen for new packed representations/cardinality changes.
+- Composite bit-packing siblings were audited after the beam-key overflow; reopen for new packed representations/cardinality changes. **2026-08-23 addendum:** that rule caught a separate must-pass lower-bound memo-key collision: the cache reserved only 24 mask bits although normalized must-pass/must-turn cardinality is schema-valid through 30. The key now reserves the full 30-bit mask space and a 25-objective regression fixture deliberately exercises the former `(pos=0, mask=1<<24)` / `(pos=1, mask=0)` alias. This is a fixed latent correctness defect, not an explanation of the historical P0 ladder-only admissible-order wins.
 - The MITM frontier key was fixed for missing future state and rerun; exact frontier growth is now the conclusion.
 - Flipping-filter single-use/global crossing-order parity is settled semantics.
 - Sparse ablation normalization is centralized; extend its registry/tests instead of adding default logic.
