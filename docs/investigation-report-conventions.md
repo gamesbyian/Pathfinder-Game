@@ -15,7 +15,26 @@ Place immediately after the title:
 
 Use those status values exactly. Put implementation detail in `Decision` or the body, not free-form status text.
 
-For top-level dated reports created on or after **2026-08-20**, `npm run check:documentation-links` enforces this block. A generated top-level dated report may opt out only with `<!-- report-metadata: generated -->` immediately after its title. Generated collection reports use their collection/generator conventions.
+For **decision-bearing solver research**, also state near the status block:
+
+```markdown
+> **Evidence role:** discovery | tuning | confirmation | transfer | forensic
+> **Selection:** prespecified | observational | selected after inspecting <population/results/candidates>
+```
+
+If several candidates, thresholds, profiles, seeds, populations, metrics, or explanations were tried before the reported winner was chosen, say so and give the meaningful candidate count/range when available. Do not make a selected-on population look like an untouched confirmatory test.
+
+For top-level dated reports created on or after **2026-08-20**, `npm run check:documentation-links` enforces the core status block. A generated top-level dated report may opt out only with `<!-- report-metadata: generated -->` immediately after its title. Generated collection reports use their collection/generator conventions.
+
+## Evidence roles
+
+- **Discovery:** exploratory evidence used to generate a hypothesis, candidate, threshold, feature, or cohort. It may nominate work but is expected to be optimistic after selection.
+- **Tuning:** evidence used to choose among parameter/configuration/policy alternatives. A winner still requires independent confirmation for a broad promotion claim.
+- **Confirmation:** a candidate and primary acceptance criterion were fixed before this population was inspected for that decision. Minor debugging does not automatically invalidate confirmation; changing the treatment in response to results does.
+- **Transfer:** untouched/fresh evidence reserved to test whether a result generalizes beyond its development distribution. Once exact failures are inspected and used to redesign the treatment, that population becomes development data for later iterations.
+- **Forensic:** replay/bisection/diagnosis of historical behavior. It can establish mechanism or provenance but is not automatically current capability evidence.
+
+The same artifact can support different claims at different roles, but the report must state which claim it is being used to support.
 
 ## Rules
 
@@ -23,10 +42,29 @@ For top-level dated reports created on or after **2026-08-20**, `npm run check:d
 - **Inconclusive** names the evidence that would resolve it. If buying more evidence is not worthwhile, use `cancelled` and say why.
 - **Superseded** links its replacement; preserve the old evidence.
 - **Cancelled** explains why the original scope is no longer decision-relevant and any reopen condition.
-- **Remaining gate** is the smallest decision-bearing check, with population/acceptance criterion when known.
+- **Remaining gate** is the smallest decision-bearing check, with population and acceptance criterion when known.
 - When a later report closes a gate, link both directions.
 - An A/B applies to the implementation it tested. If participation, budget, ordering, applicability, candidate set, or interactions materially change, state whether the old verdict still applies.
+- A positive result selected from many alternatives is normally **nomination evidence** until confirmed independently. Do not report the maximum observed arm as though it were a prespecified single test.
+- A negative result closes the tested form, not every imaginable descendant. Conversely, do not indefinitely rescue a null hypothesis by changing one more threshold, budget, seed, or cohort. Reopen only when new evidence changes the mechanism premise or the original treatment was demonstrably invalid.
+- Report the intended population, actual coverage, exclusions/missing rows, deadline truncation/errors, and whether the population itself was selected because it showed the effect.
+- Family/variant rows are correlated. State the independent unit and group/split by parent when the claim depends on generalization.
+- Cross-technique cost comparisons use `workSpent`; raw nodes remain within-technique diagnostics. If treatment buys additive work, report the larger envelope rather than describing the gain as free.
 - Retained default-off solver code is not automatically active work. Reconcile against [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md); code polarity is not promotion status.
+
+## Before buying broad compute
+
+For expensive decision-bearing work, write down enough of the intended test before dispatch that a later reader can distinguish prediction from hindsight:
+
+1. treatment/configuration being tested;
+2. control/baseline and code/ref identity;
+3. evidence role and population selection rule;
+4. primary outcome and work/cost envelope;
+5. smallest result that would close the form, nominate follow-up, or justify confirmation;
+6. planned handling of multiple candidates/thresholds if the run is a sweep;
+7. stop condition for escalating to a larger population.
+
+This is lightweight precommitment, not ceremony. It exists to prevent broad sweeps from becoming retrospective threshold-fishing exercises.
 
 ## Where information belongs
 
@@ -52,12 +90,14 @@ Before calling an investigation complete:
 
 1. Set the final status and remove stale active wording.
 2. Link final evidence and separate measurement from inference.
-3. Update the current surface that owns the decision: queue, opt-in ledger, or deferred-work index as appropriate.
-4. Ensure feature/flag descriptions do not advertise a stale gate.
-5. Update the authoritative topic/tool contract if reusable behavior changed.
-6. Add predecessor/successor links for follow-ups.
-7. If implementation changed after the decisive A/B, explicitly decide whether the verdict still applies; otherwise record a new gate.
-8. Archive concluded plans/notebooks when they make current-state retrieval harder.
-9. Run `npm run check:documentation-links`.
+3. State evidence role, selection procedure, intended/actual population, and material alternatives tried for decision-bearing solver work.
+4. Update the current surface that owns the decision: queue, opt-in ledger, or deferred-work index as appropriate.
+5. Ensure feature/flag descriptions do not advertise a stale gate.
+6. Update the authoritative topic/tool contract if reusable behavior changed.
+7. Add predecessor/successor links for follow-ups.
+8. If implementation changed after the decisive A/B, explicitly decide whether the verdict still applies; otherwise record a new gate.
+9. If a selected/tuned positive is being promoted broadly, point to independent confirmation or explicitly limit the claim.
+10. Archive concluded plans/notebooks when they make current-state retrieval harder.
+11. Run `npm run check:documentation-links`.
 
 This convention is prospective. Older reports need not be reformatted unless revised, but stale status discovered in them must still be reconciled with current authorities.
