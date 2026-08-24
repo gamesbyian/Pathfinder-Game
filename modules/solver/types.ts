@@ -1,43 +1,122 @@
+// Solver-local type contracts. Type-only module (no runtime exports) — referenced by solver
+// modules via `import type { T } from './types.js'` (ADR 0011 / docs/typing.md).
+
 import type { IntHashMap } from './int-hash-map.js';
 
+/**
+ * The solver's mutable DFS/beam search state (see search-state.ts `createState`). All masks are
+ * 32-bit integers; all keys are packed. Typed arrays are indexed by packed key (KEY_SPACE) or by
+ * objective index.
+ */
 export interface SolverSearchState {
+    /** packed cell keys of the current path */
     path: number[];
+    /** visit count per cell (KEY_SPACE) */
     visited: Uint16Array;
+    /** per-cell axis bits: 1=H used, 2=V used (KEY_SPACE) */
     edgeUsage: Uint8Array;
+    /** intersection count so far */
     ints: number;
+    /** bit i set while must-pass[i] is unvisited */
     mustMask: number;
+    /** bit i set while must-cross[i] is unsatisfied */
     mustCrossMask: number;
+    /** crossing count per must-cross cell */
     crossCounts: Uint8Array;
+    /** bit i set once must-pass[i] is visited */
     mpVisitedMask: number;
+    /** portal jumps so far (subtracted from counted length) */
     portalJumps: number;
+    /** bit i set once flipper i has been used */
     flipperUsedMask: number;
     lastWasPortalJump: boolean;
+    /** bit i set while surround[i] has unvisited neighbors */
     surroundMask: number;
+    /** per surround cell: 8-bit unvisited-neighbor mask */
     surroundNeighborRemainingMasks: Uint8Array;
+    /** bit i set while must-turn[i] is unsatisfied */
     mustTurnMask: number;
+    /** bit i set while adj-turn[i] is unsatisfied */
     adjTurnMask: number;
 }
 
+/**
+ * Ablation config (null/absent = production defaults; most features on, experimental opt-ins off).
+ * Primarily a bag of boolean feature flags
+ * (`SCORE_*`/`PRUNE_*`/`STRATEGY_*`/`PROFILE_*`/`TEMPLATE_*`), plus two special non-boolean controls
+ * read by `attempts.ts` ordering: `ATTEMPT_ORDER` and `_randomSeed`.
+ */
+export interface AblationConfig {
+    ATTEMPT_ORDER?: string;
+    _randomSeed?: number;
+    [flag: string]: boolean | string | number | undefined;
+}
+
+/**
+ * One solver attempt configuration (gate × profile × optional template/beam). Built by
+ * `getAttemptConfigs`; a `beamWidth` selects beam search (else DFS).
+ */
 export interface AttemptConfig {
     profileName: string;
-    templateName?: string | null;
-    beamWidth?: number | null;
+    template: StructuralTemplate | null;
+    beamWidth?: number;
+    minBudgetFraction?: number;
     diverseBeam?: boolean;
+    /** Dispatches to repairSearchFromGate (repair-search.js's iterated-local-search
+     *  fallback) instead of DFS/beam. Mutually exclusive with beamWidth. */
     repair?: boolean;
+    /** Only meaningful alongside `repair: true`. Enables repair-search.ts's must-turn
+     *  exit-guidance nudge (EXIT_GUIDANCE_EPSILON_BOOST) for this attempt only — see
+     *  attempts.ts's repairMustTurnBiasedAttempt and data/stress/README.md's S043 writeup. Kept as a
+     *  SEPARATE, later attempt rather than turned on for the ordinary repair attempt because the
+     *  nudge measurably regressed an already-solved must-turn cluster level (S030) even at very
+     *  low probabilities — appending it as its own attempt (which only ever runs after the
+     *  unbiased repair attempt has already failed) makes the risk purely additive: a level whose
+     *  ordinary repair attempt succeeds never reaches this one. */
     repairMustTurnBiased?: boolean;
+    /** Only meaningful alongside `repair: true`. Enables repair-search.ts's shared turn-aware
+     *  selective bias (enableTurnBias) for this attempt only. Added default-OFF, ONLY under an
+     *  explicit STRATEGY_REPAIR_TURN_BIAS ablation flag (production null-cfg never adds it), and
+     *  placed FIRST among the repair configs so the early probe tries it first — turn bias solves
+     *  its levels fast (~6 s), and wired last it only won in the ~60 s fallback. Placing it first can
+     *  displace an ordinary-repair probe solve into the (slower) fallback; that is acceptable churn,
+     *  not a veto — the project bar is net-monotonic-after-recovery (retain gains, recover any
+     *  standing regression), which the corpus-2 refresh's before/after solved-count + timing A/B is
+     *  what prices. See reports/2026-07-22-repair-stagnation-turnbias-production-wiring-validation.md
+     *  and the investigation synthesis. */
     repairTurnBiased?: boolean;
+    /** Dispatches to admissible-order-search.ts's admissibleOrderSearch instead of DFS/beam/repair.
+     *  `profileName` selects the tie-break profile (admissible slack is always the primary
+     *  ordering), not a DFS/beam scoring profile in the usual sense. Routed by
+     *  attempts.ts's getAttemptConfigs (see ADMISSIBLE_ORDER_PROFILES) as a last-resort tier run in
+     *  its own dedicated budget slice by orchestration.ts's solveLevel, after the main ladder,
+     *  repair fallback, and attraction-diversity pass have all failed — mirroring the repair
+     *  fallback's own separate-tier pattern. Also reachable standalone via scripts/method-probe.mjs's
+     *  `--only=ida:<profile>` for isolated per-level testing. Mutually exclusive with beamWidth/repair.
+     *  See admissible-order-search.ts's own doc for what the technique is and isn't. */
     admissibleOrder?: boolean;
+    /** Only meaningful alongside `admissibleOrder: true`. Skips the soft-score tie-break entirely
+     *  (admissible-order-search.ts's rankByAdmissibleSlack receives `null` instead of a resolved
+     *  ScoringProfile), reproducing the technique's ORIGINAL ordering from before the same-day
+     *  tuning experiment made the tie-break unconditional — see that file's own doc. `profileName`
+     *  is ignored when this is set (still required as a string by the type, conventionally 'none').
+     *  A real, if small, population of the technique's earliest validated solves specifically
+     *  needed this no-tie-break ordering and stopped reproducing once every profile (including
+     *  'default') started tie-breaking unconditionally. */
     admissibleOrderNoTieBreak?: boolean;
+    /** Only meaningful alongside `admissibleOrder: true`. Dispatches to admissible-order-search.ts's
+     *  admissibleOrderSearchLDS instead of calling admissibleOrderSearch directly. TESTED AND
+     *  REJECTED (2026-07-24, see that function's own doc and reports/2026-07-24-admissible-order-
+     *  search-corpus2-validation.md): measured against all 117 of this technique's validated solves,
+     *  LDS used MORE nodes on every level that solved within the standard budget and regressed 9 of
+     *  117 into outright timeout — kept only as an opt-in, zero-default-risk, documented negative
+     *  result, reachable via scripts/method-probe.mjs's `ida:<profile>(lds)`; never produced by
+     *  attempts.ts/ADMISSIBLE_ORDER_PROFILES and not a candidate for production wiring without new
+     *  evidence. */
     admissibleOrderLds?: boolean;
-    seedSalt?: number;
-    flags?: Record<string, boolean>;
 }
 
-export interface AblationConfig {
-    [key: string]: boolean | number | undefined;
-}
-
-/** A scoring weight vector. Missing values use the policy defaults at the read site. */
+/** A move-scoring weight profile (policy). All weights optional; each defaults to 1. */
 export interface ScoringProfile {
     goalAttractionWeight?: number;
     objectiveAttractionWeight?: number;
@@ -235,18 +314,17 @@ export interface PrepLevel {
     /** Research-only repair choice sink for diagnosing shared-draw/survivor-order interactions. */
     _repairChoiceResearchObserver?: RepairChoiceResearchObserver | null;
     /** Memoization cache for mustPassLowerBound, lazily created — see lower-bounds.ts. Sound to
-     *  share across every attempt/gate within one solveLevel() call only because cache warming is
-     *  semantically inert: the bound is a pure function of (pos, state.mpVisitedMask) for a fixed
-     *  level/prep, and a hit must equal a fresh computation exactly. Keyed by one packed Number
-     *  reserving the full schema-valid 30-bit visited mask; with current packed cell keys the
-     *  composite stays below 2^50, safely inside Number's exact-integer range. The cache is never
-     *  cleared mid-solve, so it is intentional cross-attempt mutable state and belongs in
-     *  fresh-vs-preceded diagnostics even though prep itself is recreated for every solveLevel(). */
+     *  share across every attempt/gate within one solveLevel() call (same prep instance for all
+     *  of them): the bound is a pure function of (pos, state.mpVisitedMask) alone, nothing
+     *  attempt/gate-specific. Keyed by a single packed number (see lower-bounds.ts), never
+     *  cleared mid-solve — prep itself is recreated fresh per solveLevel() call, so the cache
+     *  can never leak across levels or across separate solves of the same level. IntHashMap (not
+     *  a plain Map) — see int-hash-map.ts — since this is the hottest cache in the solver and the
+     *  key space is too large (~2^44) for a dense array. */
     _mpLowerBoundCache?: IntHashMap;
     /** Memoization cache for mustCrossLowerBound, lazily created — see lower-bounds.ts. Same
-     *  cross-attempt semantic-inertness requirement as _mpLowerBoundCache, extended with each
-     *  pending cell's crossCounts/axis state in the cache key (must-cross's bound depends on more
-     *  than just the mask). */
+     *  safety argument as _mpLowerBoundCache, extended with each pending cell's crossCounts/axis
+     *  state in the cache key (must-cross's bound depends on more than just the mask). */
     _mcLowerBoundCache?: IntHashMap;
 
     // Distance/lower-bound precomputation. The objective-indexed arrays below are ALWAYS set by
