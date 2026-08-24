@@ -13,19 +13,27 @@ Dates and narrative experiment names belong in `reports/`, `archive/`, `history/
 | Doc | Role |
 |---|---|
 | [`architecture.md`](architecture.md) | Application structure and code ownership. |
-| [`architecture-unification-debt.md`](architecture-unification-debt.md) | Remaining duplicate-authority/architecture debt. |
-| [`change-recipes.md`](change-recipes.md) | Cross-boundary schema/state/telemetry changes. |
+| [`architecture-unification-debt.md`](architecture-unification-debt.md) | Remaining duplicate-authority, mutable-lifetime, and architecture debt; includes P0 search-stage state isolation. |
+| [`change-recipes.md`](change-recipes.md) | Cross-boundary schema/state/telemetry changes plus solver-policy/data-generation experiment preflight recipes. |
 | [`testing.md`](testing.md) | Validation and finish-line gates. |
 | [`tooling-catalog.md`](tooling-catalog.md) | CLI, probe, batch, and workflow discovery. |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy. |
-| [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) | What solver technique/config names actually change in operation, how the major search families relate, and the active operational-similarity census proposal. |
-| [`solver-scheduling-policy.md`](solver-scheduling-policy.md) | **ASAP / HIGH PRIORITY:** evidence-driven ordering, bounded portfolio allocation, dynamic scheduling, and current budget-tranche conclusions. |
-| [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | **ASAP / HIGH PRIORITY:** architecture-level runtime refactors and already-tested negatives. |
-| [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) | Ranked live solver priority and current experiment dispositions. |
-| [`solver-research-operating-model.md`](solver-research-operating-model.md) | Solver research/evidence method. |
-| [`variant-level-research.md`](variant-level-research.md) | Variant/family research and trove use. |
-| [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) | Default-off mechanism dispositions. |
-| [`solver-future-work.md`](solver-future-work.md) | Deferred/reopen ideas. |
+| [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) | **Canonical ranked live solver research priority.** Read before specialist proposal docs. |
+| [`solver-research-operating-model.md`](solver-research-operating-model.md) | Solver research/evidence method, stop rules, promotion contract, configuration/selection discipline. |
+| [`solver-scheduling-policy.md`](solver-scheduling-policy.md) | Evidence-driven action selection, fixed-work allocation, portfolio repricing, configuration/racing, generalization and complexity gates. |
+| [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) | What technique/config names actually change in operation and bounded operational-similarity research. |
+| [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | Profile-led runtime work plus bounded native/WASM feasibility gate. |
+| [`solver-level-blindness.md`](solver-level-blindness.md) | Cold runtime information boundary **and distinction between level-blindness and generalization**. |
+| [`solver-budget-determinism.md`](solver-budget-determinism.md) | Work/budget/deadline reproducibility and shared-envelope scheduler rules. |
+| [`solver-correctness-hardening.md`](solver-correctness-hardening.md) | Correctness/state/provenance invariants, including unexplained stage-history dependence. |
+| [`variant-level-research.md`](variant-level-research.md) | Variant/family research, existing trove use, parent-held-out discipline, and generation gates. |
+| [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) | Default-off mechanism dispositions and removal/retention rules. |
+| [`solver-future-work.md`](solver-future-work.md) | Deferred/reopen ideas with mechanism/pilot/success/failure/promotion gates. |
+| [`investigation-report-conventions.md`](investigation-report-conventions.md) | Investigation status, evidence role, selection disclosure, and lightweight precommitment schema. |
+| [`solver-mutable-storage-inventory.md`](solver-mutable-storage-inventory.md) | Scratch-storage contracts. |
+| [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md) | Solver/game semantic boundary. |
+| [`solver-solution-profile.md`](solver-solution-profile.md) | Known-solution behavioral fingerprints; offline hypothesis labels, not production routing features. |
+| [`mechanic-state-contracts.md`](mechanic-state-contracts.md) | Dynamic mechanic state/bounds/model support. |
 | [`typing.md`](typing.md) | TypeScript model and `.ts` source / `.js` import rule. |
 | [`command-glossary.md`](command-glossary.md) | Runtime flow names and implementation locations. |
 | [`ui-accessibility.md`](ui-accessibility.md) | Dialog/focus/keyboard/accessibility conventions. |
@@ -34,30 +42,33 @@ Dates and narrative experiment names belong in `reports/`, `archive/`, `history/
 | [`hint-curation.md`](hint-curation.md) | Player hint selection/diversity. |
 | [`hint-variety-search.md`](hint-variety-search.md) | Varied-hint search behavior. |
 | [`hint-workbench.md`](hint-workbench.md) | Hint research CLI. |
-| [`mechanic-state-contracts.md`](mechanic-state-contracts.md) | Dynamic mechanic state/bounds/model support. |
-| [`investigation-report-conventions.md`](investigation-report-conventions.md) | Investigation status/decision/gate schema. |
-| [`solver-level-blindness.md`](solver-level-blindness.md) | Cold-capability information boundary. |
-| [`solver-budget-determinism.md`](solver-budget-determinism.md) | Work/budget/deadline reproducibility and shared-envelope scheduler budget rules. |
-| [`solver-correctness-hardening.md`](solver-correctness-hardening.md) | Correctness-hardening taxonomy. |
-| [`solver-mutable-storage-inventory.md`](solver-mutable-storage-inventory.md) | Scratch-storage contracts. |
-| [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md) | Solver/game semantic boundary. |
-| [`solver-solution-profile.md`](solver-solution-profile.md) | Known-solution behavioral fingerprints. |
+
+## Solver research reading order
+
+For a new solver optimization/research task, do not begin from whichever specialist experiment document looks interesting.
+
+1. [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md): what matters now.
+2. [`solver-research-operating-model.md`](solver-research-operating-model.md): what evidence is acceptable and which practices are blocked.
+3. Relevant program doc: scheduler/configuration, speed, variants, beam/lineage, exact/shadow, etc.
+4. [`tooling-catalog.md`](tooling-catalog.md): smallest existing instrument that can answer the question.
+5. Dated reports/raw artifacts only as evidence for the specific hypothesis.
+
+This order is deliberate. Historical evidence and specialist tooling must not silently outrank the current queue.
 
 ## Research instruments
 
-Presence does not imply current priority.
+Presence does not imply current priority or production readiness.
 
-| Doc | Role |
+| Doc | Role / evidence limit |
 |---|---|
-| [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md) | Active second-order census questions, findings, and follow-up analyses; pair outcome similarity with the implementation-side taxonomy in [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md). Current scheduler-facing budget-cap evidence is in [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md). |
-| [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) | Read-only exact/oracle-labelled probes. |
-| [`solver-winning-lineage-survival-analysis.md`](solver-winning-lineage-survival-analysis.md) | Beam lineage observation. |
-| [`solver-ablation.md`](solver-ablation.md) | Feature-flag ablation lab. |
-| [`solver-required-length-sweep.md`](solver-required-length-sweep.md) | Required-length scaling. |
+| [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md) | Rebuildable census evidence and nominations. Current queue/scheduler policy overrides its local “next questions.” |
+| [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) | Read-only exact/oracle-labelled probe discovery. Shadow success nominates a live experiment; selected probes require confirmation. |
+| [`solver-winning-lineage-survival-analysis.md`](solver-winning-lineage-survival-analysis.md) | Beam lineage observation. Known-lineage survival is a diagnostic proxy, not the production objective. |
+| [`solver-ablation.md`](solver-ablation.md) | Broad exploratory ablation lab. Its wall-bounded many-arm rankings are nomination evidence, not promotion verdicts. |
+| [`solver-required-length-sweep.md`](solver-required-length-sweep.md) | Correlated within-level scaling/diagnostic sweep; parent lengths are not independent samples. |
+| [`solver-solution-profile.md`](solver-solution-profile.md) | Solution-derived offline descriptors for hypothesis generation; direct production lookup is forbidden. |
 
-Current scheduler budget evidence: [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md) establishes that beam searches are cheap/self-exhausting screens, plain repair has material late 20M–50M capability, and deep ordinary DFS/IDA work should compete for residual budget rather than receive automatic full-depth entitlement. Policy consequences live in [`solver-scheduling-policy.md`](solver-scheduling-policy.md) and [`solver-budget-determinism.md`](solver-budget-determinism.md).
-
-Operational-similarity research: [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) records that many named techniques are shared-engine weight/config variants rather than independent algorithms and defines the missing pairwise operational census. Use it with the outcome matrix, not instead of it.
+Current scheduler budget evidence: [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md). It establishes that beam searches are often cheap/self-exhausting screens, plain repair has material late capability, and deep ordinary DFS/IDA work should compete for residual budget rather than receive automatic entitlement. Policy consequences live in [`solver-scheduling-policy.md`](solver-scheduling-policy.md) and [`solver-budget-determinism.md`](solver-budget-determinism.md).
 
 Prior experiment evidence: [`../reports/README.md`](../reports/README.md). Stress corpora: [`../data/stress/README.md`](../data/stress/README.md). Broad rules/gotchas: [`../DEVELOPER_REFERENCE.md`](../DEVELOPER_REFERENCE.md), load selectively.
 
