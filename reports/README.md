@@ -18,12 +18,12 @@ Loose `YYYY-MM-DD-<topic>.md` files are evidence, not a live queue. Do not recon
 
 - [`solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md): **canonical ranked research priority**, including the P0 stage-dependence blocker and current scheduler/generalization/configuration/reference/restart work.
 - [`solver-research-operating-model.md`](../docs/solver-research-operating-model.md): research method, stop rules, evidence roles, selection/generalization and promotion contract.
-- [`solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md): bounded action selection, portfolio repricing, configuration/racing and scheduler complexity gates.
+- [`solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md): bounded action selection, continuation-value/tranche repricing, portfolio construction, configuration/racing and scheduler complexity gates.
 - [`solver-budget-determinism.md`](../docs/solver-budget-determinism.md): shared-work budget and deterministic comparison contract.
 - [`solver-level-blindness.md`](../docs/solver-level-blindness.md): runtime information boundary and distinction between level-blindness and statistical generalization.
 - [`solver-opt-in-experiment-ledger.md`](../docs/solver-opt-in-experiment-ledger.md): retained/default-off mechanism dispositions.
 - [`solver-future-work.md`](../docs/solver-future-work.md): deferred ideas with pilot/success/stop gates.
-- [`variant-level-research.md`](../docs/variant-level-research.md): family/variant evidence and independent-unit rules.
+- [`variant-level-research.md`](../docs/variant-level-research.md): family/variant evidence, symmetry first-divergence policy, and independent-unit rules.
 - [`solver-architecture.md`](../docs/solver-architecture.md): durable implementation reference.
 
 A dated report can remain valid evidence after its recommendation is superseded. Prefer its explicit status/evidence-role/selection/decision block, then reconcile with the current topic reference before acting.
@@ -54,14 +54,25 @@ Three active dated designs turn the highest-leverage criticisms into falsifiable
 - [`2026-08-23-solver-confirmation-transfer-protocol-design.md`](2026-08-23-solver-confirmation-transfer-protocol-design.md): first renewable development → confirmation → transfer/challenge protocol, including population reclassification after exact failure inspection and parent-family grouping.
 - [`2026-08-23-solver-reference-model-capability-audit.md`](2026-08-23-solver-reference-model-capability-audit.md): current CP-SAT/reference capability and validation audit; it also reconciles the previously stale must-cross external-model support description against native legality and the CP-SAT edge-axis encoding.
 
-The 2026-08-24 [`external-research-pathfinder-synthesis`](2026-08-24-external-research-pathfinder-synthesis.md) is a **narrowing rationale**, not a fourth live roadmap. It reconciles external literature on survivor selection, repair/LNS, and learned failure against Pathfinder's existing experiments, and sharpens queue items #4, #6, and #7 into three premise-first tracks: A/D beam future-equivalence, repair reachability vs reconstructability, and sound structural failure reasons beyond existing exact-state caches/prunes. Durable next-work language lives in the queue and `solver-future-work.md`.
+The 2026-08-24 [`external-research-pathfinder-synthesis`](2026-08-24-external-research-pathfinder-synthesis.md) is a **narrowing rationale**, not a fourth live roadmap. It now reconciles all six external research reviews against Pathfinder's existing experiments and sharpens current work around continuation value, beam future-equivalence, repair reachability/reconstructability, structural failure reasons, symmetry first-divergence, and residual future opportunity. Durable next-work language lives in the queue, scheduler policy, `solver-future-work.md`, and `variant-level-research.md`.
+
+### External literature reference memos
+
+These are compact, corrected research references. They are inputs to the synthesis, not implementation instructions:
+
+- [`deep-research-report.md`](deep-research-report.md): LNS/ALNS/repair, emphasizing reachability, reconstruction, effective neighborhood size, and feasibility restoration.
+- [`nogood-deep-research-report.md`](nogood-deep-research-report.md): exact-state memory versus reusable structural failure explanations.
+- [`beam-deep-research-report.md`](beam-deep-research-report.md): survivor-set quality, diversity, novelty, and the state-abstraction problem.
+- [`portfolios-deep-research-report.md`](portfolios-deep-research-report.md): sequential portfolios, censoring, continuation value, marginal contribution, and complexity ladder.
+- [`heuristic-symmetry-deep-research-report.md`](heuristic-symmetry-deep-research-report.md): heuristic invariance versus search equivariance and representation-induced finite-budget bias.
+- [`feasibility-deep-research-report.md`](feasibility-deep-research-report.md): exact-resource attainability, lower/upper residual capacity, topology/cuts, relaxations, and soundness cautions for exact targets.
 
 The P0 cross-stage dependency did **not** receive a duplicate report: [`2026-08-22-technique-census-reverse-oracle-diagnosis.md`](2026-08-22-technique-census-reverse-oracle-diagnosis.md) remains the active evidence record and already owns its enabling-prefix/lower-bound-cache next gate.
 
 ## Current census/scheduler evidence
 
 - [`2026-08-20-technique-census-reconciliation.md`](2026-08-20-technique-census-reconciliation.md) records successful population census run `32240161854`; [`2026-08-19-technique-census-design.md`](2026-08-19-technique-census-design.md) is its design/calibration record. The census matrix is heavily mined **development evidence**, not a fresh confirmation set.
-- [`2026-08-23-technique-budget-cap-efficiency.md`](2026-08-23-technique-budget-cap-efficiency.md) is the current budget-depth interpretation of that census: beam searches are often cheap/self-exhausting screens, plain repair has material deep yield, and deep ordinary DFS/IDA continuations should compete for residual work rather than receive automatic entitlement. Durable policy lives in [`solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md) and [`solver-budget-determinism.md`](../docs/solver-budget-determinism.md).
+- [`2026-08-23-technique-budget-cap-efficiency.md`](2026-08-23-technique-budget-cap-efficiency.md) is the current budget-depth interpretation of that census: beam searches are often cheap/self-exhausting screens, plain repair has material deep yield, and deep ordinary DFS/IDA work should compete for residual work rather than receive automatic entitlement. Durable policy lives in [`solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md) and [`solver-budget-determinism.md`](../docs/solver-budget-determinism.md).
 
 Repository-wide current open-question reconciliation: [`2026-08-23-documentation-open-question-reconciliation.md`](2026-08-23-documentation-open-question-reconciliation.md). Older loose-thread inventory: [`2026-08-06-documentation-loose-threads-audit.md`](2026-08-06-documentation-loose-threads-audit.md), itself dated evidence.
 
