@@ -22,7 +22,7 @@ The observer distinguishes known support through:
 
 Useful telemetry includes support/family coverage, extinction depth/cause, cull rank/margin, and work spent after final known support.
 
-Observation OFF/ON parity is mandatory. Enabling the observer must not change solution, canonical work, scoring, retention, tie order, or randomness.
+Observation OFF/ON parity is mandatory. Enabling the observer must not change solution, canonical work, scoring, retention, tie order, randomness, or cache/memo lifetime.
 
 ## Interpretation
 
@@ -32,15 +32,27 @@ Known hints/solutions are incomplete. Therefore:
 - a solved control may lose every known labelled lineage and later find an unknown valid route;
 - a score/width extinction is a nomination for exact or contrastive follow-up, not proof that the scorer chose an infeasible branch;
 - exact-prefix CP-SAT can strengthen the diagnosis when both competing prefixes are supported by the oracle model;
-- unsupported/timeout oracle cases remain abstentions.
+- unsupported/timeout oracle cases remain abstentions;
+- the fact that a labelled path eventually wins does not imply every earlier prefix on it was the only or even the best viable continuation;
+- a lineage selected because it exhibits an attractive failure shape is discovery data, not an unbiased estimate of how often that mechanism occurs.
 
-The most useful contrast is often same-parent siblings around a real extinction event, because history is identical up to the choice being studied.
+The most useful contrast is often same-parent siblings around a real extinction event, because geometry/history can be controlled closely. Those siblings are still one family for generalization; do not count sibling rows as independent confirmation.
 
 ## Current workflow
 
-For active Priority 2 work, use the current queue's held-out family-namespaced extinction set and compare the narrowest candidate explanation against a simple K-vs-2K width control at equal surrounding policy.
+For active **Priority 4 beam-retention work**, use bounded extinction/inversion cohorts and compare the narrowest candidate explanation against simple controls at equal surrounding policy. Do not turn the lineage instrument into another full-corpus census unless a decision specifically requires it.
 
-Neutral descriptors can be tested in shadow mode before any production scorer change. Candidate families include future completion interfaces, residual topology/volume, crossing slack/resource commitments, and mechanic-state descriptors. A descriptor should generalize across unrelated parent families rather than merely separate one vivid case.
+Preferred sequence:
+
+1. locate a reproducible extinction boundary under unchanged search;
+2. ask whether exact-prefix/reference evidence can label the competing material live/dead;
+3. identify the specific score, dedup, width, or diversity decision that removed viable material;
+4. test one neutral descriptor or retention mechanism in shadow mode;
+5. compare against simple controls such as width-only or random/neutral retention at matched work;
+6. replicate the mechanism across unrelated parent families;
+7. only then test a live production counterfactual, with confirmation outside the cases used to design it.
+
+Candidate descriptor families include future completion interfaces, residual topology/volume, crossing slack/resource commitments, and mechanic-state descriptors. If several descriptors are tried on the same extinction cohort, report the selection process. The best separator from that cohort is not independently validated merely because it has a clean margin.
 
 For family/variant selection and statistical cautions see [`variant-level-research.md`](variant-level-research.md). For broader shadow/oracle rules see [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md) and [`solver-research-operating-model.md`](solver-research-operating-model.md).
 
@@ -48,4 +60,12 @@ For family/variant selection and statistical cautions see [`variant-level-resear
 
 A lineage finding earns a live counterfactual only after it identifies a recurring generic distinction. Possible receptors include score terms, retention reservoirs/quotas, diversity descriptors, or typed failure artifacts for another technique.
 
-Do not jump from “the known path was culled” to copying the known path, global beam widening, or exact-level special treatment. The production change must remain level-blind and be judged at matched total work.
+Promotion requires more than “known valid material survived longer”:
+
+- the treatment must improve actual cold solve/work behavior, not only labelled-lineage survival;
+- it must compete inside the relevant aggregate work envelope;
+- gains and losses must be measured on the population that reaches the decision;
+- a selected/tuned descriptor must survive independent confirmation;
+- level/family identity and known-path compatibility remain offline labels only.
+
+Do not jump from “the known path was culled” to copying the known path, global beam widening, or exact-level special treatment. Do not optimize the observer metric itself as though known-lineage survival were the production objective.
