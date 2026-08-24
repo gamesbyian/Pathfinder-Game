@@ -111,7 +111,11 @@ test('mustCrossLowerBound cache is semantically inert at the supported 8-cell bo
     const level = makeMustCrossLevel(8);
     const targetIndex = 7;
     const targetMask = 1 << targetIndex;
-    const pos = PACK(10, 1);
+    // MC[7] is at (9,7). Stand directly above it so a first H crossing (therefore a required V
+    // second approach) is materially nearer than a first V crossing (required H approach).
+    // The earlier (10,1) fixture made both approach distances equal and therefore could not
+    // detect an omitted first-axis component in the memo key.
+    const pos = PACK(9, 1);
     const prep = prepLevel(level);
 
     // Warm the shared per-prep table with the same pending cell but the opposite first-cross axis.
