@@ -1,9 +1,9 @@
 # Restart versus continuation-value audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-24 — July repair-probe seed-diversity work, August 23 late-probe multi-seed promotion, scheduler continuation-value literature, and current budget policy
-> **Decision:** repair seed diversity is real and already production-relevant, but existing positive evidence is predominantly additive-budget evidence. Do not infer that restarting is better than continuing. The next restart experiment must compare fresh seeded runs against continuation at the same aggregate `workSpent`.
-> **Remaining gate:** on a prespecified hard residual development population, compare one continued repair action to a small fixed set of fresh repair seeds under identical total `workSpent`, charging failed seeds and preserving exact seed/action provenance; report solve probability, work distribution, exclusivity and uncertainty.
+> **Last evidence:** 2026-08-24 — July repair-probe seed-diversity work, August 23 late-probe multi-seed promotion, scheduler continuation-value literature, current budget policy, and static audit of the current repair-late-probe execution controls
+> **Decision:** repair seed diversity is real and already production-relevant, but existing positive evidence is predominantly additive-budget evidence. Do not infer that restarting is better than continuing. The intended next experiment is equal aggregate `workSpent`; the current exposed late-probe experiment knob controls **nodes**, not per-arm work, so the experiment is not yet faithfully runnable by merely changing `REPAIR_LATE_PROBE_NODE_BUDGET`.
+> **Remaining gate:** first provide or reuse a bounded research execution path that can cap each continuation/restart arm in canonical `workSpent` while preserving fixed seeds and charging failed arms. Then, on a prespecified hard residual development population, compare one continued repair action to the primary two-seed split under identical total work. Do not substitute equal node caps or equal wall time.
 > **Evidence role:** discovery
 > **Selection:** observational — this audit reconciles previously selected/tuned repair-seed experiments and current scheduler questions; it is not independent confirmation.
 
@@ -71,16 +71,53 @@ Run seed 0 continuously to aggregate work `W`.
 
 ### Restart arm
 
-Split the same total work across a prespecified sequence of fresh seeds, for example:
+Run seed 0 to `W/2`, then seed 1 fresh to `W/2` if the first half has not solved.
 
-- seed 0 to `W/2`, then seed 1 fresh to `W/2`; or
-- four fixed seeds to `W/4` each.
+This two-seed 50/50 split is the **primary first treatment**. Do not simultaneously optimize seed count and split. A four-seed `W/4` schedule or asymmetric split is a later development treatment only if the primary comparison shows credible headroom.
 
-The exact split is part of the treatment and must be fixed before looking at the comparison population.
-
-Both arms spend at most the same aggregate `workSpent`.
+Both arms spend at most the same aggregate `workSpent`; a restart-arm success before the envelope ends spends only the work actually consumed, just as an early continuation success does.
 
 Do not compare “one 5M run” with “four additional 5M seeds” and call the latter a restart policy. That is a budget expansion.
+
+## Execution-readiness audit: current knob is the wrong currency
+
+The current solver has excellent **measurement** support for this experiment but not yet an exposed **arm-level control** in the required currency.
+
+`orchestration.ts` records, per attempt:
+
+- canonical `workSpent` delta from `prep._workMeter`;
+- `allocatedWorkCeiling` when a work cap is present;
+- node ceilings;
+- seed salt / exact random seed;
+- explicit termination outcome.
+
+So the result can be measured correctly once the treatment is executed.
+
+However, the currently exposed late-probe override is `repairLateProbeNodeBudgetOverride`. The source explicitly defines it as a **flat node count** override. The late-probe tier separately installs a generous additive `prep._workCap` derived from the solve's time budget (`timeBudgetMs * DEFAULT_WORK_PER_MS`), while the actual tier shape is bounded by `REPAIR_LATE_PROBE_NODE_BUDGET`. The multi-seed retry repeats the same pattern for each salt: a fresh broad work cap plus that seed's own flat node reserve.
+
+Therefore:
+
+> setting continuation and restart arms to the same number of repair nodes does **not** establish equal `workSpent`.
+
+Canonical work includes more than the raw node counter and is the queue-wide cross-technique currency. Node-equated arms may consume different canonical work because their trajectories can invoke different amounts of scoring, topology, pruning, repair operations, and other metered work.
+
+`strictTotalWorkBudget` is not an automatic solution to this specific comparison. It caps the **whole solve** from its start, including every earlier stage, rather than expressing “give this isolated repair continuation arm W work” versus “split exactly W across these fresh repair seeds.” Using it on the production ladder would confound the restart treatment with whatever work the prefix ladder happened to consume before reaching repair.
+
+### Smallest faithful execution prerequisite
+
+Do **not** redesign scheduling. The required capability is much narrower:
+
+- execute the same fixed repair action/config/gate under a caller-specified canonical work cap;
+- choose a fixed seed salt;
+- for continuation, preserve the same repair trajectory/state until work `W` or success;
+- for restart, terminate seed 0 at `W/2`, create a genuinely fresh repair run at seed 1, and cap its additional work at the remaining `W/2`;
+- return ordinary attempt telemetry for both failed and successful arms.
+
+This can be an offline/research harness or a tightly scoped per-action override. It does not need to alter the production scheduler or become a permanent public configuration surface.
+
+The acceptance test for that prerequisite is accounting, not solves: on deliberately failing fixtures, the two arms must terminate within the same canonical-work envelope (up to the work meter's check granularity), and telemetry must sum failed seed work rather than reporting only the final seed.
+
+Until that exists, #6 should be described as an **execution-readiness gate**, not as though the equal-work A/B can be launched with the current node-budget workflow unchanged.
 
 ## Outcomes to report
 
@@ -97,6 +134,8 @@ For each arm report:
 
 When comparing several restart schedules, report how many schedules/splits were tried. The best development split is selected evidence and needs fresh confirmation.
 
+For the **first** decision-bearing pass, do not compare several schedules: use continuation versus the fixed 50/50 seed-0/seed-1 treatment above. That keeps the multiplicity at one and makes a negative interpretable.
+
 ## Population
 
 Use a residual population where repair is actually relevant, but keep claim scope honest.
@@ -108,6 +147,8 @@ A reasonable development construction is a frozen baseline-failure-conditioned c
 It does not by itself establish unconditional improvement on fresh arbitrary puzzles.
 
 Avoid selecting only levels already known to have a seed rescue. That would answer seed reconstruction, not scheduler value.
+
+The managed-population work on 2026-08-24 deliberately did **not** reserve this residual cohort yet. Its membership depends on the exact baseline solver commit and baseline work contract used to define “still unsolved.” Freeze those at the same time the execution treatment is frozen, then derive residual membership without inspecting treatment outcomes.
 
 ## Seed semantics
 
@@ -152,16 +193,16 @@ For restart research, compare explicit seeded actions on the original level repr
 
 Stop or sharply demote restart-specific work if:
 
-- equal-work continuation matches or beats the tested restart schedules;
+- equal-work continuation matches or beats the tested restart schedule;
 - alternate-seed gains disappear once failed-seed work is charged;
 - positive schedules are unstable across unrelated levels/parents;
-- the best schedule depends on extensive threshold/seed-set mining with little fresh-confirmation support;
+- later development requires extensive threshold/seed-set mining with little fresh-confirmation support;
 - a simpler static scheduler allocation captures the same gain by moving work to another search family instead.
 
-Proceed only if a small prespecified restart schedule produces a reproducible solve/work Pareto improvement over continuation at equal aggregate work.
+Proceed only if the prespecified two-seed 50/50 restart schedule produces a reproducible solve/work Pareto improvement over continuation at equal aggregate work.
 
 ## Queue implication
 
 The promoted multi-seed tiers remain valid production baselines until scheduler repricing says otherwise, but they receive no permanent budget entitlement from their historical additive wins.
 
-The next #6 restart action is **equal-work restart versus continuation**, not another larger seed list.
+The next #6 restart action is **not yet the A/B run itself**. First make the equal-work comparison executable in the canonical currency without changing production policy. Then run exactly one primary development comparison: seed 0 continued to `W` versus seed 0 to `W/2` + fresh seed 1 to `W/2`, on a baseline-failure-conditioned residual population whose baseline contract was frozen before membership was inspected.
