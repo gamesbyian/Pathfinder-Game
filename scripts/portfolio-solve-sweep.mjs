@@ -1,191 +1,27 @@
 #!/usr/bin/env node
 /**
- * Solve-only sweep across a level range — no paired legacy comparison call — used for probing
- * currently-unsolved stress-corpus levels, where the paired-comparison sibling tool
- * (scripts/portfolio-scheduler-report.mjs) would double the cost for no benefit (see
- * docs/fast-portfolio-scheduler-plan.md / reports/portfolio/portfolio-scheduler-decision.md).
+ * Solve-only batch sweep for stress/research levels.
  *
- * Two use cases, both supported by the same script:
- *  1. Probing the portfolio-scheduler idea itself (`--scheduler-mode=portfolio-experiment`,
- *     the default): `solvedBeforeFallback: true` means a portfolio pass (1/2/3/conditional)
- *     found the solution — i.e. something other than a plain full-budget legacy-equivalent
- *     search. `solvedBeforeFallback: false` with `ok: true` means only the embedded fallback
- *     phase (a fresh full-budget legacy-equivalent solve) found it, not a portfolio-specific
- *     result.
- *  2. General fast batch testing of a NEW solver feature/heuristic against the unsolved corpora
- *     (`--scheduler-mode=legacy`): the portfolio scheduler is not itself a speed mechanism (see
- *     docs/solver-architecture.md's verdict — every measured variant is slower than legacy), so
- *     for this use case prefer plain legacy mode plus the cost knobs below, rather than the
- *     portfolio tiers.
+ * Modes:
+ * - `--scheduler-mode=legacy`: normal solver batch runs and feature/heuristic probes.
+ * - `--scheduler-mode=portfolio-experiment`: historical portfolio-tier experiment with fallback.
  *
- * Cost knobs (see docs/solver-architecture.md's cost-gotcha note — an earlier run took ~21
- * minutes on one repair-gated level before these existed):
- *   --work-budget=<n>            THE machine-independent bound (SolveOpts.workBudget,
- *                                modules/solver/work-meter.ts). Prefer this: unlike --node-budget it
- *                                means the same amount of real work in dfs/beam/repair, which count
- *                                11-17x different work per "node". The adaptive --baseline-budget
- *                                machinery below still scales off the baseline's recorded
- *                                nodesExpanded, since stress baselines do not carry workSpent yet.
- *   --node-budget=<n>            legacy per-technique cap (SolveOpts.nodeBudget),
- *                                 flat across every level.
- *   --baseline-budget            DEPRECATED experimental per-level node budgets. Kept only for
- *                                 historical reproduction: repair winners are not reproducible from
- *                                 recorded nodes alone, and "node" buys different work by technique.
- *                                 Prefer an explicit --work-budget. If used despite this warning:
- *                                 each known-solved level (per --baseline) gets a budget scaled to
- *                                 its own recorded nodesExpanded, so fast levels stop fast and a
- *                                 regression fails at K x its old cost instead of the global ceiling.
- *                                 Requires --baseline; ignored under --race-pool-size. Tunables:
- *                                   --solved-budget-mult=<K>   (default 3)  budget = K x baseline nodes
- *                                   --min-node-budget=<n>      (default 2M) floor for cheap winners
- *                                   --unsolved-node-budget=<n> budget for known-failed / not-in-
- *                                     baseline levels (the discovery lever; defaults to --node-budget,
- *                                     i.e. net-neutral — drop it for a fast "did I break anything"
- *                                     regression pass, leave it high to still discover new solves).
- *   --prime-winner               winner-first pre-attempt: for each level --baseline recorded as
- *                                 solved, try its recorded winning config+gate(+seed, for repair) as
- *                                 a single attempt before the normal ladder, skipping the (measured
- *                                 ~84% of solved-level) work the ladder spends on non-winning configs
- *                                 first. Primed by default: NORMAL-scoring beam/DFS winners (measured
- *                                 hit rate 8/8), and repair winners whose baseline record carries a
- *                                 randomSeed (attemptRecord persists it as of 2026-07-23 — an older
- *                                 baseline has none). Gated OUT by default: repair winners with NO
- *                                 recorded seed (a salt-0 replay only hit 3/6 on a sample — costly to
- *                                 miss) and attraction-diversity winners (need goal-attraction
- *                                 disabled, which a plain replay can't reproduce, ~0% hit) — see
- *                                 primeAttemptFor. Requires --baseline; ignored under
- *                                 --race-pool-size. RE-VERIFY RUNS ONLY — preserves the solvability
- *                                 verdict, not cold-search ordering (see SolveOpts.primeAttempt's
- *                                 comment); do not use for cold-capability benchmarks.
- *   --prime-include-all          also prime the excluded winner kinds above (experiments only; lower
- *                                 hit rate, and a miss adds the prime's cost to the full solve).
- *                                 By default the prime shares the solve's own node budget (generous —
- *                                 highest hit rate on unchanged code). Optional tighter cap:
- *                                   --prime-budget-mult=<K>     prime node cap = K x the winner's OWN
- *                                     recorded nodes; bounds a miss's cost but can false-miss when the
- *                                     recorded winner cost under-represents run-first cost (beam
- *                                     first-phase solves especially). Off unless passed.
- *                                   --prime-min-node-budget=<n> (default 500K) floor for that cap.
- *   --repair-budget-fraction=<n> overrides REPAIR_EXTRA_BUDGET_FRACTION (default 6x) via
- *                                 SolveOpts.repairBudgetFractionOverride — a dedicated field, NOT
- *                                 an ablation flag (an earlier version of this was, and it
- *                                 silently disabled every other unset strategy toggle by making
- *                                 the ablation config object truthy — see orchestration.ts's field
- *                                 comment). Legacy-path only (plain legacy mode, portfolio's
- *                                 embedded fallback, and --race-pool-size below).
- *   --attraction-diversity-budget-fraction=<n> overrides ATTRACTION_DIVERSITY_BUDGET_FRACTION
- *                                 (default 1.0x, the 2026-07-16 fragile-group last-resort pass)
- *                                 via SolveOpts.attractionDiversityBudgetFractionOverride — a
- *                                 SEPARATE dedicated field from --repair-budget-fraction above
- *                                 (the two extensions are independently costed and independently
- *                                 overridable; see orchestration.ts's SolveOpts comment on why).
- *                                 Pass 0 here for an ordinary batch-testing sweep of an unrelated
- *                                 solver change — otherwise every still-unsolved level in the run
- *                                 silently costs up to 1x budgetMs more than before this pass
- *                                 existed, with no signal that it happened. Same legacy-path-only
- *                                 scope as --repair-budget-fraction (works with --race-pool-size).
- *   --admissible-order-budget-fraction=<n> overrides ADMISSIBLE_ORDER_BUDGET_FRACTION (default 1.0x
- *                                 PER PROFILE, so the tier's own worst case is N x budgetMs for
- *                                 attempts.ts's ADMISSIBLE_ORDER_PROFILES) via
- *                                 SolveOpts.admissibleOrderBudgetFractionOverride — the THIRD
- *                                 independently-costed extension, and until now the only one with no
- *                                 flag here at all, which meant no batch tool could isolate this
- *                                 tier's contribution or honor CLAUDE.md's "a batch tool must set all
- *                                 three" rule from this entrypoint. Pass 0 alongside the other two
- *                                 for a sweep of an unrelated solver change.
- *                                 NOT honored under --race-pool-size: race.mjs reimplements the
- *                                 ladder and has no admissible-order tier at all (unlike the two
- *                                 fractions above, which it does read).
- *   --admissible-order-node-reserve-fraction=<n> overrides ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION
- *                                 (default 0.25) via SolveOpts.admissibleOrderNodeReserveFraction-
- *                                 Override: the share of --node-budget withheld from the earlier
- *                                 tiers so the admissible-order tier is not node-starved by them.
- *                                 Only meaningful WITH --node-budget (no external node ceiling, no
- *                                 reserve). Pass 0 for the pre-reserve behaviour — that is the
- *                                 baseline arm of an A/B on the reserve itself. Also not honored
- *                                 under --race-pool-size (race.mjs has no nodeBudget handling).
- *   --main-loop-late-reserve-fraction=<f>
- *   --main-loop-late-reserve-config-count=<n>
- *                                 opt-in main-loop starvation experiment knobs. Enable with
- *                                 --enable-flags=STRATEGY_MAIN_LOOP_LATE_RESERVE; the final n
- *                                 ordinary configs may consume fraction f of the ordinary node
- *                                 envelope withheld from the probe/early prefix. Requires a finite
- *                                 --node-budget and is not supported by --race-pool-size.
- *   --disable-extra-budget-passes  sets all three fractions above to 0 at once
- *                                 (SolveOpts.disableExtraBudgetPasses). Prefer this over remembering
- *                                 each flag when a sweep just wants no extra-pass cost; an explicit
- *                                 individual fraction still wins over it.
- *   --enable-flags=FLAG1,FLAG2   turn the named ablation flags ON for the whole run (via
- *                                 SolveOpts.ablation, a SPARSE object — normalizeAblationConfig's
- *                                 normalizer restores each unset flag's production default).
- *                                 Names validated against modules/solver/ablation-config.ts FEATURES. The A/B lever
- *                                 for an ablation-gated attempt like STRATEGY_REPAIR_TURN_BIAS:
- *                                 baseline run (omit) vs on run (--enable-flags=STRATEGY_REPAIR_TURN_BIAS).
- *                                 Threaded through every solve path (main, worker, race pool).
- *   --disable-flags=FLAG1,FLAG2  the counterpart: turn the named flags OFF, everything else at its
- *                                 default. Most flags default to ON, so this is the only lever that
- *                                 tests whether an EXISTING mechanism is load-bearing (e.g.
- *                                 --disable-flags=STRATEGY_ARCHETYPE_ROUTING forces every level
- *                                 through the catch-all attempt ladder). Rejects a flag also named
- *                                 in --enable-flags.
+ * Prefer `--work-budget` for cross-technique comparisons. Runtime validation below reports unsupported
+ * option combinations (notably race-pool/node/admissible-order interactions), and deprecated
+ * `--baseline-budget` is retained only for historical reproduction. `--prime-winner` is re-verification
+ * machinery, not cold-capability evidence. See docs/solver-architecture.md,
+ * docs/solver-scheduling-policy.md, and docs/solver-research-operating-model.md for current policy.
  *
- * Batch-scale knobs, for recurring solver-feature iteration against the unsolved corpora:
- *   --resume [--checkpoint=<path>]     append each level's result to a JSONL checkpoint as it
- *                                       completes (default <out>.checkpoint.jsonl); on the next
- *                                       identical commit/invocation with --resume, completed levels
- *                                       are loaded; stale/legacy checkpoints are rejected
- *                                       from disk instead of re-solved. Survives Ctrl-C / kill.
- *   --feature-filter=<tokens>          only run levels whose features match, e.g.
- *                                       "mustCross>=2,mustPass>=3" (supported keys: reqLen,
- *                                       reqInt, gates, mustPass, mustCross, mustTurn, portals,
- *                                       filters, flippingFilters; ops >=,<=,>,<,==). Scope a
- *                                       change's test population to levels it can plausibly
- *                                       affect instead of the whole unsolved corpus.
- *   --baseline=<compiled-baseline.json> a corpus's compiled baseline (logs/stress-corpus{1,2}-
- *                                       baseline.json, or reports/stress/dev-benchmark-corpus2.json)
- *                                       — enables --priority and --attempt-cache below.
- *   --priority=<field> [--priority-order=asc|desc]
- *                                       sort the run order by a numeric baseline field (e.g.
- *                                       `badness`) or the special field `stability` (rank:
- *                                       budget-edge before known-unsolved). Default asc = closest-
- *                                       to-solved first, for fast positive/negative signal before
- *                                       spending time on deeply-unsolved levels. Requires --baseline.
- *   --workers=<n>                      solve across N child processes in parallel (real OS
- *                                       parallelism, not just concurrent promises) instead of
- *                                       one level at a time. Hint-saving still happens only in
- *                                       this main process, so concurrent workers never race on
- *                                       the hint corpus files.
- *   --race-pool-size=<n>                ALSO race each level's own attempt ladder across N
- *                                       worker_threads (scripts/solver-parallel/race.mjs's
- *                                       createRacePool — the same pool stress:benchmark:raced
- *                                       uses) — composes with --workers: each cross-level worker
- *                                       process gets its own persistent race pool of this size,
- *                                       reused across every level that worker solves, so total
- *                                       OS-level parallelism is workers x race-pool-size (logged
- *                                       at startup, with a warning if it exceeds the machine's
- *                                       core count). Requires --scheduler-mode=legacy (race.mjs
- *                                       races the plain attempt ladder, no portfolio-experiment
- *                                       tier equivalent). Not combinable with --node-budget (the
- *                                       race pool has no node-budget concept — concurrent jobs on
- *                                       separate cores, not one sequential counter);
- *                                       --repair-budget-fraction IS honored under racing.
- *   --attempt-cache=<path>             skip re-solving a level the baseline already recorded as
- *                                       unsolved, IF every attempt family relevant to that level
- *                                       (per the CURRENT code's own attempt policy) has an
- *                                       unchanged dependency-file hash since the cache was last
- *                                       written (scripts/solver-attempt-family-cache.mjs) — e.g.
- *                                       editing only repair-search.ts leaves every level whose
- *                                       policy never reaches the repair family skippable. Only
- *                                       ever reuses a NEGATIVE (still-unsolved) result — never
- *                                       fabricates a solve. Requires --baseline.
+ * Batch controls include `--resume`, `--feature-filter`, `--baseline`, `--priority`, `--workers`,
+ * `--race-pool-size`, `--attempt-cache`, sparse `--enable-flags`/`--disable-flags`, and the explicit
+ * budget-fraction overrides parsed below. `--save-hints` persists solved paths with provenance;
+ * omit it for report-only runs.
  *
- * Usage:
- *   node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=data/stress/stress-levels-random.json --levels=pos:1-1700 --scheduler-mode=legacy --budget-ms=15000 --repair-budget-fraction=1.5 --node-budget=4000000 --workers=8 --resume --baseline=logs/stress-corpus2-baseline.json --priority=badness --attempt-cache=reports/portfolio/attempt-family-cache.json --out=reports/portfolio/corpus2-sweep.json --summary-out=reports/portfolio/corpus2-sweep-summary.md --save-hints
- *
- * --save-hints persists every solved level's path into the corpus's hint corpus (data/stress/hints{,-random}/<id>.json)
- * with a proper HintProvenanceEntry, via the same modules/solver/hint-provenance.ts + scripts/level-data-io.mjs
- * machinery scripts/hint-workbench.mjs uses — so a solve found here is a real discovery event, not a
- * throwaway report row. Omit it for a dry-run report only.
+ * Example:
+ *   node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- \
+ *     --corpus=data/stress/stress-levels-random.json --levels=pos:1-1700 \
+ *     --scheduler-mode=legacy --work-budget=1000000 --workers=8 --resume \
+ *     --out=reports/portfolio/corpus2-sweep.json
  */
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
