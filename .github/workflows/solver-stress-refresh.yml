@@ -5,6 +5,11 @@
 # identity/position, provenance, or other exact-level history may influence the search. This mirrors
 # the level editor: a freshly created level has no history to consult. Historical artifacts remain
 # valuable as OUTPUTS for research and validation, but never as inputs to Solver.solve here.
+#
+# EVIDENCE INVARIANT: every referee-valid discovery is retained. Hint capture is output-only and
+# never enters a solve. Normal refreshes may persist hints eagerly; deterministic A/B runs retain
+# changed hint files in their shard artifacts and let harvest-solver-evidence.yml merge them later,
+# which preserves both experiment isolation and parallel A/B dispatches without discarding evidence.
 name: Solver stress-corpus refresh (level-blind capability)
 
 on:
@@ -42,10 +47,6 @@ on:
         description: 'Optional STRATEGY_REPAIR_LATE_PROBE node cap override (production default 2000000, stage-budget.ts REPAIR_LATE_PROBE_NODE_BUDGET); blank for control.'
         required: false
         default: ''
-      persist_hints:
-        description: 'Save newly discovered valid solutions/provenance after solving, into data/stress/hints*/. Output-only: saved hints never enter the solve. Independent of the per-run analysis summary under reports/stress/capability-runs/RUN_ID/, which is always committed regardless of this flag -- see the combine job''s "Persist capability outputs" step.'
-        required: false
-        default: 'true'
       corpus1_budget_ms:
         description: 'Corpus-1 per-level wall budget. Default 24h is intentionally non-binding.'
         required: false
@@ -59,7 +60,7 @@ on:
         required: false
         default: '4'
       deterministic:
-        description: 'true forces a 24h non-binding deadline and skips overwriting the canonical logs/*baseline.json and reports/stress/ "latest" files; hints persist only if persist_hints=true. The compact per-run analysis summary (reports/stress/capability-runs/RUN_ID/) is always committed either way -- it is namespaced by run id, so it can never let one A/B arm mutate what a queued arm measures. Use true + persist_hints=false for matched A/B arms.'
+        description: 'true forces a 24h non-binding deadline and skips overwriting the canonical logs/*baseline.json and reports/stress/ "latest" files. Valid hint/provenance discoveries are still retained output-only via shard artifacts and the main-branch evidence harvester. The compact per-run analysis summary under reports/stress/capability-runs/RUN_ID/ is always committed.'
         required: false
         default: 'false'
       lifecycle_telemetry:
@@ -76,15 +77,11 @@ on:
         default: '20'
 
 concurrency:
-  # Matched-A/B arms (deterministic=true, persist_hints=false) touch no shared repo state beyond
-  # their own run-id-namespaced reports/stress/capability-runs/<run_id>/ directory (see the persist
-  # step's own comment) -- data/stress/hints*/ and the canonical baseline/report files are only
-  # staged when persist_hints=true / deterministic=false respectively, so two such arms can safely
-  # run at once instead of queuing behind each other. Anything that CAN mutate shared state
-  # (deterministic=false or persist_hints=true) still serializes under the single shared group, as
-  # before -- against every other run of this workflow, mutating or not, so it can never race a
-  # concurrently-running A/B arm's persist step either.
-  group: ${{ (github.event.inputs.deterministic == 'true' && github.event.inputs.persist_hints == 'false') && format('solver-stress-refresh-ab-{0}', github.run_id) || 'solver-stress-refresh' }}
+  # Deterministic A/B arms do not eagerly persist hint files or canonical baseline/latest reports;
+  # their changed hint files remain in immutable shard artifacts for the central harvester. Each arm
+  # therefore gets its own group and can run concurrently. Normal refreshes mutate canonical state
+  # eagerly and remain serialized under the shared group.
+  group: ${{ github.event.inputs.deterministic == 'true' && format('solver-stress-refresh-ab-{0}', github.run_id) || 'solver-stress-refresh' }}
   cancel-in-progress: false
 
 jobs:
@@ -180,13 +177,12 @@ jobs:
             echo "exit_code=0" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          extra=()
+          extra=("--save-hints")
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-loop-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
           [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ] && extra+=("--main-loop-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}")
           [ -n "${{ inputs.repair_late_probe_node_budget }}" ] && extra+=("--repair-late-probe-node-budget=${{ inputs.repair_late_probe_node_budget }}")
-          [ "${{ inputs.persist_hints }}" = "true" ] && extra+=("--save-hints")
           [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
           work=$(( ${{ inputs.corpus1_node_budget }} * 134 / 100 ))
           timeout -k 30s --preserve-status "${{ needs.plan.outputs.c1_timeout_min }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
@@ -211,13 +207,12 @@ jobs:
           DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus2_budget_ms }}
         run: |
           set +e
-          extra=()
+          extra=("--save-hints")
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-loop-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
           [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ] && extra+=("--main-loop-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}")
           [ -n "${{ inputs.repair_late_probe_node_budget }}" ] && extra+=("--repair-late-probe-node-budget=${{ inputs.repair_late_probe_node_budget }}")
-          [ "${{ inputs.persist_hints }}" = "true" ] && extra+=("--save-hints")
           [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
           work=$(( ${{ inputs.corpus2_node_budget }} * 134 / 100 ))
           timeout -k 30s --preserve-status "${{ needs.plan.outputs.c2_timeout_min }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
@@ -378,7 +373,7 @@ jobs:
             enableFlags: process.env.ENABLE_FLAGS,
             disableFlags: process.env.DISABLE_FLAGS,
             deterministic: process.env.DETERMINISTIC,
-            persistHints: process.env.PERSIST_HINTS,
+            persistHints: true,
             corpus1: summarize(c1),
             corpus2: summarize(c2),
           };
@@ -392,7 +387,6 @@ jobs:
           ENABLE_FLAGS: ${{ inputs.enable_flags }}
           DISABLE_FLAGS: ${{ inputs.disable_flags }}
           DETERMINISTIC: ${{ inputs.deterministic }}
-          PERSIST_HINTS: ${{ inputs.persist_hints }}
 
       - name: Mass-weighted lifecycle failure map
         if: steps.coverage.outputs.complete == 'true' && inputs.lifecycle_telemetry == 'true'
@@ -441,15 +435,15 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Persist capability outputs and/or newly found hints
+      - name: Persist capability outputs and eagerly persist hints for normal refreshes
         if: steps.coverage.outputs.complete == 'true'
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add "reports/stress/capability-runs/${{ github.run_id }}/"
-          git add data/stress/hints/ data/stress/hints-random/ data/stress/stress-levels.json data/stress/stress-levels-random.json
           if [ "${{ inputs.deterministic }}" != "true" ]; then
+            git add data/stress/hints/ data/stress/hints-random/ data/stress/stress-levels.json data/stress/stress-levels-random.json
             git add logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json reports/stress/
           fi
           if git diff --cached --quiet; then exit 0; fi
@@ -458,6 +452,8 @@ jobs:
             if git push origin HEAD:${{ github.ref_name }}; then exit 0; fi
             sleep $((attempt * 5))
             git fetch origin "${{ github.ref_name }}"
+            # Deterministic runs may have unstaged hint-file changes from downloaded artifacts. They
+            # are already durable in those artifacts and will be merged by the central harvester.
             git checkout -- .
             git rebase "origin/${{ github.ref_name }}" || exit 1
           done

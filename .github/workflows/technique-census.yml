@@ -18,6 +18,10 @@
 # against the repo; the COMBINE job is the sole writer, running once after every shard finishes -- see
 # technique-census.mjs's and combine-technique-census-shards.mjs's own header comments.
 #
+# Every referee-valid discovery is retained. Hint capture is output-only and never enters any solve,
+# so experiment isolation is not a reason to discard evidence. The combine job writes canonical hint
+# files and the main-branch evidence harvester provides the branch-independent durability layer.
+#
 # PER-SHARD WALL-CLOCK SAFETY NET. GitHub-hosted runners hard-cap a job at 360 minutes; this cannot
 # be raised. Each shard uses scripts/technique-census.mjs's OS-level worker pool
 # (scripts/solver-worker-pool.mjs). Standard public-repository `ubuntu-latest` runners currently
@@ -85,10 +89,6 @@ on:
         description: 'Shards running concurrently'
         required: false
         default: '20'
-      save_hints:
-        description: 'Persist every genuinely new, referee-valid solve found into the real hint corpus (data/hints/, data/stress/hints/, data/stress/hints-random/) with full provenance. Output-only: saved hints never enter any solve.'
-        required: false
-        default: 'true'
 
 concurrency:
   group: technique-census
@@ -233,14 +233,12 @@ jobs:
 
       - name: Combine, derive summaries, and persist novel solutions
         run: |
-          extra=()
-          [ "${{ inputs.save_hints }}" = "true" ] && extra+=("--save-hints")
           node scripts/run-bundled.mjs scripts/combine-technique-census-shards.mjs -- \
             --staging-dir=artifact-staging \
             --out-dir="reports/stress/technique-census/${{ github.run_id }}" \
             --plan=plan/technique-census-plan.json \
             --solver-version="${{ github.sha }}" \
-            "${extra[@]}"
+            --save-hints
 
       - name: Upload the combined result
         uses: actions/upload-artifact@v4
@@ -255,9 +253,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add "reports/stress/technique-census/${{ github.run_id }}/"
-          if [ "${{ inputs.save_hints }}" = "true" ]; then
-            git add data/hints/ data/stress/hints/ data/stress/hints-random/
-          fi
+          git add data/hints/ data/stress/hints/ data/stress/hints-random/
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "Technique capability census (${{ github.run_id }})"
           for attempt in 1 2 3 4; do

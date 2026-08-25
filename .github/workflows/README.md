@@ -16,6 +16,8 @@ These are throughput defaults, not universal laws. Binding wall-clock deadlines 
 
 Solver execution ref and durable evidence destination are separate concerns. A run may execute on `main` or any feature-branch SHA; useful solved paths and provenance must not depend on that branch surviving.
 
+**Retention is not an experimental treatment.** Hint/provenance capture is output-only, so disabling retention does not improve level-blindness or A/B isolation. Canonical solver workflows should therefore retain every referee-valid discovery and should not expose a dispatch switch whose purpose is to discard it. A workflow may defer the canonical merge to the harvester when eager writes would create contention, but the evidence itself must still survive in artifacts or reports.
+
 `harvest-solver-evidence.yml` runs after the canonical-level hint-producing workflows complete and persists recoverable evidence onto canonical `main`:
 
 - Existing hint artifacts, including native-solver and CP-SAT harvest output, are structurally merged by path/provenance across `data/hints`, `data/stress/hints`, and `data/stress/hints-random`; they are never copied last-writer-wins.
@@ -32,7 +34,7 @@ This retention layer is a safety net. Individual workflows may still save hints 
 
 ## Core capability
 
-- `solver-stress-refresh.yml` — canonical level-blind full refresh over Corpus 1 + Corpus 2. Default 60 shards / 20 lanes / 4 workers; node/work ceilings normally bind.
+- `solver-stress-refresh.yml` — canonical level-blind full refresh over Corpus 1 + Corpus 2. Default 60 shards / 20 lanes / 4 workers; node/work ceilings normally bind. Hint capture is always on; deterministic runs defer canonical hint persistence to the harvester.
 - `solver-typical-budget-baseline.yml` — typical-budget baseline. Already heavily oversharded; its ordinary wall deadlines are semantically meaningful, so worker-count changes require matched measurement.
 - `solver-highbudget-unsolved-sweep.yml` — high-budget unsolved sweep with runtime-weighted bin packing and dedicated slow-level handling.
 - `solver-level-blind-targeted-sweep.yml` — targeted level-blind sweep using the weighted planner.
@@ -43,11 +45,11 @@ This retention layer is a safety net. Individual workflows may still save hints 
 - `solver-repair-probe-adaptive-sample-ab.yml` — 60 shards / 20 lanes / 4 workers.
 - `solver-repair-fallback-reserve-sample-ab.yml` — 60 shards / 20 lanes / 4 workers.
 
-These use non-binding deterministic deadlines by default, so node/work budgets remain the comparison basis while cross-level parallelism changes calendar time.
+These use non-binding deterministic deadlines by default, so node/work budgets remain the comparison basis while cross-level parallelism changes calendar time. Their artifact/report evidence is still harvested even though they do not eagerly mutate canonical hints during the experiment.
 
 ## Technique and method sweeps
 
-- `technique-census.yml` — isolated technique census. `workers` defaults to 4; outer layout remains 120 shards / 20 lanes.
+- `technique-census.yml` — isolated technique census. `workers` defaults to 4; outer layout remains 120 shards / 20 lanes. Referee-valid discoveries are always retained; there is no hint-retention dispatch toggle.
 - `method-probe-sweep.yml` — isolated method/config probe. Default 60 outer shards / 20 lanes and 4 disjoint probe processes per runner. Each runner bundles once; the combiner validates metadata, duplicate IDs, and missing worker outputs.
 
 ## CP-SAT / reference-model work
