@@ -17,6 +17,7 @@ const nodeBudget = Number(args.get('--node-budget') ?? 100000);
 const outFile = args.get('--out') ?? 'reports/stress/winning-lineage-pilot.json';
 const includeStages = args.has('--include-stages');
 const metadataFile = args.get('--metadata');
+const requestedLevelIds = (args.get('--level-ids') ?? '').split(',').map(x => x.trim()).filter(Boolean);
 const retainAllRemovalDetails = args.has('--retain-all-removal-details');
 const retainRankedPoolDetails = args.has('--retain-ranked-pool-details');
 const runId = args.get('--run-id') ?? `winning-lineage-${new Date().toISOString()}`;
@@ -25,6 +26,8 @@ const familyDefinitionVersion = 'structural-solution-family-v1';
 if (![limit, beamWidth, nodeBudget].every(Number.isFinite) || limit < 1 || beamWidth < 1 || nodeBudget < 1) {
     throw new Error('limits, beam width, and node budget must be positive numbers');
 }
+if (requestedLevelIds.length && metadataFile) throw new Error('--level-ids and --metadata are mutually exclusive selection modes');
+if (new Set(requestedLevelIds).size !== requestedLevelIds.length) throw new Error('--level-ids must not contain duplicates');
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
@@ -34,7 +37,13 @@ const solutionBearing = rawLevels.filter(level => level.hints?.length > 0);
 let selected;
 let selection = 'first levels with stored hints; densest-label gate';
 let metadataColdById = null;
-if (metadataFile) {
+if (requestedLevelIds.length) {
+    const byId = new Map(solutionBearing.map(level => [String(level.id), level]));
+    const missing = requestedLevelIds.filter(id => !byId.has(id));
+    if (missing.length) throw new Error(`--level-ids not found with stored hints in ${levelsFile}: ${missing.join(', ')}`);
+    selected = requestedLevelIds.map(id => byId.get(id));
+    selection = `explicit level ids: ${requestedLevelIds.join(', ')}; densest-label gate`;
+} else if (metadataFile) {
     const metadata = JSON.parse(readFileSync(metadataFile, 'utf8'));
     const coldById = new Map((metadata.results ?? metadata.levels ?? []).map(row => [String(row.levelId ?? row.id), !!row.coldSolved]));
     metadataColdById = coldById;

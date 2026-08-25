@@ -32,10 +32,35 @@ A regression test covers both contracts:
 - default observer output still removes `rankedPool` while retaining `poolCandidateCount` and supported-pool summaries;
 - explicit `retainRankedPoolDetails: true` preserves the complete ranked pool unchanged.
 
+## Exact-parent selection
+
+The exact A/D parents currently nominated for the set-level projection (`S00001`, `S00030`, `S00048`, `R00104`) all come from `data/stress/stress-levels.json`. The pilot previously offered only first-N or metadata-stratified level selection, forcing a caller to manufacture a temporary corpus merely to rerun those four prespecified parents.
+
+The pilot now also accepts a bounded explicit selector:
+
+```text
+--level-ids=S00001,S00030,S00048,R00104
+```
+
+Explicit IDs preserve caller order, must be unique, must exist with stored hints in the chosen corpus, and are mutually exclusive with `--metadata` so two selection contracts cannot silently interact.
+
+The intended capture is therefore directly expressible as:
+
+```bash
+node scripts/run-bundled.mjs scripts/stress/winning-lineage-pilot.mjs \
+  --levels=data/stress/stress-levels.json \
+  --level-ids=S00001,S00030,S00048,R00104 \
+  --beam-width=100 \
+  --node-budget=100000 \
+  --include-stages \
+  --retain-ranked-pool-details \
+  --out=reports/stress/beam-extinction-full-pools-2026-08-24.json
+```
+
+The beam width and work cap above match the existing pilot defaults and should be verified against the source extinction run before treating a regenerated boundary as equivalent. If the historical boundary used a different work contract, preserve that original contract rather than forcing these defaults.
+
 ## Evidence limit
 
-This change makes the required data capturable. It does not itself perform the descriptor projection and does not establish that any proposed diversity key improves future coverage.
+These changes make the required data capturable and targetable. They do not themselves perform the descriptor projection and do not establish that any proposed diversity key improves future coverage.
 
-The next bounded run should target only the already-selected A/D extinction parents or the smallest reproducible lineage set containing them, with stages and ranked pools retained. Full-pool retention can make artifacts large, so it should remain a bounded research option rather than the default lineage mode.
-
-Once captured, reconstruct candidate state from each retained path and compare the prespecified low-cardinality keys from the descriptor sanity-check report. Do not add a production diversity intervention until the set-level projection clears its existing cardinality, singleton, fixed-width-retention, random-reserve, and width-only controls.
+Full-pool retention can make artifacts large, so it should remain a bounded research option rather than the default lineage mode. Once captured, reconstruct candidate state from each retained path and compare the prespecified low-cardinality keys from the descriptor sanity-check report. Do not add a production diversity intervention until the set-level projection clears its existing cardinality, singleton, fixed-width-retention, random-reserve, and width-only controls.
