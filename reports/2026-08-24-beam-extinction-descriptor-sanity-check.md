@@ -73,6 +73,47 @@ At `S00048`, the dead candidate is Manhattan distance 6 from the goal while the 
 
 This is unsurprising for exact-length path construction, but the exact labels make the failure concrete at the actual beam retention boundary rather than at arbitrary states.
 
+## Runtime-cost audit: what “cheap topology” can mean
+
+A static source audit after the scalar check narrows the admissible descriptor space further.
+
+Pathfinder's current connectivity prune already performs substantial residual-topology work. `isConnected()` runs a residual flood fill that:
+
+- treats blocks/geese/gates as static walls;
+- treats used flipping filters as hard walls;
+- can treat cells with both axis bits spent as walls;
+- accounts for the reserved second crossing of pending must-cross cells;
+- traverses portal edges;
+- records the full reached set internally;
+- verifies reachability of goal and unsatisfied must-pass/must-cross objectives; and
+- computes `freshVolume`, used for the residual length-capacity check on portal-free levels.
+
+This is not free. The topology module documents connectivity as a major hot path, including prior profiling around roughly one third of published-corpus solver CPU and dedicated bit-parallel optimization. The flood fill itself is therefore already an expensive future-opportunity approximation.
+
+Beam search deliberately **throttles** it rather than running it for every generated candidate: connectivity runs when remaining steps are at most 20 or when real path length is divisible by 8. DFS is sparser still, every 64 expanded nodes plus the final 10 steps. A new descriptor that independently launches another flood fill for every candidate would change the cost structure materially and would duplicate information the solver already pays to obtain intermittently.
+
+There is, however, a promising observation seam. During an already-scheduled connectivity pass, the implementation computes richer information than the caller retains. `isConnected()` collapses the reached set, objective reachability, and `freshVolume` down to a boolean pass/fail result. Therefore a shadow/offline experiment can distinguish two categories:
+
+1. **already-paid topology facts:** values derivable from the connectivity pass that was going to run anyway, such as `freshVolume` or bounded summaries of the reached set;
+2. **new topology work:** component counts, bridge/articulation analysis, cut width, corridor decomposition, or a second residual traversal not already performed.
+
+The first category is the correct starting point. The second must earn its cost separately.
+
+### First cheap descriptor shortlist
+
+The first offline projection should therefore prefer:
+
+- **existing connectivity slack:** where an ordinary connectivity pass already occurs, `freshVolume + intNeeded - rSteps` on portal-free levels rather than only its current sign test;
+- **local axis availability:** O(1) or bounded-neighborhood counts of unused H/V axis capacity at the current cell and pending must-cross/must-turn interfaces, using existing `edgeUsage`/mask state;
+- **already-known obligation reachability shape:** only if summarized from an already-paid reached set, not by launching a new traversal;
+- **current diversity masks plus one interface signal:** test whether the existing `(flipperUsedMask, mustCrossMask)` diversity coordinates become more informative when paired with a cheap residual-capacity/interface quantity.
+
+Do **not** begin with full bridge/articulation/cut analysis, repeated component decomposition, or exact attainable-resource dynamic programming. Those remain diagnostic candidates only if the cheap layer fails and the expected information gain can justify their cost.
+
+### Important comparison baseline
+
+Any candidate descriptor must be compared against what the pruning gauntlet already knows. A descriptor that merely predicts the boolean connectivity verdict, MST lower bounds, intersection deficit, or existing must-cross deadlocks is not new future information. The useful target is residual variation **among states that already pass current hard pruning** and compete for finite beam retention.
+
 ## More useful next descriptor families
 
 The scalar sanity check does **not** establish which descriptor will work. It does narrow where information must come from.
@@ -80,8 +121,8 @@ The scalar sanity check does **not** establish which descriptor will work. It do
 The next offline pass should prespecify only a few state/interface families that can distinguish histories even when scalar progress is tied:
 
 1. **Residual axis/interface availability.** How much H/V edge capacity remains around the current region and unsatisfied must-cross/turn obligations, using information already represented by edge usage and mechanic masks.
-2. **Residual component/corridor capacity.** Cheap connected-component volume, bridge/cut/corridor scarcity, or interface width after accounting for already-consumed traversal resources. Compare against current connectivity/prune output so a new descriptor must add information rather than rename an existing check.
-3. **Exact-resource attainability summaries.** Not merely remaining intersection/length counts, but whether a cheap relaxed/restricted residual model suggests those exact remaining values are still attainable.
+2. **Residual component/corridor capacity.** Prefer information reusable from an already-paid connectivity pass. New bridge/cut/corridor work is second-line because connectivity is already a major hot path.
+3. **Exact-resource attainability summaries.** Not merely remaining intersection/length counts, but whether a cheap relaxed/restricted residual model suggests those exact remaining values are still attainable. This is not a first runtime feature unless computation is demonstrably cheap.
 4. **Obligation geometry, not counts.** Location/interface relationships among pending objectives and available regions. Counts alone are explicitly falsified above.
 
 Existing must-cross/flipper diversity masks remain valid candidate coordinates for survivor coverage; the point is to test whether adding a small amount of **future interface** information distinguishes the exact-live alternatives from redundant/dead survivors.
@@ -100,7 +141,7 @@ No new CP-SAT campaign is needed first. The exact case material already answers 
 
 Next:
 
-1. project a **small prespecified descriptor set** onto the existing A/D exact cases, starting with quantities already cheap/available in current prepared/search state;
+1. project a **small prespecified descriptor set** onto the existing A/D exact cases, beginning with local axis/interface summaries and already-paid connectivity slack rather than a new graph traversal;
 2. compare each descriptor's incremental separation against current score and current prune/connectivity outputs, not against a blank baseline;
 3. inspect whether the same descriptor direction recurs across unrelated parents rather than fitting thresholds to these selected cases;
 4. only if a compact descriptor family survives, expand exact labels or construct a fixed-width offline survivor-coverage counterfactual;
