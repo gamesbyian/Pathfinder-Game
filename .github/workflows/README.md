@@ -69,6 +69,6 @@ Do not infer that CP-SAT search workers should equal runner vCPUs; compare repre
 
 ## Repository / diagnostic workflows
 
-These are not solver-batch entrypoints, but remain listed here for workflow discoverability checks: `ci.yml`, `audit-export.yml`, `audit-technique-census-duplicates.yml`, `diagnose-technique-census-duplicates.yml`, `deploy-pages.yml`, and `deploy-firestore-rules.yml`.
+These are not solver-batch entrypoints, but remain listed here for workflow discoverability checks: `ci.yml`, `audit-export.yml`, `audit-technique-census-duplicates.yml`, `diagnose-technique-census-duplicates.yml`, `deploy-pages.yml`, `deploy-firestore-rules.yml`, and `diverse-ih-confirm-broad-002-one-shot.yml` (temporary confirmation plumbing; do not merge as production policy).
 
 Use the narrowest workflow whose evidence semantics match the question. Capability workflows must remain level-blind. Avoid creating a new batch runner merely for different parallelism: common entrypoints now expose or implement the worker/shard controls needed to trade concurrent footprint against tail latency.
