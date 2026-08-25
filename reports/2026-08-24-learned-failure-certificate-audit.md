@@ -1,8 +1,8 @@
 # Learned-failure certificate audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-24 — current prune-gauntlet/topology implementation, repair nogood-cache evidence, prior sound DFS/beam recurrence audits, and static inspection of `isConnected()`'s rejection control flow
-> **Decision:** do not build a generic learned-nogood/CDCL layer. The first genuinely plausible learned logical reason is a bounded connectivity-derived structural certificate. The shadow pilot can start cheaper than previously stated: `isConnected()` already knows at the rejection site whether the failure is goal-unreachable, pending-MustPass-unreachable, pending-MustCross-unreachable, or residual-volume shortage, so that subtype plus existing state/resource fields can be logged with no second flood fill. Only pay for component/boundary fingerprints if this first-stage population is large/recurrent enough to justify them.
+> **Last evidence:** 2026-08-25 — current prune-gauntlet/topology implementation, repair nogood-cache evidence, prior sound DFS/beam recurrence audits, static inspection of `isConnected()`'s rejection control flow, and cross-representation reuse audit
+> **Decision:** do not build a generic learned-nogood/CDCL layer. The first genuinely plausible learned logical reason is a bounded connectivity-derived structural certificate. The shadow pilot can start cheaper than previously stated: `isConnected()` already knows at the rejection site whether the failure is goal-unreachable, pending-MustPass-unreachable, pending-MustCross-unreachable, or residual-volume shortage, so that subtype plus existing state/resource fields can be logged with no second flood fill. Only pay for component/boundary fingerprints if this first-stage population is large/recurrent enough to justify them. If a future exact frontier/DD experiment independently produces dead interface states, treat those as an opportunistic second certificate population rather than building exact machinery for learning.
 > **Remaining gate:** Stage A: instrument already-scheduled connectivity failures at their existing return sites with rejection subtype, rejected objective (where applicable), existing resource/mask fields, exact-state fingerprint, and normal work/context identity. Measure subtype prevalence and cross-state/cross-parent recurrence without changing search. Stage B only if Stage A has headroom: add conservative reached-component/boundary sketches and test recurrence, soundness, avoided flood-fill work, and earlier firing. Stop if useful reasons become nearly unique or fingerprinting/matching approaches flood-fill cost.
 > **Evidence role:** discovery
 > **Selection:** observational — candidate reason families were narrowed after inspecting existing Pathfinder prune/memoization and recurrence evidence.
@@ -175,6 +175,22 @@ Stage B answers the original four certificate questions:
 
 Both stages are observational only. They must not alter pruning, beam retention, ordering, PRNG consumption, or work budgets.
 
+## Opportunistic exact-interface population
+
+A future bounded frontier/ZDD or other independently justified exact-interface experiment may produce a second useful population: exact dead interface states.
+
+Do **not** build such an experiment for learned failure. But if those states already exist, preserve enough provenance to ask:
+
+1. do projected dead-interface descriptions recur across different exact histories or parents?
+2. can a recurring projection be stated as a sufficient reason rather than merely a correlated signature?
+3. does the resulting candidate fire in native states before or more cheaply than the original expensive exact/interface reasoning?
+
+The pipeline is:
+
+`already-paid exact dead interfaces -> projected recurring reason -> live-counterexample search + soundness derivation -> bounded cheap checker`
+
+This can complement connectivity-derived certificates because the failure populations and representations are structurally different. The same stop rules apply: near-unique reasons, expensive matching, or loss of soundness after projection close the direction.
+
 ## Success and stop gates
 
 Proceed from Stage A to Stage B only if the failure population is large enough and some subtype/coarse-context recurrence or earliness opportunity survives across unrelated parents. A Stage-A negative is enough to stop without paying for graph fingerprints.
@@ -207,6 +223,8 @@ The CP-SAT prefix oracle can act as a counterexample source for proposed project
 - any live counterexample immediately disqualifies R as a hard dead-state certificate;
 - failure to find a counterexample is supporting evidence only, not proof, unless R also has a mathematical soundness derivation.
 
+A future independent exact frontier/interface model can play the same falsification role for its supported scope and can additionally expose exact dead boundary states. Agreement between exact models is useful evidence; disagreement is a correctness/model investigation, never a majority vote.
+
 Timeout/UNKNOWN/unsupported never count as deadness.
 
 The broad reference-model support/validation matrix is now closed. Landmark-specific validation debt should only be bought if the proposed certificate/query actually depends on those landmark semantics; do not reopen generic oracle validation merely because learned-failure work uses exact counterexamples.
@@ -217,6 +235,7 @@ The broad reference-model support/validation matrix is now closed. Landmark-spec
 - Repair-local experience memory remains useful but non-proof.
 - MustPass/MustCross lower-bound caches already occupy part of the “remember repeated future information” space in a specialized, sound form.
 - The next learned-failure action is **Stage A of the shadow connectivity reason audit**, not a clause database and not yet a boundary-fingerprint implementation.
+- Dead-state reuse from a frontier/DD experiment is opportunistic only and does not change that rank.
 - If Stage A is negative, deprioritize learned logical failure cheaply and keep #6 focused on restart/continuation-value work.
 - If Stage A is positive but Stage B is negative, likewise stop before any production cache.
 - Only a positive Stage B earns one conservative monotone reason checker before any generic explanation framework.
