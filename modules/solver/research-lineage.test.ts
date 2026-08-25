@@ -74,4 +74,30 @@ describe('winning lineage research instrumentation', () => {
             details: { culled: [{ path: [1, 2], rank: 3 }, { path: [1, 9], rank: 4 }], beamWidth: 2 } });
         expect(observer.stages[0].details).toEqual({ culled: [{ path: [1, 2], rank: 3 }], beamWidth: 2 });
     });
+
+    test('summarizes ranked pools by default but can retain the full pool explicitly', () => {
+        const index = new WinningPrefixIndex([{ path: [1, 2, 3], provenance: 'x', family: 'a' }]);
+        const rankedPool = [
+            { path: [1, 9], rank: 1, score: 10, insertionOrder: 0 },
+            { path: [1, 2], rank: 2, score: 9, insertionOrder: 1 },
+            { path: [1, 8], rank: 3, score: 8, insertionOrder: 2 },
+        ];
+        const record = { stage: 'score-width-culled', depth: 1, work: 3, paths: [[1, 2]],
+            details: { rankedPool, beamWidth: 1 } };
+
+        const compact = new WinningLineageObserver(index);
+        compact.observe(record);
+        expect(compact.stages[0].details).not.toHaveProperty('rankedPool');
+        expect(compact.stages[0].details).toMatchObject({
+            poolCandidateCount: 3,
+            supportedPoolCandidates: 1,
+            supportedPoolFamilies: 1,
+            supportedPool: [{ rank: 2, score: 9, insertionOrder: 1, paths: 1, families: ['a'] }],
+        });
+
+        const fullPool = new WinningLineageObserver(index, { retainRankedPoolDetails: true });
+        fullPool.observe(record);
+        expect(fullPool.stages[0].details?.rankedPool).toEqual(rankedPool);
+        expect(fullPool.stages[0].details).toMatchObject({ poolCandidateCount: 3, supportedPoolCandidates: 1 });
+    });
 });
