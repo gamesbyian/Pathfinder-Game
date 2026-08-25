@@ -1,14 +1,15 @@
 # Sharded runner for scripts/method-probe.mjs — isolated single-method testing across a full
-# corpus, parallelized the same way solver-stress-refresh.yml parallelizes portfolio-solve-sweep.mjs
-# (20-shard matrix, ~85 levels/shard for corpus-2). Diagnostic-only: unlike that workflow, this one
-# never commits anything back to the repo — method-probe.mjs isn't part of production solving and
-# its output isn't corpus state, just a per-run answer to "does method X solve level L" across the
-# whole corpus. Results are artifacts + a job-summary table, not a git commit.
+# corpus. Diagnostic-only: this workflow never commits anything back to the repo; results are
+# artifacts + a combined job summary.
 #
-# Built 2026-07-24 for admissible-order-search.ts's prototype tuning (see
-# reports/2026-07-24-admissible-order-search-corpus2-validation.md) — testing a single tie-break
-# profile (--only=ida:<profile>) against all 1700 corpus-2 levels locally took 3-4 concurrent
-# processes fighting over 4 cores; this gets the same answer across 20 GitHub-hosted runners instead.
+# Throughput shape (2026-08-25): queue many small outer shards behind a smaller max-parallel cap,
+# then use several disjoint method-probe processes INSIDE each runner. Standard public-repository
+# ubuntu-latest runners currently expose 4 vCPUs, so the default uses 4 worker processes. Each job
+# bundles method-probe.mjs exactly once before launching those children: invoking run-bundled.mjs
+# independently in every child would make them race to rewrite the same .solver-tools bundle.
+# The outer shard queue smooths cross-level runtime variance; the inner processes keep each runner's
+# CPUs occupied. Worker subranges are floor-split with no gaps/overlaps and write separate result
+# files, all of which combine-method-probe-shards.mjs consumes afterward.
 name: method-probe sweep (isolated single-method corpus test)
 
 on:
@@ -30,28 +31,29 @@ on:
         required: false
         default: '20000000'
       total_levels:
-        description: 'Total level count in the chosen corpus (used to compute shard ranges — 1700 for stress-levels-random.json, 102 for stress-levels.json)'
+        description: 'Total level count in the chosen corpus (1700 for stress-levels-random.json, 102 for stress-levels.json)'
         required: false
         default: '1700'
       shard_count:
-        description: 'Shard count (fixed 20 before 2026-08-22). Raise well above max_parallel (e.g. 60 shards at max_parallel=15, same total footprint) for finer, self-balancing scheduling instead of every shard starting at once and the whole run waiting on whichever one drew the slowest levels -- see solver-stress-refresh.yml''s own shard_count/max_parallel input descriptions for the full mechanism this mirrors. Very small shard_count (bigger per-shard slices) may need this workflow''s fixed 120m per-shard timeout raised by hand; it is not auto-scaled here the way solver-stress-refresh.yml''s is.'
+        description: 'Fine-grained outer shard count. Default 60 queues three waves behind max_parallel=20, so fast lanes immediately pull another small slice instead of waiting for one unlucky coarse shard.'
         required: false
-        default: '20'
+        default: '60'
       max_parallel:
-        description: 'Shards running concurrently. Default 20 (== shard_count default) reproduces pre-2026-08-22 behavior exactly (no throttling) when both are left at their defaults.'
+        description: 'Outer GitHub Actions jobs running concurrently. This bounds account/job footprint independently of shard_count.'
         required: false
         default: '20'
+      workers:
+        description: 'Disjoint method-probe processes inside each runner. Default 4 matches current standard public ubuntu-latest vCPU count.'
+        required: false
+        default: '4'
 
 concurrency:
-  # Scoped by `only`, not a single shared group: unlike solver-stress-refresh.yml, this workflow
-  # never commits anything, so there's no shared-state risk from running different profile sweeps
-  # concurrently — only a same-profile double-trigger needs serializing.
+  # No git writes or shared corpus mutation. Only serialize accidental duplicate sweeps for the
+  # same technique key; different methods may run concurrently when account capacity allows it.
   group: method-probe-sweep-${{ inputs.only }}
   cancel-in-progress: false
 
 jobs:
-  # Tiny job so probe-shards' matrix can size itself to shard_count instead of a fixed [1..20]
-  # array — GitHub Actions matrices must be a static list or fromJson() of a previous job's output.
   plan:
     name: Plan shard count
     runs-on: ubuntu-latest
@@ -80,10 +82,10 @@ jobs:
       matrix:
         shard: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
-      - name: Check out main
+      - name: Check out the dispatched commit exactly
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -98,7 +100,7 @@ jobs:
         id: range
         shell: bash
         run: |
-          nn=$(printf '%02d' "${{ matrix.shard }}")
+          nn=$(printf '%03d' "${{ matrix.shard }}")
           total="${{ inputs.total_levels }}"
           n="${{ inputs.shard_count }}"
           start=$(( ( (${{ matrix.shard }} - 1) * total ) / n + 1 ))
@@ -107,24 +109,60 @@ jobs:
           echo "start=${start}" >> "$GITHUB_OUTPUT"
           echo "end=${end}" >> "$GITHUB_OUTPUT"
 
-      - name: Run method-probe on this shard's range
+      - name: Run method-probe across this runner's CPUs
         id: probe
         continue-on-error: true
         shell: bash
         run: |
           set +e
           mkdir -p logs/method-probe-shards
-          timeout -k 30s --preserve-status 110m node scripts/run-bundled.mjs scripts/method-probe.mjs -- \
-            --corpus="${{ inputs.corpus }}" \
-            --levels="pos:${{ steps.range.outputs.start }}-${{ steps.range.outputs.end }}" \
-            --only="${{ inputs.only }}" \
-            --budget-ms="${{ inputs.budget_ms }}" \
-            --node-budget="${{ inputs.node_budget }}" \
-            --out="logs/method-probe-shards/shard-${{ steps.range.outputs.nn }}.json" \
-            --summary-out="logs/method-probe-shards/shard-${{ steps.range.outputs.nn }}-summary.md" \
-            2>&1 | tee "logs/method-probe-shards/shard-${{ steps.range.outputs.nn }}.console.log"
-          status=${PIPESTATUS[0]}
-          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+
+          # Bundle once. Parallel run-bundled.mjs children would all target the same output bundle.
+          bundle=$(node --input-type=module -e \
+            "import { buildBundle } from './scripts/run-bundled.mjs'; console.log(buildBundle('scripts/method-probe.mjs'));" )
+          if [ -z "$bundle" ] || [ ! -f "$bundle" ]; then
+            echo "Failed to build method-probe bundle" >&2
+            echo "exit_code=2" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          outer_start=${{ steps.range.outputs.start }}
+          outer_end=${{ steps.range.outputs.end }}
+          count=$(( outer_end - outer_start + 1 ))
+          requested_workers=${{ inputs.workers }}
+          if [ "$requested_workers" -lt 1 ]; then requested_workers=1; fi
+          workers=$requested_workers
+          if [ "$workers" -gt "$count" ]; then workers=$count; fi
+
+          pids=()
+          labels=()
+          for ((w=0; w<workers; w++)); do
+            sub_start=$(( outer_start + (w * count) / workers ))
+            sub_end=$(( outer_start + ((w + 1) * count) / workers - 1 ))
+            label="${{ steps.range.outputs.nn }}-w$((w + 1))"
+            labels+=("$label")
+            echo "worker $((w + 1))/$workers: pos:${sub_start}-${sub_end}"
+            timeout -k 30s --preserve-status 110m node "$bundle" \
+              --corpus="${{ inputs.corpus }}" \
+              --levels="pos:${sub_start}-${sub_end}" \
+              --only="${{ inputs.only }}" \
+              --budget-ms="${{ inputs.budget_ms }}" \
+              --node-budget="${{ inputs.node_budget }}" \
+              --out="logs/method-probe-shards/shard-${label}.json" \
+              --summary-out="logs/method-probe-shards/shard-${label}-summary.md" \
+              > "logs/method-probe-shards/shard-${label}.console.log" 2>&1 &
+            pids+=("$!")
+          done
+
+          aggregate=0
+          for i in "${!pids[@]}"; do
+            wait "${pids[$i]}"
+            status=$?
+            echo "worker ${labels[$i]} exit=${status}"
+            cat "logs/method-probe-shards/shard-${labels[$i]}.console.log"
+            if [ "$status" -ne 0 ] && [ "$aggregate" -eq 0 ]; then aggregate=$status; fi
+          done
+          echo "exit_code=${aggregate}" >> "$GITHUB_OUTPUT"
           exit 0
 
       - name: Upload this shard's results
@@ -136,16 +174,25 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
+      - name: Fail on unexpected worker error
+        if: >-
+          always() &&
+          steps.probe.outputs.exit_code != '0' &&
+          steps.probe.outputs.exit_code != '124' &&
+          steps.probe.outputs.exit_code != '143'
+        run: exit 1
+
   combine:
     name: Combine shard results
     needs: probe-shards
+    if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Check out main
+      - name: Check out the dispatched commit exactly
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
 
       - name: Download all shard artifacts
         uses: actions/download-artifact@v4
@@ -159,12 +206,14 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Combine into one result file + write job summary
+      - name: Combine every worker result + write job summary
         run: node scripts/combine-method-probe-shards.mjs --staging-dir=artifact-staging --out-dir=logs/method-probe-shards
 
       - name: Upload combined result
         uses: actions/upload-artifact@v4
         with:
           name: method-probe-combined
-          path: logs/method-probe-shards/combined.json
+          path: |
+            logs/method-probe-shards/combined.json
+            logs/method-probe-shards/solved-ids.txt
           retention-days: 30
