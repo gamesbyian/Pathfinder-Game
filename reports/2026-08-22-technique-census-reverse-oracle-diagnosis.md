@@ -1,10 +1,10 @@
 # Technique census reverse-oracle diagnosis
 
-> **Status:** resolved / provenance correction
+> **Status:** concluded-negative
 > **Last evidence:** 2026-08-25 — immutable run `32459711208`, exact historical orchestration at `e5034e8c433eb32ab6d1882d80271dc277b91b0f`, lifecycle reducer audit, and census-plan coverage audit
 > **Decision:** the former P0 “predecessor-dependent admissible-order” anomaly was created by stale lifecycle-stage attribution plus missing compound census cells. The eight rows previously described as admissible-order wins were later diverse-beam retry wins. There is no surviving evidence from those rows for deterministic cross-stage teaching or MP/MC memo dependence.
-> **Remaining gate:** none for the former P0. If a future matched action/config reproduces fresh-versus-preceded divergence, use the bounded paired deterministic trace and the resource/order stop tree described below.
-> **Evidence role:** forensic correction
+> **Remaining gate:** none
+> **Evidence role:** forensic
 > **Selection:** observational
 
 ## Why this report exists
@@ -38,7 +38,7 @@ The affected rows are:
 
 The immutable combined artifact from GitHub Actions run `32459711208` records their actual successful attempts. In every case, the admissible-order attempts failed before a later diverse-beam retry solved the level.
 
-Six rows were solved by `beam:intersectionHarvest@beam5000(diverse)` and one additional intersection row plus the objective row were also late retry-stage diverse-beam successes; `R02690` used `beam:objectiveFirst@beam5000(diverse)`. The relevant successful retry stages were `dedup-near-tie-retry` and `connectivity-axis-exhausted-retry`, not `admissible-order`.
+Seven rows were solved by `beam:intersectionHarvest@beam5000(diverse)`; `R02690` used `beam:objectiveFirst@beam5000(diverse)`. The relevant successful retry stages were `dedup-near-tie-retry` and `connectivity-axis-exhausted-retry`, not `admissible-order`.
 
 `R02088`, the original forensic target, is explicit:
 
@@ -62,7 +62,7 @@ The historical/current stale list could not represent stages such as:
 
 Its “last reached before solve” logic therefore selected the last *known* old stage, not the actual last reached production stage. A solve after `ida:none` in a later beam retry could be mislabeled `admissible-order` even though the immutable attempt rows and `techniqueLifecycle` contained the later stage.
 
-The reducer is being changed to derive stage order from each artifact's `techniqueLifecycle` keys rather than maintain a second hard-coded stage registry. A regression fixture covers a solved row whose winner is a newly introduced later stage.
+The reducer now derives stage order from each artifact's `techniqueLifecycle` keys rather than maintaining a second hard-coded stage registry. A regression fixture covers a solved row whose winner is a newly introduced later stage.
 
 ## Why the census did not contradict the production beam wins
 
