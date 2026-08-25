@@ -53,11 +53,15 @@ on:
         required: false
         default: '86400000'
       workers:
-        description: 'Cross-level worker processes per shard.'
+        description: 'Cross-level worker processes per shard. Default 4 matches current standard public ubuntu-latest runner vCPU count.'
         required: false
-        default: '2'
+        default: '4'
       shard_count:
-        description: 'Number of even shards to split the sample into.'
+        description: 'Number of even shards to split the sample into. Default 60 queues fine-grained work behind 20 lanes to reduce tail latency.'
+        required: false
+        default: '60'
+      max_parallel:
+        description: 'Shards running concurrently. Keep below shard_count for queue-based tail balancing; lower further when matched arms must share the account job budget.'
         required: false
         default: '20'
       enable_flags:
@@ -138,6 +142,7 @@ jobs:
       contents: read
     strategy:
       fail-fast: false
+      max-parallel: ${{ fromJson(inputs.max_parallel) }}
       matrix: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
       - name: Check out the dispatched commit exactly
@@ -266,12 +271,6 @@ jobs:
 
       - name: Print repair-fallback-loop participation
         shell: bash
-        # Direct evidence of whether the mechanism actually changed anything, not just the aggregate
-        # solved count -- how many levels' repair fallback loop got at least one attempt (tagged
-        # `repair: true` without the `repairProbe`/biased-tier markers -- see orchestration.ts's
-        # Attempt.repairProbe comment), and whether any of those attempts won. Printed to the JOB
-        # CONSOLE LOG specifically (not just the uploaded artifact) since this session's egress
-        # policy has been observed blocking the artifact-download zip (Azure blob storage, 403).
         run: |
           node -e "
           const fs = require('node:fs');
