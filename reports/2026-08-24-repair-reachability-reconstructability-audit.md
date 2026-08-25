@@ -1,8 +1,8 @@
 # Repair reachability versus reconstructability audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-24 — exact repair-retreat CP-SAT evidence through the 2026-08-15 follow-up, the 2026-08-13 direct reconstruction/rollout diagnostic from an exact-live `R00648` prefix, current repair machinery, and the narrowed beam MustCross-state audit
-> **Decision:** do not design a new large repair operator yet. One exact-live-but-native-hard reconstructability case is **already confirmed**: `R00648` remains unsolved when `closeLengthGap` is invoked directly from a CP-SAT-verified live prefix with unrestricted backtracking and a 2,000,000-node budget, and 2,000 native randomized rollouts from the same live state also find no completion. Do not repeat that experiment. Classify the remaining exact-live retreat cases before deciding whether retreat, reconstruction, or larger destroy work is recurrently warranted.
+> **Last evidence:** 2026-08-25 — exact repair-retreat CP-SAT evidence through the 2026-08-15 follow-up, the 2026-08-13 direct reconstruction/rollout diagnostic from an exact-live `R00648` prefix, current repair machinery, the narrowed beam MustCross-state audit, and cross-representation reuse audit
+> **Decision:** do not design a new large repair operator yet. One exact-live-but-native-hard reconstructability case is **already confirmed**: `R00648` remains unsolved when `closeLengthGap` is invoked directly from a CP-SAT-verified live prefix with unrestricted backtracking and a 2,000,000-node budget, and 2,000 native randomized rollouts from the same live state also find no completion. Do not repeat that experiment. Classify the remaining exact-live retreat cases before deciding whether retreat, reconstruction, or larger destroy work is recurrently warranted. If a future exact frontier/DD experiment independently exposes exact continuation counts for these residuals, preserve them as opportunistic basin-width labels; do not build counting machinery for this audit.
 > **Remaining gate:** reuse the existing exact-live cases other than `R00648` and apply one prespecified native reconstruction operator per case under a canonical `workSpent` cap where new execution is required. Keep operator-specific conclusions explicit. `R03176` already shows that the full repair process can eventually solve with `closeLengthGap`, but that is not yet the same measurement as a direct frozen-prefix reconstruction success. Use known-dead points only as correctness controls when cheap; do not buy more CP-SAT resolution merely to narrow existing UNKNOWN intervals.
 > **Evidence role:** discovery
 > **Selection:** observational — cases and candidate descriptors come from already-mined repair-retreat and beam-extinction evidence.
@@ -128,6 +128,8 @@ One instance does not establish a general repair policy. Seek recurrence across 
 
 Offline diagnostics may include viable-branching/forced-choice, basin-width proxies, residual interface width, solution density under a safe abstraction, or distance-to-tractability. None becomes a production feature without independent value.
 
+If an independently justified exact frontier/DD representation can count continuations for one of these same live prefixes at negligible extra cost, retain the exact count or a coarse log-count bin as a stronger basin-width label. This can distinguish “one needle-like completion exists” from “many completions exist but native reconstruction still cannot find them.” That distinction is diagnostically useful, but exact counting is not a new prerequisite for repair work.
+
 ### Deep live boundary
 
 Tiny local edits are structurally incapable of success. This is the only regime where a larger destroy window, dependency-guided reopening, or eventual core/MCS-guided unrefinement becomes plausible.
@@ -171,6 +173,8 @@ Future reports should distinguish:
 - **interface width:** future-relevant boundary/context size;
 - **distance to tractability/backdoor depth:** how many hard choices remain before the residual enters a simpler class.
 
+Exact continuation count, when available from an already-built exact representation, is one unusually direct basin-width label. It is still distinct from reconstructability: a large exact basin can be hard for a badly matched heuristic, and a singleton basin can occasionally be easy if guidance points directly into it.
+
 Do not collapse these into one “repair difficulty” scalar without evidence.
 
 ## Success and stop gates
@@ -193,3 +197,5 @@ The same residual descriptor can have different legal roles:
 - scheduler (#1): only after held-out value may a cheap runtime descriptor guide allocation.
 
 `crossCounts`/MustCross phase is currently a cheap optional diagnostic, not a universal mechanism.
+
+Exact continuation counts from an already-paid exact representation remain offline labels unless a separate cheap predictor and held-out policy value are demonstrated.
