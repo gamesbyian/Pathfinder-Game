@@ -87,14 +87,13 @@ Once those rows exist, perform the already-specified join/frontier analysis:
 
 Only residual headroom after that static baseline can justify dynamic/survival/bandit scheduler machinery.
 
-## Documentation staleness found
+## Documentation staleness corrected
 
-Two live descriptions need to distinguish code readiness from data readiness:
+This reconciliation found and corrected three stale descriptions on the same branch:
 
-- [`2026-08-24-scheduler-evidence-contract-audit.md`](2026-08-24-scheduler-evidence-contract-audit.md) currently says current solver **artifacts** already carry the full per-attempt work contract. Current code does; the latest inspected full-refresh artifacts do not.
-- [`2026-08-24-research-execution-readiness-reconciliation.md`](2026-08-24-research-execution-readiness-reconciliation.md) describes P0 as needing a new tiny instrumentation seam even though current `main` already has `_orderingResearchObserver`; the missing instrumentation is historical-harness availability, not a new production seam.
-
-There is also a stale top-of-file narrative in `modules/solver/admissible-order-search.ts` that still calls the search an unwired, unmeasured prototype. Operational docs and orchestration now establish that it is a production last-resort search family with substantial validation history. That source comment should be corrected independently of search behavior.
+- [`2026-08-24-scheduler-evidence-contract-audit.md`](2026-08-24-scheduler-evidence-contract-audit.md) had said current solver **artifacts** already carry the full per-attempt work contract. It now distinguishes current code capability from the latest inspected full-refresh materialization.
+- [`2026-08-24-research-execution-readiness-reconciliation.md`](2026-08-24-research-execution-readiness-reconciliation.md) had described P0 as needing a new tiny instrumentation seam. It now records that current `main` already has `_orderingResearchObserver` and narrows the missing seam to historical-harness availability.
+- `modules/solver/admissible-order-search.ts` had still called the search an unwired, unmeasured prototype. Its top-level comment now describes the production last-resort tier and existing validation history without changing search behavior.
 
 ## Disposition
 
