@@ -121,6 +121,9 @@ Did a refactor preserve the behavior it claims to preserve?
 Did the implementation make the same useful work cheaper, or did a policy use less/more work?
 
 - For implementation speed, use the deterministic work protocol in [`solver-architecture.md`](solver-architecture.md#speed-only-optimization) and representative interleaved wall measurements.
+- `node scripts/stress/hint-cost-drift.mjs` is a cheap retrospective signal for search-cost changes when hint provenance contains same-config/same-budget rediscoveries at multiple commits. It prefers `workSpent`, but coverage is opportunistic and drift is an attribution lead, not a regression verdict.
+- `node scripts/stress/classify-stability.mjs --in=<benchmark>` distinguishes comfortable solves from budget-edge solves; add `--compare=<second-run>` to flag outcome/status flakiness. This helps decide how much confidence to place in a nominally preserved solve.
+- Neither retrospective signal replaces a controlled deterministic before/after benchmark when making a promotion or performance claim.
 - `workSpent` is the cross-technique allocation currency; raw nodes are not.
 - A policy that solves more by spending more total work is not a speedup.
 - A binding wall deadline makes unsolved capability indeterminate for reproducible search evidence; classify `deadlineTruncated` separately.
