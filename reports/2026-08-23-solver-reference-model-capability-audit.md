@@ -1,9 +1,9 @@
 # Solver exact/reference-model capability audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-23 — current `cpsat-full-probe.py`, native must-cross legality, reconciled mechanic-state contract, CP-SAT flipping-filter validation, repair-retreat prefix work, and canonical-referee validation practice
-> **Decision:** treat the existing CP-SAT/reference stack as a serious but bounded research oracle now; do not expand it yet. First summarize bidirectional validation by mechanic combination and demonstrate turnaround/value on one current ranked question
-> **Remaining gate:** produce a bounded support/validation suite that classifies each relevant mechanic combination as exact-validated, encoded-but-insufficiently-validated, one-sided/relaxed, unsupported, or timeout-prone, with every emitted witness checked by the canonical referee
+> **Last evidence:** 2026-08-24 — static reconciliation of `cpsat-full-probe.py`, mechanic-state contracts, tooling catalog, current queue, prior CP-SAT validation, and repair-retreat prefix work; corrected stale external-model support entries for regular filters and turn landmarks
+> **Decision:** treat the existing CP-SAT/reference stack as a serious but bounded research oracle now; do not expand mechanic scope yet. Close the small bidirectional support matrix, then spend the oracle on a current beam-extinction/live-dead question before considering broader infrastructure
+> **Remaining gate:** produce a bounded support/validation suite that classifies each relevant mechanic combination as exact-validated, encoded-but-insufficiently-validated, one-sided/relaxed, unsupported, or timeout-prone, with every emitted witness checked by the canonical referee; then report turnaround/UNKNOWN rate and decision value on one selected beam-retention boundary
 > **Evidence role:** forensic
 > **Selection:** observational — audit follows prior targeted CP-SAT work and current reference-program reprioritization
 
@@ -120,6 +120,19 @@ So a separate first-axis variable is not required **in this model while the exac
 
 This closes the documentation-logic discrepancy, not the broader validation gate. Targeted adversarial must-cross fixtures remain useful because a hand-written equivalence should be exercised directly before broad `INFEASIBLE` claims rely on it.
 
+### 2026-08-24 support-contract staleness correction
+
+A later static audit found that the same durable mechanic table had drifted again in a different way. It still listed regular static filters as externally exact even though the maintained full CP-SAT probe explicitly skips any level with `filters`, while it listed must-turn and adjacent-turn as relaxed despite the current full probe containing turn/chirality encodings for those landmark families.
+
+[`docs/mechanic-state-contracts.md`](../docs/mechanic-state-contracts.md) is now reconciled to the maintained full probe:
+
+- regular static filters: **unsupported by the maintained full probe**;
+- flipping filters: exact encoding present, with strong targeted validation already recorded;
+- must-turn and adjacent-turn: exact encoding present, but broad validation depth remains incomplete;
+- surround: exact encoding present, with validation depth still to be summarized.
+
+The correction also makes the contract explicit that `externalModelSupport` describes **encoding capability**, not proof that every combination is sufficiently validated for broad `INFEASIBLE` claims. This report remains the validation-depth authority.
+
 ## What the model may prove
 
 When all involved mechanics/rules are exact-validated for the query:
@@ -216,9 +229,28 @@ Do not “fix” a disagreement by weakening/strengthening constraints until the
 
 After the support audit, use the model on **one current ranked question** before expanding scope.
 
-Good candidates include:
+The preferred first question is now a known **A/D-class beam extinction boundary**, because it asks a particularly clean exact question: among candidates around a retention event, which prefixes still admit any valid completion? This directly separates search-generation failure from survivor-selection failure and supplies truth labels for evaluating proposed future-opportunity descriptors.
 
-- an exact-live/dead beam retention boundary;
+At a selected boundary, retain for each queried candidate:
+
+- exact prefix/state identity and beam depth;
+- whether production retained or discarded it;
+- model result `SAT` / `INFEASIBLE` / `UNKNOWN` / `unsupported`;
+- canonical-referee result for every emitted completion;
+- model turnaround/cost;
+- current beam score/rank and prespecified cheap residual descriptors.
+
+Useful outcomes include:
+
+- retained states dead while a discarded alternative is exact-live: direct evidence of retention failure;
+- retained and discarded alternatives all live: not the A/D defect being sought;
+- all candidates dead: the extinction happened earlier;
+- UNKNOWN dominates: CP-SAT is not a practical oracle at this boundary and the program should retain narrower uses.
+
+The same labels can falsify overcoarse proposed abstractions: if two states share a proposed residual signature but one is exact-live and the other exact-dead, that signature is not a sound future-equivalence/cache key. It may still remain a heuristic diversity descriptor, but its logical role is then explicit.
+
+Other good candidates remain:
+
 - a repair edit/retreat interface;
 - a proposed learned-failure reason whose soundness needs a counterexample search; or
 - a reduced counterexample for a new propagator.
@@ -234,6 +266,8 @@ Record:
 ### Success gate
 
 Keep/elevate the reference program if the audited model produces reliable decision-changing labels at a cost meaningfully below equivalent heuristic archaeology on at least one active question.
+
+The prior repair-retreat work already establishes one real paying use. The beam-boundary pilot is the next test of whether that value generalizes to a second ranked program without expanding mechanic scope.
 
 ### Stop/demotion gate
 
@@ -251,7 +285,7 @@ A smaller trustworthy oracle is better than a grand “full solver” whose supp
 When the bounded suite closes:
 
 1. keep [`docs/mechanic-state-contracts.md`](../docs/mechanic-state-contracts.md) aligned with verified model semantics as support changes;
-2. add the reference-model validation/support entry point to [`docs/tooling-catalog.md`](../docs/tooling-catalog.md) if repeated use justifies a stable command;
+2. keep [`docs/tooling-catalog.md`](../docs/tooling-catalog.md) aligned with the maintained probe, its abstentions, and validation direction;
 3. keep detailed validation counts and bugs in dated reports;
 4. keep unsupported/one-sided limitations explicit in every consumer report.
 
