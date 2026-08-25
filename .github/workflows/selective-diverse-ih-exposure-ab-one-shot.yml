@@ -23,16 +23,16 @@ jobs:
       - name: Select all matching Corpus-2 levels
         run: |
           mkdir -p tmp/selective-diverse-ih
-          node scripts/run-bundled.mjs - <<'NODE'
+          cat > tmp/selective-diverse-ih/select-population.ts <<'TS'
           import fs from 'node:fs';
-          import { installBrowserStubs } from './scripts/test-lib/browser-stubs.mjs';
+          import { installBrowserStubs } from '../../scripts/test-lib/browser-stubs.mjs';
           installBrowserStubs();
-          const { createSolver } = await import('./modules/solver.js');
-          const { detectArchetype } = await import('./modules/solver/archetype.js');
+          const { createSolver } = await import('../../modules/solver.js');
+          const { detectArchetype } = await import('../../modules/solver/archetype.js');
           const Solver = createSolver();
           const src = JSON.parse(fs.readFileSync('data/stress/stress-levels-random.json','utf8'));
           const levels = Array.isArray(src) ? src : src.levels;
-          const selected = levels.filter(entry => {
+          const selected = levels.filter((entry: any) => {
             const { id, stressMeta, provenance, ...raw } = entry;
             const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
             return detectArchetype(level) === 'high-intersection-burden'
@@ -48,7 +48,9 @@ jobs:
           fs.writeFileSync('tmp/selective-diverse-ih/population.json', JSON.stringify(out));
           fs.writeFileSync('tmp/selective-diverse-ih/count.txt', String(selected.length)+'\n');
           console.log(`selected ${selected.length}/${levels.length} levels`);
-          NODE
+          TS
+          npx tsx tmp/selective-diverse-ih/select-population.ts
+          rm tmp/selective-diverse-ih/select-population.ts
           sha256sum tmp/selective-diverse-ih/population.json > tmp/selective-diverse-ih/population.sha256
       - uses: actions/upload-artifact@v4
         with:
@@ -102,7 +104,6 @@ jobs:
       - name: Run strict fixed-work shard
         run: |
           d=tmp/result/${{ matrix.arm }}/shard-${{ matrix.shard }}; mkdir -p "$d"
-          n=$(cat tmp/selective-diverse-ih/count.txt)
           positions=$(python3 - <<'PY'
           n=int(open('tmp/selective-diverse-ih/count.txt').read())
           s=int('${{ matrix.shard }}')
@@ -125,10 +126,6 @@ jobs:
           const rows=r.levels??[]; if(rows.length!==expected) throw Error(`expected ${expected} rows, got ${rows.length}`);
           const bad=rows.filter(x=>x.deadlineTruncated||x.status==='deadline-truncated'||x.status==='attempt-error');
           if(bad.length) throw Error(`indeterminate/error rows: ${bad.length}`);
-          if(arm==='treatment') {
-            const offered=rows.flatMap(x=>(x.attempts??[]).filter(a=>a.stageId==='main-loop'&&a.profile==='intersectionHarvest'&&a.beamWidth===5000&&a.diverseBeam));
-            if(!offered.length) console.log('note: no shard level reached the new trailing action before an earlier solve/exhaustion');
-          }
           const patch=cp.execSync('git diff -- modules/solver/attempts.ts',{encoding:'utf8'});
           const meta={arm,shard:Number(shard),solverSha:process.env.SOLVER_SHA,populationCount:n,
             populationSha256:fs.readFileSync('tmp/selective-diverse-ih/population.sha256','utf8').trim().split(/\s+/)[0],
