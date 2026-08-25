@@ -35,6 +35,7 @@ These current docs own decisions; reports supply evidence:
 Use these as evidence for the corresponding queue item, not as alternate priority lists:
 
 - current capability/priority reconciliation: [`2026-08-25-capability-sweep-976-reconciliation.md`](2026-08-25-capability-sweep-976-reconciliation.md)
+- post-976 portfolio exposure/depth rejoin: [`2026-08-25-post-976-portfolio-exposure-rejoin.md`](2026-08-25-post-976-portfolio-exposure-rejoin.md)
 - scheduler static repricing: [`2026-08-25-scheduler-static-repricing-join.md`](2026-08-25-scheduler-static-repricing-join.md), [`2026-08-24-scheduler-evidence-contract-audit.md`](2026-08-24-scheduler-evidence-contract-audit.md)
 - corrected former P0 attribution: [`2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md`](2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md), [`2026-08-22-technique-census-reverse-oracle-diagnosis.md`](2026-08-22-technique-census-reverse-oracle-diagnosis.md)
 - locked confirmation/transfer cohorts: [`2026-08-24-solver-confirmation-transfer-cohort-reservation.md`](2026-08-24-solver-confirmation-transfer-cohort-reservation.md)
