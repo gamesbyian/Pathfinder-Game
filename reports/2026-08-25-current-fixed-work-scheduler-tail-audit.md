@@ -1,8 +1,9 @@
 # Current fixed-work scheduler tail audit
 
-> **Status:** concluded; materialization fed the completed static-repricing join
+> **Status:** concluded-positive
 > **Last evidence:** 2026-08-25 — Actions run `32821022906`, artifact `scheduler-current-fixed-work-sample`
 > **Decision:** the Queue #1 materialization gate and census join are satisfied. Under a strict 67M canonical-work envelope, the current ladder is heavily front-loaded: `main-loop` and `repair-probe` account for 81.3% of measured work and 38/40 solves. The joined evidence identifies a narrow positive static baseline: suppress only `main-loop|dfs:objectiveFirst` and `main-loop|dfs:intersectionHarvest` in a same-revision A/B before any dynamic scheduler work. See [`scheduler static repricing join`](2026-08-25-scheduler-static-repricing-join.md).
+> **Remaining gate:** run the same-revision matched A/B suppressing only `main-loop|dfs:objectiveFirst` and `main-loop|dfs:intersectionHarvest` under the same strict 67M canonical-work envelope before promotion.
 > **Evidence role:** tuning / development sample
 > **Selection:** deterministic evenly spaced 60-level sample from `data/stress/stress-levels-random.json`; level-blind, no saved hints, not confirmation evidence
 > **Queue:** [`docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md) Priority 1
