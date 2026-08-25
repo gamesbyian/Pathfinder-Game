@@ -1,9 +1,9 @@
 # Learned-failure certificate audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-24 — current prune-gauntlet/topology implementation, repair nogood-cache evidence, and prior sound DFS/beam recurrence audits
-> **Decision:** do not build a generic learned-nogood/CDCL layer. The first genuinely plausible learned logical reason is a bounded connectivity-derived structural certificate, tested in shadow mode for recurrence, earliness, soundness, and work savings before any production cache.
-> **Remaining gate:** instrument already-scheduled connectivity failures with conservative reason sketches and measure cross-state/cross-parent recurrence plus potential avoided flood-fill work and earlier firing; stop if sound projected reasons become nearly unique or expensive to match.
+> **Last evidence:** 2026-08-24 — current prune-gauntlet/topology implementation, repair nogood-cache evidence, prior sound DFS/beam recurrence audits, and static inspection of `isConnected()`'s rejection control flow
+> **Decision:** do not build a generic learned-nogood/CDCL layer. The first genuinely plausible learned logical reason is a bounded connectivity-derived structural certificate. The shadow pilot can start cheaper than previously stated: `isConnected()` already knows at the rejection site whether the failure is goal-unreachable, pending-MustPass-unreachable, pending-MustCross-unreachable, or residual-volume shortage, so that subtype plus existing state/resource fields can be logged with no second flood fill. Only pay for component/boundary fingerprints if this first-stage population is large/recurrent enough to justify them.
+> **Remaining gate:** Stage A: instrument already-scheduled connectivity failures at their existing return sites with rejection subtype, rejected objective (where applicable), existing resource/mask fields, exact-state fingerprint, and normal work/context identity. Measure subtype prevalence and cross-state/cross-parent recurrence without changing search. Stage B only if Stage A has headroom: add conservative reached-component/boundary sketches and test recurrence, soundness, avoided flood-fill work, and earlier firing. Stop if useful reasons become nearly unique or fingerprinting/matching approaches flood-fill cost.
 > **Evidence role:** discovery
 > **Selection:** observational — candidate reason families were narrowed after inspecting existing Pathfinder prune/memoization and recurrence evidence.
 
@@ -74,6 +74,32 @@ A compact structural reason could therefore have:
 
 This is much more plausible than wrapping a clause store around parity arithmetic or a memoized lower bound.
 
+## Existing zero-extra-traversal observation seam
+
+The current `isConnected()` implementation performs one residual flood fill and then tests its result in a fixed sequence:
+
+1. goal reachable?;
+2. each pending MustPass reachable?;
+3. each pending MustCross reachable?;
+4. on portal-free levels, is `freshVolume + intNeeded >= remainingSteps`?
+
+Each failed test returns `false` immediately. The function currently discards which test failed, but **the subtype is already known at that exact control-flow point**. Recording it does not require another connectivity call, separator search, or boundary reconstruction.
+
+Likewise, several useful context fields already exist before the call/return:
+
+- `intNeeded`;
+- remaining counted length;
+- pending MP/MC masks;
+- `mcOpenMask` / reserved-intersection-wall regime;
+- whether axis-exhaustion walls are enabled;
+- the specific unreachable objective for MP/MC failures;
+- `freshVolume` for volume failures;
+- normal solver stage/action/work identity outside the function.
+
+This means the first pilot should not begin by computing a sophisticated cut certificate. It can first answer whether there is enough repeated **failure population structure** to make such work plausible.
+
+Caution: a rejection subtype such as “goal unreachable” is not itself a reusable certificate. It says *what the just-completed flood fill proved*, not *which compact facts would prove it again elsewhere*. Stage A is therefore observational triage, not a candidate production checker.
+
 ## Candidate reason families
 
 ### Required-objective cut certificate
@@ -102,33 +128,58 @@ That is a sound state-level fact. The research question is whether equivalent re
 
 `freshVolume` alone is not a sound generalized key. Equal scalar volume does not imply equivalent future geometry.
 
-## Smallest value-of-information pilot
+## Two-stage value-of-information pilot
 
 Do not implement a production cache.
 
-On connectivity calls that already execute and already reject, record a bounded **shadow reason sketch**:
+### Stage A: rejection-population audit
+
+On connectivity calls that already execute and already reject, record only information available without another graph traversal:
 
 - rejection subtype: goal unreachable / pending MP unreachable / pending MC unreachable / volume shortage;
+- rejected objective index/key when applicable;
 - remaining length and intersection resources;
-- pending-MustCross count and free intersections after reservations;
-- rejected objective when applicable;
+- pending MP/MC masks and pending-MustCross count;
+- reserved-intersection-wall regime / free intersections after MC reservation;
+- MustCross first-pass summary only if already available cheaply at the caller;
+- current position and a separate exact-state fingerprint;
+- stage/action/parent identity and the work point at which the call occurred.
+
+Stage A answers:
+
+1. Which connectivity failure subtype actually consumes the failure population?
+2. How much exact-state recurrence exists within each subtype?
+3. Do coarse existing state/resource tuples recur across different exact histories and parents, or is the population already nearly unique before geometry is represented?
+4. At what work/depth do these failures occur, and how often are there long gaps before the next scheduled connectivity call where earlier firing could matter?
+
+A positive Stage A does **not** establish a sound learned reason. It only earns the more expensive reason-sketch work.
+
+### Stage B: structural reason sketch
+
+Only for promising Stage-A subtypes, add a bounded conservative sketch of the flood fill that just ran:
+
 - canonical reached-component or boundary fingerprint;
 - boundary blocker facts split by static / used-flipper / axis-exhausted / visited-wall categories;
-- pending objective masks and MustCross first-pass state where needed;
-- a separate exact-state fingerprint so abstract recurrence is not confused with literal state recurrence.
+- pending objective masks and MustCross phase only where logically needed;
+- volume/capacity slack for shortage failures;
+- exact-state fingerprint retained separately so abstract recurrence is not confused with literal state recurrence.
 
-The pilot answers four questions:
+Because the reachable set is already materialized in the flood-fill scratch at the rejection point, Stage B should **read the existing result**, not rerun connectivity. Even so, scanning/canonicalizing up to the grid population and constructing blocker facts has a cost and should be measured separately.
+
+Stage B answers the original four certificate questions:
 
 1. How often does an abstract reason recur across more than one exact state?
 2. Do repeats occur across genuinely different histories/branches/parents?
 3. How many future flood fills could a sound matching reason avoid?
 4. How often could a reason have fired earlier, between scheduled connectivity checks?
 
-The first pass is observational only. It must not alter pruning, beam retention, ordering, PRNG consumption, or work budgets.
+Both stages are observational only. They must not alter pruning, beam retention, ordering, PRNG consumption, or work budgets.
 
 ## Success and stop gates
 
-Proceed to one bounded reason checker only if all of the following hold across unrelated development parents:
+Proceed from Stage A to Stage B only if the failure population is large enough and some subtype/coarse-context recurrence or earliness opportunity survives across unrelated parents. A Stage-A negative is enough to stop without paying for graph fingerprints.
+
+Proceed from Stage B to one bounded reason checker only if all of the following hold across unrelated development parents:
 
 - recurrence materially exceeds exact-state recurrence;
 - repeated reasons cover a non-trivial fraction of connectivity cost or expose useful earlier firing;
@@ -138,9 +189,10 @@ Proceed to one bounded reason checker only if all of the following hold across u
 
 Stop if:
 
-- reason fingerprints are nearly unique;
+- Stage-A contexts are already nearly unique across exact states/parents;
+- reason fingerprints become nearly unique once geometry is represented;
 - useful recurrence disappears once enough state is retained for soundness;
-- matching itself requires graph analysis comparable to the original flood fill;
+- fingerprinting or matching itself requires graph analysis comparable to the original flood fill;
 - savings are only a tiny number of already-scheduled calls with no earlier firing;
 - recurrence is mostly one parent/family or exact-state duplication already known to be weak.
 
@@ -157,11 +209,14 @@ The CP-SAT prefix oracle can act as a counterexample source for proposed project
 
 Timeout/UNKNOWN/unsupported never count as deadness.
 
+The broad reference-model support/validation matrix is now closed. Landmark-specific validation debt should only be bought if the proposed certificate/query actually depends on those landmark semantics; do not reopen generic oracle validation merely because learned-failure work uses exact counterexamples.
+
 ## Queue implication
 
 - Generic exact-state DFS memoization remains closed/weak.
 - Repair-local experience memory remains useful but non-proof.
 - MustPass/MustCross lower-bound caches already occupy part of the “remember repeated future information” space in a specialized, sound form.
-- The next learned-failure action is a **shadow connectivity reason recurrence/earliness audit**, not a clause database.
-- If that audit is negative, deprioritize learned logical failure and keep #6 focused on restart/continuation-value work.
-- If positive, test one conservative monotone certificate family before any generic explanation framework.
+- The next learned-failure action is **Stage A of the shadow connectivity reason audit**, not a clause database and not yet a boundary-fingerprint implementation.
+- If Stage A is negative, deprioritize learned logical failure cheaply and keep #6 focused on restart/continuation-value work.
+- If Stage A is positive but Stage B is negative, likewise stop before any production cache.
+- Only a positive Stage B earns one conservative monotone reason checker before any generic explanation framework.
