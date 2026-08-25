@@ -10,6 +10,7 @@ Compact entry point for coding/research agents. Load task-specific docs, not the
 | Cross-cutting schema/state/telemetry | [`docs/change-recipes.md`](docs/change-recipes.md), then owning topic doc |
 | UI/input/accessibility/rendering | [`docs/architecture.md`](docs/architecture.md), [`docs/ui-accessibility.md`](docs/ui-accessibility.md), [`docs/testing.md`](docs/testing.md) |
 | Solver implementation | [`docs/solver-architecture.md`](docs/solver-architecture.md), [`modules/solver/README.md`](modules/solver/README.md), [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md) |
+| Solver hard prune/cache/correctness | [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md), [`docs/solver-architecture.md`](docs/solver-architecture.md) |
 | Solver optimization/research | [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md), then [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md) and the relevant specialist doc |
 | Variant/family research | [`docs/variant-level-research.md`](docs/variant-level-research.md) |
 | Existing probe/batch/workflow | [`docs/tooling-catalog.md`](docs/tooling-catalog.md) |
@@ -58,7 +59,7 @@ Use the cheapest check that answers the iteration question, then the relevant fi
 | Solver routing/scheduling/configuration | experiment preflight; shared work envelope; current reach/marginal value; independent confirmation when selected/tuned |
 | Browser/UI | focused Playwright; `npm run ci:full` for broad browser confidence |
 | Solver hot path | targeted probes + [`docs/testing.md`](docs/testing.md) solved-set/cost gates + full `npm run ci` |
-| Hard prune/cache/correctness | proof-oriented soundness/referee/differential gates in solver docs |
+| Hard prune/cache/correctness | [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md) + proof-oriented soundness/referee/differential gates |
 | Documentation | `npm run check:documentation-links` when possible |
 
 `solver:bench --check` protects outcomes, not performance. GitHub Actions is execution infrastructure, not research evidence unless the exact run/protocol is reported.
