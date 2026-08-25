@@ -1,56 +1,52 @@
-# GitHub Actions workflow index
+# Solver batch workflows
 
-Use this index and [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.md) before adding or opening research workflows.
+These workflows are the preferred GitHub Actions entrypoints for solver capability, research, and reference-model batch work. Prefer them over ad-hoc local long runs when the workload is naturally independent across levels/cases.
 
-## Core workflows
+## Common scheduling defaults
 
-| Workflow | Purpose |
-|---|---|
-| `ci.yml` | Repository CI gate. |
-| `deploy-pages.yml` | Vite/GitHub Pages deployment. |
-| `deploy-firestore-rules.yml` | Firestore rules/index deployment. |
-| `audit-export.yml` | Audit export. |
-| `solver-stress-refresh.yml` | Canonical **full-population** sharded level-blind stress refresh; [`solver-stress-refresh.md`](solver-stress-refresh.md). Use for baseline refreshes and non-archetype-scoped questions — for an `ATTEMPT_POLICY` routing-change A/B, prefer `solver-archetype-sample-ab.yml` below instead (same evidence, a fraction of the wall time). |
-| `solver-typical-budget-baseline.yml` | Level-blind baseline or matched deterministic experiment. |
-| `technique-census.yml` | Expensive isolated technique × level census; check existing census first. |
-| `method-probe-sweep.yml` | One technique or short technique list over a population. |
-| `solver-highbudget-unsolved-sweep.yml` | Additional-compute study on unresolved levels. |
-| `solver-level-blind-targeted-sweep.yml` | **Preferred for a one-off check over a specific, caller-supplied id list** (not a full refresh, not archetype-scoped) — dynamically sharded, artifact-only, no baseline/hint persistence. |
-| `solver-archetype-sample-ab.yml` | **Preferred default for validating/promoting an archetype-gated `ATTEMPT_POLICY` routing change** (the common case for `modules/solver/attempts.ts` fixes) — stratified-sample A/B, general form of the retained per-flag sample-A/B workflows below. A rule change can only affect levels whose archetype it touches, so this draws a deterministic seeded sample from the affected archetype(s) plus a small control sample from every other archetype (catches scope leakage empirically) instead of re-sweeping the full 1700-level corpus to reconfirm zero-effect everywhere else. Used to validate the 2026-08-22 archetype-routing fixes in a fraction of `solver-stress-refresh.yml`'s wall time. |
-| `family-wide-trove.yml` | Population-scale family work; check the existing ~2.5 GB trove first. |
-| `atlas-sweep.yml` | Atlas research sweep. |
-| `mitm-frontier-sweep.yml` | Meet-in-the-middle/frontier experiment. |
+For node/work-bounded native-solver sweeps on standard public `ubuntu-latest` runners, the current default pattern is:
 
-Family guidance and existing trove: [`../../docs/variant-level-research.md`](../../docs/variant-level-research.md).
+- 4 cross-level worker processes per runner, matching the current 4-vCPU standard public runner.
+- More shards than concurrent lanes, usually 60 shards behind 20 lanes, so completed lanes pull queued work instead of idling behind a coarse-shard straggler.
+- Immutable dispatched-SHA checkout for evidence-producing runs.
 
-`solver-stress-refresh.yml`, `method-probe-sweep.yml`, and `solver-archetype-sample-ab.yml` all take `shard_count` and `max_parallel` inputs (added 2026-08-22): more/smaller shards for finer-grained progress, `max_parallel` capped below `shard_count` to bound the run's concurrent-job footprint without lengthening wall time — an idle lane immediately grabs the next queued shard instead of the whole run waiting on the slowest of one big simultaneous batch. This is the fix for multi-hour GHA sweeps creating dead time, especially with paired A/B arms; tune it down before dispatching alongside other in-flight GHA work rather than accepting hours of serialized/blocked wall time. See `solver-stress-refresh.md`'s own `max_parallel` section for the full mechanism.
+These are throughput defaults, not universal laws. A workflow with intentionally binding wall-clock deadlines can change its solved set when worker contention changes, so worker count there must be measured rather than mechanically raised. CP-SAT's `num_search_workers` is also a search-portfolio parameter, not merely a CPU-count setting.
 
-## Oracle / CP-SAT
+## Core capability workflows
 
-- `cpsat-explicit-prefix-oracle.yml`
-- `cpsat-hint-harvest-sweep.yml`
-- `cpsat-hint-harvest-sweep-published.yml`
+- `solver-stress-refresh.yml` — canonical level-blind full capability refresh over Corpus 1 + Corpus 2. Default 60 shards / 20 lanes / 4 workers. Node/work ceilings are the normal binding budgets; the 24h wall deadline is intentionally non-binding.
+- `solver-typical-budget-baseline.yml` — typical-budget baseline. Already heavily oversharded for tail control. Its ordinary wall deadlines are semantically meaningful, so do not copy the 4-worker default here without a matched measurement.
+- `solver-highbudget-unsolved-sweep.yml` — high-budget unsolved sweep with runtime-weighted bin packing and dedicated slow-level handling.
+- `solver-level-blind-targeted-sweep.yml` — targeted level-blind sweep using the weighted planner.
 
-Oracle output is research evidence, not cold production capability by itself.
+## Sample A/B workflows
 
-## Retained focused experiments
+- `solver-archetype-sample-ab.yml` — stratified archetype-gated A/B. Default 60 shards / 20 lanes / 4 workers.
+- `solver-repair-probe-adaptive-sample-ab.yml` — repair-probe adaptive-budget A/B. Default 60 shards / 20 lanes / 4 workers.
+- `solver-repair-fallback-reserve-sample-ab.yml` — repair-fallback reserve A/B. Default 60 shards / 20 lanes / 4 workers.
 
-`solver-repair-fallback-reserve-sample-ab.yml`, `solver-repair-probe-adaptive-sample-ab.yml`, and `solver-elite-prefix-dfs-retry-validate.yml` remain available. Confirm the question is still open and the wiring still matches current code before reuse.
+These workflows use non-binding deterministic deadlines by default, so their node/work budgets remain the comparison basis while cross-level worker parallelism only changes calendar time.
 
-## Specialist diagnostics
+## Technique and method sweeps
 
-- `audit-technique-census-duplicates.yml`: path-triggered audit of duplicate technique-census rows using the retained forensic script.
-- `diagnose-technique-census-duplicates.yml`: path-triggered deeper duplicate-cell diagnosis and plan inspection; specialist investigation workflow, not a general census entry point.
+- `technique-census.yml` — isolated single-/paired-/flag-technique census. `workers` is configurable and defaults to 4; the 120-shard / 20-lane outer layout is retained.
+- `method-probe-sweep.yml` — isolated method/config probe over a corpus. Default 60 outer shards / 20 lanes and 4 disjoint probe processes per runner. Each runner bundles the probe once before spawning children; the combiner validates metadata, duplicate IDs, and missing worker outputs.
 
-Retired workflow designs, naming history, and migration incidents are preserved in git history and dated reports; do not use old fixed Corpus-2 batch commands for current dispatches.
+## CP-SAT / reference-model workflows
 
-## Before dispatching or adding a workflow
+- `cpsat-hint-harvest-sweep.yml` — CP-SAT hint harvest; 60 shards / 20 lanes because per-level runtime varies heavily.
+- `cpsat-hint-harvest-sweep-published.yml` — published-level harvest with a smaller matrix appropriate to its population.
+- `cpsat-explicit-prefix-oracle.yml` — explicit prefix-feasibility cases. Independent cases are sharded across 20 runners by default, then coverage-checked and combined.
+- `atlas-sweep.yml` — grows the CP-SAT-labelled branch atlas. Uses 60 fixed interleaved buckets behind 20 lanes; smaller trial dispatches select a literal subset of those buckets rather than repartitioning the population.
+- `mitm-frontier-sweep.yml` — curated per-level MITM frontier experiments.
 
-1. Check [`../../docs/solver-optimization-current-queue.md`](../../docs/solver-optimization-current-queue.md) and prior reports.
-2. Check [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.md) for a cheaper local/sample tool.
-3. **Validating or promoting an `ATTEMPT_POLICY` routing change?** Use `solver-archetype-sample-ab.yml`, not a full-population `solver-stress-refresh.yml` sweep, unless the change's blast radius genuinely isn't archetype-bounded. This is the default instrument for that question as of 2026-08-22, not an alternative to consider only when the full sweep is inconvenient.
-4. For family work, check [`../../docs/variant-level-research.md`](../../docs/variant-level-research.md) and the existing trove.
-5. Preserve level-blindness, provenance, deterministic-budget, experiment-comparability, and recoverable-progress rules.
-6. Tune `shard_count`/`max_parallel` (where the workflow offers them) before dispatching, especially alongside other in-flight GHA work — see the note above the workflow table.
+CP-SAT itself currently uses its own internal search-worker setting. Do not infer that matching this number to runner vCPUs is automatically faster; compare representative runs because CP-SAT workers also diversify search.
 
-Workflow presence means infrastructure exists, not that its hypothesis is active.
+## Other batch research
+
+- `family-wide-trove.yml` — family-wide solver trove. Native solver work already defaults to 4 workers per runner.
+- `solver-elite-prefix-dfs-retry-validate.yml` — targeted elite-prefix validation.
+
+## Choosing a workflow
+
+Use the narrowest workflow whose evidence semantics match the question. Capability workflows must remain level-blind. Research/reference workflows may use historical artifacts where explicitly designed to do so. Avoid creating a new batch runner merely to get different parallelism: most common entrypoints now expose or already implement the worker/shard controls needed to trade concurrent footprint against tail latency.
