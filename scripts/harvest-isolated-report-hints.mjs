@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Harvest referee-valid paths from method-probe and technique-census artifacts.
+/** Harvest referee-valid paths from isolated/direct-attempt solver artifacts.
  *
  * These tools deliberately bypass the production ladder. Their discoveries are still useful hints,
  * but provenance MUST carry context.isolatedTechnique=true. The canonical hint-capture helper owns
@@ -113,7 +113,6 @@ for (const file of walk(stagingDir).sort()) {
     let doc;
     try { doc = JSON.parse(readFileSync(file, 'utf8')); } catch { continue; }
 
-    // method-probe shard/combined result.
     const methodCorpus = normalizeCorpus(doc?.corpus);
     if (ALLOWED.has(methodCorpus) && Array.isArray(doc?.levels) && Array.isArray(doc?.only)) {
         await harvestRows({
@@ -125,12 +124,24 @@ for (const file of walk(stagingDir).sort()) {
         continue;
     }
 
-    // technique-census combined-cells.json. One file can span all three corpora.
     if (Array.isArray(doc?.results) && doc.results.some(r => r?.cellId && r?.corpus && r?.techniqueKeys)) {
         for (const [label, corpusRel] of Object.entries(CORPUS_BY_LABEL)) {
             const rows = doc.results.filter(r => r.corpus === label);
             await harvestRows({ corpusRel, rows, budgetMs: null, identity: `technique-census:${sourceRunId}:${label}` });
         }
+        continue;
+    }
+
+    // Generic contract for narrow validation tools: serialize the actual valid path and attempt
+    // metadata, declare isolatedTechnique=true, and name the corpus. This lets new diagnostics join
+    // the durability layer without another workflow-specific importer.
+    if (doc?.isolatedTechnique === true && ALLOWED.has(methodCorpus) && Array.isArray(doc?.rows)) {
+        await harvestRows({
+            corpusRel: methodCorpus,
+            rows: doc.rows,
+            budgetMs: doc.budgetMs ?? null,
+            identity: `isolated-report:${sourceWorkflow}:${path.relative(stagingDir, file)}`,
+        });
     }
 }
 
