@@ -11,8 +11,42 @@ env:
   COHORT_SEED: '2026082417'
 
 jobs:
+  materialize-cohort:
+    name: Materialize and seal confirm-broad-001
+    runs-on: ubuntu-latest
+    permissions: { contents: read }
+    steps:
+      - name: Check out pinned cohort-generator revision
+        uses: actions/checkout@v4
+        with: { ref: '${{ env.GENERATOR_SHA }}' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - name: Install dependencies
+        run: npm ci
+      - name: Materialize reserved cohort exactly once
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
+            --count=256 --master-seed=${COHORT_SEED} --id-prefix=C \
+            --out=${GITHUB_WORKSPACE}/tmp/confirm-broad-001.json
+          node - <<'NODE'
+          const fs=require('node:fs'),crypto=require('node:crypto');
+          const corpus=JSON.parse(fs.readFileSync('tmp/confirm-broad-001.json','utf8'));
+          if(!Array.isArray(corpus.levels)||corpus.levels.length!==256) throw Error('expected 256 generated levels');
+          const levelsHash=crypto.createHash('sha256').update(JSON.stringify(corpus.levels)).digest('hex');
+          fs.writeFileSync('tmp/confirm-broad-001-levels.sha256',levelsHash+'\n');
+          console.log(`sealed confirm-broad-001 levels sha256=${levelsHash}`);
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: confirm-broad-001-sealed-cohort
+          path: |
+            tmp/confirm-broad-001.json
+            tmp/confirm-broad-001-levels.sha256
+          retention-days: 90
+
   run-shard:
     name: ${{ matrix.arm }}-shard-${{ matrix.shard }}
+    needs: materialize-cohort
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions: { contents: read }
@@ -25,29 +59,24 @@ jobs:
       - name: Check out frozen solver revision
         uses: actions/checkout@v4
         with: { ref: '${{ env.SOLVER_SHA }}' }
-      - name: Check out pinned cohort-generator revision
-        uses: actions/checkout@v4
-        with:
-          ref: '${{ env.GENERATOR_SHA }}'
-          path: tmp/generator-src
       - uses: actions/setup-node@v4
         with: { node-version: '20', cache: npm }
       - name: Install dependencies
+        run: npm ci
+      - name: Download exact sealed cohort
+        uses: actions/download-artifact@v4
+        with:
+          name: confirm-broad-001-sealed-cohort
+          path: tmp
+      - name: Verify sealed cohort before search
         run: |
-          npm ci
-          (cd tmp/generator-src && npm ci)
-      - name: Materialize locked cohort from pinned generator
-        run: |
-          (cd tmp/generator-src && node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
-            --count=256 --master-seed=${COHORT_SEED} --id-prefix=C \
-            --out=${GITHUB_WORKSPACE}/tmp/confirm-broad-001.json)
-          # Wrapper metadata includes generatedAt. Cohort identity is the deterministic levels array.
           node - <<'NODE'
-          const fs = require('node:fs'), crypto = require('node:crypto');
-          const corpus = JSON.parse(fs.readFileSync('tmp/confirm-broad-001.json','utf8'));
-          if (!Array.isArray(corpus.levels) || corpus.levels.length !== 256) throw Error('expected 256 generated levels');
-          const hash = crypto.createHash('sha256').update(JSON.stringify(corpus.levels)).digest('hex');
-          fs.writeFileSync('tmp/confirm-broad-001-levels.sha256', hash + '\n');
+          const fs=require('node:fs'),crypto=require('node:crypto');
+          const corpus=JSON.parse(fs.readFileSync('tmp/confirm-broad-001.json','utf8'));
+          if(!Array.isArray(corpus.levels)||corpus.levels.length!==256) throw Error('expected 256 sealed levels');
+          const got=crypto.createHash('sha256').update(JSON.stringify(corpus.levels)).digest('hex');
+          const want=fs.readFileSync('tmp/confirm-broad-001-levels.sha256','utf8').trim();
+          if(got!==want) throw Error(`sealed cohort hash mismatch: got ${got}, want ${want}`);
           NODE
       - name: Apply frozen treatment rewrite
         if: matrix.arm == 'treatment'
@@ -90,7 +119,7 @@ jobs:
         run: |
           d=tmp/confirm/${{ matrix.arm }}/shard-${{ matrix.shard }}
           node - "$d" '${{ matrix.arm }}' '${{ matrix.shard }}' <<'NODE'
-          const fs=require('node:fs'), cp=require('node:child_process'), crypto=require('node:crypto');
+          const fs=require('node:fs'),cp=require('node:child_process'),crypto=require('node:crypto');
           const [d,arm,shard]=process.argv.slice(2); const r=JSON.parse(fs.readFileSync(`${d}/result.json`));
           const rows=r.levels??[]; if(rows.length!==32) throw Error(`expected 32 rows, got ${rows.length}`);
           const bad=rows.filter(x=>x.deadlineTruncated||x.status==='deadline-truncated'||x.status==='attempt-error');
@@ -102,9 +131,10 @@ jobs:
           const patch=cp.execSync('git diff -- modules/solver/orchestration.ts',{encoding:'utf8'});
           const corpus=JSON.parse(fs.readFileSync('tmp/confirm-broad-001.json','utf8'));
           const levelsHash=crypto.createHash('sha256').update(JSON.stringify(corpus.levels)).digest('hex');
-          const wrapperHash=crypto.createHash('sha256').update(fs.readFileSync('tmp/confirm-broad-001.json')).digest('hex');
+          const sealedHash=fs.readFileSync('tmp/confirm-broad-001-levels.sha256','utf8').trim();
+          if(levelsHash!==sealedHash) throw Error('sealed cohort changed before provenance write');
           const meta={arm,shard:Number(shard),solverSha:process.env.SOLVER_SHA,generatorSha:process.env.GENERATOR_SHA,
-            cohortId:'confirm-broad-001',cohortSeed:Number(process.env.COHORT_SEED),cohortLevelsSha256:levelsHash,corpusWrapperSha256:wrapperHash,
+            cohortId:'confirm-broad-001',cohortSeed:Number(process.env.COHORT_SEED),cohortLevelsSha256:levelsHash,
             strictTotalWorkBudget:67000000,nodeBudget:50000000,
             suppressedOrdinaryMainLoopConfigKeys:arm==='treatment'?['dfs:objectiveFirst','dfs:intersectionHarvest']:[],
             workingTreePatchSha256:crypto.createHash('sha256').update(patch).digest('hex')};
@@ -134,7 +164,7 @@ jobs:
           if(dirs.length!==16) throw Error(`expected 16 shard artifacts, got ${dirs.length}`);
           const g={control:[],treatment:[]}, hashes=new Set();
           for(const n of dirs){const p=path.join('tmp/downloaded',n); const m=JSON.parse(fs.readFileSync(path.join(p,'metadata.json'))); const r=JSON.parse(fs.readFileSync(path.join(p,'result.json'))); hashes.add(m.cohortLevelsSha256); g[m.arm].push(...(r.levels??[]));}
-          if(hashes.size!==1) throw Error(`deterministic levels hashes differ: ${[...hashes].join(',')}`);
+          if(hashes.size!==1) throw Error(`sealed levels hashes differ: ${[...hashes].join(',')}`);
           for(const a of ['control','treatment']){if(g[a].length!==256||new Set(g[a].map(x=>x.id)).size!==256) throw Error(`${a} population invalid`);}
           const ids=a=>new Set(g[a].filter(x=>x.ok).map(x=>x.id)); const c=ids('control'),t=ids('treatment');
           const gained=[...t].filter(x=>!c.has(x)).sort(),lost=[...c].filter(x=>!t.has(x)).sort();
