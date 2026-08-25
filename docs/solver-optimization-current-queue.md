@@ -1,7 +1,7 @@
 # Solver optimization: current priority queue
 
 > **Status:** canonical live entry point for solver capability and efficiency research.
-> **Reconciled:** 2026-08-24 after the P0/artifact reconciliation and the scheduler/configuration, generalization, beam-descriptor, reference-model, learned-failure/restart, repair, and execution-substrate audits.
+> **Reconciled:** 2026-08-24 after the P0/artifact reconciliation, scheduler/configuration audit, locked-cohort reservation, beam-descriptor projection, closed reference-model matrix, restart execution-readiness audit, staged learned-failure audit, repair reconstructability reconciliation, and execution-substrate audit.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness and generalization. Historical exact-level evidence may nominate research; it may not steer production solves.
 
 Use this file for **rank and next gate**, not as a second notebook. Detailed reasoning belongs in the linked topic docs/reports.
@@ -42,12 +42,12 @@ Additional rules:
 |---:|---|---|---|
 | 0 | Unexplained cross-stage dependence | **P0 BLOCKER** | Reproduce one fresh-vs-preceded admissible-order case under an identical action/resource contract. Compare resource/accounting/config context, then initial admissible child ordering as a semantic checksum. If ordering differs, clear MP/MC lower-bound memos first; if it agrees, trace the first later tree divergence. See [`../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md`](../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md). |
 | 1 | Evidence-driven scheduler and fixed-work portfolio repricing | **ASAP / DATA MATERIALIZATION GATE** | Current code exposes canonical action identity, per-attempt `workSpent`, ceilings, and explicit termination outcomes, but the latest inspected full-refresh artifacts predate that rich attempt projection. Materialize one current fixed-work attempt-row dataset with the existing schema, then build the action/tranche risk-set join to frozen census cap data and test a simple static policy before dynamic/survival/bandit machinery. See [`../reports/2026-08-24-queue-readiness-artifact-reconciliation.md`](../reports/2026-08-24-queue-readiness-artifact-reconciliation.md) and [`../reports/2026-08-24-scheduler-evidence-contract-audit.md`](../reports/2026-08-24-scheduler-evidence-contract-audit.md). |
-| 2 | Generalization and holdout discipline | **ASAP / FIRST COHORTS RESERVED + LOCKED** | `confirm-broad-001` and `transfer-envelope-001` are now deterministically reserved by generator version/commit, count, mode, and fresh master seed without materializing or inspecting their rows. The next selected treatment must freeze its candidate/work/acceptance contract before `confirm-broad-001` is generated; use `transfer-envelope-001` only after confirmation succeeds. See [`../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md`](../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md) and the protocol design. |
+| 2 | Generalization and holdout discipline | **ASAP / FIRST COHORTS RESERVED + LOCKED** | `confirm-broad-001` and `transfer-envelope-001` are reserved by exact repository source revision, count, mode, and fresh master seed without materializing/inspecting rows. Materialize only from the pinned revision. The next selected treatment must freeze candidate/work/acceptance before `confirm-broad-001`; use `transfer-envelope-001` only after confirmation succeeds. See [`../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md`](../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md). |
 | 3 | Automatic configuration / portfolio construction | **HIGH PRIORITY RESEARCH** | Stable config/action identities already exist in `attempt-identity.mjs`; do not rebuild them. First determine how much fixed-envelope headroom exists in the **existing action grammar**. Race/prune existing actions first; refine raw weights/widths/thresholds only inside families that survive the portfolio screen, then confirm selected survivors independently. See [`solver-scheduling-policy.md`](solver-scheduling-policy.md) and the scheduler evidence audit above. |
 | 4 | Beam score/retention at proven extinction boundaries | **ACTIVE RESEARCH / DESCRIPTOR NARROWED** | Existing exact A/D pairs falsify simple scalar progress/resource rules. MustCross first-pass state separates the `S00030` dead/live pair but does not recur across the other confirmed pairs; cheap local required-axis corridor availability separates none. Next run a read-only full-pool survivor projection over a small prespecified set of already-maintained interface-state keys, reporting bucket cardinality/singletons and fixed-width exact-live retention. Do not test a production quota/crowding rule unless a compact descriptor adds recurring information beyond current score/prunes. See [`../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md). |
-| 5 | Exact/reference-model program | **HIGH PRIORITY, BOUNDED INFRASTRUCTURE HAS PAID RENT** | Finish the small bidirectional support/validation matrix and keep encoding capability separate from validation depth. Repair-retreat and beam-extinction work have already demonstrated value. Use further CP-SAT queries only for a concrete ranked missing label/counterexample/certificate need; do not expand mechanic scope for completeness. See [`../reports/2026-08-23-solver-reference-model-capability-audit.md`](../reports/2026-08-23-solver-reference-model-capability-audit.md). |
-| 6 | Restart/randomization and learned-failure search | **HIGH PRIORITY CAPABILITY RESEARCH** | Restart side: compare fresh-seed restarts against continuation at equal aggregate `workSpent`; additive multi-seed wins establish diversity, not restart superiority. Learned-failure side: generic exact-state recurrence is already weak outside repair experience memory; run a shadow connectivity-reason recurrence/earliness audit before any learned store. See [`../reports/2026-08-24-restart-continuation-value-audit.md`](../reports/2026-08-24-restart-continuation-value-audit.md) and [`../reports/2026-08-24-learned-failure-certificate-audit.md`](../reports/2026-08-24-learned-failure-certificate-audit.md). |
-| 7 | Repair reachability/reconstructability and state-conditioned MustCross | **ACTIVE, SECONDARY** | Reuse exact retreat labels. Hand known-live prefixes to an existing bounded native reconstruction mechanism at fixed work and separate shallow/deep retreat from exact-live-but-repair-hostile reconstruction failure. Only then choose retreat, reconstruction, or larger destroy/core-guided work. See [`../reports/2026-08-24-repair-reachability-reconstructability-audit.md`](../reports/2026-08-24-repair-reachability-reconstructability-audit.md). |
+| 5 | Exact/reference-model program | **BOUNDED INFRASTRUCTURE / MATRIX CLOSED** | Broad support/validation reconciliation is complete. Portals/flippers have strong two-way evidence; core resource mechanics have substantial mixed evidence; landmark turn/surround encodings have targeted known-witness validation but shallower model→referee coverage; static filters remain deliberately unsupported. Do **not** run generic validation expansion. Buy a small landmark under-constraint/referee fixture set only if a ranked exact query depends on those semantics; otherwise use CP-SAT only for a concrete ranked label/counterexample/certificate. See [`../reports/2026-08-23-solver-reference-model-capability-audit.md`](../reports/2026-08-23-solver-reference-model-capability-audit.md). |
+| 6 | Restart/randomization and learned-failure search | **HIGH PRIORITY / EXECUTION + SHADOW GATES** | Restart: current late-repair override is node-based, so first expose/reuse a narrow arm-level canonical-`workSpent` cap; then run one prespecified comparison only, seed 0 continued to `W` versus seed 0 to `W/2` + fresh seed 1 to `W/2`. Learned failure: Stage A logs already-known connectivity rejection subtype + existing context at scheduled failures, with no second flood fill; only a positive Stage A earns boundary/component sketches. See the restart and learned-failure audits. |
+| 7 | Repair reachability/reconstructability | **ACTIVE, SECONDARY / ONE HARD-LIVE CASE CONFIRMED** | Do not repeat `R00648`: a CP-SAT-live prefix already defeated direct `closeLengthGap` with unrestricted backtracking and 2M nodes, and 2,000 randomized native rollouts produced 0 solves. Classify the **remaining** exact-live retreat cases with named existing operators under canonical `workSpent` for new comparisons. Treat `R03176` whole-repair success as contrast, not yet direct frozen-prefix success. Large destroy/core-guided work still requires recurrent deep-retreat evidence. See [`../reports/2026-08-24-repair-reachability-reconstructability-audit.md`](../reports/2026-08-24-repair-reachability-reconstructability-audit.md). |
 | 8 | Architectural speed and execution substrate | **ACTIVE SUPPORTING PROGRAM** | Re-profile current HEAD after the August 23 speed stack. Native/WASM is closed for the current broad per-candidate boundary because crossing it requires migrating too much mutable state. If scoring/candidate generation remains dominant, run one bounded true specialized-JS scorer pilot. See [`../reports/2026-08-24-speed-substrate-static-audit.md`](../reports/2026-08-24-speed-substrate-static-audit.md). |
 | 9 | Remaining cheap isolated capability missed by production | **SUBSUMED BY SCHEDULER** | Keep mining only as action/scheduler evidence. Do not append another permanent tail merely because an isolated winner exists. |
 
@@ -116,14 +116,14 @@ Use renewable evidence roles:
 - **confirmation:** candidate fixed before exact outcomes are inspected;
 - **transfer/challenge:** fresh/locked evidence for broader claims.
 
-The first two managed cohorts are now reserved in [`../reports/stress/managed-evaluation-populations-2026-08-24.json`](../reports/stress/managed-evaluation-populations-2026-08-24.json):
+The first two managed cohorts are reserved in [`../reports/stress/managed-evaluation-populations-2026-08-24.json`](../reports/stress/managed-evaluation-populations-2026-08-24.json):
 
 - `confirm-broad-001`: 256 fresh uniform-random raised-cap levels, master seed `2026082417`;
 - `transfer-envelope-001`: 256 fresh uniform-random envelope-cap levels, master seed `2026082429`.
 
-Both remain `LOCKED`: only the deterministic recipe is recorded; their level files and solver outcomes have not been materialized or inspected. See [`../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md`](../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md).
+Both remain `LOCKED`: their level files and solver outcomes have not been materialized or inspected. Their identity is pinned to **repository revision `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`**, not merely the seed or nominal generator version. Materialization must run from that checkout/worktree so imported helpers/build inputs cannot drift while the reserved population id remains unchanged.
 
-Do not generate either cohort for exploratory candidate selection. Freeze treatment + work + acceptance criteria first, then use `confirm-broad-001` once. Use `transfer-envelope-001` only after broad confirmation succeeds. If exact failures later influence redesign, reclassify and replenish rather than repeatedly querying the same population.
+Do not generate either cohort for exploratory candidate selection. Freeze treatment + work + acceptance criteria first, then materialize and use `confirm-broad-001` once. Use `transfer-envelope-001` only after broad confirmation succeeds. If the pinned source revision cannot be reproduced, reserve a new population id rather than silently regenerating different rows under the old id. If exact failures later influence redesign, reclassify and replenish rather than repeatedly querying the same population.
 
 Keep broad fresh samples separate from baseline-failure-conditioned residual samples. The latter are excellent for tail/scheduler questions but do not establish unconditional unseen-level improvement. No residual cohort is reserved yet because its membership requires a future frozen baseline commit/work contract.
 
@@ -158,57 +158,84 @@ Only if a compact key shows recurring incremental survivor value across unrelate
 
 ## #5 reference model
 
-The maintained CP-SAT/prefix stack is bounded research infrastructure, not a second production solver.
+The maintained CP-SAT/prefix stack is bounded research infrastructure, not a second production solver. The broad support/validation matrix is now **closed**.
 
-It has already paid rent twice:
+Current proof boundary:
 
-- exact repair-retreat boundaries;
-- exact beam live/dead labels around retention failures.
+- base grid, exact length/intersections, portals, multiple gates and flipping filters have the strongest two-way validation history;
+- MustPass/MustCross and other core resource mechanics have substantial mixed two-way validation in real whole-level/prefix workloads;
+- surround, must-turn and adjacent-turn have current exact encodings plus targeted known-witness/over-constraint checks, but comparatively shallow deliberately isolated cold-emitted/referee validation;
+- static regular filters remain deliberately unsupported because neither stress corpus provides a decision-bearing need for that encoding.
 
-Keep two validation directions:
+Keep the two validation directions distinct:
 
 - known-valid Pathfinder witness pinned into CP-SAT must remain feasible;
 - model-emitted witness must pass the canonical Pathfinder referee.
 
 Timeout/UNKNOWN/unsupported never become dead/UNSAT truth.
 
-Do not expand mechanic scope until a ranked question is blocked by that missing support. Use the oracle as a microscope/counterexample source for beam, repair, proposed abstractions and structural certificates.
+Do not launch a generic validation campaign to make the matrix cosmetically complete. If a ranked exact query depends materially on landmark turn/surround semantics, buy a small targeted cold/prefix emitted-path referee suite for those semantics first. Otherwise use the oracle only as a microscope/counterexample source for a concrete ranked beam, repair, abstraction, attainability, or certificate question.
 
 ## #6 restarts and learned failure
 
 Extra repair seeds clearly buy capability, including the promoted August 23 late-probe multi-seed tier. Those experiments were additive. They prove seed diversity, not that restarting beats continuing under a fixed total envelope.
 
-The restart pilot should compare, for prespecified seeds and budgets:
+### Restart side: execution gate before A/B
 
-- one continued run to total work `W`;
-- multiple fresh seeded runs whose aggregate work also equals `W`.
+The intended comparison remains canonical fixed work:
 
-Count failed restarts. Report the whole solve/work distribution, not best seed.
+- continuation: seed 0 continuously to total work `W`;
+- restart: seed 0 to `W/2`, then fresh seed 1 to `W/2` if still unsolved.
 
-For learned logical failure, keep three concepts separate:
+But the current convenient late-repair research override is a **node** cap, while the tier's work cap is a separate generous additive cap derived from the solve's time budget. Equal node caps therefore do not establish equal `workSpent`. `strictTotalWorkBudget` is also not a clean substitute because it includes all earlier ladder work before the repair arm.
+
+Before running the A/B, expose or reuse one narrow research path that can cap the isolated repair arm in canonical `workSpent`, preserve the seed-0 trajectory for continuation, create a genuinely fresh seed-1 restart, and charge failed arm work. The accounting fixture, not solve count, is the acceptance test for this prerequisite.
+
+Freeze the first treatment to the single 50/50 two-seed split above. Do not optimize seed count and split in the same first pass. Define any baseline-failure-conditioned residual population only after freezing its baseline solver commit/work contract.
+
+### Learned-failure side: cheap Stage A first
+
+Keep three concepts separate:
 
 - repair-local **experience memory**: incomplete stochastic failure reuse;
 - exact-state memoization: only safe with future-complete state and already measured weak for broad DFS/beam use;
 - structural learned reasons: sound smaller predicates that recur across distinct exact states or fire materially earlier.
 
-The current first structural candidate is connectivity-derived cut/capacity failure, because connectivity is expensive and throttled. Shadow reasons must show recurrence, earlier firing or avoided flood fills, cheap checking, and a conservative proof scope before any production cache.
+Connectivity remains the only compelling first structural family because it is expensive and throttled. But the pilot is now staged more cheaply.
+
+`isConnected()` already knows, at the existing rejection return site, whether the completed flood fill failed because of:
+
+- goal unreachable;
+- pending MustPass unreachable;
+- pending MustCross unreachable; or
+- portal-free residual-volume shortage.
+
+Stage A should log that already-known subtype plus the rejected objective where applicable, existing length/intersection/pending-mask context, exact-state fingerprint, stage/action identity and work point. It must not rerun connectivity or alter search. This is observational triage, **not** a reusable proof certificate.
+
+Only if Stage A shows enough cross-state/cross-parent recurrence or useful gaps between scheduled connectivity checks should Stage B pay to read/canonicalize the already-materialized reached set and boundary blockers. A negative Stage A cheaply closes learned logical failure without building graph-certificate machinery.
 
 ## #7 repair
 
-Exact retreat evidence contains both shallow and deep liveness-return regimes. Therefore “retreat farther” is not a universal answer.
+Exact retreat evidence contains both shallow and deep liveness-return regimes. Therefore “retreat farther” is not a universal answer, and one proposed reconstruction experiment has already been partially answered.
 
-Classify existing exact cases using:
+Use the diagnostic matrix with an explicit operator:
 
-| exact prefix | bounded native reconstruction | interpretation |
+| exact prefix | bounded named native reconstruction | interpretation |
 |---|---|---|
 | dead | fails | control |
 | dead | succeeds | correctness/reference alarm |
-| live | succeeds | retreat/selection bottleneck |
-| live | fails | reconstructability bottleneck |
+| live | succeeds | this operator can exploit the live commitment; retreat/selection may be the bottleneck |
+| live | fails | this operator cannot exploit an existing completion at the tested envelope |
 
-Only recurrent shallow-live/successful-reconstruction cases justify a reversible retreat treatment. Repeated live-but-unreconstructable cases nominate stronger bounded completion. Large destroy/core-guided work is justified only by recurrent genuinely deep rollback where small reopening is impossible in principle.
+`R00648` already occupies the final quadrant for both current repair technique classes. A CP-SAT-verified live prefix at depth 30 was replayed into native state; direct `closeLengthGap` still failed with `floor=0` and a 2,000,000-node allowance, about 500x its production budget. From that same live state, 2,000 independent randomized native rollouts produced **0 solves**, averaged about 4.3 moves before death, and reached at best depth 60 of required length 141. Do not rerun nearby budget variants as though this premise remains open.
 
-MustCross first-pass state is a shared diagnostic candidate here too, not yet a routing/scoring rule.
+`R03176` supplies useful contrast: an isolated full repair run eventually solves around 1.86M nodes with `closeLengthGap` succeeding on restart 914. That is **not yet equivalent** to handing its exact `D_live` prefix directly to the operator, so it remains classifiable if that exact question matters.
+
+For new comparisons, classify the remaining exact-live cases with one prespecified named existing operator and canonical `workSpent`; use known-dead points as cheap correctness controls where practical. Do not buy more CP-SAT time merely to narrow existing UNKNOWN intervals.
+
+MustCross first-pass state is no longer a lead repair descriptor. It separated only `S00030` among the exact beam A/D pairs, and a local required-axis corridor check separated none. Record it only as a cheap optional diagnostic if already available.
+
+Only recurrent shallow-live/operator-success cases justify a reversible retreat treatment. Repeated live/operator-fail cases may justify stronger bounded reconstruction. Large destroy/core-guided work still requires a recurrent genuinely deep-retreat population; `R00630` is a nomination, not enough by itself.
 
 ## #8 speed
 
