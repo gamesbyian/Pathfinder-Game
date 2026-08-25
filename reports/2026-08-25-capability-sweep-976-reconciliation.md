@@ -3,7 +3,7 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-08-25 — level-blind capability run `32835403128` (`976/1700` Corpus 2), clean predecessor `32526927206` (`880/1700`), fixed-work scheduler A/B `32901181013`
 > **Decision:** recent capability growth strengthens the case for portfolio exposure, routing, fixed-work allocation, and equal-work restart/continuation tests before inventing new broad search machinery. Keep the closed beam-quota and broad repair-expansion forms closed.
-> **Remaining gates:** independently confirm the exact two-action scheduler suppression; refresh the current-policy/isolated-capability join against the 976 baseline; run the prespecified equal-work continuation-versus-fresh-seed test.
+> **Remaining gate:** independently confirm the exact two-action scheduler suppression; refresh the current-policy/isolated-capability join against the 976 baseline; run the prespecified equal-work continuation-versus-fresh-seed test.
 > **Evidence role:** queue reconciliation / discovery
 
 ## Result shape
