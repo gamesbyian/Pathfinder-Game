@@ -1,9 +1,9 @@
 # Technique census reverse-oracle diagnosis
 
 > **Status:** active
-> **Last evidence:** 2026-08-24 — cardinality check against the authoritative eight historical admissible rows rules out the fixed 24-bit must-pass memo-key collision as their enabling mechanism; earlier evidence includes current-code sequential provenance, fresh-prep repair replay, bounded repair-salt controls, a current admissible-order screen, and exact-production-commit fresh controls at `e5034e8`
+> **Last evidence:** 2026-08-24 - cardinality check against the authoritative eight historical admissible rows rules out the fixed 24-bit must-pass memo-key collision as their enabling mechanism; a current-head static lifetime audit independently narrows dirty search buffers, PRNG history, and ordinary config overrides, while confirming cumulative accounting/work-cap leakage as a real architectural bug class elsewhere in the ladder
 > **Decision:** `R01936` is causally explained by the production repair probe's second seed; the other five historical repair-probe wins do not reproduce on current code at salt 1 or 2 within 2M nodes; all eight beam-labelled historical rows were actually admissible-order wins and remain genuinely predecessor-dependent at the exact historical commit; the later-discovered must-pass memo-key collision cannot cause those eight because none has enough passable objectives to set bit 24
-> **Remaining gate:** reproduce an unmodified historical full-ladder winner locally, then clear the must-pass/must-cross memo tables immediately before the admissible tier and progressively shorten/prime predecessor prefixes; if cache clearing is inert, snapshot the remaining prepared/config/accounting state around the minimal enabling prefix
+> **Remaining gate:** reproduce an unmodified historical full-ladder winner locally, then compare fresh-vs-preceded admissible dispatch under an identical explicit action contract. First compare the resource/context vector, then use initial admissible child ordering as a semantic checksum. Clear the lower-bound memo tables before broad state instrumentation; if ordering is identical, locate the first tree divergence instead of diffing every prepared field up front
 
 ## Why the original category was misleading
 
@@ -131,6 +131,43 @@ A source audit at the exact production commit narrows the prefix experiment furt
 
 The two lower-bound memo tables are therefore the only obvious persistent *value-bearing* search inputs populated by earlier attempts. Their documented contract says they are exact pure memoization, so warm-versus-empty behavior should be identical. That makes the first discriminating prefix control precise: reproduce a historical full-ladder winner while clearing `_mpLowerBoundCache` and `_mcLowerBoundCache` immediately before the admissible tier. A loss would localize the mechanism to memo-key/value behavior; a preserved win would rule out the caches and require snapshotting configuration/forced-step/static-preparation identity plus the exact successful attempt rather than broadly diffing every `PrepLevel` field. This is a code-derived hypothesis and proposed control, not measured causal evidence yet.
 
+### Current-head lifetime/accounting audit
+
+A separate 2026-08-24 static audit on current `main` checked whether a simpler generic lifetime bug could explain the anomaly and narrows several suspects before the historical executable replay:
+
+- each top-level `solveLevel()` builds a fresh prepared level and fresh per-solve `_workMeter`, so broad cross-solve contamination is not the leading theory;
+- within one solve, stages intentionally share the same mutable `PrepLevel`, cumulative `_metrics.nodesExpanded`, `_workMeter`, `_workCap`, `_cfg`, memo tables, and selected reusable state buffers;
+- `_stateBufs` are now per-prep, not module-global, after a real concurrency bug was fixed, and `createState` clears reused in-grid rows before reuse;
+- admissible-order calls `createState` **without** a reusable buffer slot, so stale DFS/beam backing arrays are not a plausible direct input to its initial state;
+- admissible-order has no seed input, so PRNG history is not a plausible explanation for its deterministic ordering difference;
+- the inspected whole-ladder and repair retry `_cfg` overrides restore the original config in `finally` blocks, lowering the prior for a simple leaked config override;
+- late direct-call retries have nonetheless already exposed **real stale `_workCap` inheritance bugs** in this architecture. Current code contains explicit save/set/restore protection because a late tier could otherwise inherit a depleted cap from an unrelated predecessor;
+- ordinary admissible-order is exceptional: it does not consult ordinary `_workCap`; it uses its node ceiling and only consults `_strictWorkCap` in strict-total-work mode;
+- ordinary admissible allocation derives remaining node allowance from a cumulative ceiling minus `prep._metrics.nodesExpanded`, so predecessor work changes its resource envelope even when the search algorithm itself is deterministic;
+- an earlier dedup-retry ordering bug already demonstrated this exact class of sequence effect: predecessor spending could consume cumulative nodes and cause a later admissible tier to be skipped/starved. That bug does **not** explain a changed initial child ordering, but it proves resource/accounting history is a real confound in this orchestration path.
+
+The correct inference is therefore narrower than either “the predecessor teaches admissible-order” or “it is definitely accounting.” Resource/accounting context can change whether/how much search occurs, but it cannot by itself change the deterministic first child ordering when explicit search inputs are otherwise identical. A measured first-ordering difference points back toward a value-bearing prepared/config input, with lower-bound memo state the strongest static candidate currently visible.
+
+### Semantic-checksum diagnostic order
+
+The smallest useful executable diagnostic should record, at the target admissible dispatch boundary in both fresh and preceded runs:
+
+- `prep._workMeter.units`;
+- `_workCap` and `_strictWorkCap`;
+- `_metrics.nodesExpanded`;
+- supplied admissible `nodeBudget` and wall-budget slice;
+- effective `_cfg` / forced-step fields;
+- gate and canonical action/config identity;
+- the **initial admissible child ordering**, including primary slack and tie-break values where practical.
+
+Treat that first child order as a semantic checksum:
+
+1. **Resource/context vector differs:** first normalize the action contract. Do not infer algorithmic carryover from unequal available work/accounting.
+2. **Resource/context is identical but initial child order differs:** the cause must already be present in prepared/config/value-bearing state before tree expansion. Clear the MP/MC lower-bound memo tables first, then snapshot only the inputs used by ranking/bounds rather than every mutable field.
+3. **Initial child order is identical:** do not instrument the whole solver. Trace the first subsequent tree divergence and inspect only the state/prune/bound inputs at that point.
+
+This ordering turns the P0 task from “diff everything mutable” into a three-stage localization test and prevents accounting noise from being confused with semantic warm-state effects.
+
 ### Later must-pass cache bug is not the historical mechanism
 
 The 2026-08-24 packing audit found a genuine, independent defect in current/historical `mustPassLowerBound` memoization: the composite cache key reserved only 24 bits for `mpVisitedMask` even though normalized must-pass plus must-turn objectives are schema-valid through 30. That defect requires bit 24 to be reachable, therefore at least **25** normalized passable objectives.
@@ -162,7 +199,8 @@ The 14-level question is no longer a single mystery:
 2. **Historical stage-attribution defect:** all eight beam-labelled frozen wins belong to `admissible-order` lifecycle, not the beam stage.
 3. **Non-transferring historical repair rows:** the remaining five fail with salts 1 and 2 on current code at 2M nodes; no current mechanism claim is warranted.
 4. **Confirmed attempt-history dependence:** every inferred or plausible admissible winner fails fresh at the exact production commit/config/gate even at 50M nodes; preceding ladder activity is necessary across all eight rows.
-5. **Specific current cache collision eliminated as cause:** the fixed must-pass key bug needs 25+ passable objectives; the eight historical rows have 5–14.
-6. **Still unresolved:** which mutable state and minimal preceding attempt prefix enables each historical admissible win.
+5. **Specific current cache collision eliminated as cause:** the fixed must-pass key bug needs 25+ passable objectives; the eight historical rows have 5-14.
+6. **Static lifetime suspects narrowed:** stale reusable buffers, PRNG history, and a simple ordinary `_workCap` explanation are poor fits for admissible-order specifically; accounting remains an important action-contract confound, while lower-bound memo/value state remains the strongest visible semantic suspect.
+7. **Still unresolved:** which mutable state and minimal preceding attempt prefix enables each historical admissible win.
 
-The next run should first reproduce an unmodified historical full-ladder winner under the preserved protocol. Then clear the two lower-bound memo tables immediately before the inferred winning admissible action; if the win survives, progressively prime the action after longer predecessor prefixes while snapshotting the remaining mutable prepared/config/accounting state. Retain `stageId`, `gateKey`, canonical `configKey`, canonical `actionKey` where available, seed, node/work ceilings, and outcome so the enabling prefix and state mutation are attributable rather than merely reproduced.
+The next run should first reproduce an unmodified historical full-ladder winner under the preserved protocol. Then execute the semantic-checksum sequence above: normalize/record the resource-context vector, compare initial admissible ordering, and clear the two lower-bound memo tables immediately before the inferred winning admissible action. If the win and initial ordering survive cache clearing, progressively prime the action after longer predecessor prefixes while snapshotting only the remaining ranking/prune-relevant prepared/config state. Retain `stageId`, `gateKey`, canonical `configKey`, canonical `actionKey` where available, seed, node/work ceilings, and outcome so the enabling prefix and state mutation are attributable rather than merely reproduced.
