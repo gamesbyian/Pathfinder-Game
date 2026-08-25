@@ -40,16 +40,18 @@ A profile name is therefore not a research claim. `harvestThenFinish`, `portalFi
 
 The census gives outcome overlap and shows substantial redundancy among some DFS/admissible configurations, plus important non-monotonicity such as width/diversity inversions and `ida:none` exclusives.
 
-The bounded operational-similarity substrate is implemented through `scripts/technique-operational-similarity.mjs`, ordering observers in `method-probe.mjs`, and bounded beam traces. Initial work found:
+The bounded operational-similarity substrate is implemented through `scripts/technique-operational-similarity.mjs`, ordering observers in `method-probe.mjs`, bounded beam traces, and the paired deterministic DFS/admissible runner `scripts/paired-deterministic-trace.mjs`. Initial work found:
 
 - ordinary DFS profiles often cluster tightly in local ranking;
 - equal-slack states are common enough that admissible tie-breaking can matter materially;
 - `ida:none` is operationally more distinct than its sibling label suggests;
 - bounded 2K/5K beam traces can diverge strongly in retained-frontier regions, so width is not merely “same search plus more states.”
 
-See [`../reports/2026-08-23-operational-similarity-substrate.md`](../reports/2026-08-23-operational-similarity-substrate.md).
+The August 23 pilot record is preserved in [`../reports/2026-08-23-operational-similarity-substrate.md`](../reports/2026-08-23-operational-similarity-substrate.md). Its former open-ended next gates are superseded by the current decision-driven policy.
 
-These findings came from bounded selected cohorts and are evidence about those operational questions, not population prevalence estimates.
+The paired-trace continuation also produced an important evidence-pipeline correction: eight rows formerly described as predecessor-conditioned admissible-order wins were actually later diverse-beam retry wins misattributed by a stale lifecycle reducer, and the isolated census comparison did not contain the exact winning diverse-beam + retry-override cells. The former cross-stage admissible P0 is therefore retired; see [`../reports/2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md`](../reports/2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md).
+
+These findings came from bounded selected cohorts and forensic reconstruction. They are evidence about those operational/causal questions, not population prevalence estimates.
 
 ## Research objective
 

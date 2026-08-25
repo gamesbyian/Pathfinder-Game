@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { compareBeamTraceBuckets, compareSiblingRankings, createBoundedSignatureCollector, orderByAdmissibleSlack } from './operational-similarity-lib.mjs';
+import { compareBeamTraceBuckets, compareDeterministicDecisionTraces, compareSiblingRankings, createBoundedSignatureCollector, orderByAdmissibleSlack } from './operational-similarity-lib.mjs';
 
 for (const count of [2, 3, 4]) {
     const rows = Array.from({ length: count }, (_, id) => ({ id: String(id), score: count - id }));
@@ -28,4 +28,37 @@ assert.deepEqual(compareBeamTraceBuckets(
 ), [{ stage: 'retained', depth: 2, leftObserved: 3, rightObserved: 4,
     leftRetainedUnique: 2, rightRetainedUnique: 2, signatureIntersection: 1,
     signatureUnion: 3, retainedSignatureJaccard: 1 / 3, censored: true }]);
+
+const event = (depth, candidates, activeOrder, family = 'admissible-order') => ({ family, depth, candidates, activeOrder });
+const identicalTrace = { observed: 2, retained: 2, truncated: false, events: [
+    event(1, [10, 11], [10, 11]), event(2, [20, 21, 22], [21, 20, 22]),
+] };
+const identicalCopy = JSON.parse(JSON.stringify(identicalTrace));
+const identicalComparison = compareDeterministicDecisionTraces(identicalTrace, identicalCopy);
+assert.equal(identicalComparison.status, 'identical-retained-trace');
+assert.equal(identicalComparison.commonEventPrefix, 2);
+assert.equal(identicalComparison.firstDivergence, null);
+assert.equal(identicalComparison.retainedEventOverlap.eventSignatureJaccard, 1);
+
+const orderingRight = { observed: 2, retained: 2, truncated: false, events: [
+    event(1, [10, 11], [11, 10]), event(2, [30, 31], [30, 31]),
+] };
+const orderingDivergence = compareDeterministicDecisionTraces(identicalTrace, orderingRight);
+assert.equal(orderingDivergence.commonEventPrefix, 0);
+assert.equal(orderingDivergence.firstDivergence.reason, 'ordering');
+assert.deepEqual(orderingDivergence.firstDivergence.left.activeOrder, [10, 11]);
+assert.deepEqual(orderingDivergence.firstDivergence.right.activeOrder, [11, 10]);
+
+const candidateRight = { observed: 2, retained: 2, truncated: false, events: [
+    event(1, [10, 12], [10, 12]), event(2, [20, 21, 22], [21, 20, 22]),
+] };
+assert.equal(compareDeterministicDecisionTraces(identicalTrace, candidateRight).firstDivergence.reason, 'candidate-set');
+
+const censoredLeft = { ...identicalTrace, observed: 9, truncated: true };
+const censoredComparison = compareDeterministicDecisionTraces(censoredLeft, identicalTrace);
+assert.equal(censoredComparison.status, 'no-divergence-observed-within-censored-bound');
+assert.equal(censoredComparison.censored, true);
+assert.equal(censoredComparison.left.retained, 2);
+assert.equal(censoredComparison.left.observed, 9);
+
 console.log('operational-similarity-lib-node-test: ok');
