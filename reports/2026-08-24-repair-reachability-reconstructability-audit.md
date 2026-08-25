@@ -1,9 +1,9 @@
 # Repair reachability versus reconstructability audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-24 — exact repair-retreat CP-SAT evidence through the 2026-08-15 follow-up, plus current repair/reconstruction machinery and beam MustCross-state audit
-> **Decision:** do not design a new large repair operator yet. First separate retreat/reachability failure from reconstructability failure by handing existing exact-live prefixes to an existing bounded native reconstruction mechanism at fixed work.
-> **Remaining gate:** on the already-labeled exact retreat cases, measure whether current native reconstruction succeeds from known-live prefixes and fails from known-dead controls; classify shallow/deep retreat and live-but-repair-hostile regimes before choosing any operator.
+> **Last evidence:** 2026-08-24 — exact repair-retreat CP-SAT evidence through the 2026-08-15 follow-up, the 2026-08-13 direct reconstruction/rollout diagnostic from an exact-live `R00648` prefix, current repair machinery, and the narrowed beam MustCross-state audit
+> **Decision:** do not design a new large repair operator yet. One exact-live-but-native-hard reconstructability case is **already confirmed**: `R00648` remains unsolved when `closeLengthGap` is invoked directly from a CP-SAT-verified live prefix with unrestricted backtracking and a 2,000,000-node budget, and 2,000 native randomized rollouts from the same live state also find no completion. Do not repeat that experiment. Classify the remaining exact-live retreat cases before deciding whether retreat, reconstruction, or larger destroy work is recurrently warranted.
+> **Remaining gate:** reuse the existing exact-live cases other than `R00648` and apply one prespecified native reconstruction operator per case under a canonical `workSpent` cap where new execution is required. Keep operator-specific conclusions explicit. `R03176` already shows that the full repair process can eventually solve with `closeLengthGap`, but that is not yet the same measurement as a direct frozen-prefix reconstruction success. Use known-dead points only as correctness controls when cheap; do not buy more CP-SAT resolution merely to narrow existing UNKNOWN intervals.
 > **Evidence role:** discovery
 > **Selection:** observational — cases and candidate descriptors come from already-mined repair-retreat and beam-extinction evidence.
 
@@ -42,7 +42,7 @@ For each exact-retreat elite define:
 - `D_live`: latest known exactly live prefix;
 - `D_dead`: earliest known dead prefix after it;
 - rollback depth from the elite end, or an interval where CP-SAT remains UNKNOWN;
-- `native_reconstruct(prefix, budget)`: whether an existing bounded native completion/reconstruction mechanism solves from that frozen prefix at fixed work.
+- `native_reconstruct(prefix, budget, operator)`: whether a named existing bounded native completion/reconstruction mechanism solves from that frozen prefix at fixed canonical work.
 
 Interpretation:
 
@@ -50,41 +50,81 @@ Interpretation:
 |---|---|---|
 | dead | fails | expected control |
 | dead | succeeds | correctness/model/prefix-semantics alarm |
-| live | succeeds | reconstruction is adequate once repair reopens the right commitment; retreat/selection is the likely bottleneck |
-| live | fails | exact completion exists but the current neighborhood cannot find it; reconstructability bottleneck |
+| live | succeeds | this operator is adequate once given the live commitment; retreat/selection may be the bottleneck |
+| live | fails | exact completion exists but this operator cannot exploit it at the tested envelope; operator-specific reconstructability bottleneck |
 
-This is a stronger diagnosis than badness, known-solution edit distance, or rollback depth alone.
+The operator qualifier matters. Failure of `closeLengthGap` does not prove that every native completion method must fail, and success of the full repair process does not prove that a particular frozen-prefix operator is sufficient.
 
-## Smallest pilot
+## Already answered: `R00648` is exact-live but hard for both existing repair technique classes
 
-Reuse existing exact labels. Do not generate a new retreat corpus first.
+The August 13 diagnostic already performed a stronger version of one quadrant this audit originally proposed.
 
-For each supported elite with a resolved or bracketed boundary:
+A CP-SAT-verified feasible prefix at depth 30 on `R00648` was replayed through native state machinery. `closeLengthGap` was then invoked directly through its test seam with:
 
-1. replay `D_live` into native state;
-2. invoke one existing bounded reconstruction mechanism with a prespecified work budget;
-3. invoke the same mechanism from `D_dead` as a negative control where practical;
-4. record solve/failure, `workSpent`, best residual/badness, and whether failure exhausted naturally or was censored;
-5. for `R02449`-style intervals, use already-known live/dead points rather than buying more CP-SAT time merely to shrink the interval.
+- `floor=0`, allowing backtracking all the way to the gate rather than only within the current splice;
+- a **2,000,000-node** allowance, about 500x its production 4,000-node budget.
+
+It still failed to find the exact completion.
+
+The same exact-live state was also handed to the randomized construction primitive used by repair. Across **2,000 independent rollouts**:
+
+- 0/2000 solved;
+- average continuation length before death was about 4.3 nodes;
+- the best rollout reached depth 60 of required length 141.
+
+This is direct evidence for a real **live-but-native-hard** residual, not merely a near-miss metric. It rules out the specific ideas that `R00648` is failing because `closeLengthGap` triggers too late, cannot backtrack far enough, or simply needs a modest budget increase.
+
+It does **not** prove an impossibility theorem for every native reconstruction algorithm. It says the two current repair-search technique classes tested there, randomized rollout and deterministic heuristic backtracking, are badly matched to that residual.
+
+Do not rerun this same case with another nearby node cap and call it new evidence.
+
+### What `R03176` already says, and does not say
+
+The same August 13 work found `R03176` solves in an isolated full `repairSearchFromGate` run at roughly 1.86M nodes, with `closeLengthGap` firing 583 times and succeeding at restart 914.
+
+That establishes that current repair machinery **can** exploit this level's residual regime eventually. It is useful contrast with `R00648`.
+
+But it is not the clean direct-prefix measurement above: the successful run may reach a different state/restart trajectory before `closeLengthGap` succeeds. Therefore keep `R03176` in the remaining classification set if the question is specifically “does reconstruction succeed when handed this exact `D_live` prefix?” Do not silently promote whole-run success into frozen-prefix success.
+
+## Remaining bounded pilot
+
+Reuse existing exact labels. Do not generate a new retreat corpus first, and do not repeat `R00648`.
+
+For the remaining supported elites with resolved or bracketed boundaries:
+
+1. replay an already-proven `D_live` into native state;
+2. invoke one **named** existing bounded reconstruction mechanism chosen before seeing that case's result;
+3. cap new comparisons in canonical `workSpent` rather than treating equal node counts as cross-operator equality;
+4. where a cheap `D_dead` control is already available, confirm the operator does not manufacture a purported valid completion from an exact-dead prefix;
+5. record solve/failure, actual `workSpent`, operator identity, best residual/badness where meaningful, and censoring/exhaustion semantics;
+6. for `R02449`-style intervals, use already-known live/dead points rather than buying more CP-SAT time merely to shrink the interval.
 
 Prefer existing machinery:
 
 - bounded DFS from a frozen prefix / the mechanism underlying elite-prefix DFS repair;
-- `closeLengthGap` when its trigger applies;
+- `closeLengthGap` when the question specifically concerns that operator;
 - current relink/recombination only where their prerequisites naturally exist;
 - ordinary repair continuation from a frozen prefix if an existing testing seam permits it.
 
 If no clean seam exists, expose one existing operator from an explicit prefix. Do not use that tooling task as an excuse to invent a new repair method.
 
+### Why future comparisons should use `workSpent`
+
+The historical `R00648` result used an enormous node allowance and is qualitatively decisive for “does modestly more of the same search fix this?” It need not be rerun merely to translate its cost into a newer accounting currency.
+
+For **new** cross-case or cross-operator comparisons, however, nodes are not the queue-wide cost currency. Different reconstruction techniques can perform very different amounts of scoring, propagation, topology work, and repair bookkeeping per node. Use `workSpent` whenever the question compares economic value or establishes a common fixed-work envelope.
+
 ## Regimes and their implications
 
 ### Shallow live boundary + reconstruction succeeds
 
-The elite is only one/few reversible decisions away from viability, and the current completion machinery is capable once returned there. Nominate a small reversible retreat/reopening treatment, not a large destroy operator.
+The elite is only one/few reversible decisions away from viability, and the tested completion machinery is capable once returned there. Nominate a small reversible retreat/reopening treatment, not a large destroy operator.
 
 ### Shallow live boundary + reconstruction fails
 
-The prefix is already correct enough in exact-feasibility terms, but the native heuristic cannot exploit its completion basin. Nominate stronger bounded reconstruction rather than deeper retreat.
+The prefix is already correct enough in exact-feasibility terms, but the tested native heuristic cannot exploit its completion basin. `R00648` is already one confirmed instance for both `closeLengthGap` and randomized rollout.
+
+One instance does not establish a general repair policy. Seek recurrence across unrelated parents before building stronger reconstruction machinery.
 
 Offline diagnostics may include viable-branching/forced-choice, basin-width proxies, residual interface width, solution density under a safe abstraction, or distance-to-tractability. None becomes a production feature without independent value.
 
@@ -92,15 +132,13 @@ Offline diagnostics may include viable-branching/forced-choice, basin-width prox
 
 Tiny local edits are structurally incapable of success. This is the only regime where a larger destroy window, dependency-guided reopening, or eventual core/MCS-guided unrefinement becomes plausible.
 
-Do not build core-guided repair until a recurrent deep-retreat population is demonstrated.
+`R00630` is the clearest existing deep-retreat nomination, not proof of a recurrent population. Do not build core-guided repair until deep rollback recurs across unrelated cases and the current reconstruction question is separated from retreat depth.
 
 ### CP-SAT-hard interior
 
 Keep an interval. UNKNOWN is not evidence for either side. Native reconstruction at an already-proven-live point still answers a useful question without resolving the exact minimum rollback.
 
-## State-conditioned MustCross seam
-
-The beam-extinction audit exposed a particularly cheap residual-state distinction relevant to repair too.
+## State-conditioned MustCross seam: now a weak shared diagnostic, not a lead
 
 `mustCrossMask` does not distinguish a pending MustCross cell that is:
 
@@ -109,17 +147,18 @@ The beam-extinction audit exposed a particularly cheap residual-state distinctio
 
 `crossCounts` and axis state do distinguish them. Current scoring already uses that information; coarse beam diversity does not.
 
-The exact `S00030` dead/live beam pair showed two candidates in the same coarse pending-mask bucket where the live state had completed the first MustCross pass and the dead state had not. That does not prove predictive value for repair, but it nominates **MustCross completion phase** as a low-cost shared diagnostic.
+The exact `S00030` beam pair demonstrates that this distinction can matter for one dead/live retention boundary. But the later projection across the other exact A/D beam pairs found **no recurrence**: MustCross first-pass state distinguished `S00030` but not `S00001`, `S00048`, or `R00104`, and a cheap local required-axis corridor check separated none of the four.
 
-For live retreat prefixes with pending MustCross obligations, record:
+Therefore MustCross phase may still be recorded cheaply on repair cases, but it is no longer a privileged explanatory candidate. Do not gate repair policy on it without independent recurrence.
+
+For live retreat prefixes where it is already available, optional diagnostics may record:
 
 - pending count;
 - untouched versus half-completed count;
 - used/required axis per pending cell where available;
-- free intersection budget after reserving required second crossings;
-- whether required-axis approach neighbors are fresh, budget-revisitable, or permanently blocked.
+- free intersection budget after reserving required second crossings.
 
-These remain diagnostics, not hard pruning or routing rules.
+Avoid adding expensive topology work just to populate a diagnostic field.
 
 ## Keep the concepts separate
 
@@ -136,13 +175,13 @@ Do not collapse these into one “repair difficulty” scalar without evidence.
 
 ## Success and stop gates
 
-Continue toward retreat-policy work if multiple unrelated elites have shallow live boundaries, existing reconstruction succeeds from those prefixes, and ordinary repair nevertheless fails to reopen them often enough.
+Continue toward retreat-policy work if multiple unrelated elites have shallow live boundaries, the same existing reconstruction operator succeeds from those exact-live prefixes, and ordinary repair nevertheless fails to reopen them often enough.
 
-Continue toward reconstruction work if exact-live prefixes repeatedly defeat current native reconstruction at meaningful work budgets and cheap legal descriptors separate those hard-live cases across unrelated parents.
+Continue toward reconstruction work if exact-live prefixes repeatedly defeat named current native reconstruction operators at meaningful fixed-work budgets. `R00648` supplies the first confirmed hard-live case; it is not enough by itself to justify a new mechanism.
 
 Continue toward large destroy/core-guided work only if a recurrent population requires genuinely deep exact rollback and smaller reopening is ruled out by oracle evidence.
 
-Stop/deprioritize if regimes are too heterogeneous, oracle UNKNOWN/unsupported dominates the useful population, or proposed descriptors merely restate badness/exact identity.
+Stop/deprioritize if regimes remain heterogeneous, the remaining cases do not reproduce either shallow-live/success or live-but-hard patterns, oracle UNKNOWN/unsupported dominates, or proposed descriptors merely restate badness/exact identity.
 
 ## Cross-queue role
 
@@ -153,4 +192,4 @@ The same residual descriptor can have different legal roles:
 - repair (#7): predictive regime descriptor;
 - scheduler (#1): only after held-out value may a cheap runtime descriptor guide allocation.
 
-`crossCounts`/MustCross phase is currently a shared diagnostic candidate, not a universal mechanism.
+`crossCounts`/MustCross phase is currently a cheap optional diagnostic, not a universal mechanism.
