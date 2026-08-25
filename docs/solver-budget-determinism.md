@@ -1,7 +1,7 @@
 # Solver work budgets and determinism
 
 > **Status:** current contract; migration complete.
-> **Active allocation program:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md) is **ASAP / HIGH PRIORITY** and must preserve this document's machine-independent budget rules.
+> **Allocation policy:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md); [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) owns rank and next gate.
 > **Current budget-depth evidence:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
 > **History:** [`archive/snapshots/solver-budget-determinism-2026-08-20.md`](archive/snapshots/solver-budget-determinism-2026-08-20.md).
 
