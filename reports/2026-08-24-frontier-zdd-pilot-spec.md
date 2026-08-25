@@ -1,288 +1,202 @@
 # Frontier/ZDD Pathfinder pilot specification
 
-Date: 2026-08-24
-Status: implementation handoff; research-only, no production solver changes
-Parent census: `reports/2026-08-24-external-solver-code-census.md`
+> **Status:** cancelled
+> **Last evidence:** 2026-08-24 — final literature synthesis and current queue reconciliation demoted general frontier/DD implementation behind higher-value interface and evidence gates
+> **Decision:** do not implement this pilot now. Preserve the expanded-lane crossing model and frontier-state design as a ready deferred specification, but reopen only if beam/reference/residual work independently demonstrates a compact interface question for which frontier-state merging has plausible value. Do not add a production solver tier or dependency from this document.
+> **Remaining gate:** reopen only when a ranked Pathfinder question identifies a supported mechanic subset, a compact expected frontier/interface regime, and a decision that cannot be answered more cheaply with existing native/CP-SAT machinery
+> **Evidence role:** discovery
+> **Selection:** observational
 
-## Goal
+## Why the original handoff was cancelled
 
-Test whether a frontier-based exact search has a useful capability regime on Pathfinder levels, using a representation materially different from both the native prefix-growing DFS/beam solver and the time-expanded CP-SAT oracle.
+The external-code census identified frontier/ZDD search as the strongest genuinely different mature representation available under usable licenses. That conclusion still stands.
 
-The first pilot should answer one question cheaply: **does geometric frontier-state merging remain tractable on real Pathfinder boards once exact length and self-crossings are represented correctly?**
+What changed is priority.
 
-Do not integrate a new production attempt tier. Do not attempt every mechanic in v1. Do not treat experimental acceptance as correctness; every emitted path must pass the native `validateCandidatePath` referee.
+The full August 24 research reconciliation established that Pathfinder already has several cheaper unresolved gates:
 
-## External implementation to start from
+- P0 cross-stage validity;
+- current fixed-work scheduler repricing;
+- exact beam-extinction labels that have not yet been fully mined;
+- bounded residual-interface/descriptor questions;
+- exact repair liveness versus reconstructability.
 
-Primary readable reference: `junkawahara/frontier_basic_tdzdd`, MIT licensed, especially `FrontierSTPath.hpp` and `FrontierManager.hpp`.
+The literature also sharpened a key warning: an exact interface can be mathematically elegant and still be useless if its width/state count is too large.
 
-The reference `s-t` implementation stores, for each vertex currently crossing the frontier, only:
+Therefore a frontier framework should not be built simply to discover whether Pathfinder has an interface problem. A concrete Pathfinder question should nominate the interface first.
 
-- selected degree (`deg`);
-- connected-component identity (`comp`).
+This file remains because it contains one nontrivial Pathfinder-specific graph derivation that would be expensive to rediscover correctly.
 
-When a vertex leaves the frontier it immediately enforces its final degree and rejects any selected component that closes while another selected component remains. This is the exact general mechanism to preserve.
+## Deferred goal
 
-Other MIT references:
+If reopened, the pilot should test one question:
 
-- `kunisura/TdZdd` — framework;
-- `kunisura/algorithms2012` — Numberlink ZDD implementation;
-- `junkawahara/frontier` — broader frontier-method implementation.
+> Does geometric frontier-state merging remain tractable on a real, explicitly supported Pathfinder subset once exact length and self-crossings are represented correctly?
 
-If source is copied/adapted rather than independently reimplemented, preserve required MIT copyright/license attribution. Do not copy AGPL source from `thomasahle/numberlink` into Pathfinder.
+It is a research oracle/representation experiment, not a production solver proposal.
 
-## Critical Pathfinder rule derivation
+## External implementation references
 
-A Pathfinder crossing must **not** be modeled as an ordinary graph vertex of degree 4.
+Preferred permissive references:
 
-Native state tracks horizontal and vertical axis use independently (`edgeUsage`: H/V bits). A move onto a cell is rejected when that axis was already used there. Turning onto the other axis marks both axes at the cell, which then prevents any later revisit. Therefore a cell can be visited twice only as two orthogonal **straight-through** passes: one horizontal and one vertical. At the crossing, those two passes geometrically share a cell but do not switch strands.
+- `junkawahara/frontier_basic_tdzdd` — MIT, small frontier `s-t` path example;
+- `kunisura/TdZdd` — MIT framework;
+- `kunisura/algorithms2012` — MIT Numberlink ZDD source;
+- `junkawahara/frontier` — MIT broader frontier implementation.
 
-`mustCross` has the same structural consequence: its two visits must be the two straight orthogonal passes. The native lock rule explicitly rejects consuming the second axis by turning on the first pass.
+If source is copied/adapted, preserve required MIT attribution/license.
 
-This means ordinary grid-vertex connectivity is wrong for frontier search because it would connect H and V strands merely because they occupy the same cell.
+Do not copy AGPL source from `thomasahle/numberlink` unless Pathfinder intentionally accepts those obligations.
 
-## Expanded lane graph
+## Critical Pathfinder crossing derivation
 
-For every passable Pathfinder cell `c`, create two graph vertices:
+A Pathfinder self-intersection must **not** be modeled as an ordinary graph vertex of degree 4.
+
+Native state tracks horizontal and vertical axis use separately. A cell can be visited twice only as two orthogonal straight-through passes. The two strands geometrically share the cell but do not switch between each other.
+
+MustCross has the same structural consequence.
+
+### Expanded lane graph
+
+For every passable physical cell `c`, create:
 
 - `c:H`
 - `c:V`
 
-Create three classes of edges.
+Edges:
 
-### 1. Horizontal movement edges
+1. horizontally adjacent cells connect H lanes; selecting one contributes 1 Pathfinder step;
+2. vertically adjacent cells connect V lanes; selecting one contributes 1 Pathfinder step;
+3. an internal `c:H -- c:V` edge represents a turn at `c` and contributes 0 Pathfinder steps.
 
-For horizontally adjacent passable cells `a,b`, add:
+A crossing uses both straight lane paths **without** selecting the internal turn edge.
 
-`a:H -- b:H`
+This prevents the false connectivity that an ordinary degree-4 cell would introduce.
 
-Selecting this edge contributes **1** to Pathfinder path length.
+## Deferred exact constraints
 
-### 2. Vertical movement edges
+For a chosen gate and goal:
 
-For vertically adjacent passable cells `a,b`, add:
+- exactly two endpoint lane nodes have selected degree 1;
+- every other used lane node has degree 2;
+- unused lane nodes have degree 0;
+- total selected horizontal/vertical movement edges equals `reqLen`;
+- a physical cell counts as an intersection exactly when both straight lanes are used and the internal turn edge is absent;
+- exact intersection count equals `reqInt`;
+- MustPass requires the physical cell to be used;
+- MustCross requires the crossing form;
+- selected expanded-lane graph forms one connected gate→goal path component.
 
-`a:V -- b:V`
+Other gates remain impassable for a solve from the chosen gate.
 
-Selecting this edge contributes **1** to Pathfinder path length.
+Blocks/geese/false goals/impassable landmarks are omitted from the graph for the relevant solver scope.
 
-### 3. Internal turn edge
+## Frontier state if reopened
 
-For each cell `c`, add:
+The minimal exact state should retain, for live frontier **lane vertices**:
 
-`c:H -- c:V`
-
-Selecting this edge means the path turns at `c`. It contributes **0** to Pathfinder path length.
-
-This construction preserves crossing semantics: an intersection uses both `c:H` and `c:V` as independent straight-through lane vertices with no internal turn edge. A turn joins the two lanes through the internal edge.
-
-## Degree rules
-
-For the selected expanded graph:
-
-- Exactly one chosen gate and the goal are path endpoints. The selected gate-side lane and goal-side lane have degree 1.
-- Every other used lane-node has degree 2.
-- Every unused lane-node has degree 0.
-- At most one of `c:H` and `c:V` may be an endpoint; endpoint handling may be implemented by allowing total cell degree 1 across its two lanes.
-
-These degree rules automatically forbid nonsensical combinations such as selecting two horizontal movement edges plus a turn edge at the same H lane-node (degree 3).
-
-Other gates are impassable for a solve from the chosen gate, matching native neighbor preparation. Run one exact search per eligible gate if necessary.
-
-Blocks, geese, false goals, and impassable landmark cells are omitted from the expanded graph.
-
-## Exact Pathfinder counters and obligations
-
-### Path length
-
-`selected horizontal movement edges + selected vertical movement edges == reqLen`
-
-Internal turn edges do not count.
-
-### Intersection count
-
-A cell is an intersection exactly when:
-
-- `c:H` has its two horizontal movement edges selected;
-- `c:V` has its two vertical movement edges selected;
-- the internal `H--V` turn edge is not selected.
-
-Because all non-endpoint used lane-nodes have degree 2, this is equivalent to both straight lanes being used. Count exactly `reqInt` such cells. Gate and goal cannot satisfy this under endpoint degree rules.
-
-### Must-pass
-
-A must-pass cell must be used by the route. Require at least one of its lane-nodes to have degree 2 (or endpoint degree if schema ever permits an endpoint overlap; validate against actual level invariants before assuming this cannot happen).
-
-### Must-cross
-
-A must-cross cell must be an intersection: both straight lanes used, internal turn edge absent.
-
-This is stronger and cleaner than carrying visit counts through the frontier.
-
-## Connectivity requirement
-
-The selected **expanded lane graph** must contain exactly one connected `gate -> goal` path component. Connectivity must never be computed on unsplit Pathfinder cells, or crossings will falsely connect strands.
-
-The standard frontier `deg + comp` machinery is applicable to the expanded graph. Reject a selected component when its last frontier vertex leaves unless it is the completed gate-goal component and no other selected component can remain.
-
-With all non-endpoint used expanded vertices degree 2 and exactly two degree-1 endpoints, one connected selected component is a simple `s-t` path in the expanded graph. Mapping it back to Pathfinder produces the ordered traversal; crossing the same physical cell on H and V is no longer a repeated expanded vertex, so ordinary path reconstruction works.
-
-## Frontier state for v1
-
-At minimum state identity needs:
-
-Per live frontier expanded vertex:
-
-- degree so far: 0..2;
+- selected degree so far;
 - canonical connected-component label.
 
-Global scalars:
+Global counters:
 
-- counted movement edges so far (`0..reqLen`);
-- finalized intersection count so far (`0..reqInt`);
-- optional compact obligation counts/masks only if an obligation cannot be enforced locally when its cell leaves the frontier.
+- selected movement-edge count up to `reqLen`;
+- finalized intersection count up to `reqInt`;
+- obligation bits only when they cannot be enforced at physical-cell finalization.
 
-Prefer enforcing must-pass/must-cross/intersection status when both lane-nodes and all incident edges for a physical cell are finalized. Do not retain per-cell history after that cell leaves the frontier.
+Enforce MustPass/MustCross/intersection status when the physical cell leaves the frontier whenever possible, so old interior history disappears.
 
-Canonicalize component labels before state hashing/merging. The external reference's component-number replacement is correct but canonical renumbering is preferable if the implementation otherwise allows equivalent label permutations to create distinct states.
+Canonicalize component labels before state hashing/merging.
 
-## Edge ordering
+## Ordering
 
-Ordering is likely decisive. The first implementation should use a geometric sweep designed to minimize the maximum number of live physical cells/lane-nodes. Test both row-major and column-major orientation and choose the smaller frontier for each level using only level geometry.
+Ordering is likely decisive because frontier width drives state explosion.
 
-Internal turn edges must be positioned in the ordering so a physical cell can be finalized promptly after its incident movement edges are decided. Do not blindly append all internal edges after all grid edges.
+If reopened:
 
-Record maximum frontier size independently of DD state count so failures can be attributed to geometry versus state richness.
+- compare row-major and column-major geometric sweeps using only level geometry;
+- place internal turn edges so a physical cell can be finalized promptly;
+- record maximum live physical cells/lane vertices separately from DD state count.
 
-## Safe pruning available immediately
+Do not choose the favorable orientation from solver outcome. Geometry-only minimum-frontier orientation is legitimate if fixed before solving.
 
-These are exact, not heuristics:
+## Exact pruning available to a pilot
 
-- movement-edge count > `reqLen` => reject;
-- movement-edge count + maximum still-selectable movement edges < `reqLen` => reject;
-- finalized intersections > `reqInt` => reject;
-- finalized intersections + maximum remaining possible crossings < `reqInt` => reject;
-- lane-node degree > 2 => reject;
-- finalized non-endpoint used lane-node degree != 2 => reject;
-- finalized endpoint cell has total selected endpoint degree != 1 => reject;
-- finalized must-pass cell unused => reject;
-- finalized must-cross cell not a crossing => reject;
-- premature selected-component closure while another selected component exists/can be required => reject.
+The deferred model can safely reject on:
 
-Do not import native heuristic scoring. The point is to measure this representation cleanly.
+- movement edges > `reqLen`;
+- movement edges + maximum selectable remainder < `reqLen`;
+- finalized intersections > `reqInt`;
+- finalized intersections + remaining maximum crossings < `reqInt`;
+- lane degree >2;
+- finalized used non-endpoint lane degree !=2;
+- invalid finalized endpoint degree;
+- finalized MustPass unused;
+- finalized MustCross not crossed;
+- premature selected-component closure.
 
-## Mechanics deliberately excluded from pilot v1
+Do not import native heuristic scoring into the exact pilot.
 
-Exclude levels containing any mechanic whose validity depends on traversal order or direction until the base representation is measured:
+## Mechanics excluded from a first reopened pilot
+
+The first experiment should remain deliberately narrow and abstain on mechanics whose validity depends on traversal order/direction until explicitly translated and validated, including initially:
 
 - portals;
 - flipping filters;
-- static filters (unless later added as a trivial validated lane restriction);
-- chirality-sensitive must-turn / adjacent-turn landmarks;
-- any other landmark whose semantics have not been explicitly translated and referee-tested.
+- static filters unless represented as a validated trivial lane restriction;
+- chirality-sensitive must-turn / adjacent-turn mechanics;
+- any other order-sensitive landmark not proved compatible with the edge-set representation.
 
-It is acceptable, and preferable, for the pilot loader to emit a machine-readable `unsupported-mechanics` result rather than silently relax a rule.
+Use machine-readable `unsupported-mechanics`; never silently relax.
 
-A later version may discover that some currently excluded mechanics are local in this representation. Add them one family at a time only after v1 establishes a useful state-count regime.
+## Reconstruction/referee contract
 
-## Reconstruction and referee
+A satisfying expanded graph must be reconstructed into the unique expanded gate→goal path, mapping movement edges back to physical Pathfinder cells and treating internal turn edges as zero-length lane changes.
 
-On a 1-terminal/satisfying DD state, reconstruct the selected expanded edges, then traverse the unique expanded `s-t` path from the chosen gate lane to the goal lane.
+Every emitted candidate must pass the canonical native `validateCandidatePath` referee.
 
-Map each movement edge to the destination physical grid cell. Internal turn edges change lane but append no Pathfinder step. The resulting physical cell sequence must then be passed to the canonical native `validateCandidatePath`.
+Classify outcomes distinctly:
 
-Classification:
+- `referee-valid`;
+- `referee-rejected` correctness alarm;
+- exact exhausted/UNSAT only if the complete supported model was enumerated;
+- timeout/state-cap inconclusive;
+- unsupported abstention.
 
-- `referee-valid`: usable experimental solve;
-- `referee-rejected`: encoding/reconstruction bug, never a solve;
-- `unsat/exhausted`: exact negative only if the implementation genuinely enumerated/exhausted the complete supported model;
-- `timeout/state-cap`: inconclusive;
-- `unsupported-mechanics`: abstain.
+## Reopen population and metrics
 
-Any referee rejection is a correctness alarm and blocks capability conclusions until root-caused.
+If the pilot is ever reactivated, keep it small and reproducible, roughly 20–50 supported levels, stratified by:
 
-## Pilot population
+- minimum grid dimension / expected frontier width;
+- density/navDensity;
+- intersection burden;
+- native status, with both unresolved levels and expensive known solves as controls.
 
-Select 20–50 levels from the current stress corpus using reproducible selectors, not hand-picked IDs as production policy.
+Primary deterministic metrics:
 
-Stratify by:
-
-- smaller vs larger minimum grid dimension (proxy for frontier width);
-- lower vs near-Hamiltonian `navDensity`;
-- `reqInt` 0 / low / high where supported;
-- native status: currently unsolved plus a smaller set of expensive known solves as positive controls.
-
-The population should contain only v1-supported mechanics.
-
-Do not tune the implementation on all sampled levels and then claim the same population as held-out evidence. The first pilot is feasibility research, but preserve enough untouched levels for a follow-up if results look promising.
-
-## Required metrics
-
-Per `(level, gate, sweep orientation)` record at least:
-
-- level id and mechanics summary;
-- grid width/height and chosen sweep orientation;
-- maximum frontier physical-cell count and expanded-vertex count;
-- DD/frontier states created;
-- peak live states at any decision level;
+- maximum frontier width;
+- states created;
+- peak live states;
 - transitions evaluated;
 - terminal classification;
-- wall time (diagnostic only);
-- selected movement edges / turn edges for a witness;
-- referee result;
-- native baseline status/nodes/work if available;
-- CP-SAT status/time for the same level if an existing comparable result is available without launching a large new campaign.
+- referee result.
 
-Primary feasibility plots/tables should use deterministic state/work counts, not wall time alone.
+Wall time is secondary. Compare native/CP-SAT evidence only where a fair existing result is available.
 
-## Early-abort gates
+Use a hard state cap so individual instances fail cheaply.
 
-This experiment should be cheap to kill.
+## Reopen success gate
 
-Abort expansion of a single level at a configurable state cap and return `state-cap`, preserving metrics.
+Do not discuss production integration unless a meaningful structural cohort shows at least one of:
 
-Do not proceed toward production integration unless at least one meaningful structural cohort shows repeatable tractability and either:
+1. exact solves of native misses;
+2. exact resolution of expensive levels at plausibly competitive deterministic state counts;
+3. an exact frontier equivalence/pruning rule that can be transplanted into native reasoning.
 
-1. solves levels the native solver currently misses; or
-2. resolves expensive levels with sufficiently low deterministic state counts to plausibly be useful; or
-3. exposes exact state-equivalence/pruning rules that are demonstrably transplantable into native search.
+If state growth is simply dominated by frontier width with no useful Pathfinder regime, close the family cleanly.
 
-If state growth is simply exponential in minimum grid dimension with no useful real-level regime, document that boundary and stop. A clean negative is success for the pilot.
+## Current disposition
 
-## Implementation boundary
+The lane-graph derivation and pilot design are worth retaining. The implementation handoff is not.
 
-Prefer an offline research tool under `scripts/` or an isolated experimental native helper. Do not add it to `solveLevel()`, `ATTEMPT_POLICY`, stage budgeting, browser bundles, or production dependencies during the pilot.
-
-If TdZdd/C++ is used directly, keep build/install mechanics isolated from normal `npm ci` / browser build unless and until the experiment passes its gate. A standalone research executable invoked by a Node wrapper is acceptable.
-
-If the small reference algorithm is independently reimplemented in TypeScript/JavaScript instead, preserve the algorithm/source attribution in the report and compare state counts against a tiny known graph fixture before trusting real-level results.
-
-## Correctness fixtures before stress-corpus work
-
-Create tiny synthetic levels covering, separately:
-
-1. straight gate-goal path, `reqInt=0`;
-2. one ordinary turn;
-3. exact-length rejection (same geometry, wrong `reqLen`);
-4. one genuine self-crossing requiring two straight passes through one cell;
-5. must-pass satisfied / omitted pair;
-6. must-cross satisfied / replaced-by-turn-invalid pair;
-7. disconnected cycle plus gate-goal component, which must be rejected despite local degrees;
-8. multiple gates, proving nonchosen gates are unavailable.
-
-For every accepted fixture, reconstruct and run the native referee. Include at least one fixture that ordinary unsplit degree-4 connectivity would falsely accept, to permanently guard the lane-splitting requirement.
-
-## Suggested implementation sequence
-
-1. Build expanded lane graph + fixture printer only.
-2. Implement frontier manager / edge ordering and report max frontier sizes, with no search.
-3. Implement degree + component state and enumerate simple `s-t` paths on tiny fixtures.
-4. Add movement-edge exact count.
-5. Add crossing count and lane-split reconstruction.
-6. Add must-pass/must-cross local finalization.
-7. Run correctness fixtures through native referee.
-8. Add state caps and structured JSON output.
-9. Run the small stratified pilot.
-10. Write a dated report before considering any solver integration.
-
-This sequence deliberately creates useful stop points. If expanded-frontier geometry is already hopeless at step 2, no search engine needs to be written.
+The current queue intentionally says not to build production or broad research DD/ZDD machinery before a bounded interface question earns it. This file is therefore a deferred specification, not active work.

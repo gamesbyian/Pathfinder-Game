@@ -1,196 +1,132 @@
 # Third-wave external research cross-pollination addendum
 
-**Date:** 2026-08-24  
-**Role:** addendum to [`2026-08-24-external-research-cross-pollination-audit.md`](2026-08-24-external-research-cross-pollination-audit.md). The original audit covered the first eleven literature memos. This document records the nontrivial transfers introduced by the final three reviews without pretending the old 11×11 matrix was a 14×14 prespecified analysis.
-
-Durable cross-cutting vocabulary lives in [`../docs/solver-residual-state-representation.md`](../docs/solver-residual-state-representation.md). Canonical execution priority remains [`../docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md).
+> **Status:** superseded
+> **Last evidence:** 2026-08-24 — final external-research synthesis and durable residual-state representation reference incorporated the third-wave concepts
+> **Decision:** retain this file as the provenance record for the final three reviews, but use [`2026-08-24-external-research-pathfinder-synthesis.md`](2026-08-24-external-research-pathfinder-synthesis.md), [`../docs/solver-residual-state-representation.md`](../docs/solver-residual-state-representation.md), and the current queue for decisions.
+> **Remaining gate:** none
+> **Evidence role:** discovery
+> **Selection:** observational
 
 ## Third-wave sources
 
-- **Z** — [`frontier-zdd-decision-diagrams-deep-research.md`](frontier-zdd-decision-diagrams-deep-research.md): frontier/ZDD interfaces, representative sets, restricted/relaxed DDs.
-- **G** — [`automaton-resource-global-constraints-deep-research.md`](automaton-resource-global-constraints-deep-research.md): `REGULAR`, `COST-REGULAR`, `MULTICOST-REGULAR`, exact counting, solution density, Parikh/resource propagation.
-- **A3** — [`abstraction-refinement-backdoors-core-guided-deep-research.md`](abstraction-refinement-backdoors-core-guided-deep-research.md): CEGAR/interpolation, backdoors, cores/MCS diagnosis.
+The final literature wave added:
 
-## Strong new transfers
+- frontier/ZDD/decision diagrams: exact frontier interfaces, representative families, restricted/relaxed DDs;
+- automaton/resource global constraints: `REGULAR`, `COST-REGULAR`, `MULTICOST-REGULAR`, exact counting, solution density, Parikh/resource propagation;
+- abstraction/refinement/backdoors/core-guided reasoning: CEGAR, interpolation, backdoor depth, UNSAT cores and correction/diagnosis sets.
 
-### Z -> beam: representative families are a stronger target than pairwise diversity
+These reviews strengthened the representation theory around the existing queue. They did not create a new top-level implementation project.
 
-The earlier beam/portfolio synthesis said a survivor can be valuable for marginal future coverage. Representative-set theory strengthens this from an analogy into a rigorous set-level concept in bounded-width connectivity DP.
+## Durable transfers
 
-A reduced family can collectively preserve every relevant future extension of a larger family even when no individual survivor pairwise-dominates every discarded state.
+### Representative families sharpen beam's target
 
-**Consequence:** the conceptual target for beam diversity is not maximal pairwise distance. It is **future-extension coverage by the retained set**.
+Pairwise diversity is not the ideal object. In exact bounded-width connectivity DP, a reduced **set** can collectively preserve all relevant future extensions of a larger set.
 
-**Guardrail:** Pathfinder currently lacks the algebra/exact interface required for representative-set guarantees. This sharpens interpretation of simple descriptor/reserve tests; it does not justify rank-based DP machinery.
+Pathfinder does not currently have the algebra or exact interface needed for such a guarantee. The useful transfer is conceptual: beam survivor quality should be interpreted as set-level future-extension coverage, not maximal pairwise distance.
 
-### Z -> feasibility/reference: restricted and relaxed future spaces are dual
+### Restricted and relaxed future spaces form a useful dual
 
-Restricted DDs under-approximate true futures; relaxed DDs over-approximate them:
+Conceptually:
 
-`restricted ⊆ true ⊆ relaxed`.
+`restricted futures ⊆ true futures ⊆ relaxed futures`.
 
-This connects beam loss and feasibility relaxation within one framework.
-
-- a restricted completion is a true witness;
+- restricted success gives a true witness;
 - restricted failure is inconclusive;
-- relaxed failure is a true impossibility proof if the relaxation direction is sound;
+- sound relaxed failure can prove true impossibility;
 - relaxed success is inconclusive.
 
-**Consequence:** future-opportunity research can explicitly ask whether an offline restricted representation and a sound relaxed representation bracket a difficult residual tightly enough to explain beam extinction or prove deadness.
+This unifies finite-width beam loss and safe residual feasibility relaxation without implying that production should maintain decision diagrams.
 
-**Guardrail:** this is a conceptual/oracle use first, not a mandate to construct production DDs.
+### Exact interfaces need both sufficiency and economy
 
-### Z -> memoization: exact interface width determines whether context caching is plausible
+Even a logically sufficient residual interface is useless for caching/DP if its width or state count explodes.
 
-Future-equivalence research already left open exact context-equivalent residual caching behind a strict sufficiency proof. Frontier DP adds the missing structural cost measure: even a logically sufficient interface can be useless if its width/number of connectivity states is too large.
+Any exact-context proposal therefore needs two gates:
 
-**Consequence:** any future exact-context caching question now needs two gates:
+1. semantic sufficiency;
+2. representational economy/recurrence.
 
-1. **semantic sufficiency**: same interface truly means same queried future;
-2. **representational economy/recurrence**: the interface is small/recurrent enough to beat full-state search cost.
+### Repair windows are frontier boundaries viewed from the other side
 
-### Z -> repair: repair windows and frontiers are the same boundary question from opposite sides
+A frontier summarizes what the unresolved side needs from processed structure. A repair interface summarizes what a reopened region needs from frozen structure.
 
-A frontier state summarizes everything the unresolved region needs to know about processed structure. A repair-window interface summarizes everything the reopened region needs to know about frozen structure.
+Repair difficulty therefore depends on interface complexity as well as rollback distance.
 
-**Consequence:** repair scope should be thought about in terms of **interface complexity**, not only rollback distance or number of reopened moves.
+### Finite-state mechanics + exact resources form a middle layer
 
-A large repair window behind a narrow interface can be structurally easier than a small window coupled to many external commitments.
+Global-constraint work shows a useful space between scalar bounds and full CP-SAT:
 
-### G -> feasibility: specialized global propagation fills the scalar-bound/exact-solver gap
+`finite-state semantics + exact counters + safe/incomplete propagation`.
 
-The earlier feasibility work offered scalar bounds, spectra, relaxations, and CP as distinct ideas. `COST-REGULAR`/`MULTICOST-REGULAR` show a mature middle layer:
+Full exact propagation may be hard while target-specific or one-sided propagation remains useful.
 
-`finite-state semantics + exact counters + incomplete/safe propagation`.
+### Target membership can be cheaper than full attainable spectra
 
-**Consequence:** research should not assume the only choices are cheap hand bounds or full CP-SAT. A small finite-state/resource subproblem may admit stronger joint lower/upper/target-membership propagation.
+For many residual questions the useful query is not “materialize every attainable vector” but:
 
-### G -> exact attainability: membership can be cheaper than spectrum construction
+`does the attainable set intersect the exact target condition?`
 
-The earlier attainable-resource memo naturally focused on representing `R(s)`. Parikh/resource propagation sharpens the practical query:
+That is a distinct future research option for bounded finite-state/resource subproblems.
 
-`Does R(s) intersect the one target condition we currently care about?`
+### Solution density is abstract future mass, not completion probability
 
-**Consequence:** target-specific lazy membership reasoning becomes a distinct research option from building reusable full spectra/bitsets.
+Constraint-level counting can estimate how much abstract feasible mass supports a decision. This can be an offline beam/repair diagnostic, but it is not whole-puzzle completion probability unless the abstraction is exact.
 
-### G -> basin width/beam: solution density is local abstract future mass
+### CEGAR gives a disciplined way to discover missing state distinctions
 
-Automaton/global-constraint DPs can count how many accepting continuations support each candidate value.
+A future signature can begin deliberately coarse:
 
-**Consequence:** basin-width work gains a middle-cost descriptor between legal-successor count and full model counting: **constraint-level solution density**.
+`coarse abstraction -> spurious equivalence/future -> exact counterexample -> add the missing distinction`.
 
-**Guardrail:** density in a relaxation/global constraint is predictive only; it is not whole-puzzle completion probability.
+The reference model can falsify overcoarse abstractions by finding live/dead or otherwise future-distinct states that the abstraction merges.
 
-### G -> learned failure: exact-count propagators can produce compact arithmetic reasons
+Finite testing can falsify sufficiency; it cannot prove universal sufficiency without a formal argument.
 
-Joint automaton/resource propagation can reject a decision because every accepting finite-state continuation lies outside an exact counter domain.
+### Cores/MCS and backdoor depth separate repair failure types
 
-**Consequence:** these contradictions can supply compact reason vocabulary combining mechanic state and exact resources, stronger than a scalar parity/overflow explanation.
+- cores diagnose frozen assumptions sufficient for contradiction;
+- correction/diagnosis sets ask what must be reopened;
+- backdoor depth asks how many adaptive hard decisions remain before the residual reaches a tractable class.
 
-### A3 -> future equivalence: abstraction fields can be discovered by counterexample, not feature shopping
+These are different from nominal neighborhood size and basin width.
 
-CEGAR adds a process to the future-signature problem:
+## Representation hierarchy retained in durable docs
 
-`coarse signature -> spurious equivalence/future -> exact counterexample -> refinement`.
-
-**Consequence:** once a candidate interface exists, the reference model can be used specifically to find pairs/states that the interface wrongly merges. Refinement should add only distinctions evidenced by counterexamples.
-
-**Guardrail:** finite testing can falsify sufficiency, not prove universal sufficiency.
-
-### A3 -> reference model: exact oracle becomes an abstraction-refinement instrument
-
-Reference use expands beyond live/dead labels. One exact failure can generate:
-
-- a distinguishing counterexample;
-- an assumption core;
-- a candidate correction set;
-- potentially a proof/interpolant over shared boundary variables.
-
-**Consequence:** the oracle can answer “what distinction/commitment matters?” rather than only “is this prefix live?” when its encoding/proof support permits.
-
-### A3 -> repair: MCS/diagnosis and backdoors separate two kinds of structural difficulty
-
-MCS/diagnosis asks what frozen assumptions must be relaxed to restore feasibility. Backdoor depth asks how many adaptive hard choices remain before the residual enters a tractable class.
-
-**Consequence:** repair-hostile residuals can now be decomposed more precisely:
-
-- wrong frozen commitments;
-- high interface coupling;
-- narrow basin;
-- shallow-but-hard backdoor requiring a few critical choices;
-- genuinely broad residual far from a tractable class.
-
-This is a richer model than nominal neighborhood size.
-
-### A3 -> scheduler: distance to tractability is a possible later dynamic signal
-
-If different residual states become easy for different tractable classes/solver paradigms after a few critical decisions, backdoor/tractability structure could eventually help choose continuation actions.
-
-**Guardrail:** this remains behind static scheduler headroom and the typed-telemetry gate. No tractable residual class has yet been demonstrated for Pathfinder.
-
-## New three-way synthesis
-
-### Preserve, overapproximate, refine
-
-The three reviews create a useful cycle:
-
-1. **restricted/representative search** tries to preserve real future capability under finite width;
-2. **relaxed propagation** adds fake futures in a controlled direction to obtain safe bounds/impossibility tests;
-3. **CEGAR/proof refinement** uses counterexamples to remove only the spurious distinctions/futures that matter.
-
-This is more precise than treating all abstractions as one feature vector.
-
-### Four state-space representations
-
-The mature external vocabulary now distinguishes:
+The final synthesis distinguishes:
 
 | Representation | Guarantee | Typical role |
 |---|---|---|
-| Exact context/interface | same context preserves the exact queried future | exact DP/cache/merge |
-| Representative family | retained set collectively preserves relevant extensions | width reduction / survivor-set ideal |
-| Restricted under-approximation | contains only true futures, but not all | beam / constructive search |
-| Relaxed over-approximation | contains all true futures plus possibly spurious ones | bounds / safe negative proof |
-| Predictive abstraction | no proof relation, only empirical signal | ranking/repair/scheduling |
+| exact context/interface | same context preserves exact queried future | exact DP/cache/merge |
+| representative family | retained set preserves relevant extensions | idealized width reduction |
+| restricted under-approximation | only real futures, not necessarily all | beam/constructive search |
+| relaxed over-approximation | all real futures plus possible spurious ones | safe bounds/negative proof |
+| predictive abstraction | empirical signal only | ranking/diagnosis/scheduling |
 
-CEGAR can refine any coarse representation when exact counterexamples expose an important missing distinction, subject to the role's soundness requirements.
+CEGAR is a refinement process, not a sixth guarantee class.
 
-### Three different notions of residual difficulty
+## Difficulty axes kept separate
 
-The combined literature now supports keeping these separate:
+The third wave reinforced that Pathfinder should not collapse these into one generic “difficulty” score:
 
-1. **interface width:** how much information must cross the past/future boundary;
-2. **basin width:** how much feasible continuation mass/flexibility exists;
-3. **backdoor depth:** how many adaptive hard choices remain before reaching a tractable regime.
-
-A fourth quantity, exact-resource slack/attainability, describes numerical opportunity rather than structural width.
-
-Do not collapse these into one score without evidence.
+- interface width;
+- basin width;
+- backdoor depth / distance to tractability;
+- exact-resource opportunity/attainability.
 
 ## Explicit non-promotions
 
-The third wave does **not** justify:
+This literature did **not** justify:
 
-- production ZDD/Graphillion/TdZdd integration;
-- replacing beam with a decision-diagram solver;
-- rank-based representative-set machinery without a matching exact interface/algebra;
+- production TdZdd/Graphillion integration;
+- replacing beam with DDs;
+- representative-set machinery without a matching exact algebra;
 - generic `REGULAR`/`MULTICOST-REGULAR` infrastructure;
-- global model-counting or density-guided production search;
 - online CEGAR/interpolation;
-- backdoor detection infrastructure without a demonstrated tractable target class;
-- exact context caching based on approximate interface descriptors;
-- core/MCS-driven repair without bounded offline evidence.
+- generic backdoor detection;
+- approximate-interface exact caching;
+- automatic core/MCS-driven repair.
 
-## Bottom line
+## Supersession
 
-The final literature wave adds a missing **representation theory** to the earlier research:
-
-- frontier/ZDD work shows what an exact boundary state looks like;
-- representative sets show how a *set* of survivors can preserve future capability;
-- restricted/relaxed DDs bracket the true future space;
-- automaton global constraints show how finite-state mechanics and exact counters can be propagated jointly;
-- solution density supplies local abstract future mass;
-- CEGAR/interpolation provide a disciplined way to discover missing interface distinctions;
-- backdoor depth describes adaptive distance to tractability;
-- MCS/diagnosis connects exact failure proofs to what repair must reopen.
-
-These additions reinforce the existing queue rather than creating a new top-level project. The durable interpretation is maintained in [`../docs/solver-residual-state-representation.md`](../docs/solver-residual-state-representation.md).
+The durable interpretation now lives in [`../docs/solver-residual-state-representation.md`](../docs/solver-residual-state-representation.md). The complete cross-wave conclusion is [`2026-08-24-external-research-pathfinder-synthesis.md`](2026-08-24-external-research-pathfinder-synthesis.md).

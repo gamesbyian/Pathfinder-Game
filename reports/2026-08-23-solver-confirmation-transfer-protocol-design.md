@@ -1,9 +1,9 @@
 # Solver confirmation and transfer protocol design
 
 > **Status:** active
-> **Last evidence:** 2026-08-23 — generalization review of Corpus 2, family/variant research, current level-blindness contract, and investigation-report selection rules
+> **Last evidence:** 2026-08-24 — static reconciliation against the current stress-corpus contract, family/variant rules, level-blindness contract, and current research queue; clarified broad versus baseline-failure-conditioned confirmation and explicit exposure states
 > **Decision:** create a renewable three-role evaluation discipline (development/tuning, untouched confirmation, locked/fresh transfer) rather than treating level-blind execution on repeatedly mined corpora as generalization evidence
-> **Remaining gate:** instantiate one reproducible confirmation cohort and one reproducible transfer/challenge cohort, record their generator/source/version metadata, and use them on the next solver treatment selected from development evidence
+> **Remaining gate:** instantiate one reproducible broad confirmation cohort and one reproducible transfer/challenge cohort, record their generator/source/version metadata and exposure state, and use them on the next solver treatment selected from development evidence; instantiate a separate residual-confirmation cohort only when the claim is explicitly conditional on current baseline failure
 > **Evidence role:** discovery
 > **Selection:** observational — protocol is motivated by repeated inspection/tuning on existing stress/census/family populations and by the number of candidate policies/configurations now being compared
 
@@ -103,7 +103,7 @@ Rules:
 - bootstrap/resampling and uncertainty should operate by parent when siblings are included;
 - a huge sibling count does not create a huge independent sample size.
 
-For unrelated generated levels with no known family relationship, the level is the default independent unit.
+For unrelated generated levels with no known family relationship, the level is the default independent unit. If a generator later introduces explicit mutation ancestry or shared construction parents, group at the earliest meaningful common generator ancestor rather than treating serialized descendants as independent.
 
 ## First instantiation
 
@@ -121,7 +121,7 @@ Use current already-mined evidence:
 
 Do **not** waste compute attempting to make these populations “clean” again. Their value is development value.
 
-### Confirmation cohort
+### Broad confirmation cohort
 
 Create or reserve a reproducible cohort large enough to detect the expected effect size of the next selected treatment, but do not default to a giant corpus.
 
@@ -136,6 +136,18 @@ Desirable properties:
 
 If the next treatment is expected to affect only a narrow mechanic population, stratification may be prespecified. The stratum definition must be based on legal static features, not post-hoc outcome inspection.
 
+### Residual confirmation is a different population and claim
+
+Do not silently create a “holdout” by generating many fresh levels, running the current solver, retaining only its failures, and then treating the retained set as a broad unseen-level sample.
+
+That construction is legitimate when the research question is explicitly conditional:
+
+> Among fresh levels that the frozen baseline fails under a declared work contract, does this candidate action/policy improve residual capability?
+
+It is especially useful for scheduler, continuation, rare-specialist, restart, and hard-tail search research. But selection on baseline failure changes the target distribution. Report it as a **residual-confirmation** population, retain the baseline commit/config/work envelope that defined membership, and do not use it alone for an unconditional “improves unseen Pathfinder levels” claim.
+
+A broad confirmation cohort is selected without solver-outcome filtering. A residual confirmation cohort is selected by a prespecified baseline outcome rule. Both can be fresh and untouched; they answer different questions.
+
 ### Transfer/challenge cohort
 
 Prefer a **freshly generated or separately sourced** population whose generation process is not merely “more of the exact cases that taught the current solver.”
@@ -144,14 +156,33 @@ Possible sources include:
 
 - fresh editor-like generation with a declared seed/version;
 - a deliberately shifted generator distribution;
+- fresh levels constrained to the shipped/editor complexity envelope;
 - new human-authored/editor levels not previously used for tuning;
 - a future generated batch held from agents until a candidate is frozen.
 
 The first transfer set does not need to be enormous. Its job is to detect obvious development-distribution overfit and calibrate the maintenance process.
 
+A useful first lifecycle can therefore use working population roles such as:
+
+- `confirm-broad`: fresh solver-blind generated sample, no baseline-outcome filtering;
+- `confirm-residual`: fresh sample conditioned by a frozen baseline failure rule, used only for residual claims;
+- `transfer-envelope`: fresh solver-blind sample constrained to shipped/editor complexity for milestone-level transfer claims;
+- `confirm-family`: fresh parent families locked as whole groups when the treatment was selected from variant/family evidence.
+
+These are role labels, not a mandate to create permanent files with these exact names.
+
 ## Visibility policy
 
 For development data, exact visibility is unrestricted.
+
+Managed confirmation/transfer populations should record one of four simple exposure states:
+
+- `LOCKED`: exact outcomes/identities have not been exposed for treatment design;
+- `AGGREGATE_SEEN`: only the prespecified summary/verdict has been exposed;
+- `EXPOSED`: individual identities, outcomes, traces, or failures have been inspected;
+- `DEVELOPMENT`: exposed information has influenced redesign or candidate selection and the population is explicitly reusable as development data.
+
+The distinction between `EXPOSED` and `DEVELOPMENT` preserves historical provenance: exact cases can be unsealed after a frozen verdict without invalidating that already-recorded comparison, but once they influence the next design they cannot remain untouched evidence for that redesigned candidate.
 
 For confirmation data:
 
@@ -159,7 +190,7 @@ For confirmation data:
 2. run full per-level evaluation;
 3. record verdict;
 4. exact failure inspection may then occur;
-5. if redesign follows, mark the cohort exposed/development for later iterations.
+5. if redesign follows, mark the cohort development for later iterations.
 
 For transfer data, prefer two stages:
 
@@ -182,6 +213,8 @@ After the transfer verdict is frozen, exact failures may be inspected for resear
 
 If infrastructure cannot currently hide exact results cheaply, do not build a large secrecy system first. Use process discipline and clear evidence-role metadata; build aggregate-only tooling only if repeated use justifies it.
 
+Repeated aggregate queries also create selection pressure. Do not submit an open-ended stream of candidates to the same “hidden” cohort and treat it as independent confirmation merely because exact IDs stay concealed. Prefer one frozen candidate comparison, or a very small prespecified robustness set, then replenish/reclassify if the population is used for selection.
+
 ## Candidate freeze contract
 
 Before confirmation/transfer, record:
@@ -191,6 +224,8 @@ Before confirmation/transfer, record:
 - action/config registry version when relevant;
 - work envelope and non-binding wall deadline;
 - population generation/source identity;
+- population role (`broad`, `residual`, `family`, `transfer`, or another prespecified scope);
+- baseline commit/config/work rule if population membership is conditioned on baseline outcome;
 - primary objective;
 - paired gain/loss rule;
 - correctness/referee criteria;
@@ -244,6 +279,8 @@ A published or Corpus-1 level repeatedly inspected for a given treatment can be 
 
 Published levels remain important product/regression evidence because users may actually encounter them. That is separate from whether they provide statistically fresh confirmation of a research hypothesis.
 
+A fresh batch generated from the same generator distribution can establish transfer beyond the exact rows used for tuning, but it still only supports claims within that generator distribution. Broader claims require deliberately shifted/editor-like/human-authored transfer evidence where available.
+
 ## Relationship to known solutions and exact/reference tools
 
 Known solutions, exact labels, and CP-SAT witnesses may be used freely in development diagnosis.
@@ -272,7 +309,8 @@ These are exactly the cases where the project now has enough candidate-selection
 Use claim language matched to evidence:
 
 - development only: “improves Corpus 2 / selected development cohort by …”;
-- independent confirmation: “retained the effect on untouched/grouped confirmation data …”;
+- broad independent confirmation: “retained the effect on untouched/grouped confirmation data …”;
+- residual confirmation: “improved fresh baseline-failure residuals under the declared baseline/work contract …”;
 - transfer: “also improved a locked/fresh challenge population …”;
 - no transfer set: do not upgrade the wording to generic unseen-level generalization.
 
@@ -285,7 +323,9 @@ Each managed confirmation/transfer population should eventually record:
 - population ID;
 - creation/source/generator version;
 - seed/hash or exact manifest;
-- intended role;
+- intended role and whether selection was outcome-conditioned;
+- baseline identity/work rule for residual populations;
+- current exposure state;
 - first treatment evaluated;
 - dates/commits of aggregate runs;
 - date exact outcomes were unsealed;
@@ -298,7 +338,7 @@ This should be machine-readable if the lifecycle repeats. Do not create a large 
 
 This protocol earns a permanent topic document when:
 
-- at least one real confirmation cohort and one transfer/challenge cohort have been instantiated;
+- at least one real broad confirmation cohort and one transfer/challenge cohort have been instantiated;
 - at least one selected solver treatment has moved through the lifecycle;
 - the project has learned which visibility/reclassification mechanics are actually practical; and
 - repeated use demonstrates that the lifecycle needs a stable authority beyond the operating model and experiment reports.

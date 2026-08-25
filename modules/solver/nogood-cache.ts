@@ -1,12 +1,16 @@
-// Repair-local dead-state cache. One instance per repairSearchFromGate call; never shared or
-// persisted. Signatures are recomputed from live state rather than incrementally hashed, avoiding
-// desynchronization across repair operators. This cache only short-circuits repeat randomized-walk
-// dead ends; it is not proof a state is unsolvable and does not replace referee/prune checks.
+// Repair-local failed-state experience cache. One instance per repairSearchFromGate call; never
+// shared or persisted. Signatures are recomputed from live state rather than incrementally hashed,
+// avoiding desynchronization across repair operators. A recorded entry means only that one prior
+// randomized repair continuation from this matching signature ended without solving. It is NOT a
+// proof that the state is globally unsatisfiable or that every continuation from it is fruitless.
+// A hit therefore changes incomplete repair exploration (for speed/diversification) but cannot
+// manufacture an invalid solution; referee/prune checks remain the only logical authorities.
 // Evidence/history: reports/2026-08-07-repair-nogood-cache.md.
 import type { SolverSearchState } from './types.js';
 
-/** Exact repair-state signature. `ints` is required because identical edgeUsage can encode paths
- * with different intersection counts. Full strings avoid hash-collision soundness risk. */
+/** Fine-grained repair-state signature used for within-call experience matching. `ints` is required
+ * because identical edgeUsage can encode paths with different intersection counts. Full strings
+ * avoid hash collisions, but equality here should not be read as a proof of future-state equivalence. */
 function stateSignature(ws: SolverSearchState): string {
     const pos = ws.path[ws.path.length - 1];
     const seen = new Set<number>();
@@ -21,13 +25,13 @@ function stateSignature(ws: SolverSearchState): string {
          + `|${ws.flipperUsedMask}|${ws.lastWasPortalJump ? 1 : 0}`;
 }
 
-/** Capacity loss only misses cache opportunities; it cannot reject a new state. */
+/** Capacity loss only misses experience-cache opportunities; it cannot reject a new signature. */
 const NOGOOD_CACHE_CAPACITY = 500000;
 
 export interface NogoodCache {
-    /** Was this exact state recorded dead earlier in this repair call? */
+    /** Was this matching repair-state signature previously recorded after a failed continuation? */
     has(ws: SolverSearchState): boolean;
-    /** Record the current state; no-op at capacity. */
+    /** Record the current failed-continuation signature; no-op at capacity. */
     recordDead(ws: SolverSearchState): void;
     readonly size: number;
 }

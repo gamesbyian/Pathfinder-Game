@@ -1,258 +1,210 @@
 # Solver exact/reference-model capability audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-23 — current `cpsat-full-probe.py`, native must-cross legality, reconciled mechanic-state contract, CP-SAT flipping-filter validation, repair-retreat prefix work, and canonical-referee validation practice
-> **Decision:** treat the existing CP-SAT/reference stack as a serious but bounded research oracle now; do not expand it yet. First summarize bidirectional validation by mechanic combination and demonstrate turnaround/value on one current ranked question
-> **Remaining gate:** produce a bounded support/validation suite that classifies each relevant mechanic combination as exact-validated, encoded-but-insufficiently-validated, one-sided/relaxed, unsupported, or timeout-prone, with every emitted witness checked by the canonical referee
+> **Last evidence:** 2026-08-24 — static reconciliation of the maintained full CP-SAT probe, mechanic-state contracts, prior bidirectional validation, repair-retreat work, and the existing exact beam-extinction case set
+> **Decision:** treat the CP-SAT/reference stack as serious but bounded research infrastructure. It has already changed decisions for repair retreat and beam extinction. Do not expand mechanic scope for completeness; close the small support/validation matrix and issue new oracle queries only for a concrete ranked label, counterexample, attainability, or certificate gap.
+> **Remaining gate:** finish a bounded adversarial bidirectional support suite that distinguishes exact-validated, encoded-but-insufficiently-validated, relaxed/one-sided, unsupported, and timeout-prone mechanic combinations; every model-emitted witness must pass the canonical Pathfinder referee.
 > **Evidence role:** forensic
-> **Selection:** observational — audit follows prior targeted CP-SAT work and current reference-program reprioritization
+> **Selection:** observational
 
 ## Purpose
 
-The project already has substantially more exact/reference capability than “we tried MiniZinc/CP-SAT once” suggests. It also has direct evidence that hand-written external encodings can be wrong in both directions.
+Pathfinder already has substantially more exact/reference capability than “we tried CP-SAT” suggests. It also has direct evidence that hand-written external encodings can be wrong in both directions.
 
-This report therefore does two things:
+This report records the current proof boundary and prevents “maintain a serious reference solver” from becoming an indefinite second-solver project.
 
-1. records what the current reference stack can already do; and
-2. prevents “maintain a serious reference solver” from turning into a vague mandate to keep expanding a second solver indefinitely.
+The live rank is owned by [`../docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md). The durable state representation vocabulary is [`../docs/solver-residual-state-representation.md`](../docs/solver-residual-state-representation.md).
 
-The live research priority remains [`docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md). This report is the current audit record for queue P5.
+## Current reference stack
 
-## Existing reference stack
+Primary model: [`../scripts/stress/cpsat-full-probe.py`](../scripts/stress/cpsat-full-probe.py).
 
-### Full CP-SAT model
-
-Primary model:
-
-- [`scripts/stress/cpsat-full-probe.py`](../scripts/stress/cpsat-full-probe.py)
-
-The file describes itself as a full-mechanic probe extending an earlier relaxed/core model. Current capabilities visible in code/comments include:
+The maintained full probe supports, subject to the validation caveats below:
 
 - exact path-position variables over a padded horizon;
-- exact required counted length with portal-jump accounting;
-- exact intersection count via real-node/distinct-cell relation;
-- gate/start and goal constraints;
-- edge-axis reuse constraints;
-- must-pass;
-- must-cross visit requirements combined with edge-axis reuse;
-- turn/chirality state for landmark constraints;
-- surround/adjacent-turn/must-turn families in the full model;
-- portals, including one-use jump semantics and no-consecutive-jump behavior;
-- flipping-filter global order/parity semantics;
+- exact counted length including zero-cost portal jumps;
+- exact intersection count;
+- gates/start/goal and static blocked cells;
+- exact per-axis reuse constraints;
+- must-pass and must-cross;
+- surround, must-turn and adjacent-turn landmark state;
+- portals;
+- flipping-filter order/parity;
 - explicit prefix forcing;
-- witness pinning for over-constraint checks; and
-- emitted-path support for referee validation.
+- known-witness pinning; and
+- model-emitted candidate paths for independent referee validation.
 
-Static regular filters are deliberately rejected/skipped because neither stress corpus currently provides a validation population.
+Static regular filters are deliberately unsupported by the maintained full probe.
 
-### Prefix / repair-retreat query path
+## Why the prefix interface matters
 
-Existing work already uses the model as a bounded exact-prefix oracle rather than only a full-level competitor. The repair-retreat study binary-searched exact feasible/infeasible boundaries along repair elites and validated CP-SAT-emitted completions with the canonical referee.
+The reference model is most valuable when asked a narrow residual question rather than “solve the whole corpus.”
 
-This is a particularly valuable reference use because the question is narrow, monotone, and directly connected to a search-quality mechanism.
+Existing explicit-prefix uses include:
 
-### Existing exact/shadow consumers
+- exact repair-retreat live/dead boundaries;
+- exact beam extinction-adjacent labels;
+- targeted witness/model validation; and
+- reduced feasibility questions.
 
-Current research has used CP-SAT/reference labels for:
+A prefix query asks whether **any** exact completion exists from a specific committed partial path. That turns the model into an independent truth source for questions such as:
 
-- repair rollback/retreat boundaries;
-- beam/extinction-adjacent prefix labels;
-- external hint/witness checks;
-- reduced/targeted feasibility questions; and
-- model-coverage validation after adding mechanics.
+- was this beam survivor still completable?
+- exactly where did a repair trajectory become dead?
+- does a proposed compressed state representation merge a live and dead future?
+- does a proposed structural failure reason admit a live counterexample?
 
-The model does not need to solve the whole stress corpus quickly to justify these uses.
+## Bidirectional validation is mandatory
+
+Two complementary checks catch opposite model defects.
+
+### Over-constraint check
+
+Pin a known referee-valid Pathfinder witness. The model must accept it.
+
+### Under-constraint check
+
+Solve cold/unpinned or from a partial prefix, emit the model path, and validate that path through the canonical Pathfinder referee.
+
+Witness pinning alone cannot detect an easier under-constrained model. Cold emitted paths alone do not establish absence of over-constraint.
 
 ## Strongest existing validation evidence
 
-The 2026-08-15 flipping-filter report is currently the most useful validation anchor.
+The 2026-08-15 flipping-filter/reference work records:
 
-It records:
+- 102/102 flipping-filter-bearing stored witnesses accepted after fixes;
+- 83/83 portal-bearing flipper-free witness checks accepted in a broader portal batch;
+- cold model-generated alternative solutions accepted by the Pathfinder referee; and
+- multiple encoding bugs discovered because emitted paths were independently refereed.
 
-- **102/102** flipping-filter-bearing stored-witness checks feasible, with 0 UNKNOWN and 0 INFEASIBLE after fixes;
-- **83/83** portal-bearing flipper-free witness checks feasible in the broader portal validation batch;
-- cold unpinned CP-SAT solves on flipping-filter levels whose emitted paths differed from stored witnesses and were accepted by the real referee;
-- prior cold portal-bearing emitted-witness/referee validation; and
-- multiple real encoding bugs found precisely because emitted paths were independently refereed rather than trusting witness-pinning alone.
+That is real exact-model infrastructure, not merely a satisfiability sketch.
 
-This is important methodological evidence. `--check-witness` is excellent for finding **over-constraint** because a model rejecting a real witness is wrong. It cannot by itself find **under-constraint**, because an easier model also accepts every valid witness. Cold emitted-path → canonical-referee validation is therefore mandatory whenever a model-produced SAT/OPTIMAL path is used as evidence.
+## Encoding bugs are evidence, not something to hide
 
-## Encoding bugs are part of the audit, not an embarrassment to hide
+Historical defects found and fixed include:
 
-The reference model has already exposed/fixed several failure classes, including:
+- illegal transitions masquerading as portal jumps;
+- edge-axis reuse modeled too weakly;
+- goal-padding transitions counted as real movement/axis touch;
+- early goal arrival followed by padding because real path length was not tied correctly to `reqLen` plus portal jumps;
+- insufficient gate exclusion; and
+- mistaken attribution of an unsupported-mechanics abstention to MustCross when flipping filters were the real cause.
 
-- jump-type variables insufficiently constrained, permitting illegal transitions to masquerade as portal jumps;
-- edge-axis reuse that originally modeled only entries rather than all axis-touching visits;
-- goal-padding transitions spuriously counted as real axis touches;
-- real path length not originally tied to `reqLen` plus portal jumps, permitting early goal arrival and padding;
-- unused gate cells insufficiently prohibited in an earlier form; and
-- historical support/abstention misattribution around must-cross vs flipping filters.
+The lesson is methodological:
 
-These bugs strengthen the case for the reference model **as a research instrument** while simultaneously proving that “CP-SAT said SAT/UNSAT” is not self-authenticating puzzle truth.
-
-The canonical referee remains the arbiter of model-emitted witnesses, and model proof claims remain limited by encoding support and validation.
+> `SAT`, `OPTIMAL`, or `INFEASIBLE` is only as trustworthy as the supported encoding and its validation history.
 
 ## Current support classification
 
-The table below deliberately separates *encoding presence* from *validated exactness*.
+| Mechanic / rule | Encoding status | Validation status / caution |
+|---|---|---|
+| Base grid, gates, goal, blocks | encoded | substantial indirect coverage; include in canonical suite |
+| Exact counted length / intersections | encoded | prior length bug fixed; cold/referee evidence exists |
+| Edge-axis reuse | encoded | prior under-constraint fixed; deserves adversarial revisit fixtures |
+| Must-pass | encoded | straightforward; explicit suite coverage still useful |
+| Must-cross | exact logic via `visits == 2` + exact edge-axis touch | targeted adversarial validation still desirable |
+| Surround | encoded | central validation summary incomplete |
+| Must-turn / adjacent-turn | exact turn/chirality encoding present | validation depth incomplete |
+| Portals | encoded | strong exact candidate; some large queries can timeout |
+| Flipping filters | encoded | strongest targeted validation family |
+| Static regular filters | **unsupported** | full probe abstains |
+| Goose / false goal / decorative exclusions | encoded for solver scope where relevant | not a full PLAY hazard simulation |
 
-| Mechanic / rule family | Current implementation evidence | Current audit classification | Needed before calling broadly exact-validated |
-|---|---|---|---|
-| Base grid adjacency / gates / goal / blocks | encoded in full model | encoded; substantial indirect witness validation | include in bounded canonical suite |
-| Exact counted length / intersections | encoded; length bug fixed 2026-08-15 | encoded with known cold/referee validation after fix | include portal and non-portal cases in suite |
-| Edge-axis reuse | encoded; prior under-constraint bug fixed after referee rejection | encoded with substantial witness/cold coverage | targeted adversarial fixtures for turns/revisits |
-| Must-pass | encoded directly | encoded; likely straightforward | explicit witness + cold cases in suite |
-| Must-cross | `visits == 2` plus exact per-visit edge-axis-touch reuse | **encoding logic reconciled as exact** with native first-pass lock semantics; broad targeted validation still desirable | adversarial first-pass-turn / axis-reuse fixtures plus cold/referee cases |
-| Must-turn / adjacent-turn chirality | turn variables and landmark families present | encoded; validation depth not yet summarized centrally | targeted witness + cold/referee fixtures for each chirality/portal-boundary interaction |
-| Surround | encoded in full model | encoded; validation depth not yet summarized centrally | targeted suite |
-| Portals | encoded, including padded horizon/jump typing; several bugs already found/fixed | strongest current exact candidate after flipper-free witness batches + cold referee checks | include pair counts and unused-pair/padding edge cases in suite |
-| Flipping filters | encoded with global ordering/parity and no-turn/single-use semantics | strong targeted validation: 102 witness checks + cold referee-valid alternative paths | include mixed portal/flipper interactions, not only isolated families |
-| Static filters | explicit skip | unsupported in current full model | no action until a real decision-bearing population/question exists |
-| Goose / false goal / decorative exclusions | represented as impassable for solver scope where applicable | encoded for solver scope; not a PLAY simulation | bounded fixtures only if a research question depends on them |
+### MustCross equivalence
 
-### Must-cross support reconciliation
+Native Pathfinder tracks first-pass consequences through edge-axis usage. Turning during the first MustCross visit consumes both axes and permanently prevents the required second orthogonal pass.
 
-The audit initially found a real documentation discrepancy: `cpsat-full-probe.py` described must-cross as exactly enforceable through `visits == 2` plus edge-axis reuse, while [`docs/mechanic-state-contracts.md`](../docs/mechanic-state-contracts.md) still said an external model was relaxed unless it explicitly tracked the first-cross axis/lock state.
+The CP-SAT model does not need a separate “first crossing axis” variable because exact `visits == 2` plus exact axis-touch reuse produces the same consequence. A first-pass turn consumes both axes and makes visit two impossible; two legal visits must therefore be straight passes on opposite axes.
 
-Reading the native legality path resolves the apparent disagreement. `search-state.ts` has an explicit **must-cross lock prevention** rule: on the unsatisfied first pass, turning would consume the other axis at that cell and permanently block the required second crossing. The CP-SAT model already encodes the equivalent resource consequence globally: a visit that turns touches both axes, while its exact edge-axis-touch constraints permit each axis at most once. Therefore requiring two visits makes a first-pass turn infeasible automatically; two legal visits must be straight crossings on opposite axes.
+Visit count **without** the exact axis constraints would be insufficient.
 
-So a separate first-axis variable is not required **in this model while the exact edge-axis-touch constraints are present**. Visit count by itself would still be insufficient. The durable mechanic contract has been corrected accordingly.
+## Stale mechanic-contract correction
 
-This closes the documentation-logic discrepancy, not the broader validation gate. Targeted adversarial must-cross fixtures remain useful because a hand-written equivalence should be exercised directly before broad `INFEASIBLE` claims rely on it.
+The audit found and corrected a durable documentation mismatch in [`../docs/mechanic-state-contracts.md`](../docs/mechanic-state-contracts.md):
+
+- regular static filters were incorrectly described as externally exact although the maintained full probe explicitly skips them;
+- must-turn and adjacent-turn were described as relaxed although current full CP-SAT has turn/chirality encodings;
+- the table did not clearly distinguish encoding capability from validation depth.
+
+The mechanic contract now owns encoding capability; this report owns validation depth/proof-use caution.
 
 ## What the model may prove
 
-When all involved mechanics/rules are exact-validated for the query:
+Only within an exact-supported and sufficiently validated query scope:
 
-- a model-emitted path accepted by the referee is a valid witness;
-- `INFEASIBLE` can serve as an exact dead/UNSAT label for that encoded query;
-- explicit-prefix feasibility can distinguish live/dead search states; and
-- monotone prefix/retreat binary searches can locate exact boundaries.
+- a referee-accepted emitted path is a valid witness;
+- `INFEASIBLE` can label an exact prefix/query dead;
+- monotone prefix/retreat binary search can locate exact liveness boundaries.
 
-When the model is relaxed/one-sided:
+For relaxed models, state the relaxation direction. For unsupported mechanics or timeout/UNKNOWN, abstain.
 
-- SAT may show that the relaxation is feasible but not necessarily that Pathfinder is feasible;
-- UNSAT may or may not be a safe implication depending on relaxation direction;
-- the report must state the direction explicitly.
+Never convert timeout, UNKNOWN, or unsupported into dead/UNSAT.
 
-When unsupported or timed out:
+## The reference model has already paid rent twice
 
-- report **unsupported** or **UNKNOWN/timeout**;
-- never collapse either into dead/UNSAT.
+### Repair retreat
 
-## What the model should *not* become
+Explicit-prefix feasibility and binary search located exact feasible/infeasible boundaries on repair elites. The later broadened sample showed multiple regimes, including shallow and deep exact rollback. This changed the repair question from vague “near miss” geometry to exact liveness versus reconstructability.
 
-Do not make the CP-SAT model:
+### Beam extinction
 
-- a source of production per-level hints/configuration;
-- a replacement criterion for “our solver solved the level”;
-- an excuse to duplicate every runtime mechanic architecture in a second indefinitely maintained system;
-- a giant full-corpus competition project before bounded research uses prove value; or
-- a truth source whose own validation status is omitted from reports.
+The committed 32-case beam set, after flipping-filter support, produced **25 live / 4 dead / 3 timeout** with zero correctness/input alarms. It includes A/D cases where a score-preferred top candidate is exact-dead while a discarded or near-cutoff alternative is exact-live.
 
-The reference model earns maintenance by answering questions that are otherwise expensive or ambiguous.
+That already proves the mechanism question “can finite-width scoring prefer dead material over live alternatives?” on selected parents. Do not spend another CP-SAT campaign merely to prove it again.
 
-## Bounded audit suite design
+See [`2026-08-24-beam-extinction-descriptor-sanity-check.md`](2026-08-24-beam-extinction-descriptor-sanity-check.md).
 
-The next concrete work should be a **small adversarial validation matrix**, not a giant benchmark.
+## Bounded adversarial validation matrix
 
-### Case construction
+Prefer tiny semantic fixtures and real stored witnesses over a giant benchmark.
 
-Select stored valid witnesses and/or tiny hand-reduced fixtures covering:
+Cover at least:
 
-1. base path + exact length/intersection;
-2. must-pass;
-3. must-cross with:
-   - two straight opposite-axis crossings;
-   - attempted first-visit turn;
-   - axis-reuse near the must-cross cell;
-4. must-turn CW / CCW / either;
-5. adjacent-turn variants;
-6. surround;
-7. portals:
-   - 1, several, and unused pairs;
-   - arrival/exit around turn landmarks;
-   - padding after fewer than maximum jumps;
-8. flipping filters:
-   - 1 and many;
-   - mixed declared axes;
-   - ordering/parity alternation;
-9. mixed portal + flipper + turn/must-cross cases if available;
-10. static-filter case only as a deliberate unsupported control.
+- base path / exact length / exact intersections;
+- must-pass;
+- MustCross horizontal→vertical and vertical→horizontal valid cases;
+- invalid MustCross first-pass turn and same-axis reuse;
+- must-turn CW / CCW / either;
+- adjacent-turn variants;
+- surround;
+- portals including unused pairs, padding and turn-boundary interactions;
+- flipping filters including mixed axes and multiple orderings;
+- mixed portal/flipper/turn cases where available;
+- one static-filter unsupported control.
 
-Prefer tiny/reduced fixtures where they exercise a specific semantic edge more directly than a large stress level.
+For supported cases, normally run both witness-pinning and cold-emitted/referee validation.
 
-### Checks per exact-supported case
+## Research roles going forward
 
-A case should normally receive both directions where feasible:
+The oracle can remain useful as:
 
-**Over-constraint check**
+- exact live/dead labeler;
+- counterexample generator for proposed state abstractions;
+- exact attainability checker for selected residual-resource questions;
+- validator/falsifier of proposed sound structural certificates;
+- bounded diagnosis instrument for repair assumptions when the encoding supports them.
 
-- pin a real stored/referee-valid witness;
-- require CP-SAT to accept it.
+It should **not** become:
 
-**Under-constraint check**
+- a source of production per-level hints or routing;
+- a replacement definition of native solver capability;
+- a second system that must encode every future mechanic;
+- a truth source whose support/validation status is omitted.
 
-- solve cold/unpinned or from a partial prefix;
-- emit the model path;
-- validate it with `Solver.validateCandidatePath` / canonical referee.
+## Cost/value gate
 
-For a deliberately infeasible reduced fixture, compare `INFEASIBLE` to a tiny independent exhaustive/reference check where practical.
-
-### Failure classification
-
-Any disagreement becomes one of:
-
-- model over-constraint;
-- model under-constraint;
-- native/referee misunderstanding;
-- unsupported mechanic combination;
-- timeout/complexity limitation;
-- test/provenance error.
-
-Do not “fix” a disagreement by weakening/strengthening constraints until the semantic rule is traced to canonical game/solver behavior.
-
-## Turnaround/value gate
-
-After the support audit, use the model on **one current ranked question** before expanding scope.
-
-Good candidates include:
-
-- an exact-live/dead beam retention boundary;
-- a repair edit/retreat interface;
-- a proposed learned-failure reason whose soundness needs a counterexample search; or
-- a reduced counterexample for a new propagator.
-
-Record:
+For every future reference-model use, record:
 
 - query construction cost;
-- model solve/label turnaround;
-- exact/unknown rate;
-- whether the answer changed a real research decision;
-- maintenance/debugging effort required.
+- solve/label turnaround;
+- exact versus UNKNOWN rate;
+- whether the answer changed a ranked decision;
+- maintenance/debugging cost.
 
-### Success gate
+A reference model can be valuable historically and still be the wrong tool for a new query.
 
-Keep/elevate the reference program if the audited model produces reliable decision-changing labels at a cost meaningfully below equivalent heuristic archaeology on at least one active question.
+## Current disposition
 
-### Stop/demotion gate
+The “can a reference model ever justify maintenance?” gate is **met** for bounded research use.
 
-Keep only narrow exact/reduced forms if:
-
-- model maintenance repeatedly exceeds the value of questions answered;
-- most relevant hard queries time out/abstain;
-- supporting remaining mechanics requires large duplicated architecture with little use; or
-- exact/shadow questions can be answered more cheaply by native exhaustive/reducer tooling.
-
-A smaller trustworthy oracle is better than a grand “full solver” whose support status is fuzzy.
-
-## Documentation consequence after the audit
-
-When the bounded suite closes:
-
-1. keep [`docs/mechanic-state-contracts.md`](../docs/mechanic-state-contracts.md) aligned with verified model semantics as support changes;
-2. add the reference-model validation/support entry point to [`docs/tooling-catalog.md`](../docs/tooling-catalog.md) if repeated use justifies a stable command;
-3. keep detailed validation counts and bugs in dated reports;
-4. keep unsupported/one-sided limitations explicit in every consumer report.
-
-Do **not** create a new permanent `solver-reference-model.md` merely because this audit exists. The topic earns a durable doc only if repeated active use makes the existing mechanic/tooling references insufficient.
+The next job is validation hygiene and demand-driven use, not broader mechanic coverage or full-corpus exact solving.

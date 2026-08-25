@@ -19,7 +19,7 @@ Definitions:
 - `affectsMoveLegality`: can reject an otherwise geometric move as illegal; pruning-only checks are distinct.
 - `affectsConnectivity`: can remove/change an available graph edge as state changes.
 - `requiresIncomingDirection`: needs how the path arrived, not only the proposed move axis.
-- `externalModelSupport`: `exact` means the current maintained external model can express the solver/game semantics needed for the mechanic when its stated supporting constraints are enabled; `relaxed` needs extra state/constraints; `unsupported` has no current exact encoding.
+- `externalModelSupport`: `exact` means the current maintained external model can express the solver/game semantics needed for the mechanic when its stated supporting constraints are enabled; `relaxed` means the maintained model intentionally omits or weakens part of the mechanic; `unsupported` means the maintained full probe abstains rather than claiming exact support. This column describes encoding capability, **not validation depth**. Before using `INFEASIBLE` as dead/UNSAT truth, also check the bidirectional validation status in [`../reports/2026-08-23-solver-reference-model-capability-audit.md`](../reports/2026-08-23-solver-reference-model-capability-audit.md).
 
 ## Summary
 
@@ -29,18 +29,19 @@ Definitions:
 | **Visited/intersection** | per-cell count | grid | yes | no | no | yes: exact `reqInt` | no | exact |
 | **Must-pass** | per-object visited bit | published max 4; schema ≤30 | yes | no | no | yes | no | exact; bound memoizable on `(pos, mpVisitedMask)` |
 | **Must-cross** | per-object count + first-axis consequence through edge usage | published max 4; schema ≤30 | count yes; axis resource matters | yes: first-pass turn would consume both axes and block required second crossing | yes | yes | yes | exact in current CP-SAT when combined with exact edge-axis-touch reuse and `visits == 2` |
-| **Regular filter** | static | n/a | n/a | yes, precompiled | yes, static | no | no | exact |
-| **Flipping filter** | global crossing parity + per-object used bit | published max 22; stress max 8; schema ≤32 | used bits yes; parity derived | yes: legal axis depends on global flipper order | yes, dynamic | no | yes | relaxed/unsupported naively; current full CP-SAT has an exact order/parity encoding validated separately |
+| **Regular filter** | static | n/a | n/a | yes, precompiled | yes, static | no | no | **unsupported in the maintained full CP-SAT probe**; it explicitly abstains on static-filter levels |
+| **Flipping filter** | global crossing parity + per-object used bit | published max 22; stress max 8; schema ≤32 | used bits yes; parity derived | yes: legal axis depends on global flipper order | yes, dynamic | no | yes | exact order/parity encoding in current full CP-SAT; targeted witness + cold/referee validation exists |
 | **Portal** | per-terminal used bit + `lastWasPortalJump` | published max 3 pairs / 6 keys; stress max 7 pairs | yes | yes: forces destination | yes | affects counted length | yes | exact with paired zero-cost, one-use edges |
 | **Gate** | static | n/a | n/a | yes: no re-entry | yes, static | no | no | exact |
 | **Goose / false goal** | static for solver | n/a | n/a | excluded from solver graph | yes, static | no | no | exact for solver scope; PLAY hazard effects are separate |
-| **Surround** | per-object remaining-neighbor mask | schema ≤30 | yes | no | no | yes | no | exact with per-neighbor visited variables |
-| **Must-turn** | per-object satisfied bit | schema ≤30 | yes | hard legality no; `mustTurnDeadlocked` is prune-only | no | yes | yes | relaxed; needs turn-chirality state |
-| **Adjacent-turn** | per-object satisfied bit | schema ≤30 | yes | no | no | yes | yes | relaxed; turn chirality + OR across neighbors |
+| **Surround** | per-object remaining-neighbor mask | schema ≤30 | yes | no | no | yes | no | exact with per-neighbor visited variables; validation depth is not yet centrally complete |
+| **Must-turn** | per-object satisfied bit | schema ≤30 | yes | hard legality no; `mustTurnDeadlocked` is prune-only | no | yes | yes | exact turn/chirality encoding in current full CP-SAT; validation depth is not yet centrally complete |
+| **Adjacent-turn** | per-object satisfied bit | schema ≤30 | yes | no | no | yes | yes | exact turn/chirality + neighbor-OR encoding in current full CP-SAT; validation depth is not yet centrally complete |
 | **Decorative landmark** | static block | n/a | n/a | yes, static | yes, static | no | no | exact |
 
 Notes:
 - Must-cross **cannot be represented by visit count alone**. Native legality uses edge-axis state: after the first visit, turning on exit would consume the other axis and permanently prevent the second required crossing, so `isMoveDynamicallyValid` rejects that lock. The current full CP-SAT model can nevertheless encode must-cross exactly without a separate first-axis variable because it combines `visits == 2` with exact per-visit edge-axis-touch reuse: any first-visit turn touches both axes and makes a second visit infeasible, while two legal visits must therefore be straight crossings on opposite axes. Removing/weaking the edge-axis constraints would make the visit-count encoding relaxed/unsound. This contract was reconciled against `search-state.ts` and `cpsat-full-probe.py` on 2026-08-23; see [`../reports/2026-08-23-solver-reference-model-capability-audit.md`](../reports/2026-08-23-solver-reference-model-capability-audit.md).
+- The external-model support table was re-reconciled on 2026-08-24 after a static audit found stale entries: the maintained full probe explicitly skips regular static filters, while must-turn and adjacent-turn are encoded with turn/chirality variables. Encoding presence is still not enough for broad exact claims; the reference-model audit owns current validation depth and required adversarial fixtures.
 - Flipper parity is `popcount(flipperUsedMask) % 2`, derived from the used mask; no separate parity state is needed. Flipper cardinality uses a different representation from the `(1 << n) - 1` initial masks below; do not reuse the ≤30 mask bound for it.
 - Portals subtract jumps from counted length and use `lastWasPortalJump` to prevent forced bounce-back.
 - Published/stress maxima are measurements, not schema contracts. Regenerate current dataset facts via `npm run facts:levels`; [`../DEVELOPER_REFERENCE.md`](../DEVELOPER_REFERENCE.md) carries the checked generated snapshot.
