@@ -1,0 +1,180 @@
+name: Selective diverse-IH exposure A/B (one-shot)
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/selective-diverse-ih-exposure-ab-one-shot.yml'
+
+env:
+  SOLVER_SHA: fc696bac37bffea9ca8b8dbc7616639224fbf4dc
+
+jobs:
+  materialize-population:
+    name: Materialize feature-defined development population
+    runs-on: ubuntu-latest
+    permissions: { contents: read }
+    steps:
+      - name: Check out frozen solver revision
+        uses: actions/checkout@v4
+        with: { ref: '${{ env.SOLVER_SHA }}' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - name: Select all matching Corpus-2 levels
+        run: |
+          mkdir -p tmp/selective-diverse-ih
+          node scripts/run-bundled.mjs - <<'NODE'
+          import fs from 'node:fs';
+          import { installBrowserStubs } from './scripts/test-lib/browser-stubs.mjs';
+          installBrowserStubs();
+          const { createSolver } = await import('./modules/solver.js');
+          const { detectArchetype } = await import('./modules/solver/archetype.js');
+          const Solver = createSolver();
+          const src = JSON.parse(fs.readFileSync('data/stress/stress-levels-random.json','utf8'));
+          const levels = Array.isArray(src) ? src : src.levels;
+          const selected = levels.filter(entry => {
+            const { id, stressMeta, provenance, ...raw } = entry;
+            const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
+            return detectArchetype(level) === 'high-intersection-burden'
+              && level.reqInt >= 7
+              && level.mustCrossKeys.length < 2;
+          });
+          if (!selected.length) throw Error('feature-defined population unexpectedly empty');
+          const out = { selection: {
+            corpus: 'stress-levels-random.json',
+            predicate: "detectArchetype(level)==='high-intersection-burden' && reqInt>=7 && mustCross<2",
+            solverSha: process.env.SOLVER_SHA,
+          }, levels: selected };
+          fs.writeFileSync('tmp/selective-diverse-ih/population.json', JSON.stringify(out));
+          fs.writeFileSync('tmp/selective-diverse-ih/count.txt', String(selected.length)+'\n');
+          console.log(`selected ${selected.length}/${levels.length} levels`);
+          NODE
+          sha256sum tmp/selective-diverse-ih/population.json > tmp/selective-diverse-ih/population.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: selective-diverse-ih-population
+          path: tmp/selective-diverse-ih/
+          retention-days: 90
+
+  run-shard:
+    name: ${{ matrix.arm }}-shard-${{ matrix.shard }}
+    needs: materialize-population
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions: { contents: read }
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [control, treatment]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - name: Check out frozen solver revision
+        uses: actions/checkout@v4
+        with: { ref: '${{ env.SOLVER_SHA }}' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: npm }
+      - run: npm ci
+      - name: Download exact development population
+        uses: actions/download-artifact@v4
+        with:
+          name: selective-diverse-ih-population
+          path: tmp/selective-diverse-ih
+      - name: Verify population seal
+        run: |
+          (cd tmp/selective-diverse-ih && sha256sum -c population.sha256)
+      - name: Apply one-dimensional exposure treatment
+        if: matrix.arm == 'treatment'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('modules/solver/attempts.ts'); s=p.read_text()
+          portal="""            beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),\n        ],\n    },\n    {\n        // Must-cross-threaded levels: the diverse beams are the ones that actually solve this\n"""
+          portal_new="""            beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),\n            ...(f.mustCross < POLICY.HIGHINT_MC_DIVERSE\n                ? [beam('intersectionHarvest', BEAM.WIDE, null, { diverseBeam: true })]\n                : []),\n        ],\n    },\n    {\n        // Must-cross-threaded levels: the diverse beams are the ones that actually solve this\n"""
+          nonportal="""            beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),\n        ],\n    },\n    {\n        why: 'near-Hamiltonian: beams collapse over the long dense walk — DFS perimeter (both directions) leads',\n"""
+          nonportal_new="""            beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),\n            ...(f.mustCross < POLICY.HIGHINT_MC_DIVERSE\n                ? [beam('intersectionHarvest', BEAM.WIDE, null, { diverseBeam: true })]\n                : []),\n        ],\n    },\n    {\n        why: 'near-Hamiltonian: beams collapse over the long dense walk — DFS perimeter (both directions) leads',\n"""
+          assert s.count(portal)==1, s.count(portal)
+          assert s.count(nonportal)==1, s.count(nonportal)
+          s=s.replace(portal,portal_new).replace(nonportal,nonportal_new)
+          p.write_text(s)
+          PY
+          git diff --check
+          npm run build
+      - name: Run strict fixed-work shard
+        run: |
+          d=tmp/result/${{ matrix.arm }}/shard-${{ matrix.shard }}; mkdir -p "$d"
+          n=$(cat tmp/selective-diverse-ih/count.txt)
+          positions=$(python3 - <<'PY'
+          n=int(open('tmp/selective-diverse-ih/count.txt').read())
+          s=int('${{ matrix.shard }}')
+          print('pos:'+','.join(str(i) for i in range(1,n+1) if (i-1)%8==s))
+          PY
+          )
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus=tmp/selective-diverse-ih/population.json --levels="$positions" \
+            --budget-ms=86400000 --node-budget=50000000 --work-budget=67000000 \
+            --strict-total-work-budget --attempt-budget-telemetry --lifecycle-telemetry \
+            --workers=4 --out="$d/result.json" --summary-out="$d/summary.md"
+      - name: Verify shard contract
+        run: |
+          d=tmp/result/${{ matrix.arm }}/shard-${{ matrix.shard }}
+          node - "$d" '${{ matrix.arm }}' '${{ matrix.shard }}' <<'NODE'
+          const fs=require('node:fs'),cp=require('node:child_process'),crypto=require('node:crypto');
+          const [d,arm,shard]=process.argv.slice(2); const r=JSON.parse(fs.readFileSync(`${d}/result.json`));
+          const n=Number(fs.readFileSync('tmp/selective-diverse-ih/count.txt','utf8'));
+          const expected=Array.from({length:n},(_,i)=>i).filter(i=>i%8===Number(shard)).length;
+          const rows=r.levels??[]; if(rows.length!==expected) throw Error(`expected ${expected} rows, got ${rows.length}`);
+          const bad=rows.filter(x=>x.deadlineTruncated||x.status==='deadline-truncated'||x.status==='attempt-error');
+          if(bad.length) throw Error(`indeterminate/error rows: ${bad.length}`);
+          if(arm==='treatment') {
+            const offered=rows.flatMap(x=>(x.attempts??[]).filter(a=>a.stageId==='main-loop'&&a.profile==='intersectionHarvest'&&a.beamWidth===5000&&a.diverseBeam));
+            if(!offered.length) console.log('note: no shard level reached the new trailing action before an earlier solve/exhaustion');
+          }
+          const patch=cp.execSync('git diff -- modules/solver/attempts.ts',{encoding:'utf8'});
+          const meta={arm,shard:Number(shard),solverSha:process.env.SOLVER_SHA,populationCount:n,
+            populationSha256:fs.readFileSync('tmp/selective-diverse-ih/population.sha256','utf8').trim().split(/\s+/)[0],
+            strictTotalWorkBudget:67000000,nodeBudget:50000000,
+            treatment:'append trailing beam:intersectionHarvest@beam5000(diverse) only to very-high-intersection bundles when mustCross<2',
+            workingTreePatchSha256:crypto.createHash('sha256').update(patch).digest('hex')};
+          fs.writeFileSync(`${d}/metadata.json`,JSON.stringify(meta,null,2)+'\n');
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: selective-diverse-ih-${{ matrix.arm }}-${{ matrix.shard }}
+          path: tmp/result/${{ matrix.arm }}/shard-${{ matrix.shard }}/
+          retention-days: 90
+
+  analyze:
+    name: Record frozen development verdict
+    needs: run-shard
+    if: always() && needs.run-shard.result == 'success'
+    runs-on: ubuntu-latest
+    permissions: { contents: read }
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { pattern: 'selective-diverse-ih-*', path: tmp/downloaded }
+      - name: Apply prespecified gate
+        run: |
+          mkdir -p tmp/analysis
+          node - <<'NODE'
+          const fs=require('node:fs'),path=require('node:path');
+          const dirs=fs.readdirSync('tmp/downloaded').filter(x=>/^selective-diverse-ih-(control|treatment)-\d+$/.test(x));
+          if(dirs.length!==16) throw Error(`expected 16 shard artifacts, got ${dirs.length}`);
+          const g={control:[],treatment:[]}, hashes=new Set(), counts=new Set();
+          for(const n of dirs){const p=path.join('tmp/downloaded',n); const m=JSON.parse(fs.readFileSync(path.join(p,'metadata.json'))); const r=JSON.parse(fs.readFileSync(path.join(p,'result.json'))); hashes.add(m.populationSha256); counts.add(m.populationCount); g[m.arm].push(...(r.levels??[]));}
+          if(hashes.size!==1||counts.size!==1) throw Error('population provenance differs across shards');
+          const n=[...counts][0];
+          for(const a of ['control','treatment']) if(g[a].length!==n||new Set(g[a].map(x=>x.id)).size!==n) throw Error(`${a} population invalid`);
+          const ids=a=>new Set(g[a].filter(x=>x.ok).map(x=>x.id)); const c=ids('control'),t=ids('treatment');
+          const gained=[...t].filter(x=>!c.has(x)).sort(),lost=[...c].filter(x=>!t.has(x)).sort();
+          const work=a=>g[a].reduce((s,x)=>s+Number(x.workSpent??0),0), cw=work('control'),tw=work('treatment'),wr=cw?(cw-tw)/cw:0;
+          const pass=lost.length===0&&(gained.length>=1||wr>=.10);
+          const v={verdict:pass?'positive-earned-confirmation':'negative-close-treatment',acceptanceRule:'no solve loss AND (>=1 gained solve OR >=10% aggregate canonical-work reduction)',populationCount:n,populationSha256:[...hashes][0],control:{solved:c.size,aggregateWork:cw},treatment:{solved:t.size,aggregateWork:tw},gainedCount:gained.length,lostCount:lost.length,aggregateWorkReductionPercent:100*wr,passesGate:pass,gained,lost};
+          fs.writeFileSync('tmp/analysis/verdict.json',JSON.stringify(v,null,2)+'\n');
+          fs.writeFileSync('tmp/analysis/summary.md',`# Selective diverse-IH exposure verdict\n\nVerdict: **${v.verdict}**\nPopulation: ${n}.\nControl: ${c.size}/${n}; ${cw.toLocaleString()} work.\nTreatment: ${t.size}/${n}; ${tw.toLocaleString()} work.\nGained: ${gained.length}. Lost: ${lost.length}.\nWork reduction: ${(100*wr).toFixed(2)}%.\nGate: **${pass?'PASS':'FAIL'}**.\n`);
+          console.log(fs.readFileSync('tmp/analysis/summary.md','utf8'));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: selective-diverse-ih-verdict
+          path: tmp/analysis/
+          retention-days: 90
