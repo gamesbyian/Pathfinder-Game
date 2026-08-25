@@ -28,6 +28,8 @@ For each committed case, reconstruct the candidate prefix exactly as the oracle 
 - Manhattan distance from current position to goal;
 - current position.
 
+A second static pass replayed the same prefixes under `search-state.ts`'s edge-usage convention: every ordinary move marks its H/V axis bit on both source and target. The selected queried prefixes contain zero portal jumps up to the query state, so this replay has no portal ambiguity.
+
 All four selected prefixes contain zero portal jumps up to the queried state, so counted prefix length here is ordinary move count. No new oracle calls were made.
 
 The exact live/dead labels come from the existing CP-SAT explicit-prefix pipeline, whose live witnesses are checked by the canonical referee. The 2026-08-15 rerun reports 25 live / 4 dead / 3 timeout with zero correctness or input alarms after flipping-filter support removed the earlier modeling abstentions.
@@ -73,6 +75,42 @@ At `S00048`, the dead candidate is Manhattan distance 6 from the goal while the 
 
 This is unsurprising for exact-length path construction, but the exact labels make the failure concrete at the actual beam retention boundary rather than at arbitrary states.
 
+### 5. Global “less axis capacity consumed” is not a dominance rule either
+
+Replaying the four pairs under the native edge-usage convention gives the number of already-touched cells whose H and V axis bits are both spent:
+
+| parent | dead top | live alternative |
+|---|---:|---:|
+| `S00001` | 16 | 15 |
+| `S00030` | 6 | 4 |
+| `S00048` | 14 | 14 |
+| `R00104` | 18 | **21** |
+
+The direction is inconsistent. `S00030` fits the tempting story that the dead state has consumed more residual axis capacity, but `R00104` is the opposite: the exact-live alternative has **more** globally axis-exhausted cells. `S00048` ties.
+
+The same problem appears in total used axis bits over touched cells: dead/live are 41/41, 21/19, 38/36, and 54/57 respectively. Aggregate topology consumption is therefore another coarse progress/resource summary, not a general future-opportunity order.
+
+The useful information, if any, has to be more **where/how** than simply **how much**.
+
+## A specific cheap representation gap: pending versus half-completed must-cross
+
+`S00030` exposes a more targeted state distinction.
+
+Both exact states:
+
+- are at `(8,9)`;
+- have the same remaining length and intersection budget;
+- still have both must-cross obligations pending in `mustCrossMask`;
+- have not used the level's flipping filter, so their flipper-used mask is also the same.
+
+But the exact-live alternative has already visited must-cross `(8,6)` once, while the exact-dead top candidate has never visited it. A first visit does **not** clear the pending bit; the bit remains set until the second visit. Therefore the production diverse-beam bucket `(flipperUsedMask, mustCrossMask)` treats these two histories as the same diversity class even though `crossCounts` distinguishes them.
+
+This is not a newly discovered implementation bug. [`2026-08-06-beam-state-dedup-sound-signature-audit.md`](2026-08-06-beam-state-dedup-sound-signature-audit.md) already documented that the coarse beam mask cannot distinguish “0 visits” from “1 visit, axis partially locked” at a pending must-cross cell and explicitly left it as a plausible future gap. The new evidence is narrower and stronger: an existing exact D-class extinction pair now shows that this previously hypothetical distinction coincides with **dead versus live** inside one current diversity bucket.
+
+It still does **not** prove that the bucket caused the extinction or that adding this field will improve survivor selection. The two candidates differ in other history-dependent state as well. Treat it as a high-value descriptor nomination, not a promotion result.
+
+The signal is also not globally absent from the solver. Scoring already reads `crossCounts[i] === 1` to switch must-cross guidance from the cell itself to perpendicular second-pass approach maps. The gap is specifically in coarse **retention/diversity representation**, not basic scoring awareness. That makes a first-pass/half-completed must-cross mask attractive for offline #4 analysis: it is bounded, derived from state already maintained, and far cheaper than a new topology traversal.
+
 ## Runtime-cost audit: what “cheap topology” can mean
 
 A static source audit after the scalar check narrows the admissible descriptor space further.
@@ -103,16 +141,19 @@ The first category is the correct starting point. The second must earn its cost 
 
 The first offline projection should therefore prefer:
 
+- **must-cross first-pass mask/count:** distinguish untouched pending obligations from half-completed ones using existing `crossCounts`, motivated specifically by `S00030` and the older sound-signature audit;
 - **existing connectivity slack:** where an ordinary connectivity pass already occurs, `freshVolume + intNeeded - rSteps` on portal-free levels rather than only its current sign test;
-- **local axis availability:** O(1) or bounded-neighborhood counts of unused H/V axis capacity at the current cell and pending must-cross/must-turn interfaces, using existing `edgeUsage`/mask state;
+- **local axis availability:** O(1) or bounded-neighborhood summaries of unused H/V capacity at the current cell and pending obligation interfaces, not a global exhausted-cell count;
 - **already-known obligation reachability shape:** only if summarized from an already-paid reached set, not by launching a new traversal;
-- **current diversity masks plus one interface signal:** test whether the existing `(flipperUsedMask, mustCrossMask)` diversity coordinates become more informative when paired with a cheap residual-capacity/interface quantity.
+- **current diversity masks plus one interface signal:** test whether `(flipperUsedMask, mustCrossMask)` becomes more informative when paired with first-pass status or another cheap residual-interface quantity.
 
 Do **not** begin with full bridge/articulation/cut analysis, repeated component decomposition, or exact attainable-resource dynamic programming. Those remain diagnostic candidates only if the cheap layer fails and the expected information gain can justify their cost.
 
 ### Important comparison baseline
 
-Any candidate descriptor must be compared against what the pruning gauntlet already knows. A descriptor that merely predicts the boolean connectivity verdict, MST lower bounds, intersection deficit, or existing must-cross deadlocks is not new future information. The useful target is residual variation **among states that already pass current hard pruning** and compete for finite beam retention.
+Any candidate descriptor must be compared against what the pruning gauntlet and scoring already know. A descriptor that merely predicts the boolean connectivity verdict, MST lower bounds, intersection deficit, existing must-cross deadlocks, or a score term already reacting to the same state is not automatically new future information. The useful target is residual variation **among states that already pass current hard pruning and nevertheless compete for finite beam retention**.
+
+For must-cross first-pass status specifically, the question is not whether scoring can see it. It can. The question is whether representing it explicitly in survivor-coverage analysis preserves a distinct live future that the current coarse diversity partition does not distinguish.
 
 ## More useful next descriptor families
 
@@ -123,7 +164,7 @@ The next offline pass should prespecify only a few state/interface families that
 1. **Residual axis/interface availability.** How much H/V edge capacity remains around the current region and unsatisfied must-cross/turn obligations, using information already represented by edge usage and mechanic masks.
 2. **Residual component/corridor capacity.** Prefer information reusable from an already-paid connectivity pass. New bridge/cut/corridor work is second-line because connectivity is already a major hot path.
 3. **Exact-resource attainability summaries.** Not merely remaining intersection/length counts, but whether a cheap relaxed/restricted residual model suggests those exact remaining values are still attainable. This is not a first runtime feature unless computation is demonstrably cheap.
-4. **Obligation geometry, not counts.** Location/interface relationships among pending objectives and available regions. Counts alone are explicitly falsified above.
+4. **Obligation geometry/status, not counts.** Location/interface relationships and partial-completion state among pending objectives. Counts alone are explicitly falsified above, and `S00030` shows that a pending bit can hide a meaningful first-pass distinction.
 
 Existing must-cross/flipper diversity masks remain valid candidate coordinates for survivor coverage; the point is to test whether adding a small amount of **future interface** information distinguishes the exact-live alternatives from redundant/dead survivors.
 
@@ -141,7 +182,7 @@ No new CP-SAT campaign is needed first. The exact case material already answers 
 
 Next:
 
-1. project a **small prespecified descriptor set** onto the existing A/D exact cases, beginning with local axis/interface summaries and already-paid connectivity slack rather than a new graph traversal;
+1. project a **small prespecified descriptor set** onto the existing A/D exact cases, leading with must-cross first-pass status, bounded local axis/interface summaries, and already-paid connectivity slack rather than a new graph traversal;
 2. compare each descriptor's incremental separation against current score and current prune/connectivity outputs, not against a blank baseline;
 3. inspect whether the same descriptor direction recurs across unrelated parents rather than fitting thresholds to these selected cases;
 4. only if a compact descriptor family survives, expand exact labels or construct a fixed-width offline survivor-coverage counterfactual;
@@ -149,4 +190,4 @@ Next:
 
 ### Stop gate
 
-Stop this branch if the cheap descriptors merely restate current prunes, separate each selected parent for unrelated reasons, or require near-exact residual solving to compute. In that case preserve the exact extinction evidence as mechanism truth but do not build a generic future-opportunity framework around it.
+Stop this branch if the cheap descriptors merely restate current prunes/scoring, separate each selected parent for unrelated reasons, or require near-exact residual solving to compute. In that case preserve the exact extinction evidence as mechanism truth but do not build a generic future-opportunity framework around it.
