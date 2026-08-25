@@ -33,7 +33,8 @@ const event = (depth, candidates, activeOrder, family = 'admissible-order') => (
 const identicalTrace = { observed: 2, retained: 2, truncated: false, events: [
     event(1, [10, 11], [10, 11]), event(2, [20, 21, 22], [21, 20, 22]),
 ] };
-const identicalComparison = compareDeterministicDecisionTraces(identicalTrace, structuredClone(identicalTrace));
+const identicalCopy = JSON.parse(JSON.stringify(identicalTrace));
+const identicalComparison = compareDeterministicDecisionTraces(identicalTrace, identicalCopy);
 assert.equal(identicalComparison.status, 'identical-retained-trace');
 assert.equal(identicalComparison.commonEventPrefix, 2);
 assert.equal(identicalComparison.firstDivergence, null);
