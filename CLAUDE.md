@@ -1,7 +1,5 @@
 # Pathfinder AI entry point
 
-Read [`AGENTS.md`](AGENTS.md). It is the canonical compact coding/research-agent guide.
+Read [`AGENTS.md`](AGENTS.md); it is the canonical coding/research-agent guide.
 
-Load [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md) only when broad game-rule, solver-gotcha, provenance, or repository-history context is actually needed. Current topic docs and [`reports/README.md`](reports/README.md) provide task-specific guidance and experiment history.
-
-For solver runs over roughly 40–50 levels, especially A/B tests, prefer reusing or creating and dispatching a sharded GitHub Actions workflow rather than running the batch locally; use local runs for smaller samples and iteration.
+Load [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md) only for rare game-rule, solver-gotcha, provenance, or level-fact context. Use current topic docs for behavior/decisions, [`reports/README.md`](reports/README.md) for prior evidence, and [`docs/tooling-catalog.md`](docs/tooling-catalog.md) / [`.github/workflows/README.md`](.github/workflows/README.md) for local or remote execution.
