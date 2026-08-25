@@ -1,0 +1,102 @@
+name: Harvest solver hint evidence
+
+on:
+  workflow_run:
+    workflows:
+      - 'Solver stress-corpus refresh (level-blind capability)'
+      - 'Solver typical-budget baseline (corpus-1 + corpus-2)'
+      - 'Solver high-budget sweep (unsolved-only, both corpora)'
+      - 'Solver level-blind targeted sweep'
+      - 'Solver archetype-gated routing sample A/B'
+      - 'Solver repair-probe adaptive-budget sample A/B'
+      - 'Solver repair-fallback node-reserve sample A/B'
+    types: [completed]
+
+# Source runs may finish together. Keep one semantic writer for the canonical hint store so two
+# provenance updates to the same level can never devolve into last-writer-wins JSON commits.
+concurrency:
+  group: canonical-solver-hint-persistence
+  cancel-in-progress: false
+
+jobs:
+  harvest:
+    # Harvest even from a partially failed/cancelled run: shard jobs write reports incrementally and
+    # upload in always() steps, so useful solves can exist before the overall workflow turns red.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download every artifact from the source solver run
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: artifact-staging
+          merge-multiple: false
+
+      - name: Merge all recoverable hint evidence onto latest main
+        shell: bash
+        env:
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+          SOURCE_WORKFLOW: ${{ github.event.workflow_run.name }}
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+          SOURCE_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          # Never rebase competing JSON edits line-by-line. On a race, reset to the new main and
+          # replay both semantic importers from the immutable source artifacts.
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Workflows that used --save-hints already carry canonical hint files in their shard
+            # artifacts. Merge them structurally and referee-check every incoming path.
+            node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
+              --staging-dir=artifact-staging
+
+            # Artifact-only level-blind workflows still retain the same information in each shard's
+            # {summary,levels} report. Reconstruct canonical provenance from the persisted winning
+            # attempt and path. Corpus-shape mismatches are quarantined, never discarded.
+            node scripts/run-bundled.mjs scripts/harvest-level-blind-report-hints.mjs -- \
+              --staging-dir=artifact-staging \
+              --source-run-id="$SOURCE_RUN_ID" \
+              --source-workflow="$SOURCE_WORKFLOW"
+
+            if git diff --quiet -- data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ 2>/dev/null; then
+              echo 'No new canonical hint/provenance evidence to persist.'
+              exit 0
+            fi
+
+            git add data/stress/hints/ data/stress/hints-random/
+            if [ -d reports/stress/pending-solver-evidence ]; then
+              git add reports/stress/pending-solver-evidence/
+            fi
+            git commit -m "Harvest solver evidence: ${SOURCE_WORKFLOW} (${SOURCE_RUN_ID})"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep $((attempt * 5))
+          done
+
+          echo 'Failed to persist solver evidence after four semantic-merge retries.' >&2
+          exit 1
