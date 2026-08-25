@@ -1,10 +1,12 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "createdAt": "2026-08-24",
   "sourceCommit": "4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92",
   "generator": {
     "path": "scripts/stress/generate-random.mjs",
-    "version": "1.1.0"
+    "version": "1.1.0",
+    "sourceCommit": "4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92",
+    "materializationPrecondition": "Run from a checkout/worktree at generator.sourceCommit, or first verify that the generator file bytes match that revision. Do not run the command against a later modified generator under the same population id."
   },
   "populations": [
     {
@@ -18,6 +20,7 @@
       "masterSeed": 2026082417,
       "generatorMode": "uniform-random-raised-caps",
       "idPrefix": "C",
+      "materializationRevision": "4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92",
       "materializationCommand": "node scripts/run-bundled.mjs scripts/stress/generate-random.mjs --count=256 --master-seed=2026082417 --id-prefix=C --out=tmp/managed-evaluation/confirm-broad-001.json",
       "intendedUse": "First selected solver treatment requiring independent broad confirmation after development/tuning.",
       "selectionRule": "All 256 generated levels; no baseline-outcome filtering and no candidate-specific post-generation filtering.",
@@ -39,6 +42,7 @@
       "masterSeed": 2026082429,
       "generatorMode": "uniform-random-envelope-caps",
       "idPrefix": "T",
+      "materializationRevision": "4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92",
       "materializationCommand": "node scripts/run-bundled.mjs scripts/stress/generate-random.mjs --envelope-caps --count=256 --master-seed=2026082429 --id-prefix=T --out=tmp/managed-evaluation/transfer-envelope-001.json",
       "intendedUse": "First locked transfer/challenge population after a treatment survives broad confirmation; tests transfer into the shipped/editor complexity envelope under a fresh seed.",
       "selectionRule": "All 256 generated levels; no solver-outcome filtering and no candidate-specific post-generation filtering.",
