@@ -1,103 +1,30 @@
 #!/usr/bin/env node
 /* global structuredClone */
 /**
- * Sibling/cousin research generator — local-mutant tier (docs/sibling-cousin-system.md).
+ * Generate witness-preserving level families for solver research.
  *
- * Takes a PARENT level + one of its own already-known witness paths (a stored hint, or a stress
- * level's stressMeta.witnessSolution), then produces "local mutant" siblings: single-object moves
- * that preserve the EXACT witness coordinate path under strict inventory. Reuses
- * scripts/stress/witness.mjs's buildRawLevel/validateWitnessOnRaw/witnessCellData verbatim (the
- * same referee-backed assembly the stress corpora are built with) and scripts/stress/witness-
- * adapter.mjs to turn the existing level+path into the witness-object shape those functions
- * expect. The per-object-type eligible-cell logic below intentionally MIRRORS (does not import)
- * scripts/stress/generate-random.mjs's opXUniform functions: importing them isn't possible
- * without either exporting private closures out of a script whose byte-stable determinism is
- * load-bearing for the already-shipped stress corpus, or refactoring it — both riskier than a
- * small, independently-tested duplication of ~10-15 line pure functions. See docs/sibling-cousin-
- * system.md section 11a for provenance handling and section 8 for the generation-mode vocabulary.
+ * Modes:
+ * - `local-mutant`: relocate one object under strict inventory.
+ * - `density-sweep`: add/remove blocks while preserving the witness.
+ * - `symmetry`: generate the seven non-identity rotations/reflections.
+ * - `swap`: exchange two object positions when the referee accepts the result.
+ * - `group-reshuffle`: re-place every instance of one `--group`.
+ * - `constrained-shuffle`: re-place all movable types, most-constrained first.
+ * - `re-embed`: translate the whole parent into a larger/equal grid.
  *
- * Usage (needs the esbuild wrapper — imports TS domain modules):
+ * The parent must supply a stored hint or stress witness. Every accepted variant is schema-checked,
+ * referee-checked against its preserved/transformed witness, fingerprint-deduplicated, and written
+ * with provenance. See docs/sibling-cousin-system.md and docs/variant-level-research.md for relation
+ * semantics and evidence policy; implementation-specific eligibility and provenance safeguards stay
+ * beside the code below.
+ *
+ * Example:
  *   node scripts/run-bundled.mjs scripts/family-generate.mjs -- \
- *     --parent-corpus=data/levels.json --parent=P00006 --witness-index=0 --count=12 \
- *     --seed=20260716 --out=data/families/family-P00006.json
+ *     --parent=P00006 --mode=local-mutant --count=12 --seed=20260716
  *
- * --parent=<id-or-position>       required.
- * --witness-index=<n>             which of the parent's stored hints to preserve (default 0);
- *                                  falls back to stressMeta.witnessSolution if the parent has no
- *                                  stored hints (stress-corpus parents).
- * --mutation-types=<csv>          restrict which object types may be moved (default: all types
- *                                  the parent actually has an instance of).
- * --count=<n>                     target number of distinct siblings (default 12).
- * --max-attempts-per-sibling=<n>  generation-attempt budget per requested sibling (default 40).
- * --out=<path>                    sibling corpus file (default data/families/family-<id>.json).
- * --manifest-out=<path>           family manifest (default <out>, .json -> -manifest.json).
- *
- * --mode=local-mutant|density-sweep   (default local-mutant)
- *   local-mutant:   the tier described above — strict inventory, single-object relocation.
- *   density-sweep:  a DIFFERENT, narrower relaxation: adds/removes ONLY blocks (never relocates
- *                   anything), so navDensity (reqLen / open-cell-area) varies while grid, reqLen,
- *                   reqInt, and the witness itself stay exactly fixed. Every other mechanic count
- *                   is strict-inventory-preserved. This exists because navDensity is INVARIANT
- *                   under local-mutant generation by construction (it depends only on object
- *                   COUNTS, which strict inventory never changes) — testing whether a
- *                   density-keyed solver threshold (e.g. prep.ts's DENSE_LEVEL_NAV_DENSITY vs
- *                   attempts.ts's POLICY.NEAR_HAMILTONIAN_DENSITY) actually matters requires
- *                   varying density itself, which needs a relaxed-inventory mode. Not one of
- *                   docs/sibling-cousin-system.md's named relations (identity/symmetry/local-
- *                   mutant/constrained-shuffle/re-embedded-cousin/recipe-cousin) — closest in
- *                   spirit to that doc's "partial mutation inventory" (section 7), scoped to one
- *                   mechanic. Manifest relation: 'density-sweep', inventoryPolicy: 'density-relaxed'.
- * --block-delta-min=<n>  most negative block-count delta to generate (default -3; a delta whose
- *                         magnitude exceeds the parent's own block count, or that runs out of free
- *                         cells to add into, is skipped with a logged reason, not silently clamped).
- * --block-delta-max=<n>  most positive block-count delta to generate (default +3).
- *
- * --mode=symmetry
- *   Applies each of the 7 non-identity 8-way grid transforms (rotations 1-3, reflections 4-7 —
- *   modules/domain/geometry.ts's transformPoint/transformAxis/transformTurnDir, the SAME
- *   primitives both the play-mode random-orientation display variant and the editor's permanent
- *   Rotate/Mirror rewrite already use) to the WHOLE level — witness, all objects, axes — at once.
- *   Grids are always square (CLAUDE.md: "grid.w === grid.h... every published level is square"),
- *   so the transform never changes grid dimensions. Relation: 'symmetry'; witnessRelation:
- *   'transformed' (coordinates differ from the parent's by a known, invertible map — not
- *   byte-identical, but not searched for either). Primarily tests the SOLVER, not the puzzle: the
- *   display variant never lets the solver see a rotated/reflected level (it's screen-only, the
- *   canonical data the solver processes is never touched), so this is the first thing that
- *   actually exercises solver-side orientation bias (e.g. a perimeter-CW template being
- *   systematically cheaper than perimeter-CCW for no puzzle-difficulty reason).
- *
- * --mode=swap
- *   Swaps the positions of two eligible object instances (same type or different — compatibility
- *   is decided empirically by the same final referee re-check every mode uses, not a pre-computed
- *   type-compatibility table). One sibling per attempted pair, up to --count. Relation: 'swap'.
- *
- * --mode=group-reshuffle --group=<type>
- *   Re-places EVERY instance of one selected object type (blocks|mustPass|mustCross|
- *   flippingFilters|geese|falseGoals|landmarks) at once, preserving each instance's own intrinsic
- *   properties (a landmark keeps its role/objectType; a flipping filter tries its own axis before
- *   the other). Every other type's placement is left exactly as the parent had it. Relation:
- *   'group-reshuffle'.
- *
- * --mode=constrained-shuffle
- *   Re-places ALL legally-movable object types at once (most-constrained-first: mustCross,
- *   landmarks, mustPass, flippingFilters, then the free-cell types), still preserving the exact
- *   witness and strict per-type inventory. The broadest sibling tier — a distribution of
- *   difficulty around one witness, per docs/sibling-cousin-system.md's "constrained-shuffle
- *   sibling". Relation: 'constrained-shuffle'.
- *
- * --mode=re-embed --re-embed-grid=<W>x<H> [--re-embed-offset=<x>,<y>]
- *   The first COUSIN tier (not a sibling — the witness's coordinates change, not just other
- *   objects' positions): embeds the parent's ENTIRE grid content, unchanged in relative structure,
- *   as a sub-rectangle inside a grid that must be >= the parent's own dimensions in both axes, at
- *   a chosen (or seeded-random) offset. The newly-added surrounding area is left completely open
- *   — no new objects placed into it. This directly tests "how much does additional irrelevant
- *   spatial freedom affect each solver technique" (docs/family-and-scaling-research-possibilities.md's
- *   board-size-embedding experiment) with everything else — witness shape, reqLen, reqInt, every
- *   object's relative position — held exactly fixed. Relation: 're-embedded-cousin'; witnessRelation:
- *   'transformed'. Recipe cousins (a freshly-generated witness matching only a declared feature
- *   recipe) are NOT implemented — docs/sibling-cousin-system.md's own phase ordering defers them
- *   until sibling/cousin findings from the tiers above are already understood (section 9: "Add
- *   recipe cousins only after defining which family features should be preserved").
+ * Common controls: `--parent-corpus`, `--parent`, `--witness-index`, `--mode`, `--count`, `--seed`,
+ * `--mutation-types`, `--out`, and `--manifest-out`. Mode-specific validation below reports required
+ * `--group`, block-delta, and re-embed arguments.
  */
 import { mkdirSync, writeFileSync, existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -491,8 +418,8 @@ function navDensityOf(witnessObj, extras) {
     return witnessObj.reqLen / navArea;
 }
 
-/** density-sweep mode: add/remove ONLY blocks, relocating nothing — see the --mode doc comment
- *  at the top of this file for why this is a separate mode from local-mutant generation. */
+/** density-sweep mode: add/remove ONLY blocks, relocating nothing — see docs/sibling-cousin-system.md
+ *  for why this is a separate relation from local-mutant generation. */
 function applyDensityDelta(ctx, extras, delta) {
     const clone = structuredClone(extras);
     if (delta > 0) {
@@ -551,8 +478,7 @@ function transformWitnessAndExtras(witnessObj, extras, variant) {
 
 // ─── re-embed mode: translate the whole level into a (possibly larger) grid ──
 /** Shifts every coordinate by (offsetX, offsetY); the parent's own grid content is otherwise
- *  byte-identical in relative structure. The newly-added surrounding area is left untouched (no
- *  objects placed there) — see the --mode=re-embed header doc comment for why that's the point. */
+ *  byte-identical in relative structure. The newly-added surrounding area is left untouched. */
 function reEmbedWitnessAndExtras(witnessObj, extras, newW, newH, offsetX, offsetY) {
     const shiftKey = (key) => { const p = UNPACK(key); return PACK(p.x + offsetX, p.y + offsetY); };
     const shiftWire = (x, y) => ({ x: x + offsetX, y: y + offsetY });
