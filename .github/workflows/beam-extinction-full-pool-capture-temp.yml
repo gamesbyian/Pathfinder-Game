@@ -1,0 +1,36 @@
+name: Temporary beam extinction full-pool capture
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    if: github.head_ref == 'chatgpt/beam-full-pool-capture-2026-08-24'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Capture selected extinction pools
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/winning-lineage-pilot.mjs \
+            --levels=data/stress/stress-levels.json \
+            --level-ids=S00001,S00030,S00048,R00104 \
+            --beam-width=100 \
+            --node-budget=100000 \
+            --include-stages \
+            --retain-ranked-pool-details \
+            --out=tmp/beam-extinction-full-pools-2026-08-24.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: beam-extinction-full-pools-2026-08-24
+          path: tmp/beam-extinction-full-pools-2026-08-24.json
+          retention-days: 1
+          if-no-files-found: error

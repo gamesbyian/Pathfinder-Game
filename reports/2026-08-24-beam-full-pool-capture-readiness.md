@@ -44,7 +44,7 @@ The pilot now also accepts a bounded explicit selector:
 
 Explicit IDs preserve caller order, must be unique, must exist with stored hints in the chosen corpus, and are mutually exclusive with `--metadata` so two selection contracts cannot silently interact.
 
-The intended capture is therefore directly expressible as:
+The archived original lineage analysis records the same-config cohort contract as **beam width 100, default profile, 100,000 canonical nodes**. Therefore the bounded recapture command is not using guessed defaults; it reproduces the documented width/work contract:
 
 ```bash
 node scripts/run-bundled.mjs scripts/stress/winning-lineage-pilot.mjs \
@@ -54,10 +54,10 @@ node scripts/run-bundled.mjs scripts/stress/winning-lineage-pilot.mjs \
   --node-budget=100000 \
   --include-stages \
   --retain-ranked-pool-details \
-  --out=reports/stress/beam-extinction-full-pools-2026-08-24.json
+  --out=tmp/beam-extinction-full-pools-2026-08-24.json
 ```
 
-The beam width and work cap above match the existing pilot defaults and should be verified against the source extinction run before treating a regenerated boundary as equivalent. If the historical boundary used a different work contract, preserve that original contract rather than forcing these defaults.
+A branch-specific temporary pull-request workflow may be used to run this bounded recapture and upload the JSON as a short-lived Actions artifact. That workflow is execution scaffolding only and should be removed before merge; the durable instrument is the CLI above.
 
 ## Evidence limit
 
