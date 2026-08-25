@@ -1,9 +1,9 @@
 # Solver exact/reference-model capability audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-23 — current `cpsat-full-probe.py`, native must-cross legality, reconciled mechanic-state contract, CP-SAT flipping-filter validation, repair-retreat prefix work, and canonical-referee validation practice
-> **Decision:** treat the existing CP-SAT/reference stack as a serious but bounded research oracle now; do not expand it yet. First summarize bidirectional validation by mechanic combination and demonstrate turnaround/value on one current ranked question
-> **Remaining gate:** produce a bounded support/validation suite that classifies each relevant mechanic combination as exact-validated, encoded-but-insufficiently-validated, one-sided/relaxed, unsupported, or timeout-prone, with every emitted witness checked by the canonical referee
+> **Last evidence:** 2026-08-24 — current `cpsat-full-probe.py`, explicit-prefix and repair-retreat wrappers, native mechanic-state contract, flipping/portal validation, mixed repair-retreat prefixes, and current queue #6 certificate/restart audit
+> **Decision:** treat the existing CP-SAT/reference stack as a serious but bounded research oracle now; do not expand it yet. Current implementation can express every mechanic used by the stress corpora; static regular filters remain deliberately unsupported. Close the remaining validation gap with a small adversarial matrix rather than another broad model build.
+> **Remaining gate:** targeted bidirectional validation for the least-directly-audited mechanic interactions (especially turn/adjacent-turn/surround, must-cross edge cases, and tiny independently-checkable dead fixtures), plus decision-changing use on one current ranked question. Reuse existing exact branch labels before buying new CP-SAT calls.
 > **Evidence role:** forensic
 > **Selection:** observational — audit follows prior targeted CP-SAT work and current reference-program reprioritization
 
@@ -103,10 +103,10 @@ The table below deliberately separates *encoding presence* from *validated exact
 | Edge-axis reuse | encoded; prior under-constraint bug fixed after referee rejection | encoded with substantial witness/cold coverage | targeted adversarial fixtures for turns/revisits |
 | Must-pass | encoded directly | encoded; likely straightforward | explicit witness + cold cases in suite |
 | Must-cross | `visits == 2` plus exact per-visit edge-axis-touch reuse | **encoding logic reconciled as exact** with native first-pass lock semantics; broad targeted validation still desirable | adversarial first-pass-turn / axis-reuse fixtures plus cold/referee cases |
-| Must-turn / adjacent-turn chirality | turn variables and landmark families present | encoded; validation depth not yet summarized centrally | targeted witness + cold/referee fixtures for each chirality/portal-boundary interaction |
-| Surround | encoded in full model | encoded; validation depth not yet summarized centrally | targeted suite |
-| Portals | encoded, including padded horizon/jump typing; several bugs already found/fixed | strongest current exact candidate after flipper-free witness batches + cold referee checks | include pair counts and unused-pair/padding edge cases in suite |
-| Flipping filters | encoded with global ordering/parity and no-turn/single-use semantics | strong targeted validation: 102 witness checks + cold referee-valid alternative paths | include mixed portal/flipper interactions, not only isolated families |
+| Must-turn / adjacent-turn chirality | turn variables and landmark families present | exact encoding present; validation depth not yet summarized centrally | targeted witness + cold/referee fixtures for each chirality/portal-boundary interaction |
+| Surround | encoded in full model | exact encoding present; validation depth not yet summarized centrally | targeted suite |
+| Portals | encoded, including padded horizon/jump typing; several bugs already found/fixed | strongest current exact candidate after flipper-free witness batches + cold referee checks | keep pair-count/unused-pair/padding adversarial cases in suite; do not rerun broad population merely for volume |
+| Flipping filters | encoded with global ordering/parity and no-turn/single-use semantics | strong targeted validation: 102 witness checks + cold referee-valid alternative paths | mixed portal/flipper prefix evidence now exists; retain one or two mixed adversarial cases in suite |
 | Static filters | explicit skip | unsupported in current full model | no action until a real decision-bearing population/question exists |
 | Goose / false goal / decorative exclusions | represented as impassable for solver scope where applicable | encoded for solver scope; not a PLAY simulation | bounded fixtures only if a research question depends on them |
 
@@ -246,12 +246,52 @@ Keep only narrow exact/reduced forms if:
 
 A smaller trustworthy oracle is better than a grand “full solver” whose support status is fuzzy.
 
+## 2026-08-24 follow-up: gate narrowing and consumer audit
+
+A current-code reconciliation narrowed the remaining P5 work further.
+
+### Existing evidence already covers more mixed terrain than the table originally implied
+
+The 2026-08-15 repair-retreat reruns provide **mixed portal + flipping-filter + must-cross** prefix evidence, not only isolated mechanic-family checks. `R00630` and `R02449` each carry five flipping filters and three portal pairs; `R00630` also has five MustCross cells. After the `real_N == reqLen + 1 + jumps` under-constraint fix, `R00630` converged to a clean adjacent live/dead prefix boundary and `R02449` produced a referee-verified live prefix plus a separate exact-dead upper point, with genuine `UNKNOWN` inside the harder transition band. That is meaningful mixed-consumer validation and should be reused rather than replaced by another broad batch.
+
+The post-flipper B2 extinction-adjacent rerun is another useful consumer control: **25 live / 4 dead / 3 timeout-abstain, 0 unsupported-mechanics, 0 correctness alarms, 0 input alarms** across the 32 selected cases. It also changed the beam diagnosis by adding two exact D-class dead-top/live-alternative examples. This already demonstrates that targeted prefix labels can alter a real research conclusion; the remaining turnaround gate should be interpreted as proving continued value on a **current** ranked question, not pretending the model has never paid for itself.
+
+### Wrapper semantics are currently conservative
+
+`cpsat-explicit-prefix-oracle-lib.mjs` preserves `OPTIMAL/FEASIBLE -> live`, `INFEASIBLE -> dead`, and maps `UNKNOWN`, `MODEL_INVALID`, unsupported mechanics, process errors and unparsed output to abstention. `cpsat-explicit-prefix-oracle.mjs` additionally replays every supplied prefix through native transition machinery before the model call and downgrades a SAT result to abstention if no path is emitted or the canonical referee rejects it.
+
+`repair-retreat-binary-search.mjs` uses the same classifier/referee path and stops the bisection on any abstention rather than moving a feasible/infeasible bound. Its stored result semantics are therefore safe. One console line still prints an “exact boundary” shape after an abstained bisection even though the stored note correctly says the interior did not converge; treat that line as presentation shorthand, not evidence that an UNKNOWN interval has been closed.
+
+### Documentation drift found and corrected
+
+`docs/mechanic-state-contracts.md` defined its `externalModelSupport` field as the capability of the **current maintained external model**, but its table had drifted in two directions: regular filters were listed `exact` even though `cpsat-full-probe.py` explicitly skips them, while MustTurn/AdjacentTurn were listed `relaxed` even though the full model now contains the required turn/chirality variables and landmark constraints. The table has been reconciled on the 2026-08-24 research branch. The field now states encoding capability; validation confidence remains here in this audit.
+
+### Practical remaining validation matrix
+
+Do not rerun the 102-level flipper or broad portal batches merely to increase sample counts. The remaining highest-information fixtures are narrow:
+
+1. MustTurn CW/CCW/either, including the “no defined turn across a portal jump” boundary;
+2. AdjacentTurn CW/CCW/either with several candidate neighbouring cells, so the OR semantics is genuinely load-bearing;
+3. Surround on a tiny fixture where one missing neighbour separates SAT from UNSAT;
+4. MustCross first-pass-turn and nearby axis-reuse adversaries, directly exercising the equivalence between native lock prevention and the model's two-visit + per-axis-touch formulation;
+5. at least one tiny deliberately infeasible fixture per nontrivial family where an independent exhaustive/native check can corroborate CP-SAT `INFEASIBLE` rather than relying only on positive witnesses;
+6. one mixed portal/flipper/turn or portal/flipper/MustCross case retained as a regression fixture from existing evidence;
+7. one static-filter case that must return unsupported, as a negative capability control.
+
+This is a semantic suite, not a benchmark. A dozen well-chosen fixtures can be more informative than another hundred ordinary witnesses.
+
+### Current ranked use: reuse before new oracle spending
+
+Queue #6's learned-failure audit now has a bounded candidate seam: joint dynamic residual-interface/resource incompatibility. Its **discovery** phase does not require new CP-SAT calls. The existing 5,518-branch exact/shadow atlas already carries enough live/dead labels to ask whether a proposed bounded reasoner adds unique exact separation and whether its explanation keys recur across different exact states. Only if the needed state family lies outside that atlas, or if independent confirmation is required, should P5 buy fresh exact-prefix labels.
+
+This is the preferred current P5/P6 coupling: reference labels as a microscope for one narrowly specified reason family, not CP-SAT expansion as an end in itself.
+
 ## Documentation consequence after the audit
 
 When the bounded suite closes:
 
 1. keep [`docs/mechanic-state-contracts.md`](../docs/mechanic-state-contracts.md) aligned with verified model semantics as support changes;
-2. add the reference-model validation/support entry point to [`docs/tooling-catalog.md`](../docs/tooling-catalog.md) if repeated use justifies a stable command;
+2. keep the reference-model validation/support entry point in [`docs/tooling-catalog.md`](../docs/tooling-catalog.md) aligned with this report;
 3. keep detailed validation counts and bugs in dated reports;
 4. keep unsupported/one-sided limitations explicit in every consumer report.
 
