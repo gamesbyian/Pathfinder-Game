@@ -1,117 +1,72 @@
 # Technique census: second-order analysis
 
-> **Status:** rebuildable existing-census evidence and research nominations; not production policy.
-> **Source:** `reports/stress/technique-census/32240161854/` after 2026-08-22 re-derivation: 78,505 unique cells across tiers, of which 76,614 are unique eligible T1 cells used here; 253/888 frozen-baseline unsolved levels have a T1 isolated solver.
-> **Goal:** extract solver behavior, routing, redundancy, and speed opportunities beyond already-mined cheap routing gaps.
-> **Operational interpretation:** [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) distinguishes solve-set/outcome similarity from similarity in actual search behavior.
-> **Scheduler-facing budget interpretation:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
+> **Status:** rebuildable existing-census instrument; not production policy or a priority list.
+> **Current scheduler use:** [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) owns rank; [`solver-scheduling-policy.md`](solver-scheduling-policy.md) owns allocation policy.
+> **Operational interpretation:** [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
+> **Current budget interpretation:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
 
-## Progress (2026-08-22)
+The committed census under `reports/stress/technique-census/32240161854/` is heavily mined **development evidence**. Use it to nominate actions, inversions, budget tranches, and causal follow-ups; do not turn exact winners/level IDs into production routing or treat row count as fresh confirmation.
 
-The first existing-data pass is recorded in [`../reports/stress/technique-census/32240161854/second-order-analysis.md`](../reports/stress/technique-census/32240161854/second-order-analysis.md), with rebuildable JSON beside it and generator [`../scripts/technique-census-second-order.mjs`](../scripts/technique-census-second-order.mjs). It covers technique success-vector similarity, multiplicity/capability margins, the perfect-router curve, ordered conditional success per node cost, cost-weighted covers, and complete per-technique cap-retention/tranche economics. Key findings so far:
+Rebuild/check with:
 
-- 161/253 (63.6%) production-unsolved oracle solves have only one or two T1 winners, versus 116/1,060 (10.9%) among production-solved oracle solves.
-- The perfect router reaches 24/253 gap solves by 100K nodes, 108 by 500K, 171 by 10M, and all 253 only at 50M; most of the isolated capability union is therefore not merely a sub-500K routing prize.
-- Several implementation families are **outcome** near-duplicates: `ida:default`/`ida:mustCrossFirst` have 0.936 Jaccard success similarity, and `dfs:harvestThenFinish`/`dfs:portalFirstTransfer` have 0.932, across 1,962 common levels. This does **not** establish operational similarity: named DFS profiles are shared-engine scoring-weight variants, while admissible-order profiles are tie-break variants. Quantify actual search/ranking overlap separately under [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
-- Mutual-information ranking, which includes joint failures rather than ignoring them as Jaccard does, puts the objective and intersection connectivity-axis ablations first (0.689 and 0.668 bits). Their lower 0.891/0.877 Jaccard scores show that they define highly predictive outcome boundaries without being the closest substitutes; phenotype decisions should therefore use both views.
-- Conditional cost rankings on the production-unsolved population repeatedly place cheap perimeter beams after expensive failed searches, nominating the reverse order (cheap screen first) for a matched-work scheduling test.
-- A cover restricted to techniques evaluated on all 888 production-unsolved levels reaches only 219/253 oracle solves; the remaining 34 depend on partially sampled repair variants and must not be compared as though they had full-population cost.
-- Nominally stronger configurations are not monotone: on the 888 gap levels, beam-5K loses one objective-first and four intersection-harvest solves that beam-2K gets; diverse beam-5K loses seven objective-first and three intersection-harvest solves that plain beam-5K gets; and `ida:none` gets 13 solves missed by `ida:default`.
-- Direction is a real outcome boundary in the frozen matrix: the two beam perimeter directions have 14 CCW-only and 13 CW-only gap solves, while their DFS counterparts have eight and six. This nominates transform-controlled family analysis; it does not by itself prove iteration-order bias.
-- Exact paired discordance tests separate sensitivity from aggregate advantage: beam and DFS directions are balanced (`p=1.00` and `p=0.791`) despite their level-specific inversions, while objective beam width (1 versus 20, `p=0.000021`) and intersection diversity (3 versus 17, `p=0.00258`) show strong arm imbalance. These uncorrected tests prioritize mechanism replays; they do not erase left-only regressions or establish production value.
-- Failure-status conditioning is presently low-information: 631/635 no-oracle levels have exhausted beams and node-capped DFS, IDA, and repair families; the other four differ only because repair exhausts. Early/depth telemetry, not final status alone, is required for useful adaptive routing.
-- Dedup-near-tie flag-off gains are consistently larger, longer, and less object-dense than losses in both beam profiles (mean requirement length 105–107 versus 95–96; mean area 176–180 versus 157–163; density 0.25–0.28 versus 0.32). This is a structural nomination for targeted telemetry, not evidence for production conditioning; must-cross prevalence does not separate both profiles consistently.
-- Broad level phenotypes reinforce repair's distinct capability: 90/253 oracle solves are repair-only, 51 are beam-only, 17 are IDA-only, and 12 are DFS-only; most mixed phenotypes also include repair.
-- Exact success vectors across the 37 fully sampled techniques split the 888 gap levels into 118 groups, 92 of which are singleton vectors. The largest solved cohort is plain-repair-only (56); 669 have no winner in the complete-technique matrix versus 635 with no T1 winner at all, making the 34-level partial-repair contribution explicit while showing that configuration-level phenotype routing would fragment badly.
-- A coverage-first greedy cover gets 121/219 full-population-technique solves from plain repair alone, but needs eight techniques to reach 190/219 and 22 to reach the full union. Conversely, the cost-first cover delays repair until step 13. This makes the coverage/work tradeoff explicit rather than implying there is one small dominant portfolio.
-- Population-specific covers diverge sharply: the production-solved union starts with diverse intersection beam and reaches 934/1,057 (88.4%) in three configurations, while the gap union starts with plain repair and reaches only 153/219 (69.9%) in three. A portfolio tuned on already-solved levels would therefore understate both repair's residual value and the gap population's long capability tail.
-- Isolated substitutability nominates removal/delay candidates: **ten** ordinary DFS profiles have every gap solve reproduced by a technique with lower mean isolated attempt nodes, as do the connectivity-axis-off intersection beam and plain objective beam. The earlier count of nine omitted `dfs:default`; the generated rows and current ordinary-DFS classification both support ten. This is only an offline screen; actual ladder removal still requires residual ordering and matched production-work evidence.
-- Joining level-blind production run `32526927206` yields 216 production failures among 1,153 matched isolated-oracle levels. Within the re-derived frozen-gap population, 152/253 still fail production, including 42 with an isolated winner within 1M nodes and 48 within 2M. The 152 count is one above the queue's pre-re-derivation 151-level read, so reconcile that exact nomination set before targeted reruns; the cross-commit node ratios are nomination evidence, not matched routing regret.
-- The 14 reverse-oracle rows are genuine members of level-blind production run `32459711208`, but the earlier same-technique interpretation was an attribution trap. Lifecycle telemetry says all eight rows whose collapsed `winningConfig` names a diverse beam were actually won by the `admissible-order` stage, and all six repair-labelled rows by `repair-probe`. This establishes real stage-only capability rather than beam/plain-repair carryover. Per-attempt gate/seed/config provenance is still needed to explain why those stage forms beat their isolated family rows; another pair sweep is not the next gate.
-- A current-code sequential provenance pilot now causally explains `R01936`: repair-probe salt 0 failed at 2,000,023 nodes, while salt 1 solved at 1,791,510 nodes on the same gate. A fresh-process direct repair replay reproduced the salt-1 win at the identical node count, ruling out ladder carryover. `R02493` currently solves in the main diverse beam, but its frozen comparison is cross-code; later exact-production-commit admissible controls below establish attempt-history dependence for its historical admissible-stage win. Full measurements and the narrowed remaining gate are in [`../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md`](../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md).
-- Fresh-process 2M-node checks of salts 1 and 2 on the other five historical repair-probe rows all failed on current code. The `R01936` seed mechanism therefore does not generalize unchanged after intervening search-order changes; larger current budgets would not explain the historical artifact. At this point the remaining admissible-order gate was exact provenance plus same-commit controls; the later controls below complete that step and narrow the question to mutable state and enabling prefix.
-- A 40-cell direct screen tested all five canonical admissible-order profiles independently on all eight historical admissible-order rows at the current 12.5M-node reserve scale. Every attempt failed at 12,500,224 nodes, consuming 500,008,960 deterministic nodes in total. This rules out an immediate current-code canonical-profile reproduction but cannot identify the historical mechanism without the missing exact attempt/gate identities or a historical-commit replay.
-- Exact-production-commit controls now close the broad mechanism for all eight admissible rows: every inferred or plausible historical winning profile fails from fresh preparation at 50,000,128 nodes, consuming 800,002,048 deterministic nodes across the controls. Because admissible-order search has no seed input, preceding ladder activity—not random restart or standalone budget—is necessary across the population. The live question is which mutable prepared/search state and minimal preceding prefix enables each win.
-- An exact-commit source audit narrows the persistent-state candidates: admissible-order search creates fresh logical search state, does not use the reusable DFS/beam/repair buffers, and reads no prior frontier, elite, or seed. Cumulative counters can only stop it; the only obvious earlier-attempt-populated value inputs are the must-pass and must-cross lower-bound memo tables, whose contract claims exact pure memoization. The next paired historical control is therefore an unmodified local full-ladder baseline versus the same ladder with both caches cleared immediately before the admissible tier; this is a code-derived hypothesis, not a measured cache attribution.
-- Added censored solve-hazard curves by technique and node band. Exhausted beam rows leave the risk set at their actual frontier, while plain repair's hazard rises from 1.7% at 2–5M nodes to 4.6% at 20–50M. This supports protecting a genuinely deep repair pass but does not reveal a low-yield middle interval to remove; any cap change still needs matched production-work validation.
-- The rebuilt repair tail has useful internal structure: 20–30M adds 13 solves, 30–40M adds 16, and 40–50M adds 8. Simulated isolated nodes per incremental solve are about 613M, 490M, and 961M respectively, making 40–50M the weakest measured repair tranche by a large margin. This **nominates** the final tranche for current-lifecycle residual-value scrutiny; it does not justify cutting it before a `workSpent` join because it still contains eight real frozen-gap wins.
-- The budget-cap interpretation in [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md) sharpens that result: beam frontiers are naturally sub-million screens; plain repair retains 37/121 hard-gap wins only in the 20M–50M band; the strongest overspend nomination is instead deep ordinary DFS/IDA work whose hard-gap wins are heavily substitutable. The scheduler should therefore allocate **budget tranches by residual value**, not impose a universal low cap.
-- Within IDA, `ida:none` should not be collapsed into a generic “deep IDA is redundant” conclusion. It has 22 frozen-gap solves, none by 10M, eight by 20M, and **five equal-cap exclusive solves at 50M** among fully sampled comparators. At 50M the other canonical IDA profiles have only one (`intersectionHarvest`) or zero (`default`, `mustCrossFirst`, `nearClosureRescue`) equal-cap exclusives. This nominates `ida:none` as a distinct deep-action candidate while the other profiles face stronger substitution pressure; sequence-dependent admissible-order behavior still requires real-ladder validation.
-- Frozen multiplicity strongly predicts later production outcome in run `32526927206`: singleton levels solve at 38.1% with median 102M production nodes, doubletons at 65.6% / 50.3M, 6–10-winner levels at 92.4% / 6.6M, and 11+-winner levels at 98.3% / 4.2M. This validates singleton/doubleton rows as sharp regression nominations, but not as a causal stability feature or permissible production routing input.
-- The second/first winning-cost ratio is not monotone with later difficulty: `<1.25×`, `1.25–2×`, and `2×+` bands solve at 91.2%, 79.5%, and 88.0%. Capability margin should therefore be read jointly with absolute cheapest cost and multiplicity, not promoted as a standalone routing feature.
-- Crossing cheapest isolated cost with multiplicity shows that multiplicity carries signal within cost bands: among ≤500K winners, later production solves 61.5% of singletons versus 97.3% of 6+-winner levels; at 2M–10M the split is 16.2% versus 93.8%. Cheap singletons are therefore still sharp capability boundaries, while high multiplicity partly offsets an expensive cheapest winner. This remains historical association rather than a permissible routing feature.
-- Structural summaries for width, diversity, IDA, and direction inversions do not reveal a shared static predictor: size/density and must-cross prevalence move in different directions across comparisons, and several inversion sides contain only 1–8 levels. Exact inversion IDs are now emitted as replay fixtures; simple threshold routing from these population means is not supported.
-- Whole-gap node economics make the parameter tradeoffs concrete: beam 5K costs 174M additional isolated nodes in either profile, or 8.7M–12.4M per gross 5K-only solve, while still losing 1–4 beam-2K solves. Diverse 5K adds its gross-only solves at roughly 1.1M–1.2M nodes each but loses 3–7 plain solves. `ida:default` is dominated in this comparison (8 gains, 13 losses, +107M nodes), whereas `ida:mustCrossFirst` gets 11 gains versus 10 losses while using 65M fewer nodes; the latter is a replay nomination, not a policy conclusion.
-- Exhaustion-frontier proxies explain most width cost: median exhausted nodes rise from roughly 124K at beam 2K to 314K–317K at beam 5K (about 2.5×), while diversity adds a smaller 6–8% at width 5K. Success rows are censored before exhaustion, so this supports width-sensitive frontier telemetry rather than treating node counts as direct memory measurements.
+```bash
+node scripts/technique-census-second-order.mjs reports/stress/technique-census/32240161854 --check
+```
 
-The broad 14-row reverse-oracle attribution question is now narrowed rather than open-ended: `R01936` is a repair seed-diversification win, the other five historical repair-probe rows do not reproduce under current-code seed controls, and all eight admissible-order rows are proven to require prior ladder activity at the exact production commit. What remains is the specific mutable state and minimal enabling prefix for those eight. Production routing regret, failure-signature adaptation, flag-flip pathology, operational search similarity, stability hypotheses, and current-code scheduler value also remain open and need lifecycle joins or targeted current-code reruns as described below.
+Start at [`tooling-catalog.md`](tooling-catalog.md) for current invocation options and related probes.
 
-## Highest-value questions
+## What the analyzer answers
 
-1. **Finish the attempt-history diagnosis for the eight admissible-order reverse-oracle rows.** The original 14-row attribution problem is mostly resolved: lifecycle telemetry reclassified six rows to `repair-probe` and eight to `admissible-order`; `R01936` is explained by seed salt 1; the other five repair rows do not reproduce under current-code salt-1/2 controls; and exact-production-commit fresh controls prove that all eight admissible-order wins require preceding ladder activity. The remaining question is which mutable prepared/search state and minimal preceding prefix enables them. First reproduce the unmodified historical full-ladder baseline locally; then clear the must-pass/must-cross lower-bound caches immediately before admissible-order as the leading code-derived discriminator and progressively prime longer historical prefixes if needed. See [`../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md`](../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md).
-2. **Model conditional technique value.** For each ordered pair, estimate `P(B solves | A failed)` and incremental solves per expected B cost. Extend to failure signatures (exhausted vs node-cap, cheap vs deep failure). Use this to test adaptive ordering based on observed search outcomes, not only static level features.
-3. **Join cap/tranche evidence to current production reach.** The rebuildable analyzer now emits every technique at `100K/250K/500K/1M/2M/5M/10M/20M/30M/40M/50M`, including simulated capped spend, retention, censored tranche economics, and equal-cap exclusivity over fully sampled comparators. The remaining gate is current lifecycle reach and `workSpent` before any live cap proposal. Treat repair 40–50M and the canonical IDA profiles, especially `ida:none` versus its siblings, as explicit tranche/profile nominations in that join.
-4. **Measure operational similarity, not just solve-vector similarity.** Use [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) to compare local child rankings, first divergence, branch/frontier overlap, template intervention, beam retention, admissible-slack disagreement, and repair-specific exploration fingerprints on bounded inversion/control cohorts. Cross that map with outcome similarity to separate redundancy, fragility, substitutability, and genuinely complementary capability.
-5. **Use flag flips as controlled pathology experiments.** Compare levels gained/lost by one-mechanism ablations, especially dedup-near-tie retention. Seek predictors and early-search differences (score entropy, tie multiplicity, duplicate pressure, beam churn, winning-lineage survival) that support state-conditioned behavior rather than a global flag.
+It derives, from already-recorded technique × level cells:
 
-## Analyses requiring only existing census data
+- outcome similarity/substitutability and phenotype/multiplicity summaries;
+- cover/oracle-frontier views and rare/exclusive capability;
+- conditional success/cost nominations;
+- budget-cap retention and censored tranche economics;
+- parameter inversions where a nominally stronger configuration loses to a weaker one;
+- current-production joins when comparable production artifacts are supplied.
 
-- **Technique outcome phenotypes:** cluster techniques by level-success vectors (Jaccard/mutual information), ignoring implementation labels. Identify outcome near-duplicates and outcome-distinct methods. Do not call these operational/behavioral duplicates without search-trace evidence; pair this with [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
-- **Level phenotypes:** cluster levels by technique-success vectors, then inspect structural/mechanic features of each cluster. This may expose latent routing classes absent from hand-built archetypes.
-- **Multiplicity / fragility:** count T1 solvers per level. Singleton/doubleton solves mark sharp capability boundaries and good regression fixtures; test whether low multiplicity predicts high production cost or instability.
-- **Capability margin:** per level record cheapest, second-cheapest, and median winning node counts plus their gaps. Distinguish narrow-key routing problems from broadly solvable but expensive levels.
-- **Minimum-cost cover:** find small technique subsets that retain most oracle-union coverage, weighted by node/time cost. Compare covers for production-solved vs production-unsolved populations.
-- **Substitutability:** for each production attempt, measure how often a cheaper technique solves the same levels. High overlap plus higher cost nominates delay/removal/conditional skip.
-- **Conditional redundancy:** measure marginal solve rate after actual or candidate predecessors fail. Raw standalone solve rate is insufficient for ladder ordering.
-- **Perfect-router curve:** at 100K/250K/500K/1M/2M/5M/10M/... nodes, compute how many levels an oracle choosing one technique would solve. This bounds the remaining value of routing alone.
-- **Cap-retention simulation:** for each fully sampled technique, cap observed isolated rows at candidate node bands and report retained solves versus simulated capped node spend. This is within-technique nomination evidence; convert to `workSpent` before cross-technique production allocation.
-- **Routing regret:** compare cheapest isolated winning cost with production work spent before success/failure. Rank large-regret levels as policy defects.
-- **Failure fingerprints:** cluster no-oracle levels by per-family outcome (`exhausted`, node-cap, eligibility skip) and work consumed. Use these as pathology classes for new-technique research.
-- **Symmetry/directionality:** compare CW/CCW and other theoretically symmetric techniques by level identity, then cross-reference rotated/mirrored families. Persistent non-transforming asymmetry can expose iteration/tie-breaking/order bias.
-- **Parameter inversions:** mine cases where a nominally stronger setting loses to a weaker one: beam2000 > beam5000, plain > diverse, `ida:none` > informed profiles. These are clean cases for locating harmful retention/ranking effects.
+Outcome overlap is not operational similarity. Different names can share one engine, while a small ordering/retention change can produce different outcomes. Use bounded operational traces for that question.
 
-## Analyses needing extra telemetry or targeted reruns
+## Scheduler-facing `techniqueBudgetCurves`
 
-- **Current production tranche reach:** join cap-retention candidates to current lifecycle action/stage reach and `workSpent`; frozen isolated curves alone do not show what the current ladder actually wastes.
-- **Operational similarity census:** compare applicable configs on shared encountered states and bounded matched probes. Measure top-choice/full-ranking agreement, score-term causes of divergence, first-divergence depth, DFS branch/subtree overlap, beam generated/retained frontier overlap and churn, template intervention, admissible-versus-soft disagreement, and repair-specific restart/elite/splice fingerprints. Start with existing inversion/discordance fixtures and controls rather than rerunning the full census. See [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
-- **Beam frontier economics:** map exhaustion size and width sensitivity. Predict where beam5000 adds useful frontier versus only cost.
-- **Winning-lineage extinction at inversions:** replay smaller/better configurations against larger/worse siblings and locate the exact depth/state where the eventual winner is dropped.
-- **Flag-flip mechanism telemetry:** instrument only the discriminating populations, not the whole corpus.
-- **Sequence-dependent cap validation:** admissible-order and any other stage with ladder-only wins must be evaluated through the real preceding state/path, not fresh isolated runs alone.
+`second-order-analysis.json.techniqueBudgetCurves` is the rebuildable cap/tranche interface. It has shared checkpoints through the census ceiling and separate production-solved / production-unsolved populations.
 
-## Scheduling hypotheses to test
+Each technique records evaluation/population coverage, full observed solve/spend/termination totals, deepest observed attempt/solve, and:
 
-- Represent families as **cheap screen + optional protected continuations** when solve-depth evidence warrants it; plain repair currently warrants a genuine deep continuation while beams mostly self-exhaust cheaply.
-- Make later DFS/IDA continuations **re-earn budget** from current residual value rather than inheriting a full-depth allowance.
-- Do not treat IDA profiles as interchangeable: preserve `ida:none` as a distinct deep candidate in scheduler analysis until the lifecycle/`workSpent` join shows whether its five equal-cap-exclusive frozen-gap solves remain residual after the real preceding ladder.
-- Treat repair 40–50M as a **scrutiny tranche**, not a presumed cut: it is the weakest isolated repair band by incremental-node economics but still contains eight measured wins.
-- Do not count a list of different profile names as a diverse portfolio by itself. Once operational similarity is measured, use operational clusters alongside outcome overlap to avoid buying several deep actions that traverse nearly the same search region.
-- Order attempts by **incremental solves per expected work on the residual population**, not total solve rate.
-- Let observed failures update routing when they are informative and level-blind.
-- Prefer pruning/removing strongly substitutable attempts before adding more ladder entries.
+- `caps`: retained/lost solves, retained fraction, simulated capped spend, observed spend/savings, savings per lost solve, and equal-cap exclusives where full sampling permits them;
+- `tranches`: lower/upper cap, risk set, tranche solves/hazard, incremental simulated capped spend, and incremental nodes per solve.
 
-## Priority order
+Censoring rules matter:
 
-1. Finish the eight-row admissible-order attempt-history diagnosis: local historical full-ladder baseline, cache-cleared discriminator, then minimal-prefix/state attribution.
-2. Conditional success/cost matrix plus a current-lifecycle reach/`workSpent` join for the now-complete cap-retention/tranche curves.
-3. Bounded operational-similarity instrumentation and inversion/control analysis; cross it with the existing outcome-similarity matrix.
-4. Candidate bounded scheduler ordering/allocation under a strict shared work envelope, using operational clusters when they are available but not blocking basic matched-work scheduler work on them.
-5. Dedup-near-tie gained-vs-lost pathology comparison.
-6. Technique/level outcome clustering, multiplicity, minimum-cost cover, and routing regret.
+- naturally exhausted attempts leave the risk set at exhaustion;
+- budget-limited attempts are censored at observed depth;
+- rows are never projected beyond observation or the census ceiling;
+- equal-cap exclusivity uses only fully sampled comparators; partial cells yield `null`, not imaginary losses.
 
-Do not turn exact census winners or level IDs into production routing. Any production change still needs current-code, level-blind, matched-work validation under `solver-research-operating-model.md`.
+Cap costs are isolated `nodesExpanded` diagnostics. They compare depth **within** one technique. Cross-technique production allocation requires current lifecycle reach plus canonical `workSpent`.
 
-## Implemented cap/tranche output contract
+`--check` validates checkpoint ordering, cap/tranche cardinality, monotone retained solves, non-growing risk sets, exact spend reconciliation, exclusivity eligibility, and byte-for-byte freshness.
 
-`second-order-analysis.json.techniqueBudgetCurves` is the rebuildable scheduler-facing interface. It contains the shared eleven node checkpoints and separate `productionUnsolved` and `productionSolved` populations. Every observed T1 technique has a descriptive entry; the entry records its evaluated/population counts, whether it is fully sampled, full recorded solve/spend totals, termination counts, deepest observed attempt/solve, and arrays of:
+## Current decision boundary
 
-- `caps`: retained/lost solves, retained fraction, `sum(min(observed nodesExpanded, cap))`, observed spend, simulated savings, savings per lost solve, and equal-cap exclusive solves;
-- `tranches`: lower/upper cap, number at risk, tranche solves/hazard, the exact increase in simulated capped spend, and simulated incremental nodes per solve.
+Do not rerun the expensive census merely because a live scheduler question exists. The current gap is **materialization/join/valuation**, not another matrix:
 
-An exhausted attempt is at risk only through its observed exhaustion depth. A budget-limited attempt is censored at its observed depth. The analyzer does not project either row beyond observation or beyond the 50M census ceiling. Equal-cap exclusivity uses only techniques evaluated on every level in the named population; partial techniques receive `null` exclusivity rather than having missing cells counted as losses.
+1. materialize current per-attempt action identity, `workSpent`, ceilings, reach, and termination outcomes;
+2. join current reach to the frozen cap/tranche evidence where comparable;
+3. value incremental solves/work, rare exclusives, portfolio cardinality, and fixed-work oracle headroom;
+4. test a simple deterministic static policy before dynamic/survival/bandit machinery.
 
-All cap costs are isolated `nodesExpanded` diagnostics. They can compare budget depth within one technique, but scheduler allocation across techniques must join current lifecycle reach and use `workSpent`.
+Sequence-dependent actions require controlled current-code execution before causal scheduler use; isolated census curves do not erase predecessor-state effects.
 
-Generation validates that checkpoints are positive and strictly increasing, every technique has one cap and tranche record per checkpoint, retained solves never decrease, risk sets never grow, tranche spend reconciles exactly to cumulative simulated capped spend, and exclusivity is present only for fully sampled techniques. `--check` therefore verifies both byte-for-byte freshness and these curve invariants.
+## Interpretation rules
 
-The focused node test uses synthetic rows for calculation/censoring/dedup semantics, then intentionally protects the named committed-census findings: the 171/202/253 perfect-router checkpoints, repair's 37 post-20M solves and aggregate hazard, sub-million beam exhaustion, 37 complete versus four partial techniques and their 34-level coverage gap, and the reconciled ten ordinary DFS rows. Those constants are fixture regression guards, not analyzer inputs or production policy.
+- The census is observational/development evidence unless a specific comparison was independently prespecified.
+- Isolated success nominates a production-policy test; it does not grant ladder entitlement.
+- A larger width/budget/configuration can lose solves through finite-budget ordering/retention; do not assume monotonicity.
+- Final failure status alone is low-information when multiple techniques simply hit caps or exhaust.
+- Use parent/family units where family data enters the analysis.
+- Report gains, losses, coverage/missing cells, censoring, and cost; do not rank only by average solve rate.
+- Historical production joins must be reconciled to current code/protocol before live policy changes.
+
+Detailed findings and dated interpretation belong in the generated census report and [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md), not here.
