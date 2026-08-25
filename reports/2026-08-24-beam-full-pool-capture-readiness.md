@@ -1,6 +1,11 @@
 # Beam full-pool capture readiness
 
 > **Status:** active evidence / queue support
+> **Last evidence:** 2026-08-24 — current beam research seam plus successful bounded full-pool capture in Actions run `32810888215` for `S00001`, `S00030`, `S00048`, and `R00104`
+> **Decision:** retain full ranked-pool capture as an explicit bounded research option, not a production/default artifact mode. The one-shot PR workflow was execution scaffolding only; the durable interface is the CLI flag and observer option.
+> **Remaining gate:** run the prespecified read-only survivor projection over the captured pools while the short-lived artifact is available, or deterministically recapture them with the documented CLI after expiry. Report bucket cardinality/singletons and fixed-width exact-live retention before any production diversity intervention.
+> **Evidence role:** discovery
+> **Selection:** deliberately selected exact A/D dead-top/live-alternative extinction parents; not prevalence or effect-size evidence
 > **Date:** 2026-08-24
 > **Queue:** [`docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md) Priority 4
 > **Related:** [`2026-08-24-beam-extinction-descriptor-sanity-check.md`](2026-08-24-beam-extinction-descriptor-sanity-check.md)
@@ -57,10 +62,10 @@ node scripts/run-bundled.mjs scripts/stress/winning-lineage-pilot.mjs \
   --out=tmp/beam-extinction-full-pools-2026-08-24.json
 ```
 
-A branch-specific temporary pull-request workflow may be used to run this bounded recapture and upload the JSON as a short-lived Actions artifact. That workflow is execution scaffolding only and should be removed before merge; the durable instrument is the CLI above.
+A branch-specific temporary pull-request workflow ran this bounded recapture successfully in Actions run `32810888215` and uploaded the JSON as a one-day artifact. That workflow was execution scaffolding only and is removed by the follow-up housekeeping pass; the durable instrument is the CLI above.
 
 ## Evidence limit
 
-These changes make the required data capturable and targetable. They do not themselves perform the descriptor projection and do not establish that any proposed diversity key improves future coverage.
+These changes make the required data capturable and targetable. The successful one-shot capture does not itself perform the descriptor projection and does not establish that any proposed diversity key improves future coverage.
 
 Full-pool retention can make artifacts large, so it should remain a bounded research option rather than the default lineage mode. Once captured, reconstruct candidate state from each retained path and compare the prespecified low-cardinality keys from the descriptor sanity-check report. Do not add a production diversity intervention until the set-level projection clears its existing cardinality, singleton, fixed-width-retention, random-reserve, and width-only controls.
