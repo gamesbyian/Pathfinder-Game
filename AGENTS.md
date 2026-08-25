@@ -13,7 +13,7 @@ Compact entry point for coding/research agents. Load task-specific docs, not the
 | Solver hard prune/cache/correctness | [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md), [`docs/solver-architecture.md`](docs/solver-architecture.md) |
 | Solver optimization/research | [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md), then [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md) and the relevant specialist doc |
 | Variant/family research | [`docs/variant-level-research.md`](docs/variant-level-research.md) |
-| Existing probe/batch/workflow | [`docs/tooling-catalog.md`](docs/tooling-catalog.md) |
+| Existing probe/batch/workflow | For a named concept, first run `node scripts/tooling-census.mjs --compact --query=<term>`; use [`docs/tooling-catalog.md`](docs/tooling-catalog.md) for broader tool choice |
 | Prior experiment | [`reports/README.md`](reports/README.md), then the current topic doc |
 | Deferred/reopen idea | [`docs/solver-future-work.md`](docs/solver-future-work.md) |
 | Default-off disposition | [`docs/solver-opt-in-experiment-ledger.md`](docs/solver-opt-in-experiment-ledger.md) |
@@ -25,7 +25,7 @@ Compact entry point for coding/research agents. Load task-specific docs, not the
 1. **Read current authority and implementation before editing.** Dated reports/archive are evidence, not current behavior or priority.
 2. **Treat the prompt as a goal, not an artificial file boundary.** Do adjacent work when it materially completes the task; avoid unrelated cleanup and do not silently replace the authorized task.
 3. **Prefer durable fixes and close the loop.** If a bug invalidated evidence, rerun it; if a result changes current guidance, update the owning authority. Leave enough durable context that the next agent does not need this chat.
-4. **Check existing machinery before adding more.** Start with [`docs/tooling-catalog.md`](docs/tooling-catalog.md), `package.json`, [`scripts/README.md`](scripts/README.md), and [`.github/workflows/README.md`](.github/workflows/README.md). Follow naming conventions in [`docs/README.md`](docs/README.md), [`reports/README.md`](reports/README.md), and [`logs/README.md`](logs/README.md).
+4. **Check existing machinery before adding more.** For a named concept, start with `node scripts/tooling-census.mjs --compact --query=<concept>`; use [`docs/tooling-catalog.md`](docs/tooling-catalog.md) when choosing among broader tool families. Open the full `package.json` or scan script/workflow directories only when those compact front doors are insufficient. [`scripts/README.md`](scripts/README.md) and [`.github/workflows/README.md`](.github/workflows/README.md) are the local/remote maps. Follow naming conventions in [`docs/README.md`](docs/README.md), [`reports/README.md`](reports/README.md), and [`logs/README.md`](logs/README.md).
 5. **Audit propagation across boundaries.** Solver results/stages, mechanics, hints/provenance, app state, and generated schemas commonly have multiple consumers; use [`docs/change-recipes.md`](docs/change-recipes.md).
 6. **Prefer branch/PR validation.** Merge to `main` before evidence collection only when the needed workflow/data path cannot exercise the branch; record why. Do not use `main` as experiment scratch space.
 7. **Do not weaken validation to pass.** Root-cause unexpected `null`, invariant, CSP, architecture-lint, referee, and type failures.
