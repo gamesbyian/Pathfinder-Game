@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 /**
- * Combines method-probe-sweep.yml's per-shard result files (downloaded artifacts, one
- * `shard-NN.json` per subdirectory under --staging-dir) into a single combined JSON + a plain-text
- * solved-ID list. A real, locally-testable script rather than an inline YAML `node -e` heredoc —
- * see this workflow's own comment for why (an earlier inline version used `require()`, which fails
- * under this repo's `"type": "module"` package.json even via `node -e`; caught by testing this
- * script against fake shard data before ever running it in CI).
+ * Combines method-probe-sweep.yml's downloaded artifacts into one result. Since 2026-08-25 each
+ * outer Actions shard may contain several disjoint worker result files (`shard-NNN-wK.json`), so
+ * every result JSON in every artifact directory is consumed rather than only the first one.
+ * Console-log/result pairs are cross-checked so a timed-out worker cannot silently disappear from
+ * an otherwise-successful outer shard artifact.
  *
  * Usage: node scripts/combine-method-probe-shards.mjs --staging-dir=artifact-staging --out-dir=logs/method-probe-shards
  */
@@ -27,15 +26,47 @@ const missing = [];
 
 for (const d of dirs.sort()) {
     const shardPath = path.join(STAGING_DIR, d);
-    const files = readdirSync(shardPath).filter(f => f.endsWith('.json') && !f.includes('summary'));
+    const names = readdirSync(shardPath);
+    const files = names.filter(f => f.endsWith('.json') && !f.includes('summary')).sort();
     if (files.length === 0) { missing.push(d); continue; }
-    const data = JSON.parse(readFileSync(path.join(shardPath, files[0]), 'utf8'));
-    if (!meta) meta = { corpus: data.corpus, only: data.only, budgetMs: data.budgetMs, nodeBudget: data.nodeBudget };
-    allLevels = allLevels.concat(data.levels || []);
+
+    // Every launched worker writes a console log immediately, while its JSON appears only if the
+    // probe reaches normal report-writing. Use that pairing to expose partial outer shards.
+    for (const log of names.filter(f => f.endsWith('.console.log'))) {
+        const expectedJson = log.replace(/\.console\.log$/u, '.json');
+        if (!names.includes(expectedJson)) missing.push(`${d}/${expectedJson}`);
+    }
+
+    for (const file of files) {
+        const data = JSON.parse(readFileSync(path.join(shardPath, file), 'utf8'));
+        const thisMeta = { corpus: data.corpus, only: data.only, budgetMs: data.budgetMs, nodeBudget: data.nodeBudget };
+        if (!meta) meta = thisMeta;
+        else if (JSON.stringify(thisMeta) !== JSON.stringify(meta)) {
+            throw new Error(`metadata mismatch in ${d}/${file}: ${JSON.stringify(thisMeta)} != ${JSON.stringify(meta)}`);
+        }
+        allLevels = allLevels.concat(data.levels || []);
+    }
 }
 
+// Disjoint subranges are an invariant. A duplicate id means sharding overlapped or the same worker
+// result was staged twice, either of which would make aggregate solved/tested counts misleading.
+const seen = new Set();
+const duplicates = [];
+for (const level of allLevels) {
+    if (seen.has(level.id)) duplicates.push(level.id);
+    else seen.add(level.id);
+}
+if (duplicates.length) throw new Error(`duplicate level ids across method-probe results: ${[...new Set(duplicates)].join(', ')}`);
+
+allLevels.sort((a, b) => String(a.id ?? '').localeCompare(String(b.id ?? '')));
 const solved = allLevels.filter(l => l.ok);
-const combined = { ...meta, totalTested: allLevels.length, totalSolved: solved.length, missingShards: missing, levels: allLevels };
+const combined = {
+    ...meta,
+    totalTested: allLevels.length,
+    totalSolved: solved.length,
+    missingShards: missing,
+    levels: allLevels,
+};
 
 mkdirSync(OUT_DIR, { recursive: true });
 writeFileSync(path.join(OUT_DIR, 'combined.json'), JSON.stringify(combined, null, 1));
@@ -46,7 +77,7 @@ const summaryLines = [
     `# method-probe sweep: ${JSON.stringify(meta?.only)}`,
     '',
     `Corpus: \`${meta?.corpus}\` — tested ${allLevels.length}, solved ${solved.length}`,
-    missing.length ? `\n**Missing shards: ${missing.join(', ')}**` : '',
+    missing.length ? `\n**Missing worker results: ${missing.join(', ')}**` : '',
     '',
     '## Solved level IDs',
     '```',
@@ -54,10 +85,12 @@ const summaryLines = [
     '```',
 ];
 const summaryText = summaryLines.join('\n');
-console.log(`Combined: ${allLevels.length} tested, ${solved.length} solved, ${missing.length} missing shards`);
+console.log(`Combined: ${allLevels.length} tested, ${solved.length} solved, ${missing.length} missing worker result(s)`);
 
 if (process.env.GITHUB_STEP_SUMMARY) {
     writeFileSync(process.env.GITHUB_STEP_SUMMARY, summaryText, { flag: 'a' });
 } else {
     console.log(summaryText);
 }
+
+if (missing.length) process.exitCode = 2;
