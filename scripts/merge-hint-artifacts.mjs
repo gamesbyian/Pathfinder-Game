@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /** Merge hint files captured by solver-workflow artifacts into the checked-out canonical store.
  *
- * Solver jobs may run on any ref. They always capture output-side hints/provenance into their
- * artifacts; this script is run later from a checkout of main. Incoming files are merged by path,
- * provenance is deduplicated, and every incoming path is referee-validated against the canonical
- * stress corpus before any file is written. This keeps evidence retention independent from the ref
- * that produced it and avoids last-writer-wins loss when several shards/runs rediscover one level.
+ * Solver jobs may run on any ref. This script is run later from a checkout of main. Incoming files
+ * are merged by path, provenance is deduplicated by the repo's canonical discovery-event identity,
+ * and every incoming path is referee-validated before any file is written. This keeps evidence
+ * retention independent from the ref that produced it and avoids last-writer-wins loss when several
+ * shards/runs rediscover one level.
  *
  * Usage: node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
  *   --staging-dir=artifact-staging
@@ -15,6 +15,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { parseHintFileContents, stringifyHints } from './level-data-io.mjs';
 import { mergeHints } from '../modules/domain/hint-types.ts';
+import { provenanceEventIdentity } from './hint-provenance-identity.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [key, ...rest] = a.split('=');
@@ -40,7 +41,19 @@ function walk(dir, out = []) {
     }
     return out;
 }
-
+function dedupeSemantic(hints) {
+    return hints.map(hint => {
+        const seen = new Set();
+        const provenance = [];
+        for (const event of hint.provenance || []) {
+            const key = provenanceEventIdentity(event);
+            if (seen.has(key)) continue;
+            seen.add(key);
+            provenance.push(event);
+        }
+        return { path: hint.path, provenance };
+    });
+}
 function corpusIndex(corpusPath) {
     const raw = JSON.parse(readFileSync(corpusPath, 'utf8'));
     const levels = Array.isArray(raw) ? raw : raw.levels;
@@ -83,14 +96,14 @@ for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => 
             const verdict = validateCandidatePath(level, hint.path);
             if (!verdict.ok) throw new Error(`${source}: referee rejected ${levelKey}: ${verdict.reason}`);
         }
-        mergedIncoming = mergeHints(mergedIncoming, hints);
+        mergedIncoming = dedupeSemantic(mergeHints(mergedIncoming, hints));
     }
 
     const target = path.join(root, 'data/stress', hintDir, fileName);
     const existing = existsSync(target)
         ? parseHintFileContents(JSON.parse(readFileSync(target, 'utf8')), target)
         : [];
-    const merged = mergeHints(existing, mergedIncoming);
+    const merged = dedupeSemantic(mergeHints(existing, mergedIncoming));
     const next = stringifyHints(merged);
     const prev = existsSync(target) ? readFileSync(target, 'utf8') : null;
     if (next !== prev) {
