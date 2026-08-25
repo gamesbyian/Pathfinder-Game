@@ -10,6 +10,8 @@ on:
       - 'Solver archetype-gated routing sample A/B'
       - 'Solver repair-probe adaptive-budget sample A/B'
       - 'Solver repair-fallback node-reserve sample A/B'
+      - 'method-probe sweep (isolated single-method corpus test)'
+      - 'Technique capability census (isolated single-/paired-/flag-technique, full budget)'
     types: [completed]
 
 # Source runs may finish together. Keep one semantic writer for the canonical hint store so two
@@ -64,30 +66,39 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
 
           # Never rebase competing JSON edits line-by-line. On a race, reset to the new main and
-          # replay both semantic importers from the immutable source artifacts.
+          # replay every semantic importer from the immutable source artifacts.
           for attempt in 1 2 3 4; do
             git fetch origin main
             git reset --hard origin/main
 
-            # Workflows that used --save-hints already carry canonical hint files in their shard
-            # artifacts. Merge them structurally and referee-check every incoming path.
+            # Workflows that used --save-hints already carry canonical hint files in shard artifacts.
+            # Merge them structurally and referee-check every incoming path.
             node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
               --staging-dir=artifact-staging
 
-            # Artifact-only level-blind workflows still retain the same information in each shard's
-            # {summary,levels} report. Reconstruct canonical provenance from the persisted winning
-            # attempt and path. Corpus-shape mismatches are quarantined, never discarded.
+            # Artifact-only level-blind workflows still retain solved paths and winning attempts in
+            # their shard reports. Reconstruct canonical provenance. Corpus hash mismatches are
+            # quarantined on main, never discarded or attributed to the wrong level revision.
             node scripts/run-bundled.mjs scripts/harvest-level-blind-report-hints.mjs -- \
               --staging-dir=artifact-staging \
               --source-run-id="$SOURCE_RUN_ID" \
               --source-workflow="$SOURCE_WORKFLOW"
 
-            if git diff --quiet -- data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ 2>/dev/null; then
+            # method-probe and technique-census deliberately bypass the production ladder. Keep their
+            # useful paths too, but mark provenance isolatedTechnique=true via the canonical capture
+            # helper so they cannot be mistaken for normal production-solver capability evidence.
+            node scripts/run-bundled.mjs scripts/harvest-isolated-report-hints.mjs -- \
+              --staging-dir=artifact-staging \
+              --source-run-id="$SOURCE_RUN_ID" \
+              --source-workflow="$SOURCE_WORKFLOW" \
+              --source-sha="$SOURCE_SHA"
+
+            if git diff --quiet -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ 2>/dev/null; then
               echo 'No new canonical hint/provenance evidence to persist.'
               exit 0
             fi
 
-            git add data/stress/hints/ data/stress/hints-random/
+            git add data/hints/ data/stress/hints/ data/stress/hints-random/
             if [ -d reports/stress/pending-solver-evidence ]; then
               git add reports/stress/pending-solver-evidence/
             fi
