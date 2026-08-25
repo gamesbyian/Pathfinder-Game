@@ -15,6 +15,21 @@ Before opening large evidence/data files:
 
 These are derived views, not new authorities. Raw reports, corpora, hints, and logs remain canonical evidence. The tooling census is observational: an orphan candidate may be a useful specialist, a completed migration, or a historical research tool rather than something to delete.
 
+## Solver research specialists
+
+For a matched deterministic DFS/admissible causal comparison, use the bounded paired decision trace rather than dumping full trees:
+
+```text
+node scripts/run-bundled.mjs scripts/paired-deterministic-trace.mjs -- \
+  --corpus=data/stress/stress-levels-random.json --level=<ID> \
+  --left=<attempt-config-key> --right=<attempt-config-key> \
+  --node-budget=200000 --trace-limit=4096 --out=/tmp/paired-trace.json
+```
+
+It runs each arm from a fresh prepared level under matched bounds and reports the common retained multi-child decision prefix, first actual candidate/order/traversal divergence, and bounded post-divergence signature overlap. It intentionally rejects beam and repair; use their existing frontier/retention and restart-native instrumentation instead. Because the observer records multi-child decision events, absence of a divergence is not proof that every one-child/prune state was identical.
+
+Operational interpretation and stop rules: [`../docs/solver-technique-operational-taxonomy.md`](../docs/solver-technique-operational-taxonomy.md).
+
 ## Directory map
 
 - `stress/`: corpus generation, benchmarks, diagnostics, reducers, profiles, provenance, oracle/research tools.
