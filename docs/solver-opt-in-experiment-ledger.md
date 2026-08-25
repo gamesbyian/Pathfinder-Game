@@ -1,79 +1,63 @@
 # Solver opt-in experiment disposition ledger
 
-This is the authoritative compact ledger for solver mechanisms whose **production default is OFF** but whose code remains invokable for research. It answers one question:
+Authoritative compact disposition for solver mechanisms whose **production default is OFF** but code remains invokable. It answers: **is a promotion decision still open?**
 
-> Does this retained mechanism have a promotion decision outstanding?
+It is not a queue. Rank lives in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); research/promotion rules in [`solver-research-operating-model.md`](solver-research-operating-model.md); default polarity in `OPT_IN_FEATURES` in [`../modules/solver/ablation-config.ts`](../modules/solver/ablation-config.ts). Documentation checks require every current member of that set below.
 
-It is not a priority queue. Current ranked solver work lives in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md). The full pre-consolidation experiment chronology is frozen at [`archive/snapshots/solver-opt-in-experiment-ledger-2026-08-20.md`](archive/snapshots/solver-opt-in-experiment-ledger-2026-08-20.md).
+Full pre-consolidation chronology: [`archive/snapshots/solver-opt-in-experiment-ledger-2026-08-20.md`](archive/snapshots/solver-opt-in-experiment-ledger-2026-08-20.md). Later measurements remain in dated reports/git history.
 
-`OPT_IN_FEATURES` in [`../modules/solver/ablation-config.ts`](../modules/solver/ablation-config.ts) is the source of truth for **default polarity**, not experiment status. Documentation checks require every current member of that set to appear below.
+## Retention rule
 
-Capability decisions obey [`solver-level-blindness.md`](solver-level-blindness.md). Historical winners, hints, and exact-level outcomes may label research; they may not guide a headline cold-capability solve. Research/promotion stop rules live in [`solver-research-operating-model.md`](solver-research-operating-model.md).
+Git is the archive. Closed default-OFF code should remain only when it provides reusable generic plumbing, an unusually valuable counterfactual/diagnostic, or is cheaper/safer to retain than remove. “Could be useful someday,” code presence, and historical interest are not retention reasons.
 
-## Retention is an exception, not an archive policy
-
-Git history and dated reports preserve failed implementations. Main solver code does not need to preserve every experiment forever.
-
-A CLOSED/default-OFF mechanism should remain invokable only when at least one current reason is named:
-
-- shared generic plumbing is actively reused by a live or plausible descendant;
-- it is an unusually valuable diagnostic/counterfactual that existing tooling cannot cheaply recreate;
-- removal would cost more complexity than the retained, isolated mechanism and the read sites remain low-risk.
-
-“Could be useful someday,” “the code already exists,” and “it documents the experiment” are not sufficient retention reasons. When a closed mechanism has no concrete reuse role, remove the flag/read sites after its report/ledger disposition is durable. Periodic ledger/tooling cleanup should nominate such code for deletion rather than treating the ledger as a museum inventory.
-
-Likewise, a default-ON retry or reserve has no permanent budget entitlement merely because it once added solves. The evidence-driven scheduler must periodically reprice its **current residual marginal value** inside a fixed aggregate work envelope. Historical zero-regression dead-last placement is a safety fact, not evidence that the stage still deserves its current work forever.
+Likewise, default-ON retries/reserves have no permanent budget entitlement. Scheduler work may reprice, shrink, reorder, condition, decompose, or remove them under a fixed aggregate `workSpent` envelope.
 
 ## Current production-default-OFF flags
 
-| Flag | Disposition | Decision-bearing evidence / reopen condition |
-|---|---|---|
-| `PRUNE_PORTAL_PARITY_ENVELOPE` | **CLOSED NEGLIGIBLE** | Sound, but live testing found effectively no useful firing in the measured portal population. Reopen only for a materially stronger formulation, not another unchanged run. |
-| `STRATEGY_REPAIR_ELITE_PREFIX_DFS` | **CLOSED NEGATIVE IN CURRENT FORM** | Equal-budget dedicated test was 4/20 ON vs 5/20 OFF with confirmed displacement of ordinary repair work. A descendant needs a cheaper or materially different operator/selection premise. |
-| `STRATEGY_REPAIR_TURN_BIAS` | **CLOSED NEGATIVE** | Deterministic Corpus-2 evidence reproduced a net loss. Reopen only with materially new mechanism evidence. |
-| `STRATEGY_REPAIR_FALLBACK_NODE_RESERVE` | **CLOSED, SAFE BUT USELESS FOR ITS TARGET** | Population test increased fallback participation dramatically with no solve gain; targeted repair attempts still plateaued. More of the same repair budget is not the missing capability. |
-| `STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE` | **CLOSED** | Local tests at multiple budget scales showed essentially no useful participation/solve movement. Reopen only with a population shown to reach this gate and plausibly benefit. |
-| `STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE` | **CLOSED NEGATIVE, POPULATION-VALIDATED** | 2026-08-19 full-corpus A/B: Corpus 1 unchanged; Corpus 2 828 -> 824, **0 gained / 4 lost**, with essentially flat node/work cost. Do not rerun the same 0.15 form. |
-| `STRATEGY_REPAIR_BEAM_SEED` | **CLOSED** | An isolated repair-only apparent gain disappeared when re-tested through the real full ladder; same solved set with added cost. Reopen only on a full-ladder positive premise. |
-| `STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY` | **RETAINED, NO CURRENT PROMOTION GATE** | The mechanism can restore a budget shrunken by adaptive repair-probe control and reproduced the known R00408 recovery. It has not earned a current ranked promotion lane. Keep default-OFF unless current evidence again shows the shrink controller causing a meaningful population regression that this recovery fixes without unacceptable cost. |
-| `STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY` | **CLOSED** | Additive dead-last retry removed the original displacement concern, but the original 20-level closest-miss sample produced **zero recoveries** at both tested retry budgets. More budget did not turn intermediate badness improvement into solves. |
-| `STRATEGY_RETRY_TIER_NODE_STAIRCASE` | **CLOSED NEGATIVE** | Per-config node redistribution fixed a real first-config monopolization shape but traded away load-bearing early-config work; measured wall time also rose sharply despite slightly lower nodes. Reopen only with a mechanism that protects later configs without simply capping the first winner-producing config. |
-| `STRATEGY_REPAIR_FALLBACK_GATE_WIDEN` | **CLOSED NEGATIVE** | 2026-08-23 population-scale GHA A/B (`solver-archetype-sample-ab.yml`, `archetypes=portal-heavy,high-intersection-burden`, 562-level sample, control run `32607083688` vs treatment run `32607087026`): control 417/562, treatment 415/562, **0 gains, 2 losses** (`R01944`, `R02474`). Confirms `claude/solver-regressions-wmu3im`'s independent "no clean feature separates repair-wins from the ineligible population" finding. Reopen only with a materially different (narrower) selection mechanism, not a bigger/different threshold on the same `isHighInt`/archetype feature set. |
-| `SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE` | **CLOSED NEGATIVE (global-swap form)** | 2026-08-23, `solver-level-blind-targeted-sweep.yml` (GHA) + local `level-blind-capability-sweep.mjs`, production 50M work/node budget, commit `4a78534b6`: 73-level loss population 15→21 (**+9/-3**); 90-level gain population 90→79 (**0/-11**); published corpus 160/160 unchanged. **Net 9-3-11=-5.** The global swap breaks levels that already solve early under the corrected distances. Not reverted — reused by the dead-last additive retry-tier form (`STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY`, see `solver-optimization-current-queue.md` Priority 7), which cannot touch this loss population by construction. Reopen the global form only with evidence the loss population can be avoided without a retry-tier scope. |
-
-## Recently promoted/default-ON mechanisms relevant to this ledger
-
-These are listed only to stop an old experiment name from being mistaken for a dangling opt-in task. Production polarity is defined in code. Their historical promotion verdict does **not** exempt them from future scheduler repricing under fixed aggregate work.
-
-| Mechanism | Current status |
+| Flag | Disposition / reopen condition |
 |---|---|
-| `PRUNE_MC_NEIGHBOR_BUDGET` | Promoted default-ON after level-blind population gain; later retry-tier work handles part of its double-edged search-order effect. |
-| `STRATEGY_DEDUP_NEAR_TIE_RETRY` | Promoted default-ON after the additive dead-last design produced a strict solved-set superset at population scale. Historical promotion predates the current fixed-total-work guardrail; audit its residual value in scheduler work rather than treating additive work as free. |
-| `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` | Promoted default-ON after population validation produced +45 with zero regressions against its baseline. Historical promotion predates the current fixed-total-work guardrail; retain as baseline, but require current residual value for future budget entitlement. |
-| `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` | Promoted default-ON after population validation produced +10 with zero regressions. Historical promotion predates the current fixed-total-work guardrail; retain as baseline, but require current residual value for future budget entitlement. |
-| `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` | Promoted default-ON 2026-08-19 after Corpus-2 819 -> 828, +9 with zero regressions; cost increased materially and remains part of the production price. This is explicitly a scheduler tail-audit candidate. |
-| `STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY` | Promoted default-ON 2026-08-23 after a population-scale A/B (`solver-level-blind-targeted-sweep.yml`, commit `95927c6df`): 73-level loss population 15/73 -> 18/73 (+3/-0, R02158/R02575/R03211); 90-level gain population 90/90 -> 90/90 (0/-0, confirming the dead-last placement structurally never fires on already-solving levels); published corpus unchanged. Smaller recovery than the closed-negative global-swap form's +9 since this tier only gets a fraction of the node ceiling the global form had from move zero. Its zero-regression result proves safe placement, not free cost; reprice this stage in the scheduler rather than increasing its reserve in isolation. |
-| `STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY` | Promoted default-ON 2026-08-23 after a population-scale A/B (`solver-level-blind-targeted-sweep.yml`, commit `6406ea92e`): 73-level loss population 18/73 -> 23/73 (**+5/-0**: R02505/R02646/R02439/R02670/R02198); 90-level gain population 90/90 -> 90/90 (0/-0); published corpus 160/160 unaffected. Extends `STRATEGY_REPAIR_LATE_PROBE` across seven extra PRNG seed salts. The treatment can buy substantial additive tail work on hard failures; scheduler repricing is mandatory before further seed/budget expansion. |
-| `STRATEGY_REPAIR_LATE_PROBE` | Promoted default-ON 2026-08-21 after a same-commit deterministic A/B (GHA 32453248184 vs 32459711208, main@e5034e8c): Corpus-1 95 -> 96, Corpus-2 863 -> 881, +19 net with zero regressions on either corpus. Retain as production baseline; future cap growth competes with other actions under shared work. |
-| `STRATEGY_MAIN_LOOP_LATE_RESERVE` | Default-ON historically; its original broad “give late repair more of the same search” research interpretation is now closed by the isolated-technique census. Do not infer an active optimization lane from the retained mechanism. |
+| `PRUNE_PORTAL_PARITY_ENVELOPE` | **CLOSED NEGLIGIBLE.** Sound but effectively non-firing in measured portal populations. Reopen only for a materially stronger formulation. |
+| `STRATEGY_REPAIR_ELITE_PREFIX_DFS` | **CLOSED NEGATIVE IN CURRENT FORM.** Dedicated equal-budget test lost against control through ordinary-repair displacement. Descendant needs a cheaper/materially different operator or selector. |
+| `STRATEGY_REPAIR_TURN_BIAS` | **CLOSED NEGATIVE.** Deterministic Corpus-2 evidence reproduced a net loss. |
+| `STRATEGY_REPAIR_FALLBACK_GATE_WIDEN` | **CLOSED NEGATIVE.** Population-scale broad `isHighInt`/portal-heavy widening produced 0 gains / 2 losses. Reopen only with a materially different narrower selection mechanism. |
+| `SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE` | **CLOSED NEGATIVE, GLOBAL-SWAP FORM.** Selected populations produced gains but larger losses; the useful descendant is the separately promoted dead-last retry. Do not reopen the global form without a selector that avoids the loss population. |
+| `STRATEGY_REPAIR_FALLBACK_NODE_RESERVE` | **CLOSED, SAFE BUT USELESS FOR TARGET.** More fallback participation produced no solves; more of the same repair work is not the missing capability. |
+| `STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE` | **CLOSED.** Multiple budget scales produced negligible useful participation/solve movement. |
+| `STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE` | **CLOSED NEGATIVE, POPULATION-VALIDATED.** Corpus-2 validation lost four solves with essentially flat work. |
+| `STRATEGY_REPAIR_BEAM_SEED` | **CLOSED.** Isolated apparent gain vanished through the real full ladder while adding cost. |
+| `STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY` | **RETAINED, NO CURRENT PROMOTION GATE.** Can restore budget withheld by adaptive probe shrink; keep as a counterfactual unless current evidence shows a meaningful shrink-caused regression it fixes economically. |
+| `STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY` | **CLOSED.** Additive dead-last form removed displacement but recovered zero levels at both tested budgets. |
+| `STRATEGY_RETRY_TIER_NODE_STAIRCASE` | **CLOSED NEGATIVE.** Fixed first-config monopolization but traded away load-bearing early work and raised wall cost. Reopen only with a different protection mechanism. |
 
-This table is intentionally not an exhaustive list of every production feature. Use code for polarity and the current queue for active work.
+## Recently promoted/default-ON mechanisms worth remembering
+
+Listed only so old experiment names are not mistaken for dangling opt-in tasks. Code owns polarity; [`solver-scheduling-policy.md`](solver-scheduling-policy.md) owns future budget valuation.
+
+| Mechanism | Current disposition |
+|---|---|
+| `PRUNE_MC_NEIGHBOR_BUDGET` | Default-ON after level-blind population gain; retry-tier evidence shows it can still alter search order in both directions. |
+| `STRATEGY_DEDUP_NEAR_TIE_RETRY` | Default-ON additive dead-last retry; safe placement does not make its work free. |
+| `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` | Default-ON after population gain; retain as baseline but reprice residual value. |
+| `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` | Default-ON after population gain; retain as baseline but reprice residual value. |
+| `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` | Default-ON after +9 / 0-loss Corpus-2 evidence; material cost makes it a scheduler tail-audit candidate. |
+| `STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY` | Default-ON dead-last descendant of the negative global swap; population test added three solves without losses in reached controls. Reprice through scheduler work rather than increasing reserve in isolation. |
+| `STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY` | Default-ON after five additive rescues without measured losses; can buy substantial failed-tail work, so seed/budget expansion requires fixed-work repricing. |
+| `STRATEGY_REPAIR_LATE_PROBE` | Default-ON after same-commit population gain; future cap growth competes with other actions under shared work. |
+| `STRATEGY_MAIN_LOOP_LATE_RESERVE` | Historical default-ON mechanism. Its broad “give late repair more work” interpretation is closed; do not infer an active research lane from code presence. |
+
+This is intentionally not an exhaustive production-feature list.
 
 ## Interpretation rules
 
-1. **Default-OFF does not mean pending.** Most retained opt-ins are closed experiments.
-2. **Code presence does not reopen a result.** Prototype infrastructure may remain useful even when its tested policy is negative.
-3. **Evidence belongs to the tested wiring and protocol.** A materially revised caller policy or operator can require a new verdict; a renamed unchanged mechanism does not.
-4. **Capability is level-blind.** `primeAttempt`, `--prime-winner`, saved-hint guidance, exact-level caches, or historical status used for scheduling make a run research/re-verification evidence, not cold capability evidence.
-5. **Small negative tests can close a form.** Do not buy a giant population run merely to make a directly falsified premise feel more official.
-6. **Isolated-technique wins are nominations, not promotions.** Confirm through the real ladder before trusting a treatment whose receptor receives a different effective budget there.
-7. **Promotion checks both halves of a flag.** Changing `OPT_IN_FEATURES` is insufficient if read sites still implement the old polarity convention.
-8. **Compare gains, losses, work, and wall cost.** Node/work meters can miss changes in the cost of an operation; a redistribution can lower nodes while becoming much slower.
-9. **Future dead-last promotion requires budget evidence.** “Cannot regress because it runs after all existing winners” proves placement safety only. New additive retries/tails normally require matched total work or an explicit decision to enlarge the product budget.
-10. **Closed code must justify retention.** If a closed mechanism has no current descendant/plumbing/diagnostic role, remove it after preserving evidence. Git is the archive.
-11. **Promoted retries are repriced, not grandfathered.** Scheduler audits may reorder, shrink, condition, decompose, or remove a historically positive retry when upstream changes reduce its present marginal value.
-12. **The selected best arm is still tuned evidence.** When a flag/seed/threshold was chosen after trying alternatives on the same population, use independent confirmation before treating that selected result as general evidence; see [`solver-research-operating-model.md`](solver-research-operating-model.md).
-
-## Historical evidence
-
-The old ledger contained detailed A/B histories, wiring-confound investigations, per-level examples, calibration notes, and promotion narratives. They remain available verbatim in [`archive/snapshots/solver-opt-in-experiment-ledger-2026-08-20.md`](archive/snapshots/solver-opt-in-experiment-ledger-2026-08-20.md) and in the dated reports it cites.
+1. Default-OFF does not mean pending; most retained opt-ins are closed.
+2. Code presence does not reopen a result.
+3. Evidence applies to the tested wiring/protocol; a materially different mechanism may need a new verdict.
+4. Historical hints/winners/level outcomes may label research but may not steer cold level-blind capability.
+5. A small decisive negative can close a form; do not buy a giant run merely for ceremony.
+6. Isolated-technique wins nominate full-policy tests; they do not promote themselves.
+7. A polarity change must update both `OPT_IN_FEATURES` and read-site semantics.
+8. Compare gains, losses, `workSpent`, and wall cost; no one metric is sufficient.
+9. Dead-last placement proves non-interference with earlier winners, not economic value.
+10. Closed code must justify retention; Git/reports preserve history.
+11. Promoted retries are repriced, not grandfathered.
+12. A best arm selected from several alternatives remains tuned evidence and needs independent confirmation for broad claims.
