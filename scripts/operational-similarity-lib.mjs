@@ -64,3 +64,73 @@ export function compareBeamTraceBuckets(leftBuckets, rightBuckets) {
             censored: !!left.truncated || !!peer.truncated };
     });
 }
+
+function arraysEqual(left, right) {
+    return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function deterministicEventSignature(event) {
+    return JSON.stringify([event.family, event.depth, event.candidates, event.activeOrder]);
+}
+
+/**
+ * Compare two bounded deterministic decision-event streams.
+ *
+ * This reducer deliberately treats event-index alignment as authoritative only until the first
+ * mismatch. Once deterministic searches diverge, later equal-looking sibling sets are merely
+ * signature overlap and are NOT called reconvergence without a shared state identity.
+ */
+export function compareDeterministicDecisionTraces(leftTrace, rightTrace) {
+    const leftEvents = leftTrace.events ?? [];
+    const rightEvents = rightTrace.events ?? [];
+    const sharedRetained = Math.min(leftEvents.length, rightEvents.length);
+    let commonEventPrefix = 0;
+    while (commonEventPrefix < sharedRetained
+        && deterministicEventSignature(leftEvents[commonEventPrefix]) === deterministicEventSignature(rightEvents[commonEventPrefix])) {
+        commonEventPrefix++;
+    }
+
+    let firstDivergence = null;
+    if (commonEventPrefix < sharedRetained) {
+        const left = leftEvents[commonEventPrefix];
+        const right = rightEvents[commonEventPrefix];
+        const sameFamilyDepth = left.family === right.family && left.depth === right.depth;
+        const sameCandidates = sameFamilyDepth && arraysEqual(left.candidates, right.candidates);
+        const reason = sameCandidates && !arraysEqual(left.activeOrder, right.activeOrder)
+            ? 'ordering'
+            : sameFamilyDepth ? 'candidate-set' : 'traversal-context';
+        firstDivergence = { retainedIndex: commonEventPrefix, reason, left, right };
+    } else if (leftEvents.length !== rightEvents.length) {
+        firstDivergence = {
+            retainedIndex: commonEventPrefix,
+            reason: 'trace-length',
+            left: leftEvents[commonEventPrefix] ?? null,
+            right: rightEvents[commonEventPrefix] ?? null,
+        };
+    }
+
+    const leftSignatures = new Set(leftEvents.map(deterministicEventSignature));
+    const rightSignatures = new Set(rightEvents.map(deterministicEventSignature));
+    const signatureIntersection = [...leftSignatures].filter(signature => rightSignatures.has(signature)).length;
+    const signatureUnion = new Set([...leftSignatures, ...rightSignatures]).size;
+    const censored = !!leftTrace.truncated || !!rightTrace.truncated;
+
+    return {
+        status: firstDivergence ? 'diverged-within-retained-bound'
+            : censored ? 'no-divergence-observed-within-censored-bound'
+                : 'identical-retained-trace',
+        commonEventPrefix,
+        firstDivergence,
+        retainedEventOverlap: {
+            leftUniqueSignatures: leftSignatures.size,
+            rightUniqueSignatures: rightSignatures.size,
+            signatureIntersection,
+            signatureUnion,
+            eventSignatureJaccard: signatureUnion ? signatureIntersection / signatureUnion : null,
+            interpretation: 'post-divergence signature overlap is not semantic reconvergence without shared state identity',
+        },
+        left: { observed: leftTrace.observed ?? leftEvents.length, retained: leftEvents.length, truncated: !!leftTrace.truncated },
+        right: { observed: rightTrace.observed ?? rightEvents.length, retained: rightEvents.length, truncated: !!rightTrace.truncated },
+        censored,
+    };
+}
