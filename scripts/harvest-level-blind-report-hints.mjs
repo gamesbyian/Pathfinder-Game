@@ -6,8 +6,8 @@
  * reconstructs the same canonical provenance shape, referee-validates each path, and merges it into
  * data/stress/hints*. Thus experiment input isolation and evidence retention are separate concerns.
  *
- * If the source report's corpus hash differs from current main, the solve is not discarded or
- * misattributed. Its solved rows are written to a compact run-id evidence file under
+ * Evidence that cannot safely attach to current main is not discarded. Corpus-hash mismatches,
+ * missing levels and referee mismatches are written to a compact run-id evidence file under
  * reports/stress/pending-solver-evidence/ for later reconciliation against the source level shape.
  */
 import { createHash } from 'node:crypto';
@@ -97,7 +97,7 @@ for (const file of walk(stagingDir).sort()) {
     if (summary.corpusSha256 && summary.corpusSha256 !== state.corpusSha256) {
         pending.push({
             sourceRunId, sourceWorkflow, artifactFile: path.relative(stagingDir, file),
-            solverRef: summary.commit ?? null, corpus: corpusRel,
+            reason: 'corpus-hash-mismatch', solverRef: summary.commit ?? null, corpus: corpusRel,
             sourceCorpusSha256: summary.corpusSha256, mainCorpusSha256: state.corpusSha256,
             budgetMs: summary.budgetMs ?? null, nodeBudget: summary.nodeBudget ?? null,
             workBudget: summary.workBudget ?? null, enableFlags: summary.enableFlags ?? [],
@@ -106,28 +106,54 @@ for (const file of walk(stagingDir).sort()) {
         continue;
     }
 
+    const accepted = [];
+    for (const row of solved) {
+        const entry = row.id != null
+            ? state.byId.get(String(row.id))
+            : state.levels[row.level - 1]
+                ? { level: state.levels[row.level - 1], index: row.level - 1 }
+                : null;
+        if (!entry) {
+            pending.push({
+                sourceRunId, sourceWorkflow, artifactFile: path.relative(stagingDir, file),
+                reason: 'level-not-found-on-main', solverRef: summary.commit ?? null,
+                corpus: corpusRel, solvedRow: row,
+            });
+            continue;
+        }
+        const parsed = parseRawLevel(entry.level, entry.index);
+        if (!parsed) {
+            pending.push({
+                sourceRunId, sourceWorkflow, artifactFile: path.relative(stagingDir, file),
+                reason: 'canonical-level-parse-failed', solverRef: summary.commit ?? null,
+                corpus: corpusRel, solvedRow: row,
+            });
+            continue;
+        }
+        const verdict = validateCandidatePath(parsed, row.solution);
+        if (!verdict.ok) {
+            pending.push({
+                sourceRunId, sourceWorkflow, artifactFile: path.relative(stagingDir, file),
+                reason: `main-referee-rejected:${verdict.reason}`, solverRef: summary.commit ?? null,
+                corpus: corpusRel, solvedRow: row,
+            });
+            continue;
+        }
+        accepted.push({ row, entry });
+    }
+    if (!accepted.length) continue;
+
     const capture = await createHintCapture({
         solverVersion: summary.commit ?? null,
         budgetMs: summary.budgetMs ?? null,
         enabled: true,
     });
-    const targets = [];
-    for (const row of solved) {
-        const entry = row.id != null ? state.byId.get(String(row.id)) : state.levels[row.level - 1] ? { level: state.levels[row.level - 1], index: row.level - 1 } : null;
-        if (!entry) throw new Error(`${file}: solved row ${row.id ?? row.level} not found in ${corpusRel}`);
-        targets.push(entry.level);
-    }
-    await capture.prepare(targets);
+    await capture.prepare(accepted.map(({ entry }) => entry.level));
 
-    for (const row of solved) {
-        const entry = row.id != null ? state.byId.get(String(row.id)) : { level: state.levels[row.level - 1], index: row.level - 1 };
-        const parsed = parseRawLevel(entry.level, entry.index);
-        if (!parsed) throw new Error(`${file}: cannot parse canonical level ${row.id ?? row.level}`);
-        const verdict = validateCandidatePath(parsed, row.solution);
-        if (!verdict.ok) throw new Error(`${file}: referee rejected ${row.id ?? row.level}: ${verdict.reason}`);
+    for (const { row, entry } of accepted) {
         const syntheticResult = {
             ok: true,
-            status: row.status === 'success' ? 'success' : 'success',
+            status: 'success',
             solution: row.solution,
             attempts: Array.isArray(row.attempts) ? row.attempts : [],
             nodesExpanded: row.nodesExpanded ?? undefined,
@@ -146,7 +172,7 @@ if (pending.length > 0) {
     mkdirSync(pendingDir, { recursive: true });
     const out = path.join(pendingDir, `run-${sourceRunId}.json`);
     writeFileSync(out, `${JSON.stringify({ schemaVersion: 1, sourceRunId, sourceWorkflow, reports: pending }, null, 2)}\n`);
-    console.log(`Quarantined ${pending.length} corpus-mismatched report(s) to ${path.relative(root, out)}.`);
+    console.log(`Quarantined ${pending.length} unmergeable level-blind evidence record(s) to ${path.relative(root, out)}.`);
 }
 
-console.log(`Level-blind evidence harvest: ${reportsSeen} report(s), ${reportsHarvested} merged, ${solvedRowsSeen} solved row(s), ${recordChanges} new hint/provenance record change(s), ${pending.length} pending report(s).`);
+console.log(`Level-blind evidence harvest: ${reportsSeen} report(s), ${reportsHarvested} merged, ${solvedRowsSeen} solved row(s), ${recordChanges} new hint/provenance record change(s), ${pending.length} pending record(s).`);
