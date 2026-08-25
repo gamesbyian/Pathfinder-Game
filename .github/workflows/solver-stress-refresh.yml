@@ -19,9 +19,9 @@ on:
         required: false
         default: '50000000'
       corpus2_workers:
-        description: 'Cross-level worker processes per shard. Level-blindness is preserved even at 1 worker.'
+        description: 'Cross-level worker processes per shard. Default 4 matches current standard public ubuntu-latest runner vCPU count; level-blindness is preserved at any worker count.'
         required: false
-        default: '2'
+        default: '4'
       enable_flags:
         description: 'Comma-separated ablation flags to turn ON for both corpora.'
         required: false
@@ -55,9 +55,9 @@ on:
         required: false
         default: '50000000'
       corpus1_workers:
-        description: 'Cross-level worker processes per shard.'
+        description: 'Cross-level worker processes per shard. Default 4 matches current standard public ubuntu-latest runner vCPU count.'
         required: false
-        default: '2'
+        default: '4'
       deterministic:
         description: 'true forces a 24h non-binding deadline and skips overwriting the canonical logs/*baseline.json and reports/stress/ "latest" files; hints persist only if persist_hints=true. The compact per-run analysis summary (reports/stress/capability-runs/RUN_ID/) is always committed either way -- it is namespaced by run id, so it can never let one A/B arm mutate what a queued arm measures. Use true + persist_hints=false for matched A/B arms.'
         required: false
@@ -67,11 +67,11 @@ on:
         required: false
         default: 'false'
       shard_count:
-        description: 'Shard count (fixed 20 before 2026-08-22). Two independent uses, both via max_parallel below: (1) set shard_count = max_parallel for the old fixed-20-style behavior at a smaller footprint -- e.g. both 10 lets an A/B pair fit the account concurrent-job limit alongside other work; (2) raise shard_count WELL above max_parallel (e.g. 60 shards at max_parallel=15) for the same total footprint but finer, self-balancing scheduling -- see max_parallel''s own description for why this cuts wall-clock tail latency on a genuinely full sweep. Corpus-2''s per-shard timeout scales inversely (fewer shards -> more levels/shard -> more time/shard), clamped to the GitHub-hosted 360min/job hard ceiling -- do not go far below 10 without also lowering node/work budgets, or a shard risks not finishing its slice inside that ceiling. Must not exceed 102 (corpus-1''s level count) or some shards get zero corpus-1 coverage.'
+        description: 'Shard count. Default 60 queues fine-grained slices behind max_parallel lanes so a lane that finishes early immediately pulls another shard instead of idling behind a straggler. Set shard_count = max_parallel to reproduce the older fixed-lane shape, or lower both for a smaller-footprint matched A/B. Corpus-2''s per-shard timeout scales inversely with shard_count, clamped to the GitHub-hosted 360min/job hard ceiling. Must not exceed 102 (corpus-1''s level count) or some shards get zero corpus-1 coverage.'
         required: false
-        default: '20'
+        default: '60'
       max_parallel:
-        description: 'Shards running concurrently (same solver-typical-budget-baseline.yml pattern). Keeping this well below shard_count (e.g. shard_count=60, max_parallel=15) is what actually fixes long-tail wall time on a full sweep: with shard_count == max_parallel (the old fixed-20 behavior), every shard starts at once and the whole run waits on whichever one drew the unluckiest cluster of expensive-to-exhaust unsolved levels -- observed taking 2+ hours even though most shards finish in well under half that. Many small shards queued behind a smaller number of concurrent lanes self-balance instead: a lane that finishes early immediately pulls the next queued shard rather than idling, so bad luck in one shard''s slice no longer stalls the whole run. Default 20 (== the shard_count default) reproduces pre-2026-08-22 behavior exactly (no throttling) when both are left at their defaults.'
+        description: 'Shards running concurrently. Default 20 with shard_count=60 provides queue-based tail balancing while preserving the established 20-runner footprint; lower this when multiple matched runs must coexist.'
         required: false
         default: '20'
 
@@ -106,7 +106,7 @@ jobs:
           n="${{ inputs.shard_count }}"
           shards=$(node -e "console.log(JSON.stringify(Array.from({length:Number(process.argv[1])},(_,i)=>i+1)))" "$n")
           echo "shards=${shards}" >> "$GITHUB_OUTPUT"
-          # Baseline 45m/300m at the default 20 shards; scale inversely with shard_count (fewer,
+          # Baseline 45m/300m at 20 shards; scale inversely with shard_count (fewer,
           # bigger shards need more time each), clamped so corpus1's + corpus2's wrapper timeouts
           # together leave margin under the GitHub-hosted 360min/job hard ceiling (solve-shards' own
           # timeout-minutes below).
@@ -345,14 +345,6 @@ jobs:
           node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-parallel.json
           mkdir -p "reports/stress/capability-runs/${{ github.run_id }}"
           node - <<'NODE'
-          // This directory is the ONLY durable, always-committed record of a run's per-level result --
-          // the uploaded Actions artifact (raw benchmark JSON, full attempts/techniqueLifecycle detail)
-          // is NOT a substitute: it lives on Azure blob storage, whose download has been observed
-          // blocked (403) by at least one Claude sandbox's egress policy (see the "Print repair-probe
-          // badness distribution" step's own note, and reports/2026-08-15-connectivity-axis-exhausted-
-          // regression.md's follow-up). A "leaner than the raw report, richer than an aggregate count"
-          // per-level projection is written here specifically so a later flip/regression analysis never
-          // depends on artifact-zip access being available.
           const fs = require('node:fs');
           const dir = `reports/stress/capability-runs/${process.env.RUN_ID}`;
           const project = file => {
@@ -434,12 +426,6 @@ jobs:
       - name: Print repair-probe badness distribution
         if: steps.coverage.outputs.complete == 'true'
         shell: bash
-        # A full-population run through THIS workflow is the usual promotion bar for a flag like
-        # STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (see docs/future-work.md item #4 and
-        # docs/solver-opt-in-experiment-ledger.md's still-open BADNESS_GATE/MIN_SCALE recalibration
-        # caveat) -- print this to the JOB CONSOLE LOG specifically, not just the uploaded artifact,
-        # since this session's egress policy has been observed blocking the artifact-download zip
-        # (Azure blob storage, 403). See scripts/stress/repair-probe-badness-report.mjs.
         run: |
           node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in=reports/stress/benchmark-parallel.json
           node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in=reports/stress/benchmark-latest-random.json
@@ -456,13 +442,6 @@ jobs:
           retention-days: 90
 
       - name: Persist capability outputs and/or newly found hints
-        # Always runs when coverage is complete: the per-run analysis summary (reports/stress/
-        # capability-runs/<run_id>/) is unconditional, so every completed run leaves a durable,
-        # git-fetchable per-level record even under persist_hints=false + deterministic=true -- see
-        # persist_hints's/deterministic's own input descriptions above for why this can never let one
-        # A/B arm mutate what a queued arm measures (the directory is namespaced by run id and never
-        # read back into any solve). Hint-corpus writes and canonical baseline/report overwrites stay
-        # conditional exactly as before.
         if: steps.coverage.outputs.complete == 'true'
         shell: bash
         run: |
@@ -479,14 +458,6 @@ jobs:
             if git push origin HEAD:${{ github.ref_name }}; then exit 0; fi
             sleep $((attempt * 5))
             git fetch origin "${{ github.ref_name }}"
-            # Discard any unstaged modifications to tracked files this run deliberately did NOT stage
-            # above (e.g. reports/stress/benchmark-*.json when deterministic=true, which the sweep
-            # still overwrites on disk even though we chose not to commit it). Without this, `git
-            # rebase` refuses with "You have unstaged changes. Please commit or stash them." the moment
-            # any other commit -- e.g. an unrelated chore(audit) auto-commit -- lands on the branch
-            # first, which is exactly what happened on run 31871824532 and silently dropped its whole
-            # persist step, hints included. Safe: anything left unstaged here was never meant to be
-            # committed by this run in the first place.
             git checkout -- .
             git rebase "origin/${{ github.ref_name }}" || exit 1
           done
