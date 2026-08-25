@@ -53,15 +53,15 @@ on:
         required: false
         default: '86400000'
       workers:
-        description: 'Cross-level worker processes per shard.'
+        description: 'Cross-level worker processes per shard. Default 4 matches current standard public ubuntu-latest runner vCPU count.'
         required: false
-        default: '2'
+        default: '4'
       shard_count:
-        description: 'Number of even shards to split the sample into.'
+        description: 'Number of even shards to split the sample into. Default 60 queues finer work behind 20 lanes so fast lanes keep pulling work instead of idling behind a coarse-shard straggler.'
         required: false
-        default: '20'
+        default: '60'
       max_parallel:
-        description: 'Shards running concurrently. Lower than shard_count to reduce this run''s concurrent-job footprint (e.g. so a control/treatment pair fits alongside other GHA work) without shrinking the sample -- see solver-stress-refresh.yml''s own shard_count/max_parallel descriptions for the full mechanism.'
+        description: 'Shards running concurrently. Keep below shard_count for queue-based tail balancing; lower further if a matched A/B pair must share the account job budget.'
         required: false
         default: '20'
       enable_flags:
