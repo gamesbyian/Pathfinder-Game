@@ -27,9 +27,10 @@ const sourceRunId = args.get('--source-run-id') || 'unknown';
 const sourceWorkflow = args.get('--source-workflow') || 'unknown';
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
-const CORPORA = new Map([
-    ['hints', path.join(root, 'data/stress/stress-levels.json')],
-    ['hints-random', path.join(root, 'data/stress/stress-levels-random.json')],
+const STORES = new Map([
+    ['data/hints', { corpus: path.join(root, 'data/levels.json'), targetDir: path.join(root, 'data/hints') }],
+    ['data/stress/hints', { corpus: path.join(root, 'data/stress/stress-levels.json'), targetDir: path.join(root, 'data/stress/hints') }],
+    ['data/stress/hints-random', { corpus: path.join(root, 'data/stress/stress-levels-random.json'), targetDir: path.join(root, 'data/stress/hints-random') }],
 ]);
 
 const { parseRawLevel } = await import('../modules/domain/level-codec.js');
@@ -62,14 +63,14 @@ function corpusIndex(corpusPath) {
     if (!Array.isArray(levels)) throw new Error(`${corpusPath}: expected levels array`);
     return new Map(levels.map((level, i) => [String(level.id || i + 1), { raw: level, index: i }]));
 }
-const indexes = new Map([...CORPORA].map(([dir, corpus]) => [dir, corpusIndex(corpus)]));
+const indexes = new Map([...STORES].map(([store, info]) => [store, corpusIndex(info.corpus)]));
 
 const incomingByTarget = new Map();
 for (const file of walk(stagingDir)) {
     const normalized = file.split(path.sep).join('/');
-    const match = normalized.match(/\/data\/stress\/(hints(?:-random)?)\/([^/]+\.json)$/u);
-    if (!match || !CORPORA.has(match[1])) continue;
-    const key = `${match[1]}/${match[2]}`;
+    const match = normalized.match(/\/(data\/hints|data\/stress\/hints(?:-random)?)\/([^/]+\.json)$/u);
+    if (!match || !STORES.has(match[1])) continue;
+    const key = `${match[1]}\0${match[2]}`;
     const list = incomingByTarget.get(key) || [];
     list.push(file);
     incomingByTarget.set(key, list);
@@ -81,12 +82,13 @@ let incomingPaths = 0;
 let incomingProvenance = 0;
 const pending = [];
 for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => a.localeCompare(b))) {
-    const [hintDir, fileName] = key.split('/');
+    const [store, fileName] = key.split('\0');
     const levelKey = fileName.slice(0, -5);
-    const levelEntry = indexes.get(hintDir).get(levelKey);
+    const storeInfo = STORES.get(store);
+    const levelEntry = indexes.get(store).get(levelKey);
     if (!levelEntry) {
         for (const source of sources) pending.push({
-            target: key,
+            target: `${store}/${fileName}`,
             sourceFile: path.relative(stagingDir, source),
             reason: 'level-not-found-on-main',
             rawHintFile: JSON.parse(readFileSync(source, 'utf8')),
@@ -96,7 +98,7 @@ for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => 
     const level = parseRawLevel(levelEntry.raw, levelEntry.index);
     if (!level) {
         for (const source of sources) pending.push({
-            target: key,
+            target: `${store}/${fileName}`,
             sourceFile: path.relative(stagingDir, source),
             reason: 'canonical-level-parse-failed',
             rawHintFile: JSON.parse(readFileSync(source, 'utf8')),
@@ -113,7 +115,7 @@ for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => 
             hints = parseHintFileContents(parsed, source);
         } catch (error) {
             pending.push({
-                target: key,
+                target: `${store}/${fileName}`,
                 sourceFile: path.relative(stagingDir, source),
                 reason: `hint-file-parse-failed:${error?.message ?? error}`,
                 rawText: readFileSync(source, 'utf8'),
@@ -128,7 +130,7 @@ for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => 
             const verdict = validateCandidatePath(level, hint.path);
             if (!verdict.ok) {
                 pending.push({
-                    target: key,
+                    target: `${store}/${fileName}`,
                     sourceFile: path.relative(stagingDir, source),
                     reason: `main-referee-rejected:${verdict.reason}`,
                     hint,
@@ -139,7 +141,7 @@ for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => 
     }
     if (!mergedIncoming.length) continue;
 
-    const target = path.join(root, 'data/stress', hintDir, fileName);
+    const target = path.join(storeInfo.targetDir, fileName);
     const existing = existsSync(target)
         ? parseHintFileContents(JSON.parse(readFileSync(target, 'utf8')), target)
         : [];
