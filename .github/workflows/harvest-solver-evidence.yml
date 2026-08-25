@@ -46,12 +46,18 @@ jobs:
         run: npm ci
 
       - name: Download every artifact from the source solver run
-        uses: actions/download-artifact@v4
-        with:
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ github.token }}
-          path: artifact-staging
-          merge-multiple: false
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifact-staging
+          # Do not use actions/download-artifact's cross-run path here. This repository has measured
+          # that path dropping the final partial page after each 100 artifacts (e.g. 240 -> 200).
+          # gh run download paginates the run's artifact collection and preserves one directory per
+          # artifact, which is exactly the shape the semantic importers expect.
+          gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir artifact-staging
 
       - name: Merge all recoverable hint evidence onto latest main
         shell: bash
@@ -74,7 +80,9 @@ jobs:
             # Workflows that used --save-hints already carry canonical hint files in shard artifacts.
             # Merge them structurally and referee-check every incoming path.
             node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
-              --staging-dir=artifact-staging
+              --staging-dir=artifact-staging \
+              --source-run-id="$SOURCE_RUN_ID" \
+              --source-workflow="$SOURCE_WORKFLOW"
 
             # Artifact-only level-blind workflows still retain solved paths and winning attempts in
             # their shard reports. Reconstruct canonical provenance. Corpus hash mismatches are
