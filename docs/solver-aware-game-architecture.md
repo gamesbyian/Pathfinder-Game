@@ -12,7 +12,7 @@ Any cache, dedup key, transposition table, oracle abstraction, or state comparis
 
 General sound transposition caching has been measured: exact signatures found few revisits at high cost; realistic exact MITM frontiers stayed large. Reopen only with materially cheaper sound identity/new evidence.
 
-Production beam dedup is intentionally coarse width/diversity control, not semantic equivalence. Removing it lost solves. Fixed-width packing became unsafe as mechanic cardinalities grew; the current delimited key avoids collisions among intended fields without claiming exact history identity.
+Production beam dedup is intentionally coarse width/diversity control, not semantic equivalence. Removing it lost solves. Fixed-width packing became unsafe as mechanic cardinalities grew. Current beam dedup normally uses a per-level mixed-radix numeric fast path with a delimited-string fallback; the schema-valid 31/32-flipper numeric-base defect is tracked in [`solver-correctness-hardening.md`](solver-correctness-hardening.md). None of these coarse keys claims exact future-state identity.
 
 Rules: do not replace coarse grouping with exact identity for neatness; do not treat grouping as equivalence proof; fixed-width mechanic slots need enforced cardinality bounds; benchmark representation changes. Evidence: `reports/2026-08-06-beam-state-dedup-sound-signature-audit.md` and archived campaign.
 
