@@ -12,6 +12,23 @@ For node/work-bounded native-solver sweeps on standard public `ubuntu-latest` ru
 
 These are throughput defaults, not universal laws. Binding wall-clock deadlines can change solved sets under different contention, so worker count there must be measured rather than mechanically raised. CP-SAT's `num_search_workers` is also a search-portfolio parameter, not merely a CPU-count setting.
 
+## Evidence retention
+
+Solver execution ref and durable evidence destination are separate concerns. A run may execute on `main` or any feature-branch SHA; useful solved paths and provenance must not depend on that branch surviving.
+
+`harvest-solver-evidence.yml` runs after the main native-solver workflows complete and persists recoverable evidence onto canonical `main`:
+
+- Existing `--save-hints` shard artifacts are structurally merged by path, not copied last-writer-wins.
+- Artifact-only level-blind runs reconstruct canonical provenance from their persisted solved rows and winning attempts. Hint capture remains output-only, so this does not feed history back into the solve.
+- `method-probe` and technique-census discoveries are retained with `isolatedTechnique=true`, preserving the distinction from competitively-budgeted production-ladder capability.
+- Failed or cancelled workflows are harvested too; completed shard output can contain a novel solve even when the overall run fails later.
+- Evidence that cannot safely attach to current `main` because the level/corpus changed or the path no longer referee-validates is committed under `reports/stress/pending-solver-evidence/` rather than discarded.
+- Competing persistence runs serialize and replay semantic merges against latest `main`; do not line-rebase hint JSON.
+
+The harvester downloads artifacts with `gh run download`. Do not replace that with the cross-run `actions/download-artifact` path without revalidating pagination: this repo has observed that path truncate runs with more than 100 artifacts.
+
+This retention layer is a safety net. Individual workflows may still save hints immediately when convenient, but branch-local persistence is no longer the only durable copy.
+
 ## Core capability
 
 - `solver-stress-refresh.yml` — canonical level-blind full refresh over Corpus 1 + Corpus 2. Default 60 shards / 20 lanes / 4 workers; node/work ceilings normally bind.
