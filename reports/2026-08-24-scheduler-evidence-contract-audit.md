@@ -1,19 +1,19 @@
 # Scheduler evidence-contract audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-24 — current `Attempt`/persistence/lifecycle contracts plus the existing technique-census second-order analysis
-> **Decision:** current solver artifacts already carry enough per-attempt identity, work, and termination semantics to support the first action-level scheduler repricing. Do not spend another telemetry round merely to distinguish natural exhaustion from censoring. The existing `portfolio-historical-replay.mjs` remains a winner/cap archaeology tool only and must not be used as the decision-bearing continuation-value analyzer.
-> **Remaining gate:** join current persisted attempt/action rows to the existing census cap/tranche matrix and compute action-level risk sets, failed-work tax, exclusivity, portfolio-cardinality and fixed-work oracle/Pareto headroom, excluding sequence-ambiguous cells until P0 is resolved.
+> **Last evidence:** 2026-08-24 — current `Attempt`/persistence/lifecycle contracts, existing technique-census second-order analysis, and direct inspection of Actions run `32526927206` raw-shard and combined artifacts
+> **Decision:** current solver **code** carries enough per-attempt identity, work, and termination semantics to support the first action-level scheduler repricing. Do not spend another telemetry-design round merely to distinguish natural exhaustion from censoring. However, the latest inspected full-refresh artifacts predate the current rich attempt projection, so a current fixed-work attempt-row dataset must be materialized before the decision-bearing join. The existing `portfolio-historical-replay.mjs` remains winner/cap archaeology only.
+> **Remaining gate:** materialize one current fixed-work development run preserving the current attempt projection, then join those action rows to the existing census cap/tranche matrix and compute risk sets, failed-work tax, exclusivity, portfolio-cardinality and fixed-work oracle/Pareto headroom, excluding sequence-ambiguous cells until P0 is resolved. See [`2026-08-24-queue-readiness-artifact-reconciliation.md`](2026-08-24-queue-readiness-artifact-reconciliation.md).
 > **Evidence role:** tuning
-> **Selection:** observational — this audit reconciles already-mined scheduler/census artifacts and current source contracts; it does not claim independent confirmation.
+> **Selection:** observational — this audit reconciles already-mined scheduler/census artifacts, current source contracts, and the latest inspected full-refresh artifacts; it does not claim independent confirmation.
 
 ## Why this audit exists
 
-Queue items #1 and #3 had converged on an infrastructure question: before building an action registry or buying more runs, does the current persisted evidence actually distinguish the things continuation-value analysis needs?
+Queue items #1 and #3 had converged on an infrastructure question: before building an action registry or buying more runs, does the current persistence contract actually distinguish the things continuation-value analysis needs?
 
-The answer on current code is mostly **yes**.
+The answer on current code is **yes**.
 
-The missing work is now analysis/integration, not another telemetry redesign.
+A subsequent artifact check adds one important qualification: the current contract has not yet been materialized by the latest inspected full refresh. The missing work is therefore **one evidence materialization plus analysis/integration**, not another telemetry redesign.
 
 ## Canonical identities already exist
 
@@ -28,7 +28,7 @@ This is a sensible current contract. Stage belongs in the action identity becaus
 
 Therefore the old queue wording “define stable search-action identity” is no longer the first missing primitive. The current identity helpers and tests already cover every supported search family.
 
-## Current persisted attempt contract
+## Current persistence contract
 
 `scripts/portfolio-solve-sweep-lib.mjs` projects current attempts with at least:
 
@@ -40,7 +40,7 @@ Therefore the old queue wording “define stable search-action identity” is no
 - `allocatedBudgetMs`;
 - `allocatedWorkCeiling`;
 - `allocatedNodeCeiling`;
-- actual `workSpent`;
+- actual per-attempt `workSpent`;
 - `nodesExpanded`;
 - `outcome`;
 - `timedOut`;
@@ -48,7 +48,44 @@ Therefore the old queue wording “define stable search-action identity” is no
 
 At row level it also preserves total `workSpent`, deadline truncation, technique lifecycle telemetry, winner action identity, failed action identities, and correctness/referee status.
 
-That is already much richer than the older portfolio replay assumed.
+That is already much richer than the older portfolio replay assumed. It is the correct persistence **schema** for the first scheduler study.
+
+## Materialization audit: current schema versus latest full refresh
+
+The distinction between “the code can persist it” and “a comparable current dataset already exists” was checked directly after the August 24 merges.
+
+Actions run `32526927206` is the latest full stress refresh inspected for this purpose. Its artifacts remain available.
+
+### Combined artifact
+
+`solver-stress-refresh-combined` contains the durable per-level projection with row-level:
+
+- `workSpent`;
+- `attemptCount`;
+- winning configuration;
+- failed-strategy labels;
+- correctness/solution information.
+
+But the combined per-level projection does **not** retain the full `attempts` array, so it cannot support action/tranche risk sets by itself.
+
+### Raw shard artifacts
+
+The raw shard reports do retain `attempts`. Those attempts contain the older projection available when the run was produced from head `ce4fc98a6ec4e87060c740161ea800dd04970a2b`, including stage/gate/profile/template, outcome, elapsed time, allocated wall budget, nodes, repair seeds, and technique-specific flags.
+
+They do **not** carry the current decision-bearing fields:
+
+- canonical `actionKey`;
+- `allocatedWorkCeiling`;
+- `allocatedNodeCeiling`;
+- per-attempt `workSpent`.
+
+Therefore the latest inspected full refresh cannot be retroactively treated as the current fixed-work action dataset merely because current source code would now project those fields.
+
+### Consequence
+
+Do not commission another census or another general telemetry redesign.
+
+Do materialize one current fixed-work development dataset under the current projection before claiming to have performed action-level fixed-work repricing. Preserve the raw attempt rows. A baseline-failure-conditioned residual population is legitimate when the claim is explicitly about late-action/tail allocation after a frozen baseline failure; use a broad full-corpus run when unconditional production accounting is required.
 
 ## Termination semantics are explicit enough
 
@@ -138,7 +175,7 @@ These are nominations, not current production cap decisions.
 
 ## Smallest current-data analysis
 
-Build one rebuildable table at **attempt/action/tranche** granularity.
+After materializing a current run, build one rebuildable table at **attempt/action/tranche** granularity.
 
 For each comparable current action/context record:
 
@@ -194,9 +231,9 @@ If the dependency is eventually formalized as an intentional producer→receptor
 
 ## Automatic-configuration consequence
 
-Queue #3 can move one step forward.
+Queue #3 can move one step forward only after the current dataset is materialized and #1 is priced.
 
-The first missing gate is no longer identity definition. The next gate is:
+The missing gate is:
 
 > Does the existing action menu, priced honestly at current residual `workSpent`, contain enough complementary fixed-envelope headroom to justify configuration search beyond selecting among the actions already present?
 
@@ -208,7 +245,8 @@ If substantial headroom remains and is concentrated inside one surviving action 
 
 Stop before new scheduler infrastructure if:
 
-- current artifacts cannot be joined without large stale-code ambiguity;
+- a current attempt-row dataset cannot be materialized without changing the solver contract being evaluated;
+- current action rows cannot be joined to census families without large stale-code ambiguity;
 - comparable fixed-work oracle headroom is small;
 - simple static repricing captures nearly all of it;
 - apparent gain depends mostly on additive work, right-censoring misclassification, or sequence-ambiguous rows;
@@ -216,6 +254,8 @@ Stop before new scheduler infrastructure if:
 
 ## Disposition
 
-The telemetry/identity prerequisite is **substantially complete on current code**.
+The telemetry/identity prerequisite is **substantially complete in current code**.
 
-Do not commission another general telemetry pass merely to obtain action identity or exhaustion-vs-censoring. Use the current persisted attempt contract, lifecycle telemetry, and existing census cap matrix. The next work is the actual join/frontier analysis.
+The evidence-materialization prerequisite is **not yet complete in the latest inspected full-refresh artifacts**. Do not confuse those two facts.
+
+Do not commission another general telemetry pass merely to obtain action identity or exhaustion-vs-censoring, and do not rerun the frozen technique census. Materialize one current fixed-work attempt dataset using the existing persistence contract, then perform the join/frontier analysis.
