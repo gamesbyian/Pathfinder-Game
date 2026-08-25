@@ -1,6 +1,6 @@
 # Scripts and local tooling
 
-Use [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md) before scanning filenames or adding a script. `package.json` is the exhaustive npm-alias list; it is not an exhaustive inventory of executable-looking files.
+Use [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md) before scanning filenames or adding a script. For a named concept, prefer `node scripts/tooling-census.mjs --compact --query=<term>` over opening the full `package.json` or listing every script. `package.json` remains the exhaustive npm-alias list; it is not an exhaustive inventory of executable-looking files.
 
 ## Cheap discovery first
 
@@ -10,7 +10,8 @@ Before opening large evidence/data files:
 - level corpora: `node scripts/corpus-query.mjs --corpus=stress2` for a summary; add filters, `--list`, or deterministic `--sample=N`; use `--full` only when exact level payloads are needed;
 - hint/provenance evidence: `npx tsx scripts/hint-query.mjs --id=<ID> [--levels=<corpus>]`; filter by cold-evidence class, source, solver, technique, or retry tier; use `--full` only for exact paths/provenance;
 - tracked raw artifacts: `node scripts/artifact-query.mjs`, optionally `--query=...` or `--role=...`;
-- script/workflow discoverability: `node scripts/tooling-census.mjs`; add `--orphans` for executable-looking files with no package alias, workflow/doc surface, or script caller, or `--json` for machine-readable lifecycle review.
+- script/tool lookup: `node scripts/tooling-census.mjs --compact --query=<term>` returns matching files, npm aliases, lifecycle labels, and compact reference counts without dumping the full census;
+- lifecycle review: `node scripts/tooling-census.mjs --orphans` lists executable-looking files with no package alias, workflow/doc surface, or script caller; use `--json` only when machine-readable detail is actually needed.
 
 These are derived views, not new authorities. Raw reports, corpora, hints, and logs remain canonical evidence. The tooling census is observational: an orphan candidate may be a useful specialist, a completed migration, or a historical research tool rather than something to delete.
 
@@ -28,7 +29,7 @@ These are derived views, not new authorities. Raw reports, corpora, hints, and l
 
 ## Before adding a script
 
-1. Check [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md) and `package.json`.
+1. Check [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md), then use `node scripts/tooling-census.mjs --compact --query=<concept>` before opening the full alias list or scanning filenames.
 2. Run `node scripts/tooling-census.mjs --orphans` so an unindexed specialist is not accidentally rebuilt under a new name.
 3. Search existing scripts and relevant reports for the concept.
 4. Check [`.github/workflows/`](../.github/workflows/README.md) for remote/sharded machinery.
