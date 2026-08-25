@@ -18,6 +18,7 @@ const outFile = args.get('--out') ?? 'reports/stress/winning-lineage-pilot.json'
 const includeStages = args.has('--include-stages');
 const metadataFile = args.get('--metadata');
 const retainAllRemovalDetails = args.has('--retain-all-removal-details');
+const retainRankedPoolDetails = args.has('--retain-ranked-pool-details');
 const runId = args.get('--run-id') ?? `winning-lineage-${new Date().toISOString()}`;
 const solverRef = process.env.GITHUB_SHA ?? execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
 const familyDefinitionVersion = 'structural-solution-family-v1';
@@ -66,7 +67,10 @@ for (const raw of selected) {
     const offPrep = api.prepLevel(level); offPrep._cfg = null; offPrep._metrics = { nodesExpanded: 0 };
     const offPath = await api.beamSearchFromGate(gateKey, level, offPrep, api.POLICY_PROFILES.default,
         120000, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
-    const observer = new api.WinningLineageObserver(new api.WinningPrefixIndex(labels), { retainAllRemovalDetails });
+    const observer = new api.WinningLineageObserver(new api.WinningPrefixIndex(labels), {
+        retainAllRemovalDetails,
+        retainRankedPoolDetails,
+    });
     const onPrep = api.prepLevel(level); onPrep._cfg = null; onPrep._metrics = { nodesExpanded: 0 }; onPrep._beamResearchObserver = observer;
     const onPath = await api.beamSearchFromGate(gateKey, level, onPrep, api.POLICY_PROFILES.default,
         120000, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
@@ -111,8 +115,8 @@ const forensic = rows.map(row => {
         canonicalWorkAfterExtinction: row.lineage.workAfterFinalKnownSupport, classification };
 }).filter(Boolean);
 for (const row of rows) if (!includeStages && row.lineage.stages) delete row.lineage.stages;
-const document = { schemaVersion: 3, runId, solverRef, generatedAt: new Date().toISOString(), levelsFile,
-    corpus: levelsFile, selection, retainAllRemovalDetails,
+const document = { schemaVersion: 4, runId, solverRef, generatedAt: new Date().toISOString(), levelsFile,
+    corpus: levelsFile, selection, retainAllRemovalDetails, retainRankedPoolDetails,
     familyDefinition: 'portal usage + crossing placement + must-cross first-entry/completion order; local edge detours ignored',
     familyDefinitionVersion, technique: 'beam winning-lineage observation', profile: 'default', seed: null,
     workBudget: nodeBudget, limitLevels: limit, beamWidth, nodeBudget, levels: rows, scoreWidthForensics: forensic,

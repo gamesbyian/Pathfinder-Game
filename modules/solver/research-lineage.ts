@@ -62,7 +62,10 @@ export interface LineageStageSummary {
 /** Observer used by the real beam. It only consumes copied records after decisions are made. */
 export class WinningLineageObserver implements BeamResearchObserver {
     readonly stages: LineageStageSummary[] = [];
-    constructor(readonly index: WinningPrefixIndex, readonly options: { retainAllRemovalDetails?: boolean } = {}) {}
+    constructor(readonly index: WinningPrefixIndex, readonly options: {
+        retainAllRemovalDetails?: boolean;
+        retainRankedPoolDetails?: boolean;
+    } = {}) {}
     observe(record: BeamResearchRecord): void {
         const supports = record.paths.map(path => this.index.match(path));
         const solutionIds = new Set(supports.flatMap(s => s.solutionIds));
@@ -77,7 +80,7 @@ export class WinningLineageObserver implements BeamResearchObserver {
             const poolFamilies = new Set(supportedPool.flatMap(row => row.families));
             details = { ...details, poolCandidateCount: rankedPool.length, supportedPool,
                 supportedPoolCandidates: supportedPool.length, supportedPoolFamilies: poolFamilies.size };
-            delete details.rankedPool;
+            if (!this.options.retainRankedPoolDetails) delete details.rankedPool;
         }
         if (details && !this.options.retainAllRemovalDetails) {
             const supportedKeys = new Set(record.paths.filter((_, i) => supports[i].paths > 0).map(keyOf));
