@@ -51,7 +51,7 @@ jobs:
           TS
           npx tsx tmp/selective-diverse-ih/select-population.ts
           rm tmp/selective-diverse-ih/select-population.ts
-          sha256sum tmp/selective-diverse-ih/population.json > tmp/selective-diverse-ih/population.sha256
+          (cd tmp/selective-diverse-ih && sha256sum population.json > population.sha256)
       - uses: actions/upload-artifact@v4
         with:
           name: selective-diverse-ih-population
