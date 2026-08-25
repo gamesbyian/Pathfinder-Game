@@ -1,8 +1,8 @@
 # Solver exact/reference-model capability audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-24 — static reconciliation of the maintained full CP-SAT probe, mechanic-state contracts, prior bidirectional validation, repair-retreat work, exact beam-extinction labels, and commit-level validation history
-> **Decision:** treat the CP-SAT/reference stack as serious but bounded research infrastructure. It has already changed decisions for repair retreat and beam extinction. Do not expand mechanic scope for completeness. The support/validation matrix is now explicit: portals and flipping filters have the strongest two-way validation; core/MustPass/MustCross have substantial mixed validation; landmark turn/surround encodings have known-witness validation but still lack a deliberately targeted cold-emitted/referee suite. Static filters remain unsupported by design.
+> **Last evidence:** 2026-08-25 — static reconciliation of the maintained full CP-SAT probe, mechanic-state contracts, prior bidirectional validation, repair-retreat work, exact beam-extinction labels, commit-level validation history, and cross-representation reuse audit
+> **Decision:** treat the CP-SAT/reference stack as serious but bounded research infrastructure. It has already changed decisions for repair retreat and beam extinction. Do not expand mechanic scope for completeness. The support/validation matrix is now explicit: portals and flipping filters have the strongest two-way validation; core/MustPass/MustCross have substantial mixed validation; landmark turn/surround encodings have known-witness validation but still lack a deliberately targeted cold-emitted/referee suite. Static filters remain unsupported by design. If an independently justified exact frontier/edge representation later answers the same bounded query, use agreement/disagreement as epistemic triangulation rather than maintaining a duplicate complete solver.
 > **Remaining gate:** add a **small landmark-focused under-constraint suite only when a ranked query actually needs stronger landmark proof**: cold/unpinned or explicit-prefix cases covering must-turn CW/CCW/either, adjacent-turn, surround, and at least one portal/turn-boundary mixture, with every emitted path refereed. Do not run a broad validation campaign merely to turn every matrix cell green.
 > **Evidence role:** forensic
 > **Selection:** observational
@@ -117,6 +117,21 @@ The lesson is methodological:
 
 > `SAT`, `OPTIMAL`, or `INFEASIBLE` is only as trustworthy as the supported encoding and its validation history.
 
+## Independent-representation triangulation
+
+If a future ranked question independently earns a second exact representation, such as a bounded frontier/expanded-lane or edge-based formulation, duplicate bounded queries can have epistemic value even when the second representation produces no unique solves.
+
+The useful pattern is:
+
+1. formulate the same narrow supported query in two materially different exact encodings;
+2. require emitted witnesses from either encoding to pass the canonical native referee;
+3. treat agreement as stronger evidence because the encodings have different structural failure modes;
+4. treat disagreement as a correctness/model investigation, never as a vote where two systems can outnumber the third.
+
+This is especially useful for high-value live/dead labels, attainability claims, and proposed hard certificates whose downstream conclusions would be expensive if wrong.
+
+Do **not** build or broaden a second exact solver solely for triangulation. The benefit is opportunistic when another representation has already been justified by its own bounded research question.
+
 ## Closed support / validation matrix
 
 The matrix deliberately separates **encoding capability** from **validation depth**. “Exact encoding present” is not the same claim as “exhaustively validated,” and no row below is a promise that every future combination is safe without checking its support context.
@@ -229,7 +244,8 @@ The oracle can remain useful as:
 - counterexample generator for proposed state abstractions;
 - exact attainability checker for selected residual-resource questions;
 - validator/falsifier of proposed sound structural certificates;
-- bounded diagnosis instrument for repair assumptions when the encoding supports them.
+- bounded diagnosis instrument for repair assumptions when the encoding supports them;
+- one side of opportunistic cross-representation triangulation when another independently justified exact model answers the same bounded query.
 
 It should **not** become:
 
@@ -249,6 +265,8 @@ For every future reference-model use, record:
 - maintenance/debugging cost.
 
 A reference model can be valuable historically and still be the wrong tool for a new query.
+
+For triangulated queries, also record whether the second representation already existed for another ranked purpose; do not hide the cost of creating duplicate exact infrastructure behind “validation.”
 
 ## Current disposition
 
