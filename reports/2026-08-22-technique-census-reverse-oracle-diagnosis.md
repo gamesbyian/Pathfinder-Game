@@ -6,6 +6,7 @@
 > **Remaining gate:** none
 > **Evidence role:** forensic
 > **Selection:** observational
+> **Complete continuation record:** [`2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md`](2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md)
 
 ## Why this report exists
 
