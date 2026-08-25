@@ -58,7 +58,7 @@ Operational-similarity work should answer one of two concrete questions:
 1. **Portfolio question:** are two candidate actions spending scarce work in effectively the same search region after the same predecessors fail?
 2. **Causal question:** two close configurations have different outcomes; what is the first load-bearing ordering/retention/pruning divergence?
 
-If a proposed trace/metric cannot inform one of those questions, it is lower priority than scheduler, holdout, exact-reference, restart, or search-quality work in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+If a proposed trace/metric cannot inform a ranked decision in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md), treat it as supporting work rather than a standalone priority.
 
 Before collecting a new trace, write down which concrete scheduling/configuration/causal decision can change depending on the result and what result would stop further tracing.
 
