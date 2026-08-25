@@ -1,8 +1,8 @@
 # Executes a bounded, explicit list of prefix-feasibility questions through the EXISTING
-# cpsat-full-probe.py model. This is intentionally separate from cpsat-hint-harvest-sweep.yml
-# (which chooses unharvested levels/forced-grid combinations) and atlas-sweep.yml (which chooses
-# its own sampled decision points). It exists so research can ask exact {level,prefix,child} cases
-# without pretending those broader workflows accept an arbitrary case list.
+# cpsat-full-probe.py model. Cases are independent, so the selected population is round-robin
+# sharded across Actions runners instead of being processed serially in one 6-hour-prone job.
+# Each individual case still runs through exactly one cpsat-full-probe.py process and preserves
+# the same live/dead/timeout/referee semantics.
 name: cpsat-explicit-prefix-oracle
 
 on:
@@ -25,25 +25,74 @@ on:
         required: false
         default: '60'
       max_cases:
-        description: 'Bound the number of selected cases for a pilot. Use a high value to process the whole committed list.'
+        description: 'Bound the TOTAL selected population before sharding. Use a high value to process the whole committed list.'
         required: false
         default: '1000'
+      shard_count:
+        description: 'Number of round-robin case shards. Default 20 matches the usual Actions concurrency footprint; empty shards are harmless on small pilots.'
+        required: false
+        default: '20'
+      max_parallel:
+        description: 'Shard jobs allowed to run concurrently. Lower this to share Actions capacity without changing the selected case population.'
+        required: false
+        default: '20'
 
 concurrency:
   group: cpsat-explicit-prefix-oracle
   cancel-in-progress: false
 
 jobs:
-  oracle:
+  plan:
+    name: Validate tooling and plan shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - name: Check out dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify explicit-prefix parsing/classification helpers
+        run: npm run test:research-analysis-lib
+
+      - name: Build shard matrix
+        id: plan
+        shell: bash
+        run: |
+          n="${{ inputs.shard_count }}"
+          shards=$(node -e "console.log(JSON.stringify(Array.from({length:Number(process.argv[1])},(_,i)=>i+1)))" "$n")
+          echo "shards=${shards}" >> "$GITHUB_OUTPUT"
+
+  oracle-shards:
+    name: Prefix oracle shard ${{ matrix.shard }}/${{ inputs.shard_count }}
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 350
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJson(inputs.max_parallel) }}
+      matrix:
+        shard: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
-      - name: Check out dispatched ref
+      - name: Check out dispatched commit exactly
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -61,10 +110,7 @@ jobs:
           npm ci
           pip install ortools
 
-      - name: Verify explicit-prefix parsing/classification helpers
-        run: npm run test:research-analysis-lib
-
-      - name: Run explicit prefix oracle cases
+      - name: Run this explicit-prefix shard
         shell: bash
         run: |
           set -euo pipefail
@@ -73,15 +119,98 @@ jobs:
           if [ -n "${{ inputs.corpus }}" ]; then
             corpus_arg+=("--corpus=${{ inputs.corpus }}")
           fi
+          nn=$(printf '%03d' "${{ matrix.shard }}")
           node scripts/run-bundled.mjs scripts/stress/cpsat-explicit-prefix-oracle.mjs -- \
             "--cases=${{ inputs.cases_file }}" \
             "--format=${{ inputs.case_format }}" \
             "--time-limit=${{ inputs.time_limit }}" \
             "--max-cases=${{ inputs.max_cases }}" \
-            "--out=reports/stress/cpsat-explicit-prefix-oracle-${{ github.run_id }}.json" \
+            "--shard-index=${{ matrix.shard }}" \
+            "--shard-count=${{ inputs.shard_count }}" \
+            "--out=reports/stress/cpsat-explicit-prefix-oracle-shard-${nn}.json" \
             "${corpus_arg[@]}"
 
-      - name: Upload oracle result
+      - name: Upload shard result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpsat-explicit-prefix-oracle-shard-${{ matrix.shard }}
+          path: reports/stress/cpsat-explicit-prefix-oracle-shard-*.json
+          retention-days: 30
+          if-no-files-found: error
+
+  combine:
+    name: Combine explicit-prefix oracle results
+    needs: [plan, oracle-shards]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Download every shard result
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cpsat-explicit-prefix-oracle-shard-*
+          path: artifact-staging
+          merge-multiple: true
+
+      - name: Combine and verify complete shard coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/stress
+          node --input-type=module <<'NODE'
+          import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+          import path from 'node:path';
+          const dir = 'artifact-staging';
+          const files = readdirSync(dir).filter(name => /^cpsat-explicit-prefix-oracle-shard-\d+\.json$/u.test(name)).sort();
+          const expectedShards = Number('${{ inputs.shard_count }}');
+          if (files.length !== expectedShards) throw new Error(`missing shard artifacts: found ${files.length}/${expectedShards}`);
+          const docs = files.map(name => JSON.parse(readFileSync(path.join(dir, name), 'utf8')));
+          const first = docs[0];
+          for (const doc of docs) {
+            if (doc.solverRef !== first.solverRef || doc.sourceCases !== first.sourceCases || doc.sourceFormat !== first.sourceFormat || doc.requestedTimeLimitSec !== first.requestedTimeLimitSec) {
+              throw new Error(`metadata mismatch in shard ${doc.shardIndex}`);
+            }
+          }
+          const rows = docs.flatMap(doc => doc.rows ?? []);
+          const seen = new Set();
+          for (const row of rows) {
+            if (seen.has(row.caseId)) throw new Error(`duplicate case across shards: ${row.caseId}`);
+            seen.add(row.caseId);
+          }
+          const count = label => rows.filter(row => row.oracleLabel === label).length;
+          const correctnessAlarms = rows.filter(row => row.correctnessAlarm).length;
+          const inputAlarms = rows.filter(row => row.inputAlarm).length;
+          const expectedCases = first.selectedCaseCount;
+          if (rows.length !== expectedCases) throw new Error(`incomplete case coverage: ${rows.length}/${expectedCases}`);
+          const combined = {
+            schemaVersion: 1,
+            generatedAt: new Date().toISOString(),
+            solverRef: first.solverRef,
+            technique: first.technique,
+            sourceCases: first.sourceCases,
+            sourceFormat: first.sourceFormat,
+            coordinateConvention: first.coordinateConvention,
+            requestedTimeLimitSec: first.requestedTimeLimitSec,
+            shardCount: expectedShards,
+            summary: { cases: rows.length, live: count('live'), dead: count('dead'), abstain: count('timeout/abstain'), correctnessAlarms, inputAlarms },
+            rows,
+            caution: first.caution,
+          };
+          const out = 'reports/stress/cpsat-explicit-prefix-oracle-${{ github.run_id }}.json';
+          writeFileSync(out, `${JSON.stringify(combined, null, 2)}\n`);
+          console.log(`Combined ${rows.length} cases: ${combined.summary.live} live / ${combined.summary.dead} dead / ${combined.summary.abstain} abstain`);
+          if (correctnessAlarms || inputAlarms) process.exitCode = 2;
+          NODE
+
+      - name: Upload combined oracle result
         if: always()
         uses: actions/upload-artifact@v4
         with:
