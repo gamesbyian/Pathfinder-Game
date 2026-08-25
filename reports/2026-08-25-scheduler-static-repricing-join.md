@@ -1,6 +1,9 @@
 # Scheduler census join and static repricing gate
 
-> **Status:** concluded-positive for static headroom; execution A/B required before promotion
+> **Status:** concluded-positive
+> **Last evidence:** 2026-08-25 — Actions run `32821022906`, artifact `scheduler-current-fixed-work-sample`, joined to frozen technique census run `32240161854`
+> **Decision:** static headroom is sufficient to earn one bounded same-revision execution A/B suppressing only `main-loop|dfs:objectiveFirst` and `main-loop|dfs:intersectionHarvest`; this is not yet a production recommendation.
+> **Remaining gate:** run the frozen 60-level strict-67M A/B and require no solve loss plus either at least one additional solve or at least 10% lower aggregate canonical work before promotion.
 > **Date:** 2026-08-25
 > **Queue:** [`docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md) Priority 1
 > **Current evidence:** Actions run `32821022906`, artifact `scheduler-current-fixed-work-sample`
