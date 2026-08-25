@@ -1,6 +1,6 @@
 # Scripts and local tooling
 
-Use [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md) before scanning filenames or adding a script. For a named concept, prefer `node scripts/tooling-census.mjs --compact --query=<term>` over opening the full `package.json` or listing every script. `package.json` remains the exhaustive npm-alias list; it is not an exhaustive inventory of executable-looking files.
+For a named concept, start with `node scripts/tooling-census.mjs --compact --query=<term>` rather than opening the full `package.json` or listing every script. Use [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md) when the task is broader or the query does not resolve the right tool family. `package.json` remains the exhaustive npm-alias list; it is not an exhaustive inventory of executable-looking files.
 
 ## Cheap discovery first
 
@@ -29,7 +29,7 @@ These are derived views, not new authorities. Raw reports, corpora, hints, and l
 
 ## Before adding a script
 
-1. Check [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md), then use `node scripts/tooling-census.mjs --compact --query=<concept>` before opening the full alias list or scanning filenames.
+1. Run `node scripts/tooling-census.mjs --compact --query=<concept>`; use [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md) if the result does not identify the right tool family. Open the full alias list or scan filenames only after those cheaper front doors.
 2. Run `node scripts/tooling-census.mjs --orphans` so an unindexed specialist is not accidentally rebuilt under a new name.
 3. Search existing scripts and relevant reports for the concept.
 4. Check [`.github/workflows/`](../.github/workflows/README.md) for remote/sharded machinery.
