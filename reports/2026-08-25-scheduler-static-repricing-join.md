@@ -1,137 +1,92 @@
 # Scheduler census join and static repricing gate
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-08-25 — Actions run `32821022906`, artifact `scheduler-current-fixed-work-sample`, joined to frozen technique census run `32240161854`
-> **Decision:** static headroom is sufficient to earn one bounded same-revision execution A/B suppressing only `main-loop|dfs:objectiveFirst` and `main-loop|dfs:intersectionHarvest`; this is not yet a production recommendation.
-> **Remaining gate:** run the frozen 60-level strict-67M A/B and require no solve loss plus either at least one additional solve or at least 10% lower aggregate canonical work before promotion.
+> **Last evidence:** 2026-08-25 — development A/B `32901181013`; precursor fixed-work sample `32821022906`; frozen technique census `32240161854`
+> **Decision:** suppressing only ordinary-main-loop `dfs:objectiveFirst` and `dfs:intersectionHarvest` passed the prespecified same-revision strict-67M development gate: **40/60 → 41/60**, `R02966` gained, no losses, aggregate `workSpent` -0.89%. Freeze the exact treatment and acceptance rule.
+> **Remaining gate:** independently test the frozen treatment on reserved `confirm-broad-001` without tuning on that cohort. Dynamic scheduler machinery remains closed pending confirmation.
 > **Date:** 2026-08-25
-> **Queue:** [`docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md) Priority 1
-> **Current evidence:** Actions run `32821022906`, artifact `scheduler-current-fixed-work-sample`
-> **Frozen census:** run `32240161854` at solver revision `c96f57c853a13e96a565105995719e23cc95bd87`; corrected derived reports at `948bd40b46ff6e6773dd16134aa01923ccb8a76d`
-> **Evidence role:** development/tuning only
+> **Queue:** [`docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md) Priority 0
+> **Evidence role:** development/tuning; confirmation not yet spent
 
-## Decision
+## Pre-execution evidence
 
-The join gate is positive. The current 60-level strict-67M sample has material static allocation headroom before any dynamic scheduler is justified.
+The reconstructed 60-level strict-67M sample contained 40 production solves and 2.037B canonical work. Joining it to the frozen isolated-technique census found 44/60 conservative non-`ida` isolated coverage.
 
-The smallest earned execution treatment is to suppress only these two **main-loop** actions under the same total 67M canonical-work envelope:
-
-- `main-loop|dfs:objectiveFirst`
-- `main-loop|dfs:intersectionHarvest`
-
-Do not otherwise reorder stages, change action semantics, alter repair depth, or change admissible-order behavior. Freed work remains available to the existing later ladder.
-
-This is an execution candidate, not a production recommendation. The current and census runs are from different revisions and current search is known to have sequence-sensitive behavior. The treatment must therefore be tested end-to-end rather than inferred as causally safe from the join.
-
-## Reconstruction and join
-
-The current artifact contains all 60 requested Corpus-2 level IDs and 1,459 rich attempt rows. The frozen census plan contains the same `Rxxxxx` IDs.
-
-The first historical combined artifact was known to have silently omitted shards 1-20. It was not used as complete evidence. For this join, its 50 sampled levels were supplemented with the ten exact original shard artifacts containing the missing sample levels: shards 2, 4, 6, 8, 11, 12, 13, 14, 19, and 20. The reconstructed T1 sample contains all 60 current level IDs and 2,346 T1 rows.
-
-The conservative scheduler view excludes every `ida:*` row because admissible-order is the active P0 sequence-dependence anomaly. Promoted non-admissible census variants remain capability evidence under their explicit identities, including `+dedup-near-tie-retention-off`, `+connectivity-axis-exhausted-off`, and `+mc-neighbor-budget-off`.
-
-`workSpent` from the current artifact is the cross-technique accounting currency. Frozen census `nodesExpanded` is used only for within-technique solve-cost/context; it is not treated as a cross-technique work currency.
-
-## Current fixed-work point
-
-Current sample:
-
-- 60 levels;
-- 40 solved, 20 unsolved;
-- 2.037B canonical work;
-- `main-loop` + `repair-probe`: 81.3% of all work and 38/40 solves.
-
-The two nominated main-loop DFS actions consume:
+Two ordinary main-loop actions were unusually expensive and substitutable:
 
 | action | current work | current solves |
 |---|---:|---:|
 | `main-loop|dfs:objectiveFirst` | 195.35M | 0 |
 | `main-loop|dfs:intersectionHarvest` | 141.51M | 0 |
-| **combined** | **336.85M** | **0** |
+| **combined** | **336.85M (16.5%)** | **0** |
 
-Combined, they consume **16.5% of all measured work** on the 60-level sample without a current success.
+Removing both lost zero coverage from the reconstructed conservative census union. Across the wider frozen census, base `dfs:objectiveFirst` and `dfs:intersectionHarvest` also had zero unique solves. This earned one narrow end-to-end test, not a production recommendation.
 
-That observation alone would not justify removal. The census join supplies the missing capability check.
+The frozen treatment was therefore:
 
-## Conservative isolated capability frontier
+> Keep the existing ladder, stage order, action semantics, repair behavior, retry tiers, and strict 67M total-work envelope unchanged; assign zero allocation only to ordinary-main-loop `dfs:objectiveFirst` and `dfs:intersectionHarvest`. Later retry tiers may still use those configurations under their own stage identities.
 
-After excluding `ida:*`, the frozen T1 census solves **44/60** sampled levels with at least one isolated action, versus **40/60** solved by the current sequential ladder.
+The prespecified pass rule was **no solve loss** plus either **>=1 gained solve** or **>=10% lower aggregate `workSpent`**.
 
-Five current misses have a non-admissible frozen isolated solver:
+## Same-revision execution result
 
-| level | cheapest observed conservative frozen solver | frozen nodes to solve |
-|---|---|---:|
-| `R00239` | `beam:intersectionHarvest@beam5000+dedup-near-tie-retention-off` | 371,748 |
-| `R02448` | `beam:intersectionHarvest@beam5000(diverse)` | 298,293 |
-| `R02505` | `beam:objectiveFirst@beam5000(diverse)` | 403,862 |
-| `R02707` | `dfs:repair:repair` | 174,713 |
-| `R02966` | `dfs:repair:repair` | 40,390,516 |
+Actions run `32901181013` executed control and treatment from the same experiment revision with complete 60-row outputs and attempt/lifecycle telemetry.
 
-One current solve, `R03052`, is absent from the conservative frozen union. This is useful drift evidence: the frozen census is an independent capability reference, not a replay oracle for current code.
+| metric | control | treatment |
+|---|---:|---:|
+| solved | 40/60 | **41/60** |
+| aggregate `workSpent` | 2,040,402,024 | **2,022,204,454** |
+| work reduction | — | **0.89%** |
+| gained | — | **`R02966`** |
+| lost | — | **none** |
 
-The best achievable conservative coverage by portfolio cardinality on this 60-level frozen join is:
+**Verdict: `positive-earned-confirmation`.** The treatment passes through the solve-gain branch of the frozen rule; the small aggregate-work reduction is secondary.
 
-| actions | max conservative coverage |
-|---:|---:|
-| 1 | 32/60 |
-| 2 | 40/60 |
-| 3 | 42/60 |
-| 4 | 43/60 |
-| 5 | 44/60 |
+### Why `R02966` matters
 
-One five-action set covering the full 44-level conservative union is:
+`R02966` was independently identified in the precursor census join as a current miss with an isolated `dfs:repair:repair` solution.
 
-1. `dfs:repair:repair`
-2. `beam:intersectionHarvest@beam5000(diverse)`
-3. `beam:intersectionHarvest@beam5000+dedup-near-tie-retention-off`
-4. `dfs:closureCommitment`
-5. `dfs:perimeterSweep/perimeterCCW`
+Under control, the two nominated ordinary DFS actions consume about **12.38M** main-loop work combined. Repair fallback later receives about **9.05M** work and fails.
 
-This set is descriptive and selected on the development sample, so it must not be installed as a bespoke production portfolio. Its role is to show that much of the measured capability is highly redundant and that a small number of complementary actions span the observed union.
+Under treatment, those two ordinary-main-loop attempts are absent. Repair fallback receives about **18.91M** work; `dfs:repair:repair` then solves the level at roughly 9.14M expanded nodes.
 
-## Why these two DFS actions are the first static cut
+This is direct same-revision evidence that repricing existing portfolio work can create a solve by changing which existing action receives the fixed envelope. It strengthens the allocation premise without implying that arbitrary earlier work can be removed safely.
 
-On the reconstructed 60-level conservative union, removing both base `dfs:objectiveFirst` and base `dfs:intersectionHarvest` loses **zero** union coverage because every level they solve is also solved by another non-admissible T1 action.
+## Work redistribution
 
-The broader frozen census points the same way. In the previously-unsolved population, `dfs:objectiveFirst` solved 11/888 and `dfs:intersectionHarvest` 12/888, with **zero unique solves** for either. In the previously-solved population they likewise have zero unique solves. Their isolated solve capability is real but highly substitutable, while their present sequential cost is large.
+Aggregate stage work moved as expected: ordinary main-loop work fell, while several later stages received more opportunity. Selected totals:
 
-Repair is deliberately not cut. It has the strongest isolated residual capability in the frozen census, substantial unique coverage, and known deep-tranche yield. Cheap/naturally exhausting beam actions are likewise not cut because the census shows strong complementary coverage at small within-technique node counts.
+| stage | control | treatment |
+|---|---:|---:|
+| main-loop | 1,371.01M | 1,281.58M |
+| default-admissible-ordering | 247.85M | 218.73M |
+| repair-fallback | 90.55M | 90.82M |
+| attraction-diversity | 7.02M | 36.17M |
+| dedup-near-tie-retry | 6.44M | 20.57M |
+| connectivity-axis-exhausted-retry | 20.92M | 41.46M |
+| repair-late-probe | 5.38M | 17.45M |
+| repair-late-probe-multi-seed-retry | 6.29M | 30.50M |
 
-## Static baseline interpretation
+The aggregate work reduction is small because much of the removed early allocation is productively or unsuccessfully consumed later. That is exactly why continuation value and portfolio repricing remain the relevant questions.
 
-The shadow repricing baseline is therefore:
+## Confirmation contract
 
-> Keep the current ladder and 67M total-work ceiling unchanged, but assign zero main-loop allocation to `dfs:objectiveFirst` and `dfs:intersectionHarvest`; let the existing later ladder consume any freed work under its existing order and gates.
+The development result freezes both treatment and criterion. Before inspecting `confirm-broad-001` outcomes:
 
-Measured headroom before execution is 336.85M work across the 60-level sample, or 16.5% of the current aggregate. The frozen conservative capability union is unchanged by removing those two base actions.
+- suppress exactly ordinary-main-loop `dfs:objectiveFirst` and `dfs:intersectionHarvest`;
+- preserve the same fixed total-work contract and all later-stage semantics;
+- do not add, reorder, resize, or condition other actions based on the development result;
+- apply the already-frozen acceptance logic to the independent cohort;
+- do not tune on confirmation failures.
 
-This does **not** mean an end-to-end current run will automatically save 16.5% or preserve all 40 solves. Removing earlier work can change what later stages see, and the repository already has direct evidence of cross-stage dependence. The join establishes value of information for the A/B, not the A/B result.
-
-## Frozen execution gate
-
-Run one bounded development A/B on the same deterministic 60-level selection and strict 67M canonical-work envelope:
-
-- **A:** current ladder;
-- **B:** current ladder with only the two nominated main-loop actions suppressed;
-- same revision for A and B;
-- no saved hints;
-- preserve attempt/lifecycle telemetry;
-- report solved set, aggregate `workSpent`, per-level work, stage/action work redistribution, and any newly reached late actions.
-
-A treatment earns confirmation only if:
-
-1. it loses **no** development-sample solves versus same-revision A; and
-2. it either gains at least one solve **or** reduces aggregate canonical work by at least **10%**.
-
-A solve regression closes this exact suppression treatment. A neutral result with less than 10% work reduction also closes it as insufficient headroom. If positive, freeze the treatment and acceptance rule before materializing `confirm-broad-001`; do not tune on that reserved cohort.
+Materialize `confirm-broad-001` only through its reserved-cohort contract at pinned revision `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`. Use transfer evidence only if confirmation succeeds.
 
 ## Dynamic scheduler disposition
 
-Dynamic/survival/hazard/bandit machinery remains closed.
+Dynamic/survival/hazard/bandit machinery remains closed. The development A/B shows that static allocation matters; it does not show that a dynamic scheduler is needed. First independently confirm this static treatment, then remeasure residual headroom.
 
-The join demonstrates static headroom, not a need for dynamic allocation. First determine whether the simple two-action suppression captures useful headroom end-to-end. Only residual headroom that survives that static baseline, plus independent confirmation, can reopen more sophisticated scheduler machinery.
+## Historical admissible note
 
-## Optimistic admissible sensitivity
+The precursor join conservatively excluded `ida:*` cells because the then-active cross-stage admissible anomaly had not yet been resolved. That P0 was subsequently retired after immutable attempt evidence showed the alleged admissible wins were later diverse-beam retry wins and the lifecycle reducer was stale.
 
-The current sample has two `ida`-family successes, but those cells remain sequence-ambiguous under P0 and are excluded from the conservative valuation above. They may be shown in secondary descriptive tables, but they do not strengthen the static suppression case, justify extra admissible budget, or enter the promotion criterion until P0 is resolved.
+This correction does not weaken or strengthen the two-action suppression verdict: neither the treatment nor its acceptance criterion depends on admissible attribution. See [`paired deterministic trace and lifecycle attribution correction`](2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md).
