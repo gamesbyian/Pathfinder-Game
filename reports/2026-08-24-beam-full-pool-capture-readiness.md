@@ -1,6 +1,6 @@
 # Beam full-pool capture readiness
 
-> **Status:** active evidence / queue support
+> **Status:** active
 > **Last evidence:** 2026-08-24 — current beam research seam plus successful bounded full-pool capture in Actions run `32810888215` for `S00001`, `S00030`, `S00048`, and `R00104`
 > **Decision:** retain full ranked-pool capture as an explicit bounded research option, not a production/default artifact mode. The one-shot PR workflow was execution scaffolding only; the durable interface is the CLI flag and observer option.
 > **Remaining gate:** run the prespecified read-only survivor projection over the captured pools while the short-lived artifact is available, or deterministically recapture them with the documented CLI after expiry. Report bucket cardinality/singletons and fixed-width exact-live retention before any production diversity intervention.
