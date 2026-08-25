@@ -19,9 +19,12 @@
  *
  * Usage:
  *   node scripts/tooling-census.mjs
+ *   node scripts/tooling-census.mjs --compact
+ *   node scripts/tooling-census.mjs --compact --query=beam
  *   node scripts/tooling-census.mjs --orphans
  *   node scripts/tooling-census.mjs --health
  *   node scripts/tooling-census.mjs --json
+ *   node scripts/tooling-census.mjs --json --query=beam
  *   node scripts/tooling-census.mjs --json --health --out=tmp/tooling-census.json
  */
 import { execFileSync } from 'node:child_process';
@@ -33,8 +36,10 @@ const ROOT = process.cwd();
 const argv = new Set(process.argv.slice(2));
 const valueArg = prefix => process.argv.slice(2).find(arg => arg.startsWith(prefix))?.slice(prefix.length) ?? null;
 const JSON_MODE = argv.has('--json');
+const COMPACT_MODE = argv.has('--compact');
 const ORPHANS_ONLY = argv.has('--orphans');
 const HEALTH_MODE = argv.has('--health');
+const QUERY = valueArg('--query=')?.trim().toLowerCase() || null;
 const OUT = valueArg('--out=');
 
 const git = (...args) => execFileSync('git', args, {
@@ -252,8 +257,22 @@ function supportedImportHealth() {
     };
 }
 
+function rowMatchesQuery(row) {
+    if (!QUERY) return true;
+    return [
+        row.file,
+        row.kind,
+        row.lifecycle,
+        row.lifecycleNote,
+        ...row.packageAliases,
+        ...row.workflowRefs,
+        ...row.currentDocRefs,
+        ...row.codeRefs,
+    ].filter(Boolean).join('\n').toLowerCase().includes(QUERY);
+}
+
 const health = HEALTH_MODE ? supportedImportHealth() : null;
-const selected = ORPHANS_ONLY ? rows.filter(row => row.orphanCandidate) : rows;
+const selected = rows.filter(row => (!ORPHANS_ONLY || row.orphanCandidate) && rowMatchesQuery(row));
 const summary = {
     trackedScripts: rows.length,
     entrypoints: rows.filter(row => row.kind === 'entrypoint').length,
@@ -274,9 +293,36 @@ if (JSON_MODE) {
 console.log(`Tooling census: ${summary.trackedScripts} tracked script files; ${summary.entrypoints} executable-looking entrypoints; ${summary.surfacedEntrypoints} surfaced; ${summary.classifiedHiddenEntrypoints} classified hidden; ${summary.orphanCandidates} orphan candidates.`);
 if (health) {
     console.log(`Supported import health: ${health.supportedRoots} surfaced roots; ${health.visitedScriptFiles} script files visited; ${health.checkedEdges} literal local edges checked; ${health.failures.length} unresolved.`);
-    for (const failure of health.failures) console.log(`  BROKEN ${failure.importer} -> ${failure.specifier}`);
-    console.log('');
+    if (!COMPACT_MODE) {
+        for (const failure of health.failures) console.log(`  BROKEN ${failure.importer} -> ${failure.specifier}`);
+        console.log('');
+    }
 }
+
+if (COMPACT_MODE) {
+    if (QUERY || ORPHANS_ONLY) {
+        const scope = QUERY ? `Query ${JSON.stringify(QUERY)}` : 'Orphan candidates';
+        console.log(`${scope}: ${selected.length} matching script file${selected.length === 1 ? '' : 's'}.`);
+        for (const row of selected) {
+            const lifecycleLabel = row.lifecycle === 'unclassified' ? '' : ` lifecycle=${row.lifecycle}`;
+            const aliasLabel = row.packageAliases.length ? ` npm=${row.packageAliases.join(',')}` : '';
+            const surfaceLabel = [
+                row.workflowRefs.length ? `W${row.workflowRefs.length}` : null,
+                row.currentDocRefs.length ? `D${row.currentDocRefs.length}` : null,
+                row.codeRefs.length ? `C${row.codeRefs.length}` : null,
+            ].filter(Boolean).join('/');
+            console.log(`  ${row.file} | ${row.kind}${lifecycleLabel}${aliasLabel}${surfaceLabel ? ` refs=${surfaceLabel}` : ''}`);
+        }
+    } else {
+        console.log('Compact mode omits per-file rows. Add --query=<term> for matching tools or --orphans for lifecycle review candidates.');
+    }
+    if (OUT) {
+        console.error('--out is only supported with --json');
+        process.exitCode = 2;
+    }
+    process.exit(process.exitCode ?? 0);
+}
+
 console.log('Legend: P=package alias, W=workflow reference, D=current-doc reference, C=script/code reference. Historical doc references are retained in JSON but do not count as D/support. History columns are maintenance activity, not runtime use.');
 for (const row of selected) {
     const signals = `${row.packageAliases.length ? 'P' : '-'}${row.workflowRefs.length ? 'W' : '-'}${row.currentDocRefs.length ? 'D' : '-'}${row.codeRefs.length ? 'C' : '-'}`;
