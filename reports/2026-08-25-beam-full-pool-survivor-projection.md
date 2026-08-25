@@ -1,6 +1,6 @@
 # Beam full-pool survivor projection
 
-> **Status:** concluded-negative for the tested fixed-width quota keys
+> **Status:** concluded-negative
 > **Last evidence:** 2026-08-25 — read-only replay of Actions run `32810888215`, artifact `beam-extinction-full-pools-2026-08-24`, captured at solver ref `2cbd3fdef440ca1fb0251b529cdfc56c5f8b158d`
 > **Decision:** none of the prespecified low-cardinality bucket keys earns a production survivor-selection intervention. The keys do not fragment excessively, but they fail to retain the available exact-live alternatives at width 100 and show no recurring incremental stored-hint support advantage over the existing `(mustCrossMask, flipperUsedMask)` bucket key.
 > **Remaining gate:** stop this quota/bucketing form. Reopen beam-retention intervention only with materially new evidence for a cheap descriptor or a different bounded survivor mechanism; do not tune a composite key on these four selected parents.
