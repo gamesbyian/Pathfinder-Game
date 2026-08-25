@@ -3,21 +3,12 @@
 // elitePrefixDfsRepair a FRESH, additive node budget in a separate repairSearchFromGate call --
 // only after the ordinary (flag-off) repair fallback loop already failed at its own protected
 // budget -- recover any level the ordinary loop alone can't solve? Directly simulates the tier's
-// own two-call mechanism without paying for the full solveLevel() ladder (main loop, probe, the
-// three sibling promoted retry tiers) on every level, which makes this dramatically cheaper than
-// driving the same question through Solver.solve() end-to-end.
+// own two-call mechanism without paying for the full solveLevel() ladder.
 //
-// Targets the SAME 20-level closest-miss sample elite-prefix-dfs-ab.mjs's own report
-// (reports/2026-08-07-repair-elite-prefix-dfs.md) used, since that is the one population this
-// mechanism is already known to have SOME effect on (a confirmed badness-improvement feedback
-// loop, though never a confirmed extra solve).
-//
-// SCRATCH-ADJACENT TOOL — reusable, not scratch-deleted, same convention as elite-prefix-dfs-ab.mjs.
-// Shardable: pass a subset of ids via idsCsv and a distinct outJsonFile per shard (see
-// .github/workflows/solver-elite-prefix-dfs-retry-validate.yml's matrix, which runs each shard as
-// its own parallel job rather than one long sequential run).
-// Run locally via:
-//   node scripts/run-bundled.mjs scripts/stress/elite-prefix-dfs-retry-validate.mjs [protectedNodeBudget] [retryNodeBudget] [corpusFile] [idsCsv] [outJsonFile]
+// IMPORTANT EVIDENCE RULE: every referee-valid solve is serialized with its path + attempt record.
+// This is an isolated/direct-attempt experiment, not production-ladder capability, but a valid new
+// path is still durable hint evidence and the workflow-level harvester records it with
+// isolatedTechnique=true after the run finishes.
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -72,8 +63,6 @@ for (const id of IDS) {
     if (!repairConfig) { console.log(`${id}: no repair config`); continue; }
     const gateKey = level.gateKeys[0];
 
-    // Ordinary repair fallback loop, unaffected (flag off, protected budget) — what the ordinary
-    // loop in solveLevel() already does today, before this tier ever runs.
     const prepOff = prepLevel(level);
     prepOff._cfg = OFF_CFG;
     prepOff._metrics = { nodesExpanded: 0 };
@@ -84,9 +73,9 @@ for (const id of IDS) {
     if (offSolved) protectedSolved++;
 
     let retrySolved = false, retryMs = 0, retryNodes = 0, validNote = '';
+    let retryPath = null, retryAttempt = null;
     if (!offSolved) {
         retryAttempted++;
-        // This tier's own mechanism: a FRESH, separate call, flag on, fresh additional budget.
         const prepOn = prepLevel(level);
         prepOn._cfg = ON_CFG;
         prepOn._metrics = { nodesExpanded: 0 };
@@ -95,11 +84,13 @@ for (const id of IDS) {
         retryMs = Date.now() - t1;
         retryNodes = prepOn._metrics.nodesExpanded;
         retrySolved = !!onResult.path;
+        retryAttempt = onResult.attempt ? { ...onResult.attempt, repairElitePrefixDfsRetry: true } : null;
         if (retrySolved) {
             const valid = Solver.validateCandidatePath(level, onResult.path);
             if (valid.ok) {
                 retryRecovered++;
                 recovered.push(id);
+                retryPath = onResult.path;
                 validNote = ' [REFEREE-VALID]';
             } else {
                 invalid.push({ id, reason: valid.reason });
@@ -111,8 +102,15 @@ for (const id of IDS) {
     const line = `${id}: protected=${offSolved ? 'SOLVED' : 'fail'} (${prepOff._metrics.nodesExpanded}n, ${offMs}ms)` +
         (offSolved ? '' : ` retry=${retrySolved ? 'SOLVED' : 'fail'} (${retryNodes}n, ${retryMs}ms)${validNote}`);
     console.log(line);
+
+    const solution = offSolved ? offResult.path : retryPath;
+    const winningAttempt = offSolved ? offResult.attempt : retryPath ? retryAttempt : null;
     rows.push({
-        id, offSolved, offNodes: prepOff._metrics.nodesExpanded, offMs,
+        id, ok: !!solution, solution,
+        attempts: winningAttempt ? [winningAttempt] : [],
+        nodesExpanded: offSolved ? prepOff._metrics.nodesExpanded : retryNodes,
+        totalMs: offSolved ? offMs : retryMs,
+        offSolved, offNodes: prepOff._metrics.nodesExpanded, offMs,
         retryAttempted: !offSolved, retrySolved, retryNodes, retryMs,
         refereeInvalid: invalid.some(x => x.id === id),
     });
@@ -128,6 +126,10 @@ if (invalid.length > 0) {
 
 if (OUT_JSON_FILE) {
     writeFileSync(OUT_JSON_FILE, JSON.stringify({
+        corpus: CORPUS_FILE,
+        isolatedTechnique: true,
+        protectedNodeBudget: PROTECTED_NODE_BUDGET,
+        retryNodeBudget: RETRY_NODE_BUDGET,
         protectedSolved, total: IDS.length, retryAttempted, retryRecovered, recovered, invalid, rows,
     }, null, 2));
 }
