@@ -3,12 +3,12 @@
  *
  * Solver jobs may run on any ref. This script is run later from a checkout of main. Incoming files
  * are merged by path, provenance is deduplicated by the repo's canonical discovery-event identity,
- * and every incoming path is referee-validated before any file is written. This keeps evidence
- * retention independent from the ref that produced it and avoids last-writer-wins loss when several
- * shards/runs rediscover one level.
+ * and every incoming path is referee-validated before it enters the canonical store. Evidence that
+ * cannot be matched safely to current main is quarantined under reports/stress/pending-solver-evidence
+ * instead of aborting the harvest or being silently discarded.
  *
  * Usage: node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
- *   --staging-dir=artifact-staging
+ *   --staging-dir=artifact-staging --source-run-id=123 --source-workflow='Solver ...'
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -23,6 +23,8 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 }));
 const root = path.resolve(new URL('..', import.meta.url).pathname);
 const stagingDir = path.resolve(args.get('--staging-dir') || 'artifact-staging');
+const sourceRunId = args.get('--source-run-id') || 'unknown';
+const sourceWorkflow = args.get('--source-workflow') || 'unknown';
 if (!existsSync(stagingDir)) throw new Error(`staging directory does not exist: ${stagingDir}`);
 
 const CORPORA = new Map([
@@ -77,27 +79,65 @@ let filesChanged = 0;
 let incomingFiles = 0;
 let incomingPaths = 0;
 let incomingProvenance = 0;
+const pending = [];
 for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => a.localeCompare(b))) {
     const [hintDir, fileName] = key.split('/');
     const levelKey = fileName.slice(0, -5);
     const levelEntry = indexes.get(hintDir).get(levelKey);
-    if (!levelEntry) throw new Error(`${key}: no matching level in ${CORPORA.get(hintDir)}`);
+    if (!levelEntry) {
+        for (const source of sources) pending.push({
+            target: key,
+            sourceFile: path.relative(stagingDir, source),
+            reason: 'level-not-found-on-main',
+            rawHintFile: JSON.parse(readFileSync(source, 'utf8')),
+        });
+        continue;
+    }
     const level = parseRawLevel(levelEntry.raw, levelEntry.index);
-    if (!level) throw new Error(`${key}: canonical level cannot be parsed`);
+    if (!level) {
+        for (const source of sources) pending.push({
+            target: key,
+            sourceFile: path.relative(stagingDir, source),
+            reason: 'canonical-level-parse-failed',
+            rawHintFile: JSON.parse(readFileSync(source, 'utf8')),
+        });
+        continue;
+    }
 
     let mergedIncoming = [];
     for (const source of sources.sort()) {
-        const parsed = JSON.parse(readFileSync(source, 'utf8'));
-        const hints = parseHintFileContents(parsed, source);
+        let parsed;
+        let hints;
+        try {
+            parsed = JSON.parse(readFileSync(source, 'utf8'));
+            hints = parseHintFileContents(parsed, source);
+        } catch (error) {
+            pending.push({
+                target: key,
+                sourceFile: path.relative(stagingDir, source),
+                reason: `hint-file-parse-failed:${error?.message ?? error}`,
+                rawText: readFileSync(source, 'utf8'),
+            });
+            continue;
+        }
         incomingFiles += 1;
         incomingPaths += hints.length;
         incomingProvenance += hints.reduce((sum, h) => sum + (h.provenance?.length || 0), 0);
+        const accepted = [];
         for (const hint of hints) {
             const verdict = validateCandidatePath(level, hint.path);
-            if (!verdict.ok) throw new Error(`${source}: referee rejected ${levelKey}: ${verdict.reason}`);
+            if (!verdict.ok) {
+                pending.push({
+                    target: key,
+                    sourceFile: path.relative(stagingDir, source),
+                    reason: `main-referee-rejected:${verdict.reason}`,
+                    hint,
+                });
+            } else accepted.push(hint);
         }
-        mergedIncoming = dedupeSemantic(mergeHints(mergedIncoming, hints));
+        mergedIncoming = dedupeSemantic(mergeHints(mergedIncoming, accepted));
     }
+    if (!mergedIncoming.length) continue;
 
     const target = path.join(root, 'data/stress', hintDir, fileName);
     const existing = existsSync(target)
@@ -113,4 +153,12 @@ for (const [key, sources] of [...incomingByTarget.entries()].sort(([a], [b]) => 
     }
 }
 
-console.log(`Hint artifact merge: ${incomingFiles} captured file(s), ${incomingPaths} path record(s), ${incomingProvenance} provenance event(s), ${filesChanged} canonical file(s) changed.`);
+if (pending.length) {
+    const pendingDir = path.join(root, 'reports/stress/pending-solver-evidence');
+    mkdirSync(pendingDir, { recursive: true });
+    const out = path.join(pendingDir, `run-${sourceRunId}-hint-artifacts.json`);
+    writeFileSync(out, `${JSON.stringify({ schemaVersion: 1, sourceRunId, sourceWorkflow, pending }, null, 2)}\n`);
+    console.log(`Quarantined ${pending.length} unmergeable captured hint record(s) to ${path.relative(root, out)}.`);
+}
+
+console.log(`Hint artifact merge: ${incomingFiles} captured file(s), ${incomingPaths} path record(s), ${incomingProvenance} provenance event(s), ${filesChanged} canonical file(s) changed, ${pending.length} pending record(s).`);
