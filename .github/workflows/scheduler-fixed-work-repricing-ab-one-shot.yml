@@ -1,0 +1,256 @@
+name: Scheduler fixed-work repricing A/B (one-shot)
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/scheduler-fixed-work-repricing-ab-one-shot.yml'
+
+# One-shot development/tuning experiment prescribed by
+# reports/2026-08-25-scheduler-static-repricing-join.md.
+# Both arms check out the exact same PR SHA. The treatment applies a guarded, uncommitted source
+# rewrite that suppresses ONLY the two nominated ordinary main-loop config identities. The canonical
+# `mainConfigs` list remains intact for attraction-diversity and every later whole-ladder retry.
+# Nothing here is a production policy change.
+
+jobs:
+  run-arm:
+    name: ${{ matrix.arm }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [control, treatment]
+    steps:
+      - name: Check out the exact shared experiment revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply guarded treatment rewrite
+        if: matrix.arm == 'treatment'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('modules/solver/orchestration.ts')
+          s = p.read_text()
+
+          old_decl = "    const mainConfigs = baseConfigs.filter(c => !c.repair && !c.admissibleOrder);\n"
+          new_decl = old_decl + (
+              "    // One-shot scheduler repricing treatment: suppress only these two ordinary main-loop\n"
+              "    // configs. Keep mainConfigs itself intact because later retry stages intentionally reuse it.\n"
+              "    const ordinaryMainConfigs = mainConfigs.filter(c => !new Set([\n"
+              "        'dfs:objectiveFirst', 'dfs:intersectionHarvest',\n"
+              "    ]).has(attemptConfigKey(c)));\n"
+          )
+          assert s.count(old_decl) == 1, f'mainConfigs declaration count={s.count(old_decl)}'
+          s = s.replace(old_decl, new_decl)
+
+          old_count = '        mainConfigsCount: mainConfigs.length,\n'
+          new_count = '        mainConfigsCount: ordinaryMainConfigs.length,\n'
+          assert s.count(old_count) == 1, f'mainConfigsCount site count={s.count(old_count)}'
+          s = s.replace(old_count, new_count)
+
+          old_interleaved = 'await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime'
+          new_interleaved = 'await runInterleavedAttempts(activeGates, ordinaryMainConfigs, level, prep, timeBudgetMs, mainLoopStartTime'
+          assert s.count(old_interleaved) == 1, f'ordinary interleaved dispatch count={s.count(old_interleaved)}'
+          s = s.replace(old_interleaved, new_interleaved)
+
+          old_serial = 'await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime'
+          new_serial = 'await runGateSerialAttempts(activeGates, ordinaryMainConfigs, level, prep, timeBudgetMs, mainLoopStartTime'
+          assert s.count(old_serial) == 1, f'ordinary serial dispatch count={s.count(old_serial)}'
+          s = s.replace(old_serial, new_serial)
+
+          # Guard the treatment boundary: retry tiers must still reference the untouched mainConfigs.
+          remaining_retry_refs = s.count('activeGates, mainConfigs, level, prep, yieldFn')
+          assert remaining_retry_refs >= 4, f'expected retry-tier mainConfigs references, found {remaining_retry_refs}'
+
+          p.write_text(s)
+          PY
+          git diff --check
+          git diff -- modules/solver/orchestration.ts
+
+      - name: Verify treatment compiles
+        if: matrix.arm == 'treatment'
+        run: npm run build
+
+      - name: Record arm provenance
+        shell: bash
+        run: |
+          mkdir -p tmp/scheduler-repricing-ab/${{ matrix.arm }}
+          git diff -- modules/solver/orchestration.ts > tmp/scheduler-repricing-ab/${{ matrix.arm }}/working-tree.patch
+          patch_sha=$(sha256sum tmp/scheduler-repricing-ab/${{ matrix.arm }}/working-tree.patch | awk '{print $1}')
+          cat > tmp/scheduler-repricing-ab/${{ matrix.arm }}/arm-metadata.json <<EOF
+          {
+            "arm": "${{ matrix.arm }}",
+            "checkoutSha": "${{ github.event.pull_request.head.sha }}",
+            "strictTotalWorkBudget": 67000000,
+            "nodeBudget": 50000000,
+            "suppressedOrdinaryMainLoopConfigKeys": ${{ matrix.arm == 'treatment' && '["dfs:objectiveFirst","dfs:intersectionHarvest"]' || '[]' }},
+            "workingTreePatchSha256": "${patch_sha}"
+          }
+          EOF
+
+      - name: Run frozen deterministic 60-level development sample
+        shell: bash
+        run: |
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels=pos:1,30,59,87,116,145,174,203,231,260,289,318,347,375,404,433,462,491,519,548,577,606,635,663,692,721,750,779,807,836,865,894,922,951,980,1009,1038,1066,1095,1124,1153,1182,1210,1239,1268,1297,1326,1354,1383,1412,1441,1470,1498,1527,1556,1585,1614,1642,1671,1700 \
+            --budget-ms=86400000 \
+            --node-budget=50000000 \
+            --work-budget=67000000 \
+            --strict-total-work-budget \
+            --attempt-budget-telemetry \
+            --lifecycle-telemetry \
+            --workers=4 \
+            --out=tmp/scheduler-repricing-ab/${{ matrix.arm }}/result.json \
+            --summary-out=tmp/scheduler-repricing-ab/${{ matrix.arm }}/summary.md
+
+      - name: Verify complete arm output
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const arm = '${{ matrix.arm }}';
+          const d = JSON.parse(fs.readFileSync(`tmp/scheduler-repricing-ab/${arm}/result.json`, 'utf8'));
+          const rows = d.levels ?? [];
+          if (rows.length !== 60) throw new Error(`${arm}: expected 60 rows, got ${rows.length}`);
+          const bad = rows.filter(r => r.deadlineTruncated || r.status === 'deadline-truncated' || r.status === 'attempt-error');
+          if (bad.length) throw new Error(`${arm}: indeterminate/error rows: ${bad.map(r => `${r.id}:${r.status}`).join(',')}`);
+          if (arm === 'treatment') {
+            const forbidden = rows.flatMap(r => (r.attempts ?? []).filter(a =>
+              a.stageId === 'main-loop' && a.beamWidth == null && a.template == null &&
+              (a.profile === 'objectiveFirst' || a.profile === 'intersectionHarvest')
+            ).map(a => `${r.id}:${a.profile}`));
+            if (forbidden.length) throw new Error(`treatment executed suppressed ordinary actions: ${forbidden.join(',')}`);
+          }
+          console.log(`${arm}: ${rows.filter(r => r.ok).length}/60 solved; work=${rows.reduce((s,r)=>s+(r.workSpent||0),0)}`);
+          NODE
+
+      - name: Upload arm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scheduler-repricing-ab-${{ matrix.arm }}
+          path: tmp/scheduler-repricing-ab/${{ matrix.arm }}/
+          retention-days: 90
+
+  analyze:
+    name: Analyze prespecified gate
+    needs: [run-arm]
+    if: always() && needs.run-arm.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the exact shared experiment revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Download both arms
+        uses: actions/download-artifact@v4
+        with:
+          pattern: scheduler-repricing-ab-*
+          path: tmp/downloaded
+
+      - name: Apply acceptance rule and build report
+        shell: bash
+        run: |
+          mkdir -p tmp/scheduler-repricing-analysis
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const find = arm => {
+            const root = `tmp/downloaded/scheduler-repricing-ab-${arm}`;
+            return JSON.parse(fs.readFileSync(path.join(root, 'result.json'), 'utf8'));
+          };
+          const control = find('control').levels ?? [];
+          const treatment = find('treatment').levels ?? [];
+          if (control.length !== 60 || treatment.length !== 60) throw new Error('both arms must contain exactly 60 rows');
+          const byId = rows => new Map(rows.map(r => [r.id, r]));
+          const c = byId(control), t = byId(treatment);
+          if ([...c.keys()].sort().join(',') !== [...t.keys()].sort().join(',')) throw new Error('arm populations differ');
+          const cSolved = new Set(control.filter(r => r.ok).map(r => r.id));
+          const tSolved = new Set(treatment.filter(r => r.ok).map(r => r.id));
+          const gained = [...tSolved].filter(id => !cSolved.has(id)).sort();
+          const lost = [...cSolved].filter(id => !tSolved.has(id)).sort();
+          const totalWork = rows => rows.reduce((sum, r) => sum + Number(r.workSpent ?? 0), 0);
+          const controlWork = totalWork(control);
+          const treatmentWork = totalWork(treatment);
+          const workReduction = controlWork ? (controlWork - treatmentWork) / controlWork : 0;
+          const passesGate = lost.length === 0 && (gained.length >= 1 || workReduction >= 0.10);
+
+          const actionKey = a => {
+            const mode = a.beamWidth ? 'beam' : 'dfs';
+            const template = a.template ? `/${a.template}` : '';
+            const beam = a.beamWidth ? `@beam${a.beamWidth}` : '';
+            const diverse = a.diverseBeam ? '(diverse)' : '';
+            const repair = a.repair ? ':repair' : '';
+            return `${a.stageId || 'unknown'}|${mode}:${a.profile}${template}${beam}${diverse}${repair}`;
+          };
+          const workBy = (rows, keyFn) => {
+            const m = new Map();
+            for (const r of rows) for (const a of (r.attempts ?? [])) {
+              const k = keyFn(a); m.set(k, (m.get(k) ?? 0) + Number(a.workSpent ?? 0));
+            }
+            return Object.fromEntries([...m.entries()].sort((a,b)=>b[1]-a[1]));
+          };
+          const perLevel = [...c.keys()].sort().map(id => ({
+            id,
+            controlSolved: !!c.get(id).ok,
+            treatmentSolved: !!t.get(id).ok,
+            controlWork: Number(c.get(id).workSpent ?? 0),
+            treatmentWork: Number(t.get(id).workSpent ?? 0),
+            workDelta: Number(t.get(id).workSpent ?? 0) - Number(c.get(id).workSpent ?? 0),
+          }));
+          const out = {
+            status: passesGate ? 'positive-earned-confirmation' : 'negative-close-exact-suppression',
+            acceptanceRule: 'no solve loss AND (>=1 gained solve OR >=10% aggregate canonical-work reduction)',
+            population: 60,
+            control: { solved: cSolved.size, aggregateWork: controlWork },
+            treatment: { solved: tSolved.size, aggregateWork: treatmentWork },
+            gained, lost,
+            aggregateWorkReductionFraction: workReduction,
+            aggregateWorkReductionPercent: 100 * workReduction,
+            passesGate,
+            stageWork: { control: workBy(control, a => a.stageId || 'unknown'), treatment: workBy(treatment, a => a.stageId || 'unknown') },
+            actionWork: { control: workBy(control, actionKey), treatment: workBy(treatment, actionKey) },
+            perLevel,
+          };
+          fs.writeFileSync('tmp/scheduler-repricing-analysis/result.json', JSON.stringify(out, null, 2) + '\n');
+          const md = [
+            '# Fixed-work scheduler repricing A/B', '',
+            `Status: **${out.status}**`, '',
+            `Control: ${out.control.solved}/60 solved; ${out.control.aggregateWork.toLocaleString()} work.`,
+            `Treatment: ${out.treatment.solved}/60 solved; ${out.treatment.aggregateWork.toLocaleString()} work.`,
+            `Gained: ${gained.join(', ') || '(none)'}`,
+            `Lost: ${lost.join(', ') || '(none)'}`,
+            `Aggregate work reduction: ${(100 * workReduction).toFixed(2)}%`,
+            `Prespecified gate: **${passesGate ? 'PASS' : 'FAIL'}**`, '',
+            'Rule: no solve loss AND either at least one gained solve or at least 10% lower aggregate canonical work.', '',
+          ].join('\n');
+          fs.writeFileSync('tmp/scheduler-repricing-analysis/summary.md', md);
+          console.log(md);
+          NODE
+
+      - name: Upload combined A/B analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: scheduler-repricing-ab-analysis
+          path: tmp/scheduler-repricing-analysis/
+          retention-days: 90
