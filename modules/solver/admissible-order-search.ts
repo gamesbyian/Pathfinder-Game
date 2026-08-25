@@ -1,44 +1,24 @@
-// A complete, admissible-order DFS variant — prototype, not wired into production attempt
-// selection yet.
+// Production last-resort admissible-order DFS search family.
 //
-// Motivation: dfsFromGateLDS's final (unbounded, k=∞) wave is ALREADY a complete, admissibly-sound
-// search — evaluatePrunedMove (prune-gauntlet.ts) rejects a candidate move only when a real
-// admissible bound proves it can no longer reach a valid solution (distance-to-goal, parity,
-// mustPassLowerBound, mustCrossLowerBound, surroundLowerBound, adjTurnLowerBound, intersection
-// deficit — see that file), so nothing here is a NEW soundness primitive. What dfsFromGate commits
-// to, though, is exploring each node's SURVIVING children in *soft scoring* order (scoreAndSort,
-// scoring.ts's tuned heuristic weights) — a child can pass every hard admissible check yet still
-// look good to the soft scorer while actually leading nowhere, and a plain DFS only discovers that
-// after however deep it commits before backtracking.
+// This search uses the same sound move legality/pruning gauntlet and bounded-memory explicit DFS
+// shape as the ordinary DFS family. Its distinguishing policy is child ORDER: surviving children
+// are ranked by admissible slack (remaining exact length minus the tightest applicable admissible
+// lower bound), least slack first, with an optional soft-score tie-break. The intent is to prefer
+// the continuation with the least residual freedom rather than the one that merely looks best to
+// the ordinary heuristic scorer.
 //
-// This variant keeps the exact same sound gauntlet and the exact same DFS memory footprint
-// (iterative explicit stack, not a priority queue — a real frontier-priority A* would have the
-// same completeness/optimality property but risks the well-known combinatorial memory blowup on a
-// state space this large; IDA*-style bounded-memory search is the standard answer), but replaces
-// the ordering rule: children are ranked by ADMISSIBLE SLACK — rSteps-after-the-move minus the
-// tightest applicable admissible lower bound, ascending (least slack first) — instead of the soft
-// heuristic score. This is the "most-constrained-first" idea from classical A*/IDA*/CSP search:
-// prefer to commit to whichever legal continuation has the LEAST room to spare, since that's the
-// move most likely to be forced by the puzzle's actual structure, not just locally attractive.
+// The technique began as an IDA*-inspired prototype in July 2026, but that lifecycle description
+// is historical now. It is wired through AttemptConfig/admissible-order dispatch and production
+// orchestration as a late dedicated-budget tier, and it has substantial corpus validation recorded
+// in reports/2026-07-24-admissible-order-search-corpus2-validation.md and later scheduler/research
+// reports. Do not infer from the "IDA" action-family name that this is textbook IDA*: reqLen is an
+// exact target rather than a minimize-cost objective, so the useful transfer is admissible-bound
+// ordering rather than iterative f-threshold deepening.
 //
-// Framed as "IDA*-inspired" deliberately, not textbook IDA*: classical IDA* iteratively deepens a
-// numeric f-threshold until a solution is found under a MINIMIZE-cost objective. This puzzle has no
-// minimize-cost objective — reqLen is an exact target, already the tightest possible threshold — so
-// there is nothing to iteratively deepen; f = g + h > reqLen is already the same bound
-// evaluatePrunedMove applies today (its "distance bound" check, reframed). What's genuinely new
-// here is using that same f-style bound as an ORDERING signal across every admissible child, not
-// only as a per-node pass/reject gate.
-//
-// Cost tradeoff, honestly: ranking children requires tentatively applying and undoing EACH
-// candidate (to read state-dependent bounds like mustPassLowerBound, which need the move already
-// applied) before committing to one — up to a small constant factor more apply/undo cycles per node
-// than plain DFS's "try the single best-scored child, backtrack only on rejection." Branching factor
-// is small (≤4, axis-aligned moves only), so this is a bounded, not unbounded, overhead — but it's
-// real, and whether smarter ordering pays for itself in fewer total nodes explored is exactly the
-// open empirical question this prototype exists to answer. Not yet measured against dfsFromGateLDS
-// on any real corpus — see scripts/method-probe.mjs for the fast per-level comparison tool built
-// for exactly this kind of question, and test on genuinely hard/robust levels before drawing any
-// conclusion from easy ones (an easy level's ordering barely matters either way).
+// Ranking requires tentative apply/undo of each candidate so state-dependent bounds can be read.
+// Branching is at most four orthogonal moves, making that a bounded but real per-node overhead whose
+// value depends on search ordering. `PrepLevel._orderingResearchObserver` is diagnostic-only: it
+// receives copied ordering/slack observations and is never read by search policy.
 import { getDistanceFromArray } from './distance.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
