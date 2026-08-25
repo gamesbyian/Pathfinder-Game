@@ -19,10 +19,12 @@
 # technique-census.mjs's and combine-technique-census-shards.mjs's own header comments.
 #
 # PER-SHARD WALL-CLOCK SAFETY NET. GitHub-hosted runners hard-cap a job at 360 minutes; this cannot
-# be raised. Each shard runs with --workers=2 (scripts/technique-census.mjs's OS-level worker-pool
-# path, scripts/solver-worker-pool.mjs) -- GitHub-hosted `ubuntu-latest` standard runners are 2-vCPU,
-# and a real 60-cell timing comparison (sequential vs --workers=2, 0 result mismatches) measured a
-# 1.78x wall-clock speedup.
+# be raised. Each shard uses scripts/technique-census.mjs's OS-level worker pool
+# (scripts/solver-worker-pool.mjs). Standard public-repository `ubuntu-latest` runners currently
+# expose 4 vCPUs, so the default is 4 cross-cell workers rather than the historical 2-worker setting.
+# The old 2-worker calibration measured a 1.78x speedup over sequential with zero result mismatches;
+# `workers` remains a dispatch input so a run can be dialled down if runner sizing or memory pressure
+# changes in the future.
 #
 # FULL-PARITY REVISION (2026-08-19): T1 covers EVERY level in all 3 real corpora, solved and
 # unsolved alike (1,962 levels, t1_sample_size=all) -- not just the 888 then-currently-unsolved ones
@@ -41,16 +43,15 @@
 # failing technique on a SOLVED level costs about the same as on an unsolved one -- no early-exit
 # discount to bank on, confirmed by a second real calibration sample) -- too much for 60 shards to
 # hold at a safe margin, so the shard count grew to **120** (still 20 concurrent by default, so this
-# roughly doubles calendar latency to ~6 waves instead of ~3). At 120 shards the plan is calibrated to
-# average ~4.69h/shard (~563 runner-hours total, ~22% margin under the hard cap) from 6 real
-# method-probe.mjs timings on unsolved levels, 8 more on solved levels, and the measured worker-pool
-# speedup, not a guess -- but calibration uncertainty is real, so every shard is wrapped in `timeout
-# -k 30s --preserve-status 345m` (5h45m, 15 minutes of buffer under the hard cap). A shard that runs
-# hotter than calibrated stops gracefully and reports whatever it finished -- technique-census.mjs
-# writes its output after every cell, so at most the one cell in flight is lost, never the whole
-# shard. The combine step reports exactly which cells did and didn't complete; any gap is closed by a
-# follow-up dispatch with --skip-existing pointed at the prior partial output, not by re-running
-# everything.
+# roughly doubles calendar latency to ~6 waves instead of ~3). The original 120-shard sizing was
+# deliberately conservative and calibrated under the older 2-worker runner assumption; increasing
+# the per-runner worker count improves expected throughput without changing the cell plan or node
+# budgets. Every shard is still wrapped in `timeout -k 30s --preserve-status 345m` (5h45m, 15
+# minutes of buffer under the hard cap). A shard that runs hotter than calibrated stops gracefully
+# and reports whatever it finished -- technique-census.mjs writes its output after every cell, so at
+# most the cells currently in flight are lost, never the whole shard. The combine step reports
+# exactly which cells did and didn't complete; any gap is closed by a follow-up dispatch with
+# --skip-existing pointed at the prior partial output, not by re-running everything.
 name: Technique capability census (isolated single-/paired-/flag-technique, full budget)
 
 on:
@@ -61,7 +62,7 @@ on:
         required: false
         default: 'reports/stress/capability-runs/31918095910/summary.json'
       t1_sample_size:
-        description: '''all'' (default, full-parity revision): EVERY level in all 3 real corpora, solved and unsolved alike, no sampling -- enabled by the --workers=2 speedup below. A number instead caps it to that many levels (corpus-1''s unsolved levels + a few research-flagged levels guaranteed in first, the rest a seeded random draw across the WHOLE population) for a smaller/faster test-drive run. See reports/2026-08-19-technique-census-design.md''s full-parity addendum for the calibrated trade.'
+        description: '''all'' (default, full-parity revision): EVERY level in all 3 real corpora, solved and unsolved alike, no sampling. A number instead caps it to that many levels (corpus-1''s unsolved levels + a few research-flagged levels guaranteed in first, the rest a seeded random draw across the WHOLE population) for a smaller/faster test-drive run. See reports/2026-08-19-technique-census-design.md''s full-parity addendum for the calibrated trade.'
         required: false
         default: 'all'
       t3t4_sample_size:
@@ -76,6 +77,10 @@ on:
         description: 'PRNG seed for the T1/T3/T4 sampling -- fixed by default for full reproducibility'
         required: false
         default: '20260819'
+      workers:
+        description: 'Cross-cell worker processes per shard. Default 4 matches current standard public ubuntu-latest runner vCPU count; lower this if runner sizing or memory pressure warrants it.'
+        required: false
+        default: '4'
       max_parallel:
         description: 'Shards running concurrently'
         required: false
@@ -174,7 +179,7 @@ jobs:
           mkdir -p logs/technique-census-shards
           timeout -k 30s --preserve-status 345m node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
             --plan=plan/technique-census-plan.json \
-            --shard="${{ matrix.shard }}" --shards=120 --workers=2 \
+            --shard="${{ matrix.shard }}" --shards=120 --workers="${{ inputs.workers }}" \
             --out="logs/technique-census-shards/shard-${nn}.json" \
             --summary-out="logs/technique-census-shards/shard-${nn}-summary.md" \
             2>&1 | tee "logs/technique-census-shards/shard-${nn}.console.log"

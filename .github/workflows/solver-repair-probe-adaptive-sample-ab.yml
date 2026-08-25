@@ -61,11 +61,15 @@ on:
         required: false
         default: '86400000'
       workers:
-        description: 'Cross-level worker processes per shard.'
+        description: 'Cross-level worker processes per shard. Default 4 matches current standard public ubuntu-latest runner vCPU count.'
         required: false
-        default: '2'
+        default: '4'
       shard_count:
-        description: 'Number of even shards to split the sample into.'
+        description: 'Number of even shards to split the sample into. Default 60 queues finer work behind 20 lanes to reduce long-tail wall time.'
+        required: false
+        default: '60'
+      max_parallel:
+        description: 'Shards running concurrently. Keep below shard_count for queue-based tail balancing; lower further when matched arms must share the account job budget.'
         required: false
         default: '20'
       enable_flags:
@@ -154,6 +158,7 @@ jobs:
       contents: read
     strategy:
       fail-fast: false
+      max-parallel: ${{ fromJson(inputs.max_parallel) }}
       matrix: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
       - name: Check out the dispatched commit exactly

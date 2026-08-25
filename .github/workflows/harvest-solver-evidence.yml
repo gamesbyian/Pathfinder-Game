@@ -1,0 +1,137 @@
+name: Harvest solver hint evidence
+
+on:
+  workflow_run:
+    workflows:
+      - 'Solver stress-corpus refresh (level-blind capability)'
+      - 'Solver typical-budget baseline (corpus-1 + corpus-2)'
+      - 'Solver high-budget sweep (unsolved-only, both corpora)'
+      - 'Solver level-blind targeted sweep'
+      - 'Solver archetype-gated routing sample A/B'
+      - 'Solver repair-probe adaptive-budget sample A/B'
+      - 'Solver repair-fallback node-reserve sample A/B'
+      - 'Solver elite-prefix-dfs-retry local validation'
+      - 'method-probe sweep (isolated single-method corpus test)'
+      - 'Technique capability census (isolated single-/paired-/flag-technique, full budget)'
+      - 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)'
+      - 'cpsat-hint-harvest-sweep-published (broaden CP-SAT hint coverage for published levels)'
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Existing Actions run id to re-harvest/backfill without rerunning the solver.'
+        required: true
+      source_workflow:
+        description: 'Optional source workflow label for provenance/pending-evidence notes.'
+        required: false
+        default: 'manual backfill'
+      source_sha:
+        description: 'Optional source solver SHA for isolated-tool provenance when the artifact itself does not record it.'
+        required: false
+        default: ''
+
+# Source runs may finish together. Keep one semantic writer for the canonical hint store so two
+# provenance updates to the same level can never devolve into last-writer-wins JSON commits.
+concurrency:
+  group: canonical-solver-hint-persistence
+  cancel-in-progress: false
+
+jobs:
+  harvest:
+    # Harvest even from a partially failed/cancelled run: shard jobs write reports incrementally and
+    # upload in always() steps, so useful solves can exist before the overall workflow turns red.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download every artifact from the source solver run
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifact-staging
+          # Do not use actions/download-artifact's cross-run path here. This repository has measured
+          # that path dropping the final partial page after each 100 artifacts (e.g. 240 -> 200).
+          # gh run download paginates the run's artifact collection and preserves one directory per
+          # artifact, which is exactly the shape the semantic importers expect.
+          gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir artifact-staging
+
+      - name: Merge all recoverable hint evidence onto latest main
+        shell: bash
+        env:
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
+          SOURCE_WORKFLOW: ${{ github.event.workflow_run.name || inputs.source_workflow || 'manual backfill' }}
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha || inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          # Never rebase competing JSON edits line-by-line. On a race, reset to the new main and
+          # replay every semantic importer from the immutable source artifacts.
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Workflows that used --save-hints, including the CP-SAT harvesters, already carry
+            # canonical hint files in shard artifacts. Merge them structurally and referee-check
+            # every incoming path across published, corpus-1 and corpus-2 hint stores.
+            node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
+              --staging-dir=artifact-staging \
+              --source-run-id="$SOURCE_RUN_ID" \
+              --source-workflow="$SOURCE_WORKFLOW"
+
+            # Artifact-only level-blind workflows still retain solved paths and winning attempts in
+            # their shard reports. Reconstruct canonical provenance. Corpus hash mismatches are
+            # quarantined on main, never discarded or attributed to the wrong level revision.
+            node scripts/run-bundled.mjs scripts/harvest-level-blind-report-hints.mjs -- \
+              --staging-dir=artifact-staging \
+              --source-run-id="$SOURCE_RUN_ID" \
+              --source-workflow="$SOURCE_WORKFLOW"
+
+            # Direct/isolated tools serialize their valid paths too. Keep them with
+            # isolatedTechnique=true so they cannot be mistaken for normal production-ladder
+            # capability evidence.
+            node scripts/run-bundled.mjs scripts/harvest-isolated-report-hints.mjs -- \
+              --staging-dir=artifact-staging \
+              --source-run-id="$SOURCE_RUN_ID" \
+              --source-workflow="$SOURCE_WORKFLOW" \
+              --source-sha="$SOURCE_SHA"
+
+            if git diff --quiet -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ 2>/dev/null; then
+              echo 'No new canonical hint/provenance evidence to persist.'
+              exit 0
+            fi
+
+            git add data/hints/ data/stress/hints/ data/stress/hints-random/
+            if [ -d reports/stress/pending-solver-evidence ]; then
+              git add reports/stress/pending-solver-evidence/
+            fi
+            git commit -m "Harvest solver evidence: ${SOURCE_WORKFLOW} (${SOURCE_RUN_ID})"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep $((attempt * 5))
+          done
+
+          echo 'Failed to persist solver evidence after four semantic-merge retries.' >&2
+          exit 1
