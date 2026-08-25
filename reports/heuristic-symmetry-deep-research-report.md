@@ -64,6 +64,28 @@ The last two are the primary diagnostic concern.
 
 Random tie-breaking can diversify traces but does not by itself prove or guarantee representation neutrality. Randomness may merely average over one source of bias while leaving others intact.
 
+## Structural orientation cost versus arbitrary representation bias
+
+Frontier/decomposition research adds an important control to this taxonomy.
+
+A rotated or reflected instance can interact differently with a **fixed geometric processing order** because the corresponding frontier/interface width changes. That is a legitimate structural computational effect: bounded-width dynamic programming is exponential in interface width, and even heuristic search can inherit different residual bottlenecks from geometry.
+
+This should be kept separate from arbitrary representation conventions such as compass priority, coordinate lexicography, insertion order, or PRNG-consumption order.
+
+For orientation diagnostics, therefore compare geometry-only interface measures when they are cheaply available:
+
+- row-major versus column-major frontier width/profile;
+- minimum of a prespecified geometry-only ordering family;
+- other exact boundary-width proxies chosen without observing solve outcome.
+
+Interpretation:
+
+- if isomorphic orientations have materially different prespecified interface widths, some runtime/capability asymmetry may have a structural explanation;
+- if those widths are equivalent but finite-budget outcomes still diverge, arbitrary ranking/retention/order effects become a stronger suspect;
+- equal width does not prove search equivariance, and unequal width does not excuse semantic or heuristic asymmetry.
+
+Do not choose the favorable ordering after observing which orientation solved and then use that width as post-hoc justification.
+
 ## Symmetry pruning and canonicalization
 
 Graph automorphisms partition states into symmetry orbits. A canonicalizer maps each orbit to one representative so duplicate-equivalent states can be stored once. Static symmetry breaking adds constraints/orderings up front; dynamic symmetry breaking prunes symmetric alternatives during search.
@@ -108,11 +130,12 @@ When symmetric variants differ, ask in order:
 
 1. **Semantic correctness:** do legal moves, goals, exact counts, and hard prunes transform correctly?
 2. **Heuristic values:** are corresponding states assigned corresponding/invariant scores?
-3. **Ranking:** when scores tie or nearly tie, does secondary ordering preserve the symmetry?
-4. **Retention:** do beam/dedup policies preserve corresponding candidate classes?
-5. **Randomness:** does the transformation alter PRNG-consumption order rather than only labels?
-6. **Budget effect:** does the trace difference materially change solve probability or work?
-7. **Systematic direction:** across unrelated parent levels, is one orientation consistently advantaged, or are wins balanced?
+3. **Structural interface cost:** under prespecified geometry-only orderings, do the orientations expose materially different frontier/interface widths?
+4. **Ranking:** when scores tie or nearly tie, does secondary ordering preserve the symmetry?
+5. **Retention:** do beam/dedup policies preserve corresponding candidate classes?
+6. **Randomness:** does the transformation alter PRNG-consumption order rather than only labels?
+7. **Budget effect:** does the trace difference materially change solve probability or work?
+8. **Systematic direction:** across unrelated parent levels, is one orientation consistently advantaged, or are wins balanced?
 
 A single orientation flip is weak evidence. Repeated parent-level cliffs, especially with consistent first-divergence mechanisms, are stronger.
 
@@ -125,6 +148,7 @@ Useful measurements include:
 - whether corresponding states are both live/dead under an exact oracle;
 - beam survival/culling differences;
 - expansions or machine-independent work by orientation;
+- prespecified geometry-only frontier/interface width by orientation where cheaply available;
 - parent-level solve/work discordance across rotations/reflections;
 - whether discordance has directional sign or merely balanced diversification;
 - ablation of tie-break/order components while holding total work fixed.
@@ -139,7 +163,7 @@ If hard semantics differ under symmetry, that is a correctness issue.
 
 If heuristic values differ unexpectedly, inspect the heuristic representation.
 
-If values agree but finite-budget outcomes diverge, inspect ranking, tie-breaking, retention, randomness, and truncation.
+If values agree but finite-budget outcomes diverge, first distinguish genuine interface/decomposition-cost differences from arbitrary ranking, tie-breaking, retention, randomness, and truncation effects.
 
 If directional differences are balanced and complementary, they may represent useful diversification rather than a defect. If one representation repeatedly loses for arbitrary reasons, reducing that dependence can recover capability and may reduce the need for multiple directional configurations.
 
@@ -149,4 +173,4 @@ The central theoretical point is simple:
 
 > **Heuristic invariance is not search equivariance.**
 
-A symmetric puzzle can receive identical heuristic values yet different finite-budget outcomes because the solver must still resolve ties, order successors, choose survivors, consume randomness, and truncate search. Symmetry pruning removes redundant equivalent states; representation-neutral search tries to ensure that arbitrary orientation does not systematically distort those decisions. Keep those goals separate.
+A symmetric puzzle can receive identical heuristic values yet different finite-budget outcomes because the solver must still resolve ties, order successors, choose survivors, consume randomness, and truncate search. Symmetry pruning removes redundant equivalent states; representation-neutral search tries to ensure that arbitrary orientation does not systematically distort those decisions. Geometry-induced interface width provides a separate structural explanation that should be measured rather than conflated with either category.
