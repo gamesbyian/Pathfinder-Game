@@ -1,7 +1,7 @@
 # Frontier/ZDD Pathfinder pilot specification
 
 > **Status:** cancelled
-> **Last evidence:** 2026-08-24 — final literature synthesis and current queue reconciliation demoted general frontier/DD implementation behind higher-value interface and evidence gates
+> **Last evidence:** 2026-08-25 — final literature synthesis and current queue reconciliation demoted general frontier/DD implementation behind higher-value interface and evidence gates; later cross-audit added opportunistic secondary measurements if the pilot is ever reopened
 > **Decision:** do not implement this pilot now. Preserve the expanded-lane crossing model and frontier-state design as a ready deferred specification, but reopen only if beam/reference/residual work independently demonstrates a compact interface question for which frontier-state merging has plausible value. Do not add a production solver tier or dependency from this document.
 > **Remaining gate:** reopen only when a ranked Pathfinder question identifies a supported mechanic subset, a compact expected frontier/interface regime, and a decision that cannot be answered more cheaply with existing native/CP-SAT machinery
 > **Evidence role:** discovery
@@ -120,6 +120,19 @@ If reopened:
 
 Do not choose the favorable orientation from solver outcome. Geometry-only minimum-frontier orientation is legitimate if fixed before solving.
 
+### Symmetry/orientation diagnostic reuse
+
+If the same level is also being studied under rotations/reflections, preserve frontier-width/profile measurements by orientation even when they are not the pilot's primary outcome.
+
+Those measurements can separate two causes that should not be conflated:
+
+- a **structural** orientation advantage because a fixed geometric sweep exposes a smaller exact interface;
+- an **arbitrary representation** advantage caused by successor order, coordinate tie-breaking, beam retention, iteration order, or PRNG-consumption differences.
+
+Equivalent geometric minimum-frontier profiles do not prove representation neutrality, but they remove one legitimate structural explanation for a runtime/capability cliff. Conversely, a real width difference is evidence that some orientation dependence may reflect decomposition cost rather than heuristic bias.
+
+Never select the winning orientation post hoc and use its width as an explanation.
+
 ## Exact pruning available to a pilot
 
 The deferred model can safely reject on:
@@ -185,6 +198,20 @@ Wall time is secondary. Compare native/CP-SAT evidence only where a fair existin
 
 Use a hard state cap so individual instances fail cheaply.
 
+### Opportunistic secondary measurements
+
+Only when the exact diagram/state space already makes them cheap, retain:
+
+- exact continuation counts or coarse log-count bins for selected residual states;
+- dead interface-state fingerprints with enough provenance to test recurrence across different exact histories/parents;
+- agreement/disagreement with an existing CP-SAT label for the same supported bounded query.
+
+These are **by-products**, not reopen criteria.
+
+Continuation counts can become high-quality offline basin-width labels for beam/repair descriptor work. Dead-state populations can nominate compact learned-failure certificates, but any generalized reason still needs a mathematical soundness argument and/or live-counterexample falsification before hard pruning. Independent agreement with CP-SAT plus native referee validation increases confidence; disagreement is a model-correctness alarm, not a voting exercise.
+
+Do not increase mechanic scope, diagram width, or runtime merely to obtain these secondary measurements.
+
 ## Reopen success gate
 
 Do not discuss production integration unless a meaningful structural cohort shows at least one of:
@@ -192,6 +219,8 @@ Do not discuss production integration unless a meaningful structural cohort show
 1. exact solves of native misses;
 2. exact resolution of expensive levels at plausibly competitive deterministic state counts;
 3. an exact frontier equivalence/pruning rule that can be transplanted into native reasoning.
+
+Useful secondary research by-products can justify retaining experimental artifacts, but they do not satisfy the production-integration gate by themselves.
 
 If state growth is simply dominated by frontier width with no useful Pathfinder regime, close the family cleanly.
 
