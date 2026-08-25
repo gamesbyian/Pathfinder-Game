@@ -80,13 +80,44 @@ Do not proliferate permanent profile names simply to encode combinations. The re
 
 Stable action IDs are research identity, not permanent API compatibility. Remove or consolidate actions when evidence says they no longer deserve production candidacy; preserve historical mappings in reports/manifests where needed.
 
+### Search identity versus execution context
+
+Do not overload one identifier with both the requested search behavior and the circumstances in which it happened to run.
+
+Keep at least two conceptual layers:
+
+- **search-action identity:** engine/family, scoring profile, template, width/diversity, repair/admissible flavor, seed/restart semantics, and any behavior-changing flags;
+- **execution context:** stage/tier, predecessor contract, forced overrides, fresh-versus-continuation status, allocated tranche, cumulative accounting scope, and any typed producer input.
+
+This distinction is required by P0. The same nominal beam/DFS/admissible configuration can appear in main, a protected suffix, or a retry under different accounting and predecessor state. Conversely, two differently named production stages may execute the same underlying search action. Portfolio/configuration analysis should not manufacture algorithm diversity from context aliases, and it should not erase context when context is causally part of the action contract.
+
 ## Automatic configuration and racing
 
 The scheduler program should use algorithm-configuration methods as **offline discovery machinery**, even if the final production policy is simple and deterministic.
 
+### First search the existing action grammar, not the raw boolean cube
+
+The current solver already has a strong conditional configuration grammar. Main-loop actions are meaningful combinations of search engine, named scoring profile, optional structural template, beam width/diversity, and stage-compatible options. Repair and admissible-order have their own conditional vocabularies. Many ablation flags are repair-only, retry-only, prune-only, experimental, closed, or pure-speed mechanisms.
+
+Therefore the first configurator/racing pilot should **not** form the Cartesian product of every `SCORE_*`, `PRUNE_*`, `STRATEGY_*`, `TEMPLATE_*`, and `PROFILE_*` flag. That space is dominated by invalid, semantically redundant, already-closed, or context-dependent combinations.
+
+Start with existing semantically valid named actions/tranches. Let systematic selection answer which action families deserve to survive before inventing nearby weights, thresholds, or flag combinations.
+
+A useful hierarchy is:
+
+1. **action pruning:** which existing DFS/beam/repair/admissible actions add reproducible marginal capability;
+2. **static portfolio construction:** which small ordered action/tranche set captures most measured fixed-work coverage;
+3. **coarse routing:** whether a few legal static level features materially improve over the best global static portfolio;
+4. **local parameter refinement:** only around surviving action families, search nearby weights/widths/budgets/thresholds;
+5. **external configurator or learned selector:** only if simpler stages leave demonstrated held-out headroom.
+
+This hierarchy is a complexity gate, not a permanent ban on lower-level tuning.
+
 ### What to configure
 
 Candidate dimensions include scoring weights/profiles, template geometry, direction, beam width/diversity, admissible tie-breaks, seeds/restart policy, eligibility thresholds, and budget tranches.
+
+Named current profiles are a useful coarse discretization of scoring-weight space. If portfolio construction eliminates most profile families, refine weights only around the survivors rather than launching an unconstrained high-dimensional weight search first.
 
 ### How to search
 
@@ -105,6 +136,12 @@ Portfolio construction should preserve reproducible rare specialists when they a
 An external configurator is optional. The required idea is systematic search, early elimination, and honest selection accounting, not a particular package.
 
 Do not report the best development configuration's effect size as though it were a prespecified estimate. Selection makes it optimistic by construction.
+
+### Portfolio cardinality and failed-work tax
+
+Report how coverage changes with portfolio size under the same aggregate work envelope: best 1 action, best 2, best 3, and so on. Pair that with the exact rare/exclusive solves lost as the portfolio shrinks. This reveals whether the apparent solver menagerie contains many genuinely complementary actions or a small useful core plus aliases/redundant tails.
+
+Charge every reached action for failed work. A dead-last action can be regression-safe for easy levels because they exit before reaching it while still imposing a large tax on the hard residual population. “Adds solves with no losses” is not enough for portfolio inclusion when the action burns substantial work across failures.
 
 ## Offline scheduler analysis
 
@@ -147,6 +184,8 @@ This is a value-of-information gate. If even an oracle selector cannot materiall
 
 An oracle built from the same mined matrix used to define candidate actions is an optimistic ceiling, not a forecast. Missing cells, sequence dependence, selected configurations, and current-code drift must be visible in the bound.
 
+For automatic configuration, compare the current production ladder against at least a simple greedy marginal portfolio and the bounded static optimum/upper bound available from the measured matrix. If a tiny static portfolio captures nearly all measurable oracle headroom, conditional routing/configuration complexity has not earned implementation.
+
 ### Tail audit
 
 Audit all current additive/retry stages on the current baseline. For each, ask:
@@ -172,7 +211,7 @@ Use three evidence roles:
 2. **Confirmation:** untouched or grouped-held-out levels used after the candidate is selected.
 3. **Transfer/challenge:** locked or freshly generated levels not inspected during policy design, used for broad claims.
 
-Variant siblings remain grouped by parent. A holdout becomes development data once its exact failures repeatedly influence policy and should then be replaced/reclassified.
+Variant siblings remain grouped by parent. A holdout becomes development data once its exact failures repeatedly influence policy and should then be replaced/reclassified. If a fresh evaluation cohort is selected by requiring the frozen baseline to fail, treat it as a residual-confirmation population and scope the claim accordingly; do not use that conditioned hard tail as the sole evidence for broad unseen-level improvement. See [`../reports/2026-08-23-solver-confirmation-transfer-protocol-design.md`](../reports/2026-08-23-solver-confirmation-transfer-protocol-design.md).
 
 For model/rule selection:
 
@@ -259,16 +298,17 @@ The migration should reduce first-match hand-authored bundle logic rather than p
 1. Resolve the P0 fresh-vs-predecessor stage-dependence issue for any action whose isolated/live evidence conflicts.
 2. Join current production lifecycle reach and `workSpent` to existing cap/tranche census outputs.
 3. Build explicit tranche risk sets, separating natural exhaustion from right-censored budget stops, and compute conditional incremental solve/work value.
-4. Define stable action IDs and expose the current configuration space without creating new named profiles.
-5. Compute fixed-work oracle frontiers, uncertainty, and current retry/tail economics using action/tranche cells.
-6. Test how much oracle headroom a simple static policy can capture.
+4. Define stable action IDs with separate search-action identity and execution context; expose the current semantically valid action/configuration grammar without creating new named profiles or flattening every ablation flag into one Cartesian search space.
+5. Compute fixed-work oracle frontiers, uncertainty, portfolio-cardinality curves, failed-work tax, and current retry/tail economics using action/tranche cells.
+6. Test how much oracle headroom a simple greedy/bounded static policy can capture.
 7. Build only the minimum racing/successive-elimination plumbing needed to prune existing action/config candidates offline.
-8. Prototype Generation A static scheduling under strict total work.
-9. Check policy stability/calibration and fallback behavior before adding dynamic features.
-10. Shadow and matched-work A/B it.
-11. Establish untouched confirmation/transfer evaluation before claiming broad generalization.
-12. Add dynamic telemetry only if static scheduling leaves measured headroom that the telemetry can plausibly recover.
-13. Consider survival/hazard, bandit, or explicit metareasoning only if simpler conditional-value scheduling leaves demonstrated held-out headroom.
+8. Refine weights/widths/thresholds only around action families that survive the portfolio screen.
+9. Prototype Generation A static scheduling under strict total work.
+10. Check policy stability/calibration and fallback behavior before adding dynamic features.
+11. Shadow and matched-work A/B it.
+12. Establish untouched confirmation/transfer evaluation before claiming broad generalization.
+13. Add dynamic telemetry only if static scheduling leaves measured headroom that the telemetry can plausibly recover.
+14. Consider survival/hazard, bandit, explicit metareasoning, or a high-dimensional external configurator only if simpler conditional-value scheduling/configuration leaves demonstrated held-out headroom.
 
 Do not let scheduler infrastructure become a large project before oracle-frontier and simple-policy gates prove both headroom and need.
 
