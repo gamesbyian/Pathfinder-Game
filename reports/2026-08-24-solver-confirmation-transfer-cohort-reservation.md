@@ -2,8 +2,8 @@
 
 > **Status:** active
 > **Last evidence:** 2026-08-24 — current confirmation/transfer protocol, stress-corpus contract, and `generate-random.mjs` v1.1.0 generator interface
-> **Decision:** reserve the first broad-confirmation and transfer-envelope cohorts now, before any next candidate is frozen or any cohort levels/outcomes are generated/inspected. Population identity includes the **generator source revision**, not just seed/mode/count.
-> **Remaining gate:** when the next selected treatment is ready, freeze its candidate/work/acceptance contract, materialize `confirm-broad-001` **from the pinned generator revision**, run the frozen comparison, and record the verdict before exact failure inspection; materialize/use `transfer-envelope-001` only after confirmation succeeds
+> **Decision:** reserve the first broad-confirmation and transfer-envelope cohorts now, before any next candidate is frozen or any cohort levels/outcomes are generated/inspected. Population identity includes the **full generator source revision**, not just seed/mode/count or one file's bytes.
+> **Remaining gate:** when the next selected treatment is ready, freeze its candidate/work/acceptance contract, materialize `confirm-broad-001` **from the pinned repository revision**, run the frozen comparison, and record the verdict before exact failure inspection; materialize/use `transfer-envelope-001` only after confirmation succeeds
 > **Evidence role:** discovery / protocol instantiation
 > **Selection:** prespecified before cohort materialization or candidate outcomes
 > **Manifest:** [`stress/managed-evaluation-populations-2026-08-24.json`](stress/managed-evaluation-populations-2026-08-24.json)
@@ -13,9 +13,9 @@
 
 The protocol's missing piece was not another discussion of holdouts. It was a reproducible population identity that exists **before** the next treatment is selected and inspected on it.
 
-Generating the levels now would add no decision value and would make accidental inspection easier. `generate-random.mjs` is deterministic from its **exact source revision**, mode, count, and master seed, so reserving those inputs is sufficient to define the population reproducibly while keeping exact level identities unmaterialized.
+Generating the levels now would add no decision value and would make accidental inspection easier. The generation process is deterministic from its **exact repository source revision**, mode, count, and master seed, so reserving those inputs is sufficient to define the population reproducibly while keeping exact level identities unmaterialized.
 
-The source revision is load-bearing. A future generator with the same nominal version string can produce a different population. Therefore the commands below are recipes **relative to checkout `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`**, not commands that may be run against arbitrary future `main`.
+The source revision is load-bearing. A future generator or imported helper can change while the nominal generator version string remains the same. Therefore the commands below are recipes **relative to checkout `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`**, not commands that may be run against arbitrary future `main`.
 
 This is intentionally process-light. There is no new holdout service, database, secrecy layer, or workflow framework.
 
@@ -23,12 +23,12 @@ This is intentionally process-light. There is no new holdout service, database, 
 
 Before generating either reserved cohort:
 
-1. use a checkout/worktree at `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`, **or** independently verify that `scripts/stress/generate-random.mjs` has identical bytes to that revision;
-2. only then run the stored materialization command;
-3. record the actual generator revision/hash with the materialized artifact;
-4. if the pinned generator can no longer be reproduced, reserve a **new population id** under a new revision rather than silently generating different rows under `confirm-broad-001` or `transfer-envelope-001`.
+1. use a checkout/worktree at **exact repository revision** `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`;
+2. only then run the stored materialization command in that checkout/worktree, using that revision's helper/build inputs as well as its generator file;
+3. record the actual source revision with the materialized artifact;
+4. if the pinned revision can no longer be reproduced, reserve a **new population id** under a new revision rather than silently generating different rows under `confirm-broad-001` or `transfer-envelope-001`.
 
-The manifest encodes this precondition explicitly. The original schema omitted it from the executable recipe, which could have allowed a later changed generator to materialize a different population under the same reserved identity; schema v2 closes that ambiguity.
+The manifest encodes this precondition explicitly. The original schema omitted it from the executable recipe, which could have allowed a later changed generator or dependency to materialize a different population under the same reserved identity; schema v2 closes that ambiguity.
 
 ## Reserved populations
 
@@ -44,7 +44,7 @@ The manifest encodes this precondition explicitly. The original schema omitted i
 - outcome conditioning: none;
 - selection: every generated row, with no baseline-failure filtering and no post-hoc candidate-specific exclusion.
 
-From the pinned generator checkout, materialize with:
+From the pinned repository checkout, materialize with:
 
 ```bash
 node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
@@ -61,13 +61,13 @@ This cohort answers the broad question: does a candidate selected on the existin
 - role: transfer/challenge;
 - exposure: `LOCKED`;
 - size: 256 independent generated levels;
-- generator: same pinned source revision, but `--envelope-caps` mode;
+- generator: same pinned repository revision, but `--envelope-caps` mode;
 - master seed: `2026082429`;
 - IDs on materialization: `T00001` onward;
 - outcome conditioning: none;
 - selection: every generated row, with no baseline-failure filtering or post-hoc exclusion.
 
-From the pinned generator checkout, materialize with:
+From the pinned repository checkout, materialize with:
 
 ```bash
 node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
@@ -107,7 +107,7 @@ Before any decision-bearing run, record the candidate freeze contract required b
 For `confirm-broad-001`:
 
 1. freeze the candidate contract;
-2. materialize from the pinned generator revision only;
+2. materialize from the pinned repository revision only;
 3. run the frozen treatment/control comparison;
 4. record the verdict before exact failure inspection;
 5. exact rows may then be unsealed for diagnosis;
@@ -116,7 +116,7 @@ For `confirm-broad-001`:
 For `transfer-envelope-001`:
 
 1. do not use it to select among candidates;
-2. materialize from the pinned generator revision only, and only after the candidate survives broad confirmation;
+2. materialize from the pinned repository revision only, and only after the candidate survives broad confirmation;
 3. prefer aggregate verdict visibility first;
 4. unseal exact rows only after the transfer verdict is frozen;
 5. reclassify if failures influence redesign.
@@ -140,8 +140,8 @@ Queue Priority 2 is no longer blocked on defining what the first populations sho
 The remaining work is operational and candidate-dependent:
 
 - freeze the next selected treatment;
-- materialize and use `confirm-broad-001` once from its pinned generator revision;
-- if it passes, use `transfer-envelope-001` once from that same pinned generator revision;
+- materialize and use `confirm-broad-001` once from its pinned repository revision;
+- if it passes, use `transfer-envelope-001` once from that same pinned repository revision;
 - record exposure transitions and replenish after unsealing/design influence.
 
 A permanent `docs/solver-evaluation-populations.md` authority is still premature. The existing protocol explicitly requires at least one real lifecycle before promoting the mechanism into durable documentation.
