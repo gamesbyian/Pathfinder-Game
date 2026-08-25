@@ -16,6 +16,19 @@ on:
       - 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)'
       - 'cpsat-hint-harvest-sweep-published (broaden CP-SAT hint coverage for published levels)'
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Existing Actions run id to re-harvest/backfill without rerunning the solver.'
+        required: true
+      source_workflow:
+        description: 'Optional source workflow label for provenance/pending-evidence notes.'
+        required: false
+        default: 'manual backfill'
+      source_sha:
+        description: 'Optional source solver SHA for isolated-tool provenance when the artifact itself does not record it.'
+        required: false
+        default: ''
 
 # Source runs may finish together. Keep one semantic writer for the canonical hint store so two
 # provenance updates to the same level can never devolve into last-writer-wins JSON commits.
@@ -52,7 +65,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
         run: |
           set -euo pipefail
           mkdir -p artifact-staging
@@ -65,10 +78,9 @@ jobs:
       - name: Merge all recoverable hint evidence onto latest main
         shell: bash
         env:
-          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
-          SOURCE_WORKFLOW: ${{ github.event.workflow_run.name }}
-          SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
-          SOURCE_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
+          SOURCE_WORKFLOW: ${{ github.event.workflow_run.name || inputs.source_workflow || 'manual backfill' }}
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha || inputs.source_sha }}
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
