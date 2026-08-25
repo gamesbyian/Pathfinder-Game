@@ -1,6 +1,6 @@
 # Beam full-pool capture readiness
 
-> **Status:** concluded — capture succeeded and the downstream projection is complete
+> **Status:** concluded-positive
 > **Last evidence:** 2026-08-25 — successful bounded full-pool capture in Actions run `32810888215`, followed by read-only projection of all 207 captured ranked pools
 > **Decision:** retain full ranked-pool capture as an explicit bounded research option, not a production/default artifact mode. The one-shot PR workflow was execution scaffolding only; the durable interface is the CLI flag and observer option. The tested survivor-quota keys were negative; see the projection report.
 > **Remaining gate:** none for this capture task. Reopen capture only when a new prespecified beam question requires full pools.
