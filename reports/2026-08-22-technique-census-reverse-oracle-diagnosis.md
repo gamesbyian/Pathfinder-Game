@@ -1,206 +1,114 @@
 # Technique census reverse-oracle diagnosis
 
 > **Status:** active
-> **Last evidence:** 2026-08-24 - cardinality check against the authoritative eight historical admissible rows rules out the fixed 24-bit must-pass memo-key collision as their enabling mechanism; a current-head static lifetime audit independently narrows dirty search buffers, PRNG history, and ordinary config overrides, while confirming cumulative accounting/work-cap leakage as a real architectural bug class elsewhere in the ladder
-> **Decision:** `R01936` is causally explained by the production repair probe's second seed; the other five historical repair-probe wins do not reproduce on current code at salt 1 or 2 within 2M nodes; all eight beam-labelled historical rows were actually admissible-order wins and remain genuinely predecessor-dependent at the exact historical commit; the later-discovered must-pass memo-key collision cannot cause those eight because none has enough passable objectives to set bit 24
-> **Remaining gate:** reproduce an unmodified historical full-ladder winner locally, then compare fresh-vs-preceded admissible dispatch under an identical explicit action contract. First compare the resource/context vector, then use initial admissible child ordering as a semantic checksum. Clear the lower-bound memo tables before broad state instrumentation; if ordering is identical, locate the first tree divergence instead of diffing every prepared field up front
+> **Last evidence:** 2026-08-24 — exact-commit fresh controls plus current-head static lifetime/accounting audit
+> **Decision:** `R01936` is explained by repair seed diversification, but the eight historical admissible-order wins remain genuinely predecessor-dependent at their exact historical commit. Do not use those rows for causal scheduler/cap inference until the dependency is localized. The next diagnostic is resource/context equality, then initial admissible child ordering as a semantic checksum; if ordering differs, clear MP/MC lower-bound memos before broader state diffing.
+> **Remaining gate:** reproduce one unmodified historical full-ladder winner and compare fresh-versus-preceded admissible dispatch under the same explicit action/resource contract; record resource context and first child order, then either clear lower-bound memos or trace the first later tree divergence.
+> **Evidence role:** forensic
+> **Selection:** observational
 
-## Why the original category was misleading
+## Why this report exists
 
-The frozen census has 14 levels solved by production but by no T1 isolated technique at 50M nodes. Joining production run `32459711208` only through its `winningConfig` field made six wins look like plain repair and eight like diverse beams. The same run's lifecycle telemetry gives the canonical stage attribution instead:
+The technique census contained production solves that did not appear in isolated T1 cells. Initial joining through `winningConfig` made several rows look like ordinary repair or beam capability that somehow became stronger after predecessor stages.
 
-- six wins occurred in `repair-probe`;
-- eight wins occurred in `admissible-order`;
-- none of the eight beam-labelled rows was actually won in the main beam stage.
+Lifecycle/stage attribution corrected that interpretation:
 
-`winningConfig` therefore identifies a collapsed/reused config label, not the winning stage. The 14 rows remain real production-only capabilities, but they are not evidence that a plain T1 beam or repair configuration becomes stronger merely by running after another technique.
+- six historical rows were `repair-probe` wins;
+- eight were `admissible-order` wins;
+- the eight beam-labelled rows were not main-beam wins at all.
 
-## Current-code provenance pilot
+The resulting question is narrower: which apparent production-only wins are ordinary missing action identity, and which really depend on prior ladder history?
 
-Measured command:
+## Repair-probe result
 
-```sh
-npm run stress:benchmark -- --corpus=data/stress/stress-levels-random.json \
-  --levels=R01936,R02493 --engine=sequential --budget-ms=600000 \
-  --work-budget=200000000 \
-  --out=logs/technique-census-reverse-oracle-provenance-pilot.json
-```
+### `R01936` is causally explained by seed 1
 
-The run was sequential, level-blind, complete, and non-truncated on commit `e60a846`. The raw local log was intentionally not committed; the command, commit, and projected attempt fields below are the durable interpreted evidence.
+Current production showed a salt-0 repair probe fail at about 2M nodes, followed by a salt-1 probe solving at about 1.79M nodes. A fresh-process direct probe with salt 1 reproduced the solve without any preceding ladder state.
 
-### `R01936`: second repair seed is causal
+Therefore this row is not evidence of hidden cross-stage teaching. It is a distinct deterministic randomized action omitted by the isolated salt-0 cell.
 
-Current production solved in `3,791,533` nodes / `14,116,917` work:
+The other five historical repair-probe rows did not reproduce on current code at salts 1 or 2 under the tested ~2M-node scale. That does not invalidate their historical wins because repair ordering/code changed. It does prevent the explanation “salt 1 explains all six” from being generalized.
 
-| attempt | stage | gate | seed salt | random seed | nodes | result |
-|---:|---|---:|---:|---:|---:|---|
-| 1 | `repair-probe` | 720901 | 0 (implicit) | 1370513525 | 2,000,023 | timed out |
-| 2 | `repair-probe` | 720901 | 1 | 3481737668 | 1,791,510 | success |
+## Admissible-order result
 
-The census cell runner calls `runAttempt` without a seed-salt argument, so its isolated repair attempt uses the default salt 0. Its frozen T1 plain-repair cell reached 50,000,003 nodes without solving. The production probe's salt-1 retry is thus not state carryover or extra budget for the same randomized stream: it is a distinct deterministic seed, and it solves after the salt-0 probe fails. This explains at least one reverse-oracle mechanism and supports treating generic multi-seed repair probing as genuine stage capability.
+The eight historical admissible rows are materially different.
 
-An independent direct replay then bypassed the ladder and created a fresh prepared level:
+At production commit `e5034e8c433eb32ab6d1882d80271dc277b91b0f`, direct fresh-preparation controls tested the plausible/canonical admissible profiles at generous deterministic node ceilings. They failed from a fresh prepared state even though the production ladder at that same commit had solved later in the admissible tier.
 
-```sh
-node scripts/run-bundled.mjs scripts/repair-direct-probe.mjs -- \
-  --corpus=data/stress/stress-levels-random.json --level=322 --gate-index=0 \
-  --budget-ms=600000 --node-budget=2000023 --races=2
-```
+The rows include `R02493`, `R02088`, `R02536`, `R01356`, `R03195`, `R02690`, `R03230`, and `R03238`.
 
-Seed salt 1 reproduced the identical success at 1,791,510 nodes. The worker is a fresh process and invokes `repairSearchFromGate` directly, so no earlier production attempt, shared preparation state, or ladder allocation can cause this win. This closes carryover as the mechanism for `R01936`; seed diversification alone is sufficient.
+The decisive property is not the exact per-row inferred profile label. It is that deterministic admissible-order search can fail fresh at the exact historical implementation while succeeding after preceding ladder work.
 
-### Remaining historical repair-probe rows do not transfer to current code
+This is genuine attempt-history dependence or an unprojected execution-context difference.
 
-Fresh-process direct probes tested salts 1 and 2 for each of the other five repair-probe rows with a 2,000,025-node ceiling. The five level probes ran concurrently for iteration speed; each salt ran in its own process, used deterministic node accounting, and completed its node ceiling without a deadline. Wall times are intentionally not compared.
+## What has been ruled down statically
 
-| level | salt 1 | salt 2 | best badness (salt 1 / 2) |
-|---|---|---|---:|
-| `R02655` | failed at 2,000,049 nodes | failed at 2,000,028 nodes | 15 / 12 |
-| `R02842` | failed at 2,000,027 nodes | failed at 2,000,037 nodes | 19 / 17 |
-| `R02452` | failed at 2,000,025 nodes | failed at 2,000,025 nodes | 6 / 5 |
-| `R02887` | failed at 2,000,046 nodes | failed at 2,000,028 nodes | 21 / 5 |
-| `R01086` | failed at 2,000,025 nodes | failed at 2,000,032 nodes | 2 / 15 |
+### Dirty DFS/beam/repair backing buffers
 
-These null results do not invalidate the historical production wins: repair search ordering changed between commits, and the current capability run already loses several of these rows. They do show that “salt 1 explains all six” is false on current code. Spending larger current budgets would answer a different question; exact historical mechanism requires a pinned historical replay, while current capability work should wait for a current production win to diagnose.
+Low probability for this anomaly. Admissible-order creates a new logical state and calls `createState` without the reusable DFS/beam/repair state-buffer slot. Current reusable buffers are per-prepared-level and cleared on reuse.
 
-### `R02493`: historical attribution does not transfer unchanged
+### PRNG history
 
-Current production solved in `6,332,402` nodes / `16,951,083` work. Three `repair-probe` attempts failed (2,000,000, 2,000,006, and 2,100,000 nodes), then a `main-loop` `intersectionHarvest` diverse beam at width 5,000 solved in 232,396 nodes.
+Very low probability. Admissible-order has no random seed input. A changed deterministic child order cannot be explained by PRNG stream position.
 
-The frozen census's same-label beam exhausted after 201,555 nodes, but it ran older solver code. The same-commit current beam win therefore disproves neither census validity nor establishes carryover; search order, routing config, and implementation changed between the artifacts. This row needs a same-commit isolated replay of the exact winning attempt before assigning a mechanism.
+### Simple leaked retry config
 
-### Current canonical admissible profiles do not reproduce any of the eight historical wins
+Lower probability on current code. Inspected whole-ladder/repair retry overrides restore `_cfg` through guarded save/restore paths. This does not prove every historical version was leak-free, but no obvious current leak explains the anomaly.
 
-A direct current-code screen bypassed the ladder and tested each canonical admissible-order profile independently on each level's current first selected gate:
+### Cross-stage accounting/resource state
 
-```sh
-node scripts/run-bundled.mjs scripts/method-probe.mjs -- \
-  --corpus=data/stress/stress-levels-random.json --levels=<level-id> \
-  --only=ida:<profile> --budget-ms=600000 --node-budget=12500000
-```
+High-priority control, because this architecture has had real bugs of this class. Stages share mutable per-solve fields such as cumulative nodes, `_workMeter`, `_workCap`, and other execution context. Historical late tiers have inherited depleted caps or been starved by predecessor cumulative-node spending.
 
-`default`, `none`, `mustCrossFirst`, `intersectionHarvest`, and `nearClosureRescue` each reached `12,500,224` nodes without solving on every level:
+Accounting can explain whether/how much search runs. By itself it cannot explain a different first deterministic child ordering when ranking inputs are otherwise identical.
 
-| level | current selected gate | profiles tested | result per profile |
-|---|---:|---:|---|
-| `R02493` | 851979 | 5 | failed at 12,500,224 nodes |
-| `R02088` | 655369 | 5 | failed at 12,500,224 nodes |
-| `R02536` | 196614 | 5 | failed at 12,500,224 nodes |
-| `R01356` | 655362 | 5 | failed at 12,500,224 nodes |
-| `R03195` | 131075 | 5 | failed at 12,500,224 nodes |
-| `R02690` | 1 | 5 | failed at 12,500,224 nodes |
-| `R03230` | 655363 | 5 | failed at 12,500,224 nodes |
-| `R03238` | 589827 | 5 | failed at 12,500,224 nodes |
+### MP/MC lower-bound memo state
 
-The 40 attempts consumed 500,008,960 deterministic nodes. Profiles ran in separate processes with at most four concurrent workers for iteration speed, so wall time is not compared. A preceding five-profile 2M-node screen on `R02088` had the same null result.
+Leading visible semantic suspect if first ordering differs under equal resource context.
 
-This is a bounded current-code non-reproduction, not the requested same-commit historical control: the frozen production artifact does not retain the exact admissible profile/config/gate/ceiling, and both gate selection and solver ordering may have changed. It does rule out an immediate current-code reproduction by any canonical profile at the ordinary 12.5M reserve scale. The remaining gate for all eight is now narrower: recover the historical winning-attempt identities or replay the historical commit, rather than increase unidentified current profiles' budgets.
+Admissible ranking/pruning reaches exact must-pass/must-cross lower-bound memo tables populated on the shared prepared level. Their intended contract is pure exact memoization, so warm versus empty should not change values or ordering. A measured difference would indicate a key/value/lifetime defect rather than beneficial learning.
 
-### Exact-commit fresh controls establish attempt-history dependence
+A later discovered fixed-width must-pass memo-key collision is not the mechanism for these eight historical rows: their objective cardinalities are too small to set the colliding high bit.
 
-The frozen per-level row identifies production commit `e5034e8c433eb32ab6d1882d80271dc277b91b0f` and records 17 failed strategies before the successful eighteenth attempt. The last recorded failure is `ida:none`. At that exact commit, `ADMISSIBLE_ORDER_PROFILES` is ordered `default`, `none`, `mustCrossFirst`, `intersectionHarvest`, `nearClosureRescue`, and the lifecycle map assigns the winner to `admissible-order`. The missing eighteenth config is therefore inferentially `ida:mustCrossFirst`; this is code-and-order reconstruction, not directly retained attempt telemetry.
+## Smallest diagnostic, in order
 
-A detached worktree at the exact production commit then ran fresh-preparation direct controls on gate `655369`. All five canonical profiles failed at 12,500,224 nodes. More importantly, each also failed independently at 50,000,128 nodes, including inferred winner `mustCrossFirst`:
+At the exact target admissible dispatch, compare fresh and preceded runs using the same gate/action/config and intended resource envelope.
 
-```sh
-git worktree add --detach /tmp/pathfinder-e503 \
-  e5034e8c433eb32ab6d1882d80271dc277b91b0f
-node scripts/run-bundled.mjs scripts/method-probe.mjs -- \
-  --corpus=data/stress/stress-levels-random.json --levels=R02088 \
-  --only=ida:mustCrossFirst --budget-ms=600000 --node-budget=50000000
-```
-
-The same exact-commit control was then extended to the other seven rows. Failed-strategy order reconstructs the next admissible profile as `none` for five rows and `mustCrossFirst` for `R03195`; `R02690` crosses an intervening dedup-retry attempt, so all five profiles were screened rather than assigning an uncertain identity.
-
-| level | inferred/plausible profile controls | fresh result at exact commit |
-|---|---|---|
-| `R02493` | `none` | failed at 50,000,128 nodes |
-| `R02088` | all five; inferred `mustCrossFirst` | all failed at 50,000,128 nodes |
-| `R02536` | `none` | failed at 50,000,128 nodes |
-| `R01356` | `none` | failed at 50,000,128 nodes |
-| `R03195` | `mustCrossFirst` | failed at 50,000,128 nodes |
-| `R02690` | all five (identity ambiguous) | all failed at 50,000,128 nodes |
-| `R03230` | `none` | failed at 50,000,128 nodes |
-| `R03238` | `none` | failed at 50,000,128 nodes |
-
-Together the exact-commit 50M controls consumed 800,002,048 deterministic nodes. Admissible-order search is deterministic; unlike repair, it has no seed input. The same implementation/config/gate can therefore solve only after preceding production attempts have run, while failing from a fresh prepared level with a ceiling far above the ordinary reserve. This is population-wide causal evidence of attempt-history-dependent mutable preparation/search state (or equivalent unprojected ladder context), not random restart value or a larger standalone budget. It validates real ladder-only capability across all eight rows and changes the next measurement from profile sweeps to state-diff/prefix/prime-attempt replays.
-
-## Mutable-state surface audit
-
-A source audit at the exact production commit narrows the prefix experiment further. `admissibleOrderSearch` creates a new logical search state for every invocation and does not read prior paths, beam frontiers, repair elites, or a seed. Its inherited mutable reads are limited to cumulative accounting (`_metrics`, `_workMeter`, and the experiment-only strict cap), the fixed configuration/forced-step fields, and the must-pass/must-cross lower-bound memo tables reached through the bound functions. Cumulative counters can stop a search but cannot change child ordering; the admissible tier at this commit also deliberately did not enforce the ordinary inherited per-attempt work cap. The reusable DFS/beam/repair backing buffers are not used by admissible-order search, because it calls `createState` without a buffer slot.
-
-The two lower-bound memo tables are therefore the only obvious persistent *value-bearing* search inputs populated by earlier attempts. Their documented contract says they are exact pure memoization, so warm-versus-empty behavior should be identical. That makes the first discriminating prefix control precise: reproduce a historical full-ladder winner while clearing `_mpLowerBoundCache` and `_mcLowerBoundCache` immediately before the admissible tier. A loss would localize the mechanism to memo-key/value behavior; a preserved win would rule out the caches and require snapshotting configuration/forced-step/static-preparation identity plus the exact successful attempt rather than broadly diffing every `PrepLevel` field. This is a code-derived hypothesis and proposed control, not measured causal evidence yet.
-
-### Current-head lifetime/accounting audit
-
-A separate 2026-08-24 static audit on current `main` checked whether a simpler generic lifetime bug could explain the anomaly and narrows several suspects before the historical executable replay:
-
-- each top-level `solveLevel()` builds a fresh prepared level and fresh per-solve `_workMeter`, so broad cross-solve contamination is not the leading theory;
-- within one solve, stages intentionally share the same mutable `PrepLevel`, cumulative `_metrics.nodesExpanded`, `_workMeter`, `_workCap`, `_cfg`, memo tables, and selected reusable state buffers;
-- `_stateBufs` are now per-prep, not module-global, after a real concurrency bug was fixed, and `createState` clears reused in-grid rows before reuse;
-- admissible-order calls `createState` **without** a reusable buffer slot, so stale DFS/beam backing arrays are not a plausible direct input to its initial state;
-- admissible-order has no seed input, so PRNG history is not a plausible explanation for its deterministic ordering difference;
-- the inspected whole-ladder and repair retry `_cfg` overrides restore the original config in `finally` blocks, lowering the prior for a simple leaked config override;
-- late direct-call retries have nonetheless already exposed **real stale `_workCap` inheritance bugs** in this architecture. Current code contains explicit save/set/restore protection because a late tier could otherwise inherit a depleted cap from an unrelated predecessor;
-- ordinary admissible-order is exceptional: it does not consult ordinary `_workCap`; it uses its node ceiling and only consults `_strictWorkCap` in strict-total-work mode;
-- ordinary admissible allocation derives remaining node allowance from a cumulative ceiling minus `prep._metrics.nodesExpanded`, so predecessor work changes its resource envelope even when the search algorithm itself is deterministic;
-- an earlier dedup-retry ordering bug already demonstrated this exact class of sequence effect: predecessor spending could consume cumulative nodes and cause a later admissible tier to be skipped/starved. That bug does **not** explain a changed initial child ordering, but it proves resource/accounting history is a real confound in this orchestration path.
-
-The correct inference is therefore narrower than either “the predecessor teaches admissible-order” or “it is definitely accounting.” Resource/accounting context can change whether/how much search occurs, but it cannot by itself change the deterministic first child ordering when explicit search inputs are otherwise identical. A measured first-ordering difference points back toward a value-bearing prepared/config input, with lower-bound memo state the strongest static candidate currently visible.
-
-### Semantic-checksum diagnostic order
-
-The smallest useful executable diagnostic should record, at the target admissible dispatch boundary in both fresh and preceded runs:
+Record:
 
 - `prep._workMeter.units`;
 - `_workCap` and `_strictWorkCap`;
-- `_metrics.nodesExpanded`;
-- supplied admissible `nodeBudget` and wall-budget slice;
-- effective `_cfg` / forced-step fields;
+- cumulative `_metrics.nodesExpanded`;
+- supplied admissible node and wall budget;
+- effective config/forced-step state;
 - gate and canonical action/config identity;
-- the **initial admissible child ordering**, including primary slack and tie-break values where practical.
+- initial admissible child order, ideally with primary slack and tie-break values.
 
-Treat that first child order as a semantic checksum:
+Interpretation:
 
-1. **Resource/context vector differs:** first normalize the action contract. Do not infer algorithmic carryover from unequal available work/accounting.
-2. **Resource/context is identical but initial child order differs:** the cause must already be present in prepared/config/value-bearing state before tree expansion. Clear the MP/MC lower-bound memo tables first, then snapshot only the inputs used by ranking/bounds rather than every mutable field.
-3. **Initial child order is identical:** do not instrument the whole solver. Trace the first subsequent tree divergence and inspect only the state/prune/bound inputs at that point.
+1. **Resource/context differs.** Normalize the action contract first. Do not call unequal-budget behavior semantic carryover.
+2. **Resource/context agrees but initial child order differs.** Clear MP/MC lower-bound memo tables and rerun. Inspect only ranking/bound inputs before broad `PrepLevel` diffing.
+3. **Initial child order agrees.** Trace the first later tree divergence and inspect the prune/bound/state inputs at that exact point.
 
-This ordering turns the P0 task from “diff everything mutable” into a three-stage localization test and prevents accounting noise from being confused with semantic warm-state effects.
+The first child order is a useful semantic checksum because it separates “something already changed before search” from “the searches diverge later.”
 
-### Later must-pass cache bug is not the historical mechanism
+## Scheduler consequence
 
-The 2026-08-24 packing audit found a genuine, independent defect in current/historical `mustPassLowerBound` memoization: the composite cache key reserved only 24 bits for `mpVisitedMask` even though normalized must-pass plus must-turn objectives are schema-valid through 30. That defect requires bit 24 to be reachable, therefore at least **25** normalized passable objectives.
+Until this dependency is understood:
 
-The authoritative eight historical admissible-order rows have normalized passable-objective counts of only:
+- mark affected admissible cells sequence-ambiguous;
+- do not estimate causal continuation value from their historical predecessor-conditioned success;
+- scheduler analyses may include a conservative frontier that excludes them and an explicitly optimistic sensitivity view that includes them;
+- do not workaround the issue by always running the historical predecessor ladder first.
 
-| level | normalized must-pass + must-turn objectives |
-|---|---:|
-| `R02493` | 5 |
-| `R02088` | 6 |
-| `R02536` | 12 |
-| `R01356` | 7 |
-| `R03195` | 14 |
-| `R02690` | 13 |
-| `R03230` | 11 |
-| `R03238` | 13 |
+If the dependency is intentional and useful, it must become a typed producer -> receptor contract whose producer work is charged. If accidental, eliminate it and add a regression fixture.
 
-The cohort maximum is 14. None can set mask bit 24, so the former `(pos, mask)` alias is unreachable on every one of these levels. The bug was worth fixing on its own, but it **cannot** explain the P0 predecessor dependence. Do not interpret the correctness fix as having resolved or even weakened the need for the historical cache-clear/prefix experiment.
+## Current disposition
 
-The sibling must-cross memo packing was also re-audited against its supported boundary. It caches only when `mustCrossKeys.length <= 8`; its key allocates 16 base-4 bits for per-cell first-cross axis state plus 8 pending-mask bits below a `2^25` position radix, and 9+ cells bypass memoization. Boundary tests now compare warm-vs-fresh values with opposite first-cross axes at `n=8` and verify the `n=9` uncached fallback. This makes must-cross key collision less plausible, but it does not substitute for the historical warm-cache control.
+The broad reverse-oracle question is mostly resolved:
 
-The audit also identifies a necessary baseline check omitted by the earlier fresh controls: replay the unmodified historical full ladder locally under the preserved 100M-node protocol before interpreting any patched prefix arm. The committed production artifact is valid historical evidence, but an environment-local baseline is needed to distinguish a treatment effect from build/runtime or deadline drift.
+- repair seed diversity explains at least one historical production-only repair row;
+- winning-config labels were insufficient for stage attribution;
+- the eight admissible-order rows are not ordinary isolated wins hidden by provenance;
+- their unresolved phenomenon is now a very small deterministic lifetime diagnostic.
 
-## Decision and next measurement
-
-The 14-level question is no longer a single mystery:
-
-1. **Confirmed seed diversification:** `R01936` is solved by salt 1 after salt 0 fails, and the salt-1 win reproduces directly from fresh preparation.
-2. **Historical stage-attribution defect:** all eight beam-labelled frozen wins belong to `admissible-order` lifecycle, not the beam stage.
-3. **Non-transferring historical repair rows:** the remaining five fail with salts 1 and 2 on current code at 2M nodes; no current mechanism claim is warranted.
-4. **Confirmed attempt-history dependence:** every inferred or plausible admissible winner fails fresh at the exact production commit/config/gate even at 50M nodes; preceding ladder activity is necessary across all eight rows.
-5. **Specific current cache collision eliminated as cause:** the fixed must-pass key bug needs 25+ passable objectives; the eight historical rows have 5-14.
-6. **Static lifetime suspects narrowed:** stale reusable buffers, PRNG history, and a simple ordinary `_workCap` explanation are poor fits for admissible-order specifically; accounting remains an important action-contract confound, while lower-bound memo/value state remains the strongest visible semantic suspect.
-7. **Still unresolved:** which mutable state and minimal preceding attempt prefix enables each historical admissible win.
-
-The next run should first reproduce an unmodified historical full-ladder winner under the preserved protocol. Then execute the semantic-checksum sequence above: normalize/record the resource-context vector, compare initial admissible ordering, and clear the two lower-bound memo tables immediately before the inferred winning admissible action. If the win and initial ordering survive cache clearing, progressively prime the action after longer predecessor prefixes while snapshotting only the remaining ranking/prune-relevant prepared/config state. Retain `stageId`, `gateKey`, canonical `configKey`, canonical `actionKey` where available, seed, node/work ceilings, and outcome so the enabling prefix and state mutation are attributable rather than merely reproduced.
+The P0 queue item owns execution priority. This report owns the forensic evidence and localization logic.
