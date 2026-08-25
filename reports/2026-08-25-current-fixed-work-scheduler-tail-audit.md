@@ -1,8 +1,8 @@
 # Current fixed-work scheduler tail audit
 
-> **Status:** active
+> **Status:** concluded; materialization fed the completed static-repricing join
 > **Last evidence:** 2026-08-25 — Actions run `32821022906`, artifact `scheduler-current-fixed-work-sample`
-> **Decision:** the Queue #1 materialization gate is satisfied. Under a strict 67M canonical-work envelope, the current ladder is heavily front-loaded: `main-loop` and `repair-probe` account for 81.3% of measured work and 38/40 solves. Most later retry rows are budget-starved before meaningful execution. Do not build dynamic scheduler machinery yet; first join the heavy current actions to the frozen census/tranche evidence and test a simple static repricing.
+> **Decision:** the Queue #1 materialization gate and census join are satisfied. Under a strict 67M canonical-work envelope, the current ladder is heavily front-loaded: `main-loop` and `repair-probe` account for 81.3% of measured work and 38/40 solves. The joined evidence identifies a narrow positive static baseline: suppress only `main-loop|dfs:objectiveFirst` and `main-loop|dfs:intersectionHarvest` in a same-revision A/B before any dynamic scheduler work. See [`scheduler static repricing join`](2026-08-25-scheduler-static-repricing-join.md).
 > **Evidence role:** tuning / development sample
 > **Selection:** deterministic evenly spaced 60-level sample from `data/stress/stress-levels-random.json`; level-blind, no saved hints, not confirmation evidence
 > **Queue:** [`docs/solver-optimization-current-queue.md`](../docs/solver-optimization-current-queue.md) Priority 1
@@ -55,7 +55,7 @@ The hard residual is therefore genuinely budget-saturating. The scheduler questi
 
 Two stages dominate both spending and solved capability on this sample: `main-loop` plus `repair-probe` consume **81.3%** of all measured work and produce **38/40** solves.
 
-The remaining two solves are one `admissible-order|ida:default` win and one `admissible-order-non-default-retry|ida:none` win. Because the historical admissible-order family is the active P0 sequence-dependence anomaly, those rows must remain sequence-ambiguous in scheduler valuation rather than being used as clean causal continuation evidence.
+The remaining two solves are one `admissible-order|ida:default` win and one `admissible-order-non-default-retry|ida:none` win. Because the historical admissible-order family is the active P0 sequence-dependence anomaly, those rows remain sequence-ambiguous in scheduler valuation rather than clean causal continuation evidence.
 
 ## Current failed-work tax
 
@@ -68,7 +68,7 @@ Most measured work is unsuccessful work because successful attempts stop early. 
 - `dedup-near-tie-retry`: 62.81M work, zero solves;
 - `attraction-diversity`: 25.87M work, zero solves.
 
-This is descriptive, not a removal recommendation: the sample is small, late stages face a selected hard residual population, and isolated census evidence shows rare specialist capability. But it identifies the actions whose continuation value actually needs pricing. Zero- or near-zero-work starved retries are not the immediate optimization target because they currently consume almost no fixed-work envelope.
+This is descriptive, not by itself a removal recommendation: the sample is small, late stages face a selected hard residual population, and isolated census evidence shows rare specialist capability.
 
 ## Unsolved residual spend
 
@@ -82,46 +82,54 @@ The 20 unsolved levels consume 1.340B work in total, almost exactly 67M each. Th
 - `admissible-order-non-default-retry`: 33.56M;
 - `attraction-diversity`: 22.99M.
 
-This is the decision-bearing residual surface for the next join. The meaningful repricing question is how much of the heavy early/deep work should be preserved, truncated, reordered, or substituted by complementary isolated actions under the same aggregate work envelope.
+This is the decision-bearing residual surface joined to the frozen isolated census in the follow-up analysis.
 
-## Action-level nominations, not decisions
+## Joined static-headroom result
 
-Current action rows show several high-cost zero-yield actions in this sample, especially DFS main-loop configurations and `repair-fallback`. Conversely, several beam actions solve while naturally exhausting, supporting the older census nomination that cheap beam screens may deserve earlier placement.
+The completed current-to-census join is documented in [`2026-08-25-scheduler-static-repricing-join.md`](2026-08-25-scheduler-static-repricing-join.md).
 
-Do not convert these observational sequential rows directly into a reordered production policy. Action difficulty is strongly conditioned by what survived earlier stages, and the P0 admissible-order anomaly makes one family explicitly sequence-ambiguous.
+Key result:
 
-## What this sample can and cannot answer
+- conservative frozen non-`ida` isolated union: **44/60**;
+- current sequential ladder: **40/60**;
+- five current misses have a non-admissible frozen isolated solver;
+- `main-loop|dfs:objectiveFirst`: **195.35M** current work, **0** solves;
+- `main-loop|dfs:intersectionHarvest`: **141.51M** current work, **0** solves;
+- combined: **336.85M**, **16.5%** of all current sample work;
+- removing both base DFS actions loses **zero** coverage from the reconstructed 44-level conservative frozen union;
+- both actions also have zero unique solves in the broader frozen census summary.
 
-It **can** now answer:
+This is sufficient static headroom to earn one narrow execution A/B. It is not evidence that deleting the actions is causally safe in current code: the census and current sample are from different revisions, and cross-stage dependence is already a live P0 issue.
+
+## What this sample and join can answer
+
+They can now answer:
 
 - whether current rich attempt telemetry materializes correctly: yes;
 - where current fixed work is actually spent;
 - which stages are reached, exhausted, timed out, or starved;
-- which late stages contribute solves in the current sequence;
-- which heavy stages require continuation-value pricing.
+- which heavy current actions are highly substitutable in the frozen capability matrix;
+- whether there is enough static headroom to justify a bounded repricing A/B: yes.
 
-It **cannot by itself** establish:
+They still cannot establish without execution:
 
-- the counterfactual solve set if an action were moved earlier;
-- rare exclusivity of actions not reached in this sequence;
-- a causal hazard curve for sequence-ambiguous admissible-order cells;
-- the best portfolio cardinality under alternative action subsets.
-
-Those require the already-planned join to the frozen isolated census/tranche evidence.
+- the current counterfactual solve set after suppressing an earlier action;
+- whether freed work reaches the expected later actions under current sequencing;
+- whether historical isolated winners retain the same behavior on current code;
+- a causal hazard curve for sequence-ambiguous admissible-order cells.
 
 ## Next gate
 
-Join these current action rows to the frozen census family/config and cap/tranche evidence, with P0 admissible cells excluded from the conservative frontier. Produce:
+Run the frozen same-revision A/B from the static-repricing report under the same deterministic 60-level selection and strict 67M canonical-work ceiling:
 
-1. continuation risk sets for the heavy comparable actions;
-2. failed-work tax versus residual/exclusive solves;
-3. portfolio-cardinality/rare-capability curve;
-4. current fixed-work point versus measured static oracle/Pareto headroom;
-5. one simple deterministic static repricing baseline;
-6. optimistic sensitivity including sequence-ambiguous admissible rows only as a labelled secondary view.
+- A = current ladder;
+- B = suppress only `main-loop|dfs:objectiveFirst` and `main-loop|dfs:intersectionHarvest`;
+- no other ordering, gate, repair-depth, or action-semantic change;
+- no saved hints;
+- preserve attempt/lifecycle telemetry.
 
-Only material residual headroom after that simple static baseline justifies dynamic/survival/bandit scheduler machinery.
+B earns confirmation only with no solve loss and either at least one extra solve or at least 10% lower aggregate canonical work. Otherwise close this exact suppression treatment. Dynamic/survival/bandit machinery remains closed regardless until the simple static baseline resolves.
 
 ## Execution-scaffolding disposition
 
-The temporary PR workflow that produced run `32821022906` is one-shot scaffolding. The durable producer is the existing level-blind capability sweep and its current attempt projection. Remove the one-shot workflow from the branch before merge; preserve the run/artifact ID here for reproducibility.
+The temporary PR workflow that produced run `32821022906` was one-shot scaffolding. The durable producer is the existing level-blind capability sweep and its current attempt projection. Preserve the run/artifact ID here for reproducibility; do not recreate the one-shot workflow merely to repeat this materialization.
