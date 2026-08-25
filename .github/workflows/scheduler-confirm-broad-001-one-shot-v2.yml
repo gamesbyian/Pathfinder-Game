@@ -41,8 +41,8 @@ jobs:
           (cd tmp/generator-src && node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
             --count=256 --master-seed=${COHORT_SEED} --id-prefix=C \
             --out=${GITHUB_WORKSPACE}/tmp/confirm-broad-001.json)
-          # Canonical corpus files are one-record-per-line JSON, not one JSON array.
-          test "$(grep -cve '^[[:space:]]*$' tmp/confirm-broad-001.json)" = '256'
+          # The generated corpus is a wrapper object with a top-level levels array.
+          test "$(node -e "console.log(JSON.parse(require('fs').readFileSync('tmp/confirm-broad-001.json','utf8')).levels.length)")" = '256'
       - name: Apply frozen treatment rewrite
         if: matrix.arm == 'treatment'
         run: |
