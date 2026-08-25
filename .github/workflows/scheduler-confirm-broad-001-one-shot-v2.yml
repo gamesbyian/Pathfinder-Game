@@ -41,8 +41,14 @@ jobs:
           (cd tmp/generator-src && node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
             --count=256 --master-seed=${COHORT_SEED} --id-prefix=C \
             --out=${GITHUB_WORKSPACE}/tmp/confirm-broad-001.json)
-          # The generated corpus is a wrapper object with a top-level levels array.
-          test "$(node -e "console.log(JSON.parse(require('fs').readFileSync('tmp/confirm-broad-001.json','utf8')).levels.length)")" = '256'
+          # Wrapper metadata includes generatedAt. Cohort identity is the deterministic levels array.
+          node - <<'NODE'
+          const fs = require('node:fs'), crypto = require('node:crypto');
+          const corpus = JSON.parse(fs.readFileSync('tmp/confirm-broad-001.json','utf8'));
+          if (!Array.isArray(corpus.levels) || corpus.levels.length !== 256) throw Error('expected 256 generated levels');
+          const hash = crypto.createHash('sha256').update(JSON.stringify(corpus.levels)).digest('hex');
+          fs.writeFileSync('tmp/confirm-broad-001-levels.sha256', hash + '\n');
+          NODE
       - name: Apply frozen treatment rewrite
         if: matrix.arm == 'treatment'
         run: |
@@ -84,7 +90,7 @@ jobs:
         run: |
           d=tmp/confirm/${{ matrix.arm }}/shard-${{ matrix.shard }}
           node - "$d" '${{ matrix.arm }}' '${{ matrix.shard }}' <<'NODE'
-          const fs=require('node:fs'), cp=require('node:child_process');
+          const fs=require('node:fs'), cp=require('node:child_process'), crypto=require('node:crypto');
           const [d,arm,shard]=process.argv.slice(2); const r=JSON.parse(fs.readFileSync(`${d}/result.json`));
           const rows=r.levels??[]; if(rows.length!==32) throw Error(`expected 32 rows, got ${rows.length}`);
           const bad=rows.filter(x=>x.deadlineTruncated||x.status==='deadline-truncated'||x.status==='attempt-error');
@@ -93,11 +99,12 @@ jobs:
             const forbidden=rows.flatMap(x=>(x.attempts??[]).filter(a=>a.stageId==='main-loop'&&a.beamWidth==null&&a.template==null&&(a.profile==='objectiveFirst'||a.profile==='intersectionHarvest')));
             if(forbidden.length) throw Error(`suppressed ordinary action executed: ${forbidden.length}`);
           }
-          const sh=p=>cp.execFileSync('sha256sum',[p],{encoding:'utf8'}).split(/\s+/)[0];
           const patch=cp.execSync('git diff -- modules/solver/orchestration.ts',{encoding:'utf8'});
-          const crypto=require('node:crypto');
+          const corpus=JSON.parse(fs.readFileSync('tmp/confirm-broad-001.json','utf8'));
+          const levelsHash=crypto.createHash('sha256').update(JSON.stringify(corpus.levels)).digest('hex');
+          const wrapperHash=crypto.createHash('sha256').update(fs.readFileSync('tmp/confirm-broad-001.json')).digest('hex');
           const meta={arm,shard:Number(shard),solverSha:process.env.SOLVER_SHA,generatorSha:process.env.GENERATOR_SHA,
-            cohortId:'confirm-broad-001',cohortSeed:Number(process.env.COHORT_SEED),cohortSha256:sh('tmp/confirm-broad-001.json'),
+            cohortId:'confirm-broad-001',cohortSeed:Number(process.env.COHORT_SEED),cohortLevelsSha256:levelsHash,corpusWrapperSha256:wrapperHash,
             strictTotalWorkBudget:67000000,nodeBudget:50000000,
             suppressedOrdinaryMainLoopConfigKeys:arm==='treatment'?['dfs:objectiveFirst','dfs:intersectionHarvest']:[],
             workingTreePatchSha256:crypto.createHash('sha256').update(patch).digest('hex')};
@@ -126,14 +133,14 @@ jobs:
           const dirs=fs.readdirSync('tmp/downloaded').filter(x=>x.startsWith('scheduler-confirm-v2-'));
           if(dirs.length!==16) throw Error(`expected 16 shard artifacts, got ${dirs.length}`);
           const g={control:[],treatment:[]}, hashes=new Set();
-          for(const n of dirs){const p=path.join('tmp/downloaded',n); const m=JSON.parse(fs.readFileSync(path.join(p,'metadata.json'))); const r=JSON.parse(fs.readFileSync(path.join(p,'result.json'))); hashes.add(m.cohortSha256); g[m.arm].push(...(r.levels??[]));}
-          if(hashes.size!==1) throw Error('cohort hashes differ');
+          for(const n of dirs){const p=path.join('tmp/downloaded',n); const m=JSON.parse(fs.readFileSync(path.join(p,'metadata.json'))); const r=JSON.parse(fs.readFileSync(path.join(p,'result.json'))); hashes.add(m.cohortLevelsSha256); g[m.arm].push(...(r.levels??[]));}
+          if(hashes.size!==1) throw Error(`deterministic levels hashes differ: ${[...hashes].join(',')}`);
           for(const a of ['control','treatment']){if(g[a].length!==256||new Set(g[a].map(x=>x.id)).size!==256) throw Error(`${a} population invalid`);}
           const ids=a=>new Set(g[a].filter(x=>x.ok).map(x=>x.id)); const c=ids('control'),t=ids('treatment');
           const gained=[...t].filter(x=>!c.has(x)).sort(),lost=[...c].filter(x=>!t.has(x)).sort();
           const work=a=>g[a].reduce((s,x)=>s+Number(x.workSpent??0),0), cw=work('control'),tw=work('treatment'),wr=cw?(cw-tw)/cw:0;
           const pass=lost.length===0&&(gained.length>=1||wr>=.10);
-          const v={verdict:pass?'confirmation-pass':'confirmation-fail',acceptanceRule:'no solve loss AND (>=1 gained solve OR >=10% aggregate canonical-work reduction)',cohortId:'confirm-broad-001',cohortSize:256,cohortSha256:[...hashes][0],solverSha:process.env.SOLVER_SHA,generatorSha:process.env.GENERATOR_SHA,control:{solved:c.size,aggregateWork:cw},treatment:{solved:t.size,aggregateWork:tw},gainedCount:gained.length,lostCount:lost.length,aggregateWorkReductionFraction:wr,aggregateWorkReductionPercent:100*wr,passesGate:pass};
+          const v={verdict:pass?'confirmation-pass':'confirmation-fail',acceptanceRule:'no solve loss AND (>=1 gained solve OR >=10% aggregate canonical-work reduction)',cohortId:'confirm-broad-001',cohortSize:256,cohortLevelsSha256:[...hashes][0],solverSha:process.env.SOLVER_SHA,generatorSha:process.env.GENERATOR_SHA,control:{solved:c.size,aggregateWork:cw},treatment:{solved:t.size,aggregateWork:tw},gainedCount:gained.length,lostCount:lost.length,aggregateWorkReductionFraction:wr,aggregateWorkReductionPercent:100*wr,passesGate:pass};
           fs.writeFileSync('tmp/confirmation-analysis/verdict.json',JSON.stringify(v,null,2)+'\n');
           fs.writeFileSync('tmp/confirmation-analysis/post-verdict-changed-ids.json',JSON.stringify({gained,lost},null,2)+'\n');
           fs.writeFileSync('tmp/confirmation-analysis/summary.md',`# Scheduler confirm-broad-001 verdict\n\nVerdict: **${v.verdict}**\n\nControl: ${c.size}/256 solved; ${cw.toLocaleString()} work.\nTreatment: ${t.size}/256 solved; ${tw.toLocaleString()} work.\nGained solves: ${gained.length}. Lost solves: ${lost.length}.\nAggregate work reduction: ${(100*wr).toFixed(2)}%.\nFrozen gate: **${pass?'PASS':'FAIL'}**.\n`);
