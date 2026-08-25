@@ -10,6 +10,7 @@ on:
       - 'Solver archetype-gated routing sample A/B'
       - 'Solver repair-probe adaptive-budget sample A/B'
       - 'Solver repair-fallback node-reserve sample A/B'
+      - 'Solver elite-prefix-dfs-retry local validation'
       - 'method-probe sweep (isolated single-method corpus test)'
       - 'Technique capability census (isolated single-/paired-/flag-technique, full budget)'
       - 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)'
@@ -95,9 +96,9 @@ jobs:
               --source-run-id="$SOURCE_RUN_ID" \
               --source-workflow="$SOURCE_WORKFLOW"
 
-            # method-probe and technique-census deliberately bypass the production ladder. Keep their
-            # useful paths too, but mark provenance isolatedTechnique=true via the canonical capture
-            # helper so they cannot be mistaken for normal production-solver capability evidence.
+            # Direct/isolated tools serialize their valid paths too. Keep them with
+            # isolatedTechnique=true so they cannot be mistaken for normal production-ladder
+            # capability evidence.
             node scripts/run-bundled.mjs scripts/harvest-isolated-report-hints.mjs -- \
               --staging-dir=artifact-staging \
               --source-run-id="$SOURCE_RUN_ID" \
