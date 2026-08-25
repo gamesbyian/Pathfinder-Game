@@ -12,6 +12,8 @@ on:
       - 'Solver repair-fallback node-reserve sample A/B'
       - 'method-probe sweep (isolated single-method corpus test)'
       - 'Technique capability census (isolated single-/paired-/flag-technique, full budget)'
+      - 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)'
+      - 'cpsat-hint-harvest-sweep-published (broaden CP-SAT hint coverage for published levels)'
     types: [completed]
 
 # Source runs may finish together. Keep one semantic writer for the canonical hint store so two
@@ -77,8 +79,9 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
-            # Workflows that used --save-hints already carry canonical hint files in shard artifacts.
-            # Merge them structurally and referee-check every incoming path.
+            # Workflows that used --save-hints, including the CP-SAT harvesters, already carry
+            # canonical hint files in shard artifacts. Merge them structurally and referee-check
+            # every incoming path across published, corpus-1 and corpus-2 hint stores.
             node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
               --staging-dir=artifact-staging \
               --source-run-id="$SOURCE_RUN_ID" \
