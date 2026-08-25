@@ -1,7 +1,7 @@
 # Third-wave external research cross-pollination addendum
 
 > **Status:** superseded
-> **Last evidence:** 2026-08-24 — final external-research synthesis and durable residual-state representation reference incorporated the third-wave concepts
+> **Last evidence:** 2026-08-25 — final external-research synthesis and durable residual-state representation reference incorporated the third-wave concepts; later cross-audit added four opportunistic reuse links without reopening this report as an authority
 > **Decision:** retain this file as the provenance record for the final three reviews, but use [`2026-08-24-external-research-pathfinder-synthesis.md`](2026-08-24-external-research-pathfinder-synthesis.md), [`../docs/solver-residual-state-representation.md`](../docs/solver-residual-state-representation.md), and the current queue for decisions.
 > **Remaining gate:** none
 > **Evidence role:** discovery
@@ -91,6 +91,51 @@ Finite testing can falsify sufficiency; it cannot prove universal sufficiency wi
 
 These are different from nominal neighborhood size and basin width.
 
+## Opportunistic reuse links added after the synthesis
+
+These are not new top-level projects. They are cheap secondary questions to ask **only if** a bounded frontier/DD or other independent exact representation is already being built for a ranked reason.
+
+### Frontier ordering can separate structural orientation effects from arbitrary representation bias
+
+Orientation dependence has at least two very different sources:
+
+- **structural orientation cost:** one geometric processing order produces a genuinely smaller frontier/interface width than another;
+- **representation bias:** compass priority, coordinate order, tie-breaking, iteration order, or PRNG consumption favors one encoding for reasons unrelated to intrinsic residual structure.
+
+A geometry-only frontier-width calculation chosen before solving is legitimate structural information. It can therefore serve as a control in symmetry/orientation audits: if rotated variants differ because their minimum geometric interface widths differ under a fixed processing scheme, that is a structural search-cost explanation; if widths are equivalent but finite-budget behavior still diverges, investigate representation-dependent ranking/retention/order instead.
+
+Do not use solve outcome to choose the favorable orientation and then call the result structural.
+
+### Dead exact frontier states can feed learned-certificate research
+
+If an exact frontier/DD experiment already enumerates or rejects many dead residual interface states, preserve enough provenance to ask whether recurring dead interfaces expose compact sufficient failure reasons.
+
+The economic pipeline is:
+
+`exact dead residuals -> recurring projected reason candidate -> live-counterexample search / mathematical soundness proof -> cheap native checker`
+
+This does **not** justify building a frontier engine to create training data for learning. It means already-paid exact dead-state populations may be reused by the existing learned-failure program instead of discarded.
+
+### Exact continuation counts can become basin-width ground truth
+
+If an exact bounded representation already supports counting, record continuation counts or coarse log-count bins for queried residuals where doing so is cheap.
+
+Those counts can provide unusually strong offline labels for:
+
+- live-but-narrow versus live-and-broad beam states;
+- repair reconstructability/basin-width analysis;
+- later evaluation of cheap predictive descriptors.
+
+The count is exact only within the exact supported representation. For relaxed/restricted abstractions it must retain the appropriate under/over-approximation semantics. Do not promote exact continuation count directly into production ranking without held-out value and cost evidence.
+
+### Independent exact representations can provide epistemic triangulation
+
+A frontier/edge-based exact model can have research value even when it contributes no unique solve if its modeling failure modes differ materially from CP-SAT.
+
+For high-value bounded labels, agreement among independently structured exact encodings plus canonical native referee validation gives stronger evidence than repeated agreement within one encoding family. Disagreement is especially valuable: treat it as a modeling/correctness investigation rather than selecting the convenient answer.
+
+This is opportunistic triangulation, not a mandate to maintain two complete exact solvers or duplicate mechanic coverage.
+
 ## Representation hierarchy retained in durable docs
 
 The final synthesis distinguishes:
@@ -126,6 +171,8 @@ This literature did **not** justify:
 - generic backdoor detection;
 - approximate-interface exact caching;
 - automatic core/MCS-driven repair.
+
+The later opportunistic reuse links also do **not** justify building an exact representation solely to obtain symmetry diagnostics, dead-state populations, continuation counts, or triangulation evidence.
 
 ## Supersession
 
