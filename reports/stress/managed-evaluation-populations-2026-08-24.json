@@ -6,7 +6,7 @@
     "path": "scripts/stress/generate-random.mjs",
     "version": "1.1.0",
     "sourceCommit": "4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92",
-    "materializationPrecondition": "Run from a checkout/worktree at generator.sourceCommit, or first verify that the generator file bytes match that revision. Do not run the command against a later modified generator under the same population id."
+    "materializationPrecondition": "Run the materialization command from a checkout/worktree at generator.sourceCommit. The generator may depend on repository helpers/build inputs, so matching only the generator file is insufficient. Do not run against a later revision under the same population id."
   },
   "populations": [
     {
