@@ -26,7 +26,7 @@ Solver execution ref and durable evidence destination are separate concerns. A r
 - Evidence that cannot safely attach to current `main` because the level/corpus changed or the path no longer referee-validates is committed under `reports/stress/pending-solver-evidence/` rather than discarded.
 - Competing persistence runs serialize and replay semantic merges against latest `main`; do not line-rebase hint JSON.
 
-The harvester downloads artifacts with `gh run download`. Do not replace that with the cross-run `actions/download-artifact` path without revalidating pagination: this repo has observed that path truncate runs with more than 100 artifacts.
+The harvester downloads artifacts with `gh run download`. Do not replace that with the cross-run `actions/download-artifact` path without revalidating pagination: this repo has observed that path truncate runs with more than 100 artifacts. It also supports manual `workflow_dispatch` with an existing source run id, so old runs or failed harvest attempts can be backfilled without rerunning the solver.
 
 This retention layer is a safety net. Individual workflows may still save hints immediately when convenient, but branch-local persistence is no longer the only durable copy. Variant-family hints under `data/families` are intentionally outside this canonical-level harvester because they belong to generated variant levels and are retained by the family research trove instead.
 
@@ -64,5 +64,9 @@ Do not infer that CP-SAT search workers should equal runner vCPUs; compare repre
 
 - `family-wide-trove.yml` — native solver work already defaults to 4 workers per runner; its hints belong to generated variants under `data/families`, not canonical levels.
 - `solver-elite-prefix-dfs-retry-validate.yml` — targeted elite-prefix validation; valid paths are serialized for the isolated-evidence harvester.
+
+## Repository / diagnostic workflows
+
+These are not solver-batch entrypoints, but remain listed here for workflow discoverability checks: `ci.yml`, `audit-export.yml`, `audit-technique-census-duplicates.yml`, `diagnose-technique-census-duplicates.yml`, `deploy-pages.yml`, and `deploy-firestore-rules.yml`.
 
 Use the narrowest workflow whose evidence semantics match the question. Capability workflows must remain level-blind. Avoid creating a new batch runner merely for different parallelism: common entrypoints now expose or implement the worker/shard controls needed to trade concurrent footprint against tail latency.
