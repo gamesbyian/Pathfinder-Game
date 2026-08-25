@@ -1,0 +1,65 @@
+name: forensic admissible predecessor trace
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  historical-p0:
+    if: github.head_ref == 'codex/paired-deterministic-operational-trace'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+    steps:
+      - name: Check out trace branch with history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Create exact historical worktree
+        run: git worktree add --detach /tmp/pathfinder-e503 e5034e8c433eb32ab6d1882d80271dc277b91b0f
+
+      - name: Install historical dependencies
+        working-directory: /tmp/pathfinder-e503
+        run: npm ci
+
+      - name: Add observation-only historical seam and driver
+        run: |
+          node scripts/forensics/patch-historical-admissible-observer.mjs --root=/tmp/pathfinder-e503
+          mkdir -p /tmp/pathfinder-e503/scripts/forensics
+          cp scripts/forensics/historical-admissible-predecessor-probe.mjs /tmp/pathfinder-e503/scripts/forensics/
+
+      - name: Reproduce R02088 predecessor-dependent admissible action
+        working-directory: /tmp/pathfinder-e503
+        run: |
+          timeout -k 30s 30m node scripts/run-bundled.mjs scripts/forensics/historical-admissible-predecessor-probe.mjs -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --level=R02088 \
+            --budget-ms=600000 \
+            --node-budget=100000000 \
+            --trace-limit=4096 \
+            --out=logs/p0-admissible-predecessor-forensic.json
+
+      - name: Stage forensic artifact
+        if: always()
+        run: |
+          mkdir -p logs/forensics
+          if [ -f /tmp/pathfinder-e503/logs/p0-admissible-predecessor-forensic.json ]; then
+            cp /tmp/pathfinder-e503/logs/p0-admissible-predecessor-forensic.json logs/forensics/
+          fi
+
+      - name: Upload forensic artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p0-admissible-predecessor-forensic
+          path: logs/forensics/p0-admissible-predecessor-forensic.json
+          retention-days: 14
+          if-no-files-found: warn
