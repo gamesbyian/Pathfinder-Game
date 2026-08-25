@@ -1,95 +1,178 @@
 # Solver architectural speed opportunities
 
-> **Status:** **ASAP / HIGH PRIORITY ACTIVE PROGRAM**.
-> **Peer priority:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md) is also **ASAP / HIGH PRIORITY**. Scheduling reduces wasted search work; this program reduces the cost of the work the scheduler chooses to execute.
+> **Status:** **HIGH PRIORITY ACTIVE PROGRAM** alongside scheduler/generalization work; it must not displace the P0 research-validity blocker.
+> **Peer priority:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Scheduling reduces wasted work; this program reduces the cost of work still worth executing.
 
-Architecture-level runtime opportunities complement the ranked live solve queue. Use with [`solver-architecture.md`](solver-architecture.md), [`solver-budget-determinism.md`](solver-budget-determinism.md), [`solver-scheduling-policy.md`](solver-scheduling-policy.md), and [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+Use with [`solver-architecture.md`](solver-architecture.md), [`solver-budget-determinism.md`](solver-budget-determinism.md), [`solver-research-operating-model.md`](solver-research-operating-model.md), and [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
 
 ## Working rule
 
-The solver is an experimental system, not a public-facing service. Internal representation, traversal order, object shape, and module boundaries are not compatibility contracts. Correctness, level-blindness, reproducible measurement, and measured solve/cost behavior are.
+The solver is an experimental system. Internal representation, object shape, traversal plumbing, module boundaries, and implementation language are not compatibility contracts. Correctness, level-blindness, deterministic work semantics, reproducible measurement, and measured solve/cost behavior are.
 
-Prefer directly testing a reversible high-upside refactor over spending comparable effort proving it safe in advance. A failed large experiment is useful evidence. Search-order changes are allowed, but must be evaluated as behavior changes rather than mislabeled pure-speed work.
+Profile first. Prefer reversible high-upside experiments. A claimed pure-speed change must preserve search work and decisions; a change that alters ordering is a behavior experiment and must be evaluated at matched work.
 
-## Evidence that implementation speed is still material
+Do not optimize because a construct looks inefficient in source. Measure self-time/allocation/GC/lookup cost on representative workloads first. A spectacular microbenchmark that does not move end-to-end solver time is a closed result, not motivation to keep digging.
 
-The 2026-07-30 hot-path campaign found large constant-factor wins: order-preserving changes cut published-corpus wall time 27.1% and a Corpus-2 sample 13.2%; beam tree-order walking was worth roughly 16-30% on measured populations. Later state-buffer reuse, urgency-context pooling, and dense distance storage added further double-digit batch wins. See [`../reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md).
+## Why speed still matters
 
-The lesson is not that the current kernel is poor; it is that representation-level work has repeatedly paid enough to justify larger experiments. This is therefore near-term execution work, not a passive idea list.
+Implementation-level work has repeatedly paid off. The July hot-path campaign cut published-corpus wall time by roughly 27% and a Corpus-2 sample by roughly 13% while preserving search behavior; beam tree-order walking saved roughly 16-30% in measured cases. On 2026-08-23, lazy beam-key construction and collision-free numeric keys produced further multi-percent/double-digit gains at identical search work, while dense `staticNeighborKeys` removed a plainly oversized allocation.
 
-## Already tested: do not rediscover unchanged forms
+Under a fixed product latency ceiling, faster identical search creates potential search headroom. **Do not automatically spend that headroom on a larger ladder.** The scheduler/allocation program decides whether more work is actually valuable.
 
-- **Fully sound DFS/beam transposition/dedup:** weak ceiling. Beam true duplicates were ~0.019% of candidates. See [`../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md).
-- **Removing coarse beam dedup:** negative. On the corrected 75-level test, dedup-on had 18 exclusive solves versus 1 dedup-off exclusive solve. The mechanism is valuable as width/diversity management even though it is not exact state equivalence.
-- **Old numeric beam signature:** invalid above four bits per mechanic field. Production now uses collision-free delimited string tuples; do not restore the old packing scheme.
-- **`UndoToken` object pooling:** 4.6% slower at identical search work. A different state/undo representation remains open; reusing the same object shape does not.
-- **Beam quickselect replacing sort:** profiling showed phase sort too small to matter in the measured case.
-- **Sparse-to-dense for cache locality alone:** weak on the 15x15 access pattern. Dense storage still won elsewhere by reducing allocation/initialization, not by the originally proposed cache-aliasing mechanism.
-- **Pre-resolving ordinary ablation gates:** 2.4% slower; production `cfg === null` is already a cheap fast path.
+## Stop re-testing these unchanged forms
 
-## Open architectural experiments
+- fully sound DFS/beam transposition/dedup as a major opportunity: measured true beam duplicates were ~0.019%; weak ceiling;
+- removing coarse beam dedup: negative because it functions as width/diversity management, not merely exact equivalence;
+- old fixed-width numeric beam signatures: invalid once mechanic cardinalities exceeded their assumed bit fields;
+- `UndoToken` object pooling: measured slower; a different state representation remains open;
+- beam quickselect replacing sort: sort was not a dominant measured cost;
+- sparse-to-dense conversion justified only by cache-locality intuition: weak in the tested form;
+- pre-resolving ordinary ablation gates while retaining the same scorer: slower;
+- hand-rolled hash structures merely because native `Map` seems high-level: numeric-keyed native `Map` already matched/beaten the measured custom form.
 
-### 1. Dense-native search core
+Dated reports retain exact measurements.
 
-Distance arrays are dense, but `staticNeighborKeys`, `visited`, `edgeUsage`, `buildIndexArr` outputs, `gateFlags`, and `reachBlockedArr` still use the packed-key `KEY_SPACE` representation. A grid has at most 225 live cells while `KEY_SPACE` is 1,048,576; `staticNeighborKeys` reserves `KEY_SPACE * 4` slots for at most about 900 useful directed-neighbor slots.
+## Bounded execution-substrate benchmark
 
-Prototype a compiled per-level representation with internal cells `0..N-1`; convert packed keys only at solver boundaries. Move state arrays, mechanic indexes/flags, adjacency, portal destinations, and hot lookup tables onto dense indices together rather than as isolated micro-edits.
+The offline research solver now consumes enough compute that the assumption “the hot kernel remains JavaScript/V8” deserves one explicit bounded test.
 
-This extends an already successful migration. Reuse the distance-array safety pattern: compiler-forced accessor changes where possible, temporary bounds guards, large-corpus read validation, then deterministic A/B.
+This is **not** a rewrite proposal and is not allowed to block already-profiled JavaScript work if the prototype cannot be made cheaply. It is a feasibility benchmark intended to close or elevate the question.
 
-**2026-08-23 first step: `staticNeighborKeys` converted to dense per-level indexing.** A microbenchmark confirmed the KEY_SPACE-sized `Int32Array(KEY_SPACE * 4)` (16.8 MB) was costing ~2ms per allocation purely from its size (not from filling it — only real cells were ever written either way); it's now a compact per-level array addressed via a new `cellDenseIndex: Uint8Array(KEY_SPACE)` (1 MB, same size class as the existing `mustPassIndex`/`mustCrossIndex`/`flipperIndexMap`), ~30x cheaper to allocate. Order-preserving (`nodesExpanded` bit-identical, `solver:bench --check` byte-identical baseline), −2.7% published wall time (consistent, 3/3 rounds), ≈−1% Corpus-2 (noise-level — this specific array's fixed per-solve cost matters far more for many-quick-solves workloads than for individual long hard-level solves). `visited`, `edgeUsage`, `gateFlags`, and `reachBlockedArr` remain packed-key-indexed — not attempted this pass; `gateFlags`/`reachBlockedArr` are 16x smaller than the old `staticNeighborKeys` so the same conversion there would need to independently earn its complexity, and `visited`/`edgeUsage` are already pooled/reused across attempts within one solve (search-state.ts's `STATE_BUF_*` slots) rather than reallocated per prepLevel call, so their allocation-cost profile is different. See [`../reports/2026-08-23-dense-static-neighbor-keys.md`](../reports/2026-08-23-dense-static-neighbor-keys.md).
+### Entry gate
 
-### 2. Beam candidate arena and cheaper coarse dedup
+Run this only when all are true:
 
-Current beam phases allocate `BeamNode` objects, construct string state signatures, build native `Map<string, BeamNode>` tables (plus a near-tie map), sort arrays, and optionally build diversity `Map`/`Set` structures. Preserve the **current coarse merge semantics** exactly; do not replace them with fully sound state equivalence, whose ceiling is already measured as negligible.
+- profiling identifies a compact hot kernel that accounts for material end-to-end time;
+- its inputs/state can cross a native/WASM boundary without first redesigning half the solver;
+- a disposable prototype can be built with bounded effort;
+- the benchmark can preserve or precisely compare logical search work.
 
-Prototype parallel typed arrays / an arena for candidate fields and a custom hash table over the existing scalar tuple, with equality verification on hash collision. Parent indices can replace object references. Compare against the current beam at pinned work with a non-binding deadline; an order-preserving implementation should reproduce decisions exactly.
+If reaching native code first requires a large architectural rewrite, the experiment has failed its own feasibility gate. Continue the measured V8 work instead.
 
-This is the most obvious place to combine with the dense-native core: dense cell IDs shrink keys and simplify hashing.
+### Prototype scope
 
-**2026-08-23 partial progress:** the two per-candidate delimited-string dedup/diversity keys (`sc`/`sk`) used to be built unconditionally for every accepted beam candidate, even in the (common) phases that never reach the `cands.length > beamWidth` branch that consumes them. `BeamNode` now stores the underlying 7 numeric fields as scalars and builds the strings lazily, only where actually consumed — order-preserving (`nodesExpanded` bit-identical, `solver:bench --check` byte-identical baseline node count), −7.8% published / −11.2% Corpus-2-sample wall time on interleaved node-budgeted medians. See [`../reports/2026-08-23-beam-dedup-key-lazy-build-experiment.md`](../reports/2026-08-23-beam-dedup-key-lazy-build-experiment.md).
+Choose one representative hot kernel with minimal integration surface, preferably candidate generation/scoring plus state apply/undo for DFS or beam. Implement the same semantics in one native-compiled form that can realistically be invoked from the current toolchain, such as Rust/C++ compiled to WASM or a native helper where CI/research runners permit it.
 
-**2026-08-23 further progress:** the delimited-string `Map<string, BeamNode>` dedup/diversity keys themselves are now replaced with a provably collision-free numeric encoding (`Map<number, BeamNode>`) wherever it fits — a mixed-radix positional key whose per-field multipliers are each level's own true mechanic cardinalities (never a fixed-width assumption), with a runtime `Number.isSafeInteger` overflow check falling back to the exact same string key on the rare level where it wouldn't fit. A standalone microbenchmark found the win comes from avoiding string construction, not from Map's hashing algorithm — a hand-rolled custom hash table (the literal form suggested above) measured no faster than a native `Map` keyed by a plain number, so the custom-hash-table/typed-array-arena idea was not pursued further; a native `Map` gets the same speed while keeping its insertion-order semantics for free, avoiding having to hand-replicate the near-tie-retention `dm2` map's delete/re-insert ordering. Verified via both a new differential unit test (byte-identical decisions against the string-key fallback on a real search) and the usual node-budgeted A/B: order-preserving, further −5.9% published / −4.9% Corpus-2-sample wall time on top of the lazy-string-key change. See [`../reports/2026-08-23-beam-dedup-numeric-key-arena.md`](../reports/2026-08-23-beam-dedup-numeric-key-arena.md). The candidate-generation/scoring segment remains the dominant remaining self-time bucket within `beamSearchFromGate` — items 4/5 below, not this one, are where further gains would come from.
+Requirements:
 
-### 3. Alternative beam-state materialization
+- identical level/config/seed/work inputs;
+- identical search decisions where the prototype claims semantic equivalence;
+- include JS↔WASM/native boundary, copying, marshalling, setup, and teardown cost;
+- benchmark both many-short-solves and long-hard-level workloads;
+- measure cold/startup and warm steady-state separately;
+- account for V8 JIT warm-up rather than comparing warmed native code with cold JS;
+- include allocation/GC behavior where the alternative changes memory ownership;
+- keep the prototype disposable unless the result is material.
 
-Parent pointers plus one mutable replay state have already been optimized heavily. Tree-order walking reduced replay from 9.78M to 2.08M steps in one measured case, so "walk related paths together" is not new.
+### Decision gate
 
-What remains untested in the documented record is a different state architecture: compact snapshots, checkpoint-plus-delta state, or an arena representation that materializes an expansion state without reconstructing an ancestor path first. Race prototypes; do not assume snapshots beat the current replay machine.
+If representative **end-to-end** solver work is not materially faster after integration overhead, close the native/WASM direction and continue V8-focused optimization. Do not migrate because native code feels more respectable, because one microkernel is faster, or because a synthetic benchmark excludes data movement.
 
-### 4. Compiled/specialized scoring kernel
+If the gain is large enough to change research throughput materially, write a separate migration proposal with a narrow boundary, portability/CI costs, debugging/observability costs, and a staged rollback path. The benchmark itself should not grow into that migration.
 
-`scoreMove` remains a broad interpreter of every scoring feature. Build a scorer once per `(level, profile, template)` that omits impossible mechanics and zero-weight terms and precomputes static candidate quantities where profitable. This is materially different from the already-negative experiment that merely pre-resolved ablation booleans while keeping the same computation.
+## Profile-led compiled/dense hot kernel
 
-Judge by CPU profile plus deterministic work/outcome comparison. Specialization that changes floating-point operation order is a behavior change unless proven decision-identical.
+### Dense-native indexing
 
-### 5. Fused move/state kernel
+The grid has at most 225 live cells while historical packed-key storage addressed a 1,048,576-key universe. `staticNeighborKeys` previously allocated about 16.8 MB for at most ~900 useful directed-neighbor slots; the 2026-08-23 dense conversion produced a measurable speedup.
 
-`getNeighbors()` still returns a fresh array despite a maximum of four grid neighbors, and the architecture doc already lists scratch reuse as open. A larger version is worth testing after dense indexing: fixed neighbor slots, dense mechanic metadata, direct dynamic validity checks, and primitive undo stacks/slabs rather than a general candidate array plus object-shaped `UndoToken`.
+Continue dense indexing only where profiles show worthwhile allocation/lookup cost. Favor a coherent per-level `0..N-1` compiled representation over isolated conversions when several interacting hot structures benefit. Avoid blanket churn where pooled packed arrays are already cheap.
 
-Do not confuse this with the failed `UndoToken` pooling experiment. The open question is whether the hot kernel can avoid that representation, not whether V8 should recycle the same object.
+**Gate:** each additional conversion should name the measured cost it removes and compare end-to-end speed. “The representation is cleaner/smaller” is not enough for a speed-priority change.
 
-### 6. Work-meter hot writes
+### Specialized scoring kernel
 
-The canonical work currency is a contract; its per-operation implementation is not. `applyMove()` and `isConnected()` currently update both the per-solve authority and a legacy module-global cumulative counter. Profile whether local primitive accumulation with bounded flushes can preserve exact budget/provenance semantics more cheaply. Treat as lower priority unless profiling shows material self-time.
+`scoreMove` remains a broad interpreter of scoring features. Prototype a scorer compiled once per `(level, profile/template)` that removes impossible mechanics and zero-weight terms and precomputes static quantities where profitable.
 
-## Suggested order
+This is distinct from the failed experiment that only pre-resolved ablation booleans while leaving the same computation. Treat changed floating-point ordering as a behavior change unless decision identity is demonstrated.
 
-1. Dense-native core plus beam arena/dedup prototype.
-2. Compiled scoring and fused move generation/state mutation.
-3. Alternative beam-state materialization.
-4. Work-meter write cleanup only if profiling nominates it.
+**Pilot gate:** profiling must show scoring/candidate evaluation remains a dominant self-time bucket after recent key optimizations. Compare specialization setup cost on short solves as well as steady-state savings on hard searches.
 
-The first pair has the strongest architectural leverage because it removes representation overhead shared by several later ideas.
+### Fused move/state kernel
 
-## Interaction with scheduling work
+Candidate generation currently crosses relatively general abstractions despite at most four grid neighbors. Profile a fused kernel with fixed neighbor slots, dense mechanic metadata, direct legality/state updates, and primitive undo storage rather than fresh candidate arrays and object-shaped undo records.
 
-Keep the two programs experimentally separable. Scheduler comparisons use machine-independent work so faster or slower hosts do not alter allocation. Pure implementation-speed experiments should preserve search work and decisions when claiming order preservation. If an architectural refactor intentionally changes search order, evaluate it as a behavior change under matched work.
+Do not confuse this with `UndoToken` pooling. The question is whether the representation can disappear from the hot loop.
 
-A scheduler gain must not be described as a kernel speedup merely because it performs less work; a kernel speedup must not silently change scheduler action shares because wall speed is not an allocation input.
+**Stop gate:** if fusion gains come mainly from changing search order/object semantics rather than implementation cost, reclassify it as a behavior experiment instead of continuing to call it pure speed.
 
-## Evaluation
+## Beam state materialization
 
-For a claimed pure implementation speedup: pin deterministic work/node limits, make wall time non-binding, require identical outcomes/search work where the design claims order preservation, and compare interleaved wall medians. For a deliberate search-order/behavior change: use a level-blind matched-work population A/B and report gains, losses, work, and wall time separately.
+Parent pointers plus mutable replay have already been optimized heavily; tree-order walking substantially reduced replay steps. Remaining open alternatives are compact snapshots, checkpoint-plus-delta state, or another materialization strategy that avoids long ancestor reconstruction.
 
-A regression is not inherently disqualifying during experimentation; measure it, understand the trade, and revert if the net result is poor. See [`solver-research-operating-model.md`](solver-research-operating-model.md) for evidence rules and [`solver-future-work.md`](solver-future-work.md) for deferred capability ideas.
+Race prototypes against the current replay machine. Do not assume copying more state is faster.
+
+Before implementation, quantify current replay share after tree-order walking. If replay is no longer material in representative profiles, demote this direction.
+
+## Work-meter and secondary overhead
+
+`applyMove()` and `isConnected()` update both per-solve and legacy cumulative work counters. Only pursue local accumulation/batched flushes if profiling shows material self-time, and preserve exact budget/provenance semantics.
+
+Likewise, avoid speculative micro-optimization of maps, sorts, allocation sites, branch hints, cache layouts, or numeric tricks that are not visible in representative profiles. Hot-path cleverness has a maintenance/correctness cost and must earn it.
+
+## Current beam representation status
+
+Two major 2026-08-23 costs are already addressed:
+
+- dedup/diversity string keys are built lazily rather than for every accepted candidate;
+- collision-free mixed-radix numeric keys use level-specific cardinalities with a safe-integer check and exact string fallback.
+
+A hand-rolled custom hash table did not beat native numeric-keyed `Map`, so the custom hash/typed-array arena variant is closed absent new profile evidence. The dominant documented beam cost moved back toward candidate generation/scoring/state work.
+
+## Suggested execution order
+
+1. Keep working measured current hot spots immediately; do not wait on speculative substrate work.
+2. Run the native/WASM feasibility benchmark only if its compact-entry gate is satisfied; then close or elevate it once.
+3. Continue profile-led compiled scoring/fused move-state work where current profiles justify it.
+4. Continue dense-native conversion only for structures with measured cost.
+5. Re-measure beam replay before prototyping alternative materialization.
+6. Touch work-meter/secondary overhead only when profiles nominate it.
+
+This order deliberately avoids making one speculative native experiment a dependency for known profitable work.
+
+## Representative benchmark set
+
+Do not let speed work optimize only whichever corpus is convenient. Use a compact set covering:
+
+- many short/easy published solves, where fixed setup/allocation cost dominates;
+- representative medium searches;
+- long hard Corpus-2 searches, where per-node/per-candidate cost dominates;
+- beam-heavy and DFS/repair-relevant workloads when the changed kernel touches them.
+
+Report per-class effects as well as an aggregate. A change can be good for short solves and irrelevant or negative on the expensive tail, or vice versa.
+
+## Interaction with scheduling
+
+Keep policy and kernel experiments separable:
+
+- scheduler decisions use machine-independent `workSpent`, never live host speed;
+- pure implementation-speed experiments pin deterministic work and non-binding deadlines;
+- if an architectural change alters search order, evaluate gains/losses at matched work;
+- do not credit less work as a kernel speedup or faster primitives as scheduler intelligence;
+- do not use a speedup as automatic permission to increase aggregate production work.
+
+A faster implementation may allow a product latency budget to be converted into more work later, but that is a separate allocation decision.
+
+## Evaluation protocol
+
+For pure speed claims:
+
+1. profile first and state the measured hotspot/share being targeted;
+2. use representative workloads rather than microbenchmarks alone;
+3. pin work/node limits and keep wall deadlines non-binding;
+4. require identical outcomes/work and, where claimed, search decisions;
+5. compare interleaved repeated wall measurements with warm-up order controlled;
+6. report variance and both short-solve/hard-level behavior;
+7. inspect allocation/GC when representation changes plausibly move them;
+8. validate the production/browser/worker boundary if a native/WASM change affects it;
+9. stop after a clear negative rather than tuning the benchmark until it becomes positive.
+
+For behavior-changing refactors, use the standard level-blind matched-work promotion contract instead.
+
+## Evidence anchors
+
+- [`../reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md)
+- [`../reports/2026-08-23-dense-static-neighbor-keys.md`](../reports/2026-08-23-dense-static-neighbor-keys.md)
+- [`../reports/2026-08-23-beam-dedup-key-lazy-build-experiment.md`](../reports/2026-08-23-beam-dedup-key-lazy-build-experiment.md)
+- [`../reports/2026-08-23-beam-dedup-numeric-key-arena.md`](../reports/2026-08-23-beam-dedup-numeric-key-arena.md)
+- [`../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md)

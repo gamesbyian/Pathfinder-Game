@@ -4,10 +4,12 @@ Use this when a change is conceptually small but can propagate across multiple r
 
 ## Solver attempt, stage, or retry
 
+Before adding one, answer the policy question first: **why is this a new production stage rather than a candidate action/configuration for the scheduler?** A dead-last placement that cannot regress already-solved levels is a safety property, not evidence that the added work is worth its cost.
+
 Check whether the change affects:
 
 1. attempt/stage selection and stable identity;
-2. budget ownership and ordering;
+2. budget ownership, aggregate `workSpent`, and ordering;
 3. sequential orchestration;
 4. raced/worker execution, if that path claims the same planned policy;
 5. attempt/result telemetry;
@@ -17,7 +19,50 @@ Check whether the change affects:
 9. current solver docs and optimization queue, when decision-bearing;
 10. targeted tests plus the solver finish-line gates in [`testing.md`](testing.md).
 
-Do not infer stage identity later from attempt order when the solver can emit it directly.
+Also require, for a production-facing stage/retry:
+
+- current residual marginal solves and work when the stage is actually reached;
+- a comparison against displacement/reordering of existing actions at fixed total work;
+- whether the proposal is only another weight/width/direction/seed/threshold configuration of an existing engine;
+- a reason a systematic configuration/racing experiment is not the better discovery method;
+- independent confirmation if the exact stage/config was selected after mining the evaluation population;
+- fresh-vs-preceded parity unless an intentional typed handoff is part of the stage contract.
+
+Do not infer stage identity later from attempt order when the solver can emit it directly. Do not add a whole-ladder retry when a narrower action can express the measured source of value.
+
+## Solver heuristic, routing, or allocation experiment
+
+Before changing scoring, retention, archetype routing, action order, eligibility, reserves, or budget shares:
+
+1. classify the failure being targeted: correctness, routing, allocation, search quality, or representation/retention;
+2. state the causal premise and the observation that supports it;
+3. state whether the candidate was prespecified or selected after inspecting levels/results;
+4. define the smallest falsifying pilot before broad compute;
+5. pin the comparison currency: `workSpent` across techniques, nodes only within a technique, wall time for implementation cost;
+6. declare the aggregate work envelope and whether treatment can buy extra work;
+7. use shadow/exact evidence first when it can answer the premise without perturbing search;
+8. separate discovery/tuning data from confirmation; group variants by parent;
+9. report gains, losses, reach/participation, errors/truncation, and work, not solve count alone;
+10. define a stop condition before launching a sweep of thresholds/profiles/seeds.
+
+If the hypothesis is “some combination of these knobs may work,” treat it as algorithm configuration. Prefer racing/successive elimination or bounded automatic configuration over serial hand-authored guesses. The best arm of a many-arm sweep is nomination evidence until independently confirmed.
+
+If a technique already fails at substantial/full isolated budget, do not prescribe another nearby budget/reserve by default. First look for operator, restart, retention, state-representation, exact-feasibility, or learned-failure evidence.
+
+## Research data / corpus generation campaign
+
+Before generating another large variant, stress, census, oracle, or lineage dataset:
+
+1. name the unanswered question;
+2. show why existing data/tooling cannot answer it;
+3. state the independent statistical unit and leakage/grouping rule;
+4. define the analysis that will consume the new data;
+5. run a small pilot and verify that the intended signal is observable;
+6. define stopping/expansion criteria before scaling;
+7. record generation and solver-evaluation provenance separately;
+8. decide whether outputs belong on `main`, off-main, in workflow artifacts, or only as rebuildable derived summaries.
+
+Do not generate a large trove because it may be useful someday. Existing large family data is a resource to query before more generation.
 
 ## Solver result or telemetry field
 
@@ -33,6 +78,8 @@ Trace the field end-to-end rather than stopping when TypeScript accepts the prod
 8. downstream analyzers that classify attempts/results.
 
 Prefer a sentinel completeness test that exercises every supported field across the relevant boundaries. Manual property whitelists are drift risks.
+
+If a field is used for research decisions, dropping or changing it is scientific-data corruption, not merely an observability regression. Preserve stage/config/seed/budget/protocol identity strongly enough to reproduce the claim.
 
 ## Level mechanic or wire-format change
 
@@ -116,4 +163,4 @@ High-risk examples are solver stage/default disposition, budget ownership, mutab
 
 ## When this document applies
 
-Use these recipes when a patch crosses representations, transports, persistence, duplicated policy, documentation authorities, or optimized implementations. Ordinary local changes should stay local. The goal is to prevent plausible 80%-complete patches, not to make every edit ceremonious.
+Use these recipes when a patch crosses representations, transports, persistence, duplicated policy, documentation authorities, optimized implementations, or research decision boundaries. Ordinary local changes should stay local. The goal is to prevent plausible 80%-complete patches and expensive experiments with weak inference, not to make every edit ceremonious.

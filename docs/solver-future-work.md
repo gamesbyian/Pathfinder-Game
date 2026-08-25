@@ -1,119 +1,395 @@
 # Solver future work
 
-Unranked solver ideas outside the live optimization queue.
+Deferred or exploratory solver work that is **not currently the top-ranked execution queue**.
 
 | Question | Authority |
 |---|---|
 | What work is next? | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) |
-| Does retained/default-off code await promotion? | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) |
 | How should research run? | [`solver-research-operating-model.md`](solver-research-operating-model.md) |
+| How should portfolio work be allocated? | [`solver-scheduling-policy.md`](solver-scheduling-policy.md) |
+| How should unresolved future state be represented/reasoned about? | [`solver-residual-state-representation.md`](solver-residual-state-representation.md) |
+| Does retained/default-off code await promotion? | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) |
 | How can variants help? | [`variant-level-research.md`](variant-level-research.md) |
 | What did an experiment measure? | [`../reports/README.md`](../reports/README.md) + dated report |
-| Historical contents | [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md) |
+| What did the 2026-08-24 external literature change? | [`../reports/2026-08-24-external-research-pathfinder-synthesis.md`](../reports/2026-08-24-external-research-pathfinder-synthesis.md) |
+| Historical future-work ledger | [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md) |
 
-Before implementing an idea below, check current code, the queue, ledger, reports, and [`tooling-catalog.md`](tooling-catalog.md) for existing capability or a concluded experiment.
+This file is intentionally a **short research backlog**, not an experiment diary. Completed measurements belong in dated reports; closed mechanisms belong in the opt-in ledger; current ranked work belongs in the queue. Before implementing anything here, check current code, the research-status index, [`tooling-catalog.md`](tooling-catalog.md), the queue, the ledger, [`solver-residual-state-representation.md`](solver-residual-state-representation.md) where future-interface/feasibility/beam/repair/caching questions are concerned, and the 2026-08-24 synthesis.
 
-## Deferred opportunities
+## Entry contract for future-work ideas
 
-### Queryable research evidence
+An idea in this file is a **question**, not authorization to build the final mechanism. Before substantial implementation, define:
 
-If joins among level structure, run identity, attempt telemetry, hints/provenance, families, oracle labels, and experiment arms keep spawning one-off scripts, add a derived analytical layer. Require comparability rather than a particular database: reuse `scripts/experiment-manifest-lib.mjs`, keep JSON/JSONL canonical where useful, reject incomparable runs, and keep analytical data out of production policy.
+1. **mechanism premise:** what limitation it addresses and why current evidence points there;
+2. **smallest informative pilot:** the cheapest test that could falsify or materially weaken the premise;
+3. **control/comparator:** including equal total work for search-policy alternatives;
+4. **evidence role:** discovery/tuning vs confirmation vs transfer;
+5. **success gate:** what result would justify the next increment;
+6. **failure/stop gate:** what result closes or demotes the tested form;
+7. **scope of implementation:** prototype plumbing should be disposable unless the pilot earns expansion;
+8. **promotion path:** how an offline effect becomes legal level-blind production behavior.
 
-### Distance-guidance/pruning split for scoring
+Do not turn a deferred idea into a framework project before the pilot demonstrates value. Do not change the success criterion after results arrive without calling the next test exploratory.
 
-`6f00baf` (2026-08-21) tightened `buildDistMap`'s treatment of gates/geese/false-goals, which is safety-monotonic for `lower-bounds.ts`'s admissible pruning but not for `scoring.ts`'s move-ordering guidance. Bisection ([`../reports/2026-08-22-corpus2-node-budget-losses.md`](../reports/2026-08-22-corpus2-node-budget-losses.md)) traced 73 Corpus-2 node-budget losses to that commit, against 90 gains. Reopen only with a concrete proposal for how scoring should consume distance differently from pruning and matched-work evidence that it recovers solves without new losses.
+## Research principles for this backlog
 
-**2026-08-23 (branch `claude/technique-census-solver-wz49v6`): global-swap form measured, net NEGATIVE — do not repeat unchanged; dead-last retry-tier form is the live next step.** Implemented the first proposal above literally: `distance.ts`'s `DistMapOpts.legacyGuidanceRouting` recreates the pre-`6f00baf` routing (geese/gates/false-goals as ordinary passable through-nodes) as a parallel `prep.guidanceGoalDistArr`, wired behind a new default-OFF ablation flag `SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE` that swaps only `SCORE_GOAL_ATTRACTION`'s own distance reads (pruning/admissible-order/`SCORE_FINISH_COMMITMENT` untouched). This is a **global** swap — every level's `SCORE_GOAL_ATTRACTION` term uses the legacy map for the whole solve, not a scoped retry.
+- Prefer a new source of information, representation, operator, or search paradigm over another nearby scoring profile.
+- Prefer systematic configuration/racing over serial hand-tuning when the hypothesis is “some combination of these knobs may work.”
+- Prefer exact/shadow diagnosis before changing heuristic behavior.
+- Prefer fixed-work portfolio competition over additive dead-last retries.
+- Prefer a small falsifying pilot before broad compute.
+- Separate discovery/tuning from confirmation.
+- Treat Corpus 2 and heavily mined variant families as development data, not automatic evidence of generalization.
+- A technique that already fails at substantial/full isolated budget has a search-quality problem until contrary evidence shows useful late hazard.
+- Do not optimize a research proxy after it becomes easy to measure. Lineage survival, badness, profile similarity, exact-label catch rate, and scheduler prediction accuracy matter only insofar as they improve actual solve/work/correctness outcomes.
+- Prefer a Pareto view where capability and cost trade off. A scalar score can hide rare exclusive solves or expensive tails.
+- For exact-resource constraints, do not assume “less used is better.” A dominance/prune needs a proof that one state's possible completions subsume another's.
+- Keep **exact interfaces, relaxed over-approximations, restricted/representative sets, and predictive abstractions** separate. A useful predictor is not a cache key or hard prune.
+- Keep **interface width, basin width, backdoor depth/distance to tractability, and exact-resource opportunity** separate unless evidence supports combining them.
 
-Measured via `solver-level-blind-targeted-sweep.yml` (GHA) and a local `level-blind-capability-sweep.mjs` run, all at production 50M work/node budget, non-binding deadline, commit `4a78534b6`:
+## High-value deferred programs
 
-- **73-level loss population** (the exact set this section's report names): control 15/73, treatment 21/73 — **+9 gains, -3 losses** (`R01535`, `R03045`, `R03333`).
-- **90-level gain population** (the exact set the same report names as gained by `6f00baf`): control 90/90, treatment **79/90 — 0 gains, -11 losses** (`R02659`, `R02722`, `R02310`, `R02149`, `R03329`, `R02616`, `R02651`, `R01273`, `R02509`, `R03052`, `R03184`). This was NOT predicted by the 73-population result alone and is the larger population by loss count.
-- **Published corpus** (160 levels): 160/160 with the flag on, matching the flag-off baseline exactly — zero cost here.
+### Maintained exact/reference formulation
 
-**Net across all three populations: 9 - 3 - 11 = -5.** The global-swap form is closed negative — do not re-enable `SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE` globally or repeat this exact measurement expecting a different population-scale result; the flag remains in the codebase default-OFF as a documented retained opt-in (matching `STRATEGY_REPAIR_ELITE_PREFIX_DFS`'s disposition class), not reverted, because the underlying mechanism (a genuinely different, dedicated guidance-only distance map) is sound and reusable by a differently-scoped consumer.
+**Why it matters:** many current questions are being answered by observing the heuristic solver's failures. An independent exact or bounded reference provides cleaner labels for whether a prefix, retreat, mechanic commitment, residual resource target, or reduced instance is genuinely completable.
 
-**Why this doesn't kill the idea:** the loss population is entirely levels that already solve early in the normal ladder under the corrected distances — the legacy map only breaks them because the global swap forces every attempt, including the ones that were already winning, to use it. A **dead-last additive retry tier** (same `runWholeLadderRetryTier`/`proxyOverrides` shape as `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`/`STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY` in `orchestration.ts`) that only forces `SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE` on *after* the entire normal ladder (main loop, repair, attraction-diversity, admissible-order) has already failed cannot touch any of the 11+3=14 measured losses by construction — a level that solves earlier never reaches the tier. Only the 9 gains (and any other currently-unsolved levels the legacy routing happens to help) are reachable. This is the next implementation step, not a fresh idea — see `docs/solver-optimization-current-queue.md` Priority 7 for progress once it lands.
+CP-SAT/reference tooling already exists and has been useful for repair retreat and prefix feasibility. The missing step is to make it a maintained research instrument rather than an occasional side experiment.
 
-**2026-08-23 (same branch): dead-last retry-tier form built and measured, VALIDATED POSITIVE at +3, zero regressions.** Implemented `STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY` exactly as proposed above: a new `goal-attraction-legacy-distance-retry` stage (order 125, after `repair-late-probe`) that reruns the whole ladder with `SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE` forced on, reached only once every earlier tier has already failed on that level — same `additive-node-headroom` budget policy and 0.5 node-reserve fraction as the other post-`repair-late-probe` retry tiers. Default OFF verified byte-identical (`solver:bench --check`, 45,859,097 nodes unchanged).
+Useful increments:
 
-Measured via the same `solver-level-blind-targeted-sweep.yml` control/treatment method at production 50M work/node budget, commit `95927c6df`: **73-level loss population** 15/73 → 18/73 (**+3: R02158, R02575, R03211; 0 losses** — baseline's 15 solves are a strict subset of the treatment's 18, confirming the "cannot touch a level that solves earlier" argument held exactly, not just in principle); **90-level gain population** 90/90 → 90/90 (**0/0**, same confirmation from the other direction — the tier never even fires here); **published corpus** 160/160 unchanged. **Net +3, zero regressions across all three populations.**
+1. inventory which mechanics/full-level sizes are modeled exactly today;
+2. classify every model component as exact, one-sided relaxation, or unsupported;
+3. add small-instance differential tests against the canonical referee in **both directions**;
+4. support explicit-prefix completion queries and reduced-instance exact controls;
+5. record model limitations, timeout/unknown states, and approximation direction explicitly;
+6. use it to produce exact-live/dead labels for beam/DFS lineage, repair interfaces, residual opportunity, and new propagator/reason tests;
+7. use it to **falsify overcoarse residual interfaces** by searching for two states sharing a proposed signature but differing in exact continuation behavior;
+8. where assumption/proof support is clean, treat cores/MCS-style diagnoses or boundary predicates as offline research outputs rather than runtime truth;
+9. only expand toward full-level competition if measurements justify the engineering cost.
 
-This recovers only 3 of the global-swap form's 9 gains, not all of them — a local check on R02975 (one of the other 6) showed the retry tier fires (reaches the new stage) but still exhausts its ~0.5x node reserve without solving, because by the time it runs, the earlier ladder tiers have already spent most of the shared per-level budget; the global form had the full budget available from move zero. This is a budget-sharing tradeoff, not a bug — the mechanism is provably safe (structurally can't touch the 14 losses) and captures real, validated gains at zero cost. Whether a larger reserve fraction recovers more of the remaining 6 is untested; reopen only with its own matched-work regression check, not an assumption that more budget only helps. **PROMOTED default-ON 2026-08-23** — see `solver-opt-in-experiment-ledger.md`.
+**Hard guardrail:** never report `UNSAT`/dead as puzzle truth from a model that contains a relaxation, omitted mechanic, timeout, or unproven encoding. Approximate models may prove only what their direction logically supports.
 
-### Repair-late-probe seed diversity
+**Pilot gate:** demonstrate reliable bidirectional agreement on a bounded suite plus useful turnaround on at least one active research question before broadening model scope.
 
-`STRATEGY_REPAIR_LATE_PROBE` (promoted 2026-08-21) is a single-seed, dead-last plain-repair attempt for levels `attempts.ts`'s routing never even offered a repair config to. Two established findings suggested more seeds specifically, not more budget or a wider gate: `REPAIR_PROBE_ORDINARY_SEED_SALTS` (the early small-budget repair probe) already found real, if modest, rescues from extra PRNG seeds at a much smaller budget; and the 2026-08-12 CP-SAT repair-retreat investigation ([`../reports/2026-08-12-repair-retreat-cpsat.md`](../reports/2026-08-12-repair-retreat-cpsat.md)) found repair elites have zero rollback slack once their trajectory diverges from every valid solution — ruling out "backtrack further" as a fix (already tried and closed via `STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY`, zero recoveries) but not "commit differently in the first place," which is exactly what a different seed does at the same decision point.
+**Stop gate:** if model maintenance grows faster than the number/value of questions it resolves, keep only the exact/reduced query forms that have demonstrated research value.
 
-**2026-08-23 (branch `claude/technique-census-solver-wz49v6`): built and PROMOTED default-ON same day.** Implemented `STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY`: a new `repair-late-probe-multi-seed-retry` stage (order 128), dead-last after `goal-attraction-legacy-distance-retry`, retrying the same `repairConfigsCount === 0` population across `REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS = [1..7]` extra seeds (repair-late-probe itself always uses seed salt 0), each seed getting its own full `REPAIR_LATE_PROBE_NODE_BUDGET` reserve — a deliberately large, untested swing (up to 35M extra node reserve per level) pending population-scale evidence. Default OFF verified byte-identical (`solver:bench --check` 160/160, 45,859,097 nodes unchanged; full 443-test solver suite passing).
+The reference model does **not** need to beat production. Its value is independent truth.
 
-Measured via the same `solver-level-blind-targeted-sweep.yml` control/treatment method at production 50M work/node budget, commit `6406ea92e`: **73-level loss population** 18/73 → 23/73 (**+5 gains: R02505, R02646, R02439, R02670, R02198; 0 losses** — control's 18 solves a strict subset of treatment's 23); **90-level gain population** 90/90 → 90/90 (**0/0**, the dead-last placement structurally cannot touch already-solving levels, confirmed at population scale again); **published corpus** 160/160 unchanged, byte-identical node count to the flag-off baseline (the mechanism never fires on the published corpus at all). **Net +5, zero regressions across all three populations** — larger than `STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY`'s +3 despite being a purely additive-seed idea with no scoring change. **PROMOTED default-ON 2026-08-23** — see `solver-opt-in-experiment-ledger.md`.
+### Restart/randomization study for systematic search
 
-### Repair-fallback gate widening
+The repair multi-seed result shows that early stochastic commitments can materially change outcomes. That should trigger a systematic question rather than another seed-specific patch:
 
-Recent census mining found many isolated repair wins on levels excluded by `attempts.ts`'s `needsRepairFallback` gate, especially `portal-heavy` and medium/near-Hamiltonian `high-intersection-burden` sub-rules. A plain threshold widening is not a fresh quick fix: prior population evidence found no clean single/pair feature separating cheap repair winners from the much larger ineligible population that never wins, which is why `STRATEGY_REPAIR_LATE_PROBE` was built as an unconditional dead-last shot instead. Raising that late probe from 2M to 5M nodes was separately population-validated and promoted on 2026-08-22 (+3 net, zero losses).
+> How variable is solve/work behavior across legal randomized tie-breaks or restart points for DFS/admissible/related systematic search?
 
-The broader gate question remains open only if a materially different level-blind selector can identify levels worth giving repair a protected/full tier, or evidence shows that >5M repair capability is being systematically stranded. Any proposal must measure the tax on newly gated already-solving levels, not only recovery targets. Current evidence/validation: [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) Priority 7.
+Start with an observation-only population:
 
-**2026-08-23 (branch `claude/technique-census-solver-wz49v6`): broad unconditional form measured, CLOSED NEGATIVE.** Wired the broad form this entry describes (`needsRepairFallback` covering all of `isHighInt(f)` plus `f.arch === 'portal-heavy'`, 545 newly-gated levels) behind a default-OFF `STRATEGY_REPAIR_FALLBACK_GATE_WIDEN` flag and measured it with a population-scale GHA A/B (562-level sample): control 417/562, treatment 415/562 — **0 gains, 2 losses (`R01944`, `R02474`), net −2**. None of the newly-gated levels benefited; two regressed from the unconditional early repair probe taxing their formerly-sufficient main-loop budget. Closed negative for this broad form — do not repeat unchanged; a future attempt needs a materially different, narrower selection mechanism. Full detail: `solver-optimization-current-queue.md` Priority 7.
+- repeat selected hard levels across a **prespecified** deterministic seed/tie-break set;
+- measure solve probability and the work distribution, not only the best observed run;
+- identify heavy-tail or bimodal cases;
+- compare bounded geometric/Luby-like/restart schedules with equivalent aggregate work;
+- preserve an unrandomized control;
+- account for **all** restart work in the treatment, not only the successful seed's work.
 
-**Reconciliation (2026-08-22, second follow-up):** this entry's "not a quick fix" framing understates the standing evidence against a plain gate-widening specifically — `STRATEGY_REPAIR_LATE_PROBE`'s own promotion comment (`stage-budget.ts`) already recorded, for the whole corpus, that "no single/pair feature cleanly separates 'repair wins cheaply here' from the much larger ineligible population that never wins," which is exactly why that tier was built to try repair unconditionally at the dead-last position instead of selecting levels via a wider feature gate. Re-deriving this on a narrower, current-code, non-stale population (13 confirmed-still-unsolved `hi:medium-high-catchall` levels wanting `dfs:repair:repair*`, see docs/solver-optimization-current-queue.md Priority 7's 2026-08-22 second-follow-up entry) reproduces the same non-separation across `reqInt`/`mustPass`/`mustCross`/`mustTurn`/`portals`/`flippers`. A future attempt at this idea needs a materially different selection mechanism (not a bigger/different threshold on the same feature set already shown not to separate) to be worth testing — otherwise it is re-litigating an already-rejected form.
+Do not cherry-pick the best seed and then compare it against a single deterministic control. If seeds were searched, the best seed is tuning evidence. A production restart policy must specify its generic seed/schedule in advance and pay for failed restarts too.
 
-**Better-scoped lever found instead, RESOLVED same day: `REPAIR_LATE_PROBE_NODE_BUDGET` raised 2,000,000 → 5,000,000 (`stage-budget.ts`), promoted.** Since `STRATEGY_REPAIR_LATE_PROBE` already reaches every `needsRepairFallback`-excluded level unconditionally at the dead-last tier, raising its flat node cap costs nothing on any level that solves earlier (main loop still exits at first success) — architecturally lower-risk than gate-widening, which changes budget-sharing for every newly-gated level including ones that already solve fast. A local 13-level hand-picked sample (`hi:medium-high-catchall` confirmed gaps) found 1/13 newly solved at 5,000,000 — directionally consistent with the shipped tier's own recorded 8.3% (26/314) hit rate but not sufficient evidence alone to promote a corpus-wide constant change. Ran the population-scale A/B this called for instead: added `--repair-late-probe-node-budget` to `level-blind-capability-sweep.mjs` and both GHA capability workflows, then dispatched `solver-archetype-sample-ab.yml` with every archetype listed as eligible (this lever isn't archetype-scoped, so that's a genuine uniform-random 300-level Corpus-2 sample plus the invariant full Corpus-1 + published, 562 levels) twice with identical seed/ref, differing only in the node-cap input. Result: control 421/562, treatment 424/562 — **+3 net gains (`R00477`, `R02271`, `R03045`), zero losses**, +0.54% nodes / +1.46% work. Promoted; `solver:bench --check` 160/160 byte-identical, full `stage-budget.test.ts`/`orchestration.test.ts` and `ci:fast` pass. Full detail: docs/solver-optimization-current-queue.md Priority 7's 2026-08-22 second-follow-up entry.
+**Pilot gate:** show reproducible across-seed variance on unrelated levels and a restart schedule that improves the solve/work frontier at equal aggregate work.
 
-The broader gate-widening idea above (widening `needsRepairFallback` itself to cover `portal-heavy` and more of `high-intersection-burden`) is a different mechanism from this cap raise — the late-probe tier's higher cap gives every `repairConfigs`-empty level a bigger *unconditional, dead-last* shot, but a level whose real winning repair search needs meaningfully more than 5,000,000 nodes still won't be reached by it; the gate-widening question (giving such levels repair as a *protected, budgeted* tier rather than a capped afterthought) was blocked on the "no clean feature" finding above, and is now empirically closed for its broad form.
+**Stop gate:** if variance is small or best schedules do not beat simply continuing the baseline search at equal work, close systematic-search restart expansion rather than proliferating seed actions.
 
-**2026-08-23 (branch `claude/technique-census-solver-wz49v6`): broad gate-widening form CLOSED NEGATIVE, population-scale GHA A/B.** Wired the exact broad form this entry describes (`needsRepairFallback` unconditionally covering `isHighInt(f)` — dropping the `VERY_HIGH_REQINT` floor — plus `f.arch === 'portal-heavy'`, 545 newly-gated levels) behind a new default-OFF `STRATEGY_REPAIR_FALLBACK_GATE_WIDEN` flag (`ablation-config.ts`/`attempts.ts`) specifically so the tradeoff this entry called for could be measured directly rather than reasoned about. Dispatched `solver-archetype-sample-ab.yml` twice (`archetypes=portal-heavy,high-intersection-burden`, same seed/ref/commit, differing only in the flag) — a 300-level Corpus-2 archetype-eligible sample plus the invariant full Corpus-1 + published, 562 levels. **Result: control 417/562, treatment 415/562 — 0 gains, 2 losses (`R01944`, `R02474`), net −2.** None of the 545 newly-gated levels in this sample benefited; two regressed, consistent with the unconditional early repair probe taxing/starving their formerly-sufficient main-loop budget. This independently confirms, at population scale rather than a 13-level sample, the "no clean feature separates repair-wins from the ineligible population" finding above. **Closed negative for the broad unconditional-`isHighInt`/`portal-heavy` form** — do not repeat unchanged. The flag stays in the codebase default-OFF (not reverted) as a documented-negative retained opt-in, so a future materially-different (narrower) selection mechanism can reuse the wiring. Full detail: docs/solver-optimization-current-queue.md Priority 7.
+A positive result would justify a generic restart action for the scheduler. A negative result closes a whole class of “try another ordering seed” speculation cheaply.
 
-### Cross-technique cooperation
+### Learned failure / reason-producing propagation
 
-Use named **producer -> receptor** hypotheses with a measured receptor failure, producer information the receptor cannot cheaply rediscover, timely/bounded consumption, protected independent search, positive shadow evidence, and a level-blind matched-work verdict. Method: [`solver-research-operating-model.md`](solver-research-operating-model.md#producer--receptor-cooperation). Historical design: [`archive/snapshots/solver-interoperability-and-cooperation-plan.md`](archive/snapshots/solver-interoperability-and-cooperation-plan.md).
+The broad “does search revisit failures?” premise has already split by search paradigm and should **not** be rerun generically.
 
-### Broader scaling research
+- Repair already has a shipped per-call exact-signature dead-end cache. On hard repair-close cases, exact repeated dead-end signatures were common enough to save work. Its semantics are deliberately local and weak: a hit means that the randomized repair continuation previously dead-ended from that exact state/context, **not** that the state is logically unsatisfiable.
+- Systematic DFS exact transposition was separately measured with a sound full-state signature and found weak, roughly 0.5–16% repeated-state opportunity rather than the misleading 92–99% seen under a loose unsound abstraction. Another exact DFS transposition-table push is therefore closed absent materially new evidence.
+- Existing cheap sound prune reasons already cover many obvious dead states, so a learned reason that merely restates them late is unlikely to pay.
 
-Controlled variants can test navigable area, required length, intersection pressure, mechanic density, portal load, and related structure. Existing exact-length work: [`solver-required-length-sweep.md`](solver-required-length-sweep.md). Methods: [`variant-level-research.md`](variant-level-research.md). Treat parent families as statistical units.
+The remaining question is narrower and more interesting:
 
-### Recipe cousins / generated families
+> Do expensive **sound** failures, across different exact states, share a compact structural reason that becomes knowable materially earlier than the solver currently rejects them?
 
-Use recipe cousins to transfer-test exact-witness sibling findings across newly generated witnesses with controlled feature recipes. Do not mix them with sibling counterfactual-effect estimates. Query the existing off-main trove before generating another large one.
+Candidate reason vocabulary includes exact resource no longer attainable, residual maximum capacity below target, obligation isolation behind a cut, Hall/matching deficiency in a necessary relaxation, finite-state/resource nonattainment, joint resource/topology incompatibility, and assumption-based cores from validated exact models. These are hypotheses, not preapproved hard prunes.
 
-### AI/manual accepted-path diagnosis
+Investigate observation-first:
 
-Treat a valid missed path as evidence, not its narrator's explanation. Referee-validate, record provenance, then locate where unchanged search generated, ranked, pruned, or lost compatible material. Repeated divergence can nominate generic heuristic/representation work. See [`solver-research-operating-model.md`](solver-research-operating-model.md#accepted-path-differential-diagnosis).
+1. collect a bounded sample of soundly dead situations from existing prune proofs, systematic exhaustion where proof scope is clear, and/or exact-prefix labels; keep these separate from repair's merely unproductive randomized dead ends;
+2. group only candidate reason classes that arise from observed repeated structure, rather than inventing a large hand-written nogood language up front;
+3. for every candidate class, state the proof scope and every state field its validity depends on;
+4. measure recurrence across distinct exact states and unrelated parents;
+5. measure the earliest point the reason could be known, the current rejection point, and work performed in between;
+6. measure overlap with existing cheap prunes and exact-state caches;
+7. estimate checking/storage cost before adding a hard reject;
+8. only if one compact class earns its keep, prototype a bounded per-solve reason store or reason-producing prune for that class.
 
-### Learned/fitted routing
+Conflict-directed backjumping is a separate later branch. It is warranted only if systematic-search failures demonstrably depend on a small subset of earlier decisions. Do not attach CBJ to randomized repair merely because both appear in conflict-learning literature.
 
-Consider fitted routing only with a stable target and enough family-balanced evidence. Split by parent family, preserve level-blindness, and compare with simpler mechanics-conditioned rules and production at matched work. Never split siblings across train/test.
+**Hard guardrails:** no cross-level persistent learning in cold capability; no approximate “reason” may become a hard reject; every nogood identity must include all state needed for its proof scope.
 
-### Deferred 2026 solver-aware measurements
+**Pilot gate:** at least one compact reason class must be sound, recur across distinct states and unrelated parents, become available appreciably before current rejection, and plausibly save more work than it costs to check/store.
 
-Historical campaign: [`archive/snapshots/solver-aware-game-architecture-2026-08-20.md`](archive/snapshots/solver-aware-game-architecture-2026-08-20.md).
+**Stop gate:** if abstractions collapse toward full-state identity, rarely recur, overlap almost entirely with current cheap prunes, or become recognizable only when the solver already rejects, close abstract nogood learning before building general conflict infrastructure.
 
-- **Contrastive failure-directed activity:** needs per-branch sibling-outcome telemetry; build only for a live retention question.
-- **Hazard-based adaptive capping / participation floors:** needs censored per-attempt hazard telemetry; reconcile with current census/routing evidence first.
-- **Multi-abstraction CEGAR:** substantial standalone refinement machinery.
-- **Detour-gadget discovery / slack allocation:** first mine stored solutions for interface-equivalent subpaths with different length/intersection deltas.
-- **Interface-preserving repair surgery:** requires stronger causal-window evidence before a live operator.
-- **Partial-order / commuting-segment analysis:** mine stored solutions first.
-- **Eulerian/local-transition relaxation:** shadow the smallest E0 relaxation first.
-- **Topology-signature diversity:** first test whether the signature separates useful frontier modes.
-- **Topology-first skeleton compilation / automatic rule synthesis:** defer pending abstraction/counterexample/proof machinery and cost evidence.
-- **Shared compiled puzzle graph:** reopen only for a concrete consumer that removes duplicate semantics without weakening the independent oracle. See [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md).
+### Automatic algorithm configuration and portfolio construction
 
-These remain unranked until current evidence makes one relevant.
+The solver has enough configurable dimensions that manual profile design is no longer an efficient exploration method. Candidate dimensions include weight vectors, structural templates, direction, beam width/diversity, admissible tie-breaks, seeds/restarts, eligibility rules, and budget bands.
 
-## Reopening closed ideas
+Deferred work beyond the scheduler's first static version:
 
-Reopen only when the mechanism or receptor materially changes, new information alters the decision, new evidence falsifies the closure reason, or a former cost can now be avoided. A small constant/sample/workflow change does not reopen an unchanged negative unless that parameter was the unresolved gate.
+- expose a clean conditional configuration schema over existing knobs;
+- bound ranges before searching them; do not let an external configurator invent an effectively unbounded policy language;
+- add bounded racing/successive-elimination support so poor configs die early;
+- optionally integrate an external configurator offline if the plumbing cost is justified;
+- optimize **marginal** portfolio coverage/work and rare exclusive capability rather than standalone solve count;
+- treat continuation tranches as candidate actions rather than permanent entitlement;
+- use grouped/held-out validation and report the number/range of configurations searched;
+- compare against simple baselines so complexity must earn its place;
+- distill successful configurations into a small understandable production action set rather than preserving the entire search space as named profiles.
 
-## Closed forms not to rediscover
+**Pilot gate:** demonstrate that systematic search finds configurations/portfolio combinations materially better than the best existing hand-authored candidates on development data, then retain improvement on independent confirmation.
 
-See the current queue for definitive dispositions. Repeatedly closed forms include universal beam widening, unconditional must-cross attraction, broad cold-start portfolio scheduling, plain extra repair budget for plateaued repair, static repair-fallback reserve, blind late-tier carve-outs, repair plateau penalties, soft recombination, exact relinking, repair turn bias, admissible-order LDS, and rejected admissible-order density/profile reserves.
+**Stop gate:** if a simple current-action subset/reorder captures nearly all measured headroom, do not build a large configurator integration merely because the parameter space is interesting.
 
-Also closed/deprioritized from solver-aware work: measured fully-sound DFS/beam transposition caching, exact whole-level symmetry canonicalization as a meaningful stress lever, static forced-sequence macros on measured populations, and the three narrow Tier-2 hard-prune/shadow reasoners already scored at atlas scale.
+Survival/hazard, bandit, or explicit value-of-computation scheduling belongs **after** the simple static-tranche scheduler demonstrates held-out value and leaves material residual headroom. If that gate is crossed, interface/basin/backdoor/conflict telemetry becomes a candidate dynamic feature family rather than current scheduler scope. See [`solver-scheduling-policy.md`](solver-scheduling-policy.md).
 
-For retained switches use [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md); code presence does not imply open status.
+### Generalization/challenge corpus maintenance
+
+Once the first locked/fresh transfer cohort exists, maintain it as a renewable resource:
+
+- never inspect exact failures while a treatment is being designed against it;
+- expose aggregate results only when practical during iteration, keeping exact identities/failure traces hidden until a decision is frozen;
+- once repeated exact inspection begins, reclassify that cohort as development data;
+- replenish with fresh generated/editor-like levels under declared generation rules;
+- keep challenge distributions distinct enough to detect overfitting to current stress-generation quirks, not merely “harder versions of the same generator”;
+- keep sibling variants in one split;
+- record generator/version/distribution metadata so transfer sets can be compared over time.
+
+The challenge set should test **distributional transfer**, not become a secret leaderboard that agents optimize against by repeated peeking.
+
+**Pilot gate:** establish one reproducible holdout creation/split protocol and use it for at least one selected solver treatment.
+
+**Stop/renewal gate:** once exact failures materially influence design, retire/reclassify the exposed set and create a new locked transfer cohort.
+
+This program is about claim quality, not runtime capability, but it protects every later research result.
+
+## Search-quality directions that remain plausible
+
+### Residual representation and bounded future models
+
+Durable concepts and role/soundness distinctions live in [`solver-residual-state-representation.md`](solver-residual-state-representation.md).
+
+The third-wave literature adds four deferred questions. They are **not** four implementation projects.
+
+1. **Exact interface/context:** does any bounded residual family admit a compact boundary state that is actually future-sufficient?
+2. **Restricted/representative future set:** can a small retained family preserve materially more extension capability than scalar top-K beam selection?
+3. **Relaxed future model:** is there a cheap over-approximation that proves new deadness/bounds beyond existing prunes?
+4. **Counterexample-guided refinement:** when a coarse signature fails, do exact counterexamples repeatedly point to a small missing distinction rather than exploding toward full state?
+
+Potential structural labels include:
+
+- interface/frontier width;
+- connectivity partition/boundary state;
+- finite mechanic/product state;
+- exact-resource counters/residues;
+- solution density/abstract future mass;
+- backdoor depth/distance to a tractable residual class.
+
+**Pilot gate:** one small reduced/observational population shows a recurring compact structure that answers an existing ranked question better than current descriptors and can be falsified/validated with the reference model.
+
+**Stop gate:** if interfaces immediately approach full state, width explodes, exact counterexamples require idiosyncratic fields, or a relaxed model duplicates current prunes, do not build DD/ZDD/CEGAR/backdoor infrastructure.
+
+### Residual future opportunity beyond current prunes
+
+The solver already uses length/intersection overflow, goal distance, parity, MP/MC lower bounds, connectivity, and related hard checks. Do **not** start a generic RCSP/label-setting rewrite or assume ordinary resource dominance transfers to exact targets.
+
+The open feasibility question is narrower:
+
+> Among states that pass the current prune gauntlet, is there a cheap residual quantity or safe relaxation that separates exact-live from exact-dead states materially earlier than current rejection?
+
+Prespecify only a few families:
+
+- **upper** residual capacity, complementing existing lower bounds;
+- parity/congruence or small attainable-value summaries for exact length/intersections;
+- residual component capacity and cut/bridge/corridor scarcity;
+- joint obligation/topology summaries;
+- a compact finite-state/resource propagation model where a mechanic subset genuinely admits one.
+
+Possible roles must remain separate:
+
+- proved one-sided condition -> candidate hard prune;
+- safe over-approximation -> candidate relaxed bound/deadness proof;
+- predictive but unsound -> ranking/beam/repair descriptor only;
+- expensive exact/relaxed computation -> offline diagnostic/reference label;
+- recurrent compact impossibility -> candidate learned-failure reason.
+
+For exact targets, “less resource used” does not automatically dominate “more resource used.” A hard dominance relation needs a proof that one state's attainable completion set subsumes another's.
+
+**Pilot gate:** a descriptor/relaxation adds reproducible early exact-live/dead separation beyond existing prune outcomes on unrelated parents and has plausible check cost.
+
+**Stop gate:** if proposed summaries mostly duplicate existing prunes, rarely separate exact labels, or require near-exact residual solving to compute, do not expand generic completion-bound machinery.
+
+### Beam retention and survivor selection
+
+Exact-prefix evidence now distinguishes at least two failure shapes:
+
+- **A/D-class extinction:** exact labels have repeatedly shown score-preferred dead material surviving while a lower-ranked exact-live sibling is lost, including width-saturated D cases;
+- **B-class near-ties:** resolved cases have been live/live, so they should not automatically receive the same treatment.
+
+The next question is not generic “make beam more diverse.” It is:
+
+> At proven A/D extinction parents, does a small set of cheap level-blind descriptors reveal that the current survivor set spends multiple slots on states with effectively similar futures while an exact-live alternative occupies an underrepresented structural class?
+
+The third-wave literature sharpens the ideal: a survivor set should be thought of as a **restricted representation** of true futures, and representative-set theory gives an exact bounded-width analogue where a small family collectively preserves extension capability. Pathfinder has no such guarantee today; the value is the target, not the machinery.
+
+Start offline on existing lineage/exact-label material. Prespecify a **small** descriptor set drawn from already-available or cheap runtime state, including remaining length/intersection resources, outstanding objective/mechanic masks, existing MustCross/flipper diversity state, and selected residual opportunity/interface summaries where they add information beyond current prunes. Do not launch a broad learned-feature search merely because many descriptors are available.
+
+A descriptor is interesting only if it recurs across unrelated parents and separates useful future coverage better than score alone **and** a neutral random-reserve control.
+
+If that premise holds, test the simplest expression first:
+
+- a bucket/quota or crowding rule over the descriptor; or
+- one small reserve slot, with a random reserve as neutral control.
+
+Keep beam width unchanged for the primary comparison and match total `workSpent`; include ordinary width increase as the “just buy more beam” control. Known-lineage or exact-live survival is still only diagnostic. Promotion requires actual cold solve/work improvement.
+
+**Pilot gate:** recurring A/D future-coverage structure on unrelated parents plus a simple descriptor-aware treatment that beats score-only, random-reserve, and width-only explanations at the relevant boundary.
+
+**Stop gate:** if descriptor structure does not recur, random reserve performs equally well, or better exact-live retention fails to become solve/work improvement, close broad diversity work rather than escalating.
+
+Do not jump to DPP subset selection, MAP-Elites, large novelty archives, representative-set algebra, or a decision-diagram engine unless simple evidence first proves real future-coverage structure that those mechanisms specifically address. Coarse beam dedup is already an intentional population-shaping policy, not an exact-equivalence mechanism.
+
+### Repair reachability, reconstructability, and operator quality
+
+Plain repair has unique deep capability, but most hard residual levels still fail after large isolated budgets. The external LNS literature is useful mainly as a diagnostic vocabulary; Pathfinder repair is not textbook routing ALNS and should not mechanically import destroy/reinsert machinery.
+
+Exact repair-retreat work already answers the crude rollback question by showing **both regimes**:
+
+1. some retained elites become provably unrecoverable at an early choice, so useful repair would have to reopen substantial earlier structure;
+2. other elites remain exactly completable until only 1–2 moves before their observed dead end, yet current randomized repair and `closeLengthGap`-style reconstruction can still fail from those exact-live states.
+
+The second regime matters because a state can be **reachable in principle but effectively unreconstructable by the current repair paradigm**. On the strongest observed example, CP-SAT proved a long exact completion from a late prefix while thousands of repair-style randomized continuations all died quickly and a vastly enlarged `closeLengthGap` search still failed. More rollback depth or more of the same local search is not the obvious remedy there.
+
+So do **not** run another generic rollback census or indiscriminately tune ruin size. Instead classify a bounded unrelated-parent sample on two independent axes:
+
+1. **reachability:** how far back must the prefix be relaxed before an exact completion exists?
+2. **reconstructability by current repair:** from an exact-live prefix, how much viable basin does current repair expose before dying?
+
+Third-wave structural questions can enrich that diagnosis without becoming runtime features:
+
+- what is the residual/interface width at the repair boundary;
+- does a core identify frozen commitments already sufficient for impossibility;
+- does an MCS/diagnosis identify a small relaxation that restores feasibility;
+- does the residual appear shallow in backdoor depth/distance-to-tractability even when nominal neighborhood size is large;
+- does a finite-state/resource subproblem admit stronger bounded reconstruction than random rollout.
+
+Then ask whether cheap, hint-free runtime state can distinguish early-broken states from exact-live-but-repair-hostile residuals. Known-solution common-prefix distance remains discovery evidence only and is illegal as a production feature.
+
+Only after a recurring legal descriptor separates regimes should implementation branch:
+
+- **early-broken:** one deeper or dependency-targeted prefix/splice reopening mechanism;
+- **late-live but repair-hostile:** one stronger bounded reconstruction mechanism, plausibly exact/constraint-assisted on a deliberately small residual, rather than more random rollout or another copy of ordinary DFS.
+
+Do not bundle these into an adaptive-repair framework first. Do not build operator weighting, bandits, or RL selection until at least two complementary operators independently demonstrate conditional value. A selector cannot manufacture useful operators.
+
+**Pilot gate:** cheap legal descriptors separate reachability/reconstructability regimes across unrelated parents strongly enough to nominate one regime-specific treatment.
+
+**Stop gate:** if cheap descriptors do not predict the regimes beyond already-known coarse correlations, close static regime routing; if a treatment only improves badness or exact-prefix survival without cold solve/work gain, close that operator form.
+
+### State-conditioned must-cross reasoning
+
+Unconditional must-cross attraction is closed. The remaining plausible form is a live-state policy that distinguishes when to target, defer, or reserve a second approach. Require recurrence across unrelated levels/families and shadow separation before touching scoring.
+
+**Pilot gate:** a state descriptor must separate exact-live/dead or known successful/failing must-cross choices better than current local heuristics on held-out parents.
+
+**Stop gate:** if the descriptor is effectively a family identifier, only works on the cases used to invent it, or requires known-solution information at runtime, reject it.
+
+### Distance guidance distinct from admissible pruning
+
+`6f00baf` correctly tightened pruning distance semantics but changed finite-budget guidance behavior. The global legacy-guidance swap was net negative; the dead-last retry recovered a few solves by buying extra search.
+
+A genuinely open form would derive a better **guidance-specific** distance or opportunity-cost feature, validated by first-divergence evidence, rather than replaying the old map globally or adding another whole-ladder retry.
+
+**Pilot gate:** identify a recurring ranking error caused specifically by the distance term and show a guidance quantity that corrects it in shadow/paired traces without changing pruning truth.
+
+**Stop gate:** do not continue trying blended/legacy distance formulas merely because some threshold somewhere recovers a selected regression population.
+
+## Representation and interoperability ideas
+
+### Orientation equivariance diagnosis
+
+Detailed policy lives in [`variant-level-research.md`](variant-level-research.md). The durable research question is not “make every rotated trace identical.” It is to locate recurring **harmful** first non-equivariant decisions on transform-controlled parent pairs.
+
+Heuristic invariance does not imply search equivariance: equal corresponding scores can still diverge through successor order, tie-breaking, retention/dedup, coordinate-derived identifiers, or PRNG-consumption order. Current direction inversions are aggregate-balanced, so there is no evidence for a universal directional correction.
+
+Residual-representation research adds one cross-cutting check: any descriptor claimed to be structural should declare whether it is expected to be invariant or equivariant under puzzle symmetries. A coordinate-dependent frontier/cache/reason identity can fragment equivalent evidence even if the underlying search asymmetry is harmless.
+
+**Pilot gate:** the same first-divergence mechanism recurs across unrelated parent-level cliffs and materially changes solve/work.
+
+**Stop gate:** if cliffs are mechanism-heterogeneous, directionally balanced, and provide complementary coverage, treat them as finite-budget diversification and do not pursue global canonicalization/invariance engineering.
+
+### Typed producer -> receptor artifacts
+
+One search stage may occasionally discover useful information another cannot cheaply rediscover. Potential examples include proven dead interfaces, repair elites, exact-live prefix descriptors, frontier scarcity signals, or a compact structural certificate class.
+
+Do not build a general blackboard. A handoff must satisfy the producer/receptor contract in [`solver-research-operating-model.md`](solver-research-operating-model.md): demonstrated receptor limitation, novel useful information, timely arrival, bounded storage/replay cost, independent control, positive shadow evidence, and matched-work benefit.
+
+Count artifact production, storage, replay, and branch-multiplication cost. Information is not free because it was produced by work the solver was already doing.
+
+**Stop gate:** if the receptor can cheaply rediscover the same information, the artifact arrives too late, or consumption displaces more useful search, keep the stages independent.
+
+### Queryable analytical layer
+
+Only pursue a new analytical store if repeated joins among run identity, attempt telemetry, static features, family identity, oracle labels, and experiment arms continue spawning bespoke scripts after the current census/lifecycle infrastructure is extended.
+
+Requirements:
+
+- existing manifests remain the source of comparability truth;
+- generated views are rebuildable;
+- canonical raw evidence stays in existing JSON/JSONL/artifact forms where appropriate;
+- no second production-policy truth source;
+- new infrastructure must replace repeated one-off work, not merely centralize it aesthetically;
+- define the specific repeated queries it will eliminate before choosing a database/schema.
+
+**Stop gate:** if two or three reusable join helpers solve the real pain, prefer them to a general research database.
+
+## Architecture/runtime ideas
+
+Runtime research is ranked separately in [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md). Capability work should remember that implementation speed increases effective search under latency limits, but pure-speed and policy evidence remain separate.
+
+A native/WASM search-kernel prototype is explicitly worth a **bounded feasibility benchmark**, not a rewrite commitment. The benchmark must include boundary/marshalling overhead, warm and steady-state JS behavior, representative short and long searches, identical logical work/decisions where possible, and end-to-end caller cost.
+
+**Stop gate:** if representative end-to-end speed is not materially better, close it and continue V8 optimization. Do not rationalize a rewrite from an isolated microkernel result.
+
+## Explicitly demoted patterns
+
+Do not treat these as open research directions without materially new evidence:
+
+- another generic dead-last whole-ladder retry;
+- another global seed fan-out that simply buys more total work;
+- another hand-authored scoring profile whose novelty is only weights/name;
+- widening an existing coarse repair gate by trying nearby thresholds;
+- broad extra repair budget after full-budget failures;
+- generic repair elite-pool diversification/relinking without a newly diagnosed conditional failure mode;
+- a general ALNS/adaptive-operator framework before complementary operators earn it;
+- universal beam-width increases;
+- DPP/MAP-Elites/large novelty-archive beam machinery before a simple descriptor-aware policy shows unexplained headroom;
+- production ZDD/Graphillion/TdZdd or a generic decision-diagram engine before a bounded interface question earns it;
+- representative-set algebra without an exact interface/property matching its proof assumptions;
+- generic `REGULAR`/`MULTICOST-REGULAR` infrastructure before a compact finite-state residual subproblem earns it;
+- online CEGAR/interpolation/backdoor machinery before one candidate abstraction/tractable class proves value;
+- exact DFS transposition-table work absent new sound recurrence evidence;
+- context-equivalent caching from an approximate interface;
+- full CDCL/LCG-style learning architecture absent a compact recurring sound reason class;
+- generic RCSP/label-setting infrastructure or exact-resource dominance without a sound subsumption proof;
+- broad graph canonicalization or production rotate/mirror retries instead of diagnosing symmetry bias;
+- survival/hazard/bandit/VOC scheduler infrastructure before simple conditional-tranche scheduling shows residual headroom;
+- giant variant generation before defining the unanswered question and analysis plan;
+- full-corpus A/Bs for ideas already falsified by a narrow causal test;
+- retaining closed experimental code solely as an archive;
+- building a scheduler/configuration/reference-model/framework before its smallest value-of-information pilot succeeds;
+- optimizing an intermediate research metric after actual solve/work improvement has failed to appear.
 
 ## History
 
-The pre-consolidation ledger, including 2026-08-07 triage, capability figures, numbered investigations, chronologies, and old ordering, is frozen at [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md).
+Detailed pre-consolidation ideas, experiment narratives, old queue states, and concluded follow-ups are preserved in [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md), [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md), and dated reports. This live file should stay about **plausible future work and its gates**, not chronology.

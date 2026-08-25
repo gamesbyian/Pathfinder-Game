@@ -7,6 +7,21 @@ test('every policy stage has exactly one canonical spec and label', () => {
     for (const id of SOLVER_STAGE_IDS) assert.equal(solverStageSpec(id).telemetryLabel, id);
     assert.throws(() => solverStageSpec('future-stage' as never), /Unknown solver stage/);
 });
+test('promoted retry metadata does not retain stale pre-promotion opt-in status', () => {
+    for (const id of [
+        'dedup-near-tie-retry',
+        'admissible-order-non-default-retry',
+        'connectivity-axis-exhausted-retry',
+        'mc-neighbor-budget-retry',
+        'repair-late-probe',
+        'goal-attraction-legacy-distance-retry',
+        'repair-late-probe-multi-seed-retry',
+    ] as const) {
+        assert.equal(solverStageSpec(id).disposition, 'promoted', `${id} disposition drifted from its production-default promotion state`);
+    }
+    assert.equal(solverStageSpec('repair-probe-shrink-recovery').disposition, 'opt-in');
+    assert.equal(solverStageSpec('repair-elite-prefix-dfs-retry').disposition, 'opt-in');
+});
 test('legacy markers derive from canonical stages', () => {
     assert.deepEqual(legacyStageTags('repair-probe-shrink-recovery'), { repairProbe: true, repairProbeShrinkRecovery: true });
     assert.deepEqual(legacyStageTags('mc-neighbor-budget-retry'), { mcNeighborBudgetRetry: true });

@@ -76,6 +76,53 @@ test('scoreMove applies template bonus without depending on Solver globals', () 
   assert.equal(withTemplate - noTemplate, computeTemplateBonus(target, pos, level, TEMPLATES.perimeterCCW, 0.25));
 });
 
+test('ordering research observer compares profiles and templates without changing survivor order', () => {
+  const pos = PACK(0, 0);
+  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 0), reqLen: 8 });
+  const prep = prepLevel(level);
+  const state = makeState(pos);
+  const original = [PACK(0, 1), PACK(1, 0), PACK(1, 1)];
+  const off = [...original];
+  scoreAndSort(off, pos, state, level, prep, POLICY_PROFILES.default, null);
+  const records: import('./types.js').OrderingResearchRecord[] = [];
+  prep._orderingResearchObserver = {
+    policies: [
+      { id: 'base', profile: POLICY_PROFILES.default },
+      { id: 'template', profile: POLICY_PROFILES.default, template: TEMPLATES.perimeterCW },
+      { id: 'must-cross', profile: POLICY_PROFILES.mustCrossFirst },
+    ],
+    observe: record => records.push(record),
+  };
+  const on = [...original];
+  scoreAndSort(on, pos, state, level, prep, POLICY_PROFILES.default, null);
+  assert.deepEqual(on, off, 'observer cannot mutate active ranking');
+  assert.equal(records.length, 1);
+  assert.deepEqual(records[0].candidates, original);
+  assert.deepEqual(records[0].rankings.map(row => row.policyId), ['base', 'template', 'must-cross']);
+  assert.ok(records[0].rankings.every(row => row.order.length === 3 && row.scores.length === 3));
+});
+
+test('ordering divergence contribution sum reproduces the ordinary score-margin change', () => {
+  const pos = PACK(1, 2);
+  const objective = PACK(4, 2);
+  const level = makeLevel({ gateKeys: [pos], goalKey: objective, mustPassKeys: [objective], reqLen: 8, reqInt: 1 });
+  const prep = prepLevel(level);
+  const records: import('./types.js').OrderingResearchRecord[] = [];
+  prep._orderingResearchObserver = {
+    policies: [
+      { id: 'objective', profile: POLICY_PROFILES.objectiveFirst },
+      { id: 'intersection', profile: POLICY_PROFILES.intersectionHarvest },
+    ],
+    observe: record => records.push(record),
+  };
+  const state = makeState(pos, { mustMask: 1 });
+  state.visited[PACK(0, 2)] = 1;
+  scoreAndSort([PACK(0, 2), PACK(2, 2)], pos, state, level, prep, POLICY_PROFILES.default);
+  const divergence = records[0].pairwiseDivergences?.[0];
+  assert.ok(divergence, 'fixture must make the two profiles choose opposite top children');
+  assert.ok(Math.abs(divergence.contributionSum - (divergence.rightMargin - divergence.leftMargin)) < 1e-9);
+});
+
 test('scoreMove rewards moving toward an unsatisfied must-turn cell, and stops once it is satisfied', () => {
   // 5x1 corridor: gate(1,1) .. mustTurn(3,1) .. goal(5,1). Approaching from (2,1) is 1 step
   // closer to the must-turn cell than staying at (1,1) — must-turn urgency should reward that,

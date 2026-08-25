@@ -161,6 +161,24 @@ export function rankByAdmissibleSlack(candidates: number[], level: NormalizedLev
         if (aDead !== bDead) return aDead ? 1 : -1;
         return a.slack - b.slack || b.score - a.score;
     });
+    const research = prep._orderingResearchObserver;
+    if (research) {
+        const researchPolicies = research.policies ?? [{ id: tieBreakProfile === null ? 'none' : 'active', profile: tieBreakProfile }];
+        const rankings = researchPolicies.map(policy => {
+            const ctx = policy.profile ? buildCurUrgencyContext(fromKey, state, level, prep, true, policy.profile) : null;
+            const rows = ranked.map(row => ({ ...row, index: candidates.indexOf(row.key),
+                policyScore: policy.profile ? scoreMove(row.key, fromKey, state, level, prep,
+                    policy.profile, level.reqLen - preRealLen - (portalFromHere?.dest === row.key ? 0 : 1), null, ctx) : 0 }));
+            rows.sort((a, b) => {
+                const aDead = a.slack < 0, bDead = b.slack < 0;
+                if (aDead !== bDead) return aDead ? 1 : -1;
+                return a.slack - b.slack || b.policyScore - a.policyScore || a.index - b.index;
+            });
+            return { policyId: policy.id, order: rows.map(row => row.key), scores: rows.map(row => row.policyScore) };
+        });
+        research.observe({ family: 'admissible-order', depth: state.path.length - 1, candidates: [...candidates], rankings,
+            admissibleSlack: ranked.map(row => ({ candidate: row.key, slack: row.slack })) });
+    }
     return ranked.map(r => r.key);
 }
 

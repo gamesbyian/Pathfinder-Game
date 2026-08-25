@@ -1,0 +1,2195 @@
+{
+ "corpus": "data/stress/stress-levels.json",
+ "only": [
+  "dfs:harvestThenFinish"
+ ],
+ "budgetMs": 30000,
+ "nodeBudget": 50000,
+ "levels": [
+  {
+   "id": "S00001",
+   "ok": false,
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 297,
+   "nodesExpanded": 50253,
+   "attempts": [
+    {
+     "configKey": "dfs:harvestThenFinish",
+     "gateKey": 589833,
+     "profile": "harvestThenFinish",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 297,
+     "allocatedBudgetMs": 30000,
+     "nodesExpanded": 50253,
+     "timedOut": true,
+     "stageId": "main-loop"
+    }
+   ],
+   "orderingResearch": {
+    "observedCandidateSets": 13801,
+    "retainedCandidateSets": 4096,
+    "truncated": true,
+    "pairs": [
+     {
+      "left": "harvestThenFinish",
+      "right": "portalFirstTransfer",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.999755859375,
+      "fullRankingAgreementRate": 0.999755859375,
+      "tieRate": 0.43994140625,
+      "meanKendallAgreement": 0.91748046875,
+      "meanLeftTopMargin": 21.217162835535483,
+      "meanRightTopMargin": 19.8552833909245,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 1043,
+       "depth": 10,
+       "candidates": [
+        589828,
+        589826
+       ],
+       "left": {
+        "order": [
+         589826,
+         589828
+        ],
+        "scores": [
+         31.759316239316238,
+         30.69068376068376
+        ]
+       },
+       "right": {
+        "order": [
+         589828,
+         589826
+        ],
+        "scores": [
+         28.972307692307695,
+         28.72769230769231
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "portalFirstTransfer",
+        "leftTop": 589826,
+        "rightTop": 589828,
+        "leftMargin": 1.0686324786324768,
+        "rightMargin": -0.24461538461538623,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -1.563247863247863
+         },
+         {
+          "term": "mustCrossUrgencyWeight",
+          "marginDelta": 0.5
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": -0.24999999999999645
+         }
+        ],
+        "contributionSum": -1.3132478632478595
+       }
+      }
+     },
+     {
+      "left": "harvestThenFinish",
+      "right": "objectiveFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.995361328125,
+      "fullRankingAgreementRate": 0.9912109375,
+      "tieRate": 0.43994140625,
+      "meanKendallAgreement": 0.9095052083333334,
+      "meanLeftTopMargin": 21.217162835535483,
+      "meanRightTopMargin": 24.280746799044756,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 188,
+       "depth": 32,
+       "candidates": [
+        458756,
+        524291,
+        393219
+       ],
+       "left": {
+        "order": [
+         393219,
+         524291,
+         458756
+        ],
+        "scores": [
+         -28.150000000000002,
+         -29.700000000000006,
+         -44.550000000000004
+        ]
+       },
+       "right": {
+        "order": [
+         524291,
+         393219,
+         458756
+        ],
+        "scores": [
+         -37.300000000000004,
+         -40.3,
+         -54.3
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "objectiveFirst",
+        "leftTop": 393219,
+        "rightTop": 524291,
+        "leftMargin": 1.5500000000000043,
+        "rightMargin": -2.999999999999993,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -2.400000000000002
+         },
+         {
+          "term": "intersectionSetupWeight",
+          "marginDelta": -0.5500000000000007
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": -2
+         },
+         {
+          "term": "revisitPenaltyWeight",
+          "marginDelta": 0.3999999999999986
+         }
+        ],
+        "contributionSum": -4.550000000000004
+       }
+      }
+     },
+     {
+      "left": "harvestThenFinish",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.992919921875,
+      "fullRankingAgreementRate": 0.985595703125,
+      "tieRate": 0.43994140625,
+      "meanKendallAgreement": 0.9054361979166667,
+      "meanLeftTopMargin": 21.217162835535483,
+      "meanRightTopMargin": 29.13417426215253,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 91,
+       "depth": 4,
+       "candidates": [
+        458758,
+        524295,
+        393223
+       ],
+       "left": {
+        "order": [
+         458758,
+         524295,
+         393223
+        ],
+        "scores": [
+         34.47059829059829,
+         30.079401709401708,
+         -23.27940170940171
+        ]
+       },
+       "right": {
+        "order": [
+         524295,
+         458758,
+         393223
+        ],
+        "scores": [
+         51.486111111111114,
+         45.21388888888889,
+         -45.28611111111111
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 458758,
+        "rightTop": 524295,
+        "leftMargin": 4.391196581196581,
+        "rightMargin": -6.272222222222226,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -2.413418803418807
+         },
+         {
+          "term": "mustCrossUrgencyWeight",
+          "marginDelta": -10
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": 2.5
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": -0.75
+         }
+        ],
+        "contributionSum": -10.663418803418807
+       }
+      }
+     },
+     {
+      "left": "portalFirstTransfer",
+      "right": "objectiveFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.99560546875,
+      "fullRankingAgreementRate": 0.991455078125,
+      "tieRate": 0.43994140625,
+      "meanKendallAgreement": 0.9099934895833334,
+      "meanLeftTopMargin": 19.8552833909245,
+      "meanRightTopMargin": 24.280746799044756,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 188,
+       "depth": 32,
+       "candidates": [
+        458756,
+        524291,
+        393219
+       ],
+       "left": {
+        "order": [
+         393219,
+         524291,
+         458756
+        ],
+        "scores": [
+         -28.25,
+         -29.5,
+         -42.650000000000006
+        ]
+       },
+       "right": {
+        "order": [
+         524291,
+         393219,
+         458756
+        ],
+        "scores": [
+         -37.300000000000004,
+         -40.3,
+         -54.3
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "portalFirstTransfer",
+        "rightPolicyId": "objectiveFirst",
+        "leftTop": 393219,
+        "rightTop": 524291,
+        "leftMargin": 1.25,
+        "rightMargin": -2.999999999999993,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -0.40000000000000213
+         },
+         {
+          "term": "intersectionSetupWeight",
+          "marginDelta": -1.6499999999999986
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": -3
+         },
+         {
+          "term": "revisitPenaltyWeight",
+          "marginDelta": 0.8000000000000007
+         }
+        ],
+        "contributionSum": -4.25
+       }
+      }
+     },
+     {
+      "left": "portalFirstTransfer",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.9931640625,
+      "fullRankingAgreementRate": 0.98583984375,
+      "tieRate": 0.43994140625,
+      "meanKendallAgreement": 0.9059244791666667,
+      "meanLeftTopMargin": 19.8552833909245,
+      "meanRightTopMargin": 29.13417426215253,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 91,
+       "depth": 4,
+       "candidates": [
+        458758,
+        524295,
+        393223
+       ],
+       "left": {
+        "order": [
+         458758,
+         524295,
+         393223
+        ],
+        "scores": [
+         31.91076923076923,
+         28.68923076923077,
+         -23.08923076923077
+        ]
+       },
+       "right": {
+        "order": [
+         524295,
+         458758,
+         393223
+        ],
+        "scores": [
+         51.486111111111114,
+         45.21388888888889,
+         -45.28611111111111
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "portalFirstTransfer",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 458758,
+        "rightTop": 524295,
+        "leftMargin": 3.221538461538458,
+        "rightMargin": -6.272222222222226,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -0.9937606837606836
+         },
+         {
+          "term": "mustCrossUrgencyWeight",
+          "marginDelta": -10.5
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": 3.4999999999999964
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": -1.5000000000000036
+         }
+        ],
+        "contributionSum": -9.49376068376069
+       }
+      }
+     },
+     {
+      "left": "objectiveFirst",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.99755859375,
+      "fullRankingAgreementRate": 0.992919921875,
+      "tieRate": 0.43994140625,
+      "meanKendallAgreement": 0.9129231770833334,
+      "meanLeftTopMargin": 24.280746799044756,
+      "meanRightTopMargin": 29.13417426215253,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 91,
+       "depth": 4,
+       "candidates": [
+        458758,
+        524295,
+        393223
+       ],
+       "left": {
+        "order": [
+         458758,
+         524295,
+         393223
+        ],
+        "scores": [
+         41.66880341880342,
+         39.481196581196585,
+         -33.58119658119658
+        ]
+       },
+       "right": {
+        "order": [
+         524295,
+         458758,
+         393223
+        ],
+        "scores": [
+         51.486111111111114,
+         45.21388888888889,
+         -45.28611111111111
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "objectiveFirst",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 458758,
+        "rightTop": 524295,
+        "leftMargin": 2.187606837606836,
+        "rightMargin": -6.272222222222226,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -0.7098290598290617
+         },
+         {
+          "term": "mustCrossUrgencyWeight",
+          "marginDelta": -6
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -2.5
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": 0.75
+         }
+        ],
+        "contributionSum": -8.459829059829062
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "S00103",
+   "ok": false,
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 267,
+   "nodesExpanded": 50093,
+   "attempts": [
+    {
+     "configKey": "dfs:harvestThenFinish",
+     "gateKey": 917515,
+     "profile": "harvestThenFinish",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 267,
+     "allocatedBudgetMs": 30000,
+     "nodesExpanded": 50093,
+     "timedOut": true,
+     "stageId": "main-loop"
+    }
+   ],
+   "orderingResearch": {
+    "observedCandidateSets": 15107,
+    "retainedCandidateSets": 4096,
+    "truncated": true,
+    "pairs": [
+     {
+      "left": "harvestThenFinish",
+      "right": "portalFirstTransfer",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.997314453125,
+      "fullRankingAgreementRate": 0.9931640625,
+      "tieRate": 0.08056640625,
+      "meanKendallAgreement": 0.9857584635416667,
+      "meanLeftTopMargin": 8.523369888816044,
+      "meanRightTopMargin": 7.78636812415104,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 1775,
+       "depth": 31,
+       "candidates": [
+        65549,
+        65547,
+        131084
+       ],
+       "left": {
+        "order": [
+         65547,
+         65549,
+         131084
+        ],
+        "scores": [
+         5.101771771771771,
+         4.398228228228229,
+         -10.901771771771772
+        ]
+       },
+       "right": {
+        "order": [
+         65549,
+         65547,
+         131084
+        ],
+        "scores": [
+         4.274054054054054,
+         4.225945945945946,
+         -9.825945945945945
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "portalFirstTransfer",
+        "leftTop": 65547,
+        "rightTop": 65549,
+        "leftMargin": 0.7035435435435424,
+        "rightMargin": -0.04810810810810828,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -1.9516516516516518
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": 0.9999999999999996
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": 0.2000000000000015
+         }
+        ],
+        "contributionSum": -0.7516516516516507
+       }
+      }
+     },
+     {
+      "left": "harvestThenFinish",
+      "right": "objectiveFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.966064453125,
+      "fullRankingAgreementRate": 0.95556640625,
+      "tieRate": 0.08056640625,
+      "meanKendallAgreement": 0.9460449218750004,
+      "meanLeftTopMargin": 8.523369888816044,
+      "meanRightTopMargin": 10.628842341226656,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 46,
+       "depth": 5,
+       "candidates": [
+        786445,
+        720910
+       ],
+       "left": {
+        "order": [
+         786445,
+         720910
+        ],
+        "scores": [
+         7.961402831402831,
+         6.627882882882883
+        ]
+       },
+       "right": {
+        "order": [
+         720910,
+         786445
+        ],
+        "scores": [
+         10.13355855855856,
+         7.370012870012869
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "objectiveFirst",
+        "leftTop": 786445,
+        "rightTop": 720910,
+        "leftMargin": 1.3335199485199478,
+        "rightMargin": -2.7635456885456913,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -1.7113513513513503
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -2.5
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": -0.0357142857142847
+         },
+         {
+          "term": "perimeterBiasWeight",
+          "marginDelta": 0.14999999999999947
+         }
+        ],
+        "contributionSum": -4.0970656370656355
+       }
+      }
+     },
+     {
+      "left": "harvestThenFinish",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.96630859375,
+      "fullRankingAgreementRate": 0.955810546875,
+      "tieRate": 0.08056640625,
+      "meanKendallAgreement": 0.9462076822916671,
+      "meanLeftTopMargin": 8.523369888816044,
+      "meanRightTopMargin": 9.32368098776951,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 46,
+       "depth": 5,
+       "candidates": [
+        786445,
+        720910
+       ],
+       "left": {
+        "order": [
+         786445,
+         720910
+        ],
+        "scores": [
+         7.961402831402831,
+         6.627882882882883
+        ]
+       },
+       "right": {
+        "order": [
+         720910,
+         786445
+        ],
+        "scores": [
+         9.01509009009009,
+         6.80633848133848
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 786445,
+        "rightTop": 720910,
+        "leftMargin": 1.3335199485199478,
+        "rightMargin": -2.2087516087516104,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -2.4244144144144144
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -1.25
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": -0.01785714285714235
+         },
+         {
+          "term": "perimeterBiasWeight",
+          "marginDelta": 0.14999999999999947
+         }
+        ],
+        "contributionSum": -3.5422715572715573
+       }
+      }
+     },
+     {
+      "left": "portalFirstTransfer",
+      "right": "objectiveFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.96875,
+      "fullRankingAgreementRate": 0.96240234375,
+      "tieRate": 0.08056640625,
+      "meanKendallAgreement": 0.9512532552083337,
+      "meanLeftTopMargin": 7.78636812415104,
+      "meanRightTopMargin": 10.628842341226656,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 46,
+       "depth": 5,
+       "candidates": [
+        786445,
+        720910
+       ],
+       "left": {
+        "order": [
+         786445,
+         720910
+        ],
+        "scores": [
+         7.04119691119691,
+         5.715945945945946
+        ]
+       },
+       "right": {
+        "order": [
+         720910,
+         786445
+        ],
+        "scores": [
+         10.13355855855856,
+         7.370012870012869
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "portalFirstTransfer",
+        "rightPolicyId": "objectiveFirst",
+        "leftTop": 786445,
+        "rightTop": 720910,
+        "leftMargin": 1.325250965250964,
+        "rightMargin": -2.7635456885456913,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -0.28522522522522564
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -3.000000000000001
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": -0.053571428571428825
+         },
+         {
+          "term": "perimeterBiasWeight",
+          "marginDelta": -0.7500000000000009
+         }
+        ],
+        "contributionSum": -4.088796653796656
+       }
+      }
+     },
+     {
+      "left": "portalFirstTransfer",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.968994140625,
+      "fullRankingAgreementRate": 0.962646484375,
+      "tieRate": 0.08056640625,
+      "meanKendallAgreement": 0.9514160156250004,
+      "meanLeftTopMargin": 7.78636812415104,
+      "meanRightTopMargin": 9.32368098776951,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 46,
+       "depth": 5,
+       "candidates": [
+        786445,
+        720910
+       ],
+       "left": {
+        "order": [
+         786445,
+         720910
+        ],
+        "scores": [
+         7.04119691119691,
+         5.715945945945946
+        ]
+       },
+       "right": {
+        "order": [
+         720910,
+         786445
+        ],
+        "scores": [
+         9.01509009009009,
+         6.80633848133848
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "portalFirstTransfer",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 786445,
+        "rightTop": 720910,
+        "leftMargin": 1.325250965250964,
+        "rightMargin": -2.2087516087516104,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -0.9982882882882889
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -1.75
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": -0.035714285714286476
+         },
+         {
+          "term": "perimeterBiasWeight",
+          "marginDelta": -0.7500000000000009
+         }
+        ],
+        "contributionSum": -3.5340025740025762
+       }
+      }
+     },
+     {
+      "left": "objectiveFirst",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.999755859375,
+      "fullRankingAgreementRate": 0.999755859375,
+      "tieRate": 0.08056640625,
+      "meanKendallAgreement": 0.9908040364583333,
+      "meanLeftTopMargin": 10.628842341226656,
+      "meanRightTopMargin": 9.32368098776951,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 1789,
+       "depth": 24,
+       "candidates": [
+        65542,
+        65540,
+        131077
+       ],
+       "left": {
+        "order": [
+         65542,
+         65540,
+         131077
+        ],
+        "scores": [
+         5.784234234234234,
+         5.640765765765763,
+         -12.990765765765765
+        ]
+       },
+       "right": {
+        "order": [
+         65540,
+         65542,
+         131077
+        ],
+        "scores": [
+         5.514639639639641,
+         4.73536036036036,
+         -11.51463963963964
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "objectiveFirst",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 65542,
+        "rightTop": 65540,
+        "leftMargin": 0.1434684684684715,
+        "rightMargin": -0.7792792792792804,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": 0.9022522522522518
+         },
+         {
+          "term": "intersectionSetupWeight",
+          "marginDelta": 1.0999999999999952
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -2.5
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": -0.024999999999999467
+         },
+         {
+          "term": "revisitPenaltyWeight",
+          "marginDelta": -0.40000000000000036
+         }
+        ],
+        "contributionSum": -0.9227477477477528
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "R00408",
+   "ok": false,
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 379,
+   "nodesExpanded": 50123,
+   "attempts": [
+    {
+     "configKey": "dfs:harvestThenFinish",
+     "gateKey": 0,
+     "profile": "harvestThenFinish",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 379,
+     "allocatedBudgetMs": 30000,
+     "nodesExpanded": 50123,
+     "timedOut": true,
+     "stageId": "main-loop"
+    }
+   ],
+   "orderingResearch": {
+    "observedCandidateSets": 12118,
+    "retainedCandidateSets": 4096,
+    "truncated": true,
+    "pairs": [
+     {
+      "left": "harvestThenFinish",
+      "right": "portalFirstTransfer",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.9951171875,
+      "fullRankingAgreementRate": 0.992431640625,
+      "tieRate": 0.002685546875,
+      "meanKendallAgreement": 0.9938151041666667,
+      "meanLeftTopMargin": 81.35713337196337,
+      "meanRightTopMargin": 78.86609896322811,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 103,
+       "depth": 11,
+       "candidates": [
+        262148,
+        262146,
+        327683
+       ],
+       "left": {
+        "order": [
+         327683,
+         262148,
+         262146
+        ],
+        "scores": [
+         66.73701754385965,
+         65.73701754385965,
+         22.68798245614035
+        ]
+       },
+       "right": {
+        "order": [
+         262148,
+         327683,
+         262146
+        ],
+        "scores": [
+         64.36421052631579,
+         63.86421052631579,
+         22.73578947368421
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "portalFirstTransfer",
+        "leftTop": 327683,
+        "rightTop": 262148,
+        "leftMargin": 1,
+        "rightMargin": -0.5,
+        "scoringWeightContributions": [
+         {
+          "term": "mustCrossUrgencyWeight",
+          "marginDelta": 0.5
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -2
+         }
+        ],
+        "contributionSum": -1.5
+       }
+      }
+     },
+     {
+      "left": "harvestThenFinish",
+      "right": "objectiveFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.9716796875,
+      "fullRankingAgreementRate": 0.9453125,
+      "tieRate": 0.001953125,
+      "meanKendallAgreement": 0.9554036458333371,
+      "meanLeftTopMargin": 81.35713337196337,
+      "meanRightTopMargin": 100.00272329994951,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 22,
+       "depth": 13,
+       "candidates": [
+        393222,
+        393220,
+        327685
+       ],
+       "left": {
+        "order": [
+         393220,
+         327685,
+         393222
+        ],
+        "scores": [
+         15.495146198830408,
+         11.895146198830412,
+         -87.3451461988304
+        ]
+       },
+       "right": {
+        "order": [
+         327685,
+         393220,
+         393222
+        ],
+        "scores": [
+         17.397076023391815,
+         16.647076023391815,
+         -112.24707602339181
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "objectiveFirst",
+        "leftTop": 393220,
+        "rightTop": 327685,
+        "leftMargin": 3.599999999999996,
+        "rightMargin": -0.75,
+        "scoringWeightContributions": [
+         {
+          "term": "intersectionSetupWeight",
+          "marginDelta": 0.5500000000000025
+         },
+         {
+          "term": "mustCrossUrgencyWeight",
+          "marginDelta": -15.999999999999995
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": 10
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": 1.5
+         },
+         {
+          "term": "revisitPenaltyWeight",
+          "marginDelta": -0.3999999999999986
+         }
+        ],
+        "contributionSum": -4.349999999999991
+       }
+      }
+     },
+     {
+      "left": "harvestThenFinish",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.942626953125,
+      "fullRankingAgreementRate": 0.904541015625,
+      "tieRate": 0.001953125,
+      "meanKendallAgreement": 0.9083658854166683,
+      "meanLeftTopMargin": 81.35713337196337,
+      "meanRightTopMargin": 126.16969725338762,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 22,
+       "depth": 13,
+       "candidates": [
+        393222,
+        393220,
+        327685
+       ],
+       "left": {
+        "order": [
+         393220,
+         327685,
+         393222
+        ],
+        "scores": [
+         15.495146198830408,
+         11.895146198830412,
+         -87.3451461988304
+        ]
+       },
+       "right": {
+        "order": [
+         327685,
+         393220,
+         393222
+        ],
+        "scores": [
+         31.4437134502924,
+         0.24371345029239944,
+         -140.7437134502924
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 393220,
+        "rightTop": 327685,
+        "leftMargin": 3.599999999999996,
+        "rightMargin": -31.2,
+        "scoringWeightContributions": [
+         {
+          "term": "intersectionSetupWeight",
+          "marginDelta": -0.5499999999999936
+         },
+         {
+          "term": "mustCrossUrgencyWeight",
+          "marginDelta": -39.99999999999999
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": 5
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": 0.75
+         }
+        ],
+        "contributionSum": -34.79999999999998
+       }
+      }
+     },
+     {
+      "left": "portalFirstTransfer",
+      "right": "objectiveFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.9736328125,
+      "fullRankingAgreementRate": 0.947509765625,
+      "tieRate": 0.002685546875,
+      "meanKendallAgreement": 0.9589843750000038,
+      "meanLeftTopMargin": 78.86609896322811,
+      "meanRightTopMargin": 100.00272329994951,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 22,
+       "depth": 13,
+       "candidates": [
+        393222,
+        393220,
+        327685
+       ],
+       "left": {
+        "order": [
+         393220,
+         327685,
+         393222
+        ],
+        "scores": [
+         13.988421052631578,
+         11.838421052631578,
+         -85.23842105263158
+        ]
+       },
+       "right": {
+        "order": [
+         327685,
+         393220,
+         393222
+        ],
+        "scores": [
+         17.397076023391815,
+         16.647076023391815,
+         -112.24707602339181
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "portalFirstTransfer",
+        "rightPolicyId": "objectiveFirst",
+        "leftTop": 393220,
+        "rightTop": 327685,
+        "leftMargin": 2.1500000000000004,
+        "rightMargin": -0.75,
+        "scoringWeightContributions": [
+         {
+          "term": "intersectionSetupWeight",
+          "marginDelta": 1.6499999999999986
+         },
+         {
+          "term": "mustCrossUrgencyWeight",
+          "marginDelta": -18
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": 12.000000000000002
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": 2.2500000000000018
+         },
+         {
+          "term": "revisitPenaltyWeight",
+          "marginDelta": -0.7999999999999989
+         }
+        ],
+        "contributionSum": -2.899999999999997
+       }
+      }
+     },
+     {
+      "left": "portalFirstTransfer",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.947509765625,
+      "fullRankingAgreementRate": 0.90966796875,
+      "tieRate": 0.002685546875,
+      "meanKendallAgreement": 0.913899739583335,
+      "meanLeftTopMargin": 78.86609896322811,
+      "meanRightTopMargin": 126.16969725338762,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 22,
+       "depth": 13,
+       "candidates": [
+        393222,
+        393220,
+        327685
+       ],
+       "left": {
+        "order": [
+         393220,
+         327685,
+         393222
+        ],
+        "scores": [
+         13.988421052631578,
+         11.838421052631578,
+         -85.23842105263158
+        ]
+       },
+       "right": {
+        "order": [
+         327685,
+         393220,
+         393222
+        ],
+        "scores": [
+         31.4437134502924,
+         0.24371345029239944,
+         -140.7437134502924
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "portalFirstTransfer",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 393220,
+        "rightTop": 327685,
+        "leftMargin": 2.1500000000000004,
+        "rightMargin": -31.2,
+        "scoringWeightContributions": [
+         {
+          "term": "intersectionSetupWeight",
+          "marginDelta": 0.5500000000000025
+         },
+         {
+          "term": "mustCrossUrgencyWeight",
+          "marginDelta": -41.99999999999999
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": 7.000000000000002
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": 1.5000000000000018
+         },
+         {
+          "term": "revisitPenaltyWeight",
+          "marginDelta": -0.40000000000000036
+         }
+        ],
+        "contributionSum": -33.34999999999999
+       }
+      }
+     },
+     {
+      "left": "objectiveFirst",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.960693359375,
+      "fullRankingAgreementRate": 0.937744140625,
+      "tieRate": 0.001953125,
+      "meanKendallAgreement": 0.9334309895833337,
+      "meanLeftTopMargin": 100.00272329994951,
+      "meanRightTopMargin": 126.16969725338762,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 24,
+       "depth": 16,
+       "candidates": [
+        327684,
+        327682,
+        262147
+       ],
+       "left": {
+        "order": [
+         327684,
+         262147,
+         327682
+        ],
+        "scores": [
+         -30.032163742690063,
+         -37.817836257309935,
+         -51.567836257309935
+        ]
+       },
+       "right": {
+        "order": [
+         262147,
+         327684,
+         327682
+        ],
+        "scores": [
+         -32.755847953216374,
+         -45.24415204678362,
+         -75.25584795321637
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "objectiveFirst",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 327684,
+        "rightTop": 262147,
+        "leftMargin": 7.785672514619872,
+        "rightMargin": -12.488304093567244,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -0.8239766081871238
+         },
+         {
+          "term": "intersectionSetupWeight",
+          "marginDelta": -1.0999999999999943
+         },
+         {
+          "term": "mustCrossUrgencyWeight",
+          "marginDelta": -18.000000000000004
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": -0.75
+         },
+         {
+          "term": "revisitPenaltyWeight",
+          "marginDelta": 0.3999999999999986
+         }
+        ],
+        "contributionSum": -20.273976608187123
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "R01336",
+   "ok": false,
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 257,
+   "nodesExpanded": 50179,
+   "attempts": [
+    {
+     "configKey": "dfs:harvestThenFinish",
+     "gateKey": 393218,
+     "profile": "harvestThenFinish",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 257,
+     "allocatedBudgetMs": 30000,
+     "nodesExpanded": 50179,
+     "timedOut": true,
+     "stageId": "main-loop"
+    }
+   ],
+   "orderingResearch": {
+    "observedCandidateSets": 13803,
+    "retainedCandidateSets": 4096,
+    "truncated": true,
+    "pairs": [
+     {
+      "left": "harvestThenFinish",
+      "right": "portalFirstTransfer",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.95703125,
+      "fullRankingAgreementRate": 0.955810546875,
+      "tieRate": 0.148681640625,
+      "meanKendallAgreement": 0.9329427083333347,
+      "meanLeftTopMargin": 12.210888308429439,
+      "meanRightTopMargin": 11.197559518165983,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 52,
+       "depth": 26,
+       "candidates": [
+        589827,
+        655364,
+        524292
+       ],
+       "left": {
+        "order": [
+         589827,
+         655364,
+         524292
+        ],
+        "scores": [
+         8.028004314994606,
+         7.771995685005395,
+         -19.228004314994607
+        ]
+       },
+       "right": {
+        "order": [
+         655364,
+         589827,
+         524292
+        ],
+        "scores": [
+         7.510776699029126,
+         7.089223300970874,
+         -17.489223300970874
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "portalFirstTransfer",
+        "leftTop": 589827,
+        "rightTop": 655364,
+        "leftMargin": 0.2560086299892106,
+        "rightMargin": -0.4215533980582524,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -1.677562028047463
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": 1
+         }
+        ],
+        "contributionSum": -0.677562028047463
+       }
+      }
+     },
+     {
+      "left": "harvestThenFinish",
+      "right": "objectiveFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.91162109375,
+      "fullRankingAgreementRate": 0.895263671875,
+      "tieRate": 0.14697265625,
+      "meanKendallAgreement": 0.8501790364583373,
+      "meanLeftTopMargin": 12.210888308429439,
+      "meanRightTopMargin": 14.740691420998473,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 52,
+       "depth": 26,
+       "candidates": [
+        589827,
+        655364,
+        524292
+       ],
+       "left": {
+        "order": [
+         589827,
+         655364,
+         524292
+        ],
+        "scores": [
+         8.028004314994606,
+         7.771995685005395,
+         -19.228004314994607
+        ]
+       },
+       "right": {
+        "order": [
+         655364,
+         589827,
+         524292
+        ],
+        "scores": [
+         13.82853290183387,
+         7.071467098166128,
+         -23.17146709816613
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "objectiveFirst",
+        "leftTop": 589827,
+        "rightTop": 655364,
+        "leftMargin": 0.2560086299892106,
+        "rightMargin": -6.757065803667743,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -2.0130744336569553
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -5
+         }
+        ],
+        "contributionSum": -7.013074433656955
+       }
+      }
+     },
+     {
+      "left": "harvestThenFinish",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.916748046875,
+      "fullRankingAgreementRate": 0.900634765625,
+      "tieRate": 0.149169921875,
+      "meanKendallAgreement": 0.8591308593750038,
+      "meanLeftTopMargin": 12.210888308429439,
+      "meanRightTopMargin": 12.960503162766736,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 52,
+       "depth": 26,
+       "candidates": [
+        589827,
+        655364,
+        524292
+       ],
+       "left": {
+        "order": [
+         589827,
+         655364,
+         524292
+        ],
+        "scores": [
+         8.028004314994606,
+         7.771995685005395,
+         -19.228004314994607
+        ]
+       },
+       "right": {
+        "order": [
+         655364,
+         589827,
+         524292
+        ],
+        "scores": [
+         11.647923408845738,
+         6.552076591154261,
+         -20.35207659115426
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 589827,
+        "rightTop": 655364,
+        "leftMargin": 0.2560086299892106,
+        "rightMargin": -5.095846817691477,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -2.8518554476806877
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -2.5
+         }
+        ],
+        "contributionSum": -5.351855447680688
+       }
+      }
+     },
+     {
+      "left": "portalFirstTransfer",
+      "right": "objectiveFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.9541015625,
+      "fullRankingAgreementRate": 0.9384765625,
+      "tieRate": 0.14794921875,
+      "meanKendallAgreement": 0.8959147135416692,
+      "meanLeftTopMargin": 11.197559518165983,
+      "meanRightTopMargin": 14.740691420998473,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 149,
+       "depth": 21,
+       "candidates": [
+        655363,
+        655361
+       ],
+       "left": {
+        "order": [
+         655363,
+         655361
+        ],
+        "scores": [
+         6.763009708737864,
+         6.736990291262137
+        ]
+       },
+       "right": {
+        "order": [
+         655361,
+         655363
+        ],
+        "scores": [
+         10.89568500539374,
+         6.754314994606257
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "portalFirstTransfer",
+        "rightPolicyId": "objectiveFirst",
+        "leftTop": 655363,
+        "rightTop": 655361,
+        "leftMargin": 0.026019417475727558,
+        "rightMargin": -4.141370010787484,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -0.3173894282632155
+         },
+         {
+          "term": "intersectionSetupWeight",
+          "marginDelta": -1.6499999999999968
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -3
+         },
+         {
+          "term": "revisitPenaltyWeight",
+          "marginDelta": 0.7999999999999998
+         }
+        ],
+        "contributionSum": -4.1673894282632125
+       }
+      }
+     },
+     {
+      "left": "portalFirstTransfer",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.958740234375,
+      "fullRankingAgreementRate": 0.943359375,
+      "tieRate": 0.14892578125,
+      "meanKendallAgreement": 0.9031575520833358,
+      "meanLeftTopMargin": 11.197559518165983,
+      "meanRightTopMargin": 12.960503162766736,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 149,
+       "depth": 21,
+       "candidates": [
+        655363,
+        655361
+       ],
+       "left": {
+        "order": [
+         655363,
+         655361
+        ],
+        "scores": [
+         6.763009708737864,
+         6.736990291262137
+        ]
+       },
+       "right": {
+        "order": [
+         655361,
+         655363
+        ],
+        "scores": [
+         9.242421790722762,
+         6.257578209277238
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "portalFirstTransfer",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 655363,
+        "rightTop": 655361,
+        "leftMargin": 0.026019417475727558,
+        "rightMargin": -2.9848435814455243,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -1.1108629989212524
+         },
+         {
+          "term": "intersectionSetupWeight",
+          "marginDelta": -0.5499999999999998
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -1.75
+         },
+         {
+          "term": "revisitPenaltyWeight",
+          "marginDelta": 0.39999999999999947
+         }
+        ],
+        "contributionSum": -3.0108629989212528
+       }
+      }
+     },
+     {
+      "left": "objectiveFirst",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.994873046875,
+      "fullRankingAgreementRate": 0.994140625,
+      "tieRate": 0.1494140625,
+      "meanKendallAgreement": 0.9711100260416666,
+      "meanLeftTopMargin": 14.740691420998473,
+      "meanRightTopMargin": 12.960503162766736,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 159,
+       "depth": 34,
+       "candidates": [
+        786438,
+        720901
+       ],
+       "left": {
+        "order": [
+         786438,
+         720901
+        ],
+        "scores": [
+         13.458522114347357,
+         13.441477885652642
+        ]
+       },
+       "right": {
+        "order": [
+         720901,
+         786438
+        ],
+        "scores": [
+         12.195658036677454,
+         11.304341963322544
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "objectiveFirst",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 786438,
+        "rightTop": 720901,
+        "leftMargin": 0.017044228694715002,
+        "rightMargin": -0.8913160733549095,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": 0.8916396979503745
+         },
+         {
+          "term": "intersectionSetupWeight",
+          "marginDelta": 1.099999999999996
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -2.5
+         },
+         {
+          "term": "revisitPenaltyWeight",
+          "marginDelta": -0.3999999999999986
+         }
+        ],
+        "contributionSum": -0.908360302049628
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "R01944",
+   "ok": false,
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 206,
+   "nodesExpanded": 50162,
+   "attempts": [
+    {
+     "configKey": "dfs:harvestThenFinish",
+     "gateKey": 393221,
+     "profile": "harvestThenFinish",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 206,
+     "allocatedBudgetMs": 30000,
+     "nodesExpanded": 50162,
+     "timedOut": true,
+     "stageId": "main-loop"
+    }
+   ],
+   "orderingResearch": {
+    "observedCandidateSets": 13407,
+    "retainedCandidateSets": 4096,
+    "truncated": true,
+    "pairs": [
+     {
+      "left": "harvestThenFinish",
+      "right": "portalFirstTransfer",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.9833984375,
+      "fullRankingAgreementRate": 0.970458984375,
+      "tieRate": 0.009521484375,
+      "meanKendallAgreement": 0.9645996093750002,
+      "meanLeftTopMargin": 28.665917505374793,
+      "meanRightTopMargin": 26.82777687593039,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 22,
+       "depth": 15,
+       "candidates": [
+        65547,
+        65545,
+        10
+       ],
+       "left": {
+        "order": [
+         65545,
+         10,
+         65547
+        ],
+        "scores": [
+         10.288771929824563,
+         10.06122807017544,
+         4.66122807017544
+        ]
+       },
+       "right": {
+        "order": [
+         10,
+         65545,
+         65547
+        ],
+        "scores": [
+         10.064736842105264,
+         7.985263157894736,
+         5.064736842105264
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "portalFirstTransfer",
+        "leftTop": 65545,
+        "rightTop": 10,
+        "leftMargin": 0.22754385964912238,
+        "rightMargin": -2.0794736842105275,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": -1.6070175438596443
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -1.8000000000000007
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": 0.20000000000000107
+         },
+         {
+          "term": "perimeterBiasWeight",
+          "marginDelta": 0.9000000000000004
+         }
+        ],
+        "contributionSum": -2.3070175438596436
+       }
+      }
+     },
+     {
+      "left": "harvestThenFinish",
+      "right": "objectiveFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.96875,
+      "fullRankingAgreementRate": 0.9580078125,
+      "tieRate": 0.009033203125,
+      "meanKendallAgreement": 0.9493815104166684,
+      "meanLeftTopMargin": 28.665917505374793,
+      "meanRightTopMargin": 35.11871919844637,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 6,
+       "depth": 3,
+       "candidates": [
+        458760,
+        458758,
+        524295
+       ],
+       "left": {
+        "order": [
+         524295,
+         458760,
+         458758
+        ],
+        "scores": [
+         1.2656725146198862,
+         -0.33432748538011525,
+         -5.165672514619883
+        ]
+       },
+       "right": {
+        "order": [
+         458760,
+         524295,
+         458758
+        ],
+        "scores": [
+         0.386549707602337,
+         -0.013450292397663377,
+         -5.7865497076023376
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "objectiveFirst",
+        "leftTop": 524295,
+        "rightTop": 458760,
+        "leftMargin": 1.6000000000000014,
+        "rightMargin": -0.40000000000000036,
+        "scoringWeightContributions": [
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -2.0000000000000018
+         }
+        ],
+        "contributionSum": -2.0000000000000018
+       }
+      }
+     },
+     {
+      "left": "harvestThenFinish",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.982421875,
+      "fullRankingAgreementRate": 0.972412109375,
+      "tieRate": 0.009033203125,
+      "meanKendallAgreement": 0.9686686197916676,
+      "meanLeftTopMargin": 28.665917505374793,
+      "meanRightTopMargin": 31.37329104161938,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 46,
+       "depth": 12,
+       "candidates": [
+        393225,
+        327690
+       ],
+       "left": {
+        "order": [
+         327690,
+         393225
+        ],
+        "scores": [
+         25.562982456140354,
+         19.937017543859646
+        ]
+       },
+       "right": {
+        "order": [
+         393225,
+         327690
+        ],
+        "scores": [
+         23.323245614035088,
+         22.876754385964915
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "harvestThenFinish",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 327690,
+        "rightTop": 393225,
+        "leftMargin": 5.625964912280708,
+        "rightMargin": -0.4464912280701725,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": 2.6275438596491156
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -8.5
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": -0.19999999999999574
+         }
+        ],
+        "contributionSum": -6.07245614035088
+       }
+      }
+     },
+     {
+      "left": "portalFirstTransfer",
+      "right": "objectiveFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.95458984375,
+      "fullRankingAgreementRate": 0.93359375,
+      "tieRate": 0.00927734375,
+      "meanKendallAgreement": 0.9190266927083347,
+      "meanLeftTopMargin": 26.82777687593039,
+      "meanRightTopMargin": 35.11871919844637,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 6,
+       "depth": 3,
+       "candidates": [
+        458760,
+        458758,
+        524295
+       ],
+       "left": {
+        "order": [
+         524295,
+         458760,
+         458758
+        ],
+        "scores": [
+         0.27473684210526383,
+         -1.7252631578947362,
+         -5.174736842105264
+        ]
+       },
+       "right": {
+        "order": [
+         458760,
+         524295,
+         458758
+        ],
+        "scores": [
+         0.386549707602337,
+         -0.013450292397663377,
+         -5.7865497076023376
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "portalFirstTransfer",
+        "rightPolicyId": "objectiveFirst",
+        "leftTop": 524295,
+        "rightTop": 458760,
+        "leftMargin": 2,
+        "rightMargin": -0.40000000000000036,
+        "scoringWeightContributions": [
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -2.4000000000000004
+         }
+        ],
+        "contributionSum": -2.4000000000000004
+       }
+      }
+     },
+     {
+      "left": "portalFirstTransfer",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.9697265625,
+      "fullRankingAgreementRate": 0.955078125,
+      "tieRate": 0.009521484375,
+      "meanKendallAgreement": 0.9443359375000008,
+      "meanLeftTopMargin": 26.82777687593039,
+      "meanRightTopMargin": 31.37329104161938,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 22,
+       "depth": 15,
+       "candidates": [
+        65547,
+        65545,
+        10
+       ],
+       "left": {
+        "order": [
+         10,
+         65545,
+         65547
+        ],
+        "scores": [
+         10.064736842105264,
+         7.985263157894736,
+         5.064736842105264
+        ]
+       },
+       "right": {
+        "order": [
+         65545,
+         10,
+         65547
+        ],
+        "scores": [
+         11.922807017543859,
+         9.977192982456144,
+         3.5771929824561433
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "portalFirstTransfer",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 10,
+        "rightTop": 65545,
+        "leftMargin": 2.0794736842105275,
+        "rightMargin": -1.945614035087715,
+        "scoringWeightContributions": [
+         {
+          "term": "goalAttractionWeight",
+          "marginDelta": 1.124912280701757
+         },
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -6.300000000000007
+         },
+         {
+          "term": "objectiveAttractionWeight",
+          "marginDelta": 0.40000000000000124
+         },
+         {
+          "term": "perimeterBiasWeight",
+          "marginDelta": 0.75
+         }
+        ],
+        "contributionSum": -4.025087719298249
+       }
+      }
+     },
+     {
+      "left": "objectiveFirst",
+      "right": "mustCrossFirst",
+      "candidateSets": 4096,
+      "topChoiceAgreementRate": 0.984375,
+      "fullRankingAgreementRate": 0.977294921875,
+      "tieRate": 0.009033203125,
+      "meanKendallAgreement": 0.9735514322916676,
+      "meanLeftTopMargin": 35.11871919844637,
+      "meanRightTopMargin": 31.37329104161938,
+      "firstTopChoiceDivergence": {
+       "retainedIndex": 6,
+       "depth": 3,
+       "candidates": [
+        458760,
+        458758,
+        524295
+       ],
+       "left": {
+        "order": [
+         458760,
+         524295,
+         458758
+        ],
+        "scores": [
+         0.386549707602337,
+         -0.013450292397663377,
+         -5.7865497076023376
+        ]
+       },
+       "right": {
+        "order": [
+         524295,
+         458760,
+         458758
+        ],
+        "scores": [
+         -0.20891812865496773,
+         -0.8089181286549691,
+         -4.791081871345032
+        ]
+       },
+       "scoringWeightDecomposition": {
+        "leftPolicyId": "objectiveFirst",
+        "rightPolicyId": "mustCrossFirst",
+        "leftTop": 458760,
+        "rightTop": 524295,
+        "leftMargin": 0.40000000000000036,
+        "rightMargin": -0.6000000000000014,
+        "scoringWeightContributions": [
+         {
+          "term": "mustPassUrgencyWeight",
+          "marginDelta": -1.0000000000000018
+         }
+        ],
+        "contributionSum": -1.0000000000000018
+       }
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -150,7 +150,18 @@ test('a candidate with negative admissible slack (already provably dead by the m
     const deadKey = PACK(0, 4); // the negative-slack (dead) candidate
     assert.ok(children.includes(deadKey), 'sanity check on the fixture');
 
+    const records: import('./types.js').OrderingResearchRecord[] = [];
+    prep._orderingResearchObserver = { policies: [
+        { id: 'none', profile: null },
+        { id: 'default', profile: POLICY_PROFILES.default },
+        { id: 'mustCrossFirst', profile: POLICY_PROFILES.mustCrossFirst },
+    ], observe: record => records.push(record) };
     const ranked = rankByAdmissibleSlack(children, level, prep, state, null);
     assert.equal(ranked[ranked.length - 1], deadKey, 'the dead candidate must be ranked LAST, after every live candidate');
     assert.ok(ranked.slice(0, -1).every(k => k !== deadKey), 'the dead candidate appears exactly once, at the end');
+    assert.equal(records.length, 1);
+    assert.equal(records[0].family, 'admissible-order');
+    assert.deepEqual(records[0].rankings.map(row => row.policyId), ['none', 'default', 'mustCrossFirst']);
+    assert.deepEqual(records[0].rankings[0].order, ranked);
+    assert.equal(records[0].admissibleSlack?.find(row => row.candidate === deadKey)?.slack, -2);
 });
