@@ -82,7 +82,7 @@ describe('winning lineage research instrumentation', () => {
             { path: [1, 2], rank: 2, score: 9, insertionOrder: 1 },
             { path: [1, 8], rank: 3, score: 8, insertionOrder: 2 },
         ];
-        const record = { stage: 'score-width-culled', depth: 1, work: 3, paths: [[1, 2]],
+        const record = { stage: 'score-width-culled' as const, depth: 1, work: 3, paths: [[1, 2]],
             details: { rankedPool, beamWidth: 1 } };
 
         const compact = new WinningLineageObserver(index);
