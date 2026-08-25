@@ -1,9 +1,9 @@
 # Solver research execution-readiness reconciliation
 
 > **Status:** active
-> **Last evidence:** 2026-08-24 — completed static audits across queue items #0-#8 and current tooling/source contracts
-> **Decision:** the current research program is no longer broadly blocked on ideas or literature. Most ranked questions have been narrowed to one small executable gate using existing machinery; avoid another round of broad conceptual expansion until those gates return evidence.
-> **Remaining gate:** execute the ranked tests below in queue order, beginning with P0 and the scheduler current-data join; update the owning report/queue item as each result lands.
+> **Last evidence:** 2026-08-24 — completed static audits across queue items #0-#8, current tooling/source contracts, recent merged commits, and direct inspection of Actions run `32526927206` shard/combined artifacts
+> **Decision:** the current research program is no longer broadly blocked on ideas or literature. Most ranked questions have been narrowed to one small executable gate using existing machinery; avoid another round of broad conceptual expansion until those gates return evidence. Recent-commit/artifact reconciliation further narrows P0 to a historical reproduction and scheduler repricing to one current rich attempt-row materialization followed by analysis.
+> **Remaining gate:** execute the ranked tests below in queue order, beginning with the P0 historical checksum and a current scheduler evidence materialization/join; update the owning report/queue item as each result lands. See [`2026-08-24-queue-readiness-artifact-reconciliation.md`](2026-08-24-queue-readiness-artifact-reconciliation.md).
 > **Evidence role:** discovery
 > **Selection:** observational — readiness is reconciled from current repo/tooling and the audits on this branch.
 
@@ -21,8 +21,8 @@ The answer is encouragingly concrete.
 
 | Queue | Current knowledge | Smallest next executable | New infrastructure needed? | Blocker |
 |---:|---|---|---|---|
-| #0 P0 stage dependence | static suspects narrowed; resource context + initial admissible ordering are the first checks | one fresh-vs-preceded reproduction with resource vector and first-order/tree-divergence diagnostics | **tiny instrumentation/test seam** | none higher; this is the blocker |
-| #1 scheduler repricing | action identity, work, outcomes, exhaustion/censoring telemetry already exist; census tranche data exist | current attempt/lifecycle × census action/tranche join, fixed-work frontier, failed-work tax, simple static baseline | **small analyzer/join**, not new telemetry system | P0 only for sequence-ambiguous admissible cells; rest can proceed with exclusions |
+| #0 P0 stage dependence | static suspects narrowed; current `main` already has `_orderingResearchObserver`; resource context + initial admissible ordering are the first checks | one historical fresh-vs-preceded reproduction at `e5034e8...` with matched resource vector and first-order/tree-divergence diagnostics | **historical harness/backport only**; no new current production observer | none higher; this is the blocker |
+| #1 scheduler repricing | current code projects action identity, per-attempt work ceilings/`workSpent`, outcomes and censoring; census tranche data exist; latest inspected full refresh predates that full attempt projection | materialize one current fixed-work development dataset, then perform attempt/lifecycle × census action/tranche join, fixed-work frontier, failed-work tax and simple static baseline | **one current evidence run + small analyzer/join**, not a new telemetry system | P0 only for sequence-ambiguous admissible cells; rest can proceed with exclusions |
 | #2 generalization | protocol designed; deterministic random/envelope generators and run manifests already exist | define thin population lifecycle manifest; mint first broad-confirmation + transfer-envelope cohorts | **small manifest/validation layer**; generator already exists | selected treatment needed before first decision-bearing use |
 | #3 automatic configuration | action grammar and stable identities already exist | use #1 portfolio-cardinality/headroom result to decide whether action racing or local parameter refinement is worth running | **none before #1** | #1 headroom gate |
 | #4 beam retention | exact A/D labels already exist; scalar summaries falsified; MustCross first-pass state nominated | offline descriptor projection on existing exact cases, then one fixed-width matched-work retention treatment only if recurrence survives | likely **small analysis extraction**, then bounded experiment | no new CP-SAT needed initially |
@@ -36,7 +36,9 @@ The answer is encouragingly concrete.
 
 ### P0
 
-One or a handful of exact reproductions are more valuable than another population sweep. The diagnostic is now deliberately staged:
+One or a handful of exact reproductions are more valuable than another population sweep. Current `main` already exposes admissible sibling ordering/slack through the diagnostic-only `_orderingResearchObserver`; do not add a second production observer. The missing seam is only whatever disposable harness/backport is necessary to expose the same checksum at the historical target commit.
+
+The diagnostic is deliberately staged:
 
 1. equalize explicit action/resource context;
 2. compare initial admissible child ordering;
@@ -47,7 +49,14 @@ Do not dump all mutable state before these cheaper discriminators.
 
 ### Scheduler
 
-The first scheduler frontier is fundamentally an **existing-data analysis**. It may discover stale/non-comparable cells that require targeted reruns, but that should be an output of the join rather than a reason to commission another full census first.
+The first scheduler frontier is **not** another census or telemetry-design project, but it is no longer accurate to call it pure analysis of an already-materialized current dataset.
+
+Direct inspection of Actions run `32526927206` found:
+
+- the combined per-level artifact retains row-level `workSpent` but drops the full `attempts` array;
+- raw shard artifacts retain attempts, but that August 21 run predates the current `actionKey`, work-ceiling and per-attempt `workSpent` projection.
+
+Therefore first materialize one current fixed-work development run using the existing projection, preserving raw attempts. A baseline-failure-conditioned residual population is legitimate for the explicit tail-allocation question. Then perform the join/frontier analysis. See [`2026-08-24-queue-readiness-artifact-reconciliation.md`](2026-08-24-queue-readiness-artifact-reconciliation.md).
 
 ### Beam
 
@@ -71,9 +80,9 @@ Only augment connectivity calls that already execute/reject. No clause store, no
 
 Expose an existing bounded operator from an explicit prefix if necessary. Do not implement a new destroy/recreate strategy just to run the diagnostic.
 
-### P0 checksum instrumentation
+### P0 historical checksum harness
 
-Log the resource/context vector and first admissible ordering in a reproducible control path. Avoid broad tracing until the checksum agrees.
+Current production instrumentation already exists. Add only the minimum disposable seam needed to reproduce the historical `e5034e8...` fresh-versus-preceded comparison while recording the resource/config vector and first admissible ordering. Avoid broad tracing until the checksum agrees.
 
 ## What is blocked by another result
 
@@ -101,6 +110,8 @@ Blocked until the architecture naturally exposes a compact material kernel or pr
 
 The branch audits also consolidate several questions whose premise is already answered enough to avoid reruns:
 
+- do not repeat the broad static P0 lifetime/accounting audit already merged on August 24;
+- do not add a second current-tree admissible-order ordering observer;
 - do not re-prove that repair seeds differ in capability;
 - do not re-run broad exact DFS transposition recurrence;
 - do not re-label the existing beam extinction set with CP-SAT before using it;
@@ -108,6 +119,7 @@ The branch audits also consolidate several questions whose premise is already an
 - do not split already-mined Corpus 2 and call the split untouched holdout;
 - do not build another solver-blind random generator for confirmation;
 - do not define a second action identity format;
+- do not run another technique census merely because the current scheduler attempt rows need materialization;
 - do not use winner-only historical portfolio replay as current continuation-value analysis;
 - do not front-load every beam globally from isolated node economics;
 - do not prototype native/WASM across the current broad candidate kernel;
@@ -117,8 +129,8 @@ The branch audits also consolidate several questions whose premise is already an
 
 Rank still controls, but several actions can be prepared in parallel without contaminating each other:
 
-1. **P0 reproduction/checksum** because it governs interpretation of sequence-sensitive admissible cells.
-2. **Scheduler existing-data join/frontier**, excluding P0-ambiguous cells rather than waiting for every action to become perfect.
+1. **P0 historical reproduction/checksum** because it governs interpretation of sequence-sensitive admissible cells.
+2. **Scheduler current attempt-row materialization + fixed-work join/frontier**, excluding P0-ambiguous cells rather than waiting for every action to become perfect.
 3. **Thin population manifest + first fresh cohorts** so confirmation capacity exists when #1/#4/#6/#7 nominate a treatment.
 4. **Beam descriptor projection** on existing exact cases.
 5. **Reference support-matrix closure** only for unresolved currently claimed exact mechanics.
@@ -131,6 +143,8 @@ This order intentionally turns existing evidence into decisions before buying an
 ## Disposition
 
 The research program has reached an execution-heavy phase.
+
+The recent-commit/artifact reconciliation removed two false starts: another broad P0 static audit and another scheduler telemetry redesign. It also exposed one smaller readiness gap: the richer current scheduler attempt contract has not yet been materialized in the latest inspected full-refresh evidence.
 
 The main risk now is not lack of sophisticated ideas. It is spending compute or implementation effort on questions whose cheapest discriminating experiment is already known.
 
