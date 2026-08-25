@@ -1,7 +1,7 @@
 # Solver optimization: current priority queue
 
 > **Status:** canonical live entry point for solver capability and efficiency research.
-> **Reconciled:** 2026-08-24 after technique-census, scheduling, speed, research-method, and fourteen-report external-literature synthesis.
+> **Reconciled:** 2026-08-24 after technique-census, scheduling, speed, research-method, external-literature synthesis, and the P0/generalization/configuration/reference/beam integration audits.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness and generalization. Historical exact-level evidence may nominate research; it may not steer production solves.
 
 Method: [`solver-research-operating-model.md`](solver-research-operating-model.md). Scheduler: [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Residual/future representation vocabulary: [`solver-residual-state-representation.md`](solver-residual-state-representation.md). Deferred/detail ideas: [`solver-future-work.md`](solver-future-work.md). Default-off mechanisms: [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Operational technique taxonomy: [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md). External-literature synthesis: [`../reports/2026-08-24-external-research-pathfinder-synthesis.md`](../reports/2026-08-24-external-research-pathfinder-synthesis.md). Historical queue snapshots remain under [`archive/snapshots/`](archive/snapshots/); dated measurements remain under [`../reports/`](../reports/).
@@ -35,12 +35,12 @@ Additional rules:
 
 | # | Opportunity | State | Next gate |
 |---:|---|---|---|
-| 0 | Unexplained cross-stage dependence | **P0 BLOCKER** | Reproduce fresh-vs-preceded behavior for admissible-order and any other affected stages at identical explicit input/config/seed/work. Identify mutable cache/state/PRNG/accounting cause or formalize an intentional typed handoff. Do not use unexplained sequence effects for cap/routing conclusions. |
+| 0 | Unexplained cross-stage dependence | **P0 BLOCKER** | Reproduce one historical/current fresh-vs-preceded admissible case under an identical action contract. First compare resource/accounting/config context, then compare the initial admissible child ordering as a semantic checksum. Clear MP/MC lower-bound memos before broad state diffing; if ordering agrees, trace the first tree divergence. See [`../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md`](../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md). |
 | 1 | Evidence-driven scheduler and fixed-work portfolio repricing | **ASAP / ACTIVE** | Join current lifecycle reach + `workSpent` to census cap/tranche data; build tranche risk sets that distinguish natural exhaustion from right-censored budget stops; estimate conditional incremental solve/work value and exclusivity; keep `P(B solves | A failed)` observational where predecessor sequence/latent difficulty is uncontrolled; compute fixed-envelope Pareto/oracle headroom; test how much a simple static policy captures before survival/bandit/dynamic machinery. See [`solver-scheduling-policy.md`](solver-scheduling-policy.md). |
-| 2 | Generalization and holdout discipline | **ASAP / INFRASTRUCTURE GAP** | Establish one reproducible untouched/fresh confirmation/transfer protocol, ideally limiting exact-failure exposure during iteration. Preserve parent-family grouping and define when an exposed holdout becomes development data. Until then, scope claims to the corpus measured. |
-| 3 | Automatic configuration / portfolio construction | **HIGH PRIORITY RESEARCH** | Define bounded machine-readable config/action ranges, then run a small racing/successive-elimination pilot over existing knobs. Optimize marginal portfolio coverage/work and rare exclusive capability, not standalone wins; record search size/selection rule and compare the survivor to simple/current baselines before external configurator complexity. |
-| 4 | Beam score/retention at proven extinction boundaries | **ACTIVE RESEARCH** | At exact A/D extinction parents, test whether a small set of cheap level-blind future-opportunity/interface descriptors reveals redundant survivor coverage while an exact-live alternative occupies an underrepresented class. Interpret the goal as **marginal future-extension coverage** by a restricted survivor set; interface width/solution-density/representative-family ideas are diagnostics only unless independently justified. Start offline; if recurrence survives unrelated parents, test one simple quota/crowding or reserve intervention at unchanged width and matched `workSpent`, against random reserve and width-only controls. Keep B-class live/live near-ties separate. |
-| 5 | Exact/reference-model program | **HIGH PRIORITY RESEARCH INFRASTRUCTURE** | Inventory exact vs relaxed/unsupported mechanics and validate current model bidirectionally on a bounded suite. Use it for prefix live/dead, repair retreat, attainable residual-resource/topology labels, structural-certificate/core counterexamples, and falsification of overcoarse proposed interfaces where tractable. Safe reduced/relaxed models may be diagnostic only when direction is explicit. Demonstrate useful turnaround before expanding scope. Never turn timeout/relaxation into UNSAT/dead truth. |
+| 2 | Generalization and holdout discipline | **ASAP / PROTOCOL DESIGNED, COHORTS NOT YET INSTANTIATED** | Instantiate one reproducible broad confirmation cohort and one transfer/challenge cohort under the renewable exposure/reclassification protocol. Use a separate baseline-failure-conditioned residual cohort only for explicitly residual claims. Preserve parent-family grouping and generator/source/version metadata. See [`../reports/2026-08-23-solver-confirmation-transfer-protocol-design.md`](../reports/2026-08-23-solver-confirmation-transfer-protocol-design.md). |
+| 3 | Automatic configuration / portfolio construction | **HIGH PRIORITY RESEARCH** | Define stable **search-action identity separately from execution context**, expose the existing semantically valid action/tranche grammar, and compute offline portfolio-cardinality/failed-work/oracle headroom before searching raw weights or ablation-flag combinations. Race existing actions first; refine only surviving families and confirm selected survivors independently. See [`solver-scheduling-policy.md`](solver-scheduling-policy.md). |
+| 4 | Beam score/retention at proven extinction boundaries | **ACTIVE RESEARCH** | Reuse the existing exact A/D case set before generating more labels. Simple scalar progress/resource summaries are already falsified; start with bounded local/interface descriptors, especially pending-vs-half-completed must-cross state and already-paid connectivity slack, and require incremental information beyond current score/prunes. If recurrence survives unrelated parents, test one simple quota/crowding/reserve intervention at unchanged width and matched `workSpent`, against random reserve and width-only controls. Keep B-class live/live near-ties separate. See [`../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md). |
+| 5 | Exact/reference-model program | **HIGH PRIORITY, BOUNDED INFRASTRUCTURE HAS PAID RENT** | Close the small bidirectional support/validation matrix and keep encoding capability separate from validation depth. Repair-retreat and beam-extinction work already demonstrate decision value, so do not expand mechanic scope or relabel existing beam cases by default. Use additional CP-SAT queries only for a concrete ranked label/counterexample gap; timeout/unsupported/relaxed never become dead/UNSAT truth. See [`../reports/2026-08-23-solver-reference-model-capability-audit.md`](../reports/2026-08-23-solver-reference-model-capability-audit.md). |
 | 6 | Restart/randomization and learned-failure search | **HIGH PRIORITY CAPABILITY RESEARCH** | For restarts, measure prespecified across-seed/tie-break distributions at equal aggregate work. For learned failure, do **not** repeat generic recurrence tests: repair exact-state memory is already useful and exact DFS transposition is already weak. Ask whether expensive **sound** failures share compact structural certificates across distinct exact states, including unattainable exact resource, residual-capacity, cut/Hall/obligation conflicts, finite-state/resource nonattainment, or assumption-core explanations, become detectable materially earlier than current rejection, and avoid enough work to repay derivation/lookup cost. Do not optimize core minimality before recurrence/value is established. |
 | 7 | Repair reachability/reconstructability, CP-SAT-anchored operators, and state-conditioned must-cross reasoning | **ACTIVE, SECONDARY** | Use exact/shadow evidence to distinguish neighborhoods that freeze a necessary change from exact-live but repair-hostile residuals needing stronger reconstruction. Ask whether cheap legal descriptors separate those regimes; offline interface width, core/MCS, solution-density or backdoor/distance-to-tractability labels may explain failures but do not become runtime routing features without independent evidence. Only then test one regime-specific reopening or bounded reconstruction treatment at equal total work. Must-cross descriptors still require unrelated/held-out recurrence and legal runtime features. |
 | 8 | Architectural speed and execution substrate | **ACTIVE SUPPORTING PROGRAM** | Continue profile-led measured V8 hot spots. Run a native/WASM feasibility prototype only if a compact material hotspot can cross the boundary cheaply; close it on weak end-to-end gain. Speedups do not automatically authorize more production work. See [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md). |
@@ -50,14 +50,17 @@ Additional rules:
 
 Reverse-oracle work found historical admissible-order wins that do not reproduce from a fresh prepared state despite apparently identical search settings. That is not safe to treat as ordinary lifecycle context. A pure cache warm-up may change wall time, but should not silently alter deterministic search capability at fixed work.
 
+Static auditing has already narrowed several candidates. Admissible-order creates a fresh logical search state without a reusable DFS/beam buffer and has no PRNG input. Current retry config overrides examined restore their original config. The architecture does have real historical/current sequence-accounting hazards, including stale late-tier work-cap inheritance and cumulative-node starvation, but accounting alone cannot explain an observed change in deterministic first-child ordering. Lower-bound memo/value state remains the strongest visible semantic suspect, while resource/accounting context remains a required control.
+
 Required diagnosis:
 
-1. pick current-code reproducible examples rather than stale historical labels;
-2. run the target stage from fresh state and after a controlled predecessor sequence with identical explicit config/seed/work;
-3. diff every mutable/search-relevant prepared field, memo/cache lifecycle, PRNG state, counters, stage overrides, and budget scope;
-4. clear candidate state classes systematically and determine the earliest point where ordering, legality, pruning, randomness, or work accounting diverges;
-5. either eliminate accidental leakage or promote the dependency into an explicit typed producer -> receptor contract with independent controls and matched-work evidence;
-6. add a regression fixture for the discovered lifetime contract.
+1. reproduce an unmodified historical/current full-ladder winner locally under its preserved protocol before interpreting treatment arms;
+2. run the target admissible action fresh and after a controlled predecessor sequence with the same explicit gate/config/action/seed semantics;
+3. record the resource/context vector first: `_workMeter.units`, `_workCap`, `_strictWorkCap`, cumulative nodes, supplied node/wall budgets, effective config/forced-step state, gate and canonical action identity;
+4. compare the **initial admissible child ordering** as a semantic checksum;
+5. if resource context differs, normalize it before inferring carryover; if initial ordering differs under equal context, clear MP/MC bound memos first and inspect only ranking/bound inputs; if initial ordering agrees, locate the first later tree divergence;
+6. either eliminate accidental leakage or promote the dependency into an explicit typed producer -> receptor contract with independent controls and matched-work evidence;
+7. add a regression fixture for the discovered lifetime contract.
 
 Do not “fix” isolated experiments by always running the predecessor ladder first. That hides the dependency rather than defining it.
 
@@ -88,17 +91,24 @@ Adding a candidate expands the menu, not the default aggregate work budget. Cont
 
 Corpus 2, technique-census cells, known regressions, and variant families have been repeatedly inspected and mined. They are therefore development evidence. Level-blind execution prevents runtime lookup but does not make repeated tuning on those populations statistically independent.
 
-Near-term deliverable: define a holdout protocol with at least:
+The protocol design now lives in [`../reports/2026-08-23-solver-confirmation-transfer-protocol-design.md`](../reports/2026-08-23-solver-confirmation-transfer-protocol-design.md). The remaining infrastructure gap is **population instantiation and lifecycle exercise**, not conceptual definition.
+
+Use three evidence roles:
 
 - discovery/tuning data that agents may inspect freely;
 - confirmation data not used to choose the candidate/threshold/configuration;
-- a locked or freshly generated transfer/challenge population reserved for broader claims;
-- family-level grouping for sibling variants;
-- rules for when an evaluated holdout becomes development data and must be replenished;
-- a policy for aggregate-vs-exact holdout visibility so repeated failure peeking does not silently tune the transfer set;
-- generator/version metadata so the challenge distribution itself is reproducible.
+- a locked or freshly generated transfer/challenge population reserved for broader claims.
 
-Do not block useful corpus-targeted engineering while this is built. Do block overbroad language: report “Corpus-2 improvement” when that is what was measured.
+Managed confirmation/transfer populations should track exposure/reclassification such as `LOCKED`, `AGGREGATE_SEEN`, `EXPOSED`, and `DEVELOPMENT`. Exact failure inspection can be useful after a frozen verdict, but once it influences redesign those cases are development data for the next iteration.
+
+Keep two fresh confirmation constructions separate:
+
+- **broad confirmation:** selected without solver-outcome filtering;
+- **residual confirmation:** conditioned on a frozen baseline failure rule, useful for scheduler/hard-tail claims but not by itself evidence of unconditional unseen-level improvement.
+
+Preserve parent-family grouping for sibling variants, record generator/source/version metadata, and do not repeatedly submit candidate variants to one aggregate-only holdout until it silently becomes a tuning service.
+
+Do not block useful corpus-targeted engineering while cohorts are instantiated. Do block overbroad language: report “Corpus-2 improvement” or “fresh baseline-failure residual improvement” when that is what was measured.
 
 The goal is not one immortal secret benchmark. It is a renewable train/confirm/transfer discipline.
 
@@ -106,42 +116,42 @@ The goal is not one immortal secret benchmark. It is a renewable train/confirm/t
 
 The current hand-authored attempt policy contains a large conditional parameter space: scoring weights/profiles, templates, direction, beam width/diversity, admissible tie-breaks, seeds, eligibility thresholds, and budget depth. Treat systematic selection among these as algorithm configuration rather than serial human guesses.
 
+The first configuration audit establishes an important boundary: this is a **conditional action grammar**, not one flat boolean/continuous hypercube. Many ablation flags are repair-only, retry-only, prune-only, pure-speed, closed, or meaningful only under another mode. Do not feed the Cartesian product of every `SCORE_*`, `PRUNE_*`, `STRATEGY_*`, `TEMPLATE_*`, and `PROFILE_*` control to a configurator.
+
 First gate:
 
-1. define bounded machine-readable parameter/action ranges using existing config identities;
-2. choose/group a development population before candidate outcomes are inspected;
-3. run staged racing/successive elimination so weak candidates do not receive full budgets/populations;
-4. evaluate surviving candidates by **marginal** coverage/work and rare exclusive capability relative to the current portfolio;
-5. report how many configurations were searched and the selection objective;
-6. compare against simple current/profile subsets before integrating a complex external configurator;
-7. confirm selected candidates on untouched/grouped data;
-8. distill any production choice into a compact deterministic, level-blind action set when possible.
+1. define stable **search-action identity** separately from execution context such as stage/tier, predecessor contract, override, and continuation tranche;
+2. expose the existing semantically valid DFS/beam/repair/admissible action vocabulary and budget tranches as the first bounded search space;
+3. compute portfolio-cardinality, failed-work tax, simple greedy/static coverage and oracle headroom from existing census/lifecycle evidence before generating more runs;
+4. choose/group a development population before candidate outcomes are inspected;
+5. run staged racing/successive elimination so weak actions/configs do not receive full budgets/populations;
+6. evaluate survivors by **marginal** coverage/work and rare exclusive capability relative to the current portfolio;
+7. refine raw weights/widths/thresholds only around action families that survive the portfolio screen;
+8. report how many configurations were searched and the selection objective;
+9. compare against simple current/profile subsets before integrating a complex external configurator or learned selector;
+10. confirm selected candidates on untouched/grouped data and distill any production choice into a compact deterministic, level-blind action set when possible.
 
 Large portfolios create selection/overfit surface. Do not create dozens of permanent named profiles merely to expose the search space, and do not quote the winning development arm's apparent effect as an unbiased effect size.
 
 ## Exact/reference-model program
 
-Pathfinder should maintain an independent way to answer selected feasibility questions rather than asking every question through the heuristic solver itself. CP-SAT/reference tools already exist and have produced useful repair-retreat and prefix evidence; elevate that role only to the extent it keeps answering real questions.
+Pathfinder should maintain an independent way to answer selected feasibility questions rather than asking every question through the heuristic solver itself. The bounded reference stack has already demonstrated value on two materially different ranked questions:
 
-Useful targets include:
+- repair-retreat exact feasible/infeasible boundaries;
+- beam extinction-adjacent exact live/dead labels, including the current 32-case material whose post-flipper-support rerun produced 25 live / 4 dead / 3 timeout with zero correctness/input alarms.
 
-- small-instance exact solve/UNSAT controls;
-- explicit-prefix completion feasibility;
-- exact-live/dead labels around beam/DFS divergence points;
-- repair retreat/interface feasibility;
-- residual **lower/upper capacity and exact-attainability** labels used to evaluate future-opportunity descriptors;
-- structural-certificate/counterexample work for proposed cut/resource/obligation reasons, and assumption-core extraction only where the exact model can support it cleanly;
-- falsification of candidate future interfaces by searching for same-signature states with different exact continuation properties;
-- reduced safe-relaxation/reference questions inspired by decision-diagram or finite-state/resource formulations, only when a bounded residual structure makes them cheaper than the full model;
-- validation that heuristic hard-prune assumptions remain one-sided;
-- reduced counterexamples for new propagators or learned-failure mechanisms.
+That means the question is now **maintenance scope and validation**, not whether an exact/reference capability can ever pay rent.
 
-Entry gate:
+Current priorities:
 
-1. inventory current mechanic coverage as exact, relaxed/one-sided, or unsupported;
-2. validate real witnesses in the model and model witnesses with the canonical referee;
-3. ensure timeout/unknown/unsupported remain distinct from UNSAT/dead;
-4. demonstrate useful answer quality/turnaround on one ranked research question.
+1. finish the small adversarial bidirectional support matrix and keep mechanic encoding capability separate from validation depth;
+2. validate real witnesses in the model and model-emitted witnesses with the canonical referee;
+3. keep timeout/unknown/unsupported distinct from UNSAT/dead;
+4. use existing exact labels before generating new ones;
+5. issue additional CP-SAT/reduced-model queries only when a ranked question has a concrete missing label, counterexample, exact-attainability, or structural-certificate need;
+6. do not expand mechanic scope merely to make the model feel “complete.” Static regular filters remain unsupported by the maintained full probe until a real decision-bearing population/question justifies them.
+
+Useful targets include explicit-prefix completion feasibility, repair interfaces, attainable residual-resource/topology labels, structural-certificate/core counterexamples, falsification of overcoarse proposed interfaces, small exact solve/UNSAT controls, and reduced safe-relaxation/reference questions where bounded structure makes them cheaper than the full model.
 
 Do not require the reference solver to outperform production. Its job is independent truth where tractable. If maintaining broader model scope costs more than the questions it resolves, keep only the exact/reduced forms that pay rent.
 
@@ -160,7 +170,7 @@ For systematic-search restart research:
 For learned failure, the generic recurrence premise is already partly resolved and must not be rerun as if blank-slate:
 
 - repair's per-call exact-signature dead-end memory already found very high repeated-state opportunity on hard repair-close cases and shipped useful node savings; its semantics are deliberately **“this randomized continuation dead-ended before,” not logical UNSAT**;
-- systematic DFS exact-state transposition was separately checked with a sound signature and found only roughly 0.5–16% recurrence, far below the earlier loose-signature illusion, so another exact DFS transposition push is closed absent materially new evidence;
+- systematic DFS exact-state transposition was separately checked with a sound signature and found only roughly 0.5-16% recurrence, far below the earlier loose-signature illusion, so another exact DFS transposition push is closed absent materially new evidence;
 - the remaining question is whether **soundly dead** situations, distinct from repair's merely unproductive random dead ends, share smaller structural reasons across different exact states.
 
 The expanded feasibility/certificate/resource-propagation reviews supply candidate reason vocabulary, not preapproved prunes: exact resource no longer attainable, residual maximum capacity below target, obligation isolation behind a cut, Hall/matching deficiency in a necessary relaxation, finite-state/resource nonattainment, joint resource/topology incompatibility, or an assumption-based core from a validated exact model. Pathfinder already has distance/parity/MP-MC lower-bound/connectivity pruning, so new reason classes must add early information beyond that gauntlet rather than restating it.
@@ -184,16 +194,25 @@ No approximate conflict explanation may become a hard reject, and no cross-level
 
 ### Beam retention
 
-Existing exact-prefix evidence now separates at least two beam-extinction regimes:
+Existing exact-prefix evidence separates at least two beam-extinction regimes:
 
-- **A/D-class:** exact labels have repeatedly shown score-preferred dead material displacing exact-live alternatives, including width-saturated D cases;
-- **B-class near-ties:** resolved examples have been live/live rather than dead/live and should not be assumed to share the same defect.
+- **A/D-class:** exact labels show score-preferred dead material displacing exact-live alternatives, including width-saturated D cases;
+- **B-class near-ties:** resolved examples are live/live rather than dead/live and should not be assumed to share the same defect.
 
-The next beam question is therefore not generic “more diversity.” At existing exact-labeled A/D parents, test offline whether a **small prespecified set of cheap, level-blind future-opportunity/interface descriptors** identifies redundant survivor-set coverage or an underrepresented live future better than score alone. Candidate families include already-available residual resources/objective masks, existing MustCross/flipper diversity state, and a few feasibility-derived summaries such as residual upper capacity, exact-resource parity/attainability, topology/cut scarcity, boundary/interface state, and cheap future-mass/forced-choice proxies where legal.
+The 2026-08-24 descriptor sanity check adds several concrete constraints. On four selected exact A/D parents, remaining length, remaining intersections, objective counts, goal distance, and global axis-consumption summaries all fail as monotone future-opportunity rules. `S00030` is especially diagnostic: its dead and live candidates share position, remaining length, remaining intersection budget, goal distance, and the current `(flipperUsedMask, mustCrossMask)` diversity bucket. The live state has already made one pass through a still-pending must-cross while the dead state has not. That first-pass distinction is present in `crossCounts` and already influences scoring, but is absent from the coarse diversity representation. It is a nominated descriptor, not evidence that changing retention will help.
 
-The third-wave decision-diagram/representative-set literature sharpens the objective: think of beam as a **restricted representation** and ask whether survivors provide marginal future-extension coverage. Representative-family algebra itself is not justified without a matching exact interface/property.
+The next beam question is therefore not generic “more diversity.” At existing exact-labeled A/D parents, test offline whether a **small prespecified set of cheap, level-blind interface descriptors** identifies redundant survivor-set coverage or an underrepresented live future better than score alone. Lead with:
 
-Do not count information already embodied by current goal-distance/parity/MP-MC lower-bound/connectivity prunes as a new descriptor win. The useful signal is what remains **after** those checks pass.
+- pending-vs-half-completed must-cross status;
+- bounded local H/V axis/interface availability around current/pending obligations;
+- connectivity slack or bounded reached-set summaries **only when reusing an already-scheduled connectivity pass**;
+- current diversity masks paired with one such interface signal.
+
+Connectivity is already a major hot path and beam throttles it to every eighth real-length step plus the final 20 steps. Do not launch a second flood fill per candidate merely to create a descriptor. Full bridge/cut/corridor or exact-attainability work is second-line and must earn its cost.
+
+The decision-diagram/representative-set literature sharpens the objective: think of beam as a **restricted representation** and ask whether survivors provide marginal future-extension coverage. Representative-family algebra itself is not justified without a matching exact interface/property.
+
+Do not count information already embodied by current goal-distance/parity/MP-MC lower-bound/connectivity prunes or current scoring as a new descriptor win. The useful signal is what remains **after** those checks pass and still improves representation of viable futures.
 
 If a descriptor recurs across unrelated parents, test the simplest retention expression first: bucket/quota/crowding or one small reserve slot, at unchanged width and matched `workSpent`. Include random reserve and ordinary width increase as controls. Exact-live retention is still a proxy; promotion requires actual cold solve/work improvement.
 
@@ -267,5 +286,9 @@ These remain documented in dated reports, archived queue snapshots, or the opt-i
 - [`variant-level-research.md`](variant-level-research.md): family/variant evidence, parent-held-out discipline, and symmetry first-divergence/randomness policy.
 - [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md): implementation-speed program.
 - [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md): retained default-off experiment dispositions.
+- [`../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md`](../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md): P0 stage-history diagnosis and semantic-checksum next step.
+- [`../reports/2026-08-23-solver-confirmation-transfer-protocol-design.md`](../reports/2026-08-23-solver-confirmation-transfer-protocol-design.md): renewable broad/residual confirmation and transfer lifecycle.
+- [`../reports/2026-08-23-solver-reference-model-capability-audit.md`](../reports/2026-08-23-solver-reference-model-capability-audit.md): bounded CP-SAT support/validation/value audit.
+- [`../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md): exact A/D scalar falsifications, runtime-cost audit, and first cheap retention descriptor candidate.
 - [`../reports/2026-08-24-external-research-pathfinder-synthesis.md`](../reports/2026-08-24-external-research-pathfinder-synthesis.md): fourteen-report literature-to-Pathfinder synthesis.
 - [`../reports/2026-08-24-third-wave-cross-pollination-addendum.md`](../reports/2026-08-24-third-wave-cross-pollination-addendum.md): final frontier/DD, automaton-resource and abstraction/backdoor cross-links.
