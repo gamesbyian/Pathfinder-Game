@@ -1,26 +1,19 @@
-# Ablation Laboratory
+# Ablation laboratory
 
 Solver-analysis tooling: `scripts/run-ablation.mjs`, `scripts/analyze-ablation.mjs`, `modules/solver/ablation-config.ts`, npm `ablation:*`.
 
-Features toggle through `opts.ablation`: production-default features default on, experimental opt-ins off, so baseline matches production. Commands use `scripts/run-bundled.mjs`, not raw `tsx`, because the hot path is ~5× slower under `tsx`.
+Features toggle through `opts.ablation`: production-default features default on, experimental opt-ins off, so baseline matches production. Commands use `scripts/run-bundled.mjs`, not raw `tsx`, because the hot path is much slower under `tsx`.
 
-> **Evidence role:** the legacy ablation lab is primarily an **exploratory/discovery instrument**. Its standard CLI is wall-budgeted and its analyzer ranks many arms after observing the same population. Do not promote a solver policy merely because it tops an ablation ranking. Re-test selected candidates through the current level-blind deterministic/matched-work experiment path, and use independent confirmation when the candidate was selected from the same data.
+> **Evidence role:** primarily exploratory/discovery. The standard CLI is wall-budgeted and the analyzer ranks many arms on one population. Do not promote policy from an ablation ranking alone. Re-test selected candidates through the current level-blind deterministic/matched-work path and independently confirm candidates selected from the same data.
 
-## Feature flags (76)
+## Feature registry
 
-| Group | Count | Controls |
-|---|---:|---|
-| scoring | 18 | `SCORE_*` terms in `scoreMove` |
-| pruning | 15 | `PRUNE_*` dead-branch checks |
-| strategy | 23 | `STRATEGY_*` search/orchestration mechanisms |
-| templates | 8 | structural traversal templates |
-| profiles | 12 | `PROFILE_<name>` attempt eligibility |
+Exact flags, groups, descriptions, and defaults live in `modules/solver/ablation-config.ts`; exact scoring-profile weights live in `modules/solver/policy.ts`. Do not duplicate changing feature counts here.
 
-Exact names/defaults: `modules/solver/ablation-config.ts`. Exact scoring-profile weights: `modules/solver/policy.ts`.
-
-`PROFILE_<name>` flags enable/disable named **scoring weight vectors**, not independent search algorithms. Ordinary DFS/beam profiles share `scoreMove()` and differ mainly in those weights; templates, beam retention, admissible-order, repair, pruning, retry context, and budget depth are separate operational layers. See [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) before interpreting profile-ablation overlap or independence.
+`PROFILE_<name>` flags enable/disable scoring weight vectors, not independent algorithms. Ordinary DFS/beam profiles share `scoreMove()` and differ mainly in weights; templates, beam retention, admissible-order, repair, pruning, retry context, and budget depth are separate operational layers. See [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
 
 Important distinctions:
+
 - `STRATEGY_REPAIR_FALLBACK`: removes repair configs and early probe.
 - `STRATEGY_REPAIR_PROBE`: disables only early probe; fallback remains.
 - `STRATEGY_REPAIR_MUSTTURN_BIAS`: only biased repair attempt.
@@ -30,9 +23,9 @@ Important distinctions:
 - `STRATEGY_REPAIR_ELITE_SPLICE`, `STRATEGY_REPAIR_STAGNATION_BURST`, `STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST`: repair exploration mechanisms.
 - `SCORE_MUST_TURN_EXIT_GUIDANCE`: exit guidance separate from must-turn urgency.
 - `STRATEGY_REPAIR_LENGTH_GAP_CLOSE`: bounded exact-length/intersection close operator.
-- `STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS`: allows it with one structural deficit (`LENGTH_GAP_CLOSE_STRUCTURAL_SLACK`, default 1).
+- `STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS`: permits close attempts with one structural deficit (`LENGTH_GAP_CLOSE_STRUCTURAL_SLACK`, default 1).
 
-History/results belong in dated reports and current queue/ledger. `ATTEMPT_ORDER`: `'reverse'`, `'random'` (with `_randomSeed`), or `'profile-grouped'`.
+History/results belong in dated reports and the current queue/ledger. `ATTEMPT_ORDER`: `'reverse'`, `'random'` (with `_randomSeed`), or `'profile-grouped'`.
 
 ## Commands
 
@@ -57,7 +50,7 @@ node scripts/run-bundled.mjs scripts/run-ablation.mjs \
   --budget-ms=30000
 ```
 
-Reuse a baseline with `--baseline=logs/ablation/baseline.json`.
+Reuse a baseline with `--baseline=logs/ablation/baseline.json` only when code/corpus/protocol remain comparable.
 
 ## `run-ablation.mjs` flags
 
@@ -66,9 +59,9 @@ Reuse a baseline with `--baseline=logs/ablation/baseline.json`.
 | `--experiment=<phase>` | `full` | `baseline`, `single-feature`, `profiles`, `templates`, `order`, `pairs`, `full` |
 | `--corpus=<path>` | `data/levels.json` | Corpus; stress witness metadata stripped before solving |
 | `--levels=<spec>` | `all` | `pos:`, `id:`, or full ID; bare numbers rejected |
-| `--budget-ms=<n>` | `10000` | Per-level wall-time budget; host/load-sensitive, so not a portable cross-technique allocation currency |
+| `--budget-ms=<n>` | `10000` | Per-level wall budget; host/load-sensitive, not portable allocation currency |
 | `--output=<path>` | timestamped | JSON output |
-| `--baseline=<path>` | — | Reuse baseline only when code/corpus/protocol remain comparable |
+| `--baseline=<path>` | — | Reuse only when code/corpus/protocol are comparable |
 | `--filter=<substr>` | — | Filter experiment names |
 | `--concise` | off | Omit per-level attempt lists |
 
@@ -88,21 +81,19 @@ Reuse a baseline with `--baseline=logs/ablation/baseline.json`.
 }
 ```
 
-## Interpretation rules
+## Interpretation
 
-`analyze-ablation.mjs` emits `featureRanking[]`, `tierSummary`, `profileRanking[]`, `templateRanking[]`, `attemptOrderSensitivity[]`, `redundancyAnalysis[]`, `recommendations[]`.
+`analyze-ablation.mjs` emits `featureRanking[]`, `tierSummary`, `profileRanking[]`, `templateRanking[]`, `attemptOrderSensitivity[]`, `redundancyAnalysis[]`, and `recommendations[]`. Treat them as descriptive rankings on the measured run, not promotion verdicts.
 
-Treat all of these as **descriptive rankings on the measured run**, not promotion verdicts.
+- The analyzer score is a convenience heuristic, not a statistical test or solver objective.
+- Broad sweeps create many opportunities for an apparently strong arm by chance or corpus specificity; record the search space when selecting a follow-up.
+- A population chosen because a feature looked important there is targeted discovery/forensic evidence, not an unbiased effect estimate.
+- Wall-bounded comparisons can change effective search work with host load. Policy decisions use deterministic `workSpent` and non-binding deadlines; see [`solver-budget-determinism.md`](solver-budget-determinism.md).
+- Equal nodes do not equalize heterogeneous technique cost.
+- Ablating one feature measures its effect inside the surrounding policy, not intrinsic standalone value.
+- Feature interactions make single ablations non-additive.
 
-- The analyzer score is a hand-designed convenience heuristic, not a statistical test or solver objective.
-- A sweep over 76 flags, profiles, templates, orders, and pairs creates many opportunities for an apparently strong arm by chance or corpus specificity. Record how many arms were considered when selecting a follow-up.
-- If a population was chosen because a feature already looked important there, the result is targeted forensic/discovery evidence, not an unbiased effect-size estimate.
-- Wall-bounded comparisons can change effective search work with host load. For current policy decisions, use the deterministic `workSpent` protocol and non-binding deadline in [`solver-budget-determinism.md`](solver-budget-determinism.md).
-- Equal node counts do not make different technique families equal-cost.
-- Ablating one feature from the full ladder measures its effect **in that surrounding policy**, not its intrinsic standalone value.
-- Feature interactions can make single ablations non-additive. Do not sum or independently rank effects as though they compose linearly.
-
-`redundancyAnalysis[]` is an **outcome/effect** comparison: it can show that disabling or retaining mechanisms produces overlapping solve/performance consequences. It does not establish operational redundancy, shared branch/frontier traversal, or equivalent move ordering. Use [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) and the operational-similarity instrumentation for those claims.
+`redundancyAnalysis[]` compares outcomes/effects. It does not prove operational redundancy, shared traversal, or equivalent move ordering; use [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) for those claims.
 
 ```text
 score = (baselineSolved - ablationSolved) * 100
@@ -119,17 +110,17 @@ score = (baselineSolved - ablationSolved) * 100
 | `neutral` | -5 ≤ score <5 |
 | `negative` | score < -5 |
 
-These tiers are triage labels only. A `critical` arm may reveal useful negative interaction rather than an indispensable universal mechanism; a `strong` arm still needs a current matched-work causal test if it will change production.
+Tiers are triage labels only. A `critical` arm may reveal a negative interaction rather than an indispensable mechanism; a `strong` arm still needs a current matched-work causal test before changing production.
 
-## Promotion path for an ablation finding
+## Promotion path
 
-1. use the ablation lab to nominate a concrete mechanism or interaction;
-2. reproduce the effect on current code with explicit participation/attempt telemetry;
-3. express the treatment as narrowly as possible;
+1. nominate a concrete mechanism/interaction with the ablation lab;
+2. reproduce on current code with participation/attempt telemetry;
+3. make the treatment as narrow as possible;
 4. compare at deterministic matched work where allocation/search policy changes;
-5. include gains, losses, work, errors/truncation, and the actual population reached;
-6. independently confirm if the treatment/profile/threshold was selected from the discovery sweep;
-7. update the queue/ledger rather than treating the analyzer recommendation as authority.
+5. report gains, losses, work, errors/truncation, and reached population;
+6. independently confirm if treatment/profile/threshold was selected from the discovery sweep;
+7. update the queue/ledger rather than treating analyzer recommendations as authority.
 
 ## Programmatic use
 
@@ -145,4 +136,4 @@ const noPrune = withFeaturesDisabled(['PRUNE_DISTANCE_BOUND', 'PRUNE_CONNECTIVIT
 const singleProfile = soloConfig(['PROFILE_perimeterSweep']);
 ```
 
-Programmatic use does not change the evidence rules above. For promotion-quality work, prefer the current experiment manifests/workflows in [`tooling-catalog.md`](tooling-catalog.md) over inventing a bespoke ablation runner.
+Programmatic use does not change the evidence rules. For promotion-quality work, prefer current experiment manifests/workflows in [`tooling-catalog.md`](tooling-catalog.md) over a bespoke runner.
