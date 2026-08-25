@@ -1,7 +1,7 @@
 # Solver optimization: current priority queue
 
 > **Status:** canonical live entry point for solver capability and efficiency research.
-> **Reconciled:** 2026-08-24 after the P0, scheduler/configuration, generalization, beam, reference-model, learned-failure/restart, repair, and execution-substrate audits.
+> **Reconciled:** 2026-08-24 after the P0/artifact reconciliation and the scheduler/configuration, generalization, beam-descriptor, reference-model, learned-failure/restart, repair, and execution-substrate audits.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness and generalization. Historical exact-level evidence may nominate research; it may not steer production solves.
 
 Use this file for **rank and next gate**, not as a second notebook. Detailed reasoning belongs in the linked topic docs/reports.
@@ -41,10 +41,10 @@ Additional rules:
 | # | Opportunity | State | Next gate |
 |---:|---|---|---|
 | 0 | Unexplained cross-stage dependence | **P0 BLOCKER** | Reproduce one fresh-vs-preceded admissible-order case under an identical action/resource contract. Compare resource/accounting/config context, then initial admissible child ordering as a semantic checksum. If ordering differs, clear MP/MC lower-bound memos first; if it agrees, trace the first later tree divergence. See [`../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md`](../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md). |
-| 1 | Evidence-driven scheduler and fixed-work portfolio repricing | **ASAP / ACTIVE** | Current attempt artifacts already expose canonical action identity, `workSpent`, ceilings, and explicit `success/exhausted/timed-out/budget-starved/error` outcomes. Build the current action/tranche risk-set join to census cap data; compute failed-work tax, exclusivity, portfolio-cardinality and fixed-work Pareto/oracle headroom; test a simple static policy before dynamic/survival/bandit machinery. See [`../reports/2026-08-24-scheduler-evidence-contract-audit.md`](../reports/2026-08-24-scheduler-evidence-contract-audit.md). |
+| 1 | Evidence-driven scheduler and fixed-work portfolio repricing | **ASAP / DATA MATERIALIZATION GATE** | Current code exposes canonical action identity, per-attempt `workSpent`, ceilings, and explicit termination outcomes, but the latest inspected full-refresh artifacts predate that rich attempt projection. Materialize one current fixed-work attempt-row dataset with the existing schema, then build the action/tranche risk-set join to frozen census cap data and test a simple static policy before dynamic/survival/bandit machinery. See [`../reports/2026-08-24-queue-readiness-artifact-reconciliation.md`](../reports/2026-08-24-queue-readiness-artifact-reconciliation.md) and [`../reports/2026-08-24-scheduler-evidence-contract-audit.md`](../reports/2026-08-24-scheduler-evidence-contract-audit.md). |
 | 2 | Generalization and holdout discipline | **ASAP / PROTOCOL DESIGNED, COHORTS NOT YET INSTANTIATED** | Instantiate one fresh broad confirmation cohort and one transfer/challenge cohort under the renewable exposure/reclassification protocol. Keep baseline-failure-conditioned residual cohorts separate and scope their claims accordingly. See [`../reports/2026-08-23-solver-confirmation-transfer-protocol-design.md`](../reports/2026-08-23-solver-confirmation-transfer-protocol-design.md). |
 | 3 | Automatic configuration / portfolio construction | **HIGH PRIORITY RESEARCH** | Stable config/action identities already exist in `attempt-identity.mjs`; do not rebuild them. First determine how much fixed-envelope headroom exists in the **existing action grammar**. Race/prune existing actions first; refine raw weights/widths/thresholds only inside families that survive the portfolio screen, then confirm selected survivors independently. See [`solver-scheduling-policy.md`](solver-scheduling-policy.md) and the scheduler evidence audit above. |
-| 4 | Beam score/retention at proven extinction boundaries | **ACTIVE RESEARCH** | Reuse the existing exact A/D case set. Simple scalar progress/resource summaries are already falsified. Test cheap local/interface descriptors offline, led by pending-vs-half-completed MustCross state and already-paid connectivity facts. Only after unrelated-parent recurrence should one simple quota/crowding/reserve treatment be tested at unchanged width and matched work. See [`../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md). |
+| 4 | Beam score/retention at proven extinction boundaries | **ACTIVE RESEARCH / DESCRIPTOR NARROWED** | Existing exact A/D pairs falsify simple scalar progress/resource rules. MustCross first-pass state separates the `S00030` dead/live pair but does not recur across the other confirmed pairs; cheap local required-axis corridor availability separates none. Next run a read-only full-pool survivor projection over a small prespecified set of already-maintained interface-state keys, reporting bucket cardinality/singletons and fixed-width exact-live retention. Do not test a production quota/crowding rule unless a compact descriptor adds recurring information beyond current score/prunes. See [`../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md). |
 | 5 | Exact/reference-model program | **HIGH PRIORITY, BOUNDED INFRASTRUCTURE HAS PAID RENT** | Finish the small bidirectional support/validation matrix and keep encoding capability separate from validation depth. Repair-retreat and beam-extinction work have already demonstrated value. Use further CP-SAT queries only for a concrete ranked missing label/counterexample/certificate need; do not expand mechanic scope for completeness. See [`../reports/2026-08-23-solver-reference-model-capability-audit.md`](../reports/2026-08-23-solver-reference-model-capability-audit.md). |
 | 6 | Restart/randomization and learned-failure search | **HIGH PRIORITY CAPABILITY RESEARCH** | Restart side: compare fresh-seed restarts against continuation at equal aggregate `workSpent`; additive multi-seed wins establish diversity, not restart superiority. Learned-failure side: generic exact-state recurrence is already weak outside repair experience memory; run a shadow connectivity-reason recurrence/earliness audit before any learned store. See [`../reports/2026-08-24-restart-continuation-value-audit.md`](../reports/2026-08-24-restart-continuation-value-audit.md) and [`../reports/2026-08-24-learned-failure-certificate-audit.md`](../reports/2026-08-24-learned-failure-certificate-audit.md). |
 | 7 | Repair reachability/reconstructability and state-conditioned MustCross | **ACTIVE, SECONDARY** | Reuse exact retreat labels. Hand known-live prefixes to an existing bounded native reconstruction mechanism at fixed work and separate shallow/deep retreat from exact-live-but-repair-hostile reconstruction failure. Only then choose retreat, reconstruction, or larger destroy/core-guided work. See [`../reports/2026-08-24-repair-reachability-reconstructability-audit.md`](../reports/2026-08-24-repair-reachability-reconstructability-audit.md). |
@@ -77,7 +77,7 @@ Do not “fix” experiments by always priming the predecessor ladder. That hide
 
 The old problem statement has changed materially.
 
-Current code already provides:
+Current **code** already provides:
 
 - canonical config identity;
 - canonical action identity including stage and repair seed;
@@ -85,7 +85,9 @@ Current code already provides:
 - row-level deadline truncation and technique lifecycle telemetry;
 - census cap/tranche evidence across a broad action matrix.
 
-The remaining problem is the **join and valuation**, not inventing an identity schema or another general telemetry pass.
+The latest inspected full-refresh **dataset** does not materialize that complete per-attempt contract. Its raw attempts predate the current `actionKey`/work-ceiling/`workSpent` projection, while its combined artifact drops the full attempt array. Therefore the immediate gate is one current rich attempt-row materialization using the existing schema. This is evidence production, not another telemetry-design project.
+
+After that materialization, the remaining problem is the **join and valuation**, not inventing an identity schema or another general telemetry pass.
 
 The existing `portfolio-historical-replay.mjs` is winner/elapsed-time archaeology only. It does not charge failed work, build right-censored risk sets, or model current action overlap, and must not be treated as the continuation-value analyzer.
 
@@ -126,13 +128,24 @@ Exact A/D evidence shows cases where score-preferred material is dead while a ne
 
 Cheap scalar “progress” rules are already refuted. Across exact dead/live pairs, closer-to-goal, fewer intersections used, objective completion and aggregate consumed axis topology point in contradictory directions.
 
-`S00030` is particularly useful: dead and live candidates share position, remaining length, remaining intersection budget, goal distance and current coarse `(flipperUsedMask, mustCrossMask)` diversity bucket. The live candidate has already made the first pass through a still-pending MustCross; the dead candidate has not. `crossCounts` captures the difference and scoring already uses it, but coarse diversity does not.
+`S00030` remains a useful representation counterexample: dead and live candidates share position, remaining length, remaining intersection budget, goal distance and current coarse `(flipperUsedMask, mustCrossMask)` diversity bucket. The live candidate has already made the first pass through a still-pending MustCross; the dead candidate has not. `crossCounts` captures the difference and scoring already uses it, but coarse diversity does not.
 
-This nominates MustCross completion phase as a cheap descriptor, not a fix.
+However, projecting that hypothesis across the other confirmed A/D dead-top/live-alternative pairs does **not** show recurrence. MustCross first-pass state distinguishes `S00030` but not `S00001`, `S00048`, or `R00104`. A stricter cheap local test asking whether the still-required H/V crossing corridor is currently available is identical on both sides of all four pairs. Other separating state is heterogeneous: must-pass progress differs on some pairs, adjacent-turn state on another, and intersection consumption on another.
+
+Therefore MustCross completion phase remains a case-specific clue, not a justified production retention key. Likewise, concatenating every state field that happens to separate these four selected pairs would be overfitting and could fragment diversity into mostly singleton buckets.
+
+The next bounded test is a **read-only full-pool survivor projection**. On existing exact extinction parents, compare a small prespecified family of cheap keys built only from state already maintained by beam, for example:
+
+- current `(flipperUsedMask, mustCrossMask)` control;
+- current key plus a bounded MustCross first-pass summary;
+- one or two compact interface-state combinations using already-maintained obligation masks/count summaries;
+- already-paid connectivity summaries only when a connectivity pass has already run.
+
+For every candidate key, report bucket count, singleton share, guaranteed slots under the existing quota rule, whether the exact-live alternative would survive at unchanged width, and whether the key adds information beyond current score/prunes. Reject keys that “work” only by making nearly every candidate its own bucket.
 
 Connectivity-derived descriptors must reuse an already-paid connectivity pass where possible. Connectivity is a hot throttled kernel; do not add another flood fill per beam candidate merely to manufacture diversity metadata.
 
-If a descriptor survives unrelated-parent analysis, test the simplest retention expression at unchanged width with random-reserve and width-only controls. Exact-live retention is still only a proxy until cold solve/work improves.
+Only if a compact key shows recurring incremental survivor value across unrelated parents should the simplest production retention expression be tested at unchanged width, with random-reserve and width-only controls and matched `workSpent`. Exact-live retention remains a proxy until cold solve/work improves.
 
 ## #5 reference model
 
@@ -234,6 +247,7 @@ Do not reopen unchanged merely because code/report names survive:
 - [`../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md`](../reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md)
 - [`../reports/2026-08-23-solver-confirmation-transfer-protocol-design.md`](../reports/2026-08-23-solver-confirmation-transfer-protocol-design.md)
 - [`../reports/2026-08-23-solver-reference-model-capability-audit.md`](../reports/2026-08-23-solver-reference-model-capability-audit.md)
+- [`../reports/2026-08-24-queue-readiness-artifact-reconciliation.md`](../reports/2026-08-24-queue-readiness-artifact-reconciliation.md)
 - [`../reports/2026-08-24-scheduler-evidence-contract-audit.md`](../reports/2026-08-24-scheduler-evidence-contract-audit.md)
 - [`../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md)
 - [`../reports/2026-08-24-restart-continuation-value-audit.md`](../reports/2026-08-24-restart-continuation-value-audit.md)
