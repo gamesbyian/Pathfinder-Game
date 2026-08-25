@@ -61,7 +61,7 @@ Do not retest without new profile evidence:
 - beam quickselect replacing sort when sort is not dominant;
 - sparse-to-dense conversion justified only by cache-locality intuition;
 - pre-resolving ordinary ablation gates while retaining the same scorer;
-- custom hash tables merely because native `Map` looks high-level: collision-free numeric-keyed `Map` matched/beat the measured custom form.
+- custom hash tables merely because native `Map` looks high-level: numeric-keyed `Map` matched/beat the measured custom form.
 
 Dated reports retain exact measurements.
 
@@ -70,7 +70,7 @@ Dated reports retain exact measurements.
 The August 23 work already:
 
 - made dedup/diversity key construction lazy;
-- replaced string-heavy hot keys with collision-free mixed-radix numeric keys plus safe fallback;
+- replaced string-heavy hot keys with a mixed-radix numeric fast path plus exact string fallback when the composed product is unsafe; the schema-valid 31/32-flipper radix defect remains tracked in [`solver-correctness-hardening.md`](solver-correctness-hardening.md);
 - found no value in the custom hash/typed-array arena once native `Map` received numeric keys;
 - made candidate generation/scoring/state work the leading documented beam target again.
 
