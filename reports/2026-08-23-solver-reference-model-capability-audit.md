@@ -1,11 +1,11 @@
 # Solver exact/reference-model capability audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-24 — static reconciliation of `cpsat-full-probe.py`, mechanic-state contracts, tooling catalog, current queue, prior CP-SAT validation, and repair-retreat prefix work; corrected stale external-model support entries for regular filters and turn landmarks
-> **Decision:** treat the existing CP-SAT/reference stack as a serious but bounded research oracle now; do not expand mechanic scope yet. Close the small bidirectional support matrix, then spend the oracle on a current beam-extinction/live-dead question before considering broader infrastructure
-> **Remaining gate:** produce a bounded support/validation suite that classifies each relevant mechanic combination as exact-validated, encoded-but-insufficiently-validated, one-sided/relaxed, unsupported, or timeout-prone, with every emitted witness checked by the canonical referee; then report turnaround/UNKNOWN rate and decision value on one selected beam-retention boundary
+> **Last evidence:** 2026-08-24 - static reconciliation of `cpsat-full-probe.py`, mechanic-state contracts, tooling catalog, current queue, prior CP-SAT validation, repair-retreat prefix work, and the existing extinction-adjacent beam case set; corrected stale external-model support entries and confirmed the beam oracle has already produced decision-useful A/D live/dead labels
+> **Decision:** treat the existing CP-SAT/reference stack as serious but bounded research infrastructure now; do not expand mechanic scope. Close the small bidirectional support matrix, then use additional oracle queries only when a ranked question has a specific label gap that existing exact material cannot answer
+> **Remaining gate:** produce a bounded support/validation suite that classifies each relevant mechanic combination as exact-validated, encoded-but-insufficiently-validated, one-sided/relaxed, unsupported, or timeout-prone, with every emitted witness checked by the canonical referee. For beam-retention Priority 4, analyze the already-committed A/D exact cases before spending more CP-SAT work
 > **Evidence role:** forensic
-> **Selection:** observational — audit follows prior targeted CP-SAT work and current reference-program reprioritization
+> **Selection:** observational - audit follows prior targeted CP-SAT work and current reference-program reprioritization
 
 ## Purpose
 
@@ -75,7 +75,7 @@ It records:
 - prior cold portal-bearing emitted-witness/referee validation; and
 - multiple real encoding bugs found precisely because emitted paths were independently refereed rather than trusting witness-pinning alone.
 
-This is important methodological evidence. `--check-witness` is excellent for finding **over-constraint** because a model rejecting a real witness is wrong. It cannot by itself find **under-constraint**, because an easier model also accepts every valid witness. Cold emitted-path → canonical-referee validation is therefore mandatory whenever a model-produced SAT/OPTIMAL path is used as evidence.
+This is important methodological evidence. `--check-witness` is excellent for finding **over-constraint** because a model rejecting a real witness is wrong. It cannot by itself find **under-constraint**, because an easier model also accepts every valid witness. Cold emitted-path -> canonical-referee validation is therefore mandatory whenever a model-produced SAT/OPTIMAL path is used as evidence.
 
 ## Encoding bugs are part of the audit, not an embarrassment to hide
 
@@ -167,7 +167,7 @@ The reference model earns maintenance by answering questions that are otherwise 
 
 ## Bounded audit suite design
 
-The next concrete work should be a **small adversarial validation matrix**, not a giant benchmark.
+The next concrete model-validation work should be a **small adversarial validation matrix**, not a giant benchmark.
 
 ### Case construction
 
@@ -227,35 +227,25 @@ Do not “fix” a disagreement by weakening/strengthening constraints until the
 
 ## Turnaround/value gate
 
-After the support audit, use the model on **one current ranked question** before expanding scope.
+The value gate has already been crossed twice in bounded form.
 
-The preferred first question is now a known **A/D-class beam extinction boundary**, because it asks a particularly clean exact question: among candidates around a retention event, which prefixes still admit any valid completion? This directly separates search-generation failure from survivor-selection failure and supplies truth labels for evaluating proposed future-opportunity descriptors.
+### Repair retreat
 
-At a selected boundary, retain for each queried candidate:
+The repair-retreat study used explicit-prefix feasibility and binary search to locate exact feasible/infeasible rollback boundaries, with emitted completions validated by the canonical referee. This changed the interpretation of repair failure: some elite trajectories had already crossed an exact completion boundary rather than merely being difficult for the native repair operator.
 
-- exact prefix/state identity and beam depth;
-- whether production retained or discarded it;
-- model result `SAT` / `INFEASIBLE` / `UNKNOWN` / `unsupported`;
-- canonical-referee result for every emitted completion;
-- model turnaround/cost;
-- current beam score/rank and prespecified cheap residual descriptors.
+### Beam extinction
 
-Useful outcomes include:
+The existing beam case set [`reports/stress/winning-lineage-extinction-adjacent-cases-2026-08-12.json`](stress/winning-lineage-extinction-adjacent-cases-2026-08-12.json) and its report [`reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md`](2026-08-12-b2-extinction-adjacent-cpsat-labels.md) already answer the exact boundary question that this audit had initially nominated as future work.
 
-- retained states dead while a discarded alternative is exact-live: direct evidence of retention failure;
-- retained and discarded alternatives all live: not the A/D defect being sought;
-- all candidates dead: the extinction happened earlier;
-- UNKNOWN dominates: CP-SAT is not a practical oracle at this boundary and the program should retain narrower uses.
+After flipping-filter support was added, the 2026-08-15 rerun of the 32 committed cases produced **25 live / 4 dead / 3 timeout, 0 correctness alarms, 0 input alarms**. It includes A- and D-class parents where the beam's score-preferred top candidate is exact-dead while a same-parent discarded/near-cutoff alternative is exact-live. The D-class examples also have a live rank-100 near-cutoff candidate, showing that the saturated pool retains viable capacity while top scoring can prefer a dead state.
 
-The same labels can falsify overcoarse proposed abstractions: if two states share a proposed residual signature but one is exact-live and the other exact-dead, that signature is not a sound future-equivalence/cache key. It may still remain a heuristic diversity descriptor, but its logical role is then explicit.
+Therefore do **not** launch another exact-label campaign merely to re-establish beam mis-ranking. Priority 4 should consume the existing labels first. The 2026-08-24 scalar sanity check in [`2026-08-24-beam-extinction-descriptor-sanity-check.md`](2026-08-24-beam-extinction-descriptor-sanity-check.md) already uses those exact pairs to falsify several simplistic future-opportunity summaries.
 
-Other good candidates remain:
+Additional CP-SAT beam queries are justified only when the offline descriptor pass identifies a concrete missing comparison, such as an unlabeled sibling needed to distinguish two candidate interface hypotheses.
 
-- a repair edit/retreat interface;
-- a proposed learned-failure reason whose soundness needs a counterexample search; or
-- a reduced counterexample for a new propagator.
+### Ongoing value accounting
 
-Record:
+For every future use, still record:
 
 - query construction cost;
 - model solve/label turnaround;
@@ -263,11 +253,13 @@ Record:
 - whether the answer changed a real research decision;
 - maintenance/debugging effort required.
 
+A reference solver can have paid rent historically and still become the wrong tool for a new query.
+
 ### Success gate
 
-Keep/elevate the reference program if the audited model produces reliable decision-changing labels at a cost meaningfully below equivalent heuristic archaeology on at least one active question.
+**Met for bounded research use.** The model has produced reliable, decision-changing labels for both repair-retreat and beam-retention questions without needing full-corpus exact solving.
 
-The prior repair-retreat work already establishes one real paying use. The beam-boundary pilot is the next test of whether that value generalizes to a second ranked program without expanding mechanic scope.
+The remaining question is maintenance scope, not whether the reference stack has any research value. Keep/elevate the bounded forms while requiring new mechanic/model expansion to justify itself separately.
 
 ### Stop/demotion gate
 
