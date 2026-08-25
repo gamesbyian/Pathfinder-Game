@@ -6,17 +6,17 @@ Historical ledger: [`archive/snapshots/future-work-2026-08-20.md`](archive/snaps
 
 ## Active elsewhere, not backlog
 
-Do not recreate these programs here:
+Do not recreate these programs here; the queue owns their rank.
 
 | Topic | Current authority |
 |---|---|
-| Generalization / locked confirmation and transfer cohorts | queue #2; [`../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md`](../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md) |
-| Automatic configuration / portfolio construction | queue #3; [`solver-scheduling-policy.md`](solver-scheduling-policy.md) |
-| Beam retention at exact extinction boundaries | queue #4; [`../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md) |
-| Exact/reference-model program | queue #5; [`../reports/2026-08-23-solver-reference-model-capability-audit.md`](../reports/2026-08-23-solver-reference-model-capability-audit.md) |
-| Restart allocation / learned failure | queue #6; [`../reports/2026-08-24-restart-continuation-value-audit.md`](../reports/2026-08-24-restart-continuation-value-audit.md), [`../reports/2026-08-24-learned-failure-certificate-audit.md`](../reports/2026-08-24-learned-failure-certificate-audit.md) |
-| Repair reachability / reconstructability | queue #7; [`../reports/2026-08-24-repair-reachability-reconstructability-audit.md`](../reports/2026-08-24-repair-reachability-reconstructability-audit.md) |
-| Architectural speed | queue #8; [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) |
+| Generalization / locked confirmation and transfer cohorts | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`cohort reservation`](../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md) |
+| Automatic configuration / portfolio construction | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`solver-scheduling-policy.md`](solver-scheduling-policy.md) |
+| Beam retention at exact extinction boundaries | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`beam descriptor audit`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md) |
+| Exact/reference-model program | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`reference-model audit`](../reports/2026-08-23-solver-reference-model-capability-audit.md) |
+| Restart allocation / learned failure | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`restart audit`](../reports/2026-08-24-restart-continuation-value-audit.md), [`learned-failure audit`](../reports/2026-08-24-learned-failure-certificate-audit.md) |
+| Repair reachability / reconstructability | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`repair audit`](../reports/2026-08-24-repair-reachability-reconstructability-audit.md) |
+| Architectural speed | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) |
 
 ## Entry contract
 
