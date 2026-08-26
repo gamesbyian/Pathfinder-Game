@@ -79,3 +79,7 @@ Do not infer that CP-SAT search workers should equal runner vCPUs; compare repre
 These are not solver-batch entrypoints, but remain listed here for workflow discoverability checks: `ci.yml`, `audit-export.yml`, `audit-technique-census-duplicates.yml`, `diagnose-technique-census-duplicates.yml`, `deploy-pages.yml`, and `deploy-firestore-rules.yml`.
 
 Use the narrowest workflow whose evidence semantics match the question. Capability workflows must remain level-blind. Avoid creating a new batch runner merely for different parallelism: common entrypoints now expose or implement the worker/shard controls needed to trade concurrent footprint against tail latency.
+
+## One-shot diagnostics (delete after use)
+
+`confirm-residual-001-archetype-audit-one-shot.yml` — pulls the sealed pool/phase-1-report artifacts from a specific `solver-residual-confirmation.yml` run (via `download-artifact`'s cross-run `run-id` input) and reports how many of the frozen residual's rows also match a given candidate's archetype gate, since the two-phase residual design only guarantees control-failure, not archetype eligibility. Delete once its answer has been recorded in the relevant report.

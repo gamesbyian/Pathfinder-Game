@@ -1,0 +1,66 @@
+# ONE-SHOT diagnostic, delete after use (see AGENTS.md / solver-research-operating-model.md rule
+# 12 on retaining one-off workflows only for repeated value).
+#
+# confirm-residual-001's two-phase design guarantees every residual row is a control-failure but
+# does NOT guarantee it also matches STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE's archetype gate
+# (isMustCrossFlipperHeavy) -- those are independent conditions. The real run (32979222722) showed
+# byte-identical work on the 520-level residual (0/520 both arms), and before writing that up as a
+# negative or inconclusive result, this workflow answers directly whether the residual actually
+# contained any archetype-eligible rows at all, by downloading that run's own sealed pool and
+# phase-1 report artifacts (via download-artifact's cross-run run-id input) and running
+# scripts/stress/confirm-residual-001-archetype-audit.mjs against them.
+
+name: confirm-residual-001 archetype audit (one-shot)
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'The solver-residual-confirmation.yml run to pull artifacts from.'
+        required: true
+        default: '32979222722'
+
+jobs:
+  audit:
+    name: Audit archetype composition of the frozen residual
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download the sealed phase-1 pool from the source run
+        uses: actions/download-artifact@v4
+        with:
+          name: residual-confirmation-pool
+          path: audit-download
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download the phase-1 combined control report from the source run
+        uses: actions/download-artifact@v4
+        with:
+          name: residual-confirmation-phase1-report
+          path: audit-download
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run the archetype audit
+        shell: bash
+        run: |
+          ls -la audit-download/
+          node scripts/run-bundled.mjs scripts/stress/confirm-residual-001-archetype-audit.mjs -- \
+            --pool="audit-download/confirm-residual-001-pool.json" \
+            --phase1-report="audit-download/residual-confirmation-phase1-control.json"
