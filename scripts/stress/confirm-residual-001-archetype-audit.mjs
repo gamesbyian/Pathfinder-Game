@@ -1,21 +1,32 @@
 #!/usr/bin/env node
 /**
- * One-off diagnostic for the confirm-residual-001 two-phase confirmation
+ * Diagnostic built for the confirm-residual-001 two-phase confirmation
  * (reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md,
- * reports/2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md).
+ * reports/2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md), retained as durable
+ * tooling rather than deleted after use (see .github/workflows/README.md's "One-shot diagnostics"
+ * note) -- the two problems it diagnoses are general, not specific to that one cohort:
  *
- * The two-phase residual design guarantees every residual row is a CONTROL-FAILURE (survives the
- * whole ladder). It does NOT guarantee archetype eligibility (isMustCrossFlipperHeavy: arch ===
- * 'must-cross-heavy' && mustPass >= 3 && flippers >= 2) -- those are two independent conditions,
- * and STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE's new configs can only ever execute on a level
- * satisfying BOTH. This script answers, directly and exactly (not by estimate), how many of
- * confirm-residual-001's 520 control-failure rows also satisfy the archetype gate, given the
- * sealed phase-1 pool and the sealed phase-1 combined control report as the source of truth for
- * exactly which of the 1200 pool levels solved vs failed.
+ * 1. A two-phase residual design guarantees every residual row is a CONTROL-FAILURE (survives the
+ *    whole ladder). It does NOT guarantee archetype eligibility for a given candidate's own gate
+ *    (e.g. isMustCrossFlipperHeavy: arch === 'must-cross-heavy' && mustPass >= 3 && flippers >= 2)
+ *    -- those are independent conditions, and a candidate's new configs can only ever execute on a
+ *    level satisfying BOTH. Given a sealed pool and a sealed phase-1 combined control report, this
+ *    computes exactly (via the real production extractFeatures/isMustCrossFlipperHeavy functions,
+ *    not a reimplementation) how many control-failure rows also satisfy a given archetype gate.
+ * 2. Even a genuinely archetype-eligible, control-failure row can still show zero participation for
+ *    a reason that has nothing to do with archetype classification: a scheduling/budget gap. Found
+ *    for confirm-residual-001 specifically -- MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT did not protect
+ *    a rule's trailing configs once a level's actual nodesExpanded overshot the nominal node_budget
+ *    by ~4.5x under non-strict ("legacy additive-pass") semantics -- this script's --dump-full-
+ *    attempts-for-id and direct getConfiguredAttemptConfigs call are the reusable way to tell
+ *    "config list is wrong" apart from "config list is right but scheduling never reached it" for
+ *    any future candidate confirmation that comes back with unexpected zero participation.
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/confirm-residual-001-archetype-audit.mjs -- \
- *     --pool=confirm-residual-001-pool.json --phase1-report=residual-confirmation-phase1-control.json
+ *     --pool=<sealed-pool.json> --phase1-report=<sealed-phase1-control-report.json> \
+ *     [--phase2-treatment-report=<sealed-phase2-treatment-report.json>] \
+ *     [--dump-full-attempts-for-id=<levelId>]
  */
 import path from 'node:path';
 import process from 'node:process';
