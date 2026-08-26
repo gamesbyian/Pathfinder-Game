@@ -1,10 +1,6 @@
-name: Temporary current-head solver profile
+name: Temporary plain-scorer speed A/B
 
-# Disposable discovery harness for queue item #7. Solver source remains untouched.
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
       - chatgpt/profile-current-head-2026-08-26
@@ -13,104 +9,99 @@ permissions:
   contents: read
 
 jobs:
-  profile:
+  ab:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: Build bundled speed probe
+      - name: Prepare pinned base and treatment worktrees
+        shell: bash
+        env:
+          BASE_SHA: 0815d6f5b4e58b45a3487c2c63a9c90ee79c38bf
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin "$BASE_SHA"
+          git worktree add --detach /tmp/pathfinder-base "$BASE_SHA"
+          git worktree add --detach /tmp/pathfinder-treat "$BASE_SHA"
+          ln -s "$GITHUB_WORKSPACE/node_modules" /tmp/pathfinder-base/node_modules
+          ln -s "$GITHUB_WORKSPACE/node_modules" /tmp/pathfinder-treat/node_modules
+          node "$GITHUB_WORKSPACE/scripts/tmp-specialize-plain-score.mjs" /tmp/pathfinder-treat/modules/solver/scoring.ts
+      - name: Build base and treatment bundles
         shell: bash
         run: |
-          BUNDLE=$(node --input-type=module -e "import { buildBundle } from './scripts/run-bundled.mjs'; console.log(buildBundle('scripts/solver-speed-probe.mjs'));" | tail -n1)
-          echo "SOLVER_SPEED_BUNDLE=$BUNDLE" >> "$GITHUB_ENV"
-          echo "Profiling bundle: $BUNDLE"
-      - name: Profile published corpus
+          set -euo pipefail
+          BASE_BUNDLE=$(cd /tmp/pathfinder-base && node --input-type=module -e "import { buildBundle } from './scripts/run-bundled.mjs'; console.log(buildBundle('scripts/solver-speed-probe.mjs'));" | tail -n1)
+          TREAT_BUNDLE=$(cd /tmp/pathfinder-treat && node --input-type=module -e "import { buildBundle } from './scripts/run-bundled.mjs'; console.log(buildBundle('scripts/solver-speed-probe.mjs'));" | tail -n1)
+          echo "BASE_BUNDLE=$BASE_BUNDLE" >> "$GITHUB_ENV"
+          echo "TREAT_BUNDLE=$TREAT_BUNDLE" >> "$GITHUB_ENV"
+      - name: Run interleaved fixed-work A/B
         shell: bash
         run: |
-          mkdir -p tmp/current-head-profile
-          node --cpu-prof \
-            --cpu-prof-dir=tmp/current-head-profile \
-            --cpu-prof-name=published.cpuprofile \
-            "$SOLVER_SPEED_BUNDLE" \
-            --corpus=published \
-            --count=160 \
-            --budget-ms=600000 \
-            --node-budget=250000 \
-            --out=tmp/current-head-profile/published.json
-      - name: Profile hard Corpus-2 sample
-        shell: bash
-        run: |
-          node --cpu-prof \
-            --cpu-prof-dir=tmp/current-head-profile \
-            --cpu-prof-name=corpus2-hard.cpuprofile \
-            "$SOLVER_SPEED_BUNDLE" \
-            --corpus=corpus2 \
-            --count=24 \
-            --start=1 \
-            --stride=67 \
-            --budget-ms=600000 \
-            --node-budget=250000 \
-            --out=tmp/current-head-profile/corpus2-hard.json
-      - name: Summarize CPU profiles
+          set -euo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/tmp/plain-score-ab"
+          run_one() {
+            local arm="$1" rep="$2" corpus="$3" count="$4" start="$5" stride="$6" cwd bundle
+            if [[ "$arm" == base ]]; then cwd=/tmp/pathfinder-base; bundle="$BASE_BUNDLE"; else cwd=/tmp/pathfinder-treat; bundle="$TREAT_BUNDLE"; fi
+            (cd "$cwd" && node "$bundle" \
+              --corpus="$corpus" --count="$count" --start="$start" --stride="$stride" \
+              --budget-ms=600000 --node-budget=250000 \
+              --out="$GITHUB_WORKSPACE/tmp/plain-score-ab/${corpus}-${arm}-${rep}.json" >/dev/null)
+          }
+
+          # Alternate arm order by repetition to reduce monotonic runner drift.
+          for rep in 1 2 3; do
+            if (( rep % 2 == 1 )); then first=base; second=treat; else first=treat; second=base; fi
+            run_one "$first"  "$rep" published 160 1 1
+            run_one "$second" "$rep" published 160 1 1
+          done
+          for rep in 1 2 3; do
+            if (( rep % 2 == 1 )); then first=base; second=treat; else first=treat; second=base; fi
+            run_one "$first"  "$rep" corpus2 24 1 67
+            run_one "$second" "$rep" corpus2 24 1 67
+          done
+      - name: Verify deterministic parity and summarize timing
         shell: bash
         run: |
           node --input-type=module <<'NODE'
           import { readFileSync, writeFileSync } from 'node:fs';
-
-          const profiles = [
-            ['published', 'tmp/current-head-profile/published.cpuprofile'],
-            ['corpus2-hard', 'tmp/current-head-profile/corpus2-hard.cpuprofile'],
-          ];
-          const selected = [
-            'scoreMove',
-            'buildCurUrgencyContext',
-            'applyMove',
-            'undoMove',
-            'getNeighbors',
-            'beamSearchFromGate',
-            '_floodFillReachability',
-            'evaluatePrunedMove',
-            'getDistanceFromArray',
-            'prepLevel',
-          ];
-          const out = {};
-
-          for (const [label, file] of profiles) {
-            const profile = JSON.parse(readFileSync(file, 'utf8'));
-            const byId = new Map(profile.nodes.map(node => [node.id, node.callFrame]));
-            const counts = new Map();
-            for (const id of profile.samples ?? []) {
-              const frame = byId.get(id);
-              const name = frame?.functionName || '(anonymous)';
-              counts.set(name, (counts.get(name) || 0) + 1);
+          const dir = 'tmp/plain-score-ab';
+          const corpora = ['published', 'corpus2'];
+          const report = {};
+          const median = xs => [...xs].sort((a,b)=>a-b)[Math.floor(xs.length/2)];
+          for (const corpus of corpora) {
+            const baseTimes = [], treatTimes = [], ratios = [];
+            let signature = null;
+            for (let rep=1; rep<=3; rep++) {
+              const base = JSON.parse(readFileSync(`${dir}/${corpus}-base-${rep}.json`, 'utf8'));
+              const treat = JSON.parse(readFileSync(`${dir}/${corpus}-treat-${rep}.json`, 'utf8'));
+              const sig = rows => rows.map(r => `${r.id}:${r.ok?1:0}:${r.nodes}`).join('|');
+              const bs = sig(base.rows), ts = sig(treat.rows);
+              if (bs !== ts) throw new Error(`${corpus} rep ${rep}: treatment changed solve/node trace`);
+              if (signature !== null && bs !== signature) throw new Error(`${corpus} rep ${rep}: base trace changed across repetitions`);
+              signature = bs;
+              baseTimes.push(base.totalMs); treatTimes.push(treat.totalMs); ratios.push(treat.totalMs/base.totalMs);
+              console.log(`${corpus} rep${rep}: base=${base.totalMs.toFixed(1)}ms treat=${treat.totalMs.toFixed(1)}ms delta=${((treat.totalMs/base.totalMs-1)*100).toFixed(2)}% nodes=${base.totalNodes}`);
             }
-            const total = profile.samples?.length || 0;
-            const rows = [...counts.entries()]
-              .map(([name, samples]) => ({ name, samples, pct: total ? 100 * samples / total : 0 }))
-              .sort((a, b) => b.samples - a.samples || a.name.localeCompare(b.name));
-            const top = rows.slice(0, 30);
-            out[label] = { totalSamples: total, top, selected: rows.filter(row => selected.includes(row.name)) };
-
-            console.log(`\n=== ${label}: ${total.toLocaleString()} CPU samples ===`);
-            for (const row of top.slice(0, 20)) {
-              console.log(`${row.pct.toFixed(2).padStart(6)}%  ${String(row.samples).padStart(7)}  ${row.name}`);
-            }
-            console.log('\nSelected solver functions:');
-            for (const name of selected) {
-              const row = rows.find(r => r.name === name);
-              console.log(`${name.padEnd(28)} ${row ? `${row.pct.toFixed(2)}% (${row.samples})` : 'no self samples'}`);
-            }
+            const gmRatio = Math.exp(ratios.reduce((s,r)=>s+Math.log(r),0)/ratios.length);
+            report[corpus] = {
+              baseTimes, treatTimes, pairedRatios: ratios,
+              medianBaseMs: median(baseTimes), medianTreatMs: median(treatTimes),
+              geometricMeanDeltaPct: (gmRatio-1)*100,
+              deterministicParity: true,
+            };
+            console.log(`${corpus} geometric-mean paired delta: ${((gmRatio-1)*100).toFixed(2)}%`);
           }
-          writeFileSync('tmp/current-head-profile/summary.json', JSON.stringify(out, null, 2));
+          writeFileSync(`${dir}/summary.json`, JSON.stringify(report, null, 2));
           NODE
-      - name: Upload profile evidence
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: current-head-solver-profile
-          path: tmp/current-head-profile/
+          name: plain-scorer-speed-ab
+          path: tmp/plain-score-ab/
           retention-days: 30
