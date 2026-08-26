@@ -279,7 +279,14 @@ export const ATTRACTION_DIVERSITY_CANDIDATE_FLAGS = ['SCORE_GOAL_ATTRACTION'] as
 // ['SCORE_OBJECTIVE_ATTRACTION', 'SCORE_INTERSECTION_SETUP', 'SCORE_SURROUND_URGENCY', 'SCORE_PERIMETER_BIAS']
 
 /** One attempt-policy rule: a feature predicate + the config bundle it selects. First match wins. */
-interface PolicyRule { when: (f: LevelFeatures) => boolean; build: (f: LevelFeatures) => AttemptConfig[]; why: string; }
+interface PolicyRule {
+    when: (f: LevelFeatures) => boolean;
+    /** cfg is only read by the two must-cross-heavy sibling rules gated by
+     *  STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE (see their own comments); every other rule
+     *  ignores the second parameter, which TypeScript allows for a narrower callback signature. */
+    build: (f: LevelFeatures, cfg?: AblationConfig | null) => AttemptConfig[];
+    why: string;
+}
 
 /**
  * The attempt policy as ordered, feature-guarded rules — evaluated top-to-bottom, first match wins.
@@ -447,7 +454,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
     {
         why: 'must-cross, must-pass-heavy: objective/must-cross beams lead, DFS fallbacks follow',
         when: f => isMustCross(f) && f.mustPass >= POLICY.OBJECTIVE_HEAVY_MUSTPASS,
-        build: () => [
+        build: (f, cfg) => [
             beam('objectiveFirst', BEAM.STANDARD), beam('mustCrossFirst', BEAM.STANDARD),
             beam('perimeterSweep', BEAM.STANDARD, perimeterCCW), beam('intersectionHarvest', BEAM.STANDARD),
             beam('harvestThenFinish', BEAM.STANDARD), beam('knotBuilder', BEAM.STANDARD),
@@ -466,6 +473,16 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // 4->5 increase (stage-budget.ts) so this 5th trailing config gets the same protection
             // without displacing dfs:perimeterSweep/perimeterCW out of the window.
             beam('objectiveFirst', BEAM.WIDE, null, { diverseBeam: true }),
+            // Ablation: STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE (default-OFF, NEW unvalidated
+            // pilot, 2026-08-26 — see that flag's own comment in ablation-config.ts). This rule's
+            // window is once again fully spent (the 8th config above already fills the 5-slot
+            // protected reserve), so this 9th trailing config only gets protection when
+            // stage-budget.ts's paired reserve-count widen is also active — same flag, same reasoning
+            // as the historical 4->5 increase this mirrors. The plain WIDE intersectionHarvest beam
+            // is the missing exposure gap this rule shares with its flipper-heavy sibling (post-976
+            // rejoin, reports/2026-08-25-post-976-portfolio-exposure-rejoin.md): 28 of the 62 not-
+            // offered levels route here.
+            ...(cfg && cfg.STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE === true ? [beam('intersectionHarvest', BEAM.WIDE)] : []),
         ],
     },
     {
@@ -481,7 +498,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
     {
         why: 'must-cross default: template DFS solves simple MC levels fast, then beams, then DFS profiles',
         when: isMustCross,
-        build: () => [
+        build: (f, cfg) => [
             dfs('perimeterSweep', cornerHarvest), dfs('perimeterSweep', perimeterCW),
             beam('mustCrossFirst', BEAM.STANDARD), beam('objectiveFirst', BEAM.STANDARD),
             dfs('mustCrossFirst'), dfs('objectiveFirst'), dfs('harvestThenFinish'),
@@ -499,6 +516,15 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // full-reserve-window reason as this rule's must-pass-heavy sibling above; landed together
             // with the validated MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT 4->5 increase.
             beam('intersectionHarvest', BEAM.WIDE, null, { diverseBeam: true }),
+            // Ablation: STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE (default-OFF, NEW unvalidated
+            // pilot, 2026-08-26 — see that flag's own comment in ablation-config.ts and this rule's
+            // must-pass-heavy sibling above, which shares the identical reasoning). Window full again
+            // at 8 configs; this 9th trailing config only gets reserve protection when stage-budget.ts's
+            // paired reserve-count widen is also active. The plain WIDE objectiveFirst beam is the
+            // missing exposure gap this catch-all shares with its two must-cross-heavy siblings
+            // (post-976 rejoin, reports/2026-08-25-post-976-portfolio-exposure-rejoin.md): 4 of the 62
+            // not-offered levels route here.
+            ...(cfg && cfg.STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE === true ? [beam('objectiveFirst', BEAM.WIDE)] : []),
         ],
     },
     {
@@ -558,12 +584,12 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     // routing itself contributes (vs. the config bundles it selects among).
     if (!cfg || cfg.STRATEGY_ARCHETYPE_ROUTING) {
         for (const rule of ATTEMPT_POLICY) {
-            if (rule.when(f)) { configs = rule.build(f); break; }
+            if (rule.when(f)) { configs = rule.build(f, cfg); break; }
         }
     }
     // Unreachable under normal routing (the last rule matches everything); reached directly when
     // STRATEGY_ARCHETYPE_ROUTING is disabled above. Also kept for total-function safety.
-    if (!configs) configs = ATTEMPT_POLICY[ATTEMPT_POLICY.length - 1].build(f);
+    if (!configs) configs = ATTEMPT_POLICY[ATTEMPT_POLICY.length - 1].build(f, cfg);
     // Ablation: STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE (default-OFF, NEW unvalidated pilot,
     // 2026-08-26). Applied centrally rather than inline in the rule's build() so the addition is a
     // single reviewable diff, matching needsRepairFallback's pattern below.

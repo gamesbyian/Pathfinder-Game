@@ -5,8 +5,9 @@ import {
     ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION, DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION,
     ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION,
     MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION,
-    REPAIR_LATE_PROBE_NODE_BUDGET, MAIN_LOOP_LATE_RESERVE_FRACTION,
+    REPAIR_LATE_PROBE_NODE_BUDGET, MAIN_LOOP_LATE_RESERVE_FRACTION, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT,
 } from './stage-budget.js';
+import { defaultConfig } from './ablation-config.js';
 
 const baseInput = {
     opts: {},
@@ -156,6 +157,30 @@ test('main-loop late-suffix reserve fraction/count overrides are honored and cla
     assert.equal(plan.mainLoopLateReserveConfigCount, 3);
     assert.equal(plan.mainLoopLateReserve, Math.floor(plan.earlyTierNodeBudget * 0.3));
     assert.equal(plan.mainLoopEarlyNodeBudget, plan.earlyTierNodeBudget - plan.mainLoopLateReserve);
+});
+
+test('STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE widens the reserve window by exactly one, only when enabled', () => {
+    const nodeBudget = 50_000_000;
+
+    const off = computeStageBudgetPlan({ ...baseInput, nodeBudget, mainConfigsCount: 20 });
+    assert.equal(off.mainLoopLateReserveConfigCount, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT, 'default (cfg: null) is unaffected');
+
+    const cfgOff = computeStageBudgetPlan({ ...baseInput, nodeBudget, mainConfigsCount: 20, cfg: defaultConfig() });
+    assert.equal(cfgOff.mainLoopLateReserveConfigCount, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT, 'production defaultConfig() (flag off) is unaffected');
+
+    const on = computeStageBudgetPlan({
+        ...baseInput, nodeBudget, mainConfigsCount: 20,
+        cfg: { ...defaultConfig(), STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: true },
+    });
+    assert.equal(on.mainLoopLateReserveConfigCount, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT + 1, 'flag on widens the window by exactly one');
+
+    // An explicit opts override still wins over the flag, same precedence as every other override here.
+    const overridden = computeStageBudgetPlan({
+        ...baseInput, nodeBudget, mainConfigsCount: 20,
+        cfg: { ...defaultConfig(), STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: true },
+        opts: { mainLoopLateReserveConfigCountOverride: 2 },
+    });
+    assert.equal(overridden.mainLoopLateReserveConfigCount, 2, 'explicit override takes precedence over the flag');
 });
 
 test('MAIN_LOOP_LATE_RESERVE_FRACTION default is honored when no override is supplied', () => {

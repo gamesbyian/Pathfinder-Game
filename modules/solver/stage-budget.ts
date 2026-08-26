@@ -1328,10 +1328,20 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     const mainLoopLateReserveFraction = Number.isFinite(mainLoopLateReserveFractionRaw) && mainLoopLateReserveFractionRaw >= 0
         ? Math.min(1, mainLoopLateReserveFractionRaw)
         : MAIN_LOOP_LATE_RESERVE_FRACTION;
+    // Ablation: STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE (default-OFF — see ablation-config.ts
+    // and attempts.ts's two must-cross-heavy sibling rules that read this same flag to append a 9th
+    // trailing config). Mirrors the validated 2026-08-22 4->5 increase (this comment's own history
+    // above): widening the protected window one more slot is a FRACTION of earlyTierNodeBudget spread
+    // one slot thinner, not a fixed amount, so every OTHER rule's existing last-N configs merely gain
+    // one more protected neighbor — confirmed a strict no-op there before, and unvalidated only for
+    // the two rules whose 9th config this flag also adds. An explicit opts override still wins.
+    const mainLoopLateReserveConfigCountDefault = (cfg && cfg.STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE === true)
+        ? MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT + 1
+        : MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT;
     const mainLoopLateReserveCountRaw = Number(opts.mainLoopLateReserveConfigCountOverride);
     const mainLoopLateReserveConfigCount = Number.isFinite(mainLoopLateReserveCountRaw) && mainLoopLateReserveCountRaw >= 0
         ? Math.min(mainConfigsCount, Math.floor(mainLoopLateReserveCountRaw))
-        : Math.min(mainConfigsCount, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT);
+        : Math.min(mainConfigsCount, mainLoopLateReserveConfigCountDefault);
     const mainLoopLateReserveEligible = mainLoopLateReserveEnabled
         && mainLoopLateReserveFraction > 0
         && mainLoopLateReserveConfigCount > 0
