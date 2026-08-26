@@ -1,19 +1,20 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "createdAt": "2026-08-24",
+  "updatedAt": "2026-08-25",
   "sourceCommit": "4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92",
   "generator": {
     "path": "scripts/stress/generate-random.mjs",
     "version": "1.1.0",
     "sourceCommit": "4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92",
-    "materializationPrecondition": "Run the materialization command from a checkout/worktree at generator.sourceCommit. The generator may depend on repository helpers/build inputs, so matching only the generator file is insufficient. Do not run against a later revision under the same population id."
+    "materializationPrecondition": "Run from a checkout/worktree at generator.sourceCommit. For decision-bearing comparisons materialize once, seal the generated levels content, and share that exact artifact across arms; do not rely on independent regeneration across jobs."
   },
   "populations": [
     {
       "id": "confirm-broad-001",
       "role": "confirmation-broad",
-      "status": "reserved",
-      "exposureState": "LOCKED",
+      "status": "spent",
+      "exposureState": "SPENT",
       "outcomeConditioned": false,
       "independentUnit": "level",
       "count": 256,
@@ -22,13 +23,33 @@
       "idPrefix": "C",
       "materializationRevision": "4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92",
       "materializationCommand": "node scripts/run-bundled.mjs scripts/stress/generate-random.mjs --count=256 --master-seed=2026082417 --id-prefix=C --out=tmp/managed-evaluation/confirm-broad-001.json",
-      "intendedUse": "First selected solver treatment requiring independent broad confirmation after development/tuning.",
       "selectionRule": "All 256 generated levels; no baseline-outcome filtering and no candidate-specific post-generation filtering.",
-      "baselineCondition": null,
-      "firstTreatment": null,
-      "aggregateRuns": [],
-      "unsealedAt": null,
-      "becameDevelopmentAt": null,
+      "firstTreatment": "suppress ordinary-main-loop dfs:objectiveFirst and dfs:intersectionHarvest, preserving retry uses",
+      "aggregateRuns": [32908734154],
+      "verdict": "confirmation-fail",
+      "resultSummary": "control 140/256; treatment 141/256; +3/-2; aggregate work -0.22%; failed zero-loss gate",
+      "spentAt": "2026-08-25",
+      "successor": "confirm-broad-002"
+    },
+    {
+      "id": "confirm-broad-002",
+      "role": "confirmation-broad",
+      "status": "spent",
+      "exposureState": "SPENT",
+      "outcomeConditioned": false,
+      "independentUnit": "level",
+      "count": 256,
+      "masterSeed": 2026082517,
+      "generatorMode": "uniform-random-raised-caps",
+      "idPrefix": "D",
+      "materializationRevision": "4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92",
+      "materializationCommand": "node scripts/run-bundled.mjs scripts/stress/generate-random.mjs --count=256 --master-seed=2026082517 --id-prefix=D --out=tmp/managed-evaluation/confirm-broad-002.json",
+      "selectionRule": "All 256 generated levels; no baseline-outcome filtering and no candidate-specific post-generation filtering.",
+      "firstTreatment": "append beam:intersectionHarvest@beam5000(diverse) in the two very-high-intersection policy bundles when mustCross < 2",
+      "aggregateRuns": [32912881453],
+      "verdict": "confirmation-fail",
+      "resultSummary": "control 126/256; treatment 126/256; 0 gains/0 losses; treatment aggregate work about +0.01%; clean null",
+      "spentAt": "2026-08-25",
       "successor": null
     },
     {
@@ -46,11 +67,9 @@
       "materializationCommand": "node scripts/run-bundled.mjs scripts/stress/generate-random.mjs --envelope-caps --count=256 --master-seed=2026082429 --id-prefix=T --out=tmp/managed-evaluation/transfer-envelope-001.json",
       "intendedUse": "First locked transfer/challenge population after a treatment survives broad confirmation; tests transfer into the shipped/editor complexity envelope under a fresh seed.",
       "selectionRule": "All 256 generated levels; no solver-outcome filtering and no candidate-specific post-generation filtering.",
-      "baselineCondition": null,
       "firstTreatment": null,
       "aggregateRuns": [],
-      "unsealedAt": null,
-      "becameDevelopmentAt": null,
+      "spentAt": null,
       "successor": null
     }
   ]
