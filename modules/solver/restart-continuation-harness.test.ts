@@ -92,6 +92,36 @@ test('restart arm runs a genuinely fresh seed 1 and SUMS both seeds\' work, not 
         'restart workSpent must exceed seed 0 alone — proof the second seed\'s work was actually summed in, not dropped');
 });
 
+test('restart arm reports the BEST bestBadness across both seeds, not just seed 1\'s own', async () => {
+    const level = makeImpossibleLevel();
+    const workBudget = 20_000;
+    const result = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), POLICY_PROFILES.repair, workBudget);
+
+    // Independently replay each seed under the exact caps the harness itself used, and confirm
+    // the harness's reported bestBadness is the MIN of the two — repairSearchFromGate's own
+    // bestBadnessEver resets per call, so a fresh seed 1 has no way to inherit seed 0's own
+    // near-miss, and the harness must not silently drop that information either.
+    const { repairSearchFromGate } = await import('./repair-search.js');
+    const half = Math.floor(workBudget / 2);
+
+    const seed0Prep = prepLevel(level);
+    seed0Prep._workCap = half;
+    const seed0Out: { bestBadness?: number } = {};
+    await repairSearchFromGate(K(1, 1), level, seed0Prep, POLICY_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, seed0Out, 0);
+
+    // A fresh prep starts its own workMeter at 0, so replaying seed 1 in isolation only needs the
+    // REMAINING budget as its cap (repairSearchFromGate only ever compares workMeter against
+    // workCap as a delta) — not seed 0's absolute spend plus that remainder.
+    const seed1Prep = prepLevel(level);
+    seed1Prep._workCap = Math.max(0, workBudget - seed0Prep._workMeter.units);
+    const seed1Out: { bestBadness?: number } = {};
+    await repairSearchFromGate(K(1, 1), level, seed1Prep, POLICY_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, seed1Out, 1);
+
+    const expectedBest = Math.min(seed0Out.bestBadness!, seed1Out.bestBadness!);
+    assert.equal(result.restart.bestBadness, expectedBest,
+        `expected the min of seed0 (${seed0Out.bestBadness}) and seed1 (${seed1Out.bestBadness}), got ${result.restart.bestBadness}`);
+});
+
 test('restartSplitFraction controls seed 0\'s share of the restart arm\'s budget', async () => {
     const level = makeImpossibleLevel();
     const workBudget = 20_000;

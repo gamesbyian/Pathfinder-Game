@@ -9,11 +9,13 @@ export interface RepairArmResult {
     workSpent: number;
     nodesExpanded: number;
     seedSalts: number[];
-    /** `repairSearchFromGate`'s own best-ever badness reached by the LAST seed that ran (its
-     *  own out.bestBadness on failure) — diagnostic only, lets a caller tell "search made real
-     *  progress but ran out of budget" apart from "search never moved," per the operating model's
-     *  own rule to diagnose search-quality failure before prescribing more of the same search.
-     *  `null` when solved (repairSearchFromGate does not report a badness for a success). */
+    /** The BEST (lowest) `out.bestBadness` any seed in this arm reached — for the restart arm,
+     *  the min across seed 0 and seed 1, since `repairSearchFromGate`'s own `bestBadnessEver` is
+     *  local to each call and a seed 1 that never learns of seed 0's near-miss cannot be credited
+     *  with recovering it. Diagnostic only: lets a caller tell "search made real progress but ran
+     *  out of budget" apart from "search never moved," per the operating model's own rule to
+     *  diagnose search-quality failure before prescribing more of the same search. `null` when
+     *  solved (repairSearchFromGate does not report a badness for a success). */
     bestBadness: number | null;
 }
 
@@ -100,7 +102,14 @@ export async function runRepairRestartVsContinuation(
                 workSpent: seed0.workSpentDelta + seed1.workSpentDelta,
                 nodesExpanded: seed0.nodesExpandedDelta + seed1.nodesExpandedDelta,
                 seedSalts: [0, 1],
-                bestBadness: seed1.bestBadness,
+                // The BEST of the two seeds, not just seed 1's own number: repairSearchFromGate's
+                // `bestBadnessEver` is local to each call (resets to Infinity per seed), so a naive
+                // "report the last seed's bestBadness" would understate the restart arm whenever
+                // seed 0 found a better near-miss before being abandoned — exactly the progress a
+                // fresh seed 1 has no way to know about or recover.
+                bestBadness: seed1.bestBadness == null ? seed0.bestBadness
+                    : seed0.bestBadness == null ? seed1.bestBadness
+                    : Math.min(seed0.bestBadness, seed1.bestBadness),
             };
         })();
 
