@@ -69,7 +69,7 @@ for (const file of filesUnder(ROOT)) {
     replacements++;
     return `${prefix}${name}[denseIndex(${expr.trim()}, prep.gridW)]`;
   });
-  src = ensureDenseImport(src);
+  if (src !== before) src = ensureDenseImport(src);
   if (src !== before) {
     writeFileSync(file, src);
     changed.push(path.relative(process.cwd(), file));
