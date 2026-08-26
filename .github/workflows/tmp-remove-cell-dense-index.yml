@@ -87,7 +87,8 @@ jobs:
 
       - name: Prepare final tree
         run: |
-          node scripts/tmp-remove-cell-dense-index.mjs
+          # Treatment round 3 leaves modules/solver in the passing transformed state.
+          # Remove only the temporary workbench files before validating the merge candidate.
           git rm .github/workflows/tmp-remove-cell-dense-index.yml scripts/tmp-remove-cell-dense-index.mjs
 
       - name: Fast CI on final tree
