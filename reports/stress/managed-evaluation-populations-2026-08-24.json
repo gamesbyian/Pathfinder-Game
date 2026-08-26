@@ -73,7 +73,30 @@
       "verdict": "inconclusive-non-participating",
       "resultSummary": "control 159/256; treatment 159/256; 0 gains/0 losses; aggregate workSpent BYTE-IDENTICAL (29,676,406,171 both arms) -- not a normal clean null (contrast confirm-broad-002's nonzero +0.01% work delta despite 0/0). Diagnosed as repair-fallback saturation: isMustCrossFlipperHeavy's gate is a strict superset of needsRepairFallback's gate, so every eligible level also gets an early repair probe before this candidate's new main-loop configs could ever run; a fresh uniform-random cohort's eligible levels are overwhelmingly repair-resistant-negative (repair solves them) unlike the development population, which was mined specifically from levels the whole existing ladder (repair included) already fails on. See reports/2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md's 'Confirmation attempt' section. Not evidence of no mechanism -- do not promote or close negative on this run.",
       "spentAt": "2026-08-26",
-      "successor": null
+      "successor": "confirm-broad-004"
+    },
+    {
+      "id": "confirm-broad-004",
+      "role": "confirmation-broad",
+      "status": "reserved",
+      "exposureState": "RESERVED",
+      "outcomeConditioned": false,
+      "independentUnit": "level",
+      "count": 1200,
+      "masterSeed": 2026082602,
+      "generatorMode": "uniform-random-raised-caps",
+      "idPrefix": "H",
+      "materializationRevision": null,
+      "materializationCommand": "node scripts/run-bundled.mjs scripts/stress/generate-random.mjs --count=1200 --master-seed=2026082602 --id-prefix=H --out=logs/solver-broad-confirmation/confirm-broad-004.json",
+      "materializationTool": ".github/workflows/solver-broad-confirmation.yml (dispatch with cohort_id=confirm-broad-004, master_seed=2026082602, id_prefix=H, count=1200, enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE, node_budget=50000000, shard_count raised proportionally e.g. 60/arm)",
+      "selectionRule": "All 1,200 generated levels; no baseline-outcome filtering and no candidate-specific post-generation filtering.",
+      "firstTreatment": "STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE (see reports/2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md) -- identical candidate to confirm-broad-003's; retested at ~4.7x the population, sized from the post-976 rejoin's own measured 1.76% (30/1,700) repair-resistant-eligible rate so the expected participating-row count (~21) matches the order of the 30-row development population that produced the original +3/-0 result",
+      "aggregateRuns": [],
+      "verdict": null,
+      "resultSummary": null,
+      "spentAt": null,
+      "successor": null,
+      "predecessor": "confirm-broad-003"
     },
     {
       "id": "transfer-envelope-001",
