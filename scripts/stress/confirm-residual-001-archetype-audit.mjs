@@ -36,6 +36,30 @@ const { detectArchetype } = await import('../../modules/solver/archetype.js');
 const OBJECTIVE_HEAVY_MUSTPASS = 3;
 const FLIPPER_HEAVY = 2;
 
+// The real sweep pipeline (level-blind-capability-sweep.mjs) reduces each raw level to ONLY these
+// fields before the solver ever sees it (level-blindness: no identity/history/hints/baseline).
+// Reproduced here to check whether that reduction changes the computed archetype/features versus
+// computing them from the full raw pool record.
+const PUZZLE_FIELDS = [
+    'grid', 'gates', 'goal', 'reqLen', 'reqInt', 'blocks', 'geese', 'falseGoals', 'mustPass',
+    'mustCross', 'landmarks', 'filters', 'flippingFilters', 'portals',
+];
+function mechanicsOnlyLevel(raw) {
+    const clean = {};
+    for (const key of PUZZLE_FIELDS) {
+        if (raw?.[key] !== undefined) clean[key] = JSON.parse(JSON.stringify(raw[key]));
+    }
+    return clean;
+}
+function classify(rawOrReduced, levelNumber) {
+    const level = normalizeRawLevel(rawOrReduced, levelNumber);
+    const arch = detectArchetype(level);
+    const mustPass = level.mustPassKeys.length;
+    const flippers = level.flippingFilterMap?.size ?? 0;
+    const eligible = arch === 'must-cross-heavy' && mustPass >= OBJECTIVE_HEAVY_MUSTPASS && flippers >= FLIPPER_HEAVY;
+    return { arch, mustPass, flippers, eligible };
+}
+
 const poolParsed = JSON.parse(readFileSync(path.resolve(poolPath), 'utf8'));
 const poolLevels = Array.isArray(poolParsed) ? poolParsed : poolParsed.levels;
 const report = JSON.parse(readFileSync(path.resolve(reportPath), 'utf8'));
@@ -50,20 +74,27 @@ let archEligibleAndFailed = 0;
 const eligibleFailedIds = [];
 const archCounts = new Map();
 
+let mismatches = 0;
 for (let i = 0; i < poolLevels.length; i++) {
     const raw = poolLevels[i];
-    const level = normalizeRawLevel(raw, i + 1);
-    const arch = detectArchetype(level);
-    archCounts.set(arch, (archCounts.get(arch) ?? 0) + 1);
-    const mustPass = level.mustPassKeys.length;
-    const flippers = level.flippingFilterMap?.size ?? 0;
-    const eligible = arch === 'must-cross-heavy' && mustPass >= OBJECTIVE_HEAVY_MUSTPASS && flippers >= FLIPPER_HEAVY;
-    if (!eligible) continue;
+    const rawClass = classify(raw, i + 1);
+    archCounts.set(rawClass.arch, (archCounts.get(rawClass.arch) ?? 0) + 1);
+    const reducedClass = classify(mechanicsOnlyLevel(raw), i + 1);
+    if (reducedClass.eligible !== rawClass.eligible || reducedClass.arch !== rawClass.arch) {
+        mismatches++;
+        if (mismatches <= 5) {
+            console.log(`MISMATCH ${raw.id}: raw=${JSON.stringify(rawClass)} mechanics-only=${JSON.stringify(reducedClass)}`);
+        }
+    }
+    // The actual sweep pipeline solves the mechanics-only-reduced level (level-blindness), so that
+    // is the classification that determines what really ran -- not the raw pool record.
+    if (!reducedClass.eligible) continue;
     archEligible++;
     const solved = solvedIds.has(raw.id);
     if (solved) archEligibleAndSolved++;
     else { archEligibleAndFailed++; eligibleFailedIds.push(raw.id); }
 }
+if (mismatches > 0) console.log(`\n*** ${mismatches}/${poolLevels.length} levels classify DIFFERENTLY under raw vs. mechanics-only-reduced fields ***\n`);
 
 console.log(`archetype distribution: ${JSON.stringify(Object.fromEntries(archCounts))}`);
 console.log(`isMustCrossFlipperHeavy-eligible in pool: ${archEligible}/${poolLevels.length} (${(100 * archEligible / poolLevels.length).toFixed(2)}%)`);
