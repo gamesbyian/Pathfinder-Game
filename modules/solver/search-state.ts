@@ -1,4 +1,5 @@
 import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, popcount } from './encoding.js';
+import { denseIndex } from './distance.js';
 import { workMeter } from './work-meter.js';
 import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -328,10 +329,8 @@ export function getNeighbors(pos: number, state: SolverSearchState, level: Norma
     }
 
     const candidates: number[] = [];
-    // staticNeighborKeys is dense-indexed (cellDenseIndex[pos] - 1) * 4 + d, not packed-key-
-    // indexed — see prep.ts's own comment. pos is always a live cell here (the search only ever
-    // moves onto cells getNeighbors itself returned), so cellDenseIndex[pos] is always nonzero.
-    const base = (prep.cellDenseIndex[pos] - 1) * 4;
+    // staticNeighborKeys is row-major dense-indexed by grid cell.
+    const base = denseIndex(pos, prep.gridW) * 4;
     for (let d = 0; d < 4; d++) {
         // +1-biased so 0 can mean "no neighbour" — see prep.ts.
         const nkPlus1 = prep.staticNeighborKeys[base + d];
