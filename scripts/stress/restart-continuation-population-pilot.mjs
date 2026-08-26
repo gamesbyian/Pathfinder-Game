@@ -36,6 +36,7 @@ const corpusPath = argMap.get('--corpus') || path.join(root, 'data/stress/stress
 const workBudget = Number(argMap.get('--work-budget') || 2_000_000);
 const sampleEvery = Number(argMap.get('--sample-every') || 29);
 const maxBadness = argMap.has('--max-badness') ? Number(argMap.get('--max-badness')) : Infinity;
+const limit = argMap.has('--limit') ? Number(argMap.get('--limit')) : Infinity;
 const outPath = argMap.get('--out') || path.join(root, 'tmp/restart-continuation-pilot.json');
 
 installBrowserStubs();
@@ -67,10 +68,13 @@ const candidates = census.levels.filter(lv => {
     return attempt.bestBadness == null || attempt.bestBadness <= maxBadness;
 });
 
-const selected = candidates.filter((_, i) => i % sampleEvery === 0);
+// `--limit` truncates to the first N candidates in census order (compute-boundedness, not
+// outcome selection); `--sample-every` (applied first) is the alternative stride-based reducer —
+// combine only deliberately, since both change which rows are covered.
+const selected = candidates.filter((_, i) => i % sampleEvery === 0).slice(0, limit);
 
 console.log(`restart-continuation-population-pilot: census=${censusPath} (${census.solved}/${census.total} solved, commit ${census.commitSha})`);
-console.log(`population: ${candidates.length} unsolved levels with a repair-probe attempt; sampling every ${sampleEvery}th -> ${selected.length} levels; work-budget=${workBudget}`);
+console.log(`population: ${candidates.length} unsolved levels with a repair-probe attempt; sampling every ${sampleEvery}th, limit=${Number.isFinite(limit) ? limit : '(none)'} -> ${selected.length} levels; work-budget=${workBudget}`);
 
 const results = [];
 for (const lv of selected) {
