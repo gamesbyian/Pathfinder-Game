@@ -87,4 +87,14 @@ if (treatmentReportPath) {
             || (a.actionKey || '').includes('beam:objectiveFirst@beam5000') && !(a.actionKey || '').includes('diverse'));
         console.log(`${id}: ok=${row.ok} workSpent=${row.workSpent} nodesExpanded=${row.nodesExpanded} attemptCount=${attempts.length} repairAttempts=${repairAttempts.length} repairNodesExpanded=${repairWork} newCandidateConfigAttempts=${newConfigAttempts.length}${newConfigAttempts.length ? ' [' + newConfigAttempts.map(a => `${a.actionKey}:outcome=${a.outcome}:nodes=${a.nodesExpanded}`).join(' | ') + ']' : ''}`);
     }
+    const dumpId = argMap.get('--dump-full-attempts-for-id');
+    if (dumpId) {
+        const row = byId.get(dumpId);
+        console.log(`\n--- full attempt sequence for ${dumpId} ---`);
+        console.log(JSON.stringify((row?.attempts ?? []).map(a => ({
+            stageId: a.stageId, actionKey: a.actionKey, profile: a.profile, beamWidth: a.beamWidth,
+            outcome: a.outcome, allocatedBudgetMs: a.allocatedBudgetMs, nodesExpanded: a.nodesExpanded,
+            ok: a.ok, timedOut: a.timedOut,
+        })), null, 1));
+    }
 }
