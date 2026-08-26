@@ -1,10 +1,11 @@
 # Capability sweep 976 reconciliation
 
-> **Status:** concluded-positive as capability evidence; follow-on mined treatments closed after confirmation
+> **Status:** concluded-positive
 > **Last evidence:** 2026-08-25 — capability run `32835403128` (`976/1700`), scheduler confirmation `32908734154`, selective diverse-IH development `32911007113`, diverse-IH confirmation `32912881453`
-> **Decision:** the 880→976 gain remains strong evidence for routing, exposure, allocation, and restart research before broad new search machinery. Two post-hoc fixed-work treatments selected from development evidence did not generalize and are closed.
+> **Decision:** the 880→976 gain remains strong evidence for routing, exposure, allocation, and restart research before broad new search machinery. Two fixed-work treatments selected from development evidence did not generalize and are closed.
 > **Remaining gate:** equal-work continuation-versus-fresh-seed restart is the next independent execution seam; any further portfolio treatment must be newly prespecified and independently confirmed.
-> **Evidence role:** queue reconciliation / discovery
+> **Evidence role:** discovery
+> **Selection:** observational capability reconciliation; follow-on candidates were selected after inspecting Corpus-2 and census evidence and therefore required independent confirmation
 
 ## Result shape
 
