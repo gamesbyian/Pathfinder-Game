@@ -88,7 +88,15 @@ edit('modules/solver/types.ts', src => {
   return mustReplace(src, old, replacement, 'PrepLevel dense adjacency contract');
 });
 
+const forbiddenCodePatterns = [
+  /prep\.cellDenseIndex\b/,
+  /\bcellDenseIndex\s*:/,
+  /\bconst\s+cellDenseIndex\b/,
+  /\blet\s+cellDenseIndex\b/,
+  /\bvar\s+cellDenseIndex\b/,
+];
 for (const path of ['modules/solver/prep.ts','modules/solver/lower-bounds.ts','modules/solver/search-state.ts','modules/solver/prep.test.ts','modules/solver/representation-contracts.test.ts','modules/solver/types.ts']) {
-  if (readFileSync(path, 'utf8').includes('cellDenseIndex')) throw new Error(`cellDenseIndex remains in ${path}`);
+  const text = readFileSync(path, 'utf8');
+  if (forbiddenCodePatterns.some(re => re.test(text))) throw new Error(`cellDenseIndex code reference remains in ${path}`);
 }
 console.log('Removed packed-key row indirection and switched staticNeighborKeys to row-major dense indexing.');
