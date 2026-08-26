@@ -2,6 +2,9 @@ name: Temporary current-head solver profile
 
 # Disposable discovery harness for queue item #7. Solver source remains untouched.
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - chatgpt/profile-current-head-2026-08-26
