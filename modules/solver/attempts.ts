@@ -80,7 +80,7 @@ interface LevelFeatures {
     mustTurn: number;
 }
 
-function extractFeatures(level: NormalizedLevel): LevelFeatures {
+export function extractFeatures(level: NormalizedLevel): LevelFeatures {
     return {
         arch: detectArchetype(level),
         // Walkable density: excludes blocks/geese/false-goals/gates — same formula as detectArchetype.
@@ -133,7 +133,7 @@ const isMustCross = (f: LevelFeatures) => f.arch === 'must-cross-heavy';
 /** Shared with getAttemptConfigs's STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE application below,
  *  so the ablation-gated addition can never drift from the rule it extends — see that flag's own
  *  comment for why this rule specifically (not its must-cross-heavy siblings) was chosen. */
-const isMustCrossFlipperHeavy = (f: LevelFeatures) =>
+export const isMustCrossFlipperHeavy = (f: LevelFeatures) =>
     isMustCross(f) && f.mustPass >= POLICY.OBJECTIVE_HEAVY_MUSTPASS && f.flippers >= POLICY.FLIPPER_HEAVY;
 
 /** Diverse WIDE beams for must-cross-threaded high-int levels — see POLICY.HIGHINT_MC_DIVERSE.
