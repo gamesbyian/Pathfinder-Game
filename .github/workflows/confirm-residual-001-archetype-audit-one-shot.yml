@@ -73,4 +73,5 @@ jobs:
           node scripts/run-bundled.mjs scripts/stress/confirm-residual-001-archetype-audit.mjs -- \
             --pool="audit-download/confirm-residual-001-pool.json" \
             --phase1-report="audit-download/residual-confirmation-phase1-control.json" \
-            --phase2-treatment-report="audit-download-phase2/residual-confirmation-phase2-treatment.json"
+            --phase2-treatment-report="audit-download-phase2/residual-confirmation-phase2-treatment.json" \
+            --dump-full-attempts-for-id="J00035"
