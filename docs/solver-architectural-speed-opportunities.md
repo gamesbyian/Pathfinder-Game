@@ -17,9 +17,9 @@ Implementation speed can create latency headroom, but the scheduler decides whet
 
 ### Specialized scoring
 
-`scoreMove` remains a broad interpreter of scoring features. If fresh profiling still shows scoring/candidate evaluation dominant, test a scorer compiled once per `(level, profile/template)` that removes impossible mechanics/zero-weight terms and precomputes profitable static quantities.
+Fresh 2026-08-26 profiling still found `scoreMove` material (9.55% self-time on all 160 published levels; 14.56% on a 24-level hard Corpus-2 sample), so the predeclared bounded specialization pilot was earned. A conservative static fast path for plain/default/no-template levels then preserved every solve/node trace but produced **+0.91% slower** paired geometric-mean wall time on published and **-0.05%** on the hard sample. The exact branch-deletion form is therefore closed: the generic scorer's apparent breadth is not translating into recoverable end-to-end overhead under V8.
 
-This is distinct from the negative experiment that only pre-resolved ablation booleans while retaining the same computation. Count setup cost on short solves as well as hard-search savings. Treat changed floating-point ordering as behavior change unless decision identity is demonstrated.
+A materially different scorer candidate needs new evidence and a different mechanism, such as eliminating or fusing computation rather than merely deleting statically impossible branches. See [the current-HEAD scorer pilot](../reports/2026-08-26-current-head-specialized-scorer-pilot.md).
 
 ### Fused move/state kernel
 
@@ -68,6 +68,7 @@ Do not retest without new profile evidence:
 - sparse-to-dense conversion justified only by cache-locality intuition;
 - naive six-array `prepLevel()` dense conversion with independent `denseIndex()` calls at each reader: hard Corpus-2 sample regressed about 2.82%;
 - pre-resolving ordinary ablation gates while retaining the same scorer;
+- static plain/default/no-template scorer specialization that only deletes impossible scoring branches: deterministic parity held, but published was about 0.91% slower and the hard Corpus-2 sample was effectively flat (-0.05%);
 - custom hash tables merely because native `Map` looks high-level: numeric-keyed `Map` matched/beat the measured custom form.
 
 Dated reports retain exact measurements.
@@ -83,10 +84,10 @@ The August 23 work already:
 
 ## Execution order
 
-1. Re-profile current HEAD.
-2. Pursue specialized scoring/fused JS state work only where the profile supports it.
-3. Extend dense indexing only for measured hot structures; do not repeat the naive six-array form.
-4. Re-measure replay before alternative beam materialization.
+1. Current-HEAD profile complete: hard-beam work remains the largest named bucket; the static scorer specialization it nominated is closed negative.
+2. Use the existing debug-only beam breakdown on the same hard workload to separate replay, candidate generation, connectivity, dedup, and sort.
+3. If candidate generation/apply/undo dominates, run one bounded fused-JS move/state-kernel pilot; if replay is material, revisit state materialization. Do not pursue either without that breakdown.
+4. Extend dense indexing only for measured hot structures; do not repeat the naive six-array form.
 5. Touch work-meter/secondary overhead only if measured.
 6. Reopen native/WASM only if a new compact boundary clears the gate above.
 
@@ -111,6 +112,7 @@ Keep policy and kernel effects separable. Scheduler decisions use machine-indepe
 
 ## Evidence anchors
 
+- [`../reports/2026-08-26-current-head-specialized-scorer-pilot.md`](../reports/2026-08-26-current-head-specialized-scorer-pilot.md)
 - [`../reports/2026-08-26-dense-index-architecture-followup.md`](../reports/2026-08-26-dense-index-architecture-followup.md)
 - [`../reports/2026-08-24-speed-substrate-static-audit.md`](../reports/2026-08-24-speed-substrate-static-audit.md)
 - [`../reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md)
