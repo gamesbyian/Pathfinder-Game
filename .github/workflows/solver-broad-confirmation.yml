@@ -1,0 +1,358 @@
+# Solver broad-confirmation cohort: generate ONE fresh, sealed, uniform-random level cohort and run
+# a control/treatment level-blind capability A/B against it, in a single workflow run so both arms
+# provably see the byte-identical artifact.
+#
+# WHY A SINGLE RUN, NOT TWO DISPATCHES (unlike solver-archetype-sample-ab.yml and its siblings):
+# reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md found that independently
+# invoking the level generator with the same seed in separate jobs did NOT reliably produce
+# byte-identical cohort files -- the valid protocol materializes the cohort exactly ONCE, seals its
+# sha256, and makes every arm download and verify that exact artifact before search. A `generate`
+# job here runs once; every `solve` shard (both arms) downloads its output and verifies the hash
+# before ever touching the solver, so a corrupted or divergent artifact fails loudly instead of
+# silently comparing two different level sets.
+#
+# This is durable, reusable plumbing (not one-shot): confirm-broad-001 and confirm-broad-002 both
+# used bespoke workflow YAML that was deliberately deleted after use (see PR #1483's description).
+# A third confirmation candidate is exactly the "repeated value" bar the repo's own retention rule
+# names for keeping generic plumbing instead of re-authoring or re-deleting it again -- see
+# docs/solver-research-operating-model.md rule 12 and AGENTS.md rule 4.
+#
+# Durable confirmation contract this workflow implements (see the cohort-reservation report's
+# "Durable confirmation contract" section for the full human-side protocol this only partly
+# automates -- freezing the candidate/gate BEFORE dispatch, and reading the aggregate verdict
+# before inspecting any changed id, are still the dispatcher's responsibility, not this workflow's):
+#   1. reserve a fresh, never-before-used master_seed/id_prefix before dispatch;
+#   2. generate the cohort exactly once from the dispatched commit;
+#   3. seal the generated file's sha256 and give every arm that exact artifact;
+#   4. verify the seal in every solve shard before search;
+#   5. combine each arm separately and print the aggregate solved/gains/losses verdict.
+#
+# Unlike the archetype-sample A/B workflows, this cohort is NOT required to also include Corpus 1
+# or published levels -- confirm-broad-001/002 tested their generated cohort alone, and a uniform
+# random raised-cap cohort already contains a natural mix of archetypes (confirm-broad-002
+# meaningfully exercised an archetype-gated candidate this way). If a future candidate's gate is so
+# narrow that a plain 256-level uniform-random cohort would not participate enough to be
+# informative, raise `count` or say so in the run's own report rather than adding Corpus 1/published
+# here by default.
+
+name: Solver broad confirmation cohort
+
+on:
+  workflow_dispatch:
+    inputs:
+      cohort_id:
+        description: 'Human-readable cohort id for artifact/report naming, e.g. confirm-broad-003. Must not reuse a prior cohort id (see docs/solver-opt-in-experiment-ledger.md / reports/stress/managed-evaluation-populations-2026-08-24.json).'
+        required: true
+      master_seed:
+        description: 'Generator master seed. MUST be a value never used by a prior cohort.'
+        required: true
+      id_prefix:
+        description: 'Single-letter level id prefix (e.g. "G"). MUST be a letter never used by a prior cohort/corpus.'
+        required: true
+      count:
+        description: 'Number of levels to generate.'
+        required: false
+        default: '256'
+      envelope_caps:
+        description: 'true generates the in-envelope stratum (documented per-level maxima) instead of the default raised-cap stratum.'
+        required: false
+        default: 'false'
+      enable_flags:
+        description: 'Comma-separated ablation flags to turn ON for the treatment arm only.'
+        required: false
+        default: ''
+      disable_flags:
+        description: 'Comma-separated ablation flags to turn OFF for the treatment arm only.'
+        required: false
+        default: ''
+      node_budget:
+        description: 'Cumulative node ceiling per level, both arms.'
+        required: false
+        default: '50000000'
+      budget_ms:
+        description: 'Per-level wall budget. Default 24h is intentionally non-binding; node budget is the real ceiling.'
+        required: false
+        default: '86400000'
+      workers:
+        description: 'Cross-level worker processes per shard.'
+        required: false
+        default: '4'
+      shard_count:
+        description: 'Shards PER ARM (so total solve jobs = 2 * shard_count). Default gives 16 levels/shard for the default count=256, matching the "more shards than lanes" principle so one slow shard cannot dominate the run the way an unsharded Corpus 1 job did (see .github/workflows/README.md).'
+        required: false
+        default: '16'
+      max_parallel:
+        description: 'Solve jobs (across both arms) running concurrently.'
+        required: false
+        default: '20'
+      deterministic:
+        description: 'true forces a 24h non-binding deadline for reproducible (bit-identical) nodes/work. Keep true for a decision-bearing confirmation.'
+        required: false
+        default: 'true'
+
+concurrency:
+  group: solver-broad-confirmation-${{ inputs.cohort_id }}
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    name: Generate and seal the cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      levels_sha256: ${{ steps.seal.outputs.sha256 }}
+      total_levels: ${{ steps.seal.outputs.total_levels }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate the cohort exactly once
+        shell: bash
+        run: |
+          mkdir -p logs/solver-broad-confirmation
+          node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
+            --count="${{ inputs.count }}" \
+            --master-seed="${{ inputs.master_seed }}" \
+            --id-prefix="${{ inputs.id_prefix }}" \
+            ${{ inputs.envelope_caps == 'true' && '--envelope-caps' || '' }} \
+            --out="logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json"
+
+      - name: Seal the generated artifact
+        id: seal
+        shell: bash
+        run: |
+          SHA=$(sha256sum "logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json" | cut -d' ' -f1)
+          COUNT=$(node -e "const l=require('./logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json'); console.log((Array.isArray(l)?l:l.levels).length)")
+          echo "sha256=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "total_levels=${COUNT}" >> "$GITHUB_OUTPUT"
+          echo "Sealed logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json: sha256=${SHA}, ${COUNT} levels, commit=${{ github.sha }}, master_seed=${{ inputs.master_seed }}, id_prefix=${{ inputs.id_prefix }}, envelope_caps=${{ inputs.envelope_caps }}"
+
+      - name: Upload the sealed cohort
+        uses: actions/upload-artifact@v4
+        with:
+          name: broad-confirmation-cohort
+          path: logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json
+          if-no-files-found: error
+          retention-days: 90
+
+  plan:
+    name: Plan shards
+    needs: [generate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - name: Split the cohort into even round-robin shards, per arm
+        id: plan
+        shell: bash
+        run: |
+          node -e "
+          const shardCount = Number('${{ inputs.shard_count }}');
+          const total = Number('${{ needs.generate.outputs.total_levels }}');
+          const positions = Array.from({ length: total }, (_, i) => i + 1);
+          const shards = [];
+          for (const arm of ['control', 'treatment']) {
+            for (let i = 0; i < shardCount; i++) {
+              const slice = positions.filter((_, index) => index % shardCount === i);
+              if (slice.length) shards.push({ idx: \`\${arm}-\${String(i + 1).padStart(2, '0')}\`, arm, levels: \`pos:\${slice.join(',')}\` });
+            }
+          }
+          console.log('shards=' + JSON.stringify({ shard: shards }));
+          " >> "$GITHUB_OUTPUT"
+
+  solve:
+    name: Solve shard ${{ matrix.shard.idx }}
+    needs: [generate, plan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJson(inputs.max_parallel) }}
+      matrix: ${{ fromJson(needs.plan.outputs.shards) }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download the sealed cohort
+        uses: actions/download-artifact@v4
+        with:
+          name: broad-confirmation-cohort
+          path: cohort-download
+
+      - name: Verify the seal before touching the solver
+        shell: bash
+        run: |
+          ACTUAL=$(sha256sum "cohort-download/${{ inputs.cohort_id }}.json" | cut -d' ' -f1)
+          EXPECTED="${{ needs.generate.outputs.levels_sha256 }}"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::Cohort artifact hash mismatch: expected ${EXPECTED}, got ${ACTUAL}. Refusing to search a possibly-divergent cohort."
+            exit 1
+          fi
+          echo "Cohort seal verified: ${ACTUAL}"
+
+      - name: Run level-blind capability sweep on this shard
+        id: sweep
+        continue-on-error: true
+        shell: bash
+        env:
+          DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
+        run: |
+          set +e
+          mkdir -p logs/solver-broad-confirmation
+          extra=()
+          if [ "${{ matrix.arm }}" = "treatment" ]; then
+            [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+            [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          fi
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="cohort-download/${{ inputs.cohort_id }}.json" \
+            --levels="${{ matrix.shard.levels }}" \
+            --budget-ms="${DEADLINE}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --work-budget="${work}" \
+            --workers="${{ inputs.workers }}" \
+            "${extra[@]}" \
+            --out="logs/solver-broad-confirmation/batch-${{ matrix.shard.idx }}.json" \
+            --summary-out="logs/solver-broad-confirmation/batch-${{ matrix.shard.idx }}-summary.md"
+          status=$?
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload shard artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: broad-confirmation-shard-${{ matrix.shard.idx }}
+          path: |
+            logs/solver-broad-confirmation/batch-${{ matrix.shard.idx }}.json
+            logs/solver-broad-confirmation/batch-${{ matrix.shard.idx }}-summary.md
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Fail on unexpected sweep error
+        if: >-
+          always() &&
+          (steps.sweep.outputs.exit_code != '0' && steps.sweep.outputs.exit_code != '124' && steps.sweep.outputs.exit_code != '143')
+        run: exit 1
+
+  combine:
+    name: Combine and compare both arms
+    needs: [generate, solve]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download control shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'broad-confirmation-shard-control-*'
+          path: artifact-staging/control
+          merge-multiple: true
+
+      - name: Download treatment shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'broad-confirmation-shard-treatment-*'
+          path: artifact-staging/treatment
+          merge-multiple: true
+
+      - name: Combine each arm (subset-shaped -- NOT the full-corpus baseline)
+        shell: bash
+        run: |
+          mkdir -p reports/stress
+          for arm in control treatment; do
+            mkdir -p "logs/solver-broad-confirmation-${arm}"
+            cp -a "artifact-staging/${arm}/." "logs/solver-broad-confirmation-${arm}/"
+            FILES=$(ls logs/solver-broad-confirmation-${arm}/batch-*.json 2>/dev/null | paste -sd, -)
+            [ -n "$FILES" ] && npm run solver:combine-corpus2-batches -- --allow-mixed-corpora --in="${FILES}" --out="reports/stress/broad-confirmation-${arm}.json"
+          done
+
+      - name: Verify complete coverage, both arms
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const expectedTotal = ${{ needs.generate.outputs.total_levels }};
+          for (const arm of ['control', 'treatment']) {
+            const report = JSON.parse(fs.readFileSync(\`reports/stress/broad-confirmation-\${arm}.json\`, 'utf8'));
+            const rows = report.levels ?? [];
+            if (rows.length !== expectedTotal) { console.error(\`\${arm} incomplete: \${rows.length}/\${expectedTotal}\`); process.exit(1); }
+          }
+          console.log(\`both arms complete: \${expectedTotal}/\${expectedTotal}\`);
+          "
+
+      - name: Print the frozen confirmation verdict inputs
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const control = JSON.parse(fs.readFileSync('reports/stress/broad-confirmation-control.json', 'utf8')).levels ?? [];
+          const treatment = JSON.parse(fs.readFileSync('reports/stress/broad-confirmation-treatment.json', 'utf8')).levels ?? [];
+          const idOf = x => x.id ?? String(x.level);
+          const controlSolved = new Set(control.filter(x => x.ok).map(idOf));
+          const treatmentSolved = new Set(treatment.filter(x => x.ok).map(idOf));
+          const gained = [...treatmentSolved].filter(id => !controlSolved.has(id)).sort();
+          const lost = [...controlSolved].filter(id => !treatmentSolved.has(id)).sort();
+          const workOf = rows => rows.reduce((n, x) => n + (x.workSpent || 0), 0);
+          const controlWork = workOf(control), treatmentWork = workOf(treatment);
+          console.log('cohort=${{ inputs.cohort_id }} enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} ref=${{ github.sha }} sha256=${{ needs.generate.outputs.levels_sha256 }}');
+          console.log(\`control solved: \${controlSolved.size}/\${control.length}, work=\${controlWork}\`);
+          console.log(\`treatment solved: \${treatmentSolved.size}/\${treatment.length}, work=\${treatmentWork} (\${(100*(treatmentWork-controlWork)/controlWork).toFixed(2)}% vs control)\`);
+          console.log(\`gained (\${gained.length}): \` + gained.join(','));
+          console.log(\`lost (\${lost.length}): \` + lost.join(','));
+          "
+
+      - name: Upload combined results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: broad-confirmation-combined
+          path: |
+            reports/stress/broad-confirmation-control.json
+            reports/stress/broad-confirmation-treatment.json
+          if-no-files-found: error
+          retention-days: 90

@@ -49,6 +49,10 @@ These use non-binding deterministic deadlines by default, so node/work budgets r
 
 All three share `scripts/plan-ab-corpus-shards.mjs` for the mandatory Corpus 1 + published + Corpus 2 sample matrix. Corpus 1 is split into several shards (same levels-per-shard density as the Corpus 2 sample) and scheduled *before* the Corpus 2 shards in the matrix array, since GitHub Actions starts matrix jobs in array order up to `max-parallel`: a single unsharded Corpus 1 job placed last does not get a lane until multiple rounds of Corpus 2 shards have already completed, and Corpus 1's own per-level cost (stress levels, not published) then runs long on top of that late start — becoming the run's tail straggler by a wide margin (observed 17-28 minutes solo vs. a few minutes per Corpus 2 shard). Model any new corpus-matrix workflow on the fixed form.
 
+## Broad confirmation
+
+- `solver-broad-confirmation.yml` — generates one fresh, sealed, uniform-random level cohort and runs a control/treatment level-blind capability A/B against it in a single workflow run (so both arms provably see the byte-identical cohort artifact — see the workflow's own header comment for why this differs from the two-dispatch Sample A/B pattern above). Use this for the confirmation step of the repository's confirmation/transfer cohort protocol (`reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md`): reserve a never-before-used `master_seed`/`id_prefix` before dispatch, freeze the candidate/gate first, and read the printed aggregate solved/gains/losses verdict before inspecting any changed level id.
+
 ## Technique and method sweeps
 
 - `technique-census.yml` — isolated technique census. `workers` defaults to 4; outer layout remains 120 shards / 20 lanes. Referee-valid discoveries are always retained; there is no hint-retention dispatch toggle.
