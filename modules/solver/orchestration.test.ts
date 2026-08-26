@@ -946,6 +946,99 @@ test('interleaved main-loop reserve gives every late config/gate pair its own sl
     assert.equal(result.nodeBudgetReached, true);
 });
 
+// Regression for the confirm-residual-001 gap (2026-08-26, fixed the same day): every existing
+// main-loop-reserve test above starves the loop via `nodeBudget` alone, with `workBudget` set
+// generously large (1,000,000) so it never binds. Production solves are actually capped on BOTH
+// resources simultaneously, and before the fix, runGateSerialAttempts/runInterleavedAttempts' WORK
+// stop condition had no `ci >= lateConfigStart` carve-out the way the NODE-side check did -- an
+// early config that consumed more than its fair share of WORK (measured directly on real generated
+// raised-cap levels: confirm-residual-001's 25 archetype-eligible-and-residual rows each spent
+// orders of magnitude more canonical work than nodes per attempt) could exhaust the loop's work
+// pool before ever reaching the reserve-protected late suffix, even while the NODE dimension still
+// had ample headroom -- the trailing configs the reserve exists to protect never got dispatched.
+// This exercises the FIXED behavior directly: once an early config's own consumption crosses the
+// reserve's early work ceiling, FURTHER early configs are skipped rather than allowed to keep
+// draining the slice reserved for the trailing configs.
+test('main-loop reserve protects late configs from WORK (not just node) starvation by early configs', async () => {
+    const seenConfigs: string[] = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, , , prep, , , , , , out] = args;
+        seenConfigs.push(attemptConfigKey(config));
+        // Simulate a work-expensive attempt that overshoots its own allotted share, as a real
+        // beam/DFS search that only checks its budget periodically can, while expanding only a
+        // token number of nodes -- the node dimension stays practically untouched.
+        prep._workMeter.units += 60000;
+        if (prep._metrics) prep._metrics.nodesExpanded += 1;
+        if (out) { out.nodesExpanded = 1; out.timedOut = true; }
+        return null;
+    };
+    const level = makeAttractionDiversityGatedInfeasibleLevel();
+    const mainConfigs = getConfiguredAttemptConfigs(level, null)
+        .filter(config => !config.repair && !config.admissibleOrder);
+    const result = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        nodeBudget: 1_000_000, // generous -- must not be what stops the loop
+        workBudget: 100_000,
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        mainLoopLateReserveFractionOverride: 0.5,
+        mainLoopLateReserveConfigCountOverride: 1,
+        attemptSearchForTesting: dispatch,
+    });
+
+    // Node budget was never remotely threatened.
+    assert.ok(result.nodesExpanded < 1_000, 'node budget must stay far from exhausted in this scenario');
+    assert.ok(seenConfigs.includes(attemptConfigKey(mainConfigs[0])), 'the first config should still run');
+    assert.ok(!seenConfigs.includes(attemptConfigKey(mainConfigs[1])),
+        'the second, non-reserved early config must be skipped once the early work ceiling is crossed, ' +
+        'preserving its share for the reserve-protected suffix instead');
+    assert.ok(seenConfigs.includes(attemptConfigKey(mainConfigs.at(-1)!)),
+        'the reserve-protected last config must still get dispatched despite the earlier work overshoot');
+    assert.equal(result.attempts.some(a => a.mainLoopLateReserve), true,
+        'the reserve must still get a genuine chance to run once its own slice, not zero, when work is scarce');
+});
+
+// Interleaved-variant sibling of the gate-serial test above: same WORK-dimension gap
+// (runInterleavedAttempts' work check had no `ci >= lateConfigStart` carve-out either), exercised
+// through the multi-gate path instead. Mirrors 'interleaved main-loop reserve gives every late
+// config/gate pair its own slice' above, but starves via `workBudget` instead of `nodeBudget`.
+test('interleaved main-loop reserve protects late config/gate pairs from WORK starvation by early configs', async () => {
+    const level = { ...makeAttractionDiversityGatedInfeasibleLevel(), gateKeys: [PACK(0, 0), PACK(0, 2)] };
+    const attemptsSeen: Array<{ config: string; gate: number }> = [];
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [config, gate, , prep, , , , , , out] = args;
+        attemptsSeen.push({ config: attemptConfigKey(config), gate });
+        // Same work-expensive-overshoot simulation as the gate-serial test above. The multi-gate
+        // config list for this level is much longer (16 configs), so the fair evenShare per
+        // config/gate pair is small; the overshoot must clear the early reserve ceiling in a single
+        // dispatch regardless.
+        prep._workMeter.units += 1_400_000;
+        if (prep._metrics) prep._metrics.nodesExpanded += 1;
+        if (out) { out.nodesExpanded = 1; out.timedOut = true; }
+        return null;
+    };
+    const mainConfigs = getConfiguredAttemptConfigs(level, null).filter(config => !config.repair && !config.admissibleOrder);
+    const result = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        nodeBudget: 1_000_000,
+        workBudget: 2_000_000,
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        mainLoopLateReserveFractionOverride: 0.5,
+        mainLoopLateReserveConfigCountOverride: 1,
+        attemptSearchForTesting: dispatch,
+    });
+
+    assert.ok(result.nodesExpanded < 1_000, 'node budget must stay far from exhausted in this scenario');
+    assert.deepEqual(attemptsSeen, [
+        { config: attemptConfigKey(mainConfigs[0]), gate: level.gateKeys[0] },
+        { config: attemptConfigKey(mainConfigs.at(-1)!), gate: level.gateKeys[0] },
+    ], 'the second early config is skipped entirely once the early work ceiling is crossed, and the ' +
+        'reserve-protected last config gets dispatched on its own escalating slice instead');
+    assert.equal(result.attempts.some(a => a.mainLoopLateReserve), true,
+        'the reserve must still get a genuine chance to run once its own slice, not zero, when work is scarce');
+});
+
 test('main-loop reserve activates by default with an omitted ablation config and a finite node ceiling', async () => {
     // Production default-ON as of 2026-08-12 (reports/2026-08-12-main-loop-late-reserve-population-ab.md).
     // Mirrors lower-bounds.test.ts's PRUNE_MC_NEIGHBOR_BUDGET regression: an entirely omitted
