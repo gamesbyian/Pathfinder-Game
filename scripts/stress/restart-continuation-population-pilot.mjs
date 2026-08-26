@@ -22,6 +22,11 @@
  * an unequal split (e.g. 0.8) is a DIFFERENT treatment from the 50/50 form, not a rescue of it;
  * see reports/2026-08-26-restart-vs-continuation-near-miss-development-pilot.md.
  *
+ * `--offset=<n>` (default 0) skips the first N candidates (in the same fixed census order,
+ * before `--sample-every`/`--limit`) so a follow-up pilot can select a disjoint, non-overlapping
+ * slice of the same stratum without re-running or re-selecting rows an earlier pilot already
+ * inspected and drew conclusions from — see reports/2026-08-26-restart-continuation-larger-w-pilot.md.
+ *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/restart-continuation-population-pilot.mjs -- \
  *     --census=reports/stress/benchmark-latest-random.json --corpus=data/stress/stress-levels-random.json \
@@ -42,6 +47,7 @@ const workBudget = Number(argMap.get('--work-budget') || 2_000_000);
 const sampleEvery = Number(argMap.get('--sample-every') || 29);
 const maxBadness = argMap.has('--max-badness') ? Number(argMap.get('--max-badness')) : Infinity;
 const limit = argMap.has('--limit') ? Number(argMap.get('--limit')) : Infinity;
+const offset = argMap.has('--offset') ? Number(argMap.get('--offset')) : 0;
 const restartSplitFraction = argMap.has('--restart-split') ? Number(argMap.get('--restart-split')) : 0.5;
 const outPath = argMap.get('--out') || path.join(root, 'tmp/restart-continuation-pilot.json');
 
@@ -74,13 +80,15 @@ const candidates = census.levels.filter(lv => {
     return attempt.bestBadness == null || attempt.bestBadness <= maxBadness;
 });
 
-// `--limit` truncates to the first N candidates in census order (compute-boundedness, not
-// outcome selection); `--sample-every` (applied first) is the alternative stride-based reducer —
-// combine only deliberately, since both change which rows are covered.
-const selected = candidates.filter((_, i) => i % sampleEvery === 0).slice(0, limit);
+// `--offset` (applied first) skips a prefix of candidates in census order, purely to let a
+// follow-up pilot select rows disjoint from an earlier one's — not outcome-based. `--limit`
+// truncates to the first N candidates after that (compute-boundedness, not outcome selection);
+// `--sample-every` (applied after offset, before limit) is the alternative stride-based reducer —
+// combine only deliberately, since all three change which rows are covered.
+const selected = candidates.slice(offset).filter((_, i) => i % sampleEvery === 0).slice(0, limit);
 
 console.log(`restart-continuation-population-pilot: census=${censusPath} (${census.solved}/${census.total} solved, commit ${census.commitSha})`);
-console.log(`population: ${candidates.length} unsolved levels with a repair-probe attempt; sampling every ${sampleEvery}th, limit=${Number.isFinite(limit) ? limit : '(none)'} -> ${selected.length} levels; work-budget=${workBudget}; restart-split=${restartSplitFraction}`);
+console.log(`population: ${candidates.length} unsolved levels with a repair-probe attempt; offset=${offset}, sampling every ${sampleEvery}th, limit=${Number.isFinite(limit) ? limit : '(none)'} -> ${selected.length} levels; work-budget=${workBudget}; restart-split=${restartSplitFraction}`);
 
 const results = [];
 for (const lv of selected) {
