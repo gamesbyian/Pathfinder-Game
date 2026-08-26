@@ -1,5 +1,5 @@
 import { getNavigableDensity } from './archetype.js';
-import { buildAxisApproachMap, buildDistMap, distMapToArray } from './distance.js';
+import { buildAxisApproachMap, buildDistMap, denseIndex, distMapToArray } from './distance.js';
 import type { DistMapOpts } from './distance.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, NEIGHBOR_DX, NEIGHBOR_DY, PACK } from './encoding.js';
 import { MAX_BITROW_DIM } from './topology.js';
@@ -407,41 +407,19 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // gate cells, and neighbors that violate static (regular) filter constraints. Flipping-
     // filter and portal constraints remain dynamic.
     //
-    // Dense indexing (2026-08-23): this used to be a flat KEY_SPACE * 4 Int32Array (16.8 MB),
-    // directly packed-key-indexed. A grid has at most a few hundred live (non-block/non-goose)
-    // cells while KEY_SPACE is 1,048,576, so the array was >99.9% permanently-zero padding —
-    // microbenchmarked at ~2ms per allocation from the array's SIZE alone (not from filling it;
-    // only real cells were ever written either way, same as the "+1 bias avoids fill(-1)" note
-    // below always meant). `cellDenseIndex` is the one remaining KEY_SPACE-sized array (a
-    // Uint8Array, 1 MB — grid cell counts fit comfortably under 256): every packed key that is a
-    // live cell maps to a dense row 0..N-1; `staticNeighborKeys` itself shrinks to N*4 slots.
-    // Every direct-index consumer (prep.ts's own gateForcedFirstStepKey below, search-state.ts's
-    // getNeighbors, lower-bounds.ts's two must-cross deadlock checks) resolves the dense row via
-    // cellDenseIndex first. See reports/2026-08-23-dense-static-neighbor-keys.md.
+    // Row-major dense indexing: static adjacency is gridW*gridH*4, still at most 900 slots.
+    // This removes the former 1 MB KEY_SPACE-sized packed-key-to-row indirection; packed grid keys
+    // resolve directly through distance.ts's denseIndex(key, gridW). Block/goose rows stay zero.
     {
         const { w, h } = level.grid;
-        // Stores neighbourKey+1 so that ZERO means "no neighbour in this direction" — the same
-        // zero-means-absent trick distance.ts's distMapToArray uses, and for the same reason: the
-        // old -1 sentinel forced `.fill(-1)` over every entry, for a grid with at most a few
-        // hundred live cells. A packed key of 0 is the legitimate cell (0,0), so the sentinel
-        // cannot simply be 0 — hence the +1 bias, undone at every read site.
-        prep.cellDenseIndex = new Uint8Array(KEY_SPACE);
-        let _liveCellCount = 0;
+        // Stores neighbourKey+1 so that ZERO means "no neighbour in this direction".
+        prep.staticNeighborKeys = new Int32Array(w * h * 4);
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
                 const k = PACK(x, y);
                 if (level.blockSet.has(k) || level.gooseSet.has(k)) continue;
-                prep.cellDenseIndex[k] = ++_liveCellCount;
-            }
-        }
-        prep.staticNeighborKeys = new Int32Array(_liveCellCount * 4);
-        for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-                const k = PACK(x, y);
-                const denseIdx = prep.cellDenseIndex[k];
-                if (denseIdx === 0) continue; // block/goose: no adjacency row (matches skip above)
                 const filterFrom = level.filterMap.get(k);
-                const base = (denseIdx - 1) * 4;
+                const base = denseIndex(k, w) * 4;
                 for (let d = 0; d < 4; d++) {
                     const nx = x + NEIGHBOR_DX[d], ny = y + NEIGHBOR_DY[d];
                     if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
@@ -473,7 +451,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     {
         prep.gateForcedFirstStepKey = new Map();
         for (const g of level.gateKeys) {
-            const base = (prep.cellDenseIndex[g] - 1) * 4;
+            const base = denseIndex(g, level.grid.w) * 4;
             let forced = -1, count = 0;
             for (let d = 0; d < 4; d++) {
                 const nk = prep.staticNeighborKeys[base + d] - 1;

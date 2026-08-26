@@ -5,6 +5,8 @@
 > **Decision:** landed directly (order-preserving, no flag needed)
 > **Remaining gate:** none
 
+> **2026-08-26 follow-up:** [`2026-08-26-dense-index-architecture-followup.md`](2026-08-26-dense-index-architecture-followup.md) resumes this architecture thread. It closes a naive conversion of the six remaining `prepLevel()` mechanic arrays after a hard-tail regression, and records a passing narrower removal of the 1 MiB `cellDenseIndex` indirection introduced by this change.
+
 Branch `claude/solver-speed-optimizations-mtbemk`. First concrete step on item 1 of
 [`../docs/solver-architectural-speed-opportunities.md`](../docs/solver-architectural-speed-opportunities.md)
 ("Dense-native search core"), following the beam dedup-key work earlier the same day

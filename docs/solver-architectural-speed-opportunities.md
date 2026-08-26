@@ -27,7 +27,13 @@ If profiles nominate candidate generation/apply/undo overhead, test a fused JS k
 
 ### Dense level-local indexing
 
-The positive `staticNeighborKeys` conversion showed that sparse packed-key storage can be wasteful when a hot structure only needs live cells. Extend dense indexing only when profiles identify a specific allocation/lookup cost. Prefer coherent level-local `0..N-1` representations over isolated churn when several interacting hot structures benefit.
+The positive `staticNeighborKeys` conversion showed that sparse packed-key storage can be wasteful when a hot structure only needs live cells. The 2026-08-26 follow-up sharpened the boundary:
+
+- removing the 1 MiB `cellDenseIndex` indirection while keeping `staticNeighborKeys` directly row-major passed repeated A/B measurement: published short solves improved about 1.66%, while the hard Corpus-2 sample was effectively flat (+0.05%) with identical decisions/nodes;
+- naively converting the six remaining `prepLevel()` mechanic arrays to dense storage improved the short sample but regressed the hard sample about 2.82%, so that exact form is closed;
+- the likely failure mode is repeated `denseIndex()` arithmetic in hot readers, not dense storage itself. A future mechanic-array candidate must hoist/reuse a row calculation per hot key rather than independently recomputing it for each metadata read.
+
+Extend dense indexing only when profiles identify a specific allocation/lookup cost. Prefer coherent level-local `0..N-1` representations where they remove both storage and indirection, and treat arithmetic inserted into per-node loops as a first-class cost. See [`../reports/2026-08-26-dense-index-architecture-followup.md`](../reports/2026-08-26-dense-index-architecture-followup.md).
 
 ### Beam state materialization
 
@@ -60,6 +66,7 @@ Do not retest without new profile evidence:
 - `UndoToken` object pooling;
 - beam quickselect replacing sort when sort is not dominant;
 - sparse-to-dense conversion justified only by cache-locality intuition;
+- naive six-array `prepLevel()` dense conversion with independent `denseIndex()` calls at each reader: hard Corpus-2 sample regressed about 2.82%;
 - pre-resolving ordinary ablation gates while retaining the same scorer;
 - custom hash tables merely because native `Map` looks high-level: numeric-keyed `Map` matched/beat the measured custom form.
 
@@ -78,7 +85,7 @@ The August 23 work already:
 
 1. Re-profile current HEAD.
 2. Pursue specialized scoring/fused JS state work only where the profile supports it.
-3. Extend dense indexing only for measured hot structures.
+3. Extend dense indexing only for measured hot structures; do not repeat the naive six-array form.
 4. Re-measure replay before alternative beam materialization.
 5. Touch work-meter/secondary overhead only if measured.
 6. Reopen native/WASM only if a new compact boundary clears the gate above.
@@ -104,6 +111,7 @@ Keep policy and kernel effects separable. Scheduler decisions use machine-indepe
 
 ## Evidence anchors
 
+- [`../reports/2026-08-26-dense-index-architecture-followup.md`](../reports/2026-08-26-dense-index-architecture-followup.md)
 - [`../reports/2026-08-24-speed-substrate-static-audit.md`](../reports/2026-08-24-speed-substrate-static-audit.md)
 - [`../reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md)
 - [`../reports/2026-08-23-dense-static-neighbor-keys.md`](../reports/2026-08-23-dense-static-neighbor-keys.md)
