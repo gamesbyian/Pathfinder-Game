@@ -1,11 +1,11 @@
 # Selective diverse-IH exposure development A/B
 
-> **Status:** concluded-positive in development; superseded by failed independent confirmation
+> **Status:** superseded
 > **Last evidence:** 2026-08-25 — development run `32911007113`; independent confirmation `32912881453`
 > **Decision:** development evidence showed a strong +9/-0 effect on the feature-defined Corpus-2 population, but the exact treatment is closed after fresh confirmation produced 0 gains / 0 losses. Do not promote or retune this rule as a general policy.
-> **Remaining gate:** none for this exact treatment. Any successor portfolio rule must be newly prespecified and independently confirmed.
-> **Evidence role:** development/tuning only
-> **Selection:** feature-defined from the post-976 Corpus-2 residual analysis
+> **Remaining gate:** none
+> **Evidence role:** tuning
+> **Selection:** selected after inspecting the post-976 Corpus-2 residual/census evidence; the 262-level execution population itself was then defined by solver-visible features rather than known winning IDs
 
 ## Treatment
 
