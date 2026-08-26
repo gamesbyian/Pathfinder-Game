@@ -1,0 +1,571 @@
+# Solver two-phase residual confirmation: generate ONE fresh, sealed pool; run the CONTROL ladder
+# alone across it; freeze the subset it fails to solve as a sealed residual corpus; then run the
+# real control/treatment A/B only on that frozen residual.
+#
+# WHY THIS EXISTS (see reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md's
+# "Repair-saturation gap" and confirm-broad-004 sections for the full diagnosis): a candidate mined
+# from a residual-miss analysis (the dominant source of Priority 1's candidates) is, by definition,
+# "helps solve levels the whole current ladder including repair already fails on." A plain fresh
+# uniform-random cohort (see solver-broad-confirmation.yml) draws overwhelmingly from levels the
+# ladder already solves, so such a candidate's new configs may never execute on a single row no
+# matter how large the cohort -- confirm-broad-003 (256 levels) and confirm-broad-004 (1,200 levels,
+# ~4.7x larger) both came back byte-identical aggregate work in both arms, ruling out chance at the
+# larger size (P~=7e-10) while a local sanity check confirmed the candidate mechanism itself was
+# never broken. Scaling `count` a third time is not a sound response to that result.
+#
+# This workflow instead mines its own residual, mirroring exactly how the original 724-level
+# Corpus-2 residual population (the source of most Priority 1 candidates) was defined -- by which
+# levels the current ladder fails to solve -- but applied to a fresh generated pool instead of the
+# existing corpus:
+#   Phase 1: generate a fresh pool, run the CONTROL ladder alone across it, freeze the subset it
+#            fails to solve (no archetype-rate guessing needed -- this population *is* fresh-
+#            generated "repair-resistant" by the same construction that made the original
+#            development population participate).
+#   Phase 2: run the real control/treatment A/B only on that frozen residual.
+# Filtering by whether *control* solves a level, decided entirely before phase 2's real comparison
+# ever runs, is a pre-outcome-neutral selection rule -- not the same as selecting by whether
+# *treatment* succeeds. Once a residual's composition has informed a decision for one candidate it
+# must not be reused for a different candidate; reserve a fresh cohort_id/master_seed/id_prefix each
+# time, same discipline as solver-broad-confirmation.yml.
+#
+# Kept as durable, reusable plumbing (not one-shot) for the same reason solver-broad-confirmation.yml
+# was kept: this confirmation-methodology gap is likely to recur for any future candidate mined from
+# a residual-miss analysis, not just this one candidate.
+
+name: Solver two-phase residual confirmation
+
+on:
+  workflow_dispatch:
+    inputs:
+      cohort_id:
+        description: 'Human-readable cohort id for artifact/report naming, e.g. confirm-residual-001. Must not reuse a prior cohort id (see docs/solver-opt-in-experiment-ledger.md / reports/stress/managed-evaluation-populations-2026-08-24.json).'
+        required: true
+      master_seed:
+        description: 'Generator master seed for the phase-1 pool. MUST be a value never used by a prior cohort.'
+        required: true
+      id_prefix:
+        description: 'Single-letter level id prefix for the phase-1 pool (e.g. "J"). MUST be a letter never used by a prior cohort/corpus.'
+        required: true
+      pool_count:
+        description: 'Number of levels to generate for the phase-1 pool.'
+        required: false
+        default: '1200'
+      envelope_caps:
+        description: 'true generates the in-envelope stratum (documented per-level maxima) instead of the default raised-cap stratum.'
+        required: false
+        default: 'false'
+      enable_flags:
+        description: 'Comma-separated ablation flags to turn ON for the phase-2 treatment arm only.'
+        required: false
+        default: ''
+      disable_flags:
+        description: 'Comma-separated ablation flags to turn OFF for the phase-2 treatment arm only.'
+        required: false
+        default: ''
+      node_budget:
+        description: 'Cumulative node ceiling per level, both phases and both arms.'
+        required: false
+        default: '50000000'
+      budget_ms:
+        description: 'Per-level wall budget. Default 24h is intentionally non-binding; node budget is the real ceiling.'
+        required: false
+        default: '86400000'
+      workers:
+        description: 'Cross-level worker processes per shard.'
+        required: false
+        default: '4'
+      phase1_shard_count:
+        description: 'Control-only phase-1 shards (single arm). Default targets ~16 levels/shard at the default pool_count=1200.'
+        required: false
+        default: '75'
+      phase2_levels_per_shard:
+        description: 'Target levels per shard when sharding the frozen residual for phase 2 (both arms). The actual shard count is computed after phase 1 completes, since the residual size is not known before then.'
+        required: false
+        default: '16'
+      max_parallel:
+        description: 'Solve jobs running concurrently, within each phase.'
+        required: false
+        default: '20'
+      deterministic:
+        description: 'true forces a 24h non-binding deadline for reproducible (bit-identical) nodes/work. Keep true for a decision-bearing confirmation.'
+        required: false
+        default: 'true'
+
+concurrency:
+  group: solver-residual-confirmation-${{ inputs.cohort_id }}
+  cancel-in-progress: false
+
+jobs:
+  generate-pool:
+    name: Generate and seal the phase-1 pool
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      pool_sha256: ${{ steps.seal.outputs.sha256 }}
+      pool_total: ${{ steps.seal.outputs.total_levels }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate the phase-1 pool exactly once
+        shell: bash
+        run: |
+          mkdir -p logs/solver-residual-confirmation
+          node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
+            --count="${{ inputs.pool_count }}" \
+            --master-seed="${{ inputs.master_seed }}" \
+            --id-prefix="${{ inputs.id_prefix }}" \
+            ${{ inputs.envelope_caps == 'true' && '--envelope-caps' || '' }} \
+            --out="logs/solver-residual-confirmation/${{ inputs.cohort_id }}-pool.json"
+
+      - name: Seal the generated pool
+        id: seal
+        shell: bash
+        run: |
+          SHA=$(sha256sum "logs/solver-residual-confirmation/${{ inputs.cohort_id }}-pool.json" | cut -d' ' -f1)
+          COUNT=$(node -e "const l=require('./logs/solver-residual-confirmation/${{ inputs.cohort_id }}-pool.json'); console.log((Array.isArray(l)?l:l.levels).length)")
+          echo "sha256=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "total_levels=${COUNT}" >> "$GITHUB_OUTPUT"
+          echo "Sealed phase-1 pool logs/solver-residual-confirmation/${{ inputs.cohort_id }}-pool.json: sha256=${SHA}, ${COUNT} levels, commit=${{ github.sha }}, master_seed=${{ inputs.master_seed }}, id_prefix=${{ inputs.id_prefix }}, envelope_caps=${{ inputs.envelope_caps }}"
+
+      - name: Upload the sealed pool
+        uses: actions/upload-artifact@v4
+        with:
+          name: residual-confirmation-pool
+          path: logs/solver-residual-confirmation/${{ inputs.cohort_id }}-pool.json
+          if-no-files-found: error
+          retention-days: 90
+
+  plan-phase1:
+    name: Plan phase-1 (control-only) shards
+    needs: [generate-pool]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - name: Split the pool into even round-robin control-only shards
+        id: plan
+        shell: bash
+        run: |
+          node -e "
+          const shardCount = Number('${{ inputs.phase1_shard_count }}');
+          const total = Number('${{ needs.generate-pool.outputs.pool_total }}');
+          const positions = Array.from({ length: total }, (_, i) => i + 1);
+          const shards = [];
+          for (let i = 0; i < shardCount; i++) {
+            const slice = positions.filter((_, index) => index % shardCount === i);
+            if (slice.length) shards.push({ idx: \`control-\${String(i + 1).padStart(2, '0')}\`, arm: 'control', levels: \`pos:\${slice.join(',')}\` });
+          }
+          console.log('shards=' + JSON.stringify({ shard: shards }));
+          " >> "$GITHUB_OUTPUT"
+
+  solve-phase1:
+    name: Phase 1 solve shard ${{ matrix.shard.idx }}
+    needs: [generate-pool, plan-phase1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJson(inputs.max_parallel) }}
+      matrix: ${{ fromJson(needs.plan-phase1.outputs.shards) }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download the sealed pool
+        uses: actions/download-artifact@v4
+        with:
+          name: residual-confirmation-pool
+          path: pool-download
+
+      - name: Verify the seal before touching the solver
+        shell: bash
+        run: |
+          ACTUAL=$(sha256sum "pool-download/${{ inputs.cohort_id }}-pool.json" | cut -d' ' -f1)
+          EXPECTED="${{ needs.generate-pool.outputs.pool_sha256 }}"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::Pool artifact hash mismatch: expected ${EXPECTED}, got ${ACTUAL}. Refusing to search a possibly-divergent pool."
+            exit 1
+          fi
+          echo "Pool seal verified: ${ACTUAL}"
+
+      - name: Run CONTROL-only level-blind capability sweep on this shard
+        id: sweep
+        continue-on-error: true
+        shell: bash
+        env:
+          DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
+        run: |
+          set +e
+          mkdir -p logs/solver-residual-confirmation
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="pool-download/${{ inputs.cohort_id }}-pool.json" \
+            --levels="${{ matrix.shard.levels }}" \
+            --budget-ms="${DEADLINE}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --work-budget="${work}" \
+            --workers="${{ inputs.workers }}" \
+            --out="logs/solver-residual-confirmation/phase1-batch-${{ matrix.shard.idx }}.json" \
+            --summary-out="logs/solver-residual-confirmation/phase1-batch-${{ matrix.shard.idx }}-summary.md"
+          status=$?
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload phase-1 shard artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: residual-phase1-shard-${{ matrix.shard.idx }}
+          path: |
+            logs/solver-residual-confirmation/phase1-batch-${{ matrix.shard.idx }}.json
+            logs/solver-residual-confirmation/phase1-batch-${{ matrix.shard.idx }}-summary.md
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Fail on unexpected sweep error
+        if: >-
+          always() &&
+          (steps.sweep.outputs.exit_code != '0' && steps.sweep.outputs.exit_code != '124' && steps.sweep.outputs.exit_code != '143')
+        run: exit 1
+
+  freeze-residual:
+    name: Freeze the control-failure residual
+    needs: [generate-pool, solve-phase1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      residual_sha256: ${{ steps.freeze.outputs.residual_sha256 }}
+      residual_total: ${{ steps.freeze.outputs.residual_total }}
+      phase2_shard_count: ${{ steps.freeze.outputs.phase2_shard_count }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download the sealed pool
+        uses: actions/download-artifact@v4
+        with:
+          name: residual-confirmation-pool
+          path: pool-download
+
+      - name: Download all phase-1 shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'residual-phase1-shard-*'
+          path: artifact-staging/phase1
+          merge-multiple: true
+
+      - name: Combine phase-1 (control-only) shards
+        shell: bash
+        run: |
+          mkdir -p reports/stress logs/solver-residual-confirmation-phase1
+          cp -a artifact-staging/phase1/. logs/solver-residual-confirmation-phase1/
+          FILES=$(ls logs/solver-residual-confirmation-phase1/phase1-batch-*.json 2>/dev/null | paste -sd, -)
+          npm run solver:combine-corpus2-batches -- --allow-mixed-corpora --in="${FILES}" --out="reports/stress/residual-confirmation-phase1-control.json"
+
+      - name: Verify complete phase-1 coverage
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const expectedTotal = ${{ needs.generate-pool.outputs.pool_total }};
+          const report = JSON.parse(fs.readFileSync('reports/stress/residual-confirmation-phase1-control.json', 'utf8'));
+          const rows = report.levels ?? [];
+          if (rows.length !== expectedTotal) { console.error(\`phase-1 incomplete: \${rows.length}/\${expectedTotal}\`); process.exit(1); }
+          console.log(\`phase-1 control-only sweep complete: \${expectedTotal}/\${expectedTotal}\`);
+          "
+
+      - name: Freeze the control-failure residual as a new sealed corpus
+        id: freeze
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const pool = JSON.parse(fs.readFileSync('pool-download/${{ inputs.cohort_id }}-pool.json', 'utf8'));
+          const poolLevels = Array.isArray(pool) ? pool : pool.levels;
+          const report = JSON.parse(fs.readFileSync('reports/stress/residual-confirmation-phase1-control.json', 'utf8'));
+          const rows = report.levels ?? [];
+          const idOf = x => x.id ?? String(x.level);
+          const solved = new Set(rows.filter(x => x.ok).map(idOf));
+          const residual = poolLevels.filter(l => !solved.has(l.id));
+          if (residual.length === 0) {
+            console.error('::error::Phase-1 control solved every level in the pool -- no residual to freeze. Cannot proceed to phase 2.');
+            process.exit(1);
+          }
+          const out = Array.isArray(pool) ? residual : { ...pool, levels: residual };
+          fs.writeFileSync('logs/solver-residual-confirmation-phase1/${{ inputs.cohort_id }}-residual.json', JSON.stringify(out));
+          const crypto = require('node:crypto');
+          const sha256 = crypto.createHash('sha256').update(fs.readFileSync('logs/solver-residual-confirmation-phase1/${{ inputs.cohort_id }}-residual.json')).digest('hex');
+          const targetPerShard = Number('${{ inputs.phase2_levels_per_shard }}') || 16;
+          const shardCount = Math.max(1, Math.round(residual.length / targetPerShard));
+          console.log(\`Phase-1 pool \${poolLevels.length}: control solved \${solved.size}, residual (control-failure) \${residual.length}. Freezing residual sha256=\${sha256}, phase2_shard_count=\${shardCount}.\`);
+          const fsGithub = process.env.GITHUB_OUTPUT;
+          fs.appendFileSync(fsGithub, \`residual_sha256=\${sha256}\n\`);
+          fs.appendFileSync(fsGithub, \`residual_total=\${residual.length}\n\`);
+          fs.appendFileSync(fsGithub, \`phase2_shard_count=\${shardCount}\n\`);
+          "
+
+      - name: Upload the sealed residual corpus
+        uses: actions/upload-artifact@v4
+        with:
+          name: residual-confirmation-residual
+          path: logs/solver-residual-confirmation-phase1/${{ inputs.cohort_id }}-residual.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload phase-1 combined control report
+        uses: actions/upload-artifact@v4
+        with:
+          name: residual-confirmation-phase1-report
+          path: reports/stress/residual-confirmation-phase1-control.json
+          if-no-files-found: error
+          retention-days: 90
+
+  plan-phase2:
+    name: Plan phase-2 (both arms) shards
+    needs: [freeze-residual]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - name: Split the frozen residual into even round-robin shards, per arm
+        id: plan
+        shell: bash
+        run: |
+          node -e "
+          const shardCount = Number('${{ needs.freeze-residual.outputs.phase2_shard_count }}');
+          const total = Number('${{ needs.freeze-residual.outputs.residual_total }}');
+          const positions = Array.from({ length: total }, (_, i) => i + 1);
+          const shards = [];
+          for (const arm of ['control', 'treatment']) {
+            for (let i = 0; i < shardCount; i++) {
+              const slice = positions.filter((_, index) => index % shardCount === i);
+              if (slice.length) shards.push({ idx: \`\${arm}-\${String(i + 1).padStart(2, '0')}\`, arm, levels: \`pos:\${slice.join(',')}\` });
+            }
+          }
+          console.log('shards=' + JSON.stringify({ shard: shards }));
+          " >> "$GITHUB_OUTPUT"
+
+  solve-phase2:
+    name: Phase 2 solve shard ${{ matrix.shard.idx }}
+    needs: [freeze-residual, plan-phase2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJson(inputs.max_parallel) }}
+      matrix: ${{ fromJson(needs.plan-phase2.outputs.shards) }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download the sealed residual
+        uses: actions/download-artifact@v4
+        with:
+          name: residual-confirmation-residual
+          path: residual-download
+
+      - name: Verify the seal before touching the solver
+        shell: bash
+        run: |
+          ACTUAL=$(sha256sum "residual-download/${{ inputs.cohort_id }}-residual.json" | cut -d' ' -f1)
+          EXPECTED="${{ needs.freeze-residual.outputs.residual_sha256 }}"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::Residual artifact hash mismatch: expected ${EXPECTED}, got ${ACTUAL}. Refusing to search a possibly-divergent residual."
+            exit 1
+          fi
+          echo "Residual seal verified: ${ACTUAL}"
+
+      - name: Run level-blind capability sweep on this shard
+        id: sweep
+        continue-on-error: true
+        shell: bash
+        env:
+          DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
+        run: |
+          set +e
+          mkdir -p logs/solver-residual-confirmation
+          extra=()
+          if [ "${{ matrix.arm }}" = "treatment" ]; then
+            [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+            [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          fi
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="residual-download/${{ inputs.cohort_id }}-residual.json" \
+            --levels="${{ matrix.shard.levels }}" \
+            --budget-ms="${DEADLINE}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --work-budget="${work}" \
+            --workers="${{ inputs.workers }}" \
+            "${extra[@]}" \
+            --out="logs/solver-residual-confirmation/phase2-batch-${{ matrix.shard.idx }}.json" \
+            --summary-out="logs/solver-residual-confirmation/phase2-batch-${{ matrix.shard.idx }}-summary.md"
+          status=$?
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload phase-2 shard artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: residual-phase2-shard-${{ matrix.shard.idx }}
+          path: |
+            logs/solver-residual-confirmation/phase2-batch-${{ matrix.shard.idx }}.json
+            logs/solver-residual-confirmation/phase2-batch-${{ matrix.shard.idx }}-summary.md
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Fail on unexpected sweep error
+        if: >-
+          always() &&
+          (steps.sweep.outputs.exit_code != '0' && steps.sweep.outputs.exit_code != '124' && steps.sweep.outputs.exit_code != '143')
+        run: exit 1
+
+  combine-phase2:
+    name: Combine and compare both phase-2 arms
+    needs: [generate-pool, freeze-residual, solve-phase2]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download control shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'residual-phase2-shard-control-*'
+          path: artifact-staging/control
+          merge-multiple: true
+
+      - name: Download treatment shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'residual-phase2-shard-treatment-*'
+          path: artifact-staging/treatment
+          merge-multiple: true
+
+      - name: Combine each arm (subset-shaped -- NOT the full-corpus baseline)
+        shell: bash
+        run: |
+          mkdir -p reports/stress
+          for arm in control treatment; do
+            mkdir -p "logs/solver-residual-confirmation-${arm}"
+            cp -a "artifact-staging/${arm}/." "logs/solver-residual-confirmation-${arm}/"
+            FILES=$(ls logs/solver-residual-confirmation-${arm}/phase2-batch-*.json 2>/dev/null | paste -sd, -)
+            [ -n "$FILES" ] && npm run solver:combine-corpus2-batches -- --allow-mixed-corpora --in="${FILES}" --out="reports/stress/residual-confirmation-phase2-${arm}.json"
+          done
+
+      - name: Verify complete coverage, both arms
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const expectedTotal = ${{ needs.freeze-residual.outputs.residual_total }};
+          for (const arm of ['control', 'treatment']) {
+            const report = JSON.parse(fs.readFileSync(\`reports/stress/residual-confirmation-phase2-\${arm}.json\`, 'utf8'));
+            const rows = report.levels ?? [];
+            if (rows.length !== expectedTotal) { console.error(\`\${arm} incomplete: \${rows.length}/\${expectedTotal}\`); process.exit(1); }
+          }
+          console.log(\`both arms complete: \${expectedTotal}/\${expectedTotal}\`);
+          "
+
+      - name: Print the frozen confirmation verdict inputs
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const control = JSON.parse(fs.readFileSync('reports/stress/residual-confirmation-phase2-control.json', 'utf8')).levels ?? [];
+          const treatment = JSON.parse(fs.readFileSync('reports/stress/residual-confirmation-phase2-treatment.json', 'utf8')).levels ?? [];
+          const idOf = x => x.id ?? String(x.level);
+          const controlSolved = new Set(control.filter(x => x.ok).map(idOf));
+          const treatmentSolved = new Set(treatment.filter(x => x.ok).map(idOf));
+          const gained = [...treatmentSolved].filter(id => !controlSolved.has(id)).sort();
+          const lost = [...controlSolved].filter(id => !treatmentSolved.has(id)).sort();
+          const workOf = rows => rows.reduce((n, x) => n + (x.workSpent || 0), 0);
+          const controlWork = workOf(control), treatmentWork = workOf(treatment);
+          console.log('cohort=${{ inputs.cohort_id }} phase1_pool_total=${{ needs.generate-pool.outputs.pool_total }} residual_total=${{ needs.freeze-residual.outputs.residual_total }} enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} ref=${{ github.sha }} pool_sha256=${{ needs.generate-pool.outputs.pool_sha256 }} residual_sha256=${{ needs.freeze-residual.outputs.residual_sha256 }}');
+          console.log(\`control solved: \${controlSolved.size}/\${control.length}, work=\${controlWork}\`);
+          console.log(\`treatment solved: \${treatmentSolved.size}/\${treatment.length}, work=\${treatmentWork} (\${(100*(treatmentWork-controlWork)/controlWork).toFixed(2)}% vs control)\`);
+          console.log(\`gained (\${gained.length}): \` + gained.join(','));
+          console.log(\`lost (\${lost.length}): \` + lost.join(','));
+          "
+
+      - name: Upload combined results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: residual-confirmation-combined
+          path: |
+            reports/stress/residual-confirmation-phase2-control.json
+            reports/stress/residual-confirmation-phase2-treatment.json
+          if-no-files-found: error
+          retention-days: 90
