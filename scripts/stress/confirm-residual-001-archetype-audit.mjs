@@ -26,7 +26,8 @@ const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
 const poolPath = argMap.get('--pool');
 const reportPath = argMap.get('--phase1-report');
-if (!poolPath || !reportPath) throw new Error('Usage: --pool=<path> --phase1-report=<path>');
+const treatmentReportPath = argMap.get('--phase2-treatment-report');
+if (!poolPath || !reportPath) throw new Error('Usage: --pool=<path> --phase1-report=<path> [--phase2-treatment-report=<path>]');
 
 installBrowserStubs();
 const { normalizeRawLevel } = await import('../../modules/solver/normalization.js');
@@ -69,3 +70,21 @@ console.log(`isMustCrossFlipperHeavy-eligible in pool: ${archEligible}/${poolLev
 console.log(`  of those, solved by control: ${archEligibleAndSolved}`);
 console.log(`  of those, control-failure (in the residual): ${archEligibleAndFailed}`);
 console.log(`archetype-eligible-and-in-residual IDs (${eligibleFailedIds.length}): ${eligibleFailedIds.join(',')}`);
+
+if (treatmentReportPath) {
+    const treatment = JSON.parse(readFileSync(path.resolve(treatmentReportPath), 'utf8'));
+    const treatmentRows = treatment.levels ?? [];
+    const byId = new Map(treatmentRows.map(r => [r.id ?? String(r.level), r]));
+    console.log('\n--- treatment-arm attempt detail for each archetype-eligible-and-residual row ---');
+    for (const id of eligibleFailedIds) {
+        const row = byId.get(id);
+        if (!row) { console.log(`${id}: NOT FOUND in treatment report`); continue; }
+        const attempts = row.attempts ?? [];
+        const repairAttempts = attempts.filter(a => a.repair);
+        const repairWork = repairAttempts.reduce((n, a) => n + (a.nodesExpanded || 0), 0);
+        const newConfigAttempts = attempts.filter(a =>
+            (a.actionKey || '').includes('beam:intersectionHarvest@beam5000') && !(a.actionKey || '').includes('diverse')
+            || (a.actionKey || '').includes('beam:objectiveFirst@beam5000') && !(a.actionKey || '').includes('diverse'));
+        console.log(`${id}: ok=${row.ok} workSpent=${row.workSpent} nodesExpanded=${row.nodesExpanded} attemptCount=${attempts.length} repairAttempts=${repairAttempts.length} repairNodesExpanded=${repairWork} newCandidateConfigAttempts=${newConfigAttempts.length}${newConfigAttempts.length ? ' [' + newConfigAttempts.map(a => `${a.actionKey}:outcome=${a.outcome}:nodes=${a.nodesExpanded}`).join(' | ') + ']' : ''}`);
+    }
+}
