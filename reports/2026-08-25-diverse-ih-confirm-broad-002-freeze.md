@@ -1,67 +1,55 @@
-# Selective diverse-IH broad-confirmation freeze
+# Selective diverse-IH broad confirmation
 
-> **Status:** active confirmation contract
-> **Last evidence:** 2026-08-25 — development A/B run `32911007113`: 262 feature-defined Corpus-2 levels, control 122 solved, treatment 131 solved, +9/-0, aggregate canonical work 11,846,980,349 -> 11,795,480,124 (-0.43%)
-> **Decision:** freeze the exact selective diverse-IH exposure treatment and test it once on fresh successor broad cohort `confirm-broad-002`; do not tune from confirmation rows before the aggregate verdict is recorded
-> **Remaining gate:** run sealed `confirm-broad-002` control/treatment comparison under the frozen 67M canonical-work envelope and apply the prespecified no-loss acceptance rule
-> **Evidence role:** confirmation freeze / preregistration
+> **Status:** concluded-negative after independent confirmation
+> **Last evidence:** 2026-08-25 — confirmation run `32912881453`; development run `32911007113`
+> **Decision:** close the exact selective diverse-IH exposure treatment. It was +9/-0 on the feature-defined Corpus-2 development population but exactly null on fresh `confirm-broad-002`.
+> **Remaining gate:** none for this treatment. Do not tune or rerun it against `confirm-broad-002`. `transfer-envelope-001` remains untouched.
+> **Evidence role:** preregistered independent confirmation; cohort now spent
 
 ## Frozen candidate
 
-- Solver revision: `fc696bac37bffea9ca8b8dbc7616639224fbf4dc`.
-- Treatment: append exactly one existing action, `beam:intersectionHarvest@beam5000(diverse)`, to the same two very-high-intersection policy bundles when `mustCross < 2`.
-- No beam-width, score, ordering, retry, repair, DFS, admissible-search, or total-budget change.
-- The appended action gets no bespoke minimum-budget floor.
-- Strict total canonical-work budget: 67,000,000 per level.
-- Node ceiling: 50,000,000 per level.
-- Wall deadline: 24h, intended non-binding.
-- Objective: paired solve capability first; aggregate canonical work second.
-- Correctness/validity: no deadline-truncated or attempt-error rows; every shard must use the identical sealed cohort and frozen solver/treatment patch.
-- Development alternatives in this step: one prespecified selective exposure treatment derived from the post-976 portfolio rejoin; the broader global DFS-suppression candidate was a separate earlier experiment and is already closed.
+The candidate was frozen before materializing the confirmation cohort:
 
-## Frozen acceptance rule
+- solver revision `fc696bac37bffea9ca8b8dbc7616639224fbf4dc`;
+- append only `beam:intersectionHarvest@beam5000(diverse)` to the same two very-high-intersection policy bundles when `mustCross < 2`;
+- no beam-width, score, retry, repair, DFS, admissible-search, or total-budget change;
+- no bespoke minimum-budget floor;
+- strict total canonical-work budget 67,000,000 per level;
+- node ceiling 50,000,000 per level;
+- acceptance: zero lost solves AND either at least one gained solve or at least 10% aggregate-work reduction.
 
-Confirmation passes only if:
+Development run `32911007113` had produced **122/262 → 131/262**, **+9/-0**, with aggregate work **11,846,980,349 → 11,795,480,124** (-0.43%), earning confirmation.
 
-1. treatment loses **zero** control solves; and
-2. treatment either gains at least **one** solve or reduces aggregate canonical work by at least **10%**.
+## `confirm-broad-002` contract
 
-Otherwise the exact treatment fails confirmation and closes. A net-positive solve count with any lost solves is a failure.
+Because `confirm-broad-001` was already spent, a fresh successor was reserved before materialization:
 
-## Fresh reserved cohort: `confirm-broad-002`
+- 256 independently generated raised-cap levels;
+- generator revision `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`;
+- master seed `2026082517`;
+- IDs `D00001` onward;
+- every generated row included, with no outcome conditioning.
 
-`confirm-broad-001` was spent by the earlier scheduler candidate and is not reusable. This successor is reserved before materialization or outcome inspection.
+The workflow materialized the cohort exactly once, sealed the `levels` hash, and required all 16 control/treatment shards to download and verify that identical artifact before search. All shard and provenance checks passed. Treatment patch hashes were identical across treatment shards.
 
-- role: broad independent confirmation;
-- exposure: `LOCKED` until the aggregate verdict is recorded;
-- size: 256 independent generated levels;
-- generator source revision: `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`;
-- generator: `scripts/stress/generate-random.mjs` v1.1.0 at that revision;
-- mode: ordinary uniform-random raised-caps mode, matching Corpus-2 generation philosophy;
-- master seed: `2026082517`;
-- id prefix: `D` (`D00001` onward);
-- outcome conditioning: none;
-- selection: every generated row, no baseline-failure filtering or candidate-specific exclusion.
+## Confirmation result
 
-Materialize only from the pinned generator checkout:
+Run `32912881453` completed cleanly.
 
-```bash
-node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
-  --count=256 \
-  --master-seed=2026082517 \
-  --id-prefix=D \
-  --out=tmp/managed-evaluation/confirm-broad-002.json
-```
+| metric | control | treatment |
+|---|---:|---:|
+| solved | **126/256** | **126/256** |
+| aggregate `workSpent` | **11,220,816,792** | **11,222,024,892** |
+| gained solves | — | **0** |
+| lost solves | — | **0** |
+| work reduction | — | **-0.01%** |
 
-The Actions workflow must generate this cohort exactly once, seal the generated `levels` array hash, and make every control/treatment shard download and verify that same artifact before search.
+Frozen verdict: **`confirmation-fail`**.
 
-## Exposure lifecycle
+There were no changed IDs to inspect. The result is a clean null, not a regression: the treatment did not generalize to this fresh broad sample and cost about 1.21M additional aggregate work.
 
-1. Candidate and acceptance contract frozen here.
-2. Materialize `confirm-broad-002` once from the pinned generator revision.
-3. Run frozen paired control/treatment arms.
-4. Record aggregate pass/fail verdict before exact changed-row IDs are inspected.
-5. Only after verdict may changed IDs be unsealed for diagnosis.
-6. If confirmation rows influence redesign, this cohort becomes development evidence and a future redesigned candidate requires another fresh successor.
+## Interpretation
 
-`transfer-envelope-001` remains untouched. It is not used unless this exact candidate first survives broad confirmation.
+The development result remains valid evidence that Corpus-2 contains exploitable routing structure, but it does not support promoting this particular feature rule as a general solver improvement. This is exactly the distinction the confirmation protocol was designed to enforce.
+
+`confirm-broad-002` is now spent. Do not retune the candidate against it. `transfer-envelope-001` was not earned and remains pristine.
