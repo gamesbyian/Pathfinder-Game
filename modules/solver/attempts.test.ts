@@ -227,6 +227,43 @@ test('getConfiguredAttemptConfigs normalizes sparse and undefined overrides at i
   assert.equal(sparse.some(c => c.admissibleOrder), baseline.some(c => c.admissibleOrder), 'default-on tiers remain present');
 });
 
+test('STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE is default-off and, when enabled, appends the plain WIDE beams only for the must-cross+flipper-heavy rule', () => {
+  // mustCross>=2 & reqInt=4 & density<0.55 -> must-cross-heavy (not high-intersection-burden);
+  // mustPass>=OBJECTIVE_HEAVY_MUSTPASS(3) & flippers>=FLIPPER_HEAVY(2) -> the flipper-heavy rule.
+  const level = makeLevel({
+    reqLen: 40, reqInt: 4,
+    mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
+    mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
+    flippingFilterMap: new Map([[PACK(6, 6), 1], [PACK(7, 7), 1]]),
+  });
+
+  const off = getAttemptConfigs(level, null);
+  assert.equal(off.some(c => c.beamWidth === 5000 && !c.diverseBeam), false,
+    'production default: plain WIDE beams never offered here');
+  assert.equal(off.some(c => c.beamWidth === 5000 && c.diverseBeam), true, 'sanity: the existing diverse WIDE beam is untouched');
+
+  const onDefaultCfg = getAttemptConfigs(level, { ...defaultConfig(), STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: true });
+  const plainWide = onDefaultCfg.filter(c => c.beamWidth === 5000 && !c.diverseBeam);
+  assert.deepEqual(plainWide.map(c => c.profileName), ['intersectionHarvest', 'objectiveFirst'],
+    'flag appends exactly the two plain WIDE beams, trailing, in this order');
+  // The two new configs are inserted right after the archetype-rule's own main-loop configs, before
+  // repair-fallback/admissible-order are appended (getAttemptConfigs's own ordering) — so removing
+  // them from `onDefaultCfg` must reproduce `off` exactly: purely additive, nothing else moved.
+  const withoutPlainWide = onDefaultCfg.filter(c => !(c.beamWidth === 5000 && !c.diverseBeam && !c.repair));
+  assert.deepEqual(withoutPlainWide, off, 'the flag is purely additive; nothing existing is reordered or removed');
+
+  // A must-cross-heavy level that does NOT match the flipper-heavy sub-rule (flippers < FLIPPER_HEAVY)
+  // must stay untouched even with the flag on: this is a single-rule pilot, not archetype-wide.
+  const nonFlipperLevel = makeLevel({
+    reqLen: 40, reqInt: 4,
+    mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
+    mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
+  });
+  const nonFlipperOn = getAttemptConfigs(nonFlipperLevel, { ...defaultConfig(), STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: true });
+  assert.equal(nonFlipperOn.some(c => c.beamWidth === 5000 && !c.diverseBeam), false,
+    'flag has no effect outside isMustCrossFlipperHeavy');
+});
+
 test('SOLVER_TESTING_API exposes the extracted attempt-order helper', () => {
   const level = makeLevel({ reqLen: 10, reqInt: 1 });
   assert.equal(SOLVER_TESTING_API.getAttemptConfigs, getAttemptConfigs);

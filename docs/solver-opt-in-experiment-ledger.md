@@ -28,6 +28,7 @@ Likewise, default-ON retries/reserves have no permanent budget entitlement. Sche
 | `STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY` | **RETAINED, NO CURRENT PROMOTION GATE.** Can restore budget withheld by adaptive probe shrink; keep as a counterfactual unless current evidence shows a meaningful shrink-caused regression it fixes economically. |
 | `STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY` | **CLOSED.** Additive dead-last form removed displacement but recovered zero levels at both tested budgets. |
 | `STRATEGY_RETRY_TIER_NODE_STAIRCASE` | **CLOSED NEGATIVE.** Fixed first-config monopolization but traded away load-bearing early work and raised wall cost. Reopen only with a different protection mechanism. |
+| `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` | **NEW, PENDING FIRST A/B (2026-08-26).** Appends plain `beam:intersectionHarvest@beam5000` + `beam:objectiveFirst@beam5000` to attempts.ts's must-cross+flipper-heavy rule only. Prespecified `solver-archetype-sample-ab.yml` pilot restricted to `must-cross-heavy` not yet run/reported; see [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) Priority 1. |
 
 ## Recently promoted/default-ON mechanisms worth remembering
 
