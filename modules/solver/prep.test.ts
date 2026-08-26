@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { SOLVER_TESTING_API } from '../solver.js';
 import {AXIS_H, AXIS_V, PACK } from './encoding.js';
-import { getDistanceFromArray } from './distance.js';
+import { denseIndex, getDistanceFromArray } from './distance.js';
 import { prepLevel } from './prep.js';
 import type { NormalizedLevel } from '../domain/types.js';
 
