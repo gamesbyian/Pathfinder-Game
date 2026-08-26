@@ -47,6 +47,8 @@ This retention layer is a safety net. Individual workflows may still save hints 
 
 These use non-binding deterministic deadlines by default, so node/work budgets remain the comparison basis while cross-level parallelism changes calendar time. Their artifact/report evidence is still harvested even though they do not eagerly mutate canonical hints during the experiment.
 
+All three share `scripts/plan-ab-corpus-shards.mjs` for the mandatory Corpus 1 + published + Corpus 2 sample matrix. Corpus 1 is split into several shards (same levels-per-shard density as the Corpus 2 sample) and scheduled *before* the Corpus 2 shards in the matrix array, since GitHub Actions starts matrix jobs in array order up to `max-parallel`: a single unsharded Corpus 1 job placed last does not get a lane until multiple rounds of Corpus 2 shards have already completed, and Corpus 1's own per-level cost (stress levels, not published) then runs long on top of that late start — becoming the run's tail straggler by a wide margin (observed 17-28 minutes solo vs. a few minutes per Corpus 2 shard). Model any new corpus-matrix workflow on the fixed form.
+
 ## Technique and method sweeps
 
 - `technique-census.yml` — isolated technique census. `workers` defaults to 4; outer layout remains 120 shards / 20 lanes. Referee-valid discoveries are always retained; there is no hint-retention dispatch toggle.
