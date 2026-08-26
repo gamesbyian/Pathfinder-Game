@@ -1,9 +1,9 @@
 # Dense-index architecture follow-up
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-08-26 — GitHub Actions run `32919924101`
-> **Decision:** promote the narrow `cellDenseIndex` removal as an architecture simplification with no measured hard-tail penalty; close the naive six-array `prepLevel()` conversion.
-> **Remaining gate:** merge the validated narrow candidate.
+> **Last evidence:** 2026-08-26 — PR #1484 merged as `95ba1da4d6ac6c1c52c92f28e226e2c77735bef3` after CI run `32920435042` passed all five jobs
+> **Decision:** landed the narrow `cellDenseIndex` removal as an architecture simplification with no measured hard-tail penalty; closed the naive six-array `prepLevel()` conversion.
+> **Remaining gate:** none
 
 Evidence role: architecture/performance development evidence  
 Selection: current solver architecture; no solve-set selection
@@ -117,9 +117,13 @@ After correcting the metadata convention, the same final-head workflow completed
 
 This is the promotion-bearing validation. The temporary workflow and codemod do not remain in the resulting branch.
 
+### PR validation and landing
+
+PR #1484 then ran the repository's normal CI suite as run `32920435042`. All five jobs passed: build, checks, unit-fast, node-fast, and deep verification. The PR was squash-merged to `main` as `95ba1da4d6ac6c1c52c92f28e226e2c77735bef3`.
+
 ## Architectural disposition
 
-1. **Promote the narrow `cellDenseIndex` removal.** Its value is simpler representation and a smaller per-level working set without a demonstrated hard-tail cost, not a claimed throughput speedup.
+1. **The narrow `cellDenseIndex` removal is landed.** Its value is simpler representation and a smaller per-level working set without a demonstrated hard-tail cost, not a claimed throughput speedup.
 2. **Do not merge the naive six-array conversion.** It is documented negative performance evidence.
 3. Keep `visited`, `edgeUsage`, and reusable reachability scratch separate. Their allocation lifetime and hot-path economics differ from fresh `prepLevel()` arrays and were intentionally not bundled into these tests.
 4. If dense mechanic arrays are revisited, test a hoisted-index implementation where each hot key is converted once and reused across all relevant array reads.
