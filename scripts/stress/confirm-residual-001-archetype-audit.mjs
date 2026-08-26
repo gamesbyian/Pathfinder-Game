@@ -31,10 +31,10 @@ if (!poolPath || !reportPath) throw new Error('Usage: --pool=<path> --phase1-rep
 
 installBrowserStubs();
 const { normalizeRawLevel } = await import('../../modules/solver/normalization.js');
-const { detectArchetype } = await import('../../modules/solver/archetype.js');
-
-const OBJECTIVE_HEAVY_MUSTPASS = 3;
-const FLIPPER_HEAVY = 2;
+// Use the REAL production functions directly (both now exported specifically for this audit)
+// rather than reimplementing their logic, to eliminate any chance of implementation drift between
+// this script's classification and what getAttemptConfigs itself actually computes and branches on.
+const { extractFeatures, isMustCrossFlipperHeavy, getConfiguredAttemptConfigs } = await import('../../modules/solver/attempts.js');
 
 // The real sweep pipeline (level-blind-capability-sweep.mjs) reduces each raw level to ONLY these
 // fields before the solver ever sees it (level-blindness: no identity/history/hints/baseline).
@@ -53,11 +53,9 @@ function mechanicsOnlyLevel(raw) {
 }
 function classify(rawOrReduced, levelNumber) {
     const level = normalizeRawLevel(rawOrReduced, levelNumber);
-    const arch = detectArchetype(level);
-    const mustPass = level.mustPassKeys.length;
-    const flippers = level.flippingFilterMap?.size ?? 0;
-    const eligible = arch === 'must-cross-heavy' && mustPass >= OBJECTIVE_HEAVY_MUSTPASS && flippers >= FLIPPER_HEAVY;
-    return { arch, mustPass, flippers, eligible };
+    const f = extractFeatures(level);
+    const eligible = isMustCrossFlipperHeavy(f);
+    return { arch: f.arch, mustPass: f.mustPass, flippers: f.flippers, reqInt: f.reqInt, eligible };
 }
 
 const poolParsed = JSON.parse(readFileSync(path.resolve(poolPath), 'utf8'));
@@ -127,5 +125,19 @@ if (treatmentReportPath) {
             outcome: a.outcome, allocatedBudgetMs: a.allocatedBudgetMs, nodesExpanded: a.nodesExpanded,
             ok: a.ok, timedOut: a.timedOut,
         })), null, 1));
+
+        const rawDump = poolLevels.find(l => l.id === dumpId);
+        if (rawDump) {
+            const levelNumber = poolLevels.indexOf(rawDump) + 1;
+            const classification = classify(rawDump, levelNumber);
+            console.log(`\n--- ${dumpId} classification (via real extractFeatures/isMustCrossFlipperHeavy) ---`);
+            console.log(JSON.stringify(classification));
+            const normalized = normalizeRawLevel(rawDump, levelNumber);
+            const directConfigs = getConfiguredAttemptConfigs(normalized, { STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: true });
+            console.log(`\n--- ${dumpId}: getConfiguredAttemptConfigs(level, {STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: true}) called directly, right here, right now ---`);
+            console.log(JSON.stringify(directConfigs.map(c => ({ profileName: c.profileName, beamWidth: c.beamWidth ?? null, templateId: c.template?.id ?? null, diverseBeam: c.diverseBeam ?? null, repair: c.repair ?? null }))));
+        } else {
+            console.log(`\n${dumpId} not found in pool levels (checked ${poolLevels.length} raw records by .id)`);
+        }
     }
 }
