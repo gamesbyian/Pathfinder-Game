@@ -1,9 +1,9 @@
 # Dense-index architecture follow-up
 
-> **Status:** active
-> **Last evidence:** 2026-08-26 — GitHub Actions run `32919593955`
-> **Decision:** retain the narrow `cellDenseIndex` removal as an architecture simplification with no measured hard-tail penalty; close the naive six-array `prepLevel()` conversion.
-> **Remaining gate:** clean final-tree CI and merge for the narrow candidate.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-08-26 — GitHub Actions run `32919924101`
+> **Decision:** promote the narrow `cellDenseIndex` removal as an architecture simplification with no measured hard-tail penalty; close the naive six-array `prepLevel()` conversion.
+> **Remaining gate:** merge the validated narrow candidate.
 
 Evidence role: architecture/performance development evidence  
 Selection: current solver architecture; no solve-set selection
@@ -95,18 +95,31 @@ Median timings on this rerun were:
 | published 40 | 597.2 ms | 606.1 ms | **+1.49%** |
 | Corpus-2 hard 24 | 23,123.2 ms | 23,127.3 ms | **+0.02%** |
 
-This replication changes the speed claim. The earlier short-solve improvement did **not** reproduce; both short and hard timing differences are now consistent with runner noise. The robust conclusion is therefore not “this makes the solver ~1.7% faster.” It is:
+This replication changes the speed claim. The earlier short-solve improvement did **not** reproduce; both short and hard timing differences are consistent with runner noise. The robust conclusion is therefore not “this makes the solver ~1.7% faster.” It is:
 
 - the 1 MiB per-level `cellDenseIndex` allocation and lookup layer can be removed;
 - search behavior is unchanged;
 - the hard-search throughput that dominates batch cost is measurably unaffected at this probe scale;
 - no reliable wall-time speedup has been established.
 
-Run `32919593955` reached `ci:fast`; every reported check passed except documentation navigation, which rejected this report's original unformatted metadata block. That metadata failure is the only remaining blocker recorded by the run.
+Run `32919593955` reached `ci:fast`; every reported check passed except documentation navigation, which rejected this report's original unformatted metadata block.
+
+### Final validated tree: run `32919924101`
+
+After correcting the metadata convention, the same final-head workflow completed successfully end to end:
+
+- three baseline/treatment rounds: pass;
+- identical IDs, outcomes, and node counts: pass;
+- performance guardrail: pass;
+- final-tree preparation with temporary harness removal: pass;
+- `ci:fast`: pass;
+- commit/push of the durable solver tree: pass.
+
+This is the promotion-bearing validation. The temporary workflow and codemod do not remain in the resulting branch.
 
 ## Architectural disposition
 
-1. **Retain the narrow `cellDenseIndex` removal** if final-tree CI is clean. Its value is simpler representation and a smaller per-level working set without a demonstrated hard-tail cost, not a claimed throughput speedup.
+1. **Promote the narrow `cellDenseIndex` removal.** Its value is simpler representation and a smaller per-level working set without a demonstrated hard-tail cost, not a claimed throughput speedup.
 2. **Do not merge the naive six-array conversion.** It is documented negative performance evidence.
 3. Keep `visited`, `edgeUsage`, and reusable reachability scratch separate. Their allocation lifetime and hot-path economics differ from fresh `prepLevel()` arrays and were intentionally not bundled into these tests.
 4. If dense mechanic arrays are revisited, test a hoisted-index implementation where each hot key is converted once and reused across all relevant array reads.
