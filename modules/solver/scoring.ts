@@ -1,4 +1,4 @@
-import { getDistanceFromArray } from './distance.js';
+import { getDistanceFromArray, denseIndex } from './distance.js';
 import { AXIS_H, AXIS_V, popcount } from './encoding.js';
 import { getRealLengthFromState } from './solution.js';
 import { turnDirection } from '../domain/geometry.js';
@@ -359,8 +359,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         let bestObjDist = Infinity;
         for (let oi = 0; oi < prep.objectiveKeys.length; oi++) {
             const objKey = prep.objectiveKeys[oi];
-            const mpIdx = (prep.mustPassIndex[objKey] - 1);
-            const mcIdx = (prep.mustCrossIndex[objKey] - 1);
+            const mpIdx = (prep.mustPassIndex[denseIndex(objKey, prep.gridW)] - 1);
+            const mcIdx = (prep.mustCrossIndex[denseIndex(objKey, prep.gridW)] - 1);
             const satisfied = (mpIdx !== -1 && (state.mustMask & (1 << mpIdx)) === 0)
                            || (mcIdx !== -1 && (state.mustCrossMask & (1 << mcIdx)) === 0);
             if (satisfied) continue;
@@ -535,7 +535,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // structural turn/direction check below, which independently derives correctness from
     // prevKey/pos/target and needs no pre-image of the mask.
     if ((!cfg || cfg.SCORE_MUST_TURN_EXIT_GUIDANCE) && wmte !== 0) {
-        const mtIdx = (prep.mustTurnCellIndex[pos] - 1);
+        const mtIdx = (prep.mustTurnCellIndex[denseIndex(pos, prep.gridW)] - 1);
         if (mtIdx !== -1) {
             const pathLen = state.path.length;
             const posIsPathTip = pathLen >= 1 && state.path[pathLen - 1] === pos;
@@ -623,7 +623,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // Intersection setup: reward second visit to a non-gate, non-goal cell if ints needed
     if (!cfg || cfg.SCORE_INTERSECTION_SETUP) {
         const intNeeded = level.reqInt - state.ints;
-        if (intNeeded > 0 && state.visited[target] > 0 && target !== level.goalKey && !prep.gateFlags[target]) {
+        if (intNeeded > 0 && state.visited[target] > 0 && target !== level.goalKey && !prep.gateFlags[denseIndex(target, prep.gridW)]) {
             score += wi * 12;
         } else if (intNeeded > 0) {
             score += wi * 1;

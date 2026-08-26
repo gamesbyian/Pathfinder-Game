@@ -23,6 +23,7 @@
 // out) — never a soundness risk, since isConnected only ever prunes, it never permits an
 // otherwise-illegal move.
 import { AXIS_H, AXIS_V, popcount } from './encoding.js';
+import { denseIndex } from './distance.js';
 import { STATE_BUF_REPAIR, applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, structuralDeficit } from './solution.js';
@@ -356,7 +357,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     let preferredTurnTarget: number | null = null;
     let posIsPendingMustTurn = false;
     if ((rand2 !== null || turnBias) && ws.mustTurnMask !== 0 && ws.path.length >= 2) {
-        const mtIdx = (prep.mustTurnCellIndex[pos] - 1);
+        const mtIdx = (prep.mustTurnCellIndex[denseIndex(pos, prep.gridW)] - 1);
         if (mtIdx !== -1 && (ws.mustTurnMask & (1 << mtIdx)) !== 0) {
             posIsPendingMustTurn = true;
             preferredTurnTarget = preferredTurnExit(ws.path[ws.path.length - 2], pos, neighbors, prep.mustTurnDirs?.[mtIdx]);

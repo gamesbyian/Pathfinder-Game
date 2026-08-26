@@ -1,4 +1,5 @@
 import { KEY_SPACE, popcount } from './encoding.js';
+import { denseIndex } from './distance.js';
 import { getRealLengthFromState } from './solution.js';
 import { CONNECTIVITY_WORK_UNITS, workMeter } from './work-meter.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -71,7 +72,7 @@ function _reached(k: number): boolean {
 // catch genuine dead ends earlier — never reject a state the old check would have kept.
 function _reachCanEnter(nk: number, gen: number, maxVisit: number, pos: number, state: SolverSearchState, prep: PrepLevel, mcOpenMask: number, mcKeys: ArrayLike<number>, axisExhausted: boolean): boolean {
     if (prep.flipperIndexMap) {
-        const fi = (prep.flipperIndexMap[nk] - 1);
+        const fi = (prep.flipperIndexMap[denseIndex(nk, prep.gridW)] - 1);
         if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) return false;
     }
     // Both axis bits spent => the cell can never be entered again: entering along H needs H free and
@@ -85,7 +86,7 @@ function _reachCanEnter(nk: number, gen: number, maxVisit: number, pos: number, 
     // required 2nd crossing), so it is unenterable and the state is dead. Walling it is what makes
     // the fill report that.
     if (axisExhausted && nk !== pos && state.edgeUsage[nk] === 3) return false;
-    if (_reachGenBuf[nk] === gen || prep.reachBlockedArr[nk] !== 0) return false;
+    if (_reachGenBuf[nk] === gen || prep.reachBlockedArr[denseIndex(nk, prep.gridW)] !== 0) return false;
     if (state.visited[nk] <= maxVisit || nk === pos) return true;
     // Reserved-intersection wall (see isConnected): the only over-budget revisit still payable is a
     // pending must-cross cell's own reserved second crossing. mcOpenMask is 0 on every other call,

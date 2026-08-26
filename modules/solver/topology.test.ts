@@ -3,6 +3,7 @@
  * infeasible state and must NOT fire on a feasible one.
  */
 import assert from 'node:assert/strict';
+import { denseIndex } from './distance.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
@@ -325,12 +326,12 @@ function referenceIsConnected(
     const intNeeded = level.reqInt - state.ints;
     const maxVisit = intNeeded > 0 ? 2 : 0;
     const canEnter = (k: number) => {
-        const fi = prep.flipperIndexMap[k] - 1;
+        const fi = prep.flipperIndexMap[denseIndex(k, prep.gridW)] - 1;
         if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) {
             if (coverage) coverage.rejectedUsedFlipper = true;
             return false;
         }
-        if (prep.reachBlockedArr[k] !== 0) return false;
+        if (prep.reachBlockedArr[denseIndex(k, prep.gridW)] !== 0) return false;
         // Both axis bits spent => the cell can never be entered again (entering along H needs H
         // free, along V needs V free -- move-rules.ts's invalid-edge-reuse-target). Re-derived here
         // from the rule, not copied from topology.ts: this reference shares no code with the
@@ -444,10 +445,10 @@ test('isConnected matches an independent BFS across a randomized sequence of sta
             if (x > 0) cands.push(PACK(x - 1, y));
             if (y + 1 < h) cands.push(PACK(x, y + 1));
             if (y > 0) cands.push(PACK(x, y - 1));
-            const legal = cands.filter(k => prep.reachBlockedArr[k] === 0);
+            const legal = cands.filter(k => prep.reachBlockedArr[denseIndex(k, prep.gridW)] === 0);
             if (legal.length === 0) break;
             const target = forcedMoves[step] ?? legal[(rnd() * legal.length) | 0];
-            const flipperIndex = prep.flipperIndexMap[target] - 1;
+            const flipperIndex = prep.flipperIndexMap[denseIndex(target, prep.gridW)] - 1;
             if (flipperIndex !== -1) {
                 if ((state.flipperUsedMask & (1 << flipperIndex)) !== 0) usedFlipperMoves++;
                 else freshFlipperMoves++;

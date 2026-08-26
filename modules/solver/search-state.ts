@@ -1,4 +1,5 @@
 import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, popcount } from './encoding.js';
+import { denseIndex } from './distance.js';
 import { workMeter } from './work-meter.js';
 import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -88,17 +89,17 @@ export function createState(startKey: number, level: NormalizedLevel, prep: Prep
     };
     state.visited[startKey] = 1;
     // Apply start-cell effects
-    const mpIdx = (prep.mustPassIndex[startKey] - 1);
+    const mpIdx = (prep.mustPassIndex[denseIndex(startKey, prep.gridW)] - 1);
     if (mpIdx !== -1) {
         state.mustMask &= ~(1 << mpIdx);
         state.mpVisitedMask |= (1 << mpIdx);
     }
-    const mcIdx = (prep.mustCrossIndex[startKey] - 1);
+    const mcIdx = (prep.mustCrossIndex[denseIndex(startKey, prep.gridW)] - 1);
     if (mcIdx !== -1) {
         state.crossCounts[mcIdx] = 1;
         // mustCrossMask bit stays set (still need one more visit)
     }
-    const _fsi = (prep.flipperIndexMap[startKey] - 1);
+    const _fsi = (prep.flipperIndexMap[denseIndex(startKey, prep.gridW)] - 1);
     if (_fsi !== -1) state.flipperUsedMask |= (1 << _fsi);
     // Surround: mark start cell's neighbor-bits as visited
     const snNbrs = prep.surroundNeighborIndex?.get(startKey);
@@ -147,13 +148,13 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     }
 
     // Intersection: non-goal, non-gate cell visited again
-    const wasIntAdded = prevVisited > 0 && target !== level.goalKey && !prep.gateFlags[target];
+    const wasIntAdded = prevVisited > 0 && target !== level.goalKey && !prep.gateFlags[denseIndex(target, prep.gridW)];
     if (wasIntAdded) state.ints++;
 
     // Must-pass: clear mustMask bit + set mpVisitedMask bit on first visit
     const prevMustMask = state.mustMask;
     const prevMpVisitedMask = state.mpVisitedMask;
-    const mpIdx = (prep.mustPassIndex[target] - 1);
+    const mpIdx = (prep.mustPassIndex[denseIndex(target, prep.gridW)] - 1);
     if (mpIdx !== -1 && prevVisited === 0) {
         state.mustMask &= ~(1 << mpIdx);
         state.mpVisitedMask |= (1 << mpIdx);
@@ -162,7 +163,7 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // Must-cross: accumulate crosses
     const prevMustCrossMask = state.mustCrossMask;
     let prevCrossCount = 0;
-    const mcIdx = (prep.mustCrossIndex[target] - 1);
+    const mcIdx = (prep.mustCrossIndex[denseIndex(target, prep.gridW)] - 1);
     if (mcIdx !== -1) {
         prevCrossCount = state.crossCounts[mcIdx];
         if (state.crossCounts[mcIdx] < 255) state.crossCounts[mcIdx]++;
@@ -172,7 +173,7 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // Flipping filter update (global-flip rule: mark flipper as used)
     const prevFlipperUsedMask = state.flipperUsedMask;
     if (!isPortalJump) {
-        const _fi = (prep.flipperIndexMap[target] - 1);
+        const _fi = (prep.flipperIndexMap[denseIndex(target, prep.gridW)] - 1);
         if (_fi !== -1) state.flipperUsedMask |= (1 << _fi);
     }
 
@@ -217,7 +218,7 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // Guard: state.mustTurnMask === 0 when no must-turn cells remain (or no landmark level).
     const prevMustTurnMask = state.mustTurnMask;
     if (state.mustTurnMask !== 0 && !isPortalJump) {
-        const mtIdx = (prep.mustTurnCellIndex[from] - 1);
+        const mtIdx = (prep.mustTurnCellIndex[denseIndex(from, prep.gridW)] - 1);
         if (mtIdx !== -1 && (state.mustTurnMask & (1 << mtIdx)) !== 0) {
             const pathLen = state.path.length; // path already has target pushed
             // path is [..., prev, from, target]; from = path[pathLen-2], prev = path[pathLen-3]
@@ -374,7 +375,7 @@ export function isMoveDynamicallyValid(from: number, target: number, state: Solv
 
     // Must-cross lock prevention: turning at an unsatisfied 1st-pass MC cell
     // would consume both axis bits, permanently blocking the required 2nd crossing
-    const _mcLockIdx = (prep.mustCrossIndex[from] - 1);
+    const _mcLockIdx = (prep.mustCrossIndex[denseIndex(from, prep.gridW)] - 1);
     if (_mcLockIdx !== -1 && state.crossCounts[_mcLockIdx] === 1
             && (state.mustCrossMask & (1 << _mcLockIdx)) !== 0) {
         const _eH = (state.edgeUsage[from] & AXIS_H) !== 0;
@@ -388,7 +389,7 @@ export function isMoveDynamicallyValid(from: number, target: number, state: Solv
     }
 
     // Flipping filter at target: must enter in the flipper's current orientation
-    const fi = (prep.flipperIndexMap[target] - 1);
+    const fi = (prep.flipperIndexMap[denseIndex(target, prep.gridW)] - 1);
     if (fi !== -1) {
         if (state.flipperUsedMask & (1 << fi)) return false;
         const usedCount = popcount(state.flipperUsedMask);

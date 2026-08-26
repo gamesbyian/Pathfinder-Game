@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { denseIndex } from './distance.js';
 import { test } from 'vitest';
 import { NEIGHBOR_DX, NEIGHBOR_DY, PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
@@ -37,18 +38,18 @@ test('prep index arrays use +1 bias with zero as the absent sentinel', () => {
 
     // Index zero must be representable, so stored entries are index+1 and untouched typed-array
     // cells stay zero. Consumers must subtract one before comparing with -1 or using the index.
-    assert.equal(prep.mustPassIndex[K(2, 2)], 1);
-    assert.equal(prep.mustCrossIndex[K(3, 2)], 1);
-    assert.equal(prep.flipperIndexMap[K(2, 1)], 1);
+    assert.equal(prep.mustPassIndex[denseIndex(K(2, 2), prep.gridW)], 1);
+    assert.equal(prep.mustCrossIndex[denseIndex(K(3, 2), prep.gridW)], 1);
+    assert.equal(prep.flipperIndexMap[denseIndex(K(2, 1), prep.gridW)], 1);
 
-    assert.equal(prep.mustPassIndex[K(4, 1)], 0);
-    assert.equal(prep.mustCrossIndex[K(4, 1)], 0);
-    assert.equal(prep.flipperIndexMap[K(4, 1)], 0);
+    assert.equal(prep.mustPassIndex[denseIndex(K(4, 1), prep.gridW)], 0);
+    assert.equal(prep.mustCrossIndex[denseIndex(K(4, 1), prep.gridW)], 0);
+    assert.equal(prep.flipperIndexMap[denseIndex(K(4, 1), prep.gridW)], 0);
 
-    assert.equal(prep.mustPassIndex[K(2, 2)] - 1, 0);
-    assert.equal(prep.mustCrossIndex[K(3, 2)] - 1, 0);
-    assert.equal(prep.flipperIndexMap[K(2, 1)] - 1, 0);
-    assert.equal(prep.flipperIndexMap[K(4, 1)] - 1, -1);
+    assert.equal(prep.mustPassIndex[denseIndex(K(2, 2), prep.gridW)] - 1, 0);
+    assert.equal(prep.mustCrossIndex[denseIndex(K(3, 2), prep.gridW)] - 1, 0);
+    assert.equal(prep.flipperIndexMap[denseIndex(K(2, 1), prep.gridW)] - 1, 0);
+    assert.equal(prep.flipperIndexMap[denseIndex(K(4, 1), prep.gridW)] - 1, -1);
 });
 
 test('staticNeighborKeys uses neighborKey+1 with zero as no-neighbor', () => {

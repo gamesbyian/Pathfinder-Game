@@ -5,8 +5,8 @@ import type { IntHashMap } from './int-hash-map.js';
 
 /**
  * The solver's mutable DFS/beam search state (see search-state.ts `createState`). All masks are
- * 32-bit integers; all keys are packed. Typed arrays are indexed by packed key (KEY_SPACE) or by
- * objective index.
+ * 32-bit integers; all keys are packed. Typed arrays are indexed either by dense row-major cell index (gridW * gridH), by packed key
+ * where explicitly documented, or by objective index.
  */
 export interface SolverSearchState {
     /** packed cell keys of the current path */
@@ -186,7 +186,7 @@ export interface PrepLevel {
     initialMustTurnMask?: number;
     initialAdjTurnMask?: number;
     hasLandmarkConstraints: boolean;
-    /** packed key → 1 if a gate cell, 0 otherwise */
+    /** denseIndex(packedKey, gridW) → 1 if a gate cell, 0 otherwise */
     gateFlags: Uint8Array;
     /** Flipping-filter cells that can be entered but never left, so entering one can never be part
      *  of a solution — see prepLevel for the derivation. Treated as impassable by the connectivity
@@ -195,7 +195,7 @@ export interface PrepLevel {
     /** Grid width — the stride for denseIndex(). Distance arrays are dense (gridW * gridH), not
      *  KEY_SPACE-sized, so every read needs it. See distance.ts's denseIndex. */
     gridW: number;
-    /** blocks ∪ geese ∪ gates, indexed by packed key — used by the isConnected BFS */
+    /** blocks ∪ geese ∪ gates, dense-indexed by denseIndex(key, gridW) — used by isConnected */
     reachBlockedArr: Uint8Array;
     /** Row-bitmap mirror of `reachBlockedArr`'s complement for the bit-parallel connectivity
      *  flood fill (topology.ts): `reachPassableRows[y]` has bit x set when (x, y) is NOT in
@@ -205,14 +205,14 @@ export interface PrepLevel {
     /** packed keys of the flipping-filter cells, in flipperIndexMap's own index order — lets the
      *  flood fill map a set `flipperUsedMask` bit back to its cell without scanning the grid. */
     flipperKeys: Int32Array;
-    /** packed key → index into mustPassKeys PLUS ONE, 0 meaning "not a must-pass cell" (same
+    /** denseIndex(packedKey, gridW) → index into mustPassKeys PLUS ONE, 0 meaning "not a must-pass cell" (same
      *  zero-means-absent bias as staticNeighborKeys below — every real read site undoes it with
      *  `- 1`; this comment previously said "-1 if not," which was stale and wrong). */
     mustPassIndex: Int8Array;
-    /** packed key → index into mustCrossKeys PLUS ONE, 0 meaning "not a must-cross cell" — same
+    /** denseIndex(packedKey, gridW) → index into mustCrossKeys PLUS ONE, 0 meaning "not a must-cross cell" — same
      *  convention as mustPassIndex above. */
     mustCrossIndex: Int8Array;
-    /** packed key → index into the flipping-filter map PLUS ONE, 0 meaning "not a flipper cell"
+    /** denseIndex(packedKey, gridW) → index into the flipping-filter map PLUS ONE, 0 meaning "not a flipper cell"
      *  — same convention as mustPassIndex/mustCrossIndex above (this comment previously said
      *  "-1 if not," which was stale and wrong the same way theirs was). */
     flipperIndexMap: Int8Array;
@@ -252,7 +252,7 @@ export interface PrepLevel {
     trapInvalidSet: Set<number>;
     surroundInitNeighborMasks?: Uint8Array | number[];
     surroundNeighborIndex?: Map<number, SurroundNbr[]>;
-    /** packed key → index into mustTurnKeys, or -1 if not a must-turn cell (always present,
+    /** denseIndex(packedKey, gridW) → index into mustTurnKeys PLUS ONE, 0 meaning absent (always present,
      *  all -1 when there are no must-turn cells — same convention as mustPassIndex etc.) */
     mustTurnCellIndex: Int8Array;
     mustTurnDirs?: string[];

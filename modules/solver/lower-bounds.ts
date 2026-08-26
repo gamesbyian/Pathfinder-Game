@@ -1,4 +1,4 @@
-import { getDistanceFromArray } from './distance.js';
+import { getDistanceFromArray, denseIndex } from './distance.js';
 import { AXIS_H, AXIS_V, NEIGHBOR_AXIS, popcount } from './encoding.js';
 import { IntHashMap } from './int-hash-map.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -79,7 +79,7 @@ export function mustCrossForcedNeighborDeadlocked(pos: number, state: SolverSear
             const nk = staticNeighborKeys[base + d] - 1; // -1 bias undone; -1 itself means absent
             if (nk < 0 || nk === pos) continue;          // absent per the derivation, or exempt (see above)
             if (eu[nk] === (AXIS_H | AXIS_V)) return true;
-            const fi = flipperIndexMap ? flipperIndexMap[nk] - 1 : -1;
+            const fi = flipperIndexMap ? flipperIndexMap[denseIndex(nk, prep.gridW)] - 1 : -1;
             if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) return true;
         }
     }
@@ -145,9 +145,9 @@ export function mustCrossNeighborBudgetDeadlocked(pos: number, state: SolverSear
             if (usedAxes & NEIGHBOR_AXIS[d]) continue; // that pass is already satisfied
             const nk = staticNeighborKeys[base + d] - 1; // undo the +1 "absent" bias
             if (nk < 0 || nk === pos) continue; // absent, or exempt (may serve as this neighbor right now)
-            if (flipperIndexMap && flipperIndexMap[nk] !== 0) continue; // dynamic axis state — abstain
+            if (flipperIndexMap && flipperIndexMap[denseIndex(nk, prep.gridW)] !== 0) continue; // dynamic axis state — abstain
             if (eu[nk] === (AXIS_H | AXIS_V)) continue; // hard wall — mustCrossForcedNeighborDeadlocked's job
-            if (mustCrossIndex[nk] !== 0 && (state.mustCrossMask & (1 << (mustCrossIndex[nk] - 1))) !== 0) continue; // pending-MC-adjacent-to-MC — avoid double-counting its own reservation
+            if (mustCrossIndex[denseIndex(nk, prep.gridW)] !== 0 && (state.mustCrossMask & (1 << (mustCrossIndex[denseIndex(nk, prep.gridW)] - 1))) !== 0) continue; // pending-MC-adjacent-to-MC — avoid double-counting its own reservation
             if (state.visited[nk] === 0) continue; // not yet visited — no forced revisit yet
             if (seen.indexOf(nk) !== -1) continue; // already counted via a different must-cross cell/axis
             seen.push(nk);

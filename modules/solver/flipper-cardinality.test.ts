@@ -1,5 +1,6 @@
 /** Boundary coverage for the 32-bit flipperUsedMask contract. */
 import assert from 'node:assert/strict';
+import { denseIndex } from './distance.js';
 import { test } from 'vitest';
 import { AXIS_H, AXIS_NONE, PACK, popcount } from './encoding.js';
 import { prepLevel } from './prep.js';
@@ -28,7 +29,7 @@ function levelWithThirtyTwoFlippers(): { level: NormalizedLevel; target: number;
 test('the 32nd flipper uses bit 31 without signed-int confusion', () => {
     const { level, target, start } = levelWithThirtyTwoFlippers();
     const prep = prepLevel(level);
-    assert.equal(prep.flipperIndexMap[target] - 1, 31, 'fixture must exercise the sign bit');
+    assert.equal(prep.flipperIndexMap[denseIndex(target, prep.gridW)] - 1, 31, 'fixture must exercise the sign bit');
 
     const state = createState(start, level, prep);
     const bit31 = 1 << 31;

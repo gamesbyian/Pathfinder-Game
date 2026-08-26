@@ -1,5 +1,5 @@
 import { getNavigableDensity } from './archetype.js';
-import { buildAxisApproachMap, buildDistMap, distMapToArray } from './distance.js';
+import { buildAxisApproachMap, buildDistMap, distMapToArray, denseIndex } from './distance.js';
 import type { DistMapOpts } from './distance.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, NEIGHBOR_DX, NEIGHBOR_DY, PACK } from './encoding.js';
 import { MAX_BITROW_DIM } from './topology.js';
@@ -19,20 +19,20 @@ export const DENSE_LEVEL_NAV_DENSITY = 0.70;
 /**
  * Precompute per-level solver data (distance maps, masks, static adjacency, landmark indexes).
  */
-// Builds a KEY_SPACE-sized index lookup. Same "typed array beats Map.get()" rationale as
+// Builds a compact row-major index lookup (gridW * gridH). Same typed-array hot-path rationale as
 // reachBlockedArr/the dist-array mirrors below — mustPassIndex/mustCrossIndex/flipperIndexMap are
 // read on every applyMove/undoMove/scoreMove call (10^6-10^7 times on beam-heavy levels). Int8 is
 // sufficient: level object-count caps (max 4 must-pass, 4 must-cross, 4 flippers) are in CLAUDE.md.
 //
 // Stores i+1 so that ZERO means "not one of these cells", which is what a typed array already
-// contains — no fill needed. The old `-1` sentinel required fill(-1) over 1,048,576 entries per
-// array, four arrays per level, for a grid with at most 225 live cells (4.1% of solver CPU on a
+// contains — no fill needed. The old representation allocated KEY_SPACE entries per array; the
+// dense representation stores only grid cells, while preserving the same i+1/zero sentinel. The old fills were 4.1% of solver CPU on a
 // short-solve workload). Every read site subtracts 1, which maps an absent cell's 0 back to -1 —
-// so all the existing `!== -1` comparisons stay correct verbatim. Same zero-means-absent trick as
+// so all the existing `!== -1` comparisons stay correct verbatim. Reads use denseIndex(key, gridW), same pattern as
 // distance.ts's distMapToArray and prep's staticNeighborKeys.
-function buildIndexArr(keys: number[]): Int8Array {
-    const arr = new Int8Array(KEY_SPACE);
-    for (let i = 0; i < keys.length; i++) arr[keys[i]] = i + 1;
+function buildIndexArr(keys: number[], gridW: number, gridH: number): Int8Array {
+    const arr = new Int8Array(gridW * gridH);
+    for (let i = 0; i < keys.length; i++) arr[denseIndex(keys[i], gridW)] = i + 1;
     return arr;
 }
 
@@ -57,16 +57,16 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     prep.guidanceGoalDistArr = distMapToArray(
         buildDistMap(level, [level.goalKey], { ...distOpts, legacyGuidanceRouting: true }),
         level.grid.w, level.grid.h);
-    prep.mustPassIndex  = buildIndexArr(level.mustPassKeys);
-    prep.mustCrossIndex = buildIndexArr(level.mustCrossKeys);
+    prep.mustPassIndex  = buildIndexArr(level.mustPassKeys, level.grid.w, level.grid.h);
+    prep.mustCrossIndex = buildIndexArr(level.mustCrossKeys, level.grid.w, level.grid.h);
     prep.mustPassDistMaps  = level.mustPassKeys.map(k => buildDistMap(level, [k], distOpts));
     prep.mustCrossDistMaps = level.mustCrossKeys.map(k => buildDistMap(level, [k], distOpts));
-    // Flat presence flag instead of Set<number>: read per-candidate in scoreMove/applyMove
+    // Dense row-major presence flag instead of Set<number>: read per-candidate in scoreMove/applyMove
     // hot loops (intersection-setup scoring, "was this an intersection" check), same
     // "typed array beats Set.has()" rationale as reachBlockedArr below. Gate counts are
     // small, but call volume is once per candidate on every level.
-    prep.gateFlags = new Uint8Array(KEY_SPACE);
-    for (const k of level.gateKeys) prep.gateFlags[k] = 1;
+    prep.gateFlags = new Uint8Array(level.grid.w * level.grid.h);
+    for (const k of level.gateKeys) prep.gateFlags[denseIndex(k, prep.gridW)] = 1;
     // Statically untraversable flipping filters. A flipper must be crossed STRAIGHT THROUGH — its
     // entry and exit axis must match (no turning on it, see search-state.ts's isMoveDynamicallyValid),
     // and the axis-reuse rule forbids backing out the way you came — so crossing it needs BOTH
@@ -103,17 +103,17 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     }
     prep.deadFlipperKeys = _deadFlipperKeys;
 
-    // Unified impassable-for-BFS lookup (blocks ∪ geese ∪ gates), used by the connectivity-prune
+    // Dense row-major impassable-for-BFS lookup (blocks ∪ geese ∪ gates), used by the connectivity-prune
     // BFS in topology.ts. Same "typed array beats Map.get()" rationale as the dist-array mirrors
     // below — isConnected() is the hottest single call in beam search (10^5-10^6 calls on
     // beam-heavy levels), and this collapses its per-neighbor 3x Set.has() into 1 array read.
-    prep.reachBlockedArr = new Uint8Array(KEY_SPACE);
-    for (const k of level.blockSet) prep.reachBlockedArr[k] = 1;
+    prep.reachBlockedArr = new Uint8Array(level.grid.w * level.grid.h);
+    for (const k of level.blockSet) prep.reachBlockedArr[denseIndex(k, prep.gridW)] = 1;
     // Impassable for the connectivity BFS too: counting a cell the path can never leave toward the
     // goal inflates freshVolume and weakens the volume prune.
-    for (const k of _deadFlipperKeys) prep.reachBlockedArr[k] = 1;
-    for (const k of level.gooseSet) prep.reachBlockedArr[k] = 1;
-    for (const k of level.gateKeys) prep.reachBlockedArr[k] = 1;
+    for (const k of _deadFlipperKeys) prep.reachBlockedArr[denseIndex(k, prep.gridW)] = 1;
+    for (const k of level.gooseSet) prep.reachBlockedArr[denseIndex(k, prep.gridW)] = 1;
+    for (const k of level.gateKeys) prep.reachBlockedArr[denseIndex(k, prep.gridW)] = 1;
     // Row-bitmap mirror of the same data for that BFS's bit-parallel form (topology.ts): one
     // 32-bit word per grid row, bit x = "(x, y) is passable". Built once per level here so the
     // flood fill only has to overlay the per-call dynamic part (visit counts, used flippers).
@@ -122,7 +122,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         const rows = new Uint32Array(level.grid.h);
         for (let y = 0; y < level.grid.h; y++) {
             let m = 0;
-            for (let x = 0; x < level.grid.w; x++) if (prep.reachBlockedArr[PACK(x, y)] === 0) m |= (1 << x);
+            for (let x = 0; x < level.grid.w; x++) if (prep.reachBlockedArr[denseIndex(PACK(x, y), prep.gridW)] === 0) m |= (1 << x);
             rows[y] = m;
         }
         prep.reachPassableRows = rows;
@@ -230,7 +230,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
 
     // Flipper index data for the global-flip mechanism.
     const _fKeys = [...level.flippingFilterMap.keys()];
-    prep.flipperIndexMap  = buildIndexArr(_fKeys);
+    prep.flipperIndexMap  = buildIndexArr(_fKeys, level.grid.w, level.grid.h);
     prep.flipperKeys      = new Int32Array(_fKeys);
     prep.flipperInitAxes  = new Uint8Array(_fKeys.map(k => level.flippingFilterMap.get(k) ?? 0));
 
@@ -363,7 +363,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     const mtEntries = level.mustPassTurnDirs ? [...level.mustPassTurnDirs.entries()] : [];
     prep.mustTurnKeys        = mtEntries.map(([k]) => k);
     prep.mustTurnDirs        = mtEntries.map(([, d]) => d);
-    prep.mustTurnCellIndex   = buildIndexArr(prep.mustTurnKeys);
+    prep.mustTurnCellIndex   = buildIndexArr(prep.mustTurnKeys, level.grid.w, level.grid.h);
     prep.initialMustTurnMask = mtEntries.length > 0 ? ((1 << mtEntries.length) - 1) : 0;
     // Single-source BFS distance-to-cell map per must-turn cell (mirrors mpDistArrs —
     // must-turn cells are passable single points, unlike surround/adj-turn's multi-source
@@ -449,7 +449,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
                     if (level.blockSet.has(nk)) continue;
                     if (level.gooseSet.has(nk)) continue;
                     if (level.falseGoalKeys.has(nk) && !opts.allowFalseGoalNeighbors) continue;
-                    if (prep.gateFlags[nk]) continue;
+                    if (prep.gateFlags[denseIndex(nk, prep.gridW)]) continue;
                     const moveAxis = NEIGHBOR_AXIS[d];
                     if (filterFrom && filterFrom !== moveAxis) continue;
                     const filterTarget = level.filterMap.get(nk);
@@ -478,7 +478,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
             for (let d = 0; d < 4; d++) {
                 const nk = prep.staticNeighborKeys[base + d] - 1;
                 if (nk < 0) continue;
-                if (prep.mustCrossIndex[nk] !== 0) { forced = nk; count++; }
+                if (prep.mustCrossIndex[denseIndex(nk, prep.gridW)] !== 0) { forced = nk; count++; }
             }
             if (count === 1) prep.gateForcedFirstStepKey.set(g, forced);
         }

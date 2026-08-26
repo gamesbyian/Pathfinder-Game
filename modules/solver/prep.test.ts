@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { SOLVER_TESTING_API } from '../solver.js';
 import {AXIS_H, AXIS_V, PACK } from './encoding.js';
-import { getDistanceFromArray } from './distance.js';
+import { getDistanceFromArray, denseIndex } from './distance.js';
 import { prepLevel } from './prep.js';
 import type { NormalizedLevel } from '../domain/types.js';
 
@@ -32,9 +32,9 @@ test('prepLevel builds index maps, distance mirrors, and objective lists', () =>
   const prep = prepLevel(level);
   // Index arrays store i+1 so that 0 means "absent" and prepLevel can skip a per-array fill;
   // every read site subtracts 1, which maps 0 back to the historical -1. See prep.ts.
-  assert.equal(prep.mustPassIndex[PACK(2, 1)] - 1, 0);
-  assert.equal(prep.mustPassIndex[PACK(0, 0)] - 1, -1, 'a non-must-pass cell still reads as -1');
-  assert.equal(prep.mustCrossIndex[PACK(2, 2)] - 1, 0);
+  assert.equal(prep.mustPassIndex[denseIndex(PACK(2, 1), prep.gridW)] - 1, 0);
+  assert.equal(prep.mustPassIndex[denseIndex(PACK(0, 0), prep.gridW)] - 1, -1, 'a non-must-pass cell still reads as -1');
+  assert.equal(prep.mustCrossIndex[denseIndex(PACK(2, 2), prep.gridW)] - 1, 0);
   assert.deepEqual(prep.objectiveKeys, [PACK(2, 1), PACK(2, 2)]);
   // Distance arrays are dense (gridW * gridH), not KEY_SPACE-sized — a 15x15 level's maps are 225
   // entries instead of 1,048,576, and a level builds 11+ of them. See distance.ts's denseIndex.
@@ -62,7 +62,7 @@ test('prepLevel builds approach maps for must-cross and flipping filters', () =>
   const prep = prepLevel(level);
   assert.equal(prep.mcApproachDistMaps!.length, 1);
   assert.equal(getDistanceFromArray(prep.mcApproachDistMaps![0].v, PACK(2, 1), prep.gridW), 0);
-  assert.equal(prep.flipperIndexMap[flipper] - 1, 0);
+  assert.equal(prep.flipperIndexMap[denseIndex(flipper, prep.gridW)] - 1, 0);
   assert.equal(prep.flipperInitAxes[0], AXIS_H);
   assert.equal(prep.flipperApproachEven.length, 1);
   assert.equal(prep.flipperApproachOdd.length, 1);
@@ -91,9 +91,9 @@ test('prepLevel marks only flippers with neither axis traversable as dead', () =
   assert.equal(prep.deadFlipperKeys.has(edge), false, 'one dead axis is not enough — it may flip to the open one');
   assert.equal(prep.deadFlipperKeys.has(open), false, 'an open horizontal pair keeps it alive');
   // Dead cells are impassable for the connectivity BFS...
-  assert.equal(prep.reachBlockedArr[corner], 1);
-  assert.equal(prep.reachBlockedArr[boxed], 1);
-  assert.equal(prep.reachBlockedArr[edge], 0);
+  assert.equal(prep.reachBlockedArr[denseIndex(corner, prep.gridW)], 1);
+  assert.equal(prep.reachBlockedArr[denseIndex(boxed, prep.gridW)], 1);
+  assert.equal(prep.reachBlockedArr[denseIndex(edge, prep.gridW)], 0);
   // ...but deliberately still reachable in move generation: excluding them there was measured
   // net-negative (see prep.ts). Slot 1 is "left", so PACK(1,0)'s left neighbour is the dead corner.
   // staticNeighborKeys is dense-indexed via cellDenseIndex, not directly by packed key.
