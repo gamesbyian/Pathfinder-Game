@@ -1,11 +1,11 @@
 # Selective diverse-IH broad confirmation
 
-> **Status:** concluded-negative after independent confirmation
+> **Status:** concluded-negative
 > **Last evidence:** 2026-08-25 — confirmation run `32912881453`; development run `32911007113`
 > **Decision:** close the exact selective diverse-IH exposure treatment. It was +9/-0 on the feature-defined Corpus-2 development population but exactly null on fresh `confirm-broad-002`.
-> **Remaining gate:** none for this treatment. Do not tune or rerun it against `confirm-broad-002`. `transfer-envelope-001` remains untouched.
-> **Evidence role:** preregistered independent confirmation; cohort now spent
-> **Selection:** treatment selected from mined Corpus-2 development evidence; confirmation cohort, work envelope, candidate, and acceptance rule frozen before cohort materialization
+> **Remaining gate:** none
+> **Evidence role:** confirmation
+> **Selection:** prespecified for confirmation after treatment selection on mined Corpus-2 development evidence; cohort, work envelope, candidate, and acceptance rule were frozen before cohort materialization
 
 ## Frozen candidate
 
