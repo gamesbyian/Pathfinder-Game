@@ -5,6 +5,7 @@
 > **Decision:** close the exact selective diverse-IH exposure treatment. It was +9/-0 on the feature-defined Corpus-2 development population but exactly null on fresh `confirm-broad-002`.
 > **Remaining gate:** none for this treatment. Do not tune or rerun it against `confirm-broad-002`. `transfer-envelope-001` remains untouched.
 > **Evidence role:** preregistered independent confirmation; cohort now spent
+> **Selection:** treatment selected from mined Corpus-2 development evidence; confirmation cohort, work envelope, candidate, and acceptance rule frozen before cohort materialization
 
 ## Frozen candidate
 
