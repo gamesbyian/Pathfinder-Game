@@ -1,0 +1,26 @@
+name: Temporary dense-prep access audit
+
+on:
+  push:
+    branches:
+      - chatgpt/dense-prep-indexes-2026-08-25
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Enumerate packed-key prep readers
+        run: node scripts/tmp-dense-prep-audit.mjs
+      - name: Baseline published speed probe
+        run: npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/published.json
+      - name: Baseline Corpus-2 speed probe
+        run: npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/corpus2.json
