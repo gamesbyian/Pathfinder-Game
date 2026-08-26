@@ -55,6 +55,12 @@ test('continuation and restart arms spend the same canonical work envelope on a 
     // short of its cap would mean the cap is not the actual terminating condition.
     assert.ok(result.continuation.workSpent > workBudget * 0.5, `continuation underspent: ${result.continuation.workSpent}`);
     assert.ok(result.restart.workSpent > workBudget * 0.5, `restart underspent: ${result.restart.workSpent}`);
+
+    // A failed arm must report a finite bestBadness (repairSearchFromGate always tracks one) —
+    // the search-quality diagnostic the audit's own rule 10 calls for before prescribing more of
+    // the same search.
+    assert.ok(Number.isFinite(result.continuation.bestBadness), `continuation bestBadness not finite: ${result.continuation.bestBadness}`);
+    assert.ok(Number.isFinite(result.restart.bestBadness), `restart bestBadness not finite: ${result.restart.bestBadness}`);
 });
 
 test('restart arm runs a genuinely fresh seed 1 and SUMS both seeds\' work, not just the last seed', async () => {
@@ -94,6 +100,7 @@ test('restart arm skips seed 1 entirely when seed 0 already solves', async () =>
     assert.equal(result.restart.solved, true);
     assert.deepEqual(result.restart.seedSalts, [0]);
     assert.ok(result.restart.workSpent <= workBudget);
+    assert.equal(result.restart.bestBadness, null, 'a solved arm reports no bestBadness');
 });
 
 test('a larger work budget lets the continuation arm spend proportionally more before stopping', async () => {

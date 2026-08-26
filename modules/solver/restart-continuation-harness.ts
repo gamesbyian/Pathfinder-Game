@@ -9,6 +9,12 @@ export interface RepairArmResult {
     workSpent: number;
     nodesExpanded: number;
     seedSalts: number[];
+    /** `repairSearchFromGate`'s own best-ever badness reached by the LAST seed that ran (its
+     *  own out.bestBadness on failure) — diagnostic only, lets a caller tell "search made real
+     *  progress but ran out of budget" apart from "search never moved," per the operating model's
+     *  own rule to diagnose search-quality failure before prescribing more of the same search.
+     *  `null` when solved (repairSearchFromGate does not report a badness for a success). */
+    bestBadness: number | null;
 }
 
 export interface RestartVsContinuationResult {
@@ -50,16 +56,17 @@ export async function runRepairRestartVsContinuation(
     const budgetMs = opts.budgetMs ?? 60_000;
     const nodeBudget = opts.nodeBudget ?? Infinity;
 
-    async function runArm(prep: PrepLevel, seedSalt: number, workCap: number): Promise<{ solved: boolean; workSpentDelta: number; nodesExpandedDelta: number }> {
+    async function runArm(prep: PrepLevel, seedSalt: number, workCap: number): Promise<{ solved: boolean; workSpentDelta: number; nodesExpandedDelta: number; bestBadness: number | null }> {
         const workBefore = prep._workMeter.units;
         const nodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
         prep._workCap = workCap;
-        const out: { nodesExpanded?: number } = {};
+        const out: { nodesExpanded?: number; bestBadness?: number } = {};
         const solution = await repairSearchFromGate(gateKey, level, prep, profile, budgetMs, Date.now(), null, null, false, nodeBudget, out, seedSalt);
         return {
             solved: solution !== null,
             workSpentDelta: prep._workMeter.units - workBefore,
             nodesExpandedDelta: (prep._metrics ? prep._metrics.nodesExpanded : nodesBefore) - nodesBefore,
+            bestBadness: solution !== null ? null : (out.bestBadness ?? null),
         };
     }
 
@@ -68,7 +75,7 @@ export async function runRepairRestartVsContinuation(
     const continuationArm = await runArm(continuationPrep, 0, continuationPrep._workMeter.units + workBudget);
     const continuation: RepairArmResult = {
         solved: continuationArm.solved, workSpent: continuationArm.workSpentDelta,
-        nodesExpanded: continuationArm.nodesExpandedDelta, seedSalts: [0],
+        nodesExpanded: continuationArm.nodesExpandedDelta, seedSalts: [0], bestBadness: continuationArm.bestBadness,
     };
 
     const restartPrep = makePrep();
@@ -76,7 +83,7 @@ export async function runRepairRestartVsContinuation(
     const half = Math.floor(workBudget / 2);
     const seed0 = await runArm(restartPrep, 0, restartPrep._workMeter.units + half);
     const restart: RepairArmResult = seed0.solved
-        ? { solved: true, workSpent: seed0.workSpentDelta, nodesExpanded: seed0.nodesExpandedDelta, seedSalts: [0] }
+        ? { solved: true, workSpent: seed0.workSpentDelta, nodesExpanded: seed0.nodesExpandedDelta, seedSalts: [0], bestBadness: null }
         : await (async () => {
             const remaining = Math.max(0, workBudget - seed0.workSpentDelta);
             const seed1 = await runArm(restartPrep, 1, restartPrep._workMeter.units + remaining);
@@ -85,6 +92,7 @@ export async function runRepairRestartVsContinuation(
                 workSpent: seed0.workSpentDelta + seed1.workSpentDelta,
                 nodesExpanded: seed0.nodesExpandedDelta + seed1.nodesExpandedDelta,
                 seedSalts: [0, 1],
+                bestBadness: seed1.bestBadness,
             };
         })();
 

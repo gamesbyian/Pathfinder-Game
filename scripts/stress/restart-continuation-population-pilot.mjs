@@ -89,8 +89,9 @@ for (const lv of selected) {
     const start = Date.now();
     const result = await runRepairRestartVsContinuation(gateKey, level, () => prepLevel(level), profile, workBudget, { budgetMs: 120_000 });
     const elapsedMs = Date.now() - start;
-    console.log(`${lv.id} (pos ${lv.level}, censusBestBadness=${censusBestBadness}): continuation solved=${result.continuation.solved} workSpent=${result.continuation.workSpent} | `
-        + `restart solved=${result.restart.solved} workSpent=${result.restart.workSpent} seeds=[${result.restart.seedSalts.join(',')}] | ${elapsedMs}ms`);
+    console.log(`${lv.id} (pos ${lv.level}, censusBestBadness=${censusBestBadness}): `
+        + `continuation solved=${result.continuation.solved} workSpent=${result.continuation.workSpent} bestBadness=${result.continuation.bestBadness} | `
+        + `restart solved=${result.restart.solved} workSpent=${result.restart.workSpent} bestBadness=${result.restart.bestBadness} seeds=[${result.restart.seedSalts.join(',')}] | ${elapsedMs}ms`);
     results.push({ id: lv.id, level: lv.level, gateKey, censusBestBadness, elapsedMs, ...result });
 }
 
