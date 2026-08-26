@@ -19,14 +19,20 @@ export interface RepairArmResult {
 
 export interface RestartVsContinuationResult {
     workBudget: number;
+    restartSplitFraction: number;
     continuation: RepairArmResult;
     restart: RepairArmResult;
 }
 
 /** Runs one fixed repair action/config/gate under the two equal-`workSpent`-envelope schedules
  *  docs/reports/2026-08-24-restart-continuation-value-audit.md's execution-readiness gate calls
- *  for: seed 0 continued to `workBudget` canonical work units, versus seed 0 to `workBudget / 2`
+ *  for: seed 0 continued to `workBudget` canonical work units, versus seed 0 to
+ *  `workBudget * restartSplitFraction` (default 0.5, the audit's own primary 50/50 comparison)
  *  then — only if seed 0 did not solve — a genuinely fresh seed 1 capped at the remaining budget.
+ *  A non-default `restartSplitFraction` is a DIFFERENT treatment from the audit's primary
+ *  comparison (e.g. a small insurance tail for seed 1 rather than an even split) — see
+ *  docs/reports/2026-08-26-restart-vs-continuation-near-miss-development-pilot.md's "what remains
+ *  open" for why the 50/50 form being closed does not by itself rule out an unequal one.
  *
  *  The existing `repairLateProbeNodeBudgetOverride`-style knobs cap raw node counts, which the
  *  audit shows is the wrong currency: node-equated arms can still consume different canonical
@@ -50,11 +56,13 @@ export async function runRepairRestartVsContinuation(
     makePrep: () => PrepLevel,
     profile: ScoringProfile,
     workBudget: number,
-    opts: { budgetMs?: number; nodeBudget?: number } = {},
+    opts: { budgetMs?: number; nodeBudget?: number; restartSplitFraction?: number } = {},
 ): Promise<RestartVsContinuationResult> {
     if (!(workBudget > 0)) throw new Error(`workBudget must be a positive number of canonical work units, got ${workBudget}`);
     const budgetMs = opts.budgetMs ?? 60_000;
     const nodeBudget = opts.nodeBudget ?? Infinity;
+    const restartSplitFraction = opts.restartSplitFraction ?? 0.5;
+    if (!(restartSplitFraction > 0 && restartSplitFraction < 1)) throw new Error(`restartSplitFraction must be in (0, 1), got ${restartSplitFraction}`);
 
     async function runArm(prep: PrepLevel, seedSalt: number, workCap: number): Promise<{ solved: boolean; workSpentDelta: number; nodesExpandedDelta: number; bestBadness: number | null }> {
         const workBefore = prep._workMeter.units;
@@ -80,8 +88,8 @@ export async function runRepairRestartVsContinuation(
 
     const restartPrep = makePrep();
     if (!restartPrep._metrics) restartPrep._metrics = { nodesExpanded: 0 };
-    const half = Math.floor(workBudget / 2);
-    const seed0 = await runArm(restartPrep, 0, restartPrep._workMeter.units + half);
+    const seed0Share = Math.floor(workBudget * restartSplitFraction);
+    const seed0 = await runArm(restartPrep, 0, restartPrep._workMeter.units + seed0Share);
     const restart: RepairArmResult = seed0.solved
         ? { solved: true, workSpent: seed0.workSpentDelta, nodesExpanded: seed0.nodesExpandedDelta, seedSalts: [0], bestBadness: null }
         : await (async () => {
@@ -96,5 +104,5 @@ export async function runRepairRestartVsContinuation(
             };
         })();
 
-    return { workBudget, continuation, restart };
+    return { workBudget, restartSplitFraction, continuation, restart };
 }

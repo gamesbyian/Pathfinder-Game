@@ -23,7 +23,11 @@
  *                      runRepairRestartVsContinuation — the equal-canonical-`workSpent`-envelope
  *                      comparison docs/reports/2026-08-24-restart-continuation-value-audit.md's
  *                      execution-readiness gate calls for (seed 0 continued to n work units versus
- *                      seed 0 to n/2 then, only on failure, a fresh seed 1 for the remainder).
+ *                      seed 0 to n*restartSplit then, only on failure, a fresh seed 1 for the
+ *                      remainder). `--restart-split=<f>` (default 0.5, the audit's own primary
+ *                      comparison) picks seed 0's share of n in the restart arm; an unequal split
+ *                      is a DIFFERENT treatment from the 50/50 form, not a variant of it — see
+ *                      reports/2026-08-26-restart-vs-continuation-near-miss-development-pilot.md.
  *                      Deliberately NOT the same currency as --node-budget/--races above: `n` here
  *                      is canonical `workSpent`, which the audit found node counts cannot express
  *                      faithfully across arms. Single-run, this process, deterministic.
@@ -51,6 +55,7 @@ const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budge
 const mustTurnBiased = flags.has('--must-turn-biased');
 const races = Number(argMap.get('--races') || 1);
 const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : null;
+const restartSplitFraction = argMap.has('--restart-split') ? Number(argMap.get('--restart-split')) : 0.5;
 if (workBudget !== null && races > 1) { console.error('--work-budget and --races are mutually exclusive.'); process.exit(2); }
 
 installBrowserStubs();
@@ -75,7 +80,7 @@ const profile = POLICY_PROFILES.repair ?? POLICY_PROFILES.default;
 console.log(`repair-direct-probe: level=${levelNumber}${raw.id ? ` (${raw.id})` : ''} gate=${gateIndex}/${gateKeys.length} budget=${budgetMs}ms node-budget=${Number.isFinite(nodeBudget) ? nodeBudget : '(none)'} must-turn-biased=${mustTurnBiased} races=${races}${workBudget !== null ? ` work-budget=${workBudget}` : ''}`);
 
 if (workBudget !== null) {
-    const result = await runRepairRestartVsContinuation(gateKey, level, () => prepLevel(level), profile, workBudget, { budgetMs, nodeBudget });
+    const result = await runRepairRestartVsContinuation(gateKey, level, () => prepLevel(level), profile, workBudget, { budgetMs, nodeBudget, restartSplitFraction });
     const fmt = (arm) => `solved=${arm.solved} workSpent=${arm.workSpent}/${workBudget} nodesExpanded=${arm.nodesExpanded} seedSalts=[${arm.seedSalts.join(',')}]`;
     console.log(`continuation: ${fmt(result.continuation)}`);
     console.log(`restart:      ${fmt(result.restart)}`);

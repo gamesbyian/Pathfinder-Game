@@ -92,6 +92,26 @@ test('restart arm runs a genuinely fresh seed 1 and SUMS both seeds\' work, not 
         'restart workSpent must exceed seed 0 alone — proof the second seed\'s work was actually summed in, not dropped');
 });
 
+test('restartSplitFraction controls seed 0\'s share of the restart arm\'s budget', async () => {
+    const level = makeImpossibleLevel();
+    const workBudget = 20_000;
+    const result = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), POLICY_PROFILES.repair, workBudget, { restartSplitFraction: 0.8 });
+
+    assert.equal(result.restartSplitFraction, 0.8);
+    assert.deepEqual(result.restart.seedSalts, [0, 1]);
+
+    // Seed 0 alone, replayed independently under the SAME 0.8 share, must land close to (and
+    // under, up to the work meter's own check granularity) 80% of workBudget — proof the fraction
+    // actually reaches the arm's internal split, not just the returned metadata field.
+    const restartPrep = prepLevel(level);
+    restartPrep._workCap = Math.floor(workBudget * 0.8);
+    const { repairSearchFromGate } = await import('./repair-search.js');
+    await repairSearchFromGate(K(1, 1), level, restartPrep, POLICY_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, null, 0);
+    const seed0WorkAt80Pct = restartPrep._workMeter.units;
+    assert.ok(seed0WorkAt80Pct > workBudget * 0.5,
+        `an 0.8 split should spend noticeably more on seed 0 than the 0.5 default would: ${seed0WorkAt80Pct}`);
+});
+
 test('restart arm skips seed 1 entirely when seed 0 already solves', async () => {
     const level = makeSolvableLevel();
     const workBudget = 20_000;

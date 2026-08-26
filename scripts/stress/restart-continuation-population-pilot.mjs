@@ -17,6 +17,11 @@
  * outcome-based. This is DISCOVERY/DEVELOPMENT evidence only — Corpus 2 is repeatedly-mined
  * development data — never confirmation.
  *
+ * `--restart-split=<f>` (default 0.5, the audit's own primary comparison) changes what fraction
+ * of the work budget seed 0 gets in the restart arm before a fresh seed 1 takes the remainder —
+ * an unequal split (e.g. 0.8) is a DIFFERENT treatment from the 50/50 form, not a rescue of it;
+ * see reports/2026-08-26-restart-vs-continuation-near-miss-development-pilot.md.
+ *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/restart-continuation-population-pilot.mjs -- \
  *     --census=reports/stress/benchmark-latest-random.json --corpus=data/stress/stress-levels-random.json \
@@ -37,6 +42,7 @@ const workBudget = Number(argMap.get('--work-budget') || 2_000_000);
 const sampleEvery = Number(argMap.get('--sample-every') || 29);
 const maxBadness = argMap.has('--max-badness') ? Number(argMap.get('--max-badness')) : Infinity;
 const limit = argMap.has('--limit') ? Number(argMap.get('--limit')) : Infinity;
+const restartSplitFraction = argMap.has('--restart-split') ? Number(argMap.get('--restart-split')) : 0.5;
 const outPath = argMap.get('--out') || path.join(root, 'tmp/restart-continuation-pilot.json');
 
 installBrowserStubs();
@@ -74,7 +80,7 @@ const candidates = census.levels.filter(lv => {
 const selected = candidates.filter((_, i) => i % sampleEvery === 0).slice(0, limit);
 
 console.log(`restart-continuation-population-pilot: census=${censusPath} (${census.solved}/${census.total} solved, commit ${census.commitSha})`);
-console.log(`population: ${candidates.length} unsolved levels with a repair-probe attempt; sampling every ${sampleEvery}th, limit=${Number.isFinite(limit) ? limit : '(none)'} -> ${selected.length} levels; work-budget=${workBudget}`);
+console.log(`population: ${candidates.length} unsolved levels with a repair-probe attempt; sampling every ${sampleEvery}th, limit=${Number.isFinite(limit) ? limit : '(none)'} -> ${selected.length} levels; work-budget=${workBudget}; restart-split=${restartSplitFraction}`);
 
 const results = [];
 for (const lv of selected) {
@@ -87,7 +93,7 @@ for (const lv of selected) {
     if (!level.gateKeys.includes(gateKey)) { console.error(`SKIP ${lv.id}: census gateKey ${gateKey} not present on re-prepared level`); continue; }
     const profile = POLICY_PROFILES.repair ?? POLICY_PROFILES.default;
     const start = Date.now();
-    const result = await runRepairRestartVsContinuation(gateKey, level, () => prepLevel(level), profile, workBudget, { budgetMs: 120_000 });
+    const result = await runRepairRestartVsContinuation(gateKey, level, () => prepLevel(level), profile, workBudget, { budgetMs: 120_000, restartSplitFraction });
     const elapsedMs = Date.now() - start;
     console.log(`${lv.id} (pos ${lv.level}, censusBestBadness=${censusBestBadness}): `
         + `continuation solved=${result.continuation.solved} workSpent=${result.continuation.workSpent} bestBadness=${result.continuation.bestBadness} | `
