@@ -1,9 +1,9 @@
 # Solver confirmation/transfer cohort reservation
 
 > **Status:** active
-> **Last evidence:** 2026-08-26 — reserved `confirm-broad-003` (unmaterialized) for `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE`, the first candidate to reach confirmation since `confirm-broad-002`
-> **Decision:** broad confirmation has now completed two real one-use lifecycles. `confirm-broad-001` and `confirm-broad-002` are spent; `transfer-envelope-001` remains locked and untouched because neither candidate survived broad confirmation. `confirm-broad-003` is reserved (identity/seed fixed, not yet materialized) for the next tuned candidate.
-> **Remaining gate:** materialize `confirm-broad-003` via `.github/workflows/solver-broad-confirmation.yml` and run the frozen `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` candidate against it; materialize `transfer-envelope-001` only after a candidate passes broad confirmation.
+> **Last evidence:** 2026-08-26 — `confirm-broad-003` run [`32940910715`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/32940910715): byte-identical aggregate work in both arms, diagnosed as repair-fallback saturation, not a real negative
+> **Decision:** broad confirmation has now completed three real one-use lifecycles, but `confirm-broad-003` surfaced a methodology gap the first two didn't hit: a plain fresh/broad uniform-random cohort cannot exercise a candidate whose eligible population is a strict superset of `needsRepairFallback`'s gate, because the early repair probe solves almost all such levels before the candidate's own new configs ever run. `confirm-broad-001` and `confirm-broad-002` are spent with real (if negative) verdicts; `confirm-broad-003` is spent but **inconclusive**, not negative; `transfer-envelope-001` remains locked and untouched.
+> **Remaining gate:** design and land a confirmation cohort form that can exercise a repair-saturated candidate (see "Repair-saturation gap" below) before `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` (or any similarly repair-gated future candidate) can get a real confirmation verdict; materialize `transfer-envelope-001` only after a candidate actually passes broad confirmation.
 > **Evidence role:** discovery
 > **Selection:** prespecified cohort lifecycle; each confirmation candidate, work envelope, and acceptance rule was frozen before its cohort was materialized
 > **Manifest:** [`stress/managed-evaluation-populations-2026-08-24.json`](stress/managed-evaluation-populations-2026-08-24.json)
@@ -38,6 +38,31 @@ Reserved fresh before materialization because `confirm-broad-001` was already sp
 - verdict: failed frozen gate as a clean null.
 
 See [`2026-08-25-diverse-ih-confirm-broad-002-freeze.md`](2026-08-25-diverse-ih-confirm-broad-002-freeze.md).
+
+### `confirm-broad-003` — SPENT, INCONCLUSIVE (not a negative)
+
+Reserved fresh before materialization because `confirm-broad-001`/`002` were already spent:
+
+- 256 uniform-random raised-cap generated levels;
+- generator revision `36c0744a3eaa6cd2ff787e8221032062ebd85f9d` (current, not the older pinned `4f2b2b14...` revision `confirm-broad-001`/`002` used — the generator itself was unchanged in between, verified by diffing `scripts/stress/generate-random.mjs` and `modules/domain` across the two revisions before reuse);
+- master seed `2026082601`, IDs `G00001` onward;
+- candidate: append plain `beam:intersectionHarvest@beam5000` + `beam:objectiveFirst@beam5000` to `attempts.ts`'s must-cross+flipper-heavy rule only (`STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE`);
+- final run [`32940910715`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/32940910715);
+- result: **159/256 → 159/256**, **0 gains / 0 losses**, aggregate `workSpent` **byte-identical** (`29,676,406,171` both arms) — not merely a null, but zero measurable execution of the new configs anywhere in the cohort;
+- verdict: **inconclusive / non-participating**, not confirmation-fail.
+
+See [`2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md`](2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md)'s "Confirmation attempt" section for the full diagnosis.
+
+#### Repair-saturation gap
+
+`isMustCrossFlipperHeavy`'s eligibility gate (`mustCross≥2`, `mustPass≥3`) is a strict superset of `needsRepairFallback`'s gate (`REPAIR_MC_MIN=2`, `REPAIR_MP_MIN=3`), so every level eligible for this candidate's new configs is also eligible for the early repair probe that runs before the main loop. That rule's own code comment already documents that repair "now solves nearly everything in this archetype via its own early probe." The development population that produced `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE`'s +3/-0 result was mined from Corpus 2's *current production misses* — levels the whole ladder, repair included, already fails on — so every development-eligible row was, by construction, repair-resistant. A fresh uniform-random cohort's eligible rows overwhelmingly are not: the early repair probe solves them first, and this candidate's new trailing configs never run.
+
+This generalizes: **any candidate mined from a residual-miss analysis (the dominant source of Priority 1's candidates) risks the identical wall in confirmation**, because "helps solve levels that survive the whole current ladder" is exactly the premise that makes a candidate invisible to a plain fresh cohort. Two candidate fixes, neither built yet:
+
+1. a much larger fresh cohort, sized so the *repair-resistant* eligible tail (not just the archetype-eligible population) is expected to appear in adequate numbers — costly, and the needed size is not yet estimated;
+2. a two-phase "control-failure residual" cohort: generate a large fresh pool, run the *control* ladder alone across it, freeze the subset it fails to solve, then run both arms only on that frozen residual. This mirrors exactly how Corpus 2's own 724-level residual population is defined (mining current misses), just applied to fresh generated levels instead of the existing corpus. Filtering by whether *control* solves a fresh level, decided before the real A/B ever runs, is a pre-outcome-neutral selection rule, not the same as selecting by whether *treatment* succeeds — but this needs a fresh committed cohort per candidate (the control-failure step still can't be reused across candidates once its exact composition has influenced a decision), and roughly doubles the compute cost of a confirmation run.
+
+Neither option is implemented. Until one is, a `confirm-broad-*`-style plain broad cohort is the wrong instrument for any candidate this narrowly repair-gated, and a byte-identical-work result like this one should read as "wrong instrument," not "no effect."
 
 ### `transfer-envelope-001` — LOCKED / UNTOUCHED
 
@@ -86,12 +111,6 @@ The two failed confirmations are themselves valuable evidence: both treatments l
 
 ## Next reservation
 
-`confirm-broad-003` is now reserved for `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` (see [`2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md`](2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md)), the first candidate to earn confirmation since `confirm-broad-002`:
+No fresh broad cohort is reserved in this report. `confirm-broad-003` is spent (inconclusive). `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` remains at "development-positive, no working confirmation yet" — reopen its confirmation only after the repair-saturation gap above has a real fix (larger N with an estimated required size, or the two-phase control-failure-residual design), not by simply re-dispatching another plain `confirm-broad-004` at the same shape and hoping for better luck. `STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE` (the sibling-rule follow-up candidate) has not reached confirmation at all yet — it needs its own development A/B first — but will hit the identical repair-saturation wall when it does, since it shares the same must-cross-heavy/`needsRepairFallback` overlap; whichever confirmation-design fix lands first should serve both candidates rather than being built twice.
 
-- 256 uniform-random raised-cap generated levels (same generator mode as `confirm-broad-001`/`002`);
-- master seed `2026082601`, IDs `G00001` onward — both values never used by a prior cohort;
-- candidate: append plain `beam:intersectionHarvest@beam5000` + `beam:objectiveFirst@beam5000` to `attempts.ts`'s must-cross+flipper-heavy rule only (`STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE`, default-off);
-- acceptance rule fixed before materialization, same shape as the development gate: zero lost solves AND (≥1 gained solve OR ≥10% aggregate-work reduction);
-- materialize via `.github/workflows/solver-broad-confirmation.yml`, `cohort_id=confirm-broad-003`, `enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE`, `node_budget=50000000` (matching the development A/B's envelope).
-
-This reservation supersedes the prior "no third broad cohort reserved" note. Unlike `confirm-broad-001`/`002`, the workflow that materializes this cohort is durable, checked-in plumbing (`.github/workflows/solver-broad-confirmation.yml`, documented in `.github/workflows/README.md`) rather than bespoke one-shot YAML deleted after use — a third confirmation is enough repeated value to keep it (see that workflow's own header comment).
+The workflow that materializes these cohorts, `.github/workflows/solver-broad-confirmation.yml`, remains durable, checked-in plumbing (documented in `.github/workflows/README.md`) rather than bespoke one-shot YAML deleted after use — a third confirmation was enough repeated value to keep it (see that workflow's own header comment), and whichever repair-saturation fix is built next should extend it rather than replace it.

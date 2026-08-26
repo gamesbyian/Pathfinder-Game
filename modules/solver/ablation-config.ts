@@ -104,6 +104,7 @@ export const FEATURES: Record<string, string> = {
     STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: 'Production default-OFF; closed retained opt-in: reserve part of the main-loop late slice for attraction-diversity retry. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: 'Production default-OFF; closed retained opt-in: reserve part of the admissible-order tier for non-default profiles. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: 'Production default-OFF; NEW unvalidated pilot (2026-08-26): appends plain (non-diverse) beam:intersectionHarvest@beam5000 and beam:objectiveFirst@beam5000 as trailing protected-reserve configs to attempts.ts\'s must-cross+flipper-heavy rule only (isMustCrossFlipperHeavy — the one of three must-cross-heavy rules sharing this exposure gap whose trailing-reserve window has room without displacing an existing protected config). See attempts.ts\'s STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE comment and docs/solver-optimization-current-queue.md Priority 1 for the post-976 rejoin evidence motivating this. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
+    STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: 'Production default-OFF; NEW unvalidated pilot (2026-08-26), prepared but not yet dispatched pending STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE\'s own confirmation result. Widens stage-budget.ts\'s MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT by one (mirroring the validated 2026-08-22 4->5 increase) AND appends the missing plain WIDE beam to attempts.ts\'s other two must-cross-heavy sibling rules ("must-cross, must-pass-heavy": beam:intersectionHarvest@beam5000; "must-cross default": beam:objectiveFirst@beam5000) — the two rules from the same post-976 exposure gap (docs/solver-optimization-current-queue.md Priority 1) whose trailing-reserve windows were already full, unlike the sibling STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE rule. Bundled as one flag because the reserve widen and both beam additions are only meaningful together, mirroring how the 2026-08-22 precedent landed. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
 
     // ── Templates ──────────────────────────────────────────────────────────────
     TEMPLATE_CORNER_HARVEST:    'cornerHarvest — pulls toward grid corners during harvest phase',
@@ -151,6 +152,7 @@ export const OPT_IN_FEATURES = new Set([
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY',
     'STRATEGY_RETRY_TIER_NODE_STAIRCASE',
     'STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE',
+    'STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE',
 ]);
 
 // ─── Template → config key mapping ────────────────────────────────────────────

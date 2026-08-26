@@ -264,6 +264,48 @@ test('STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE is default-off and, when ena
     'flag has no effect outside isMustCrossFlipperHeavy');
 });
 
+test('STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE appends one plain WIDE beam to each of the other two must-cross-heavy sibling rules, and only those', () => {
+  // isMustCross & mustPass>=3, flippers<FLIPPER_HEAVY(2) -> "must-cross, must-pass-heavy" rule
+  // (not the flipper-heavy rule, which STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE already covers).
+  const mustPassHeavyLevel = makeLevel({
+    reqLen: 40, reqInt: 4,
+    mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
+    mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
+  });
+  const mustPassHeavyOff = getAttemptConfigs(mustPassHeavyLevel, null);
+  assert.equal(mustPassHeavyOff.some(c => c.beamWidth === 5000 && !c.diverseBeam), false, 'production default: no plain WIDE beam here');
+  const mustPassHeavyOn = getAttemptConfigs(mustPassHeavyLevel, { ...defaultConfig(), STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: true });
+  const mustPassHeavyPlainWide = mustPassHeavyOn.filter(c => c.beamWidth === 5000 && !c.diverseBeam);
+  assert.deepEqual(mustPassHeavyPlainWide.map(c => c.profileName), ['intersectionHarvest'], 'appends exactly the missing plain intersectionHarvest WIDE beam');
+  const mustPassHeavyWithoutNew = mustPassHeavyOn.filter(c => !(c.beamWidth === 5000 && !c.diverseBeam && !c.repair));
+  assert.deepEqual(mustPassHeavyWithoutNew, mustPassHeavyOff, 'purely additive; nothing existing reordered or removed');
+
+  // isMustCross, mustPass<OBJECTIVE_HEAVY_MUSTPASS, below COMBO_MUSTCROSS/COMBO_MUSTPASS -> the
+  // must-cross "default" catch-all rule.
+  const mustCrossDefaultLevel = makeLevel({
+    reqLen: 40, reqInt: 4,
+    mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
+  });
+  const mustCrossDefaultOff = getAttemptConfigs(mustCrossDefaultLevel, null);
+  assert.equal(mustCrossDefaultOff.some(c => c.beamWidth === 5000 && !c.diverseBeam), false, 'production default: no plain WIDE beam here');
+  const mustCrossDefaultOn = getAttemptConfigs(mustCrossDefaultLevel, { ...defaultConfig(), STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: true });
+  const mustCrossDefaultPlainWide = mustCrossDefaultOn.filter(c => c.beamWidth === 5000 && !c.diverseBeam);
+  assert.deepEqual(mustCrossDefaultPlainWide.map(c => c.profileName), ['objectiveFirst'], 'appends exactly the missing plain objectiveFirst WIDE beam');
+  const mustCrossDefaultWithoutNew = mustCrossDefaultOn.filter(c => !(c.beamWidth === 5000 && !c.diverseBeam && !c.repair));
+  assert.deepEqual(mustCrossDefaultWithoutNew, mustCrossDefaultOff, 'purely additive; nothing existing reordered or removed');
+
+  // This flag must have NO effect on the flipper-heavy rule (that's the OTHER flag's job, already
+  // fully exposed with room to spare — see the sibling test above).
+  const flipperHeavyLevel = makeLevel({
+    reqLen: 40, reqInt: 4,
+    mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
+    mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
+    flippingFilterMap: new Map([[PACK(6, 6), 1], [PACK(7, 7), 1]]),
+  });
+  const flipperHeavyOn = getAttemptConfigs(flipperHeavyLevel, { ...defaultConfig(), STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: true });
+  assert.equal(flipperHeavyOn.some(c => c.beamWidth === 5000 && !c.diverseBeam), false, 'flag has no effect on the flipper-heavy rule');
+});
+
 test('SOLVER_TESTING_API exposes the extracted attempt-order helper', () => {
   const level = makeLevel({ reqLen: 10, reqInt: 1 });
   assert.equal(SOLVER_TESTING_API.getAttemptConfigs, getAttemptConfigs);
