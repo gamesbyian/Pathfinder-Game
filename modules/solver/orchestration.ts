@@ -240,7 +240,7 @@ export function classifyAttemptTier(attempt: AttemptTierFlags): string {
                                             : 'main-ladder';
 }
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
-interface SearchResult { solution: number[] | null; attempts: Attempt[]; earlyNodeBudgetReached?: boolean; shrunkBiased?: ShrunkBiasedTier[]; }
+interface SearchResult { solution: number[] | null; attempts: Attempt[]; earlyNodeBudgetReached?: boolean; earlyWorkBudgetReached?: boolean; shrunkBiased?: ShrunkBiasedTier[]; }
 
 /** One biased repair-probe tier whose node budget STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET
  *  reduced, recorded so a later tier can restore what was withheld — see
@@ -717,10 +717,12 @@ async function runInterleavedAttempts(
     prep: PrepLevel, timeBudgetMs: number, levelStartTime: number, yieldFn: YieldFn,
     nodeBudget = Infinity, workBudget = Infinity, workStart = 0,
     earlyConfigNodeBudget = nodeBudget, lateConfigStart = baseConfigs.length,
+    earlyConfigWorkBudget = workBudget,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     let pairsLeft = baseConfigs.length * activeGates.length;
     let earlyNodeBudgetReached = false;
+    let earlyWorkBudgetReached = false;
     const lateConfigCount = baseConfigs.length - lateConfigStart;
     const latePairCount = lateConfigCount * activeGates.length;
 
@@ -755,17 +757,42 @@ async function runInterleavedAttempts(
                     continue configLoop;
                 }
                 if (latePairIndex + 1 < latePairCount) { pairsLeft--; continue; }
-                return { solution: null, attempts, earlyNodeBudgetReached };
+                return { solution: null, attempts, earlyNodeBudgetReached, earlyWorkBudgetReached };
+            }
+            // WORK-side mirror of the node-side check just above (2026-08-26 fix for the
+            // confirm-residual-001 gap — see solveLevel's mainLoopLateWorkReserveEligible comment for
+            // the full rationale). Before this, the only work-budget stop condition in this loop was
+            // the flat check that used to live where budgetLeft is now computed below
+            // (`workSpent >= workBudget`), with no reserve carve-out at all: a work-expensive early
+            // config population could exhaust workBudget long before ever reaching the reserve-
+            // protected late suffix, even while the NODE dimension above still had headroom. Same
+            // escalating-slice-per-late-pair shape as configNodeBudget, keyed off workBudget instead
+            // of nodeBudget.
+            const configWorkBudget = latePairIndex >= 0
+                ? earlyConfigWorkBudget + Math.floor((workBudget - earlyConfigWorkBudget) * (latePairIndex + 1) / latePairCount)
+                : earlyConfigWorkBudget;
+            const workSpent = prep._workMeter.units - workStart;
+            if (workSpent >= configWorkBudget) {
+                if (earlyConfigWorkBudget < workBudget && ci < lateConfigStart) {
+                    earlyWorkBudgetReached = true;
+                    pairsLeft = (baseConfigs.length - lateConfigStart) * activeGates.length;
+                    ci = lateConfigStart - 1;
+                    continue configLoop;
+                }
+                if (latePairIndex + 1 < latePairCount) { pairsLeft--; continue; }
+                return { solution: null, attempts, earlyNodeBudgetReached, earlyWorkBudgetReached };
             }
             // Ablation: STRATEGY_MIN_BUDGET_FLOOR gates the per-attempt-config minimum
             // budget-share floor (long-multigate perimeter beams, must-cross diverse-beam
             // threads) — disabling it falls back to the flat even split for every config.
             const minFrac = (!cfg || cfg.STRATEGY_MIN_BUDGET_FLOOR) ? (baseConfigs[ci].minBudgetFraction ?? 0) : 0;
             // The remainder being divided is WORK, never wall clock — that is what makes the whole
-            // schedule a function of (level, workBudget) alone. See work-meter.ts.
-            const workSpent = prep._workMeter.units - workStart;
-            if (workSpent >= workBudget) return { solution: null, attempts };
-            const budgetLeft = workBudget - workSpent;
+            // schedule a function of (level, workBudget) alone. See work-meter.ts. Divided out of
+            // configWorkBudget (the late-reserve-aware ceiling computed above), not the flat
+            // workBudget, so a late-window config's own attempt allocation stays capped at its own
+            // escalating slice too — mirroring remainingNodeBudget's identical use of configNodeBudget
+            // (rather than the flat nodeBudget) below.
+            const budgetLeft = configWorkBudget - workSpent;
             let attBudget = attemptBudgetShare(budgetLeft, pairsLeft, budgetLeft / activeGates.length, minFrac);
             if (gateProgress && ci >= 1) {
                 // adaptiveGateWeight is unbounded above ((share*n)**2 for a gate that has been
@@ -775,11 +802,11 @@ async function runInterleavedAttempts(
                 // <= budgetLeft by construction, so this clamp preserves that same invariant rather
                 // than changing the weighting's own (validated, S142-scoped) relative aggressiveness.
                 // Without it, a single heavily-weighted attempt could claim several times budgetLeft,
-                // overspending this tier's declared workBudget before the outer `workSpent >= workBudget`
+                // overspending this tier's declared workBudget before the outer `workSpent >= configWorkBudget`
                 // check on the NEXT iteration ever gets a chance to stop it.
                 attBudget = Math.min(budgetLeft, Math.max(MIN_ATTEMPT_WORK, Math.floor(attBudget * adaptiveGateWeight(gateKey, gateProgress))));
             }
-            if (attBudget < MIN_ATTEMPT_WORK) return { solution: null, attempts };
+            if (attBudget < MIN_ATTEMPT_WORK) return { solution: null, attempts, earlyNodeBudgetReached, earlyWorkBudgetReached };
             prep._workCap = Math.min(prep._workMeter.units + attBudget, prep._strictWorkCap ?? Infinity);
 
             // Remaining GLOBAL node budget, recomputed fresh before each attempt (same pattern as the
@@ -794,15 +821,18 @@ async function runInterleavedAttempts(
             if (ci < lateConfigStart && (prep._metrics ? prep._metrics.nodesExpanded : 0) >= earlyConfigNodeBudget) {
                 earlyNodeBudgetReached = earlyConfigNodeBudget < nodeBudget;
             }
+            if (ci < lateConfigStart && (prep._workMeter.units - workStart) >= earlyConfigWorkBudget) {
+                earlyWorkBudgetReached = earlyConfigWorkBudget < workBudget;
+            }
             if (gateProgress) {
                 gateProgress.set(gateKey, (gateProgress.get(gateKey) ?? 0) + (result.attempt.nodesExpanded ?? 0));
             }
             attempts.push(result.attempt);
             pairsLeft--;
-            if (result.path) return { solution: result.path, attempts, earlyNodeBudgetReached };
+            if (result.path) return { solution: result.path, attempts, earlyNodeBudgetReached, earlyWorkBudgetReached };
         }
     }
-    return { solution: null, attempts, earlyNodeBudgetReached };
+    return { solution: null, attempts, earlyNodeBudgetReached, earlyWorkBudgetReached };
 }
 
 async function runGateSerialAttempts(
@@ -810,10 +840,12 @@ async function runGateSerialAttempts(
     prep: PrepLevel, timeBudgetMs: number, levelStartTime: number, yieldFn: YieldFn,
     nodeBudget = Infinity, workBudget = Infinity, workStart = 0,
     earlyConfigNodeBudget = nodeBudget, lateConfigStart = baseConfigs.length,
+    lateWorkReserveFraction = 0,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     const cfg = prep._cfg;
     let earlyNodeBudgetReached = false;
+    let earlyWorkBudgetReached = false;
     const lateConfigCount = baseConfigs.length - lateConfigStart;
     const latePairCount = lateConfigCount * activeGates.length;
 
@@ -829,6 +861,18 @@ async function runGateSerialAttempts(
         if (workSpent >= workBudget) return { solution: null, attempts };
         const gatesLeft = activeGates.length - gi;
         const gateBudget = Math.floor((workBudget - workSpent) / gatesLeft);
+        // WORK-side mirror of earlyConfigNodeBudget, sized fresh per gate (2026-08-26 fix for the
+        // confirm-residual-001 gap — see runInterleavedAttempts's identical-purpose configWorkBudget,
+        // and solveLevel's mainLoopLateWorkReserveEligible comment, for the full rationale). Unlike
+        // the node dimension, work here is already divided into a fresh per-gate slice (gateBudget,
+        // just above) rather than one shared global pool, so the reserve is carved as a FRACTION of
+        // each gate's own slice rather than an absolute global ceiling threaded in from the caller.
+        // `lateConfigCount === 0` (no reserve window at all) forces this to exactly gateBudget
+        // regardless of the fraction, matching earlyConfigNodeBudget defaulting to nodeBudget
+        // whenever the reserve is disabled.
+        const earlyGateWorkBudget = lateConfigCount > 0
+            ? gateBudget - Math.floor(gateBudget * lateWorkReserveFraction)
+            : gateBudget;
 
         for (let ci = 0; ci < baseConfigs.length; ci++) {
             const latePairIndex = ci >= lateConfigStart
@@ -840,12 +884,20 @@ async function runGateSerialAttempts(
             if (earlyConfigNodeBudget < nodeBudget && (prep._metrics ? prep._metrics.nodesExpanded : 0) >= configNodeBudget) {
                 if (ci < lateConfigStart) { earlyNodeBudgetReached = true; continue; }
                 if (latePairIndex + 1 < latePairCount) continue;
-                return { solution: null, attempts, earlyNodeBudgetReached };
+                return { solution: null, attempts, earlyNodeBudgetReached, earlyWorkBudgetReached };
             }
+            const configWorkBudget = latePairIndex >= 0
+                ? earlyGateWorkBudget + Math.floor((gateBudget - earlyGateWorkBudget) * (latePairIndex + 1) / latePairCount)
+                : earlyGateWorkBudget;
             const elapsed = prep._workMeter.units - gateStartUnits;
+            if (earlyGateWorkBudget < gateBudget && elapsed >= configWorkBudget) {
+                if (ci < lateConfigStart) { earlyWorkBudgetReached = true; continue; }
+                if (latePairIndex + 1 < latePairCount) continue;
+                return { solution: null, attempts, earlyNodeBudgetReached, earlyWorkBudgetReached };
+            }
             if (elapsed >= gateBudget) break;
 
-            const remaining = gateBudget - elapsed;
+            const remaining = configWorkBudget - elapsed;
             const attemptsLeft = baseConfigs.length - ci;
             // Ablation: STRATEGY_MIN_BUDGET_FLOOR — see runInterleavedAttempts's identical gate.
             const minFrac = (!cfg || cfg.STRATEGY_MIN_BUDGET_FLOOR) ? (baseConfigs[ci].minBudgetFraction ?? 0) : 0;
@@ -860,11 +912,14 @@ async function runGateSerialAttempts(
             if (ci < lateConfigStart && (prep._metrics ? prep._metrics.nodesExpanded : 0) >= earlyConfigNodeBudget) {
                 earlyNodeBudgetReached = earlyConfigNodeBudget < nodeBudget;
             }
+            if (ci < lateConfigStart && (prep._workMeter.units - gateStartUnits) >= earlyGateWorkBudget) {
+                earlyWorkBudgetReached = earlyGateWorkBudget < gateBudget;
+            }
             attempts.push(result.attempt);
-            if (result.path) return { solution: result.path, attempts, earlyNodeBudgetReached };
+            if (result.path) return { solution: result.path, attempts, earlyNodeBudgetReached, earlyWorkBudgetReached };
         }
     }
-    return { solution: null, attempts, earlyNodeBudgetReached };
+    return { solution: null, attempts, earlyNodeBudgetReached, earlyWorkBudgetReached };
 }
 
 // Retry-tier budget fraction/reserve constants and their re-derivation cascade now live in
@@ -1626,9 +1681,38 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         repairLateProbeMultiSeedRetryTierWillRun, repairLateProbeMultiSeedRetryNodeCeiling,
         retryTierStaircase, earlyTierNodeBudget, admissibleOrderDefaultProfileCeiling,
         mainLoopLateReserve, mainLoopEarlyNodeBudget, mainLoopLateConfigStart,
+        mainLoopLateReserveEnabled, mainLoopLateReserveFraction, mainLoopLateReserveConfigCount,
         repairFallbackNodeReserve, attractionDiversityNodeReserve,
         shrinkRecoveryEnabled,
     } = stageBudgetPlan;
+    // WORK-budget mirror of mainLoopLateReserve/mainLoopEarlyNodeBudget above (2026-08-26 fix for the
+    // confirm-residual-001 scheduling gap -- see docs/solver-opt-in-experiment-ledger.md's
+    // STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE row and
+    // reports/2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md's confirm-residual-001
+    // subsection). MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT's protection for the trailing configs only ever
+    // worked against the NODE dimension: runInterleavedAttempts/runGateSerialAttempts's own WORK-budget
+    // stop conditions had no equivalent carve-out, so a work-expensive early config population could
+    // exhaust `workBudget` while `nodeBudget` still had headroom, silently defeating the reserve --
+    // confirmed directly on real generated levels in that confirmation attempt (25/25 archetype-
+    // eligible-and-residual rows truncated after only 4 of 6 configs despite the node reserve
+    // nominally protecting the trailing 5).
+    //
+    // Lives here, not in stage-budget.ts, because `workBudget` is a solveLevel-local input never
+    // threaded into computeStageBudgetPlan (every other WORK-dimension computation -- workSpent,
+    // gateBudget, attemptBudgetShare -- already lives in this file, not there). Same fraction and
+    // config-count policy as the node-side reserve, mirrored onto the other resource dimension; see
+    // that reserve's own comment (stage-budget.ts) for the eligibility/rounding-to-zero rationale,
+    // which applies identically here.
+    const mainLoopLateWorkReserveEligible = mainLoopLateReserveEnabled
+        && mainLoopLateReserveFraction > 0
+        && mainLoopLateReserveConfigCount > 0
+        && workBudget !== Infinity;
+    const mainLoopLateWorkReserve = mainLoopLateWorkReserveEligible
+        ? Math.floor(workBudget * mainLoopLateReserveFraction)
+        : 0;
+    const mainLoopEarlyWorkBudget = mainLoopLateWorkReserve > 0
+        ? workBudget - mainLoopLateWorkReserve
+        : workBudget;
     // Canonical per-stage BudgetEnvelope projection of the same plan (stage-policy.ts) — every
     // node ceiling above is a bare scalar for the SAME reason dispatch reads it that way (see
     // buildStageBudgetEnvelopes's own doc); this object is the typed, stage-keyed record of those
@@ -1812,10 +1896,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const useInterleaving = (!cfg || cfg.STRATEGY_GATE_INTERLEAVING);
     const mainLoopStartTime = Date.now();
     const result = useInterleaving && activeGates.length > 1
-        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, mainLoopNodeBudgetFinal, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart)
-        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, mainLoopNodeBudgetFinal, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart);
+        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, mainLoopNodeBudgetFinal, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart, mainLoopEarlyWorkBudget)
+        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, mainLoopNodeBudgetFinal, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart, mainLoopLateWorkReserveEligible ? mainLoopLateReserveFraction : 0);
     result.attempts = [...probeAttempts, ...result.attempts];
     const mainLoopEarlyTiersHitNodeCeiling = result.earlyNodeBudgetReached === true;
+    const mainLoopEarlyTiersHitWorkCeiling = result.earlyWorkBudgetReached === true;
 
     // repairBudgetFraction was already resolved above (before the early probe) — reused here
     // unchanged for the full-budget fallback loop, same as before this fix. Checks against
@@ -2491,7 +2576,17 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // bound the run with workBudget alone, in which case this can never be set.
     // See docs/solver-budget-determinism.md.
     const workSpent = prep._workMeter.units - workStart;
-    const deadlineTruncated = totalMs >= timeBudgetMs && workSpent < workBudget && !nodeBudgetReached;
+    // Mirrors nodeBudgetReached's own reduced-ceiling accounting above, now that the main loop's
+    // WORK dimension can also be truncated below the full workBudget by its own late reserve
+    // (mainLoopEarlyWorkBudget/mainLoopEarlyTiersHitWorkCeiling): without the OR term, a level whose
+    // early configs were cut off at that reduced ceiling, but whose later tiers (repair fallback,
+    // admissible order) then exhaust their own search naturally below the full workBudget, would
+    // report workBudgetReached: false / status 'failed' — hiding that the main loop itself was
+    // budget-limited, not searched out. Bit-identical to the plain `workSpent >= workBudget` check
+    // whenever the reserve never triggered (every caller before this fix, and any run with an
+    // infinite workBudget).
+    const workBudgetReached = workBudget !== Infinity && (workSpent >= workBudget || mainLoopEarlyTiersHitWorkCeiling);
+    const deadlineTruncated = totalMs >= timeBudgetMs && !nodeBudgetReached && !workBudgetReached;
     // A technique exception is not evidence that the level exhausted, timed out, or consumed its
     // node allowance. Attempts after it still run, but an unsuccessful aggregate remains visibly
     // indeterminate even when a separate budget boundary was also reached later.
@@ -2499,6 +2594,6 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const status = hadAttemptError ? 'attempt-error'
         : nodeBudgetReached ? 'node-budget-reached'
         : deadlineTruncated ? 'deadline-truncated'
-        : (workSpent >= workBudget ? 'work-budget-reached' : 'failed');
+        : (workBudgetReached ? 'work-budget-reached' : 'failed');
     return finish({ ok: false, status, solution: null, solutions: [], attempts: result.attempts, totalMs, nodesExpanded, nodeBudgetReached, deadlineTruncated, workSpent, workBudget });
 }
