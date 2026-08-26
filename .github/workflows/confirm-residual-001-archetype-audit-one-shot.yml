@@ -57,10 +57,20 @@ jobs:
           run-id: ${{ inputs.source_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Download the phase-2 combined arm reports from the source run
+        uses: actions/download-artifact@v4
+        with:
+          name: residual-confirmation-combined
+          path: audit-download-phase2
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run the archetype audit
         shell: bash
         run: |
           ls -la audit-download/
+          find audit-download-phase2 -type f
           node scripts/run-bundled.mjs scripts/stress/confirm-residual-001-archetype-audit.mjs -- \
             --pool="audit-download/confirm-residual-001-pool.json" \
-            --phase1-report="audit-download/residual-confirmation-phase1-control.json"
+            --phase1-report="audit-download/residual-confirmation-phase1-control.json" \
+            --phase2-treatment-report="audit-download-phase2/reports/stress/residual-confirmation-phase2-treatment.json"
