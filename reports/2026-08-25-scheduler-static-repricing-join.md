@@ -1,10 +1,11 @@
 # Scheduler census join and static repricing gate
 
-> **Status:** concluded-negative after independent confirmation
+> **Status:** concluded-negative
 > **Last evidence:** 2026-08-25 — sealed-cohort confirmation `32908734154`; development A/B `32901181013`; precursor fixed-work sample `32821022906`; frozen technique census `32240161854`
 > **Decision:** close the exact global suppression of ordinary-main-loop `dfs:objectiveFirst` and `dfs:intersectionHarvest`. It passed development but failed independent confirmation under the frozen zero-loss rule. Retain only the broader allocation premise.
-> **Remaining gate:** none for this treatment. Do not tune it on confirmation rows. Dynamic scheduler machinery remains closed.
-> **Evidence role:** development + independent confirmation; `confirm-broad-001` spent
+> **Remaining gate:** none
+> **Evidence role:** confirmation
+> **Selection:** prespecified for `confirm-broad-001` after the treatment was selected on development evidence; the confirmation candidate, work envelope, and acceptance rule were frozen before cohort materialization
 
 ## Pre-execution evidence
 
