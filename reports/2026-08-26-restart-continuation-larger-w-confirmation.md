@@ -5,7 +5,7 @@
 > **Decision:** pending
 > **Remaining gate:** run the frozen comparison below and report the outcome per the success/stop gates
 > **Evidence role:** discovery (development-stage confirmation on a disjoint sample; not a production-promotion-grade confirmation cohort — restart-vs-continuation is not yet wired as a production ablation flag, so the heavier `confirm-broad-*`/sealed-cohort protocol in [`2026-08-24-solver-confirmation-transfer-cohort-reservation.md`](2026-08-24-solver-confirmation-transfer-cohort-reservation.md) does not yet apply to it)
-> **Selection:** prespecified before execution; frozen at commit `3bfd14dcf1e75d4518d4c627b87edeb455f6a450`
+> **Selection:** prespecified before execution; frozen at commit `5030f861e150e87e6079defcc42c281872ebb49c` (the same commit that adds the `--offset` flag this design depends on)
 
 ## Motivation
 
