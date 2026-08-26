@@ -1,0 +1,112 @@
+name: Temporary current-head solver profile
+
+on:
+  push:
+    branches:
+      - chatgpt/profile-current-head-2026-08-26
+
+permissions:
+  contents: read
+
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Build bundled speed probe
+        shell: bash
+        run: |
+          BUNDLE=$(node --input-type=module -e "import { buildBundle } from './scripts/run-bundled.mjs'; console.log(buildBundle('scripts/solver-speed-probe.mjs'));" | tail -n1)
+          echo "SOLVER_SPEED_BUNDLE=$BUNDLE" >> "$GITHUB_ENV"
+          echo "Profiling bundle: $BUNDLE"
+      - name: Profile published corpus
+        shell: bash
+        run: |
+          mkdir -p tmp/current-head-profile
+          node --cpu-prof \
+            --cpu-prof-dir=tmp/current-head-profile \
+            --cpu-prof-name=published.cpuprofile \
+            "$SOLVER_SPEED_BUNDLE" \
+            --corpus=published \
+            --count=160 \
+            --budget-ms=600000 \
+            --node-budget=250000 \
+            --out=tmp/current-head-profile/published.json
+      - name: Profile hard Corpus-2 sample
+        shell: bash
+        run: |
+          node --cpu-prof \
+            --cpu-prof-dir=tmp/current-head-profile \
+            --cpu-prof-name=corpus2-hard.cpuprofile \
+            "$SOLVER_SPEED_BUNDLE" \
+            --corpus=corpus2 \
+            --count=24 \
+            --start=1 \
+            --stride=67 \
+            --budget-ms=600000 \
+            --node-budget=250000 \
+            --out=tmp/current-head-profile/corpus2-hard.json
+      - name: Summarize CPU profiles
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+
+          const profiles = [
+            ['published', 'tmp/current-head-profile/published.cpuprofile'],
+            ['corpus2-hard', 'tmp/current-head-profile/corpus2-hard.cpuprofile'],
+          ];
+          const selected = [
+            'scoreMove',
+            'buildCurUrgencyContext',
+            'applyMove',
+            'undoMove',
+            'getNeighbors',
+            'beamSearchFromGate',
+            '_floodFillReachability',
+            'evaluatePrunedMove',
+            'getDistanceFromArray',
+            'prepLevel',
+          ];
+          const out = {};
+
+          for (const [label, file] of profiles) {
+            const profile = JSON.parse(readFileSync(file, 'utf8'));
+            const byId = new Map(profile.nodes.map(node => [node.id, node.callFrame]));
+            const counts = new Map();
+            for (const id of profile.samples ?? []) {
+              const frame = byId.get(id);
+              const name = frame?.functionName || '(anonymous)';
+              counts.set(name, (counts.get(name) || 0) + 1);
+            }
+            const total = profile.samples?.length || 0;
+            const rows = [...counts.entries()]
+              .map(([name, samples]) => ({ name, samples, pct: total ? 100 * samples / total : 0 }))
+              .sort((a, b) => b.samples - a.samples || a.name.localeCompare(b.name));
+            const top = rows.slice(0, 30);
+            out[label] = { totalSamples: total, top, selected: rows.filter(row => selected.includes(row.name)) };
+
+            console.log(`\n=== ${label}: ${total.toLocaleString()} CPU samples ===`);
+            for (const row of top.slice(0, 20)) {
+              console.log(`${row.pct.toFixed(2).padStart(6)}%  ${String(row.samples).padStart(7)}  ${row.name}`);
+            }
+            console.log('\nSelected solver functions:');
+            for (const name of selected) {
+              const row = rows.find(r => r.name === name);
+              console.log(`${name.padEnd(28)} ${row ? `${row.pct.toFixed(2)}% (${row.samples})` : 'no self samples'}`);
+            }
+          }
+          writeFileSync('tmp/current-head-profile/summary.json', JSON.stringify(out, null, 2));
+          NODE
+      - name: Upload profile evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-head-solver-profile
+          path: tmp/current-head-profile/
+          retention-days: 30
