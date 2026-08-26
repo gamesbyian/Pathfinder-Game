@@ -1,73 +1,57 @@
 # Solver confirmation/transfer cohort reservation
 
 > **Status:** active
-> **Last evidence:** 2026-08-24 — current confirmation/transfer protocol, stress-corpus contract, and `generate-random.mjs` v1.1.0 generator interface
-> **Decision:** reserve the first broad-confirmation and transfer-envelope cohorts now, before any next candidate is frozen or any cohort levels/outcomes are generated/inspected. Population identity includes the **full generator source revision**, not just seed/mode/count or one file's bytes.
-> **Remaining gate:** when the next selected treatment is ready, freeze its candidate/work/acceptance contract, materialize `confirm-broad-001` **from the pinned repository revision**, run the frozen comparison, and record the verdict before exact failure inspection; materialize/use `transfer-envelope-001` only after confirmation succeeds
-> **Evidence role:** discovery / protocol instantiation
-> **Selection:** prespecified before cohort materialization or candidate outcomes
+> **Last evidence:** 2026-08-25 — completed `confirm-broad-001` run `32908734154` and `confirm-broad-002` run `32912881453`
+> **Decision:** broad confirmation has now completed two real one-use lifecycles. `confirm-broad-001` and `confirm-broad-002` are spent; `transfer-envelope-001` remains locked and untouched because neither candidate survived broad confirmation. Future candidates need a newly reserved broad successor before confirmation.
+> **Remaining gate:** reserve a fresh broad-confirmation successor before the next tuned candidate reaches confirmation; materialize `transfer-envelope-001` only after a candidate passes broad confirmation.
+> **Evidence role:** discovery
+> **Selection:** prespecified cohort lifecycle; each confirmation candidate, work envelope, and acceptance rule was frozen before its cohort was materialized
 > **Manifest:** [`stress/managed-evaluation-populations-2026-08-24.json`](stress/managed-evaluation-populations-2026-08-24.json)
 > **Protocol:** [`2026-08-23-solver-confirmation-transfer-protocol-design.md`](2026-08-23-solver-confirmation-transfer-protocol-design.md)
 
-## Why reserve rather than generate now?
+## Lifecycle now exercised
 
-The protocol's missing piece was not another discussion of holdouts. It was a reproducible population identity that exists **before** the next treatment is selected and inspected on it.
+The reservation mechanism has moved from paper design to working evidence discipline.
 
-Generating the levels now would add no decision value and would make accidental inspection easier. The generation process is deterministic from its **exact repository source revision**, mode, count, and master seed, so reserving those inputs is sufficient to define the population reproducibly while keeping exact level identities unmaterialized.
+### `confirm-broad-001` — SPENT
 
-The source revision is load-bearing. A future generator or imported helper can change while the nominal generator version string remains the same. Therefore the commands below are recipes **relative to checkout `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`**, not commands that may be run against arbitrary future `main`.
+- 256 ordinary raised-cap generated levels;
+- generator revision `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`;
+- master seed `2026082417`, IDs `C00001` onward;
+- candidate: global suppression of ordinary-main-loop `dfs:objectiveFirst` and `dfs:intersectionHarvest`;
+- final valid run `32908734154`;
+- result: **140/256 → 141/256**, **+3/-2**, work -0.22%;
+- verdict: failed frozen zero-loss gate.
 
-This is intentionally process-light. There is no new holdout service, database, secrecy layer, or workflow framework.
+The first attempts exposed an infrastructure lesson: independently invoking the pinned generator with the same seed did not guarantee byte-identical cohort wrappers, and deeper generation behavior could not safely be assumed reproducible across separate jobs. The valid workflow therefore materialized the cohort **once**, sealed the `levels` hash, and made every arm download and verify the same artifact before search. That single-specimen pattern is now the required confirmation contract.
 
-## Materialization invariant
+### `confirm-broad-002` — SPENT
 
-Before generating either reserved cohort:
+Reserved fresh before materialization because `confirm-broad-001` was already spent:
 
-1. use a checkout/worktree at **exact repository revision** `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`;
-2. only then run the stored materialization command in that checkout/worktree, using that revision's helper/build inputs as well as its generator file;
-3. record the actual source revision with the materialized artifact;
-4. if the pinned revision can no longer be reproduced, reserve a **new population id** under a new revision rather than silently generating different rows under `confirm-broad-001` or `transfer-envelope-001`.
+- 256 ordinary raised-cap generated levels;
+- same pinned generator revision;
+- master seed `2026082517`, IDs `D00001` onward;
+- candidate: selective exposure of `beam:intersectionHarvest@beam5000(diverse)` in the two existing very-high-intersection policy bundles when `mustCross < 2`;
+- final run `32912881453`;
+- result: **126/256 → 126/256**, **0 gains / 0 losses**, treatment work about +0.01%;
+- verdict: failed frozen gate as a clean null.
 
-The manifest encodes this precondition explicitly. The original schema omitted it from the executable recipe, which could have allowed a later changed generator or dependency to materialize a different population under the same reserved identity; schema v2 closes that ambiguity.
+See [`2026-08-25-diverse-ih-confirm-broad-002-freeze.md`](2026-08-25-diverse-ih-confirm-broad-002-freeze.md).
 
-## Reserved populations
-
-### `confirm-broad-001`
-
-- role: broad independent confirmation;
-- exposure: `LOCKED`;
-- size: 256 independent generated levels;
-- generator: `scripts/stress/generate-random.mjs`, version `1.1.0` at source commit `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`;
-- generator mode: ordinary uniform-random raised-caps mode, matching the Corpus-2 generation philosophy but with a fresh master seed;
-- master seed: `2026082417`;
-- IDs on materialization: `C00001` onward;
-- outcome conditioning: none;
-- selection: every generated row, with no baseline-failure filtering and no post-hoc candidate-specific exclusion.
-
-From the pinned repository checkout, materialize with:
-
-```bash
-node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
-  --count=256 \
-  --master-seed=2026082417 \
-  --id-prefix=C \
-  --out=tmp/managed-evaluation/confirm-broad-001.json
-```
-
-This cohort answers the broad question: does a candidate selected on the existing development populations retain its solve/work effect on an untouched sample from the solver-blind generated distribution?
-
-### `transfer-envelope-001`
+### `transfer-envelope-001` — LOCKED / UNTOUCHED
 
 - role: transfer/challenge;
-- exposure: `LOCKED`;
 - size: 256 independent generated levels;
-- generator: same pinned repository revision, but `--envelope-caps` mode;
+- generator revision: `4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92`;
+- mode: `--envelope-caps`;
 - master seed: `2026082429`;
 - IDs on materialization: `T00001` onward;
-- outcome conditioning: none;
-- selection: every generated row, with no baseline-failure filtering or post-hoc exclusion.
+- outcome conditioning: none.
 
-From the pinned repository checkout, materialize with:
+It remains unmaterialized because neither broad-confirmation candidate passed. Do not spend it merely because it exists.
+
+From the pinned generator checkout, its reserved recipe remains:
 
 ```bash
 node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
@@ -78,70 +62,28 @@ node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
   --out=tmp/managed-evaluation/transfer-envelope-001.json
 ```
 
-This is a modest but real distribution shift. It uses the same solver-blind witness-first generator while restoring mechanic caps to the shipped/editor envelope rather than Corpus 2's deliberately raised stress caps. It therefore tests something stronger than another exact Corpus-2 sample without pretending to be human-authored transfer evidence.
+## Durable confirmation contract
 
-## Why 256 + 256?
+Before any future decision-bearing confirmation:
 
-This is a reservation, not a claim that 256 is universally sufficient for every future effect size.
+1. select/tune only on development evidence;
+2. freeze solver revision, exact treatment, total work envelope, primary outcome, correctness rule, gains/loss rule, and pass/fail criterion;
+3. reserve a fresh cohort identity before materialization or inspection;
+4. generate the cohort exactly once from its pinned source revision;
+5. seal the generated `levels` content and give every arm that exact artifact;
+6. verify cohort seal and treatment provenance before search;
+7. record the aggregate verdict before inspecting changed IDs or traces;
+8. mark the cohort spent after that one decision-bearing use;
+9. if exact failures influence redesign, treat them as development evidence and reserve another successor.
 
-The choice deliberately balances three considerations:
-
-1. large enough that a material several-percent solve-rate change is not represented by only one or two levels;
-2. small enough that the first lifecycle does not turn confirmation into another multi-hour giant-corpus ritual by default;
-3. power-of-two cardinality makes sharding and paired accounting simple if/when these cohorts are materialized.
-
-The **candidate acceptance rule still must be frozen before the run**. If development evidence implies an effect too small for this population to decide credibly, the right response is to reserve a larger fresh successor before inspecting outcomes, not to keep querying this cohort until something looks convincing.
-
-## Exposure contract
-
-At this commit the two populations remain `LOCKED` because:
-
-- their exact level files have not been generated into the repository;
-- no baseline or candidate solve outcomes exist for them;
-- no per-level identities/features/traces have been inspected for treatment design.
-
-The seeds and generator recipe are intentionally recorded publicly for reproducibility. Merely knowing the deterministic recipe does not make the cohort development evidence; reconstructing/inspecting its rows for candidate design would.
-
-Before any decision-bearing run, record the candidate freeze contract required by the protocol: solver commit, treatment/config, work envelope, objective, paired gain/loss rule, correctness criteria, acceptable work tradeoff, pass/fail/inconclusive rule, and how many alternatives were tried in development.
-
-For `confirm-broad-001`:
-
-1. freeze the candidate contract;
-2. materialize from the pinned repository revision only;
-3. run the frozen treatment/control comparison;
-4. record the verdict before exact failure inspection;
-5. exact rows may then be unsealed for diagnosis;
-6. if those details influence redesign, change exposure state to `DEVELOPMENT` and reserve a successor for the redesigned candidate.
-
-For `transfer-envelope-001`:
-
-1. do not use it to select among candidates;
-2. materialize from the pinned repository revision only, and only after the candidate survives broad confirmation;
-3. prefer aggregate verdict visibility first;
-4. unseal exact rows only after the transfer verdict is frozen;
-5. reclassify if failures influence redesign.
-
-## What this does not instantiate
-
-No residual-confirmation cohort is reserved yet. That population is only needed for an explicitly conditional hard-tail question such as scheduler continuation value among fresh baseline failures. Its membership requires a **future frozen baseline commit/work contract**, so reserving a failure-conditioned set before that contract exists would be backwards.
-
-Likewise, no family-confirmation cohort is reserved. The next likely decision-bearing treatments are scheduler/configuration/restart/beam policies selected from existing development evidence, not a treatment whose independent unit is a variant parent family.
+Seeds and recipes may remain public for reproducibility. Freshness comes from non-use and non-inspection for candidate design, not secrecy.
 
 ## Relationship to existing corpora
 
-Existing Corpus 2, census cells, regressions, and envelope data remain development evidence for current research because they have already been repeatedly inspected and used to choose hypotheses.
+Corpus 2, technique census, variant families, and spent confirmation cohorts are all development evidence for future hypothesis generation once they have influenced design. Level-blindness within those populations does not restore holdout status.
 
-These reservations do not relabel or sanitize them. They create new population identities with fresh seeds and an explicit exposure lifecycle.
+The two failed confirmations are themselves valuable evidence: both treatments looked positive on repeatedly studied development data, and neither survived a fresh broad cohort. Independent confirmation is therefore a demonstrated requirement for broad promotion claims in this project.
 
-## Decision consequence
+## Next reservation
 
-Queue Priority 2 is no longer blocked on defining what the first populations should be. Two deterministic cohorts are now reserved and `LOCKED`.
-
-The remaining work is operational and candidate-dependent:
-
-- freeze the next selected treatment;
-- materialize and use `confirm-broad-001` once from its pinned repository revision;
-- if it passes, use `transfer-envelope-001` once from that same pinned repository revision;
-- record exposure transitions and replenish after unsealing/design influence.
-
-A permanent `docs/solver-evaluation-populations.md` authority is still premature. The existing protocol explicitly requires at least one real lifecycle before promoting the mechanism into durable documentation.
+No third broad cohort is reserved in this report. Reserve its identity only when a new candidate is approaching confirmation, before its exact generated rows are inspected. The current queue puts equal-work restart/continuation ahead of another mined portfolio treatment, so a future residual-confirmation cohort may require a separately frozen baseline-membership contract rather than another unconditional broad sample.
