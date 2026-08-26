@@ -1,98 +1,58 @@
 # Capability sweep 976 reconciliation
 
-> **Status:** concluded-positive
-> **Last evidence:** 2026-08-25 — level-blind capability run `32835403128` (`976/1700` Corpus 2), clean predecessor `32526927206` (`880/1700`), fixed-work scheduler A/B `32901181013`
-> **Decision:** recent capability growth strengthens the case for portfolio exposure, routing, fixed-work allocation, and equal-work restart/continuation tests before inventing new broad search machinery. Keep the closed beam-quota and broad repair-expansion forms closed.
-> **Remaining gate:** independently confirm the exact two-action scheduler suppression; refresh the current-policy/isolated-capability join against the 976 baseline; run the prespecified equal-work continuation-versus-fresh-seed test.
+> **Status:** concluded-positive as capability evidence; follow-on mined treatments closed after confirmation
+> **Last evidence:** 2026-08-25 — capability run `32835403128` (`976/1700`), scheduler confirmation `32908734154`, selective diverse-IH development `32911007113`, diverse-IH confirmation `32912881453`
+> **Decision:** the 880→976 gain remains strong evidence for routing, exposure, allocation, and restart research before broad new search machinery. Two post-hoc fixed-work treatments selected from development evidence did not generalize and are closed.
+> **Remaining gate:** equal-work continuation-versus-fresh-seed restart is the next independent execution seam; any further portfolio treatment must be newly prespecified and independently confirmed.
 > **Evidence role:** queue reconciliation / discovery
 
 ## Result shape
 
-The latest clean level-blind Corpus-2 comparison is unusually strong:
+The latest clean level-blind Corpus-2 comparison is:
 
 - run `32526927206`: **880/1700**;
 - run `32835403128`: **976/1700**;
 - delta: **+96 solves, 0 losses**.
 
-This differs from the preceding capability transitions, which had substantial gain/loss churn. The new 976 solved set strictly contains the prior 880 solved set.
+The 96 new winners divide into 45 repair, 41 beam, 10 ordinary DFS, and 0 admissible/IDA. The new solved set strictly contains the prior 880 solved set.
 
-The 96 newly solved levels break down by winning family:
+Work growth is concentrated almost entirely in the still-unsolved tail. On the 880 common solves, work fell about 0.26%; on the 96 new solves it rose about 4.53%; on the 724 still-unsolved levels it rose about 67.54%. Roughly 99.3% of added work landed on levels that still failed. That keeps continuation value and tail stopping economically important.
 
-| family | new solves |
-|---|---:|
-| `dfs:repair:repair` | 45 |
-| beam | 41 |
-| ordinary DFS | 10 |
-| admissible/IDA | 0 |
+## Beam interpretation
 
-This is descriptive across revisions, not a same-revision causal A/B. Its value is in identifying where current production capability has appeared and which already-ranked questions now have more evidence behind them.
+Thirty-five of the 41 new beam wins use four beam identities that earlier census-to-policy work had already identified as missing from applicable production rules: wide objective-first, wide intersection-harvest, and clockwise/counter-clockwise perimeter beams.
 
-## Beam gains mostly validate routing/exposure work, not survivor-selection work
+This supports **routing/exposure of existing algorithms**, not reopening the negative fixed-width quota/bucketing survivor-selection form.
 
-Thirty-five of the 41 new beam wins use the four beam identities that the August 22 census-to-policy audit had already identified as missing from relevant production policy rules:
+## Repair interpretation
 
-- `beam:objectiveFirst@beam5000`;
-- `beam:intersectionHarvest@beam5000`;
-- `beam:perimeterSweep/perimeterCW@beam2000`;
-- `beam:perimeterSweep/perimeterCCW@beam2000`.
+Repair accounts for 45 new wins, but broad repair expansion remains unsupported. The better upstream questions are allocation/access and equal-work seed continuation. Existing multi-seed gains are additive-budget evidence, not proof that restart beats continuation.
 
-Commit `7ad7cd2e351025a9d8810bd3828bbb70caaabc69` recorded the precursor diagnosis: among 46 examined cheap residual gaps, 35 had a winning beam configuration that the applicable `ATTEMPT_POLICY` rule never generated. The later routing additions exposed those existing techniques through trailing protected reserve.
+## Fixed-work allocation follow-up
 
-Therefore the 41 beam gains do **not** reopen the negative fixed-width quota/bucketing result. The stronger lesson is that existing search families still have capability hidden behind whether they are offered and whether they receive useful work.
+The global two-DFS suppression development A/B `32901181013` produced **40/60 → 41/60**, +1/-0, with aggregate work **2,037,107,633 → 2,018,891,302** (-0.894%). `R02966` solved because work shifted from early ordinary DFS into repair fallback.
 
-## Repair gains elevate allocation and restart questions, not broad new repair machinery
+Independent sealed-cohort confirmation `32908734154` produced **140/256 → 141/256**, but with **+3/-2**, so it failed the frozen zero-loss rule. The treatment is closed. See [`scheduler static repricing`](2026-08-25-scheduler-static-repricing-join.md).
 
-Repair accounts for 45 of the 96 new wins, but current evidence does not justify a new large repair operator:
+## Portfolio exposure follow-up
 
-- broad repair-fallback gate widening is already population-negative;
-- generic extra repair reserve has already failed to solve its target population economically;
-- the exact-live reconstructability audit remains heterogeneous and has only one confirmed native-hard case (`R00648`);
-- multi-seed repair-late-probe work already showed real additive seed-diversity value (+5, 0 losses in its validation population).
+The post-976 rejoin found 139 of the 724 current misses with an observed unablated singleton census solver: 73 with a known winner not offered exactly, 57 offered but starved, and 9 offered adequately but no longer replaying.
 
-The new sweep therefore increases the value of two narrower questions:
+A deliberately narrow development treatment then exposed `beam:intersectionHarvest@beam5000(diverse)` only in the two existing very-high-intersection policy bundles where the plain wide sibling was already offered but the diverse sibling was gated away. Development run `32911007113` was strong: **122/262 → 131/262**, **+9/-0**, and aggregate work fell 0.43%.
 
-1. **access/allocation:** which levels fail because repair is not offered or is reached with too little fixed work?
-2. **continuation value:** at equal total work, when is a fresh repair seed better than continuing the current seed?
+Fresh `confirm-broad-002` run `32912881453` was exactly null: **126/256 → 126/256**, **0 gains, 0 losses**, with treatment work higher by about 0.01%. The frozen gate therefore failed and the treatment is closed. `transfer-envelope-001` remains untouched.
 
-Keep repair-search invention secondary until those cheaper explanations are separated.
-
-## Fixed-work scheduler A/B now provides causal support
-
-The prespecified same-revision A/B `32901181013` suppresses only ordinary-main-loop `dfs:objectiveFirst` and `dfs:intersectionHarvest` while preserving the strict 67M total-work envelope and all later retry uses of those configurations.
-
-Result on the frozen 60-level development sample:
-
-| metric | control | treatment |
-|---|---:|---:|
-| solved | 40/60 | **41/60** |
-| aggregate `workSpent` | 2,040,402,024 | **2,022,204,454** |
-| work reduction | — | **0.89%** |
-| gained | — | **R02966** |
-| lost | — | **none** |
-
-The treatment passes the frozen gate because it loses no solve and gains one.
-
-`R02966` is especially diagnostic. The frozen census had independently nominated ordinary repair as its conservative isolated solver. Under control, the two suppressed DFS actions consume about 12.38M main-loop work and repair fallback gets about 9.05M before failure. Under treatment, those ordinary main-loop actions are absent and repair fallback receives about 18.91M; `dfs:repair:repair` then solves the level. This is direct evidence that **repricing existing work can create capability**, not merely reduce runtime.
-
-Freeze this exact treatment and the existing acceptance rule before using reserved confirmation evidence. Do not tune it on `confirm-broad-001`.
+The lesson is important: Corpus-2 contains real exploitable routing structure, but treatments mined from that repeatedly studied corpus are not automatically general solver improvements. Holdout discipline is now empirically justified, not merely procedural.
 
 ## Priority consequences
 
-1. **Scheduler/fixed-work repricing remains #0 and advances to independent confirmation.** Dynamic scheduling remains closed until this exact static treatment confirms.
-2. **Generalization/holdout becomes immediately active.** The exact treatment and acceptance rule are now frozen, so `confirm-broad-001` has an earned use.
-3. **Portfolio construction remains #2 but gets a concrete next analysis.** Rejoin current production policy to isolated capability on the 976 baseline and classify each residual opportunity as: **not offered**, **offered but starved**, or **offered adequately but fails**. Race/prune actions before tuning scores, widths, or thresholds.
-4. **Restart/randomization moves ahead of inactive beam/exact-model lanes.** Run the existing equal-work seed-0 continuation versus seed-0/seed-1 split gate. Additive multi-seed gains are motivation, not proof.
-5. **Beam quota/bucketing stays closed.** The new beam evidence is primarily routing/exposure evidence.
-6. **Repair reconstructability remains secondary.** Allocation/access/seed questions are elevated under scheduler/restart work; large destroy/reconstruct work still needs recurrent structural evidence.
+1. Keep global two-DFS suppression closed.
+2. Keep the tested selective diverse-IH exposure closed as a general promotion candidate.
+3. Preserve the broader premise that allocation and exposure matter, but require fresh prespecified treatments rather than further tuning on spent confirmation rows.
+4. Advance equal-work restart/continuation as the next major execution question.
+5. Keep beam quota/bucketing and broad repair expansion closed.
+6. Keep exact/reference work bounded to concrete ranked questions.
 
 ## Capability-refresh evidence hygiene
 
-A major capability refresh should produce a compact delta digest against the latest comparable refresh. At minimum report:
-
-- gained and lost level IDs;
-- winning stage and stable action/config identity for changed solves;
-- per-level `workSpent` and attempt-count deltas;
-- aggregate work split across previously solved, newly solved, and still-unsolved levels;
-- revision, budgets, deterministic/deadline mode, and relevant flags.
-
-This digest is output-only research evidence. It must never feed exact-level history back into a cold level-blind solve.
+Future major refreshes should emit an output-only delta digest covering gain/loss IDs, winning stage/action, per-level work and attempt deltas, aggregate work split across prior solves/new solves/still-unsolved, and the exact revision/budget/determinism contract. This evidence must never feed exact-level history back into a cold level-blind solve.
