@@ -1,9 +1,11 @@
 # Current-HEAD specialized scorer pilot
 
-> **Date:** 2026-08-26  
-> **Queue item:** #7, architectural speed and execution substrate  
-> **Evidence role:** bounded pure-speed development pilot  
-> **Verdict:** **clean negative for the tested static plain/default scorer specialization**. Keep the exact form closed.
+> **Status:** concluded-negative
+> **Last evidence:** 2026-08-26 — three-repetition interleaved fixed-work A/B on all 160 published levels and a 24-level hard Corpus-2 sample, with byte-identical solve/node traces between control and treatment
+> **Decision:** close the tested static plain/default/no-template scorer specialization. It was +0.91% slower on published and effectively flat (-0.05%) on hard Corpus-2 despite fresh profiling showing scoreMove at 9.55% and 14.56% self-time respectively.
+> **Remaining gate:** use the existing debug-only beam breakdown on the same hard workload to partition replay, candidate generation, connectivity, dedup, and sort; nominate a fused-JS move/state or replay/materialization pilot only if that breakdown identifies a material subcomponent.
+> **Evidence role:** bounded pure-speed development pilot
+> **Queue item:** #7, architectural speed and execution substrate
 
 ## Question
 
