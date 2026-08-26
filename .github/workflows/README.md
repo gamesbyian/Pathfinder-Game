@@ -44,7 +44,6 @@ This retention layer is a safety net. Individual workflows may still save hints 
 - `solver-archetype-sample-ab.yml` — 60 shards / 20 lanes / 4 workers.
 - `solver-repair-probe-adaptive-sample-ab.yml` — 60 shards / 20 lanes / 4 workers.
 - `solver-repair-fallback-reserve-sample-ab.yml` — 60 shards / 20 lanes / 4 workers.
-- `selective-diverse-ih-exposure-ab-one-shot.yml` — one-shot fixed-work development A/B for selective exposure of the existing diverse WIDE intersection-harvest beam on a feature-defined Corpus-2 population; experiment plumbing only, not a production entrypoint.
 
 These use non-binding deterministic deadlines by default, so node/work budgets remain the comparison basis while cross-level parallelism changes calendar time. Their artifact/report evidence is still harvested even though they do not eagerly mutate canonical hints during the experiment.
 
