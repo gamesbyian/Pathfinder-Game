@@ -24,46 +24,73 @@ jobs:
       - name: Enumerate packed-key prep readers
         run: node scripts/tmp-dense-prep-audit.mjs
 
-      - name: Baseline published speed probe
-        run: npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/published-before.json
-      - name: Baseline Corpus-2 speed probe
-        run: npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/corpus2-before.json
+      - name: Baseline round 1
+        run: |
+          npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/pub-b1.json
+          npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/c2-b1.json
 
-      - name: Apply count-checked dense-prep codemod
-        run: node scripts/tmp-apply-dense-prep-codemod.mjs
+      - name: Apply treatment and verify representation
+        run: |
+          node scripts/tmp-apply-dense-prep-codemod.mjs
+          npm run check:types
+          npm run check:types:tests
+          npm run solver:bench -- --check
 
-      - name: Typecheck changed representation
-        run: npm run check:types && npm run check:types:tests
-      - name: Solver regression baseline
-        run: npm run solver:bench -- --check
+      - name: Treatment round 1
+        run: |
+          npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/pub-t1.json
+          npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/c2-t1.json
 
-      - name: Treatment published speed probe
-        run: npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/published-after.json
-      - name: Treatment Corpus-2 speed probe
-        run: npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/corpus2-after.json
+      - name: Baseline round 2
+        run: |
+          git checkout HEAD -- modules/solver
+          npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/pub-b2.json
+          npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/c2-b2.json
 
-      - name: Require identical search work and report wall change
+      - name: Treatment round 2
+        run: |
+          node scripts/tmp-apply-dense-prep-codemod.mjs
+          npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/pub-t2.json
+          npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/c2-t2.json
+
+      - name: Baseline round 3
+        run: |
+          git checkout HEAD -- modules/solver
+          npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/pub-b3.json
+          npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/c2-b3.json
+
+      - name: Treatment round 3
+        run: |
+          node scripts/tmp-apply-dense-prep-codemod.mjs
+          npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/pub-t3.json
+          npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/dense-prep/c2-t3.json
+
+      - name: Require identical work and report medians
         run: |
           node --input-type=module <<'NODE'
           import { readFileSync } from 'node:fs';
-          const pairs = [
-            ['published', 'tmp/dense-prep/published-before.json', 'tmp/dense-prep/published-after.json'],
-            ['corpus2', 'tmp/dense-prep/corpus2-before.json', 'tmp/dense-prep/corpus2-after.json'],
-          ];
+          const median = xs => [...xs].sort((a,b) => a-b)[Math.floor(xs.length / 2)];
           let bad = false;
-          for (const [name, bp, ap] of pairs) {
-            const b = JSON.parse(readFileSync(bp, 'utf8'));
-            const a = JSON.parse(readFileSync(ap, 'utf8'));
-            if (b.rows.length !== a.rows.length) throw new Error(`${name}: row-count mismatch`);
-            for (let i = 0; i < b.rows.length; i++) {
-              const br = b.rows[i], ar = a.rows[i];
-              if (br.id !== ar.id || br.ok !== ar.ok || br.nodes !== ar.nodes) {
-                console.error(`${name}: search divergence at ${br.id}: before ok=${br.ok} nodes=${br.nodes}; after ok=${ar.ok} nodes=${ar.nodes}`);
-                bad = true;
+          for (const prefix of ['pub', 'c2']) {
+            const docs = {};
+            for (const arm of ['b','t']) for (let r = 1; r <= 3; r++) {
+              docs[`${arm}${r}`] = JSON.parse(readFileSync(`tmp/dense-prep/${prefix}-${arm}${r}.json`, 'utf8'));
+            }
+            const ref = docs.b1;
+            for (const [label, doc] of Object.entries(docs)) {
+              if (doc.rows.length !== ref.rows.length) throw new Error(`${prefix}/${label}: row-count mismatch`);
+              for (let i = 0; i < ref.rows.length; i++) {
+                const rr = ref.rows[i], dr = doc.rows[i];
+                if (rr.id !== dr.id || rr.ok !== dr.ok || rr.nodes !== dr.nodes) {
+                  console.error(`${prefix}/${label}: divergence at ${rr.id}: ref ok=${rr.ok} nodes=${rr.nodes}; got ok=${dr.ok} nodes=${dr.nodes}`);
+                  bad = true;
+                }
               }
             }
-            const pct = ((a.totalMs / b.totalMs) - 1) * 100;
-            console.log(`${name}: ${b.totalMs.toFixed(1)}ms -> ${a.totalMs.toFixed(1)}ms (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%), nodes ${b.totalNodes} -> ${a.totalNodes}`);
+            const b = [1,2,3].map(r => docs[`b${r}`].totalMs);
+            const t = [1,2,3].map(r => docs[`t${r}`].totalMs);
+            const bm = median(b), tm = median(t), pct = (tm / bm - 1) * 100;
+            console.log(`${prefix}: baseline [${b.map(x=>x.toFixed(1)).join(', ')}] median=${bm.toFixed(1)}ms; treatment [${t.map(x=>x.toFixed(1)).join(', ')}] median=${tm.toFixed(1)}ms; delta=${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`);
           }
           if (bad) process.exit(1);
           NODE
@@ -71,14 +98,11 @@ jobs:
       - name: Fast repository CI
         run: npm run ci:fast
 
-      - name: Commit verified solver changes
+      - name: Commit verified solver changes and remove workbench
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/tmp-dense-prep-audit.yml scripts/tmp-dense-prep-audit.mjs scripts/tmp-apply-dense-prep-codemod.mjs
           git add modules/solver
-          if git diff --cached --quiet; then
-            echo "No solver changes to commit"
-            exit 0
-          fi
           git commit -m "Dense-index remaining prepLevel cell arrays"
           git push origin HEAD:chatgpt/dense-prep-indexes-2026-08-25
