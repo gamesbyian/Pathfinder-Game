@@ -1,9 +1,9 @@
 # Solver confirmation/transfer cohort reservation
 
 > **Status:** active
-> **Last evidence:** 2026-08-26 — reserved `confirm-broad-004` (unmaterialized), a costed larger-N successor to `confirm-broad-003` sized from the post-976 rejoin's own measured 1.76% repair-resistant-eligible rate
-> **Decision:** broad confirmation has now completed three real one-use lifecycles, but `confirm-broad-003` surfaced a methodology gap the first two didn't hit: a plain fresh/broad uniform-random cohort cannot exercise a candidate whose eligible population is a strict superset of `needsRepairFallback`'s gate, because the early repair probe solves almost all such levels before the candidate's own new configs ever run. `confirm-broad-001` and `confirm-broad-002` are spent with real (if negative) verdicts; `confirm-broad-003` is spent but **inconclusive**, not negative. `confirm-broad-004` is reserved to retest `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` at a size the measured base rate says should actually participate. `transfer-envelope-001` remains locked and untouched.
-> **Remaining gate:** materialize `confirm-broad-004` via `.github/workflows/solver-broad-confirmation.yml` and run the frozen `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` candidate against it; materialize `transfer-envelope-001` only after a candidate actually passes broad confirmation.
+> **Last evidence:** 2026-08-26 — `confirm-broad-004` (1,200 levels, run [`32955491247`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/32955491247)) came back byte-identical work in both arms again, same as `confirm-broad-003` but decisively ruling out chance (`P≈7×10⁻¹⁰`); a local sanity check confirmed the candidate mechanism is real and unbroken. `confirm-residual-001` reserved as the two-phase control-failure-residual successor.
+> **Decision:** broad confirmation has now completed four real one-use lifecycles. `confirm-broad-001` and `confirm-broad-002` are spent with real (if negative) verdicts. `confirm-broad-003` and `confirm-broad-004` are both spent but **inconclusive**, not negative — a plain fresh/broad uniform-random cohort structurally cannot exercise `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE`'s narrow repair-resistant gate no matter how large (scaling `count` 4.7x from 256 to 1,200 changed nothing: still bit-for-bit identical aggregate work). `confirm-residual-001` is reserved for the two-phase control-failure-residual design instead of scaling `count` a third time. `transfer-envelope-001` remains locked and untouched.
+> **Remaining gate:** materialize `confirm-residual-001` phase 1 (fresh pool, control-only sweep, freeze the residual) then phase 2 (both arms on the frozen residual) against the frozen `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` candidate; materialize `transfer-envelope-001` only after a candidate actually passes broad confirmation.
 > **Evidence role:** discovery
 > **Selection:** prespecified cohort lifecycle; each confirmation candidate, work envelope, and acceptance rule was frozen before its cohort was materialized
 > **Manifest:** [`stress/managed-evaluation-populations-2026-08-24.json`](stress/managed-evaluation-populations-2026-08-24.json)
@@ -64,6 +64,31 @@ This generalizes: **any candidate mined from a residual-miss analysis (the domin
 
 Neither option is implemented. Until one is, a `confirm-broad-*`-style plain broad cohort is the wrong instrument for any candidate this narrowly repair-gated, and a byte-identical-work result like this one should read as "wrong instrument," not "no effect."
 
+### `confirm-broad-004` — SPENT, INCONCLUSIVE (option 1 tested, decisively insufficient)
+
+Reserved fresh before materialization as the sized retest of `confirm-broad-003`'s candidate:
+
+- 1,200 uniform-random raised-cap generated levels (≈4.7x `confirm-broad-003`'s size, sized so the measured 1.76% repair-resistant-eligible rate implies ≈21 expected participating rows);
+- generator revision `7fb675bcbf1e6ca1d36a0bb02a53c1560df83f25`;
+- master seed `2026082602`, IDs `H00001` onward;
+- candidate: identical to `confirm-broad-003`'s;
+- final run [`32955491247`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/32955491247);
+- result: **674/1,200 → 674/1,200**, **0 gains / 0 losses**, aggregate `workSpent` **byte-identical** (`149,686,882,168` both arms) — the same non-participation signature as `confirm-broad-003`, at 4.7x the scale;
+- verdict: **inconclusive / non-participating**, not confirmation-fail.
+
+At this size, `P(zero participating rows | n=1,200, p=0.0176) ≈ 7×10⁻¹⁰` — decisively ruling out an unlucky draw, unlike `confirm-broad-003`'s own ≈1.1% figure. Rather than accept "the rate is even lower than measured" without first ruling out a wiring regression, a local control-vs-treatment run directly against the three known development-positive levels (`R00817`/`R02010`/`R02151`) reproduced the original development +3/-0 result exactly (0/3 solved control, 3/3 solved treatment). The candidate mechanism is confirmed intact — the gap is real and structural: Corpus 2's naturally-accumulated repair-resistant population and this generator's raised-cap output are not the same population for this candidate's purposes, and scaling `count` further stops being a practical answer (reaching the same ≈21-expected-participant bar the third time would need `count≈12,000`).
+
+See [`2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md`](2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md)'s "Confirmation attempts" section for the full detail, including the sanity-check methodology.
+
+#### Escalating to option 2
+
+Both `confirm-broad-003` and `confirm-broad-004` point the same direction: option 1 (scale `count`) is exhausted for this candidate. `confirm-residual-001` is reserved for option 2 (the two-phase control-failure-residual design) instead:
+
+- **Phase 1:** generate a fresh 1,200-level pool (master seed `2026082701`, id prefix `J` — both never used by a prior cohort), run the *control* ladder alone across it at the same `node_budget=50,000,000` envelope, and freeze the subset it fails to solve. This directly mirrors how the original 724-level Corpus-2 residual (the source of this candidate in the first place) was defined — mining current production misses — just applied to a fresh generated pool instead of the existing corpus. No archetype-rate guess is needed this time: the control-failure population *is* the fresh-generated analogue of "repair-resistant," by the same construction that made the development population participate.
+- **Phase 2:** run both control and treatment (`enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE`) on the frozen phase-1 residual only, same envelope. Filtering by whether *control* solves a level, decided before phase 2's real comparison ever runs, remains a pre-outcome-neutral selection rule — not the same as selecting by whether *treatment* succeeds.
+- Phase 1's residual size cannot be known before it runs; at `confirm-broad-004`'s own observed 43.8% control-failure rate (526/1,200), a 1,200-level phase-1 pool is expected to freeze roughly 500+ residual rows for phase 2 — comparable in scale to `confirm-broad-004` itself, so this design's total compute cost is closer to parity with a repeated broad run than the earlier "roughly doubles" estimate assumed, once phase 1 only needs a single arm.
+- `.github/workflows/solver-broad-confirmation.yml` can serve as phase 1 directly (dispatch with empty `enable_flags` and treat the single arm's per-level results as the residual source). Phase 2 needs new plumbing: a mechanism to seal and solve both arms against a precomputed/frozen corpus file instead of generating fresh. Not yet built as of this writing.
+
 ### `transfer-envelope-001` — LOCKED / UNTOUCHED
 
 - role: transfer/challenge;
@@ -111,15 +136,12 @@ The two failed confirmations are themselves valuable evidence: both treatments l
 
 ## Next reservation
 
-`confirm-broad-004` is reserved for a retest of `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` — not a repeat of `confirm-broad-003`'s same shape hoping for better luck, but a specifically costed larger cohort:
+`confirm-broad-004` came back byte-identical at 1,200 levels, the same non-participation signature as `confirm-broad-003` at 256, decisively ruling out chance (`P≈7×10⁻¹⁰`). Per the pre-registered contingency, option 1 (scale `count` further) is exhausted; `confirm-residual-001` is reserved for option 2, the two-phase control-failure-residual design (see `confirm-broad-004`'s own subsection above for the full rationale):
 
-- 1,200 uniform-random raised-cap generated levels (same generator mode as `confirm-broad-001`/`002`/`003`);
-- master seed `2026082602`, IDs `H00001` onward — both values never used by a prior cohort;
-- candidate: identical to `confirm-broad-003`'s (append plain `beam:intersectionHarvest@beam5000` + `beam:objectiveFirst@beam5000` to `attempts.ts`'s must-cross+flipper-heavy rule only);
-- sizing rationale: the post-976 rejoin measures this rule's true repair-resistant-eligible rate directly at 30/1,700 ≈ 1.76% of Corpus 2 (not the coarser ~5.5% archetype-only prevalence `confirm-broad-003`'s report used) — at `count=1,200` the expected participating-row count is ≈21, the same order as the 30-row development population that produced the original +3/-0 result;
-- acceptance rule unchanged: zero lost solves AND (≥1 gained solve OR ≥10% aggregate-work reduction);
-- materialize via `.github/workflows/solver-broad-confirmation.yml`, `cohort_id=confirm-broad-004`, `count=1200`, `shard_count` raised proportionally (e.g. 60/arm, matching the density used elsewhere) so wall time doesn't scale linearly with the larger population, `enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE`, `node_budget=50000000` (same envelope as before).
+- **Phase 1:** 1,200 fresh uniform-random raised-cap generated levels, master seed `2026082701`, id prefix `J` (both never used by a prior cohort); run *control only* (`enable_flags` empty) via `.github/workflows/solver-broad-confirmation.yml` at `node_budget=50,000,000`; freeze the subset it fails to solve as the phase-2 residual corpus.
+- **Phase 2:** run both control and `enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` treatment on the frozen phase-1 residual only, same envelope. Needs new plumbing (not yet built) to seal/solve a precomputed corpus rather than generating fresh.
+- acceptance rule unchanged: zero lost solves AND (≥1 gained solve OR ≥10% aggregate-work reduction).
 
-If `confirm-broad-004` also comes back with implausibly low participation given this sizing, treat that as evidence the true rate is lower than the mined 1.76% figure (development's own population may itself be a slightly favorable draw) and move to the two-phase control-failure-residual design instead of scaling `count` further. `STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE` is closed negative in development and does not need a confirmation cohort at all.
+If `confirm-residual-001` also shows implausibly low participation, that would mean this candidate's real-world value is confined to levels evolved/curated in ways this generator's raised-cap stratum does not reproduce at all — worth documenting as a durable methodology finding in its own right, distinct from a negative result for the candidate itself. `STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE` is closed negative in development and does not need a confirmation cohort at all.
 
 The workflow that materializes these cohorts, `.github/workflows/solver-broad-confirmation.yml`, remains durable, checked-in plumbing (documented in `.github/workflows/README.md`) rather than bespoke one-shot YAML deleted after use — a third confirmation was enough repeated value to keep it (see that workflow's own header comment).
