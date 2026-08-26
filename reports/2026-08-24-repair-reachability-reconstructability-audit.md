@@ -1,9 +1,9 @@
 # Repair reachability versus reconstructability audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-25 — exact repair-retreat CP-SAT evidence through the 2026-08-15 follow-up, the 2026-08-13 direct reconstruction/rollout diagnostic from an exact-live `R00648` prefix, current repair machinery, the narrowed beam MustCross-state audit, and cross-representation reuse audit
-> **Decision:** do not design a new large repair operator yet. One exact-live-but-native-hard reconstructability case is **already confirmed**: `R00648` remains unsolved when `closeLengthGap` is invoked directly from a CP-SAT-verified live prefix with unrestricted backtracking and a 2,000,000-node budget, and 2,000 native randomized rollouts from the same live state also find no completion. Do not repeat that experiment. Classify the remaining exact-live retreat cases before deciding whether retreat, reconstruction, or larger destroy work is recurrently warranted. If a future exact frontier/DD experiment independently exposes exact continuation counts for these residuals, preserve them as opportunistic basin-width labels; do not build counting machinery for this audit.
-> **Remaining gate:** reuse the existing exact-live cases other than `R00648` and apply one prespecified native reconstruction operator per case under a canonical `workSpent` cap where new execution is required. Keep operator-specific conclusions explicit. `R03176` already shows that the full repair process can eventually solve with `closeLengthGap`, but that is not yet the same measurement as a direct frozen-prefix reconstruction success. Use known-dead points only as correctness controls when cheap; do not buy more CP-SAT resolution merely to narrow existing UNKNOWN intervals.
+> **Last evidence:** 2026-08-26 reconciliation of exact repair-retreat CP-SAT evidence through the 2026-08-15 follow-up, including the 2026-08-13 apples-to-apples direct reconstruction/rollout diagnostics from exact-live `R00648` and `R03176` prefixes, current repair machinery, the narrowed beam MustCross-state audit, and cross-representation reuse audit
+> **Decision:** do not design a new large repair operator yet. Two exact-live-but-native-hard reconstructability cases are **already confirmed for the same two named native mechanisms**. At CP-SAT-verified live prefixes, both `R00648` and `R03176` defeat unrestricted-floor `closeLengthGap` at a 2,000,000-node allowance and 2,000 randomized rollouts. Their basin shapes differ sharply: the best rollout reaches only depth 60/141 on `R00648` but 134/141 on `R03176`; full repair eventually solves `R03176` from another restart trajectory. Do not repeat either frozen-prefix experiment. Classify the remaining exact-live retreat cases before deciding whether retreat, reconstruction, or larger destroy work is recurrently warranted. If a future exact frontier/DD experiment independently exposes exact continuation counts for these residuals, preserve them as opportunistic basin-width labels; do not build counting machinery for this audit.
+> **Remaining gate:** reuse the existing exact-live cases other than `R00648` and `R03176` and apply one prespecified existing native reconstruction operator per case under a canonical `workSpent` cap where new execution is required. Keep operator-specific conclusions explicit. Use known-dead points only as correctness controls when cheap; do not buy more CP-SAT resolution merely to narrow existing UNKNOWN intervals.
 > **Evidence role:** discovery
 > **Selection:** observational — cases and candidate descriptors come from already-mined repair-retreat and beam-extinction evidence.
 
@@ -78,13 +78,16 @@ It does **not** prove an impossibility theorem for every native reconstruction a
 
 Do not rerun this same case with another nearby node cap and call it new evidence.
 
-### What `R03176` already says, and does not say
+### `R03176` is also exact-live but hard at the tested frozen prefix
 
-The same August 13 work found `R03176` solves in an isolated full `repairSearchFromGate` run at roughly 1.86M nodes, with `closeLengthGap` firing 583 times and succeeding at restart 914.
+The same August 13 evidence already contains the apples-to-apples direct-prefix measurement this audit had left marked open. At `R03176`'s CP-SAT-verified depth-74 live branch point, the identical diagnostic used for `R00648` was run:
 
-That establishes that current repair machinery **can** exploit this level's residual regime eventually. It is useful contrast with `R00648`.
+- `closeLengthGap` with `floor=0` and a 2,000,000-node allowance: **failed**;
+- 2,000 independent randomized rollouts: **0/2000 solved**, average continuation about 6.5 nodes, best depth **134/141**.
 
-But it is not the clean direct-prefix measurement above: the successful run may reach a different state/restart trajectory before `closeLengthGap` succeeds. Therefore keep `R03176` in the remaining classification set if the question is specifically “does reconstruction succeed when handed this exact `D_live` prefix?” Do not silently promote whole-run success into frozen-prefix success.
+So `R03176` is a second live-but-hard frozen prefix for these two named native mechanisms. It is still a useful contrast with `R00648`: blind rollouts get dramatically closer on `R03176` (134/141 versus 60/141), and an isolated full `repairSearchFromGate` run eventually solves `R03176` at roughly 1.86M nodes with `closeLengthGap` succeeding from a different restart trajectory. This separates frozen-prefix reconstructability from whole-process access to a friendlier basin.
+
+The direct comparison is already recorded in [the repair-retreat CP-SAT report](2026-08-12-repair-retreat-cpsat.md). Do not rerun `R03176` merely to fill the matrix; it is filled.
 
 ## Remaining bounded pilot
 
@@ -181,7 +184,7 @@ Do not collapse these into one “repair difficulty” scalar without evidence.
 
 Continue toward retreat-policy work if multiple unrelated elites have shallow live boundaries, the same existing reconstruction operator succeeds from those exact-live prefixes, and ordinary repair nevertheless fails to reopen them often enough.
 
-Continue toward reconstruction work if exact-live prefixes repeatedly defeat named current native reconstruction operators at meaningful fixed-work budgets. `R00648` supplies the first confirmed hard-live case; it is not enough by itself to justify a new mechanism.
+Continue toward reconstruction work if exact-live prefixes repeatedly defeat named current native reconstruction operators at meaningful fixed-work budgets. `R00648` and `R03176` now supply two confirmed hard-live cases for the same named mechanisms, with materially different basin shapes. Two cases still do not justify a new mechanism by themselves; classify the remaining unrelated exact-live cases first.
 
 Continue toward large destroy/core-guided work only if a recurrent population requires genuinely deep exact rollback and smaller reopening is ruled out by oracle evidence.
 
