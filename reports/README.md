@@ -43,7 +43,7 @@ Use these as evidence for the corresponding queue item, not as alternate priorit
 - locked confirmation/transfer cohorts: [`2026-08-24-solver-confirmation-transfer-cohort-reservation.md`](2026-08-24-solver-confirmation-transfer-cohort-reservation.md)
 - beam extinction/retention: [`2026-08-25-beam-full-pool-survivor-projection.md`](2026-08-25-beam-full-pool-survivor-projection.md), [`2026-08-24-beam-extinction-descriptor-sanity-check.md`](2026-08-24-beam-extinction-descriptor-sanity-check.md)
 - exact/reference support: [`2026-08-23-solver-reference-model-capability-audit.md`](2026-08-23-solver-reference-model-capability-audit.md)
-- restart allocation: [`2026-08-24-restart-continuation-value-audit.md`](2026-08-24-restart-continuation-value-audit.md)
+- restart allocation: [`2026-08-24-restart-continuation-value-audit.md`](2026-08-24-restart-continuation-value-audit.md), execution-readiness harness: [`2026-08-26-restart-continuation-execution-readiness.md`](2026-08-26-restart-continuation-execution-readiness.md)
 - learned failure: [`2026-08-24-learned-failure-certificate-audit.md`](2026-08-24-learned-failure-certificate-audit.md)
 - repair reconstructability: [`2026-08-24-repair-reachability-reconstructability-audit.md`](2026-08-24-repair-reachability-reconstructability-audit.md)
 - execution substrate: [`2026-08-24-speed-substrate-static-audit.md`](2026-08-24-speed-substrate-static-audit.md)

@@ -7,7 +7,7 @@
  * REPAIR_EXTRA_BUDGET_FRACTION's comment in orchestration.ts), so testing repair in isolation
  * skips straight to the part that actually matters for that iteration.
  *
- * Two modes:
+ * Three modes:
  *   Single run (default): one repairSearchFromGate call, this process, deterministic.
  *   --races=<n>: runs N independent repairSearchFromGate calls in parallel child processes
  *                (scripts/solver-worker-pool.mjs — real OS parallelism), each with a different
@@ -19,9 +19,18 @@
  *                instead of one long search with an accumulating "elite" splice pool — repair's
  *                own stagnation-burst logic suggests pure restart diversity sometimes beats
  *                elite-guided restarts anyway, so measure for your own change rather than assume.
+ *   --work-budget=<n>: runs modules/solver/restart-continuation-harness.ts's
+ *                      runRepairRestartVsContinuation — the equal-canonical-`workSpent`-envelope
+ *                      comparison docs/reports/2026-08-24-restart-continuation-value-audit.md's
+ *                      execution-readiness gate calls for (seed 0 continued to n work units versus
+ *                      seed 0 to n/2 then, only on failure, a fresh seed 1 for the remainder).
+ *                      Deliberately NOT the same currency as --node-budget/--races above: `n` here
+ *                      is canonical `workSpent`, which the audit found node counts cannot express
+ *                      faithfully across arms. Single-run, this process, deterministic.
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/repair-direct-probe.mjs -- --corpus=data/stress/stress-levels.json --level=44 --gate-index=0 --budget-ms=20000 --node-budget=8000000 [--must-turn-biased] [--races=8]
+ *   node scripts/run-bundled.mjs scripts/repair-direct-probe.mjs -- --corpus=data/stress/stress-levels.json --level=44 --gate-index=0 --work-budget=200000
  */
 import path from 'node:path';
 import process from 'node:process';
@@ -41,12 +50,15 @@ const budgetMs = Number(argMap.get('--budget-ms') || 20000);
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : Infinity;
 const mustTurnBiased = flags.has('--must-turn-biased');
 const races = Number(argMap.get('--races') || 1);
+const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : null;
+if (workBudget !== null && races > 1) { console.error('--work-budget and --races are mutually exclusive.'); process.exit(2); }
 
 installBrowserStubs();
 const { createSolver } = await import('../modules/solver.js');
 const { prepLevel } = await import('../modules/solver/prep.js');
 const { repairSearchFromGate } = await import('../modules/solver/repair-search.js');
 const { POLICY_PROFILES } = await import('../modules/solver/policy.js');
+const { runRepairRestartVsContinuation } = await import('../modules/solver/restart-continuation-harness.js');
 
 const Solver = createSolver();
 const { readFileSync } = await import('node:fs');
@@ -60,9 +72,15 @@ const gateKey = gateKeys[gateIndex];
 if (gateKey === undefined) { console.error(`--gate-index=${gateIndex}: level has ${gateKeys.length} gate(s).`); process.exit(2); }
 const profile = POLICY_PROFILES.repair ?? POLICY_PROFILES.default;
 
-console.log(`repair-direct-probe: level=${levelNumber}${raw.id ? ` (${raw.id})` : ''} gate=${gateIndex}/${gateKeys.length} budget=${budgetMs}ms node-budget=${Number.isFinite(nodeBudget) ? nodeBudget : '(none)'} must-turn-biased=${mustTurnBiased} races=${races}`);
+console.log(`repair-direct-probe: level=${levelNumber}${raw.id ? ` (${raw.id})` : ''} gate=${gateIndex}/${gateKeys.length} budget=${budgetMs}ms node-budget=${Number.isFinite(nodeBudget) ? nodeBudget : '(none)'} must-turn-biased=${mustTurnBiased} races=${races}${workBudget !== null ? ` work-budget=${workBudget}` : ''}`);
 
-if (races <= 1) {
+if (workBudget !== null) {
+    const result = await runRepairRestartVsContinuation(gateKey, level, () => prepLevel(level), profile, workBudget, { budgetMs, nodeBudget });
+    const fmt = (arm) => `solved=${arm.solved} workSpent=${arm.workSpent}/${workBudget} nodesExpanded=${arm.nodesExpanded} seedSalts=[${arm.seedSalts.join(',')}]`;
+    console.log(`continuation: ${fmt(result.continuation)}`);
+    console.log(`restart:      ${fmt(result.restart)}`);
+    process.exitCode = 0;
+} else if (races <= 1) {
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
     const out = {};
