@@ -114,7 +114,7 @@
       "phase2Description": "Run BOTH control and treatment (enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE) on the frozen phase-1 residual corpus only, same node_budget=50000000 envelope. The residual's exact size and level set are determined by phase 1's outcome and cannot be known before phase 1 completes -- this entry reserves the identity/seed, not a fixed level set.",
       "candidate": "STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE (identical to confirm-broad-003/004's)",
       "selectionRule": "Phase-1 filtering is by whether CONTROL alone solves a fresh level, decided before either arm's real phase-2 comparison ever runs -- a pre-outcome-neutral selection rule, not selection by whether treatment succeeds. Once phase 1's residual composition has informed this decision it cannot be reused for a different candidate.",
-      "materializationTool": ".github/workflows/solver-broad-confirmation.yml for phase 1 (control-only: leave enable_flags empty, treat the single arm as the residual source) plus a new phase-2 mechanism (not yet built) that accepts a precomputed/frozen corpus instead of generating fresh",
+      "materializationTool": ".github/workflows/solver-residual-confirmation.yml (dispatch with cohort_id=confirm-residual-001, master_seed=2026082701, id_prefix=J, pool_count=1200, enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE, node_budget=50000000) -- runs both phases in one workflow run: generates the pool, sweeps control-only, freezes the control-failure residual, then runs the real control/treatment A/B on that frozen residual",
       "aggregateRuns": [],
       "verdict": null,
       "resultSummary": null,
