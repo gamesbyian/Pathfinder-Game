@@ -130,6 +130,11 @@ function mediumHighIntDfsOrder(f: LevelFeatures): AttemptConfig[] {
 
 const isHighInt = (f: LevelFeatures) => f.arch === 'high-intersection-burden';
 const isMustCross = (f: LevelFeatures) => f.arch === 'must-cross-heavy';
+/** Shared with getAttemptConfigs's STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE application below,
+ *  so the ablation-gated addition can never drift from the rule it extends — see that flag's own
+ *  comment for why this rule specifically (not its must-cross-heavy siblings) was chosen. */
+const isMustCrossFlipperHeavy = (f: LevelFeatures) =>
+    isMustCross(f) && f.mustPass >= POLICY.OBJECTIVE_HEAVY_MUSTPASS && f.flippers >= POLICY.FLIPPER_HEAVY;
 
 /** Diverse WIDE beams for must-cross-threaded high-int levels — see POLICY.HIGHINT_MC_DIVERSE.
  *  Budget floors keep them viable against per-gate/per-config ladder fragmentation. */
@@ -422,7 +427,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
     },
     {
         why: 'must-cross + flipper-heavy with many objectives: diverse beam, then DFS fallbacks (see BEAM comment above — wider tiers removed, proven not to help this archetype)',
-        when: f => isMustCross(f) && f.mustPass >= POLICY.OBJECTIVE_HEAVY_MUSTPASS && f.flippers >= POLICY.FLIPPER_HEAVY,
+        when: isMustCrossFlipperHeavy,
         build: () => [
             // Diverse beam buckets candidates by (flipperUsedMask, mustCrossMask) so all valid flipper
             // orderings stay alive. The repair fallback (attempts.ts's needsRepairFallback, always
@@ -559,6 +564,32 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     // Unreachable under normal routing (the last rule matches everything); reached directly when
     // STRATEGY_ARCHETYPE_ROUTING is disabled above. Also kept for total-function safety.
     if (!configs) configs = ATTEMPT_POLICY[ATTEMPT_POLICY.length - 1].build(f);
+    // Ablation: STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE (default-OFF, NEW unvalidated pilot,
+    // 2026-08-26). Applied centrally rather than inline in the rule's build() so the addition is a
+    // single reviewable diff, matching needsRepairFallback's pattern below.
+    //
+    // docs/solver-optimization-current-queue.md Priority 1's post-976 portfolio rejoin
+    // (reports/2026-08-25-post-976-portfolio-exposure-rejoin.md) found `beam:intersectionHarvest@
+    // beam5000` and `beam:objectiveFirst@beam5000` (the PLAIN WIDE beams, not their `(diverse)`
+    // siblings already used elsewhere in this file) each absent from production on exactly the same
+    // 62 current Corpus-2 misses, with isolated census wins at the cheapest observed nodes/solve of
+    // any beam identity in that report's exposure-economics table. A follow-up classification
+    // (2026-08-26) found all 62 are `must-cross-heavy`, split across three ATTEMPT_POLICY rules —
+    // this one (isMustCrossFlipperHeavy, 30/62), "must-cross, must-pass-heavy" (28/62), and
+    // "must-cross default" (4/62). Only THIS rule's build() has fewer than
+    // MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (stage-budget.ts, 5) existing entries (4): appending both
+    // plain WIDE beams here still fits entirely inside the protected trailing-reserve window at no
+    // cost to (no eviction of) any existing protected config, unlike its two sibling rules whose
+    // windows are already full — see stage-budget.ts's own 4->5 reserve-count-increase comment for
+    // why displacing an already-validated protected config is not a free change. The two fuller
+    // sibling rules are deliberately NOT touched by this flag: promoting them would need either
+    // accepting that displacement or a further reserve-count increase, a second dimension this pilot
+    // does not test. Prespecified for a same-commit fixed-envelope
+    // solver-archetype-sample-ab.yml A/B restricted to must-cross-heavy before any promotion claim;
+    // see the opt-in ledger for disposition once that runs.
+    if (cfg && cfg.STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE === true && isMustCrossFlipperHeavy(f)) {
+        configs = [...configs, beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE)];
+    }
     // Applied centrally (not per-rule) since the feature gate cuts across several archetypes
     // (must-cross-heavy and high-intersection-burden rules both match batch-B cluster levels —
     // see POLICY.REPAIR_MC_MIN/REPAIR_MP_MIN).

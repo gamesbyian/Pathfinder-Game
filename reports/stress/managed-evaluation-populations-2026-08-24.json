@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "createdAt": "2026-08-24",
-  "updatedAt": "2026-08-25",
+  "updatedAt": "2026-08-26",
   "sourceCommit": "4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92",
   "generator": {
     "path": "scripts/stress/generate-random.mjs",
@@ -50,6 +50,28 @@
       "verdict": "confirmation-fail",
       "resultSummary": "control 126/256; treatment 126/256; 0 gains/0 losses; treatment aggregate work about +0.01%; clean null",
       "spentAt": "2026-08-25",
+      "successor": "confirm-broad-003"
+    },
+    {
+      "id": "confirm-broad-003",
+      "role": "confirmation-broad",
+      "status": "reserved",
+      "exposureState": "LOCKED",
+      "outcomeConditioned": false,
+      "independentUnit": "level",
+      "count": 256,
+      "masterSeed": 2026082601,
+      "generatorMode": "uniform-random-raised-caps",
+      "idPrefix": "G",
+      "materializationRevision": null,
+      "materializationCommand": "node scripts/run-bundled.mjs scripts/stress/generate-random.mjs --count=256 --master-seed=2026082601 --id-prefix=G --out=logs/solver-broad-confirmation/confirm-broad-003.json",
+      "materializationTool": ".github/workflows/solver-broad-confirmation.yml (dispatch with cohort_id=confirm-broad-003, master_seed=2026082601, id_prefix=G)",
+      "selectionRule": "All 256 generated levels; no baseline-outcome filtering and no candidate-specific post-generation filtering.",
+      "firstTreatment": "STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE (see reports/2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md) -- append plain beam:intersectionHarvest@beam5000 and beam:objectiveFirst@beam5000 to attempts.ts's must-cross+flipper-heavy rule only",
+      "aggregateRuns": [],
+      "verdict": null,
+      "resultSummary": null,
+      "spentAt": null,
       "successor": null
     },
     {

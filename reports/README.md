@@ -38,6 +38,7 @@ Use these as evidence for the corresponding queue item, not as alternate priorit
 - post-976 portfolio exposure/depth rejoin: [`2026-08-25-post-976-portfolio-exposure-rejoin.md`](2026-08-25-post-976-portfolio-exposure-rejoin.md)
 - selective diverse-IH development A/B: [`2026-08-25-selective-diverse-ih-exposure-development-ab.md`](2026-08-25-selective-diverse-ih-exposure-development-ab.md)
 - selective diverse-IH independent confirmation: [`2026-08-25-diverse-ih-confirm-broad-002-freeze.md`](2026-08-25-diverse-ih-confirm-broad-002-freeze.md)
+- must-cross+flipper-heavy plain WIDE beam exposure development A/B (development-positive, awaiting confirmation): [`2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md`](2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md)
 - scheduler static repricing: [`2026-08-25-scheduler-static-repricing-join.md`](2026-08-25-scheduler-static-repricing-join.md), [`2026-08-24-scheduler-evidence-contract-audit.md`](2026-08-24-scheduler-evidence-contract-audit.md)
 - corrected former P0 attribution: [`2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md`](2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md), [`2026-08-22-technique-census-reverse-oracle-diagnosis.md`](2026-08-22-technique-census-reverse-oracle-diagnosis.md)
 - locked confirmation/transfer cohorts: [`2026-08-24-solver-confirmation-transfer-cohort-reservation.md`](2026-08-24-solver-confirmation-transfer-cohort-reservation.md)
