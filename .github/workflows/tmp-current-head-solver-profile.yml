@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: tmp-plain-scorer-speed-ab
+  cancel-in-progress: true
+
 jobs:
   ab:
     runs-on: ubuntu-latest
