@@ -24,6 +24,7 @@ function filesUnder(dir) {
 
 function ensureDenseImport(src) {
   if (!src.includes('denseIndex(')) return src;
+  if (/export function denseIndex\b/.test(src)) return src;
   if (/import\s*\{[^}]*\bdenseIndex\b[^}]*\}\s*from\s*['"]\.\/distance\.js['"]/.test(src)) return src;
   const named = /import\s*\{([^}]*)\}\s*from\s*['"]\.\/distance\.js['"];?/;
   if (named.test(src)) {
@@ -75,7 +76,6 @@ for (const file of filesUnder(ROOT)) {
   }
 }
 
-// Keep the type contract explicit: these six arrays are row-major gridW*gridH arrays now.
 const typesPath = path.join(ROOT, 'types.ts');
 let types = readFileSync(typesPath, 'utf8');
 types = types
@@ -88,7 +88,6 @@ types = types
   .replace('/** packed key → index into mustTurnKeys, or -1 if not a must-turn cell (always present,', '/** denseIndex(packedKey, gridW) → index into mustTurnKeys PLUS ONE, 0 meaning absent (always present,');
 writeFileSync(typesPath, types);
 
-// Update prep's stale packed-array prose while keeping the historical motivation.
 prep = readFileSync(prepPath, 'utf8')
   .replace('// Builds a KEY_SPACE-sized index lookup. Same "typed array beats Map.get()" rationale as', '// Builds a compact row-major index lookup (gridW * gridH). Same typed-array hot-path rationale as')
   .replace('// contains — no fill needed. The old `-1` sentinel required fill(-1) over 1,048,576 entries per\n// array, four arrays per level, for a grid with at most 225 live cells (4.1% of solver CPU on a', '// contains — no fill needed. The old representation allocated KEY_SPACE entries per array; the\n// dense representation stores only grid cells, while preserving the same i+1/zero sentinel. The old fills were 4.1% of solver CPU on a')
@@ -97,7 +96,6 @@ prep = readFileSync(prepPath, 'utf8')
   .replace('// Unified impassable-for-BFS lookup (blocks ∪ geese ∪ gates), used by the connectivity-prune', '// Dense row-major impassable-for-BFS lookup (blocks ∪ geese ∪ gates), used by the connectivity-prune');
 writeFileSync(prepPath, prep);
 
-// Dense conversion must eliminate direct packed-key indexing of all six targets in solver TS.
 const leftovers = [];
 for (const file of filesUnder(ROOT)) {
   const lines = readFileSync(file, 'utf8').split('\n');
