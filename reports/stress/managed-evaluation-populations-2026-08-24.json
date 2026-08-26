@@ -129,7 +129,7 @@
     {
       "id": "confirm-residual-002",
       "role": "confirmation-residual-twophase",
-      "status": "reserved",
+      "status": "in-flight",
       "exposureState": "RESERVED",
       "outcomeConditioned": false,
       "independentUnit": "level",
@@ -142,8 +142,8 @@
       "candidate": "STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE (identical to confirm-residual-001's)",
       "selectionRule": "Same pre-outcome-neutral phase-1 control-failure selection rule as confirm-residual-001.",
       "reservationRationale": "confirm-residual-001 found a real archetype-eligible population (25/520) but zero participation due to a scheduling gap in MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (protected the NODE-budget dimension only, not WORK). That gap is now fixed (2026-08-26, orchestration.ts's mainLoopEarlyWorkBudget/earlyGateWorkBudget). This cohort reruns the identical design against the fixed scheduler to isolate that one changed variable -- a fresh identity is required per the confirmation contract since confirm-residual-001's own residual composition already informed this candidate's diagnosis and cannot be reused.",
-      "materializationTool": ".github/workflows/solver-residual-confirmation.yml (to be dispatched with cohort_id=confirm-residual-002, master_seed=2026082702, id_prefix=K, pool_count=1200, enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE, node_budget=50000000)",
-      "aggregateRuns": [],
+      "materializationTool": ".github/workflows/solver-residual-confirmation.yml (dispatched with cohort_id=confirm-residual-002, master_seed=2026082702, id_prefix=K, pool_count=1200, enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE, node_budget=50000000)",
+      "aggregateRuns": [33020293451],
       "spentAt": null,
       "successor": null,
       "predecessor": "confirm-residual-001"
