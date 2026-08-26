@@ -95,14 +95,16 @@ jobs:
           if (bad) process.exit(1);
           NODE
 
-      - name: Fast repository CI
+      - name: Remove workbench before final CI
+        run: git rm .github/workflows/tmp-dense-prep-audit.yml scripts/tmp-dense-prep-audit.mjs scripts/tmp-apply-dense-prep-codemod.mjs
+
+      - name: Fast repository CI on final tree
         run: npm run ci:fast
 
-      - name: Commit verified solver changes and remove workbench
+      - name: Commit verified solver changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm .github/workflows/tmp-dense-prep-audit.yml scripts/tmp-dense-prep-audit.mjs scripts/tmp-apply-dense-prep-codemod.mjs
           git add modules/solver
           git commit -m "Dense-index remaining prepLevel cell arrays"
           git push origin HEAD:chatgpt/dense-prep-indexes-2026-08-25
