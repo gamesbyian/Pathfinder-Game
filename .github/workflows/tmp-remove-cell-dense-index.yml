@@ -1,0 +1,102 @@
+name: Temporary cellDenseIndex removal A/B
+
+on:
+  push:
+    branches:
+      - chatgpt/remove-cell-dense-index-2026-08-25
+
+permissions:
+  contents: write
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Baseline round 1
+        run: |
+          npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/cell-dense/pub-b1.json
+          npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/cell-dense/c2-b1.json
+
+      - name: Treatment round 1 and correctness gate
+        run: |
+          node scripts/tmp-remove-cell-dense-index.mjs
+          npm run check:types
+          npm run check:types:tests
+          npm run solver:bench -- --check
+          npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/cell-dense/pub-t1.json
+          npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/cell-dense/c2-t1.json
+
+      - name: Baseline round 2
+        run: |
+          git checkout HEAD -- modules/solver
+          npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/cell-dense/pub-b2.json
+          npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/cell-dense/c2-b2.json
+
+      - name: Treatment round 2
+        run: |
+          node scripts/tmp-remove-cell-dense-index.mjs
+          npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/cell-dense/pub-t2.json
+          npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/cell-dense/c2-t2.json
+
+      - name: Baseline round 3
+        run: |
+          git checkout HEAD -- modules/solver
+          npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/cell-dense/pub-b3.json
+          npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/cell-dense/c2-b3.json
+
+      - name: Treatment round 3
+        run: |
+          node scripts/tmp-remove-cell-dense-index.mjs
+          npm run solver:speed-probe -- --corpus=published --count=40 --budget-ms=600000 --node-budget=250000 --out=tmp/cell-dense/pub-t3.json
+          npm run solver:speed-probe -- --corpus=corpus2 --count=24 --start=1 --stride=67 --budget-ms=600000 --node-budget=250000 --out=tmp/cell-dense/c2-t3.json
+
+      - name: Compare medians and require no hard-tail regression
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const median = xs => [...xs].sort((a,b) => a-b)[1];
+          const deltas = {};
+          for (const prefix of ['pub','c2']) {
+            const docs = {};
+            for (const arm of ['b','t']) for (let r=1;r<=3;r++) docs[`${arm}${r}`] = JSON.parse(readFileSync(`tmp/cell-dense/${prefix}-${arm}${r}.json`,'utf8'));
+            const ref = docs.b1;
+            for (const [label, doc] of Object.entries(docs)) {
+              if (doc.rows.length !== ref.rows.length) throw new Error(`${prefix}/${label}: row-count mismatch`);
+              for (let i=0;i<ref.rows.length;i++) {
+                const a=ref.rows[i], b=doc.rows[i];
+                if (a.id!==b.id || a.ok!==b.ok || a.nodes!==b.nodes) throw new Error(`${prefix}/${label}: search divergence at ${a.id}`);
+              }
+            }
+            const b=[1,2,3].map(r=>docs[`b${r}`].totalMs), t=[1,2,3].map(r=>docs[`t${r}`].totalMs);
+            const bm=median(b), tm=median(t), pct=(tm/bm-1)*100;
+            deltas[prefix]=pct;
+            console.log(`${prefix}: baseline [${b.map(x=>x.toFixed(1)).join(', ')}] median=${bm.toFixed(1)}ms; treatment [${t.map(x=>x.toFixed(1)).join(', ')}] median=${tm.toFixed(1)}ms; delta=${pct>=0?'+':''}${pct.toFixed(2)}%`);
+          }
+          if (deltas.c2 > 0.5) throw new Error(`Hard-tail regression ${deltas.c2.toFixed(2)}% exceeds +0.5% gate`);
+          if (deltas.pub > 3.0) throw new Error(`Short-solve regression ${deltas.pub.toFixed(2)}% exceeds +3% gate`);
+          NODE
+
+      - name: Prepare final tree
+        run: |
+          node scripts/tmp-remove-cell-dense-index.mjs
+          git rm .github/workflows/tmp-remove-cell-dense-index.yml scripts/tmp-remove-cell-dense-index.mjs
+
+      - name: Fast CI on final tree
+        run: npm run ci:fast
+
+      - name: Commit passing refactor
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add modules/solver
+          git commit -m "Remove packed-key cellDenseIndex indirection"
+          git push origin HEAD:chatgpt/remove-cell-dense-index-2026-08-25
