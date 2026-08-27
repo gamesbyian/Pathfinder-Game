@@ -13,9 +13,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
+import process from 'node:process';
+import { buildBundle } from './run-bundled.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const COMPLETE_SHARDED_BUNDLE = buildBundle('scripts/hint-complete-enumeration-sharded.mjs');
 const { readLevelsWithHints } = await import('./level-data-io.mjs');
 
 // A 3x3 grid, gate (1,1) -> goal (3,3), reqLen 4, reqInt 0: Manhattan distance 4, so every
@@ -43,7 +46,7 @@ async function writeFixture(dirAbs, levels) {
 }
 
 async function runSharded(args) {
-    return execFile('node', ['scripts/run-bundled.mjs', 'scripts/hint-complete-enumeration-sharded.mjs', ...args], {
+    return execFile(process.execPath, [COMPLETE_SHARDED_BUNDLE, ...args], {
         cwd: ROOT,
         maxBuffer: 10 * 1024 * 1024,
     });
