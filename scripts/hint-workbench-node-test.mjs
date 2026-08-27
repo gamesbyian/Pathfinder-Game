@@ -95,8 +95,17 @@ async function main() {
         ], /Refusing to write report inside source-controlled artifact path data/);
 
 
+        const levelSpecDir = path.join(tempDir, 'level-spec-fixture');
+        await mkdir(levelSpecDir, { recursive: true });
+        const levelSpecPath = path.join(levelSpecDir, 'levels.json');
+        await writeFile(levelSpecPath, `${JSON.stringify([
+            syntheticWorkbenchLevel({ id: 'T00001' }),
+            syntheticWorkbenchLevel({ id: 'T00002' }),
+            syntheticWorkbenchLevel({ id: 'T00003' }),
+        ])}\n`);
         const levelSpecOutput = path.join(tempDir, 'level-spec-report.json');
         await runWorkbench([
+            `--levels-json=${levelSpecPath}`,
             '--levels=pos:1,pos:2-3,pos:2',
             '--preset=enumerate-targeted',
             '--policy=audit-only',
