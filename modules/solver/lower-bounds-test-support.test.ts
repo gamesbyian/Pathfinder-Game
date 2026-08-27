@@ -121,6 +121,19 @@ function referenceSearch(state: SolverSearchState, level: NormalizedLevel, targe
   const initial = referenceAccounting(path, level);
   const prefixCost = initial.cost;
   const maxCost = level.grid.w * level.grid.h - 1 + level.reqInt;
+  // On a single-gate, mechanics-free grid, an unseen orthogonal neighbor cannot violate blocks,
+  // hazards, portal/filter rules, gate re-entry, edge reuse, or intersection limits. A must-cross
+  // cell on its first visit is the one remaining case where departure-axis legality can reject a
+  // first-time destination, so keep the referee there.
+  const simpleOpenGrid =
+    level.gateKeys.length === 1 &&
+    level.blockSet.size === 0 &&
+    level.gooseSet.size === 0 &&
+    level.falseGoalKeys.size === 0 &&
+    level.portalMap.size === 0 &&
+    level.filterMap.size === 0 &&
+    level.flippingFilterMap.size === 0;
+  const mustCrossSet = new Set(level.mustCrossKeys);
   let best = Infinity;
 
   const walk = (
@@ -171,7 +184,11 @@ function referenceSearch(state: SolverSearchState, level: NormalizedLevel, targe
         reqInt: probeInts,
       } as unknown as NormalizedLevel;
 
-      if (validateCandidatePath(prefixLevel, path).ok) {
+      const firstVisitIsTriviallyLegal =
+        simpleOpenGrid &&
+        seen === 0 &&
+        !(mustCrossSet.has(pos) && (initial.counts.get(pos) ?? 0) === 1);
+      if (firstVisitIsTriviallyLegal || validateCandidatePath(prefixLevel, path).ok) {
         walk(nextCost, nextNonGateRevisits, jump);
       }
 
