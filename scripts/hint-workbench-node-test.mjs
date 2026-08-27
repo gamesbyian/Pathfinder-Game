@@ -107,10 +107,13 @@ async function main() {
         assert.deepEqual(levelSpecReport.levels.map(level => level.level), [1, 2, 3]);
         assert.ok(levelSpecReport.levels.every(level => level.runs.length === 0));
 
-        const levelsPath = path.join(ROOT, 'data/levels.json');
+        const auditFixtureDir = path.join(tempDir, 'audit-fixture');
+        await mkdir(auditFixtureDir, { recursive: true });
+        const levelsPath = await writeFixtureLevel(auditFixtureDir);
         const before = await stat(levelsPath);
         const output = path.join(tempDir, 'compact-report.json');
         const audit = await runWorkbench([
+            `--levels-json=${levelsPath}`,
             '--levels=pos:1',
             '--preset=all-practical',
             '--policy=audit-only',
@@ -127,8 +130,8 @@ async function main() {
         assert.match(audit.stdout, /would-accept/);
 
         const after = await stat(levelsPath);
-        assert.equal(after.mtimeMs, before.mtimeMs, 'audit-only run must not modify data/levels.json');
-        assert.equal(after.size, before.size, 'audit-only run must not resize data/levels.json');
+        assert.equal(after.mtimeMs, before.mtimeMs, 'audit-only run must not modify its levels input');
+        assert.equal(after.size, before.size, 'audit-only run must not resize its levels input');
 
         const report = JSON.parse(await readFile(output, 'utf8'));
         assert.equal(report.schemaVersion, 1);
