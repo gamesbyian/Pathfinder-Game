@@ -227,9 +227,29 @@ jobs:
           set +e
           mkdir -p logs/solver-broad-confirmation
           extra=()
-          if [ "${{ matrix.arm }}" = "treatment" ]; then
+          if [ "${{ matrix.shard.arm }}" = "treatment" ]; then
             [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
             [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          fi
+          # Fail-fast + persisted provenance: this is the single most consequential wiring point in
+          # the workflow -- `matrix.arm` (rather than `matrix.shard.arm`) silently resolved to empty
+          # here for every dispatch of this workflow before 2026-08-27, so every "treatment" shard
+          # ran with an empty extra[] (i.e. as an undeclared second control arm) while still reporting
+          # a real-looking null/non-participation result. Persist the resolved arm/flags for every
+          # shard so this can be audited directly from the artifact, and refuse to run at all if a
+          # treatment shard resolves no flags while flags were requested, or a control shard resolves
+          # any.
+          resolved="${extra[*]:-}"
+          echo "{\"idx\":\"${{ matrix.shard.idx }}\",\"arm\":\"${{ matrix.shard.arm }}\",\"resolvedFlags\":\"${resolved}\"}" > "logs/solver-broad-confirmation/batch-${{ matrix.shard.idx }}-flags.json"
+          if [ "${{ matrix.shard.arm }}" = "treatment" ] && [ -n "${{ inputs.enable_flags }}${{ inputs.disable_flags }}" ] && [ ${#extra[@]} -eq 0 ]; then
+            echo "::error::Treatment shard ${{ matrix.shard.idx }} resolved an EMPTY flag set despite enable_flags/disable_flags being requested -- refusing to silently run as control."
+            echo "exit_code=2" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${{ matrix.shard.arm }}" = "control" ] && [ ${#extra[@]} -ne 0 ]; then
+            echo "::error::Control shard ${{ matrix.shard.idx }} unexpectedly resolved a NON-EMPTY flag set (${extra[*]}) -- refusing to silently run as treatment."
+            echo "exit_code=2" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
@@ -254,6 +274,7 @@ jobs:
           path: |
             logs/solver-broad-confirmation/batch-${{ matrix.shard.idx }}.json
             logs/solver-broad-confirmation/batch-${{ matrix.shard.idx }}-summary.md
+            logs/solver-broad-confirmation/batch-${{ matrix.shard.idx }}-flags.json
           if-no-files-found: error
           retention-days: 90
 
