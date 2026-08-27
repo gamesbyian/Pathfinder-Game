@@ -72,8 +72,22 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - name: Dependency advisory diagnostic
-        run: npm audit --json || true
+      - name: Generate dependency-cleanup candidate
+        run: |
+          npm pkg delete devDependencies.npm-run-all
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm audit fix --package-lock-only --ignore-scripts --no-fund || true
+          echo 'PACKAGE_JSON_BASE64_BEGIN'
+          base64 -w0 package.json
+          echo
+          echo 'PACKAGE_JSON_BASE64_END'
+          echo 'PACKAGE_LOCK_BASE64_BEGIN'
+          base64 -w0 package-lock.json
+          echo
+          echo 'PACKAGE_LOCK_BASE64_END'
+          echo 'AUDIT_AFTER_BEGIN'
+          npm audit --json || true
+          echo 'AUDIT_AFTER_END'
       - run: npm run check:lint
 
   node-tests:
