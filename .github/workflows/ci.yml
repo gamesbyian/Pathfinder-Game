@@ -90,7 +90,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        root_branch: [0, 1]
+        root_branch: ['0', '1']
     steps:
       - uses: actions/checkout@v4
         with:
@@ -111,7 +111,7 @@ jobs:
       - name: Run exhaustive deadlock subtree
         run: >-\n          npx vitest run modules/solver/lower-bounds.test.ts\n          -t "property: deadlock helpers only report independently unsatisfiable reachable states"
         env:
-          SOLVER_DEADLOCK_PROOF_ROOT: ${{ matrix.root_branch }}
+          SOLVER_DEADLOCK_PROOF_ROOT: "${{ matrix.root_branch }}"
 
   deep-verification:
     runs-on: ubuntu-latest
