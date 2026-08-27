@@ -130,7 +130,7 @@ Hint and level provenance are independent append-only schemas and do not affect 
 - After dedupe, differing fields included `nodesExpanded` (11,061), `solver.forcing` (2,290), `solver.version` (287). Non-redundant ≠ useful.
 - Coverage is measured, not assumed. 2026-08-12: 253,491 hints / 477,925 entries; both stress corpora 100%; published 89.5%, with 6,093/58,179 uncovered. Regenerate via `npm run stress:provenance-coverage`.
 - Cold evidence is stricter than `hintGuided === false`. Snapshot: prefix-anchored touched 28.6% corpus1, 7.6% corpus2, 2.8% published; strict-cold shares 63.0%, 88.0%, 86.8%. Another 36,381 entries set `usedExistingHints`; checking only `hintGuided` overstated corpus1 cold share by 13 points. Use `isColdCapabilityEvidence`.
-- Valid hint corpus ≠ cold capability. Witness/human/prefix/guided paths may be valid without being cold `Solver.solve()` results. `check:hint-validity` proves PLAY validity only.
+- Valid hint corpus ≠ cold capability. Witness/human/prefix/guided paths may be valid without being cold `Solver.solve()` results. `check:level-data-validity` proves PLAY validity only.
 - Path-only `.hints`/`.foundHintsSinceLoad` coexist with canonical `.hintRecords`/`foundHintsSinceLoadRecords`; reconcile only via `reconcileHints`/`mergeHints`.
 - All corpora use schemaVersion 3 through `scripts/level-data-io.mjs`: `data/hints/<id>.json`, `data/stress/hints/<id>.json`, `data/stress/hints-random/<id>.json`.
 - Attempt provenance may include `beamWidth`, `diverseBeam`, winner `gateKey`, `seedSalt`, `repairMustTurnBiased`/`repairTurnBiased`; old hints may lack later fields.
