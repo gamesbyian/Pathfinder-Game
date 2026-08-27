@@ -120,12 +120,12 @@ jobs:
       total_levels: ${{ steps.seal.outputs.total_levels }}
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -163,7 +163,7 @@ jobs:
           echo "Sealed logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json: sha256=${SHA}, ${COUNT} levels, commit=${{ github.sha }}, generator=${{ inputs.generator }}, master_seed=${{ inputs.master_seed }}, id_prefix=${{ inputs.id_prefix }}, envelope_caps=${{ inputs.envelope_caps }}"
 
       - name: Upload the sealed cohort
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: broad-confirmation-cohort
           path: logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json
@@ -209,12 +209,12 @@ jobs:
       matrix: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -223,7 +223,7 @@ jobs:
         run: npm ci
 
       - name: Download the sealed cohort
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: broad-confirmation-cohort
           path: cohort-download
@@ -290,7 +290,7 @@ jobs:
 
       - name: Upload shard artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: broad-confirmation-shard-${{ matrix.shard.idx }}
           path: |
@@ -316,12 +316,12 @@ jobs:
       contents: read
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -330,14 +330,14 @@ jobs:
         run: npm ci
 
       - name: Download control shard artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: 'broad-confirmation-shard-control-*'
           path: artifact-staging/control
           merge-multiple: true
 
       - name: Download treatment shard artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: 'broad-confirmation-shard-treatment-*'
           path: artifact-staging/treatment
@@ -396,7 +396,7 @@ jobs:
 
       - name: Upload combined results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: broad-confirmation-combined
           path: |
