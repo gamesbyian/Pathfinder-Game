@@ -1,0 +1,118 @@
+# One-shot diagnostic (delete after use, per .github/workflows/README.md's convention): recombine
+# confirm-residual-003's already-completed phase-2 shard artifacts using the fixed combine logic.
+#
+# WHY THIS EXISTS: solver-residual-confirmation.yml's combine-phase2 job failed on run 33054538000
+# -- not from the matrix.shard.arm treatment-flag bug (that fix, landed the same day, was verified
+# correct via direct shard-log inspection: control shards genuinely carried no flags, treatment
+# shards genuinely carried --enable-flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE) -- but from
+# a second, unrelated bug the hardening change itself introduced: the combine step's file glob
+# (`phase2-batch-*.json`) also matched the new `*-flags.json` provenance file now written per shard,
+# and fed it into solver:combine-corpus2-batches as if it were a sweep report, which promptly
+# rejected it as not looking like one. All 64 solve-phase2 shards (32 control + 32 treatment)
+# completed successfully and their artifacts are intact with 90-day retention on that run -- only the
+# final combine step failed. Rather than re-running the full multi-hour two-phase sweep from scratch
+# (which would burn another ~4+ hours of compute reproducing identical, already-solved shards, since
+# the master seed is fixed and the sweep is deterministic), this downloads those existing shard
+# artifacts and reruns just the (now-fixed) combine/verify/verdict logic.
+name: Recombine confirm-residual-003 phase-2 artifacts (one-shot)
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Run id whose phase-2 shard artifacts to recombine.'
+        required: true
+        default: '33054538000'
+
+jobs:
+  recombine:
+    name: Download and recombine both phase-2 arms
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download every phase-2 shard artifact from the source run
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifact-staging
+          # gh run download (not actions/download-artifact's cross-run path -- see
+          # harvest-solver-evidence.yml's own comment on why: that path has been measured dropping
+          # the final partial page past 100 artifacts on this repo. Only 64 artifacts here, well
+          # under that, but this keeps the same proven mechanism as the repo's other cross-run job).
+          gh run download "${{ inputs.source_run_id }}" --repo "$GITHUB_REPOSITORY" --dir artifact-staging --pattern 'residual-phase2-shard-*'
+          ls artifact-staging | wc -l
+
+      - name: Combine each arm (subset-shaped -- NOT the full-corpus baseline)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/stress
+          for arm in control treatment; do
+            mkdir -p "logs/solver-residual-confirmation-${arm}"
+            cp artifact-staging/residual-phase2-shard-${arm}-*/*.json "logs/solver-residual-confirmation-${arm}/"
+            # Excludes the *-flags.json provenance file (see this workflow's header comment) --
+            # matches the same phase2-batch-*.json glob but is {idx,arm,resolvedFlags}, not a
+            # {summary,levels} sweep report.
+            FILES=$(ls logs/solver-residual-confirmation-${arm}/phase2-batch-*.json 2>/dev/null | grep -v -- '-flags\.json$' | paste -sd, -)
+            [ -n "$FILES" ] && npm run solver:combine-corpus2-batches -- --allow-mixed-corpora --in="${FILES}" --out="reports/stress/residual-confirmation-phase2-${arm}.json"
+          done
+
+      - name: Verify both arms cover the same rows
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const control = JSON.parse(fs.readFileSync('reports/stress/residual-confirmation-phase2-control.json', 'utf8')).levels ?? [];
+          const treatment = JSON.parse(fs.readFileSync('reports/stress/residual-confirmation-phase2-treatment.json', 'utf8')).levels ?? [];
+          if (control.length !== treatment.length) { console.error(\`arm row-count mismatch: control=\${control.length} treatment=\${treatment.length}\`); process.exit(1); }
+          console.log(\`both arms cover \${control.length} rows\`);
+          "
+
+      - name: Print the frozen confirmation verdict inputs
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const control = JSON.parse(fs.readFileSync('reports/stress/residual-confirmation-phase2-control.json', 'utf8')).levels ?? [];
+          const treatment = JSON.parse(fs.readFileSync('reports/stress/residual-confirmation-phase2-treatment.json', 'utf8')).levels ?? [];
+          const idOf = x => x.id ?? String(x.level);
+          const controlSolved = new Set(control.filter(x => x.ok).map(idOf));
+          const treatmentSolved = new Set(treatment.filter(x => x.ok).map(idOf));
+          const gained = [...treatmentSolved].filter(id => !controlSolved.has(id)).sort();
+          const lost = [...controlSolved].filter(id => !treatmentSolved.has(id)).sort();
+          const workOf = rows => rows.reduce((n, x) => n + (x.workSpent || 0), 0);
+          const controlWork = workOf(control), treatmentWork = workOf(treatment);
+          console.log('cohort=confirm-residual-003 source_run_id=${{ inputs.source_run_id }} ref=${{ github.sha }}');
+          console.log(\`control solved: \${controlSolved.size}/\${control.length}, work=\${controlWork}\`);
+          console.log(\`treatment solved: \${treatmentSolved.size}/\${treatment.length}, work=\${treatmentWork} (\${(100*(treatmentWork-controlWork)/controlWork).toFixed(2)}% vs control)\`);
+          console.log(\`gained (\${gained.length}): \` + gained.join(','));
+          console.log(\`lost (\${lost.length}): \` + lost.join(','));
+          "
+
+      - name: Upload combined results
+        uses: actions/upload-artifact@v4
+        with:
+          name: residual-confirmation-combined
+          path: |
+            reports/stress/residual-confirmation-phase2-control.json
+            reports/stress/residual-confirmation-phase2-treatment.json
+          if-no-files-found: error
+          retention-days: 90
