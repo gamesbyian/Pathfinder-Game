@@ -47,7 +47,7 @@ Use these as evidence for the corresponding queue item, not as alternate priorit
 - restart allocation: [`2026-08-24-restart-continuation-value-audit.md`](2026-08-24-restart-continuation-value-audit.md), execution-readiness harness: [`2026-08-26-restart-continuation-execution-readiness.md`](2026-08-26-restart-continuation-execution-readiness.md), near-miss development pilot (corrected — tie, no detected restart effect): [`2026-08-26-restart-vs-continuation-near-miss-development-pilot-corrected.md`](2026-08-26-restart-vs-continuation-near-miss-development-pilot-corrected.md) (supersedes [the original](2026-08-26-restart-vs-continuation-near-miss-development-pilot.md), which had a best-badness metric bug)
 - learned failure: [`2026-08-24-learned-failure-certificate-audit.md`](2026-08-24-learned-failure-certificate-audit.md)
 - repair reconstructability: [`2026-08-24-repair-reachability-reconstructability-audit.md`](2026-08-24-repair-reachability-reconstructability-audit.md)
-- execution substrate: [`2026-08-24-speed-substrate-static-audit.md`](2026-08-24-speed-substrate-static-audit.md)
+- execution substrate: [`2026-08-24-speed-substrate-static-audit.md`](2026-08-24-speed-substrate-static-audit.md), scorer pilot (closed negative): [`2026-08-26-current-head-specialized-scorer-pilot.md`](2026-08-26-current-head-specialized-scorer-pilot.md), beam cost breakdown (nominates fused-kernel pilot): [`2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md`](2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md)
 
 Current budget-depth evidence: [`2026-08-23-technique-budget-cap-efficiency.md`](2026-08-23-technique-budget-cap-efficiency.md). The underlying technique census is heavily mined development evidence, not a fresh confirmation set.
 

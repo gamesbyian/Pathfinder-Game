@@ -23,7 +23,9 @@ A materially different scorer candidate needs new evidence and a different mecha
 
 ### Fused move/state kernel
 
-If profiles nominate candidate generation/apply/undo overhead, test a fused JS kernel using fixed neighbor slots, dense mechanic metadata, direct legality/state updates, and primitive undo storage. This asks whether general candidate/undo representations can disappear from the hot loop; it is not another `UndoToken` pooling experiment.
+**Nominated by the 2026-08-27 beam cost breakdown.** The existing `PF_BEAM_DEBUG=1` counters, run on three independent 24-level hard-Corpus-2 stride samples plus the full published corpus, show candidate generation/apply/undo (`getNeighbors`/`pruneFirstStepNeighbors`/`buildCurUrgencyContext`/`applyMove`/`undoMove`/`scoreMove`, disjoint from the nested connectivity timer) at 46.5-55.3% of instrumented beam time on every workload — 2-4x connectivity (16.6-27.2%) and replay (12.3-16.2%). See [`../reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md`](../reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md).
+
+Test a fused JS kernel using fixed neighbor slots, dense mechanic metadata, direct legality/state updates, and primitive undo storage. This asks whether general candidate/undo representations can disappear from the hot loop; it is not another `UndoToken` pooling experiment. Use the closed scorer pilot's exact evaluation protocol (deterministic node budget, non-binding wall deadline, byte-identical `id:solved:nodes` signatures required before timing is interpreted, interleaved reps on both published and hard-Corpus-2 workloads) — that pilot is the concrete precedent that a materially-hot bucket does not automatically translate into recovered end-to-end wall time once V8's own optimization is accounted for, so setup/dispatch cost and representative short/long workloads both matter here too.
 
 ### Dense level-local indexing
 
@@ -85,8 +87,8 @@ The August 23 work already:
 ## Execution order
 
 1. Current-HEAD profile complete: hard-beam work remains the largest named bucket; the static scorer specialization it nominated is closed negative.
-2. Use the existing debug-only beam breakdown on the same hard workload to separate replay, candidate generation, connectivity, dedup, and sort.
-3. If candidate generation/apply/undo dominates, run one bounded fused-JS move/state-kernel pilot; if replay is material, revisit state materialization. Do not pursue either without that breakdown.
+2. **Done (2026-08-27):** the existing debug-only beam breakdown, run on the hard Corpus-2 workload plus published, separated replay/candidate-generation/connectivity/dedup/sort. Candidate generation/apply/undo dominates (46.5-55.3%) on every workload; connectivity and replay are real but clearly secondary.
+3. **Current step:** run one bounded fused-JS move/state-kernel pilot (candidate generation/apply/undo dominated). Replay/state-materialization stays closed — it was measured present but not dominant, not merely unmeasured.
 4. Extend dense indexing only for measured hot structures; do not repeat the naive six-array form.
 5. Touch work-meter/secondary overhead only if measured.
 6. Reopen native/WASM only if a new compact boundary clears the gate above.
@@ -112,6 +114,7 @@ Keep policy and kernel effects separable. Scheduler decisions use machine-indepe
 
 ## Evidence anchors
 
+- [`../reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md`](../reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md)
 - [`../reports/2026-08-26-current-head-specialized-scorer-pilot.md`](../reports/2026-08-26-current-head-specialized-scorer-pilot.md)
 - [`../reports/2026-08-26-dense-index-architecture-followup.md`](../reports/2026-08-26-dense-index-architecture-followup.md)
 - [`../reports/2026-08-24-speed-substrate-static-audit.md`](../reports/2026-08-24-speed-substrate-static-audit.md)
