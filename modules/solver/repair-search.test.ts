@@ -13,8 +13,6 @@ import { evaluatePrunedMove } from './prune-gauntlet.js';
 import type { PruneDiagnostics } from './prune-gauntlet.js';
 import {
     replayAndValidate,
-    r02560Level,
-    R02560_NODE_BUDGET,
 } from './repair-search-test-support.test.js';
 
 const K = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
@@ -539,22 +537,8 @@ test('STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST=false disables the must-turn exit nudg
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
 
-// R02560's expensive enabled-vs-disabled rescue proof lives in
-// repair-search-close-length-gap.test.ts so Vitest can schedule that real regression search
-// independently of the rest of this file. The shared fixture remains below for cheaper checks.
-test('closeLengthGap is deterministic: identical inputs produce identical output', async () => {
-    const level = r02560Level();
-    const gateKey = K(11, 5);
-    const prepA = prepLevel(level);
-    prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(gateKey, level, prepA, POLICY_PROFILES.repair, 15000, Date.now(), null, undefined, false, R02560_NODE_BUDGET);
-
-    const prepB = prepLevel(level);
-    prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(gateKey, level, prepB, POLICY_PROFILES.repair, 15000, Date.now(), null, undefined, false, R02560_NODE_BUDGET);
-
-    assert.deepEqual(pathA, pathB);
-}, 20000);
+// Determinism is owned by the small synthetic repairSearchFromGate tests above. Do not use the
+// historical R02560 rescue witness merely to prove identical inputs produce identical outputs.
 
 test('closeLengthGap never returns an unsound path on a level with must-pass/must-cross objectives (soundness spot-check)', async () => {
     // Reuses the existing must-pass/must-cross soundness-check shape (see the earlier
