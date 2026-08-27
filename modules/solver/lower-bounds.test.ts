@@ -99,15 +99,10 @@ test('prepLevel output can feed extracted lower-bound helpers', () => {
 });
 
 // ── Hardening plan §1 additions: prune-fires / prune-does-not-fire behavior ──────
-import { normalizeRawLevel } from './normalization.js';
 import { createState, applyMove, getNeighbors, undoMove } from './search-state.js';
 import { getRealLengthFromState } from './solution.js';
-import { validateCandidatePath } from '../domain/path-validator.js';
 import { isConnected } from './topology.js';
-import { evaluatePrunedMove } from './prune-gauntlet.js';
-import type { PruneDiagnostics, PruneId } from './prune-gauntlet.js';
-import { normalizeAblationConfig } from './orchestration.js';
-import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, mustCrossForcedNeighborDeadlocked, mustCrossNeighborBudgetDeadlocked } from './lower-bounds.js';
+import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, mustCrossForcedNeighborDeadlocked } from './lower-bounds.js';
 import {
   W,
   wireLevel,
