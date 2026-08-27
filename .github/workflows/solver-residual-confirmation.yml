@@ -107,12 +107,12 @@ jobs:
       pool_total: ${{ steps.seal.outputs.total_levels }}
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -142,7 +142,7 @@ jobs:
           echo "Sealed phase-1 pool logs/solver-residual-confirmation/${{ inputs.cohort_id }}-pool.json: sha256=${SHA}, ${COUNT} levels, commit=${{ github.sha }}, master_seed=${{ inputs.master_seed }}, id_prefix=${{ inputs.id_prefix }}, envelope_caps=${{ inputs.envelope_caps }}"
 
       - name: Upload the sealed pool
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: residual-confirmation-pool
           path: logs/solver-residual-confirmation/${{ inputs.cohort_id }}-pool.json
@@ -186,12 +186,12 @@ jobs:
       matrix: ${{ fromJson(needs.plan-phase1.outputs.shards) }}
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -200,7 +200,7 @@ jobs:
         run: npm ci
 
       - name: Download the sealed pool
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: residual-confirmation-pool
           path: pool-download
@@ -241,7 +241,7 @@ jobs:
 
       - name: Upload phase-1 shard artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: residual-phase1-shard-${{ matrix.shard.idx }}
           path: |
@@ -269,12 +269,12 @@ jobs:
       phase2_shard_count: ${{ steps.freeze.outputs.phase2_shard_count }}
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -283,13 +283,13 @@ jobs:
         run: npm ci
 
       - name: Download the sealed pool
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: residual-confirmation-pool
           path: pool-download
 
       - name: Download all phase-1 shard artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: 'residual-phase1-shard-*'
           path: artifact-staging/phase1
@@ -346,7 +346,7 @@ jobs:
           "
 
       - name: Upload the sealed residual corpus
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: residual-confirmation-residual
           path: logs/solver-residual-confirmation-phase1/${{ inputs.cohort_id }}-residual.json
@@ -354,7 +354,7 @@ jobs:
           retention-days: 90
 
       - name: Upload phase-1 combined control report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: residual-confirmation-phase1-report
           path: reports/stress/residual-confirmation-phase1-control.json
@@ -400,12 +400,12 @@ jobs:
       matrix: ${{ fromJson(needs.plan-phase2.outputs.shards) }}
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -414,7 +414,7 @@ jobs:
         run: npm ci
 
       - name: Download the sealed residual
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: residual-confirmation-residual
           path: residual-download
@@ -481,7 +481,7 @@ jobs:
 
       - name: Upload phase-2 shard artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: residual-phase2-shard-${{ matrix.shard.idx }}
           path: |
@@ -507,12 +507,12 @@ jobs:
       contents: read
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -521,14 +521,14 @@ jobs:
         run: npm ci
 
       - name: Download control shard artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: 'residual-phase2-shard-control-*'
           path: artifact-staging/control
           merge-multiple: true
 
       - name: Download treatment shard artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: 'residual-phase2-shard-treatment-*'
           path: artifact-staging/treatment
@@ -586,7 +586,7 @@ jobs:
 
       - name: Upload combined results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: residual-confirmation-combined
           path: |
