@@ -33,7 +33,8 @@ so `reports/stress/` is not a pure archive.
 
 All generated stress levels are intended to be valid and solvable by construction:
 
-- generation begins from a witness path;
+- every retained level carries a construction witness, whether the generator chooses that witness
+  first or derives it from a topology/composition scaffold;
 - gate, goal, exact required length, and exact required intersections derive from that witness;
 - added mechanics are accepted only when the witness still passes the canonical referee;
 - accepted wire data passes schema and structural validation;
