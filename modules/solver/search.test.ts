@@ -12,6 +12,7 @@ import { isConnected } from './topology.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PruneDiagnostics } from './prune-gauntlet.js';
 import type { PruneId } from './prune-gauntlet.js';
+import { validateCandidatePath } from '../domain/path-validator.js';
 
 function makeLevel(overrides = {}) {
   return {
@@ -400,26 +401,28 @@ test('beamSearchFromGate numeric dedup key reproduces the string-key fallback ex
 
 test('dfsFromGateLDS honors a finite nodeBudget (it bounds the otherwise-unbounded final DFS wave)', async () => {
   const level = makeLevel({ grid: { w: 9, h: 9 }, reqLen: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
-  const base = prepLevel(level); base._cfg = null; base._metrics = { nodesExpanded: 0 };
-  // Deliberately generous ms budget: this test is about the NODE budget bounding the final DFS
-  // wave, and the deadline is only here so a broken build cannot hang. 5000 was marginal — this
-  // fixture's solve expands ~2M nodes, which fits in ~1.4s plain but blows 5s under `npm run ci`'s
-  // V8 coverage instrumentation, so the suite failed on `main` while passing standalone. A
-  // wall-clock bound must never be the thing a unit test's assertion actually turns on.
-  const basePath = await dfsFromGateLDS(PACK(0, 0), level, base, POLICY_PROFILES.default, 120000, Date.now(), null, null, {}, Infinity);
-  assert.ok(basePath, 'unbudgeted baseline should solve');
-  const solveNodes = base._metrics!.nodesExpanded; // this wandering level's DFS solve expands ~2M nodes
+
+  // Prove independently that the fixture is genuinely solvable without spending ~2M DFS nodes
+  // merely to establish that prerequisite. This fixed simple path has exactly 40 ordinary moves,
+  // no revisits, and is checked by the domain referee rather than by the search under test.
+  const knownSolutionCoords = [
+    [0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0],[8,0],
+    [8,1],[7,1],[6,1],[5,1],[4,1],[3,1],[2,1],[1,1],[0,1],
+    [0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[7,2],[8,2],
+    [8,3],[7,3],[6,3],[5,3],[4,3],[4,4],[5,4],[6,4],[7,4],[8,4],
+    [8,5],[8,6],[8,7],[8,8],
+  ];
+  const knownSolution = knownSolutionCoords.map(([x, y]) => PACK(x, y));
+  assert.equal(validateCandidatePath(level, knownSolution).ok, true, 'budget fixture must be independently solvable');
 
   const cap = 20000;
   const capped = prepLevel(level); capped._cfg = null; capped._metrics = { nodesExpanded: 0 };
   const out: { timedOut?: boolean } = {};
   const cappedPath = await dfsFromGateLDS(PACK(0, 0), level, capped, POLICY_PROFILES.default, 120000, Date.now(), null, null, out, cap);
-  assert.equal(cappedPath, null, 'a cap far below the solve cost must prevent the solve');
+  assert.equal(cappedPath, null, 'a 20k-node cap must interrupt this solvable fixture before DFS finds its solution');
   assert.equal(out.timedOut, true);
   assert.ok(capped._metrics!.nodesExpanded >= cap && capped._metrics!.nodesExpanded < cap + 4096,
     `capped run should stop near the cap (${cap}), got ${capped._metrics!.nodesExpanded}`);
-  assert.ok(solveNodes > capped._metrics!.nodesExpanded * 10,
-    `the unbudgeted run (${solveNodes}) should dwarf the capped run (${capped._metrics!.nodesExpanded}) — proof the cap curtailed the runaway final wave`);
 });
 
 test('findTrapSpots returns valid one-step false-goal cells', async () => {
