@@ -116,54 +116,9 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-  # The expensive deadlock soundness proof is an exhaustive tree with exactly two
-  # root moves. GitHub runs those disjoint subtrees on separate runners; local `npm run ci`
-  # runs the same two shards concurrently in one dedicated phase, never alongside coverage or Node.
-  deadlock-soundness-0:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # These jobs do not consume archived solver runs/reports or standing stress corpora.
-          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
-          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/
-            !/data/stress/
-          sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - run: npm run test:deadlock-soundness:0
-
-  deadlock-soundness-1:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # These jobs do not consume archived solver runs/reports or standing stress corpora.
-          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
-          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/
-            !/data/stress/
-          sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - run: npm run test:deadlock-soundness:1
-
-  # TEMPORARY PR benchmark: compare the historical local command graph with the optimized
-  # local `npm run ci` graph on equivalent single hosted runners. Remove before merge.
-  local-ci-baseline-benchmark:
+  # TEMPORARY PR benchmark: measure the native file-parallel full local CI shape.
+  # Remove before merge.
+  local-ci-native-benchmark:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -172,20 +127,7 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - name: Run historical local CI shape
-        run: npm run check && npm run test:coverage && npm run test:node
-
-  local-ci-optimized-benchmark:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - name: Run optimized local CI shape
-        run: npm run ci
+      - run: npm run ci
 
   deep-verification:
     runs-on: ubuntu-latest
@@ -206,4 +148,4 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - run: npm run test:coverage:ci
+      - run: npm run test:coverage
