@@ -39,7 +39,7 @@ Test-wall-time figures are measurements, not contracts: fixture changes, runner 
 
 `test:node:fast` currently includes every Node validator; it leaves room to exclude future genuinely slow validators. Former slow hint-workbench/diversification validators now use cheap fixtures with the same plumbing.
 
-Local `ci` runs `check`, `test:coverage`, then `test:node`. Each has internal concurrency; running them concurrently on one 4-core machine can oversubscribe it. In GitHub Actions those legs use separate runners. Vitest and Node jobs use sparse checkout because they do not consume archived `logs/`, dated `reports/`, or standing `data/stress/` corpora; repository-wide static hygiene keeps a full checkout because it intentionally scans tracked artifacts. `package.json` is authoritative for the local graph.
+Local `ci` runs `check`, `test:coverage`, then `test:node`. Each has internal concurrency; running them concurrently on one 4-core machine can oversubscribe it. In GitHub Actions those legs use separate runners. Vitest/build/proof jobs omit archived `logs/`, dated `reports/`, and standing `data/stress/` corpora they do not consume; Node harnesses keep reports/corpora but omit historical `logs/`. Repository-wide static hygiene keeps a full checkout because it intentionally scans tracked artifacts. `package.json` is authoritative for the local graph.
 
 ## Fast vs deep
 
