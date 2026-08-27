@@ -77,7 +77,7 @@ Use this short preflight before choosing a command:
 
 | Area | Main commands / references |
 |---|---|
-| Validation | `check`, `ci`, `ci:fast`, `ci:full`, `test:unit`, `test:unit:fast`, `test:coverage`, `test:node`, `test:node:fast`, `test:e2e*`, `test:visual`, `check:documentation-links`, `check:types*`, `check:lint`; [`testing.md`](testing.md) |
+| Validation | `check`, `ci`, `ci:fast`, `ci:full`, `test:unit`, `test:unit:fast`, `test:coverage`, `test:node`, `test:e2e*`, `test:visual`, `check:documentation-links`, `check:types*`, `check:lint`; [`testing.md`](testing.md) |
 | Tool discovery | `scripts/tooling-census.mjs --orphans` for lifecycle discovery and `--health` for observational support-scoped import health; current front-door catalog plus periodic lifecycle review |
 | Solver | `solver:direct`, `solver:bench`, `solver:speed-probe`, `solver:fingerprint*`, `solver:req-length-sweep`, `solver:trap-audit`, `solver:winning-attempts`, `solver:experiment-preflight`; [`solver-architecture.md`](solver-architecture.md), [`solver-scheduling-policy.md`](solver-scheduling-policy.md), [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md), [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) |
 | Reference / exact oracle | `scripts/stress/cpsat-full-probe.py` and existing explicit-prefix / repair-retreat drivers; current support/validation limits: [`../reports/2026-08-23-solver-reference-model-capability-audit.md`](../reports/2026-08-23-solver-reference-model-capability-audit.md) |
