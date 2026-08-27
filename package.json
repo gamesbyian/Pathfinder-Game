@@ -11,7 +11,6 @@
     "check:audit-artifacts": "node scripts/check-audit-artifacts.mjs",
     "check:documentation-links": "node scripts/check-documentation-links.mjs",
     "research:index": "node scripts/research-status-index.mjs",
-    "check:third-party": "node scripts/check-third-party-dependencies.mjs",
     "check:csp": "node scripts/check-csp.mjs",
     "check:modal-a11y": "node scripts/check-modal-a11y.mjs",
     "check:css-dead-components": "node scripts/check-css-dead-components.mjs",
@@ -157,10 +156,11 @@
     "check:current-level-facts": "node scripts/current-level-facts.mjs --check",
     "test:current-level-facts": "node scripts/current-level-facts-node-test.mjs",
     "check:text-source-files": "node scripts/check-text-source-files.mjs",
-    "check:validators": "node scripts/run-scripts-parallel.mjs check:current-level-facts check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:workflow-actions check:third-party check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:canvas-theme-coverage check:level-data-validity check:level-provenance check:corpus-level-formatting",
+    "check:validators": "node scripts/run-scripts-parallel.mjs check:current-level-facts check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:workflow-actions check:browser-external-dependencies check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:canvas-theme-coverage check:level-data-validity check:level-provenance check:corpus-level-formatting",
     "check:nonlint": "npm run check:dead-scripts && npm run check:text-source-files && npm run check:validators",
     "check:level-data-validity": "tsx scripts/check-level-data-validity.mjs",
-    "check:workflow-actions": "node scripts/check-workflow-actions.mjs"
+    "check:workflow-actions": "node scripts/check-workflow-actions.mjs",
+    "check:browser-external-dependencies": "node scripts/check-browser-external-dependencies.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
