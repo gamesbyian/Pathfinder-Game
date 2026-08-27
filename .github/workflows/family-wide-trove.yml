@@ -98,13 +98,13 @@ jobs:
       contents: write
     steps:
       - name: Check out research branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.RESEARCH_BRANCH }}
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -160,12 +160,12 @@ jobs:
                 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60]
     steps:
       - name: Check out research branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.RESEARCH_BRANCH }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -217,7 +217,7 @@ jobs:
 
       - name: Upload this shard's staged results as an artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: trove-shard-${{ steps.ids.outputs.nn }}
           path: artifact-staging/trove-shard-${{ steps.ids.outputs.nn }}
@@ -235,13 +235,13 @@ jobs:
       actions: read
     steps:
       - name: Check out research branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.RESEARCH_BRANCH }}
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -250,7 +250,7 @@ jobs:
         run: npm ci
 
       - name: Download every shard's artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: 'trove-shard-*'
           path: artifact-staging/downloaded
@@ -278,7 +278,7 @@ jobs:
 
       - name: Upload the combined trove as an artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: family-wide-trove-combined
           path: |
