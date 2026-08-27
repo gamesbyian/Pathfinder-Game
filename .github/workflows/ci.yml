@@ -118,7 +118,7 @@ jobs:
 
   # The expensive deadlock soundness proof is an exhaustive tree with exactly two
   # root moves. GitHub runs those disjoint subtrees on separate runners; local `npm run ci`
-  # still runs both serially because SOLVER_DEADLOCK_PROOF_ROOT is normally unset.
+  # runs the same two shards concurrently in one dedicated phase, never alongside coverage or Node.
   deadlock-soundness-0:
     runs-on: ubuntu-latest
     steps:
@@ -138,12 +138,7 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - name: Run exhaustive deadlock subtree
-        run: >-
-          npx vitest run modules/solver/lower-bounds.test.ts
-          -t "property: deadlock helpers only report independently unsatisfiable reachable states"
-        env:
-          SOLVER_DEADLOCK_PROOF_ROOT: '0'
+      - run: npm run test:deadlock-soundness:0
 
   deadlock-soundness-1:
     runs-on: ubuntu-latest
@@ -164,12 +159,7 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - name: Run exhaustive deadlock subtree
-        run: >-
-          npx vitest run modules/solver/lower-bounds.test.ts
-          -t "property: deadlock helpers only report independently unsatisfiable reachable states"
-        env:
-          SOLVER_DEADLOCK_PROOF_ROOT: '1'
+      - run: npm run test:deadlock-soundness:1
 
   deep-verification:
     runs-on: ubuntu-latest
@@ -190,7 +180,4 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - run: npm run test:coverage
-        env:
-          # The two deadlock-soundness jobs above own the complete exhaustive deadlock proof.
-          SOLVER_DEADLOCK_PROOF_ROOT: skip
+      - run: npm run test:coverage:ci
