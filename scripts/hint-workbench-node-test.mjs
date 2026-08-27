@@ -6,10 +6,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
+import { buildBundle } from './run-bundled.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const NODE = process.execPath;
+const WORKBENCH_BUNDLE = buildBundle('scripts/hint-workbench.mjs');
 const { readLevelHints, readLevelsWithHints } = await import('./level-data-io.mjs');
 
 async function writeFixtureLevel(fixtureDir) {
@@ -34,7 +36,7 @@ async function writeTrivialFixtureLevel(fixtureDir) {
 }
 
 async function runWorkbench(args) {
-    return execFile(NODE, ['scripts/run-bundled.mjs', 'scripts/hint-workbench.mjs', ...args], {
+    return execFile(NODE, [WORKBENCH_BUNDLE, ...args], {
         cwd: ROOT,
         maxBuffer: 10 * 1024 * 1024,
     });
