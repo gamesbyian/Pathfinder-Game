@@ -2,7 +2,7 @@
 
 > **Status:** concluded-positive
 > **Last evidence:** 2026-08-27 — `confirm-residual-003` (516-level control-failure residual, phase-2 solve run [`33054538000`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33054538000), recombined after an unrelated glob bug via one-shot run [`33083577386`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33083577386)) is the **first genuine confirmation result this candidate has ever produced**: control 0/516, treatment 3/516, work +0.15% (124,739,052,106 → 124,924,680,731), gained `L00278`/`L00831`/`L00933`, lost none.
-> **Decision:** `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` has passed broad/residual confirmation with a clean gain matching the shape of its original 486-level development A/B (+3/-0). All four prior attempts (`confirm-broad-003`/`004`, `confirm-residual-001`/`002`) were void control-vs-control non-results caused by the `matrix.arm` wiring bug documented in [`2026-08-27-confirmation-workflow-treatment-flag-wiring-bug.md`](2026-08-27-confirmation-workflow-treatment-flag-wiring-bug.md), not genuine inconclusive attempts. The candidate is still opt-in, not default-on in `modules/solver/attempts.ts`. Per the durable confirmation contract, a confirmed treatment still needs independent transfer evidence before a broad promotion claim — `transfer-envelope-001` is the recommended next step and remains locked and untouched pending that decision.
+> **Decision:** `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` has passed broad/residual confirmation with a clean gain matching the shape of its original 486-level development A/B (+3/-0). All four prior attempts (`confirm-broad-003`/`004`, `confirm-residual-001`/`002`) were void control-vs-control non-results caused by the `matrix.arm` wiring bug documented in [`2026-08-27-confirmation-workflow-treatment-flag-wiring-bug.md`](2026-08-27-confirmation-workflow-treatment-flag-wiring-bug.md), not genuine inconclusive attempts. That confirmation verdict stands. Current promotion/generalization policy is now owned by [`../docs/solver-evaluation-evidence.md`](../docs/solver-evaluation-evidence.md) and the live queue: `transfer-envelope-001` remains pristine but is a same-generator in-envelope challenge/confirmation stratum, not cross-generator transfer.
 > **Remaining gate:** none blocking confirmation itself — the main-loop late-reserve WORK-budget carve-out (fixed 2026-08-26) and the treatment-flag wiring bug (fixed 2026-08-27) are both resolved, and `confirm-residual-003` ran clean against both fixes. The remaining gate is a forward decision, not a defect: materialize `transfer-envelope-001` against this candidate before flipping its default in code.
 > **Evidence role:** discovery
 > **Selection:** prespecified cohort lifecycle; each confirmation candidate, work envelope, and acceptance rule was frozen before its cohort was materialized
@@ -10,6 +10,19 @@
 > **Protocol:** [`2026-08-23-solver-confirmation-transfer-protocol-design.md`](2026-08-23-solver-confirmation-transfer-protocol-design.md)
 >
 > **Correction (2026-08-27):** `confirm-broad-003`, `confirm-broad-004`, and `confirm-residual-001` (and `confirm-residual-002`, added below) were **all control-vs-control**, not control-vs-treatment — both confirmation workflows referenced `matrix.arm` (nonexistent) instead of `matrix.shard.arm` in the step that adds the candidate's ablation flags, so no dispatch of either workflow ever actually enabled a treatment arm. See [`2026-08-27-confirmation-workflow-treatment-flag-wiring-bug.md`](2026-08-27-confirmation-workflow-treatment-flag-wiring-bug.md) for the full correction — now fixed and hardened. The "different instrument mechanism each time" framing below (repair-fallback saturation, then a late-reserve scheduling gap, then a concurrency variance) was a reasonable read of results that all shared one real root cause. `confirm-broad-001`/`confirm-broad-002` predate both confirmation workflows (dispatched via direct sweep invocation, not this matrix pattern) and are **not** affected. `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` has zero valid confirmation evidence as of this correction — not four inconclusive attempts.
+
+## Methodology note (2026-08-27)
+
+The historical one-fresh-cohort-per-candidate lifecycle in this report is no longer the default
+framework. Its evidence remains valid, including the +3/-0 `confirm-residual-003` verdict and the
+void status of the four miswired control-vs-control runs. For future work, consume untouched blocks
+from a locked pool when repeated confirmation is expected, and reserve the term **transfer** for a
+materially different source/generator. See
+[`../docs/solver-evaluation-evidence.md`](../docs/solver-evaluation-evidence.md).
+
+`transfer-envelope-001` is therefore retained untouched for player-envelope challenge/confirmation
+value. Its recipe shares `generate-random.mjs` with Corpus 2 and does not, by itself, test
+distributional transfer.
 
 ## Lifecycle now exercised
 
