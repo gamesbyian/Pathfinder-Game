@@ -2,6 +2,11 @@
   "schemaVersion": 2,
   "createdAt": "2026-08-24",
   "updatedAt": "2026-08-27",
+  "topologyGenerator": {
+    "path": "scripts/stress/generate-topology.mjs",
+    "version": "0.1.0",
+    "materializationPrecondition": "Cross-generator transfer/challenge only. Does not call generateWitness(); see docs/solver-evaluation-evidence.md#suitability-and-expansion-gate before a decision-bearing dispatch."
+  },
   "sourceCommit": "4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92",
   "generator": {
     "path": "scripts/stress/generate-random.mjs",
@@ -210,6 +215,31 @@
       "spentAt": null,
       "successor": null,
       "frameworkNote": "Reclassified 2026-08-27 by docs/solver-evaluation-evidence.md; remains LOCKED/unmaterialized and scientifically usable for its narrower envelope claim."
+    },
+    {
+      "id": "confirm-transfer-topology-001",
+      "role": "challenge-cross-generator",
+      "status": "reserved",
+      "exposureState": "LOCKED",
+      "outcomeConditioned": false,
+      "independentUnit": "level",
+      "count": 1000,
+      "masterSeed": 2026082802,
+      "generatorMode": "topology-composition-v1",
+      "idPrefix": "U",
+      "materializationRevision": "b86359b53f6fd962f2c1ce677aab192c5900d404",
+      "materializationCommand": "node scripts/run-bundled.mjs scripts/stress/generate-topology.mjs --count=1000 --master-seed=2026082802 --id-prefix=U --out=logs/solver-broad-confirmation/confirm-transfer-topology-001.json",
+      "materializationTool": ".github/workflows/solver-broad-confirmation.yml (dispatch with cohort_id=confirm-transfer-topology-001, generator=topology, master_seed=2026082802, id_prefix=U, count=1000, enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE, node_budget=50000000, workers=4, shard_count=60)",
+      "selectionRule": "All 1,000 generated levels; no baseline-outcome filtering and no candidate-specific post-generation filtering.",
+      "firstTreatment": "STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE (see reports/2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md and reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md's 2026-08-27 CONFIRMED update) -- append plain beam:intersectionHarvest@beam5000 and beam:objectiveFirst@beam5000 to attempts.ts's must-cross+flipper-heavy rule only. This is the candidate's first cross-generator transfer/challenge attempt, materialized after it passed same-generator confirmation via confirm-residual-003.",
+      "featureOnlyPilot": "A separate, non-decision-bearing 300-level topology-composition batch (master_seed=2026082801, id_prefix=T, generated and inspected locally, never solved) measured must-cross-heavy archetype incidence at 56/300 (18.7%) and full isMustCrossFlipperHeavy eligibility (must-cross-heavy AND mustPass>=3 AND flippers>=2, computed via scripts/stress/query-mustcross-flipper-eligibility.mjs) at 8/300 (2.7%). count=1000 for this cohort was sized from that structural yield to target an expected ~27 eligible-participating rows, the same order of magnitude as confirm-broad-004's count=1200 sizing off its own measured 1.76% eligible rate. No solver outcome was observed on the pilot batch or on this cohort before dispatch.",
+      "suitabilityCheck": "isMustCrossFlipperHeavy requires must-cross-heavy archetype (mustCrossKeys>=2, reqInt>=2), mustPass>=3, and flippers>=2 -- all mechanics generate-topology.mjs v0.1 explicitly supports (MustCross, MustPass, flipping filters). Per docs/solver-evaluation-evidence.md#suitability-and-expansion-gate this candidate depends only on mechanics already represented by v0.1, so the generator is used as-is with no expansion.",
+      "aggregateRuns": [],
+      "verdict": null,
+      "resultSummary": null,
+      "spentAt": null,
+      "successor": null,
+      "predecessor": "confirm-residual-003"
     }
   ],
   "methodAuthority": "../../docs/solver-evaluation-evidence.md"
