@@ -10,16 +10,38 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { readLevelsWithHints } from './level-data-io.mjs';
+import { prChangedFiles } from './repository-file-view.mjs';
 
 const { parseRawLevelDetailed } = await import('../modules/domain/level-codec.js');
 const { validateCandidatePath } = await import('../modules/domain/path-validator.js');
 
 const root = new URL('..', import.meta.url).pathname;
-const corpora = [
-  { label: 'published', file: path.join(root, 'data', 'levels.json') },
-  { label: 'stress-corpus-1', file: path.join(root, 'data', 'stress', 'stress-levels.json') },
-  { label: 'stress-corpus-2', file: path.join(root, 'data', 'stress', 'stress-levels-random.json') },
+const allCorpora = [
+  { label: 'published', relativeFile: 'data/levels.json', hintPrefix: 'data/hints/' },
+  { label: 'stress-corpus-1', relativeFile: 'data/stress/stress-levels.json', hintPrefix: 'data/stress/hints/' },
+  { label: 'stress-corpus-2', relativeFile: 'data/stress/stress-levels-random.json', hintPrefix: 'data/stress/hints-random/' },
 ];
+
+const changed = prChangedFiles(root);
+const semanticsChanged = changed?.some(file =>
+  file.startsWith('modules/domain/')
+  || file === 'scripts/level-data-io.mjs'
+  || file === 'scripts/check-level-data-validity.mjs');
+
+const selectedCorpora = !changed || semanticsChanged
+  ? allCorpora
+  : allCorpora.filter(corpus => changed.some(file =>
+      file === corpus.relativeFile || file.startsWith(corpus.hintPrefix)));
+
+if (selectedCorpora.length === 0) {
+  console.log('Runtime level/hint validity: no relevant PR changes; base commit already owns this invariant.');
+  process.exit(0);
+}
+
+const corpora = selectedCorpora.map(corpus => ({
+  ...corpus,
+  file: path.join(root, corpus.relativeFile),
+}));
 
 let totalLevels = 0;
 let totalHints = 0;
@@ -64,4 +86,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`All ${totalLevels} runtime-shipped levels and ${totalHints} stored hints across ${corpora.length} corpora are structurally/PLAY valid.`);
+console.log(`All ${totalLevels} checked runtime levels and ${totalHints} stored hints across ${corpora.length} corpus${corpora.length === 1 ? '' : 'es'} are structurally/PLAY valid.`);
