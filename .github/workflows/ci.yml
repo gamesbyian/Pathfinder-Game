@@ -161,6 +161,32 @@ jobs:
       - run: npm ci
       - run: npm run test:deadlock-soundness:1
 
+  # TEMPORARY PR benchmark: compare the historical local command graph with the optimized
+  # local `npm run ci` graph on equivalent single hosted runners. Remove before merge.
+  local-ci-baseline-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Run historical local CI shape
+        run: npm run check && npm run test:coverage && npm run test:node
+
+  local-ci-optimized-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Run optimized local CI shape
+        run: npm run ci
+
   deep-verification:
     runs-on: ubuntu-latest
     steps:
