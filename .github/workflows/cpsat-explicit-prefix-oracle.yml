@@ -52,12 +52,12 @@ jobs:
       shards: ${{ steps.plan.outputs.shards }}
     steps:
       - name: Check out dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -90,18 +90,18 @@ jobs:
         shard: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
       - name: Check out dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -132,7 +132,7 @@ jobs:
 
       - name: Upload shard result
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cpsat-explicit-prefix-oracle-shard-${{ matrix.shard }}
           path: reports/stress/cpsat-explicit-prefix-oracle-shard-*.json
@@ -149,12 +149,12 @@ jobs:
       contents: read
     steps:
       - name: Check out dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Download every shard result
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: cpsat-explicit-prefix-oracle-shard-*
           path: artifact-staging
@@ -212,7 +212,7 @@ jobs:
 
       - name: Upload combined oracle result
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cpsat-explicit-prefix-oracle-${{ github.run_id }}
           path: reports/stress/cpsat-explicit-prefix-oracle-${{ github.run_id }}.json
