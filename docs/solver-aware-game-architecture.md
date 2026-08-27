@@ -34,7 +34,7 @@ Single-use; effective orientation depends on level-wide order of distinct flippe
 
 ## Stress and generation evidence
 
-The hard stress generator exceeds some published maxima. Use the in-envelope stratum for current-player transfer and broader corpus for robustness. See [`../data/stress/README.md`](../data/stress/README.md).
+The hard stress generator exceeds some published maxima. Use the in-envelope stratum for player-envelope relevance/challenge and the broader corpus for robustness. Because both use the same witness-first generator family, use topology-composition or another materially different source when cross-generator transfer is the claim. See [`../data/stress/README.md`](../data/stress/README.md) and [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
 Witness paths, families, mutations/symmetries, intended regions, and construction order may support offline diagnostics, hint diversification, routing/scoring labels, and oracle/reducer selection. They are never cold-solve inputs. See [`solver-level-blindness.md`](solver-level-blindness.md), [`variant-level-research.md`](variant-level-research.md).
 
