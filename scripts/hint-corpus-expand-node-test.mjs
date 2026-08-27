@@ -12,9 +12,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
+import { buildBundle } from './run-bundled.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const HINT_CORPUS_EXPAND_BUNDLE = buildBundle('scripts/hint-corpus-expand.mjs');
 const { readLevelsWithHints } = await import('./level-data-io.mjs');
 
 // scripts/hint-corpus-expand.mjs resolves --levels-json as `path.join(ROOT, cfg.levelsJsonPath)`
@@ -29,7 +31,7 @@ async function writeFixtureLevel(fixtureDirAbs) {
 }
 
 async function runCorpusExpand(args) {
-    return execFile('node', ['scripts/run-bundled.mjs', 'scripts/hint-corpus-expand.mjs', ...args], {
+    return execFile('node', [HINT_CORPUS_EXPAND_BUNDLE, ...args], {
         cwd: ROOT,
         maxBuffer: 10 * 1024 * 1024,
     });
