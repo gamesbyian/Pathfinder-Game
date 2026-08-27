@@ -41,9 +41,9 @@ export function r02560Level() {
     });
 }
 
-// Historical characterization records the enabled solve at exactly 803,000 nodes. Keep a
-// deterministic margin above that known convergence point while making the equally bounded
-// disabled control prove its failure with less irrelevant tail work.
-export const R02560_NODE_BUDGET = 825_000;
+// Historical characterization records the enabled solve at exactly 803,000 nodes and the
+// disabled control exhausting this 900,000-node ceiling. Preserve that published regression
+// boundary; file-level parallelism now removes it from the rest of repair-search's critical path.
+export const R02560_NODE_BUDGET = 900_000;
 
 export const R02560_GATE_KEY = PACK(10, 4);
