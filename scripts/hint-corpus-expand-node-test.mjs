@@ -22,11 +22,19 @@ const { readLevelsWithHints } = await import('./level-data-io.mjs');
 // scripts/hint-corpus-expand.mjs resolves --levels-json as `path.join(ROOT, cfg.levelsJsonPath)`
 // unconditionally, so the fixture must live under ROOT and be referenced by a ROOT-relative
 // path. tmp/ is gitignored, so a fixture under ROOT/tmp never risks landing in git status.
+function syntheticCorpusExpandLevel() {
+    return {
+        grid: { w: 5, h: 1 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 }, falseGoals: [],
+        reqLen: 4, reqInt: 0, blocks: [], mustPass: [], mustCross: [], filters: [],
+        flippingFilters: [], portals: [], geese: [], landmarks: [], hints: [],
+        designerName: '', description: '', difficulty: null,
+    };
+}
+
 async function writeFixtureLevel(fixtureDirAbs) {
-    const sourceLevels = readLevelsWithHints(path.join(ROOT, 'data/levels.json'));
     await mkdir(fixtureDirAbs, { recursive: true });
     const fixtureLevelsPathAbs = path.join(fixtureDirAbs, 'levels.json');
-    await writeFile(fixtureLevelsPathAbs, `${JSON.stringify([sourceLevels[0]], null, 2)}\n`);
+    await writeFile(fixtureLevelsPathAbs, `${JSON.stringify([syntheticCorpusExpandLevel()], null, 2)}\n`);
     return path.relative(ROOT, fixtureLevelsPathAbs);
 }
 
