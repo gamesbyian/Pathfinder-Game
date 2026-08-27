@@ -43,9 +43,7 @@ function loadAllLevels() {
 }
 
 // --- Validate a single hint path against level constraints, via the real PLAY referee ---
-function validateHintPath(raw, hintPath, levelNumber) {
-  const level = parseRawLevel(raw, levelNumber - 1);
-  if (!level) return { ok: false, errors: ['level failed to parse (structural validity is covered by validate-bundled-levels)'] };
+function validateHintPath(level, hintPath) {
   const v = validateCandidatePath(level, hintPath);
   return v.ok ? { ok: true, errors: [] } : { ok: false, errors: [v.reason] };
 }
@@ -75,8 +73,28 @@ async function main() {
       continue;
     }
 
+    // Parsing/normalization is level-scoped, not hint-scoped. A level can carry thousands of
+    // stored hints; reparsing the identical raw level for every path used to dominate this oracle.
+    const level = parseRawLevel(raw, i);
+    if (!level) {
+      failed++;
+      results.push({
+        levelNumber,
+        status: 'warn-invalid-hints',
+        invalidHintCount: raw.hints.length,
+        totalHintCount: raw.hints.length,
+        representativeHintIndex: 0,
+        hintAnalyses: raw.hints.map((_, hintIndex) => ({
+          hintIndex,
+          status: 'invalid',
+          errors: ['level failed to parse (structural validity is covered by validate-bundled-levels)'],
+        })),
+      });
+      continue;
+    }
+
     const hintAnalyses = raw.hints.map((hintPath, hi) => {
-      const result = validateHintPath(raw, hintPath, levelNumber);
+      const result = validateHintPath(level, hintPath);
       return {
         hintIndex: hi,
         status: result.ok ? 'valid' : 'invalid',
