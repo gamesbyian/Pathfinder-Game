@@ -82,6 +82,32 @@ The envelope stratum distinguishes "solver reaches outside the shipped complexit
 "solver handles complexity users can actually construct under documented object-count maxima."
 Keep that distinction when interpreting Corpus-2 failures that exceed ordinary game limits.
 
+## Alternative generator: topology composition
+
+`scripts/stress/generate-topology.mjs` is a deliberately different solver-blind construction
+family for transfer/challenge work. It does **not** use `generateWitness()`, the stochastic witness
+walker shared by Corpus 1 and Corpus 2. Instead it:
+
+- generates a randomized perfect maze first on a coarse 4x4 or 5x5 macro grid;
+- takes that maze's diameter as a macro route;
+- compiles the route into independent 3x3 Pathfinder path modules;
+- uses a compact turn-module crossing gadget to create exact self-intersections without global
+  search; and
+- gives off-route/absent macro connections priority when placing blocks, so the construction
+  topology influences the resulting puzzle rather than serving only as hidden provenance.
+
+Every retained row still carries a construction witness and passes the normal schema, structural,
+and canonical-referee checks. The production solver is never run during generation or candidate
+selection. The v0.1 mechanic scope is intentionally bounded to blocks, MustPass, MustCross,
+flipping filters, must-turn landmarks, geese, and false goals. It currently omits portals, static
+filters, surround, adjacent-turn, and multi-gate levels rather than broadening machinery merely for
+coverage.
+
+This is **generator tooling, not a standing committed corpus**. By default it writes under `tmp/`.
+Create or reserve a persistent population only for a specific research question. Its value is
+distributional independence from the shared random-walk generator, not an entitlement to call every
+sample an untouched holdout forever.
+
 ## Workflow
 
 Use [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.md) for task-oriented tool selection.
@@ -90,6 +116,7 @@ Common local commands:
 ```bash
 npm run stress:generate
 npm run stress:generate-random
+npm run stress:generate-topology
 npm run stress:validate-witnesses
 npm run stress:compare
 npm run stress:smoke
@@ -122,6 +149,10 @@ answers the question. Family/variant research has its own canonical resource:
   portable budget currency.
 - Use both corpora when a production-facing solver treatment might trade one population against
   another.
+- When a broad robustness claim needs evidence beyond another draw from the Corpus-2 generator,
+  prefer a prespecified sample from the topology-composition generator or another genuinely
+  different construction family; record that difference explicitly rather than calling a new seed
+  a new distribution.
 - Do not quote solve totals from this README. Counts change quickly and belong in frozen run reports,
   baselines, and [`../../docs/solver-optimization-current-queue.md`](../../docs/solver-optimization-current-queue.md).
 
