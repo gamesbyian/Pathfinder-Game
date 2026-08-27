@@ -11,7 +11,10 @@ import {
     R02560_GATE_KEY,
 } from './repair-search-test-support.test.js';
 
-const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
+const deepTest =
+  process.env.SOLVER_DEEP_TESTS === '0' || process.env.SOLVER_R02560_PROOF_SKIP === '1'
+    ? test.skip
+    : test;
 
 deepTest('closeLengthGap enabled rescues R02560 within the shared regression node budget', async () => {
     const level = r02560Level();
