@@ -74,12 +74,12 @@ jobs:
         level: ${{ fromJSON(needs.prepare-matrix.outputs.levels) }}
     steps:
       - name: Check out the dispatched ref
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -110,7 +110,7 @@ jobs:
 
       - name: Upload this level's result
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mitm-frontier-${{ matrix.level }}
           path: |
@@ -129,19 +129,19 @@ jobs:
       contents: write
     steps:
       - name: Check out the dispatched ref
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
 
       - name: Download all shard artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: mitm-frontier-*
           path: artifact-staging
           merge-multiple: true
 
       - name: Upload combined artifact (also kept regardless of the commit below)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mitm-frontier-sweep-combined
           path: artifact-staging/
