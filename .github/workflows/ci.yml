@@ -76,7 +76,7 @@ jobs:
             /*
             !/logs/
             !/reports/
-            !/data/stress/
+            !/data/
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v7
         with:
