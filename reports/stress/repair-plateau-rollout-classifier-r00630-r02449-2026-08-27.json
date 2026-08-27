@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-08-27T21:26:19.187Z",
+  "corpus": "data/stress/stress-levels-random.json",
+  "eliteNodeBudget": 500000,
+  "rolloutTrials": 2000,
+  "rolloutNodeCap": 5000,
+  "seed": "repair-reconstructability-classification-2026-08-27",
+  "retreatFile": "/tmp/claude-0/-home-user-Pathfinder-Game/d0eb6d27-6af1-5265-bb2c-ae86b28050e2/scratchpad/r00630-r02449-corrected-boundary.json",
+  "method": "CP-SAT-anchored: rollouts start from a verified-feasible depth (repair-retreat-binary-search.mjs output), not a raw elite dead end",
+  "levels": [
+    {
+      "id": "R00630",
+      "provenance": "unknown",
+      "reqLen": 70,
+      "blocks": 20,
+      "blocksFraction": 0.1653,
+      "mustCross": 5,
+      "reqInt": 5,
+      "navDensity": 0.7527,
+      "eliteId": "R00630:elite:0",
+      "verifiedFeasibleDepth": 36,
+      "verifiedInfeasibleDepth": 37,
+      "eliteLength": 65,
+      "badness": 14,
+      "rolloutLadder": [
+        {
+          "branchDepth": 36,
+          "residual": 34,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 15,
+          "progressP90": 19,
+          "progressMax": 33,
+          "progressFractionOfResidualMax": 0.9705882352941176,
+          "avgNodesPerTrial": 13.7955
+        }
+      ],
+      "closeLengthGapResult": {
+        "solved": true,
+        "nodes": 3247
+      }
+    },
+    {
+      "id": "R02449",
+      "provenance": "unknown",
+      "reqLen": 76,
+      "blocks": 20,
+      "blocksFraction": 0.1389,
+      "mustCross": 2,
+      "reqInt": 2,
+      "navDensity": 0.6441,
+      "eliteId": "R02449:elite:3",
+      "verifiedFeasibleDepth": 19,
+      "verifiedInfeasibleDepth": 37,
+      "eliteLength": 44,
+      "badness": 34,
+      "rolloutLadder": [
+        {
+          "branchDepth": 19,
+          "residual": 57,
+          "trials": 2000,
+          "solvedInRollout": 0,
+          "progressMedian": 27,
+          "progressP90": 42,
+          "progressMax": 61,
+          "progressFractionOfResidualMax": 1,
+          "avgNodesPerTrial": 27.6715
+        }
+      ],
+      "closeLengthGapResult": {
+        "solved": true,
+        "nodes": 1268180
+      }
+    }
+  ]
+}
