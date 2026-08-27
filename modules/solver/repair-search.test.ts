@@ -11,10 +11,15 @@ import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { repairSearchFromGate, repairStreamSeeds, computePlateauPenaltyCells, selectGuideCells, relinkPaths, preferredTurnExit, __takePlyForTests } from './repair-search.js';
 import { createState, applyMove } from './search-state.js';
-import { getRealLengthFromState, isSolutionState } from './solution.js';
+import { getRealLengthFromState } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import type { PruneDiagnostics } from './prune-gauntlet.js';
 import { withFeatureDisabled } from './ablation-config.js';
+import {
+    replayAndValidate,
+    r02560Level,
+    R02560_NODE_BUDGET,
+} from './repair-search-test-support.test.js';
 
 const K = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 
@@ -27,21 +32,6 @@ function makeLevel(overrides: any = {}) {
         filters: [], flippingFilters: [], portals: [], landmarks: [], hints: [],
         ...overrides,
     });
-}
-
-// Replays a candidate path from scratch through the real state machinery and confirms it
-// actually satisfies the win condition — a second, independent check beyond trusting that
-// repairSearchFromGate's internal isSolutionState gate did its job, mirroring how the rest of
-// the solve pipeline (Solver.ts's validateCandidatePath) re-verifies every returned solution.
-function replayAndValidate(path: number[], level: ReturnType<typeof makeLevel>, prep: ReturnType<typeof prepLevel>): boolean {
-    const state = createState(path[0], level, prep);
-    for (let i = 1; i < path.length; i++) {
-        const from = path[i - 1];
-        const portal = level.portalMap.get(from);
-        const isJump = !!(portal && !state.lastWasPortalJump && portal.dest === path[i]);
-        applyMove(path[i], state, level, prep, isJump);
-    }
-    return isSolutionState(state, level);
 }
 
 test('repairSearchFromGate solves a simple line level', async () => {
@@ -553,69 +543,9 @@ test('STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST=false disables the must-turn exit nudg
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
 
-// closeLengthGap (STRATEGY_REPAIR_LENGTH_GAP_CLOSE) — see repair-search.ts's own doc comment and
-// reports/2026-07-17-repair-stagnation-frozen-signature-generalization.md /
-// reports/2026-07-17-length-gap-close-operator.md. Default-enabled like every other repair
-// STRATEGY_* flag in this file (`!cfg || cfg.FLAG`).
-//
-// R02560 (stress-corpus-2) is a real, deterministic rescue found during that report's A/B sweep:
-// with the flag enabled, repairSearchFromGate solves it within a 900,000-node budget; with it
-// disabled, the same budget is exhausted without a solution. Used directly here (trimmed to its
-// gameplay-relevant fields) rather than a hand-built trap level, because an earlier hand-built
-// trap turned out NOT to need the rescue once every scoring/pruning flag was held at its correct
-// default (a bare `{ STRATEGY_REPAIR_LENGTH_GAP_CLOSE: false }` config object silently disables
-// every OTHER unset flag too — see the report's methodology-correction section) — the test below
-// avoids that trap by using `withFeatureDisabled()` (every flag explicit except the one under
-// test) instead of a bare partial object, exactly like `scripts/run-ablation.mjs` does for real
-// ablation sweeps.
-function r02560Level() {
-    return normalizeRawLevel({
-        grid: { w: 15, h: 15 }, gates: [{ x: 11, y: 5 }], goal: { x: 11, y: 1 },
-        reqLen: 138, reqInt: 9,
-        falseGoals: [{ x: 2, y: 1 }, { x: 2, y: 12 }, { x: 8, y: 3 }, { x: 13, y: 13 }, { x: 1, y: 13 }, { x: 2, y: 2 }],
-        blocks: [], mustPass: [], mustCross: [], filters: [],
-        flippingFilters: [
-            { x: 15, y: 12, axis: 2 }, { x: 14, y: 3, axis: 1 }, { x: 9, y: 12, axis: 1 }, { x: 2, y: 3, axis: 1 },
-            { x: 10, y: 15, axis: 1 }, { x: 14, y: 10, axis: 2 }, { x: 1, y: 6, axis: 1 }, { x: 4, y: 8, axis: 1 },
-        ],
-        portals: [],
-        geese: [{ x: 4, y: 5 }, { x: 15, y: 2 }, { x: 12, y: 9 }, { x: 3, y: 1 }, { x: 8, y: 6 }, { x: 15, y: 14 }, { x: 9, y: 14 }, { x: 7, y: 5 }],
-        landmarks: [
-            { x: 14, y: 14, objectType: 'park', role: 'decorative' }, { x: 8, y: 12, objectType: 'park', role: 'decorative' },
-            { x: 5, y: 5, objectType: 'fountain', role: 'decorative' }, { x: 1, y: 2, objectType: 'market', role: 'decorative' },
-            { x: 5, y: 3, objectType: 'fountain', role: 'decorative' }, { x: 5, y: 14, objectType: 'lamppost', role: 'decorative' },
-            { x: 4, y: 1, objectType: 'fountain', role: 'decorative' }, { x: 14, y: 2, objectType: 'park', role: 'decorative' },
-        ],
-        hints: [],
-    });
-}
-// Historical characterization records the enabled solve at exactly 803,000 nodes. Keep a
-// deterministic margin above that known convergence point while making the equally bounded
-// disabled control prove its failure with less irrelevant tail work.
-const R02560_NODE_BUDGET = 825_000;
-
-// The single most expensive test in this file (~15s): a real regression rescue against a real
-// published level within a real node budget. The cost of actually spending that budget is what's
-// under test, so it stays full-strength rather than being sped up.
-deepTest('closeLengthGap (default-enabled) rescues R02560 within a node budget the disabled path cannot', async () => {
-    const level = r02560Level();
-    const gateKey = K(11, 5);
-
-    const prepEnabled = prepLevel(level);
-    // No _cfg at all — the actual production path (every flag, including this one, default-on).
-    prepEnabled._metrics = { nodesExpanded: 0 };
-    const outEnabled: { nodesExpanded?: number } = {};
-    const pathEnabled = await repairSearchFromGate(gateKey, level, prepEnabled, POLICY_PROFILES.repair, 15000, Date.now(), null, undefined, false, R02560_NODE_BUDGET, outEnabled);
-    assert.ok(pathEnabled, 'expected the default-enabled closeLengthGap path to solve within the node budget');
-    assert.equal(replayAndValidate(pathEnabled as number[], level, prepEnabled), true);
-
-    const prepDisabled = prepLevel(level);
-    prepDisabled._cfg = withFeatureDisabled('STRATEGY_REPAIR_LENGTH_GAP_CLOSE');
-    prepDisabled._metrics = { nodesExpanded: 0 };
-    const pathDisabled = await repairSearchFromGate(gateKey, level, prepDisabled, POLICY_PROFILES.repair, 15000, Date.now(), null, undefined, false, R02560_NODE_BUDGET);
-    assert.equal(pathDisabled, null, 'expected the same node budget to be insufficient with every OTHER flag held at its default and only this one disabled');
-}, 20000);
-
+// R02560's expensive enabled-vs-disabled rescue proof lives in
+// repair-search-close-length-gap.test.ts so Vitest can schedule that real regression search
+// independently of the rest of this file. The shared fixture remains below for cheaper checks.
 test('closeLengthGap is deterministic: identical inputs produce identical output', async () => {
     const level = r02560Level();
     const gateKey = K(11, 5);
