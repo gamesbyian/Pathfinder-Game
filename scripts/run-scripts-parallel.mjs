@@ -75,21 +75,7 @@ function runScript(name) {
   });
 }
 
-const requestedMax = Number.parseInt(process.env.PATHFINDER_PARALLEL_SCRIPTS_MAX ?? '', 10);
-const maxConcurrency = Number.isFinite(requestedMax) && requestedMax > 0
-  ? Math.min(requestedMax, names.length)
-  : names.length;
-
-const results = new Array(names.length);
-let nextIndex = 0;
-async function runWorker() {
-  while (true) {
-    const index = nextIndex++;
-    if (index >= names.length) return;
-    results[index] = await runScript(names[index]);
-  }
-}
-await Promise.all(Array.from({ length: maxConcurrency }, () => runWorker()));
+const results = await Promise.all(names.map(runScript));
 
 console.log('\n--- parallel run summary ---');
 for (const { name, code, seconds } of results) {
