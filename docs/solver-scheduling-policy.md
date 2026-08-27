@@ -18,7 +18,7 @@ For an action already unsolved through work `t`, value the next tranche **condit
 4. Distinguish natural exhaustion from budget censoring.
 5. Use canonical `workSpent` across techniques; nodes remain within-technique diagnostics.
 6. Dead-last non-interference with earlier winners is not economic evidence.
-7. Level-blindness is necessary but repeatedly mined scheduler rules still need independent confirmation/transfer for broad claims.
+7. Level-blindness is necessary but repeatedly mined scheduler rules still need independent confirmation proportional to selection pressure; broad/high-selection-risk claims need cross-distribution challenge evidence under [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 8. Unexplained predecessor-state dependence blocks causal scheduler inference.
 9. Use systematic racing/configuration search rather than hand-authoring large nearby families.
 10. Preserve rare unique capability and uncertainty; do not optimize only the mean.
@@ -84,7 +84,7 @@ Current cap/tranche evidence is documented in [`technique-census-second-order-an
 
 Scheduler development has unusually high selection/overfit surface because it compares many actions/features/tranches.
 
-Use discovery/tuning, untouched/grouped confirmation, and locked/fresh transfer/challenge roles. Split before fitting thresholds/features; group variant siblings by parent; prefer simple baselines; report policy complexity; avoid repeated transfer peeking; assess decision quality on rare cohorts; use independent-unit resampling where useful.
+Use the roles in [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Split before fitting thresholds/features; group variant siblings by parent; prefer simple baselines; report policy complexity; consume untouched confirmation blocks rather than repeatedly peeking at one holdout; and use a materially different source/generator when the scheduler claim itself is cross-distribution. Assess decision quality on rare cohorts and use independent-unit resampling where useful.
 
 A baseline-failure-conditioned population supports claims about that residual tail, not unconditional unseen-level improvement.
 
@@ -128,7 +128,7 @@ The migration should reduce first-match bundle logic, not add a parallel policy 
 5. shadow candidate choices without changing search;
 6. run a matched-work live A/B;
 7. independently confirm selected policy/configuration;
-8. use transfer evidence appropriate to broader claims;
+8. use sample-independent confirmation and cross-distribution transfer/challenge evidence appropriate to the policy's selection pressure and claim scope;
 9. report gains/losses, `workSpent`, wall cost, reach, actions/tranches, errors/truncation, rare unique losses, complexity, fallback rate;
 10. periodically reprice all actions/tails.
 
