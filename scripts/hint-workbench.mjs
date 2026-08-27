@@ -1188,7 +1188,7 @@ await atomicWriteJson(opts.output, {
         changedFiles: opts.writePatch && patchResult ? [relativePath(path.resolve(opts.writePatch))] : (writeResult?.levelsChanged ? [relativePath(levelsPath), ...changedHintFiles] : changedHintFiles),
         result: opts.writePatch ? patchResult : writeResult,
         postWriteReminders: (opts.writeLevels || Boolean(opts.writePatch)) && !opts.auditMode && totalAccepted > 0
-            ? ['npm run levels:generate-heatmaps', 'npm run check:hint-validity', 'npm run test:hint-path-oracle']
+            ? ['npm run levels:generate-heatmaps', 'npm run check:level-data-validity', 'npm run test:hint-path-oracle']
             : [],
     },
     preset: {
@@ -1202,9 +1202,9 @@ await atomicWriteJson(opts.output, {
 console.log(`Done: ${totalAccepted} ${opts.auditMode ? 'would-accept' : 'accepted'} candidate(s). Report -> ${opts.output}`);
 if (opts.writePatch && !opts.auditMode) {
     console.log(`Patch -> ${opts.writePatch}`);
-    if (totalAccepted > 0) console.log('Review patch, then run post-apply checks: npm run levels:generate-heatmaps && npm run check:hint-validity && npm run test:hint-path-oracle');
+    if (totalAccepted > 0) console.log('Review patch, then run post-apply checks: npm run levels:generate-heatmaps && npm run check:level-data-validity && npm run test:hint-path-oracle');
 } else if (opts.writeLevels && !opts.auditMode) {
     console.log(`Updated -> ${opts.levelsJsonPath}`);
-    if (totalAccepted > 0) console.log('Post-write checks: npm run levels:generate-heatmaps && npm run check:hint-validity && npm run test:hint-path-oracle');
+    if (totalAccepted > 0) console.log('Post-write checks: npm run levels:generate-heatmaps && npm run check:level-data-validity && npm run test:hint-path-oracle');
 }
 if (opts.auditMode && (opts.writeLevels || opts.writePatch)) console.log('Audit mode enabled; skipped writes despite write options.');
