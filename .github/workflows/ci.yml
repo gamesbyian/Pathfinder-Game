@@ -29,6 +29,7 @@ jobs:
             /logs/artifact-metadata.json
             !/reports/*
             /reports/*.md
+            /reports/**/*.md
             !/data/stress/*
             /data/stress/README.md
             /data/stress/stress-levels.json
