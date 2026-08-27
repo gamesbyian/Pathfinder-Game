@@ -1,9 +1,9 @@
 # Repair reachability versus reconstructability audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-26 — reconciliation of exact repair-retreat CP-SAT evidence through the 2026-08-15 follow-up, including the 2026-08-13 apples-to-apples direct reconstruction/rollout diagnostics from exact-live `R00648` and `R03176` prefixes, current repair machinery, the narrowed beam MustCross-state audit, and cross-representation reuse audit
-> **Decision:** do not design a new large repair operator yet. Two exact-live-but-native-hard reconstructability cases are **already confirmed for the same two named native mechanisms**. At CP-SAT-verified live prefixes, both `R00648` and `R03176` defeat unrestricted-floor `closeLengthGap` at a 2,000,000-node allowance and 2,000 randomized rollouts. Their basin shapes differ sharply: the best rollout reaches only depth 60/141 on `R00648` but 134/141 on `R03176`; full repair eventually solves `R03176` from another restart trajectory. Do not repeat either frozen-prefix experiment. Classify the remaining exact-live retreat cases before deciding whether retreat, reconstruction, or larger destroy work is recurrently warranted. If a future exact frontier/DD experiment independently exposes exact continuation counts for these residuals, preserve them as opportunistic basin-width labels; do not build counting machinery for this audit.
-> **Remaining gate:** reuse the existing exact-live cases other than `R00648` and `R03176` and apply one prespecified existing native reconstruction operator per case under a canonical `workSpent` cap where new execution is required. Keep operator-specific conclusions explicit. Use known-dead points only as correctness controls when cheap; do not buy more CP-SAT resolution merely to narrow existing UNKNOWN intervals.
+> **Last evidence:** 2026-08-27 — direct `closeLengthGap`/randomized-rollout classification of the two remaining resolved-boundary exact-live cases, `R00630` and `R02449`
+> **Decision:** do not design a new large repair operator yet. Four exact-live cases are now classified across **three distinct regimes**, not two: `R00648` defeats `closeLengthGap` even at 500x its production node budget (operator-incapable); `R03176` also defeats the direct diagnostic but the whole repair process eventually solves it from a different restart trajectory; `R00630` is solved by `closeLengthGap` in just 3,247 nodes, *under* its own 4,000-node production budget (cheap reconstruction — a retreat/reopening question, not a reconstruction one); `R02449` is also solved by `closeLengthGap`, but only at 1,268,180 nodes, 317x its production budget (reconstructable in principle, but only far outside the work production actually spends there — a genuine budget-scale gap distinct from both other regimes). Randomized rollout fails on all four (0/2000 each). No regime yet recurs across unrelated cases; do not build retreat, reconstruction-budget, or destroy machinery from any single case. See [`2026-08-27 classification`](../reports/2026-08-27-repair-live-prefix-reconstruction-classification-r00630-r02449.md).
+> **Remaining gate:** check whether either new regime (`R00630`'s cheap-reconstruction shape or `R02449`'s expensive-but-reconstructable shape) recurs across unrelated exact-live cases before considering any retreat/reopening treatment or a larger `closeLengthGap` budget. Use known-dead points only as correctness controls when cheap; do not buy more CP-SAT resolution merely to narrow existing UNKNOWN intervals (`R02449`'s own `[20,36]` interior stays open).
 > **Evidence role:** discovery
 > **Selection:** observational — cases and candidate descriptors come from already-mined repair-retreat and beam-extinction evidence.
 
@@ -88,6 +88,19 @@ The same August 13 evidence already contains the apples-to-apples direct-prefix 
 So `R03176` is a second live-but-hard frozen prefix for these two named native mechanisms. It is still a useful contrast with `R00648`: blind rollouts get dramatically closer on `R03176` (134/141 versus 60/141), and an isolated full `repairSearchFromGate` run eventually solves `R03176` at roughly 1.86M nodes with `closeLengthGap` succeeding from a different restart trajectory. This separates frozen-prefix reconstructability from whole-process access to a friendlier basin.
 
 The direct comparison is already recorded in [the repair-retreat CP-SAT report](2026-08-12-repair-retreat-cpsat.md). Do not rerun `R03176` merely to fill the matrix; it is filled.
+
+## Also answered (2026-08-27): `R00630` and `R02449` are exact-live and reconstructable, at opposite cost extremes
+
+The remaining bounded pilot below was executed for the two other supported elites with a resolved boundary: `R00630:elite:0` (`low=36`, `high=37`) and `R02449:elite:3` (`low=19`, referee-verified feasible; `high=37`, interior `[20,36]` still open) — see [`2026-08-27-repair-live-prefix-reconstruction-classification-r00630-r02449.md`](2026-08-27-repair-live-prefix-reconstruction-classification-r00630-r02449.md) for full method and referee validation.
+
+Unlike `R00648`/`R03176`, `closeLengthGap` (`floor=0`, same 2,000,000-node ceiling) **solved both**, referee-validated:
+
+- `R00630`: solved in 3,247 nodes — *under* `closeLengthGap`'s own 4,000-node production budget;
+- `R02449`: solved in 1,268,180 nodes — 317x that production budget.
+
+Randomized rollout still failed on both (0/2000 each), consistent with every case tested this way so far.
+
+This adds a third regime the original two-quadrant matrix (below) did not distinguish: **live, reconstructable by the same named operator, but only far outside the work production actually spends on it.** `R00630`'s cheap solve reframes it as a retreat/reopening question (does ordinary repair ever reach this branch point at all?), not a reconstruction-strength one; `R02449` is reconstructable in principle but only at a work multiple no production budget currently provides. Neither shape yet recurs across unrelated cases — do not build a mechanism from either alone.
 
 ## Remaining bounded pilot
 
@@ -184,11 +197,13 @@ Do not collapse these into one “repair difficulty” scalar without evidence.
 
 Continue toward retreat-policy work if multiple unrelated elites have shallow live boundaries, the same existing reconstruction operator succeeds from those exact-live prefixes, and ordinary repair nevertheless fails to reopen them often enough.
 
-Continue toward reconstruction work if exact-live prefixes repeatedly defeat named current native reconstruction operators at meaningful fixed-work budgets. `R00648` and `R03176` now supply two confirmed hard-live cases for the same named mechanisms, with materially different basin shapes. Two cases still do not justify a new mechanism by themselves; classify the remaining unrelated exact-live cases first.
+Continue toward reconstruction work if exact-live prefixes repeatedly defeat named current native reconstruction operators at meaningful fixed-work budgets. `R00648` and `R03176` supply two confirmed hard-live cases for the same named mechanisms, with materially different basin shapes; `R00630` and `R02449` (2026-08-27) instead both succeed with the same operator, at opposite cost extremes. Four classified cases now span three regimes with no recurrence in any one of them; classify further exact-live cases (as they become available) before building a mechanism for any single regime.
 
 Continue toward large destroy/core-guided work only if a recurrent population requires genuinely deep exact rollback and smaller reopening is ruled out by oracle evidence.
 
-Stop/deprioritize if regimes remain heterogeneous, the remaining cases do not reproduce either shallow-live/success or live-but-hard patterns, oracle UNKNOWN/unsupported dominates, or proposed descriptors merely restate badness/exact identity.
+Continue toward a retreat/reopening treatment if multiple unrelated cases match `R00630`'s shape (shallow live boundary, cheap reconstruction, i.e. under the operator's own production budget) and ordinary repair still fails to reach that boundary often enough. Continue toward a larger `closeLengthGap` budget specifically if multiple unrelated cases match `R02449`'s shape (reconstructable by the same operator, but only at a large multiple of its production budget). One case of each is not that population.
+
+Stop/deprioritize if regimes remain heterogeneous, the remaining cases do not reproduce any of the now-three named patterns, oracle UNKNOWN/unsupported dominates, or proposed descriptors merely restate badness/exact identity.
 
 ## Cross-queue role
 
