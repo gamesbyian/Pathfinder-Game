@@ -116,14 +116,87 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+  # Heavy implementation proofs are ordinary Vitest files locally, so the local suite can use
+  # Vitest's file workers. Actions delegates those same files to separate runners and tells the
+  # coverage job to skip only the delegated copies. This preserves one proof population without
+  # making the coverage runner execute the long poles twice.
+  deadlock-soundness-0:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run modules/solver/lower-bounds-deadlock-0.test.ts
+
+  deadlock-soundness-1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run modules/solver/lower-bounds-deadlock-1.test.ts
+
+  repair-r02560-enabled:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run modules/solver/repair-search-close-length-gap-enabled.test.ts
+
+  repair-r02560-disabled:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run modules/solver/repair-search-close-length-gap-disabled.test.ts
+
   deep-verification:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          # These jobs do not consume archived solver runs/reports or standing stress corpora.
-          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
-          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
           sparse-checkout: |
             /*
             !/logs/
@@ -136,3 +209,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:coverage
+        env:
+          SOLVER_DEADLOCK_PROOF_SKIP: '1'
+          SOLVER_R02560_PROOF_SKIP: '1'
