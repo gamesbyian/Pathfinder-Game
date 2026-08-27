@@ -16,8 +16,8 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -29,7 +29,7 @@ jobs:
   checks-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           sparse-checkout: |
             /*
@@ -37,7 +37,7 @@ jobs:
             !/reports/
             !/data/stress/
           sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -47,7 +47,7 @@ jobs:
   node-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Node/CLI software-contract tests use synthetic fixtures or current runtime assets.
           # Frozen research reports and standing stress corpora are not test fixtures.
@@ -57,7 +57,7 @@ jobs:
             !/reports/
             !/data/stress/
           sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -67,7 +67,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # The deployed admin Dev-Mode switcher needs only these stress runtime assets. Do not
           # materialize unrelated stress tooling/research artifacts just to build the app.
@@ -81,7 +81,7 @@ jobs:
             /data/stress/hints/
             /data/stress/hints-random/
           sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -95,7 +95,7 @@ jobs:
   deep-proofs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           sparse-checkout: |
             /*
@@ -103,7 +103,7 @@ jobs:
             !/reports/
             !/data/stress/
           sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -121,7 +121,7 @@ jobs:
   deep-verification:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           sparse-checkout: |
             /*
@@ -129,7 +129,7 @@ jobs:
             !/reports/
             !/data/stress/
           sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
