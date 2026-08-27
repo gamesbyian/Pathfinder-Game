@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+# Only the newest revision of a PR can become mergeable. Cancel superseded runs instead of letting
+# obsolete six-job copies consume runners and delay the head that actually matters.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 # Each job owns a distinct validation layer. GitHub Actions uses separate runners where that buys
 # real wall time, but does not rerun the same ordinary test population merely to produce an earlier
 # green badge. Local command composition remains authoritative in package.json / docs/testing.md.
@@ -27,6 +33,8 @@ jobs:
             /*
             !/logs/*
             /logs/artifact-metadata.json
+            /logs/*.md
+            /logs/**/*.md
             !/reports/*
             /reports/*.md
             /reports/**/*.md
