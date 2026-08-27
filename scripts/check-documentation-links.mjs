@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, extname, relative, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { readRepositoryText, repositoryPathKind } from './repository-file-view.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], { cwd: ROOT })
@@ -29,7 +30,8 @@ function markdownAnchors(target) {
   if (anchorCache.has(target)) return anchorCache.get(target);
   const anchors = new Set();
   const slugCounts = new Map();
-  for (const line of readFileSync(target, 'utf8').split(/\r?\n/)) {
+  const rel = relative(ROOT, target).split('\\').join('/');
+  for (const line of readRepositoryText(ROOT, rel).split(/\r?\n/)) {
     const heading = line.match(/^#{1,6}\s+(.+?)\s*#*$/);
     if (heading) {
       const base = githubHeadingSlug(heading[1]);
@@ -51,7 +53,7 @@ for (const file of markdownFiles) {
   // authorities. Do not force archival prose to chase later path renames.
   if (historicalDocumentation(file)) continue;
 
-  const source = readFileSync(resolve(ROOT, file), 'utf8');
+  const source = readRepositoryText(ROOT, file);
   for (const match of source.matchAll(markdownLink)) {
     let destination = match[1].trim();
     if (destination.startsWith('<') && destination.endsWith('>')) destination = destination.slice(1, -1);
@@ -69,13 +71,16 @@ for (const file of markdownFiles) {
     }
 
     const target = pathPart ? resolve(ROOT, dirname(file), decoded) : resolve(ROOT, file);
+    const targetRel = relative(ROOT, target).split('\\').join('/');
+    const kind = repositoryPathKind(ROOT, targetRel, tracked);
     if (!target.startsWith(`${ROOT}/`) && target !== ROOT) {
       failures.push(`${file}: link escapes repository: ${destination}`);
-    } else if (!existsSync(target)) {
+    } else if (!kind) {
       failures.push(`${file}: missing link target: ${destination}`);
-    } else if (statSync(target).isDirectory() && !existsSync(resolve(target, 'README.md'))) {
+    } else if (kind === 'directory'
+      && !repositoryPathKind(ROOT, `${targetRel.replace(/\/$/, '')}/README.md`, tracked)) {
       failures.push(`${file}: linked directory has no README.md: ${destination}`);
-    } else if (encodedFragment && statSync(target).isFile()) {
+    } else if (encodedFragment && kind === 'file') {
       let fragment;
       try {
         fragment = decodeURIComponent(encodedFragment);
