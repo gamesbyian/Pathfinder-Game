@@ -38,6 +38,10 @@
  * arm — check with a small `--limit` smoke run at the intended `--work-budget` before a full pilot;
  * a silently wall-clock-truncated arm is not an equal-work comparison. See the same design report.
  *
+ * `--count-only`: print just the post-badness-filter population size (before offset/sample-every/
+ * limit) and exit without running anything — for a GHA planning job to shard a full population by
+ * --offset/--limit ranges without duplicating this file's own selection filter.
+ *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/restart-continuation-population-pilot.mjs -- \
  *     --census=reports/stress/benchmark-latest-random.json --corpus=data/stress/stress-levels-random.json \
@@ -117,6 +121,14 @@ const selected = candidates.slice(offset).filter((_, i) => i % sampleEvery === 0
 
 console.log(`restart-continuation-population-pilot: census=${censusPath} (${census.solved}/${census.total} solved, commit ${census.commitSha})`);
 console.log(`population: ${candidates.length} unsolved levels with a repair-probe attempt (min-badness=${minBadness}, max-badness=${Number.isFinite(maxBadness) ? maxBadness : '(none)'}); offset=${offset}, sampling every ${sampleEvery}th, limit=${Number.isFinite(limit) ? limit : '(none)'} -> ${selected.length} levels; work-budget=${workBudget}; restart-split=${restartSplitFraction}; budget-ms=${budgetMs}`);
+
+// --count-only: print the population size (post min/max-badness filter, pre offset/sample-every/
+// limit) and exit, for a GHA planning job that shards a full population by --offset/--limit ranges
+// without duplicating this file's own selection filter. No solver work is run.
+if (args.includes('--count-only')) {
+    console.log(candidates.length);
+    process.exit(0);
+}
 
 const results = [];
 for (const lv of selected) {
