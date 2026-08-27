@@ -116,28 +116,21 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-  # TEMPORARY PR benchmarks: test Vitest's threads pool on the current main shape and
-  # on the split-proof branch shape. Remove before merge.
-  local-ci-main-threads-benchmark:
+  # TEMPORARY PR benchmarks: compare local Node-harness fan-out widths on equivalent
+  # full-checkout runners. Remove before merge.
+  node-fanout-unlimited-benchmark:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - name: Run main local CI with Vitest threads
-        run: >-
-          npm run check &&
-          npx vitest run --coverage --pool=threads --reporter=default --reporter=json
-          --outputFile=tmp/vitest-timings.json &&
-          node scripts/vitest-slow-test-report.mjs &&
-          npm run test:node
+      - run: npm run test:node
 
-  local-ci-split-threads-benchmark:
+
+  node-fanout-16-benchmark:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -146,13 +139,38 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - name: Run split-proof local CI with Vitest threads
-        run: >-
-          npm run check &&
-          npx vitest run --coverage --pool=threads --reporter=default --reporter=json
-          --outputFile=tmp/vitest-timings.json &&
-          node scripts/vitest-slow-test-report.mjs &&
-          npm run test:node
+      - run: npm run test:node
+        env:
+          PATHFINDER_PARALLEL_SCRIPTS_MAX: '16'
+
+
+  node-fanout-8-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:node
+        env:
+          PATHFINDER_PARALLEL_SCRIPTS_MAX: '8'
+
+
+  node-fanout-4-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:node
+        env:
+          PATHFINDER_PARALLEL_SCRIPTS_MAX: '4'
+
 
   deep-verification:
     runs-on: ubuntu-latest
