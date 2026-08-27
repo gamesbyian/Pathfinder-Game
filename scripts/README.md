@@ -32,7 +32,7 @@ Operational interpretation and stop rules: [`../docs/solver-technique-operationa
 
 ## Directory map
 
-- `stress/`: corpus generation, benchmarks, diagnostics, reducers, profiles, provenance, oracle/research tools.
+- `stress/`: corpus generation, benchmarks, diagnostics, reducers, profiles, provenance, oracle/research tools. `npm run stress:generate-topology` is the alternative macro-maze/module generator for cross-generator challenge evidence; see [`../docs/solver-evaluation-evidence.md`](../docs/solver-evaluation-evidence.md).
 - `solver-parallel/`: parallel solver infrastructure.
 - `solver-oracle/`: independent oracle/fuzz support.
 - top-level `hint-*`: hint discovery/enumeration/provenance.
