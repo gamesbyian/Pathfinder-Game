@@ -116,9 +116,28 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-  # TEMPORARY PR benchmark: measure the native file-parallel full local CI shape.
-  # Remove before merge.
-  local-ci-native-benchmark:
+  # TEMPORARY PR benchmarks: test Vitest's threads pool on the current main shape and
+  # on the split-proof branch shape. Remove before merge.
+  local-ci-main-threads-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Run main local CI with Vitest threads
+        run: >-
+          npm run check &&
+          npx vitest run --coverage --pool=threads --reporter=default --reporter=json
+          --outputFile=tmp/vitest-timings.json &&
+          node scripts/vitest-slow-test-report.mjs &&
+          npm run test:node
+
+  local-ci-split-threads-benchmark:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -127,7 +146,13 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - run: npm run ci
+      - name: Run split-proof local CI with Vitest threads
+        run: >-
+          npm run check &&
+          npx vitest run --coverage --pool=threads --reporter=default --reporter=json
+          --outputFile=tmp/vitest-timings.json &&
+          node scripts/vitest-slow-test-report.mjs &&
+          npm run test:node
 
   deep-verification:
     runs-on: ubuntu-latest
