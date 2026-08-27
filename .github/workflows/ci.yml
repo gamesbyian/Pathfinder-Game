@@ -33,6 +33,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # These jobs do not consume archived solver runs/reports or standing stress corpora.
+          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
+          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -44,6 +54,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # These jobs do not consume archived solver runs/reports or standing stress corpora.
+          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
+          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -62,13 +82,57 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+  # The expensive deadlock soundness proof is an exhaustive tree with exactly two
+  # root moves. GitHub runs those disjoint subtrees on separate runners; local `npm run ci`
+  # still runs both serially because SOLVER_DEADLOCK_PROOF_ROOT is normally unset.
+  deadlock-soundness:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        root_branch: [0, 1]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # These jobs do not consume archived solver runs/reports or standing stress corpora.
+          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
+          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Run exhaustive deadlock subtree
+        run: npx vitest run modules/solver/lower-bounds.test.ts -t "property: deadlock helpers only report independently unsatisfiable reachable states"
+        env:
+          SOLVER_DEADLOCK_PROOF_ROOT: ${{ matrix.root_branch }}
+
   deep-verification:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # These jobs do not consume archived solver runs/reports or standing stress corpora.
+          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
+          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
       - run: npm ci
       - run: npm run test:coverage
+        env:
+          # The two matrix jobs above own the complete exhaustive deadlock proof.
+          SOLVER_DEADLOCK_PROOF_ROOT: skip
