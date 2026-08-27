@@ -76,25 +76,10 @@ async function main() {
     // Parsing/normalization is level-scoped, not hint-scoped. A level can carry thousands of
     // stored hints; reparsing the identical raw level for every path used to dominate this oracle.
     const level = parseRawLevel(raw, i);
-    if (!level) {
-      failed++;
-      results.push({
-        levelNumber,
-        status: 'warn-invalid-hints',
-        invalidHintCount: raw.hints.length,
-        totalHintCount: raw.hints.length,
-        representativeHintIndex: 0,
-        hintAnalyses: raw.hints.map((_, hintIndex) => ({
-          hintIndex,
-          status: 'invalid',
-          errors: ['level failed to parse (structural validity is covered by validate-bundled-levels)'],
-        })),
-      });
-      continue;
-    }
-
     const hintAnalyses = raw.hints.map((hintPath, hi) => {
-      const result = validateHintPath(level, hintPath);
+      const result = level
+        ? validateHintPath(level, hintPath)
+        : { ok: false, errors: ['level failed to parse (structural validity is covered by validate-bundled-levels)'] };
       return {
         hintIndex: hi,
         status: result.ok ? 'valid' : 'invalid',
