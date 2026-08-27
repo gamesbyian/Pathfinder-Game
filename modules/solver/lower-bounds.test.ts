@@ -2,19 +2,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-// Fast/deep test-tier gate (see docs/testing.md's "Fast and deep gates"): this file's one
-// exhaustive-search property test is expensive because exhaustiveness IS the proof, not something
-// a smaller fixture could establish just as well. `deepTest` runs it exactly like `test` everywhere
-// (locally, `npm run ci`, the CI deep-verification job) except the fast CI job, which sets
-// SOLVER_DEEP_TESTS=0 to skip it for quicker signal — a relocation to a parallel job, not a
-// coverage cut.
-const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
-// CI can partition the one very expensive deadlock-soundness property by the two first
-// moves of its 5x5 must-cross fixture. Unset means the original full proof, so direct
-// `test:coverage` / `test:unit` calls keep their historical behavior. Full `npm run ci`
-// runs coverage with "skip", then executes roots 0 and 1 concurrently as a dedicated phase.
-const deadlockProofRoot = process.env.SOLVER_DEADLOCK_PROOF_ROOT ?? 'all';
-const deadlockProofTest = deadlockProofRoot === 'skip' ? test.skip : deepTest;
 import { AXIS_H, KEY_SPACE, PACK } from './encoding.js';
 import { getDistanceFromArray } from './distance.js';
 import { IntHashMap } from './int-hash-map.js';
@@ -121,26 +108,15 @@ import { evaluatePrunedMove } from './prune-gauntlet.js';
 import type { PruneDiagnostics, PruneId } from './prune-gauntlet.js';
 import { normalizeAblationConfig } from './orchestration.js';
 import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, mustCrossForcedNeighborDeadlocked, mustCrossNeighborBudgetDeadlocked } from './lower-bounds.js';
-
-const W = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
-
-function wireLevel(overrides: any = {}) {
-  const grid = overrides.grid || { w: 5, h: 3 };
-  return normalizeRawLevel({
-    grid, gates: [{ x: 1, y: 1 }], goal: { x: grid.w, y: grid.h },
-    reqLen: 6, reqInt: 0,
-    blocks: [], geese: [], falseGoals: [], mustPass: [], mustCross: [],
-    filters: [], flippingFilters: [], portals: [], landmarks: [], hints: [],
-    ...overrides,
-  });
-}
-
-/** Run exactly one configurable gauntlet rule against an already-reached test state. */
-function diagnoseRule(id: PruneId, next: number, state: SolverSearchState, level: NormalizedLevel, prep: ReturnType<typeof prepLevel>) {
-  const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
-  const verdict = evaluatePrunedMove(next, getRealLengthFromState(state), state, level, prep, { [id]: true }, false, { diagnostics });
-  return { verdict, reached: diagnostics.reached[id] ?? 0, rejected: diagnostics.rejected[id] ?? 0 };
-}
+import {
+  W,
+  wireLevel,
+  diagnoseRule,
+  mustTurnLevel,
+  mcForcedNeighborLevel,
+  exactRemainingCost,
+  exactCostToRequiredCell,
+} from './lower-bounds.test-support.js';
 
 test('mustPassLowerBound is Infinity (prune fires) when the objective is sealed off', () => {
   const sealed = wireLevel({
@@ -335,14 +311,6 @@ test('adjTurnLowerBound: zero when satisfied, positive when remaining, and rejec
 // mustTurnDeadlocked: a still-pending must-turn cell whose edgeUsage already has both axis
 // bits set can never be re-entered (isMoveDynamicallyValid's edge-axis-reuse rule blocks
 // either axis), so the requirement is provably unsatisfiable from that point on.
-function mustTurnLevel(turn: string) {
-  return wireLevel({
-    grid: { w: 3, h: 3 }, gates: [{ x: 2, y: 1 }], goal: { x: 2, y: 3 },
-    landmarks: [{ x: 2, y: 2, objectType: 'library', role: 'mustTurn', turn }],
-    reqLen: 6,
-  });
-}
-
 test('mustTurnDeadlocked: false on a fresh, untouched must-turn cell', () => {
   const l = mustTurnLevel('cw');
   const prep = prepLevel(l);
@@ -393,14 +361,6 @@ test('mustTurnDeadlocked: false after a correct-direction turn (requirement sati
 //     .  .  S  .  .
 //     .  .  .  .  .
 // with gate (1,1). MC=(3,3), N=(3,2), S=(3,4), W=(2,3), E=(4,3).
-function mcForcedNeighborLevel() {
-  return wireLevel({
-    grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 },
-    mustCross: [{ x: 3, y: 3 }],
-    reqLen: 20,
-  });
-}
-
 test('mustCrossForcedNeighborDeadlocked: false on a fresh, untouched must-cross cell', () => {
   const l = mcForcedNeighborLevel();
   const prep = prepLevel(l);
@@ -561,81 +521,6 @@ test('MST declared capacity is accepted and capacity+1 uses the safe individual-
   assert.equal(overflow.actual, evaluate(MAX_MST_K + 1).actual, 'fallback is stable after the boundary call');
 });
 
-function referencePathStats(path: number[], level: NormalizedLevel) {
-  const counts = new Map<number, number>();
-  counts.set(path[0], 1);
-  let cost = 0, ints = 0, lastWasJump = false;
-  for (let i = 1; i < path.length; i++) {
-    const from = path[i - 1], to = path[i];
-    const jump: boolean = !lastWasJump && level.portalMap.get(from)?.dest === to;
-    if (!jump) cost++;
-    const seen = counts.get(to) ?? 0;
-    if (seen > 0 && to !== level.goalKey && !level.gateKeys.includes(to)) ints++;
-    counts.set(to, seen + 1);
-    lastWasJump = jump;
-  }
-  return { cost, ints, lastWasJump };
-}
-
-function referenceCandidates(path: number[], level: NormalizedLevel): number[] {
-  const pos = path[path.length - 1];
-  const { lastWasJump } = referencePathStats(path, level);
-  const portal = level.portalMap.get(pos);
-  if (portal && !lastWasJump) return [portal.dest];
-  const x = pos & 0xFFFF, y = (pos >>> 16) & 0xFFFF;
-  const out: number[] = [];
-  if (x > 0) out.push(pos - 1);
-  if (x + 1 < level.grid.w) out.push(pos + 1);
-  if (y > 0) out.push(pos - 0x10000);
-  if (y + 1 < level.grid.h) out.push(pos + 0x10000);
-  return out;
-}
-
-/** Independent reference search: candidate generation and accounting above do not use solver
- * transitions. The domain referee independently accepts or rejects every prefix and completion.
- * A legal path has at most `area - 1` first-time ordinary arrivals plus `reqInt` revisits, so the
- * derived bound is complete; exhausting it is an independent proof of unreachability. */
-function referenceSearch(state: SolverSearchState, level: NormalizedLevel, targetOnly?: number): number {
-  const path = state.path.slice();
-  const prefixCost = referencePathStats(path, level).cost;
-  const maxCost = level.grid.w * level.grid.h - 1 + level.reqInt;
-  let best = Infinity;
-  const walk = () => {
-    const pos = path[path.length - 1];
-    const stats = referencePathStats(path, level);
-    if (stats.ints > level.reqInt || stats.cost > maxCost || stats.cost - prefixCost >= best) return;
-    if (targetOnly !== undefined && pos === targetOnly) { best = stats.cost - prefixCost; return; }
-    if (pos === level.goalKey) {
-      if (targetOnly !== undefined) return;
-      const candidateLevel = { ...level, reqLen: stats.cost, reqInt: stats.ints } as NormalizedLevel;
-      if (validateCandidatePath(candidateLevel, path).ok) best = stats.cost - prefixCost;
-      return;
-    }
-    for (const next of referenceCandidates(path, level)) {
-      path.push(next);
-      const nextStats = referencePathStats(path, level);
-      // With objectives removed and this endpoint terminal, the independent referee checks the
-      // entire prefix's move legality. Reference accounting separately enforces the real budget.
-      const probeStats = referencePathStats(path, { ...level, goalKey: next } as NormalizedLevel);
-      const prefixLevel = { ...level, goalKey: next, mustPassKeys: [], mustCrossKeys: [],
-        surroundKeys: [], mustPassTurnDirs: new Map(), adjacentTurnKeys: [],
-        reqLen: nextStats.cost, reqInt: probeStats.ints } as unknown as NormalizedLevel;
-      if (validateCandidatePath(prefixLevel, path).ok) walk();
-      path.pop();
-    }
-  };
-  walk();
-  return best;
-}
-
-function exactRemainingCost(_pos: number, state: SolverSearchState, level: NormalizedLevel, _prep: ReturnType<typeof prepLevel>): number {
-  return referenceSearch(state, level);
-}
-
-function exactCostToRequiredCell(target: number, state: SolverSearchState, level: NormalizedLevel, _prep: ReturnType<typeof prepLevel>): number {
-  return referenceSearch(state, level, target);
-}
-
 let hardConclusionsChecked = 0;
 function assertPermittedLowerBoundDirection(label: string, bound: number, exact: number) {
   if (bound === Infinity) {
@@ -765,105 +650,4 @@ test('property: topology connectivity over-approximates every truly reachable re
   };
   walk();
   assert.ok(reachableRequiredCells > 0, 'property exercised truly reachable required cells');
-});
-
-// By far the most expensive test in this file (~80s of the file's ~85s): an exhaustive DFS over
-// every reachable state of two small fixture levels, independently re-deriving exact remaining
-// cost at each state via a brute-force reference search.
-deadlockProofTest('property: deadlock helpers only report independently unsatisfiable reachable states', () => {
-  const selectedRootBranch = deadlockProofRoot === 'all' ? null : Number(deadlockProofRoot);
-  if (selectedRootBranch !== null) {
-    assert.ok(selectedRootBranch === 0 || selectedRootBranch === 1,
-      `SOLVER_DEADLOCK_PROOF_ROOT must be "all", "skip", 0, or 1; got ${deadlockProofRoot}`);
-  }
-  const levels = [mustTurnLevel('cw'), mcForcedNeighborLevel()];
-  const reportedDeadStates = [0, 0, 0];
-  const diagnosedDeadStates = [0, 0, 0];
-  const feasibleControls = [0, 0, 0];
-  const ids: PruneId[] = ['PRUNE_MUST_TURN_DEADLOCK', 'PRUNE_MC_FORCED_NEIGHBOR', 'PRUNE_MC_NEIGHBOR_BUDGET'];
-  for (const [fixtureIndex, level] of levels.entries()) {
-    const prep = prepLevel(level), state = createState(level.gateKeys[0], level, prep);
-    for (let i = 0; i < ids.length; i++) {
-      const applicable = i === 0 ? state.mustTurnMask !== 0 : state.mustCrossMask !== 0;
-      if (!applicable || feasibleControls[i]) continue;
-      assert.deepEqual(diagnoseRule(ids[i], level.gateKeys[0], state, level, prep),
-        { verdict: 'pass', reached: 1, rejected: 0 }, `${ids[i]} fresh feasible control must survive`);
-      feasibleControls[i]++;
-    }
-    const walk = () => {
-      const pos = state.path[state.path.length - 1];
-      const reports = [mustTurnDeadlocked(state, prep), mustCrossForcedNeighborDeadlocked(pos, state, level, prep),
-        mustCrossNeighborBudgetDeadlocked(pos, state, level, prep)];
-      for (let i = 0; i < reports.length; i++) {
-        if (reports[i]) {
-          reportedDeadStates[i]++;
-          assert.equal(exactRemainingCost(pos, state, level, prep), Infinity, `deadlock helper ${i} false positive`);
-          const diagnostic = diagnoseRule(ids[i], pos, state, level, prep);
-          if (diagnostic.reached) {
-            assert.deepEqual(diagnostic, { verdict: 'reject', reached: 1, rejected: 1 },
-              `${ids[i]} must be the isolated firing rule once its branch is reached`);
-            if (i === 2 && diagnosedDeadStates[i] === 0) {
-              const suppressedDiagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
-              assert.equal(evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
-                { PRUNE_MC_NEIGHBOR_BUDGET: true }, false,
-                { allowNeighborBudgetPrune: false, diagnostics: suppressedDiagnostics }), 'pass',
-              'stochastic-repair participation policy keeps this otherwise rejected candidate alive');
-              assert.equal(suppressedDiagnostics.reached.PRUNE_MC_NEIGHBOR_BUDGET, undefined,
-                'diagnostics remain independent and do not claim a suppressed rule was reached');
-              assert.equal(evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
-                { PRUNE_MC_NEIGHBOR_BUDGET: false }, false), 'pass',
-              'explicit disable still suppresses the rule regardless of production default');
-              // Promoted to default-on 2026-08-12 (reports/2026-08-08-mc-neighbor-budget-propagation.md,
-              // reports/2026-08-12-worker-count-sensitivity-repair-probe-wallclock.md's "Corpus-scale
-              // directionality, resolved" section): an entirely omitted ablation config (cfg=null,
-              // exactly what every production caller and any CLI invocation without --enable-flags
-              // passes) must now activate this rule, not silently leave it inert. Uses REAL production
-              // resolution (normalizeAblationConfig), not a raw sparse object like diagnoseRule's --
-              // a raw object would leave every OTHER key `undefined` (falsy), silently disabling every
-              // other default-on rule instead of testing this one's real default. PRUNE_MC_CEILING
-              // happens to independently reject this same walked state (a legitimate, harmless
-              // overlap in production) and fires first in gauntlet order, so it's suppressed here to
-              // isolate PRUNE_MC_NEIGHBOR_BUDGET's own default alone, via diagnostics rather than the
-              // overall verdict -- trusting the verdict alone is exactly what made an earlier, cruder
-              // version of this check misleadingly pass for the wrong reason.
-              const isolatedCfg = normalizeAblationConfig({ PRUNE_MC_CEILING: false });
-              const isolatedDiagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
-              const isolatedVerdict = evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
-                isolatedCfg, false, { diagnostics: isolatedDiagnostics });
-              assert.equal(isolatedDiagnostics.rejected.PRUNE_MC_NEIGHBOR_BUDGET, 1,
-                `production default-ON: an ablation config that leaves PRUNE_MC_NEIGHBOR_BUDGET ` +
-                `unset must still activate it (verdict=${isolatedVerdict} rejected=${JSON.stringify(isolatedDiagnostics.rejected)} reached=${JSON.stringify(isolatedDiagnostics.reached)})`);
-              // And the fully-omitted case (cfg=null, exactly what every production caller and any
-              // CLI invocation without --enable-flags passes) must still end in 'reject' overall --
-              // whichever rule fires, the candidate must not silently pass.
-              assert.equal(evaluatePrunedMove(pos, getRealLengthFromState(state), state, level, prep,
-                null, false), 'reject',
-                'an omitted ablation config must not let this genuinely dead state pass');
-            }
-            diagnosedDeadStates[i]++;
-          }
-        }
-      }
-      if (pos === level.goalKey) return;
-      const neighbors = getNeighbors(pos, state, level, prep);
-      const partitionRoot = fixtureIndex === 1 && state.path.length === 1 && selectedRootBranch !== null;
-      if (partitionRoot) {
-        assert.equal(neighbors.length, 2,
-          'the CI deadlock-proof partition assumes the fixed 5x5 fixture has exactly two root moves');
-      }
-      for (let neighborIndex = 0; neighborIndex < neighbors.length; neighborIndex++) {
-        if (partitionRoot && neighborIndex !== selectedRootBranch) continue;
-        const undo = applyMove(neighbors[neighborIndex], state, level, prep, false);
-        if (state.ints <= level.reqInt) walk();
-        undoMove(undo, state);
-      }
-    };
-    walk();
-  }
-  assert.ok(reportedDeadStates.every(n => n > 0),
-    `property must exercise every deadlock helper; reports=${reportedDeadStates.join(',')}`);
-  assert.ok(diagnosedDeadStates.every(n => n > 0),
-    `property must reach every gauntlet branch before it fires; diagnostics=${diagnosedDeadStates.join(',')}`);
-  assert.ok(feasibleControls.every(n => n > 0),
-    `property must find an oracle-feasible negative control for every helper; controls=${feasibleControls.join(',')}`);
 });
