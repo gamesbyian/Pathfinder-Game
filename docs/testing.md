@@ -55,13 +55,13 @@ Measure before guessing:
 
 - `test:coverage` writes `tmp/vitest-timings.json` and reports slow files/tests via `vitest-slow-test-report.mjs`; file-level proof partitioning uses Vitest's ordinary worker scheduling rather than another runner layer.
 - `check`/`test:node` use `run-scripts-parallel.mjs`, which reports subcommand time.
-- Actions separates `checks`, `unit-tests-fast`, `node-tests-fast`, `node-tests-evidence`, `build`, `deep-verification`, the two deadlock-soundness roots, and the enabled/disabled R02560 regression halves.
+- Actions separates lint (`checks-lint`) from the full-tree non-lint repository gate (`checks`), then independently runs `unit-tests-fast`, `node-tests-fast`, `node-tests-evidence`, `build`, `deep-verification`, the two deadlock-soundness roots, and the enabled/disabled R02560 regression halves. Local `npm run check` remains serial lint → validator fan-out because racing those CPU-heavy halves on one machine measured slower.
 
 When optimizing test runtime, profile the actual suite/subcommand before deleting coverage or weakening a proof. Prefer cheaper fixtures, targeted stubs, concurrency fixes, and tiering over making important validation disappear.
 
 ## Static checks
 
-`npm run check` covers architecture lint, types, security/secrets/dependencies/CSP, modal accessibility, CSS/canvas-theme checks, `check:no-solver-level-numbers`, hint validity, level provenance/corpus formatting, and documentation/workflow discovery.
+`npm run check` covers architecture lint, types, security/secrets/dependencies/CSP, modal accessibility, CSS/canvas-theme checks, `check:no-solver-level-numbers`, hint validity, level provenance/corpus formatting, and documentation/workflow discovery. `check:validators` is the parallel non-lint validator fan-out; `check:nonlint` adds the two structural prechecks and exists so Actions can run that half independently of `check:lint`. These scripts partition execution only; `check` remains the authoritative local composition.
 
 A PLAY-valid stored hint proves a solution, not cold solver capability; use shared provenance classification for capability claims.
 
