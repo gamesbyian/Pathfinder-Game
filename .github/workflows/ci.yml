@@ -9,8 +9,8 @@ on:
 permissions:
   contents: read
 
-# Fast/deep split (docs/testing.md "Fast and deep gates"): `checks`, `unit-tests-fast`,
-# `node-tests-fast`, and `build` are the PR-blocking fast gate — each is independent (no `needs:`
+# Fast/deep split (docs/testing.md "Fast and deep gates"): `checks`, `checks-lint`,
+# `unit-tests-fast`, `node-tests-fast`, and `build` are the PR-blocking fast gate — each is independent (no `needs:`
 # between them), so they run on separate runners in parallel instead of serially on one, and each
 # stays well clear of the CPU oversubscription that made running them concurrently on ONE runner
 # flaky (see scripts/run-scripts-parallel.mjs's header comment). The workflow as a whole covers the
@@ -18,6 +18,9 @@ permissions:
 # `deep-verification` owns only the full Vitest coverage/deep-test leg. Re-running `check` and
 # `test:node` serially inside that job only duplicated sibling jobs and lengthened the critical path.
 jobs:
+  # Local `npm run check` keeps lint before the validator fan-out because racing them on one
+  # machine slows both. Actions has independent runners, so run those two CPU-heavy halves in
+  # parallel while retaining the full-repository checks job name for branch protection.
   checks:
     runs-on: ubuntu-latest
     steps:
@@ -27,7 +30,25 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - run: npm run check
+      - run: npm run check:nonlint
+
+  checks-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run check:lint
 
   unit-tests-fast:
     runs-on: ubuntu-latest
@@ -116,17 +137,15 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-  # The expensive deadlock soundness proof is an exhaustive tree with exactly two
-  # root moves. GitHub runs those disjoint subtrees on separate runners; local `npm run ci`
-  # still runs both serially because SOLVER_DEADLOCK_PROOF_ROOT is normally unset.
+  # Heavy implementation proofs are ordinary Vitest files locally, so the local suite can use
+  # Vitest's file workers. Actions delegates those same files to separate runners and tells the
+  # coverage job to skip only the delegated copies. This preserves one proof population without
+  # making the coverage runner execute the long poles twice.
   deadlock-soundness-0:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          # These jobs do not consume archived solver runs/reports or standing stress corpora.
-          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
-          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
           sparse-checkout: |
             /*
             !/logs/
@@ -138,21 +157,13 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - name: Run exhaustive deadlock subtree
-        run: >-
-          npx vitest run modules/solver/lower-bounds.test.ts
-          -t "property: deadlock helpers only report independently unsatisfiable reachable states"
-        env:
-          SOLVER_DEADLOCK_PROOF_ROOT: '0'
+      - run: npx vitest run modules/solver/lower-bounds-deadlock-0.test.ts
 
   deadlock-soundness-1:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          # These jobs do not consume archived solver runs/reports or standing stress corpora.
-          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
-          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
           sparse-checkout: |
             /*
             !/logs/
@@ -164,21 +175,82 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - name: Run exhaustive deadlock subtree
-        run: >-
-          npx vitest run modules/solver/lower-bounds.test.ts
-          -t "property: deadlock helpers only report independently unsatisfiable reachable states"
-        env:
-          SOLVER_DEADLOCK_PROOF_ROOT: '1'
+      - run: npx vitest run modules/solver/lower-bounds-deadlock-1.test.ts
+
+  repair-r02560-enabled:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run modules/solver/repair-search-close-length-gap-enabled.test.ts
+
+  repair-r02560-disabled:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run modules/solver/repair-search-close-length-gap-disabled.test.ts
+
+  # TEMPORARY benchmark: measure the final full local command graph on one hosted runner.
+  # Remove before merge.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run ci
+
+  # TEMPORARY benchmark: decompose the second-order census validator. Remove before merge.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/technique-census-second-order-node-test.mjs
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/technique-census-second-order.mjs --check
 
   deep-verification:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          # These jobs do not consume archived solver runs/reports or standing stress corpora.
-          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
-          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
           sparse-checkout: |
             /*
             !/logs/
@@ -192,5 +264,5 @@ jobs:
       - run: npm ci
       - run: npm run test:coverage
         env:
-          # The two deadlock-soundness jobs above own the complete exhaustive deadlock proof.
-          SOLVER_DEADLOCK_PROOF_ROOT: skip
+          SOLVER_DEADLOCK_PROOF_SKIP: '1'
+          SOLVER_R02560_PROOF_SKIP: '1'

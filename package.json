@@ -29,7 +29,7 @@
     "test:data-asset-runtime-smoke": "tsx scripts/data-asset-runtime-smoke-test.mjs",
     "test:firestore-rules": "node scripts/firestore-rules-test.mjs",
     "test:bundled-levels": "tsx scripts/validate-bundled-levels.mjs",
-    "check": "npm run check:dead-scripts && npm run check:text-source-files && npm run check:lint && node scripts/run-scripts-parallel.mjs check:current-level-facts check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:third-party check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:canvas-theme-coverage check:hint-validity check:level-provenance check:corpus-level-formatting",
+    "check": "npm run check:dead-scripts && npm run check:text-source-files && npm run check:lint && npm run check:validators",
     "ci": "npm run check && npm run test:coverage && npm run test:node",
     "ci:fast": "npm run check && npm run test:unit:fast && npm run test:node:fast",
     "ci:full": "npm run ci && npm run test:e2e",
@@ -69,7 +69,7 @@
     "test:unit:watch": "vitest",
     "test:coverage": "vitest run --coverage --reporter=default --reporter=json --outputFile=tmp/vitest-timings.json && node scripts/vitest-slow-test-report.mjs",
     "test:unit:fast": "SOLVER_DEEP_TESTS=0 vitest run",
-    "test:node": "node scripts/run-scripts-parallel.mjs test:startup-smoke test:current-level-facts test:hint-path-oracle test:loader test:hint-workbench test:hint-diversification test:hint-corpus-expand test:hint-complete-sharded test:portfolio-solve-sweep-lib test:race-stage-parity test:portfolio-sweep-reports-to-benchmark test:plan-ab-corpus-shards test:req-length-sweep-lib test:hint-cost-drift-lib test:probe-corpus-loader test:stress-topology-generator test:family-generate test:family-index test:research-index test:family-analyze test:family-boundary test:family-boundary-cli test:family-source-selection test:family-parent-hint-replay test:divergence-lib test:research-analysis-lib test:experiment-manifest test:family-run-manifest-producer test:technique-campaign-analysis test:technique-census-result-lib test:technique-census-second-order test:operational-similarity-lib test:winning-attempt-family test:data-asset-runtime-smoke test:firestore-rules test:bundled-levels",
+    "test:node": "node scripts/run-scripts-parallel.mjs test:startup-smoke test:current-level-facts test:loader test:hint-workbench test:hint-diversification test:hint-corpus-expand test:hint-complete-sharded test:portfolio-solve-sweep-lib test:race-stage-parity test:portfolio-sweep-reports-to-benchmark test:plan-ab-corpus-shards test:req-length-sweep-lib test:hint-cost-drift-lib test:probe-corpus-loader test:stress-topology-generator test:family-generate test:family-index test:research-index test:family-analyze test:family-boundary test:family-boundary-cli test:family-source-selection test:family-parent-hint-replay test:divergence-lib test:research-analysis-lib test:experiment-manifest test:family-run-manifest-producer test:technique-campaign-analysis test:technique-census-result-lib test:technique-census-second-order test:operational-similarity-lib test:winning-attempt-family test:data-asset-runtime-smoke test:firestore-rules test:bundled-levels",
     "test:node:fast": "npm run test:node",
     "stress:generate": "node scripts/run-bundled.mjs scripts/stress/generate.mjs",
     "stress:generate-random": "node scripts/run-bundled.mjs scripts/stress/generate-random.mjs",
@@ -159,7 +159,9 @@
     "facts:levels": "node scripts/current-level-facts.mjs",
     "check:current-level-facts": "node scripts/current-level-facts.mjs --check",
     "test:current-level-facts": "node scripts/current-level-facts-node-test.mjs",
-    "check:text-source-files": "node scripts/check-text-source-files.mjs"
+    "check:text-source-files": "node scripts/check-text-source-files.mjs",
+    "check:validators": "node scripts/run-scripts-parallel.mjs check:current-level-facts check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:third-party check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:canvas-theme-coverage check:hint-validity check:level-provenance check:corpus-level-formatting",
+    "check:nonlint": "npm run check:dead-scripts && npm run check:text-source-files && npm run check:validators"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

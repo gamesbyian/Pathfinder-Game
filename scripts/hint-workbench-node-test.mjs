@@ -6,16 +6,27 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
+import { buildBundle } from './run-bundled.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const NODE = process.execPath;
+const WORKBENCH_BUNDLE = buildBundle('scripts/hint-workbench.mjs');
 const { readLevelHints, readLevelsWithHints } = await import('./level-data-io.mjs');
 
+function syntheticWorkbenchLevel({ id = 'P00001' } = {}) {
+    return {
+        ...(id ? { id } : {}),
+        grid: { w: 5, h: 1 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 }, falseGoals: [],
+        reqLen: 4, reqInt: 0, blocks: [], mustPass: [], mustCross: [], filters: [],
+        flippingFilters: [], portals: [], geese: [], landmarks: [], hints: [],
+        designerName: '', description: '', difficulty: null,
+    };
+}
+
 async function writeFixtureLevel(fixtureDir) {
-    const sourceLevels = readLevelsWithHints(path.join(ROOT, 'data/levels.json'));
     const fixtureLevelsPath = path.join(fixtureDir, 'levels.json');
-    await writeFile(fixtureLevelsPath, `${JSON.stringify([sourceLevels[0]], null, 2)}\n`);
+    await writeFile(fixtureLevelsPath, `${JSON.stringify([syntheticWorkbenchLevel()], null, 2)}\n`);
     return fixtureLevelsPath;
 }
 
@@ -34,7 +45,7 @@ async function writeTrivialFixtureLevel(fixtureDir) {
 }
 
 async function runWorkbench(args) {
-    return execFile(NODE, ['scripts/run-bundled.mjs', 'scripts/hint-workbench.mjs', ...args], {
+    return execFile(NODE, [WORKBENCH_BUNDLE, ...args], {
         cwd: ROOT,
         maxBuffer: 10 * 1024 * 1024,
     });
@@ -96,10 +107,13 @@ async function main() {
         assert.deepEqual(levelSpecReport.levels.map(level => level.level), [1, 2, 3]);
         assert.ok(levelSpecReport.levels.every(level => level.runs.length === 0));
 
-        const levelsPath = path.join(ROOT, 'data/levels.json');
+        const auditFixtureDir = path.join(tempDir, 'audit-fixture');
+        await mkdir(auditFixtureDir, { recursive: true });
+        const levelsPath = await writeFixtureLevel(auditFixtureDir);
         const before = await stat(levelsPath);
         const output = path.join(tempDir, 'compact-report.json');
         const audit = await runWorkbench([
+            `--levels-json=${levelsPath}`,
             '--levels=pos:1',
             '--preset=all-practical',
             '--policy=audit-only',
@@ -116,8 +130,8 @@ async function main() {
         assert.match(audit.stdout, /would-accept/);
 
         const after = await stat(levelsPath);
-        assert.equal(after.mtimeMs, before.mtimeMs, 'audit-only run must not modify data/levels.json');
-        assert.equal(after.size, before.size, 'audit-only run must not resize data/levels.json');
+        assert.equal(after.mtimeMs, before.mtimeMs, 'audit-only run must not modify its levels input');
+        assert.equal(after.size, before.size, 'audit-only run must not resize its levels input');
 
         const report = JSON.parse(await readFile(output, 'utf8'));
         assert.equal(report.schemaVersion, 1);
@@ -292,7 +306,7 @@ async function main() {
 
         const fixtureDir = path.join(tempDir, 'fixture-write');
         await mkdir(fixtureDir, { recursive: true });
-        const sourceHintCount = readLevelsWithHints(path.join(ROOT, 'data/levels.json'))[0].hints.length;
+        const sourceHintCount = 0;
         const fixtureLevelsPath = await writeFixtureLevel(fixtureDir);
         const writeOutput = path.join(tempDir, 'write-report.json');
         await runWorkbench([
@@ -311,9 +325,8 @@ async function main() {
         const writeReport = JSON.parse(await readFile(writeOutput, 'utf8'));
         assert.equal(writeReport.writes.requested, true);
         assert.equal(writeReport.writes.skippedForAudit, false);
-        // The fixture's only level is a verbatim copy of the real level 1, which (since the
-        // 2026-07-15 id backfill) carries a persistent id -- so the hint file is written under
-        // that id, not the position-based name a pre-id level would get.
+        // The synthetic fixture deliberately carries a persistent id, so this exercises the
+        // id-keyed hint artifact path without coupling CLI correctness to any published level.
         assert.ok(writeReport.writes.changedFiles.some(filePath => filePath.endsWith('hints/P00001.json')));
         assert.ok(writeReport.writes.postWriteReminders.includes('npm run check:hint-validity'));
         const fixtureHints = JSON.parse(await readFile(path.join(fixtureDir, 'hints/P00001.json'), 'utf8'));
@@ -324,12 +337,10 @@ async function main() {
         assert.ok(newlyAcceptedHint.provenance.length > 0, 'newly accepted hint should carry provenance');
         assert.equal(typeof newlyAcceptedHint.provenance[0].solver.technique, 'string');
 
-        // This sub-test exercises the position-keyed fallback (no id on the level), so `id` is
-        // deliberately stripped from the copied source level -- otherwise readLevelsWithHints
-        // below would look for hints/P00001.json (this level's real persistent id) instead of
-        // the position-keyed hints/00001.json artifact this test writes.
+        // This sub-test exercises the position-keyed fallback using the same synthetic level
+        // shape but no persistent id, so readLevelsWithHints must use hints/00001.json.
         const wrappedHintsDir = path.join(tempDir, 'wrapped-hints');
-        const { id: _wrappedSourceId, ...wrappedSourceLevel } = readLevelsWithHints(path.join(ROOT, 'data/levels.json'))[0];
+        const wrappedSourceLevel = syntheticWorkbenchLevel({ id: '' });
         await mkdir(path.join(wrappedHintsDir, 'hints'), { recursive: true });
         await writeFile(path.join(wrappedHintsDir, 'levels.json'), `${JSON.stringify([{ ...wrappedSourceLevel, hints: [[1, 2, 3]] }])}\n`);
         await writeFile(path.join(wrappedHintsDir, 'hints/00001.json'), `${JSON.stringify({

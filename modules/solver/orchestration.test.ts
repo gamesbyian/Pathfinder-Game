@@ -621,17 +621,17 @@ deepTest('the repair probe caps itself to a small external nodeBudget instead of
     // same arithmetic back at itself and could never catch a regression in it.
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 50,
-        nodeBudget: 2_500_000, // < 4,000,000 (both ordinary seeds' combined worst case)
+        nodeBudget: 250_000, // far below one 2,000,000-node internal seed round
         // Isolates repair-probe capping from the unrelated main-loop late-suffix reserve (production
         // default-ON as of 2026-08-12), which would otherwise also shape node accounting here.
         mainLoopLateReserveFractionOverride: 0,
     });
     assert.equal(result.ok, false);
     assert.equal(result.nodeBudgetReached, true);
-    // Without the fix, this would run both full 2,000,000-node ordinary seeds regardless of the
-    // external ceiling, landing near 4,000,000 — well past nodeBudget. With the fix, the second
-    // seed's own round is capped to whatever's left, so the total stays close to the ceiling.
-    assert.ok(result.nodesExpanded < 3_000_000, `expected nodesExpanded well under 3,000,000 (the fixed-budget-only worst case would be ~4,000,000), got ${result.nodesExpanded}`);
+    // Without the fix, even the first ordinary seed could spend its full 2,000,000-node internal
+    // allowance despite this much smaller external ceiling. With the fix, that first round itself is
+    // capped by the remaining caller budget, so total work stays close to 250,000.
+    assert.ok(result.nodesExpanded < 300_000, `expected nodesExpanded close to the 250,000 external ceiling (the old uncapped first round could spend ~2,000,000), got ${result.nodesExpanded}`);
 });
 
 // Not repair-gated (no mustCross/mustPass, low reqInt — needsRepairFallback in attempts.ts stays

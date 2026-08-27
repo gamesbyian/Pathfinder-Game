@@ -12,9 +12,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
+import process from 'node:process';
+import { buildBundle } from '../run-bundled.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const TOPOLOGY_GENERATOR_BUNDLE = buildBundle('scripts/stress/generate-topology.mjs');
 
 const { PACK } = await import('../../modules/domain/cell-key.js');
 const { validateRawLevel } = await import('../../modules/domain/level-schema.js');
@@ -24,9 +27,8 @@ const { getLevelFingerprintSource } = await import('../../modules/domain/level-f
 const { normalizeRawLevel } = await import('../../modules/solver/normalization.js');
 
 async function generate(outFile) {
-    return execFile('node', [
-        'scripts/run-bundled.mjs',
-        'scripts/stress/generate-topology.mjs',
+    return execFile(process.execPath, [
+        TOPOLOGY_GENERATOR_BUNDLE,
         '--',
         '--count=12',
         '--master-seed=424242',

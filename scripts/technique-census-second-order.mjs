@@ -194,10 +194,18 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
 
     const techniquePairs = [];
     const techniques = [...byTechnique.keys()].sort();
+    // The analysis crosses the same techniques by level many times. Build these immutable indexes
+    // once rather than reconstructing ~thousands of Maps/Sets inside pairwise and economics loops.
+    const techniqueRowsByLevel = new Map(techniques.map(technique => [technique,
+        new Map(byTechnique.get(technique).map(row => [levelKey(row), row]))]));
+    const productionUnsolvedRowsByTechnique = new Map(techniques.map(technique => [technique,
+        byTechnique.get(technique).filter(row => row.solvedByProduction === false)]));
+    const solvedLevelKeysByTechnique = new Map(techniques.map(technique => [technique,
+        new Set(byTechnique.get(technique).filter(row => row.ok).map(levelKey))]));
     for (let i = 0; i < techniques.length; i++) for (let j = i + 1; j < techniques.length; j++) {
         const a = techniques[i], b = techniques[j];
-        const aRows = new Map(byTechnique.get(a).map(row => [levelKey(row), row]));
-        const bRows = new Map(byTechnique.get(b).map(row => [levelKey(row), row]));
+        const aRows = techniqueRowsByLevel.get(a);
+        const bRows = techniqueRowsByLevel.get(b);
         const common = [...aRows.keys()].filter(key => bRows.has(key));
         const aSolved = common.filter(key => aRows.get(key).ok);
         const bSolved = common.filter(key => bRows.get(key).ok);
@@ -215,8 +223,8 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
     const conditional = [];
     for (const a of techniques) for (const b of techniques) {
         if (a === b) continue;
-        const aRows = new Map(byTechnique.get(a).map(row => [levelKey(row), row]));
-        const bRows = new Map(byTechnique.get(b).map(row => [levelKey(row), row]));
+        const aRows = techniqueRowsByLevel.get(a);
+        const bRows = techniqueRowsByLevel.get(b);
         const residual = [...aRows].filter(([key, row]) => row.solvedByProduction === false && !row.ok && bRows.has(key));
         const incremental = residual.filter(([key]) => bRows.get(key).ok).length;
         const expectedNodes = residual.reduce((sum, [key]) => sum + Number(bRows.get(key).nodesExpanded ?? 0), 0);
@@ -228,8 +236,8 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
 
     const conditionalByFailureStatus = [];
     for (const row of conditional) {
-        const aRows = new Map(byTechnique.get(row.a).map(cell => [levelKey(cell), cell]));
-        const bRows = new Map(byTechnique.get(row.b).map(cell => [levelKey(cell), cell]));
+        const aRows = techniqueRowsByLevel.get(row.a);
+        const bRows = techniqueRowsByLevel.get(row.b);
         for (const status of ['exhausted', 'node-budget-reached']) {
             const residual = [...aRows].filter(([key, cell]) => cell.solvedByProduction === false
                 && !cell.ok && cell.status === status && bRows.has(key));
@@ -245,8 +253,8 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
     }
 
     const compare = (label, left, right, interpretation) => {
-        const leftRows = new Map((byTechnique.get(left) ?? []).map(row => [levelKey(row), row]));
-        const rightRows = new Map((byTechnique.get(right) ?? []).map(row => [levelKey(row), row]));
+        const leftRows = techniqueRowsByLevel.get(left) ?? new Map();
+        const rightRows = techniqueRowsByLevel.get(right) ?? new Map();
         const common = [...leftRows.keys()].filter(key => rightRows.has(key));
         const summarize = keys => ({
             common: keys.length,
@@ -323,7 +331,8 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
 
     const unsolvedPopulationSize = populations.productionUnsolved.length;
     const completeTechniques = techniques.filter(technique =>
-        byTechnique.get(technique).filter(row => row.solvedByProduction === false).length === unsolvedPopulationSize);
+        productionUnsolvedRowsByTechnique.get(technique).length === unsolvedPopulationSize);
+    const completeTechniqueSet = new Set(completeTechniques);
     const summarizeDescriptors = keys => {
         const rows = keys.map(key => descriptorsById.get(byLevel.get(key)?.[0]?.levelId)).filter(Boolean);
         const mean = values => values.length
@@ -343,7 +352,7 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
     };
     const exactLevelPhenotypes = new Map();
     for (const key of populations.productionUnsolved) {
-        const winners = byLevel.get(key).filter(row => row.ok && completeTechniques.includes(row.technique))
+        const winners = byLevel.get(key).filter(row => row.ok && completeTechniqueSet.has(row.technique))
             .map(row => row.technique).sort();
         const signature = winners.join('\0');
         const current = exactLevelPhenotypes.get(signature) ?? { techniques: winners, levelKeys: [] };
@@ -360,8 +369,8 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
     const flagPathologies = techniques.filter(technique => technique.includes('+dedup-near-tie-retention-off'))
         .map(variant => {
             const baseline = variant.replace('+dedup-near-tie-retention-off', '');
-            const baselineRows = new Map((byTechnique.get(baseline) ?? []).map(row => [levelKey(row), row]));
-            const variantRows = new Map(byTechnique.get(variant).map(row => [levelKey(row), row]));
+            const baselineRows = techniqueRowsByLevel.get(baseline) ?? new Map();
+            const variantRows = techniqueRowsByLevel.get(variant);
             const common = [...baselineRows.keys()].filter(key => variantRows.has(key));
             const gained = common.filter(key => !baselineRows.get(key).ok && variantRows.get(key).ok);
             const lost = common.filter(key => baselineRows.get(key).ok && !variantRows.get(key).ok);
@@ -370,8 +379,8 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
                     baselineRows.get(key).ok && variantRows.get(key).ok)) };
         });
     const comparisonPathologies = comparisons.map(comparison => {
-        const leftRows = new Map((byTechnique.get(comparison.left) ?? []).map(row => [levelKey(row), row]));
-        const rightRows = new Map((byTechnique.get(comparison.right) ?? []).map(row => [levelKey(row), row]));
+        const leftRows = techniqueRowsByLevel.get(comparison.left) ?? new Map();
+        const rightRows = techniqueRowsByLevel.get(comparison.right) ?? new Map();
         const common = [...leftRows.keys()].filter(key => rightRows.has(key)
             && leftRows.get(key).solvedByProduction === false);
         const leftOnlyKeys = common.filter(key => leftRows.get(key).ok && !rightRows.get(key).ok);
@@ -449,16 +458,18 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
         productionSolved: buildPopulationCover(populations.productionSolved),
     };
 
+    const unsolvedMeanNodesByTechnique = new Map(completeTechniques.map(technique => {
+        const rows = productionUnsolvedRowsByTechnique.get(technique);
+        return [technique, rows.reduce((sum, row) => sum + row.nodesExpanded, 0) / unsolvedPopulationSize];
+    }));
     const techniqueEconomics = completeTechniques.map(technique => {
-        const techniqueRows = byTechnique.get(technique).filter(row => !row.solvedByProduction);
+        const techniqueRows = productionUnsolvedRowsByTechnique.get(technique);
         const solvedKeys = techniqueRows.filter(row => row.ok).map(levelKey);
-        const meanAttemptNodes = Math.round(techniqueRows.reduce((sum, row) => sum + row.nodesExpanded, 0)
-            / techniqueRows.length);
-        const cheaper = completeTechniques.filter(other => other !== technique &&
-            byTechnique.get(other).filter(row => !row.solvedByProduction)
-                .reduce((sum, row) => sum + row.nodesExpanded, 0) / unsolvedPopulationSize < meanAttemptNodes);
+        const meanAttemptNodes = Math.round(unsolvedMeanNodesByTechnique.get(technique));
+        const cheaper = completeTechniques.filter(other => other !== technique
+            && unsolvedMeanNodesByTechnique.get(other) < meanAttemptNodes);
         const substituted = solvedKeys.filter(key => cheaper.some(other =>
-            byTechnique.get(other).some(row => levelKey(row) === key && row.ok))).length;
+            solvedLevelKeysByTechnique.get(other).has(key))).length;
         return { technique, solved: solvedKeys.length, meanAttemptNodes, cheaperTechniques: cheaper.length,
             substitutedByCheaper: substituted, unsharedWithCheaper: solvedKeys.length - substituted,
             substitutionRate: solvedKeys.length ? substituted / solvedKeys.length : null };

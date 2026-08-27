@@ -18,9 +18,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
+import { buildBundle } from './run-bundled.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const FAMILY_GENERATE_BUNDLE = buildBundle('scripts/family-generate.mjs');
 const { readLevelsWithHints, writeLevelsWithHints } = await import('./level-data-io.mjs');
 const { validateRawLevel } = await import('../modules/domain/level-schema.js');
 const { validateCandidatePath } = await import('../modules/domain/path-validator.js');
@@ -28,7 +30,7 @@ const { parseRawLevel } = await import('../modules/domain/level-codec.js');
 const { getLevelFingerprintSource } = await import('../modules/domain/level-fingerprint.js');
 
 async function runGenerate(args) {
-    return execFile('node', ['scripts/run-bundled.mjs', 'scripts/family-generate.mjs', ...args], {
+    return execFile('node', [FAMILY_GENERATE_BUNDLE, ...args], {
         cwd: ROOT,
         maxBuffer: 10 * 1024 * 1024,
     });
