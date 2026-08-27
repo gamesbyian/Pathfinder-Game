@@ -82,7 +82,7 @@ When optimizing test runtime, profile the actual suite/subcommand before deletin
 
 ## Static checks
 
-`npm run check` covers architecture lint, types, security/secrets/dependencies/CSP, modal accessibility, CSS/canvas-theme checks, `check:no-solver-level-numbers`, hint validity, level provenance/corpus formatting, and documentation/workflow discovery. `check:validators` is the parallel non-lint validator fan-out; `check:nonlint` adds the two structural prechecks and exists so Actions can run that half independently of `check:lint`. These scripts partition execution only; `check` remains the authoritative local composition.
+`npm run check` covers architecture lint, types, security/secrets/dependencies/CSP, modal accessibility, CSS/canvas-theme checks, `check:no-solver-level-numbers`, runtime level/hint validity, level provenance/corpus formatting, documentation/workflow discovery, and the maintained GitHub Action runtime-major policy. `check:validators` is the parallel non-lint validator fan-out; `check:nonlint` adds the two structural prechecks and exists so Actions can run that half independently of `check:lint`. These scripts partition execution only; `check` remains the authoritative local composition.
 
 A PLAY-valid stored hint proves a solution, not cold solver capability; use shared provenance classification for capability claims.
 
