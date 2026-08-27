@@ -68,25 +68,40 @@ export function mcForcedNeighborLevel() {
   });
 }
 
-function referencePathStats(path: number[], level: NormalizedLevel) {
+function referenceAccounting(path: number[], level: NormalizedLevel) {
   const counts = new Map<number, number>();
+  const gateSet = new Set(level.gateKeys);
   counts.set(path[0], 1);
-  let cost = 0, ints = 0, lastWasJump = false;
+  let cost = 0;
+  // Count revisits to every non-gate cell without treating any cell as the goal. For a chosen
+  // goal G, the referee's intersection count is this value minus G's revisit contribution.
+  // Keeping that goal-neutral total lets the prefix referee below change goalKey to the current
+  // endpoint in O(1), instead of rescanning the whole path for every candidate.
+  let nonGateRevisits = 0;
+  let lastWasJump = false;
   for (let i = 1; i < path.length; i++) {
     const from = path[i - 1], to = path[i];
-    const jump: boolean = !lastWasJump && level.portalMap.get(from)?.dest === to;
+    const jump = !lastWasJump && level.portalMap.get(from)?.dest === to;
     if (!jump) cost++;
     const seen = counts.get(to) ?? 0;
-    if (seen > 0 && to !== level.goalKey && !level.gateKeys.includes(to)) ints++;
+    if (seen > 0 && !gateSet.has(to)) nonGateRevisits++;
     counts.set(to, seen + 1);
     lastWasJump = jump;
   }
-  return { cost, ints, lastWasJump };
+  return { counts, gateSet, cost, nonGateRevisits, lastWasJump };
 }
 
-function referenceCandidates(path: number[], level: NormalizedLevel): number[] {
-  const pos = path[path.length - 1];
-  const { lastWasJump } = referencePathStats(path, level);
+function goalAdjustedIntersections(
+  nonGateRevisits: number,
+  counts: Map<number, number>,
+  gateSet: Set<number>,
+  goalKey: number,
+) {
+  if (gateSet.has(goalKey)) return nonGateRevisits;
+  return nonGateRevisits - Math.max(0, (counts.get(goalKey) ?? 0) - 1);
+}
+
+function referenceCandidates(pos: number, lastWasJump: boolean, level: NormalizedLevel): number[] {
   const portal = level.portalMap.get(pos);
   if (portal && !lastWasJump) return [portal.dest];
   const x = pos & 0xFFFF, y = (pos >>> 16) & 0xFFFF;
@@ -98,27 +113,52 @@ function referenceCandidates(path: number[], level: NormalizedLevel): number[] {
   return out;
 }
 
-/** Independent reference search used as the deadlock/lower-bound proof oracle. */
+/** Independent reference search: candidate generation/accounting remain separate from solver
+ * transitions, while incremental bookkeeping avoids O(path length) rescans at every recursion.
+ * The explored candidate tree and independent referee call at every prefix are unchanged. */
 function referenceSearch(state: SolverSearchState, level: NormalizedLevel, targetOnly?: number): number {
   const path = state.path.slice();
-  const prefixCost = referencePathStats(path, level).cost;
+  const initial = referenceAccounting(path, level);
+  const prefixCost = initial.cost;
   const maxCost = level.grid.w * level.grid.h - 1 + level.reqInt;
   let best = Infinity;
-  const walk = () => {
+
+  const walk = (
+    cost: number,
+    nonGateRevisits: number,
+    lastWasJump: boolean,
+  ) => {
     const pos = path[path.length - 1];
-    const stats = referencePathStats(path, level);
-    if (stats.ints > level.reqInt || stats.cost > maxCost || stats.cost - prefixCost >= best) return;
-    if (targetOnly !== undefined && pos === targetOnly) { best = stats.cost - prefixCost; return; }
-    if (pos === level.goalKey) {
-      if (targetOnly !== undefined) return;
-      const candidateLevel = { ...level, reqLen: stats.cost, reqInt: stats.ints } as NormalizedLevel;
-      if (validateCandidatePath(candidateLevel, path).ok) best = stats.cost - prefixCost;
+    const ints = goalAdjustedIntersections(nonGateRevisits, initial.counts, initial.gateSet, level.goalKey);
+    if (ints > level.reqInt || cost > maxCost || cost - prefixCost >= best) return;
+    if (targetOnly !== undefined && pos === targetOnly) {
+      best = cost - prefixCost;
       return;
     }
-    for (const next of referenceCandidates(path, level)) {
+    if (pos === level.goalKey) {
+      if (targetOnly !== undefined) return;
+      const candidateLevel = { ...level, reqLen: cost, reqInt: ints } as NormalizedLevel;
+      if (validateCandidatePath(candidateLevel, path).ok) best = cost - prefixCost;
+      return;
+    }
+
+    for (const next of referenceCandidates(pos, lastWasJump, level)) {
+      const jump = !lastWasJump && level.portalMap.get(pos)?.dest === next;
+      const seen = initial.counts.get(next) ?? 0;
+      const nextCount = seen + 1;
+      initial.counts.set(next, nextCount);
       path.push(next);
-      const nextStats = referencePathStats(path, level);
-      const probeStats = referencePathStats(path, { ...level, goalKey: next } as NormalizedLevel);
+
+      const nextCost = cost + (jump ? 0 : 1);
+      const nextNonGateRevisits = nonGateRevisits + (seen > 0 && !initial.gateSet.has(next) ? 1 : 0);
+      // Prefix validation temporarily makes the endpoint the goal. Subtracting that cell's whole
+      // revisit contribution is exactly equivalent to the previous full-path rescan with goalKey=next.
+      const probeInts = goalAdjustedIntersections(
+        nextNonGateRevisits,
+        initial.counts,
+        initial.gateSet,
+        next,
+      );
       const prefixLevel = {
         ...level,
         goalKey: next,
@@ -127,14 +167,21 @@ function referenceSearch(state: SolverSearchState, level: NormalizedLevel, targe
         surroundKeys: [],
         mustPassTurnDirs: new Map(),
         adjacentTurnKeys: [],
-        reqLen: nextStats.cost,
-        reqInt: probeStats.ints,
+        reqLen: nextCost,
+        reqInt: probeInts,
       } as unknown as NormalizedLevel;
-      if (validateCandidatePath(prefixLevel, path).ok) walk();
+
+      if (validateCandidatePath(prefixLevel, path).ok) {
+        walk(nextCost, nextNonGateRevisits, jump);
+      }
+
       path.pop();
+      if (seen === 0) initial.counts.delete(next);
+      else initial.counts.set(next, seen);
     }
   };
-  walk();
+
+  walk(initial.cost, initial.nonGateRevisits, initial.lastWasJump);
   return best;
 }
 
