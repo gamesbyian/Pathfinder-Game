@@ -43,11 +43,24 @@ Local `ci` runs `check`, `test:coverage`, then `test:node`. The major phases rem
 
 ## Fast vs deep
 
-`deepTest` is for expense intrinsic to an implementation proof: exhaustive soundness, real regression rescue, or real cross-tier budget behavior. `SOLVER_DEEP_TESTS=0` skips them; `test:unit:fast`/`ci:fast` set it. Every PR still runs every deep proof. The expensive deadlock-soundness proof is represented by two deep Vitest files, one for each root move of the fixed 5x5 must-cross fixture; those subtrees are disjoint and collectively exhaustive, and each file repeats the negligible must-turn fixture so it independently exercises every helper/control. The R02560 close-length-gap regression is likewise two deep files sharing the same 900,000-node boundary: production-default enabled must solve, while disabling only that feature must not. Local coverage runs all four through Vitest's normal worker pool. Actions runs those same files in dedicated jobs and sets proof-specific skip flags only on the coverage job, so the proof population is unchanged and not duplicated.
+`deepTest` is for expense intrinsic to an implementation proof: exhaustive soundness, real regression rescue, or real cross-tier budget behavior. `SOLVER_DEEP_TESTS=0` skips them; `test:unit:fast`/`ci:fast` set it. Every PR still runs every deep proof. The expensive deadlock-soundness proof is represented by two deep Vitest files, one for each root move of the fixed 5x5 must-cross fixture; those subtrees are disjoint and collectively exhaustive, and each file repeats the negligible must-turn fixture so it independently exercises every helper/control. The provisional R02560 close-length-gap integration witness is two deep files sharing the same 900,000-node boundary: production-default enabled must solve, while disabling only that feature must not. It remains only because the earlier synthetic trap failed to isolate this mechanism correctly; replacement by a smaller faithful witness is preferred. Local coverage runs all four through Vitest's normal worker pool. Actions runs those same files in dedicated jobs and sets proof-specific skip flags only on the coverage job, so the proof population is unchanged and not duplicated.
 
 Do not mark a test deep merely because it is slow. Stub search when assertions only need scheduling/routing/budget behavior; `orchestration.test.ts` uses `attemptSearchForTesting` / `exhaustingDispatch` for this.
 
 A deep test can prove a specific invariant over its fixtures. It does not make a selected heuristic treatment statistically independent or generally effective.
+
+### Historical level witnesses
+
+A production/stress level may document where a regression was discovered, but ordinary correctness CI should prefer the smallest synthetic or distilled witness that exercises the implementation invariant. Do not make “this historical level still solves” a permanent correctness contract merely because it was once solved in research.
+
+A real corpus level may remain executable in CI only when the relevant mechanism cannot yet be reproduced faithfully by a smaller fixture. Such a dependency must:
+
+- name the implementation invariant it isolates, not merely the solve outcome;
+- use deterministic/matched budgets where the budget boundary is part of that invariant;
+- be documented as **provisional**, with replacement by a synthetic/distilled witness as the intended end state; and
+- never be cited as evidence of general solver effectiveness or promotion quality.
+
+Historical level IDs are encouraged in comments as provenance when the actual test uses a distilled fixture. Solver/corpus effectiveness belongs in research/benchmark gates, not correctness CI.
 
 ## Timing instrumentation
 
