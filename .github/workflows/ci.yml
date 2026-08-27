@@ -213,39 +213,6 @@ jobs:
       - run: npm ci
       - run: npx vitest run modules/solver/repair-search-close-length-gap-disabled.test.ts
 
-  # TEMPORARY benchmark: measure the final full local command graph on one hosted runner.
-  # Remove before merge.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - run: npm run ci
-
-  # TEMPORARY benchmark: decompose the second-order census validator. Remove before merge.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - run: node scripts/technique-census-second-order-node-test.mjs
-
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - run: node scripts/technique-census-second-order.mjs --check
-
   deep-verification:
     runs-on: ubuntu-latest
     steps:
