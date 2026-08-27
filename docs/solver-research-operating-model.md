@@ -4,12 +4,13 @@
 > **Priority:** [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) owns active rank.
 > **Technique/config interpretation:** [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
 > **Capability/generalization boundary:** [`solver-level-blindness.md`](solver-level-blindness.md).
+> **Evaluation evidence:** [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) owns development/confirmation/transfer roles and proportional evidence gates.
 
 Measurements belong in dated reports, ranked decisions in the queue, deferred work in [`solver-future-work.md`](solver-future-work.md), and retained/default-off dispositions in [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Pre-consolidation notebook: [`archive/snapshots/solver-research-operating-model-2026-08-20.md`](archive/snapshots/solver-research-operating-model-2026-08-20.md).
 
 ## Pipeline
 
-> semantic truth → controlled evidence → failure class → exact/shadow evaluation → narrow intervention → level-blind matched-work verdict → independent confirmation when selected/tuned → transfer evidence for broad generalization claims
+> semantic truth → controlled evidence → failure class → exact/shadow evaluation → narrow intervention → level-blind matched-work verdict → confirmation proportional to selection pressure → cross-distribution challenge when the claim warrants it
 
 Correctness bugs may go directly to fix + regression/soundness validation. Speculative heuristics should test the premise first with existing observers, oracles, family comparisons, reducers, isolated probes, or replay tools.
 
@@ -19,8 +20,8 @@ These are gates, not aspirations.
 
 1. **No fixed-ladder accretion by default.** A late retry/seed/profile/width/reserve that buys additive work is not free because earlier winners cannot regress. New actions normally compete inside a fixed aggregate `workSpent` envelope or explicitly justify a larger product budget.
 2. **Treat knobs as configurations until evidence shows a different mechanism.** Names, weights, templates, widths, directions, tie-breaks, seeds, thresholds, and budget bands do not create new algorithms. Prefer bounded sweeps/racing/configuration search to serial artisanal guesses.
-3. **Selection is part of the result.** Data used to discover a pattern, choose a threshold/config/seed/population, or pick the best arm/metric is development data for that decision. Record the meaningful search space and use untouched/grouped confirmation for robust claims.
-4. **Level-blindness is not generalization.** Runtime may use mechanics/current state, not identity/history/hints/winners. A level-blind policy repeatedly tuned on one corpus can still overfit it; broad claims require fresh/locked transfer evidence. Group variants by parent.
+3. **Selection is part of the result.** Data used to discover a pattern, choose a threshold/config/seed/population, or pick the best arm/metric is development data for that decision. Evidence intensity scales with that selection pressure: a trace-preserving speed fix does not need a statistical holdout, while a winner selected from many routing/configuration alternatives normally does. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
+4. **Level-blindness is not generalization.** Runtime may use mechanics/current state, not identity/history/hints/winners. A level-blind policy repeatedly tuned on one corpus can still overfit it. A new seed from the same generator can provide sample-independent confirmation, but broad cross-distribution claims need a materially different source/generator. Group variants by parent.
 5. **Unexplained stage-history dependence blocks causal inference.** Identical explicit level/action/config/seed/work should not change capability because unrelated predecessor stages ran unless a typed handoff is part of the contract. Cache warmth may change wall cost, not semantics/search order/randomness/work accounting.
 6. **Use the right cost currency.** `workSpent` compares heterogeneous techniques; raw nodes diagnose one technique; wall time measures implementation cost/latency. Do not confuse algorithmic policy with kernel speed.
 7. **Use the smallest evidence that can decide the next gate.** Diagnose participation/budget/instrumentation once, stop directly falsified forms, and expand populations only after a narrower pilot earns it. Full-corpus compute does not rescue a weak premise.
@@ -39,13 +40,15 @@ These are gates, not aspirations.
 
 The product case is an unseen editor level. Cold solves may use mechanics, current state/telemetry, and generic code/config only. Forbidden steering includes saved hints/solutions, prior winners/configs/seeds, historical solve/cost/family outcomes, per-level special cases/caches, IDs/corpus position, and practical identity recognition through fingerprints/nearest-neighbor replay.
 
-Use three renewable roles:
+Use three renewable roles, defined fully in [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md):
 
-- **discovery/tuning:** freely inspected evidence used to invent/fit treatments;
-- **confirmation:** untouched/grouped-held-out evidence used after the treatment is fixed;
-- **transfer/challenge:** fresh or locked unrelated evidence for broader claims.
+- **development/tuning:** freely inspected evidence used to invent/fit treatments;
+- **confirmation:** sample-independent evidence used after the treatment is fixed;
+- **transfer/challenge:** evidence from a materially different source/construction distribution for broader claims.
 
-Once exact confirmation/transfer failures influence redesign, reclassify them as development evidence and replenish rather than repeatedly peeking.
+Prefer locked pools partitioned into untouched blocks when repeated confirmation is expected. Spend the
+block whose outcomes inform the decision, not every untouched block in the pool. Once exact results
+from a block influence redesign, that block is development evidence for descendants.
 
 ## Failure classes
 
@@ -89,7 +92,7 @@ When tuning configurations, define legal ranges, use cheap racing, record the se
 2. exact/bounded oracle labels with approximation direction explicit;
 3. controlled paired evidence;
 4. untouched/grouped confirmation after selection;
-5. transfer/challenge evidence for broad claims;
+5. cross-distribution transfer/challenge evidence for broad claims;
 6. level-blind population evidence for corpus-scoped production decisions;
 7. historical/forensic evidence for nomination after current-code reconciliation.
 
@@ -115,7 +118,7 @@ For a valid human/AI/oracle/variant path: referee-validate and record provenance
 
 Production-facing treatments normally require: level-blind execution; identifiable code/protocol; complete intended population or explicit sample; non-binding deadlines when work comparability matters; comparable arms; gains/losses; `workSpent`, nodes, errors/truncation as relevant; no hidden hint/data mutation; and queue/ledger updates when disposition changes.
 
-Selected/tuned treatments need untouched/grouped confirmation. Report intended population, actual coverage, independent unit, exclusions/missing cells, and denominators. Scheduling additionally requires total-work envelope, current reach, rare unique wins/losses, and a simple-policy comparator. Proxy improvement alone is insufficient.
+Selected/tuned treatments normally need sample-independent confirmation, with strength proportional to the candidate search/selection pressure. Cross-generator transfer is reserved for broad claims, heavily tuned/global/learned policies, or cases where distributional robustness is materially in doubt. Report intended population, actual coverage, independent unit, exclusions/missing cells, and denominators. Scheduling additionally requires total-work envelope, current reach, rare unique wins/losses, and a simple-policy comparator. Proxy improvement alone is insufficient. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
 ## Before expensive decision-bearing runs
 

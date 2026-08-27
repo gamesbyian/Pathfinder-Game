@@ -61,11 +61,11 @@ Family research uses explicit evidence roles:
 
 - **discovery/tuning families:** may be inspected freely to find boundaries, choose descriptors, fit thresholds, or select configurations;
 - **confirmation families:** held out while the candidate rule/configuration is chosen;
-- **transfer/challenge data:** unrelated fresh/locked canonical or generated levels used for claims beyond the family resource.
+- **transfer/challenge data:** unrelated material from a meaningfully different parent/source/construction distribution used for claims beyond the family resource. A new seed from the same overall generator is sample-independent confirmation, not automatically cross-distribution transfer.
 
 A rule that generalizes across siblings but fails on unrelated parents is family memorization. A rule that survives held-out parents but was tuned repeatedly on the same overall stress distribution is still not proof of universal Pathfinder generalization.
 
-Once exact outcomes from a holdout have influenced design, reclassify it as development data and replenish/replace the holdout. Where tooling permits, prefer aggregate holdout results during iteration and defer exact failure inspection until the treatment/decision is frozen.
+Once exact outcomes from a holdout family/block have influenced design, reclassify that unit as development data for descendants. Untouched blocks/parent families remain usable; do not discard an entire locked pool merely because one block was consumed. Where tooling permits, prefer aggregate holdout results during iteration and defer exact failure inspection until the treatment/decision is frozen. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
 ## What variants are for
 

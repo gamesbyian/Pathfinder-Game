@@ -1,11 +1,16 @@
 # Solver confirmation and transfer protocol design
 
-> **Status:** active
-> **Last evidence:** 2026-08-24 — static reconciliation against the current stress-corpus contract, family/variant rules, level-blindness contract, and current research queue; clarified broad versus baseline-failure-conditioned confirmation and explicit exposure states
-> **Decision:** create a renewable three-role evaluation discipline (development/tuning, untouched confirmation, locked/fresh transfer) rather than treating level-blind execution on repeatedly mined corpora as generalization evidence
-> **Remaining gate:** instantiate one reproducible broad confirmation cohort and one reproducible transfer/challenge cohort, record their generator/source/version metadata and exposure state, and use them on the next solver treatment selected from development evidence; instantiate a separate residual-confirmation cohort only when the claim is explicitly conditional on current baseline failure
+> **Status:** superseded
+> **Last evidence:** 2026-08-27 — the cohort lifecycle produced a genuine +3/-0 confirmation only after exposing workflow-instrument complexity, and a materially different topology-composition generator was added for cross-generator challenge evidence
+> **Decision:** the three evidence roles remain, but the durable implementation is now [`docs/solver-evaluation-evidence.md`](../docs/solver-evaluation-evidence.md): evidence intensity scales with selection pressure; repeated confirmation may consume pre-partitioned blocks rather than a wholly new corpus per candidate; another seed from the same generator is confirmation, while transfer means a materially different source/construction distribution
+> **Remaining gate:** none — use the replacement authority and the live queue
 > **Evidence role:** discovery
-> **Selection:** observational — protocol is motivated by repeated inspection/tuning on existing stress/census/family populations and by the number of candidate policies/configurations now being compared
+> **Selection:** observational — this dated design is retained as provenance for why independent confirmation was introduced
+
+> **Supersession note:** The cohort experiments validated the need for train/test discipline but also
+> demonstrated the cost and failure surface of excessive cohort ceremony. Historical cohort IDs,
+> hashes, and verdicts remain valid evidence in their own reports/manifests. This file no longer owns
+> current holdout or transfer policy.
 
 ## Purpose
 

@@ -10,7 +10,7 @@ Do not recreate these programs here; the queue owns their rank.
 
 | Topic | Current authority |
 |---|---|
-| Generalization / locked confirmation and transfer cohorts | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`cohort reservation`](../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md) |
+| Generalization / confirmation blocks / cross-generator challenge | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md); [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); historical [`cohort reservation`](../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md) |
 | Automatic configuration / portfolio construction | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`solver-scheduling-policy.md`](solver-scheduling-policy.md) |
 | Beam retention at exact extinction boundaries | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`beam descriptor audit`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md) |
 | Exact/reference-model program | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`reference-model audit`](../reports/2026-08-23-solver-reference-model-capability-audit.md) |

@@ -2,7 +2,7 @@
 
 The production solver and headline capability benchmarks must be **level-blind**: an unseen editor level has no solver history, so exact-level history cannot be part of capability.
 
-Level-blindness is necessary for a fair cold solve. It is **not sufficient evidence of generalization**. A generic rule can be perfectly level-blind at runtime and still be overfit to the corpus that was repeatedly used to invent, tune, and select it.
+Level-blindness is necessary for a fair cold solve. It is **not sufficient evidence of generalization**. A generic rule can be perfectly level-blind at runtime and still be overfit to the corpus that was repeatedly used to invent, tune, and select it. Population roles and proportional confirmation/transfer gates are owned by [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
 ## Runtime invariant
 
@@ -43,29 +43,48 @@ Offline data may discover that some latent property predicts a useful action. Th
 
 ## Generalization roles
 
-Treat solver research populations as having distinct roles:
+There are three distinct questions:
 
-- **Discovery/tuning:** levels freely inspected to generate hypotheses, pick thresholds, select configurations, and diagnose failures. Corpus 2, much of the technique census, recurring regression cohorts, and heavily mined variant families belong here for many current decisions.
-- **Confirmation:** levels not used to choose the candidate being tested. Use this to decide whether an apparently useful selected/tuned treatment survives selection bias.
-- **Transfer/challenge:** a locked or freshly generated population not inspected during treatment design, reserved for claims about broader unseen-level behavior.
+1. **runtime blindness:** did this invocation use only legal current-level/current-solve inputs?
+2. **sample independence:** did these evaluation rows help choose the treatment?
+3. **distributional independence:** do these rows come from a materially different source/construction process?
 
-A population can move only toward more contaminated roles. Once exact failures from a confirmation/transfer set are inspected and used to redesign the treatment, those cases are development data for the next iteration. Replenish the locked/fresh set rather than pretending repeated exposure remains independent.
+Use the roles in [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md):
 
-Variant siblings are correlated. Split/group by parent family for learned/tuned rules and transfer claims.
+- **Development/tuning:** freely inspected levels used to invent, tune, select, or diagnose. Corpus 2,
+  much of the technique census, recurring regression cohorts, and heavily mined variant families
+  belong here for many current decisions.
+- **Confirmation:** an untouched sample/block evaluated after the candidate and primary decision rule
+  are fixed. Another seed from `generate-random.mjs` can be valid confirmation even though it
+  shares Corpus 2's generator family.
+- **Transfer/challenge:** evidence from a materially different construction/source distribution for
+  a broader generalization claim. A new seed or `--envelope-caps` mode of the same witness-first
+  generator is not cross-generator transfer.
 
-## Holdout visibility
+Variant siblings are correlated. Split/group by parent family when family generalization matters.
 
-A useful holdout protocol should reduce the temptation to tune against the holdout while still making decisions possible.
+## Holdout visibility and block consumption
 
-Where tooling permits during iteration:
+A useful holdout protocol creates procedural independence without turning evaluation into a security
+system.
 
-- expose aggregate confirmation/transfer metrics first rather than exact level IDs, paths, winning configs, or failure traces;
-- freeze the treatment/decision before opening exact failures for forensic learning;
-- once exact failures are opened and influence the next design, mark those cases/population as development data for future iterations;
-- record the generator/version/split so a replacement holdout can be created reproducibly;
-- do not repeatedly create “fresh” siblings of already-inspected parents and call them independent transfer data.
+When several confirmation decisions are expected, prefer a locked pool partitioned into blocks before
+outcomes are inspected. Use one untouched block for one fixed decision-bearing candidate. After its
+outcomes influence redesign, that **block** becomes development evidence for descendants; untouched
+blocks in the same pool remain usable. There is no scientific benefit in declaring every unseen block
+contaminated merely because a sibling block was used.
 
-This need not become a security system or elaborate blind leaderboard. The goal is procedural friction against accidental repeated peeking, not secrecy for its own sake.
+Where tooling permits:
+
+- expose aggregate confirmation/transfer metrics before exact IDs/traces;
+- freeze the verdict before opening exact failures for forensic learning;
+- record generator/source revision, pool/block identity, seal/hash, treatment provenance, and
+  participation;
+- do not repeatedly reuse the same block for a succession of selected candidates;
+- do not call fresh siblings of already-inspected variant parents independent transfer data.
+
+A fresh one-off cohort remains valid when it is cheaper than maintaining a pool. The block model is an
+efficiency default, not a new infrastructure requirement.
 
 ## Claim discipline
 
@@ -73,8 +92,9 @@ Use language that matches the evidence:
 
 - “+N on the current Corpus-2 sample” is a valid corpus result even if that corpus inspired the treatment.
 - “improves level-blind capability on Corpus 2” requires a level-blind run but not necessarily an untouched holdout.
-- “selected treatment confirmed on held-out parents” requires that those parents did not choose the treatment/threshold.
-- “generalizes to unseen Pathfinder levels” requires independent confirmation/transfer evidence beyond the development population.
+- “selected treatment confirmed on an untouched block” requires that the block did not choose the treatment/threshold.
+- “transfers to topology-composition levels” requires an untouched sample from that different generator family and is limited to its represented mechanics.
+- “generalizes to unseen Pathfinder levels” requires broader distributionally independent transfer evidence beyond a new seed from the development generator.
 - “zero regressions” means zero observed losses on the stated population/protocol, not proof of universal monotonicity.
 
 Do not use level-blindness as a rhetorical substitute for a train/test distinction.
@@ -95,7 +115,7 @@ Do not use level-blindness as a rhetorical substitute for a train/test distincti
 
 Experiment-manifest tests statically guard the mechanics allowlist, worker identity boundary, no-priming path, and pinned SHA.
 
-This workflow does **not** by itself certify that the tested population was untouched during treatment design. Record evidence role and selection separately under [`investigation-report-conventions.md`](investigation-report-conventions.md) and [`solver-research-operating-model.md`](solver-research-operating-model.md).
+This workflow does **not** by itself certify that the tested population was untouched during treatment design or distributionally independent from development data. Record evidence role and selection separately under [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md), [`investigation-report-conventions.md`](investigation-report-conventions.md), and [`solver-research-operating-model.md`](solver-research-operating-model.md).
 
 ## Benchmark terminology
 
