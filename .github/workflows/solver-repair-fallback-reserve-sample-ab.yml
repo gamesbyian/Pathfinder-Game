@@ -221,10 +221,6 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '20'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Download shard artifacts
         uses: actions/download-artifact@v8
@@ -239,7 +235,7 @@ jobs:
           mkdir -p logs/solver-repair-fallback-reserve-sample reports/stress
           cp -a artifact-staging/downloaded/. logs/solver-repair-fallback-reserve-sample/
           FILES=$(ls logs/solver-repair-fallback-reserve-sample/batch-*.json 2>/dev/null | paste -sd, -)
-          [ -n "$FILES" ] && npm run solver:combine-corpus2-batches -- --allow-mixed-corpora --in="${FILES}" --out=reports/stress/repair-fallback-reserve-sample-ab.json
+          [ -n "$FILES" ] && node scripts/portfolio-sweep-reports-to-benchmark.mjs --allow-mixed-corpora --in="${FILES}" --out=reports/stress/repair-fallback-reserve-sample-ab.json
 
       - name: Verify complete coverage
         id: coverage
