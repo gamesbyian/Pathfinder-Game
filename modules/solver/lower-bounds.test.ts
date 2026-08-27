@@ -9,6 +9,12 @@ import { test } from 'vitest';
 // SOLVER_DEEP_TESTS=0 to skip it for quicker signal — a relocation to a parallel job, not a
 // coverage cut.
 const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
+// GitHub CI can partition the one very expensive deadlock-soundness property by the two
+// first moves of its 5x5 must-cross fixture. Unset means the original full proof, which
+// keeps local `npm run ci` behavior unchanged; "skip" is used only by the coverage job
+// when the two dedicated matrix jobs own those exhaustive root subtrees.
+const deadlockProofRoot = process.env.SOLVER_DEADLOCK_PROOF_ROOT ?? 'all';
+const deadlockProofTest = deadlockProofRoot === 'skip' ? test.skip : deepTest;
 import { AXIS_H, KEY_SPACE, PACK } from './encoding.js';
 import { getDistanceFromArray } from './distance.js';
 import { IntHashMap } from './int-hash-map.js';
@@ -764,13 +770,18 @@ test('property: topology connectivity over-approximates every truly reachable re
 // By far the most expensive test in this file (~80s of the file's ~85s): an exhaustive DFS over
 // every reachable state of two small fixture levels, independently re-deriving exact remaining
 // cost at each state via a brute-force reference search.
-deepTest('property: deadlock helpers only report independently unsatisfiable reachable states', () => {
+deadlockProofTest('property: deadlock helpers only report independently unsatisfiable reachable states', () => {
+  const selectedRootBranch = deadlockProofRoot === 'all' ? null : Number(deadlockProofRoot);
+  if (selectedRootBranch !== null) {
+    assert.ok(selectedRootBranch === 0 || selectedRootBranch === 1,
+      `SOLVER_DEADLOCK_PROOF_ROOT must be "all", "skip", 0, or 1; got ${deadlockProofRoot}`);
+  }
   const levels = [mustTurnLevel('cw'), mcForcedNeighborLevel()];
   const reportedDeadStates = [0, 0, 0];
   const diagnosedDeadStates = [0, 0, 0];
   const feasibleControls = [0, 0, 0];
   const ids: PruneId[] = ['PRUNE_MUST_TURN_DEADLOCK', 'PRUNE_MC_FORCED_NEIGHBOR', 'PRUNE_MC_NEIGHBOR_BUDGET'];
-  for (const level of levels) {
+  for (const [fixtureIndex, level] of levels.entries()) {
     const prep = prepLevel(level), state = createState(level.gateKeys[0], level, prep);
     for (let i = 0; i < ids.length; i++) {
       const applicable = i === 0 ? state.mustTurnMask !== 0 : state.mustCrossMask !== 0;
@@ -834,8 +845,15 @@ deepTest('property: deadlock helpers only report independently unsatisfiable rea
         }
       }
       if (pos === level.goalKey) return;
-      for (const next of getNeighbors(pos, state, level, prep)) {
-        const undo = applyMove(next, state, level, prep, false);
+      const neighbors = getNeighbors(pos, state, level, prep);
+      const partitionRoot = fixtureIndex === 1 && state.path.length === 1 && selectedRootBranch !== null;
+      if (partitionRoot) {
+        assert.equal(neighbors.length, 2,
+          'the CI deadlock-proof partition assumes the fixed 5x5 fixture has exactly two root moves');
+      }
+      for (let neighborIndex = 0; neighborIndex < neighbors.length; neighborIndex++) {
+        if (partitionRoot && neighborIndex !== selectedRootBranch) continue;
+        const undo = applyMove(neighbors[neighborIndex], state, level, prep, false);
         if (state.ints <= level.reqInt) walk();
         undoMove(undo, state);
       }
