@@ -39,11 +39,11 @@ Test-wall-time figures are measurements, not contracts: fixture changes, runner 
 
 `test:node:fast` currently includes every Node validator; it leaves room to exclude future genuinely slow validators. Former slow hint-workbench/diversification validators now use cheap fixtures with the same plumbing.
 
-`ci` runs `check`, `test:coverage`, then `test:node`. Each has internal concurrency; running them concurrently can oversubscribe 4-core runners. `package.json` is authoritative for the graph.
+Local `ci` runs `check`, `test:coverage`, then `test:node`. Each has internal concurrency; running them concurrently on one 4-core machine can oversubscribe it. In GitHub Actions those legs already have separate runners: `checks` and `node-tests-fast` cover the same current check/Node-validator work, while `deep-verification` runs only `test:coverage` so it does not serially repeat those sibling jobs. `package.json` is authoritative for the local graph.
 
 ## Fast vs deep
 
-`deepTest` is for expense intrinsic to an implementation proof: exhaustive soundness, real regression rescue, or real cross-tier budget behavior. `SOLVER_DEEP_TESTS=0` skips them; `test:unit:fast`/`ci:fast` set it. Every PR still runs deep tests in the separate `deep-verification` Actions job.
+`deepTest` is for expense intrinsic to an implementation proof: exhaustive soundness, real regression rescue, or real cross-tier budget behavior. `SOLVER_DEEP_TESTS=0` skips them; `test:unit:fast`/`ci:fast` set it. Every PR still runs deep tests, with coverage thresholds, in the separate `deep-verification` Actions job. That job intentionally does not rerun `check` or the Node harness because sibling jobs already own those legs.
 
 Do not mark a test deep merely because it is slow. Stub search when assertions only need scheduling/routing/budget behavior; `orchestration.test.ts` uses `attemptSearchForTesting` / `exhaustingDispatch` for this.
 

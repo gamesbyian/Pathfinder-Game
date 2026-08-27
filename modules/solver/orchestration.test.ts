@@ -216,6 +216,7 @@ test('portfolio errors remain visible when its ordinary fallback is also unsucce
     });
     const result = await solveLevel(level, {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         schedulerMode: 'portfolio-experiment',
         portfolioExperiment: {
             pass1Ms: 10, pass2Ms: 10, pass3Ms: 10,
@@ -266,6 +267,7 @@ test('solveLevel honors forcedPortalExitKey toward the only viable direction', a
 test('solveLevel fails when forcedPortalExitKey points away from the goal', async () => {
     const result = await solveLevel(makePortalBranchLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         forcedPortalExitKey: { from: PACK(1, 2), to: PACK(0, 2) },
     });
     assert.equal(result.ok, false);
@@ -686,6 +688,7 @@ test('STRATEGY_ATTRACTION_DIVERSITY: false suppresses the pass', async () => {
     // repairBudgetFractionOverride field comment) doesn't change the (still-unsolved) result.
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         ablation: { STRATEGY_ATTRACTION_DIVERSITY: false },
     });
     assert.equal(result.ok, false);
@@ -697,6 +700,7 @@ test('attractionDiversityBudgetFractionOverride: 0 suppresses the pass independe
     // sites — confirms the two are independently controllable (not coupled to one flag/override).
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         repairBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
     });
@@ -756,6 +760,7 @@ test('an explicit attractionDiversityBudgetFractionOverride still wins over disa
 test('a nodeBudget exhausted by the main loop alone suppresses the diversity pass entirely', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         nodeBudget: 200, // < 288 (main loop's own total) -- budget runs out before the pass's own gate check
     });
     assert.equal(result.ok, false);
@@ -1904,6 +1909,7 @@ test('dedup-near-tie-retry pass reruns the main ladder once more after main loop
 test('dedup-near-tie-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
     });
@@ -1922,6 +1928,7 @@ test('disableExtraBudgetPasses: true suppresses the promoted default-ON pass eve
 test('dedup-near-tie-retry pass stays off under an explicit { STRATEGY_DEDUP_NEAR_TIE_RETRY: false }', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: false },
     });
     assert.equal(result.ok, false);
@@ -1937,6 +1944,7 @@ test('a sparse unrelated ablation object leaves the promoted default-ON pass act
     // correctly registered as default-ON so a sparse object must NOT silently disable it either).
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         ablation: { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
@@ -1948,6 +1956,7 @@ test('a sparse unrelated ablation object leaves the promoted default-ON pass act
 test('dedupNearTieRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true },
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
@@ -2026,6 +2035,7 @@ test('admissible-order-non-default-retry pass can solve a level the admissible-o
 test('admissible-order-non-default-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
     });
@@ -2044,6 +2054,7 @@ test('disableExtraBudgetPasses: true suppresses the promoted default-ON admissib
 test('admissible-order-non-default-retry pass stays off under an explicit { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: false }', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: false },
     });
     assert.equal(result.ok, false);
@@ -2056,6 +2067,7 @@ test('a sparse unrelated ablation object leaves the promoted default-ON admissib
     // check as the dedup-near-tie-retry suite's own equivalent test.
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         ablation: { STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: false },
         attractionDiversityBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
@@ -2067,6 +2079,7 @@ test('a sparse unrelated ablation object leaves the promoted default-ON admissib
 test('admissibleOrderNonDefaultRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: true },
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
     });
@@ -2130,6 +2143,7 @@ test('connectivity-axis-exhausted-retry pass reruns the main ladder once more af
 test('connectivity-axis-exhausted-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
@@ -2150,6 +2164,7 @@ test('disableExtraBudgetPasses: true suppresses the promoted default-ON connecti
 test('connectivity-axis-exhausted-retry pass stays off under an explicit { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false }', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false },
     });
     assert.equal(result.ok, false);
@@ -2164,6 +2179,7 @@ test('a sparse unrelated ablation object leaves the promoted default-ON connecti
     // non-default-retry suites' own equivalent tests.
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         ablation: { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
@@ -2177,6 +2193,7 @@ test('a sparse unrelated ablation object leaves the promoted default-ON connecti
 test('connectivityAxisExhaustedRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
         ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true },
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,

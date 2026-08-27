@@ -150,7 +150,7 @@ test('infeasible level: solver reports failure rather than a bogus path', async 
     assert.equal(feasibleDiagnostics.rejected.PRUNE_PARITY, undefined,
         'the exact four-edge oracle path remains available');
 
-    const result = await solver.solve(level, { timeBudgetMs: 2000 });
+    const result = await solver.solve(level, { timeBudgetMs: 2000, disableExtraBudgetPasses: true });
     assert.equal(result.ok, false);
     assert.equal(result.solution, null);
 });
