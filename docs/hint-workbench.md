@@ -90,7 +90,7 @@ After applying a patch or mutating hints:
 
 ```bash
 npm run levels:generate-heatmaps
-npm run check:hint-validity
+npm run check:level-data-validity
 npm run test:hint-path-oracle
 ```
 
