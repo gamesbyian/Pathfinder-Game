@@ -590,9 +590,16 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     // Unreachable under normal routing (the last rule matches everything); reached directly when
     // STRATEGY_ARCHETYPE_ROUTING is disabled above. Also kept for total-function safety.
     if (!configs) configs = ATTEMPT_POLICY[ATTEMPT_POLICY.length - 1].build(f, cfg);
-    // Ablation: STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE (default-OFF, NEW unvalidated pilot,
-    // 2026-08-26). Applied centrally rather than inline in the rule's build() so the addition is a
-    // single reviewable diff, matching needsRepairFallback's pattern below.
+    // Ablation: STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE (default-ON, promoted 2026-08-27).
+    // Applied centrally rather than inline in the rule's build() so the addition is a single
+    // reviewable diff, matching needsRepairFallback's pattern below.
+    //
+    // Promotion evidence: development A/B +3/-0 (486-level must-cross-heavy sample), same-generator
+    // confirmation +3/-0 on an untouched control-failure residual (confirm-residual-003), and a
+    // cross-generator topology-composition transfer attempt (confirm-transfer-topology-001) that
+    // came back a clean null with zero losses (ceiling-limited by that sample's own 99.7% control
+    // solve rate, not evidence against the mechanism). See
+    // reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md for the full record.
     //
     // docs/solver-optimization-current-queue.md Priority 1's post-976 portfolio rejoin
     // (reports/2026-08-25-post-976-portfolio-exposure-rejoin.md) found `beam:intersectionHarvest@
@@ -610,10 +617,8 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     // why displacing an already-validated protected config is not a free change. The two fuller
     // sibling rules are deliberately NOT touched by this flag: promoting them would need either
     // accepting that displacement or a further reserve-count increase, a second dimension this pilot
-    // does not test. Prespecified for a same-commit fixed-envelope
-    // solver-archetype-sample-ab.yml A/B restricted to must-cross-heavy before any promotion claim;
-    // see the opt-in ledger for disposition once that runs.
-    if (cfg && cfg.STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE === true && isMustCrossFlipperHeavy(f)) {
+    // did not test. See docs/solver-opt-in-experiment-ledger.md for current disposition.
+    if ((!cfg || cfg.STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE) && isMustCrossFlipperHeavy(f)) {
         configs = [...configs, beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE)];
     }
     // Applied centrally (not per-rule) since the feature gate cuts across several archetypes
