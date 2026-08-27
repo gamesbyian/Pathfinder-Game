@@ -1,0 +1,105 @@
+# One-shot diagnostic (delete after use, per .github/workflows/README.md's "One-shot diagnostics"
+# convention): does real GitHub Actions --workers=4 concurrent dispatch change a level's own
+# deterministic node/work trajectory relative to an isolated --workers=1 solve of the identical
+# level and budgets?
+#
+# Direct follow-up to the open question in
+# reports/2026-08-27-mustcross-flipper-wide-beam-exposure-scheduling-gap-part-2.md: confirm-
+# residual-002's sealed report (built under standard --workers=4 production concurrency) showed
+# dfs:objectiveFirst/dfs:intersectionHarvest consuming measurably more nodes than two independent
+# --workers=1 reproductions of the identical level+options. A local sandbox investigation (this same
+# branch) could not reproduce any node/work variance at --workers=4 -- even under deliberately
+# induced CPU oversubscription reproducing the exact historically-measured ~37-43k nodes/sec
+# contended throughput -- so this workflow tests the ACTUAL production runner (standard
+# ubuntu-latest, 4 vCPU, matching .github/workflows/README.md's "Scheduling defaults"), which the
+# local sandbox cannot represent.
+#
+# Levels are drawn from the existing local stress corpus (pos:3,4,7,9 of stress-levels-random.json
+# -- R00044/R00046/R00073/R00082), already confirmed locally to run substantial (15-30s+ per
+# attempt uncontended) repair-probe and dfs:objectiveFirst/intersectionHarvest attempts at this
+# node budget -- no need for a fresh corpus/pool.
+name: Worker-pool concurrency determinism diagnostic (one-shot)
+
+on:
+  workflow_dispatch:
+    inputs:
+      levels:
+        description: 'Level spec (level-blind-capability-sweep.mjs --levels syntax).'
+        required: false
+        default: 'pos:3,4,7,9'
+      node_budget:
+        description: 'Per-level node ceiling.'
+        required: false
+        default: '8000000'
+      budget_ms:
+        description: 'Per-level wall budget. Non-binding default, matches local reproduction.'
+        required: false
+        default: '1800000'
+
+jobs:
+  solve:
+    name: Solve at workers=${{ matrix.workers }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        workers: [1, 4]
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Report runner CPU count
+        run: node -e "console.log('cpus:', require('node:os').cpus().length)"
+
+      - name: Run level-blind capability sweep
+        shell: bash
+        run: |
+          mkdir -p logs/worker-pool-concurrency-diag
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels="${{ inputs.levels }}" \
+            --budget-ms="${{ inputs.budget_ms }}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --work-budget="${work}" \
+            --workers="${{ matrix.workers }}" \
+            --attempt-budget-telemetry \
+            --out="logs/worker-pool-concurrency-diag/workers-${{ matrix.workers }}.json" \
+            --summary-out="logs/worker-pool-concurrency-diag/workers-${{ matrix.workers }}-summary.md"
+
+      - name: Print per-attempt telemetry for the diagnostic (readable directly from job logs)
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('node:fs');
+          const j = JSON.parse(fs.readFileSync('logs/worker-pool-concurrency-diag/workers-${{ matrix.workers }}.json', 'utf8'));
+          for (const r of j.levels) {
+            console.log('=== LEVEL', r.id, 'ok=' + r.ok, 'status=' + r.status, 'nodesExpanded=' + r.nodesExpanded, 'totalMs=' + r.totalMs);
+            for (const a of (r.attempts || [])) {
+              console.log('  ATTEMPT', a.actionKey, 'nodesExpanded=' + a.nodesExpanded, 'workSpent=' + a.workSpent, 'elapsedMs=' + a.elapsedMs, 'allocatedBudgetMs=' + a.allocatedBudgetMs, 'allocatedNodeCeiling=' + a.allocatedNodeCeiling, 'allocatedWorkCeiling=' + a.allocatedWorkCeiling, 'outcome=' + a.outcome);
+            }
+          }
+          "
+
+      - name: Upload run artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worker-pool-concurrency-diag-workers-${{ matrix.workers }}
+          path: logs/worker-pool-concurrency-diag/
+          if-no-files-found: error
+          retention-days: 14
