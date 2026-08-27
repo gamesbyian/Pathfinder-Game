@@ -541,7 +541,11 @@ jobs:
           for arm in control treatment; do
             mkdir -p "logs/solver-residual-confirmation-${arm}"
             cp -a "artifact-staging/${arm}/." "logs/solver-residual-confirmation-${arm}/"
-            FILES=$(ls logs/solver-residual-confirmation-${arm}/phase2-batch-*.json 2>/dev/null | paste -sd, -)
+            # Excludes the *-flags.json provenance file this workflow also writes per shard (added
+            # 2026-08-27 alongside the matrix.shard.arm fix) -- it matches the same phase2-batch-*.json
+            # glob but is {idx,arm,resolvedFlags}, not a {summary,levels} sweep report, and made this
+            # combine step fail outright the first time confirm-residual-003 ran against the fix.
+            FILES=$(ls logs/solver-residual-confirmation-${arm}/phase2-batch-*.json 2>/dev/null | grep -v -- '-flags\.json$' | paste -sd, -)
             [ -n "$FILES" ] && npm run solver:combine-corpus2-batches -- --allow-mixed-corpora --in="${FILES}" --out="reports/stress/residual-confirmation-phase2-${arm}.json"
           done
 
