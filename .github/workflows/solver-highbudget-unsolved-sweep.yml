@@ -73,12 +73,12 @@ jobs:
       shard_count: ${{ steps.plan.outputs.shard_count }}
     steps:
       - name: Check out main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -109,7 +109,7 @@ jobs:
           echo "shard_count=$(jq '.shard | length' logs/solver-highbudget-sweep/shard-plan.json)" >> "$GITHUB_OUTPUT"
 
       - name: Upload the shard plan for traceability
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: highbudget-shard-plan
           path: logs/solver-highbudget-sweep/shard-plan.json
@@ -132,12 +132,12 @@ jobs:
       matrix: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
       - name: Check out main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -246,7 +246,7 @@ jobs:
 
       - name: Upload this shard's staged results as an artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: highbudget-shard-${{ matrix.shard.idx }}
           path: artifact-staging/highbudget-shard-${{ matrix.shard.idx }}
@@ -281,13 +281,13 @@ jobs:
       contents: write
     steps:
       - name: Check out main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -314,7 +314,7 @@ jobs:
           mkdir -p logs/solver-highbudget-sweep
 
       - name: Download every shard's artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: 'highbudget-shard-*'
           path: artifact-staging/downloaded
