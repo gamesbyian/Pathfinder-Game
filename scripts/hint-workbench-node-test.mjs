@@ -337,7 +337,7 @@ async function main() {
         // The synthetic fixture deliberately carries a persistent id, so this exercises the
         // id-keyed hint artifact path without coupling CLI correctness to any published level.
         assert.ok(writeReport.writes.changedFiles.some(filePath => filePath.endsWith('hints/P00001.json')));
-        assert.ok(writeReport.writes.postWriteReminders.includes('npm run check:hint-validity'));
+        assert.ok(writeReport.writes.postWriteReminders.includes('npm run check:level-data-validity'));
         const fixtureHints = JSON.parse(await readFile(path.join(fixtureDir, 'hints/P00001.json'), 'utf8'));
         assert.equal(fixtureHints.schemaVersion, 3);
         assert.ok(fixtureHints.hints.length > sourceHintCount);
