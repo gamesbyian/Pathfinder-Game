@@ -78,6 +78,25 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:node:fast
+        env:
+          PATHFINDER_SKIP_NPM_SCRIPTS: >-
+            test:plan-ab-corpus-shards,test:technique-campaign-analysis,test:technique-census-second-order
+
+  node-tests-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Run evidence-dependent Node harnesses
+        run: >-
+          node scripts/run-scripts-parallel.mjs
+          test:plan-ab-corpus-shards
+          test:technique-campaign-analysis
+          test:technique-census-second-order
 
   build:
     runs-on: ubuntu-latest
