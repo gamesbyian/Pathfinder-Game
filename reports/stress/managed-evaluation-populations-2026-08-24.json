@@ -129,8 +129,8 @@
     {
       "id": "confirm-residual-002",
       "role": "confirmation-residual-twophase",
-      "status": "in-flight",
-      "exposureState": "RESERVED",
+      "status": "spent",
+      "exposureState": "SPENT",
       "outcomeConditioned": false,
       "independentUnit": "level",
       "phase1PoolCount": 1200,
@@ -144,7 +144,9 @@
       "reservationRationale": "confirm-residual-001 found a real archetype-eligible population (25/520) but zero participation due to a scheduling gap in MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (protected the NODE-budget dimension only, not WORK). That gap is now fixed (2026-08-26, orchestration.ts's mainLoopEarlyWorkBudget/earlyGateWorkBudget). This cohort reruns the identical design against the fixed scheduler to isolate that one changed variable -- a fresh identity is required per the confirmation contract since confirm-residual-001's own residual composition already informed this candidate's diagnosis and cannot be reused.",
       "materializationTool": ".github/workflows/solver-residual-confirmation.yml (dispatched with cohort_id=confirm-residual-002, master_seed=2026082702, id_prefix=K, pool_count=1200, enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE, node_budget=50000000)",
       "aggregateRuns": [33020293451],
-      "spentAt": null,
+      "verdict": "inconclusive-non-participating",
+      "resultSummary": "Byte-identical to confirm-residual-001 despite the intervening 2026-08-26 WORK-budget reserve fix (PR #1506): 0/26 archetype-eligible-and-residual rows show any attempt of the candidate's two new beam configs (newCandidateConfigAttempts=0 on all 26, per scripts/stress/confirm-residual-001-archetype-audit.mjs). Live instrumentation (temporary console.error telemetry in runGateSerialAttempts, plus a --debug-main-loop flag threaded through the real level-blind-capability-sweep.mjs, both reverted after use) proved the 2026-08-26 fix's scheduling LOGIC is correct: a --workers=1 re-solve of the real row K00131 through the actual worker-pool dispatch path shows both new configs dispatching with a genuine, non-starved exhausted outcome and valid escalating node/work ceilings. But the real sealed confirm-residual-002 report (built under the standard --workers=4 production concurrency) shows the SAME two preceding unprotected DFS configs consuming measurably more nodes under real concurrency (16,013,766 / 11,371,082) than in two independently-reproduced --workers=1 runs of the identical level+options (9,291,718 / 9,730,890 each time) -- enough extra consumption to exhaust the gate's work budget before the protected window is reached. The barrier has shifted from a fixable scheduler-logic gap to an unexplained, concurrency-correlated variance in the search's own node/work consumption -- plausibly tied to modules/solver/search.ts's DFS/beam stop condition including a wall-clock (Date.now()-startTime>=budgetMs) leg, or to scripts/solver-worker-pool.mjs reusing the same forked worker process (and its one long-lived Solver instance) across many sequentially-dispatched levels, though neither was confirmed with certainty. See reports/2026-08-27-mustcross-flipper-wide-beam-exposure-scheduling-gap-part-2.md. Not evidence against the candidate -- do not promote or close negative. Do not commission a fifth cohort under standard --workers=4 concurrency until the concurrency-sensitivity is separately understood; it would very likely repeat this exact result for the same unresolved reason.",
+      "spentAt": "2026-08-27",
       "successor": null,
       "predecessor": "confirm-residual-001"
     },

@@ -881,22 +881,9 @@ async function runGateSerialAttempts(
             const configNodeBudget = latePairIndex >= 0
                 ? earlyConfigNodeBudget + Math.floor((nodeBudget - earlyConfigNodeBudget) * (latePairIndex + 1) / latePairCount)
                 : earlyConfigNodeBudget;
-            // TEMP DIAGNOSTIC (2026-08-27, remove before merge) — confirm-residual-002 investigation.
-            if ((prep as any)._debugMainLoop) {
-                console.error(JSON.stringify({
-                    dbgGateSerial: true, gi, ci, latePairIndex, lateConfigStart, lateConfigCount, latePairCount,
-                    nodeBudget, earlyConfigNodeBudget, configNodeBudget,
-                    nodesExpanded: prep._metrics ? prep._metrics.nodesExpanded : 0,
-                    gateBudget, earlyGateWorkBudget,
-                    elapsedWork: prep._workMeter.units - gateStartUnits,
-                    workSpentTotal: prep._workMeter.units - workStart,
-                    profileName: baseConfigs[ci].profileName, beamWidth: baseConfigs[ci].beamWidth ?? null,
-                }));
-            }
             if (earlyConfigNodeBudget < nodeBudget && (prep._metrics ? prep._metrics.nodesExpanded : 0) >= configNodeBudget) {
                 if (ci < lateConfigStart) { earlyNodeBudgetReached = true; continue; }
                 if (latePairIndex + 1 < latePairCount) continue;
-                if ((prep as any)._debugMainLoop) console.error(JSON.stringify({ dbgGateSerial: true, gi, ci, stop: 'node-return' }));
                 return { solution: null, attempts, earlyNodeBudgetReached, earlyWorkBudgetReached };
             }
             const configWorkBudget = latePairIndex >= 0
@@ -906,13 +893,9 @@ async function runGateSerialAttempts(
             if (earlyGateWorkBudget < gateBudget && elapsed >= configWorkBudget) {
                 if (ci < lateConfigStart) { earlyWorkBudgetReached = true; continue; }
                 if (latePairIndex + 1 < latePairCount) continue;
-                if ((prep as any)._debugMainLoop) console.error(JSON.stringify({ dbgGateSerial: true, gi, ci, stop: 'work-return', elapsed, configWorkBudget }));
                 return { solution: null, attempts, earlyNodeBudgetReached, earlyWorkBudgetReached };
             }
-            if (elapsed >= gateBudget) {
-                if ((prep as any)._debugMainLoop) console.error(JSON.stringify({ dbgGateSerial: true, gi, ci, stop: 'flat-break', elapsed, gateBudget }));
-                break;
-            }
+            if (elapsed >= gateBudget) break;
 
             const remaining = configWorkBudget - elapsed;
             const attemptsLeft = baseConfigs.length - ci;
@@ -1620,8 +1603,6 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     if (prep._strictWorkCap !== undefined) prep._workCap = prep._strictWorkCap;
     prep._attemptBudgetTelemetry = opts.attemptBudgetTelemetry === true || opts.lifecycleTelemetry === true
         || opts.strictTotalWorkBudget === true;
-    // TEMP DIAGNOSTIC (2026-08-27, remove before merge) — confirm-residual-002 investigation.
-    (prep as any)._debugMainLoop = (opts as any).debugMainLoop === true;
     if (opts.attemptSearchForTesting) testAttemptDispatches.set(prep, opts.attemptSearchForTesting);
     const gateKeys = Array.isArray(level.gateKeys) ? level.gateKeys : [];
 

@@ -41,8 +41,6 @@ const saveHints = flags.has('--save-hints');
 const strictTotalWorkBudget = flags.has('--strict-total-work-budget');
 const attemptBudgetTelemetry = flags.has('--attempt-budget-telemetry');
 const lifecycleTelemetry = flags.has('--lifecycle-telemetry');
-// TEMP DIAGNOSTIC (2026-08-27, remove before merge) — confirm-residual-002 investigation.
-const debugMainLoop = flags.has('--debug-main-loop');
 const runStartedAt = new Date().toISOString();
 const mainLoopLateReserveFraction = argMap.has('--main-loop-late-reserve-fraction')
     ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
@@ -149,7 +147,6 @@ if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
 if (strictTotalWorkBudget) solveOpts.strictTotalWorkBudget = true;
 if (attemptBudgetTelemetry) solveOpts.attemptBudgetTelemetry = true;
 if (lifecycleTelemetry) solveOpts.lifecycleTelemetry = true;
-if (debugMainLoop) solveOpts.debugMainLoop = true;
 if (Number.isFinite(mainLoopLateReserveFraction)) solveOpts.mainLoopLateReserveFractionOverride = mainLoopLateReserveFraction;
 if (Number.isFinite(mainLoopLateReserveConfigCount)) solveOpts.mainLoopLateReserveConfigCountOverride = mainLoopLateReserveConfigCount;
 if (Number.isFinite(admissibleOrderNodeReserveFraction)) solveOpts.admissibleOrderNodeReserveFractionOverride = admissibleOrderNodeReserveFraction;
