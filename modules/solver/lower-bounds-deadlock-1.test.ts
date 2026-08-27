@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 
-import { runDeadlockSoundnessRoot } from './lower-bounds-test-support.js';
+import { runDeadlockSoundnessRoot } from './lower-bounds-test-support.test.js';
 
 const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 
