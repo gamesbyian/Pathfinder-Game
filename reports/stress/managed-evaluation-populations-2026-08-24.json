@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "createdAt": "2026-08-24",
-  "updatedAt": "2026-08-26",
+  "updatedAt": "2026-08-27",
   "sourceCommit": "4f2b2b143ee2bc194b8e017fcc59a680b9ee8d92",
   "generator": {
     "path": "scripts/stress/generate-random.mjs",
@@ -147,8 +147,32 @@
       "verdict": "inconclusive-non-participating",
       "resultSummary": "Byte-identical to confirm-residual-001 despite the intervening 2026-08-26 WORK-budget reserve fix (PR #1506): 0/26 archetype-eligible-and-residual rows show any attempt of the candidate's two new beam configs (newCandidateConfigAttempts=0 on all 26, per scripts/stress/confirm-residual-001-archetype-audit.mjs). Live instrumentation (temporary console.error telemetry in runGateSerialAttempts, plus a --debug-main-loop flag threaded through the real level-blind-capability-sweep.mjs, both reverted after use) proved the 2026-08-26 fix's scheduling LOGIC is correct: a --workers=1 re-solve of the real row K00131 through the actual worker-pool dispatch path shows both new configs dispatching with a genuine, non-starved exhausted outcome and valid escalating node/work ceilings. But the real sealed confirm-residual-002 report (built under the standard --workers=4 production concurrency) shows the SAME two preceding unprotected DFS configs consuming measurably more nodes under real concurrency (16,013,766 / 11,371,082) than in two independently-reproduced --workers=1 runs of the identical level+options (9,291,718 / 9,730,890 each time) -- enough extra consumption to exhaust the gate's work budget before the protected window is reached. The barrier has shifted from a fixable scheduler-logic gap to an unexplained, concurrency-correlated variance in the search's own node/work consumption -- plausibly tied to modules/solver/search.ts's DFS/beam stop condition including a wall-clock (Date.now()-startTime>=budgetMs) leg, or to scripts/solver-worker-pool.mjs reusing the same forked worker process (and its one long-lived Solver instance) across many sequentially-dispatched levels, though neither was confirmed with certainty. See reports/2026-08-27-mustcross-flipper-wide-beam-exposure-scheduling-gap-part-2.md. Not evidence against the candidate -- do not promote or close negative. Do not commission a fifth cohort under standard --workers=4 concurrency until the concurrency-sensitivity is separately understood; it would very likely repeat this exact result for the same unresolved reason.",
       "spentAt": "2026-08-27",
-      "successor": null,
+      "successor": "confirm-residual-003",
       "predecessor": "confirm-residual-001"
+    },
+    {
+      "id": "confirm-residual-003",
+      "role": "confirmation-residual-twophase",
+      "status": "reserved",
+      "exposureState": "LOCKED",
+      "outcomeConditioned": false,
+      "independentUnit": "level",
+      "phase1PoolCount": 1200,
+      "phase1MasterSeed": 2026082703,
+      "phase1IdPrefix": "L",
+      "generatorMode": "uniform-random-raised-caps",
+      "phase1Description": "Identical design to confirm-residual-001/002: generate a fresh 1,200-level pool (master seed 2026082703, id prefix L -- never used by a prior cohort), run the CONTROL ladder alone across it at the same node_budget=50000000 envelope, freeze the control-failure subset as the phase-2 residual corpus.",
+      "phase2Description": "Run BOTH control and treatment (enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE) on the frozen phase-1 residual corpus only, same node_budget=50000000 envelope, same as confirm-residual-001/002.",
+      "candidate": "STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE (identical to confirm-residual-001/002's)",
+      "selectionRule": "Same pre-outcome-neutral phase-1 control-failure selection rule as confirm-residual-001/002.",
+      "reservationRationale": "confirm-residual-002 reran the identical design against the fixed WORK-budget reserve scheduler and came back byte-identical to confirm-residual-001 again -- not a scheduling-logic gap this time, but a real, concurrency-correlated variance in the search's own node/work consumption under standard --workers=4 dispatch (see reports/2026-08-27-mustcross-flipper-wide-beam-exposure-scheduling-gap-part-2.md). reports/2026-08-27-worker-pool-concurrency-determinism-diagnosis.md subsequently closed the GENERAL concurrency-determinism hypothesis negative: --workers=1 vs --workers=4 produced byte-identical results across 258 attempts on 4 repair-probe- and dfs:objectiveFirst/intersectionHarvest-heavy levels, both locally (including under deliberately induced contention matching the historically measured contended throughput) and on the actual GitHub Actions production runner class. confirm-residual-002's standing caution against a standard-concurrency fifth cohort no longer applies. A fresh identity is required per the confirmation contract since confirm-residual-001/002's own residual composition already informed this candidate's diagnosis.",
+      "materializationTool": ".github/workflows/solver-residual-confirmation.yml (dispatched with cohort_id=confirm-residual-003, master_seed=2026082703, id_prefix=L, pool_count=1200, enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE, node_budget=50000000, workers=4)",
+      "aggregateRuns": [],
+      "verdict": null,
+      "resultSummary": null,
+      "spentAt": null,
+      "successor": null,
+      "predecessor": "confirm-residual-002"
     },
     {
       "id": "transfer-envelope-001",
