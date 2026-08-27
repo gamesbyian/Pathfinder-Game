@@ -165,6 +165,7 @@ async function main() {
 
         const rejectionOutput = path.join(tempDir, 'rejections-report.json');
         await runWorkbench([
+            `--levels-json=${levelsPath}`,
             '--levels=pos:1',
             '--include=enumeration',
             '--policy=audit-only',
@@ -181,6 +182,7 @@ async function main() {
 
         const includeOutput = path.join(tempDir, 'include-report.json');
         await runWorkbench([
+            `--levels-json=${levelsPath}`,
             '--levels=pos:1',
             '--include=enumeration',
             '--policy=audit-only',
