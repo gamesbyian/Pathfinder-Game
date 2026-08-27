@@ -55,10 +55,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Node harnesses consume committed reports and standing stress corpora, but not historical logs.
+          # Node harnesses validate three committed large-tree fixtures. Keep those exact evidence
+          # paths while avoiding unrelated historical logs/reports/stress artifacts.
           sparse-checkout: |
             /*
             !/logs/
+            !/reports/*
+            /reports/experiments/
+            !/reports/experiments/*
+            /reports/experiments/2026-08-13-technique-tuning/
+            /reports/stress/
+            !/reports/stress/*
+            /reports/stress/technique-census/
+            !/reports/stress/technique-census/*
+            /reports/stress/technique-census/32240161854/
+            !/data/stress/*
+            /data/stress/stress-levels.json
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
