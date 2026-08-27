@@ -226,6 +226,29 @@ jobs:
       - run: npm ci
       - run: npm run ci
 
+  # TEMPORARY benchmark: decompose the second-order census validator. Remove before merge.
+  census-unit-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/technique-census-second-order-node-test.mjs
+
+  census-generated-check-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/technique-census-second-order.mjs --check
+
   deep-verification:
     runs-on: ubuntu-latest
     steps:
