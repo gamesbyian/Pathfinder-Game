@@ -17,6 +17,16 @@
 # names for keeping generic plumbing instead of re-authoring or re-deleting it again -- see
 # docs/solver-research-operating-model.md rule 12 and AGENTS.md rule 4.
 #
+# GENERATOR CHOICE (added 2026-08-27 alongside docs/solver-evaluation-evidence.md): `generator=random`
+# (default) uses generate-random.mjs, the witness-first family Corpus 2 also uses -- same-generator
+# confirmation, not cross-generator transfer. `generator=topology` uses generate-topology.mjs, whose
+# macro-maze/module construction does not call generateWitness() -- use this for cross-generator
+# transfer/challenge evidence after a candidate has already earned that expense. Check
+# docs/solver-evaluation-evidence.md#suitability-and-expansion-gate before a topology-generator
+# decision-bearing dispatch: the v0.1 generator omits portals, static filters, surround,
+# adjacent-turn, and multi-gate levels, so it cannot support a claim that depends on those mechanics.
+# `envelope_caps` only applies to `generator=random`.
+#
 # Durable confirmation contract this workflow implements (see the cohort-reservation report's
 # "Durable confirmation contract" section for the full human-side protocol this only partly
 # automates -- freezing the candidate/gate BEFORE dispatch, and reading the aggregate verdict
@@ -53,8 +63,12 @@ on:
         description: 'Number of levels to generate.'
         required: false
         default: '256'
+      generator:
+        description: '"random" (default, generate-random.mjs -- same-generator confirmation) or "topology" (generate-topology.mjs -- cross-generator transfer/challenge; see docs/solver-evaluation-evidence.md#suitability-and-expansion-gate first).'
+        required: false
+        default: 'random'
       envelope_caps:
-        description: 'true generates the in-envelope stratum (documented per-level maxima) instead of the default raised-cap stratum.'
+        description: 'true generates the in-envelope stratum (documented per-level maxima) instead of the default raised-cap stratum. Only applies to generator=random.'
         required: false
         default: 'false'
       enable_flags:
@@ -123,12 +137,20 @@ jobs:
         shell: bash
         run: |
           mkdir -p logs/solver-broad-confirmation
-          node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
-            --count="${{ inputs.count }}" \
-            --master-seed="${{ inputs.master_seed }}" \
-            --id-prefix="${{ inputs.id_prefix }}" \
-            ${{ inputs.envelope_caps == 'true' && '--envelope-caps' || '' }} \
-            --out="logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json"
+          if [ "${{ inputs.generator }}" = "topology" ]; then
+            node scripts/run-bundled.mjs scripts/stress/generate-topology.mjs \
+              --count="${{ inputs.count }}" \
+              --master-seed="${{ inputs.master_seed }}" \
+              --id-prefix="${{ inputs.id_prefix }}" \
+              --out="logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json"
+          else
+            node scripts/run-bundled.mjs scripts/stress/generate-random.mjs \
+              --count="${{ inputs.count }}" \
+              --master-seed="${{ inputs.master_seed }}" \
+              --id-prefix="${{ inputs.id_prefix }}" \
+              ${{ inputs.envelope_caps == 'true' && '--envelope-caps' || '' }} \
+              --out="logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json"
+          fi
 
       - name: Seal the generated artifact
         id: seal
@@ -138,7 +160,7 @@ jobs:
           COUNT=$(node -e "const l=require('./logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json'); console.log((Array.isArray(l)?l:l.levels).length)")
           echo "sha256=${SHA}" >> "$GITHUB_OUTPUT"
           echo "total_levels=${COUNT}" >> "$GITHUB_OUTPUT"
-          echo "Sealed logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json: sha256=${SHA}, ${COUNT} levels, commit=${{ github.sha }}, master_seed=${{ inputs.master_seed }}, id_prefix=${{ inputs.id_prefix }}, envelope_caps=${{ inputs.envelope_caps }}"
+          echo "Sealed logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json: sha256=${SHA}, ${COUNT} levels, commit=${{ github.sha }}, generator=${{ inputs.generator }}, master_seed=${{ inputs.master_seed }}, id_prefix=${{ inputs.id_prefix }}, envelope_caps=${{ inputs.envelope_caps }}"
 
       - name: Upload the sealed cohort
         uses: actions/upload-artifact@v4
@@ -365,7 +387,7 @@ jobs:
           const lost = [...controlSolved].filter(id => !treatmentSolved.has(id)).sort();
           const workOf = rows => rows.reduce((n, x) => n + (x.workSpent || 0), 0);
           const controlWork = workOf(control), treatmentWork = workOf(treatment);
-          console.log('cohort=${{ inputs.cohort_id }} enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} ref=${{ github.sha }} sha256=${{ needs.generate.outputs.levels_sha256 }}');
+          console.log('cohort=${{ inputs.cohort_id }} generator=${{ inputs.generator }} enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} ref=${{ github.sha }} sha256=${{ needs.generate.outputs.levels_sha256 }}');
           console.log(\`control solved: \${controlSolved.size}/\${control.length}, work=\${controlWork}\`);
           console.log(\`treatment solved: \${treatmentSolved.size}/\${treatment.length}, work=\${treatmentWork} (\${(100*(treatmentWork-controlWork)/controlWork).toFixed(2)}% vs control)\`);
           console.log(\`gained (\${gained.length}): \` + gained.join(','));
