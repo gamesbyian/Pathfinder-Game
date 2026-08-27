@@ -13,10 +13,10 @@ permissions:
 # `node-tests-fast`, and `build` are the PR-blocking fast gate — each is independent (no `needs:`
 # between them), so they run on separate runners in parallel instead of serially on one, and each
 # stays well clear of the CPU oversubscription that made running them concurrently on ONE runner
-# flaky (see scripts/run-scripts-parallel.mjs's header comment). `deep-verification` mirrors local
-# `npm run ci` byte-for-byte (full Vitest coverage + every Node validator, including the handful of
-# genuinely expensive solver-proof tests the fast jobs skip via SOLVER_DEEP_TESTS=0) and runs in
-# parallel alongside them rather than after them — slower, but never on the critical path.
+# flaky (see scripts/run-scripts-parallel.mjs's header comment). The workflow as a whole covers the
+# same check + full Vitest coverage/deep tests + Node-validator graph as local `npm run ci`, but
+# `deep-verification` owns only the full Vitest coverage/deep-test leg. Re-running `check` and
+# `test:node` serially inside that job only duplicated sibling jobs and lengthened the critical path.
 jobs:
   checks:
     runs-on: ubuntu-latest
@@ -71,4 +71,4 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - run: npm run ci
+      - run: npm run test:coverage
