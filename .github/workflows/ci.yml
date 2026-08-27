@@ -72,6 +72,8 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
+      - name: Dependency advisory diagnostic
+        run: npm audit --json || true
       - run: npm run check:lint
 
   node-tests:
