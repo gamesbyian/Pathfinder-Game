@@ -116,7 +116,7 @@ import {
   mcForcedNeighborLevel,
   exactRemainingCost,
   exactCostToRequiredCell,
-} from './lower-bounds.test-support.js';
+} from './lower-bounds-test-support.js';
 
 test('mustPassLowerBound is Infinity (prune fires) when the objective is sealed off', () => {
   const sealed = wireLevel({
