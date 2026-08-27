@@ -589,7 +589,10 @@ function r02560Level() {
         hints: [],
     });
 }
-const R02560_NODE_BUDGET = 900_000;
+// Historical characterization records the enabled solve at exactly 803,000 nodes. Keep a
+// deterministic margin above that known convergence point while making the equally bounded
+// disabled control prove its failure with less irrelevant tail work.
+const R02560_NODE_BUDGET = 825_000;
 
 // The single most expensive test in this file (~15s): a real regression rescue against a real
 // published level within a real node budget. The cost of actually spending that budget is what's
