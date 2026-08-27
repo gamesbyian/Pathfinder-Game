@@ -23,9 +23,11 @@ A materially different scorer candidate needs new evidence and a different mecha
 
 ### Fused move/state kernel
 
-**Nominated by the 2026-08-27 beam cost breakdown.** The existing `PF_BEAM_DEBUG=1` counters, run on three independent 24-level hard-Corpus-2 stride samples plus the full published corpus, show candidate generation/apply/undo (`getNeighbors`/`pruneFirstStepNeighbors`/`buildCurUrgencyContext`/`applyMove`/`undoMove`/`scoreMove`, disjoint from the nested connectivity timer) at 46.5-55.3% of instrumented beam time on every workload — 2-4x connectivity (16.6-27.2%) and replay (12.3-16.2%). See [`../reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md`](../reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md).
+**Nominated by the 2026-08-27 beam cost breakdown, tested, CLOSED NEGATIVE the same day.** The existing `PF_BEAM_DEBUG=1` counters, run on three independent 24-level hard-Corpus-2 stride samples plus the full published corpus, showed candidate generation/apply/undo at 46.5-55.3% of instrumented beam time on every workload — 2-4x connectivity (16.6-27.2%) and replay (12.3-16.2%). See [`../reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md`](../reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md).
 
-Test a fused JS kernel using fixed neighbor slots, dense mechanic metadata, direct legality/state updates, and primitive undo storage. This asks whether general candidate/undo representations can disappear from the hot loop; it is not another `UndoToken` pooling experiment. Use the closed scorer pilot's exact evaluation protocol (deterministic node budget, non-binding wall deadline, byte-identical `id:solved:nodes` signatures required before timing is interpreted, interleaved reps on both published and hard-Corpus-2 workloads) — that pilot is the concrete precedent that a materially-hot bucket does not automatically translate into recovered end-to-end wall time once V8's own optimization is accounted for, so setup/dispatch cost and representative short/long workloads both matter here too.
+A bounded pilot then eligibility-gated (no must-pass/must-cross/portal/flipper/landmark mechanics, production config, non-research — the only shape where every mechanic branch inside `applyMove`/`evaluatePrunedMove`/`undoMove` is provably dead) inline replacement using fixed candidate-loop code, direct state mutation, and primitive (non-allocating, non-closure) undo storage instead of a per-candidate `UndoToken` object — genuinely different from the already-closed `UndoToken`-pooling form, which still allocated/reused an object. It preserved every solve/node trace exactly (byte-identical on the eligible-level A/B and on the full 160-level `solver:bench --check`) but was **+3.13% slower** (geometric mean, slower in every one of 5 reps) on the 24 published levels that engage it, and effectively flat/noisy (-0.11%) on the 4 Corpus-2 levels that do — only 24/160 published and 4/1700 Corpus-2 levels are ever eligible for this exact mechanic-free shape. See [`../reports/2026-08-27-fused-plain-candidate-kernel-pilot.md`](../reports/2026-08-27-fused-plain-candidate-kernel-pilot.md).
+
+Close this exact branch-inlining form: V8's existing generic dispatch (monomorphic inline caching on the stable-shape `UndoToken`, nursery-allocation GC) is evidently cheaper than the branch/verdict-computation overhead a hand-inlined replacement adds, reinforcing the closed scorer pilot's own conclusion from a different angle. A materially different fused-kernel candidate needs a different mechanism than "delete/inline the same dead branches a different way" — e.g. fixed neighbor slots to avoid `getNeighbors`'s per-node array allocation (untouched by this pilot), or batching work across candidates rather than fusing one candidate's apply/evaluate/undo cycle at a time — not a wider eligibility gate or more tuning of this same approach. Use the closed scorer pilot's exact evaluation protocol (deterministic node budget, non-binding wall deadline, byte-identical `id:solved:nodes` signatures required before timing is interpreted, interleaved reps on the actual eligible-level population) for any such descendant.
 
 ### Dense level-local indexing
 
@@ -71,6 +73,7 @@ Do not retest without new profile evidence:
 - naive six-array `prepLevel()` dense conversion with independent `denseIndex()` calls at each reader: hard Corpus-2 sample regressed about 2.82%;
 - pre-resolving ordinary ablation gates while retaining the same scorer;
 - static plain/default/no-template scorer specialization that only deletes impossible scoring branches: deterministic parity held, but published was about 0.91% slower and the hard Corpus-2 sample was effectively flat (-0.05%);
+- eligibility-gated fused plain-candidate move/state kernel (inlined `applyMove`/`evaluatePrunedMove`/`undoMove` with primitive, non-allocating undo storage, for the same mechanic-free shape): deterministic parity held on every eligible level in both corpora, but published (the 24 eligible levels) was about 3.13% slower in all 5 measured reps and Corpus-2 (the 4 eligible levels) was flat/noisy (-0.11%);
 - custom hash tables merely because native `Map` looks high-level: numeric-keyed `Map` matched/beat the measured custom form.
 
 Dated reports retain exact measurements.
@@ -88,7 +91,7 @@ The August 23 work already:
 
 1. Current-HEAD profile complete: hard-beam work remains the largest named bucket; the static scorer specialization it nominated is closed negative.
 2. **Done (2026-08-27):** the existing debug-only beam breakdown, run on the hard Corpus-2 workload plus published, separated replay/candidate-generation/connectivity/dedup/sort. Candidate generation/apply/undo dominates (46.5-55.3%) on every workload; connectivity and replay are real but clearly secondary.
-3. **Current step:** run one bounded fused-JS move/state-kernel pilot (candidate generation/apply/undo dominated). Replay/state-materialization stays closed — it was measured present but not dominant, not merely unmeasured.
+3. **Done (2026-08-27), closed negative:** the bounded fused-JS move/state-kernel pilot (candidate generation/apply/undo dominated, so it was earned) preserved every decision but was measurably slower on the levels it could engage. Replay/state-materialization stays closed — it was measured present but not dominant, not merely unmeasured. Do not retest this exact branch-inlining form; a descendant needs a different mechanism (fixed neighbor slots, batched candidates) per the pilot report.
 4. Extend dense indexing only for measured hot structures; do not repeat the naive six-array form.
 5. Touch work-meter/secondary overhead only if measured.
 6. Reopen native/WASM only if a new compact boundary clears the gate above.
@@ -114,6 +117,7 @@ Keep policy and kernel effects separable. Scheduler decisions use machine-indepe
 
 ## Evidence anchors
 
+- [`../reports/2026-08-27-fused-plain-candidate-kernel-pilot.md`](../reports/2026-08-27-fused-plain-candidate-kernel-pilot.md)
 - [`../reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md`](../reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md)
 - [`../reports/2026-08-26-current-head-specialized-scorer-pilot.md`](../reports/2026-08-26-current-head-specialized-scorer-pilot.md)
 - [`../reports/2026-08-26-dense-index-architecture-followup.md`](../reports/2026-08-26-dense-index-architecture-followup.md)
