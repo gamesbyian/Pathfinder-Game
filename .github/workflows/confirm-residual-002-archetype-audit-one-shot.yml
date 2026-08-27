@@ -1,0 +1,84 @@
+# ONE-SHOT diagnostic, delete after use (see AGENTS.md / solver-research-operating-model.md rule
+# 12 on retaining one-off workflows only for repeated value).
+#
+# confirm-residual-002 was dispatched against the fixed main-loop late-reserve scheduler (see
+# orchestration.ts's mainLoopEarlyWorkBudget/earlyGateWorkBudget, merged in #1506) specifically to
+# retest STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE after confirm-residual-001's scheduling-gap
+# diagnosis. The real run (33020293451) still came back byte-identical work on the 533-level
+# residual (0/533 both arms) -- before concluding the fix did not help, this workflow answers
+# directly whether the residual contains archetype-eligible rows at all, and if so whether the new
+# candidate configs are now actually being dispatched (even if they still don't yield a solve),
+# by downloading that run's own sealed pool and phase-1/phase-2 report artifacts (via
+# download-artifact's cross-run run-id input) and running
+# scripts/stress/confirm-residual-001-archetype-audit.mjs (durable, generic tooling -- kept for
+# exactly this reuse) against them.
+
+name: confirm-residual-002 archetype audit (one-shot)
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'The solver-residual-confirmation.yml run to pull artifacts from.'
+        required: true
+        default: '33020293451'
+      dump_id:
+        description: 'Optional level id to dump the full attempt sequence for (leave blank for summary only).'
+        required: false
+        default: ''
+
+jobs:
+  audit:
+    name: Audit archetype composition of the frozen residual
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download the sealed phase-1 pool from the source run
+        uses: actions/download-artifact@v4
+        with:
+          name: residual-confirmation-pool
+          path: audit-download
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download the phase-1 combined control report from the source run
+        uses: actions/download-artifact@v4
+        with:
+          name: residual-confirmation-phase1-report
+          path: audit-download
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download the phase-2 combined arm reports from the source run
+        uses: actions/download-artifact@v4
+        with:
+          name: residual-confirmation-combined
+          path: audit-download-phase2
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run the archetype audit
+        shell: bash
+        run: |
+          ls -la audit-download/
+          find audit-download-phase2 -type f
+          node scripts/run-bundled.mjs scripts/stress/confirm-residual-001-archetype-audit.mjs -- \
+            --pool="audit-download/confirm-residual-002-pool.json" \
+            --phase1-report="audit-download/residual-confirmation-phase1-control.json" \
+            --phase2-treatment-report="audit-download-phase2/residual-confirmation-phase2-treatment.json" \
+            ${{ inputs.dump_id != '' && format('--dump-full-attempts-for-id={0}', inputs.dump_id) || '' }}
