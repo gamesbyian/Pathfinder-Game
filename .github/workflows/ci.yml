@@ -55,14 +55,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # These jobs do not consume archived solver runs/reports or standing stress corpora.
-          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
-          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
+          # Node harnesses consume committed reports and standing stress corpora, but not historical logs.
           sparse-checkout: |
             /*
             !/logs/
-            !/reports/
-            !/data/stress/
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
@@ -75,6 +71,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # This job does not consume archived solver runs/reports or standing stress corpora.
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -158,5 +162,5 @@ jobs:
       - run: npm ci
       - run: npm run test:coverage
         env:
-          # The two matrix jobs above own the complete exhaustive deadlock proof.
+          # The two deadlock-soundness jobs above own the complete exhaustive deadlock proof.
           SOLVER_DEADLOCK_PROOF_ROOT: skip
