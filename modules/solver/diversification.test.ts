@@ -31,6 +31,36 @@ function portalLevel() {
     });
 }
 
+let portalHarvestPromise: Promise<{
+    level: ReturnType<typeof portalLevel>;
+    session: ReturnType<typeof createDiversificationSession>;
+    novel: number[][];
+    report: any;
+    isComplete: boolean;
+    events: string[];
+}> | null = null;
+
+/** One full real-solver harvest is enough to establish the shared portal fixture's known hints.
+ * Follow-up tests retain their own independent session/action assertions instead of repeatedly
+ * rediscovering this identical prerequisite. */
+function portalHarvest() {
+    if (!portalHarvestPromise) {
+        portalHarvestPromise = (async () => {
+            const level = portalLevel();
+            const session = createDiversificationSession(level, [], {
+                solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000,
+            });
+            const events: string[] = [];
+            const { novel, report, isComplete } = await session.runUntil(
+                () => workMeter.units + 500_000_000,
+                { onProgress: (e: any) => events.push(e.type) },
+            );
+            return { level, session, novel, report, isComplete, events };
+        })();
+    }
+    return portalHarvestPromise;
+}
+
 test('hint helpers: signatures, dedup merge, counts, button label', () => {
     assert.equal(pathSignature([1, 2, 3]), '1,2,3');
     const merged = mergeUniqueHints([[1, 2]], [[1, 2], [3, 4]]);
@@ -45,13 +75,7 @@ test('hint helpers: signatures, dedup merge, counts, button label', () => {
 // point (proving the plumbing actually finds/dedupes/halts on real work), not something a stub
 // could stand in for.
 deepTest('a full session run finds novel validated hints across phases and completes', async () => {
-    const level = portalLevel();
-    const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
-    const events: string[] = [];
-    const { novel, report, isComplete } = await session.runUntil(
-        () => workMeter.units + 500_000_000,
-        { onProgress: (e: any) => events.push(e.type) },
-    );
+    const { level, session, novel, report, isComplete, events } = await portalHarvest();
 
     assert.ok(novel.length > 0, 'session should discover at least one hint');
     assert.equal(isComplete, true);
@@ -71,11 +95,10 @@ deepTest('a full session run finds novel validated hints across phases and compl
 
 deepTest('already-known hints are not re-reported as novel', async () => {
     const level = portalLevel();
-    // First session harvests everything within budget…
-    const first = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
-    const firstRun = await first.runUntil(() => workMeter.units + 500_000_000, {});
+    // Reuse the independently asserted full harvest above as this test's prerequisite, then a
+    // fresh second session with those existing hints must not repeat them.
+    const firstRun = await portalHarvest();
     assert.ok(firstRun.novel.length > 0);
-    // …then a second session with those as existing hints must not repeat them.
     const second = createDiversificationSession(level, firstRun.novel, { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
     const secondRun = await second.runUntil(() => workMeter.units + 500_000_000, {});
     const firstSigs = new Set(firstRun.novel.map(pathSignature));
@@ -129,9 +152,7 @@ test('cancellation is observed and reported without an error entry', async () =>
 // persisted provenance. Uses a mock solverApi for the same reason that file's test does — the real
 // solver only reaches admissible-order-search on levels everything else already fails.
 deepTest('a baseline win with admissibleOrder: true gets a distinguishing phase in its provenance event', async () => {
-    const level = portalLevel();
-    const real = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
-    const realRun = await real.runUntil(() => workMeter.units + 500_000_000, {});
+    const realRun = await portalHarvest();
     assert.ok(realRun.novel.length > 0, 'sanity check on the fixture');
     const validPath = realRun.novel[0];
 
