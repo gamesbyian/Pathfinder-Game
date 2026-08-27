@@ -30,6 +30,10 @@ on:
         description: 'Optional level id to re-solve directly with attemptBudgetTelemetry:true (see exact per-attempt node/work ceilings).'
         required: false
         default: ''
+      sweep_debug_id:
+        description: 'TEMP (2026-08-27): optional level id to re-run through the REAL level-blind-capability-sweep.mjs worker-pool path (not a direct solveLevel call) with --debug-main-loop, to see live internal gateBudget/earlyGateWorkBudget/elapsed state exactly as production computed it.'
+        required: false
+        default: ''
 
 jobs:
   audit:
@@ -87,3 +91,28 @@ jobs:
             --phase2-treatment-report="audit-download-phase2/residual-confirmation-phase2-treatment.json" \
             ${{ inputs.dump_id != '' && format('--dump-full-attempts-for-id={0}', inputs.dump_id) || '' }} \
             ${{ inputs.solve_direct_id != '' && format('--solve-direct-for-id={0}', inputs.solve_direct_id) || '' }}
+
+      - name: TEMP (remove before merge) -- re-run the REAL sweep worker-pool path with --debug-main-loop
+        if: inputs.sweep_debug_id != ''
+        shell: bash
+        run: |
+          POS=$(node -e "
+            const fs = require('node:fs');
+            const pool = JSON.parse(fs.readFileSync('audit-download/confirm-residual-002-pool.json', 'utf8'));
+            const levels = Array.isArray(pool) ? pool : pool.levels;
+            const idx = levels.findIndex(l => l.id === '${{ inputs.sweep_debug_id }}');
+            if (idx < 0) { console.error('level not found'); process.exit(1); }
+            console.log(idx + 1);
+          ")
+          echo "sweep_debug_id=${{ inputs.sweep_debug_id }} is at pool position ${POS}"
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="audit-download/confirm-residual-002-pool.json" \
+            --levels="pos:${POS}" \
+            --budget-ms=86400000 \
+            --node-budget=50000000 \
+            --work-budget=67000000 \
+            --workers=1 \
+            --enable-flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE \
+            --debug-main-loop \
+            --out="audit-download/sweep-debug-${{ inputs.sweep_debug_id }}.json" \
+            --summary-out="audit-download/sweep-debug-${{ inputs.sweep_debug_id }}-summary.md" 2>&1
