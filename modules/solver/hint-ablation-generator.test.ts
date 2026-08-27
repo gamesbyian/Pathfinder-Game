@@ -102,7 +102,6 @@ deepTest('a full run finds novel validated hints across phases, all of which use
 });
 
 deepTest('already-known hints are not re-reported as novel on a second run', async () => {
-    const raw = rawForcedPortalLevel();
     const first = await fullHarvest();
     assert.ok(first.novel.length > 0);
 
