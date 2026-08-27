@@ -143,7 +143,7 @@ function referenceSearch(state: SolverSearchState, level: NormalizedLevel, targe
     }
 
     for (const next of referenceCandidates(pos, lastWasJump, level)) {
-      const jump = !lastWasJump && level.portalMap.get(pos)?.dest === next;
+      const jump: boolean = !lastWasJump && level.portalMap.get(pos)?.dest === next;
       const seen = initial.counts.get(next) ?? 0;
       const nextCount = seen + 1;
       initial.counts.set(next, nextCount);
@@ -242,10 +242,15 @@ export function runDeadlockSoundnessRoot(rootBranch: 0 | 1) {
         mustCrossNeighborBudgetDeadlocked(pos, state, level, prep),
       ];
 
+      let exactForReportedState: number | undefined;
       for (let i = 0; i < reports.length; i++) {
         if (!reports[i]) continue;
         reportedDeadStates[i]++;
-        assert.equal(exactRemainingCost(pos, state, level, prep), Infinity, `deadlock helper ${i} false positive`);
+        // Multiple independent helpers can correctly flag the same state. The exact reference
+        // search proves the state itself unreachable, so solve that identical oracle problem once
+        // and reuse its answer for every helper-specific false-positive assertion at this state.
+        exactForReportedState ??= exactRemainingCost(pos, state, level, prep);
+        assert.equal(exactForReportedState, Infinity, `deadlock helper ${i} false positive`);
         const diagnostic = diagnoseRule(ids[i], pos, state, level, prep);
         if (!diagnostic.reached) continue;
 
