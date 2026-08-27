@@ -81,7 +81,7 @@ function referenceAccounting(path: number[], level: NormalizedLevel) {
   let lastWasJump = false;
   for (let i = 1; i < path.length; i++) {
     const from = path[i - 1], to = path[i];
-    const jump = !lastWasJump && level.portalMap.get(from)?.dest === to;
+    const jump: boolean = !lastWasJump && level.portalMap.get(from)?.dest === to;
     if (!jump) cost++;
     const seen = counts.get(to) ?? 0;
     if (seen > 0 && !gateSet.has(to)) nonGateRevisits++;
