@@ -18,7 +18,7 @@ Compact entry point for coding/research agents. Load task-specific docs, not the
 | Prior experiment | [`reports/README.md`](reports/README.md), then the current topic doc |
 | Deferred/reopen idea | [`docs/solver-future-work.md`](docs/solver-future-work.md) |
 | Default-off disposition | [`docs/solver-opt-in-experiment-ledger.md`](docs/solver-opt-in-experiment-ledger.md) |
-| Stress corpus | [`data/stress/README.md`](data/stress/README.md) |
+| Stress corpus | [`data/stress/README.md`](data/stress/README.md); before using/expanding topology-composition challenge data, apply [`docs/solver-evaluation-evidence.md#suitability-and-expansion-gate`](docs/solver-evaluation-evidence.md#suitability-and-expansion-gate) |
 | Validation choice | [`docs/testing.md`](docs/testing.md) |
 
 ## Working rules

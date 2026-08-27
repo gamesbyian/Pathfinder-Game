@@ -105,10 +105,21 @@ stochastic witness walker shared by Corpus 1 and Corpus 2. Instead it:
 Every retained row still carries a construction witness and passes schema, structural, and canonical
 referee checks. The production solver is never run during generation or candidate filtering.
 
-The v0.1 scope is intentionally bounded to blocks, MustPass, MustCross, flipping filters, must-turn
-landmarks, geese, and false goals. Portals, static filters, surround, adjacent-turn, and multi-gate
-levels are currently omitted. Therefore transfer claims from this generator are limited to the
-mechanics/distributions it actually represents.
+The v0.1 scope is intentionally bounded to **12x12/15x15 perfect-maze-diameter
+topologies** with blocks, MustPass, MustCross, flipping filters, must-turn landmarks, geese, and
+false goals. Portals, static filters, surround, adjacent-turn, and multi-gate levels are currently
+omitted. It also does not represent arbitrary macro cycles, multiple competing macro routes, large
+open-region grammars, or other topology families merely because those could fit on the same grid.
+Therefore transfer claims from this generator are limited to the mechanics, scales, and topology
+family it actually represents.
+
+**Suitability rule:** before a decision-bearing run, check
+[`../../docs/solver-evaluation-evidence.md#suitability-and-expansion-gate`](../../docs/solver-evaluation-evidence.md#suitability-and-expansion-gate).
+If the candidate requires an omitted mechanic/scale/topology, do not interpret non-participation or a
+null as negative evidence. Use another independent source or expand the generator first. Conversely,
+do not expand it merely for completeness when v0.1 already challenges the property at issue.
+Expansion is earned when a ranked question is genuinely blocked by a missing capability or a broad
+claim requires that additional distributional coverage.
 
 The generator is durable tooling, **not a standing committed corpus**. By default it writes under
 `tmp/`. Generate a persistent or locked sample only when a ranked research question earns it. Do

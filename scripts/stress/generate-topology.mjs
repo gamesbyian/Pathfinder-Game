@@ -16,8 +16,22 @@
  *
  * Deliberate v0.1 scope:
  *   - square 12x12 or 15x15 grids (4x4 / 5x5 macro grids of 3x3 modules);
+ *   - one topology grammar: randomized perfect-maze diameter compiled into path modules;
  *   - blocks, MustPass, MustCross, flipping filters, must-turn landmarks, geese, false goals;
- *   - no portals, static filters, surround, adjacent-turn, or multi-gate levels yet.
+ *   - no portals, static filters, surround, adjacent-turn, multi-gate, arbitrary macro cycles,
+ *     competing macro routes, or open-region/room-corridor grammars yet.
+ *
+ * Suitability/expansion contract:
+ *   - use as-is only when the decision-bearing claim is represented by that mechanic/scale/topology
+ *     scope;
+ *   - never treat absent activation or a null caused by an unsupported mechanic/topology as negative
+ *     solver evidence;
+ *   - expand only when a ranked research question is blocked by missing coverage or a broader claim
+ *     materially requires it, and prefer a new construction grammar when topology is the missing
+ *     dimension;
+ *   - do not broaden generator parameters in response to a treatment outcome and reuse the same
+ *     evidence as untouched transfer.
+ * See docs/solver-evaluation-evidence.md#suitability-and-expansion-gate.
  *
  * The default output is tmp/, not a standing corpus. Promote a generated population into
  * data/stress only through an explicit research decision.
