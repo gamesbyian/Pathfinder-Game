@@ -138,7 +138,7 @@ jobs:
           node scripts/run-bundled.mjs scripts/stress/restart-continuation-population-pilot.mjs -- \
             --census="${{ inputs.census }}" --corpus="${{ inputs.corpus }}" \
             --min-badness="${{ inputs.min_badness }}" --max-badness="${{ inputs.max_badness }}" \
-            --offset="${{ matrix.offset }}" --limit="${{ matrix.limit }}" \
+            --offset="${{ matrix.offset }}" --limit="${{ matrix.limit }}" --sample-every=1 \
             --work-budget="${{ inputs.work_budget }}" --restart-split="${{ inputs.restart_split }}" \
             --budget-ms="${{ inputs.budget_ms }}" \
             --out="logs/repair-restart-continuation-pilot/shard-${{ matrix.idx }}.json"
