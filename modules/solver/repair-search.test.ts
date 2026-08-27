@@ -2,9 +2,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-// Fast/deep test-tier gate (see docs/testing.md's "Fast and deep gates" and
-// modules/solver/lower-bounds.test.ts's identical gate for the full rationale).
-const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES } from './policy.js';
@@ -14,7 +11,6 @@ import { createState, applyMove } from './search-state.js';
 import { getRealLengthFromState } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import type { PruneDiagnostics } from './prune-gauntlet.js';
-import { withFeatureDisabled } from './ablation-config.js';
 import {
     replayAndValidate,
     r02560Level,
