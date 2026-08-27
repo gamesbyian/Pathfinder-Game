@@ -219,8 +219,8 @@
     {
       "id": "confirm-transfer-topology-001",
       "role": "challenge-cross-generator",
-      "status": "reserved",
-      "exposureState": "LOCKED",
+      "status": "spent",
+      "exposureState": "SPENT",
       "outcomeConditioned": false,
       "independentUnit": "level",
       "count": 1000,
@@ -237,9 +237,9 @@
       "aggregateRuns": [
         33108351046
       ],
-      "verdict": null,
-      "resultSummary": null,
-      "spentAt": null,
+      "verdict": "clean-null-ceiling-limited",
+      "resultSummary": "Run 33108351046 completed in ~29 minutes: all 120 solve shards (60 control, 60 treatment) succeeded. Directly verified via job logs that treatment shards genuinely carried --enable-flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE (e.g. treatment-59's log: extra=(--enable-flags=...), 16/16 solved) and control shards genuinely carried none (e.g. control-01's log: extra=(), 17/17 solved). RESULT: control 997/1000, treatment 997/1000, work 5,526,984,362 -> 5,550,082,141 (+0.42%). Gained (0): none. Lost (0): none -- both arms failed the exact same 3 levels. This is a clean null, not a confirmation failure: unlike topology's 2.7% isMustCrossFlipperHeavy eligibility (measured separately by the feature-only pilot), this UNCONDITIONED 1000-level sample turned out 99.7% solvable by control alone, leaving almost no room for any candidate to show an incremental gain regardless of whether cross-generator transfer holds -- a ceiling effect, not evidence the mechanism fails to generalize. Small positive work movement (+0.42%) with zero losses is at least a no-harm signal on a materially different construction family. A residual-conditioned topology design (mirroring confirm-residual-003's phase-1/phase-2 pattern, generating control failures first) would be needed for a higher-power transfer test if stronger transfer evidence is later wanted. See reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md for the full record and promotion-readiness discussion.",
+      "spentAt": "2026-08-27",
       "successor": null,
       "predecessor": "confirm-residual-003"
     }
