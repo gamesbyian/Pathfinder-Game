@@ -33,6 +33,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # These jobs do not consume archived solver runs/reports or standing stress corpora.
+          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
+          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -44,17 +54,61 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Node harnesses validate three committed large-tree fixtures. Keep those exact evidence
+          # paths while avoiding unrelated historical logs/reports/stress artifacts.
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/*
+            /reports/experiments/
+            !/reports/experiments/*
+            /reports/experiments/2026-08-13-technique-tuning/
+            /reports/stress/
+            !/reports/stress/*
+            /reports/stress/technique-census/
+            !/reports/stress/technique-census/*
+            /reports/stress/technique-census/32240161854/
+            !/data/stress/*
+            /data/stress/stress-levels.json
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
       - run: npm ci
       - run: npm run test:node:fast
+        env:
+          PATHFINDER_SKIP_NPM_SCRIPTS: >-
+            test:plan-ab-corpus-shards,test:technique-campaign-analysis,test:technique-census-second-order
+
+  node-tests-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Run evidence-dependent Node harnesses
+        run: >-
+          node scripts/run-scripts-parallel.mjs
+          test:plan-ab-corpus-shards
+          test:technique-campaign-analysis
+          test:technique-census-second-order
 
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Vite copies standing stress data into the runtime bundle, but does not consume logs/reports.
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -62,13 +116,81 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+  # The expensive deadlock soundness proof is an exhaustive tree with exactly two
+  # root moves. GitHub runs those disjoint subtrees on separate runners; local `npm run ci`
+  # still runs both serially because SOLVER_DEADLOCK_PROOF_ROOT is normally unset.
+  deadlock-soundness-0:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # These jobs do not consume archived solver runs/reports or standing stress corpora.
+          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
+          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Run exhaustive deadlock subtree
+        run: >-
+          npx vitest run modules/solver/lower-bounds.test.ts
+          -t "property: deadlock helpers only report independently unsatisfiable reachable states"
+        env:
+          SOLVER_DEADLOCK_PROOF_ROOT: '0'
+
+  deadlock-soundness-1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # These jobs do not consume archived solver runs/reports or standing stress corpora.
+          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
+          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Run exhaustive deadlock subtree
+        run: >-
+          npx vitest run modules/solver/lower-bounds.test.ts
+          -t "property: deadlock helpers only report independently unsatisfiable reachable states"
+        env:
+          SOLVER_DEADLOCK_PROOF_ROOT: '1'
+
   deep-verification:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # These jobs do not consume archived solver runs/reports or standing stress corpora.
+          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
+          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
       - run: npm ci
       - run: npm run test:coverage
+        env:
+          # The two deadlock-soundness jobs above own the complete exhaustive deadlock proof.
+          SOLVER_DEADLOCK_PROOF_ROOT: skip
