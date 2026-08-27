@@ -9,8 +9,8 @@ on:
 permissions:
   contents: read
 
-# Fast/deep split (docs/testing.md "Fast and deep gates"): `checks`, `unit-tests-fast`,
-# `node-tests-fast`, and `build` are the PR-blocking fast gate — each is independent (no `needs:`
+# Fast/deep split (docs/testing.md "Fast and deep gates"): `checks`, `checks-lint`,
+# `unit-tests-fast`, `node-tests-fast`, and `build` are the PR-blocking fast gate — each is independent (no `needs:`
 # between them), so they run on separate runners in parallel instead of serially on one, and each
 # stays well clear of the CPU oversubscription that made running them concurrently on ONE runner
 # flaky (see scripts/run-scripts-parallel.mjs's header comment). The workflow as a whole covers the
@@ -18,6 +18,9 @@ permissions:
 # `deep-verification` owns only the full Vitest coverage/deep-test leg. Re-running `check` and
 # `test:node` serially inside that job only duplicated sibling jobs and lengthened the critical path.
 jobs:
+  # Local `npm run check` keeps lint before the validator fan-out because racing them on one
+  # machine slows both. Actions has independent runners, so run those two CPU-heavy halves in
+  # parallel while retaining the full-repository checks job name for branch protection.
   checks:
     runs-on: ubuntu-latest
     steps:
@@ -27,7 +30,25 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - run: npm run check
+      - run: npm run check:nonlint
+
+  checks-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+            !/data/stress/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run check:lint
 
   unit-tests-fast:
     runs-on: ubuntu-latest
