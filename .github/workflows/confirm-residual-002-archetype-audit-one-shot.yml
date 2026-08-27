@@ -26,6 +26,10 @@ on:
         description: 'Optional level id to dump the full attempt sequence for (leave blank for summary only).'
         required: false
         default: ''
+      solve_direct_id:
+        description: 'Optional level id to re-solve directly with attemptBudgetTelemetry:true (see exact per-attempt node/work ceilings).'
+        required: false
+        default: ''
 
 jobs:
   audit:
@@ -81,4 +85,5 @@ jobs:
             --pool="audit-download/confirm-residual-002-pool.json" \
             --phase1-report="audit-download/residual-confirmation-phase1-control.json" \
             --phase2-treatment-report="audit-download-phase2/residual-confirmation-phase2-treatment.json" \
-            ${{ inputs.dump_id != '' && format('--dump-full-attempts-for-id={0}', inputs.dump_id) || '' }}
+            ${{ inputs.dump_id != '' && format('--dump-full-attempts-for-id={0}', inputs.dump_id) || '' }} \
+            ${{ inputs.solve_direct_id != '' && format('--solve-direct-for-id={0}', inputs.solve_direct_id) || '' }}

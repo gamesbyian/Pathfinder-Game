@@ -26,7 +26,14 @@
  *   node scripts/run-bundled.mjs scripts/stress/confirm-residual-001-archetype-audit.mjs -- \
  *     --pool=<sealed-pool.json> --phase1-report=<sealed-phase1-control-report.json> \
  *     [--phase2-treatment-report=<sealed-phase2-treatment-report.json>] \
- *     [--dump-full-attempts-for-id=<levelId>]
+ *     [--dump-full-attempts-for-id=<levelId>] \
+ *     [--solve-direct-for-id=<levelId> [--node-budget=N] [--work-budget=N]]
+ *
+ * --solve-direct-for-id re-solves one pool level right here with attemptBudgetTelemetry:true, since
+ * a sealed combined report never carries per-attempt allocatedNodeCeiling/allocatedWorkCeiling/
+ * workSpent unless the original sweep dispatch itself passed --attempt-budget-telemetry -- this is
+ * how to see exactly which ceiling (node or work) actually stopped a given attempt without
+ * re-running the whole sealed cohort with telemetry on.
  */
 import path from 'node:path';
 import process from 'node:process';
@@ -46,6 +53,7 @@ const { normalizeRawLevel } = await import('../../modules/solver/normalization.j
 // rather than reimplementing their logic, to eliminate any chance of implementation drift between
 // this script's classification and what getAttemptConfigs itself actually computes and branches on.
 const { extractFeatures, isMustCrossFlipperHeavy, getConfiguredAttemptConfigs } = await import('../../modules/solver/attempts.js');
+const { solveLevel } = await import('../../modules/solver/orchestration.js');
 
 // The real sweep pipeline (level-blind-capability-sweep.mjs) reduces each raw level to ONLY these
 // fields before the solver ever sees it (level-blindness: no identity/history/hints/baseline).
@@ -150,5 +158,41 @@ if (treatmentReportPath) {
         } else {
             console.log(`\n${dumpId} not found in pool levels (checked ${poolLevels.length} raw records by .id)`);
         }
+    }
+}
+
+// --solve-direct-for-id=<id> [--node-budget=N] [--work-budget=N]: re-solve one level directly, right
+// here, with attemptBudgetTelemetry:true, to see the ACTUAL per-attempt allocatedNodeCeiling/
+// allocatedWorkCeiling/workSpent the real scheduler computed -- the combined report's own attempts
+// array (used by --dump-full-attempts-for-id above) never carries this telemetry unless the original
+// sweep dispatch itself passed --attempt-budget-telemetry, so re-running locally with it turned on is
+// the only way to see exactly which ceiling (node or work) actually stopped a given attempt, without
+// re-running the whole sealed cohort. Mirrors level-blind-capability-sweep.mjs's own solveOpts
+// construction so the reproduction is faithful to the real dispatch.
+const solveDirectId = argMap.get('--solve-direct-for-id');
+if (solveDirectId) {
+    const rawDump = poolLevels.find(l => l.id === solveDirectId);
+    if (!rawDump) {
+        console.log(`\n${solveDirectId} not found in pool levels (checked ${poolLevels.length} raw records by .id)`);
+    } else {
+        const levelNumber = poolLevels.indexOf(rawDump) + 1;
+        const normalized = normalizeRawLevel(mechanicsOnlyLevel(rawDump), levelNumber);
+        const nodeBudget = Number(argMap.get('--node-budget')) || 50000000;
+        const workBudget = Number(argMap.get('--work-budget')) || Math.floor(nodeBudget * 134 / 100);
+        console.log(`\n--- solving ${solveDirectId} directly with nodeBudget=${nodeBudget}, workBudget=${workBudget}, attemptBudgetTelemetry=true ---`);
+        const result = await solveLevel(normalized, {
+            timeBudgetMs: 86400000,
+            nodeBudget,
+            workBudget,
+            ablation: { STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: true },
+            attemptBudgetTelemetry: true,
+        });
+        console.log(`ok=${result.ok} status=${result.status} nodesExpanded=${result.nodesExpanded} workSpent=${result.workSpent}`);
+        console.log(JSON.stringify(result.attempts.map(a => ({
+            stageId: a.stageId, actionKey: a.actionKey, outcome: a.outcome,
+            nodesExpanded: a.nodesExpanded, allocatedNodeCeiling: a.allocatedNodeCeiling ?? null,
+            allocatedWorkCeiling: a.allocatedWorkCeiling ?? null, workSpent: a.workSpent ?? null,
+            mainLoopLateReserve: a.mainLoopLateReserve ?? null, timedOut: a.timedOut ?? null,
+        })), null, 1));
     }
 }
