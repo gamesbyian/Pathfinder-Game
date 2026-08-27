@@ -27,6 +27,17 @@
  * slice of the same stratum without re-running or re-selecting rows an earlier pilot already
  * inspected and drew conclusions from — see reports/2026-08-26-restart-continuation-larger-w-pilot.md.
  *
+ * `--min-badness=<n>` (default 0) is `--max-badness`'s companion lower bound, so a follow-up
+ * pilot can select a disjoint, materially different badness band (e.g. 7-9) instead of a disjoint
+ * slice of the SAME band — useful once a fixed band's whole population has already been spent
+ * across earlier pilots — see reports/2026-08-27-repair-restart-continuation-production-candidate-
+ * design.md.
+ *
+ * `--budget-ms=<ms>` (default 120000, this tool's original hardcoded per-arm wall-clock deadline)
+ * must stay large enough that `--work-budget`, not this wall clock, is what actually stops a slow
+ * arm — check with a small `--limit` smoke run at the intended `--work-budget` before a full pilot;
+ * a silently wall-clock-truncated arm is not an equal-work comparison. See the same design report.
+ *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/restart-continuation-population-pilot.mjs -- \
  *     --census=reports/stress/benchmark-latest-random.json --corpus=data/stress/stress-levels-random.json \
@@ -46,7 +57,23 @@ const corpusPath = argMap.get('--corpus') || path.join(root, 'data/stress/stress
 const workBudget = Number(argMap.get('--work-budget') || 2_000_000);
 const sampleEvery = Number(argMap.get('--sample-every') || 29);
 const maxBadness = argMap.has('--max-badness') ? Number(argMap.get('--max-badness')) : Infinity;
+// `--min-badness` (default 0, inert): companion lower bound to `--max-badness`, so a follow-up
+// pilot can select a disjoint, materially different badness band (e.g. 7-9) from an earlier one
+// (e.g. 2-6) without re-including any level the earlier pilot already inspected and drew
+// conclusions from — same rationale as `--offset`, but by stratum definition rather than by
+// position within one fixed stratum. See reports/2026-08-27-repair-restart-continuation-
+// production-candidate-design.md.
+const minBadness = argMap.has('--min-badness') ? Number(argMap.get('--min-badness')) : 0;
 const limit = argMap.has('--limit') ? Number(argMap.get('--limit')) : Infinity;
+// `--budget-ms` (default 120_000, this tool's original hardcoded value): non-binding wall-clock
+// deadline PER ARM passed through to runRepairRestartVsContinuation. Must stay large enough that
+// the deterministic `--work-budget` cap, not this wall clock, is what actually stops a slow arm —
+// otherwise both arms are silently right-censored by wall time before reaching equal work, which
+// would confound the restart-vs-continuation comparison with wall-clock speed instead of testing
+// it at equal workSpent. Exposed as a flag (rather than left hardcoded) because a much larger
+// --work-budget than this tool was originally built for needs a proportionally larger deadline;
+// pick it from a timing smoke check at the intended --work-budget, not by guessing.
+const budgetMs = Number(argMap.get('--budget-ms') || 120_000);
 const offset = argMap.has('--offset') ? Number(argMap.get('--offset')) : 0;
 const restartSplitFraction = argMap.has('--restart-split') ? Number(argMap.get('--restart-split')) : 0.5;
 const outPath = argMap.get('--out') || path.join(root, 'tmp/restart-continuation-pilot.json');
@@ -77,7 +104,8 @@ const candidates = census.levels.filter(lv => {
     if (lv.status === 'success') return false;
     const attempt = primaryRepairProbe(lv);
     if (!attempt) return false;
-    return attempt.bestBadness == null || attempt.bestBadness <= maxBadness;
+    if (attempt.bestBadness == null) return minBadness <= 0;
+    return attempt.bestBadness >= minBadness && attempt.bestBadness <= maxBadness;
 });
 
 // `--offset` (applied first) skips a prefix of candidates in census order, purely to let a
@@ -88,7 +116,7 @@ const candidates = census.levels.filter(lv => {
 const selected = candidates.slice(offset).filter((_, i) => i % sampleEvery === 0).slice(0, limit);
 
 console.log(`restart-continuation-population-pilot: census=${censusPath} (${census.solved}/${census.total} solved, commit ${census.commitSha})`);
-console.log(`population: ${candidates.length} unsolved levels with a repair-probe attempt; offset=${offset}, sampling every ${sampleEvery}th, limit=${Number.isFinite(limit) ? limit : '(none)'} -> ${selected.length} levels; work-budget=${workBudget}; restart-split=${restartSplitFraction}`);
+console.log(`population: ${candidates.length} unsolved levels with a repair-probe attempt (min-badness=${minBadness}, max-badness=${Number.isFinite(maxBadness) ? maxBadness : '(none)'}); offset=${offset}, sampling every ${sampleEvery}th, limit=${Number.isFinite(limit) ? limit : '(none)'} -> ${selected.length} levels; work-budget=${workBudget}; restart-split=${restartSplitFraction}; budget-ms=${budgetMs}`);
 
 const results = [];
 for (const lv of selected) {
@@ -101,7 +129,7 @@ for (const lv of selected) {
     if (!level.gateKeys.includes(gateKey)) { console.error(`SKIP ${lv.id}: census gateKey ${gateKey} not present on re-prepared level`); continue; }
     const profile = POLICY_PROFILES.repair ?? POLICY_PROFILES.default;
     const start = Date.now();
-    const result = await runRepairRestartVsContinuation(gateKey, level, () => prepLevel(level), profile, workBudget, { budgetMs: 120_000, restartSplitFraction });
+    const result = await runRepairRestartVsContinuation(gateKey, level, () => prepLevel(level), profile, workBudget, { budgetMs, restartSplitFraction });
     const elapsedMs = Date.now() - start;
     console.log(`${lv.id} (pos ${lv.level}, censusBestBadness=${censusBestBadness}): `
         + `continuation solved=${result.continuation.solved} workSpent=${result.continuation.workSpent} bestBadness=${result.continuation.bestBadness} | `
