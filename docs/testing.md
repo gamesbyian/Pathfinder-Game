@@ -43,7 +43,7 @@ Local `ci` runs `check`, `test:coverage`, then `test:node`. Each has internal co
 
 ## Fast vs deep
 
-`deepTest` is for expense intrinsic to an implementation proof: exhaustive soundness, real regression rescue, or real cross-tier budget behavior. `SOLVER_DEEP_TESTS=0` skips them; `test:unit:fast`/`ci:fast` set it. Every PR still runs every deep proof. `deep-verification` owns coverage plus the ordinary deep tests; the exhaustive must-cross deadlock-soundness property is the one exception to single-runner execution because its fixed 5x5 search tree has exactly two root moves. Actions runs those two disjoint root subtrees in the `deadlock-soundness` matrix while the coverage job skips only that duplicate execution. With `SOLVER_DEADLOCK_PROOF_ROOT` unset, local `npm run ci` still runs the original whole tree serially. The matrix is execution plumbing only; it does not narrow the proof population.
+`deepTest` is for expense intrinsic to an implementation proof: exhaustive soundness, real regression rescue, or real cross-tier budget behavior. `SOLVER_DEEP_TESTS=0` skips them; `test:unit:fast`/`ci:fast` set it. Every PR still runs every deep proof. `deep-verification` owns coverage plus the ordinary deep tests; the exhaustive must-cross deadlock-soundness property is the one exception to single-runner execution because its fixed 5x5 search tree has exactly two root moves. Actions runs those two disjoint root subtrees in separate `deadlock-soundness-0` / `deadlock-soundness-1` jobs while the coverage job skips only that duplicate execution. With `SOLVER_DEADLOCK_PROOF_ROOT` unset, local `npm run ci` still runs the original whole tree serially. The split is execution plumbing only; it does not narrow the proof population.
 
 Do not mark a test deep merely because it is slow. Stub search when assertions only need scheduling/routing/budget behavior; `orchestration.test.ts` uses `attemptSearchForTesting` / `exhaustingDispatch` for this.
 
@@ -55,7 +55,7 @@ Measure before guessing:
 
 - `test:coverage` writes `tmp/vitest-timings.json` and reports slow files/tests via `vitest-slow-test-report.mjs`.
 - `check`/`test:node` use `run-scripts-parallel.mjs`, which reports subcommand time.
-- Actions separates `checks`, `unit-tests-fast`, `node-tests-fast`, `build`, `deep-verification`, and the two `deadlock-soundness` root partitions.
+- Actions separates `checks`, `unit-tests-fast`, `node-tests-fast`, `build`, `deep-verification`, and the two `deadlock-soundness-*` root partitions.
 
 When optimizing test runtime, profile the actual suite/subcommand before deleting coverage or weakening a proof. Prefer cheaper fixtures, targeted stubs, concurrency fixes, and tiering over making important validation disappear.
 
