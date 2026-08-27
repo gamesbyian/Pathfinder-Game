@@ -19,6 +19,10 @@ export function replayAndValidate(
     return isSolutionState(state, level);
 }
 
+// Provisional historical integration witness. Keep only until closeLengthGap's enabled-vs-disabled
+// rescue mechanism can be reproduced faithfully by a smaller synthetic/distilled fixture. Ordinary
+// CI should not accumulate permanent corpus-effectiveness obligations merely because a level once
+// served as discovery evidence; see docs/testing.md "Historical level witnesses".
 export function r02560Level() {
     return normalizeRawLevel({
         grid: { w: 15, h: 15 }, gates: [{ x: 11, y: 5 }], goal: { x: 11, y: 1 },
