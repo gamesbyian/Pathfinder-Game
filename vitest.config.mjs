@@ -33,7 +33,7 @@ export default defineConfig({
             ],
             exclude: [
                 'modules/**/*.test.ts',
-                'modules/**/*.test-support.ts',
+                'modules/**/*-test-support.ts',
                 'modules/**/types.ts',
                 'modules/solver/testing-api.ts',
             ],
