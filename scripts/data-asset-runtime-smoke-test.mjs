@@ -12,6 +12,7 @@ import { createData } from '../modules/data.js';
 
 let passed = 0;
 let failed = 0;
+const clone = (value) => JSON.parse(JSON.stringify(value));
 
 async function test(name, fn) {
   try { await fn(); console.log(`  ✓ ${name}`); passed += 1; }
@@ -41,7 +42,7 @@ function fixtureFetch() {
   const fetchImpl = async (url) => {
     requested.push(url);
     if (!payloads.has(url)) return { ok: false, json: async () => null };
-    return { ok: true, json: async () => structuredClone(payloads.get(url)) };
+    return { ok: true, json: async () => clone(payloads.get(url)) };
   };
   return { fetchImpl, requested };
 }
@@ -51,7 +52,7 @@ await test('default data-asset loader requests the runtime levels/themes contrac
   const loadAssets = createDefaultDataAssetLoader({ fetchImpl, basePath: './data' });
   const assets = await loadAssets();
   assert.deepEqual(new Set(requested), new Set(['./data/levels.json', './data/themes.json']));
-  const data = createData({ deepClone: structuredClone });
+  const data = createData({ deepClone: clone });
   data.ingest({ levels: assets.levels, themes: assets.themes, window: null });
   assert.equal(data.getLevels().length, 1);
   assert.equal(typeof data.getThemes().classic, 'object');
@@ -61,7 +62,7 @@ await test('default data-asset loader requests the runtime levels/themes contrac
 await test('getHints requests the id-keyed split artifact lazily and caches the result', async () => {
   const { fetchImpl, requested } = fixtureFetch();
   const data = createData({
-    deepClone: structuredClone,
+    deepClone: clone,
     hintsSource: createDefaultHintsSource({ fetchImpl, basePath: './data' }),
   });
   const loadAssets = createDefaultDataAssetLoader({ fetchImpl, basePath: './data' });
