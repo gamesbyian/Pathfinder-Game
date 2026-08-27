@@ -77,6 +77,12 @@ node scripts/run-bundled.mjs scripts/stress/restart-continuation-population-pilo
 2. **Effect absent or reversed** (tied or worse solved counts, unlike both `W=16,000,000`'s tie-low and `W=64,000,000`'s clear gain) → this would be a genuinely new finding — that the two-seed restart advantage does not simply keep growing with `W`, but saturates or reverses at a large enough budget — and blocks wiring the 2-way split as designed above. It would not by itself revive the current 8-way fan-out as correct either; it would mean the effect's shape versus `W` needs its own characterization before any restructuring of this tier.
 3. **Do not** rescue an absent effect by re-running at a different `W` "to see" — that repeats the exact fishing pattern the operating model's stop rules forbid. One pilot at `W=150,000,000`, one verdict.
 
+### Pilot dispatched (2026-08-27)
+
+The `bestBadness<=6` stratum is fully spent (both prior pilots together already cover all 43 of its candidates), so this pilot uses a fresh, disjoint band: `bestBadness` in `[7,9]` (36 candidates total, via `--min-badness=7 --max-badness=9`, added to `restart-continuation-population-pilot.mjs` for exactly this purpose — see the companion tooling PR). Population/gate/`W`/split fixed above before any of this population's outcomes were inspected.
+
+A `--limit=2 --budget-ms=900000` timing-feasibility run (confirming `budget-ms` — not previously exposed by this tool — is large enough that `--work-budget=150,000,000` itself, not the wall clock, terminates each arm) happened to run the exact prespecified treatment on the population's first 2 rows in fixed census order (`R00561` position 86, `R01124` position 183) and reached `workSpent` within a few thousand units of the 150,000,000 target on every arm — confirming feasibility and, since the treatment/population/budget were the real ones, counting as genuine (not merely calibration) execution of this pilot's first two rows. Continuing on the same population's next 18 rows (`--offset=2 --limit=18`, same `W`/split/`budget-ms`) for a first batch of 20 total — the same batch size the original `W=16,000,000`/`W=64,000,000` pilots each used. Results to follow in a new dated report once the run completes; the gates above apply to the pooled 20-level batch.
+
 ## Candidate shape (contingent on gate 1 above)
 
 If the pre-wiring pilot confirms the effect at the production-equivalent `W`, the candidate is:
