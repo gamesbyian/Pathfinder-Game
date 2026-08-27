@@ -1,26 +1,18 @@
 name: CI
 
 on:
-  # PRs are the CI gate. Merging a PR already had this workflow run on the
-  # pull_request event, so do not run it a second time for the merge commit.
+  # PRs are the CI gate. The merge commit does not need to repeat validation that already ran
+  # against the PR merge ref.
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# Fast/deep split (docs/testing.md "Fast and deep gates"): `checks`, `checks-lint`,
-# `unit-tests-fast`, `node-tests-fast`, and `build` are the PR-blocking fast gate — each is independent (no `needs:`
-# between them), so they run on separate runners in parallel instead of serially on one, and each
-# stays well clear of the CPU oversubscription that made running them concurrently on ONE runner
-# flaky (see scripts/run-scripts-parallel.mjs's header comment). The workflow as a whole covers the
-# same check + full Vitest coverage/deep tests + Node-validator graph as local `npm run ci`, but
-# `deep-verification` owns only the full Vitest coverage/deep-test leg. Re-running `check` and
-# `test:node` serially inside that job only duplicated sibling jobs and lengthened the critical path.
+# Each job owns a distinct validation layer. GitHub Actions uses separate runners where that buys
+# real wall time, but does not rerun the same ordinary test population merely to produce an earlier
+# green badge. Local command composition remains authoritative in package.json / docs/testing.md.
 jobs:
-  # Local `npm run check` keeps lint before the validator fan-out because racing them on one
-  # machine slows both. Actions has independent runners, so run those two CPU-heavy halves in
-  # parallel while retaining the full-repository checks job name for branch protection.
   checks:
     runs-on: ubuntu-latest
     steps:
@@ -32,6 +24,8 @@ jobs:
       - run: npm ci
       - run: npm run check:nonlint
 
+  # Lint races poorly with the validator fan-out on one small machine, but is independent on its
+  # own Actions runner.
   checks-lint:
     runs-on: ubuntu-latest
     steps:
@@ -50,14 +44,13 @@ jobs:
       - run: npm ci
       - run: npm run check:lint
 
-  unit-tests-fast:
+  node-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          # These jobs do not consume archived solver runs/reports or standing stress corpora.
-          # Sparse checkout keeps all source/tests, bundled levels/hints, docs, and runtime assets
-          # while avoiding ~900 MB of unrelated current-tree payload on every runner.
+          # Node/CLI software-contract tests use synthetic fixtures or current runtime assets.
+          # Frozen research reports and standing stress corpora are not test fixtures.
           sparse-checkout: |
             /*
             !/logs/
@@ -69,66 +62,24 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - run: npm run test:unit:fast
-
-  node-tests-fast:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # Node harnesses validate three committed large-tree fixtures. Keep those exact evidence
-          # paths while avoiding unrelated historical logs/reports/stress artifacts.
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/*
-            /reports/experiments/
-            !/reports/experiments/*
-            /reports/experiments/2026-08-13-technique-tuning/
-            /reports/stress/
-            !/reports/stress/*
-            /reports/stress/technique-census/
-            !/reports/stress/technique-census/*
-            /reports/stress/technique-census/32240161854/
-            !/data/stress/*
-            /data/stress/stress-levels.json
-          sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - run: npm run test:node:fast
-        env:
-          PATHFINDER_SKIP_NPM_SCRIPTS: >-
-            test:plan-ab-corpus-shards,test:technique-campaign-analysis,test:technique-census-second-order
-
-  node-tests-evidence:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - name: Run evidence-dependent Node harnesses
-        run: >-
-          node scripts/run-scripts-parallel.mjs
-          test:plan-ab-corpus-shards
-          test:technique-campaign-analysis
-          test:technique-census-second-order
+      - run: npm run test:node
 
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          # Vite copies standing stress data into the runtime bundle, but does not consume logs/reports.
+          # The deployed admin Dev-Mode switcher needs only these stress runtime assets. Do not
+          # materialize unrelated stress tooling/research artifacts just to build the app.
           sparse-checkout: |
             /*
             !/logs/
             !/reports/
+            !/data/stress/*
+            /data/stress/stress-levels.json
+            /data/stress/stress-levels-random.json
+            /data/stress/hints/
+            /data/stress/hints-random/
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
@@ -137,11 +88,11 @@ jobs:
       - run: npm ci
       - run: npm run build
 
-  # Heavy implementation proofs are ordinary Vitest files locally, so the local suite can use
-  # Vitest's file workers. Actions delegates those same files to separate runners and tells the
-  # coverage job to skip only the delegated copies. This preserves one proof population without
-  # making the coverage runner execute the long poles twice.
-  deadlock-soundness-0:
+  # These four files are deliberately heavyweight implementation proofs. Local coverage lets
+  # Vitest schedule them as ordinary deep files; Actions moves them to one dedicated runner so
+  # coverage does not pay for them twice. One Vitest invocation lets its worker pool schedule the
+  # independent files without four duplicate checkout/setup/npm-ci jobs.
+  deep-proofs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -157,62 +108,16 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - run: npx vitest run modules/solver/lower-bounds-deadlock-0.test.ts
+      - name: Run heavyweight implementation proofs
+        run: >-
+          npx vitest run
+          modules/solver/lower-bounds-deadlock-0.test.ts
+          modules/solver/lower-bounds-deadlock-1.test.ts
+          modules/solver/repair-search-close-length-gap-enabled.test.ts
+          modules/solver/repair-search-close-length-gap-disabled.test.ts
 
-  deadlock-soundness-1:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/
-            !/data/stress/
-          sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - run: npx vitest run modules/solver/lower-bounds-deadlock-1.test.ts
-
-  repair-r02560-enabled:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/
-            !/data/stress/
-          sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - run: npx vitest run modules/solver/repair-search-close-length-gap-enabled.test.ts
-
-  repair-r02560-disabled:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/
-            !/data/stress/
-          sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - run: npx vitest run modules/solver/repair-search-close-length-gap-disabled.test.ts
-
+  # This is the one ordinary Vitest pass on PRs: full coverage plus ordinary deep tests. The four
+  # files above are skipped here only because deep-proofs owns those exact copies.
   deep-verification:
     runs-on: ubuntu-latest
     steps:
