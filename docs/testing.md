@@ -39,11 +39,11 @@ Test-wall-time figures are measurements, not contracts: fixture changes, runner 
 
 `test:node:fast` currently includes every Node validator; it leaves room to exclude future genuinely slow validators. Former slow hint-workbench/diversification validators now use cheap fixtures with the same plumbing.
 
-Local `ci` runs `check`, `test:coverage`, then `test:node`. Each has internal concurrency; running them concurrently on one 4-core machine can oversubscribe it. In GitHub Actions those legs already have separate runners: `checks` and `node-tests-fast` cover the same current check/Node-validator work, while `deep-verification` runs only `test:coverage` so it does not serially repeat those sibling jobs. `package.json` is authoritative for the local graph.
+Local `ci` runs `check`, `test:coverage`, then `test:node`. Each has internal concurrency; running them concurrently on one 4-core machine can oversubscribe it. In GitHub Actions those legs use separate runners. Vitest and Node jobs use sparse checkout because they do not consume archived `logs/`, dated `reports/`, or standing `data/stress/` corpora; repository-wide static hygiene keeps a full checkout because it intentionally scans tracked artifacts. `package.json` is authoritative for the local graph.
 
 ## Fast vs deep
 
-`deepTest` is for expense intrinsic to an implementation proof: exhaustive soundness, real regression rescue, or real cross-tier budget behavior. `SOLVER_DEEP_TESTS=0` skips them; `test:unit:fast`/`ci:fast` set it. Every PR still runs deep tests, with coverage thresholds, in the separate `deep-verification` Actions job. That job intentionally does not rerun `check` or the Node harness because sibling jobs already own those legs.
+`deepTest` is for expense intrinsic to an implementation proof: exhaustive soundness, real regression rescue, or real cross-tier budget behavior. `SOLVER_DEEP_TESTS=0` skips them; `test:unit:fast`/`ci:fast` set it. Every PR still runs every deep proof. `deep-verification` owns coverage plus the ordinary deep tests; the exhaustive must-cross deadlock-soundness property is the one exception to single-runner execution because its fixed 5x5 search tree has exactly two root moves. Actions runs those two disjoint root subtrees in the `deadlock-soundness` matrix while the coverage job skips only that duplicate execution. With `SOLVER_DEADLOCK_PROOF_ROOT` unset, local `npm run ci` still runs the original whole tree serially.
 
 Do not mark a test deep merely because it is slow. Stub search when assertions only need scheduling/routing/budget behavior; `orchestration.test.ts` uses `attemptSearchForTesting` / `exhaustingDispatch` for this.
 
@@ -55,7 +55,7 @@ Measure before guessing:
 
 - `test:coverage` writes `tmp/vitest-timings.json` and reports slow files/tests via `vitest-slow-test-report.mjs`.
 - `check`/`test:node` use `run-scripts-parallel.mjs`, which reports subcommand time.
-- Actions separates `checks`, `unit-tests-fast`, `node-tests-fast`, `build`, `deep-verification`.
+- Actions separates `checks`, `unit-tests-fast`, `node-tests-fast`, `build`, `deep-verification`, and the two `deadlock-soundness` root partitions.
 
 When optimizing test runtime, profile the actual suite/subcommand before deleting coverage or weakening a proof. Prefer cheaper fixtures, targeted stubs, concurrency fixes, and tiering over making important validation disappear.
 
