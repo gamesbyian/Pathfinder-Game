@@ -109,7 +109,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Run exhaustive deadlock subtree
-        run: npx vitest run modules/solver/lower-bounds.test.ts -t "property: deadlock helpers only report independently unsatisfiable reachable states"
+        run: >-\n          npx vitest run modules/solver/lower-bounds.test.ts\n          -t "property: deadlock helpers only report independently unsatisfiable reachable states"
         env:
           SOLVER_DEADLOCK_PROOF_ROOT: ${{ matrix.root_branch }}
 
