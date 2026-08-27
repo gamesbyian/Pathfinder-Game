@@ -29,7 +29,7 @@
     "test:data-asset-runtime-smoke": "tsx scripts/data-asset-runtime-smoke-test.mjs",
     "test:firestore-rules": "node scripts/firestore-rules-test.mjs",
     "test:bundled-levels": "tsx scripts/validate-bundled-levels.mjs",
-    "check": "npm run check:dead-scripts && npm run check:text-source-files && node scripts/run-scripts-parallel.mjs check:lint check:current-level-facts check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:third-party check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:canvas-theme-coverage check:hint-validity check:level-provenance check:corpus-level-formatting",
+    "check": "npm run check:dead-scripts && npm run check:text-source-files && npm run check:lint && node scripts/run-scripts-parallel.mjs check:current-level-facts check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:third-party check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:canvas-theme-coverage check:hint-validity check:level-provenance check:corpus-level-formatting",
     "ci": "npm run check && npm run test:coverage && npm run test:node",
     "ci:fast": "npm run check && npm run test:unit:fast && npm run test:node:fast",
     "ci:full": "npm run ci && npm run test:e2e",
