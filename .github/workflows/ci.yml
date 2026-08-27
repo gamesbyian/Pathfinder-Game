@@ -72,12 +72,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # This job does not consume archived solver runs/reports or standing stress corpora.
+          # Vite copies standing stress data into the runtime bundle, but does not consume logs/reports.
           sparse-checkout: |
             /*
             !/logs/
             !/reports/
-            !/data/stress/
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v4
         with:
