@@ -7,7 +7,7 @@
  * from the same seed, and keep geometry construction independent from witness.mjs's generateWitness.
  */
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile as execFileCb } from 'node:child_process';
@@ -67,6 +67,7 @@ function reproducibleShape(corpus) {
 
 async function main() {
     const tmpRoot = path.join(ROOT, 'tmp');
+    await mkdir(tmpRoot, { recursive: true });
     const tempDir = await mkdtemp(path.join(tmpRoot, 'topology-generator-test-'));
     try {
         const outA = path.join(tempDir, 'a.json');
