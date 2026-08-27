@@ -165,8 +165,8 @@
     {
       "id": "confirm-residual-003",
       "role": "confirmation-residual-twophase",
-      "status": "reserved",
-      "exposureState": "LOCKED",
+      "status": "spent",
+      "exposureState": "SPENT",
       "outcomeConditioned": false,
       "independentUnit": "level",
       "phase1PoolCount": 1200,
@@ -181,11 +181,12 @@
       "materializationTool": ".github/workflows/solver-residual-confirmation.yml (dispatched with cohort_id=confirm-residual-003, master_seed=2026082703, id_prefix=L, pool_count=1200, enable_flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE, node_budget=50000000, workers=4)",
       "aggregateRuns": [
         33053110418,
-        33054538000
+        33054538000,
+        33083577386
       ],
-      "verdict": null,
-      "resultSummary": "Run 33053110418 was CANCELLED before phase 1 completed, immediately upon discovering that solver-residual-confirmation.yml's treatment arm was wired via matrix.arm (always empty) instead of matrix.shard.arm -- the same bug that made confirm-broad-003/004 and confirm-residual-001/002 all control-vs-control (see reports/2026-08-27-confirmation-workflow-treatment-flag-wiring-bug.md). The identity (master_seed=2026082703, id_prefix=L) and reservation remain valid and unspent. Redispatched as run 33054538000 (2026-08-27, against main commit 38493a5a, which includes the matrix.shard.arm fix and the new per-shard *-flags.json + fail-fast hardening) -- in flight, not yet complete. Verify each treatment shard's resolvedFlags is actually populated before trusting any result.",
-      "spentAt": null,
+      "verdict": "confirmation-pass",
+      "resultSummary": "Run 33053110418 was CANCELLED before phase 1 completed, immediately upon discovering that solver-residual-confirmation.yml's treatment arm was wired via matrix.arm (always empty) instead of matrix.shard.arm -- the same bug that made confirm-broad-003/004 and confirm-residual-001/002 all control-vs-control (see reports/2026-08-27-confirmation-workflow-treatment-flag-wiring-bug.md). Redispatched as run 33054538000 (2026-08-27, main commit 38493a5a, includes the matrix.shard.arm fix and the per-shard *-flags.json + fail-fast hardening). All 64 phase-2 solve shards (32 control, 32 treatment) completed successfully; directly verified via job logs that treatment shards genuinely carried --enable-flags=STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE and control shards genuinely carried none. The combine-phase2 job in that same run then failed on an UNRELATED bug: the new *-flags.json provenance file matched the same glob the combine step used to find sweep reports, and was fed into solver:combine-corpus2-batches as a malformed report. Fixed (excluded -flags.json from the glob) and recombined the already-complete shard artifacts via a one-shot workflow (confirm-residual-003-recombine-one-shot.yml, run 33083577386) rather than re-running the full sweep. RESULT (first genuinely trustworthy confirmation of this candidate, after four consecutive control-vs-control non-results): control 0/516, treatment 3/516, work 124,739,052,106 -> 124,924,680,731 (+0.15%). Gained (3): L00278, L00831, L00933. Lost (0): none. A clean confirmed gain, matching the shape of the original development A/B (+3/-0). See reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md for the full record and next-step recommendation (transfer-envelope-001 before default-on promotion).",
+      "spentAt": "2026-08-27",
       "successor": null,
       "predecessor": "confirm-residual-002"
     },
