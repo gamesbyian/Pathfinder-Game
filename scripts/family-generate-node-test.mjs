@@ -35,8 +35,10 @@ async function runGenerate(args) {
     });
 }
 
+const pack = (x, y) => (x | (y << 16)) >>> 0;
 const witnessPath = [
-    [1,1],[2,1],[3,1],[4,1],[5,1],[5,2],[5,3],[5,4],[5,5],
+    pack(0,0), pack(1,0), pack(2,0), pack(3,0), pack(4,0),
+    pack(4,1), pack(4,2), pack(4,3), pack(4,4),
 ];
 
 function fixtureLevel(id, overrides = {}) {
