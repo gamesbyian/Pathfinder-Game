@@ -9,10 +9,10 @@ import { test } from 'vitest';
 // SOLVER_DEEP_TESTS=0 to skip it for quicker signal — a relocation to a parallel job, not a
 // coverage cut.
 const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
-// GitHub CI can partition the one very expensive deadlock-soundness property by the two
-// first moves of its 5x5 must-cross fixture. Unset means the original full proof, which
-// keeps local `npm run ci` behavior unchanged; "skip" is used only by the coverage job
-// when the two dedicated matrix jobs own those exhaustive root subtrees.
+// CI can partition the one very expensive deadlock-soundness property by the two first
+// moves of its 5x5 must-cross fixture. Unset means the original full proof, so direct
+// `test:coverage` / `test:unit` calls keep their historical behavior. Full `npm run ci`
+// runs coverage with "skip", then executes roots 0 and 1 concurrently as a dedicated phase.
 const deadlockProofRoot = process.env.SOLVER_DEADLOCK_PROOF_ROOT ?? 'all';
 const deadlockProofTest = deadlockProofRoot === 'skip' ? test.skip : deepTest;
 import { AXIS_H, KEY_SPACE, PACK } from './encoding.js';
