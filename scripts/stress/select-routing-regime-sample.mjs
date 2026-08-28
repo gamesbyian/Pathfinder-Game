@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Selects a deterministic, seeded stratified Corpus-2 sample for A/B testing an routing-regime-gated
+ * Selects a deterministic, seeded stratified Corpus-2 sample for A/B testing a routing-regime-gated
  * ATTEMPT_POLICY routing change (modules/solver/attempts.ts) — the general form of
  * select-repair-probe-adaptive-sample.mjs's eligibility-sample pattern, generalized from one
  * hardcoded mechanic predicate to any set of classifyRoutingRegime() routing regimes.
@@ -10,7 +10,7 @@
  * classifyRoutingRegime(level)/LevelFeatures — see attempts.ts's own "pure function of level features"
  * doc comment). A uniform random Corpus-2 sample would waste most of its compute re-confirming
  * zero-effect on every other routing regime. This draws a deterministic seeded subsample from the
- * ELIGIBLE population (the named archetypes) specifically, plus a small control sample from every
+ * ELIGIBLE population (the named routing regimes) specifically, plus a small control sample from every
  * other routing regime, to empirically catch anything outside the intended scope, not just to trust the
  * routing-regime list.
  *
@@ -44,7 +44,7 @@ import { fileURLToPath } from 'node:url';
 
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 
-// This script imports modules/solver.js (detectArchetype needs the real TS solver code, unlike
+// This script imports modules/solver.js (classifyRoutingRegime needs the real TS solver code, unlike
 // select-repair-probe-adaptive-sample.mjs's raw-JSON-only looksRepairGated approximation), so it
 // must run through scripts/run-bundled.mjs, not plain node. run-bundled.mjs bundles the entry into
 // .solver-tools/ (ONE level under the repo root — see its own header comment), so ROOT is one
@@ -107,7 +107,7 @@ routingRegimes = new Set(routingRegimesArg.split(',').map(s => normalizeRoutingR
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, corpusFile), 'utf8'));
 const levels = Array.isArray(corpus) ? corpus : corpus.levels;
 
-// { id, pos, arch } triples -- pos is the 1-indexed array position level-blind-capability-sweep.mjs
+// { id, pos, routingRegime } triples -- pos is the 1-indexed array position level-blind-capability-sweep.mjs
 // and plan-ab-corpus-shards.mjs both key on (parseLevelSpec has no id-resolution).
 const eligible = [];
 const ineligible = [];
