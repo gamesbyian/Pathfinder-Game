@@ -1920,11 +1920,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     await withWorkCapScope(prep, prep._workMeter.units + repairFallbackWorkBudget, async () => {
         for (const repairConfig of repairConfigs) {
             if (result.solution) break;
-            if (prep._metrics.nodesExpanded >= repairFallbackNodeCeiling) break;
+            if (prep._metrics!.nodesExpanded >= repairFallbackNodeCeiling) break;
             const repairTotalBudget = repairFallbackTotalBudget;
             const repairStart = Date.now();
             for (let gi = 0; gi < activeGates.length; gi++) {
-                if (prep._metrics.nodesExpanded >= repairFallbackNodeCeiling) break;
+                if (prep._metrics!.nodesExpanded >= repairFallbackNodeCeiling) break;
                 const gateKey = activeGates[gi];
                 const elapsed = Date.now() - repairStart;
                 const gatesLeft = activeGates.length - gi;
@@ -1935,7 +1935,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 // 0 each time), so passing the external total directly would compare a per-call counter
                 // against a whole-solve target — recomputing the remainder keeps it correct regardless
                 // of how many nodes earlier attempts already spent.
-                const remainingNodeBudget = repairFallbackNodeCeiling === Infinity ? Infinity : Math.max(0, repairFallbackNodeCeiling - prep._metrics.nodesExpanded);
+                const remainingNodeBudget = repairFallbackNodeCeiling === Infinity ? Infinity : Math.max(0, repairFallbackNodeCeiling - prep._metrics!.nodesExpanded);
                 const r = await runAttempt(gateKey, level, prep, repairConfig, repairBudget, Date.now(), yieldFn, remainingNodeBudget);
                 result.attempts.push(withSolverStage(r.attempt, 'repair-fallback'));
                 if (r.path) { result.solution = r.path; break; }
@@ -2206,10 +2206,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // its full, unreduced shot above and is never retried here.
             for (const admissibleOrderConfig of admissibleOrderNonDefaultConfigs) {
                 if (result.solution) break;
-                if (prep._metrics.nodesExpanded >= nonDefaultRetryNodeCeiling) break;
+                if (prep._metrics!.nodesExpanded >= nonDefaultRetryNodeCeiling) break;
                 const retryStart = Date.now();
                 for (let gi = 0; gi < activeGates.length; gi++) {
-                    if (prep._metrics.nodesExpanded >= nonDefaultRetryNodeCeiling) break;
+                    if (prep._metrics!.nodesExpanded >= nonDefaultRetryNodeCeiling) break;
                     const gateKey = activeGates[gi];
                     const elapsed = Date.now() - retryStart;
                     const gatesLeft = activeGates.length - gi;
@@ -2217,7 +2217,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                     if (retryBudget < 50) break;
                     const remainingNodeBudget = nonDefaultRetryNodeCeiling === Infinity
                         ? Infinity
-                        : Math.max(0, nonDefaultRetryNodeCeiling - prep._metrics.nodesExpanded);
+                        : Math.max(0, nonDefaultRetryNodeCeiling - prep._metrics!.nodesExpanded);
                     const r = await runAttempt(gateKey, level, prep, admissibleOrderConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
                     result.attempts.push(withSolverStage(r.attempt, 'admissible-order-non-default-retry'));
                     if (r.path) { result.solution = r.path; break; }
@@ -2296,10 +2296,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 // Same per-config/per-gate loop shape as the ordinary repair fallback loop above.
                 for (const repairConfig of repairConfigs) {
                     if (result.solution) break;
-                    if (prep._metrics.nodesExpanded >= repairElitePrefixDfsRetryNodeCeiling) break;
+                    if (prep._metrics!.nodesExpanded >= repairElitePrefixDfsRetryNodeCeiling) break;
                     const retryStart = Date.now();
                     for (let gi = 0; gi < activeGates.length; gi++) {
-                        if (prep._metrics.nodesExpanded >= repairElitePrefixDfsRetryNodeCeiling) break;
+                        if (prep._metrics!.nodesExpanded >= repairElitePrefixDfsRetryNodeCeiling) break;
                         const gateKey = activeGates[gi];
                         const elapsed = Date.now() - retryStart;
                         const gatesLeft = activeGates.length - gi;
@@ -2307,7 +2307,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                         if (retryBudget < 50) break;
                         const remainingNodeBudget = repairElitePrefixDfsRetryNodeCeiling === Infinity
                             ? Infinity
-                            : Math.max(0, repairElitePrefixDfsRetryNodeCeiling - prep._metrics.nodesExpanded);
+                            : Math.max(0, repairElitePrefixDfsRetryNodeCeiling - prep._metrics!.nodesExpanded);
                         const r = await runAttempt(gateKey, level, prep, repairConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
                         result.attempts.push(withSolverStage(r.attempt, 'repair-elite-prefix-dfs-retry'));
                         if (r.path) { result.solution = r.path; break; }
@@ -2437,8 +2437,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         const repairLateProbeWorkBudget = legacyMsToWork(repairLateProbeTotalBudget, MIN_ATTEMPT_WORK);
         await withWorkCapScope(prep, prep._workMeter.units + repairLateProbeWorkBudget, async () => {
             for (let gi = 0; gi < activeGates.length; gi++) {
-                if (prep._metrics.nodesExpanded >= repairLateProbeNodeCeiling) break;
-                const ownBudgetRemaining = repairLateProbeNodeBudget - (prep._metrics.nodesExpanded - repairLateProbeEntryNodes);
+                if (prep._metrics!.nodesExpanded >= repairLateProbeNodeCeiling) break;
+                const ownBudgetRemaining = repairLateProbeNodeBudget - (prep._metrics!.nodesExpanded - repairLateProbeEntryNodes);
                 if (ownBudgetRemaining <= 0) break;
                 const gateKey = activeGates[gi];
                 const elapsed = Date.now() - repairLateProbeStart;
@@ -2447,7 +2447,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 if (retryBudget < 50) break;
                 const outerCeilingRemaining = repairLateProbeNodeCeiling === Infinity
                     ? Infinity
-                    : Math.max(0, repairLateProbeNodeCeiling - prep._metrics.nodesExpanded);
+                    : Math.max(0, repairLateProbeNodeCeiling - prep._metrics!.nodesExpanded);
                 const remainingNodeBudget = Math.min(ownBudgetRemaining, outerCeilingRemaining);
                 const r = await runAttempt(gateKey, level, prep, repairLateProbeConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
                 result.attempts.push(withSolverStage(r.attempt, 'repair-late-probe'));
