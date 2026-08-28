@@ -4,6 +4,7 @@
 # Each individual case still runs through exactly one cpsat-full-probe.py process and preserves
 # the same live/dead/timeout/referee semantics.
 name: cpsat-explicit-prefix-oracle
+run-name: "CP-SAT prefix oracle · ${{ inputs.cases_file }} · shards=${{ inputs.shard_count }}"
 
 on:
   workflow_dispatch:
@@ -218,3 +219,22 @@ jobs:
           path: reports/stress/cpsat-explicit-prefix-oracle-${{ github.run_id }}.json
           retention-days: 30
           if-no-files-found: error
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="reports/stress/cpsat-explicit-prefix-oracle-${{ github.run_id }}.json" \
+            --shards-expected="${{ inputs.shard_count }}" \
+            --shards-observed="$(find artifact-staging -maxdepth 1 -name 'cpsat-explicit-prefix-oracle-shard-*.json' | wc -l | tr -d ' ')" \
+            --source-artifact="cpsat-explicit-prefix-oracle-${{ github.run_id }}"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90

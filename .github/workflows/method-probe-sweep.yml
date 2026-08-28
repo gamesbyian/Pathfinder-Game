@@ -11,6 +11,7 @@
 # CPUs occupied. Worker subranges are floor-split with no gaps/overlaps and write separate result
 # files, all of which combine-method-probe-shards.mjs consumes afterward.
 name: method-probe sweep (isolated single-method corpus test)
+run-name: "Method probe · ${{ inputs.only || 'all methods' }} · shards=${{ inputs.shard_count }}"
 
 on:
   workflow_dispatch:
@@ -227,3 +228,23 @@ jobs:
             logs/method-probe-shards/combined.json
             logs/method-probe-shards/solved-ids.txt
           retention-days: 30
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="logs/method-probe-shards/combined.json" \
+            --include="logs/method-probe-shards/solved-ids.txt" \
+            --shards-expected="${{ inputs.shard_count }}" \
+            --shards-observed="$(find artifact-staging -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
+            --source-artifact="method-probe-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90

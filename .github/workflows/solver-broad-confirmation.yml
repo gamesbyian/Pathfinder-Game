@@ -46,6 +46,7 @@
 # here by default.
 
 name: Solver broad confirmation cohort
+run-name: "Broad confirm · ${{ inputs.cohort_id }} · ${{ inputs.generator }} · flags=${{ inputs.enable_flags || 'control' }}"
 
 on:
   workflow_dispatch:
@@ -398,5 +399,25 @@ jobs:
           path: |
             reports/stress/broad-confirmation-control.json
             reports/stress/broad-confirmation-treatment.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="reports/stress/broad-confirmation-control.json" \
+            --include="reports/stress/broad-confirmation-treatment.json" \
+            --shards-expected="$(( ( ${{ inputs.shard_count }} < ${{ needs.generate.outputs.total_levels }} ? ${{ inputs.shard_count }} : ${{ needs.generate.outputs.total_levels }} ) * 2 ))" \
+            --shards-observed="$(find logs/solver-broad-confirmation-control logs/solver-broad-confirmation-treatment -maxdepth 1 -name 'batch-*.json' ! -name '*-flags.json' | wc -l | tr -d ' ')" \
+            --source-artifact="broad-confirmation-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
           if-no-files-found: error
           retention-days: 90

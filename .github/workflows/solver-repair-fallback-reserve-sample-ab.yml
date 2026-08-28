@@ -28,6 +28,7 @@
 # combined solved count/gains/losses (per-id, from each run's reports/stress/repair-fallback-
 # reserve-sample-ab.json artifact, or the console-log summary this workflow prints directly).
 name: Solver repair-fallback node-reserve sample A/B
+run-name: "Repair-fallback sample · flags=${{ inputs.enable_flags || 'control' }} · shards=${{ inputs.shard_count }}"
 
 on:
   workflow_dispatch:
@@ -303,5 +304,24 @@ jobs:
           path: |
             reports/stress/repair-fallback-reserve-sample-ab.json
             logs/solver-repair-fallback-reserve-sample/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="reports/stress/repair-fallback-reserve-sample-ab.json" \
+            --shards-expected="${{ needs.plan.outputs.shard_count }}" \
+            --shards-observed="$(find logs/solver-repair-fallback-reserve-sample -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
+            --source-artifact="repair-fallback-reserve-sample-ab-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
           if-no-files-found: error
           retention-days: 90
