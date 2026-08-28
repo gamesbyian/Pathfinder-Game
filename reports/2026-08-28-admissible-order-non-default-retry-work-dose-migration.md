@@ -37,7 +37,9 @@ Same disclaimers as the first two migrations: no claim about the remaining 6 sit
 
 ## Addendum: pos:1-10 confirmation-scale population
 
-*(Filled in once the run completes — see the reproduction command below.)*
+Same `pos:1-10` population and protocol as the first two migrations' own addenda (before = commit `5b234cd`, the state immediately after `repair-fallback`'s migration landed, in a separate worktree; after = this migration's own commit).
+
+**Result: exact match on every field, third time in a row.** All 10 levels matched precisely on `ok`, `status`, `winningStageId`, and `nodesExpanded` — **0 diffs**. Every stage's `totalWorkSpent` matched exactly too, `admissible-order-non-default-retry`'s own included: **1,730,816 both before and after**, unchanged to the unit. Same explanation as `repair-fallback`'s own addendum: this tier's node ceiling (`nonDefaultRetryNodeCeiling`, purely `nodeBudget`-derived and untouched by this migration) binds before either the old (near-infinite) or new (`670,000`-scaled) work cap is ever approached on this population, so the formula-level argument in "What changed" above — not this empirical run — is what establishes the fix; this run's value is confirming zero solved-set risk, not exercising the changed dimension.
 
 ## Reproduction
 
