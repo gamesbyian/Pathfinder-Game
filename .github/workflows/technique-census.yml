@@ -57,6 +57,7 @@
 # exactly which cells did and didn't complete; any gap is closed by a follow-up dispatch with
 # --skip-existing pointed at the prior partial output, not by re-running everything.
 name: Technique capability census (isolated single-/paired-/flag-technique, full budget)
+run-name: "Technique census · workers=${{ inputs.workers }}"
 
 on:
   workflow_dispatch:
@@ -253,6 +254,9 @@ jobs:
         run: |
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/technique-census/${{ github.run_id }}" \
+            --shards-expected="120" \
+            --shards-observed="$(find artifact-staging -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
+            --provenance-out="reports/stress/technique-census/${{ github.run_id }}/gha-source-run.json" \
             --source-artifact="technique-census-combined"
 
       - name: Upload standard solver sweep result
