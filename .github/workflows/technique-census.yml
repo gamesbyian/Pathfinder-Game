@@ -74,7 +74,7 @@ on:
         required: false
         default: '200'
       t1_node_budget:
-        description: 'T1/T3/T4 per-cell node budget (the "full ladder budget" this run exists to test; T2 -- a separate, smaller-budget breadth tier -- was retired 2026-08-19 once T1 itself grew to cover every level)'
+        description: 'T1/T3/T4 per-cell NODE depth ceiling. Deterministic and useful within a technique, but NOT equal compute across DFS/beam/repair; cross-technique allocation conclusions require canonical workSpent/equal-work evidence.'
         required: false
         default: '50000000'
       seed:
