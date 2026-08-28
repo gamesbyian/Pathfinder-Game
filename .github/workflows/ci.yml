@@ -24,10 +24,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # Repository checks need current source/docs plus canonical level/hint data. Historical
-          # logs and derived research blobs remain visible through Git's index but need not be
-          # materialized. fetch-depth 2 exposes the PR merge ref's base parent for incremental
-          # content hygiene checks.
+          # Repository checks need source/docs plus runtime level/hint data. Start without the
+          # ~2,000 runtime hint files; an exact Git-object-keyed cache restores those below.
+          # Historical logs/research blobs remain visible through Git's index but unmaterialized.
+          # fetch-depth 2 exposes the PR merge ref's base parent for incremental hygiene checks.
           fetch-depth: 2
           sparse-checkout: |
             /*
@@ -38,13 +38,59 @@ jobs:
             !/reports/*
             /reports/*.md
             /reports/**/*.md
-            !/data/stress/*
-            /data/stress/README.md
-            /data/stress/stress-levels.json
-            /data/stress/stress-levels-random.json
-            /data/stress/hints/
-            /data/stress/hints-random/
+            !/data/
           sparse-checkout-cone-mode: false
+      - name: Derive runtime-data cache key
+        id: runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Restore exact runtime-data tree
+        id: runtime-data-cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/hints
+            data/stress/hints-random
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
+      - name: Materialize runtime data on cache miss
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          git sparse-checkout set --no-cone --stdin <<'EOF'
+          /*
+          !/logs/*
+          /logs/artifact-metadata.json
+          /logs/*.md
+          /logs/**/*.md
+          !/reports/*
+          /reports/*.md
+          /reports/**/*.md
+          !/data/*
+          /data/levels.json
+          /data/level-heatmaps.json
+          /data/themes.json
+          /data/hints/
+          /data/stress/stress-levels.json
+          /data/stress/stress-levels-random.json
+          /data/stress/hints/
+          /data/stress/hints-random/
+          EOF
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
@@ -108,18 +154,60 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # The deployed admin Dev-Mode switcher needs only these stress runtime assets. Do not
-          # materialize unrelated stress tooling/research artifacts just to build the app.
+          # Build source is small; runtime level/hint data is restored separately below so Git does
+          # not rewrite ~2,000 unchanged hint files on every PR revision.
           sparse-checkout: |
             /*
             !/logs/
             !/reports/
-            !/data/stress/*
-            /data/stress/stress-levels.json
-            /data/stress/stress-levels-random.json
-            /data/stress/hints/
-            /data/stress/hints-random/
+            !/data/
           sparse-checkout-cone-mode: false
+      - name: Derive runtime-data cache key
+        id: runtime-data-key
+        shell: bash
+        run: |
+          {
+            git rev-parse HEAD:data/levels.json
+            git rev-parse HEAD:data/level-heatmaps.json
+            git rev-parse HEAD:data/themes.json
+            git rev-parse HEAD:data/hints
+            git rev-parse HEAD:data/stress/stress-levels.json
+            git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/hints
+            git rev-parse HEAD:data/stress/hints-random
+          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
+      - name: Restore exact runtime-data tree
+        id: runtime-data-cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            data/levels.json
+            data/level-heatmaps.json
+            data/themes.json
+            data/hints
+            data/stress/stress-levels.json
+            data/stress/stress-levels-random.json
+            data/stress/hints
+            data/stress/hints-random
+          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
+      - name: Materialize runtime data on cache miss
+        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          git sparse-checkout set --no-cone --stdin <<'EOF'
+          /*
+          !/logs/
+          !/reports/
+          !/data/*
+          /data/levels.json
+          /data/level-heatmaps.json
+          /data/themes.json
+          /data/hints/
+          /data/stress/stress-levels.json
+          /data/stress/stress-levels-random.json
+          /data/stress/hints/
+          /data/stress/hints-random/
+          EOF
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
