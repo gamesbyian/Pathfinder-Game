@@ -28,6 +28,7 @@
  *   node scripts/stress/select-routing-regime-sample.mjs \
  *     --corpus=data/stress/stress-levels-random.json \
  *     --routing-regimes=intersection-heavy,must-cross-heavy \
+ *     # legacy input --archetypes=high-intersection-burden,must-cross-heavy is still accepted and normalized
  *     --eligible-sample=250 --control-sample=50 --seed=<commit-sha-or-any-string> \
  *     --out=logs/solver-routing-regime-sample/sample.txt
  *
@@ -58,8 +59,17 @@ for (const arg of process.argv.slice(2)) {
 }
 
 const corpusFile = argMap.get('--corpus') || 'data/stress/stress-levels-random.json';
-const routingRegimesArg = argMap.get('--routing-regimes');
-if (!routingRegimesArg) { console.error('--routing-regimes is required (comma-separated classifyRoutingRegime() values)'); process.exit(2); }
+const canonicalRoutingRegimesArg = argMap.get('--routing-regimes');
+const legacyArchetypesArg = argMap.get('--archetypes');
+if (canonicalRoutingRegimesArg && legacyArchetypesArg && canonicalRoutingRegimesArg !== legacyArchetypesArg) {
+    console.error('Conflicting --routing-regimes and deprecated --archetypes values.');
+    process.exit(2);
+}
+const routingRegimesArg = canonicalRoutingRegimesArg || legacyArchetypesArg;
+if (!routingRegimesArg) {
+    console.error('--routing-regimes is required (deprecated compatibility alias: --archetypes).');
+    process.exit(2);
+}
 let routingRegimes;
 const eligibleSampleSize = Number(argMap.get('--eligible-sample') || 250);
 const controlSampleSize = Number(argMap.get('--control-sample') || 50);
