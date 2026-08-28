@@ -1,7 +1,7 @@
 # Additive-tier participation audit — the 9 legacy tiers are dead in play, and their real cost dwarfs the nominal budget
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-08-28 — static trace of `disableExtraBudgetPasses` through `modules/solver/stage-budget.ts`, plus a 10-level empirical run (`scripts/additive-tier-participation-audit.mjs`) with a capability-sweep-shaped call (`nodeBudget=500,000`, `workBudget=670,000`, `timeBudgetMs=86,400,000`, no `disableExtraBudgetPasses`, no `strictTotalWorkBudget`)
+> **Last evidence:** 2026-08-28 — static trace of `disableExtraBudgetPasses` through `modules/solver/stage-budget.ts`, a 10-level empirical run (`scripts/additive-tier-participation-audit.mjs`) with a capability-sweep-shaped call (`nodeBudget=500,000`, `workBudget=670,000`, `timeBudgetMs=86,400,000`, no `disableExtraBudgetPasses`, no `strictTotalWorkBudget`), and a follow-up trace of `strictTotalWorkBudget`'s own enforcement plus which real workflows opt into it (none currently do — see Part 3)
 > **Decision:** the 9 CI-ratchet-approved ms-shaped additive tiers (plus `repair-late-probe`/its multi-seed retry, the 10th/11th related sites) never run in either real interactive production path (`solver-controller.ts`, `review-controller.ts` — both pass `disableExtraBudgetPasses: true`), so migrating any of their formulas carries **zero live-player risk**. Their actual relevance is entirely to offline capability-sweep/confirmation-workflow tooling, where this audit found they are neither rare nor cheap: on a 10-level hard sample, every level produced at least one additive-tier attempt, 30% of levels were *solved by* one, and per-tier work costs ran 1.5x-470x the nominal `workBudget=670,000` (e.g. `repair-late-probe-multi-seed-retry` alone spent 313,076,369 work units across 3 levels — 104M/level, ~470x nominal). A caller-supplied `nodeBudget`/`workBudget` is not a real ceiling on a capability-sweep-shaped solve unless `strictTotalWorkBudget: true` is also set.
 > **Remaining gate:** none for this audit itself (a discovery pilot, not a promotion). It supplies the missing "how much is actually at stake" input for queue #2 step 3's "one additive tier at a time" migration work and for anyone interpreting a capability-sweep/confirmation workflow's `node_budget` input as a real per-level ceiling.
 > **Evidence role:** discovery
@@ -76,12 +76,52 @@ This does not tell us any specific tier's ms→work conversion is currently *wro
 2. **These tiers are not negligible on offline populations** — they fire on effectively every hard level in this sample and are responsible for a meaningful share of solves (30% here), so "just delete them" is not a viable simplification; any future migration needs real behavior-preservation, not removal.
 3. **The bigger, currently-undocumented-in-one-place risk for anyone consuming a capability-sweep/confirmation number is budget legibility, not ms-vs-work purity**: a `node_budget=X` input to `solver-broad-confirmation.yml`/`solver-residual-confirmation.yml`/`level-blind-capability-sweep.mjs` can mean many times `X` in real per-level cost once these tiers engage, unless the run also sets `strictTotalWorkBudget`. That is a distinct, likely higher-value finding than the "one additive tier at a time" migration order queue #2 currently names, and is worth flagging to whoever next revises that item's priority ordering.
 
+## Part 3: is the fix already available, and is it actually used?
+
+A follow-up static trace answers the "not-yet-audited question" this report originally left open.
+
+**The fix works.** `strictTotalWorkBudget: true` sets `prep._strictWorkCap = workStart + workBudget`
+(`orchestration.ts:1610`), and every additive tier's own local `prep._workCap` assignment is clamped
+to it (`Math.min(prep._workMeter.units + attBudget, prep._strictWorkCap ?? Infinity)`, e.g.
+`orchestration.ts:814,910,2528`). The search internals that actually stop work
+(`search.ts:153`, `repair-search.ts:1106`, `admissible-order-search.ts:317`) all check
+`prep._workMeter.units >= (prep._workCap ?? Infinity)` as a hard stop — so `strictTotalWorkBudget`
+genuinely overrides even a fixed-constant tier like `repair-late-probe`'s flat 5,000,000-node budget,
+not just the fraction-derived ones. This is exactly the mechanism Stage A/B of the connectivity-
+rejection audit already relied on for their byte-identical, wall-clock-predictable per-level runs.
+
+**It is opt-in and the real confirmation pipeline does not opt in.** `level-blind-capability-sweep.mjs`
+(the script both `solver-broad-confirmation.yml` and `solver-residual-confirmation.yml` invoke for
+every real confirmation shard) supports `--strict-total-work-budget`, but neither workflow — nor the
+currently-running `solver-level-blind-targeted-sweep.yml` — ever passes it. Every confirmation A/B
+this queue has run to date (including the `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE` promotion
+chain) ran under the additive, not-actually-capped semantics this report describes.
+
+**This is not necessarily a bug to fix.** These workflows' `target_wall_minutes`/timeout/worker
+settings were presumably tuned against their own real observed run times, additive tiers included —
+switching them to `strictTotalWorkBudget` now would itself be a solve-set-changing intervention
+requiring the same behavior-preservation rigor as any other queue #2 step-3 migration, not a free
+correctness fix. The actionable takeaway is narrower: **`node_budget`/`--node-budget` in these
+workflows is a per-level starting allocation, not a per-level ceiling** — worth stating precisely
+wherever that input is documented or reasoned about, so a future reader does not treat it as a hard
+bound it never was.
+
+**Scale caveat on Part 2's 1.5x-467x figures:** that population used `nodeBudget=500,000`, two orders
+of magnitude below the confirmation workflows' own `node_budget=50,000,000` default. Tiers with a
+FLAT constant ceiling (`repair-late-probe`'s 5,000,000 nodes) would be a much smaller relative share
+at that larger scale (10% of 50M vs. ~1000% of 500K here). Tiers at a `1.0` budget FRACTION
+(`dedup-near-tie-retry`, `connectivity-axis-exhausted-retry`, `mc-neighbor-budget-retry`,
+`goal-attraction-legacy-distance-retry`) scale proportionally with whatever pool they draw from, so
+their relative overshoot should hold roughly constant across scale — but this is reasoning from the
+constants, not measured at 50M-node-budget scale, which would need its own (much more expensive) run.
+
 ## What this does not establish
 
 - No claim about any tier's ms→work conversion accuracy or correctness — not measured here.
 - No production code change, and no recommendation to add one. This is discovery evidence only.
 - No claim beyond this specific 10-level corpus2 sample; a larger population would sharpen the per-tier participation/win rates but is unlikely to change Part 1's static conclusion (which is a code fact, not a sample-dependent one).
-- Does not address whether `strictTotalWorkBudget` is itself set correctly everywhere it should be in the confirmation/sweep workflows — that is a separate, not-yet-audited question this report's Part 2 finding motivates but does not answer.
+- Part 2's exact multiplier (1.5x-467x) is specific to the tested `nodeBudget=500,000` scale, not measured at the confirmation workflows' own `node_budget=50,000,000` scale — see Part 3's scale caveat.
+- No recommendation on whether the confirmation/sweep workflows should adopt `strictTotalWorkBudget` — that tradeoff (reproducibility/legibility vs. a real solve-set-changing policy change) is unevaluated here.
 
 ## Reproduction
 
