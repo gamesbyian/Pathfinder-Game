@@ -116,7 +116,7 @@ test('attempt exceptions are recorded and the ladder continues to a later succes
         name: 'TypeError', message: 'deterministic dispatch failure',
         gateKey: result.attempts[0].gateKey,
         configKey: attemptConfigKey(getConfiguredAttemptConfigs(makeLineLevel(), null)[0]),
-        profile: result.attempts[0].profile, template: result.attempts[0].template,
+        profile: result.attempts[0].profile, orderingBias: result.attempts[0].orderingBias,
     });
     assert.equal(result.attempts.some(a => a.outcome === 'success'), true);
 });
@@ -158,8 +158,8 @@ test('an error attempt preserves repair identity, allocation, node usage, and se
     const attempt = result.attempts[0];
     assert.equal(attempt.outcome, 'error');
     assert.equal(attempt.gateKey, gateKey);
-    assert.equal(attempt.profile, repairConfig.profileName);
-    assert.equal(attempt.template, repairConfig.template?.id ?? null);
+    assert.equal(attempt.profile, repairConfig.scoringProfileId);
+    assert.equal(attempt.orderingBias, repairConfig.orderingBias?.id ?? null);
     assert.equal(attempt.repair, true);
     assert.equal(attempt.allocatedBudgetMs, 50);
     assert.equal(attempt.nodesExpanded, 7);
@@ -187,7 +187,7 @@ test('an admissible-order search that drains its space is marked exhausted, not 
     const level = { ...makeLineLevel(), reqLen: 4 } as NormalizedLevel;
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
-    const config = { profileName: 'default', template: null, admissibleOrder: true };
+    const config = { scoringProfileId: 'default', orderingBias: null, admissibleOrder: true };
     const result = await runAttempt(level.gateKeys[0], level, prep, config, 1000, Date.now(), null);
     assert.equal(result.path, null);
     assert.equal(result.attempt.outcome, 'exhausted');
@@ -1611,7 +1611,7 @@ test('a non-binding deadline cannot resize an explicit-work main-ladder trajecto
         stageId: attempt.stageId,
         gateKey: attempt.gateKey,
         profile: attempt.profile,
-        template: attempt.template,
+        orderingBias: attempt.orderingBias,
         beamWidth: attempt.beamWidth,
         outcome: attempt.outcome,
         nodesExpanded: attempt.nodesExpanded,
@@ -2202,7 +2202,7 @@ test('admissible-order-non-default-retry pass can solve a level the admissible-o
     // own "can solve a level the main loop misses" test.
     const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
         const [config] = args;
-        if (config.admissibleOrder && config.profileName !== 'default') return [0, 1];
+        if (config.admissibleOrder && config.scoringProfileId !== 'default') return [0, 1];
         return null;
     }) as typeof runAttemptSearch;
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
@@ -2281,7 +2281,7 @@ test('disableExtraBudgetPasses: true suppresses the admissible-order-non-default
 
     const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
         const [config] = args;
-        if (config.admissibleOrder && config.profileName !== 'default') return [0, 1];
+        if (config.admissibleOrder && config.scoringProfileId !== 'default') return [0, 1];
         return null;
     }) as typeof runAttemptSearch;
     const overridden = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
