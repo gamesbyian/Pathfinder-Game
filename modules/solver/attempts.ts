@@ -312,7 +312,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // config list — and therefore their timing — is unchanged.
         why: 'very-high reqInt + portal-dense: objectiveFirst beam guides through portal transitions',
         when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT && f.portals >= POLICY.PORTAL_DENSE_PAIRS,
-        build: f => [
+        build: (f, cfg) => [
             ...mcDiverseThread(f),
             beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
             dfs('objectiveFirst'), dfs('intersectionHarvest'),
@@ -326,6 +326,12 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // already above, not a width variant of them, so it costs nothing on levels those beams
             // already solve.
             beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
+            // Current-residual missing-exposure pilot (2026-08-28): the frozen T1 census still
+            // contains cheap STANDARD intersectionHarvest wins in this very-high-reqInt regime,
+            // while production offers only the WIDE form. Keep it trailing and opt-in so the
+            // strict-total-work development pilot charges any displacement it causes.
+            ...(cfg && cfg.STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE === true
+                ? [beam('intersectionHarvest', BEAM.STANDARD)] : []),
         ],
     },
     {
@@ -335,7 +341,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // instead of being squeezed by two non-diverse beams that each burn a full even share first.
         why: 'very-high reqInt, non-portal: intersectionHarvest beam wins directly, DFS fallbacks follow',
         when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT,
-        build: f => [
+        build: (f, cfg) => [
             ...mcDiverseThread(f),
             beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE),
             dfs('intersectionHarvest'), dfs('objectiveFirst'),
@@ -345,6 +351,8 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // several still-unsolved levels this rule never offered any perimeter beam for. Trailing,
             // protected-reserve placement; a different technique family from the two beams above.
             beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
+            ...(cfg && cfg.STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE === true
+                ? [beam('intersectionHarvest', BEAM.STANDARD)] : []),
         ],
     },
     {
