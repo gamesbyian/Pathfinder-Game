@@ -161,7 +161,7 @@ deepTest('a baseline win with admissibleOrder: true gets a distinguishing phase 
     const mockSolver = {
         prepareLevelForSolver: solverApi.prepareLevelForSolver,
         validateCandidatePath: solverApi.validateCandidatePath,
-        solve: async () => ({
+        solveLevel: async () => ({
             ok: true,
             solution: validPath,
             attempts: [{ ok: true, profile: 'default', admissibleOrder: true }],
