@@ -17,6 +17,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.js';
+import { normalizeAttemptIdentityKey, parseAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
 
 const argv = process.argv.slice(2);
 const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -88,21 +89,22 @@ function isBaseT1(row) {
         && !row.ablation;
 }
 
-const censusByLevelTechnique = new Map();
-const techniques = new Set();
+const censusByLevelAttemptConfig = new Map();
+const attemptConfigIdentities = new Set();
 for (const row of censusRows) {
     if (!isBaseT1(row)) continue;
     const id = row.levelId ?? corpusRows[(row.levelPos ?? 0) - 1]?.id;
-    const technique = row.techniqueKeys[0];
-    if (!id || !technique) continue;
-    const key = `${id}\0${technique}`;
-    const prior = censusByLevelTechnique.get(key);
+    const rawAttemptConfigIdentity = row.techniqueKeys[0];
+    if (!id || !rawAttemptConfigIdentity) continue;
+    const attemptConfigIdentity = normalizeAttemptIdentityKey(rawAttemptConfigIdentity);
+    const key = `${id}\0${attemptConfigIdentity}`;
+    const prior = censusByLevelAttemptConfig.get(key);
     if (prior && (prior.ok !== row.ok || prior.status !== row.status
         || prior.nodesExpanded !== row.nodesExpanded || prior.winningGate !== row.winningGate)) {
-        throw new Error(`Conflicting base T1 census rows for ${id}/${technique}`);
+        throw new Error(`Conflicting base T1 census rows for ${id}/${attemptConfigIdentity}`);
     }
-    if (!prior) censusByLevelTechnique.set(key, row);
-    techniques.add(technique);
+    if (!prior) censusByLevelAttemptConfig.set(key, row);
+    attemptConfigIdentities.add(attemptConfigIdentity);
 }
 
 const levelInfo = new Map();
@@ -128,17 +130,17 @@ for (const id of currentResidual) {
             flippers: level.flipperKeys?.length ?? level.flippingFilterKeys?.length ?? 0,
         },
     });
-    for (const [key, cell] of censusByLevelTechnique) {
-        if (key.startsWith(id + '\0')) techniques.add(cell.techniqueKeys[0]);
+    for (const [key] of censusByLevelAttemptConfig) {
+        if (key.startsWith(id + '\0')) attemptConfigIdentities.add(key.slice(id.length + 1));
     }
 }
 
 const aggregate = [];
-for (const technique of [...techniques].sort()) {
-    const absent = currentResidual.filter(id => !levelInfo.get(id).offered.has(technique));
+for (const attemptConfigIdentity of [...attemptConfigIdentities].sort()) {
+    const absent = currentResidual.filter(id => !levelInfo.get(id).offered.has(attemptConfigIdentity));
     if (!absent.length) continue;
     const observed = absent
-        .map(id => ({ id, row: censusByLevelTechnique.get(`${id}\0${technique}`) }))
+        .map(id => ({ id, row: censusByLevelAttemptConfig.get(`${id}\0${attemptConfigIdentity}`) }))
         .filter(x => x.row);
     const wins = observed.filter(x => x.row.ok && x.row.refereeValid !== false);
     if (!wins.length) continue;
@@ -151,13 +153,13 @@ for (const technique of [...techniques].sort()) {
     }
     for (const [routingRegime, ids] of byRoutingRegime) {
         const obs = ids
-            .map(id => ({ id, row: censusByLevelTechnique.get(`${id}\0${technique}`) }))
+            .map(id => ({ id, row: censusByLevelAttemptConfig.get(`${id}\0${attemptConfigIdentity}`) }))
             .filter(x => x.row);
         const routingRegimeWins = obs.filter(x => x.row.ok && x.row.refereeValid !== false);
         if (!routingRegimeWins.length) continue;
         const spend = obs.reduce((sum, x) => sum + Number(x.row.nodesExpanded ?? 0), 0);
         aggregate.push({
-            technique,
+            attemptConfigIdentity,
             routingRegime,
             absentResidualLevels: ids.length,
             censusObservedLevels: obs.length,
@@ -178,7 +180,7 @@ for (const technique of [...techniques].sort()) {
         });
     }
     aggregate.push({
-        technique,
+        attemptConfigIdentity,
         routingRegime: '*',
         absentResidualLevels: absent.length,
         censusObservedLevels: observed.length,
@@ -205,13 +207,13 @@ const ranked = aggregate
     .sort((a, b) => b.isolatedSolves - a.isolatedSolves
         || a.nodesPerObservedSolve - b.nodesPerObservedSolve
         || a.absentResidualLevels - b.absentResidualLevels
-        || a.technique.localeCompare(b.technique));
+        || a.attemptConfigIdentity.localeCompare(b.attemptConfigIdentity));
 
 const overall = aggregate
     .filter(row => row.routingRegime === '*')
     .sort((a, b) => b.isolatedSolves - a.isolatedSolves
         || a.nodesPerObservedSolve - b.nodesPerObservedSolve);
-const beamRanked = ranked.filter(row => row.technique.startsWith('beam:'));
+const beamRanked = ranked.filter(row => parseAttemptIdentityKey(row.attemptConfigIdentity).beamWidth != null);
 
 const result = {
     generatedAt: new Date().toISOString(),
@@ -223,22 +225,22 @@ const result = {
     baselineUnsolvedBeforeExclusion: baselineRows.filter(row => row?.ok === false).length,
     currentResidualLevels: currentResidual.length,
     censusPartialShards: censusDocument.partialShards ?? [],
-    rankingSemantics: 'technique x current routing regime; only current residual levels where production getAttemptConfigs() lacks the exact base technique key; frozen base T1 census only',
-    rankedTechniqueArchetypeCandidates: ranked,
-    rankedBeamTechniqueArchetypeCandidates: beamRanked,
-    overallTechniqueCandidates: overall,
+    rankingSemantics: 'attempt config x current routing regime; only current residual levels where production getAttemptConfigs() lacks the exact normalized base attempt identity; frozen base T1 census only',
+    rankedAttemptConfigRoutingRegimeCandidates: ranked,
+    rankedBeamAttemptConfigRoutingRegimeCandidates: beamRanked,
+    overallAttemptConfigCandidates: overall,
 };
 
 mkdirSync(path.dirname(path.resolve(OUT)), { recursive: true });
 writeFileSync(path.resolve(OUT), JSON.stringify(result, null, 2));
 
 console.log(`Current residual: ${currentResidual.length} level(s); excluded now-solved: ${[...EXCLUDE_SOLVED].sort().join(', ') || 'none'}`);
-console.log(`Base T1 census rows indexed: ${censusByLevelTechnique.size}; partial shards: ${(censusDocument.partialShards ?? []).join(', ') || 'none'}`);
+console.log(`Base T1 census rows indexed: ${censusByLevelAttemptConfig.size}; partial shards: ${(censusDocument.partialShards ?? []).join(', ') || 'none'}`);
 console.log('');
-console.log('TOP TECHNIQUE × ROUTING REGIME MISSING-EXPOSURE CANDIDATES');
+console.log('TOP ATTEMPT CONFIG × ROUTING REGIME MISSING-EXPOSURE CANDIDATES');
 for (const row of ranked.slice(0, 20)) {
     console.log([
-        row.technique,
+        row.attemptConfigIdentity,
         `routingRegime=${row.routingRegime}`,
         `absent=${row.absentResidualLevels}`,
         `observed=${row.censusObservedLevels}`,
@@ -253,15 +255,15 @@ for (const row of ranked.slice(0, 20)) {
 console.log('');
 console.log('TOP BEAM-ONLY CANDIDATES WITH WINNING FEATURES');
 for (const row of beamRanked.slice(0, 12)) {
-    console.log(`${row.technique} | routingRegime=${row.routingRegime} | absent=${row.absentResidualLevels} | observed=${row.censusObservedLevels} | wins=${row.isolatedSolves} | nodes/win=${row.nodesPerObservedSolve}`);
+    console.log(`${row.attemptConfigIdentity} | routingRegime=${row.routingRegime} | absent=${row.absentResidualLevels} | observed=${row.censusObservedLevels} | wins=${row.isolatedSolves} | nodes/win=${row.nodesPerObservedSolve}`);
     for (const win of row.winningIds)
         console.log(`  ${win.id} nodes=${win.nodes} gate=${win.gate ?? '-'} features=${JSON.stringify(win.features)}`);
 }
 console.log('');
-console.log('OVERALL MISSING TECHNIQUES');
+console.log('OVERALL MISSING ATTEMPT CONFIGS');
 for (const row of overall.slice(0, 16)) {
     console.log([
-        row.technique,
+        row.attemptConfigIdentity,
         `absent=${row.absentResidualLevels}`,
         `observed=${row.censusObservedLevels}`,
         `wins=${row.isolatedSolves}`,
