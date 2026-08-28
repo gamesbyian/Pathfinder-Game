@@ -71,6 +71,15 @@ jobs:
         with:
           node-version: '20'
           cache: npm
+      - name: Restore ESLint result cache
+        uses: actions/cache@v5
+        with:
+          path: .cache/eslint
+          # A fresh commit key lets this run save improved per-file results; the config-hash
+          # prefix restores the newest cache whose rule/dependency generation is still valid.
+          key: eslint-${{ runner.os }}-${{ hashFiles('eslint.config.mjs', 'package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            eslint-${{ runner.os }}-${{ hashFiles('eslint.config.mjs', 'package-lock.json') }}-
       - run: npm ci
       - name: Generate dependency-cleanup candidate
         run: |
@@ -155,12 +164,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Run heavyweight implementation proofs
-        run: >-
-          npx vitest run
-          modules/solver/lower-bounds-deadlock-0.test.ts
-          modules/solver/lower-bounds-deadlock-1.test.ts
-          modules/solver/repair-search-close-length-gap-enabled.test.ts
-          modules/solver/repair-search-close-length-gap-disabled.test.ts
+        run: npm run test:deep-proofs
 
   # This is the one ordinary Vitest pass on PRs: full coverage plus ordinary deep tests. The four
   # files above are skipped here only because deep-proofs owns those exact copies.
