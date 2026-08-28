@@ -12,9 +12,9 @@
  * eslint.config.mjs and package-lock.json, so any config/rule/dependency
  * change starts from an empty cache; within a cache generation, per-file
  * validity uses content hashes (--cache-strategy content), not mtimes. Stale
- * generations are deleted on each run, and the cache lives under
- * node_modules/.cache so `npm ci` (and therefore GitHub Actions) always
- * starts cold.
+ * generations are deleted on each run. The cache lives under .cache/eslint
+ * rather than node_modules so local runs can reuse it and GitHub Actions can
+ * persist the same content-addressed results across compatible commits.
  */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -23,7 +23,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 const ROOT = process.cwd();
-const CACHE_DIR = path.join(ROOT, 'node_modules', '.cache', 'eslint');
+const CACHE_DIR = path.join(ROOT, '.cache', 'eslint');
 
 const hash = createHash('sha256');
 for (const file of ['eslint.config.mjs', 'package-lock.json']) {
