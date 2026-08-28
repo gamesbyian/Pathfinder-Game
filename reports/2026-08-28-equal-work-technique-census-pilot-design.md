@@ -1,6 +1,6 @@
 # First equal-work technique-census pilot design
 
-> **Status:** prespecified design; implementation/run not yet performed.
+> **Status:** EXECUTED / CONCLUDED. Corrected canonical result: [EW1 equal-work technique census pilot](2026-08-28-ew1-equal-work-technique-census-pilot.md), run 33156541827.
 > **Date:** 2026-08-28
 > **Queue:** solver optimization #2, equal-work evidence substrate.
 > **Evidence role:** development/value-of-information.
@@ -80,7 +80,7 @@ Then build a simple equal-work greedy cover only as an **oracle diagnostic**. It
 - a supposedly cheap screen turns out expensive in canonical work;
 - repair's early/medium residual value differs enough to move its proposed tranche position.
 
-**Stop after the pilot** if it merely reproduces the already-strong qualitative ordering of naturally bounded beams first, repair as a distinct protected continuation, and thin/redundant ordinary DFS/IDA early value. In that case the existing node census plus this cross-currency calibration is sufficient; do not build a full equal-work mirror census for symmetry's sake.
+**Stop after the pilot** if it merely reproduces the already-strong qualitative ordering of naturally bounded beams first, repair as a distinct protected continuation, and thin/redundant ordinary DFS/IDA early value. **This stop condition was met by corrected EW1: do not expand the matrix for symmetry or smoother rankings.** In that case the existing node census plus this cross-currency calibration is sufficient; do not build a full equal-work mirror census for symmetry's sake.
 
 If expansion is earned, the next scale is a larger sample and/or a deeper 20M-work cap chosen from the observed censoring/unique-win boundary. Do not jump straight to 50M work across the full population.
 
