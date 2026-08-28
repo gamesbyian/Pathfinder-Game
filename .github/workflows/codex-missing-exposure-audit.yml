@@ -1,9 +1,6 @@
 name: Codex missing-exposure audit
 
 on:
-  push:
-    branches:
-      - codex/missing-exposure-and-budget-audit
   workflow_dispatch:
 
 permissions:
