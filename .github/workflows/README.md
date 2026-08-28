@@ -47,10 +47,12 @@ The publisher also appends `summary.md` to `$GITHUB_STEP_SUMMARY`, so the final 
 
 **Retrieval order for agents:**
 
-1. Identify the workflow run by run id when known; otherwise by workflow + dispatched SHA/ref.
-2. Fetch/download the artifact named exactly `solver-sweep-result`. With the GitHub CLI: `gh run download <run-id> -n solver-sweep-result`.
-3. Read `summary.md`, then `manifest.json`, then the referenced result file(s).
+1. Prefer the repo helper: `npm run gha:result -- --run=<run-id>`. If the run id is not known, use `npm run gha:result -- --workflow=<workflow-file-or-name>` (optionally `--branch=<branch>`); it resolves the latest matching run, downloads only `solver-sweep-result`, and prints `summary.md`.
+2. Read `summary.md`, then `manifest.json`, then the referenced result file(s). Add `--json` to print the manifest too, or `--out=<dir>` to retain the downloaded standard artifact.
+3. The manifest includes the exact dispatch inputs in addition to workflow/run/SHA/ref provenance. When the workflow exposes reliable shard identity, the summary also reports observed/expected shard completeness.
 4. Only enumerate final jobs, legacy artifacts, or shard artifacts when the standard artifact reports missing/incomplete output or when debugging a failed/cancelled run.
+
+The raw GitHub CLI equivalent remains `gh run download <run-id> -n solver-sweep-result`, but agents should normally use `gha:result` so pagination and artifact naming are not repeatedly rediscovered.
 
 Do not begin a successful-run analysis by listing every shard job or artifact. GitHub and connector listings are paginated, and large sweeps can place the combine job or decision-bearing artifact beyond the first page. The standard artifact exists specifically to make shard count irrelevant to ordinary result retrieval.
 
