@@ -32,6 +32,7 @@ const canonicalAdmissible = new RegExp('^admissible-order\\|tieBreak=(' + ID + '
 const legacyAdmissible = new RegExp('^ida:(' + ID + ')(\\(lds\\))?$');
 const legacySearch = new RegExp('^(dfs|beam):(' + ID + ')(?:\\/(' + ID + '))?(?:@beam([1-9]\\d*))?(\\(diverse\\))?(:repair)?(\\(mustTurnBiased\\)|\\(turnBiased\\))?$');
 
+/** @param {string} value */
 const nullableBias = value => value === 'none' ? null : value;
 
 /**
