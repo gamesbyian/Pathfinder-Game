@@ -34,8 +34,20 @@ const EXCLUDE_SOLVED = new Set((args.get('--exclude-solved') || '')
     .split(',').map(x => x.trim()).filter(Boolean));
 
 const readJson = file => JSON.parse(readFileSync(path.resolve(file), 'utf8'));
-const rowsOf = document => Array.isArray(document) ? document : (document.levels ?? document.results ?? []);
-const baselineRows = rowsOf(readJson(BASELINE));
+function rowsOf(document) {
+    if (Array.isArray(document)) return document;
+    for (const key of ['levels', 'results', 'rows', 'perLevel']) {
+        if (Array.isArray(document?.[key])) return document[key];
+    }
+    if (document && typeof document === 'object') {
+        const values = Object.values(document);
+        if (values.length && values.every(value => value && typeof value === 'object' && !Array.isArray(value)))
+            return values;
+    }
+    return [];
+}
+const baselineDocument = readJson(BASELINE);
+const baselineRows = rowsOf(baselineDocument);
 const censusDocument = readJson(CENSUS);
 const censusRows = censusDocument.results ?? [];
 const corpusDocument = readJson(CORPUS);
@@ -44,10 +56,19 @@ const corpusRows = Array.isArray(corpusDocument) ? corpusDocument : corpusDocume
 const Solver = createSolver();
 const { getAttemptConfigs, attemptConfigKey, detectArchetype } = SOLVER_TESTING_API;
 
+if (!baselineRows.length) {
+    console.error('Unrecognized baseline schema; top-level keys:', Object.keys(baselineDocument ?? {}).slice(0, 20).join(', '));
+    process.exit(2);
+}
+console.log('Baseline schema:', Array.isArray(baselineDocument) ? 'array'
+    : `object keys=${Object.keys(baselineDocument).slice(0, 8).join(',')}`,
+    `rows=${baselineRows.length}`,
+    `sampleKeys=${Object.keys(baselineRows[0] ?? {}).slice(0, 20).join(',')}`);
+
 const baselineUnsolved = new Set(baselineRows
     .filter(row => row && row.ok === false)
-    .map(row => row.id ?? row.levelId)
-    .filter(Boolean));
+    .map(row => row.id ?? row.levelId ?? row.level)
+    .filter(value => typeof value === 'string'));
 for (const id of EXCLUDE_SOLVED) baselineUnsolved.delete(id);
 
 const corpusById = new Map(corpusRows.map((row, index) => [row.id, { row, pos: index + 1 }]));
