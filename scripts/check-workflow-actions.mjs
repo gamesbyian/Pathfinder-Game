@@ -9,6 +9,7 @@ import path from 'node:path';
 
 const expected = new Map([
   ['actions/checkout', 'v7'],
+  ['actions/cache', 'v5'],
   ['actions/setup-node', 'v7'],
   ['actions/setup-python', 'v7'],
   ['actions/upload-artifact', 'v7'],
