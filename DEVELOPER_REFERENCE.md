@@ -76,7 +76,7 @@ See [`docs/architecture.md`](docs/architecture.md), [`docs/typing.md`](docs/typi
 
 ## Solver gotchas
 
-Implementation: [`docs/solver-architecture.md`](docs/solver-architecture.md). Ranked work: [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md).
+Implementation: [`docs/solver-architecture.md`](docs/solver-architecture.md). Ranked work: [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md).
 
 ```js
 PACK(x, y) = ((y << 16) | x) >>> 0
