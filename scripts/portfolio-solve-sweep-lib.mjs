@@ -50,11 +50,14 @@ function projectedAttemptError(error) {
         return string.slice(0, max);
     };
     const field = (key) => { try { return error?.[key]; } catch { return undefined; } };
+    const rawConfigKey = bounded(field('configKey'), 'unknown', 240);
+    let configKey = rawConfigKey;
+    try { configKey = normalizeAttemptIdentityKey(rawConfigKey); } catch {}
     return {
         name: bounded(field('name'), 'Error', 120),
         message: bounded(field('message'), 'Unknown attempt error', 500),
         gateKey: Number.isFinite(field('gateKey')) ? field('gateKey') : null,
-        configKey: bounded(field('configKey'), 'unknown', 240),
+        configKey,
         profile: bounded(field('profile'), 'unknown', 120),
         template: field('template') == null ? null : bounded(field('template'), 'unknown', 120),
     };
