@@ -590,3 +590,21 @@ jobs:
             reports/stress/residual-confirmation-phase2-treatment.json
           if-no-files-found: error
           retention-days: 90
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="reports/stress/residual-confirmation-phase2-control.json" \
+            --include="reports/stress/residual-confirmation-phase2-treatment.json" \
+            --source-artifact="residual-confirmation-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
