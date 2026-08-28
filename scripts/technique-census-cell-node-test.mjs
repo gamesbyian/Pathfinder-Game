@@ -33,7 +33,7 @@ function stubRunner(onCall) {
 
 const baseCell = {
     cellId: 'T1-0000001', tier: 'T1', corpus: 'published', levelPos: 1,
-    techniqueKeys: ['dfs:nearClosureRescue'], ablation: null, budgetMs: 8000,
+    techniqueKeys: ['dfs|score=nearClosureRescue|bias=none'], ablation: null, budgetMs: 8000,
 };
 
 test('node-budget cell (no workBudget) is unaffected by the equal-work addition', async () => {
@@ -130,7 +130,7 @@ test('work-budget cell reports success exactly like the node-budget mode when a 
     assert.equal(result.ok, false, 'refereeValid is null for a stubbed non-real path -- see the real-solver test below for a genuine referee-valid success');
     assert.equal(result.status, 'referee-invalid');
     assert.equal(result.workSpent, 42);
-    assert.equal(result.winningConfigKey, 'dfs:nearClosureRescue');
+    assert.equal(result.winningConfigKey, 'dfs|score=nearClosureRescue|bias=none');
 });
 
 test('multi-technique cell: the first config gets the whole gate share, the second gets only the leftover', async () => {
@@ -147,7 +147,7 @@ test('multi-technique cell: the first config gets the whole gate share, the seco
     });
     const { runCell } = await createCellRunner({ runAttemptForTesting });
     const result = await runCell({
-        ...baseCell, techniqueKeys: ['dfs:nearClosureRescue', 'dfs:default'], workBudget: 100_000_000,
+        ...baseCell, techniqueKeys: ['dfs|score=nearClosureRescue|bias=none', 'dfs|score=default|bias=none'], workBudget: 100_000_000,
     });
 
     // 2 gates x 2 configs = 4 calls total (nothing here ever reaches its ceiling, so both configs
@@ -193,7 +193,7 @@ test('real solver, work budget too small for a losing technique: work-budget-rea
     const { runCell } = await createCellRunner();
     const result = await runCell({
         cellId: 'T1-0000002', tier: 'T1', corpus: 'published', levelPos: 1,
-        techniqueKeys: ['beam:objectiveFirst@beam2000'], ablation: null, budgetMs: 8000,
+        techniqueKeys: ['beam|score=objectiveFirst|bias=none|width=2000|retention=plain'], ablation: null, budgetMs: 8000,
         workBudget: 50_000,
     });
 
@@ -211,7 +211,7 @@ test('real admissible-order/IDA cell obeys the equal-work cap instead of oversho
     const budget = 50_000;
     const result = await runCell({
         cellId: 'EW1-IDA-CAP', tier: 'EW1', corpus: 'published', levelPos: 1,
-        techniqueKeys: ['ida:none'], ablation: null, budgetMs: 600_000,
+        techniqueKeys: ['admissible-order|tieBreak=none|lds=off'], ablation: null, budgetMs: 600_000,
         workBudget: budget,
     });
 
