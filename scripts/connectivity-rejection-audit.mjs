@@ -215,6 +215,11 @@ const summary = {
 console.log('\n=== Stage A summary ===');
 console.log(JSON.stringify(summary, null, 2));
 
+// Each --boundary-sketch record adds a per-row reachedFingerprint plus a boundaryBlockers array,
+// which roughly doubled raw output size on the 80-level/12,905-dominant-cluster corpus2 sample (the
+// committed reports/stress/connectivity-rejection-audit-corpus2-stageb.json is ~90MB, close to
+// GitHub's 100MB hard push limit). A larger --boundary-sketch sample should drop the raw `records`
+// payload (or gzip it) rather than committing it as-is.
 mkdirSync(path.dirname(path.resolve(OUT_FILE)), { recursive: true });
 writeFileSync(path.resolve(OUT_FILE), JSON.stringify({ summary, levelSummaries, records: allRecords }));
 console.log(`\nWrote ${OUT_FILE} (${allRecords.length} records, ${levelSummaries.length} levels)`);
