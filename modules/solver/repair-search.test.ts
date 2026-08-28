@@ -4,7 +4,7 @@ import { test, vi } from 'vitest';
 
 import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
-import { POLICY_PROFILES } from './policy.js';
+import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { repairSearchFromGate, repairStreamSeeds, computePlateauPenaltyCells, selectGuideCells, relinkPaths, preferredTurnExit, __takePlyForTests } from './repair-search.js';
 import { createState, applyMove } from './search-state.js';
@@ -32,7 +32,7 @@ test('repairSearchFromGate solves a simple line level', async () => {
     const level = makeLevel({ grid: { w: 3, h: 1 }, goal: { x: 3, y: 1 }, reqLen: 2 });
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
-    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 1000, Date.now(), null);
+    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 1000, Date.now(), null);
     assert.deepEqual(path, [K(1, 1), K(2, 1), K(3, 1)]);
 });
 
@@ -47,7 +47,7 @@ test('repairSearchFromGate finds a valid path requiring an intersection and a mu
     });
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
-    const path = await repairSearchFromGate(K(2, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null);
+    const path = await repairSearchFromGate(K(2, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null);
     assert.ok(path, 'expected a solution within budget on this small grid');
     assert.equal(replayAndValidate(path as number[], level, prep), true);
 });
@@ -66,7 +66,7 @@ test('stochastic takePly retains a candidate that deterministic neighbor-budget 
 
     const choices: Array<{ survivors: number[] }> = [];
     prep._repairChoiceResearchObserver = { observe: record => choices.push(record) };
-    __takePlyForTests(state, level, prep, POLICY_PROFILES.repair, null, () => 0, null, 0, []);
+    __takePlyForTests(state, level, prep, SCORING_PROFILES.repair, null, () => 0, null, 0, []);
     assert.ok(choices[0]?.survivors.includes(candidate),
         'the exact stochastic survivor-selection loop must retain the neighbor-budget candidate');
 
@@ -91,7 +91,7 @@ test('repairSearchFromGate is deterministic: identical inputs produce identical 
     });
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 1500, Date.now(), null);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 1500, Date.now(), null);
 
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
@@ -99,7 +99,7 @@ test('repairSearchFromGate is deterministic: identical inputs produce identical 
     const choiceRecords: Array<{ survivors: number[]; chosenIndex: number }> = [];
     prepB._repairEliteResearchObserver = { observe: record => eliteRecords.push(record.path) };
     prepB._repairChoiceResearchObserver = { observe: record => choiceRecords.push(record) };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 1500, Date.now(), null);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 1500, Date.now(), null);
 
     assert.deepEqual(pathA, pathB);
     assert.equal(prepA._metrics.nodesExpanded, prepB._metrics.nodesExpanded, 'elite observation must not change canonical work');
@@ -127,7 +127,7 @@ test('repairSearchFromGate stops at its wall deadline without relying on real el
     const clock = vi.spyOn(Date, 'now');
     try {
         clock.mockReturnValueOnce(0).mockReturnValue(300);
-        const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 300, 0, null, undefined, false, Infinity, out);
+        const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 300, 0, null, undefined, false, Infinity, out);
         assert.equal(path, null);
         assert.equal(out.timedOut, true);
         assert.equal(out.stopReason, 'wall-clock');
@@ -150,7 +150,7 @@ test('every path repairSearchFromGate returns satisfies isSolutionState (soundne
     });
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
-    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null);
+    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null);
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
     // A null result (budget exhausted without a solution) is also an acceptable outcome here —
     // this test's contract is "never return an invalid path," not "always succeed."
@@ -174,7 +174,7 @@ test('repairSearchFromGate defaults enableMustTurnBias to false (omitted 8th arg
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
     // No 8th argument at all — exercises the same call shape every pre-existing caller uses.
-    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 500, Date.now(), null);
+    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 500, Date.now(), null);
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
 
@@ -182,7 +182,7 @@ test('repairSearchFromGate with enableMustTurnBias=true only ever returns sound,
     const level = mustTurnLevel();
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
-    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, true);
+    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, true);
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
 
@@ -203,11 +203,11 @@ test('repairSearchFromGate with enableMustTurnBias=true is deterministic', async
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, true, 1_000_000);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, true, 1_000_000);
 
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, true, 1_000_000);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, true, 1_000_000);
 
     assert.deepEqual(pathA, pathB);
 }, 25000);
@@ -240,7 +240,7 @@ test('repairSearchFromGate with enablePlateauPenalty=true only ever returns soun
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
     // Positional args through seedSalt=0, then enablePlateauPenalty=true (13th arg).
-    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, true);
+    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, true);
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
 
@@ -252,10 +252,10 @@ test('repairSearchFromGate with enablePlateauPenalty=true is deterministic', asy
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, true);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, true);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, true);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, true);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -263,10 +263,10 @@ test('enablePlateauPenalty=false (default) is byte-identical to omitting it', as
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -293,7 +293,7 @@ test('repairSearchFromGate with enableRecombination=true only ever returns sound
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
     // Positional args through enablePlateauPenalty=false, then enableRecombination=true (14th arg).
-    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, true);
+    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, true);
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
 
@@ -301,10 +301,10 @@ test('repairSearchFromGate with enableRecombination=true is deterministic', asyn
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, true);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, true);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, true);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, true);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -312,10 +312,10 @@ test('enableRecombination=false (default) is byte-identical to omitting it', asy
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -328,7 +328,7 @@ test('repairSearchFromGate with enableBeamSeed=true only ever returns sound, val
     const level = mustTurnLevel();
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
-    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, false, false, false, true);
+    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, false, false, false, true);
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
 
@@ -336,10 +336,10 @@ test('repairSearchFromGate with enableBeamSeed=true is deterministic', async () 
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, false, false, true);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, false, false, true);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, false, false, true);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, false, false, true);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -347,10 +347,10 @@ test('enableBeamSeed=false (default) is byte-identical to omitting it', async ()
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false, false, false, false);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false, false, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -360,7 +360,7 @@ test('enableBeamSeed=true actually seeds the elite pool from a beam survivor bef
     prep._metrics = { nodesExpanded: 0 };
     const arrivals: { producer: 'repair'; path: number[]; badness: number; arrivalNodes: number; restart: number }[] = [];
     prep._repairEliteResearchObserver = { observe: record => arrivals.push(record) };
-    await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, 50_000, null, 0, false, false, false, false, false, true);
+    await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, 50_000, null, 0, false, false, false, false, false, true);
     // At least one elite must have arrived at restart 0 -- i.e. before the restart loop's first
     // increment (restartCount++ is the loop's very first statement) -- proving the seed step ran
     // and inserted through considerElite BEFORE ordinary restart-driven discovery had a chance to.
@@ -374,7 +374,7 @@ test('enableBeamSeed=true charges the beam-seed cost against this call\'s own no
     const out: { nodesExpanded?: number } = {};
     // A tiny nodeBudget the ordinary restart loop alone could not possibly exceed in zero restarts,
     // isolating the beam-seed step's own node cost as (most of) what gets reported.
-    await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1, out, 0, false, false, false, false, false, true);
+    await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1, out, 0, false, false, false, false, false, true);
     assert.equal(prep._metrics.nodesExpanded > 0, true, 'the beam-seed step spent real, globally-counted nodes');
     // The tiny nodeBudget=1 means the restart loop's own first check trips immediately on
     // nodesExpandedLocal alone -- so out.nodesExpanded (set on that exit path) reports ONLY the
@@ -416,7 +416,7 @@ test('repairSearchFromGate with enableRelink=true only ever returns sound, valid
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
     // Positional args through enableRecombination=false, then enableRelink=true (15th arg).
-    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, true);
+    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, true);
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
 
@@ -424,10 +424,10 @@ test('repairSearchFromGate with enableRelink=true is deterministic', async () =>
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, true);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, true);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, true);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, true);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -435,10 +435,10 @@ test('enableRelink=false (default) is byte-identical to omitting it', async () =
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -463,7 +463,7 @@ test('repairSearchFromGate with enableTurnBias=true only ever returns sound, val
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
     // Positional args through enableRelink=false, then enableTurnBias=true (16th arg).
-    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, false, true);
+    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, false, true);
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
 
@@ -471,10 +471,10 @@ test('repairSearchFromGate with enableTurnBias=true is deterministic', async () 
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, true);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, true);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, true);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, true);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -482,10 +482,10 @@ test('enableTurnBias=false (default) is byte-identical to omitting it', async ()
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false, false);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, SCORING_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
@@ -505,13 +505,13 @@ test('STRATEGY_REPAIR_ELITE_SPLICE=false forces every restart fresh-from-gate', 
     const prepDefault = prepLevel(level);
     prepDefault._metrics = { nodesExpanded: 0 };
     const outDefault: { bestBadness?: number } = {};
-    await repairSearchFromGate(K(1, 1), level, prepDefault, POLICY_PROFILES.repair, 150, Date.now(), null, undefined, false, Infinity, outDefault);
+    await repairSearchFromGate(K(1, 1), level, prepDefault, SCORING_PROFILES.repair, 150, Date.now(), null, undefined, false, Infinity, outDefault);
 
     const prepNoSplice = prepLevel(level);
     prepNoSplice._cfg = { STRATEGY_REPAIR_ELITE_SPLICE: false };
     prepNoSplice._metrics = { nodesExpanded: 0 };
     const outNoSplice: { bestBadness?: number } = {};
-    await repairSearchFromGate(K(1, 1), level, prepNoSplice, POLICY_PROFILES.repair, 150, Date.now(), null, undefined, false, Infinity, outNoSplice);
+    await repairSearchFromGate(K(1, 1), level, prepNoSplice, SCORING_PROFILES.repair, 150, Date.now(), null, undefined, false, Infinity, outNoSplice);
 
     // Both are legitimate ILS runs (may or may not solve in 150ms); the flag must at minimum
     // not crash, and — since rand() consumption differs the moment splicing is force-disabled —
@@ -525,13 +525,13 @@ test('STRATEGY_REPAIR_STAGNATION_BURST=false never forces a fresh-restart burst,
 
     const prepNoCfg = prepLevel(level);
     prepNoCfg._metrics = { nodesExpanded: 0 };
-    const pathNoCfg = await repairSearchFromGate(K(1, 1), level, prepNoCfg, POLICY_PROFILES.repair, 1000, Date.now(), null);
+    const pathNoCfg = await repairSearchFromGate(K(1, 1), level, prepNoCfg, SCORING_PROFILES.repair, 1000, Date.now(), null);
     assert.deepEqual(pathNoCfg, [K(1, 1), K(2, 1), K(3, 1)]);
 
     const prepNoBurst = prepLevel(level);
     prepNoBurst._cfg = { STRATEGY_REPAIR_STAGNATION_BURST: false };
     prepNoBurst._metrics = { nodesExpanded: 0 };
-    const pathNoBurst = await repairSearchFromGate(K(1, 1), level, prepNoBurst, POLICY_PROFILES.repair, 1000, Date.now(), null);
+    const pathNoBurst = await repairSearchFromGate(K(1, 1), level, prepNoBurst, SCORING_PROFILES.repair, 1000, Date.now(), null);
     assert.deepEqual(pathNoBurst, [K(1, 1), K(2, 1), K(3, 1)], 'disabling the stagnation burst must not break an ordinary solve');
 });
 
@@ -540,7 +540,7 @@ test('STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST=false disables the must-turn exit nudg
     const prep = prepLevel(level);
     prep._cfg = { STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST: false };
     prep._metrics = { nodesExpanded: 0 };
-    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, true);
+    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 2000, Date.now(), null, undefined, true);
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
 
@@ -563,6 +563,6 @@ test('closeLengthGap never returns an unsound path on a level with must-pass/mus
     const prep = prepLevel(level);
     // No _cfg — closeLengthGap is default-enabled, so this already exercises it.
     prep._metrics = { nodesExpanded: 0 };
-    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 3000, Date.now(), null);
+    const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 3000, Date.now(), null);
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
