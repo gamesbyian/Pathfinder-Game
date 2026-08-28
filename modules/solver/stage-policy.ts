@@ -48,8 +48,20 @@ export function solverStageSpec(id: SolverStageId): SolverStageSpec {
 }
 export interface BudgetCurrency { ceiling: number | null; capped: boolean; source: 'production-default' | 'explicit-override'; }
 export interface BudgetEnvelope {
-    stageId: SolverStageId; scope: 'stage-local' | 'whole-solve'; wall: BudgetCurrency; work: BudgetCurrency; nodes: BudgetCurrency;
-    headroom: { kind: 'none' | 'additive' | 'withheld'; amount: number; sourceStageId: SolverStageId | null }; strictTotalWork: boolean;
+    stageId: SolverStageId;
+    scope: 'stage-local' | 'whole-solve';
+    /** Compatibility/telemetry projection only. Wall time is a deadline, not an allocation currency;
+     * new scheduler policy must not derive search shares from this field. */
+    wall: BudgetCurrency;
+    /** Canonical cross-technique allocation currency. Some legacy stage projections are not yet
+     * populated here; stage-budget.ts documents that migration debt explicitly. */
+    work: BudgetCurrency;
+    /** Technique-local/diagnostic guard. Raw nodes are not portable cross-technique cost. */
+    nodes: BudgetCurrency;
+    /** Historical node-headroom metadata today. Keep the unit explicit in callers; a future work
+     * reserve must not reuse this unqualified scalar. */
+    headroom: { kind: 'none' | 'additive' | 'withheld'; amount: number; sourceStageId: SolverStageId | null };
+    strictTotalWork: boolean;
 }
 export function createBudgetEnvelope(input: { stageId: SolverStageId; wallMs?: number; workUnits?: number; nodeCeiling?: number; explicitOverride?: boolean; scope?: BudgetEnvelope['scope']; strictTotalWork?: boolean; headroom?: BudgetEnvelope['headroom'] }): BudgetEnvelope {
     solverStageSpec(input.stageId);
