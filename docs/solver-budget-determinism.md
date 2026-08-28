@@ -43,6 +43,12 @@ Both counters use the same work unit:
 
 If `workBudget` is omitted, ms-shaped callers convert at the run boundary using committed work-per-ms calibration; live host speed never controls allocation.
 
+### Clock-shaped compatibility names
+
+Some older APIs and CLIs still expose names such as `--wall-ms` or `wallClockDeadlineMs` even though the implementation now converts that value once into canonical work and never gates search extent on `Date.now()`. Treat these as compatibility shims, not evidence of a live wall-clock budget. New APIs should prefer explicit `workBudget` / `haltedByWorkBudget` names; persisted old names may remain as documented aliases until consumers migrate.
+
+Conversely, a genuine outer wall deadline must say when it actually bound. Decision-bearing research harnesses must expose/propagate the stop reason and reject or separately classify a wall-truncated arm rather than silently recording it as ordinary unsolved-at-work evidence.
+
 ## Scheduler portfolio contract
 
 Evidence-driven scheduling changes the division of work, not the definition of work.
