@@ -17,3 +17,6 @@ coverage/
 tmp/
 reports/hint-discovery/
 reports/hint-workbench/
+
+# Persistent local/tool caches (also restorable by GitHub Actions)
+.cache/
