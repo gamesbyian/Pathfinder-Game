@@ -34,6 +34,10 @@ const corpusPath = path.resolve(argMap.get('--corpus') || path.join(root, 'data'
 const outFile = argMap.get('--out') || 'reports/stress/level-blind-capability-sweep.json';
 const summaryOutFile = argMap.get('--summary-out') || outFile.replace(/\.json$/u, '-summary.md');
 const budgetMs = Number(argMap.get('--budget-ms') || 86400000);
+// --node-budget/--work-budget are per-level STARTING allocations, not hard ceilings: additive
+// fallback/retry tiers can spend several times either budget's own value once the main ladder is
+// exhausted (measured 1.5x-467x on a sample; see reports/2026-08-28-additive-tier-participation-
+// audit.md), unless --strict-total-work-budget is also passed.
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
 const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined;
 const workers = Math.max(1, Number(argMap.get('--workers') || 1));
