@@ -1,9 +1,9 @@
 # Very-high-intersection STANDARD intersection-harvest beam exposure
 
-> **Status:** append-last parent CLOSED NEGATIVE. Reserve-preserving descendant is a separate tuning candidate.
-> **Candidate:** STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE.
-> **Evidence role:** selected development replay + broader feature-defined development A/B; independent confirmation separately prespecified and not yet earned.
-> **Branch:** codex/missing-exposure-and-budget-audit.
+> **Status:** concluded-negative
+> **Last evidence:** 2026-08-28 — run 33150739483: 56/120 control vs 55/120 treatment, 0 gains / 1 loss (R02965), treatment participation 68/120, no error/deadline censoring
+> **Decision:** close the append-last standard-IH exposure form; its added useful action displaced fixed-work budget from an existing winner
+> **Remaining gate:** none for this form; any descendant requires a materially new premise
 
 ## Premise
 
