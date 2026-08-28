@@ -58,6 +58,8 @@ Do not begin a successful-run analysis by listing every shard job or artifact. G
 
 Legacy workflow-specific combined artifacts remain for compatibility and richer/raw retention. `solver-sweep-result` is an additional retrieval interface, not a replacement for evidence retention.
 
+Workflow `run-name` values also include the inputs most useful for distinguishing nearby dispatches in the Actions list. Workflows that commit durable research reports write a small `gha-source-run` provenance sidecar with the originating run URL/id, SHA/ref, dispatch inputs, and completeness record, so agents can navigate report → run without reconstructing history.
+
 ## Core capability
 
 - `solver-stress-refresh.yml` — canonical level-blind full refresh over Corpus 1 + Corpus 2. Default 60 shards / 20 lanes / 4 workers; node/work ceilings normally bind. Hint capture is always on; deterministic runs defer canonical hint persistence to the harvester.
