@@ -140,7 +140,8 @@ jobs:
             /*
             !/logs/
             !/reports/
-            !/data/
+            !/data/*
+            /data/levels.json
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v7
         with:

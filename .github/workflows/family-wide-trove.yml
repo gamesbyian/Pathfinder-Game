@@ -36,6 +36,7 @@
 # target it at all -- GitHub requires a workflow file to exist on the default branch before it's
 # dispatchable, even against a different ref's own copy of the file.
 name: Family wide research trove (research branch only)
+run-name: "Family trove · ${{ inputs.recover_run_id && format('recover {0}', inputs.recover_run_id) || 'fresh' }} · shards=${{ inputs.shards }} · variants=${{ inputs.variant_count }}"
 
 on:
   workflow_dispatch:
@@ -288,13 +289,35 @@ jobs:
           if-no-files-found: warn
           retention-days: 90
 
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="reports/families/2026-08-07-wide-trove-summary.md" \
+            --shards-expected="$(if [ -n "${{ inputs.recover_run_id }}" ]; then find logs/family-census -maxdepth 1 -name 'wide-shard-*-summary.jsonl' | wc -l | tr -d ' '; else echo "${{ inputs.shards }}"; fi)" \
+            --shards-basis="${{ inputs.recover_run_id && 'recovery source expected count unavailable; observed source artifacts used as denominator' || 'dispatch shard count' }}" \
+            --shards-observed="$(find logs/family-census -maxdepth 1 -name 'wide-shard-*-summary.jsonl' | wc -l | tr -d ' ')" \
+            --provenance-out="reports/families/2026-08-07-wide-trove-source-run.json" \
+            --source-artifact="family-wide-trove-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Commit and push the combined trove to the research branch
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add data/families/ logs/family-census/ reports/families/2026-08-07-wide-trove-summary.md \
-                  reports/families/2026-08-07-wide-trove-attempts-*.json
+                  reports/families/2026-08-07-wide-trove-attempts-*.json \
+                  reports/families/2026-08-07-wide-trove-source-run.json
           if git diff --cached --quiet; then
             echo "Nothing changed -- not creating an empty commit."
             exit 0

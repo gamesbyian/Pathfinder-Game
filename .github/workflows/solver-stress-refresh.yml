@@ -11,6 +11,7 @@
 # changed hint files in their shard artifacts and let harvest-solver-evidence.yml merge them later,
 # which preserves both experiment isolation and parallel A/B dispatches without discarding evidence.
 name: Solver stress-corpus refresh (level-blind capability)
+run-name: "Stress refresh · ${{ inputs.deterministic == 'true' && 'deterministic' || 'normal' }} · flags=${{ inputs.enable_flags || 'control' }} · shards=${{ inputs.shard_count }}"
 
 on:
   workflow_dispatch:
@@ -432,6 +433,27 @@ jobs:
           path: |
             reports/stress/
             logs/solver-corpus2-batches/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="reports/stress/benchmark-parallel.json" \
+            --include="reports/stress/benchmark-latest-random.json" \
+            --shards-expected="${{ inputs.shard_count }}" \
+            --shards-observed="$(find logs/solver-corpus2-batches -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
+            --provenance-out="reports/stress/capability-runs/${{ github.run_id }}/gha-source-run.json" \
+            --source-artifact="solver-stress-refresh-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
           if-no-files-found: error
           retention-days: 90
 

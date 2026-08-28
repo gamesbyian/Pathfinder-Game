@@ -23,6 +23,7 @@
 # 2026-08-25 throughput pass keeps that assignment model but makes its buckets finer to reduce tail
 # latency, matching the queue-based pattern already used by other variable-runtime batch workflows.
 name: atlas-sweep (grow the CP-SAT-labelled branch atlas)
+run-name: "Atlas sweep · ${{ inputs.backfill_run_id && format('backfill {0}', inputs.backfill_run_id) || 'fresh' }} · ${{ inputs.corpus }} · shards=${{ inputs.shard_count }}"
 
 on:
   workflow_dispatch:
@@ -180,6 +181,26 @@ jobs:
           path: artifact-staging/reports/stress/
           retention-days: 30
           if-no-files-found: warn
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="artifact-staging/reports/stress" \
+            --shards-expected="${{ inputs.shard_count }}" \
+            --shards-observed="$(find artifact-staging/logs/atlas-sweep -maxdepth 1 -name 'shard-*-summary.md' | wc -l | tr -d ' ')" \
+            --provenance-out="reports/stress/atlas-source-run-${{ github.run_id }}.json" \
+            --source-artifact="atlas-sweep-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
 
       - name: Merge new/updated atlas files into the working tree and commit
         shell: bash

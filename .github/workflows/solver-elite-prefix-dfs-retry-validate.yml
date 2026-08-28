@@ -9,6 +9,7 @@
 # the interactive sandbox in the first place. Never commits to main, never touches any
 # baseline/heatmap file.
 name: Solver elite-prefix-dfs-retry local validation
+run-name: "Elite-prefix retry validation · protected=${{ inputs.protected_node_budget }} · retry=${{ inputs.retry_node_budget }}"
 
 on:
   workflow_dispatch:
@@ -97,6 +98,11 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Check out dispatched commit exactly
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
       - name: Download shard artifacts
         uses: actions/download-artifact@v8
         with:
@@ -139,4 +145,23 @@ jobs:
         with:
           name: elite-prefix-dfs-retry-validate-combined
           path: shards/
+          retention-days: 90
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="shards" \
+            --shards-expected="10" \
+            --shards-observed="$(find shards -maxdepth 1 -name 'shard-*.json' | wc -l | tr -d ' ')" \
+            --source-artifact="elite-prefix-dfs-retry-validate-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
           retention-days: 90

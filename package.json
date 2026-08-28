@@ -157,13 +157,15 @@
     "check:current-level-facts": "node scripts/current-level-facts.mjs --check",
     "test:current-level-facts": "node scripts/current-level-facts-node-test.mjs",
     "check:text-source-files": "node scripts/check-text-source-files.mjs",
-    "check:validators": "node scripts/run-scripts-parallel.mjs check:current-level-facts check:solver-budget-boundaries check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:workflow-actions check:browser-external-dependencies check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:canvas-theme-coverage check:level-data-validity check:level-provenance check:corpus-level-formatting",
+    "check:validators": "node scripts/run-scripts-parallel.mjs check:current-level-facts check:solver-budget-boundaries check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:solver-sweep-results check:workflow-actions check:browser-external-dependencies check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:canvas-theme-coverage check:level-data-validity check:level-provenance check:corpus-level-formatting",
     "check:nonlint": "npm run check:dead-scripts && npm run check:text-source-files && npm run check:validators",
     "check:level-data-validity": "tsx scripts/check-level-data-validity.mjs",
     "check:workflow-actions": "node scripts/check-workflow-actions.mjs",
     "check:browser-external-dependencies": "node scripts/check-browser-external-dependencies.mjs",
     "check:solver-budget-boundaries": "node scripts/check-solver-budget-boundaries.mjs",
-    "test:deep-proofs": "vitest run modules/solver/lower-bounds-deadlock-0.test.ts modules/solver/lower-bounds-deadlock-1.test.ts modules/solver/repair-search-close-length-gap-enabled.test.ts modules/solver/repair-search-close-length-gap-disabled.test.ts"
+    "test:deep-proofs": "vitest run modules/solver/lower-bounds-deadlock-0.test.ts modules/solver/lower-bounds-deadlock-1.test.ts modules/solver/repair-search-close-length-gap-enabled.test.ts modules/solver/repair-search-close-length-gap-disabled.test.ts",
+    "check:solver-sweep-results": "node scripts/check-solver-sweep-result-contract.mjs",
+    "gha:result": "node scripts/gha-result.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
