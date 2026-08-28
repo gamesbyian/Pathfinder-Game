@@ -13,6 +13,7 @@ const workflowInputs = {
 };
 const base = { schemaVersion: 2, experimentId: 'e', solverRef: 'abc', corpus: 'c.json', levelIds: ['a', 'b'],
     levelSelectionHash: levelSelectionHash(['a', 'b']), seeds: [1], canonicalWorkBudget: 10, wallDeadlineMs: 100,
+    budgetProtocol: 'production-additive',
     profile: 'default', instrumentation: 'off', workflow: 'solver-stress-refresh', workflowInputs };
 const control = { ...base, runId: 'c', arm: 'control', solverFlags: { TARGET: false, OTHER: true }, output: 'c.json' };
 const treatment = { ...base, runId: 't', arm: 'treatment', solverFlags: { TARGET: true, OTHER: true }, output: 't.json' };
@@ -45,6 +46,8 @@ assert.throws(() => compareExperimentArms({ ...control, solverFlags: { TARGET: t
 assert.throws(() => validateExperimentManifest({ ...control, levelIds: ['a'] }), /hash mismatch/);
 assert.throws(() => validateExperimentManifest({ ...control, levelIds: ['a', 'a'], levelSelectionHash: levelSelectionHash(['a', 'a']) }), /duplicates/);
 assert.throws(() => validateExperimentManifest({ ...control, workflowInputs: [] }), /workflowInputs/);
+assert.throws(() => validateExperimentManifest({ ...control, budgetProtocol: 'wall-clock-soup' }), /invalid budgetProtocol/);
+assert.throws(() => compareExperimentArms(control, { ...treatment, budgetProtocol: 'strict-total-work' }, 'TARGET'), /budgetProtocol/);
 const missingDeterministic = { ...workflowInputs }; delete missingDeterministic.deterministic;
 assert.throws(() => validateExperimentManifest({ ...control, workflowInputs: missingDeterministic }), /missing for solver-stress-refresh: deterministic/);
 
@@ -87,6 +90,8 @@ const runPreflight = ({ runId, flagValue, inputs }) => spawnSync(process.execPat
     '--profile=default', '--instrumentation=off', `--output=${path.join(temp, `${runId}.json`)}`, '--allow-dirty',
 ], { encoding: 'utf8' });
 assert.equal(runPreflight({ runId: 'off', flagValue: 'false', inputs: workflowInputs }).status, 0);
+const preflightManifest = JSON.parse(readFileSync(path.join(temp, 'off.json'), 'utf8'));
+assert.equal(preflightManifest.budgetProtocol, 'production-additive');
 const inconsistent = runPreflight({ runId: 'bad-on', flagValue: 'true', inputs: workflowInputs });
 assert.notEqual(inconsistent.status, 0);
 assert.match(`${inconsistent.stdout}${inconsistent.stderr}`, /solverFlags disagree/);
