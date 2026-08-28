@@ -162,8 +162,8 @@ export function mustCrossKeysOf(level: HintNoveltyLevel): number[] {
     return mc.map(m => PACK(m.x - 1, m.y - 1));
 }
 
-/** reqLen / navigable area — mirrors the solver's getNavigableDensity. 0 when reqLen is unknown. */
-export function navigableDensity(level: HintNoveltyLevel): number {
+/** reqLen / non-gate winning-path cell count — mirrors the solver's getRequiredPathCoverageRatio. 0 when reqLen is unknown. */
+export function requiredPathCoverageRatio(level: HintNoveltyLevel): number {
     if (!level.reqLen) return 0;
     const { w, h } = level.grid;
     const occupied = (level.blocks?.length || 0) + (level.geese?.length || 0)
@@ -186,7 +186,7 @@ export function nearestFeatureDistance(level: HintNoveltyLevel, candidate: numbe
     const hints = level.hints || [];
     if (!hints.length) return 1;
     const mcKeys = mustCrossKeysOf(level);
-    const useCrossings = navigableDensity(level) >= NEAR_HAMILTONIAN_COVERAGE_THRESHOLD;
+    const useCrossings = requiredPathCoverageRatio(level) >= NEAR_HAMILTONIAN_COVERAGE_THRESHOLD;
     const candFeat = buildPathFeatures(candidate, mcKeys);
     let nearest = 1;
     for (const hint of hints) nearest = Math.min(nearest, featureDistance(candFeat, buildPathFeatures(hint, mcKeys), useCrossings));
