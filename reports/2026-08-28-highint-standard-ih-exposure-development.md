@@ -1,6 +1,6 @@
 # Very-high-intersection STANDARD intersection-harvest beam exposure
 
-> **Status:** append-last parent CLOSED NEGATIVE by frozen zero-loss gate; final 120-row accounting still being collected. Reserve-preserving descendant is a separate tuning candidate.
+> **Status:** append-last parent CLOSED NEGATIVE. Reserve-preserving descendant is a separate tuning candidate.
 > **Candidate:** STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE.
 > **Evidence role:** selected development replay + broader feature-defined development A/B; independent confirmation separately prespecified and not yet earned.
 > **Branch:** codex/missing-exposure-and-budget-audit.
@@ -63,6 +63,24 @@ The attempt trace isolates the cause. The two leading diverse-beam attempts are 
 Therefore the append-last parent fails the prespecified development gate regardless of any later gains. Its independent-confirmation protocol must not be executed for this form.
 
 This failure supplies a materially new premise for one descendant: expose the same action immediately **before** the pre-existing protected suffix, preserving all five old protected members without widening the reserve. That descendant is tracked separately by `STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE`; its first gate is a selected two-row replay containing the known parent gain (`R02440`) and known parent regression (`R02965`).
+
+### Final 120-row accounting
+
+The sealed shard artifacts from run `33150739483` were recombined directly while the tiny Actions compare job was runner-queued. Exact result:
+
+| metric | control | append-last treatment |
+|---|---:|---:|
+| solved | **56/120** | **55/120** |
+| aggregate work | **5,537,517,279** | **5,566,556,458** |
+| treatment-only solves | — | **0** |
+| control-only solves | — | **1 (R02965)** |
+| new action reached | — | **68/120** |
+| deadline-truncated | 0 | 0 |
+| error / attempt-error rows | 0 | 0 |
+
+Treatment therefore adds **29,039,179** work (+0.52%) while losing one solve and gaining none. The sole changed solved-ID outcome is R02965, matching the mechanistic trace above. This is a decisive development negative under the frozen zero-loss rule.
+
+The parent confirmation protocol is consequently **not executed**.
 
 ### Development verdict gate
 
