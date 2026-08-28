@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'vitest';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { PACK } from './encoding.js';
-import { POLICY_PROFILES } from './policy.js';
+import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, AttemptConfig, PrepLevel } from './types.js';
@@ -47,15 +47,15 @@ const SOLUTION = [PACK(0, 0), PACK(1, 0), PACK(2, 0)];
 
 test('DFS branch (no beamWidth, no repair) runs the DFS search and solves', async () => {
   const level = makeLevel();
-  const cfg: AttemptConfig = { profileName: 'default', template: null };
-  const path = await runAttemptSearch(cfg, PACK(0, 0), level, prepFor(level), POLICY_PROFILES.default, 1000, Date.now(), null);
+  const cfg: AttemptConfig = { scoringProfileId: 'default', orderingBias: null };
+  const path = await runAttemptSearch(cfg, PACK(0, 0), level, prepFor(level), SCORING_PROFILES.default, 1000, Date.now(), null);
   assert.deepEqual(path, SOLUTION);
 });
 
 test('beam branch (beamWidth set) runs the beam search and solves', async () => {
   const level = makeLevel();
-  const cfg: AttemptConfig = { profileName: 'default', template: null, beamWidth: 8 };
-  const path = await runAttemptSearch(cfg, PACK(0, 0), level, prepFor(level), POLICY_PROFILES.default, 1000, Date.now(), null);
+  const cfg: AttemptConfig = { scoringProfileId: 'default', orderingBias: null, beamWidth: 8 };
+  const path = await runAttemptSearch(cfg, PACK(0, 0), level, prepFor(level), SCORING_PROFILES.default, 1000, Date.now(), null);
   assert.deepEqual(path, SOLUTION);
 });
 
@@ -66,14 +66,14 @@ test('repair branch routes to repair search — distinguishable from DFS by its 
   const level = makeLevel({ reqLen: 5 });
 
   const repairOut: { bestBadness?: number } = {};
-  const repairCfg: AttemptConfig = { profileName: 'repair', template: null, repair: true };
-  const repairPath = await runAttemptSearch(repairCfg, PACK(0, 0), level, prepFor(level), POLICY_PROFILES.repair, 200, Date.now(), null, Infinity, repairOut);
+  const repairCfg: AttemptConfig = { scoringProfileId: 'repair', orderingBias: null, repair: true };
+  const repairPath = await runAttemptSearch(repairCfg, PACK(0, 0), level, prepFor(level), SCORING_PROFILES.repair, 200, Date.now(), null, Infinity, repairOut);
   assert.equal(repairPath, null);
   assert.equal(typeof repairOut.bestBadness, 'number', 'repair config must dispatch to repairSearchFromGate (sets bestBadness)');
 
   const dfsOut: { bestBadness?: number } = {};
-  const dfsCfg: AttemptConfig = { profileName: 'default', template: null };
-  const dfsPath = await runAttemptSearch(dfsCfg, PACK(0, 0), level, prepFor(level), POLICY_PROFILES.default, 200, Date.now(), null, Infinity, dfsOut);
+  const dfsCfg: AttemptConfig = { scoringProfileId: 'default', orderingBias: null };
+  const dfsPath = await runAttemptSearch(dfsCfg, PACK(0, 0), level, prepFor(level), SCORING_PROFILES.default, 200, Date.now(), null, Infinity, dfsOut);
   assert.equal(dfsPath, null);
   assert.equal(dfsOut.bestBadness, undefined, 'DFS config must NOT dispatch to repair (leaves bestBadness unset)');
 });
@@ -89,13 +89,13 @@ test('STRATEGY_REPAIR_BEAM_SEED threads through to repairSearchFromGate\'s enabl
   const arrivals: { restart: number }[] = [];
   prep._repairEliteResearchObserver = { observe: record => arrivals.push(record) };
 
-  const offCfg: AttemptConfig = { profileName: 'repair', template: null, repair: true };
+  const offCfg: AttemptConfig = { scoringProfileId: 'repair', orderingBias: null, repair: true };
   prep._cfg = null;
-  await runAttemptSearch(offCfg, PACK(0, 0), level, prep, POLICY_PROFILES.repair, 200, Date.now(), null);
+  await runAttemptSearch(offCfg, PACK(0, 0), level, prep, SCORING_PROFILES.repair, 200, Date.now(), null);
   assert.equal(arrivals.some(a => a.restart === 0), false, 'no beam-seeded elite without the flag');
 
   prep._cfg = { STRATEGY_REPAIR_BEAM_SEED: true } as AblationConfig;
-  await runAttemptSearch(offCfg, PACK(0, 0), level, prep, POLICY_PROFILES.repair, 200, Date.now(), null);
+  await runAttemptSearch(offCfg, PACK(0, 0), level, prep, SCORING_PROFILES.repair, 200, Date.now(), null);
   assert.equal(arrivals.some(a => a.restart === 0), true, 'a beam-seeded elite arrives at restart 0 once the flag is set on prep._cfg');
 });
 
