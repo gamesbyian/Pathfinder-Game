@@ -1,11 +1,15 @@
-/** Unit tests for Solver archetype/density classification. */
+/** Unit tests for Solver routing-regime / required-path-coverage classification. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { SOLVER_TESTING_API } from '../solver.js';
-import { detectArchetype, getNavigableArea, getNavigableDensity } from './archetype.js';
+import {
+  classifyRoutingRegime,
+  getNonGateWinningPathCellCount,
+  getRequiredPathCoverageRatio,
+  normalizeRoutingRegime,
+} from './archetype.js';
 import { PACK } from './encoding.js';
 import type { NormalizedLevel } from '../domain/types.js';
-
 
 function makeLevel(overrides = {}) {
   return {
@@ -22,7 +26,7 @@ function makeLevel(overrides = {}) {
   } as unknown as NormalizedLevel;
 }
 
-test('getNavigableArea excludes blocked, goose, false-goal, and gate cells', () => {
+test('getNonGateWinningPathCellCount preserves the historical denominator exactly', () => {
   const level = makeLevel({
     grid: { w: 4, h: 4 },
     gateKeys: [PACK(0, 0), PACK(1, 0)],
@@ -30,20 +34,41 @@ test('getNavigableArea excludes blocked, goose, false-goal, and gate cells', () 
     gooseSet: new Set([PACK(3, 0)]),
     falseGoalKeys: new Set([PACK(0, 1)]),
   });
-  assert.equal(getNavigableArea(level), 11);
-  assert.equal(getNavigableDensity({ ...level, reqLen: 5 }), 5 / 11);
+  assert.equal(getNonGateWinningPathCellCount(level), 11);
+  assert.equal(getRequiredPathCoverageRatio({ ...level, reqLen: 5 }), 5 / 11);
 });
 
-test('detectArchetype preserves priority order for known buckets', () => {
-  assert.equal(detectArchetype(makeLevel({ reqLen: 10, reqInt: 1 })), 'near-closure');
-  assert.equal(detectArchetype(makeLevel({ reqLen: 60, reqInt: 5 })), 'high-intersection-burden');
-  assert.equal(detectArchetype(makeLevel({ reqLen: 40, reqInt: 2, mustCrossKeys: [PACK(1, 1), PACK(2, 2)] })), 'must-cross-heavy');
-  assert.equal(detectArchetype(makeLevel({ reqLen: 40, reqInt: 2, portalMap: new Map([[PACK(1, 1), { dest: PACK(2, 2) }], [PACK(2, 2), { dest: PACK(1, 1) }], [PACK(3, 3), { dest: PACK(4, 4) }], [PACK(4, 4), { dest: PACK(3, 3) }]]) })), 'portal-heavy');
-  assert.equal(detectArchetype(makeLevel({ reqLen: 40, reqInt: 2 })), 'default');
+test('classifyRoutingRegime preserves the historical first-match routing buckets', () => {
+  assert.equal(classifyRoutingRegime(makeLevel({ reqLen: 10, reqInt: 1 })), 'sparse-low-intersection');
+  assert.equal(classifyRoutingRegime(makeLevel({ reqLen: 60, reqInt: 5 })), 'intersection-heavy');
+  assert.equal(classifyRoutingRegime(makeLevel({
+    reqLen: 40, reqInt: 2, mustCrossKeys: [PACK(1, 1), PACK(2, 2)],
+  })), 'must-cross-heavy');
+  assert.equal(classifyRoutingRegime(makeLevel({
+    reqLen: 40, reqInt: 2,
+    portalMap: new Map([
+      [PACK(1, 1), { dest: PACK(2, 2) }],
+      [PACK(2, 2), { dest: PACK(1, 1) }],
+      [PACK(3, 3), { dest: PACK(4, 4) }],
+      [PACK(4, 4), { dest: PACK(3, 3) }],
+    ]),
+  })), 'multi-portal');
+  assert.equal(classifyRoutingRegime(makeLevel({ reqLen: 40, reqInt: 2 })), 'general');
 });
 
-test('SOLVER_TESTING_API exposes the extracted archetype detector', () => {
+test('normalizeRoutingRegime dual-reads every historical persisted value', () => {
+  assert.equal(normalizeRoutingRegime('default'), 'general');
+  assert.equal(normalizeRoutingRegime('near-closure'), 'sparse-low-intersection');
+  assert.equal(normalizeRoutingRegime('high-intersection-burden'), 'intersection-heavy');
+  assert.equal(normalizeRoutingRegime('must-cross-heavy'), 'must-cross-heavy');
+  assert.equal(normalizeRoutingRegime('portal-heavy'), 'multi-portal');
+  assert.equal(normalizeRoutingRegime('intersection-heavy'), 'intersection-heavy');
+  assert.throws(() => normalizeRoutingRegime('not-a-routing-regime'), /Unknown solver routing regime/);
+});
+
+test('SOLVER_TESTING_API exposes canonical routing helpers', () => {
   const level = makeLevel({ reqLen: 10, reqInt: 1 });
-  assert.equal(SOLVER_TESTING_API.detectArchetype, detectArchetype);
-  assert.equal(SOLVER_TESTING_API.detectArchetype(level), 'near-closure');
+  assert.equal(SOLVER_TESTING_API.classifyRoutingRegime, classifyRoutingRegime);
+  assert.equal(SOLVER_TESTING_API.classifyRoutingRegime(level), 'sparse-low-intersection');
+  assert.equal(SOLVER_TESTING_API.normalizeRoutingRegime('near-closure'), 'sparse-low-intersection');
 });
