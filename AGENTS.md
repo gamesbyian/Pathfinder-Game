@@ -8,6 +8,7 @@ Compact entry point for coding/research agents. Load task-specific docs, not the
 |---|---|
 | Product/code change | [`docs/architecture.md`](docs/architecture.md), then changed files |
 | Cross-cutting schema/state/telemetry | [`docs/change-recipes.md`](docs/change-recipes.md), then owning topic doc |
+| Naming cleanup / rename migration | [`docs/naming-cleanup-plan.md`](docs/naming-cleanup-plan.md), then [`docs/change-recipes.md`](docs/change-recipes.md) and the owning topic doc |
 | UI/input/accessibility/rendering | [`docs/architecture.md`](docs/architecture.md), [`docs/ui-accessibility.md`](docs/ui-accessibility.md), [`docs/testing.md`](docs/testing.md) |
 | Solver implementation | [`docs/solver-architecture.md`](docs/solver-architecture.md), [`modules/solver/README.md`](modules/solver/README.md), [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md) |
 | Solver hard prune/cache/correctness | [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md), [`docs/solver-architecture.md`](docs/solver-architecture.md) |
