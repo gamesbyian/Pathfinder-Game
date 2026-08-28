@@ -54,7 +54,7 @@ test('racedAttemptRecord expands bounded worker errors with attempt identity', (
   assert.equal(record.allocatedBudgetMs, 50);
   assert.deepEqual(record.error, {
     name: 'TypeError', message: 'dispatch failed', gateKey: 7,
-    configKey: 'beam:default/portal@beam500', profile: 'default', template: 'portal',
+    configKey: 'beam|score=default|bias=portal|width=500|retention=plain', profile: 'default', template: 'portal',
   });
 });
 
