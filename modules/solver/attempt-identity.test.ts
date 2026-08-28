@@ -10,23 +10,23 @@ import { attemptConfigKey } from './orchestration.js';
 import type { AttemptConfig } from './types.js';
 
 const canonicalCases = [
-    [{ profileName: 'default', templateId: null }, 'dfs|score=default|bias=none'],
-    [{ profileName: 'default', templateId: 'cornerHarvest' }, 'dfs|score=default|bias=cornerHarvest'],
-    [{ profileName: 'default', templateId: null, beamWidth: 5000 }, 'beam|score=default|bias=none|width=5000|retention=plain'],
-    [{ profileName: 'objectiveFirst', templateId: null, beamWidth: 5000, diverseBeam: true }, 'beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets'],
-    [{ profileName: 'repair', templateId: null, repair: true }, 'repair|score=repair|guidance=standard'],
-    [{ profileName: 'repair', templateId: null, repair: true, repairMustTurnBiased: true }, 'repair|score=repair|guidance=must-turn-biased'],
-    [{ profileName: 'repair', templateId: null, repair: true, repairTurnBiased: true }, 'repair|score=repair|guidance=turn-biased'],
-    [{ profileName: 'default', templateId: null, admissibleOrder: true }, 'admissible-order|tieBreak=default|lds=off'],
-    [{ profileName: 'none', templateId: null, admissibleOrder: true, admissibleOrderNoTieBreak: true }, 'admissible-order|tieBreak=none|lds=off'],
-    [{ profileName: 'default', templateId: null, admissibleOrder: true, admissibleOrderLds: true }, 'admissible-order|tieBreak=default|lds=on'],
+    [{ scoringProfileId: 'default', templateId: null }, 'dfs|score=default|bias=none'],
+    [{ scoringProfileId: 'default', templateId: 'cornerHarvest' }, 'dfs|score=default|bias=cornerHarvest'],
+    [{ scoringProfileId: 'default', templateId: null, beamWidth: 5000 }, 'beam|score=default|bias=none|width=5000|retention=plain'],
+    [{ scoringProfileId: 'objectiveFirst', templateId: null, beamWidth: 5000, mechanicBucketRetention: true }, 'beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets'],
+    [{ scoringProfileId: 'repair', templateId: null, repair: true }, 'repair|score=repair|guidance=standard'],
+    [{ scoringProfileId: 'repair', templateId: null, repair: true, repairMustTurnBiased: true }, 'repair|score=repair|guidance=must-turn-biased'],
+    [{ scoringProfileId: 'repair', templateId: null, repair: true, repairTurnBiased: true }, 'repair|score=repair|guidance=turn-biased'],
+    [{ scoringProfileId: 'default', templateId: null, admissibleOrder: true }, 'admissible-order|tieBreak=default|lds=off'],
+    [{ scoringProfileId: 'none', templateId: null, admissibleOrder: true, admissibleOrderNoTieBreak: true }, 'admissible-order|tieBreak=none|lds=off'],
+    [{ scoringProfileId: 'default', templateId: null, admissibleOrder: true, admissibleOrderLds: true }, 'admissible-order|tieBreak=default|lds=on'],
 ] as const;
 
 test('formatAttemptIdentityKey emits the canonical structured grammar for every family', () => {
     for (const [fields, key] of canonicalCases) assert.equal(formatAttemptIdentityKey(fields), key);
     assert.equal(
         formatAttemptIdentityKey({
-            profileName: 'repair', templateId: null, repair: true,
+            scoringProfileId: 'repair', templateId: null, repair: true,
             repairMustTurnBiased: true, repairTurnBiased: true,
         }),
         'repair|score=repair|guidance=must-turn-biased',
@@ -78,33 +78,33 @@ test('malformed or contradictory identities are rejected rather than guessed', (
 });
 
 test('formatAttemptActionKey layers stage and deterministic repair seed over canonical config identity', () => {
-    const repair = { profileName: 'repair', templateId: null, repair: true };
+    const repair = { scoringProfileId: 'repair', templateId: null, repair: true };
     assert.equal(formatAttemptActionKey({ ...repair, stageId: 'repair-probe' }), 'repair-probe|repair|score=repair|guidance=standard|seedSalt=0');
     assert.equal(formatAttemptActionKey({ ...repair, stageId: 'repair-probe', seedSalt: 1 }), 'repair-probe|repair|score=repair|guidance=standard|seedSalt=1');
     assert.equal(formatAttemptActionKey({ ...repair, stageId: 'repair-fallback', seedSalt: 1 }), 'repair-fallback|repair|score=repair|guidance=standard|seedSalt=1');
-    assert.equal(formatAttemptActionKey({ profileName: 'default', templateId: null, stageId: 'main-loop' }), 'main-loop|dfs|score=default|bias=none');
-    assert.throws(() => formatAttemptActionKey({ profileName: 'default', templateId: null, stageId: '' }), /requires stageId/);
+    assert.equal(formatAttemptActionKey({ scoringProfileId: 'default', templateId: null, stageId: 'main-loop' }), 'main-loop|dfs|score=default|bias=none');
+    assert.throws(() => formatAttemptActionKey({ scoringProfileId: 'default', templateId: null, stageId: '' }), /requires stageId/);
 });
 
 test('orchestration attemptConfigKey agrees with canonical formatter for every supported family', () => {
     const cases: AttemptConfig[] = [
-        { profileName: 'default', template: null },
-        { profileName: 'default', template: { id: 'perimeterCW' } },
-        { profileName: 'default', template: null, beamWidth: 3000 },
-        { profileName: 'default', template: null, beamWidth: 3000, diverseBeam: true },
-        { profileName: 'repair', template: null, repair: true },
-        { profileName: 'repair', template: null, repair: true, repairMustTurnBiased: true },
-        { profileName: 'repair', template: null, repair: true, repairTurnBiased: true },
-        { profileName: 'default', template: null, admissibleOrder: true },
-        { profileName: 'none', template: null, admissibleOrder: true, admissibleOrderNoTieBreak: true },
-        { profileName: 'default', template: null, admissibleOrder: true, admissibleOrderLds: true },
+        { scoringProfileId: 'default', orderingBias: null },
+        { scoringProfileId: 'default', orderingBias: { id: 'perimeterCW' } },
+        { scoringProfileId: 'default', orderingBias: null, beamWidth: 3000 },
+        { scoringProfileId: 'default', orderingBias: null, beamWidth: 3000, mechanicBucketRetention: true },
+        { scoringProfileId: 'repair', orderingBias: null, repair: true },
+        { scoringProfileId: 'repair', orderingBias: null, repair: true, repairMustTurnBiased: true },
+        { scoringProfileId: 'repair', orderingBias: null, repair: true, repairTurnBiased: true },
+        { scoringProfileId: 'default', orderingBias: null, admissibleOrder: true },
+        { scoringProfileId: 'none', orderingBias: null, admissibleOrder: true, admissibleOrderNoTieBreak: true },
+        { scoringProfileId: 'default', orderingBias: null, admissibleOrder: true, admissibleOrderLds: true },
     ];
     for (const config of cases) {
         const expected = formatAttemptIdentityKey({
-            profileName: config.profileName,
-            templateId: config.template?.id ?? null,
+            scoringProfileId: config.scoringProfileId,
+            templateId: config.orderingBias?.id ?? null,
             beamWidth: config.beamWidth,
-            diverseBeam: config.diverseBeam,
+            mechanicBucketRetention: config.mechanicBucketRetention,
             repair: config.repair,
             repairMustTurnBiased: config.repairMustTurnBiased,
             repairTurnBiased: config.repairTurnBiased,
