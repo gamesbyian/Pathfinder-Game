@@ -1,6 +1,6 @@
 # Evidence-driven solver scheduling and allocation
 
-> **Status:** active policy/research contract; [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) owns rank and next gate.
+> **Status:** active policy/research contract; [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns rank and next gate.
 > **Objective:** replace fixed-ladder accretion with level-blind bounded allocation that improves the solve/`workSpent` Pareto frontier while preserving reproducible rare capability.
 > **Related:** implementation [`solver-architecture.md`](solver-architecture.md); research method [`solver-research-operating-model.md`](solver-research-operating-model.md); budget semantics [`solver-budget-determinism.md`](solver-budget-determinism.md).
 
