@@ -1,6 +1,6 @@
 # Naming cleanup implementation plan
 
-Status: **approved vocabulary and implementation plan, subject to latest-`main` reconciliation**. The canonical naming decisions in this document are authoritative for this cleanup, but this branch snapshot is not allowed to outrank newer implementation on `main`. Before implementation begins, perform Section 0. If newer code has replaced, removed, persisted, or materially changed a listed concept, reconcile this plan and the ledger first rather than executing a stale rename.
+Status: **approved vocabulary and implementation plan; latest-`main` preflight complete at `e236a51d3af9` (2026-08-28)**. The canonical naming decisions in this document are authoritative for this cleanup, but no implementation PR may outrank newer implementation on `main`. Repeat Section 0 whenever unrelated solver/application work has merged since the previous naming-cleanup PR.
 
 This is a **behavior-preserving naming and vocabulary migration** unless a section explicitly says that an obsolete compatibility surface is removed after its consumers are migrated. Do not change solver policy, attempt order, scoring weights, eligibility, budgets, pruning behavior, random seeds, corpus contents, or evidence disposition as part of this work.
 
@@ -24,30 +24,41 @@ The cleanup is only comprehensive when the final audit has **zero unclassified l
 
 ### 0.1 Reconciliation completed against current `main` (2026-08-28)
 
-Preflight reconciled this plan against `main` at `e6050e2da7b7` after the CI/budget/tooling changes that landed after the plan branch point. The implementation branch now carries current `main` as a parent; this record closes the mandatory pre-PR-1 latest-main gate for that snapshot only. Every later implementation PR must repeat Section 0 if unrelated solver/application work has merged.
+The plan branch was reconciled again against `main` at `e236a51d3af9` and merged with it in `333204ae1e10`. This supersedes the earlier `e6050e2da7b7` preflight record. The implementation branch now carries the current main tree as a parent; this closes the mandatory pre-PR-1 latest-main gate for this snapshot only. Every later implementation PR must repeat Section 0 if unrelated solver/application work has merged.
 
-Naming-relevant changes since the branch point were classified as follows:
+GitHub code search is not indexed for this repository, so the refreshed live-surface census did **not** treat empty search results as evidence. The reconciliation instead compared `e6050e2da7b7..e236a51d3af9`, selected every changed code/current-doc/workflow surface, and inspected all **27 naming-relevant changed files** for the plan's ambiguous vocabulary families. Every newly introduced live hit is classified below or assigned to an existing migration section. Generated hints, dated reports, and retained evidence files remain frozen history.
 
 | New/current surface | Classification | Disposition |
 |---|---|---|
 | `SolveOpts.baseWorkBudget` | superseded by newer architecture | Retain as the preferred base-allocation name. Do not recreate an older generic budget name. |
 | `SolveOpts.workBudget` | intentional compatibility term | Retain as a legacy read/API alias while current workflows/artifacts still depend on it; current docs must continue to qualify it as a base allocation rather than a whole-solve cap. |
 | `LEGACY_MS_TO_WORK_RATE` / `legacyMsToWork` | intentional retained term | Retain. Here `legacy` is behaviorally meaningful: these names identify an explicitly quarantined compatibility conversion and are permitted by Section 2.1. |
-| `strictTotalWorkBudget` | intentional retained term | Retain for the current experiment-only whole-solve envelope. Future scheduler APIs may use `totalWorkCap`, but this cleanup must not turn that policy/design question into a mechanical rename. |
+| `scaledStageWorkBudget` | intentional retained term | Retain as the canonical helper for deriving an additive stage's work dose from the solve's already-resolved base work allocation. The naming cleanup must not recreate the superseded ms-derived work-sizing path. |
+| `dedup-near-tie-retry`, `repair-fallback`, and `admissible-order-non-default-retry` work-dose implementations | newer architecture under existing planned stage names | Their work pools now use `scaledStageWorkBudget()`. Keep the stage-name migrations in Section 4.6 unchanged; PR 6 must preserve the new work-dose semantics exactly. |
+| plain `admissible-order` work-cap gap | research/budget issue, not naming work | Retain current naming-plan treatment. Do not add a new allocation while renaming the stage; the naming PR is behavior-preserving. |
+| `strictTotalWorkBudget` and workflow `strict_total_work_budget` | intentional retained term | Retain for the current experiment-only whole-solve envelope. This name accurately distinguishes a strict total cap from the legacy base allocation. |
 | `solver-sweep-result` / manifest kind `pathfinder-solver-sweep-result` | intentional retained protocol name | Retain. It identifies the standardized solver-sweep result contract precisely. |
-| `gha-source-run` / `pathfinder-gha-source-run` | intentional retained provenance name | Retain. It describes GHA source-run provenance rather than an implementation history label. |
+| `gha-source-run` / `pathfinder-gha-source-run` | intentional retained provenance name | Retain. It describes GHA source-run provenance rather than an implementation-history label. |
 | `publish-solver-sweep-result.mjs` | intentional retained tool | Retain: operation-first and behavior-descriptive. |
 | `check-solver-sweep-result-contract.mjs` / `check:solver-sweep-results` | intentional retained tool/alias | Retain: deterministic contract validation with an honest `check` verb. |
-| `gha:result` / `scripts/gha-result.mjs` | rename | Rename to `gha:fetch-result` / `scripts/fetch-gha-result.mjs`; it actively resolves/downloads a completed run artifact, so a retrieval verb is clearer than a noun-only surfaced command. |
-| new `run-name`/artifact/provenance surfaces across the 18 maintained evidence workflows | covered live surface | Treat as propagation targets for any workflow/tool terminology renamed later; do not rewrite historical run artifacts. |
-| `solver-archetype-sample-ab.yml` display/artifact strings | covered existing rename | Include workflow display name, run-name, artifact/source-artifact names, paths and docs in PR 3's archetype -> routing-regime migration. |
-| `additive-tier-participation-audit.mjs` | intentional retained tool | Retain: it is a bounded systematic audit of additive-tier participation, and both nouns describe actual runtime structure. |
-| `connectivity-rejection-audit.mjs` | intentional retained tool | Retain: it systematically audits connectivity rejection behavior rather than naming an experimental origin. |
-| `technique-census-cell.mjs` | covered existing taxonomy cleanup | Keep the live file until PR 8's technique-census analysis rename; include the new cell helper/test in that migration rather than leaving a split vocabulary. |
+| `gha:result` / `scripts/gha-result.mjs` | rename | Rename to `gha:fetch-result` / `scripts/fetch-gha-result.mjs`; it actively resolves/downloads a completed run artifact. |
+| new `run-name`/artifact/provenance surfaces across maintained evidence workflows | covered live surface | Treat as propagation targets for any workflow/tool terminology renamed later; do not rewrite historical run artifacts. |
+| `solver-archetype-sample-ab.yml`, `select-archetype-sample.mjs`, workflow input/output `archetype*`, and `STRATEGY_ARCHETYPE_ROUTING` | rename | PR 3 migrates these atomically to routing-regime terminology; exact mappings are fixed in Section 4.1. |
+| `techniqueLifecycle` result/telemetry field | rename | Its keys are solver stages, not techniques. Rename to `stageLifecycle` in PR 6 with dual-read for retained generated JSON. |
+| `scripts/stress/current-missing-exposure-audit.mjs` | rename | Rename to `scripts/stress/analyze-current-missing-attempt-exposure.mjs`; PR 3 migrates routing-regime vocabulary and PR 4 migrates attempt-config identity fields. |
+| `scripts/stress/select-attempt-exposure-sample.mjs` | retain file, rename interface fields | The filename accurately describes mechanics-only sampling. PR 4 changes `--technique` to `--attempt-config` and generated `technique` to `attemptConfigIdentity`. |
+| `scripts/stress/analyze-equal-work-census-pilot.mjs` | rename | It is now surfaced durable tooling. Rename to `scripts/stress/analyze-equal-work-census.mjs` in PR 8. |
+| `technique-census-cell.mjs` and its new equal-work test/helper surfaces | covered existing taxonomy cleanup | Keep live until PR 8; migrate the whole technique-census tool family together so equal-work additions do not preserve split vocabulary. |
+| `portfolio-sweep-reports-to-benchmark.mjs` / `solver:combine-corpus2-batches` | rename | The helper now combines generic solver-sweep reports and is used outside Corpus 2. Rename to `combine-solver-sweep-reports.mjs` / `solver:combine-sweep-reports` in PR 9. |
+| current generated outputs `reports/stress/benchmark-parallel.json` and `reports/stress/benchmark-latest-random.json` | rename live output paths | New workflow output paths become `reports/stress/solver-corpus1-latest.json` and `reports/stress/solver-corpus2-latest.json`; retained historical files are not rewritten. |
+| `STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE` and `STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE` | intentional retained experiment IDs | Both tested forms are closed negative in the opt-in ledger. Do not spend compatibility churn renaming dead experiment IDs; retain them only as closed default-off historical controls and ledger exemptions. If removed later, delete rather than rename. |
+| `additive-tier-participation-audit.mjs` | intentional retained tool | Retain: it is a bounded systematic audit of additive-tier participation. |
+| `connectivity-rejection-audit.mjs` | intentional retained tool | Retain: it systematically audits connectivity rejection behavior. |
+| `portfolio-sweep-reports-to-benchmark` output concept "benchmark-shaped report" | intentional data-shape description only | "Benchmark" may remain in comments describing the historical consumer schema; the executable and live output paths are renamed as above. |
 
-The fresh census also confirmed that newly committed dated reports, solver-workflow logs, and generated hint/evidence files are frozen evidence for naming-cleanup purposes. They are not rename targets merely because they contain legacy strings.
+The refreshed delta census has **zero unclassified naming-relevant hits introduced since the previous reconciliation**. Older live surfaces remain governed by the explicit mappings and retained-term rules in Sections 4-8 and must be rechecked by PR 1's full ledger population.
 
-No production solver behavior, budget allocation, experiment disposition, corpus identity, or evidence content is changed by this reconciliation.
+No production solver behavior, work allocation, experiment disposition, corpus identity, or frozen evidence content changes in this reconciliation.
 
 ## 1. Goals and non-goals
 
@@ -238,6 +249,10 @@ The names below are fixed. Do not substitute alternatives.
 | `NEAR_HAMILTONIAN_DENSITY` | `NEAR_HAMILTONIAN_COVERAGE_THRESHOLD` | direct internal rename |
 | `DENSE_LEVEL_NAV_DENSITY` | `DENSE_LEVEL_COVERAGE_THRESHOLD` | direct internal rename |
 | `detectArchetype` | `classifyRoutingRegime` | direct internal rename |
+| `STRATEGY_ARCHETYPE_ROUTING` | `STRATEGY_ROUTING_REGIME_SELECTION` | dual-read in flag/config parsing while historical experiment metadata remains readable |
+| `scripts/stress/select-archetype-sample.mjs` | `scripts/stress/select-routing-regime-sample.mjs` | direct tool rename |
+| `.github/workflows/solver-archetype-sample-ab.yml` | `.github/workflows/solver-routing-regime-sample-ab.yml` | workflow rename; historical runs keep old identity |
+| workflow/input/output `archetype` / `archetypes` for that sampler | `routingRegime` / `routing_regimes` | live workflow/tool schema rename |
 | "archetype" when referring to this classifier | "routing regime" | live docs/telemetry labels |
 | `default` routing value | `general` | dual-read if persisted |
 | `near-closure` | `sparse-low-intersection` | dual-read if persisted |
@@ -256,6 +271,23 @@ For level schema vocabulary:
 - all solver/application code must stop using naked `reqLen`/`reqInt` once the normalized boundary migration is complete.
 
 This internal expansion is intentionally late in the sequence because it is broad, but the target names are fixed.
+
+#### Current missing-attempt-exposure analyzer
+
+The live residual analyzer introduced on 2026-08-28 spans both routing and attempt identity. Its canonical surface is fixed now so PR 3 and PR 4 do not invent incompatible halves:
+
+| Current | Canonical | Phase |
+|---|---|---|
+| `scripts/stress/current-missing-exposure-audit.mjs` | `scripts/stress/analyze-current-missing-attempt-exposure.mjs` | PR 3 |
+| default output `tmp/current-missing-exposure-audit.json` | `tmp/current-missing-attempt-exposure.json` | PR 3 |
+| local/result `archetype` | `routingRegime` | PR 3 |
+| `rankedTechniqueArchetypeCandidates` | `rankedAttemptConfigRoutingRegimeCandidates` | PR 4 |
+| `rankedBeamTechniqueArchetypeCandidates` | `rankedBeamAttemptConfigRoutingRegimeCandidates` | PR 4 |
+| `overallTechniqueCandidates` | `overallAttemptConfigCandidates` | PR 4 |
+| row/result `technique` when it contains an exact `attemptConfigKey` | `attemptConfigIdentity` | PR 4 |
+| internal `censusByLevelTechnique` | `censusByLevelAttemptConfig` | PR 4 |
+
+Its source census may continue to use historical `techniqueKeys` until the technique-census schema migration in PR 8; PR 4 must parse that legacy field rather than rewrite frozen census artifacts.
 
 ### 4.2 Attempt identity and admissible-order search
 
@@ -280,6 +312,8 @@ The current ad-hoc attempt identity grammar is replaced by the following canonic
 The old forms, including `ida:*`, `dfs:*`, `beam:*@beam*`, `(diverse)`, and `:repair`, become legacy input syntax only.
 
 Implementation requirements:
+
+Before switching writers, migrate `scripts/stress/select-attempt-exposure-sample.mjs` from `--technique=<attemptConfigKey>` to `--attempt-config=<attemptConfigIdentity>`, rename its internal `TECHNIQUE` variable accordingly, and write `attemptConfigIdentity` instead of `technique` in new sample JSON. Accept `--technique` as a compatibility alias for one migration window only; if both are supplied with different values, fail loudly.
 
 1. create a single canonical parser/normalizer for legacy and new attempt identities;
 2. make all current consumers use the parsed structure rather than string slicing/suffix tests;
@@ -381,6 +415,7 @@ The `guidanceGoalDistArr` implementation is the factual basis for the new goal-d
 Stage migration must update all of:
 
 - `stage-policy.ts`;
+- `techniqueLifecycle` -> `stageLifecycle` in solve results, workflow output, reducers, and analysis tooling; retained generated JSON is dual-read;
 - `stage-plan.ts`;
 - `stage-budget.ts`;
 - `stage-executors.ts`;
@@ -696,6 +731,7 @@ The following commands are already surfaced and therefore are no longer unnamed/
 | `stress/repair-rollback-census-pilot.mjs` / `solver:repair-rollback-pilot` | `stress/census-repair-rollback-windows.mjs` / `solver:census-repair-rollback-windows` |
 | `stress/symmetry-repair-seed-pilot.mjs` / `solver:symmetry-repair-seed-pilot` | `stress/compare-symmetry-repair-seed.mjs` / `solver:compare-symmetry-repair-seed` |
 | `stress/restart-continuation-population-pilot.mjs` | `stress/compare-repair-restart-continuation-population.mjs` |
+| `stress/analyze-equal-work-census-pilot.mjs` | `stress/analyze-equal-work-census.mjs` |
 
 The restart/continuation tool is not currently a package alias, but it is active durable research machinery referenced by current decision documents, so its lifecycle label is still inappropriate. Historical report filenames containing `pilot` remain frozen.
 
@@ -738,7 +774,7 @@ When renaming workflows, also migrate current job labels/IDs, concurrency groups
 `method-probe` remains valid terminology because it is genuinely bounded diagnostic single-method execution; do not rename it merely because other uses of "probe" are being corrected.
 
 
-### 5.10 GitHub Actions result retrieval
+### 5.11 GitHub Actions result retrieval
 
 The standardized result publisher and protocol names introduced after this plan's original audit are already behavior-descriptive and remain canonical:
 
@@ -758,6 +794,19 @@ Rename only the noun-only retrieval command:
 | package alias `gha:result` | `gha:fetch-result` |
 
 Update `AGENTS.md`, `scripts/README.md`, `docs/tooling-catalog.md`, `.github/workflows/README.md`, the contract checker, package aliases, and current workflow/tooling documentation together. The artifact/provenance protocol strings themselves do not change.
+
+### 5.12 Solver-sweep report combination and live corpus outputs
+
+The generic report combiner has outgrown both `portfolio` and `corpus2` in its surfaced names:
+
+| Current | Canonical |
+|---|---|
+| `scripts/portfolio-sweep-reports-to-benchmark.mjs` | `scripts/combine-solver-sweep-reports.mjs` |
+| package alias `solver:combine-corpus2-batches` | `solver:combine-sweep-reports` |
+| live output `reports/stress/benchmark-parallel.json` | `reports/stress/solver-corpus1-latest.json` |
+| live output `reports/stress/benchmark-latest-random.json` | `reports/stress/solver-corpus2-latest.json` |
+
+The combiner may continue to describe its output schema in comments as `stress:benchmark`-shaped until PR 9 renames that measuring command, but its executable identity is generic combination, not portfolio scheduling or benchmarking. Update every maintained workflow, current doc, package alias, and current reader of the live output paths. Do not rename dated/frozen benchmark artifacts.
 
 ## 6. Data and corpus terminology
 
@@ -902,7 +951,9 @@ Documentation only.
 ### PR 3: Solver metric and routing vocabulary
 
 - coverage helper/constant renames;
-- archetype -> routing regime;
+- archetype -> routing regime, including `STRATEGY_ARCHETYPE_ROUTING` -> `STRATEGY_ROUTING_REGIME_SELECTION`;
+- rename `select-archetype-sample.mjs` and `solver-archetype-sample-ab.yml`, including live workflow input/output/artifact/concurrency labels;
+- rename `current-missing-exposure-audit.mjs` and its routing-regime fields per Section 4.1;
 - routing value compatibility normalization;
 - docs/tests/telemetry updates;
 - prove thresholds and selected attempt order are byte-for-byte unchanged for representative fixtures.
@@ -913,6 +964,7 @@ Documentation only.
 - migrate all live consumers off raw string slicing;
 - add historical fixtures;
 - switch writers to canonical grammar;
+- update `select-attempt-exposure-sample.mjs` CLI/result fields and the current missing-attempt-exposure analyzer's attempt-config fields;
 - update CLI examples/docs/tooling;
 - keep legacy reads.
 
@@ -934,6 +986,7 @@ This PR is high risk and requires full CI.
 - migrate scheduler modes, experiment option/result names, scheduler phase vocabulary, stage policy-status vocabulary, and additive-wall-multiplier policy names;
 - rename live filenames/workflows whose identity is the renamed stage, including the early-repair-search adaptive sampler/report/workflow;
 - update all stage/scheduler producers, consumers, worker/report telemetry, provenance, budget planners, and public ports;
+- rename `techniqueLifecycle` to `stageLifecycle` with dual-read compatibility for retained generated JSON;
 - historical fixtures prove old stage IDs and persisted scheduler modes remain readable;
 - identity round-trip/collision tests from Section 3.6;
 - full CI.
@@ -954,7 +1007,7 @@ This PR is high risk and requires full CI.
 - hint oracle rename;
 - CP-SAT reference names;
 - offline replay rename;
-- technique census analysis rename;
+- technique census analysis rename, including `analyze-equal-work-census-pilot.mjs` -> `analyze-equal-work-census.mjs` and the new equal-work cell/test/tooling surfaces;
 - atlas/dataset/lineage surfaced-tool renames, including the live research-lineage module/types;
 - surfaced pilot-command renames from Section 5.9, including the active restart/continuation population tool;
 - durable cohort-named diagnostic rename;
@@ -969,6 +1022,8 @@ This PR is high risk and requires full CI.
 - `solver:bench` -> `solver:regression`;
 - `solver:speed-probe` -> `solver:measure-speed`;
 - `stress:benchmark` -> `stress:measure-solver`;
+- `portfolio-sweep-reports-to-benchmark.mjs` -> `combine-solver-sweep-reports.mjs` and `solver:combine-corpus2-batches` -> `solver:combine-sweep-reports`;
+- move maintained live corpus outputs from `benchmark-parallel.json` / `benchmark-latest-random.json` to `solver-corpus1-latest.json` / `solver-corpus2-latest.json` without rewriting frozen artifacts;
 - remove deprecated aliases after all live references are migrated;
 - update `AGENTS.md`, testing docs, tooling catalog, scripts/workflows READMEs, package scripts.
 
@@ -1142,6 +1197,10 @@ The cleanup is complete only when all of the following are true.
 25. Normalize/denormalize and representative corpus round trips preserve the existing level wire format and persistent fingerprints.
 26. No frozen report or historical evidence file was mass-rewritten for cosmetic naming.
 27. A final current-`main` naming census has zero unclassified live hits; every retained potentially ambiguous term is justified in the completed ledger.
+28. Current solver lifecycle telemetry is named `stageLifecycle`; historical `techniqueLifecycle` JSON remains readable.
+29. Current attempt-exposure tooling uses `routingRegime` and `attemptConfigIdentity`, not `archetype` and `technique`, for those exact concepts.
+30. No surfaced equal-work analysis command retains `pilot` in its permanent name.
+31. Maintained solver-sweep report combination uses `combine-solver-sweep-reports` / `solver:combine-sweep-reports`, and current Corpus 1/2 output paths do not use `parallel`, `random`, or unqualified `benchmark` as corpus identity.
 
 ## 14. Stop conditions
 
