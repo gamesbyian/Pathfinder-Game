@@ -1,3 +1,5 @@
+import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
+
 function canonicalFlagName(flag) {
     return String(flag)
         .replace(/^(?:PRUNE|STRATEGY|SCORE)_/, '')
@@ -5,20 +7,42 @@ function canonicalFlagName(flag) {
         .replaceAll('_', '-');
 }
 
+export function normalizeTechniqueCensusIdentityLabel(label) {
+    if (!label) return null;
+    const [base, ...suffixes] = String(label).split('+');
+    let canonicalBase;
+    try { canonicalBase = normalizeAttemptIdentityKey(base); }
+    catch { return String(label); }
+    return suffixes.length ? canonicalBase + '+' + suffixes.join('+') : canonicalBase;
+}
+
 export function inferredVariantLabel(result) {
-    if (result.variantLabel) return result.variantLabel;
+    if (result.variantLabel) return normalizeTechniqueCensusIdentityLabel(result.variantLabel);
     if (result.tier !== 'T1' || (result.techniqueKeys?.length ?? 0) !== 1 || !result.ablation) return null;
     const enabled = [...(result.ablation.enable ?? [])].sort().map(flag => `${canonicalFlagName(flag)}-on`);
     const disabled = [...(result.ablation.disable ?? [])].sort().map(flag => `${canonicalFlagName(flag)}-off`);
     const suffixes = [...enabled, ...disabled];
-    return suffixes.length ? `${result.techniqueKeys[0]}+${suffixes.join('+')}` : null;
+    const base = normalizeAttemptIdentityKey(result.techniqueKeys[0]);
+    return suffixes.length ? base + '+' + suffixes.join('+') : null;
 }
 
 export function techniqueCensusIdentityKey(result) {
-    return inferredVariantLabel(result) ?? result.techniqueKeys?.[0] ?? null;
+    return inferredVariantLabel(result)
+        ?? (result.techniqueKeys?.[0] ? normalizeAttemptIdentityKey(result.techniqueKeys[0]) : null);
+}
+
+export function canonicalizeTechniqueCensusResult(result) {
+    if (!result || typeof result !== 'object') return result;
+    const techniqueKeys = Array.isArray(result.techniqueKeys)
+        ? result.techniqueKeys.map(normalizeAttemptIdentityKey)
+        : result.techniqueKeys;
+    const normalized = { ...result, ...(techniqueKeys ? { techniqueKeys } : {}) };
+    if (result.variantLabel) normalized.variantLabel = normalizeTechniqueCensusIdentityLabel(result.variantLabel);
+    return normalized;
 }
 
 function comparablePayload(result) {
+    result = canonicalizeTechniqueCensusResult(result);
     const {
         totalMs: _totalMs,
         variantLabel: _variantLabel,
@@ -36,7 +60,8 @@ function comparablePayload(result) {
 export function dedupeTechniqueCensusResults(results) {
     const byCellId = new Map();
     let duplicatesRemoved = 0;
-    for (const result of results) {
+    for (const rawResult of results) {
+        const result = canonicalizeTechniqueCensusResult(rawResult);
         if (!result?.cellId) throw new Error('Technique census result is missing cellId');
         const prior = byCellId.get(result.cellId);
         if (!prior) {
