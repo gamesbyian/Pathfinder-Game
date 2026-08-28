@@ -9,7 +9,7 @@
  *   node scripts/run-bundled.mjs scripts/stress/select-attempt-exposure-sample.mjs -- \
  *     --corpus=data/stress/stress-levels-random.json \
  *     --enable-flag=STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE \
- *     --technique=beam:intersectionHarvest@beam2000 \
+ *     --attempt-config='beam|score=intersectionHarvest|bias=none|width=2000|retention=plain' \
  *     --exclude-ids=R01124,R02500,R02718,R02440 \
  *     [--exclude-sample=tmp/prior-sample.json] \
  *     --count=120 --seed=20260828 \
@@ -21,6 +21,7 @@ import path from 'node:path';
 
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.js';
 import { defaultConfig } from '../../modules/solver/ablation-config.js';
+import { normalizeAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
 
 const argv = process.argv.slice(2);
 const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -30,7 +31,15 @@ const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map
 
 const CORPUS = args.get('--corpus') || 'data/stress/stress-levels-random.json';
 const FLAG = args.get('--enable-flag');
-const TECHNIQUE = args.get('--technique');
+const canonicalAttemptConfigArg = args.get('--attempt-config');
+const legacyTechniqueArg = args.get('--technique');
+if (canonicalAttemptConfigArg && legacyTechniqueArg
+    && normalizeAttemptIdentityKey(canonicalAttemptConfigArg) !== normalizeAttemptIdentityKey(legacyTechniqueArg)) {
+    throw new Error('Conflicting --attempt-config and deprecated --technique values');
+}
+const ATTEMPT_CONFIG_IDENTITY = canonicalAttemptConfigArg || legacyTechniqueArg
+    ? normalizeAttemptIdentityKey(canonicalAttemptConfigArg || legacyTechniqueArg)
+    : null;
 const COUNT = Math.max(0, Number(args.get('--count') || 120));
 const SEED = Number(args.get('--seed') || 20260828);
 const OUT = args.get('--out') || 'tmp/attempt-exposure-sample.json';
@@ -46,8 +55,8 @@ if (EXCLUDE_SAMPLE) {
     }
 }
 
-if (!FLAG || !TECHNIQUE) {
-    throw new Error('--enable-flag=<STRATEGY_...> and --technique=<attemptConfigKey> are required');
+if (!FLAG || !ATTEMPT_CONFIG_IDENTITY) {
+    throw new Error('--enable-flag=<STRATEGY_...> and --attempt-config=<attemptConfigIdentity> are required (deprecated alias: --technique)');
 }
 if (!Number.isInteger(COUNT) || COUNT < 0) throw new Error('--count must be a non-negative integer');
 if (!Number.isFinite(SEED)) throw new Error('--seed must be finite');
@@ -78,8 +87,8 @@ for (let i = 0; i < rows.length; i++) {
     const level = Solver.prepareLevelForSolver(mechanicsOnly(raw), { source: 'raw' });
     const controlKeys = getAttemptConfigs(level, null).map(attemptConfigKey);
     const treatmentKeys = getAttemptConfigs(level, treatmentConfig).map(attemptConfigKey);
-    const controlCount = controlKeys.filter(key => key === TECHNIQUE).length;
-    const treatmentCount = treatmentKeys.filter(key => key === TECHNIQUE).length;
+    const controlCount = controlKeys.filter(key => key === ATTEMPT_CONFIG_IDENTITY).length;
+    const treatmentCount = treatmentKeys.filter(key => key === ATTEMPT_CONFIG_IDENTITY).length;
     if (controlCount === 0 && treatmentCount > 0) {
         eligible.push({ pos: i + 1, id: raw?.id ?? null, treatmentCount });
     }
@@ -115,7 +124,7 @@ const result = {
     evidenceRole: 'mechanics-only sample planning',
     corpus: CORPUS,
     enableFlag: FLAG,
-    technique: TECHNIQUE,
+    attemptConfigIdentity: ATTEMPT_CONFIG_IDENTITY,
     seed: SEED,
     requestedCount: COUNT,
     eligibleCount: eligible.length,
