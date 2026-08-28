@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { admissibleOrderSearch, admissibleOrderSearchLDS, rankByAdmissibleSlack } from './admissible-order-search.js';
 import { PACK } from './encoding.js';
-import { POLICY_PROFILES } from './policy.js';
+import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { normalizeRawLevel } from './normalization.js';
 import { createState, getNeighbors } from './search-state.js';
@@ -33,7 +33,7 @@ test('admissibleOrderSearch solves a simple line level with a real tie-break pro
   const prep = prepLevel(level);
   prep._cfg = null;
   prep._metrics = { nodesExpanded: 0 };
-  const path = await admissibleOrderSearch(PACK(0, 0), level, prep, 1000, Date.now(), null, null, Infinity, POLICY_PROFILES.default);
+  const path = await admissibleOrderSearch(PACK(0, 0), level, prep, 1000, Date.now(), null, null, Infinity, SCORING_PROFILES.default);
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
 });
 
@@ -91,7 +91,7 @@ test('admissibleOrderSearch with maxDiscrepancy: 0 still solves a straight line 
   const prep = prepLevel(level);
   prep._cfg = null;
   prep._metrics = { nodesExpanded: 0 };
-  const path = await admissibleOrderSearch(PACK(0, 0), level, prep, 1000, Date.now(), null, null, Infinity, POLICY_PROFILES.default, 0);
+  const path = await admissibleOrderSearch(PACK(0, 0), level, prep, 1000, Date.now(), null, null, Infinity, SCORING_PROFILES.default, 0);
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
 });
 
@@ -100,12 +100,12 @@ test('admissibleOrderSearch maxDiscrepancy defaults to Infinity (byte-for-byte u
   const prepA = prepLevel(level);
   prepA._cfg = null;
   prepA._metrics = { nodesExpanded: 0 };
-  const withoutParam = await admissibleOrderSearch(PACK(0, 0), level, prepA, 1000, Date.now(), null, null, Infinity, POLICY_PROFILES.default);
+  const withoutParam = await admissibleOrderSearch(PACK(0, 0), level, prepA, 1000, Date.now(), null, null, Infinity, SCORING_PROFILES.default);
 
   const prepB = prepLevel(level);
   prepB._cfg = null;
   prepB._metrics = { nodesExpanded: 0 };
-  const withExplicitInfinity = await admissibleOrderSearch(PACK(0, 0), level, prepB, 1000, Date.now(), null, null, Infinity, POLICY_PROFILES.default, Infinity);
+  const withExplicitInfinity = await admissibleOrderSearch(PACK(0, 0), level, prepB, 1000, Date.now(), null, null, Infinity, SCORING_PROFILES.default, Infinity);
 
   assert.deepEqual(withoutParam, withExplicitInfinity);
 });
@@ -115,7 +115,7 @@ test('admissibleOrderSearchLDS solves a simple line level (probe-then-fallback w
   const prep = prepLevel(level);
   prep._cfg = null;
   prep._metrics = { nodesExpanded: 0 };
-  const path = await admissibleOrderSearchLDS(PACK(0, 0), level, prep, 1000, Date.now(), null, null, Infinity, POLICY_PROFILES.default);
+  const path = await admissibleOrderSearchLDS(PACK(0, 0), level, prep, 1000, Date.now(), null, null, Infinity, SCORING_PROFILES.default);
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
 });
 
@@ -153,8 +153,8 @@ test('a candidate with negative admissible slack (already provably dead by the m
     const records: import('./types.js').OrderingResearchRecord[] = [];
     prep._orderingResearchObserver = { policies: [
         { id: 'none', profile: null },
-        { id: 'default', profile: POLICY_PROFILES.default },
-        { id: 'mustCrossFirst', profile: POLICY_PROFILES.mustCrossFirst },
+        { id: 'default', profile: SCORING_PROFILES.default },
+        { id: 'mustCrossFirst', profile: SCORING_PROFILES.mustCrossFirst },
     ], observe: record => records.push(record) };
     const ranked = rankByAdmissibleSlack(children, level, prep, state, null);
     assert.equal(ranked[ranked.length - 1], deadKey, 'the dead candidate must be ranked LAST, after every live candidate');
