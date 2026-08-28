@@ -1921,8 +1921,23 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // own override just above and repairElitePrefixDfsRetry's below): this loop's `runAttempt` calls
     // used to silently inherit whatever `prep._workCap` the main loop (or the probe just above) last
     // wrote, which can already be exhausted on exactly the levels this loop exists for.
+    //
+    // `repairFallbackWorkBudget` is sized off the solve's own resolved `workBudget` (queue #2 step-3
+    // migration, 2026-08-28 — second site after dedup-near-tie-retry; see
+    // reports/2026-08-28-dedup-near-tie-retry-work-dose-migration.md for the full account of what
+    // this pattern does and does not preserve), not re-derived from `timeBudgetMs` a second time.
+    // Behavior-preserving for live play (this loop never runs there — repairConfigs is empty unless
+    // a repair-eligible level reaches it, and both real interactive callers still zero
+    // `repairBudgetFraction` via `disableExtraBudgetPasses`) and for the plain-default no-override
+    // call shape (`REPAIR_EXTRA_BUDGET_FRACTION` is the integer `6.0`, so `legacyMsToWork` linearity
+    // makes the two formulas produce the identical number there). NOT behavior-preserving for the
+    // offline capability-sweep call shape (explicit `workBudget` disproportionate to a huge
+    // non-binding `timeBudgetMs`) — same genuine, deliberate dose correction as the first site.
+    // `repairFallbackTotalBudget` (ms) is kept: it still sizes the per-gate wall-deadline slice
+    // (`repairBudget` below) passed to `runAttempt`, a genuine latency safety bound subordinate to
+    // `prep._workCap` for actual allocation, not a work-sizing input in its own right.
     const repairFallbackTotalBudget = Math.floor(timeBudgetMs * repairBudgetFraction);
-    const repairFallbackWorkBudget = legacyMsToWork(repairFallbackTotalBudget, MIN_ATTEMPT_WORK);
+    const repairFallbackWorkBudget = scaledStageWorkBudget(workBudget, repairBudgetFraction, MIN_ATTEMPT_WORK);
     await withWorkCapScope(prep, prep._workMeter.units + repairFallbackWorkBudget, async () => {
         for (const repairConfig of repairConfigs) {
             if (result.solution) break;

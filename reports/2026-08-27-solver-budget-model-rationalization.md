@@ -167,6 +167,14 @@ call shape specifically). The `node_budget` inputs on the confirmation/sweep wor
 audit found, in place, rather than only in this report. See
 [`2026-08-28-dedup-near-tie-retry-work-dose-migration.md`](2026-08-28-dedup-near-tie-retry-work-dose-migration.md).
 
+**2026-08-28, same day: second site migrated.** `repair-fallback` now follows the identical
+pattern (`scaledStageWorkBudget(workBudget, repairBudgetFraction, MIN_ATTEMPT_WORK)` in place of a
+second `timeBudgetMs`-derived `legacyMsToWork` conversion), with the same behavior-preservation
+profile: byte-identical for live play and the plain-default call shape (`REPAIR_EXTRA_BUDGET_FRACTION`
+is the integer `6.0`), a genuine dose correction for the offline capability-sweep call shape. See
+[`2026-08-28-repair-fallback-work-dose-migration.md`](2026-08-28-repair-fallback-work-dose-migration.md).
+Seven of the nine sites remain unmigrated.
+
 ### 2. One direct per-seed ms-to-work compatibility site
 
 Repair-late-probe multi-seed retry still creates each round's work allowance from the base
