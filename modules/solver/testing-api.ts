@@ -1,5 +1,5 @@
 import { getAttemptConfigs } from './attempts.js';
-import { detectArchetype } from './archetype.js';
+import { classifyRoutingRegime, normalizeRoutingRegime } from './archetype.js';
 import { buildDistMap } from './distance.js';
 import { normalizeRawLevel } from './normalization.js';
 import { prepLevel } from './prep.js';
@@ -21,7 +21,8 @@ export function createSolverTestingApi() {
     return Object.freeze({
         normalizeRawLevel: normalizeRawLevel,
         buildDistMap,
-        detectArchetype,
+        classifyRoutingRegime,
+        normalizeRoutingRegime,
         getAttemptConfigs,
         prepLevel,
         // Search-core primitives — added for witness-trace replay tooling (scripts/stress/
