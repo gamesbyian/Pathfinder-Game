@@ -74,7 +74,7 @@ This is lightweight precommitment, not ceremony. It exists to prevent broad swee
 | Information | Canonical home |
 |---|---|
 | Current product/solver behavior | Topic reference under `docs/` |
-| Ranked solver optimization work | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) |
+| Ranked solver optimization work | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) |
 | Solver research method/promotion rules | [`solver-research-operating-model.md`](solver-research-operating-model.md) |
 | Solver development/confirmation/transfer evidence | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) |
 | Broader deferred/reopen ideas | [`solver-future-work.md`](solver-future-work.md) |
@@ -86,7 +86,7 @@ This is lightweight precommitment, not ceremony. It exists to prevent broad swee
 | Completed plan/handoff | [`archive/`](archive/README.md) |
 | Durable architecture decision | [`adr/`](adr/) |
 
-Historical evidence may remain outside its canonical home, but must not present itself as a competing live queue. Long dated notebooks with stable replacements should be frozen under `archive/snapshots/` and left with a compact compatibility pointer/current contract.
+Historical evidence may remain outside its canonical home, but must not present itself as a competing workstream authority. Long dated notebooks with stable replacements should be frozen under `archive/snapshots/` and left with a compact compatibility pointer/current contract.
 
 ## Closing checklist
 
