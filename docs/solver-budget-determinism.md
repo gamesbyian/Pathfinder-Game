@@ -1,8 +1,8 @@
 # Solver work budgets and determinism
 
 > **Status:** current contract; main-ladder allocation migration complete, additive-tier compatibility debt explicitly tracked.
-> **Allocation policy:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md); [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns rank and next gate.
-> **Priority:** remaining budget-model completion is active queue item #2 and is a prerequisite to new scheduler repricing policy.
+> **Allocation policy:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md); [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns current execution priority and next gate.
+> **Priority:** remaining budget-model completion is active Workstream 2 and is a prerequisite to new scheduler repricing policy.
 > **Current budget-depth evidence:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
 > **History:** [`archive/snapshots/solver-budget-determinism-2026-08-20.md`](archive/snapshots/solver-budget-determinism-2026-08-20.md).
 
@@ -62,7 +62,7 @@ Changing production to strict-total semantics is decision-bearing and requires m
 
 ### Migration priority
 
-Treat this as active research-enabling infrastructure, not optional cleanup. The live queue's order is authoritative; within its budget-model item, prefer:
+Treat this as active research-enabling infrastructure, not optional cleanup. The current execution priority is authoritative; within Workstream 2, prefer:
 
 1. explicit stage/attempt work ownership and parity;
 2. session-isolated multi-solve accounting;
