@@ -28,6 +28,7 @@
 # combined solved count/gains/losses (per-id, from each run's reports/stress/repair-fallback-
 # reserve-sample-ab.json artifact, or the console-log summary this workflow prints directly).
 name: Solver repair-fallback node-reserve sample A/B
+run-name: "Repair-fallback sample · flags=${{ inputs.enable_flags || 'control' }} · shards=${{ inputs.shard_count }}"
 
 on:
   workflow_dispatch:
@@ -312,6 +313,8 @@ jobs:
         run: |
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/repair-fallback-reserve-sample-ab.json" \
+            --shards-expected="${{ needs.plan.outputs.shard_count }}" \
+            --shards-observed="$(find logs/solver-repair-fallback-reserve-sample -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
             --source-artifact="repair-fallback-reserve-sample-ab-combined"
 
       - name: Upload standard solver sweep result
