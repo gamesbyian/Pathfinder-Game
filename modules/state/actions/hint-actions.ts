@@ -88,7 +88,7 @@ export function setHintPaths(
     hinter.heatmap = buildPathListHeatmap(pathList);
     if (curate) {
         const sel = selectDisplayHints(pathList, {
-            navDensity: navigableDensity(engineState.level),
+            requiredPathCoverageRatio: navigableDensity(engineState.level),
             mustCrossKeys: engineState.level?.mustCrossKeys,
         });
         hinter.displayIndices = sel.indices;
