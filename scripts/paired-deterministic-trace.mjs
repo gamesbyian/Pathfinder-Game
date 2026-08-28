@@ -12,7 +12,7 @@
  * Example:
  *   node scripts/run-bundled.mjs scripts/paired-deterministic-trace.mjs -- \
  *     --corpus=data/stress/stress-levels-random.json --level=R00408 \
- *     --left=dfs:harvestThenFinish --right=dfs:portalFirstTransfer \
+ *     --left='dfs|score=harvestThenFinish|bias=none' --right='dfs|score=portalFirstTransfer|bias=none' \
  *     --node-budget=200000 --trace-limit=4096 --out=/tmp/paired-trace.json
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -65,6 +65,8 @@ function parseDeterministicConfig(key) {
 
 const leftConfig = parseDeterministicConfig(LEFT_KEY);
 const rightConfig = parseDeterministicConfig(RIGHT_KEY);
+const leftKey = attemptConfigKey(leftConfig);
+const rightKey = attemptConfigKey(rightConfig);
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, CORPUS_FILE), 'utf8'));
 const corpusLevels = Array.isArray(corpus) ? corpus : corpus.levels;
 const entry = corpusLevels.find(level => level.id === LEVEL_ID);
@@ -130,8 +132,8 @@ async function runArm(label, key, config) {
     };
 }
 
-const left = await runArm('left', LEFT_KEY, leftConfig);
-const right = await runArm('right', RIGHT_KEY, rightConfig);
+const left = await runArm('left', leftKey, leftConfig);
+const right = await runArm('right', rightKey, rightConfig);
 const comparison = compareDeterministicDecisionTraces(left.trace, right.trace);
 const output = {
     schemaVersion: 1,
