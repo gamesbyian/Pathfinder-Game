@@ -141,6 +141,10 @@ Phase/escalation decisions use work, not elapsed time; cooperative yielding/late
 
 Label units in old/new provenance; never mix nodes and work silently.
 
+## Offline workflow control
+
+The active level-blind GitHub Actions sweep/confirmation workflows expose an opt-in `strict_total_work_budget` input. It defaults to `false` so historical additive-tier semantics remain reproducible. Set it to `true` for decision-bearing matched-work experiments that require the derived work budget to be the true whole-solve envelope. In those workflows, `node_budget` is a base/local allocation guard, not a whole-solve ceiling under legacy additive semantics. See [the 2026-08-28 workflow exposure audit](../reports/2026-08-28-offline-sweep-strict-work-exposure-audit.md).
+
 ## Matched-work experiments
 
 Declare whether additive retries/passes are inside the envelope. If treatment can spend extra work, use `strictTotalWorkBudget` or report extra cost. Equal `nodeBudget` does not imply equal work when technique mixes differ.
