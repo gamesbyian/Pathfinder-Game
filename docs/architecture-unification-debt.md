@@ -1,6 +1,6 @@
 # Architecture unification debt
 
-> **Status:** live structural-debt queue, reconciled 2026-08-23 after solver research-method review.
+> **Status:** live structural-debt queue, reconciled 2026-08-27 after budget-model rationalization.
 > **Read for:** remaining duplicate authority, compatibility migration, state-lifetime isolation, and boundary cleanup.
 > **Do not use for:** solver-policy priorities; use [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
 
@@ -23,6 +23,7 @@ External forms may vary; internal authorities and mutable lifetimes should not b
 | Area | Direction |
 |---|---|
 | **Search-stage mutable-state isolation** | **P0 while unexplained sequence dependence exists.** A target action run from fresh preparation versus after unrelated predecessor stages should be search-equivalent at fixed explicit input/config/seed/work unless a documented typed handoff says otherwise. Inventory and isolate caches, memo tables, PRNG state, counters, proxy overrides, and reusable scratch by ownership/lifetime. |
+| **Budget semantics / mutable caps** | **High-priority scheduler prerequisite (queue #2).** Base-vs-total naming has begun; next make stage work ownership authoritative, replace shared mutable `prep._workCap` inheritance with explicit attempt/stage budget context, then retire the finite ms-derived additive-stage inventory one behavior-preserving site at a time. Any solve-policy change discovered during migration becomes a scheduler experiment rather than structural cleanup. |
 | Per-solve vs cumulative work meters | Keep both meanings only while ownership is explicit; replace/encapsulate mutable global cumulative ownership so it cannot influence solve budgets or nested/concurrent behavior. |
 | Solver stage/retry policy | Canonical stage policy/plan/budget/identity has landed; remove residual mirrored dispatch only where behavior stays explicit. New search actions should flow through scheduler/action identity rather than creating another policy authority. |
 | Attempt/result telemetry | `stageId` is primary; keep legacy fields only at compatibility boundaries; retain one solver-originated external projection. Telemetry must preserve enough config/seed/budget/protocol identity to reproduce research claims. |
@@ -40,7 +41,7 @@ External forms may vary; internal authorities and mutable lifetimes should not b
 
 ## Stage-state isolation
 
-The current P0 research queue records historical admissible-order wins that require prior ladder activity to reproduce. Until that is explained, treat mutable lifetime as architectural correctness debt, not useful scheduler context.
+The former admissible-order sequence-dependence blocker has been retired by the live queue after the attribution error was identified. Keep the isolation contract below as a non-regression rule: if a new same-action, same-input fresh-vs-preceded discrepancy appears, it immediately becomes correctness/research-validity debt again.
 
 A stage/action should have an explicit input contract. For a search action that is supposed to be independent, predecessor execution may change CPU/cache warmth but must not silently change:
 
@@ -73,7 +74,7 @@ Keep hot-path accounting direct/monomorphic and characterize discovery stopping 
 
 Current authorities are `modules/solver/stage-policy.ts`, `stage-budget.ts`, `stage-plan.ts`, `stage-executors.ts`, `Attempt.stageId`, and `attempt-identity.mjs`. New actions/stages must use canonical stage/budget/telemetry infrastructure.
 
-Budget resources remain distinct: `workBudget` (deterministic allocation), `timeBudgetMs` (deadline), `nodeBudget` (technique/diagnostic cap), and `strictTotalWorkBudget` (experiment-only whole-solve envelope). A stage budget must define ownership/rollover, node scope, deadline relation, reserve/additive behavior, expected binding resource, cross-resource behavior, and strict-total participation. Do not partition WORK shares beneath one shared NODE ceiling that early configs can exhaust.
+Budget resources remain distinct: `workBudget` (legacy-named base deterministic allocation), `timeBudgetMs` (deadline plus inventoried additive-tier compatibility sizing debt), `nodeBudget` (deterministic technique/cumulative diagnostic cap), and `strictTotalWorkBudget` (experiment-only whole-solve work envelope). A stage budget must define ownership/rollover, node scope, deadline relation, reserve/additive behavior, expected binding resource, cross-resource behavior, and strict-total participation. Do not partition WORK shares beneath one shared NODE ceiling that early configs can exhaust.
 
 Sequential/raced engines may schedule differently. `RACE_SUPPORTED_STAGE_IDS` makes race coverage explicit. Share stage/config identity and budget policy where practical; do not require deterministic race winners.
 
@@ -104,14 +105,14 @@ Specialized rule implementations may remain in runtime/domain/solver. Treat the 
 
 ## Implementation order
 
-0. **Resolve unexplained search-stage history dependence** before using affected stage-isolated evidence for scheduler/cap decisions.
-1. Finish residual solver dispatch/telemetry compatibility cleanup without policy changes.
-2. Replace implicit global work ownership after behavior/hot-path cost are characterized.
+0. **Budget-model completion for queue #2:** finish stage work-envelope projection and explicit base/total semantics; replace `prep._workCap` inheritance with explicit budget context; isolate module-global multi-solve work ownership; then retire ms-derived additive allocation sites incrementally with parity evidence.
+1. Finish residual solver dispatch/telemetry compatibility cleanup only where it directly supports that budget/stage authority or removes demonstrated ambiguity.
+2. Reopen stage-history isolation only if a new fresh-vs-preceded discrepancy appears; the former admissible-order blocker is retired in the live queue.
 3. Migrate persistent entity identity and mutable hints inward.
 4. Unify wire interpretation, strengthen rule conformance, and remove coordinate/selector guessing.
 5. Address corpus/published-storage facades and solver aliases only when they remove demonstrated repeated work.
 
-Do not allow low-value architecture tidiness to displace P0 research validity, scheduler/generalization work, or measured hot-path opportunities.
+Do not allow low-value architecture tidiness to displace queue #0 evidence work or queue #2 budget-model completion. Budget ownership/determinism cleanup is specifically exempt from the usual 'architecture can wait' rule because it is required for trustworthy scheduler evidence.
 
 ## Verification
 
