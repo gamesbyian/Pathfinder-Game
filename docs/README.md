@@ -4,7 +4,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories curr
 
 ## Naming
 
-Current docs use lowercase kebab-case, stable undated names, and canonical repository terms. Put dated/narrative investigations in `reports/`, `archive/`, `history/`, or `refactor-notes/`. When renaming a live authority, update current links/workflows/metadata and run `npm run check:documentation-links`; do not rewrite frozen reports merely to modernize paths. The active repository-wide cleanup is specified by [`naming-cleanup-plan.md`](naming-cleanup-plan.md).
+Current docs use lowercase kebab-case, stable undated names, and canonical repository terms. Put dated/narrative investigations in `reports/`, `archive/`, `history/`, or `refactor-notes/`. When renaming a live authority, update current links/workflows/metadata and run `npm run check:documentation-links`; do not rewrite frozen reports merely to modernize paths. Canonical naming rules live in [`naming-and-vocabulary.md`](naming-and-vocabulary.md). The active repository-wide cleanup is specified by [`naming-cleanup-plan.md`](naming-cleanup-plan.md) and tracked in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json).
 
 ## Current references
 
@@ -13,7 +13,9 @@ Current docs use lowercase kebab-case, stable undated names, and canonical repos
 | [`architecture.md`](architecture.md) | Application structure and code ownership |
 | [`architecture-unification-debt.md`](architecture-unification-debt.md) | Remaining authority/mutable-lifetime architecture debt |
 | [`change-recipes.md`](change-recipes.md) | Cross-boundary schema/state/telemetry changes and experiment preflight recipes |
+| [`naming-and-vocabulary.md`](naming-and-vocabulary.md) | Permanent canonical naming and vocabulary rules |
 | [`naming-cleanup-plan.md`](naming-cleanup-plan.md) | Decision-complete repository naming cleanup, compatibility rules, rename inventory, and implementation sequence |
+| [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json) | Machine-readable execution status for rename and retained-term decisions |
 | [`testing.md`](testing.md) | Validation and finish-line gates |
 | [`tooling-catalog.md`](tooling-catalog.md) | CLI, probe, batch, and workflow discovery |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |
