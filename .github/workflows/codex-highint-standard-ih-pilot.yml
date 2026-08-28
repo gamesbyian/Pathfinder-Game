@@ -1,0 +1,129 @@
+name: Codex high-int standard-IH pilot
+
+on:
+  push:
+    branches:
+      - codex/missing-exposure-and-budget-audit
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run modules/solver/attempts.test.ts
+      - run: npm run check:types
+
+  pilot:
+    needs: unit
+    strategy:
+      fail-fast: false
+      matrix:
+        arm: [control, treatment]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Resolve prespecified development-replay positions
+        id: positions
+        shell: bash
+        run: |
+          positions=$(node - <<'NODE'
+          const fs = require('node:fs');
+          const doc = JSON.parse(fs.readFileSync('data/stress/stress-levels-random.json', 'utf8'));
+          const rows = Array.isArray(doc) ? doc : doc.levels;
+          const ids = new Set(['R01124', 'R02500', 'R02718', 'R02440']);
+          const found = rows.flatMap((row, i) => ids.has(row.id) ? [i + 1] : []);
+          if (found.length !== ids.size) throw new Error('expected 4 ids, found ' + found.length);
+          process.stdout.write(found.join(','));
+          NODE
+          )
+          echo "positions=$positions" >> "$GITHUB_OUTPUT"
+          echo "positions=$positions"
+      - name: Run strict-work selected replay
+        shell: bash
+        run: |
+          extra=()
+          if [ "${{ matrix.arm }}" = "treatment" ]; then
+            extra+=("--enable-flags=STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE")
+          fi
+          timeout -k 30s --preserve-status 110m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels="pos:${{ steps.positions.outputs.positions }}" \
+            --budget-ms=86400000 \
+            --node-budget=50000000 \
+            --work-budget=67000000 \
+            --strict-total-work-budget \
+            --attempt-budget-telemetry \
+            --workers=4 \
+            "${extra[@]}" \
+            --out="tmp/standard-ih-${{ matrix.arm }}.json" \
+            --summary-out="tmp/standard-ih-${{ matrix.arm }}-summary.md"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: standard-ih-${{ matrix.arm }}
+          path: tmp/standard-ih-${{ matrix.arm }}*
+          if-no-files-found: error
+          retention-days: 30
+
+  compare:
+    needs: pilot
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: standard-ih-*
+          path: tmp/download
+          merge-multiple: true
+      - name: Compare arms
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const control = JSON.parse(fs.readFileSync('tmp/download/standard-ih-control.json', 'utf8'));
+          const treatment = JSON.parse(fs.readFileSync('tmp/download/standard-ih-treatment.json', 'utf8'));
+          const byId = rows => new Map(rows.map(r => [r.id, r]));
+          const c = byId(control.levels), t = byId(treatment.levels);
+          const ids = [...new Set([...c.keys(), ...t.keys()])].sort();
+          const gained = ids.filter(id => !c.get(id)?.ok && t.get(id)?.ok);
+          const lost = ids.filter(id => c.get(id)?.ok && !t.get(id)?.ok);
+          const work = rows => rows.reduce((sum, r) => sum + Number(r.workSpent ?? 0), 0);
+          const result = {
+            evidenceRole: 'selected development replay only',
+            ids,
+            controlSolved: ids.filter(id => c.get(id)?.ok),
+            treatmentSolved: ids.filter(id => t.get(id)?.ok),
+            gained,
+            lost,
+            controlWork: work(control.levels),
+            treatmentWork: work(treatment.levels),
+            rows: ids.map(id => ({
+              id,
+              control: { ok: c.get(id)?.ok, status: c.get(id)?.status, workSpent: c.get(id)?.workSpent, nodesExpanded: c.get(id)?.nodesExpanded },
+              treatment: { ok: t.get(id)?.ok, status: t.get(id)?.status, workSpent: t.get(id)?.workSpent, nodesExpanded: t.get(id)?.nodesExpanded },
+            })),
+          };
+          fs.writeFileSync('tmp/standard-ih-selected-replay-result.json', JSON.stringify(result, null, 2));
+          console.log(JSON.stringify(result, null, 2));
+          NODE
+      - uses: actions/upload-artifact@v7
+        with:
+          name: standard-ih-selected-replay-result
+          path: tmp/standard-ih-selected-replay-result.json
+          if-no-files-found: error
+          retention-days: 30
