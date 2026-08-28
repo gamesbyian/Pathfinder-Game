@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describeLevel, loadCorpus } from './corpus-query-lib.mjs';
 import { techniqueCensusIdentityKey } from './technique-census-result-lib.mjs';
+import { parseAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
 const DEFAULT_DIRECTORY = 'reports/stress/technique-census/32240161854';
 const DEFAULT_PRODUCTION_RUN = 'reports/stress/capability-runs/32526927206';
@@ -20,8 +21,13 @@ const median = values => {
     const middle = Math.floor(sorted.length / 2);
     return sorted.length % 2 ? sorted[middle] : Math.round((sorted[middle - 1] + sorted[middle]) / 2);
 };
-const techniqueFamily = technique => technique.startsWith('dfs:repair:') ? 'repair'
-    : technique.split(':', 1)[0];
+const techniqueFamily = technique => {
+    const base = String(technique).split('+', 1)[0];
+    const fields = parseAttemptIdentityKey(base);
+    if (fields.repair) return 'repair';
+    if (fields.admissibleOrder) return 'admissible-order';
+    return fields.beamWidth ? 'beam' : 'dfs';
+};
 const assertIncreasingCaps = thresholds => {
     if (!thresholds.length || thresholds.some((cap, index) => !Number.isSafeInteger(cap) || cap <= 0
         || (index > 0 && cap <= thresholds[index - 1]))) {
@@ -288,14 +294,14 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
             } };
     };
     const comparisons = [
-        compare('objective beam width', 'beam:objectiveFirst@beam2000', 'beam:objectiveFirst@beam5000', 'left=2K, right=5K'),
-        compare('intersection beam width', 'beam:intersectionHarvest@beam2000', 'beam:intersectionHarvest@beam5000', 'left=2K, right=5K'),
-        compare('objective diversity', 'beam:objectiveFirst@beam5000', 'beam:objectiveFirst@beam5000(diverse)', 'left=plain, right=diverse'),
-        compare('intersection diversity', 'beam:intersectionHarvest@beam5000', 'beam:intersectionHarvest@beam5000(diverse)', 'left=plain, right=diverse'),
-        compare('IDA default vs none', 'ida:none', 'ida:default', 'left=no tie-break, right=informed default'),
-        compare('IDA must-cross vs none', 'ida:none', 'ida:mustCrossFirst', 'left=no tie-break, right=informed must-cross'),
-        compare('beam direction', 'beam:perimeterSweep/perimeterCCW@beam2000', 'beam:perimeterSweep/perimeterCW@beam2000', 'nominally symmetric directions'),
-        compare('DFS direction', 'dfs:perimeterSweep/perimeterCCW', 'dfs:perimeterSweep/perimeterCW', 'nominally symmetric directions'),
+        compare('objective beam width', 'beam|score=objectiveFirst|bias=none|width=2000|retention=plain', 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain', 'left=2K, right=5K'),
+        compare('intersection beam width', 'beam|score=intersectionHarvest|bias=none|width=2000|retention=plain', 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain', 'left=2K, right=5K'),
+        compare('objective diversity', 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain', 'beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets', 'left=plain, right=diverse'),
+        compare('intersection diversity', 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain', 'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets', 'left=plain, right=diverse'),
+        compare('IDA default vs none', 'admissible-order|tieBreak=none|lds=off', 'admissible-order|tieBreak=default|lds=off', 'left=no tie-break, right=informed default'),
+        compare('IDA must-cross vs none', 'admissible-order|tieBreak=none|lds=off', 'admissible-order|tieBreak=mustCrossFirst|lds=off', 'left=no tie-break, right=informed must-cross'),
+        compare('beam direction', 'beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain', 'beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain', 'nominally symmetric directions'),
+        compare('DFS direction', 'dfs|score=perimeterSweep|bias=perimeterCCW', 'dfs|score=perimeterSweep|bias=perimeterCW', 'nominally symmetric directions'),
     ];
 
     const failureFingerprints = new Map();
@@ -307,7 +313,7 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
             statuses.add(cell.status);
             families.set(family, statuses);
         }
-        const fingerprint = ['beam', 'dfs', 'ida', 'repair'].map(family => {
+        const fingerprint = ['beam', 'dfs', 'admissible-order', 'repair'].map(family => {
             const statuses = families.get(family);
             if (!statuses) return `${family}:not-sampled`;
             if (statuses.has('node-budget-reached')) return `${family}:node-cap`;
@@ -770,7 +776,7 @@ export function renderTechniqueCensusSecondOrder(result, sourceDirectory, source
     const productionRun = sources.productionRun ?? path.basename(DEFAULT_PRODUCTION_RUN);
     const frozenProductionRun = sources.frozenProductionRun ?? path.basename(FROZEN_PRODUCTION_RUN);
     const gapBudgetCurves = result.techniqueBudgetCurves.populations.productionUnsolved;
-    const repairBudgetCurve = gapBudgetCurves.techniques.find(row => row.technique === 'dfs:repair:repair');
+    const repairBudgetCurve = gapBudgetCurves.techniques.find(row => row.technique === 'repair|score=repair|guidance=standard');
     const repairLateTranches = repairBudgetCurve?.tranches.filter(row => row.lowerNodeCap >= 20_000_000) ?? [];
     const repairLateRisk = repairLateTranches[0]?.atRiskAtStart ?? 0;
     const repairLateSolves = repairLateTranches.reduce((sum, row) => sum + row.solvesInTranche, 0);
