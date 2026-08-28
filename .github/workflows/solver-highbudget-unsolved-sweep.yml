@@ -388,7 +388,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/stress/hints/ data/stress/hints-random/ reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json logs/solver-highbudget-sweep/ logs/solver-stress-refresh/corpus2-runtime-telemetry.json 2>/dev/null || true
+          git add data/stress/hints/ data/stress/hints-random/ reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json "reports/stress/highbudget-unsolved-sweep-source-run-${{ github.run_id }}.json" logs/solver-highbudget-sweep/ logs/solver-stress-refresh/corpus2-runtime-telemetry.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "Nothing changed -- not creating an empty commit."
             exit 0
