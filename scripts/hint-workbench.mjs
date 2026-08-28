@@ -473,7 +473,9 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
         rediscovered,
         exhaustion: {
             status: classifyAblationExhaustion(result.report),
-            haltedByWallClock: Boolean(result.report?.haltedByWallClock),
+            haltedByWorkBudget: Boolean(result.report?.haltedByWorkBudget ?? result.report?.haltedByWallClock),
+            // Compatibility output for older report consumers.
+            haltedByWallClock: Boolean(result.report?.haltedByWorkBudget ?? result.report?.haltedByWallClock),
             haltedByMaxHints: Boolean(result.report?.haltedByMaxHints),
             haltedByCancel: Boolean(result.report?.haltedByCancel),
         },
@@ -494,12 +496,14 @@ const ABLATION_FULL_PHASE_SETS = {
 };
 
 async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber, phases = ABLATION_FULL_PHASE_SETS.all) {
-    const wallClockDeadlineMs = opts.wallMs;
+    // --wall-ms is retained as a CLI compatibility name, but all hint-discovery extent is work-
+    // bounded. Convert once here and pass the preferred workBudget API; no live clock gates phases.
+    const workBudget = Math.max(1, Math.floor(opts.wallMs * WORKBENCH_WORK_PER_MS));
     const result = await createHintAblationGenerator(rawLevel, levelNumber, {
         solverApi: Solver,
         attemptBudgetMs: opts.attemptBudgetMs,
         baselineBudgetMs: opts.baselineBudgetMs,
-        wallClockDeadlineMs,
+        workBudget,
         extraEvidenceHints: existingHints,
         phases,
     });
@@ -511,7 +515,8 @@ async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber
         // no need to re-derive it here from result.discoveries.
         rediscovered: result.rediscovered,
         exhaustion: {
-            status: result.report.haltedByWallClock ? 'budgeted' : 'done',
+            status: result.report.haltedByWorkBudget ? 'budgeted' : 'done',
+            haltedByWorkBudget: result.report.haltedByWorkBudget,
             haltedByWallClock: result.report.haltedByWallClock,
         },
         meta: result.report,
@@ -522,8 +527,9 @@ async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber
 // mutation of existing hints — ported from scripts/hint-candidate-search.mjs. Unlike that script's
 // unbounded (gate x direction x strategy-flag) grid, which had no incremental persistence and could
 // time out with zero output (found in the 2026-07-25 tool comparison, reports/2026-07-25-hint-tool-
-// comparison.md), this step is bounded by opts.wallMs like runAblationUi/runAblationFull: it always
-// returns within budget with whatever candidates it found so far, so the outer per-level write loop
+// comparison.md), this step is bounded by the work ceiling derived from opts.wallMs, like
+// runAblationUi/runAblationFull. It always returns within that deterministic work envelope with
+// whatever candidates it found so far, so the outer per-level write loop
 // in main() below can persist partial progress instead of losing an interrupted run's work entirely.
 function unpackCellKey(key) {
     return { x: key & 0xFFFF, y: key >>> 16 };
@@ -775,7 +781,7 @@ function classifyEnumerationExhaustion(outcome) {
 
 function classifyAblationExhaustion(report) {
     if (report?.haltedByCancel) return 'cancelled';
-    if (report?.haltedByWallClock) return 'budgeted';
+    if (report?.haltedByWorkBudget ?? report?.haltedByWallClock) return 'budgeted';
     if (report?.haltedByMaxHints) return 'capped';
     return 'done';
 }
