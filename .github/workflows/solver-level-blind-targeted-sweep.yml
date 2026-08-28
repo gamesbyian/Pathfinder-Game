@@ -43,11 +43,15 @@ on:
         required: false
         default: 'data/stress/stress-levels-random.json'
       node_budget:
-        description: 'Per-level cumulative node ceiling.'
+        description: 'Per-level base node allocation. Legacy additive tiers may spend beyond this nominal value; strict_total_work_budget gives the true whole-solve work ceiling.'
         required: false
         default: '50000000'
+      strict_total_work_budget:
+        description: 'If true, enforce the derived work budget as a true whole-solve ceiling. Default false preserves legacy additive-pass semantics.'
+        required: false
+        default: 'false'
       budget_ms:
-        description: 'Per-level wall budget. Default 24h is intentionally non-binding; node budget is the real ceiling.'
+        description: 'Per-level wall-safety deadline. Default 24h is intentionally non-binding; allocation is governed by node/work inputs, with additive tiers unless strict_total_work_budget=true.'
         required: false
         default: '86400000'
       workers:
@@ -189,6 +193,8 @@ jobs:
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
           # plan-highbudget-shards.mjs emits "pos:" per comma-token (its native consumer,
           # portfolio-solve-sweep.mjs's stripPositionPrefix, tolerates that) -- but level-blind-
           # capability-sweep.mjs's own parseLevelSpec only strips ONE leading "pos:" for the whole
@@ -201,6 +207,7 @@ jobs:
             --budget-ms="${{ inputs.budget_ms }}" \
             --node-budget="${{ inputs.node_budget }}" \
             --work-budget="${work}" \
+            "${strict[@]}" \
             --workers="${{ inputs.workers }}" \
             "${extra[@]}" \
             --out="logs/solver-targeted-sweep/batch-${{ matrix.shard.idx }}.json" \
