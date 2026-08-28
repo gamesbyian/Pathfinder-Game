@@ -66,16 +66,20 @@ const directMsToWorkLines = orchestration.split('\n')
 assert.deepEqual(directMsToWorkLines.filter(line => !approvedDirectMsToWorkSites.has(line)), [],
     'new direct timeBudgetMs -> work conversion added inside orchestration; normalize only at an intentional compatibility boundary');
 
-// 2026-08-28: dedup-near-tie-retry (queue #2 step 3's first migrated site) no longer re-derives its
-// own work pool from timeBudgetMs via legacyMsToWork — it now scales the solve's own resolved
-// `workBudget` instead (see budget-units.ts's scaledStageWorkBudget and this tier's own call-site
-// comment in orchestration.ts). `dedupRetryTotalBudget` itself stays timeBudgetMs-derived and stays
+// 2026-08-28+: queue #2 step-3 migrated sites no longer re-derive their own work pool from
+// timeBudgetMs via legacyMsToWork — each now scales the solve's own resolved `workBudget` instead
+// (see budget-units.ts's scaledStageWorkBudget and each tier's own call-site comment in
+// orchestration.ts). Each site's own `*TotalBudget` (ms) line stays timeBudgetMs-derived and stays
 // in approvedLegacyTimeDerivedAllocations above — that is now a WALL-DEADLINE sizing line only
-// (`totalBudgetMs`, latency safety), a legitimate, permanent use of timeBudgetMs distinct from the
-// work-dose debt the other 8 sites in that set still carry. Guard against silently reintroducing the
-// old work-dose pattern for this one migrated tier.
-assert.equal(orchestration.includes('legacyMsToWork(dedupRetryTotalBudget'), false,
-    'dedup-near-tie-retry work dose regressed back to a timeBudgetMs-derived legacyMsToWork conversion');
+// (a genuine, permanent use of timeBudgetMs), distinct from the work-dose debt the still-unmigrated
+// sites in that set carry. Guard against silently reintroducing the old work-dose pattern for each
+// migrated tier. See reports/2026-08-28-dedup-near-tie-retry-work-dose-migration.md for the full
+// account of what this pattern does and does not preserve.
+const migratedWorkDoseSites = ['dedupRetryTotalBudget', 'repairFallbackTotalBudget'];
+for (const site of migratedWorkDoseSites) {
+    assert.equal(orchestration.includes(`legacyMsToWork(${site}`), false,
+        `${site}'s work dose regressed back to a timeBudgetMs-derived legacyMsToWork conversion`);
+}
 
 assert.match(portfolio, /LEGACY WALL-CLOCK SCHEDULER EXPERIMENT/u,
     'the old ms portfolio must remain visibly quarantined until it is work-normalized or removed');

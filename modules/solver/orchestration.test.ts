@@ -1196,6 +1196,59 @@ test('repair-fallback reserve gives the fallback loop room without touching the 
     assert.equal(on.nodesExpanded, 1000, 'same total spend either way -- this reserve only changes WHO gets the nodes, never how many exist');
 });
 
+// 2026-08-28: repair-fallback was the second tier migrated off queue #2 step 3's ms-derived
+// work-dose debt (docs/solver-budget-determinism.md's "Remaining ms-shaped allocation debt";
+// scaledStageWorkBudget in budget-units.ts) -- same pattern and same two tests as
+// dedup-near-tie-retry's own pair above. STRATEGY_REPAIR_FALLBACK_NODE_RESERVE / the reserve
+// override are needed (see the two tests just above) so the fallback loop actually gets a turn
+// instead of being starved by the main loop's own share of the shared node budget.
+function isolateRepairFallbackOpts(overrides: Record<string, unknown> = {}) {
+    return {
+        nodeBudget: 1000,
+        admissibleOrderBudgetFractionOverride: 0,
+        attractionDiversityBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
+        mainLoopLateReserveFractionOverride: 0.3,
+        mainLoopLateReserveConfigCountOverride: 2,
+        repairFallbackNodeReserveFractionOverride: 0.5,
+        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
+        attemptSearchForTesting: repairFallbackReserveDispatch(),
+        attemptBudgetTelemetry: true,
+        ...overrides,
+    };
+}
+
+test('repair-fallback work dose no longer resizes with a non-binding deadline change', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const run = (timeBudgetMs: number) => solveLevel(level, isolateRepairFallbackOpts({ timeBudgetMs, workBudget: 200_000 }));
+    const shortDeadline = await run(1000);
+    const longDeadline = await run(600_000);
+    const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
+        .filter(a => a.repair === true)
+        .map(a => a.allocatedWorkCeiling);
+    const shortDose = dose(shortDeadline);
+    assert.ok(shortDose.length > 0, 'expected at least one repair-fallback attempt');
+    assert.deepEqual(dose(longDeadline), shortDose,
+        'this tier\'s own work pool must depend on workBudget, not on the (non-binding) deadline');
+});
+
+test('repair-fallback now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const solveWith = (baseWorkBudget: number) => solveLevel(level, isolateRepairFallbackOpts({ timeBudgetMs: 1000, baseWorkBudget }));
+    const small = await solveWith(200_000);
+    const large = await solveWith(20_000_000);
+    const ceiling = (result: Awaited<ReturnType<typeof solveLevel>>) =>
+        result.attempts.find(a => a.repair === true)?.allocatedWorkCeiling ?? null;
+    const smallCeiling = ceiling(small);
+    const largeCeiling = ceiling(large);
+    assert.ok(smallCeiling != null && largeCeiling != null, 'expected a repair-fallback attempt in both runs');
+    assert.ok((largeCeiling as number) > (smallCeiling as number),
+        'an explicit baseWorkBudget must now size this tier\'s own dose');
+});
+
 test('repair-fallback reserve is a no-op when mainLoopLateReserve is 0 (accepted coupling)', async () => {
     // Documented, accepted limitation (see the read site's own comment): this reserve carves FROM
     // mainLoopLateReserve, so it has nothing to withhold when that reserve is itself zero --
@@ -1648,12 +1701,20 @@ test('the ordinary repair fallback loop gets fresh work room, not a stale cap le
     });
     assert.equal(result.ok, true, 'the mocked repair config must win');
     assert.ok(repairAllocatedWorkCeiling !== undefined, 'the repair fallback attempt must have run');
-    // Before the fix this was whatever the main loop's last per-attempt slice happened to be
-    // (bounded by the external workBudget=100,000). After the fix it is REPAIR_EXTRA_BUDGET_FRACTION
-    // (6.0) * timeBudgetMs * DEFAULT_WORK_PER_MS, ~100.5M — three orders of magnitude larger, so a
-    // generous threshold well above workBudget cleanly distinguishes the two.
-    assert.ok(repairAllocatedWorkCeiling! > 1_000_000,
-        `repair fallback must see a fresh, generous work cap, got ${repairAllocatedWorkCeiling}`);
+    // Before the 2026-08-20 fix this was whatever the main loop's last per-attempt slice happened to
+    // be (bounded by the external workBudget=100,000). After that fix, and before the 2026-08-28
+    // queue #2 step-3 migration (reports/2026-08-28-dedup-near-tie-retry-work-dose-migration.md),
+    // it was REPAIR_EXTRA_BUDGET_FRACTION (6.0) * timeBudgetMs * DEFAULT_WORK_PER_MS, ~100.5M —
+    // ignoring the caller's own explicit workBudget entirely, exactly the bug that migration closed.
+    // After the migration it is REPAIR_EXTRA_BUDGET_FRACTION (6.0) * the solve's own resolved
+    // workBudget (100,000 here, explicit) = 600,000 exactly — three orders of magnitude smaller than
+    // the old ms-derived number, but still three orders of magnitude larger than any single
+    // main-loop per-attempt slice of workBudget=100,000 (bounded by workBudget itself, so at most
+    // 100,000, typically far less once divided across many configs), so this pin still distinguishes
+    // "fresh" from "stale/inherited" — it just now also reflects the caller's real workBudget instead
+    // of silently re-deriving a different one from timeBudgetMs.
+    assert.equal(repairAllocatedWorkCeiling, 600_000,
+        `repair fallback must see a fresh work cap sized off workBudget, got ${repairAllocatedWorkCeiling}`);
 });
 
 test('lifecycle telemetry classifies newer retry tiers as their own technique, not main-ladder/repair-fallback/admissible-order (regression, fixed 2026-08-20)', async () => {
