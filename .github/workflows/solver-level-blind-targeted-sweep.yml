@@ -294,3 +294,20 @@ jobs:
           name: targeted-sweep-combined
           path: logs/solver-targeted-sweep/combined.json
           retention-days: 90
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="logs/solver-targeted-sweep/combined.json" \
+            --source-artifact="targeted-sweep-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
