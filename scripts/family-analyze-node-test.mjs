@@ -106,7 +106,7 @@ async function main() {
 
         // ── density-sweep mutationManifest shape: {operation:'add'|'remove', count, ...}, no
         // from/to at all — this crashed the original implementation (assumed every mutation was a
-        // {from,to} move). Also exercises the navDensity column, shown only when present. ─────────
+        // {from,to} move). Also exercises dual-read of legacy navDensity fields while displaying canonical requiredPathCoverageRatio. ─────────
         const densityManifestPath = path.join(tempDir, 'density-manifest.json');
         const densityManifest = {
             familyId: 'family-TEST-w0', parentLevelId: 'TEST', selectedWitnessSource: 'hint[0]',
@@ -125,9 +125,9 @@ async function main() {
         };
         await writeFile(densityManifestPath, JSON.stringify(densityManifest));
         const densityResult = await runAnalyze([`--manifest=${densityManifestPath}`, `--solve-result=${solveResultPath}`]);
-        assert.match(densityResult.stdout, /parent navDensity 0\.750/);
+        assert.match(densityResult.stdout, /parent requiredPathCoverageRatio 0\.750/);
         assert.match(densityResult.stdout, /mode: density-sweep/);
-        assert.match(densityResult.stdout, /variant\tobjectType\tmove\tnavDensity\tok\t/, 'navDensity column appears when variants carry it');
+        assert.match(densityResult.stdout, /variant\tobjectType\tmove\trequiredPathCoverageRatio\tok\t/, 'canonical coverage column appears when legacy manifest variants carry navDensity');
         assert.match(densityResult.stdout, /F00TEST-04\tblocks\t-2 \(now 4\)\t0\.700\t\?\t-\t-\t-\t-\t-/);
         assert.match(densityResult.stdout, /F00TEST-05\tblocks\t\+3 \(now 9\)\t0\.830\t\?\t-\t-\t-\t-\t-/);
 
