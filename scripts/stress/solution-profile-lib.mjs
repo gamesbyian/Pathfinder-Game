@@ -21,12 +21,12 @@ import path from 'node:path';
 import { PACK, UNPACK } from '../../modules/domain/cell-key.ts';
 import {
     edgeSet, crossingSet, portalSignature, mustCrossOrders, buildPathFeatures, featureDistance,
-    jaccardDistance, pathSignature, isDrawnStep, NEAR_HAMILTONIAN_DENSITY,
+    jaccardDistance, pathSignature, isDrawnStep, NEAR_HAMILTONIAN_COVERAGE_THRESHOLD,
 } from '../../modules/domain/path-features.ts';
 import { turnDirection } from '../../modules/domain/geometry.ts';
 import { resolveLandmarkTurn, baseLandmarkRole } from '../../modules/domain/landmark-rules.ts';
 import {
-    buildHintEdgeCounts, pathVisitCells, mustCrossKeysOf, navigableDensity, entropy, percentile,
+    buildHintEdgeCounts, pathVisitCells, mustCrossKeysOf, requiredPathCoverageRatio, entropy, percentile,
 } from '../../modules/domain/hint-novelty.ts';
 import { WITNESS_GENERATOR_ID, SOLVER_ID, HUMAN_PLAYER_ID } from '../../modules/domain/hint-types.ts';
 import { readLevelsWithHints, parseLevelSelector } from '../level-data-io.mjs';
@@ -517,7 +517,7 @@ export function buildLevelSolutionProfile(level, levelId, opts = {}) {
 
     const objectives = extractObjectives(level);
     const mcKeys = mustCrossKeysOf(level);
-    const useCrossings = navigableDensity(level) >= NEAR_HAMILTONIAN_DENSITY;
+    const useCrossings = requiredPathCoverageRatio(level) >= NEAR_HAMILTONIAN_COVERAGE_THRESHOLD;
     const buckets = bucketHintsBySource(hints);
 
     const bySource = {};
@@ -552,7 +552,7 @@ export function buildLevelSolutionProfile(level, levelId, opts = {}) {
 export function buildSinglePathProfile(path, level, seed = 20260703) {
     const objectives = extractObjectives(level);
     const mcKeys = mustCrossKeysOf(level);
-    const useCrossings = navigableDensity(level) >= NEAR_HAMILTONIAN_DENSITY;
+    const useCrossings = requiredPathCoverageRatio(level) >= NEAR_HAMILTONIAN_COVERAGE_THRESHOLD;
     return buildBucketProfile([{ path, provenance: [] }], level, objectives, mcKeys, useCrossings, seed);
 }
 
