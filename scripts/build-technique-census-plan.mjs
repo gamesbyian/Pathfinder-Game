@@ -94,6 +94,11 @@ const T3T4_SAMPLE_SIZE = Number(args.get('--t3t4-sample-size') || 200);
 const T1_NODE_BUDGET = Number(args.get('--t1-node-budget') || 50000000);
 const T3_NODE_BUDGET = Number(args.get('--t3-node-budget') || 50000000);
 const T4_NODE_BUDGET = Number(args.get('--t4-node-budget') || 50000000);
+// EW1 is an opt-in decision-bearing equal-work pilot. Zero sample size keeps ordinary census
+// plans/cost unchanged. A single max work cap is sufficient to reconstruct lower successful-work
+// thresholds from each row's measured workSpent; see reports/2026-08-28-equal-work-technique-census-pilot-design.md.
+const EW1_SAMPLE_SIZE = Math.max(0, Number(args.get('--equal-work-sample-size') || 0));
+const EW1_WORK_BUDGET = Number(args.get('--equal-work-budget') || 10000000);
 // Per-attempt wall-clock cap passed to runAttempt -- a belt-and-suspenders backstop alongside the
 // node budget (mirrors method-probe.mjs's own --budget-ms). Generous: the node budget is what's
 // meant to bind in the overwhelming majority of cells.
@@ -256,6 +261,17 @@ const t1Sample = [
 // results, so the combine step can join rather than needing a redundant control cell.
 const t3t4Sample = seededShuffle(t1Sample, mulberry32(SEED + 1)).slice(0, Math.min(T3T4_SAMPLE_SIZE, t1Sample.length));
 
+// EW1 samples only the same frozen production-unsolved population that T1's historical gap
+// analyses use, making the node-depth and equal-work rows directly joinable. No technique/feature
+// outcome is consulted for sampling. Corpus-1 and Corpus-2 are pooled before the seeded draw.
+const frozenGapLevels = [
+    ...corpusLevels.corpus1.filter(l => !isSolved('corpus1', l.id)).map(l => ({ corpus: 'corpus1', ...l })),
+    ...corpusLevels.corpus2.filter(l => !isSolved('corpus2', l.id)).map(l => ({ corpus: 'corpus2', ...l })),
+];
+const ew1Sample = EW1_SAMPLE_SIZE > 0
+    ? seededShuffle(frozenGapLevels, mulberry32(SEED + 2)).slice(0, Math.min(EW1_SAMPLE_SIZE, frozenGapLevels.length))
+    : [];
+
 // ─── Flag classification (2026-08-19, per external design review) ─────────────────────────────────
 // Ablation flags fall into three groups, treated differently rather than swept as an unconstrained
 // flag x technique cross-product:
@@ -405,11 +421,27 @@ for (const exp of FLAG_EXPERIMENTS) {
     }
 }
 
+// EW1: every base single technique on a bounded, unselected frozen-gap sample under the same
+// canonical WORK cap. No promoted variants/pairs: this pilot prices existing base action identity.
+for (const level of ew1Sample) {
+    for (const key of ALL_TECHNIQUE_KEYS) {
+        if (techniqueEligible(key, level.raw)) {
+            pushCell('EW1', level, [key], null, null, { workBudget: EW1_WORK_BUDGET });
+        }
+    }
+}
+
 const plan = {
     generatedAt: new Date().toISOString(),
-    budgetProtocol: 'technique-local-node-depth',
+    budgetProtocol: ew1Sample.length ? 'mixed-node-depth-and-equal-work' : 'technique-local-node-depth',
     equalCostAcrossTechniques: false,
-    costSemantics: 'node budgets measure within-technique depth/capability; use canonical workSpent for cross-technique allocation',
+    costSemantics: ew1Sample.length
+        ? 'T1/T3/T4 remain technique-local node-depth evidence; EW1 gives equal canonical-work pricing on a bounded frozen-gap sample'
+        : 'node budgets measure within-technique depth/capability; use canonical workSpent for cross-technique allocation',
+    ...(ew1Sample.length ? { equalWorkPilot: {
+        tier: 'EW1', sampleSize: ew1Sample.length, workBudget: EW1_WORK_BUDGET,
+        seed: SEED + 2, population: 'frozen production-unsolved corpus1+corpus2',
+    } } : {}),
     commitSha: COMMIT_SHA,
     seed: SEED,
     baselineFile: BASELINE_FILE,
@@ -423,10 +455,11 @@ const plan = {
         priorityLevels: priorityLevels.length,
         t1SampleSize: t1Sample.length,
         t3t4SampleSize: t3t4Sample.length,
+        ...(ew1Sample.length ? { ew1SampleSize: ew1Sample.length, frozenGapLevels: frozenGapLevels.length } : {}),
         allCorporaLevels: Object.fromEntries(Object.entries(corpusLevels).map(([k, v]) => [k, v.length])),
     },
     // T2 intentionally absent -- retired 2026-08-19, gap kept rather than reused (see file header).
-    tierCounts: Object.fromEntries(['T1', 'T3', 'T4'].map(t => [t, cells.filter(c => c.tier === t).length])),
+    tierCounts: Object.fromEntries((ew1Sample.length ? ['T1', 'T3', 'T4', 'EW1'] : ['T1', 'T3', 'T4']).map(t => [t, cells.filter(c => c.tier === t).length])),
     totalCells: cells.length,
     cells,
 };
