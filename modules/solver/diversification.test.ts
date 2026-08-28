@@ -115,7 +115,8 @@ deepTest('an exhausted work ceiling halts the session early and marks it resumab
     const res = await session.runUntil(() => workMeter.units - 1, {});
     assert.equal(res.isComplete, false);
     assert.equal(session.isComplete, false);
-    assert.equal(res.report.haltedByWallClock, true);
+    assert.equal(res.report.haltedByWorkBudget, true);
+    assert.equal(res.report.haltedByWallClock, true, 'legacy alias mirrors the work-budget field');
 
     // Resuming with a real ceiling picks up where it stopped and completes.
     const resumed = await session.runUntil(() => workMeter.units + 500_000_000, {});
