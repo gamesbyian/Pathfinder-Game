@@ -1,6 +1,6 @@
 /** Shared pure helpers for sequential and worker portfolio-sweep paths. */
 
-import { formatAttemptActionKey, formatAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
+import { formatAttemptActionKey, formatAttemptIdentityKey, normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
 /** Reconstruct canonical config identity from a persisted Attempt shape. */
 export function attemptConfigKey(attempt) {
@@ -11,6 +11,13 @@ export function attemptConfigKey(attempt) {
         admissibleOrder: attempt?.admissibleOrder, admissibleOrderNoTieBreak: attempt?.admissibleOrderNoTieBreak,
         admissibleOrderLds: attempt?.admissibleOrderLds,
     });
+}
+
+/** Normalize a persisted config string when present; otherwise reconstruct it from Attempt fields. */
+export function canonicalAttemptConfigKey(attempt) {
+    const raw = attempt?.configKey ?? attempt?.config;
+    if (raw != null) return normalizeAttemptIdentityKey(String(raw));
+    return attemptConfigKey(attempt);
 }
 
 /**
@@ -75,7 +82,7 @@ export function attemptRecord(a) {
         // Whitelist error fields; never persist arbitrary thrown objects/stacks.
         ...(a.error !== undefined ? { error: projectedAttemptError(a.error) } : {}),
         ...(a.passNumber !== undefined ? { passNumber: a.passNumber } : {}),
-        ...(a.configKey !== undefined ? { configKey: a.configKey } : {}),
+        ...(a.configKey !== undefined || a.config !== undefined ? { configKey: canonicalAttemptConfigKey(a) } : {}),
         ...(a.restart !== undefined ? { restart: a.restart } : {}),
         ...(a.schedulerPhase !== undefined ? { schedulerPhase: a.schedulerPhase } : {}),
         ...(a.allocatedBudgetMs !== undefined ? { allocatedBudgetMs: a.allocatedBudgetMs } : {}),
@@ -139,13 +146,13 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         pass,
         phaseLabel,
         // Compatibility family identity remains unchanged; action identity preserves stage + seed.
-        winningConfig: winner ? (winner.configKey ?? attemptConfigKey(winner)) : null,
+        winningConfig: winner ? canonicalAttemptConfigKey(winner) : null,
         winningActionKey: persistedWinner?.actionKey ?? null,
         gateKey: winner?.gateKey ?? null,
         solution: result?.solution ?? null,
         attemptCount: attempts.length,
         attempts,
-        failedStrategies: attempts.filter(a => !a.ok).map(a => a.configKey ?? attemptConfigKey(a)),
+        failedStrategies: attempts.filter(a => !a.ok).map(canonicalAttemptConfigKey),
         failedActionKeys: attempts.filter(a => !a.ok && a.actionKey).map(a => a.actionKey),
         hintAppended: false,
         skippedCached: false,
