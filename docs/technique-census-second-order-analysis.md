@@ -1,7 +1,7 @@
 # Technique census: second-order analysis
 
 > **Status:** rebuildable existing-census instrument; not production policy or a priority list.
-> **Current scheduler use:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns rank; [`solver-scheduling-policy.md`](solver-scheduling-policy.md) owns allocation policy.
+> **Current scheduler use:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns current execution priority; [`solver-scheduling-policy.md`](solver-scheduling-policy.md) owns allocation policy.
 > **Operational interpretation:** [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
 > **Current budget interpretation:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
 
