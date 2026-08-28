@@ -24,10 +24,9 @@ import { decideCandidateAcceptance, isDrawnStep, pathSignature } from '../module
 import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
 import { workMeter } from '../modules/solver/work-meter.ts';
+import { legacyMsToWork } from '../modules/solver/budget-units.ts';
 
-/** Work units per millisecond of a caller's --wall-ms/--enum-wall-ms, mirroring orchestration.ts's
- *  DEFAULT_WORK_PER_MS. See modules/solver/work-meter.ts for why work is the unit. */
-const WORKBENCH_WORK_PER_MS = 3350;
+/** --wall-ms/--enum-wall-ms are compatibility names: convert once to canonical work. */
 import { createHintAblationGenerator } from '../modules/solver/hint-ablation-generator.ts';
 import { deriveSolveAttemptInfo } from '../modules/solver/hint-provenance.ts';
 import { makeProvenanceEntry, mergeHints, toHint } from '../modules/domain/hint-types.ts';
@@ -337,7 +336,7 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
             // the failure mode that skipped re-attribution on large levels. This secondary
             // hang-safety bound is now WORK too (opts.enumWallMs converted at the same rate), so
             // even the non-binding safety net cannot make the discovered set host-dependent.
-            cancelled = workMeter.units - startedWork >= Math.max(1, Math.floor(opts.enumWallMs * WORKBENCH_WORK_PER_MS));
+            cancelled = workMeter.units - startedWork >= legacyMsToWork(opts.enumWallMs, 1);
             return cancelled;
         },
         isCancelled: () => cancelled,
@@ -417,7 +416,7 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
     // Wall-clock budget in, WORK ceiling out — converted once here at the run boundary using the
     // same measured rate solveLevel's own ms->work shim uses, so an existing --wall-ms caller keeps
     // roughly its intended cost while WHICH HINTS GET FOUND stops depending on host speed.
-    const workCeiling = workMeter.units + Math.max(1, Math.floor(opts.wallMs * WORKBENCH_WORK_PER_MS));
+    const workCeiling = workMeter.units + legacyMsToWork(opts.wallMs, 1);
     // The cascade doesn't track nodesExpanded/elapsedMs per found candidate (only wall-clock
     // budgets per phase), but onProgress does report each find's phase/profile/template — capture
     // it here (in the same order `novel` is pushed, since consider() does both synchronously) so
@@ -498,7 +497,7 @@ const ABLATION_FULL_PHASE_SETS = {
 async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber, phases = ABLATION_FULL_PHASE_SETS.all) {
     // --wall-ms is retained as a CLI compatibility name, but all hint-discovery extent is work-
     // bounded. Convert once here and pass the preferred workBudget API; no live clock gates phases.
-    const workBudget = Math.max(1, Math.floor(opts.wallMs * WORKBENCH_WORK_PER_MS));
+    const workBudget = legacyMsToWork(opts.wallMs, 1);
     const result = await createHintAblationGenerator(rawLevel, levelNumber, {
         solverApi: Solver,
         attemptBudgetMs: opts.attemptBudgetMs,
@@ -599,7 +598,7 @@ async function runCandidateGrid(level, raw, existingHints, opts, levelNumber) {
     // Wall-clock budget in, WORK ceiling out — converted once here at the run boundary using the
     // same measured rate solveLevel's own ms->work shim uses, so an existing --wall-ms caller keeps
     // roughly its intended cost while WHICH HINTS GET FOUND stops depending on host speed.
-    const workCeiling = workMeter.units + Math.max(1, Math.floor(opts.wallMs * WORKBENCH_WORK_PER_MS));
+    const workCeiling = workMeter.units + legacyMsToWork(opts.wallMs, 1);
     const timedOut = () => workMeter.units >= workCeiling;
     const candidates = [];
     const errors = [];
@@ -711,7 +710,7 @@ async function runPortalGrid(level, opts, levelNumber) {
     // Wall-clock budget in, WORK ceiling out — converted once here at the run boundary using the
     // same measured rate solveLevel's own ms->work shim uses, so an existing --wall-ms caller keeps
     // roughly its intended cost while WHICH HINTS GET FOUND stops depending on host speed.
-    const workCeiling = workMeter.units + Math.max(1, Math.floor(opts.wallMs * WORKBENCH_WORK_PER_MS));
+    const workCeiling = workMeter.units + legacyMsToWork(opts.wallMs, 1);
     const timedOut = () => workMeter.units >= workCeiling;
     const portalDests = [...new Set([...level.portalMap.values()].map(p => p.dest))];
     let combosTried = 0;
