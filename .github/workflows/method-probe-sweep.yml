@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: 'method-probe.mjs --only value (one or more attemptConfigKeys, comma-separated), e.g. ida:mustCrossFirst or dfs:objectiveFirst'
+        description: 'method-probe.mjs --only value (one or more canonical attempt identities, comma-separated), e.g. admissible-order|tieBreak=mustCrossFirst|lds=off or dfs|score=objectiveFirst|bias=none'
         required: true
       corpus:
         description: 'Corpus file to test against'
