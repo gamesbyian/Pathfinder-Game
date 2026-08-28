@@ -1,15 +1,15 @@
-# Stratified-sample level-blind capability A/B for an routing-regime-gated ATTEMPT_POLICY routing
+# Stratified-sample level-blind capability A/B for a routing-regime-gated ATTEMPT_POLICY routing
 # change (modules/solver/attempts.ts) -- the general form of solver-repair-probe-adaptive-sample-
 # ab.yml's eligibility-sample pattern, generalized from one hardcoded mechanic predicate to any set
-# of classifyRoutingRegime() routing_regimes via scripts/stress/select-routing-regime-sample.mjs.
+# of classifyRoutingRegime() routing regimes via scripts/stress/select-routing-regime-sample.mjs.
 #
 # Deliberately NOT a full-corpus refresh, and NOT solver-stress-refresh.yml's canonical full-1700
 # capability workflow: an ATTEMPT_POLICY rule change can only ever affect a level's outcome if the
-# level's detected routing-regime matches one of the rules the change touches (attempts.ts routes purely
+# level's classified routing regime matches one of the rules the change touches (attempts.ts routes purely
 # on classifyRoutingRegime(level)/LevelFeatures). A uniform random sample of the full corpus wastes most
-# of its compute re-confirming zero-effect on every other routing-regime. This draws a deterministic
-# seeded subsample from the named routing-regime(s) specifically, plus a small control sample from every
-# other routing-regime, to empirically catch anything outside the intended scope. Same seed -> same
+# of its compute re-confirming zero-effect on every other routing regime. This draws a deterministic
+# seeded subsample from the named routing regime(s) specifically, plus a small control sample from every
+# other routing regime, to empirically catch anything outside the intended scope. Same seed -> same
 # sample, always.
 #
 # CORPUS INVARIANT: every arm also runs all of Corpus 1 and all published levels; the targeted
@@ -34,11 +34,11 @@ on:
         description: 'Comma-separated classifyRoutingRegime() values the code change under test can affect, e.g. intersection-heavy,must-cross-heavy (see modules/solver/archetype.ts for the full vocabulary: sparse-low-intersection, multi-portal, must-cross-heavy, intersection-heavy, general).'
         required: true
       eligible_sample:
-        description: 'How many of the eligible (routing-regime in the list above) population to sample.'
+        description: 'How many of the eligible (routing regime in the list above) population to sample.'
         required: false
         default: '250'
       control_sample:
-        description: 'How many ineligible (every other routing-regime) levels to sample as a control.'
+        description: 'How many ineligible (every other routing regime) levels to sample as a control.'
         required: false
         default: '50'
       seed:
