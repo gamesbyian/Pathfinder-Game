@@ -1,6 +1,6 @@
 # Very-high-intersection STANDARD intersection-harvest beam exposure
 
-> **Status:** development in progress.
+> **Status:** append-last parent CLOSED NEGATIVE by frozen zero-loss gate; final 120-row accounting still being collected. Reserve-preserving descendant is a separate tuning candidate.
 > **Candidate:** STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE.
 > **Evidence role:** selected development replay + broader feature-defined development A/B; independent confirmation separately prespecified and not yet earned.
 > **Branch:** codex/missing-exposure-and-budget-audit.
@@ -53,6 +53,16 @@ Sample: deterministic random 120 / 585 eligible levels; seed 20260828; sample SH
 Both arms use the same strict 67M whole-solve work envelope as the selected replay.
 
 GitHub Actions run 33150739483 is the first valid execution of this exact broader design. An earlier attempt failed during sample materialization before any solver arm ran because an inline Node script tried to import the TypeScript-backed solver as a literal modules/solver.js file. That failure exposed no treatment outcomes and did not spend the sample. The planner was replaced with the bundled mechanics-only selector; validation and sample materialization then passed.
+
+### Early decisive regression and mechanism
+
+The first completed paired shard already falsified the append-last parent's zero-loss requirement. On `R02965`, control solves at **33,278,052** whole-solve work with `main-loop|beam:objectiveFirst@beam5000`; treatment reaches the 67M cap unsolved.
+
+The attempt trace isolates the cause. The two leading diverse-beam attempts are identical across arms. Under control, `beam:objectiveFirst@beam5000` is the first member of the protected five-config late suffix and solves after **6,465,587** attempt-work / 487,912 nodes. Appending the experimental STANDARD-IH beam increases the config count by one, so that same objective-first beam falls immediately outside the protected suffix; its treatment allocation ends at **5,412,314** work / 451,180 nodes and misses the solution. The new STANDARD-IH beam later runs and exhausts, so this is verified participation plus a real displacement regression, not non-participation or randomness.
+
+Therefore the append-last parent fails the prespecified development gate regardless of any later gains. Its independent-confirmation protocol must not be executed for this form.
+
+This failure supplies a materially new premise for one descendant: expose the same action immediately **before** the pre-existing protected suffix, preserving all five old protected members without widening the reserve. That descendant is tracked separately by `STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE`; its first gate is a selected two-row replay containing the known parent gain (`R02440`) and known parent regression (`R02965`).
 
 ### Development verdict gate
 
