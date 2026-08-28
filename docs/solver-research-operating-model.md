@@ -1,12 +1,12 @@
 # Solver research operating model
 
 > **Status:** current research-method/evidence-routing contract.
-> **Priority:** [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) owns active rank.
+> **Execution priority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns current execution order and workstream state.
 > **Technique/config interpretation:** [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
 > **Capability/generalization boundary:** [`solver-level-blindness.md`](solver-level-blindness.md).
 > **Evaluation evidence:** [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) owns development/confirmation/transfer roles and proportional evidence gates.
 
-Measurements belong in dated reports, ranked decisions in the queue, deferred work in [`solver-future-work.md`](solver-future-work.md), and retained/default-off dispositions in [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Pre-consolidation notebook: [`archive/snapshots/solver-research-operating-model-2026-08-20.md`](archive/snapshots/solver-research-operating-model-2026-08-20.md).
+Measurements belong in dated reports, current workstream decisions in the workstream authority, deferred work in [`solver-future-work.md`](solver-future-work.md), and retained/default-off dispositions in [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Pre-consolidation notebook: [`archive/snapshots/solver-research-operating-model-2026-08-20.md`](archive/snapshots/solver-research-operating-model-2026-08-20.md).
 
 ## Pipeline
 
@@ -127,7 +127,7 @@ Use [`investigation-report-conventions.md`](investigation-report-conventions.md)
 ## Documentation handoff
 
 - chronology/measurements → dated report;
-- ranked state → [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md);
+- workstream state / current execution priority → [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md);
 - deferred/reopen work → [`solver-future-work.md`](solver-future-work.md);
 - scheduler policy → [`solver-scheduling-policy.md`](solver-scheduling-policy.md);
 - retained/default-off disposition → [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md);
