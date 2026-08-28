@@ -227,6 +227,48 @@ test('getConfiguredAttemptConfigs normalizes sparse and undefined overrides at i
   assert.equal(sparse.some(c => c.admissibleOrder), baseline.some(c => c.admissibleOrder), 'default-on tiers remain present');
 });
 
+test('STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE adds only the missing STANDARD intersection-harvest beam to very-high-reqInt high-intersection rules', () => {
+  const nonPortal = makeLevel({ reqLen: 60, reqInt: 8 });
+  const off = getAttemptConfigs(nonPortal, null);
+  assert.equal(off.some(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam), false,
+    'production default leaves the STANDARD intersection-harvest beam absent in the very-high-reqInt rule');
+
+  const on = getAttemptConfigs(nonPortal, {
+    ...defaultConfig(),
+    STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE: true,
+  });
+  const added = on.filter(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam);
+  assert.equal(added.length, 1, 'treatment adds exactly one STANDARD intersection-harvest beam');
+  const withoutAdded = on.filter(c => !(c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam));
+  assert.deepEqual(withoutAdded, off, 'treatment is purely additive inside the selected rule');
+
+  const portalDense = makeLevel({
+    reqLen: 60, reqInt: 8,
+    portalMap: new Map([
+      [PACK(1, 1), PACK(2, 2)], [PACK(2, 2), PACK(1, 1)],
+      [PACK(3, 3), PACK(4, 4)], [PACK(4, 4), PACK(3, 3)],
+    ]),
+  });
+  const portalOff = getAttemptConfigs(portalDense, null);
+  const portalOn = getAttemptConfigs(portalDense, {
+    ...defaultConfig(),
+    STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE: true,
+  });
+  assert.equal(portalOff.some(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam), false);
+  assert.equal(portalOn.filter(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam).length, 1,
+    'portal-dense sibling rule gets the same single missing action');
+
+  // Below VERY_HIGH_REQINT, the medium-high-int rule already contains the STANDARD beam.
+  // The experimental flag must not duplicate or otherwise perturb that existing exposure.
+  const mediumHigh = makeLevel({ reqLen: 55, reqInt: 5 });
+  const mediumOff = getAttemptConfigs(mediumHigh, null);
+  const mediumOn = getAttemptConfigs(mediumHigh, {
+    ...defaultConfig(),
+    STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE: true,
+  });
+  assert.deepEqual(mediumOn, mediumOff, 'flag has no effect outside the two very-high-reqInt rules');
+});
+
 test('STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE is default-ON (promoted 2026-08-27) and appends the plain WIDE beams only for the must-cross+flipper-heavy rule', () => {
   // mustCross>=2 & reqInt=4 & density<0.55 -> must-cross-heavy (not high-intersection-burden);
   // mustPass>=OBJECTIVE_HEAVY_MUSTPASS(3) & flippers>=FLIPPER_HEAVY(2) -> the flipper-heavy rule.
