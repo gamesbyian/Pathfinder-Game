@@ -227,3 +227,21 @@ jobs:
             logs/method-probe-shards/combined.json
             logs/method-probe-shards/solved-ids.txt
           retention-days: 30
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="logs/method-probe-shards/combined.json" \
+            --include="logs/method-probe-shards/solved-ids.txt" \
+            --source-artifact="method-probe-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
