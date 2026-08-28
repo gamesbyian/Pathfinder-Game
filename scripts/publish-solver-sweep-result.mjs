@@ -21,8 +21,10 @@ if (!primary) {
 }
 const outDir = values.get('out') || 'logs/solver-sweep-result';
 const sourceArtifact = values.get('source-artifact') || null;
-const shardsExpected = values.has('shards-expected') ? Number(values.get('shards-expected')) : null;
-const shardsObserved = values.has('shards-observed') ? Number(values.get('shards-observed')) : null;
+const numberArg = key => values.has(key) && String(values.get(key)).trim() !== '' ? Number(values.get(key)) : null;
+const shardsExpected = numberArg('shards-expected');
+const shardsObserved = numberArg('shards-observed');
+const shardsBasis = values.get('shards-basis') || null;
 const provenanceOut = values.get('provenance-out') || null;
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
@@ -115,6 +117,7 @@ const shardCompleteness = Number.isFinite(shardsExpected) && Number.isFinite(sha
       expected: shardsExpected,
       observed: shardsObserved,
       complete: shardsExpected === shardsObserved,
+      basis: shardsBasis,
     }
   : null;
 
@@ -162,7 +165,7 @@ if (manifest.sha) lines.push(`- Commit: \`${manifest.sha}\``);
 if (manifest.refName) lines.push(`- Ref: \`${manifest.refName}\``);
 if (sourceArtifact) lines.push(`- Legacy/specialized artifact: \`${sourceArtifact}\``);
 if (Object.keys(dispatchInputs).length) lines.push(`- Dispatch inputs: recorded in \`manifest.json\``);
-if (shardCompleteness) lines.push(`- Shards: ${shardCompleteness.observed}/${shardCompleteness.expected} ${shardCompleteness.complete ? 'complete' : '**INCOMPLETE**'}`);
+if (shardCompleteness) lines.push(`- Shards: ${shardCompleteness.observed}/${shardCompleteness.expected} ${shardCompleteness.complete ? 'complete' : '**INCOMPLETE**'}${shardCompleteness.basis ? ` (${shardCompleteness.basis})` : ''}`);
 lines.push('- Standard artifact: `solver-sweep-result`');
 lines.push(`- Primary result: ${entries[0].missing ? '**missing**' : `\`${entries[0].published}\``}`);
 
