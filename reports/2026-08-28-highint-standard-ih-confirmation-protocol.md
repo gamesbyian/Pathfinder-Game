@@ -1,6 +1,6 @@
 # Standard-width intersection-harvest exposure confirmation protocol
 
-> **Status:** prespecified; execute only if the broader development A/B earns confirmation.
+> **Status:** NOT EXECUTED / CLOSED. Prespecified before the broader result; append-last development failed 56/120 control vs 55/120 treatment (0 gains, 1 loss), so this protocol was correctly never spent.
 > **Date frozen:** 2026-08-28, before the broader 120-level development A/B result was opened.
 > **Candidate:** `STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE`.
 > **Primary claim scope:** narrow routing improvement for very-high-intersection levels under a fixed whole-solve work envelope.
