@@ -145,7 +145,7 @@ export const ADMISSIBLE_ORDER_BUDGET_FRACTION = 1.0;
  *    - The curve knees here: 0.20 covers 75 finds for the same 5 at risk, 0.30 covers 79 for 7.
  *  Neither number is a prediction — coverage is "the find is cheap enough to fit", not "it will
  *  reproduce through the real ladder" — but they bound a reallocation whose precedents in this repo
- *  (MST tightening -12, archetype routing -4/-8) came up negative, and this one's asymmetry is
+ *  (MST tightening -12, routing-regime selection -4/-8) came up negative, and this one's asymmetry is
  *  measured rather than assumed. A/B: reports/2026-07-30-admissible-order-node-reserve.md.
  *
  *  STRICTLY A NO-OP unless a finite external `nodeBudget` is set AND this tier is actually going to
