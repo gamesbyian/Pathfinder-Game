@@ -1,16 +1,7 @@
 name: Codex EW1 equal-work census pilot
 
 on:
-  push:
-    branches:
-      - codex/missing-exposure-and-budget-audit
-    paths:
-      - '.github/workflows/codex-equal-work-census-pilot.yml'
-      - 'scripts/build-technique-census-plan.mjs'
-      - 'scripts/combine-technique-census-shards.mjs'
-      - 'scripts/technique-census-cell.mjs'
-      - 'scripts/technique-census.mjs'
-      - 'scripts/technique-census-worker.mjs'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -163,7 +154,7 @@ jobs:
           path: artifact-staging
       - name: Combine EW1 cells
         run: |
-          node scripts/combine-technique-census-shards.mjs \
+          node scripts/run-bundled.mjs scripts/combine-technique-census-shards.mjs -- \
             --staging-dir=artifact-staging \
             --out-dir=tmp/ew1-combined \
             --plan=tmp/ew1-plan.json
