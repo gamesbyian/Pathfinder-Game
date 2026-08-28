@@ -9,8 +9,11 @@
  * solver-stress-refresh.yml computes shard ranges arithmetically rather than checking in an
  * enumeration. Deterministic (fixed seed) so a local run reproduces byte-identical to CI's.
  *
- * WHAT THIS ANSWERS: "which technique, given the FULL ladder node budget to itself (not shared
- * across a ladder), solves or fails on this level — and how." Three active tiers (T2 retired, see
+ * WHAT THIS ANSWERS: "which technique, given the FULL ladder NODE budget to itself (not shared
+ * across a ladder), solves or fails on this level — and how." This is technique-local DEPTH/capability
+ * evidence, not equal-compute evidence across technique families: raw nodes have different canonical
+ * work cost in DFS/beam/repair. Cross-technique scheduler pricing must use workSpent or a future
+ * equal-work census mode. Three active tiers (T2 retired, see
  * below), each answering a different piece of that:
  *
  *   T1 (primary, full budget, FULL POPULATION): every technique the real ladder ever generates
@@ -404,6 +407,9 @@ for (const exp of FLAG_EXPERIMENTS) {
 
 const plan = {
     generatedAt: new Date().toISOString(),
+    budgetProtocol: 'technique-local-node-depth',
+    equalCostAcrossTechniques: false,
+    costSemantics: 'node budgets measure within-technique depth/capability; use canonical workSpent for cross-technique allocation',
     commitSha: COMMIT_SHA,
     seed: SEED,
     baselineFile: BASELINE_FILE,
