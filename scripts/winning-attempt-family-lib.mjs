@@ -1,7 +1,7 @@
-import { attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
+import { canonicalAttemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
 
 export function winnerConfig(attempt) {
-    return String(attempt?.configKey ?? attempt?.config ?? attemptConfigKey(attempt));
+    return canonicalAttemptConfigKey(attempt);
 }
 const pct = (values, percentile) => values.length ? values[Math.max(0, Math.ceil(values.length * percentile) - 1)] : null;
 const metric = value => value === null || value === undefined || value === '' ? null : Number.isFinite(Number(value)) ? Number(value) : null;
