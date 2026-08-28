@@ -212,7 +212,7 @@ const repairTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', t
  *  before that same-day change), then the 3 lower-yield tie-break profiles ('mustCrossFirst',
  *  'intersectionHarvest', 'nearClosureRescue', a handful each from a full-corpus GitHub Actions
  *  sweep). A first version of this list gave every entry ONE combined budget total (the
- *  attraction-diversity pass's shared-rerun shape), which starved 'general' below the full,
+ *  attraction-diversity pass's shared-rerun shape), which starved 'default' below the full,
  *  unshared per-entry budget every validated solve actually used (method-probe.mjs's standalone
  *  `--only=ida:<key>` runs, never multiple entries sharing one call) — fixed by giving each entry
  *  its own sequential sub-pass instead (see orchestration.ts's call site).
