@@ -75,7 +75,7 @@ assert.deepEqual(directMsToWorkLines.filter(line => !approvedDirectMsToWorkSites
 // sites in that set carry. Guard against silently reintroducing the old work-dose pattern for each
 // migrated tier. See reports/2026-08-28-dedup-near-tie-retry-work-dose-migration.md for the full
 // account of what this pattern does and does not preserve.
-const migratedWorkDoseSites = ['dedupRetryTotalBudget', 'repairFallbackTotalBudget'];
+const migratedWorkDoseSites = ['dedupRetryTotalBudget', 'repairFallbackTotalBudget', 'nonDefaultRetryTotalBudget'];
 for (const site of migratedWorkDoseSites) {
     assert.equal(orchestration.includes(`legacyMsToWork(${site}`), false,
         `${site}'s work dose regressed back to a timeBudgetMs-derived legacyMsToWork conversion`);

@@ -2268,6 +2268,50 @@ test('disableExtraBudgetPasses: true suppresses the admissible-order-non-default
     assert.ok(overridden.attempts.some(a => a.admissibleOrderNonDefaultRetry === true));
 });
 
+// 2026-08-28: admissible-order-non-default-retry was the third tier migrated off queue #2 step 3's
+// ms-derived work-dose debt (docs/solver-budget-determinism.md's "Remaining ms-shaped allocation
+// debt"; scaledStageWorkBudget in budget-units.ts) -- same pattern and same two tests as
+// dedup-near-tie-retry's/repair-fallback's own pairs above.
+function isolateAdmissibleOrderNonDefaultRetryOpts(overrides: Record<string, unknown> = {}) {
+    return {
+        attemptBudgetTelemetry: true,
+        ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        dedupNearTieRetryBudgetFractionOverride: 0,
+        repairLateProbeNodeBudgetOverride: 0,
+        ...overrides,
+    };
+}
+
+test('admissible-order-non-default-retry work dose no longer resizes with a non-binding deadline change', async () => {
+    const level = makeAttractionDiversityGatedInfeasibleLevel();
+    const run = (timeBudgetMs: number) => solveLevel(level, isolateAdmissibleOrderNonDefaultRetryOpts({ timeBudgetMs, workBudget: 200_000 }));
+    const shortDeadline = await run(1000);
+    const longDeadline = await run(600_000);
+    const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
+        .filter(a => a.admissibleOrderNonDefaultRetry === true)
+        .map(a => a.allocatedWorkCeiling);
+    const shortDose = dose(shortDeadline);
+    assert.ok(shortDose.length > 0, 'expected at least one admissible-order-non-default-retry attempt');
+    assert.deepEqual(dose(longDeadline), shortDose,
+        'this tier\'s own work pool must depend on workBudget, not on the (non-binding) deadline');
+});
+
+test('admissible-order-non-default-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
+    const level = makeAttractionDiversityGatedInfeasibleLevel();
+    const solveWith = (baseWorkBudget: number) => solveLevel(level, isolateAdmissibleOrderNonDefaultRetryOpts({ timeBudgetMs: 1000, baseWorkBudget }));
+    const small = await solveWith(200_000);
+    const large = await solveWith(20_000_000);
+    const ceiling = (result: Awaited<ReturnType<typeof solveLevel>>) =>
+        result.attempts.find(a => a.admissibleOrderNonDefaultRetry === true)?.allocatedWorkCeiling ?? null;
+    const smallCeiling = ceiling(small);
+    const largeCeiling = ceiling(large);
+    assert.ok(smallCeiling != null && largeCeiling != null, 'expected an admissible-order-non-default-retry attempt in both runs');
+    assert.ok((largeCeiling as number) > (smallCeiling as number),
+        'an explicit baseWorkBudget must now size this tier\'s own dose');
+});
+
 // ── STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY ────────────────────────────────
 //
 // PROMOTED to production default-ON (see CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION's own
