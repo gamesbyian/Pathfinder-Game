@@ -7,6 +7,7 @@
 # - Concurrency group serialized: trial runs won't race with full runs
 #
 name: cpsat-hint-harvest-sweep-published (broaden CP-SAT hint coverage for published levels)
+run-name: "CP-SAT published harvest · shards=${{ inputs.shard_count }} · limit=${{ inputs.time_limit }}"
 
 on:
   workflow_dispatch:
@@ -149,6 +150,25 @@ jobs:
           path: artifact-staging/
           retention-days: 30
           if-no-files-found: warn
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="artifact-staging" \
+            --shards-expected="${{ inputs.shard_count }}" \
+            --shards-observed="$(find artifact-staging/logs/cpsat-hint-harvest-sweep-published -maxdepth 1 -name 'shard-*-summary.md' | wc -l | tr -d ' ')" \
+            --source-artifact="cpsat-hint-harvest-sweep-published-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
 
       - name: Merge new/updated hint files into the working tree and commit
         shell: bash
