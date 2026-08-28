@@ -1,9 +1,9 @@
 # Offline sweep strict-work exposure audit
 
-> **Status:** implementation-complete on `codex/missing-exposure-and-budget-audit`; validation pending at time of writing.
-> **Last evidence:** 2026-08-28 — static audit of every active workflow that invokes `scripts/level-blind-capability-sweep.mjs`, following `reports/2026-08-28-additive-tier-participation-audit.md`.
-> **Decision:** expose the already-supported `strictTotalWorkBudget` mechanism in all active level-blind sweep/confirmation workflows, default-OFF, and stop describing the nominal node input as a hard whole-solve ceiling.
-> **Evidence role:** infrastructure/legibility; no solver-policy claim.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-08-28 — seven active level-blind sweep/confirmation workflows audited and given opt-in strict_total_work_budget plumbing with legacy default false
+> **Decision:** make true whole-solve work ceilings explicit and selectable in offline workflows without silently changing historical default semantics
+> **Remaining gate:** none for exposure plumbing; individual decision-bearing experiments opt in when matched whole-solve work is required
 
 ## Finding
 
