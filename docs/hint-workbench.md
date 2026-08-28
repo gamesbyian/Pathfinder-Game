@@ -1,5 +1,7 @@
 # Hint Workbench
 
+> **Budget naming:** `--wall-ms` is retained as a compatibility CLI name, but hint-discovery extent is deterministic work-bounded. The workbench converts the ms-shaped value once using the committed work-per-ms calibration; phase progression does not read elapsed wall time. `elapsedMs` remains telemetry only.
+
 CLI for discovering/auditing hint candidates. Default runs are read-only. Generated paths use shared validation/deduplication and policy evaluation; player display curation remains `selectDisplayHints()`.
 
 ## Presets
