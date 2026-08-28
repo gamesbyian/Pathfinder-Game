@@ -23,6 +23,7 @@
 # 2026-08-25 throughput pass keeps that assignment model but makes its buckets finer to reduce tail
 # latency, matching the queue-based pattern already used by other variable-runtime batch workflows.
 name: atlas-sweep (grow the CP-SAT-labelled branch atlas)
+run-name: "Atlas sweep · ${{ inputs.corpus }} · every=${{ inputs.every }} · shards=${{ inputs.shard_count }}"
 
 on:
   workflow_dispatch:
@@ -187,6 +188,9 @@ jobs:
         run: |
           node scripts/publish-solver-sweep-result.mjs \
             --primary="artifact-staging/reports/stress" \
+            --shards-expected="${{ inputs.shard_count }}" \
+            --shards-observed="$(find artifact-staging/logs/atlas-sweep -maxdepth 1 -name 'shard-*-summary.md' | wc -l | tr -d ' ')" \
+            --provenance-out="reports/stress/atlas-source-run-${{ github.run_id }}.json" \
             --source-artifact="atlas-sweep-combined"
 
       - name: Upload standard solver sweep result
