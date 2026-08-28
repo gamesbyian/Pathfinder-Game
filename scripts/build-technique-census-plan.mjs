@@ -320,7 +320,7 @@ const T1_PROMOTED_VARIANTS = [
 ];
 
 // ─── T4's remaining curated flag experiments (smaller sample -- exploratory, not yet evidenced) ────
-// Empty as of 2026-08-19: the one candidate here, STRATEGY_ARCHETYPE_ROUTING off (testing dfs:default
+// Empty as of 2026-08-19: the one candidate here, STRATEGY_ROUTING_REGIME_SELECTION off (testing dfs|score=default|bias=none
 // as the catch-all fallback in isolation), was found and REMOVED after a direct architectural check,
 // not a soft judgment call -- that flag is read ONLY inside attempts.ts's getAttemptConfigs, which
 // decides which configs a LADDER routes to. This census never calls getAttemptConfigs; every cell
@@ -408,7 +408,7 @@ for (const level of t1Sample) {
 // degenerates to testing only the other member (method-probe's shared-budget semantics mean the
 // ineligible member never gets any real nodes once the eligible one has run) -- pure duplicate
 // compute with T1's own cell for that same (level, technique), not a genuine pair test. The only
-// pair this currently affects is dfs:repair:repair + repair|score=repair|guidance=must-turn-biased on
+// pair this currently affects is repair|score=repair|guidance=standard + repair|score=repair|guidance=must-turn-biased on
 // zero-must-turn levels.
 for (const level of t3t4Sample) for (const pair of TECHNIQUE_PAIRS) {
     if (pair.every(k => techniqueEligible(k, level.raw))) pushCell('T3', level, pair, T3_NODE_BUDGET, null, { pairLabel: pair.join('+') });
