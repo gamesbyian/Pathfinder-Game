@@ -2,7 +2,7 @@
 
 > **Status:** live structural-debt queue, reconciled 2026-08-27 after budget-model rationalization.
 > **Read for:** remaining duplicate authority, compatibility migration, state-lifetime isolation, and boundary cleanup.
-> **Do not use for:** solver-policy priorities; use [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+> **Do not use for:** solver-policy priorities; use [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 
 Preserve behavior/evidence. Do not merge representations merely because they look similar. Correctness and reproducible causal evidence outrank neatness. Keep structural refactors separate from solver-policy tuning unless the structural defect itself invalidates research.
 
@@ -41,7 +41,7 @@ External forms may vary; internal authorities and mutable lifetimes should not b
 
 ## Stage-state isolation
 
-The former admissible-order sequence-dependence blocker has been retired by the live queue after the attribution error was identified. Keep the isolation contract below as a non-regression rule: if a new same-action, same-input fresh-vs-preceded discrepancy appears, it immediately becomes correctness/research-validity debt again.
+The former admissible-order sequence-dependence blocker has been retired by the workstream authority after the attribution error was identified. Keep the isolation contract below as a non-regression rule: if a new same-action, same-input fresh-vs-preceded discrepancy appears, it immediately becomes correctness/research-validity debt again.
 
 A stage/action should have an explicit input contract. For a search action that is supposed to be independent, predecessor execution may change CPU/cache warmth but must not silently change:
 
@@ -107,7 +107,7 @@ Specialized rule implementations may remain in runtime/domain/solver. Treat the 
 
 0. **Budget-model completion for queue #2:** finish stage work-envelope projection and explicit base/total semantics; replace `prep._workCap` inheritance with explicit budget context; isolate module-global multi-solve work ownership; then retire ms-derived additive allocation sites incrementally with parity evidence.
 1. Finish residual solver dispatch/telemetry compatibility cleanup only where it directly supports that budget/stage authority or removes demonstrated ambiguity.
-2. Reopen stage-history isolation only if a new fresh-vs-preceded discrepancy appears; the former admissible-order blocker is retired in the live queue.
+2. Reopen stage-history isolation only if a new fresh-vs-preceded discrepancy appears; the former admissible-order blocker is retired in the workstream authority.
 3. Migrate persistent entity identity and mutable hints inward.
 4. Unify wire interpretation, strengthen rule conformance, and remove coordinate/selector guessing.
 5. Address corpus/published-storage facades and solver aliases only when they remove demonstrated repeated work.
