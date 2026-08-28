@@ -2,7 +2,7 @@
 
 `modules/solver.ts` is the public facade over `modules/solver/*`. This doc covers solution generation; hint display/cycling: [`hint-curation.md`](hint-curation.md).
 
-> **Level-blind:** strategy may use mechanics/current state (`reqInt`, `navDensity`, counts, gates, `reqLen`, etc.), never level identity. `check:no-solver-level-numbers` enforces this.
+> **Level-blind:** strategy may use mechanics/current state (`reqInt`, `requiredPathCoverageRatio`, counts, gates, `reqLen`, etc.), never level identity. `check:no-solver-level-numbers` enforces this.
 >
 > **Corpus caveat:** before stress pass-rate tuning, read [`data/stress/README.md`](../data/stress/README.md), especially “Corpus 1: hypothesis-driven.” Some batches target historical weaknesses and are not independent generalization evidence.
 
@@ -26,26 +26,26 @@ Technique/config names do not by themselves imply distinct search behavior. See 
 
 `beamWidth` selects beam; otherwise DFS. `minBudgetFraction` protects critical configs from dilution.
 
-### Archetypes (`detectArchetype`)
+### Routing regimes (`classifyRoutingRegime`)
 
-1. **near-closure:** `reqInt <= 1 && navDensity < 0.35`.
-2. **high-intersection-burden:** `(reqInt>=5 && density>=0.45) || (reqInt>=4 && density>=0.55) || reqInt>=10`.
+1. **sparse-low-intersection:** `reqInt <= 1 && requiredPathCoverageRatio < 0.35`.
+2. **intersection-heavy:** `(reqInt>=5 && requiredPathCoverageRatio>=0.45) || (reqInt>=4 && requiredPathCoverageRatio>=0.55) || reqInt>=10`.
 3. **must-cross-heavy:** `mustCrossKeys.length >= 2 && reqInt >= 2`.
-4. **portal-heavy:** `portalMap.size >= 4`.
-5. **default**.
+4. **multi-portal:** `portalMap.size >= 4`.
+5. **general**.
 
-`navDensity = reqLen / navArea`, `navArea = w*h - blocks - geese - falseGoals - gates`.
+`requiredPathCoverageRatio = reqLen / nonGateWinningPathCellCount`, where `nonGateWinningPathCellCount = w*h - blocks - geese - falseGoals - gates`.
 
 ### Attempt policy
 
 `modules/solver/attempts.ts` is authoritative: first-match-wins `ATTEMPT_POLICY` over `LevelFeatures`, thresholds in `POLICY.*`, bundles from `dfs()`/`beam()`/`profilesFirst()`.
 
-- **near-closure:** `nearClosureRescue -> harvestThenFinish -> finishFirst -> perimeterSweep`, then templates.
-- **high-intersection-burden:**
+- **sparse-low-intersection:** `nearClosureRescue -> harvestThenFinish -> finishFirst -> perimeterSweep`, then templates.
+- **intersection-heavy:**
   - `reqInt >= POLICY.VERY_HIGH_REQINT (7)`: beam first; portal-dense (`portals >= 2`) leads `objectiveFirst`, otherwise `intersectionHarvest`; DFS fallback.
-  - `navDensity >= POLICY.NEAR_HAMILTONIAN_DENSITY (0.82)`: DFS perimeter both directions; skip leading beams.
+  - `requiredPathCoverageRatio >= POLICY.NEAR_HAMILTONIAN_COVERAGE_THRESHOLD (0.82)`: DFS perimeter both directions; skip leading beams.
   - otherwise perimeter/objective beams first; long multi-gate (`reqLen >= 90 && gates >= 2`) gets budget floors; DFS prefers objectives when `mustPass >= 3`, CCW when `reqInt <= 4 && mustPass = 0`.
-- **portal-heavy:** `portalFirstTransfer`, `portalCommitted`, then templates.
+- **multi-portal:** `portalFirstTransfer`, `portalCommitted`, then templates.
 - **must-cross-heavy:**
   - `mustPass >= 3 && flippers >= 2`: diverse `intersectionHarvest` beam 5000, then DFS; 15000/50000 tiers were removed after zero-yield natural exhaustion.
   - `mustPass >= 3`: objective/must-cross beams first.
@@ -64,7 +64,7 @@ const ATTEMPT_CONFIGS = [
 // 16 total
 ```
 
-The ladder is hand-tuned. Historical corpus1 analysis found 79% of solved-level time before the winning attempt; `navDensity` predicted repair wins only weakly. Re-test current corpus2 evidence before further hand-ordering. See [`archive/snapshots/solver-improvement-research-notes.md`](archive/snapshots/solver-improvement-research-notes.md).
+The ladder is hand-tuned. Historical corpus1 analysis found 79% of solved-level time before the winning attempt; `requiredPathCoverageRatio` predicted repair wins only weakly. Re-test current corpus2 evidence before further hand-ordering. See [`archive/snapshots/solver-improvement-research-notes.md`](archive/snapshots/solver-improvement-research-notes.md).
 
 ## DFS (`dfsFromGate`)
 
@@ -113,7 +113,7 @@ state = {
 - `mcPairDist`, `mpPairDist`, `mcApproachDistMaps`.
 - `surroundNeighborIndex`, `surroundInitNeighborMasks`, `surroundNeighborDistMaps`.
 - `mustTurnCellIndex`, `mustTurnDirs`, `adjTurnDistMaps`.
-- `mustMaskForDFS`: `initialMustMask`, or 0 for `navDensity >= DENSE_LEVEL_NAV_DENSITY`.
+- `mustMaskForDFS`: `initialMustMask`, or 0 for `requiredPathCoverageRatio >= DENSE_LEVEL_COVERAGE_THRESHOLD`.
 - `hasLandmarkConstraints` fast path.
 
 ## Encoding

@@ -1,8 +1,8 @@
 // Shared pure path-distinctiveness primitives for display curation and hint discovery.
 import { UNPACK } from './cell-key.js';
 
-/** At/above this navigable density, edge overlap is nearly saturated, so crossing placement also matters. */
-export const NEAR_HAMILTONIAN_DENSITY = 0.82;
+/** At/above this required path coverage ratio, edge overlap is nearly saturated, so crossing placement also matters. */
+export const NEAR_HAMILTONIAN_COVERAGE_THRESHOLD = 0.82;
 /** Minimum distinctiveness assigned to any non-zero must-cross order difference. */
 export const MUSTCROSS_ORDER_MIN = 0.66;
 

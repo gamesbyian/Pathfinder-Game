@@ -102,7 +102,7 @@ test('default no-must-pass levels prefer perimeterCCW before perimeterCW, with b
   ]);
 });
 
-test('near-closure attempts prioritize closure rescue profiles before templates', () => {
+test('sparse-low-intersection attempts prioritize closure rescue profiles before templates', () => {
   const attempts = getAttemptConfigs(makeLevel({ reqLen: 10, reqInt: 1 }));
   assert.deepEqual(attempts.slice(0, 4).map(c => c.profileName), [
     'nearClosureRescue',
@@ -114,9 +114,9 @@ test('near-closure attempts prioritize closure rescue profiles before templates'
   assert.equal(attempts.some(c => c.template?.id === 'cornerHarvest'), true);
 });
 
-test('portal-heavy levels lead with portal profiles, with beam configs trailing last', () => {
-  // portalMap.size >= 4 (2+ pairs) triggers the portal-heavy archetype (archetype.ts); reqInt kept
-  // low enough to avoid the high-intersection-burden rule matching first.
+test('multi-portal levels lead with portal profiles, with beam configs trailing last', () => {
+  // portalMap.size >= 4 (2+ pairs) triggers the multi-portal routing regime (archetype.ts); reqInt kept
+  // low enough to avoid the intersection-heavy rule matching first.
   const attempts = getAttemptConfigs(makeLevel({
     reqLen: 40, reqInt: 2,
     portalMap: new Map([[PACK(1, 1), PACK(2, 2)], [PACK(2, 2), PACK(1, 1)], [PACK(3, 3), PACK(4, 4)], [PACK(4, 4), PACK(3, 3)]]),
@@ -144,7 +144,7 @@ test('high-intersection dense levels lead with beam configs', () => {
 });
 
 
-test('STRATEGY_ARCHETYPE_ROUTING disabled forces the catch-all rule regardless of features', () => {
+test('STRATEGY_ROUTING_REGIME_SELECTION disabled forces the catch-all rule regardless of features', () => {
   const level = makeLevel({ reqLen: 60, reqInt: 7 });
   const routed = getAttemptConfigs(level);
   assert.deepEqual(routed.slice(0, 2).map(c => [c.profileName, c.beamWidth]), [
@@ -152,7 +152,7 @@ test('STRATEGY_ARCHETYPE_ROUTING disabled forces the catch-all rule regardless o
     ['objectiveFirst', 5000],
   ]);
 
-  const forcedDefault = getAttemptConfigs(level, { STRATEGY_ARCHETYPE_ROUTING: false });
+  const forcedDefault = getAttemptConfigs(level, { STRATEGY_ROUTING_REGIME_SELECTION: false });
   assert.deepEqual(forcedDefault.slice(0, 4).map(c => c.template?.id), [
     'cornerHarvest', 'perimeterCW', 'perimeterCCW', 'sideCommitment',
   ]);
@@ -325,7 +325,7 @@ test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps t
 });
 
 test('STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE is default-ON (promoted 2026-08-27) and appends the plain WIDE beams only for the must-cross+flipper-heavy rule', () => {
-  // mustCross>=2 & reqInt=4 & density<0.55 -> must-cross-heavy (not high-intersection-burden);
+  // mustCross>=2 & reqInt=4 & density<0.55 -> must-cross-heavy (not intersection-heavy);
   // mustPass>=OBJECTIVE_HEAVY_MUSTPASS(3) & flippers>=FLIPPER_HEAVY(2) -> the flipper-heavy rule.
   const level = makeLevel({
     reqLen: 40, reqInt: 4,
@@ -349,14 +349,14 @@ test('STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE is default-ON (promoted 2026
   const off = getAttemptConfigs(level, { ...defaultConfig(), STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: false });
   assert.equal(off.some(c => c.beamWidth === 5000 && !c.diverseBeam), false,
     'explicitly disabling restores the pre-promotion ladder');
-  // The two configs are inserted right after the archetype-rule's own main-loop configs, before
+  // The two configs are inserted right after the routing-regime rule's own main-loop configs, before
   // repair-fallback/admissible-order are appended (getAttemptConfigs's own ordering) — so removing
   // them from `on` must reproduce `off` exactly: purely additive, nothing else moved.
   const withoutPlainWide = on.filter(c => !(c.beamWidth === 5000 && !c.diverseBeam && !c.repair));
   assert.deepEqual(withoutPlainWide, off, 'the flag is purely additive; nothing existing is reordered or removed');
 
   // A must-cross-heavy level that does NOT match the flipper-heavy sub-rule (flippers < FLIPPER_HEAVY)
-  // must stay untouched even with the flag on: this is a single-rule promotion, not archetype-wide.
+  // must stay untouched even with the flag on: this is a single-rule promotion, not routing-regime-wide.
   const nonFlipperLevel = makeLevel({
     reqLen: 40, reqInt: 4,
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
@@ -421,7 +421,7 @@ test('SOLVER_TESTING_API exposes the extracted attempt-order helper', () => {
 });
 
 test('must-cross-threaded medium-high-int levels get floored diverse wide beams', () => {
-  // reqInt 5 at density ~0.55 → high-intersection-burden, below the very-high-reqInt and
+  // reqInt 5 at density ~0.55 → intersection-heavy, below the very-high-reqInt and
   // near-Hamiltonian branches. With ≥2 must-cross cells the plain 2000-wide beams collapse
   // to one structural mode and DFS never recovers (stress-corpus finding: the diverse
   // bucketed WIDE beam solves these in seconds while the shipped ladder times out).

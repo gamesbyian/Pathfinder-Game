@@ -957,7 +957,7 @@ test('interleaved main-loop reserve gives every late config/gate pair its own sl
 // resources simultaneously, and before the fix, runGateSerialAttempts/runInterleavedAttempts' WORK
 // stop condition had no `ci >= lateConfigStart` carve-out the way the NODE-side check did -- an
 // early config that consumed more than its fair share of WORK (measured directly on real generated
-// raised-cap levels: confirm-residual-001's 25 archetype-eligible-and-residual rows each spent
+// raised-cap levels: confirm-residual-001's 25 routing-regime-eligible-and-residual rows each spent
 // orders of magnitude more canonical work than nodes per attempt) could exhaust the loop's work
 // pool before ever reaching the reserve-protected late suffix, even while the NODE dimension still
 // had ample headroom -- the trailing configs the reserve exists to protect never got dispatched.
@@ -1823,6 +1823,33 @@ test('normalizeAblationConfig defaults every OTHER opt-in-only flag to false, no
     assert.equal(cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS, false, 'an unrelated opt-in flag must NOT be silently activated');
     assert.equal(cfg.PRUNE_PORTAL_PARITY_ENVELOPE, false, 'nor this one');
     assert.equal(cfg.STRATEGY_REPAIR_NOGOOD_CACHE, true, 'a standard default-on flag is unaffected');
+});
+
+test('normalizeAblationConfig dual-reads the legacy routing flag and single-writes the canonical name', () => {
+    const cfg = normalizeAblationConfig({ STRATEGY_ARCHETYPE_ROUTING: false })!;
+    assert.equal(cfg.STRATEGY_ROUTING_REGIME_SELECTION, false);
+    assert.equal(Object.hasOwn(cfg, 'STRATEGY_ROUTING_REGIME_SELECTION'), true);
+    assert.equal(Object.hasOwn(cfg, 'STRATEGY_ARCHETYPE_ROUTING'), false);
+    assert.deepEqual(
+        Object.keys({ ...cfg }).filter(key => key.includes('ROUTING')),
+        ['STRATEGY_ROUTING_REGIME_SELECTION'],
+    );
+});
+
+test('normalizeAblationConfig rejects conflicting legacy/canonical routing flag values', () => {
+    assert.throws(
+        () => normalizeAblationConfig({
+            STRATEGY_ARCHETYPE_ROUTING: false,
+            STRATEGY_ROUTING_REGIME_SELECTION: true,
+        }),
+        /Conflicting ablation values for canonical feature STRATEGY_ROUTING_REGIME_SELECTION/,
+    );
+});
+
+test('ablation defaults emit only the canonical routing flag name', () => {
+    const defaults = defaultConfig();
+    assert.equal(defaults.STRATEGY_ROUTING_REGIME_SELECTION, true);
+    assert.equal(Object.hasOwn(defaults, 'STRATEGY_ARCHETYPE_ROUTING'), false);
 });
 
 test('normalizeAblationConfig: opt-in flags stay off when a DIFFERENT flag is named', () => {

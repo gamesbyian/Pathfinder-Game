@@ -145,7 +145,7 @@ export const ADMISSIBLE_ORDER_BUDGET_FRACTION = 1.0;
  *    - The curve knees here: 0.20 covers 75 finds for the same 5 at risk, 0.30 covers 79 for 7.
  *  Neither number is a prediction — coverage is "the find is cheap enough to fit", not "it will
  *  reproduce through the real ladder" — but they bound a reallocation whose precedents in this repo
- *  (MST tightening -12, archetype routing -4/-8) came up negative, and this one's asymmetry is
+ *  (MST tightening -12, routing-regime selection -4/-8) came up negative, and this one's asymmetry is
  *  measured rather than assumed. A/B: reports/2026-07-30-admissible-order-node-reserve.md.
  *
  *  STRICTLY A NO-OP unless a finite external `nodeBudget` is set AND this tier is actually going to
@@ -802,10 +802,10 @@ export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  confirmed-still-unsolved `hi:medium-high-catchall` Corpus-2 levels found 1/13 newly solved at
  *  2.5x the shipped cap, consistent with but not sufficient evidence beyond this tier's own
  *  original 8.3% figure to promote a corpus-wide constant change. Ran the real population-scale A/B
- *  the queue entry called for instead of promoting on that sample alone: `solver-archetype-sample-
+ *  the queue entry called for instead of promoting on that sample alone: `solver-routing-regime-sample-
  *  ab.yml` dispatched twice (same seed `repair-late-probe-budget-ab`, same ref, differing only in
- *  `--repair-late-probe-node-budget`) with every `detectArchetype()` value listed as "eligible" —
- *  this tier isn't archetype-scoped, so that reduces to a genuine uniform-random 300-level Corpus-2
+ *  `--repair-late-probe-node-budget`) with every `classifyRoutingRegime()` value listed as "eligible" —
+ *  this tier isn't routing-regime-scoped, so that reduces to a genuine uniform-random 300-level Corpus-2
  *  sample plus the full Corpus-1 (102) and published (160) invariant, 562 levels total. Control (GHA
  *  32564849428, cap 2,000,000): 421/562 solved, nodes=22,027,848,723, work=26,971,498,356. Treatment
  *  (GHA 32564853928, cap 5,000,000): 424/562 solved, nodes=22,147,270,137, work=27,365,379,188. Exact

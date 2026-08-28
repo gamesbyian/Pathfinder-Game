@@ -182,7 +182,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
 // a candidate becomes an accepted, saved solution.
 import { prepLevel } from './prep.js';
 import { createState, getNeighbors } from './search-state.js';
-import { getNavigableDensity } from './archetype.js';
+import { getRequiredPathCoverageRatio } from './archetype.js';
 import { validateCandidatePath } from '../domain/path-validator.js';
 import { selectDisplayHints } from '../domain/hint-selection.js';
 import { pathSignature } from '../domain/path-features.js';
@@ -220,7 +220,7 @@ export function createEnumerationPoolClient(workerFactory: () => Worker, poolSiz
     async function runComplete(level: any, existingHints: number[][], opts: EnumeratePoolRunOpts): Promise<EnumeratePoolResult> {
         if (destroyed) throw new Error('createEnumerationPoolClient: runComplete() called after terminate()');
         const prep = prepLevel(level);
-        const nd = getNavigableDensity(level);
+        const requiredPathCoverageRatio = getRequiredPathCoverageRatio(level);
         const mcKeys = level.mustCrossKeys;
         const levelKey = `pool_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
@@ -239,7 +239,7 @@ export function createEnumerationPoolClient(workerFactory: () => Worker, poolSiz
         }
 
         const finish = (): EnumeratePoolResult => {
-            const sel = selectDisplayHints(pool.slice(), { cap: opts.target, navDensity: nd, mustCrossKeys: mcKeys });
+            const sel = selectDisplayHints(pool.slice(), { cap: opts.target, requiredPathCoverageRatio, mustCrossKeys: mcKeys });
             const outcome: EnumeratePoolOutcome = capped ? 'capped' : (opts.isCancelled?.() ? 'cancelled' : (allExhausted ? 'exhaustive' : 'cancelled'));
             return {
                 newlySaved: newlySaved.slice(), newlySavedMeta: newlySavedMeta.slice(), shown: sel.indices.map((i) => pool[i]),

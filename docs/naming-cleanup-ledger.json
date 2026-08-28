@@ -12,8 +12,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 3,
-      "status": "pending",
-      "notes": "Behavior-preserving denominator helper rename."
+      "status": "done",
+      "notes": "Behavior-preserving denominator helper rename. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "getNavigableDensity",
@@ -22,8 +22,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 3,
-      "status": "pending",
-      "notes": "Preserve exact formula and thresholds."
+      "status": "done",
+      "notes": "Preserve exact formula and thresholds. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "navDensity",
@@ -32,8 +32,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 3,
-      "status": "pending",
-      "notes": "Internal feature field."
+      "status": "done",
+      "notes": "Internal feature field. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "NEAR_HAMILTONIAN_DENSITY",
@@ -42,8 +42,8 @@
       "risk": "low",
       "persistence": "none",
       "phase": 3,
-      "status": "pending",
-      "notes": "Threshold value unchanged."
+      "status": "done",
+      "notes": "Threshold value unchanged. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "DENSE_LEVEL_NAV_DENSITY",
@@ -52,8 +52,8 @@
       "risk": "low",
       "persistence": "none",
       "phase": 3,
-      "status": "pending",
-      "notes": "Threshold value unchanged."
+      "status": "done",
+      "notes": "Threshold value unchanged. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "detectArchetype",
@@ -62,8 +62,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 3,
-      "status": "pending",
-      "notes": "Classifier behavior unchanged."
+      "status": "done",
+      "notes": "Classifier behavior unchanged. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "STRATEGY_ARCHETYPE_ROUTING",
@@ -72,8 +72,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 3,
-      "status": "pending",
-      "notes": "Legacy flag/config metadata remains readable."
+      "status": "done",
+      "notes": "Legacy flag/config metadata remains readable. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "scripts/stress/select-archetype-sample.mjs",
@@ -82,8 +82,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 3,
-      "status": "pending",
-      "notes": "Update workflow/docs/spawns."
+      "status": "done",
+      "notes": "Update workflow/docs/spawns. Implemented in naming-cleanup PR 3."
     },
     {
       "old": ".github/workflows/solver-archetype-sample-ab.yml",
@@ -92,8 +92,8 @@
       "risk": "medium",
       "persistence": "frozen-history",
       "phase": 3,
-      "status": "pending",
-      "notes": "Historical workflow runs retain old identity."
+      "status": "done",
+      "notes": "Historical workflow runs retain old identity. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "workflow archetype/archetypes",
@@ -102,8 +102,8 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 3,
-      "status": "pending",
-      "notes": "Live sampler/workflow schema."
+      "status": "done",
+      "notes": "Live sampler/workflow schema. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "archetype (routing classifier)",
@@ -112,8 +112,8 @@
       "risk": "low",
       "persistence": "frozen-history",
       "phase": 3,
-      "status": "pending",
-      "notes": "Current docs/telemetry only."
+      "status": "done",
+      "notes": "Current docs/telemetry only. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "default (routing value)",
@@ -122,8 +122,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 3,
-      "status": "pending",
-      "notes": "Normalize persisted routing values."
+      "status": "done",
+      "notes": "Normalize persisted routing values. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "near-closure",
@@ -132,8 +132,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 3,
-      "status": "pending",
-      "notes": "Routing value only."
+      "status": "done",
+      "notes": "Routing value only. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "high-intersection-burden",
@@ -142,8 +142,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 3,
-      "status": "pending",
-      "notes": "Routing value only."
+      "status": "done",
+      "notes": "Routing value only. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "portal-heavy",
@@ -152,8 +152,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 3,
-      "status": "pending",
-      "notes": "Routing value only."
+      "status": "done",
+      "notes": "Routing value only. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "must-cross-heavy",
@@ -162,8 +162,8 @@
       "risk": "low",
       "persistence": "none",
       "phase": 3,
-      "status": "pending",
-      "notes": "Intentional retained routing value."
+      "status": "done",
+      "notes": "Intentional retained routing value. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "scripts/stress/current-missing-exposure-audit.mjs",
@@ -172,8 +172,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 3,
-      "status": "pending",
-      "notes": "Routing half in PR3; attempt identity fields in PR4."
+      "status": "done",
+      "notes": "Routing half in PR3; attempt identity fields in PR4. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "tmp/current-missing-exposure-audit.json",
@@ -182,8 +182,8 @@
       "risk": "low",
       "persistence": "none",
       "phase": 3,
-      "status": "pending",
-      "notes": "Temporary default output only."
+      "status": "done",
+      "notes": "Temporary default output only. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "archetype (missing-exposure result)",
@@ -192,8 +192,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 3,
-      "status": "pending",
-      "notes": "Analyzer result/local field."
+      "status": "done",
+      "notes": "Analyzer result/local field. Implemented in naming-cleanup PR 3."
     },
     {
       "old": "ida:*",

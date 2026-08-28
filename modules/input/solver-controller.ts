@@ -9,8 +9,8 @@ import { mergeHints } from '../domain/hint-types.js';
 import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 import { SOLVER_VERSION } from '../build-info.js';
 import { buildVarietySearchSummary, customTier, formatMinSec, isSessionStale, shouldOfferExtend, VARIETY_TIERS, FIND_ALL_TIER, FIND_ALL_NOCAP_TIER } from './solver-core.js';
-import { getNavigableDensity } from '../solver/archetype.js';
-import { DENSE_LEVEL_NAV_DENSITY } from '../solver/prep.js';
+import { getRequiredPathCoverageRatio } from '../solver/archetype.js';
+import { DENSE_LEVEL_COVERAGE_THRESHOLD } from '../solver/prep.js';
 import { createEnumerationPoolClient } from '../solver/solver-worker-client.js';
 import { defaultReportError } from '../error-reporting.js';
 
@@ -391,12 +391,12 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
     };
 
     // "Find all" pre-flight confirm: always warns of the 20+ minute possibility; on a near-Hamiltonian
-    // level (navDensity >= DENSE_LEVEL_NAV_DENSITY) the solution-space size is combinatorial regardless
+    // level (requiredPathCoverageRatio >= DENSE_LEVEL_COVERAGE_THRESHOLD) the solution-space size is combinatorial regardless
     // of grid size, so exhaustive completion is unlikely — steer the user toward "no cap" instead of the
     // 1,000-cap variant, which will most likely just report `capped` without exploring much more.
     async function confirmFindAll(tier: any): Promise<boolean> {
         const level = state.ENGINE.editor.workingLevel;
-        const dense = !!level && getNavigableDensity(level) >= DENSE_LEVEL_NAV_DENSITY;
+        const dense = !!level && getRequiredPathCoverageRatio(level) >= DENSE_LEVEL_COVERAGE_THRESHOLD;
         const text = dense
             ? `This level's solution space is very large, so an exhaustive search is unlikely to finish${tier.hardCap ? '' : ' — consider "Find all — no cap" instead'}. This can take 20+ minutes; you can stop at any time and everything found so far is kept.`
             : 'This can take 20+ minutes depending on the level and your device. You can stop at any time and everything found so far is kept.';

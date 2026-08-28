@@ -1,15 +1,15 @@
-# Stratified-sample level-blind capability A/B for an archetype-gated ATTEMPT_POLICY routing
+# Stratified-sample level-blind capability A/B for a routing-regime-gated ATTEMPT_POLICY routing
 # change (modules/solver/attempts.ts) -- the general form of solver-repair-probe-adaptive-sample-
 # ab.yml's eligibility-sample pattern, generalized from one hardcoded mechanic predicate to any set
-# of detectArchetype() archetypes via scripts/stress/select-archetype-sample.mjs.
+# of classifyRoutingRegime() routing regimes via scripts/stress/select-routing-regime-sample.mjs.
 #
 # Deliberately NOT a full-corpus refresh, and NOT solver-stress-refresh.yml's canonical full-1700
 # capability workflow: an ATTEMPT_POLICY rule change can only ever affect a level's outcome if the
-# level's detected archetype matches one of the rules the change touches (attempts.ts routes purely
-# on detectArchetype(level)/LevelFeatures). A uniform random sample of the full corpus wastes most
-# of its compute re-confirming zero-effect on every other archetype. This draws a deterministic
-# seeded subsample from the named archetype(s) specifically, plus a small control sample from every
-# other archetype, to empirically catch anything outside the intended scope. Same seed -> same
+# level's classified routing regime matches one of the rules the change touches (attempts.ts routes purely
+# on classifyRoutingRegime(level)/LevelFeatures). A uniform random sample of the full corpus wastes most
+# of its compute re-confirming zero-effect on every other routing regime. This draws a deterministic
+# seeded subsample from the named routing regime(s) specifically, plus a small control sample from every
+# other routing regime, to empirically catch anything outside the intended scope. Same seed -> same
 # sample, always.
 #
 # CORPUS INVARIANT: every arm also runs all of Corpus 1 and all published levels; the targeted
@@ -19,32 +19,37 @@
 # sweep.mjs, never the history-aware research sweep. Never persists hints, never touches
 # logs/stress-corpus2-baseline.json / data/level-heatmaps.json. Artifact-only: never commits to main.
 #
-# Usage: dispatch twice with identical inputs (including archetypes and seed) except enable_flags/
+# Usage: dispatch twice with identical inputs (including routing_regimes and seed) except enable_flags/
 # disable_flags/ref for whatever code change you're A/B testing -- e.g. dispatch control at the
-# pre-change commit and treatment at the post-change commit, both with identical archetypes/seed/
+# pre-change commit and treatment at the post-change commit, both with identical routing_regimes/seed/
 # node_budget -- then compare each run's combined solved count/gains/losses (per-id, from each run's
-# reports/stress/archetype-sample-ab.json artifact).
-name: Solver archetype-gated routing sample A/B
-run-name: "Archetype sample · ${{ inputs.archetypes }} · flags=${{ inputs.enable_flags || 'control' }}"
+# reports/stress/routing-regime-sample-ab.json artifact).
+name: Solver routing-regime-gated routing sample A/B
+run-name: "Routing regime sample · ${{ inputs.routing_regimes || inputs.archetypes || 'missing' }} · flags=${{ inputs.enable_flags || 'control' }}"
 
 on:
   workflow_dispatch:
     inputs:
+      routing_regimes:
+        description: 'Comma-separated classifyRoutingRegime() values the code change under test can affect, e.g. intersection-heavy,must-cross-heavy (see modules/solver/archetype.ts for the full vocabulary: sparse-low-intersection, multi-portal, must-cross-heavy, intersection-heavy, general).'
+        required: false
+        default: ''
       archetypes:
-        description: 'Comma-separated detectArchetype() values the code change under test can affect, e.g. high-intersection-burden,must-cross-heavy (see modules/solver/archetype.ts for the full vocabulary: near-closure, portal-heavy, must-cross-heavy, high-intersection-burden, default).'
-        required: true
+        description: 'Deprecated compatibility alias for routing_regimes. Legacy values are normalized by the selector; do not set both inputs to different values.'
+        required: false
+        default: ''
       eligible_sample:
-        description: 'How many of the eligible (archetype in the list above) population to sample.'
+        description: 'How many of the eligible (routing regime in the list above) population to sample.'
         required: false
         default: '250'
       control_sample:
-        description: 'How many ineligible (every other archetype) levels to sample as a control.'
+        description: 'How many ineligible (every other routing regime) levels to sample as a control.'
         required: false
         default: '50'
       seed:
         description: 'Deterministic sample seed. MUST be identical across both arms of a matched A/B -- pick something stable per question (e.g. a short slug for what you are testing) so re-dispatches of the same question stay comparable.'
         required: false
-        default: 'archetype-sample'
+        default: 'routing-regime-sample'
       node_budget:
         description: 'Corpus-2 base node allocation per level. Matches solver-stress-refresh.yml''s canonical corpus2_node_budget default; additive tiers can exceed it unless strict_total_work_budget=true.'
         required: false
@@ -87,7 +92,7 @@ on:
         default: 'true'
 
 concurrency:
-  group: solver-archetype-sample-ab-${{ inputs.archetypes }}-${{ inputs.seed }}
+  group: solver-routing-regime-sample-ab-${{ inputs.routing_regimes || inputs.archetypes || 'missing' }}-${{ inputs.seed }}
   cancel-in-progress: false
 
 jobs:
@@ -124,28 +129,39 @@ jobs:
       - name: Select the deterministic stratified sample
         shell: bash
         run: |
-          mkdir -p logs/solver-archetype-sample
-          node scripts/run-bundled.mjs scripts/stress/select-archetype-sample.mjs -- \
+          mkdir -p logs/solver-routing-regime-sample
+          routing_regimes="${{ inputs.routing_regimes }}"
+          legacy_archetypes="${{ inputs.archetypes }}"
+          if [ -z "$routing_regimes" ] && [ -z "$legacy_archetypes" ]; then
+            echo "routing_regimes is required (deprecated alias: archetypes)" >&2
+            exit 2
+          fi
+          if [ -n "$routing_regimes" ] && [ -n "$legacy_archetypes" ] && [ "$routing_regimes" != "$legacy_archetypes" ]; then
+            echo "conflicting routing_regimes/archetypes inputs" >&2
+            exit 2
+          fi
+          resolved_regimes="${routing_regimes:-$legacy_archetypes}"
+          node scripts/run-bundled.mjs scripts/stress/select-routing-regime-sample.mjs -- \
             --corpus=data/stress/stress-levels-random.json \
-            --archetypes="${{ inputs.archetypes }}" \
+            --routing-regimes="$resolved_regimes" \
             --eligible-sample="${{ inputs.eligible_sample }}" \
             --control-sample="${{ inputs.control_sample }}" \
             --seed="${{ inputs.seed }}" \
-            --out=logs/solver-archetype-sample/sample.txt
+            --out=logs/solver-routing-regime-sample/sample.txt
 
       - name: Split into even shards
         id: plan
         shell: bash
         run: |
           node scripts/plan-ab-corpus-shards.mjs \
-            --corpus2-sample="logs/solver-archetype-sample/sample.txt" \
+            --corpus2-sample="logs/solver-routing-regime-sample/sample.txt" \
             --corpus2-shards="${{ inputs.shard_count }}"
 
       - name: Upload the sample + shard plan for traceability
         uses: actions/upload-artifact@v7
         with:
-          name: archetype-sample-plan
-          path: logs/solver-archetype-sample/
+          name: routing-regime-sample-plan
+          path: logs/solver-routing-regime-sample/
           retention-days: 90
 
   solve-shards:
@@ -187,7 +203,7 @@ jobs:
           DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
         run: |
           set +e
-          mkdir -p logs/solver-archetype-sample
+          mkdir -p logs/solver-routing-regime-sample
           extra=()
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
@@ -204,8 +220,8 @@ jobs:
             "${strict[@]}" \
             --workers="${{ inputs.workers }}" \
             "${extra[@]}" \
-            --out="logs/solver-archetype-sample/batch-${{ matrix.shard.idx }}.json" \
-            --summary-out="logs/solver-archetype-sample/batch-${{ matrix.shard.idx }}-summary.md"
+            --out="logs/solver-routing-regime-sample/batch-${{ matrix.shard.idx }}.json" \
+            --summary-out="logs/solver-routing-regime-sample/batch-${{ matrix.shard.idx }}-summary.md"
           status=$?
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
@@ -214,10 +230,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: archetype-sample-shard-${{ matrix.shard.idx }}
+          name: routing-regime-sample-shard-${{ matrix.shard.idx }}
           path: |
-            logs/solver-archetype-sample/batch-${{ matrix.shard.idx }}.json
-            logs/solver-archetype-sample/batch-${{ matrix.shard.idx }}-summary.md
+            logs/solver-routing-regime-sample/batch-${{ matrix.shard.idx }}.json
+            logs/solver-routing-regime-sample/batch-${{ matrix.shard.idx }}-summary.md
           if-no-files-found: error
           retention-days: 90
 
@@ -254,17 +270,17 @@ jobs:
       - name: Download shard artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: 'archetype-sample-shard-*'
+          pattern: 'routing-regime-sample-shard-*'
           path: artifact-staging/downloaded
           merge-multiple: true
 
       - name: Combine into one report (subset-shaped -- NEVER the full-corpus baseline)
         shell: bash
         run: |
-          mkdir -p logs/solver-archetype-sample reports/stress
-          cp -a artifact-staging/downloaded/. logs/solver-archetype-sample/
-          FILES=$(ls logs/solver-archetype-sample/batch-*.json 2>/dev/null | paste -sd, -)
-          [ -n "$FILES" ] && node scripts/portfolio-sweep-reports-to-benchmark.mjs --allow-mixed-corpora --in="${FILES}" --out=reports/stress/archetype-sample-ab.json
+          mkdir -p logs/solver-routing-regime-sample reports/stress
+          cp -a artifact-staging/downloaded/. logs/solver-routing-regime-sample/
+          FILES=$(ls logs/solver-routing-regime-sample/batch-*.json 2>/dev/null | paste -sd, -)
+          [ -n "$FILES" ] && node scripts/portfolio-sweep-reports-to-benchmark.mjs --allow-mixed-corpora --in="${FILES}" --out=reports/stress/routing-regime-sample-ab.json
 
       - name: Verify complete coverage
         id: coverage
@@ -273,7 +289,7 @@ jobs:
           node -e "
           const fs = require('node:fs');
           const expectedTotal = ${{ needs.plan.outputs.total_levels }};
-          const report = JSON.parse(fs.readFileSync('reports/stress/archetype-sample-ab.json', 'utf8'));
+          const report = JSON.parse(fs.readFileSync('reports/stress/routing-regime-sample-ab.json', 'utf8'));
           const rows = report.levels ?? [];
           if (rows.length !== expectedTotal) { console.error(\`incomplete: \${rows.length}/\${expectedTotal}\`); process.exit(1); }
           console.log(\`complete: \${rows.length}/\${expectedTotal}\`);
@@ -284,12 +300,12 @@ jobs:
         run: |
           node -e "
           const fs = require('node:fs');
-          const r = JSON.parse(fs.readFileSync('reports/stress/archetype-sample-ab.json', 'utf8'));
+          const r = JSON.parse(fs.readFileSync('reports/stress/routing-regime-sample-ab.json', 'utf8'));
           const rows = r.levels ?? [];
           const solved = rows.filter(x => x.ok).length;
           const nodes = rows.reduce((n,x) => n + (x.nodesExpanded || 0), 0);
           const work = rows.reduce((n,x) => n + (x.workSpent || 0), 0);
-          console.log('archetypes=${{ inputs.archetypes }} enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} ref=${{ github.sha }}');
+          console.log('routing_regimes=${{ inputs.routing_regimes || inputs.archetypes }} enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} ref=${{ github.sha }}');
           console.log(\`SOLVED sample: \${solved}/\${rows.length} nodes=\${nodes} work=\${work}\`);
           console.log('Solved ids: ' + rows.filter(x => x.ok).map(x => x.id ?? String(x.level)).sort().join(','));
           console.log('Unsolved ids: ' + rows.filter(x => !x.ok).map(x => x.id ?? String(x.level)).sort().join(','));
@@ -299,10 +315,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: archetype-sample-ab-combined
+          name: routing-regime-sample-ab-combined
           path: |
-            reports/stress/archetype-sample-ab.json
-            logs/solver-archetype-sample/
+            reports/stress/routing-regime-sample-ab.json
+            logs/solver-routing-regime-sample/
           if-no-files-found: error
           retention-days: 90
 
@@ -311,10 +327,10 @@ jobs:
         shell: bash
         run: |
           node scripts/publish-solver-sweep-result.mjs \
-            --primary="reports/stress/archetype-sample-ab.json" \
+            --primary="reports/stress/routing-regime-sample-ab.json" \
             --shards-expected="${{ needs.plan.outputs.shard_count }}" \
-            --shards-observed="$(find logs/solver-archetype-sample -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
-            --source-artifact="archetype-sample-ab-combined"
+            --shards-observed="$(find logs/solver-routing-regime-sample -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
+            --source-artifact="routing-regime-sample-ab-combined"
 
       - name: Upload standard solver sweep result
         if: always()

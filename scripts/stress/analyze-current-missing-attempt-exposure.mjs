@@ -7,11 +7,11 @@
  * is to nominate the smallest missing-exposure A/B after later promotions have changed the ladder.
  *
  * Example:
- *   node scripts/run-bundled.mjs scripts/stress/current-missing-exposure-audit.mjs -- \
+ *   node scripts/run-bundled.mjs scripts/stress/analyze-current-missing-attempt-exposure.mjs -- \
  *     --baseline=reports/stress/capability-runs/32835403128/per-level-corpus2.json \
  *     --census=reports/stress/technique-census/32240161854/combined-cells.json \
  *     --exclude-solved=R02151,R00817,R02010 \
- *     --out=tmp/current-missing-exposure-audit.json
+ *     --out=tmp/current-missing-attempt-exposure.json
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -29,7 +29,7 @@ const BASELINE = args.get('--baseline')
 const CENSUS = args.get('--census')
     || 'reports/stress/technique-census/32240161854/combined-cells.json';
 const CORPUS = args.get('--corpus') || 'data/stress/stress-levels-random.json';
-const OUT = args.get('--out') || 'tmp/current-missing-exposure-audit.json';
+const OUT = args.get('--out') || 'tmp/current-missing-attempt-exposure.json';
 const EXCLUDE_SOLVED = new Set((args.get('--exclude-solved') || '')
     .split(',').map(x => x.trim()).filter(Boolean));
 
@@ -54,7 +54,7 @@ const corpusDocument = readJson(CORPUS);
 const corpusRows = Array.isArray(corpusDocument) ? corpusDocument : corpusDocument.levels;
 
 const Solver = createSolver();
-const { getAttemptConfigs, attemptConfigKey, detectArchetype } = SOLVER_TESTING_API;
+const { getAttemptConfigs, attemptConfigKey, classifyRoutingRegime } = SOLVER_TESTING_API;
 
 if (!baselineRows.length) {
     console.error('Unrecognized baseline schema; top-level keys:', Object.keys(baselineDocument ?? {}).slice(0, 20).join(', '));
@@ -113,10 +113,10 @@ for (const id of currentResidual) {
     const offered = new Set(getAttemptConfigs(level, null)
         .filter(config => !config.repair && !config.admissibleOrder)
         .map(attemptConfigKey));
-    const archetype = detectArchetype(level);
+    const routingRegime = classifyRoutingRegime(level);
     levelInfo.set(id, {
         id,
-        archetype,
+        routingRegime,
         offered,
         features: {
             reqLen: level.reqLen,
@@ -143,31 +143,31 @@ for (const technique of [...techniques].sort()) {
     const wins = observed.filter(x => x.row.ok && x.row.refereeValid !== false);
     if (!wins.length) continue;
     const nodeSpend = observed.reduce((sum, x) => sum + Number(x.row.nodesExpanded ?? 0), 0);
-    const byArchetype = new Map();
+    const byRoutingRegime = new Map();
     for (const id of absent) {
-        const arch = levelInfo.get(id).archetype;
-        if (!byArchetype.has(arch)) byArchetype.set(arch, []);
-        byArchetype.get(arch).push(id);
+        const routingRegime = levelInfo.get(id).routingRegime;
+        if (!byRoutingRegime.has(routingRegime)) byRoutingRegime.set(routingRegime, []);
+        byRoutingRegime.get(routingRegime).push(id);
     }
-    for (const [archetype, ids] of byArchetype) {
+    for (const [routingRegime, ids] of byRoutingRegime) {
         const obs = ids
             .map(id => ({ id, row: censusByLevelTechnique.get(`${id}\0${technique}`) }))
             .filter(x => x.row);
-        const archWins = obs.filter(x => x.row.ok && x.row.refereeValid !== false);
-        if (!archWins.length) continue;
+        const routingRegimeWins = obs.filter(x => x.row.ok && x.row.refereeValid !== false);
+        if (!routingRegimeWins.length) continue;
         const spend = obs.reduce((sum, x) => sum + Number(x.row.nodesExpanded ?? 0), 0);
         aggregate.push({
             technique,
-            archetype,
+            routingRegime,
             absentResidualLevels: ids.length,
             censusObservedLevels: obs.length,
-            isolatedSolves: archWins.length,
+            isolatedSolves: routingRegimeWins.length,
             censusNodes: spend,
-            nodesPerObservedSolve: archWins.length ? Math.round(spend / archWins.length) : null,
-            winsAtOrBelow250k: archWins.filter(x => x.row.nodesExpanded <= 250_000).length,
-            winsAtOrBelow500k: archWins.filter(x => x.row.nodesExpanded <= 500_000).length,
-            winsAtOrBelow1m: archWins.filter(x => x.row.nodesExpanded <= 1_000_000).length,
-            winningIds: archWins
+            nodesPerObservedSolve: routingRegimeWins.length ? Math.round(spend / routingRegimeWins.length) : null,
+            winsAtOrBelow250k: routingRegimeWins.filter(x => x.row.nodesExpanded <= 250_000).length,
+            winsAtOrBelow500k: routingRegimeWins.filter(x => x.row.nodesExpanded <= 500_000).length,
+            winsAtOrBelow1m: routingRegimeWins.filter(x => x.row.nodesExpanded <= 1_000_000).length,
+            winningIds: routingRegimeWins
                 .map(x => ({
                     id: x.id,
                     nodes: x.row.nodesExpanded,
@@ -179,7 +179,7 @@ for (const technique of [...techniques].sort()) {
     }
     aggregate.push({
         technique,
-        archetype: '*',
+        routingRegime: '*',
         absentResidualLevels: absent.length,
         censusObservedLevels: observed.length,
         isolatedSolves: wins.length,
@@ -193,7 +193,7 @@ for (const technique of [...techniques].sort()) {
                 id: x.id,
                 nodes: x.row.nodesExpanded,
                 gate: x.row.winningGate ?? null,
-                archetype: levelInfo.get(x.id).archetype,
+                routingRegime: levelInfo.get(x.id).routingRegime,
                 features: levelInfo.get(x.id).features,
             }))
             .sort((a, b) => a.nodes - b.nodes),
@@ -201,14 +201,14 @@ for (const technique of [...techniques].sort()) {
 }
 
 const ranked = aggregate
-    .filter(row => row.archetype !== '*')
+    .filter(row => row.routingRegime !== '*')
     .sort((a, b) => b.isolatedSolves - a.isolatedSolves
         || a.nodesPerObservedSolve - b.nodesPerObservedSolve
         || a.absentResidualLevels - b.absentResidualLevels
         || a.technique.localeCompare(b.technique));
 
 const overall = aggregate
-    .filter(row => row.archetype === '*')
+    .filter(row => row.routingRegime === '*')
     .sort((a, b) => b.isolatedSolves - a.isolatedSolves
         || a.nodesPerObservedSolve - b.nodesPerObservedSolve);
 const beamRanked = ranked.filter(row => row.technique.startsWith('beam:'));
@@ -223,7 +223,7 @@ const result = {
     baselineUnsolvedBeforeExclusion: baselineRows.filter(row => row?.ok === false).length,
     currentResidualLevels: currentResidual.length,
     censusPartialShards: censusDocument.partialShards ?? [],
-    rankingSemantics: 'technique x current detectArchetype; only current residual levels where production getAttemptConfigs() lacks the exact base technique key; frozen base T1 census only',
+    rankingSemantics: 'technique x current routing regime; only current residual levels where production getAttemptConfigs() lacks the exact base technique key; frozen base T1 census only',
     rankedTechniqueArchetypeCandidates: ranked,
     rankedBeamTechniqueArchetypeCandidates: beamRanked,
     overallTechniqueCandidates: overall,
@@ -235,11 +235,11 @@ writeFileSync(path.resolve(OUT), JSON.stringify(result, null, 2));
 console.log(`Current residual: ${currentResidual.length} level(s); excluded now-solved: ${[...EXCLUDE_SOLVED].sort().join(', ') || 'none'}`);
 console.log(`Base T1 census rows indexed: ${censusByLevelTechnique.size}; partial shards: ${(censusDocument.partialShards ?? []).join(', ') || 'none'}`);
 console.log('');
-console.log('TOP TECHNIQUE × ARCHETYPE MISSING-EXPOSURE CANDIDATES');
+console.log('TOP TECHNIQUE × ROUTING REGIME MISSING-EXPOSURE CANDIDATES');
 for (const row of ranked.slice(0, 20)) {
     console.log([
         row.technique,
-        `arch=${row.archetype}`,
+        `routingRegime=${row.routingRegime}`,
         `absent=${row.absentResidualLevels}`,
         `observed=${row.censusObservedLevels}`,
         `wins=${row.isolatedSolves}`,
@@ -253,7 +253,7 @@ for (const row of ranked.slice(0, 20)) {
 console.log('');
 console.log('TOP BEAM-ONLY CANDIDATES WITH WINNING FEATURES');
 for (const row of beamRanked.slice(0, 12)) {
-    console.log(`${row.technique} | arch=${row.archetype} | absent=${row.absentResidualLevels} | observed=${row.censusObservedLevels} | wins=${row.isolatedSolves} | nodes/win=${row.nodesPerObservedSolve}`);
+    console.log(`${row.technique} | routingRegime=${row.routingRegime} | absent=${row.absentResidualLevels} | observed=${row.censusObservedLevels} | wins=${row.isolatedSolves} | nodes/win=${row.nodesPerObservedSolve}`);
     for (const win of row.winningIds)
         console.log(`  ${win.id} nodes=${win.nodes} gate=${win.gate ?? '-'} features=${JSON.stringify(win.features)}`);
 }

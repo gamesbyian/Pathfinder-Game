@@ -21,7 +21,7 @@ import { readLevelsWithHints } from './level-data-io.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { buildRow } from './portfolio-solve-sweep-lib.mjs';
 import { runWorkerPool } from './solver-worker-pool.mjs';
-import { FEATURES } from '../modules/solver/ablation-config.js';
+import { canonicalAblationFeatureName, FEATURES } from '../modules/solver/ablation-config.js';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -81,9 +81,9 @@ for (const forbidden of ['--baseline', '--baseline-budget', '--prime-winner', '-
 }
 
 const enableFlags = argMap.has('--enable-flags')
-    ? argMap.get('--enable-flags').split(',').map(s => s.trim()).filter(Boolean) : [];
+    ? argMap.get('--enable-flags').split(',').map(s => canonicalAblationFeatureName(s.trim())).filter(Boolean) : [];
 const disableFlags = argMap.has('--disable-flags')
-    ? argMap.get('--disable-flags').split(',').map(s => s.trim()).filter(Boolean) : [];
+    ? argMap.get('--disable-flags').split(',').map(s => canonicalAblationFeatureName(s.trim())).filter(Boolean) : [];
 for (const flag of [...enableFlags, ...disableFlags]) {
     if (!(flag in FEATURES)) {
         console.error(`Unknown ablation flag "${flag}" (see modules/solver/ablation-config.ts FEATURES).`);
