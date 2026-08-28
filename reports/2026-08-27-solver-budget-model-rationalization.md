@@ -166,12 +166,13 @@ realm can therefore contaminate that session counter.
 Target direction: caller-owned work scopes / accumulation from each solve's `workSpent`, after
 characterizing hint/discovery behavior.
 
-**2026-08-28, partially closed:** `modules/solver/diversification.ts`'s `createDiversificationSession`
-and `scripts/hint-workbench.mjs`'s own `runAblationUi`/`runCandidateGrid`/`runPortalGrid` now
-accumulate a session-local work counter from each solve's own `workSpent` instead of reading the
-realm-global `workMeter`. `modules/solver/hint-ablation-generator.ts` (~30 sites) and
-`hint-workbench.mjs`'s `runEnumeration` secondary hang-safety callback still read the realm-global
-counter — remaining debt, explicitly flagged in place. See
+**2026-08-28, largely closed:** `modules/solver/diversification.ts`'s `createDiversificationSession`,
+`modules/solver/hint-ablation-generator.ts`'s `createHintAblationGenerator` (~30 sites), and
+`scripts/hint-workbench.mjs`'s own `runAblationUi`/`runCandidateGrid`/`runPortalGrid` now accumulate a
+session-local work counter from each solve's own `workSpent` instead of reading the realm-global
+`workMeter`. Only `hint-workbench.mjs`'s `runEnumeration` secondary hang-safety callback (non-binding;
+no caller-visible per-step result to intercept from `variety-search.ts`'s own `run()`) still reads the
+realm-global counter — remaining debt, explicitly flagged in place. See
 [`2026-08-28-discovery-work-meter-session-scope-fix.md`](2026-08-28-discovery-work-meter-session-scope-fix.md)
 (also documents a real corner-flip candidate bug found and fixed along the way).
 

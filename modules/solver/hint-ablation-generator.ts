@@ -27,7 +27,6 @@
  */
 
 import type { HintCandidateEvent } from './hint-candidate-events.js';
-import { workMeter } from './work-meter.js';
 import { legacyMsToWork } from './budget-units.js';
 import { createState, getNeighbors } from './search-state.js';
 import { AXIS_H, AXIS_V } from './encoding.js';
@@ -270,12 +269,23 @@ interface RunCtx {
     solverApi: any;
     attemptBudgetMs: number;
     errors: string[];
-    /** Absolute `workMeter.units` ceiling for this whole generator run. Deliberately WORK, not a
+    /** This whole generator run's work budget, measured from this run's own zero baseline (NOT an
+     *  absolute `workMeter.units` checkpoint — see `workSpent` below). Deliberately WORK, not a
      *  Date.now() deadline: this bound decides how far the phase ladder gets, and therefore WHICH
      *  HINTS DISCOVERY FINDS. Gating that on wall clock made the discovered set — and so the
      *  provenance corpus built from it — a function of how fast and how loaded the host was.
      *  See docs/solver-budget-determinism.md and work-meter.ts. */
     workCeiling: number;
+    /** Session-owned work counter (2026-08-28 caller-owned-work-scope fix, matching
+     *  diversification.ts's identical `ctx.sessionWork` — see queue item #2 debt #4 "module-global
+     *  discovery work meter"). Every solve this generator run performs adds its own
+     *  `SolveResult.workSpent` here; the run never reads the realm-global `workMeter` shared by
+     *  every other concurrent solve in the process, so an unrelated solve elsewhere in the same
+     *  realm can no longer pad or steal this run's own work-ceiling accounting. One accepted edge
+     *  case: a solve that THROWS (rare — a genuine error, not ordinary exhaustion) can't report the
+     *  work it spent before throwing, unlike the old realm-global read; conservative in the safe
+     *  direction only (this run may go marginally over its nominal budget on that path, never under). */
+    workSpent: number;
 }
 
 // Generic cascade: repeatedly solves with `solveOptsBase` plus a growing disabled-feature
@@ -289,7 +299,7 @@ async function runCascade(target: any, solveOptsBase: any, label: string, ctx: R
     let round = 0;
     let haltedByWorkBudget = false;
     while (true) {
-        if (workMeter.units >= ctx.workCeiling) { haltedByWorkBudget = true; break; }
+        if (ctx.workSpent >= ctx.workCeiling) { haltedByWorkBudget = true; break; }
         if (disabled.size > 0 && !anyConfigSurvives(target, disabled)) break;
 
         const cfg = disabled.size > 0 ? withFeaturesDisabled([...disabled]) : null;
@@ -308,6 +318,8 @@ async function runCascade(target: any, solveOptsBase: any, label: string, ctx: R
             ctx.errors.push(`${label} round=${round}: ${(e as Error)?.message}`);
             break;
         }
+        // Counts even a losing final round's cost — see ctx.workSpent's doc comment above.
+        ctx.workSpent += result?.workSpent ?? 0;
         round++;
         if (!result?.ok || !result.solution) break;
 
@@ -342,7 +354,7 @@ async function runStrategyPhase(target: any, solveOptsBase: any, label: string, 
     const found: FoundEntry[] = [];
     let haltedByWorkBudget = false;
     for (const flag of STRATEGY_FLAGS) {
-        if (workMeter.units >= ctx.workCeiling) { haltedByWorkBudget = true; break; }
+        if (ctx.workSpent >= ctx.workCeiling) { haltedByWorkBudget = true; break; }
         let result;
         try {
             // disableExtraBudgetPasses: same reasoning as runCascade's identical option -- one
@@ -352,6 +364,7 @@ async function runStrategyPhase(target: any, solveOptsBase: any, label: string, 
             ctx.errors.push(`strategy=${flag} ${label}: ${(e as Error)?.message}`);
             continue;
         }
+        ctx.workSpent += result?.workSpent ?? 0;
         if (result?.ok && result.solution) {
             const winner = result.attempts?.find((a: any) => a.ok);
             const attemptInfo = deriveSolveAttemptInfo(result.attempts);
@@ -393,7 +406,9 @@ export async function createHintAblationGenerator(
     const workBudget = options.workBudget == null
         ? legacyMsToWork(legacyWallClockDeadlineMs, 1)
         : Math.max(0, Math.floor(options.workBudget));
-    const workCeiling = workMeter.units + workBudget;
+    // Session-local budget (see RunCtx.workSpent's doc comment): measured from this run's own zero
+    // baseline, not an absolute realm-global workMeter.units checkpoint.
+    const workCeiling = workBudget;
 
     const level = solverApi.prepareLevelForSolver(rawLevel, { source: 'raw', levelNumber });
     const existingSigs = new Set((rawLevel.hints || []).map(pathSignature));
@@ -405,10 +420,12 @@ export async function createHintAblationGenerator(
         baseline: 0, cascade: 0, swap: 0, portalCascade: 0, swapPortal: 0, combined: 0, swapCombined: 0,
     };
     const phasesRun: string[] = [];
-    let haltedByWorkBudget = workMeter.units >= workCeiling;
+    // No solve has run yet, so this run's own work-spent is still exactly 0 (ctx isn't constructed
+    // until just below) — equivalent to the old `workMeter.units >= workCeiling` at this same point.
+    let haltedByWorkBudget = workBudget <= 0;
     let baselineWinner: string | null = null;
 
-    const ctx: RunCtx = { solverApi, attemptBudgetMs, errors, workCeiling };
+    const ctx: RunCtx = { solverApi, attemptBudgetMs, errors, workCeiling, workSpent: 0 };
 
     function consider(path: number[], provenance: any): void {
         const sig = pathSignature(path);
@@ -437,10 +454,11 @@ export async function createHintAblationGenerator(
     }
 
     // Phase 0: unconstrained baseline (establishes "what wins by default").
-    if (phases.baseline && workMeter.units < workCeiling) {
+    if (phases.baseline && ctx.workSpent < workCeiling) {
         phasesRun.push('baseline');
         try {
             const base = await solverApi.solve(level, { timeBudgetMs: baselineBudgetMs });
+            ctx.workSpent += base?.workSpent ?? 0;
             if (base?.ok && base.solution) {
                 const winner = base.attempts?.find((a: any) => a.ok);
                 baselineWinner = winner?.profile ?? null;
@@ -484,12 +502,12 @@ export async function createHintAblationGenerator(
     if (phases.cascade && !haltedByWorkBudget) {
         phasesRun.push('cascade');
         for (const gateKey of level.gateKeys) {
-            if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+            if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
             const gateLevel = { ...level, gateKeys: [gateKey] };
             const directions = enumerateDirections(gateLevel, gateKey);
 
             for (const direction of directions) {
-                if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+                if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
                 combosTried.cascade++;
 
                 const cascadeOutcome = await runCascade(gateLevel, { forcedFirstStepKey: direction }, `gate=${gateKey} dir=${direction}`, ctx);
@@ -512,7 +530,7 @@ export async function createHintAblationGenerator(
                     });
                 }
 
-                if (cascadeOutcome.found.length > 0 && workMeter.units < workCeiling) {
+                if (cascadeOutcome.found.length > 0 && ctx.workSpent < workCeiling) {
                     const strategyOutcome = await runStrategyPhase(gateLevel, { forcedFirstStepKey: direction }, `gate=${gateKey} dir=${direction}`, ctx);
                     if (strategyOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                     for (const r of strategyOutcome.found) {
@@ -544,15 +562,15 @@ export async function createHintAblationGenerator(
     if (phases.swap && !haltedByWorkBudget) {
         phasesRun.push('swap');
         for (const gateKey of level.gateKeys) {
-            if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+            if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
             for (const flipFlippers of flipperVariants) {
-                if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+                if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
                 const swapLevel = buildSwapLevel(level, gateKey, flipFlippers);
                 const swapGateKey = swapLevel.gateKeys[0];
                 const directions = enumerateDirections(swapLevel, swapGateKey);
 
                 for (const direction of directions) {
-                    if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+                    if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
                     combosTried.swap++;
 
                     const cascadeOutcome = await runCascade(swapLevel, { forcedFirstStepKey: direction }, `swap gate=${gateKey} dir=${direction} flip=${flipFlippers}`, ctx);
@@ -576,7 +594,7 @@ export async function createHintAblationGenerator(
                         });
                     }
 
-                    if (cascadeOutcome.found.length > 0 && workMeter.units < workCeiling) {
+                    if (cascadeOutcome.found.length > 0 && ctx.workSpent < workCeiling) {
                         const strategyOutcome = await runStrategyPhase(swapLevel, { forcedFirstStepKey: direction }, `swap gate=${gateKey} dir=${direction} flip=${flipFlippers}`, ctx);
                         if (strategyOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                         for (const r of strategyOutcome.found) {
@@ -609,11 +627,11 @@ export async function createHintAblationGenerator(
         phasesRun.push('portalCascade');
         const portalDests = findPortalExitPoints(level, evidenceHints());
         for (const destKey of portalDests) {
-            if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+            if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
             const directions = enumeratePortalExitDirections(level, destKey);
 
             for (const direction of directions) {
-                if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+                if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
                 combosTried.portalCascade++;
 
                 const cascadeOutcome = await runCascade(level, { forcedPortalExitKey: { from: destKey, to: direction } }, `portalDest=${destKey} dir=${direction}`, ctx);
@@ -636,7 +654,7 @@ export async function createHintAblationGenerator(
                     });
                 }
 
-                if (cascadeOutcome.found.length > 0 && workMeter.units < workCeiling) {
+                if (cascadeOutcome.found.length > 0 && ctx.workSpent < workCeiling) {
                     const strategyOutcome = await runStrategyPhase(level, { forcedPortalExitKey: { from: destKey, to: direction } }, `portalDest=${destKey} dir=${direction}`, ctx);
                     if (strategyOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                     for (const r of strategyOutcome.found) {
@@ -670,17 +688,17 @@ export async function createHintAblationGenerator(
         const reversedHintsForPortalScan = evidenceHints().map(h => h.slice().reverse());
         const swapPortalDests = findPortalExitPoints(level, reversedHintsForPortalScan);
         for (const gateKey of level.gateKeys) {
-            if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+            if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
             for (const flipFlippers of flipperVariants) {
-                if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+                if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
                 const swapLevel = buildSwapLevel(level, gateKey, flipFlippers);
 
                 for (const destKey of swapPortalDests) {
-                    if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+                    if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
                     const directions = enumeratePortalExitDirections(swapLevel, destKey);
 
                     for (const direction of directions) {
-                        if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+                        if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
                         combosTried.swapPortal++;
 
                         const cascadeOutcome = await runCascade(swapLevel, { forcedPortalExitKey: { from: destKey, to: direction } }, `swap portalDest=${destKey} dir=${direction} flip=${flipFlippers}`, ctx);
@@ -705,7 +723,7 @@ export async function createHintAblationGenerator(
                             });
                         }
 
-                        if (cascadeOutcome.found.length > 0 && workMeter.units < workCeiling) {
+                        if (cascadeOutcome.found.length > 0 && ctx.workSpent < workCeiling) {
                             const strategyOutcome = await runStrategyPhase(swapLevel, { forcedPortalExitKey: { from: destKey, to: direction } }, `swap portalDest=${destKey} dir=${direction} flip=${flipFlippers}`, ctx);
                             if (strategyOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                             for (const r of strategyOutcome.found) {
@@ -742,12 +760,12 @@ export async function createHintAblationGenerator(
         phasesRun.push('combined');
         const gatePortalTriples = findGatePortalTriples(level, evidenceHints());
         for (const { startKey: triGateKey, direction: triDirection, destKey: triDestKey } of gatePortalTriples) {
-            if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+            if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
             const gateLevel = { ...level, gateKeys: [triGateKey] };
             const exitDirections = enumeratePortalExitDirections(gateLevel, triDestKey);
 
             for (const exitDir of exitDirections) {
-                if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+                if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
                 combosTried.combined++;
 
                 const solveOptsBase = { forcedFirstStepKey: triDirection, forcedPortalExitKey: { from: triDestKey, to: exitDir } };
@@ -773,7 +791,7 @@ export async function createHintAblationGenerator(
                     });
                 }
 
-                if (cascadeOutcome.found.length > 0 && workMeter.units < workCeiling) {
+                if (cascadeOutcome.found.length > 0 && ctx.workSpent < workCeiling) {
                     const strategyOutcome = await runStrategyPhase(gateLevel, solveOptsBase, `combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir}`, ctx);
                     if (strategyOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                     for (const r of strategyOutcome.found) {
@@ -807,14 +825,14 @@ export async function createHintAblationGenerator(
         const reversedForCombined = evidenceHints().map(h => h.slice().reverse());
         const swapGatePortalTriples = findGatePortalTriples(level, reversedForCombined);
         for (const { direction: triDirection, destKey: triDestKey, endKey: triGateKey } of swapGatePortalTriples) {
-            if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+            if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
             for (const flipFlippers of flipperVariants) {
-                if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+                if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
                 const swapLevel = buildSwapLevel(level, triGateKey, flipFlippers);
                 const exitDirections = enumeratePortalExitDirections(swapLevel, triDestKey);
 
                 for (const exitDir of exitDirections) {
-                    if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
+                    if (ctx.workSpent >= workCeiling) { haltedByWorkBudget = true; break; }
                     combosTried.swapCombined++;
 
                     const solveOptsBase = { forcedFirstStepKey: triDirection, forcedPortalExitKey: { from: triDestKey, to: exitDir } };
@@ -841,7 +859,7 @@ export async function createHintAblationGenerator(
                         });
                     }
 
-                    if (cascadeOutcome.found.length > 0 && workMeter.units < workCeiling) {
+                    if (cascadeOutcome.found.length > 0 && ctx.workSpent < workCeiling) {
                         const strategyOutcome = await runStrategyPhase(swapLevel, solveOptsBase, `swap combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir} flip=${flipFlippers}`, ctx);
                         if (strategyOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                         for (const r of strategyOutcome.found) {
