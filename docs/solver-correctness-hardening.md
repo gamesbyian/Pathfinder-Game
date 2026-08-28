@@ -3,7 +3,7 @@
 > **Status:** current invariants distilled from fixed correctness failures.
 > **History:** [`archive/snapshots/solver-correctness-archaeology-2026-08-20.md`](archive/snapshots/solver-correctness-archaeology-2026-08-20.md).
 
-Use when changing hard prunes, state identity, solver/runtime rules, reusable scratch, budgets, experiment plumbing, or persisted telemetry. This is a review checklist, not a defect list; current optimization work is in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md). The August 2026 hardening pass found no newly demonstrated production hard prune rejecting a valid solution.
+Use when changing hard prunes, state identity, solver/runtime rules, reusable scratch, budgets, experiment plumbing, or persisted telemetry. This is a review checklist, not a defect list; current optimization work is in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md). The August 2026 hardening pass found no newly demonstrated production hard prune rejecting a valid solution.
 
 ## Standing failure classes
 

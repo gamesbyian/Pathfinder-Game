@@ -104,11 +104,11 @@ for (const prefix of ['docs/archive/']) {
 }
 
 const routerRequirements = [
-  ['AGENTS.md', ['docs/tooling-catalog.md', 'docs/solver-optimization-current-queue.md', 'docs/variant-level-research.md', 'docs/solver-research-operating-model.md', 'docs/solver-opt-in-experiment-ledger.md', 'docs/testing.md', 'reports/README.md']],
+  ['AGENTS.md', ['docs/tooling-catalog.md', 'docs/solver-optimization-workstreams.md', 'docs/variant-level-research.md', 'docs/solver-research-operating-model.md', 'docs/solver-opt-in-experiment-ledger.md', 'docs/testing.md', 'reports/README.md']],
   ['CLAUDE.md', ['AGENTS.md', 'DEVELOPER_REFERENCE.md']],
   ['.github/copilot-instructions.md', ['AGENTS.md']],
   ['docs/tooling-catalog.md', ['package.json', 'scripts/README.md', '.github/workflows/README.md', 'variant-level-research.md']],
-  ['docs/solver-research-operating-model.md', ['solver-optimization-current-queue.md', 'solver-level-blindness.md', 'variant-level-research.md']],
+  ['docs/solver-research-operating-model.md', ['solver-optimization-workstreams.md', 'solver-level-blindness.md', 'variant-level-research.md']],
 ];
 for (const [file, requiredStrings] of routerRequirements) {
   const target = resolve(ROOT, file);

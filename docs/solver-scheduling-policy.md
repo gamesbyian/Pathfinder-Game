@@ -1,6 +1,6 @@
 # Evidence-driven solver scheduling and allocation
 
-> **Status:** active policy/research contract; [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) owns rank and next gate.
+> **Status:** active policy/research contract; [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns current execution priority and next gate.
 > **Objective:** replace fixed-ladder accretion with level-blind bounded allocation that improves the solve/`workSpent` Pareto frontier while preserving reproducible rare capability.
 > **Related:** implementation [`solver-architecture.md`](solver-architecture.md); research method [`solver-research-operating-model.md`](solver-research-operating-model.md); budget semantics [`solver-budget-determinism.md`](solver-budget-determinism.md).
 
@@ -60,7 +60,7 @@ Report coverage versus portfolio cardinality under the same aggregate work envel
 
 ## Budget-model completion prerequisite
 
-The scheduler cannot be coherently repriced while a non-binding wall deadline can still resize deterministic search. The live queue therefore treats budget-model completion as scheduler foundation, not optional architecture cleanup.
+The scheduler cannot be coherently repriced while a non-binding wall deadline can still resize deterministic search. The workstream authority therefore treats budget-model completion as scheduler foundation, not optional architecture cleanup.
 
 Before new production allocation policy is promoted:
 

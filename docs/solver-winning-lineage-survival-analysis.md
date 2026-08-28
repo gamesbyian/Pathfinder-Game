@@ -1,6 +1,6 @@
 # Winning-lineage survival analysis
 
-> **Status:** current beam-observation instrument contract. Current scoring/retention rank lives in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+> **Status:** current beam-observation instrument contract. Current scoring/retention rank lives in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **Capability rule:** known solutions are offline labels only and never guide search.
 
 Winning-lineage observation asks a finite-frontier question:

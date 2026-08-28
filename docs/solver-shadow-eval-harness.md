@@ -4,7 +4,7 @@
 
 The shadow harness tests candidate solver reasoners against labelled states **without changing production search**. Use it to falsify a pruning/representation premise cheaply before wiring a live treatment.
 
-The full pre-consolidation document, including the first prototype campaigns and dated result interpretation, is frozen at [`archive/snapshots/solver-shadow-eval-harness-2026-08-20.md`](archive/snapshots/solver-shadow-eval-harness-2026-08-20.md). Current solver priority lives in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+The full pre-consolidation document, including the first prototype campaigns and dated result interpretation, is frozen at [`archive/snapshots/solver-shadow-eval-harness-2026-08-20.md`](archive/snapshots/solver-shadow-eval-harness-2026-08-20.md). Current solver priority lives in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 
 ## Entry point
 
@@ -89,7 +89,7 @@ If the live result is null, do not keep tuning thresholds indefinitely on the sa
 
 ## When to use something else
 
-- Need current priority? Use [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+- Need current priority? Use [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 - Need a level/family boundary? Use [`variant-level-research.md`](variant-level-research.md) and family tools.
 - Need actual beam retention/extinction? Use [`solver-winning-lineage-survival-analysis.md`](solver-winning-lineage-survival-analysis.md).
 - Need a causal before/after search divergence? Use family pair-divergence / witness-divergence tooling.

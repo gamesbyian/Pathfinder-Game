@@ -8,7 +8,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 
 Use this short preflight before choosing a command:
 
-1. Read [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md). A specialist tool's local “next question” does not outrank the live queue.
+1. Read [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md). A specialist tool's local “next question” does not override the current execution priority.
 2. Classify the question: correctness, routing, allocation, search quality, retention/representation, implementation speed, or generalization.
 3. Decide whether the run is **discovery/tuning, confirmation, transfer, or forensic**. A new seed from the same generator is confirmation, not cross-generator transfer.
 4. If the treatment was selected from prior results, do not use the selected-on population as sole confirmation.
@@ -97,7 +97,7 @@ Historical portfolio tools (`solver:portfolio-report`, `solver:portfolio-replay`
 ## Rules
 
 - Use the smallest population/tool that decides the next gate; escalate only survivors.
-- Read [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) before treating any tool-local proposal as current priority.
+- Read [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) before treating any tool-local proposal as current priority.
 - Run `node scripts/tooling-census.mjs --orphans` before adding local tooling when the concept may already exist. An orphan is a lifecycle review candidate, not deletion or promotion evidence. Use `--health` when the question is whether currently surfaced script entrypoints still resolve their literal local imports/exports; historical doc references remain visible in JSON but do not promote a script into current support.
 - For scheduler work, begin with existing cap/tranche outputs, lifecycle/current capability, family index, current action identities, and bounded operational evidence. Add a new analyzer/store only when current rebuildable surfaces cannot answer a repeated decision-relevant query.
 - The cap-retention/tranche extension is already implemented in `technique-census-second-order.mjs` at `100K/250K/500K/1M/2M/5M/10M/20M/30M/40M/50M`. Do not rebuild it separately.

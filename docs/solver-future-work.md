@@ -1,22 +1,22 @@
 # Solver future work
 
-Deferred/reopen ideas that are **not current ranked execution**. Current rank lives in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); research rules in [`solver-research-operating-model.md`](solver-research-operating-model.md); retained default-OFF dispositions in [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md).
+Deferred/reopen ideas that are **not current execution priority**. Current execution priority lives in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); research rules in [`solver-research-operating-model.md`](solver-research-operating-model.md); retained default-OFF dispositions in [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md).
 
 Historical ledger: [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md). Prior evidence: [`../reports/README.md`](../reports/README.md) or `node scripts/research-status-index.mjs --compact --query=<term>`.
 
 ## Active elsewhere, not backlog
 
-Do not recreate these programs here; the queue owns their rank.
+Do not recreate these programs here; the workstream authority owns their execution priority.
 
 | Topic | Current authority |
 |---|---|
-| Generalization / confirmation blocks / cross-generator challenge | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md); [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); historical [`cohort reservation`](../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md) |
-| Automatic configuration / portfolio construction | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`solver-scheduling-policy.md`](solver-scheduling-policy.md) |
-| Beam retention at exact extinction boundaries | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`beam descriptor audit`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md) |
-| Exact/reference-model program | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`reference-model audit`](../reports/2026-08-23-solver-reference-model-capability-audit.md) |
-| Restart allocation / learned failure | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`restart audit`](../reports/2026-08-24-restart-continuation-value-audit.md), [`learned-failure audit`](../reports/2026-08-24-learned-failure-certificate-audit.md) |
-| Repair reachability / reconstructability | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`repair audit`](../reports/2026-08-24-repair-reachability-reconstructability-audit.md) |
-| Architectural speed | [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) |
+| Generalization / confirmation blocks / cross-generator challenge | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md); [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); historical [`cohort reservation`](../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md) |
+| Automatic solver action selection | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`solver-scheduling-policy.md`](solver-scheduling-policy.md) |
+| Beam retention at exact extinction boundaries | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`beam descriptor audit`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md) |
+| Exact/reference-model program | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`reference-model audit`](../reports/2026-08-23-solver-reference-model-capability-audit.md) |
+| Restart allocation / learned failure | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`restart audit`](../reports/2026-08-24-restart-continuation-value-audit.md), [`learned-failure audit`](../reports/2026-08-24-learned-failure-certificate-audit.md) |
+| Repair reachability / reconstructability | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`repair audit`](../reports/2026-08-24-repair-reachability-reconstructability-audit.md) |
+| Architectural speed | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) |
 
 ## Entry contract
 
@@ -28,7 +28,7 @@ An item here is a question, not authorization to build a framework. Before subst
 4. success and stop gates;
 5. how any positive offline result could become legal level-blind production behavior.
 
-Check current code, queue, ledger, [`tooling-catalog.md`](tooling-catalog.md), and prior evidence first. If an idea becomes ranked work, move its live gate to the queue/current topic doc and leave chronology in reports.
+Check current code, queue, ledger, [`tooling-catalog.md`](tooling-catalog.md), and prior evidence first. If an idea becomes active workstream work, move its live gate to the queue/current topic doc and leave chronology in reports.
 
 ## Deferred representation / search-quality questions
 
