@@ -28,8 +28,8 @@ Technique/config names do not by themselves imply distinct search behavior. See 
 
 ### Routing regimes (`classifyRoutingRegime`)
 
-1. **sparse-low-intersection:** `reqInt <= 1 && navDensity < 0.35`.
-2. **intersection-heavy:** `(reqInt>=5 && density>=0.45) || (reqInt>=4 && density>=0.55) || reqInt>=10`.
+1. **sparse-low-intersection:** `reqInt <= 1 && requiredPathCoverageRatio < 0.35`.
+2. **intersection-heavy:** `(reqInt>=5 && requiredPathCoverageRatio>=0.45) || (reqInt>=4 && requiredPathCoverageRatio>=0.55) || reqInt>=10`.
 3. **must-cross-heavy:** `mustCrossKeys.length >= 2 && reqInt >= 2`.
 4. **multi-portal:** `portalMap.size >= 4`.
 5. **general**.
