@@ -1,7 +1,7 @@
 # Solver evaluation evidence
 
 > **Status:** current authority for development, confirmation, and transfer/challenge evidence.
-> **Priority:** [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) owns which candidate is tested next.
+> **Execution priority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns which workstream/candidate is tested next.
 > **Runtime boundary:** [`solver-level-blindness.md`](solver-level-blindness.md).
 > **General research method:** [`solver-research-operating-model.md`](solver-research-operating-model.md).
 
