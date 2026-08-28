@@ -35,7 +35,7 @@ let runId = opts.get('run');
 const workflow = opts.get('workflow');
 if (!runId && workflow) {
   const branch = opts.get('branch');
-  const argv = ['run', 'list', '--workflow', workflow, '--limit', '1', '--json', 'databaseId,status,conclusion,headSha,displayTitle'];
+  const argv = ['run', 'list', '--workflow', workflow, '--status', 'completed', '--limit', '1', '--json', 'databaseId,status,conclusion,headSha,displayTitle'];
   if (branch) argv.push('--branch', branch);
   const rows = JSON.parse(runGh(argv) || '[]');
   if (!rows.length) {
