@@ -39,7 +39,10 @@ for (const d of dirs.sort()) {
 
     for (const file of files) {
         const data = JSON.parse(readFileSync(path.join(shardPath, file), 'utf8'));
-        const thisMeta = { corpus: data.corpus, only: data.only, budgetMs: data.budgetMs, nodeBudget: data.nodeBudget };
+        const thisMeta = {
+            corpus: data.corpus, only: data.only, budgetMs: data.budgetMs,
+            workBudget: data.workBudget ?? null, nodeBudget: data.nodeBudget,
+        };
         if (!meta) meta = thisMeta;
         else if (JSON.stringify(thisMeta) !== JSON.stringify(meta)) {
             throw new Error(`metadata mismatch in ${d}/${file}: ${JSON.stringify(thisMeta)} != ${JSON.stringify(meta)}`);
@@ -60,10 +63,16 @@ if (duplicates.length) throw new Error(`duplicate level ids across method-probe 
 
 allLevels.sort((a, b) => String(a.id ?? '').localeCompare(String(b.id ?? '')));
 const solved = allLevels.filter(l => l.ok);
+const deadlineTruncatedIds = allLevels.filter(l => l.deadlineTruncated).map(l => l.id);
+const deterministicWorkMode = meta?.workBudget != null;
+const validDeterministicEvidence = deterministicWorkMode && missing.length === 0 && deadlineTruncatedIds.length === 0;
 const combined = {
     ...meta,
     totalTested: allLevels.length,
     totalSolved: solved.length,
+    deterministicWorkMode,
+    validDeterministicEvidence,
+    deadlineTruncatedIds,
     missingShards: missing,
     levels: allLevels,
 };
@@ -76,8 +85,9 @@ writeFileSync(path.join(OUT_DIR, 'solved-ids.txt'), solvedIds.join('\n') + '\n')
 const summaryLines = [
     `# method-probe sweep: ${JSON.stringify(meta?.only)}`,
     '',
-    `Corpus: \`${meta?.corpus}\` — tested ${allLevels.length}, solved ${solved.length}`,
+    `Corpus: \`${meta?.corpus}\` — tested ${allLevels.length}, solved ${solved.length}; work-budget=${meta?.workBudget ?? '(legacy wall-bounded)'}`,
     missing.length ? `\n**Missing worker results: ${missing.join(', ')}**` : '',
+    deadlineTruncatedIds.length ? `\n**Deadline-truncated rows (invalid deterministic evidence): ${deadlineTruncatedIds.join(', ')}**` : '',
     '',
     '## Solved level IDs',
     '```',
@@ -93,4 +103,4 @@ if (process.env.GITHUB_STEP_SUMMARY) {
     console.log(summaryText);
 }
 
-if (missing.length) process.exitCode = 2;
+if (missing.length || deadlineTruncatedIds.length) process.exitCode = 2;

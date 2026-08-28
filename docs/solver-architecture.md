@@ -211,6 +211,8 @@ Complete-mode Find-all alone uses this pool; targeted tiers stay main-thread. Se
 
 Across-level `--parallel` may beat within-level racing for mostly-fast levels; do not combine them in `stress:benchmark`. Long batch tools must persist per-level progress: benchmark partial output/`--skip-existing-dir`; portfolio JSONL/`--resume`. Use the cheapest population/budget that decides the gate; do not time competing CPU-bound arms concurrently.
 
+For isolated method research, prefer `method-probe.mjs --work-budget=<units>` with a generously non-binding `--budget-ms`. The work ceiling is cumulative across the level just like its node ceiling; a row whose wall deadline binds first is marked `deadlineTruncated` and the work-bounded run exits non-zero. Omit `--work-budget` only when the question is deliberately about historical wall-bounded behavior.
+
 ## `--levels` syntax
 
 Shared `level-data-io.mjs` parsers reject bare numeric ambiguity:
@@ -224,7 +226,7 @@ Shared `level-data-io.mjs` parsers reject bare numeric ambiguity:
 
 ## Offline portfolio experiment
 
-`opts.schedulerMode = 'portfolio-experiment'` is offline-only; live Play/Editor/Review/hint discovery use `'legacy'`. Best published 2026-07-12 variant was **1.51×** legacy with equal solves; a later repair-speed change moved a stress comparison from **0.57×** to **1.45×**, so portfolio results are not production-stable. See `reports/portfolio/portfolio-scheduler-decision.md` and 2026-07-16 reverification.
+`opts.schedulerMode = 'portfolio-experiment'` is offline-only; live Play/Editor/Review/hint discovery use `'legacy'`. Its `pass1Ms`/`pass2Ms`/`pass3Ms` policy is explicitly a **legacy wall-clock scheduler experiment**, useful for historical latency/architecture questions but not machine-independent equal-work evidence. Best published 2026-07-12 variant was **1.51×** legacy with equal solves; a later repair-speed change moved a stress comparison from **0.57×** to **1.45×**, illustrating exactly why elapsed-time thresholds are host/implementation sensitive. New scheduler research should use work quanta rather than extending this ms policy. See `reports/portfolio/portfolio-scheduler-decision.md` and 2026-07-16 reverification.
 
 Tools: `solver:portfolio-report`, `solver:portfolio-replay`, `portfolio-solve-sweep.mjs`. The sweep supports JSONL `--resume`, mechanic filters, baseline/priority ordering, dependency-hashed negative `--attempt-cache`, child `--workers`, and `--race-pool-size`; legacy scheduler required for race pools, which are incompatible with `--node-budget`.
 
@@ -243,7 +245,7 @@ Tools: `solver:portfolio-report`, `solver:portfolio-replay`, `portfolio-solve-sw
 
 ## Work-budget determinism
 
-Solver allocation uses the machine-independent work currency `applyMove + 12 * isConnected`; wall clock is an outer latency/safety deadline and must not size attempt shares or escalation decisions. Internal search loops may also honor technique/node caps, but cross-technique allocation authority is `prep._workMeter` / `workBudget`. See [`solver-budget-determinism.md`](solver-budget-determinism.md).
+Solver allocation's target currency is machine-independent work `applyMove + 12 * isConnected`. The main ladder already divides work, not elapsed milliseconds. A finite inventoried set of additive legacy tiers still derives fresh work from ms-shaped stage fractions; `check:solver-budget-boundaries` prevents that debt from growing while it is migrated. Internal search loops may also honor technique/node caps. See [`solver-budget-determinism.md`](solver-budget-determinism.md).
 
 ## Attraction-diversity pass
 

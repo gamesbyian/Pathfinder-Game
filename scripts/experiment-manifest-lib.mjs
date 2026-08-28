@@ -46,6 +46,12 @@ const REQUIRED = ['schemaVersion', 'experimentId', 'runId', 'solverRef', 'corpus
     'arm', 'solverFlags', 'workflow', 'workflowInputs', 'seeds', 'canonicalWorkBudget', 'wallDeadlineMs', 'profile',
     'instrumentation', 'output'];
 
+export const EXPERIMENT_BUDGET_PROTOCOLS = Object.freeze([
+    'production-additive',
+    'strict-total-work',
+    'technique-local-work',
+]);
+
 const WORKFLOW_REQUIRED_INPUTS = {
     'solver-stress-refresh': [
         'corpus2_budget_ms', 'corpus2_node_budget', 'corpus2_workers', 'enable_flags', 'disable_flags',
@@ -65,6 +71,9 @@ export function validateExperimentManifest(manifest) {
     if (new Set(manifest.levelIds).size !== manifest.levelIds.length) throw new Error('levelIds contains duplicates');
     if (manifest.levelSelectionHash !== levelSelectionHash(manifest.levelIds)) throw new Error('level selection hash mismatch');
     if (!(manifest.canonicalWorkBudget > 0) || !(manifest.wallDeadlineMs > 0)) throw new Error('work/deadline must be positive');
+    if ('budgetProtocol' in manifest && !EXPERIMENT_BUDGET_PROTOCOLS.includes(manifest.budgetProtocol)) {
+        throw new Error(`invalid budgetProtocol ${manifest.budgetProtocol}; expected one of ${EXPERIMENT_BUDGET_PROTOCOLS.join(', ')}`);
+    }
     if (!Array.isArray(manifest.seeds) || manifest.seeds.some(x => !Number.isFinite(x))) throw new Error('seeds must be finite numbers');
     if (!manifest.workflowInputs || typeof manifest.workflowInputs !== 'object' || Array.isArray(manifest.workflowInputs)) {
         throw new Error('workflowInputs must be an object');

@@ -1528,6 +1528,54 @@ test('an explicit workBudget reproduces the same search and bounds the work spen
     assert.equal(spentB, spentA, 'and spend the same work');
 });
 
+test('baseWorkBudget is the preferred alias for legacy workBudget and conflicts fail loudly', async () => {
+    const level = makeLineLevel() as unknown as NormalizedLevel;
+    const legacy = await solveLevel(level, { timeBudgetMs: 600_000, workBudget: 200_000 });
+    const preferred = await solveLevel(level, { timeBudgetMs: 600_000, baseWorkBudget: 200_000 });
+    assert.equal(preferred.ok, legacy.ok);
+    assert.equal(preferred.nodesExpanded, legacy.nodesExpanded);
+    assert.equal(preferred.workSpent, legacy.workSpent);
+    await assert.rejects(
+        solveLevel(level, { timeBudgetMs: 600_000, baseWorkBudget: 200_000, workBudget: 199_999 }),
+        /baseWorkBudget .* legacy workBudget .* disagree/,
+    );
+});
+
+test('a non-binding deadline cannot resize an explicit-work main-ladder trajectory', async () => {
+    // This deliberately exercises the part of the scheduler that is already fully work-denominated.
+    // Additive legacy tiers still have separately-inventoried ms-shaped compatibility debt; when
+    // those are migrated, extend this invariant across the whole production ladder too.
+    const level = makeLineLevel() as unknown as NormalizedLevel;
+    const run = (timeBudgetMs: number) => solveLevel(level, {
+        timeBudgetMs,
+        workBudget: 200_000,
+        disableExtraBudgetPasses: true,
+        attemptBudgetTelemetry: true,
+    });
+    const shortDeadline = await run(60_000);
+    const longDeadline = await run(600_000);
+    const trajectory = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts.map(attempt => ({
+        stageId: attempt.stageId,
+        gateKey: attempt.gateKey,
+        profile: attempt.profile,
+        template: attempt.template,
+        beamWidth: attempt.beamWidth,
+        outcome: attempt.outcome,
+        nodesExpanded: attempt.nodesExpanded,
+        allocatedWorkCeiling: attempt.allocatedWorkCeiling,
+        workSpent: attempt.workSpent,
+    }));
+
+    assert.equal(shortDeadline.deadlineTruncated, undefined);
+    assert.equal(longDeadline.deadlineTruncated, undefined);
+    assert.equal(longDeadline.ok, shortDeadline.ok);
+    assert.deepEqual(longDeadline.solution, shortDeadline.solution);
+    assert.equal(longDeadline.nodesExpanded, shortDeadline.nodesExpanded);
+    assert.equal(longDeadline.workSpent, shortDeadline.workSpent);
+    assert.deepEqual(trajectory(longDeadline), trajectory(shortDeadline),
+        'deadline headroom is latency protection, not a search-allocation input');
+});
+
 test('strictTotalWorkBudget installs one remaining-work cap across every additive path', async () => {
     const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
         const [, , , prep, , , , , , out] = args;

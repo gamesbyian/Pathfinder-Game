@@ -28,6 +28,7 @@
 
 import type { HintCandidateEvent } from './hint-candidate-events.js';
 import { workMeter } from './work-meter.js';
+import { legacyMsToWork } from './budget-units.js';
 import { createState, getNeighbors } from './search-state.js';
 import { AXIS_H, AXIS_V } from './encoding.js';
 import { getAttemptConfigs } from './attempts.js';
@@ -263,9 +264,7 @@ interface FoundEntry {
     seedSalt: number | null;
 }
 
-/** Work units per millisecond for the deprecated ms-shaped compatibility input, mirroring
- * orchestration.ts's DEFAULT_WORK_PER_MS. New callers should pass workBudget directly. */
-const GENERATOR_WORK_PER_MS = 3350;
+/** Deprecated ms-shaped inputs normalize through budget-units.ts's one committed conversion. */
 
 interface RunCtx {
     solverApi: any;
@@ -392,7 +391,7 @@ export async function createHintAblationGenerator(
     // Preferred callers specify work directly. The old ms-shaped option remains only as a
     // compatibility shim and is converted once at this boundary; live host speed never enters.
     const workBudget = options.workBudget == null
-        ? Math.max(1, Math.floor(legacyWallClockDeadlineMs * GENERATOR_WORK_PER_MS))
+        ? legacyMsToWork(legacyWallClockDeadlineMs, 1)
         : Math.max(0, Math.floor(options.workBudget));
     const workCeiling = workMeter.units + workBudget;
 

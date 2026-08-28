@@ -89,6 +89,9 @@ if (!DERIVED_ONLY) {
         missingShards: missing,
         partialShards: partial,
         duplicateCellsRemoved: deduped.duplicatesRemoved,
+        budgetProtocol: 'technique-local-node-depth',
+        equalCostAcrossTechniques: false,
+        costSemantics: 'isolated nodesExpanded is within-technique depth; use canonical workSpent for cross-technique allocation',
         totalCells: allResults.length,
         results: allResults,
     }));

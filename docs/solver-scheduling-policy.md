@@ -58,6 +58,22 @@ For any search: define legal conditional ranges; use stable config IDs; group co
 
 Report coverage versus portfolio cardinality under the same aggregate work envelope, including which rare/exclusive solves disappear as the portfolio shrinks. Charge every reached failed action for its work.
 
+## Budget-model completion prerequisite
+
+The scheduler cannot be coherently repriced while a non-binding wall deadline can still resize deterministic search. The live queue therefore treats budget-model completion as scheduler foundation, not optional architecture cleanup.
+
+Before new production allocation policy is promoted:
+
+1. **Own work explicitly.** `stage-budget.ts` / `BudgetEnvelope` should describe the work actually granted to a stage; wall time is deadline metadata, nodes are local/diagnostic guards.
+2. **Remove hidden cap lifetime.** Replace shared mutable `prep._workCap` inheritance with explicit attempt/stage budget context. Compatibility scopes may bridge the migration, but a prior stage must not be able to donate or starve work accidentally.
+3. **Isolate multi-solve accounting.** Discovery/research sessions must own their work scope rather than consuming a realm-global counter that unrelated solves can advance.
+4. **Price heterogeneous techniques in work.** Keep the existing node census for within-technique depth/censoring analysis, but scheduler cost comparisons require equal-work execution or trustworthy `workSpent` observations.
+5. **Retire ms-derived allocation incrementally.** For each inventoried `timeBudgetMs * fraction` additive tier, first measure/derive its current effective work dose and reproduce that policy with explicit work. Preserve eligibility/order/seed behavior during this migration. Any deliberate repricing is a separate experiment.
+6. **Expand the invariant.** Every migrated stage should join the regression that changing a generously non-binding deadline leaves deterministic search unchanged. The end state is whole-solve deadline independence.
+7. **Keep the ratchet shrinking.** `check:solver-budget-boundaries` may lose legacy allowlist entries as migration proceeds; it must not gain new wall-derived allocation sites.
+
+This prerequisite does **not** require converting production to `strictTotalWorkBudget` wholesale. That switch remains the current experiment mechanism for matched whole-solve envelopes. Production total-work policy is itself a scheduler decision and must earn it through matched evidence.
+
 ## Offline scheduler analysis
 
 Before live reordering, materialize comparable current action/reach/`workSpent` data and build:
@@ -113,11 +129,11 @@ For unsupported/out-of-distribution cases, prefer conservative behavior: baselin
 - `stage-policy.ts`: stable stage/action metadata;
 - `attempts.ts`: candidate definitions/static features;
 - `stage-plan.ts`: eligibility/order/planning;
-- `stage-budget.ts`: shared envelope/tranches/minima;
+- `stage-budget.ts`: authoritative work envelope/tranches/minima plus explicit node/deadline guards;
 - `orchestration.ts`: execution/telemetry feedback, not policy sprawl;
 - `stage-executors.ts`: execute an action without owning global order.
 
-The migration should reduce first-match bundle logic, not add a parallel policy layer.
+The migration should reduce first-match bundle logic, not add a parallel policy layer. Budget-model completion is part of this seam: once a stage's work policy is represented here, orchestration should execute it rather than reconstructing work from milliseconds.
 
 ## Promotion path
 

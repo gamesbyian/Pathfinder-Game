@@ -54,7 +54,12 @@ const results = [];
 if (OUT_FILE) mkdirSync(path.dirname(path.resolve(OUT_FILE)), { recursive: true });
 function writeReport(partial) {
     if (!OUT_FILE) return;
-    writeFileSync(path.resolve(OUT_FILE), JSON.stringify({ shard: SHARD, shards: SHARDS, planFile: PLAN_FILE, workers: WORKERS, partial, results }));
+    writeFileSync(path.resolve(OUT_FILE), JSON.stringify({
+        shard: SHARD, shards: SHARDS, planFile: PLAN_FILE, workers: WORKERS, partial,
+        budgetProtocol: plan.budgetProtocol ?? 'technique-local-node-depth',
+        equalCostAcrossTechniques: plan.equalCostAcrossTechniques ?? false,
+        results,
+    }));
 }
 
 let handledSignal = false;

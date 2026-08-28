@@ -123,9 +123,11 @@ for (const row of tieredRows) {
 
 const report = {
     generatedAt: new Date().toISOString(),
+    evidenceClass: 'legacy-wall-clock-scheduler-replay',
+    decisionBearingForEqualWork: false,
     inputs,
     sources,
-    note: 'Historical replay is an upper-bound expectation from recorded winning-attempt elapsed times only; it does not model scheduler-context effects.',
+    note: 'Historical replay is an upper-bound expectation from recorded winning-attempt elapsed times only; it is host/provenance-sensitive, does not model scheduler-context effects, and is not equal-work evidence.',
     totalWinningAttempts: wins.length,
     simpleCaps,
     tieredPolicy: {

@@ -1,11 +1,12 @@
 # Solver work budgets and determinism
 
-> **Status:** current contract; migration complete.
+> **Status:** current contract; main-ladder allocation migration complete, additive-tier compatibility debt explicitly tracked.
 > **Allocation policy:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md); [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) owns rank and next gate.
+> **Priority:** remaining budget-model completion is active queue item #2 and is a prerequisite to new scheduler repricing policy.
 > **Current budget-depth evidence:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
 > **History:** [`archive/snapshots/solver-budget-determinism-2026-08-20.md`](archive/snapshots/solver-budget-determinism-2026-08-20.md).
 
-Solver allocation uses one machine-independent work currency; wall clock is only an outer latency deadline.
+Solver allocation's canonical currency is machine-independent work. The main ladder is fully work-denominated. A bounded set of historical additive fallback/retry tiers still derives fresh work from ms-shaped stage fractions; those sites are compatibility debt, not the target model, and CI now prevents the set from growing.
 
 ## Work unit
 
@@ -36,12 +37,45 @@ Both counters use the same work unit:
 
 | Field | Role |
 |---|---|
-| `workBudget` | Primary cross-technique machine-independent budget. Pin for CI/A-B/benchmarks/research/reproducible diagnostics. |
-| `timeBudgetMs` | Outer latency/safety deadline; may truncate but must not size attempt shares. |
-| `nodeBudget` | Legacy/diagnostic or technique-specific cap; not portable cross-technique currency. |
-| `strictTotalWorkBudget` | Experiment-only whole-solve ceiling when additive retry/tail tiers must fit one envelope. |
+| `baseWorkBudget` | Preferred API name for the base cross-technique machine-independent allocation. The main ladder divides it; under legacy production semantics additive stages may spend fresh work beyond it. |
+| `workBudget` | Compatibility alias for `baseWorkBudget`, retained for existing workflows/artifacts. Supplying both with different values is an error. |
+| `timeBudgetMs` | Intended role: outer latency/safety deadline. A finite inventory of legacy additive stages still uses ms-shaped fractions as compatibility sizing debt; no new sites are permitted. |
+| `nodeBudget` | Cumulative/technique diagnostic cap; deterministic, but not portable cross-technique cost. Often still acts as the practical whole-level guard under legacy additive semantics. |
+| `strictTotalWorkBudget` | Experiment-only switch that turns the configured `workBudget` into an immutable whole-solve work ceiling. |
 
 If `workBudget` is omitted, ms-shaped callers convert at the run boundary using committed work-per-ms calibration; live host speed never controls allocation.
+
+The compatibility conversion is centralized in `modules/solver/budget-units.ts` as `LEGACY_MS_TO_WORK_RATE`. Do not copy that number into another caller. It is a frozen boundary calibration, not measured host throughput.
+
+### Base work versus total work
+
+The historical name `workBudget` predates the current additive tail. New code may use the clearer `baseWorkBudget` alias; existing workflows/artifacts remain compatible with `workBudget`. In ordinary production mode it means **base allocation**, not necessarily **total work purchased by the whole solve**. Several fallback/retry stages can receive fresh deterministic work after that base pool has been depleted. Consequently:
+
+- `workSpent > workBudget` is legal under legacy production semantics;
+- an equal `workBudget` does not by itself prove equal total treatment cost when additive-stage reach differs;
+- `strictTotalWorkBudget: true` is the current experiment mechanism for a genuine whole-solve work envelope;
+- future scheduler APIs should prefer names such as `baseWorkBudget` and `totalWorkCap` rather than perpetuating this ambiguity.
+
+Changing production to strict-total semantics is decision-bearing and requires matched solve-retention evidence. Renaming/documenting the distinction is not.
+
+### Migration priority
+
+Treat this as active research-enabling infrastructure, not optional cleanup. The live queue's order is authoritative; within its budget-model item, prefer:
+
+1. explicit stage/attempt work ownership and parity;
+2. session-isolated multi-solve accounting;
+3. equal-work execution for scheduler-pricing evidence;
+4. one behavior-preserving ms-derived additive-tier migration at a time;
+5. whole-solve deadline-independence regression once the legacy inventory reaches zero;
+6. only then new fixed-work repricing policy.
+
+Do not combine several additive-tier migrations into one opaque solve-set change. A conversion that changes policy is an experiment and must be evaluated as one.
+
+### Remaining ms-shaped allocation debt
+
+The remaining legacy sites are in additive stage setup inside `orchestration.ts`: repair fallback, attraction-diversity, admissible-order, and promoted retry-stage work pools derived from `timeBudgetMs * stageFraction` before conversion to work. They are deterministic for identical inputs, but they violate the stronger target invariant that a non-binding deadline can change **only latency**, never search allocation.
+
+`scripts/check-solver-budget-boundaries.mjs` records these sites as an allowlist/ratchet. Removing a site is automatically allowed; adding a new one fails CI. Migrate them only through a behavior-preserving representation change or a separately measured production-policy experiment.
 
 ### Clock-shaped compatibility names
 
@@ -87,7 +121,7 @@ For decision-bearing offline work:
 4. compare `workSpent` for cost;
 5. record protocol, commit, flags, corpus, budget.
 
-Equal level/config/seed/work budget with non-binding deadline is deterministic across host speed/load. Remote A/Bs: `solver-typical-budget-baseline.yml` with `deterministic: true`. Binding historical baselines may preserve continuity but are not machine-independent causal evidence.
+For the fully work-denominated main ladder, equal level/config/seed/work allocation with a non-binding deadline is deterministic across host speed/load; a regression test pins that invariant. Whole production solves can still change additive-stage dose when `timeBudgetMs` itself changes because of the inventoried compatibility debt above. Therefore matched experiments must pin BOTH explicit work and the same deadline until those sites are migrated, and must reject `deadlineTruncated`. Remote A/Bs: `solver-typical-budget-baseline.yml` with `deterministic: true`. Binding historical baselines may preserve continuity but are not machine-independent causal evidence.
 
 ## Deadline truncation
 
