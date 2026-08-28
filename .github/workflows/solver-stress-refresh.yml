@@ -17,13 +17,17 @@ on:
   workflow_dispatch:
     inputs:
       corpus2_budget_ms:
-        description: 'Corpus-2 per-level wall budget. Default 24h is intentionally non-binding; node/work budgets are the real ceilings.'
+        description: 'Corpus-2 per-level wall-safety deadline. Default 24h is intentionally non-binding; base node/work allocations can be exceeded by additive tiers unless strict_total_work_budget=true.'
         required: false
         default: '86400000'
       corpus2_node_budget:
         description: 'Corpus-2 cumulative node ceiling per level. Unified with corpus1_node_budget (2026-08-12) -- previously 36000000, a value with no corpus-2-specific justification beyond an old, since-drifted wall-clock ratio; the solver should treat levels identically regardless of which corpus they came from. See corpus1_node_budget''s description for the unification rationale.'
         required: false
         default: '50000000'
+      strict_total_work_budget:
+        description: 'If true, enforce each corpus derived work budget as a true whole-solve ceiling. Default false preserves legacy additive-pass semantics.'
+        required: false
+        default: 'false'
       corpus2_workers:
         description: 'Cross-level worker processes per shard. Default 4 matches current standard public ubuntu-latest runner vCPU count; level-blindness is preserved at any worker count.'
         required: false
@@ -186,12 +190,15 @@ jobs:
           [ -n "${{ inputs.repair_late_probe_node_budget }}" ] && extra+=("--repair-late-probe-node-budget=${{ inputs.repair_late_probe_node_budget }}")
           [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
           work=$(( ${{ inputs.corpus1_node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
           timeout -k 30s --preserve-status "${{ needs.plan.outputs.c1_timeout_min }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus=data/stress/stress-levels.json \
             --levels="pos:${{ steps.range.outputs.c1start }}-${{ steps.range.outputs.c1end }}" \
             --budget-ms="${DEADLINE}" \
             --node-budget="${{ inputs.corpus1_node_budget }}" \
             --work-budget="${work}" \
+            "${strict[@]}" \
             --workers="${{ inputs.corpus1_workers }}" \
             "${extra[@]}" \
             --out="logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.json" \
@@ -216,12 +223,15 @@ jobs:
           [ -n "${{ inputs.repair_late_probe_node_budget }}" ] && extra+=("--repair-late-probe-node-budget=${{ inputs.repair_late_probe_node_budget }}")
           [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
           work=$(( ${{ inputs.corpus2_node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
           timeout -k 30s --preserve-status "${{ needs.plan.outputs.c2_timeout_min }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus=data/stress/stress-levels-random.json \
             --levels="pos:${{ steps.range.outputs.c2start }}-${{ steps.range.outputs.c2end }}" \
             --budget-ms="${DEADLINE}" \
             --node-budget="${{ inputs.corpus2_node_budget }}" \
             --work-budget="${work}" \
+            "${strict[@]}" \
             --workers="${{ inputs.corpus2_workers }}" \
             "${extra[@]}" \
             --out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" \

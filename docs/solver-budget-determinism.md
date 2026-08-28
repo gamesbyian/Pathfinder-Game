@@ -151,6 +151,14 @@ Phase/escalation decisions use work, not elapsed time; cooperative yielding/late
 
 Label units in old/new provenance; never mix nodes and work silently.
 
+## Offline workflow control
+
+The active level-blind GitHub Actions sweep/confirmation workflows expose an opt-in `strict_total_work_budget` input. It defaults to `false` so historical additive-tier semantics remain reproducible. Set it to `true` for decision-bearing matched-work experiments that require the derived work budget to be the true whole-solve envelope. In those workflows, `node_budget` is a base/local allocation guard, not a whole-solve ceiling under legacy additive semantics. See [the 2026-08-28 workflow exposure audit](../reports/2026-08-28-offline-sweep-strict-work-exposure-audit.md).
+
+## Equal-work isolated-action contract
+
+Equal-work census cells are fixed-work experiments, so a finite cell work budget must reach every search family through the cap that family actually checks. The 2026-08-28 EW1 pilot exposed that DFS/beam/repair honored `prep._workCap` while admissible-order/IDA deliberately checked `prep._strictWorkCap` in its hot loop; setting only the former allowed nominal 10M IDA cells to escape into hundreds of millions or billions of work. `technique-census-cell.mjs` now sets both to the same per-attempt ceiling in work-budget mode, with a real-IDA regression test. Corrected run `33156541827` stayed within a small discrete overshoot of 10M for all 2,015 cells. Any future equal-work executor must preserve this family-complete hard-cap contract.
+
 ## Matched-work experiments
 
 Declare whether additive retries/passes are inside the envelope. If treatment can spend extra work, use `strictTotalWorkBudget` or report extra cost. Equal `nodeBudget` does not imply equal work when technique mixes differ.

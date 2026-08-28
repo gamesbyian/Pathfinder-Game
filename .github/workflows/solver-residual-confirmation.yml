@@ -67,8 +67,12 @@ on:
         description: 'Cumulative node ceiling per level, both phases and both arms. This is a per-level STARTING allocation, not a hard per-level cost ceiling: additive fallback/retry tiers can spend several times this much real work beyond it once the main ladder is exhausted (measured 1.5x-467x on a sample; see reports/2026-08-28-additive-tier-participation-audit.md). Pass --strict-total-work-budget for a true whole-solve work cap; this workflow does not do so by default, so it is not a solve-set-preserving substitution here without separate parity evidence.'
         required: false
         default: '50000000'
+      strict_total_work_budget:
+        description: 'If true, enforce the derived work budget as a true whole-solve ceiling. Default false preserves legacy additive-pass semantics.'
+        required: false
+        default: 'false'
       budget_ms:
-        description: 'Per-level wall budget. Default 24h is intentionally non-binding; node budget is the real ceiling.'
+        description: 'Per-level wall-safety deadline. Default 24h is intentionally non-binding; allocation is governed by node/work inputs, with additive tiers unless strict_total_work_budget=true.'
         required: false
         default: '86400000'
       workers:
@@ -227,12 +231,15 @@ jobs:
           set +e
           mkdir -p logs/solver-residual-confirmation
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
           timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus="pool-download/${{ inputs.cohort_id }}-pool.json" \
             --levels="${{ matrix.shard.levels }}" \
             --budget-ms="${DEADLINE}" \
             --node-budget="${{ inputs.node_budget }}" \
             --work-budget="${work}" \
+            "${strict[@]}" \
             --workers="${{ inputs.workers }}" \
             --out="logs/solver-residual-confirmation/phase1-batch-${{ matrix.shard.idx }}.json" \
             --summary-out="logs/solver-residual-confirmation/phase1-batch-${{ matrix.shard.idx }}-summary.md"
@@ -466,12 +473,15 @@ jobs:
             exit 0
           fi
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
           timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus="residual-download/${{ inputs.cohort_id }}-residual.json" \
             --levels="${{ matrix.shard.levels }}" \
             --budget-ms="${DEADLINE}" \
             --node-budget="${{ inputs.node_budget }}" \
             --work-budget="${work}" \
+            "${strict[@]}" \
             --workers="${{ inputs.workers }}" \
             "${extra[@]}" \
             --out="logs/solver-residual-confirmation/phase2-batch-${{ matrix.shard.idx }}.json" \

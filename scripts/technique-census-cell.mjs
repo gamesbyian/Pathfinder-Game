@@ -118,7 +118,17 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
                 // no Infinity-guard is needed on this assignment. Node mode is completely unchanged:
                 // it still bounds via runAttempt's own nodeBudget param, exactly as before this cell
                 // gained work-budget support.
-                if (useWork) prep._workCap = prep._workMeter.units + remaining;
+                if (useWork) {
+                    const attemptWorkCap = prep._workMeter.units + remaining;
+                    prep._workCap = attemptWorkCap;
+                    // admissible-order / ida search intentionally ignores the historical soft
+                    // _workCap and only obeys _strictWorkCap inside its hot loop. Equal-work census
+                    // cells are decision-bearing fixed-work experiments, so both caps must describe
+                    // the same per-attempt remainder. Without this, IDA could overshoot a nominal
+                    // 10M EW1 cell into hundreds of millions/billions of work while DFS/beam/repair
+                    // stopped correctly, destroying cross-family comparability.
+                    prep._strictWorkCap = attemptWorkCap;
+                }
                 const r = await runAttempt(gateKey, level, prep, config, cell.budgetMs, Date.now(), null, useWork ? Infinity : remaining);
                 attempts.push({ configKey: key, gateKey, ...r.attempt });
                 if (r.path) { solution = r.path; winningKey = key; winningGate = gateKey; break outer; }
