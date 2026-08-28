@@ -26,6 +26,7 @@
 # merging newly-solved ids into the official baseline is a separate, explicit step (see
 # scripts/patch-benchmark-with-sweep.mjs) run after reviewing a round's results.
 name: Solver high-budget sweep (unsolved-only, both corpora)
+run-name: "High-budget unsolved · node=${{ inputs.node_budget }} · workers=${{ inputs.workers }}"
 
 on:
   workflow_dispatch:
@@ -368,6 +369,9 @@ jobs:
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json" \
             --include="reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json" \
+            --shards-expected="${{ needs.plan.outputs.shard_count }}" \
+            --shards-observed="$(find logs/solver-highbudget-sweep -maxdepth 1 -name 'corpus2-batch-*.json' | wc -l | tr -d ' ')" \
+            --provenance-out="reports/stress/highbudget-unsolved-sweep-source-run-${{ github.run_id }}.json" \
             --source-artifact="committed high-budget combined reports"
 
       - name: Upload standard solver sweep result
