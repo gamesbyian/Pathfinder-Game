@@ -11,7 +11,7 @@ declare module './types.js' {
         id: string;
         /** null means the true no-soft-tie-break admissible ordering; DFS ignores null policies. */
         profile: ScoringProfile | null;
-        template?: StructuralTemplate | null;
+        orderingBias?: StructuralOrderingBias | null;
     }
 
     export interface OrderingResearchRecord {
