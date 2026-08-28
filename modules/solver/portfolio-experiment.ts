@@ -1,5 +1,10 @@
+// LEGACY WALL-CLOCK SCHEDULER EXPERIMENT.
 // Shared fast-portfolio scheduler experiment definition. Runtime orchestration and offline
 // replay/report tools consume the same tier thresholds and config sets from this module.
+//
+// Its pass caps are intentionally historical milliseconds. That makes this useful for latency/
+// archaeology questions but NOT machine-independent equal-work scheduler evidence. New scheduler
+// research should use canonical work; do not add another ms-shaped policy here.
 
 /**
  * @typedef {Readonly<{
