@@ -181,6 +181,23 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="artifact-staging/reports/stress" \
+            --source-artifact="atlas-sweep-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Merge new/updated atlas files into the working tree and commit
         shell: bash
         run: |
