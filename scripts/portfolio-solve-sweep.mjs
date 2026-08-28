@@ -689,7 +689,7 @@ if (workerCount <= 1) {
                     // run combines the two.
                     ablation: solveOpts.ablation, // race.mjs reads levelOpts.ablation; must be threaded explicitly here
                 })
-                : await Solver.solve(getPrepared(levelNumber), solveOptsFor(solveOpts, raw?.id));
+                : await Solver.solveLevel(getPrepared(levelNumber), solveOptsFor(solveOpts, raw?.id));
             attachRefereeValid(levelNumber, result);
         } catch (err) {
             // One bad level (a solver exception, not just a failed-to-solve result) must not take
