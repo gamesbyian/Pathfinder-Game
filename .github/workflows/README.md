@@ -57,7 +57,7 @@ All three share `scripts/plan-ab-corpus-shards.mjs` for the mandatory Corpus 1 +
 ## Technique and method sweeps
 
 - `technique-census.yml` — isolated technique census. `workers` defaults to 4; outer layout remains 120 shards / 20 lanes. Referee-valid discoveries are always retained; there is no hint-retention dispatch toggle.
-- `method-probe-sweep.yml` — isolated method/config probe. Default 60 outer shards / 20 lanes and 4 disjoint probe processes per runner. Each runner bundles once; the combiner validates metadata, duplicate IDs, and missing worker outputs.
+- `method-probe-sweep.yml` — isolated method/config probe. Default 60 outer shards / 20 lanes and 4 disjoint probe processes per runner. Each runner bundles once; the combiner validates metadata, duplicate IDs, missing worker outputs, and deadline-truncated work-bounded rows. Set `work_budget` for decision-bearing/equal-cost research; blank preserves the legacy wall+node probe semantics.
 
 ## CP-SAT / reference-model work
 
