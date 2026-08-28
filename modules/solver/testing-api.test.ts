@@ -28,7 +28,7 @@ function makeLevel() {
 test('SOLVER_TESTING_API exposes stable analysis helpers', () => {
     assert.equal(typeof SOLVER_TESTING_API.normalizeRawLevel, 'function');
     assert.equal(typeof SOLVER_TESTING_API.buildDistMap, 'function');
-    assert.equal(typeof SOLVER_TESTING_API.detectArchetype, 'function');
+    assert.equal(typeof SOLVER_TESTING_API.classifyRoutingRegime, 'function');
     assert.equal(typeof SOLVER_TESTING_API.getAttemptConfigs, 'function');
     assert.equal(typeof SOLVER_TESTING_API.prepLevel, 'function');
     assert.equal(typeof SOLVER_TESTING_API.beamSearchFromGate, 'function');
@@ -53,7 +53,7 @@ test('createSolverTestingApi returns an isolated frozen helper facade', () => {
 
 test('Solver instance no longer exposes the deprecated underscore aliases', () => {
     const solver = createSolver();
-    for (const prop of ['_normalizeRawLevel', '_buildDistMap', '_detectArchetype', '_getAttemptConfigs', '_prepLevel']) {
+    for (const prop of ['_normalizeRawLevel', '_buildDistMap', '_classifyRoutingRegime', '_getAttemptConfigs', '_prepLevel']) {
         assert.equal((solver as any)[prop], undefined, `${prop} was removed — use SOLVER_TESTING_API instead`);
     }
 });
@@ -65,6 +65,6 @@ test('testing API helpers can prepare and inspect a simple level', () => {
     // mean "unreachable" and prepLevel can skip a 1M-entry fill per map (see distance.ts).
     assert.equal(getDistanceFromArray(prep.goalDistArr, PACK(2, 0), prep.gridW), 0);
     assert.equal(SOLVER_TESTING_API.buildDistMap(level, [PACK(0, 0)]).get(PACK(2, 0)), 2);
-    assert.equal(typeof SOLVER_TESTING_API.detectArchetype(level), 'string');
+    assert.equal(typeof SOLVER_TESTING_API.classifyRoutingRegime(level), 'string');
     assert.equal(Array.isArray(SOLVER_TESTING_API.getAttemptConfigs(level)), true);
 });
