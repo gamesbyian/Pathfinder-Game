@@ -27,7 +27,7 @@
 // carries its Sets/Maps intact.
 //
 // solve() accepts the FULL SolveOpts the direct/on-thread solver does (fixed 2026-08-20 — it used
-// to silently forward only timeBudgetMs/yieldFn, dropping ablation/nodeBudget/workBudget/
+// to silently forward only timeBudgetMs/yieldFn, dropping ablation/nodeBudget/baseWorkBudget/workBudget/
 // disableExtraBudgetPasses/lifecycleTelemetry/every *BudgetFractionOverride field/etc., breaking
 // the "drop-in swap" promise above for any caller relying on them). timeBudgetMs and yieldFn stay
 // specially handled (a dedicated postMessage field and client-side polling, respectively) since
@@ -86,7 +86,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
             // other function-valued option — structured clone throws a DataCloneError on a
             // function rather than silently dropping it, and a function-shaped option (like the
             // test-only attemptSearchForTesting) wouldn't mean anything across a real worker
-            // boundary anyway. Everything else (ablation, nodeBudget, workBudget,
+            // boundary anyway. Everything else (ablation, nodeBudget, baseWorkBudget/workBudget,
             // disableExtraBudgetPasses, lifecycleTelemetry, every *BudgetFractionOverride field,
             // primeAttempt, portfolioExperiment, schedulerMode, ...) is plain data and forwarded
             // as-is — see this file's own header comment for why this exists.
