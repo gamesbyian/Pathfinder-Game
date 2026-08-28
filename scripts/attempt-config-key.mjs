@@ -10,21 +10,21 @@ import {
 } from '../modules/solver/attempt-identity.mjs';
 
 /** Dependency injection keeps this plain .mjs usable from bundled and TS-source contexts. */
-export function makeAttemptConfigKeyParser({ TEMPLATES, POLICY_PROFILES, attemptConfigKey }) {
+export function makeAttemptConfigKeyParser({ STRUCTURAL_ORDERING_BIASES, SCORING_PROFILES, attemptConfigKey }) {
     return function parseAttemptConfigKey(key) {
         const fields = parseAttemptIdentityKey(key);
-        if (!fields.admissibleOrder && !POLICY_PROFILES[fields.profileName])
-            throw new Error('"' + key + '" references unknown profile "' + fields.profileName + '". Run with --list-profiles for the vocabulary.');
-        if (fields.admissibleOrder && !fields.admissibleOrderNoTieBreak && !POLICY_PROFILES[fields.profileName])
-            throw new Error('"' + key + '" references unknown admissible-order tie-break profile "' + fields.profileName + '". Run with --list-profiles or use tieBreak=none.');
-        if (fields.templateId && !TEMPLATES[fields.templateId])
-            throw new Error('"' + key + '" references unknown structural bias "' + fields.templateId + '".');
+        if (!fields.admissibleOrder && !SCORING_PROFILES[fields.scoringProfileId])
+            throw new Error('"' + key + '" references unknown profile "' + fields.scoringProfileId + '". Run with --list-profiles for the vocabulary.');
+        if (fields.admissibleOrder && !fields.admissibleOrderNoTieBreak && !SCORING_PROFILES[fields.scoringProfileId])
+            throw new Error('"' + key + '" references unknown admissible-order tie-break profile "' + fields.scoringProfileId + '". Run with --list-profiles or use tieBreak=none.');
+        if (fields.orderingBiasId && !STRUCTURAL_ORDERING_BIASES[fields.orderingBiasId])
+            throw new Error('"' + key + '" references unknown structural bias "' + fields.orderingBiasId + '".');
 
         const config = {
-            profileName: fields.profileName,
-            template: fields.templateId ? TEMPLATES[fields.templateId] : null,
+            scoringProfileId: fields.scoringProfileId,
+            template: fields.orderingBiasId ? STRUCTURAL_ORDERING_BIASES[fields.orderingBiasId] : null,
             ...(fields.beamWidth ? { beamWidth: fields.beamWidth } : {}),
-            ...(fields.diverseBeam ? { diverseBeam: true } : {}),
+            ...(fields.mechanicBucketRetention ? { mechanicBucketRetention: true } : {}),
             ...(fields.repair ? { repair: true } : {}),
             ...(fields.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
             ...(fields.repairTurnBiased ? { repairTurnBiased: true } : {}),
