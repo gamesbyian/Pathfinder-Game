@@ -1,4 +1,4 @@
-import { detectArchetype, getNavigableDensity } from './archetype.js';
+import { classifyRoutingRegime, getRequiredPathCoverageRatio } from './routing regime.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER, TEMPLATE_CONFIG_KEYS, TEMPLATES } from './policy.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, AttemptConfig, StructuralTemplate } from './types.js';
@@ -16,7 +16,7 @@ const POLICY = {
     /** portal pairs ≥ this → objectiveFirst guides the beam through portal transitions better than pure harvest. */
     PORTAL_DENSE_PAIRS: 2,
     /** navDensity ≥ this is near-Hamiltonian: beams collapse over the long dense walk, so DFS-perimeter leads. */
-    NEAR_HAMILTONIAN_DENSITY: 0.82,
+    NEAR_HAMILTONIAN_COVERAGE_THRESHOLD: 0.82,
     /** reqLen ≥ this is a "long" path (a perimeter beam needs seconds to walk it). */
     LONG_PATH_REQLEN: 90,
     /** gate count ≥ this can starve a long-path beam via per-gate budget division (→ give it a floor). */
@@ -55,8 +55,8 @@ const POLICY = {
  * Beam widths, narrowest→widest. A narrow beam converges fast when the level allows it; WIDE is
  * the fallback that trades time for breadth. The must-cross+flipper-heavy rule below used to walk
  * WIDE→WIDER(15000)→WIDEST(50000, full-budget floor), but a dedicated isolated run proved
- * width-50000 *naturally exhausts* (not budget-cut) with zero solves on the exact archetype it
- * was built for (see data/stress/README.md's "beam search cannot solve the S031/S043 archetype at any
+ * width-50000 *naturally exhausts* (not budget-cut) with zero solves on the exact routing regime it
+ * was built for (see data/stress/README.md's "beam search cannot solve the S031/S043 routing regime at any
  * width" finding) — beam breadth was never the bottleneck for this cluster, and the iterated-
  * local-search repair fallback has since superseded it entirely (now catching every level that
  * currently matches this rule via its own early probe, before the main loop even runs). WIDER/
@@ -68,8 +68,8 @@ const BEAM = { STANDARD: 2000, WIDE: 5000 } as const;
 
 /** The level features the attempt policy branches on (extracted once; the policy reads nothing else). */
 interface LevelFeatures {
-    arch: string;
-    navDensity: number;
+    routingRegime: string;
+    requiredPathCoverageRatio: number;
     reqInt: number;
     reqLen: number;
     gates: number;
@@ -82,9 +82,9 @@ interface LevelFeatures {
 
 export function extractFeatures(level: NormalizedLevel): LevelFeatures {
     return {
-        arch: detectArchetype(level),
-        // Walkable density: excludes blocks/geese/false-goals/gates — same formula as detectArchetype.
-        navDensity: getNavigableDensity(level),
+        routingRegime: classifyRoutingRegime(level),
+        // Required path coverage uses the historical non-gate path-cell denominator.
+        requiredPathCoverageRatio: getRequiredPathCoverageRatio(level),
         reqInt: level.reqInt,
         reqLen: level.reqLen,
         gates: level.gateKeys?.length ?? 0,
@@ -128,8 +128,8 @@ function mediumHighIntDfsOrder(f: LevelFeatures): AttemptConfig[] {
     return [dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW), dfs('objectiveFirst'), dfs('intersectionHarvest'), dfs('knotBuilder')];
 }
 
-const isHighInt = (f: LevelFeatures) => f.arch === 'high-intersection-burden';
-const isMustCross = (f: LevelFeatures) => f.arch === 'must-cross-heavy';
+const isHighInt = (f: LevelFeatures) => f.routingRegime === 'intersection-heavy';
+const isMustCross = (f: LevelFeatures) => f.routingRegime === 'must-cross-heavy';
 /** Shared with getAttemptConfigs's STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE application below,
  *  so the ablation-gated addition can never drift from the rule it extends — see that flag's own
  *  comment for why this rule specifically (not its must-cross-heavy siblings) was chosen. */
@@ -154,7 +154,7 @@ const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= PO
  *  the available budget to converge), confirmed by repairSearchFromGate solving two previously
  *  ~2x-budget-short mechanism-free levels in under a second each, dramatically faster than DFS's
  *  own ~28-40s. Reuses the same named VERY_HIGH_REQINT threshold the "wide beam first" rule
- *  above already uses for this archetype/difficulty regime — not a threshold invented for these
+ *  above already uses for this routing/difficulty regime — not a threshold invented for these
  *  two levels specifically. Purely additive and risk-free for every other level exactly as the
  *  must-cross/must-pass clause is: repair only ever runs after the entire existing bundle has
  *  already failed, so a level that solves via any earlier attempt is completely unaffected.
@@ -164,7 +164,7 @@ const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= PO
  *  main loop (`repairConfigs.length > 0` is its own eligibility check, driven directly by this
  *  function). A level that never solves via repair still pays the probe's full bounded node cost
  *  every time — `REPAIR_PROBE_ORDINARY_NODE_BUDGET`'s own comment documents ~10.7s of measured
- *  dead-search overhead on one such level. `docs/solver-optimization-current-queue.md` Priority 7's
+ *  dead-search overhead on one such level. `docs/solver-optimization-workstreams.md` Priority 7's
  *  2026-08-22 follow-up mining pass found the CURRENT (narrow) gate already taxes more levels than
  *  it helps (48 fast-solving vs 13 repair-needing, full-corpus scan) and left widening this gate to
  *  cover `portal-heavy` and the rest of `high-intersection-burden` (55 more genuinely-gapped rows)
@@ -172,14 +172,14 @@ const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= PO
  *  `solver-future-work.md`'s "repair-fallback gate widening" entry. `STRATEGY_REPAIR_FALLBACK_GATE_WIDEN`
  *  (default OFF, ablation-config.ts) below is that experiment's gate: OFF reproduces this function's
  *  pre-2026-08-23 behavior byte-for-byte; ON adds unconditional `isHighInt(f)` (dropping the
- *  VERY_HIGH_REQINT floor) and `f.arch === 'portal-heavy'`. **CLOSED NEGATIVE 2026-08-23:**
- *  population-scale GHA A/B (562-level sample, `solver-archetype-sample-ab.yml`) found 0 gains, 2
+ *  VERY_HIGH_REQINT floor) and `f.routingRegime === 'multi-portal'`. **CLOSED NEGATIVE 2026-08-23:**
+ *  population-scale GHA A/B (562-level sample, `solver-routing-regime-sample-ab.yml`) found 0 gains, 2
  *  losses (`R01944`, `R02474`) — see `docs/solver-opt-in-experiment-ledger.md`. Keep default OFF;
  *  do not repeat this unchanged broad form. */
 const needsRepairFallback = (f: LevelFeatures, cfg: AblationConfig | null = null): boolean =>
     (f.mustCross >= POLICY.REPAIR_MC_MIN && f.mustPass >= POLICY.REPAIR_MP_MIN)
     || (isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT)
-    || (!!(cfg && cfg.STRATEGY_REPAIR_FALLBACK_GATE_WIDEN === true) && (isHighInt(f) || f.arch === 'portal-heavy'));
+    || (!!(cfg && cfg.STRATEGY_REPAIR_FALLBACK_GATE_WIDEN === true) && (isHighInt(f) || f.routingRegime === 'multi-portal'));
 // Exported for orchestration.ts's STRATEGY_REPAIR_LATE_PROBE tier, which needs to build a plain
 // repair AttemptConfig itself when repairConfigs is empty (needsRepairFallback was false) — see
 // that tier's own comment.
@@ -212,14 +212,14 @@ const repairTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', t
  *  before that same-day change), then the 3 lower-yield tie-break profiles ('mustCrossFirst',
  *  'intersectionHarvest', 'nearClosureRescue', a handful each from a full-corpus GitHub Actions
  *  sweep). A first version of this list gave every entry ONE combined budget total (the
- *  attraction-diversity pass's shared-rerun shape), which starved 'default' below the full,
+ *  attraction-diversity pass's shared-rerun shape), which starved 'general' below the full,
  *  unshared per-entry budget every validated solve actually used (method-probe.mjs's standalone
  *  `--only=ida:<key>` runs, never multiple entries sharing one call) — fixed by giving each entry
  *  its own sequential sub-pass instead (see orchestration.ts's call site).
  *
  *  The remaining 8 PROFILE_ORDER entries scored 0 hits on local sampling and were never validated at
  *  full-corpus scale — left out until that validation exists. Unconditional (not feature-gated): the
- *  validated wins span multiple archetypes with no single predictive feature found yet, mirroring
+ *  validated wins span multiple routing regimes with no single predictive feature found yet, mirroring
  *  ATTRACTION_DIVERSITY_CANDIDATE_FLAGS's own "no shared structural predictor found" reasoning above.
  *  Gated only by ablation flag STRATEGY_ADMISSIBLE_ORDER (default-on — absent/null cfg enables it,
  *  matching every other stable strategy flag's polarity). */
@@ -272,7 +272,7 @@ function predictLikelyBiasedRepairTechnique(f: LevelFeatures): 'mustTurnBiased' 
  *  rerun of the main-loop ladder with these flags off, own separate small budget, only ever run
  *  after the entire normal ladder AND repair fallback have already failed, so it costs nothing on
  *  any level that solves earlier). Not gated by level features (unlike needsRepairFallback) — the
- *  5 known fragile cases span 4 different archetypes with no shared structural predictor found yet
+ *  5 known fragile cases span 4 different routing regimes with no shared structural predictor found yet
  *  (same report), so an unconditional last-resort tier is the defensible starting point; narrow it
  *  to a feature gate once/if a real one is found. */
 export const ATTRACTION_DIVERSITY_CANDIDATE_FLAGS = ['SCORE_GOAL_ATTRACTION'] as const;
@@ -296,12 +296,12 @@ interface PolicyRule {
 const ATTEMPT_POLICY: PolicyRule[] = [
     {
         why: 'near-closure: near-loop, goal attraction dominates — closure/harvest profiles first',
-        when: f => f.arch === 'near-closure',
+        when: f => f.routingRegime === 'sparse-low-intersection',
         build: () => profilesFirst(['nearClosureRescue', 'harvestThenFinish', 'finishFirst', 'perimeterSweep']),
     },
     {
         // Must-cross-threaded levels: the diverse beams are the ones that actually solve this
-        // archetype (the plain WIDE beams never do — stress-corpus finding, same reasoning as
+        // routing regime (the plain WIDE beams never do — stress-corpus finding, same reasoning as
         // the non-portal sibling rule below) — put them first so the 0.35/0.25 minBudgetFraction
         // floors are computed against the full remaining budget instead of being squeezed by two
         // non-diverse beams that each burn a full even share first. Mirrors the shipped
@@ -323,7 +323,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             dfs('objectiveFirst'), dfs('intersectionHarvest'),
             // Cross-referencing the 2026-08-20 technique census (run 32240161854) against the
             // 2026-08-21 capability run (32526927206) surfaced a residual beam-routing gap on this
-            // archetype (docs/solver-optimization-current-queue.md Priority 7): this rule offered no
+            // routing regime (docs/solver-optimization-workstreams.md): this rule offered no
             // perimeter beam at all, and `beam:perimeterSweep/perimeterCCW@beam2000` was the cheap
             // (sub-200K-node) isolated-technique winner on several still-unsolved levels here. Trailing
             // placement (not leading) for the same protected-late-reserve reason documented on the
@@ -342,7 +342,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
     },
     {
         // Must-cross-threaded levels: the diverse beams are the ones that actually solve this
-        // archetype (the plain WIDE beams never do — stress-corpus finding) — put them first so
+        // routing regime (the plain WIDE beams never do — stress-corpus finding) — put them first so
         // the 0.35/0.25 minBudgetFraction floors are computed against the full remaining budget
         // instead of being squeezed by two non-diverse beams that each burn a full even share first.
         why: 'very-high reqInt, non-portal: intersectionHarvest beam wins directly, DFS fallbacks follow',
@@ -370,24 +370,24 @@ const ATTEMPT_POLICY: PolicyRule[] = [
     },
     {
         why: 'near-Hamiltonian: beams collapse over the long dense walk — DFS perimeter (both directions) leads',
-        when: f => isHighInt(f) && f.navDensity >= POLICY.NEAR_HAMILTONIAN_DENSITY,
+        when: f => isHighInt(f) && f.requiredPathCoverageRatio >= POLICY.NEAR_HAMILTONIAN_COVERAGE_THRESHOLD,
         build: () => [
             dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW),
             dfs('objectiveFirst'), dfs('intersectionHarvest'), dfs('knotBuilder'),
             beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
             // Cross-referencing the 2026-08-20 census against the 2026-08-21 capability run
-            // (docs/solver-optimization-current-queue.md Priority 7) found this rule offers only
+            // (docs/solver-optimization-workstreams.md) found this rule offers only
             // perimeter beams — objectiveFirst/intersectionHarvest appear only in DFS form here, and
             // their WIDE beam counterparts were the cheap isolated-technique winner on several
-            // still-unsolved levels of this archetype. Trailing, protected-reserve placement — same
+            // still-unsolved levels of this routing regime. Trailing, protected-reserve placement — same
             // reasoning as every other beam-added-here fix in this file: costs nothing where the DFS/
             // perimeter-beam attempts above already win, only reached where they exhaust first.
             beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE),
-            // Follow-up (2026-08-22 mining pass, docs/solver-optimization-current-queue.md
+            // Follow-up (2026-08-22 mining pass, docs/solver-optimization-workstreams.md
             // Priority 7): this rule offers `sideCommitment` nowhere — neither as DFS nor beam —
-            // unlike the default archetype rules, which both include it. `dfs:perimeterSweep/
+            // unlike the default routing regime rules, which both include it. `dfs:perimeterSweep/
             // sideCommitment` was independently the cheap-to-moderate isolated winner on multiple
-            // still-unsolved levels of this archetype (R02858, R03226, R02903), the single best-
+            // still-unsolved levels of this routing regime (R02858, R03226, R02903), the single best-
             // coverage candidate technique found for this rule. Trailing, protected-reserve
             // placement — lands in the 5th slot the MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT 4->5
             // increase opened up, so it adds coverage without evicting anything protected before
@@ -411,10 +411,10 @@ const ATTEMPT_POLICY: PolicyRule[] = [
                 beam('objectiveFirst', BEAM.STANDARD),
                 ...mediumHighIntDfsOrder(f),
                 // Cross-referencing the 2026-08-20 census against the 2026-08-21 capability run
-                // (docs/solver-optimization-current-queue.md Priority 7): this catch-all only offered
+                // (docs/solver-optimization-workstreams.md): this catch-all only offered
                 // STANDARD-width intersectionHarvest/objectiveFirst beams, but their WIDE counterparts
                 // were independently the cheap isolated-technique winner (well under 1M nodes) on
-                // several still-unsolved levels of this archetype — a genuinely different technique
+                // several still-unsolved levels of this routing regime — a genuinely different technique
                 // from the STANDARD beams above, not a retry of them. Trailing, protected-reserve
                 // placement (same reasoning as every other beam-added-here fix in this file): reached
                 // only after the STANDARD beams and DFS fallbacks above have already exhausted.
@@ -426,7 +426,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // Beam added here too (technique census, run 32240161854 — docs/solver-optimization-current-
         // queue.md Priority 7): this turned out to be the DOMINANT contributor to the beam-routing
         // gap (43 of 69 zero-beam oracle-union levels, vs. 26 across the two sibling default rules
-        // fixed above) — profilesFirst() built this archetype's list purely from DFS profiles and
+        // fixed above) — profilesFirst() built this routing regime's list purely from DFS profiles and
         // templates too, with no beam offered at all. Placed as the LAST two configs deliberately
         // (not first): mainConfigs' last MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (stage-budget.ts, 5)
         // entries get a protected node-budget reserve regardless of what earlier configs consume, so
@@ -434,17 +434,17 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // their full allocated time without concluding) while costing nothing on already-solving
         // levels — the main loop exits on first success, so an already-fast template/profile win
         // never even reaches these trailing beam configs. A first attempt at leading with beam
-        // instead recovered the same levels but cost every already-solving level in this archetype
+        // instead recovered the same levels but cost every already-solving level in this routing regime
         // 1-6+ seconds of needless beam search first (measured on the published corpus: +94% total
         // wall time, 66/160 levels meaningfully slower) — reverted in favor of this placement.
-        // Follow-up (technique census, run 32240161854 — docs/solver-optimization-current-queue.md
+        // Follow-up (technique census, run 32240161854 — docs/solver-optimization-workstreams.md
         // Priority 7): objectiveFirst/intersectionHarvest WIDE alone left a further gap on THIS
-        // archetype specifically — `beam:perimeterSweep/perimeterCW@beam2000` and its CCW sibling are
-        // each independently the cheap census winner on more of this archetype's oracle-union
+        // routing regime specifically — `beam:perimeterSweep/perimeterCW@beam2000` and its CCW sibling are
+        // each independently the cheap census winner on more of this routing regime's oracle-union
         // population than either WIDE config. Added at the same trailing position for the same
         // late-reserve-protection reason.
         why: 'portal-heavy: portal-transfer profiles, remaining profiles/templates, beams last (protected reserve slice)',
-        when: f => f.arch === 'portal-heavy',
+        when: f => f.routingRegime === 'multi-portal',
         build: () => [
             dfs('portalFirstTransfer'), dfs('portalCommitted'),
             ...PROFILE_ORDER.filter(p => p !== 'portalFirstTransfer' && p !== 'portalCommitted').map(p => dfs(p)),
@@ -454,17 +454,17 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         ],
     },
     {
-        why: 'must-cross + flipper-heavy with many objectives: diverse beam, then DFS fallbacks (see BEAM comment above — wider tiers removed, proven not to help this archetype)',
+        why: 'must-cross + flipper-heavy with many objectives: diverse beam, then DFS fallbacks (see BEAM comment above — wider tiers removed, proven not to help this routing regime)',
         when: isMustCrossFlipperHeavy,
         build: () => [
             // Diverse beam buckets candidates by (flipperUsedMask, mustCrossMask) so all valid flipper
             // orderings stay alive. The repair fallback (attempts.ts's needsRepairFallback, always
             // present here — this rule's predicate implies it) now solves nearly everything in this
-            // archetype via its own early probe before this main loop even runs.
+            // routing regime via its own early probe before this main loop even runs.
             beam('intersectionHarvest', BEAM.WIDE, null, { diverseBeam: true }),
             dfs('objectiveFirst'), dfs('intersectionHarvest'),
             // Cross-referencing the 2026-08-20 technique census against the 2026-08-21 capability
-            // run (docs/solver-optimization-current-queue.md Priority 7) found this rule offers no
+            // run (docs/solver-optimization-workstreams.md) found this rule offers no
             // perimeter beam at all, unlike every sibling must-cross rule — R02515's cheap
             // (120,635-node) isolated win here was perimeterSweep/perimeterCW@beam2000. Trailing,
             // protected-reserve placement, same reasoning as the other beam-added-here fixes in this
@@ -485,7 +485,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // default/combo must-cross rules below — R02788's cheap (1,483,636-node) isolated win
             // here was plain dfs:perimeterSweep/perimeterCW. Trailing, protected-reserve placement.
             dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW),
-            // Follow-up (docs/solver-optimization-current-queue.md Priority 7 / solver-future-work.md
+            // Follow-up (docs/solver-optimization-workstreams.md / solver-future-work.md
             // "must-cross-heavy diverse-beam gaps"): this rule never offers a diverse WIDE beam at all
             // (mcDiverseThread isn't used here) — R02299's cheap (281,990-node) isolated win was
             // beam:objectiveFirst@beam5000(diverse). Previously left open because this rule's
@@ -525,12 +525,12 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             dfs('mustCrossFirst'), dfs('objectiveFirst'), dfs('harvestThenFinish'),
             beam('perimeterSweep', BEAM.STANDARD, perimeterCW),
             // Same census cross-reference as the flipper-heavy/must-pass-heavy must-cross rules
-            // above (docs/solver-optimization-current-queue.md Priority 7): this catch-all offers
-            // perimeterCW but never perimeterCCW, unlike most other archetype rules that offer both
+            // above (docs/solver-optimization-workstreams.md): this catch-all offers
+            // perimeterCW but never perimeterCCW, unlike most other routing regime rules that offer both
             // directions — R02131's cheap (106,547-node) isolated win here was
             // perimeterSweep/perimeterCCW@beam2000. Trailing, protected-reserve placement.
             beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
-            // Follow-up (docs/solver-optimization-current-queue.md Priority 7 / solver-future-work.md
+            // Follow-up (docs/solver-optimization-workstreams.md / solver-future-work.md
             // "must-cross-heavy diverse-beam gaps"): this catch-all never offers a diverse WIDE beam
             // either (mcDiverseThread isn't used here) — R02159's cheap (578,428-node) isolated win
             // was beam:intersectionHarvest@beam5000(diverse). Previously left open for the same
@@ -562,13 +562,13 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // success, so an already-fast template/profile win never even reaches these trailing beam
         // configs. Two earlier placements were tried and reverted: right after the 4 templates (beam
         // never got a real node share, 0/25 sampled recoveries) and leading the whole list (recovered
-        // levels, but cost every already-solving level in this archetype 1-6+ seconds of needless
+        // levels, but cost every already-solving level in this routing regime 1-6+ seconds of needless
         // beam search first — measured on the published corpus: +94% total wall time, 66/160 levels
         // meaningfully slower).
-        // Follow-up (technique census, run 32240161854 — docs/solver-optimization-current-queue.md
+        // Follow-up (technique census, run 32240161854 — docs/solver-optimization-workstreams.md
         // Priority 7): same additional gap as the portal-heavy rule's own follow-up comment —
         // beam:perimeterSweep/perimeterCW(CCW)@beam2000 is independently the cheap census winner on
-        // more of this archetype's oracle-union population than the WIDE configs alone reach.
+        // more of this routing regime's oracle-union population than the WIDE configs alone reach.
         why: 'default, no must-pass: CCW template before CW (open grids where CW times out), then profiles, beams last (protected reserve slice)',
         when: f => f.mustPass === 0,
         build: () => [
@@ -600,16 +600,16 @@ const ATTEMPT_POLICY: PolicyRule[] = [
 export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | null = null): AttemptConfig[] {
     const f = extractFeatures(level);
     let configs: AttemptConfig[] | null = null;
-    // Ablation: STRATEGY_ARCHETYPE_ROUTING — disabling forces every level through the catch-all
-    // rule below regardless of detected archetype/features, isolating how much the feature-based
+    // Ablation: STRATEGY_ROUTING_REGIME_SELECTION — disabling forces every level through the catch-all
+    // rule below regardless of classified routing regime/features, isolating how much the feature-based
     // routing itself contributes (vs. the config bundles it selects among).
-    if (!cfg || cfg.STRATEGY_ARCHETYPE_ROUTING) {
+    if (!cfg || cfg.STRATEGY_ROUTING_REGIME_SELECTION) {
         for (const rule of ATTEMPT_POLICY) {
             if (rule.when(f)) { configs = rule.build(f, cfg); break; }
         }
     }
     // Unreachable under normal routing (the last rule matches everything); reached directly when
-    // STRATEGY_ARCHETYPE_ROUTING is disabled above. Also kept for total-function safety.
+    // STRATEGY_ROUTING_REGIME_SELECTION is disabled above. Also kept for total-function safety.
     if (!configs) configs = ATTEMPT_POLICY[ATTEMPT_POLICY.length - 1].build(f, cfg);
     // Ablation: STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE (default-ON, promoted 2026-08-27).
     // Applied centrally rather than inline in the rule's build() so the addition is a single
@@ -622,7 +622,7 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     // solve rate, not evidence against the mechanism). See
     // reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md for the full record.
     //
-    // docs/solver-optimization-current-queue.md Priority 1's post-976 portfolio rejoin
+    // docs/solver-optimization-workstreams.md Priority 1's post-976 portfolio rejoin
     // (reports/2026-08-25-post-976-portfolio-exposure-rejoin.md) found `beam:intersectionHarvest@
     // beam5000` and `beam:objectiveFirst@beam5000` (the PLAIN WIDE beams, not their `(diverse)`
     // siblings already used elsewhere in this file) each absent from production on exactly the same
@@ -642,7 +642,7 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     if ((!cfg || cfg.STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE) && isMustCrossFlipperHeavy(f)) {
         configs = [...configs, beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE)];
     }
-    // Applied centrally (not per-rule) since the feature gate cuts across several archetypes
+    // Applied centrally (not per-rule) since the feature gate cuts across several routing regimes
     // (must-cross-heavy and high-intersection-burden rules both match batch-B cluster levels —
     // see POLICY.REPAIR_MC_MIN/REPAIR_MP_MIN).
     if (needsRepairFallback(f, cfg)) {
