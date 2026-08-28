@@ -53,15 +53,15 @@ export interface AblationConfig {
 }
 
 /**
- * One solver attempt configuration (gate × profile × optional template/beam). Built by
+ * One solver attempt configuration (gate × scoring profile × optional ordering bias/beam). Built by
  * `getAttemptConfigs`; a `beamWidth` selects beam search (else DFS).
  */
 export interface AttemptConfig {
-    profileName: string;
-    template: StructuralTemplate | null;
+    scoringProfileId: string;
+    orderingBias: StructuralOrderingBias | null;
     beamWidth?: number;
     minBudgetFraction?: number;
-    diverseBeam?: boolean;
+    mechanicBucketRetention?: boolean;
     /** Dispatches to repairSearchFromGate (repair-search.js's iterated-local-search
      *  fallback) instead of DFS/beam. Mutually exclusive with beamWidth. */
     repair?: boolean;
@@ -86,13 +86,13 @@ export interface AttemptConfig {
      *  and the investigation synthesis. */
     repairTurnBiased?: boolean;
     /** Dispatches to admissible-order-search.ts's admissibleOrderSearch instead of DFS/beam/repair.
-     *  `profileName` selects the tie-break profile (admissible slack is always the primary
+     *  `scoringProfileId` selects the tie-break profile (admissible slack is always the primary
      *  ordering), not a DFS/beam scoring profile in the usual sense. Routed by
      *  attempts.ts's getAttemptConfigs (see ADMISSIBLE_ORDER_PROFILES) as a last-resort tier run in
      *  its own dedicated budget slice by orchestration.ts's solveLevel, after the main ladder,
      *  repair fallback, and attraction-diversity pass have all failed — mirroring the repair
      *  fallback's own separate-tier pattern. Also reachable standalone via scripts/method-probe.mjs's
-     *  `--only=ida:<profile>` for isolated per-level testing. Mutually exclusive with beamWidth/repair.
+     *  canonical `admissible-order|tieBreak=<profile>|lds=off` identities for isolated per-level testing. Mutually exclusive with beamWidth/repair.
      *  See admissible-order-search.ts's own doc for what the technique is and isn't. */
     admissibleOrder?: boolean;
     /** Only meaningful alongside `admissibleOrder: true`. Skips the soft-score tie-break entirely
@@ -125,14 +125,14 @@ export interface ScoringProfile {
     mustPassUrgencyWeight?: number;
     mustCrossUrgencyWeight?: number;
     /** Distance-to-cell pull toward pending must-turn landmarks. Defaults to 1 like every other
-     *  weight — except POLICY_PROFILES.repair sets it to 0 (see scoring.ts's must-turn urgency
+     *  weight — except SCORING_PROFILES.repair sets it to 0 (see scoring.ts's must-turn urgency
      *  term and data/stress/README.md for why repair specifically opts out: this term's constant
      *  background pull throughout exploration measurably destabilized repair's convergence). */
     mustTurnUrgencyWeight?: number;
     /** Reward for choosing the specific exit direction that satisfies a pending must-turn
      *  cell's cw/ccw requirement once standing at it — decoupled from mustTurnUrgencyWeight
      *  because it's a much more localized signal (only nonzero at the cell itself, not a
-     *  constant pull). Despite that locality, POLICY_PROFILES.repair still sets it to 0: a
+     *  constant pull). Despite that locality, SCORING_PROFILES.repair still sets it to 0: a
      *  scoring.ts bug fix made this term start actually firing under repair's calling
      *  convention (previously silently dead there — see scoring.ts), and even its default
      *  weight of 1 regressed an already-solved must-turn level. See policy.ts and
@@ -149,8 +149,8 @@ export interface ScoringProfile {
     revisitPenaltyWeight?: number;
 }
 
-/** A structural traversal template (perimeter/corner/side biases). All fields optional. */
-export interface StructuralTemplate {
+/** A structural ordering bias (perimeter/corner/side biases). All fields optional. */
+export interface StructuralOrderingBias {
     id?: string;
     /** 'cw' | 'ccw' */
     perimeterDir?: string;
