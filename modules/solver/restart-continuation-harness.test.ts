@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
-import { POLICY_PROFILES } from './policy.js';
+import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { runRepairRestartVsContinuation } from './restart-continuation-harness.js';
 
@@ -40,7 +40,7 @@ function makeSolvableLevel() {
 test('continuation and restart arms spend the same canonical work envelope on a failing fixture', async () => {
     const level = makeImpossibleLevel();
     const workBudget = 20_000;
-    const result = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), POLICY_PROFILES.repair, workBudget);
+    const result = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), SCORING_PROFILES.repair, workBudget);
 
     assert.equal(result.continuation.solved, false);
     assert.equal(result.restart.solved, false);
@@ -70,7 +70,7 @@ test('continuation and restart arms spend the same canonical work envelope on a 
 test('a binding wall deadline is surfaced as invalid equal-work evidence and does not continue the restart arm', async () => {
     const level = makeImpossibleLevel();
     const result = await runRepairRestartVsContinuation(
-        K(1, 1), level, () => prepLevel(level), POLICY_PROFILES.repair, 20_000, { budgetMs: 0 },
+        K(1, 1), level, () => prepLevel(level), SCORING_PROFILES.repair, 20_000, { budgetMs: 0 },
     );
 
     assert.equal(result.continuation.solved, false);
@@ -87,7 +87,7 @@ test('a binding wall deadline is surfaced as invalid equal-work evidence and doe
 test('restart arm runs a genuinely fresh seed 1 and SUMS both seeds\' work, not just the last seed', async () => {
     const level = makeImpossibleLevel();
     const workBudget = 20_000;
-    const result = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), POLICY_PROFILES.repair, workBudget);
+    const result = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), SCORING_PROFILES.repair, workBudget);
 
     // Both seeds must actually have run (the fixture can never solve, so seed 0 cannot have
     // short-circuited the restart arm before seed 1 started).
@@ -100,11 +100,11 @@ test('restart arm runs a genuinely fresh seed 1 and SUMS both seeds\' work, not 
     const half = Math.floor(workBudget / 2);
     restartPrep._workCap = half;
     const { repairSearchFromGate } = await import('./repair-search.js');
-    await repairSearchFromGate(K(1, 1), level, restartPrep, POLICY_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, null, 0);
+    await repairSearchFromGate(K(1, 1), level, restartPrep, SCORING_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, null, 0);
     const seed0Work = restartPrep._workMeter.units;
     assert.ok(seed0Work > 0, 'seed 0 must have spent real work on an impossible fixture');
     restartPrep._workCap = seed0Work + Math.max(0, workBudget - seed0Work);
-    await repairSearchFromGate(K(1, 1), level, restartPrep, POLICY_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, null, 1);
+    await repairSearchFromGate(K(1, 1), level, restartPrep, SCORING_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, null, 1);
     const totalWork = restartPrep._workMeter.units;
 
     assert.equal(result.restart.workSpent, totalWork,
@@ -116,7 +116,7 @@ test('restart arm runs a genuinely fresh seed 1 and SUMS both seeds\' work, not 
 test('restart arm reports the BEST bestBadness across both seeds, not just seed 1\'s own', async () => {
     const level = makeImpossibleLevel();
     const workBudget = 20_000;
-    const result = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), POLICY_PROFILES.repair, workBudget);
+    const result = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), SCORING_PROFILES.repair, workBudget);
 
     // Independently replay each seed under the exact caps the harness itself used, and confirm
     // the harness's reported bestBadness is the MIN of the two — repairSearchFromGate's own
@@ -128,7 +128,7 @@ test('restart arm reports the BEST bestBadness across both seeds, not just seed 
     const seed0Prep = prepLevel(level);
     seed0Prep._workCap = half;
     const seed0Out: { bestBadness?: number } = {};
-    await repairSearchFromGate(K(1, 1), level, seed0Prep, POLICY_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, seed0Out, 0);
+    await repairSearchFromGate(K(1, 1), level, seed0Prep, SCORING_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, seed0Out, 0);
 
     // A fresh prep starts its own workMeter at 0, so replaying seed 1 in isolation only needs the
     // REMAINING budget as its cap (repairSearchFromGate only ever compares workMeter against
@@ -136,7 +136,7 @@ test('restart arm reports the BEST bestBadness across both seeds, not just seed 
     const seed1Prep = prepLevel(level);
     seed1Prep._workCap = Math.max(0, workBudget - seed0Prep._workMeter.units);
     const seed1Out: { bestBadness?: number } = {};
-    await repairSearchFromGate(K(1, 1), level, seed1Prep, POLICY_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, seed1Out, 1);
+    await repairSearchFromGate(K(1, 1), level, seed1Prep, SCORING_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, seed1Out, 1);
 
     const expectedBest = Math.min(seed0Out.bestBadness!, seed1Out.bestBadness!);
     assert.equal(result.restart.bestBadness, expectedBest,
@@ -146,7 +146,7 @@ test('restart arm reports the BEST bestBadness across both seeds, not just seed 
 test('restartSplitFraction controls seed 0\'s share of the restart arm\'s budget', async () => {
     const level = makeImpossibleLevel();
     const workBudget = 20_000;
-    const result = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), POLICY_PROFILES.repair, workBudget, { restartSplitFraction: 0.8 });
+    const result = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), SCORING_PROFILES.repair, workBudget, { restartSplitFraction: 0.8 });
 
     assert.equal(result.restartSplitFraction, 0.8);
     assert.deepEqual(result.restart.seedSalts, [0, 1]);
@@ -157,7 +157,7 @@ test('restartSplitFraction controls seed 0\'s share of the restart arm\'s budget
     const restartPrep = prepLevel(level);
     restartPrep._workCap = Math.floor(workBudget * 0.8);
     const { repairSearchFromGate } = await import('./repair-search.js');
-    await repairSearchFromGate(K(1, 1), level, restartPrep, POLICY_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, null, 0);
+    await repairSearchFromGate(K(1, 1), level, restartPrep, SCORING_PROFILES.repair, 60_000, Date.now(), null, null, false, Infinity, null, 0);
     const seed0WorkAt80Pct = restartPrep._workMeter.units;
     assert.ok(seed0WorkAt80Pct > workBudget * 0.5,
         `an 0.8 split should spend noticeably more on seed 0 than the 0.5 default would: ${seed0WorkAt80Pct}`);
@@ -166,7 +166,7 @@ test('restartSplitFraction controls seed 0\'s share of the restart arm\'s budget
 test('restart arm skips seed 1 entirely when seed 0 already solves', async () => {
     const level = makeSolvableLevel();
     const workBudget = 20_000;
-    const result = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), POLICY_PROFILES.repair, workBudget);
+    const result = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), SCORING_PROFILES.repair, workBudget);
 
     assert.equal(result.restart.solved, true);
     assert.deepEqual(result.restart.seedSalts, [0]);
@@ -176,8 +176,8 @@ test('restart arm skips seed 1 entirely when seed 0 already solves', async () =>
 
 test('a larger work budget lets the continuation arm spend proportionally more before stopping', async () => {
     const level = makeImpossibleLevel();
-    const small = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), POLICY_PROFILES.repair, 2_000);
-    const large = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), POLICY_PROFILES.repair, 20_000);
+    const small = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), SCORING_PROFILES.repair, 2_000);
+    const large = await runRepairRestartVsContinuation(K(1, 1), level, () => prepLevel(level), SCORING_PROFILES.repair, 20_000);
 
     assert.ok(small.continuation.workSpent <= 2_000);
     assert.ok(large.continuation.workSpent <= 20_000);
