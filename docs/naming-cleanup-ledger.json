@@ -2142,8 +2142,8 @@
       "risk": "medium",
       "persistence": "frozen-history",
       "phase": 2,
-      "status": "pending",
-      "notes": "Stable workstream IDs separated from current execution order."
+      "status": "done",
+      "notes": "Stable workstream IDs separated from current execution order. Implemented in naming-cleanup PR 2."
     },
     {
       "old": "ranked queue numbering",
@@ -2152,8 +2152,8 @@
       "risk": "medium",
       "persistence": "frozen-history",
       "phase": 2,
-      "status": "pending",
-      "notes": "Do not renumber historical references."
+      "status": "done",
+      "notes": "Do not renumber historical references. Implemented in naming-cleanup PR 2."
     },
     {
       "old": "Automatic configuration / portfolio construction",
@@ -2162,8 +2162,8 @@
       "risk": "medium",
       "persistence": "frozen-history",
       "phase": 2,
-      "status": "pending",
-      "notes": "Current workstream umbrella name."
+      "status": "done",
+      "notes": "Current workstream umbrella name. Implemented in naming-cleanup PR 2."
     },
     {
       "old": "solver-shadow-eval-harness.md",
@@ -2375,5 +2375,7 @@
       "status": "done",
       "notes": "Closed negative default-off experiment ID; delete later rather than rename."
     }
-  ]
+  ],
+  "lastCompletedPhase": 2,
+  "lastUpdated": "2026-08-28"
 }
