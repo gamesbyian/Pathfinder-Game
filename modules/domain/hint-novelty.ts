@@ -4,7 +4,7 @@
 import { PACK, UNPACK } from './cell-key.js';
 import {
     buildPathFeatures, edgeSet, featureDistance, jaccardDistance, pathSignature, portalSignature,
-    isDrawnStep, NEAR_HAMILTONIAN_DENSITY,
+    isDrawnStep, NEAR_HAMILTONIAN_COVERAGE_THRESHOLD,
 } from './path-features.js';
 
 // Re-exported so discovery scripts import one module for both signatures and acceptance.
@@ -186,7 +186,7 @@ export function nearestFeatureDistance(level: HintNoveltyLevel, candidate: numbe
     const hints = level.hints || [];
     if (!hints.length) return 1;
     const mcKeys = mustCrossKeysOf(level);
-    const useCrossings = navigableDensity(level) >= NEAR_HAMILTONIAN_DENSITY;
+    const useCrossings = navigableDensity(level) >= NEAR_HAMILTONIAN_COVERAGE_THRESHOLD;
     const candFeat = buildPathFeatures(candidate, mcKeys);
     let nearest = 1;
     for (const hint of hints) nearest = Math.min(nearest, featureDistance(candFeat, buildPathFeatures(hint, mcKeys), useCrossings));
