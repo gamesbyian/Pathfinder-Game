@@ -15,6 +15,7 @@ import { validateCandidatePath } from '../domain/path-validator.js';
 import { selectDisplayHints } from '../domain/hint-selection.js';
 import { pathSignature } from '../domain/path-features.js';
 import { enumerateFromGate, anchoredFromSeed } from './hint-enumeration.js';
+import { getRequiredPathCoverageRatio } from './archetype.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, ScoringProfile } from './types.js';
 
@@ -116,12 +117,6 @@ export interface VarietyResult {
     outcome: VarietyOutcome;
 }
 
-function navDensity(level: NormalizedLevel): number {
-    const g = level.grid;
-    const occupied = level.blockSet.size + level.gooseSet.size + level.falseGoalKeys.size + level.gateKeys.length;
-    return level.reqLen / Math.max(1, g.w * g.h - occupied);
-}
-
 /**
  * Create a resumable variety-search over one level. `existingHints` are treated as already-saved (not
  * re-reported) but count toward curation and the cap. Call `run()` for one pass; call it again (targeted
@@ -150,7 +145,7 @@ export function createVarietySearch(
     // orderBy/tieBreakProfile don't vary per run().
     const orderSuffix = orderBy === 'admissible-slack' ? ':admissible-slack' : '';
     const orderProfile: string | null = orderBy === 'admissible-slack' ? (tieBreakProfile ? 'flat' : null) : null;
-    const nd = navDensity(level);
+    const requiredPathCoverageRatio = getRequiredPathCoverageRatio(level);
     const mcKeys = level.mustCrossKeys;
 
     const pool: number[][] = [...existingHints];
@@ -160,7 +155,7 @@ export function createVarietySearch(
     const rediscovered: VarietyRediscoveredEntry[] = [];
 
     const curatedCount = (cap: number): number =>
-        selectDisplayHints(pool.slice(), { cap, navDensity: nd, mustCrossKeys: mcKeys }).indices.length;
+        selectDisplayHints(pool.slice(), { cap, requiredPathCoverageRatio, mustCrossKeys: mcKeys }).indices.length;
 
     async function run(runOpts: VarietyRunOptions): Promise<VarietyResult> {
         const { mode, target = 15, yieldFn, shouldStop: extStop, isCancelled, onProgress } = runOpts;
@@ -278,7 +273,7 @@ export function createVarietySearch(
     }
 
     function finish(outcome: VarietyOutcome, target: number): VarietyResult {
-        const sel = selectDisplayHints(pool.slice(), { cap: target, navDensity: nd, mustCrossKeys: mcKeys });
+        const sel = selectDisplayHints(pool.slice(), { cap: target, requiredPathCoverageRatio, mustCrossKeys: mcKeys });
         return {
             newlySaved: newlySaved.slice(),
             newlySavedMeta: newlySavedMeta.slice(),
