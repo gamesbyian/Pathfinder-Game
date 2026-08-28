@@ -2235,8 +2235,18 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // so without this override this tier would silently inherit a stale, likely-already-exceeded
         // cap and find nothing regardless of its own node ceiling. withWorkCapScope owns/restores the
         // compatibility field lexically so no later stage can inherit this tier's cap.
+        //
+        // `nonDefaultRetryWorkBudget` sized off the solve's own resolved `workBudget` (queue #2
+        // step-3 migration, 2026-08-28 — third site, same pattern/caveats as dedup-near-tie-retry's
+        // and repair-fallback's own migrations; see reports/2026-08-28-dedup-near-tie-retry-work-
+        // dose-migration.md for the full account). `ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_
+        // FRACTION` is the integer `1.0`, so behavior-preserving for live play (this tier's fraction
+        // is also zeroed by `disableExtraBudgetPasses`) and the plain-default no-override call shape;
+        // a deliberate dose correction, not a no-op, for the offline capability-sweep call shape.
+        // `nonDefaultRetryTotalBudget` (ms) is kept for the per-gate wall-deadline slice
+        // (`retryBudget` below) — latency safety, not a work-sizing input.
         const nonDefaultRetryTotalBudget = Math.floor(timeBudgetMs * nonDefaultRetryBudgetFraction);
-        const nonDefaultRetryWorkBudget = legacyMsToWork(nonDefaultRetryTotalBudget, MIN_ATTEMPT_WORK);
+        const nonDefaultRetryWorkBudget = scaledStageWorkBudget(workBudget, nonDefaultRetryBudgetFraction, MIN_ATTEMPT_WORK);
         await withWorkCapScope(prep, prep._workMeter.units + nonDefaultRetryWorkBudget, async () => {
             // Same per-profile/per-gate loop shape as the admissible-order tier's own pass above
             // (deliberately NOT a single combined runInterleavedAttempts/runGateSerialAttempts call —
