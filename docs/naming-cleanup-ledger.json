@@ -1,0 +1,2379 @@
+{
+  "schemaVersion": 1,
+  "authority": "docs/naming-cleanup-plan.md",
+  "permanentVocabularyAuthority": "docs/naming-and-vocabulary.md",
+  "generatedForPlanRevision": "2026-08-28",
+  "status": "active",
+  "entries": [
+    {
+      "old": "getNavigableArea",
+      "new": "getNonGateWinningPathCellCount",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Behavior-preserving denominator helper rename."
+    },
+    {
+      "old": "getNavigableDensity",
+      "new": "getRequiredPathCoverageRatio",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Preserve exact formula and thresholds."
+    },
+    {
+      "old": "navDensity",
+      "new": "requiredPathCoverageRatio",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Internal feature field."
+    },
+    {
+      "old": "NEAR_HAMILTONIAN_DENSITY",
+      "new": "NEAR_HAMILTONIAN_COVERAGE_THRESHOLD",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Threshold value unchanged."
+    },
+    {
+      "old": "DENSE_LEVEL_NAV_DENSITY",
+      "new": "DENSE_LEVEL_COVERAGE_THRESHOLD",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Threshold value unchanged."
+    },
+    {
+      "old": "detectArchetype",
+      "new": "classifyRoutingRegime",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Classifier behavior unchanged."
+    },
+    {
+      "old": "STRATEGY_ARCHETYPE_ROUTING",
+      "new": "STRATEGY_ROUTING_REGIME_SELECTION",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Legacy flag/config metadata remains readable."
+    },
+    {
+      "old": "scripts/stress/select-archetype-sample.mjs",
+      "new": "scripts/stress/select-routing-regime-sample.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Update workflow/docs/spawns."
+    },
+    {
+      "old": ".github/workflows/solver-archetype-sample-ab.yml",
+      "new": ".github/workflows/solver-routing-regime-sample-ab.yml",
+      "kind": "workflow",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Historical workflow runs retain old identity."
+    },
+    {
+      "old": "workflow archetype/archetypes",
+      "new": "routingRegime/routing_regimes",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Live sampler/workflow schema."
+    },
+    {
+      "old": "archetype (routing classifier)",
+      "new": "routing regime",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Current docs/telemetry only."
+    },
+    {
+      "old": "default (routing value)",
+      "new": "general",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Normalize persisted routing values."
+    },
+    {
+      "old": "near-closure",
+      "new": "sparse-low-intersection",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Routing value only."
+    },
+    {
+      "old": "high-intersection-burden",
+      "new": "intersection-heavy",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Routing value only."
+    },
+    {
+      "old": "portal-heavy",
+      "new": "multi-portal",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Routing value only."
+    },
+    {
+      "old": "must-cross-heavy",
+      "new": "must-cross-heavy",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Intentional retained routing value."
+    },
+    {
+      "old": "scripts/stress/current-missing-exposure-audit.mjs",
+      "new": "scripts/stress/analyze-current-missing-attempt-exposure.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Routing half in PR3; attempt identity fields in PR4."
+    },
+    {
+      "old": "tmp/current-missing-exposure-audit.json",
+      "new": "tmp/current-missing-attempt-exposure.json",
+      "kind": "file",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Temporary default output only."
+    },
+    {
+      "old": "archetype (missing-exposure result)",
+      "new": "routingRegime",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 3,
+      "status": "pending",
+      "notes": "Analyzer result/local field."
+    },
+    {
+      "old": "ida:*",
+      "new": "admissible-order|tieBreak=<profile-or-none>|lds=<on|off>",
+      "kind": "attempt-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 4,
+      "status": "pending",
+      "notes": "Legacy parser input; canonical writer uses structured grammar."
+    },
+    {
+      "old": "dfs:*",
+      "new": "dfs|score=<profile>|bias=<bias-or-none>",
+      "kind": "attempt-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 4,
+      "status": "pending",
+      "notes": "Legacy parser input."
+    },
+    {
+      "old": "beam:*@beam*",
+      "new": "beam|score=<profile>|bias=<bias-or-none>|width=<n>|retention=<plain|mechanic-buckets>",
+      "kind": "attempt-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 4,
+      "status": "pending",
+      "notes": "Legacy parser input."
+    },
+    {
+      "old": ":repair legacy attempt form",
+      "new": "repair|score=repair|guidance=<standard|turn-biased|must-turn-biased>",
+      "kind": "attempt-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 4,
+      "status": "pending",
+      "notes": "Legacy parser input."
+    },
+    {
+      "old": "--technique=<attemptConfigKey>",
+      "new": "--attempt-config=<attemptConfigIdentity>",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 4,
+      "status": "pending",
+      "notes": "select-attempt-exposure compatibility window."
+    },
+    {
+      "old": "TECHNIQUE (select-attempt-exposure)",
+      "new": "ATTEMPT_CONFIG_IDENTITY",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 4,
+      "status": "pending",
+      "notes": "Local CLI variable."
+    },
+    {
+      "old": "technique (select-attempt-exposure result)",
+      "new": "attemptConfigIdentity",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 4,
+      "status": "pending",
+      "notes": "New JSON writes canonical field."
+    },
+    {
+      "old": "rankedTechniqueArchetypeCandidates",
+      "new": "rankedAttemptConfigRoutingRegimeCandidates",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 4,
+      "status": "pending",
+      "notes": "Missing-exposure analyzer."
+    },
+    {
+      "old": "rankedBeamTechniqueArchetypeCandidates",
+      "new": "rankedBeamAttemptConfigRoutingRegimeCandidates",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 4,
+      "status": "pending",
+      "notes": "Missing-exposure analyzer."
+    },
+    {
+      "old": "overallTechniqueCandidates",
+      "new": "overallAttemptConfigCandidates",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 4,
+      "status": "pending",
+      "notes": "Missing-exposure analyzer."
+    },
+    {
+      "old": "technique (exact attemptConfigKey result)",
+      "new": "attemptConfigIdentity",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 4,
+      "status": "pending",
+      "notes": "Missing-exposure analyzer."
+    },
+    {
+      "old": "censusByLevelTechnique",
+      "new": "censusByLevelAttemptConfig",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 4,
+      "status": "pending",
+      "notes": "Internal analyzer map."
+    },
+    {
+      "old": "universalSolveLevel",
+      "new": "solveLevel",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 4,
+      "status": "pending",
+      "notes": "Remove alias after repository consumers migrate."
+    },
+    {
+      "old": "solve (solver facade alias)",
+      "new": "solveLevel",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 4,
+      "status": "pending",
+      "notes": "Remove redundant solver alias."
+    },
+    {
+      "old": "POLICY_PROFILES",
+      "new": "SCORING_PROFILES",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Weight configurations, not techniques."
+    },
+    {
+      "old": "PROFILE_ORDER",
+      "new": "SCORING_PROFILE_ORDER",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Ordering of scoring profile IDs."
+    },
+    {
+      "old": "profileName (solver action/config)",
+      "new": "scoringProfileId",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Persisted/generated readers require compatibility where applicable."
+    },
+    {
+      "old": "TEMPLATES",
+      "new": "STRUCTURAL_ORDERING_BIASES",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Geometry/order biases."
+    },
+    {
+      "old": "StructuralTemplate",
+      "new": "StructuralOrderingBias",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Type rename."
+    },
+    {
+      "old": "template (attempt config)",
+      "new": "orderingBias",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Migrate telemetry/provenance readers."
+    },
+    {
+      "old": "templateId",
+      "new": "orderingBiasId",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Migrate generated readers where persisted."
+    },
+    {
+      "old": "TEMPLATE_CONFIG_KEYS",
+      "new": "ORDERING_BIAS_CONFIG_KEYS",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Config-key mapping."
+    },
+    {
+      "old": "diverse beam",
+      "new": "mechanic-bucket retention",
+      "kind": "term",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Current docs/display terminology."
+    },
+    {
+      "old": "diverseBeam",
+      "new": "mechanicBucketRetention",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Attempt/config telemetry compatibility."
+    },
+    {
+      "old": "(diverse) attempt-key suffix",
+      "new": "retention=mechanic-buckets",
+      "kind": "attempt-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Handled by canonical attempt parser."
+    },
+    {
+      "old": "beam dedup coarse key",
+      "new": "coarse state key",
+      "kind": "term",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Do not imply exact equivalence."
+    },
+    {
+      "old": "beam dedup coarse merge",
+      "new": "coarse state merge",
+      "kind": "term",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Do not imply exact equivalence."
+    },
+    {
+      "old": "DEDUP_NEAR_TIE_*",
+      "new": "COARSE_STATE_NEAR_TIE_RETENTION_*",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 5,
+      "status": "pending",
+      "notes": "Feature/config aliases accepted through migration."
+    },
+    {
+      "old": "prime",
+      "new": "explicit-prime",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "repair-probe",
+      "new": "early-repair-search",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "main-loop",
+      "new": "main-search",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "repair-fallback",
+      "new": "repair-fallback",
+      "kind": "stage-id",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Intentional retained stage ID."
+    },
+    {
+      "old": "attraction-diversity",
+      "new": "goal-attraction-disabled-retry",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "repair-probe-shrink-recovery",
+      "new": "repair-shrink-recovery",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "admissible-order",
+      "new": "admissible-order-fallback",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "dedup-near-tie-retry",
+      "new": "coarse-state-near-tie-retention-disabled-retry",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "admissible-order-non-default-retry",
+      "new": "admissible-order-alternate-tiebreak-retry",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "connectivity-axis-exhausted-retry",
+      "new": "connectivity-axis-prune-disabled-retry",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "repair-elite-prefix-dfs-retry",
+      "new": "repair-elite-prefix-dfs-retry",
+      "kind": "stage-id",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Intentional retained stage ID."
+    },
+    {
+      "old": "mc-neighbor-budget-retry",
+      "new": "must-cross-neighbor-prune-disabled-retry",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "repair-late-probe",
+      "new": "late-repair-search",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "goal-attraction-legacy-distance-retry",
+      "new": "guidance-goal-distance-retry",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "repair-late-probe-multi-seed-retry",
+      "new": "late-repair-multiseed-retry",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "portfolio-pass",
+      "new": "legacy-latency-portfolio-pass",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "portfolio-fallback",
+      "new": "legacy-latency-portfolio-fallback",
+      "kind": "stage-id",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Central normalizeSolverStageId compatibility."
+    },
+    {
+      "old": "SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE",
+      "new": "SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Behavior is guidance-distance selection."
+    },
+    {
+      "old": "portfolio-experiment.ts",
+      "new": "legacy-latency-portfolio-experiment.ts",
+      "kind": "file",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Historical latency scheduler identity."
+    },
+    {
+      "old": "PORTFOLIO_EXPERIMENT",
+      "new": "LEGACY_LATENCY_PORTFOLIO_EXPERIMENT",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Historical latency scheduler identity."
+    },
+    {
+      "old": "techniqueLifecycle",
+      "new": "stageLifecycle",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Keys are solver stages."
+    },
+    {
+      "old": "scheduler mode legacy",
+      "new": "production",
+      "kind": "status-value",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Generic legacy mode removed after migration."
+    },
+    {
+      "old": "scheduler mode portfolio-experiment",
+      "new": "legacy-latency-portfolio-experiment",
+      "kind": "status-value",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Persisted scheduler mode."
+    },
+    {
+      "old": "PortfolioExperimentDefinition",
+      "new": "LegacyLatencyPortfolioExperimentDefinition",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Type rename."
+    },
+    {
+      "old": "portfolioExperiment option",
+      "new": "legacyLatencyPortfolioExperiment",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Dual-read only where external/generated configs persist."
+    },
+    {
+      "old": "portfolio result field",
+      "new": "legacyLatencyPortfolioExperiment",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Generated JSON single-write canonical."
+    },
+    {
+      "old": "schedulerPhase: portfolio",
+      "new": "schedulerPhase: legacy-latency-portfolio",
+      "kind": "status-value",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Attempt telemetry."
+    },
+    {
+      "old": "StageBudgetPolicyId: additive-fraction",
+      "new": "StageBudgetPolicyId: additive-wall-multiplier",
+      "kind": "status-value",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Wall multiplier, not [0,1] fraction."
+    },
+    {
+      "old": "SolverStageDisposition",
+      "new": "SolverStagePolicyStatus",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Runtime policy status, not history."
+    },
+    {
+      "old": "SolverStagePolicyStatus: promoted",
+      "new": "SolverStagePolicyStatus: production-default",
+      "kind": "status-value",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Promotion history belongs in evidence ledger."
+    },
+    {
+      "old": "findTrapSpots",
+      "new": "findTriggerableFalseGoalCells",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "TrapSearchResult",
+      "new": "FalseGoalTriggerSearchResult",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "TrapProgress",
+      "new": "FalseGoalTriggerSearchProgress",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "TrapOpts",
+      "new": "FalseGoalTriggerSearchOptions",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "spots",
+      "new": "triggerableCells",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "FalseGoalStatus",
+      "new": "FalseGoalTriggerability",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "reachable",
+      "new": "triggerable",
+      "kind": "status-value",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "unreachable",
+      "new": "untriggerable",
+      "kind": "status-value",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "classifyFalseGoals",
+      "new": "classifyFalseGoalTriggerability",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "isParityReachableEndpoint",
+      "new": "isParityCompatibleEndpoint",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "getTrapSpotBudgetMs",
+      "new": "getFalseGoalTriggerSearchBudgetMs",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "timeLimit",
+      "new": "timeLimitMs",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "trap-search.ts",
+      "new": "false-goal-trigger-search.ts",
+      "kind": "file",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "TRAP",
+      "new": "FALSE_GOAL_TRIGGER_SEARCH",
+      "kind": "protocol",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "TRAP_PROGRESS",
+      "new": "FALSE_GOAL_TRIGGER_SEARCH_PROGRESS",
+      "kind": "protocol",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "TRAP_RESULT",
+      "new": "FALSE_GOAL_TRIGGER_SEARCH_RESULT",
+      "kind": "protocol",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "trap-scan-controller.ts",
+      "new": "false-goal-trigger-scan-controller.ts",
+      "kind": "file",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "trap-scan-core.ts",
+      "new": "false-goal-trigger-scan-core.ts",
+      "kind": "file",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "createTrapScanController",
+      "new": "createFalseGoalTriggerScanController",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "runTrapSearch",
+      "new": "runFalseGoalTriggerSearch",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "trapScanState",
+      "new": "falseGoalTriggerScanState",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "validTrapSpots",
+      "new": "triggerableFalseGoalCells",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "trapParityCandidates",
+      "new": "falseGoalTriggerParityCandidates",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "*TrapSpots state actions",
+      "new": "*TriggerableFalseGoalCells state actions",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "*TrapParityCandidates state actions",
+      "new": "*FalseGoalTriggerParityCandidates state actions",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "trap-search-audit.mjs",
+      "new": "audit-false-goal-triggerability.mjs",
+      "kind": "tool",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "solver:trap-audit",
+      "new": "solver:audit-false-goal-triggerability",
+      "kind": "package-alias",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "pending",
+      "notes": "False-goal triggerability migration."
+    },
+    {
+      "old": "trap result status done",
+      "new": "complete",
+      "kind": "status-value",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "Legacy generated payloads may contain done."
+    },
+    {
+      "old": "trap result status timeout",
+      "new": "partial",
+      "kind": "status-value",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "Timeout means incomplete result."
+    },
+    {
+      "old": "TrapSearchResult.ok",
+      "new": "status only",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "Remove misleading ok from canonical result."
+    },
+    {
+      "old": "TrapSearchResult.timedOut",
+      "new": "status !== complete",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 7,
+      "status": "pending",
+      "notes": "Derive incompleteness from status."
+    },
+    {
+      "old": "closeLengthGap",
+      "new": "searchCompletionFromPartialPath",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 10,
+      "status": "pending",
+      "notes": "Completion search can satisfy all remaining constraints."
+    },
+    {
+      "old": "solved by closeLengthGap",
+      "new": "solved by partial-path completion search",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 10,
+      "status": "pending",
+      "notes": "Current docs/reports wording only."
+    },
+    {
+      "old": "prune-gauntlet.ts",
+      "new": "hard-prune-pipeline.ts",
+      "kind": "file",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 10,
+      "status": "pending",
+      "notes": "Central hard-prune evaluation pipeline."
+    },
+    {
+      "old": "prune gauntlet",
+      "new": "hard-prune pipeline",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 10,
+      "status": "pending",
+      "notes": "Current docs/comments."
+    },
+    {
+      "old": "REPAIR_EXTRA_BUDGET_FRACTION",
+      "new": "REPAIR_ADDITIVE_BUDGET_MULTIPLIER",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 10,
+      "status": "pending",
+      "notes": "Only if constant still exists; value 6.0 is multiplier."
+    },
+    {
+      "old": "repairBudgetFractionOverride",
+      "new": "repairAdditiveBudgetMultiplierOverride",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 10,
+      "status": "pending",
+      "notes": "Quantity can exceed 1."
+    },
+    {
+      "old": "repairBudgetFraction",
+      "new": "repairAdditiveBudgetMultiplier",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 10,
+      "status": "pending",
+      "notes": "Resolved/local quantity."
+    },
+    {
+      "old": "additive-fraction",
+      "new": "additive-wall-multiplier",
+      "kind": "status-value",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 10,
+      "status": "pending",
+      "notes": "Stage budget policy spelling."
+    },
+    {
+      "old": "runtime variant",
+      "new": "orientation",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 11,
+      "status": "pending",
+      "notes": "Runtime rotation/reflection only; research level variant retained."
+    },
+    {
+      "old": "setVariant",
+      "new": "setOrientation",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 11,
+      "status": "pending",
+      "notes": "Runtime orientation setter."
+    },
+    {
+      "old": "eng.variant",
+      "new": "eng.orientation",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 11,
+      "status": "pending",
+      "notes": "Runtime engine state."
+    },
+    {
+      "old": "geometry argument variant",
+      "new": "orientation",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 11,
+      "status": "pending",
+      "notes": "Rotation/reflection argument."
+    },
+    {
+      "old": "8 transform variants",
+      "new": "8 orientations",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 11,
+      "status": "pending",
+      "notes": "Current runtime docs only."
+    },
+    {
+      "old": "solver-winning-lineage-survival-analysis.md",
+      "new": "solver-known-solution-prefix-survival.md",
+      "kind": "doc",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Current instrument doc rename."
+    },
+    {
+      "old": "analyze-lineage-mechanics.mjs",
+      "new": "analyze-known-solution-prefix-survival.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Current analyzer."
+    },
+    {
+      "old": "modules/solver/research-lineage.ts",
+      "new": "modules/solver/known-solution-prefix-survival.ts",
+      "kind": "file",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Research observer module."
+    },
+    {
+      "old": "WinningPrefixIndex",
+      "new": "KnownSolutionPrefixIndex",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Observer type."
+    },
+    {
+      "old": "WinningLineageObserver",
+      "new": "KnownSolutionPrefixSurvivalObserver",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Observer type."
+    },
+    {
+      "old": "LineageStageSummary",
+      "new": "KnownSolutionPrefixStageSummary",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Summary type."
+    },
+    {
+      "old": "naked profile",
+      "new": "qualified profile term",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Use scoringProfile/solutionProfile as appropriate."
+    },
+    {
+      "old": "naked fingerprint",
+      "new": "qualified fingerprint term",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Use level/solver/solutionFingerprint."
+    },
+    {
+      "old": "naked family",
+      "new": "qualified family term",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Use levelFamily/attemptFamily/searchFamily."
+    },
+    {
+      "old": "winning lineage",
+      "new": "known-solution-prefix survival",
+      "kind": "term",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Historical artifacts retain lineage."
+    },
+    {
+      "old": "naked residual API term",
+      "new": "domain-qualified residual term",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Use residualLevelSet/residualSearchState/etc."
+    },
+    {
+      "old": "ActionType command members",
+      "new": "GameCommandType",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 12,
+      "status": "pending",
+      "notes": "MOVE/UNDO/RESET/level navigation."
+    },
+    {
+      "old": "ActionType event members",
+      "new": "GameEventType",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 12,
+      "status": "pending",
+      "notes": "BACKTRACK/PORTAL_TRAVERSE/hazards/WIN/logic state."
+    },
+    {
+      "old": "event variable carrying command",
+      "new": "command",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 12,
+      "status": "pending",
+      "notes": "Match type role."
+    },
+    {
+      "old": "command variable carrying event",
+      "new": "event",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 12,
+      "status": "pending",
+      "notes": "Match type role."
+    },
+    {
+      "old": "modules/core.ts",
+      "new": "specific app constants/audio dependencies",
+      "kind": "file",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 14,
+      "status": "pending",
+      "notes": "Extract responsibilities then delete mixed bag."
+    },
+    {
+      "old": "SOUND_BUS",
+      "new": "audioService",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 14,
+      "status": "pending",
+      "notes": "Move to audio-service.ts."
+    },
+    {
+      "old": "createCore",
+      "new": "specific dependencies",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 14,
+      "status": "pending",
+      "notes": "Remove after consumers migrate."
+    },
+    {
+      "old": "modules/level-utils.ts",
+      "new": "direct domain imports",
+      "kind": "file",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 14,
+      "status": "pending",
+      "notes": "Compatibility facade deleted after migration."
+    },
+    {
+      "old": "HinterState",
+      "new": "HintDisplayState",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 14,
+      "status": "pending",
+      "notes": "Hint display/animation/pinning state."
+    },
+    {
+      "old": "ENGINE (mutable state property)",
+      "new": "engineState",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 14,
+      "status": "pending",
+      "notes": "Avoid constant-looking mutable state."
+    },
+    {
+      "old": "publicDrawPath",
+      "new": "drawPathWithCurrentOrientation",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 14,
+      "status": "pending",
+      "notes": "Name behavior, not visibility."
+    },
+    {
+      "old": "pendingAction",
+      "new": "pendingConfirmationAction",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 14,
+      "status": "pending",
+      "notes": "Existing value is queued confirmation action."
+    },
+    {
+      "old": "*-core.ts (ADR 0006 qualified cores)",
+      "new": "*-core.ts (ADR 0006 qualified cores)",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 14,
+      "status": "pending",
+      "notes": "Intentional retained architecture term."
+    },
+    {
+      "old": "state/actions/core-actions.ts",
+      "new": "state/actions/core-actions.ts",
+      "kind": "file",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 14,
+      "status": "pending",
+      "notes": "Intentional retained core-state-slice action module."
+    },
+    {
+      "old": "normalized reqLen",
+      "new": "requiredLength",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 13,
+      "status": "pending",
+      "notes": "Raw wire field reqLen remains serialized compatibility spelling."
+    },
+    {
+      "old": "normalized reqInt",
+      "new": "requiredIntersections",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 13,
+      "status": "pending",
+      "notes": "Raw wire field reqInt remains serialized compatibility spelling."
+    },
+    {
+      "old": "raw wire reqLen",
+      "new": "raw wire reqLen",
+      "kind": "field",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 13,
+      "status": "pending",
+      "notes": "Intentional retained serialized field."
+    },
+    {
+      "old": "raw wire reqInt",
+      "new": "raw wire reqInt",
+      "kind": "field",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 13,
+      "status": "pending",
+      "notes": "Intentional retained serialized field."
+    },
+    {
+      "old": "solver:bench",
+      "new": "solver:regression",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 9,
+      "status": "pending",
+      "notes": "One compatibility PR; solved-set regression, not speed."
+    },
+    {
+      "old": "solver:speed-probe",
+      "new": "solver:measure-speed",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 9,
+      "status": "pending",
+      "notes": "Performance measurement."
+    },
+    {
+      "old": "stress:benchmark",
+      "new": "stress:measure-solver",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 9,
+      "status": "pending",
+      "notes": "Actual corpus solver measurement."
+    },
+    {
+      "old": "run-solverv2-direct.mjs",
+      "new": "run-solver-direct.mjs",
+      "kind": "tool",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 9,
+      "status": "pending",
+      "notes": "Remove stale v2 history; solver:direct alias retained."
+    },
+    {
+      "old": "scripts/portfolio-sweep-reports-to-benchmark.mjs",
+      "new": "scripts/combine-solver-sweep-reports.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 9,
+      "status": "pending",
+      "notes": "Generic report combination."
+    },
+    {
+      "old": "solver:combine-corpus2-batches",
+      "new": "solver:combine-sweep-reports",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 9,
+      "status": "pending",
+      "notes": "Combiner now used beyond Corpus 2."
+    },
+    {
+      "old": "reports/stress/benchmark-parallel.json",
+      "new": "reports/stress/solver-corpus1-latest.json",
+      "kind": "file",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 9,
+      "status": "pending",
+      "notes": "New live output path; frozen outputs untouched."
+    },
+    {
+      "old": "reports/stress/benchmark-latest-random.json",
+      "new": "reports/stress/solver-corpus2-latest.json",
+      "kind": "file",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 9,
+      "status": "pending",
+      "notes": "New live output path; no random corpus identity."
+    },
+    {
+      "old": "hint-path-oracle.mjs",
+      "new": "validate-hint-paths.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Uses canonical referee, not independent oracle."
+    },
+    {
+      "old": "test:hint-path-oracle",
+      "new": "test:hint-path-validation",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Update current docs/workflows."
+    },
+    {
+      "old": "cpsat-full-probe.py",
+      "new": "cpsat-reference-probe.py",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Support matrix is not full mechanics."
+    },
+    {
+      "old": "cpsat-explicit-prefix-oracle.mjs",
+      "new": "cpsat-explicit-prefix-reference.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Execution seam around CP-SAT reference model."
+    },
+    {
+      "old": "atlas-sweep.mjs",
+      "new": "collect-prune-gap-labels.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Collects labelled branch data."
+    },
+    {
+      "old": "branch atlas",
+      "new": "labelled branch set",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Current docs/tool output."
+    },
+    {
+      "old": "family-wide-trove-manifest.mjs",
+      "new": "build-variant-family-dataset-manifest.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Variant-family dataset terminology."
+    },
+    {
+      "old": "trove",
+      "new": "variant-family dataset",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Current docs/tool output."
+    },
+    {
+      "old": "winning-path archaeology",
+      "new": "winning-path analysis",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Current docs/tool output."
+    },
+    {
+      "old": "technique-census-second-order.mjs",
+      "new": "analyze-technique-census.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Behavior-descriptive analyzer name."
+    },
+    {
+      "old": "technique-census-second-order-analysis.md",
+      "new": "technique-census-analysis.md",
+      "kind": "doc",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Current instrument doc."
+    },
+    {
+      "old": "run-audit-export.mjs",
+      "new": "analyze-solver-diagnostics.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Diagnostic analysis, not generic audit export."
+    },
+    {
+      "old": "knownHardCluster",
+      "new": "hardClusterHeuristicMatch",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Heuristic, not known fact."
+    },
+    {
+      "old": "recommendedGating",
+      "new": "derivedGatingCandidate",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Generated candidate, not normative recommendation."
+    },
+    {
+      "old": "audit:newhint:full",
+      "new": "solver:analyze-diagnostics",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Opaque historical alias."
+    },
+    {
+      "old": "repair-direct-probe.mjs",
+      "new": "run-repair-search.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Isolated technique execution, not diagnostic probe."
+    },
+    {
+      "old": "repair-direct-probe-worker.mjs",
+      "new": "run-repair-search-worker.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Worker follows tool rename."
+    },
+    {
+      "old": "stress/winning-lineage-pilot.mjs",
+      "new": "stress/collect-known-solution-prefix-survival.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Surfaced durable collector."
+    },
+    {
+      "old": "solver:winning-lineage-pilot",
+      "new": "solver:collect-known-solution-prefix-survival",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Surfaced durable command."
+    },
+    {
+      "old": "stress/winning-prefix-atlas-pilot.mjs",
+      "new": "stress/collect-known-solution-prefix-branches.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Surfaced durable collector."
+    },
+    {
+      "old": "solver:winning-prefix-atlas-pilot",
+      "new": "solver:collect-known-solution-prefix-branches",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Surfaced durable command."
+    },
+    {
+      "old": "stress/producer-population-pilot.mjs",
+      "new": "stress/compare-search-producer-populations.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Surfaced durable comparison."
+    },
+    {
+      "old": "solver:producer-population-pilot",
+      "new": "solver:compare-search-producer-populations",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Surfaced durable command."
+    },
+    {
+      "old": "stress/residual-interface-mining-pilot.mjs",
+      "new": "stress/analyze-residual-interfaces.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Surfaced durable analyzer."
+    },
+    {
+      "old": "solver:residual-interface-pilot",
+      "new": "solver:analyze-residual-interfaces",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Surfaced durable command."
+    },
+    {
+      "old": "stress/repair-rollback-census-pilot.mjs",
+      "new": "stress/census-repair-rollback-windows.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Surfaced durable census."
+    },
+    {
+      "old": "solver:repair-rollback-pilot",
+      "new": "solver:census-repair-rollback-windows",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Surfaced durable command."
+    },
+    {
+      "old": "stress/symmetry-repair-seed-pilot.mjs",
+      "new": "stress/compare-symmetry-repair-seed.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Surfaced durable comparison."
+    },
+    {
+      "old": "solver:symmetry-repair-seed-pilot",
+      "new": "solver:compare-symmetry-repair-seed",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Surfaced durable command."
+    },
+    {
+      "old": "stress/restart-continuation-population-pilot.mjs",
+      "new": "stress/compare-repair-restart-continuation-population.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Active durable research machinery."
+    },
+    {
+      "old": "stress/analyze-equal-work-census-pilot.mjs",
+      "new": "stress/analyze-equal-work-census.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Now surfaced durable analyzer."
+    },
+    {
+      "old": ".github/workflows/atlas-sweep.yml",
+      "new": ".github/workflows/collect-prune-gap-labels.yml",
+      "kind": "workflow",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Update display/concurrency/artifact names."
+    },
+    {
+      "old": "workflow atlas-sweep display/concurrency",
+      "new": "collect-prune-gap-labels",
+      "kind": "term",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Historical run identities remain."
+    },
+    {
+      "old": ".github/workflows/cpsat-explicit-prefix-oracle.yml",
+      "new": ".github/workflows/cpsat-explicit-prefix-reference.yml",
+      "kind": "workflow",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Reference model terminology."
+    },
+    {
+      "old": "CP-SAT workflow/job oracle display",
+      "new": "reference",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Current workflow only."
+    },
+    {
+      "old": ".github/workflows/family-wide-trove.yml",
+      "new": ".github/workflows/collect-variant-family-dataset.yml",
+      "kind": "workflow",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Dataset collection terminology."
+    },
+    {
+      "old": "family-wide-trove-shard-run.mjs",
+      "new": "collect-variant-family-dataset-shard.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Dataset shard execution."
+    },
+    {
+      "old": "family-wide-trove-shard-slice.mjs",
+      "new": "plan-variant-family-dataset-shard.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Dataset shard planning."
+    },
+    {
+      "old": "family-wide-trove-combine.mjs",
+      "new": "merge-variant-family-dataset-shards.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Dataset merge."
+    },
+    {
+      "old": "family-trove-doctor.mjs",
+      "new": "validate-variant-family-dataset-worktree.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Validation tool."
+    },
+    {
+      "old": "family:trove:doctor",
+      "new": "family:validate-dataset-worktree",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Update docs/workflows."
+    },
+    {
+      "old": "PATHFINDER_VARIANT_TROVE",
+      "new": "PATHFINDER_VARIANT_FAMILY_DATASET_ROOT",
+      "kind": "env",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "External developer/CI env compatibility window."
+    },
+    {
+      "old": "TROVE_BRANCH",
+      "new": "VARIANT_FAMILY_DATASET_BRANCH",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Local script variable."
+    },
+    {
+      "old": ".github/workflows/audit-export.yml",
+      "new": ".github/workflows/solver-diagnostics.yml",
+      "kind": "workflow",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Update display/job/artifact/concurrency names."
+    },
+    {
+      "old": "Audit Export",
+      "new": "Solver diagnostics and hint capture",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Workflow display."
+    },
+    {
+      "old": "stress/confirm-residual-001-archetype-audit.mjs",
+      "new": "stress/audit-candidate-eligibility-and-participation.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Durable general diagnostic."
+    },
+    {
+      "old": "stress/select-repair-probe-adaptive-sample.mjs",
+      "new": "stress/select-early-repair-search-adaptive-sample.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Migrate with stage identity."
+    },
+    {
+      "old": "stress/repair-probe-badness-report.mjs",
+      "new": "stress/early-repair-search-badness-report.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Migrate with stage identity."
+    },
+    {
+      "old": ".github/workflows/solver-repair-probe-adaptive-sample-ab.yml",
+      "new": ".github/workflows/solver-early-repair-search-adaptive-sample-ab.yml",
+      "kind": "workflow",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Migrate with stage identity."
+    },
+    {
+      "old": "portfolio-scheduler-report.mjs",
+      "new": "legacy-latency-portfolio-report.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Historical wall-clock portfolio semantics."
+    },
+    {
+      "old": "solver:portfolio-report",
+      "new": "solver:legacy-latency-portfolio-report",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Historical wall-clock portfolio semantics."
+    },
+    {
+      "old": "portfolio-historical-replay.mjs",
+      "new": "legacy-latency-portfolio-replay.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Historical wall-clock portfolio semantics."
+    },
+    {
+      "old": "solver:portfolio-replay",
+      "new": "solver:legacy-latency-portfolio-replay",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Historical wall-clock portfolio semantics."
+    },
+    {
+      "old": "scripts/gha-result.mjs",
+      "new": "scripts/fetch-gha-result.mjs",
+      "kind": "tool",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Retrieval verb."
+    },
+    {
+      "old": "gha:result",
+      "new": "gha:fetch-result",
+      "kind": "package-alias",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Completed-run retrieval."
+    },
+    {
+      "old": "docs/solver-optimization-current-queue.md",
+      "new": "docs/solver-optimization-workstreams.md",
+      "kind": "doc",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 2,
+      "status": "pending",
+      "notes": "Stable workstream IDs separated from current execution order."
+    },
+    {
+      "old": "ranked queue numbering",
+      "new": "workstream IDs plus explicit execution priority",
+      "kind": "term",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 2,
+      "status": "pending",
+      "notes": "Do not renumber historical references."
+    },
+    {
+      "old": "Automatic configuration / portfolio construction",
+      "new": "Automatic solver action selection",
+      "kind": "term",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 2,
+      "status": "pending",
+      "notes": "Current workstream umbrella name."
+    },
+    {
+      "old": "solver-shadow-eval-harness.md",
+      "new": "solver-offline-replay-harness.md",
+      "kind": "doc",
+      "risk": "medium",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Offline replay is not production shadowing."
+    },
+    {
+      "old": "interface-probe-harness.mjs",
+      "new": "offline-replay-harness.mjs",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Offline replay harness."
+    },
+    {
+      "old": "producer -> receptor",
+      "new": "producer -> consumer",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Standard consumer terminology."
+    },
+    {
+      "old": "receptor limitation",
+      "new": "consumer limitation",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Current docs."
+    },
+    {
+      "old": "receptor can rediscover",
+      "new": "consumer can rediscover",
+      "kind": "term",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 8,
+      "status": "pending",
+      "notes": "Current docs."
+    },
+    {
+      "old": "baseWorkBudget",
+      "new": "baseWorkBudget",
+      "kind": "field",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Preferred base-allocation API; intentional retain."
+    },
+    {
+      "old": "workBudget",
+      "new": "workBudget",
+      "kind": "field",
+      "risk": "low",
+      "persistence": "dual-read",
+      "phase": 1,
+      "status": "done",
+      "notes": "Compatibility alias; docs qualify as base allocation."
+    },
+    {
+      "old": "LEGACY_MS_TO_WORK_RATE",
+      "new": "LEGACY_MS_TO_WORK_RATE",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Legacy is behaviorally meaningful compatibility conversion."
+    },
+    {
+      "old": "legacyMsToWork",
+      "new": "legacyMsToWork",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Legacy is behaviorally meaningful compatibility conversion."
+    },
+    {
+      "old": "scaledStageWorkBudget",
+      "new": "scaledStageWorkBudget",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Canonical additive-stage work sizing helper."
+    },
+    {
+      "old": "strictTotalWorkBudget",
+      "new": "strictTotalWorkBudget",
+      "kind": "field",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Accurately names experiment-only whole-solve cap."
+    },
+    {
+      "old": "solver-sweep-result",
+      "new": "solver-sweep-result",
+      "kind": "protocol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Intentional standardized protocol name."
+    },
+    {
+      "old": "pathfinder-solver-sweep-result",
+      "new": "pathfinder-solver-sweep-result",
+      "kind": "protocol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Intentional manifest protocol kind."
+    },
+    {
+      "old": "gha-source-run",
+      "new": "gha-source-run",
+      "kind": "protocol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Intentional provenance name."
+    },
+    {
+      "old": "publish-solver-sweep-result.mjs",
+      "new": "publish-solver-sweep-result.mjs",
+      "kind": "tool",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Operation-first and descriptive."
+    },
+    {
+      "old": "check-solver-sweep-result-contract.mjs",
+      "new": "check-solver-sweep-result-contract.mjs",
+      "kind": "tool",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Honest deterministic check verb."
+    },
+    {
+      "old": "additive-tier-participation-audit.mjs",
+      "new": "additive-tier-participation-audit.mjs",
+      "kind": "tool",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Bounded systematic audit; retain."
+    },
+    {
+      "old": "connectivity-rejection-audit.mjs",
+      "new": "connectivity-rejection-audit.mjs",
+      "kind": "tool",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Systematic audit; retain."
+    },
+    {
+      "old": "method-probe",
+      "new": "method-probe",
+      "kind": "tool",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 1,
+      "status": "done",
+      "notes": "Genuine bounded diagnostic single-method execution."
+    },
+    {
+      "old": "STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE",
+      "new": "STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE",
+      "kind": "field",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 1,
+      "status": "done",
+      "notes": "Closed negative default-off experiment ID; delete later rather than rename."
+    },
+    {
+      "old": "STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE",
+      "new": "STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE",
+      "kind": "field",
+      "risk": "low",
+      "persistence": "frozen-history",
+      "phase": 1,
+      "status": "done",
+      "notes": "Closed negative default-off experiment ID; delete later rather than rename."
+    }
+  ]
+}

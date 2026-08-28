@@ -1,5 +1,22 @@
 # Cross-cutting change recipes
 
+## Rename / identity migration
+
+For any rename that crosses a module boundary, persisted identity, workflow, generated artifact, CLI, or current documentation authority:
+
+1. read [`naming-and-vocabulary.md`](naming-and-vocabulary.md) and the active row(s) in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json);
+2. search the old spelling, canonical spelling, abbreviations, case variants, and human-readable labels across source, tests, package scripts, workflows, current docs, schemas, telemetry/provenance, environment variables, artifact/concurrency/cache identifiers, and spawned/imported physical paths;
+3. identify the producer, canonical reader/parser, transports, generated projections, historical fixtures, and every consumer before changing a persisted string;
+4. use dual-read/single-write for persisted identities unless the owning plan row explicitly says otherwise;
+5. do not rewrite frozen reports, logs, archived snapshots, or historical workflow artifacts merely to modernize terminology;
+6. for structured identities, require parse/format round trips, uniqueness, deterministic canonical formatting, legacy-to-canonical fixtures, and a collision check proving distinct legacy behavior does not collapse;
+7. for file/workflow renames, audit exact-case `paths`/`paths-ignore`, imports/spawns, workflow display/job names, concurrency groups, artifacts, caches, package aliases, and reproduction commands;
+8. for behavior-preserving solver renames, compare representative attempt/stage order, node/work accounting, and solved outcomes before/after;
+9. update current authority links and semantic dependants, then run `npm run check:documentation-links`;
+10. mark only the implemented ledger rows `done`. Do not opportunistically choose a different canonical name.
+
+A compatibility alias may be removed only when live code/workflows no longer emit it, current docs no longer teach it, historical readers still accept the legacy form, and a representative historical fixture proves compatibility.
+
 Use this when a change is conceptually small but can propagate across multiple representations or execution boundaries. These are audit checklists, not instructions to edit every named surface blindly. Inspect current consumers first.
 
 ## Solver attempt, stage, or retry

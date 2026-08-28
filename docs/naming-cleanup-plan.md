@@ -41,7 +41,7 @@ GitHub code search is not indexed for this repository, so the refreshed live-sur
 | `gha-source-run` / `pathfinder-gha-source-run` | intentional retained provenance name | Retain. It describes GHA source-run provenance rather than an implementation-history label. |
 | `publish-solver-sweep-result.mjs` | intentional retained tool | Retain: operation-first and behavior-descriptive. |
 | `check-solver-sweep-result-contract.mjs` / `check:solver-sweep-results` | intentional retained tool/alias | Retain: deterministic contract validation with an honest `check` verb. |
-| `gha:result` / `scripts/gha-result.mjs` | rename | Rename to `gha:fetch-result` / `scripts/fetch-gha-result.mjs`; it actively resolves/downloads a completed run artifact. |
+| `gha:result` / `scripts/gha-result.mjs` | rename | Rename to **gha:fetch-result** / `scripts/fetch-gha-result.mjs`; it actively resolves/downloads a completed run artifact. |
 | new `run-name`/artifact/provenance surfaces across maintained evidence workflows | covered live surface | Treat as propagation targets for any workflow/tool terminology renamed later; do not rewrite historical run artifacts. |
 | `solver-archetype-sample-ab.yml`, `select-archetype-sample.mjs`, workflow input/output `archetype*`, and `STRATEGY_ARCHETYPE_ROUTING` | rename | PR 3 migrates these atomically to routing-regime terminology; exact mappings are fixed in Section 4.1. |
 | `techniqueLifecycle` result/telemetry field | rename | Its keys are solver stages, not techniques. Rename to `stageLifecycle` in PR 6 with dual-read for retained generated JSON. |
@@ -49,7 +49,7 @@ GitHub code search is not indexed for this repository, so the refreshed live-sur
 | `scripts/stress/select-attempt-exposure-sample.mjs` | retain file, rename interface fields | The filename accurately describes mechanics-only sampling. PR 4 changes `--technique` to `--attempt-config` and generated `technique` to `attemptConfigIdentity`. |
 | `scripts/stress/analyze-equal-work-census-pilot.mjs` | rename | It is now surfaced durable tooling. Rename to `scripts/stress/analyze-equal-work-census.mjs` in PR 8. |
 | `technique-census-cell.mjs` and its new equal-work test/helper surfaces | covered existing taxonomy cleanup | Keep live until PR 8; migrate the whole technique-census tool family together so equal-work additions do not preserve split vocabulary. |
-| `portfolio-sweep-reports-to-benchmark.mjs` / `solver:combine-corpus2-batches` | rename | The helper now combines generic solver-sweep reports and is used outside Corpus 2. Rename to `combine-solver-sweep-reports.mjs` / `solver:combine-sweep-reports` in PR 9. |
+| `portfolio-sweep-reports-to-benchmark.mjs` / `solver:combine-corpus2-batches` | rename | The helper now combines generic solver-sweep reports and is used outside Corpus 2. Rename to `combine-solver-sweep-reports.mjs` / **solver:combine-sweep-reports** in PR 9. |
 | current generated outputs `reports/stress/benchmark-parallel.json` and `reports/stress/benchmark-latest-random.json` | rename live output paths | New workflow output paths become `reports/stress/solver-corpus1-latest.json` and `reports/stress/solver-corpus2-latest.json`; retained historical files are not rewritten. |
 | `STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE` and `STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE` | intentional retained experiment IDs | Both tested forms are closed negative in the opt-in ledger. Do not spend compatibility churn renaming dead experiment IDs; retain them only as closed default-off historical controls and ledger exemptions. If removed later, delete rather than rename. |
 | `additive-tier-participation-audit.mjs` | intentional retained tool | Retain: it is a bounded systematic audit of additive-tier participation. |
@@ -233,9 +233,11 @@ For structured or persisted identifiers, "the tests pass" is not enough. Add the
 - direct symbol/file renames leave no live old-name imports, spawns, workflow filters, or package aliases after their compatibility window closes;
 - behavior-preserving solver renames compare representative attempt order, stage order, work/node accounting, and solved outcomes before/after, not merely final solved count.
 
-For workflow/file changes, run a case-sensitive path audit. The current repository already contains at least one naming-era hazard of this class: `.github/workflows/audit-export.yml` watches `modules/Solver.ts` while the live facade is `modules/solver.ts`. Correct stale trigger paths when that workflow is migrated; do not preserve them as historical spelling.
+For workflow/file changes, run a case-sensitive path audit. The current repository already contains at least one naming-era hazard of this class: `.github/workflows/audit-export.yml` watches **modules/Solver.ts** while the live facade is `modules/solver.ts`. Correct stale trigger paths when that workflow is migrated; do not preserve them as historical spelling.
 
 ## 4. Canonical rename inventory
+
+> **Notation:** backticked paths/commands in this current authority exist now. Future canonical paths and package aliases are shown in **bold** until the implementation PR creates them; this keeps the documentation contract checker from treating planned names as already-runnable repository surfaces.
 
 The names below are fixed. Do not substitute alternatives.
 
@@ -500,7 +502,7 @@ The internal boundary migration is also fixed, not left to implementer invention
 | editor `trapParityCandidates` | `falseGoalTriggerParityCandidates` |
 | corresponding `*TrapSpots` / `*TrapParityCandidates` state actions | `*TriggerableFalseGoalCells` / `*FalseGoalTriggerParityCandidates` |
 | `trap-search-audit.mjs` | `audit-false-goal-triggerability.mjs` |
-| npm `solver:trap-audit` | `solver:audit-false-goal-triggerability` |
+| npm `solver:trap-audit` | **solver:audit-false-goal-triggerability** |
 
 The canonical worker/result status values are `complete`, `partial`, and `aborted`. Legacy `done` and `timeout` values are read only where historical/generated payloads require them. Update editor completion checks in the same PR so no live caller still tests `status === 'done'`.
 
@@ -581,7 +583,7 @@ Rename current instrument and implementation names:
 
 - `solver-winning-lineage-survival-analysis.md` -> `solver-known-solution-prefix-survival.md`;
 - `analyze-lineage-mechanics.mjs` -> `analyze-known-solution-prefix-survival.mjs`;
-- `modules/solver/research-lineage.ts` -> `modules/solver/known-solution-prefix-survival.ts`;
+- `modules/solver/research-lineage.ts` -> **modules/solver/known-solution-prefix-survival.ts**;
 - `WinningPrefixIndex` -> `KnownSolutionPrefixIndex`;
 - `WinningLineageObserver` -> `KnownSolutionPrefixSurvivalObserver`;
 - `LineageStageSummary` -> `KnownSolutionPrefixStageSummary`.
@@ -609,10 +611,10 @@ Do not merely rename the current junk-drawer facades.
 
 Perform a behavior-preserving extraction and then delete `core.ts`:
 
-- move audio ownership to `modules/audio-service.ts`;
+- move audio ownership to **modules/audio-service.ts**;
 - `SOUND_BUS` -> `audioService`;
 - expose `createAudioService`;
-- move stable app constants/status enums to `modules/app-constants.ts`;
+- move stable app constants/status enums to **modules/app-constants.ts**;
 - keep DOM lookup helpers local to consumers rather than in a global "core" bag;
 - replace injected `core` dependencies with the specific constants/audio dependencies each consumer uses;
 - remove `createCore` when no consumer remains.
@@ -647,11 +649,11 @@ The following public/surfaced tool names are canonical.
 
 ### 5.1 Solver regression and performance
 
-- npm `solver:bench` -> `solver:regression`;
+- npm `solver:bench` -> **solver:regression**;
 - underlying solved-set command/file should use "regression" terminology;
 - keep `solver:bench` as a deprecated npm alias during one migration PR only, then remove it after workflows/docs are updated;
-- performance measurement remains `solver:speed-probe` until the tool-convention PR, where it becomes `solver:measure-speed`;
-- `stress:benchmark` -> `stress:measure-solver` because it is actual corpus solver measurement.
+- performance measurement remains `solver:speed-probe` until the tool-convention PR, where it becomes **solver:measure-speed**;
+- `stress:benchmark` -> **stress:measure-solver** because it is actual corpus solver measurement.
 
 Current docs must say explicitly: solved-set regression is not a speed benchmark.
 
@@ -663,7 +665,7 @@ Current docs must say explicitly: solved-set regression is not a speed benchmark
 ### 5.3 Hint validation
 
 - `hint-path-oracle.mjs` -> `validate-hint-paths.mjs`;
-- corresponding npm/test alias -> `test:hint-path-validation`;
+- corresponding npm/test alias -> **test:hint-path-validation**;
 - documentation must state that it uses the canonical production referee/validator and is not independent.
 
 ### 5.4 CP-SAT
@@ -702,7 +704,7 @@ Rename generated fields:
 - preserve legacy-field reads for existing generated JSON;
 - write only the new fields after all current consumers accept both.
 
-Replace the opaque npm alias `audit:newhint:full` with `solver:analyze-diagnostics`. Remove the old alias after current docs/workflows are migrated.
+Replace the opaque npm alias `audit:newhint:full` with **solver:analyze-diagnostics**. Remove the old alias after current docs/workflows are migrated.
 
 ### 5.8 Probe overloading
 
@@ -724,12 +726,12 @@ The following commands are already surfaced and therefore are no longer unnamed/
 
 | Current file / alias | Canonical file / alias |
 |---|---|
-| `stress/winning-lineage-pilot.mjs` / `solver:winning-lineage-pilot` | `stress/collect-known-solution-prefix-survival.mjs` / `solver:collect-known-solution-prefix-survival` |
-| `stress/winning-prefix-atlas-pilot.mjs` / `solver:winning-prefix-atlas-pilot` | `stress/collect-known-solution-prefix-branches.mjs` / `solver:collect-known-solution-prefix-branches` |
-| `stress/producer-population-pilot.mjs` / `solver:producer-population-pilot` | `stress/compare-search-producer-populations.mjs` / `solver:compare-search-producer-populations` |
-| `stress/residual-interface-mining-pilot.mjs` / `solver:residual-interface-pilot` | `stress/analyze-residual-interfaces.mjs` / `solver:analyze-residual-interfaces` |
-| `stress/repair-rollback-census-pilot.mjs` / `solver:repair-rollback-pilot` | `stress/census-repair-rollback-windows.mjs` / `solver:census-repair-rollback-windows` |
-| `stress/symmetry-repair-seed-pilot.mjs` / `solver:symmetry-repair-seed-pilot` | `stress/compare-symmetry-repair-seed.mjs` / `solver:compare-symmetry-repair-seed` |
+| `stress/winning-lineage-pilot.mjs` / `solver:winning-lineage-pilot` | `stress/collect-known-solution-prefix-survival.mjs` / **solver:collect-known-solution-prefix-survival** |
+| `stress/winning-prefix-atlas-pilot.mjs` / `solver:winning-prefix-atlas-pilot` | `stress/collect-known-solution-prefix-branches.mjs` / **solver:collect-known-solution-prefix-branches** |
+| `stress/producer-population-pilot.mjs` / `solver:producer-population-pilot` | `stress/compare-search-producer-populations.mjs` / **solver:compare-search-producer-populations** |
+| `stress/residual-interface-mining-pilot.mjs` / `solver:residual-interface-pilot` | `stress/analyze-residual-interfaces.mjs` / **solver:analyze-residual-interfaces** |
+| `stress/repair-rollback-census-pilot.mjs` / `solver:repair-rollback-pilot` | `stress/census-repair-rollback-windows.mjs` / **solver:census-repair-rollback-windows** |
+| `stress/symmetry-repair-seed-pilot.mjs` / `solver:symmetry-repair-seed-pilot` | `stress/compare-symmetry-repair-seed.mjs` / **solver:compare-symmetry-repair-seed** |
 | `stress/restart-continuation-population-pilot.mjs` | `stress/compare-repair-restart-continuation-population.mjs` |
 | `stress/analyze-equal-work-census-pilot.mjs` | `stress/analyze-equal-work-census.mjs` |
 
@@ -753,7 +755,7 @@ Canonical live mappings:
 | `family-wide-trove-shard-slice.mjs` | `plan-variant-family-dataset-shard.mjs` |
 | `family-wide-trove-combine.mjs` | `merge-variant-family-dataset-shards.mjs` |
 | `family-trove-doctor.mjs` | `validate-variant-family-dataset-worktree.mjs` |
-| npm `family:trove:doctor` | `family:validate-dataset-worktree` |
+| npm `family:trove:doctor` | **family:validate-dataset-worktree** |
 | env `PATHFINDER_VARIANT_TROVE` | `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT` |
 | local `TROVE_BRANCH` | `VARIANT_FAMILY_DATASET_BRANCH` |
 | `.github/workflows/audit-export.yml` | `.github/workflows/solver-diagnostics.yml` |
@@ -762,14 +764,14 @@ Canonical live mappings:
 | `stress/select-repair-probe-adaptive-sample.mjs` | `stress/select-early-repair-search-adaptive-sample.mjs` |
 | `stress/repair-probe-badness-report.mjs` | `stress/early-repair-search-badness-report.mjs` |
 | `.github/workflows/solver-repair-probe-adaptive-sample-ab.yml` | `.github/workflows/solver-early-repair-search-adaptive-sample-ab.yml` |
-| `portfolio-scheduler-report.mjs` / npm `solver:portfolio-report` | `legacy-latency-portfolio-report.mjs` / `solver:legacy-latency-portfolio-report` |
-| `portfolio-historical-replay.mjs` / npm `solver:portfolio-replay` | `legacy-latency-portfolio-replay.mjs` / `solver:legacy-latency-portfolio-replay` |
+| `portfolio-scheduler-report.mjs` / npm `solver:portfolio-report` | `legacy-latency-portfolio-report.mjs` / **solver:legacy-latency-portfolio-report** |
+| `portfolio-historical-replay.mjs` / npm `solver:portfolio-replay` | `legacy-latency-portfolio-replay.mjs` / **solver:legacy-latency-portfolio-replay** |
 
 The `confirm-residual-001` diagnostic explicitly describes itself as durable general tooling, so its permanent name must describe its reusable job rather than the cohort that caused it to be written. The early-repair-search filenames migrate in the same PR as the stage identity so current tools/workflows do not preserve `repair-probe` after the runtime stage has changed.
 
 The dataset-root environment variable uses dual-read/single-prefer-new for one compatibility window because developers or CI may have it configured outside git. New docs/workflows write only `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT`.
 
-When renaming workflows, also migrate current job labels/IDs, concurrency groups, newly emitted artifact names, default input descriptions, and current README/catalog entries. Historical workflow-run artifacts retain their historical names. Fix the stale `modules/Solver.ts` path filter in the diagnostics workflow to the live `modules/solver.ts` spelling.
+When renaming workflows, also migrate current job labels/IDs, concurrency groups, newly emitted artifact names, default input descriptions, and current README/catalog entries. Historical workflow-run artifacts retain their historical names. Fix the stale **modules/Solver.ts** path filter in the diagnostics workflow to the live `modules/solver.ts` spelling.
 
 `method-probe` remains valid terminology because it is genuinely bounded diagnostic single-method execution; do not rename it merely because other uses of "probe" are being corrected.
 
@@ -791,7 +793,7 @@ Rename only the noun-only retrieval command:
 | Current | Canonical |
 |---|---|
 | `scripts/gha-result.mjs` | `scripts/fetch-gha-result.mjs` |
-| package alias `gha:result` | `gha:fetch-result` |
+| package alias `gha:result` | **gha:fetch-result** |
 
 Update `AGENTS.md`, `scripts/README.md`, `docs/tooling-catalog.md`, `.github/workflows/README.md`, the contract checker, package aliases, and current workflow/tooling documentation together. The artifact/provenance protocol strings themselves do not change.
 
@@ -802,7 +804,7 @@ The generic report combiner has outgrown both `portfolio` and `corpus2` in its s
 | Current | Canonical |
 |---|---|
 | `scripts/portfolio-sweep-reports-to-benchmark.mjs` | `scripts/combine-solver-sweep-reports.mjs` |
-| package alias `solver:combine-corpus2-batches` | `solver:combine-sweep-reports` |
+| package alias `solver:combine-corpus2-batches` | **solver:combine-sweep-reports** |
 | live output `reports/stress/benchmark-parallel.json` | `reports/stress/solver-corpus1-latest.json` |
 | live output `reports/stress/benchmark-latest-random.json` | `reports/stress/solver-corpus2-latest.json` |
 
@@ -1014,15 +1016,15 @@ This PR is high risk and requires full CI.
 - dataset worktree/env-var migration;
 - audit diagnostics rename;
 - workflow filenames, display/job names, concurrency groups, current artifact names, path filters, package aliases, catalogs, and workflow docs updated together;
-- rename the completed-run retrieval helper `gha:result` / `gha-result.mjs` to `gha:fetch-result` / `fetch-gha-result.mjs` while retaining the `solver-sweep-result` and `gha-source-run` protocol names;
-- correct the existing `modules/Solver.ts` workflow path-filter case mismatch.
+- rename the completed-run retrieval helper `gha:result` / `gha-result.mjs` to **gha:fetch-result** / `fetch-gha-result.mjs` while retaining the `solver-sweep-result` and `gha-source-run` protocol names;
+- correct the existing **modules/Solver.ts** workflow path-filter case mismatch.
 
 ### PR 9: Regression/performance CLI vocabulary
 
-- `solver:bench` -> `solver:regression`;
-- `solver:speed-probe` -> `solver:measure-speed`;
-- `stress:benchmark` -> `stress:measure-solver`;
-- `portfolio-sweep-reports-to-benchmark.mjs` -> `combine-solver-sweep-reports.mjs` and `solver:combine-corpus2-batches` -> `solver:combine-sweep-reports`;
+- `solver:bench` -> **solver:regression**;
+- `solver:speed-probe` -> **solver:measure-speed**;
+- `stress:benchmark` -> **stress:measure-solver**;
+- `portfolio-sweep-reports-to-benchmark.mjs` -> `combine-solver-sweep-reports.mjs` and `solver:combine-corpus2-batches` -> **solver:combine-sweep-reports**;
 - move maintained live corpus outputs from `benchmark-parallel.json` / `benchmark-latest-random.json` to `solver-corpus1-latest.json` / `solver-corpus2-latest.json` without rewriting frozen artifacts;
 - remove deprecated aliases after all live references are migrated;
 - update `AGENTS.md`, testing docs, tooling catalog, scripts/workflows READMEs, package scripts.
@@ -1189,7 +1191,7 @@ The cleanup is complete only when all of the following are true.
 17. Current scheduler mode is `production`; the historical wall-clock experiment is explicitly `legacy-latency-portfolio-experiment`; generic `legacy` is not a live scheduler identity.
 18. False-goal internal code, worker protocol, editor state/actions, telemetry, and developer tools use triggerability terminology; only deliberate player-facing copy may say "Trap".
 19. Live variant-family dataset tooling/workflows/env vars do not use `trove`; historical branch/report/artifact names may.
-20. Workflow names, path filters, concurrency identifiers, and newly emitted artifact names have been audited; no current workflow references a stale case-sensitive source path such as `modules/Solver.ts`.
+20. Workflow names, path filters, concurrency identifiers, and newly emitted artifact names have been audited; no current workflow references a stale case-sensitive source path such as **modules/Solver.ts**.
 21. Attempt/action identity formatters pass round-trip, injectivity/collision, legacy-normalization, and deterministic-format tests.
 22. `npm run check:documentation-links` passes.
 23. Full `npm run ci` passes after the final alias removals.
@@ -1200,7 +1202,7 @@ The cleanup is complete only when all of the following are true.
 28. Current solver lifecycle telemetry is named `stageLifecycle`; historical `techniqueLifecycle` JSON remains readable.
 29. Current attempt-exposure tooling uses `routingRegime` and `attemptConfigIdentity`, not `archetype` and `technique`, for those exact concepts.
 30. No surfaced equal-work analysis command retains `pilot` in its permanent name.
-31. Maintained solver-sweep report combination uses `combine-solver-sweep-reports` / `solver:combine-sweep-reports`, and current Corpus 1/2 output paths do not use `parallel`, `random`, or unqualified `benchmark` as corpus identity.
+31. Maintained solver-sweep report combination uses `combine-solver-sweep-reports` / **solver:combine-sweep-reports**, and current Corpus 1/2 output paths do not use `parallel`, `random`, or unqualified `benchmark` as corpus identity.
 
 ## 14. Stop conditions
 
