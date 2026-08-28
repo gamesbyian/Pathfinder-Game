@@ -20,7 +20,7 @@ import { createCellRunner } from './technique-census-cell.mjs';
 function stubRunner(onCall) {
     const calls = [];
     const runAttemptForTesting = async (gateKey, level, prep, attemptConfig, attBudget, attStart, yieldFn, nodeBudget) => {
-        const call = { gateKey, attBudget, nodeBudget, workCapBefore: prep._workCap, workSpentBefore: prep._workMeter.units };
+        const call = { gateKey, attBudget, nodeBudget, workCapBefore: prep._workCap, strictWorkCapBefore: prep._strictWorkCap, workSpentBefore: prep._workMeter.units };
         calls.push(call);
         const outcome = onCall(call, prep) ?? {};
         return {
@@ -61,6 +61,7 @@ test('node-budget cell (no workBudget) is unaffected by the equal-work addition'
     assert.equal(Object.hasOwn(result, 'deadlineTruncated'), false);
     // Node mode still bounds via runAttempt's own nodeBudget param, never prep._workCap.
     assert.ok(calls.every(c => c.workCapBefore === undefined));
+    assert.ok(calls.every(c => c.strictWorkCapBefore === undefined));
 });
 
 test('work-budget cell caps by canonical work, not raw nodes', async () => {
@@ -90,6 +91,9 @@ test('work-budget cell caps by canonical work, not raw nodes', async () => {
     assert.ok(calls.every(c => c.nodeBudget === Infinity));
     assert.equal(calls[0].workCapBefore, 75);
     assert.equal(calls[1].workCapBefore, 150);
+    assert.equal(calls[0].strictWorkCapBefore, calls[0].workCapBefore,
+        'equal-work cells expose the same hard cap to admissible-order/IDA as to DFS/beam/repair');
+    assert.equal(calls[1].strictWorkCapBefore, calls[1].workCapBefore);
 });
 
 test('work-budget cell right-censors on a wall-safety timeout before its own share is exhausted', async () => {
@@ -197,6 +201,26 @@ test('real solver, work budget too small for a losing technique: work-budget-rea
     assert.equal(result.status, 'work-budget-reached');
     assert.equal(result.deadlineTruncated, false);
     assert.ok(result.workSpent >= 50_000, `workSpent (${result.workSpent}) should have reached the 50,000 ceiling`);
+});
+
+test('real admissible-order/IDA cell obeys the equal-work cap instead of overshooting by orders of magnitude', async () => {
+    const { runCell } = await createCellRunner();
+    // Use the always-present published fixture so this contract stays covered by CI's deliberately
+    // sparse node-test checkout. The original EW1 failure was observed on Corpus 2, but the bug was
+    // family-wide: admissible-order ignored _workCap and only consulted _strictWorkCap.
+    const budget = 50_000;
+    const result = await runCell({
+        cellId: 'EW1-IDA-CAP', tier: 'EW1', corpus: 'published', levelPos: 1,
+        techniqueKeys: ['ida:none'], ablation: null, budgetMs: 600_000,
+        workBudget: budget,
+    });
+
+    assert.equal(result.deadlineTruncated, false);
+    // Whether this tiny published fixture happens to solve before the ceiling is not the contract
+    // under test. What matters is that the genuine IDA hot loop can no longer escape far beyond the
+    // equal-work cap. A small discrete overshoot is expected because the loop checks in batches.
+    assert.ok(result.workSpent < budget * 2,
+        `IDA workSpent (${result.workSpent}) escaped far beyond the ${budget} equal-work cap`);
 });
 
 test('runCellSafe echoes workBudget on a thrown error, same as the success/failure paths', async () => {

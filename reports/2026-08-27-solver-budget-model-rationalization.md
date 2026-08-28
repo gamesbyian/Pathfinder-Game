@@ -158,6 +158,32 @@ constant/fraction independent of the caller's own `nodeBudget`/`workBudget`
 ran 1.5x-467x the nominal `workBudget` — a `node_budget` input to a capability sweep or confirmation
 workflow is not a real per-level ceiling unless `strictTotalWorkBudget` is also set.
 
+**2026-08-28, same day: first site migrated, and node_budget legibility documented in place.**
+`dedup-near-tie-retry` is now sized from the solve's resolved `workBudget` instead of a second
+`timeBudgetMs`-derived conversion (proven behavior-preserving for live play and the plain-default
+call shape; a genuine, deliberate dose correction — not a no-op — for the offline capability-sweep
+call shape specifically). The `node_budget` inputs on the confirmation/sweep workflows and
+`level-blind-capability-sweep.mjs` itself now state the starting-allocation-not-ceiling fact this
+audit found, in place, rather than only in this report. See
+[`2026-08-28-dedup-near-tie-retry-work-dose-migration.md`](2026-08-28-dedup-near-tie-retry-work-dose-migration.md).
+
+**2026-08-28, same day: second site migrated.** `repair-fallback` now follows the identical
+pattern (`scaledStageWorkBudget(workBudget, repairBudgetFraction, MIN_ATTEMPT_WORK)` in place of a
+second `timeBudgetMs`-derived `legacyMsToWork` conversion), with the same behavior-preservation
+profile: byte-identical for live play and the plain-default call shape (`REPAIR_EXTRA_BUDGET_FRACTION`
+is the integer `6.0`), a genuine dose correction for the offline capability-sweep call shape. See
+[`2026-08-28-repair-fallback-work-dose-migration.md`](2026-08-28-repair-fallback-work-dose-migration.md).
+**2026-08-28, same day: third site migrated, and a distinct structural gap found.**
+`admissible-order-non-default-retry` follows the identical pattern (integer `1.0` fraction, same
+behavior-preservation profile). See
+[`2026-08-28-admissible-order-non-default-retry-work-dose-migration.md`](2026-08-28-admissible-order-non-default-retry-work-dose-migration.md).
+While planning it, the sibling plain `admissible-order` tier was found to install no fresh work cap
+at all under legacy semantics — a distinct, larger question (a new-allocation addition, not a
+currency swap) outside this migration's scope; see
+[`2026-08-28-admissible-order-work-cap-gap-discovery.md`](2026-08-28-admissible-order-work-cap-gap-discovery.md).
+
+Five of the nine ms-shaped debt sites remain unmigrated.
+
 ### 2. One direct per-seed ms-to-work compatibility site
 
 Repair-late-probe multi-seed retry still creates each round's work allowance from the base
