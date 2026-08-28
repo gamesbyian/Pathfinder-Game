@@ -90,7 +90,7 @@ export const FEATURES: Record<string, string> = {
     STRATEGY_REPAIR_MUSTTURN_BIAS: 'Second, exit-guidance-biased repair attempt on must-turn levels',
     STRATEGY_ADAPTIVE_GATE_BUDGET: 'nodesExpanded-weighted per-gate budget skew on ≥4-gate levels',
     STRATEGY_LOWER_BOUND_MEMO:  'Exact memoization of must-pass/must-cross lower bounds (pure speed)',
-    STRATEGY_ARCHETYPE_ROUTING: 'Feature/archetype-based ATTEMPT_POLICY rule selection — disabling forces every level through the catch-all default rule',
+    STRATEGY_ROUTING_REGIME_SELECTION: 'Feature/routing-regime ATTEMPT_POLICY rule selection — disabling forces every level through the catch-all general rule',
     STRATEGY_MIN_BUDGET_FLOOR:  'Per-attempt-config minimum budget-share floor (long-multigate perimeter beams, must-cross diverse-beam threads)',
     STRATEGY_REPAIR_ELITE_SPLICE:      'Repair-search: splice restarts from the near-miss elite pool instead of always restarting fresh from the gate',
     STRATEGY_REPAIR_STAGNATION_BURST:  'Repair-search: force a burst of fresh-from-gate restarts after a long stretch with no badness improvement',
@@ -98,13 +98,13 @@ export const FEATURES: Record<string, string> = {
     STRATEGY_REPAIR_LENGTH_GAP_CLOSE: 'Repair-search: on a dead end where every non-length/intersection objective is already satisfied, try a small bounded backtracking search to close the exact length/intersection gap instead of discarding the restart',
     STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS: 'Repair-search: additionally trigger closeLengthGap when at most LENGTH_GAP_CLOSE_STRUCTURAL_SLACK non-length objectives are still pending (not just exactly zero) — targets near-miss dead ends like "length off by 1, one pending mustTurn cell" that the strict base trigger never attempts',
     STRATEGY_REPAIR_TURN_BIAS: 'Production default-OFF; closed retained opt-in: repair attempt with turn-aware selective bias. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
-    STRATEGY_REPAIR_FALLBACK_GATE_WIDEN: 'Production default-OFF; CLOSED NEGATIVE 2026-08-23: widens attempts.ts\'s needsRepairFallback gate to unconditionally cover isHighInt(f) (dropping the VERY_HIGH_REQINT floor) and portal-heavy (545 newly-gated levels). Population-scale GHA A/B (solver-archetype-sample-ab.yml, 562-level sample): control 417/562, treatment 415/562 — 0 gains, 2 losses (R01944, R02474). Confirms the unconditional early repair PROBE this gate also drives (see needsRepairFallback\'s own comment) taxes more than it helps in this broad form. Current disposition: docs/solver-opt-in-experiment-ledger.md. Do not repeat this unchanged form; a descendant needs a materially different (narrower) selection mechanism.',
+    STRATEGY_REPAIR_FALLBACK_GATE_WIDEN: 'Production default-OFF; CLOSED NEGATIVE 2026-08-23: widens attempts.ts\'s needsRepairFallback gate to unconditionally cover isHighInt(f) (dropping the VERY_HIGH_REQINT floor) and multi-portal (545 newly-gated levels). Population-scale GHA A/B (solver-routing-regime-sample-ab.yml, 562-level sample): control 417/562, treatment 415/562 — 0 gains, 2 losses (R01944, R02474). Confirms the unconditional early repair PROBE this gate also drives (see needsRepairFallback\'s own comment) taxes more than it helps in this broad form. Current disposition: docs/solver-opt-in-experiment-ledger.md. Do not repeat this unchanged form; a descendant needs a materially different (narrower) selection mechanism.',
     STRATEGY_MAIN_LOOP_LATE_RESERVE: 'Production default-ON: reserve a fixed main-loop node slice for a late config suffix without reordering attempts (MAIN_LOOP_LATE_RESERVE_FRACTION in orchestration.ts).',
     STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: 'Production default-OFF; closed retained opt-in: reserve part of the main-loop late slice for repair fallback. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: 'Production default-OFF; closed retained opt-in: reserve part of the main-loop late slice for attraction-diversity retry. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: 'Production default-OFF; closed retained opt-in: reserve part of the admissible-order tier for non-default profiles. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: 'Production default-ON: appends plain (non-diverse) beam:intersectionHarvest@beam5000 and beam:objectiveFirst@beam5000 as trailing protected-reserve configs to attempts.ts\'s must-cross+flipper-heavy rule only (isMustCrossFlipperHeavy — the one of three must-cross-heavy rules sharing this exposure gap whose trailing-reserve window has room without displacing an existing protected config). Promoted 2026-08-27 after development A/B +3/-0, same-generator confirmation +3/-0 (confirm-residual-003), and a cross-generator topology-composition transfer attempt (confirm-transfer-topology-001) that came back a clean null with zero losses. See attempts.ts\'s STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE comment. Disposition: docs/solver-opt-in-experiment-ledger.md.',
-    STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: 'Production default-OFF; CLOSED NEGATIVE 2026-08-26: widens stage-budget.ts\'s MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT by one (mirroring the validated 2026-08-22 4->5 increase) AND appends the missing plain WIDE beam to attempts.ts\'s two must-cross-heavy sibling rules ("must-cross, must-pass-heavy": beam:intersectionHarvest@beam5000; "must-cross default": beam:objectiveFirst@beam5000) that STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE\'s rule left untouched. Population-scale development A/B (solver-archetype-sample-ab.yml, 486-level must-cross-heavy sample): control 389/486, treatment 389/486 — 0 gains, 0 losses, with real (nonzero) work/node engagement confirming the mechanism actually ran, not a non-participation artifact. Current disposition: docs/solver-opt-in-experiment-ledger.md. Do not repeat this unchanged form (same two rules, same two beams, same reserve-widen mechanism) without materially new evidence.',
+    STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: 'Production default-OFF; CLOSED NEGATIVE 2026-08-26: widens stage-budget.ts\'s MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT by one (mirroring the validated 2026-08-22 4->5 increase) AND appends the missing plain WIDE beam to attempts.ts\'s two must-cross-heavy sibling rules ("must-cross, must-pass-heavy": beam:intersectionHarvest@beam5000; "must-cross default": beam:objectiveFirst@beam5000) that STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE\'s rule left untouched. Population-scale development A/B (solver-routing-regime-sample-ab.yml, 486-level must-cross-heavy sample): control 389/486, treatment 389/486 — 0 gains, 0 losses, with real (nonzero) work/node engagement confirming the mechanism actually ran, not a non-participation artifact. Current disposition: docs/solver-opt-in-experiment-ledger.md. Do not repeat this unchanged form (same two rules, same two beams, same reserve-widen mechanism) without materially new evidence.',
     STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE: 'Production default-OFF; CLOSED NEGATIVE 2026-08-28 append-last form. Selected replay was +1/-0, but the prespecified 120-level mechanics-eligible strict-67M development A/B was control 56/120 vs treatment 55/120: 0 gains, 1 loss (R02965), treatment participation 68/120, no deadline/error censoring, and +29.0M aggregate work. Mechanism: appending the new beam changed MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT=5 suffix membership and starved a previously protected beam:objectiveFirst@beam5000 winner. Do not repeat this append-last form. Separate reserve-preserving descendant has a materially new placement premise.',
     STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE: 'Production default-OFF development descendant: exposes the same beam:intersectionHarvest@beam2000 action as STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE, but inserts it immediately before each affected rule\'s previously protected five-config late-reserve suffix instead of appending it after that suffix. Motivated by the parent treatment\'s R02965 development regression: append-last changed suffix membership and starved the existing beam:objectiveFirst@beam5000 winner. This descendant preserves the pre-treatment protected suffix membership without widening the reserve or changing total-work policy.',
 
@@ -158,6 +158,22 @@ export const OPT_IN_FEATURES = new Set([
     'STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE',
 ]);
 
+
+/** Historical externally persisted flag spellings accepted on input only. */
+export const LEGACY_FEATURE_ALIASES: Readonly<Record<string, string>> = Object.freeze({
+    STRATEGY_ARCHETYPE_ROUTING: 'STRATEGY_ROUTING_REGIME_SELECTION',
+});
+
+/** Normalize one historical feature name to the canonical registry key. */
+export function canonicalAblationFeatureName(featureName: string): string {
+    return LEGACY_FEATURE_ALIASES[featureName] ?? featureName;
+}
+
+/** True for canonical feature names and supported historical aliases. */
+export function isKnownAblationFeatureName(featureName: string): boolean {
+    return canonicalAblationFeatureName(featureName) in FEATURES;
+}
+
 // ─── Template → config key mapping ────────────────────────────────────────────
 
 /** @type {Record<string, string>} */
@@ -210,9 +226,10 @@ export function defaultConfig(): AblationConfig {
 
 /** One feature disabled, all others at production defaults. @param {string} featureName @returns {Record<string, any>} */
 export function withFeatureDisabled(featureName: string): AblationConfig {
-    if (!(featureName in FEATURES)) throw new Error(`Unknown feature: ${featureName}`);
+    const canonical = canonicalAblationFeatureName(featureName);
+    if (!(canonical in FEATURES)) throw new Error(`Unknown feature: ${featureName}`);
     const cfg = defaultConfig();
-    cfg[featureName] = false;
+    cfg[canonical] = false;
     return cfg;
 }
 
@@ -220,8 +237,9 @@ export function withFeatureDisabled(featureName: string): AblationConfig {
 export function withFeaturesDisabled(featureNames: string[]): AblationConfig {
     const cfg = defaultConfig();
     for (const f of featureNames) {
-        if (!(f in FEATURES)) throw new Error(`Unknown feature: ${f}`);
-        cfg[f] = false;
+        const canonical = canonicalAblationFeatureName(f);
+        if (!(canonical in FEATURES)) throw new Error(`Unknown feature: ${f}`);
+        cfg[canonical] = false;
     }
     return cfg;
 }
@@ -230,8 +248,9 @@ export function withFeaturesDisabled(featureNames: string[]): AblationConfig {
 export function soloConfig(featureNames: string[]): AblationConfig {
     const cfg = Object.fromEntries(Object.keys(FEATURES).map(k => [k, false]));
     for (const f of featureNames) {
-        if (!(f in FEATURES)) throw new Error(`Unknown feature: ${f}`);
-        cfg[f] = true;
+        const canonical = canonicalAblationFeatureName(f);
+        if (!(canonical in FEATURES)) throw new Error(`Unknown feature: ${f}`);
+        cfg[canonical] = true;
     }
     return cfg;
 }
