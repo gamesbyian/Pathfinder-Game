@@ -15,7 +15,7 @@ const POLICY = {
     VERY_HIGH_REQINT: 7,
     /** portal pairs ≥ this → objectiveFirst guides the beam through portal transitions better than pure harvest. */
     PORTAL_DENSE_PAIRS: 2,
-    /** navDensity ≥ this is near-Hamiltonian: beams collapse over the long dense walk, so DFS-perimeter leads. */
+    /** requiredPathCoverageRatio ≥ this is near-Hamiltonian: beams collapse over the long dense walk, so DFS-perimeter leads. */
     NEAR_HAMILTONIAN_COVERAGE_THRESHOLD: 0.82,
     /** reqLen ≥ this is a "long" path (a perimeter beam needs seconds to walk it). */
     LONG_PATH_REQLEN: 90,
@@ -164,10 +164,10 @@ const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= PO
  *  main loop (`repairConfigs.length > 0` is its own eligibility check, driven directly by this
  *  function). A level that never solves via repair still pays the probe's full bounded node cost
  *  every time — `REPAIR_PROBE_ORDINARY_NODE_BUDGET`'s own comment documents ~10.7s of measured
- *  dead-search overhead on one such level. `docs/solver-optimization-workstreams.md` Priority 7's
+ *  dead-search overhead on one such level. `docs/solver-optimization-workstreams.md` Workstream 1's
  *  2026-08-22 follow-up mining pass found the CURRENT (narrow) gate already taxes more levels than
  *  it helps (48 fast-solving vs 13 repair-needing, full-corpus scan) and left widening this gate to
- *  cover `portal-heavy` and the rest of `high-intersection-burden` (55 more genuinely-gapped rows)
+ *  cover `multi-portal` and the rest of `intersection-heavy` (55 more genuinely-gapped rows)
  *  explicitly unlanded pending a population-scale/stratified-sample wall-time check — see
  *  `solver-future-work.md`'s "repair-fallback gate widening" entry. `STRATEGY_REPAIR_FALLBACK_GATE_WIDEN`
  *  (default OFF, ablation-config.ts) below is that experiment's gate: OFF reproduces this function's
@@ -295,7 +295,7 @@ interface PolicyRule {
  */
 const ATTEMPT_POLICY: PolicyRule[] = [
     {
-        why: 'near-closure: near-loop, goal attraction dominates — closure/harvest profiles first',
+        why: 'sparse-low-intersection: low-intersection sparse route, goal attraction dominates — closure/harvest profiles first',
         when: f => f.routingRegime === 'sparse-low-intersection',
         build: () => profilesFirst(['nearClosureRescue', 'harvestThenFinish', 'finishFirst', 'perimeterSweep']),
     },
@@ -384,7 +384,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // perimeter-beam attempts above already win, only reached where they exhaust first.
             beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE),
             // Follow-up (2026-08-22 mining pass, docs/solver-optimization-workstreams.md
-            // Priority 7): this rule offers `sideCommitment` nowhere — neither as DFS nor beam —
+            // Workstream 1): this rule offers `sideCommitment` nowhere — neither as DFS nor beam —
             // unlike the default routing regime rules, which both include it. `dfs:perimeterSweep/
             // sideCommitment` was independently the cheap-to-moderate isolated winner on multiple
             // still-unsolved levels of this routing regime (R02858, R03226, R02903), the single best-
@@ -424,7 +424,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
     },
     {
         // Beam added here too (technique census, run 32240161854 — docs/solver-optimization-current-
-        // queue.md Priority 7): this turned out to be the DOMINANT contributor to the beam-routing
+        // queue.md Workstream 1): this turned out to be the DOMINANT contributor to the beam-routing
         // gap (43 of 69 zero-beam oracle-union levels, vs. 26 across the two sibling default rules
         // fixed above) — profilesFirst() built this routing regime's list purely from DFS profiles and
         // templates too, with no beam offered at all. Placed as the LAST two configs deliberately
@@ -438,12 +438,12 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // 1-6+ seconds of needless beam search first (measured on the published corpus: +94% total
         // wall time, 66/160 levels meaningfully slower) — reverted in favor of this placement.
         // Follow-up (technique census, run 32240161854 — docs/solver-optimization-workstreams.md
-        // Priority 7): objectiveFirst/intersectionHarvest WIDE alone left a further gap on THIS
+        // Workstream 1): objectiveFirst/intersectionHarvest WIDE alone left a further gap on THIS
         // routing regime specifically — `beam:perimeterSweep/perimeterCW@beam2000` and its CCW sibling are
         // each independently the cheap census winner on more of this routing regime's oracle-union
         // population than either WIDE config. Added at the same trailing position for the same
         // late-reserve-protection reason.
-        why: 'portal-heavy: portal-transfer profiles, remaining profiles/templates, beams last (protected reserve slice)',
+        why: 'multi-portal: portal-transfer profiles, remaining profiles/templates, beams last (protected reserve slice)',
         when: f => f.routingRegime === 'multi-portal',
         build: () => [
             dfs('portalFirstTransfer'), dfs('portalCommitted'),
@@ -550,7 +550,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
     },
     {
         // Beam added here (technique census, run 32240161854 — docs/solver-optimization-current-
-        // queue.md Priority 7): this rule previously built its list purely from DFS templates and
+        // queue.md Workstream 1): this rule previously built its list purely from DFS templates and
         // profiles, so it never offered beam search at all — a real capability gap on exactly the
         // open, low-constraint levels this rule matches, where beam disproportionately wins cheaply.
         // Placed as the LAST two configs deliberately (not first, not right after the templates):
@@ -566,10 +566,10 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // beam search first — measured on the published corpus: +94% total wall time, 66/160 levels
         // meaningfully slower).
         // Follow-up (technique census, run 32240161854 — docs/solver-optimization-workstreams.md
-        // Priority 7): same additional gap as the portal-heavy rule's own follow-up comment —
+        // Workstream 1): same additional gap as the multi-portal rule's own follow-up comment —
         // beam:perimeterSweep/perimeterCW(CCW)@beam2000 is independently the cheap census winner on
         // more of this routing regime's oracle-union population than the WIDE configs alone reach.
-        why: 'default, no must-pass: CCW template before CW (open grids where CW times out), then profiles, beams last (protected reserve slice)',
+        why: 'general, no must-pass: CCW template before CW (open grids where CW times out), then profiles, beams last (protected reserve slice)',
         when: f => f.mustPass === 0,
         build: () => [
             dfs('perimeterSweep', cornerHarvest), dfs('perimeterSweep', perimeterCCW),
@@ -643,7 +643,7 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
         configs = [...configs, beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE)];
     }
     // Applied centrally (not per-rule) since the feature gate cuts across several routing regimes
-    // (must-cross-heavy and high-intersection-burden rules both match batch-B cluster levels —
+    // (must-cross-heavy and intersection-heavy rules both match batch-B cluster levels —
     // see POLICY.REPAIR_MC_MIN/REPAIR_MP_MIN).
     if (needsRepairFallback(f, cfg)) {
         // Experimental turn-aware bias attempt: default-OFF (production passes null cfg → not added),
