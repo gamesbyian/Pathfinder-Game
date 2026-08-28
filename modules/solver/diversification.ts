@@ -251,7 +251,10 @@ export function createDiversificationSession(level: any, existingHints: number[]
     const report: any = {
         combosTried: 0, portalCombosTried: 0,
         baselineWinner: null, novelFound: 0, errors: [],
-        haltedByWallClock: false, haltedByMaxHints: false, haltedByCancel: false,
+        haltedByWorkBudget: false,
+        // Persisted compatibility alias; the stop condition is work, not Date.now().
+        haltedByWallClock: false,
+        haltedByMaxHints: false, haltedByCancel: false,
     };
 
     let phase = 'baseline'; // 'baseline' -> 'gate-direction' -> 'portal-direction' -> 'done'
@@ -261,8 +264,9 @@ export function createDiversificationSession(level: any, existingHints: number[]
 
     function buildResult(getWorkCeiling: () => number, isCancelled: () => boolean, maxHints: number) {
         report.novelFound = novel.length;
-        // Name kept for the persisted report's schema; the bound is now work, not wall clock.
-        report.haltedByWallClock = workMeter.units >= getWorkCeiling();
+        report.haltedByWorkBudget = workMeter.units >= getWorkCeiling();
+        // Compatibility alias for older UI/report consumers.
+        report.haltedByWallClock = report.haltedByWorkBudget;
         report.haltedByMaxHints = novel.length >= maxHints;
         report.haltedByCancel = isCancelled();
         return {
