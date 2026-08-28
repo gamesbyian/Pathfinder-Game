@@ -25,14 +25,19 @@
 # node_budget -- then compare each run's combined solved count/gains/losses (per-id, from each run's
 # reports/stress/routing-regime-sample-ab.json artifact).
 name: Solver routing-regime-gated routing sample A/B
-run-name: "Routing regime sample · ${{ inputs.routing_regimes }} · flags=${{ inputs.enable_flags || 'control' }}"
+run-name: "Routing regime sample · ${{ inputs.routing_regimes || inputs.archetypes || 'missing' }} · flags=${{ inputs.enable_flags || 'control' }}"
 
 on:
   workflow_dispatch:
     inputs:
       routing_regimes:
         description: 'Comma-separated classifyRoutingRegime() values the code change under test can affect, e.g. intersection-heavy,must-cross-heavy (see modules/solver/archetype.ts for the full vocabulary: sparse-low-intersection, multi-portal, must-cross-heavy, intersection-heavy, general).'
-        required: true
+        required: false
+        default: ''
+      archetypes:
+        description: 'Deprecated compatibility alias for routing_regimes. Legacy values are normalized by the selector; do not set both inputs to different values.'
+        required: false
+        default: ''
       eligible_sample:
         description: 'How many of the eligible (routing regime in the list above) population to sample.'
         required: false
@@ -87,7 +92,7 @@ on:
         default: 'true'
 
 concurrency:
-  group: solver-routing-regime-sample-ab-${{ inputs.routing_regimes }}-${{ inputs.seed }}
+  group: solver-routing-regime-sample-ab-${{ inputs.routing_regimes || inputs.archetypes || 'missing' }}-${{ inputs.seed }}
   cancel-in-progress: false
 
 jobs:
@@ -125,9 +130,20 @@ jobs:
         shell: bash
         run: |
           mkdir -p logs/solver-routing-regime-sample
+          routing_regimes="${{ inputs.routing_regimes }}"
+          legacy_archetypes="${{ inputs.archetypes }}"
+          if [ -z "$routing_regimes" ] && [ -z "$legacy_archetypes" ]; then
+            echo "routing_regimes is required (deprecated alias: archetypes)" >&2
+            exit 2
+          fi
+          if [ -n "$routing_regimes" ] && [ -n "$legacy_archetypes" ] && [ "$routing_regimes" != "$legacy_archetypes" ]; then
+            echo "conflicting routing_regimes/archetypes inputs" >&2
+            exit 2
+          fi
+          resolved_regimes="${routing_regimes:-$legacy_archetypes}"
           node scripts/run-bundled.mjs scripts/stress/select-routing-regime-sample.mjs -- \
             --corpus=data/stress/stress-levels-random.json \
-            --routing_regimes="${{ inputs.routing_regimes }}" \
+            --routing-regimes="$resolved_regimes" \
             --eligible-sample="${{ inputs.eligible_sample }}" \
             --control-sample="${{ inputs.control_sample }}" \
             --seed="${{ inputs.seed }}" \
@@ -289,7 +305,7 @@ jobs:
           const solved = rows.filter(x => x.ok).length;
           const nodes = rows.reduce((n,x) => n + (x.nodesExpanded || 0), 0);
           const work = rows.reduce((n,x) => n + (x.workSpent || 0), 0);
-          console.log('routing_regimes=${{ inputs.routing_regimes }} enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} ref=${{ github.sha }}');
+          console.log('routing_regimes=${{ inputs.routing_regimes || inputs.archetypes }} enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} ref=${{ github.sha }}');
           console.log(\`SOLVED sample: \${solved}/\${rows.length} nodes=\${nodes} work=\${work}\`);
           console.log('Solved ids: ' + rows.filter(x => x.ok).map(x => x.id ?? String(x.level)).sort().join(','));
           console.log('Unsolved ids: ' + rows.filter(x => !x.ok).map(x => x.id ?? String(x.level)).sort().join(','));
