@@ -23,9 +23,13 @@ on:
         required: false
         default: 'data/stress/stress-levels-random.json'
       budget_ms:
-        description: 'Per-attempt time budget in milliseconds'
+        description: 'Per-attempt wall safety deadline. In work-budget mode keep this generously non-binding; blank work_budget preserves the legacy real-time search cap.'
         required: false
         default: '8000'
+      work_budget:
+        description: 'Optional per-level canonical WORK ceiling. Recommended for decision-bearing/equal-cost research; rows fail closed if budget_ms binds first. Blank preserves legacy wall+node mode.'
+        required: false
+        default: ''
       node_budget:
         description: 'Per-level node-count ceiling'
         required: false
@@ -134,6 +138,11 @@ jobs:
           workers=$requested_workers
           if [ "$workers" -gt "$count" ]; then workers=$count; fi
 
+          work_arg=""
+          if [ -n "${{ inputs.work_budget }}" ]; then
+            work_arg="--work-budget=${{ inputs.work_budget }}"
+          fi
+
           pids=()
           labels=()
           for ((w=0; w<workers; w++)); do
@@ -147,6 +156,7 @@ jobs:
               --levels="pos:${sub_start}-${sub_end}" \
               --only="${{ inputs.only }}" \
               --budget-ms="${{ inputs.budget_ms }}" \
+              ${work_arg} \
               --node-budget="${{ inputs.node_budget }}" \
               --out="logs/method-probe-shards/shard-${label}.json" \
               --summary-out="logs/method-probe-shards/shard-${label}-summary.md" \
