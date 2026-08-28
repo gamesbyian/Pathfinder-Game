@@ -26,6 +26,18 @@ Use `ci:fast` by default. It skips only `deepTest` tests and coverage instrument
 
 Test-wall-time figures are measurements, not contracts: fixture changes, runner load, hardware, and suite composition can move them sharply. Measure current timings from the command/workflow when runtime itself matters rather than copying a historical minute estimate into another authority.
 
+### Clock discipline in tests
+
+A correctness test must not depend on how many real milliseconds the host happened to provide. In particular:
+
+- do not assert that solver/search work finishes or times out inside a small real-time window;
+- when testing a wall-deadline code path, mock the clock and make the deadline transition deterministic;
+- when testing search extent, scheduling, or budget accounting, use work/node ceilings and a deliberately non-binding wall deadline;
+- treat Vitest/Actions timeouts as hang-safety infrastructure, not solver evidence. If a deterministic proof approaches the runner timeout under contention, isolate or partition the proof rather than interpreting the timeout as a search result;
+- keep real elapsed-time assertions in explicit performance/benchmark tooling, where host/load are part of the measurement and are reported as such.
+
+A solver `deadlineTruncated` result, a mocked deadline-path unit test, and a test-runner timeout are three different things and must remain labeled separately.
+
 ## Tier map
 
 | Tier | Command | Purpose |
