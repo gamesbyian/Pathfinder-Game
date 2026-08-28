@@ -3,7 +3,7 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-08-28 — code migration, full 160-level `solver:bench --check` byte-identical, targeted unit tests, a pre-existing test correction, and a full `pos:1-10` capability-sweep-shaped before/after confirmation (see addendum)
 > **Decision:** `repair-fallback`'s own fresh `withWorkCapScope` cap is now sized from the solve's resolved `workBudget` (`scaledStageWorkBudget` in `budget-units.ts`) instead of re-deriving it from `timeBudgetMs` a second time via `legacyMsToWork`. Same pattern and same behavior-preservation profile as [`dedup-near-tie-retry`'s own migration](2026-08-28-dedup-near-tie-retry-work-dose-migration.md) (queue #2 step 3's first site): rigorously behavior-preserving for live interactive play and the plain-default `solveLevel()` call shape; a genuine, deliberate dose correction for the offline capability-sweep/confirmation-workflow call shape.
-> **Remaining gate:** none. See addendum for the confirmation-scale population result.
+> **Remaining gate:** none. The `pos:1-10` population matched exactly on every field (solved set, per-level `nodesExpanded`, and every stage's `workSpent` including `repair-fallback`'s own) — a stronger empirical result than the first migration's own confirmation, but one that (see addendum) did not actually exercise the work-cap dimension this migration changed, since `repair-fallback`'s node ceiling binds first on this population either way. The formula-level argument, not this run, is what establishes the fix.
 
 ## Motivation
 
@@ -52,7 +52,11 @@ Same disclaimers as the first migration's report: no claim about any of the rema
 
 ## Addendum: pos:1-10 confirmation-scale population
 
-*(Filled in once the run completes — see the reproduction command below.)*
+The same `pos:1-10` population and protocol as the first migration's own addendum (before = commit `79147e0`, the state immediately after `dedup-near-tie-retry`'s migration landed, in a separate worktree; after = this migration's own commit).
+
+**Result: exact match on every field, not just the solved set.** All 10 levels matched precisely on `ok`, `status`, `winningStageId`, **and `nodesExpanded`** (e.g. `R00046` 44,750,022 both before and after; `R00088` 44,000,004 both before and after) — **0 diffs across the entire population**. This is a stronger result than the first migration's own addendum, which matched on solved-set/winning-stage but showed small non-deterministic ppm-level jitter in unrelated stages' `workSpent`; here every stage's `totalWorkSpent` matched exactly too, `repair-fallback` itself included: **1,022,368 both before and after**, unchanged to the unit.
+
+**Why no dose change was even visible here, unlike `dedup-near-tie-retry`'s clear ~2.5x drop:** `repair-fallback`'s real limiting factor on this population is its NODE ceiling (`repairFallbackNodeCeiling`, purely `nodeBudget`-derived and untouched by this migration), not its work cap — the loop's own `repairFallbackNodeCeiling` check breaks it out well before either the old (effectively unbounded) or new (`6 * 670,000 = 4,020,000`) work cap is ever approached on these 10 levels. So this population demonstrates **no observable behavior change at all**, a stronger empirical result than "zero solved-set change despite a real dose shift" (dedup-near-tie-retry's case) — but it also means this specific population does not exercise the work-cap dimension this migration actually changed. The formula-level argument in "What changed" above (not this empirical run) is what establishes the fix is real and matters at some scale/population where `repair-fallback`'s node ceiling is generous relative to a workBudget small enough for the new, smaller cap to bind — this run simply was not that population.
 
 ## Reproduction
 
