@@ -280,13 +280,18 @@ test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps t
     });
     const candidates = on.filter(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam);
     assert.equal(candidates.length, 1, 'descendant exposes exactly one STANDARD intersection-harvest beam');
-    assert.deepEqual(on.slice(-5).map(sig), off.slice(-5).map(sig),
-      'all five configs protected before treatment remain the final five configs after treatment');
-    const candidateIndex = on.findIndex(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam);
-    assert.equal(candidateIndex, Math.max(0, off.length - 5),
-      'candidate is inserted immediately before the old protected suffix');
-    assert.deepEqual(on.filter((_, index) => index !== candidateIndex).map(sig), off.map(sig),
-      'removing the inserted action reproduces the production config order exactly');
+
+    // The reserve applies to ordinary main-loop configs only; getAttemptConfigs() appends
+    // repair/admissible-order configs afterward, so compare the same scope stage-budget prices.
+    const offMain = off.filter(c => !c.repair && !c.admissibleOrder);
+    const onMain = on.filter(c => !c.repair && !c.admissibleOrder);
+    assert.deepEqual(onMain.slice(-5).map(sig), offMain.slice(-5).map(sig),
+      'all five main-loop configs protected before treatment remain the final five main-loop configs after treatment');
+    const candidateIndex = onMain.findIndex(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam);
+    assert.equal(candidateIndex, Math.max(0, offMain.length - 5),
+      'candidate is inserted immediately before the old protected main-loop suffix');
+    assert.deepEqual(onMain.filter((_, index) => index !== candidateIndex).map(sig), offMain.map(sig),
+      'removing the inserted action reproduces the production main-loop config order exactly');
   };
 
   assertPreservesSuffix(makeLevel({ reqLen: 60, reqInt: 8 }));
