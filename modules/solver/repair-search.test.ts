@@ -1,6 +1,6 @@
 /** Unit tests for the iterated-local-search repair fallback (repair-search.ts). */
 import assert from 'node:assert/strict';
-import { test } from 'vitest';
+import { test, vi } from 'vitest';
 
 import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
@@ -117,17 +117,24 @@ test('repair research seed normalizes both independent streams without changing 
     assert.notEqual(normalizedA.primary, normalizedA.mustTurn);
 });
 
-test('repairSearchFromGate returns null and respects its budget on a parity-impossible level', async () => {
+test('repairSearchFromGate stops at its wall deadline without relying on real elapsed time', async () => {
     // Portal-free grid: reqLen parity must match the gate/goal Manhattan-distance parity.
     // A 1x3 corridor's only route is 2 steps; reqLen=1 is impossible (wrong parity).
     const level = makeLevel({ grid: { w: 3, h: 1 }, goal: { x: 3, y: 1 }, reqLen: 1 });
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
-    const start = Date.now();
-    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 300, start, null);
-    const elapsed = Date.now() - start;
-    assert.equal(path, null);
-    assert.ok(elapsed < 300 + 250, `expected to respect the 300ms budget, took ${elapsed}ms`);
+    const out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number; stopReason?: 'wall-clock' | 'node-budget' | 'work-budget' } = {};
+    const clock = vi.spyOn(Date, 'now');
+    try {
+        clock.mockReturnValueOnce(0).mockReturnValue(300);
+        const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 300, 0, null, undefined, false, Infinity, out);
+        assert.equal(path, null);
+        assert.equal(out.timedOut, true);
+        assert.equal(out.stopReason, 'wall-clock');
+        assert.ok((out.nodesExpanded ?? 0) > 0, 'the mocked deadline should fire only after real repair work');
+    } finally {
+        clock.mockRestore();
+    }
 });
 
 test('every path repairSearchFromGate returns satisfies isSolutionState (soundness spot-check)', async () => {
