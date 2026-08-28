@@ -74,7 +74,7 @@ test('malformed or contradictory identities are rejected rather than guessed', (
         'admissible-order|tieBreak=default|lds=maybe',
         'dfs:default:repair',
         'beam:repair@beam5000:repair',
-    ]) assert.throws(() => parseAttemptIdentityKey(bad), undefined, bad);
+    ]) assert.throws(() => parseAttemptIdentityKey(bad), bad);
 });
 
 test('formatAttemptActionKey layers stage and deterministic repair seed over canonical config identity', () => {
