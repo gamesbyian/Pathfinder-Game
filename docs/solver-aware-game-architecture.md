@@ -1,6 +1,6 @@
 # Solver-aware game architecture and rule alignment
 
-> **Status:** current contract. History: [`archive/snapshots/solver-aware-game-architecture-2026-08-20.md`](archive/snapshots/solver-aware-game-architecture-2026-08-20.md). Priority: [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+> **Status:** current contract. History: [`archive/snapshots/solver-aware-game-architecture-2026-08-20.md`](archive/snapshots/solver-aware-game-architecture-2026-08-20.md). Priority: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 
 ## Core semantic rule
 
