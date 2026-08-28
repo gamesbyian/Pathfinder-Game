@@ -11,6 +11,7 @@
  *     --enable-flag=STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE \
  *     --technique=beam:intersectionHarvest@beam2000 \
  *     --exclude-ids=R01124,R02500,R02718,R02440 \
+ *     [--exclude-sample=tmp/prior-sample.json] \
  *     --count=120 --seed=20260828 \
  *     --out=tmp/highint-standard-ih-sample.json
  */
@@ -34,6 +35,16 @@ const COUNT = Math.max(0, Number(args.get('--count') || 120));
 const SEED = Number(args.get('--seed') || 20260828);
 const OUT = args.get('--out') || 'tmp/attempt-exposure-sample.json';
 const EXCLUDED = new Set((args.get('--exclude-ids') || '').split(',').map(x => x.trim()).filter(Boolean));
+const EXCLUDE_SAMPLE = args.get('--exclude-sample') || null;
+if (EXCLUDE_SAMPLE) {
+    const prior = JSON.parse(readFileSync(path.resolve(EXCLUDE_SAMPLE), 'utf8'));
+    const rows = prior.sample ?? prior.levels ?? prior.results ?? (Array.isArray(prior) ? prior : []);
+    if (!Array.isArray(rows)) throw new Error(`${EXCLUDE_SAMPLE}: expected sample/levels/results array`);
+    for (const row of rows) {
+        const id = typeof row === 'string' ? row : row?.id ?? row?.levelId ?? null;
+        if (id) EXCLUDED.add(id);
+    }
+}
 
 if (!FLAG || !TECHNIQUE) {
     throw new Error('--enable-flag=<STRATEGY_...> and --technique=<attemptConfigKey> are required');
