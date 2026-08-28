@@ -69,6 +69,6 @@ function createSolver(): SolverApi {
 
 // Canonical test/ablation analysis surface. Lives on its own named export rather than on
 // the solver instance so it is not part of the runtime solver's public shape. (The former
-// `_normalizeRawLevel`/`_buildDistMap`/`_detectArchetype`/`_getAttemptConfigs`/`_prepLevel`
+// `_normalizeRawLevel`/`_buildDistMap`/`_classifyRoutingRegime`/`_getAttemptConfigs`/`_prepLevel`
 // underscore aliases on the createSolver() instance were removed — import from here.)
 export { createSolver, SOLVER_TESTING_API };
