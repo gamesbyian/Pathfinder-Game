@@ -122,9 +122,7 @@ export interface DataService {
 /** `solverApi` — the hint-solver facade built by `createSolver`. */
 export interface SolverApi {
     prepareLevelForSolver(rawLevel: any, opts?: any): any;
-    universalSolveLevel(level: any, opts?: any): Promise<SolveResult>;
     solveLevel(level: any, opts?: any): Promise<SolveResult>;
-    solve(level: any, opts?: any): Promise<SolveResult>;
     findTrapSpots(level: any, opts?: any): Promise<any>;
     classifyFalseGoals(level: any, result: any): any;
     getTrapSpotBudgetMs(level: any): number;
