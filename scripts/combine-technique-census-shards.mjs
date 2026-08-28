@@ -80,6 +80,7 @@ const allResults = deduped.results.map(r => {
     const variantLabel = inferredVariantLabel(r);
     return variantLabel && !r.variantLabel ? { ...r, variantLabel } : r;
 });
+const hasEqualWork = allResults.some(r => r.tier === 'EW1');
 console.log(`technique-census combine: ${rawResults.length} raw cell result(s), ${allResults.length} unique (${deduped.duplicatesRemoved} duplicate(s) removed; ${missing.length} missing shard(s), ${partial.length} partial marker(s))`);
 
 mkdirSync(OUT_DIR, { recursive: true });
@@ -89,9 +90,11 @@ if (!DERIVED_ONLY) {
         missingShards: missing,
         partialShards: partial,
         duplicateCellsRemoved: deduped.duplicatesRemoved,
-        budgetProtocol: 'technique-local-node-depth',
+        budgetProtocol: hasEqualWork ? 'mixed-node-depth-and-equal-work' : 'technique-local-node-depth',
         equalCostAcrossTechniques: false,
-        costSemantics: 'isolated nodesExpanded is within-technique depth; use canonical workSpent for cross-technique allocation',
+        costSemantics: hasEqualWork
+            ? 'T1/T3/T4 are node-depth evidence; EW1 rows use equal canonical work budgets for cross-technique pricing'
+            : 'isolated nodesExpanded is within-technique depth; use canonical workSpent for cross-technique allocation',
         totalCells: allResults.length,
         results: allResults,
     }));
@@ -175,6 +178,76 @@ writeFileSync(path.join(OUT_DIR, 'technique-capability-summary.md'), [
     '## T1 — previously-solved population (the regression-safety read)', '',
     statsTable(t1StatsSolved, uniqueSolveCountsSolved), '',
 ].join('\n'));
+
+// EW1 is the bounded equal-work pricing pilot. Keep its summary separate from T1's node-depth
+// tables so neither currency can be mistaken for the other.
+const ew1Results = allResults.filter(r => r.tier === 'EW1' && (r.techniqueKeys?.length ?? 0) === 1);
+if (ew1Results.length) {
+    const byTechnique = new Map();
+    const solversByLevel = new Map();
+    const thresholds = [500000, 2000000, 5000000, 10000000];
+    for (const r of ew1Results) {
+        const key = identityKey(r);
+        if (!key) continue;
+        if (!byTechnique.has(key)) byTechnique.set(key, {
+            total: 0, ok: 0, workBudgetReached: 0, exhausted: 0, deadlineTruncated: 0,
+            refereeInvalid: 0, error: 0, sumWork: 0, solveWork: [],
+        });
+        const s = byTechnique.get(key);
+        s.total++;
+        const spent = Number(r.workSpent ?? 0);
+        s.sumWork += spent;
+        if (r.ok) {
+            s.ok++;
+            s.solveWork.push(spent);
+            const lk = `${r.corpus}/${r.levelPos}`;
+            if (!solversByLevel.has(lk)) solversByLevel.set(lk, new Set());
+            solversByLevel.get(lk).add(key);
+        } else if (r.status === 'work-budget-reached') s.workBudgetReached++;
+        else if (r.status === 'deadline-truncated') s.deadlineTruncated++;
+        else if (r.status === 'exhausted') s.exhausted++;
+        else if (r.status === 'referee-invalid') s.refereeInvalid++;
+        else if (r.status === 'error') s.error++;
+    }
+    const uniqueByTechnique = new Map();
+    for (const solvers of solversByLevel.values()) if (solvers.size === 1) {
+        const key = [...solvers][0];
+        uniqueByTechnique.set(key, (uniqueByTechnique.get(key) ?? 0) + 1);
+    }
+    const rows = [...byTechnique.entries()]
+        .map(([technique, s]) => ({
+            technique,
+            total: s.total,
+            solved: s.ok,
+            unique: uniqueByTechnique.get(technique) ?? 0,
+            workBudgetReached: s.workBudgetReached,
+            exhausted: s.exhausted,
+            deadlineTruncated: s.deadlineTruncated,
+            refereeInvalid: s.refereeInvalid,
+            error: s.error,
+            meanWorkSpent: s.total ? Math.round(s.sumWork / s.total) : null,
+            medianSolveWork: median(s.solveWork),
+            solvesByWork: Object.fromEntries(thresholds.map(t => [String(t), s.solveWork.filter(w => w <= t).length])),
+        }))
+        .sort((a, b) => b.solved - a.solved || b.unique - a.unique || a.meanWorkSpent - b.meanWorkSpent || a.technique.localeCompare(b.technique));
+    const workBudgets = [...new Set(ew1Results.map(r => r.workBudget).filter(Number.isFinite))].sort((a, b) => a - b);
+    const summary = {
+        tier: 'EW1',
+        cells: ew1Results.length,
+        levels: new Set(ew1Results.map(r => `${r.corpus}/${r.levelPos}`)).size,
+        workBudgets,
+        deadlineTruncated: ew1Results.filter(r => r.status === 'deadline-truncated').length,
+        techniques: rows,
+    };
+    writeFileSync(path.join(OUT_DIR, 'equal-work-summary.json'), JSON.stringify(summary, null, 2));
+    writeFileSync(path.join(OUT_DIR, 'equal-work-summary.md'), [
+        '# Technique capability census — EW1 equal-work pilot', '',
+        `Cells: ${summary.cells}; levels: ${summary.levels}; work budget(s): ${workBudgets.join(', ') || 'unknown'}; deadline-truncated: ${summary.deadlineTruncated}.`, '',
+        '| technique | solved | unique | <=0.5M work | <=2M | <=5M | <=10M | work-cap | exhausted | deadline | total | mean work | median solve work |',
+        '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|',
+        ...rows.map(r => `| \`${r.technique}\` | ${r.solved} | ${r.unique} | ${r.solvesByWork['500000']} | ${r.solvesByWork['2000000']} | ${r.solvesByWork['5000000']} | ${r.solvesByWork['10000000']} | ${r.workBudgetReached} | ${r.exhausted} | ${r.deadlineTruncated} | ${r.total} | ${r.meanWorkSpent ?? '—'} | ${r.medianSolveWork ?? '—'} |`),
+    ].join('\n'));
+}
 
 const coverage = new Map();
 for (const r of allResults) {
