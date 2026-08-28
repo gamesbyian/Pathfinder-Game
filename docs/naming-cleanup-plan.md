@@ -1,10 +1,25 @@
 # Naming cleanup implementation plan
 
-Status: **approved implementation plan**. This document is the current authority for the repository naming cleanup identified by the 2026-08-27 naming audit. It is intentionally decision-complete: implementing agents should not invent substitute names, alternate migration schemes, or broader semantic changes while executing it.
+Status: **approved vocabulary and implementation plan, subject to latest-`main` reconciliation**. The canonical naming decisions in this document are authoritative for this cleanup, but this branch snapshot is not allowed to outrank newer implementation on `main`. Before implementation begins, perform Section 0. If newer code has replaced, removed, persisted, or materially changed a listed concept, reconcile this plan and the ledger first rather than executing a stale rename.
 
 This is a **behavior-preserving naming and vocabulary migration** unless a section explicitly says that an obsolete compatibility surface is removed after its consumers are migrated. Do not change solver policy, attempt order, scoring weights, eligibility, budgets, pruning behavior, random seeds, corpus contents, or evidence disposition as part of this work.
 
 Use `docs/change-recipes.md` for every cross-boundary rename. Historical reports, archived snapshots, frozen logs, immutable workflow artifacts, and committed evidence files remain unchanged unless a parser must be taught to read their legacy identifiers.
+
+## 0. Latest-main reconciliation and scope closure
+
+This gate is mandatory before PR 1 and again at the start of every implementation PR that follows a merge of unrelated solver/application work.
+
+1. update the implementation branch from the current `main`;
+2. compare the naming-plan branch point with current `main` and inspect every newer change touching a listed concept;
+3. rerun the live-surface naming census over code, package aliases, workflows, current docs, generated-schema readers/writers, telemetry/provenance, environment-variable contracts, and workflow artifact/concurrency identifiers;
+4. classify every live confusing-name hit as **rename**, **intentional retained term**, **frozen history**, or **superseded by newer architecture**;
+5. add any newly discovered live rename to this document and `docs/naming-cleanup-ledger.json` before changing code;
+6. never infer that an omitted surface is safe merely because the original audit predated it.
+
+A current-`main` change that makes a planned mapping obsolete is not a reason to recreate the old concept. Record the superseding commit in the ledger and use the newer architecture's vocabulary.
+
+The cleanup is only comprehensive when the final audit has **zero unclassified live naming hits**. The ledger therefore records both renames and explicit retained-term exemptions for potentially confusing vocabulary that is intentionally correct in context.
 
 ## 1. Goals and non-goals
 
@@ -34,7 +49,7 @@ Reserve these words for their strict meanings:
 - **full**: complete support for the stated domain;
 - **known**: established by evidence or proof, not a heuristic score;
 - **reachable**: graph/search reachability, not merely "can satisfy all constraints as a terminal";
-- **benchmark**: performance/cost measurement, not a solved-set regression check.
+- **benchmark**: an unqualified executable/run name means performance or cost measurement, not a solved-set regression check. A qualified noun such as **benchmark set** or **benchmark dataset** may describe a fixed evaluation population when that meaning is explicit.
 
 ### 2.3 Search mechanism, scoring, ordering bias, retention, routing, and stage are separate concepts
 
@@ -68,22 +83,24 @@ Use full project terms in exported types, public APIs, stage IDs, report fields,
 
 ### 2.6 Tool verbs
 
-Permanent executable names use this vocabulary:
+Surfaced research/validation executables must lead with an operation that says what the tool actually does. Prefer this vocabulary when it fits:
 
-- `*-check`: deterministic invariant/pass-fail validation;
-- `*-validate`: semantic/data validation;
-- `*-analyze`: offline analysis of existing evidence;
-- `*-compare`: comparison of two or more existing/run outputs;
-- `*-measure`: cost/performance measurement;
-- `*-run`: execute a search/treatment;
-- `*-generate`: generate data;
-- `*-collect`: build/rebuild evidence from many runs;
-- `*-sweep`: repeat a defined operation across a population or parameter range;
-- `*-probe`: bounded diagnostic measurement only;
-- `*-audit`: broad systematic review;
-- `*-census`: near-exhaustive enumeration over a defined matrix.
+- `check`: deterministic invariant/pass-fail validation;
+- `validate`: semantic/data validation;
+- `analyze`: offline analysis of existing evidence;
+- `compare`: comparison of two or more existing/run outputs;
+- `measure`: cost/performance measurement;
+- `run`: execute a search/treatment when no more specific verb is honest;
+- `generate`: generate new data;
+- `collect`: build/rebuild evidence from many runs;
+- `sweep`: repeat a defined operation across a population or parameter range;
+- `probe`: bounded diagnostic measurement only;
+- `audit`: broad systematic review;
+- `census`: near-exhaustive enumeration over a defined matrix.
 
-`pilot` belongs in report descriptions, not permanent executable names.
+This is a semantic vocabulary, not an exhaustive filename grammar. Precise domain verbs such as `build`, `merge`, `plan`, `import`, `migrate`, `replay`, `rank`, `solve`, and `report` may remain when they are more informative than a generic verb.
+
+Lifecycle labels are not operations. `pilot`, dates, experiment origin, and `legacy` must not be permanent surfaced command identities unless the historical distinction is the behavior being selected. A temporary pilot may keep that word only while it is genuinely disposable and unsurfaced; once it is in `package.json`, a live workflow, or the tooling catalog, give it a behavior name or remove the surface.
 
 ## 3. Migration rules and mandatory checks
 
@@ -105,9 +122,13 @@ Search for both the old symbol/string and any common textual variants across:
 - current baseline/report generators;
 - hint/provenance conversion code;
 - telemetry serializers and reducers;
-- tool discovery/catalog metadata.
+- tool discovery/catalog metadata;
+- workflow filenames, displayed `name:`, job IDs/names, `concurrency.group`, artifact names, cache keys, and `paths`/`paths-ignore` filters;
+- environment-variable names consumed by live scripts/workflows;
+- package-script aliases and their transitive test/CI aggregators;
+- case-sensitive physical paths referenced by workflow triggers, imports, spawns, and documentation.
 
-Use `node scripts/tooling-census.mjs --compact --query=<old-term>` and again with the new term whenever the concept is surfaced through tooling.
+Use `node scripts/tooling-census.mjs --compact --query=<old-term>` and again with the new term whenever the concept is surfaced through tooling. For a physical file rename, separately verify exact-case workflow path filters and spawned/imported paths; link checking does not catch case-only stale workflow triggers.
 
 ### 3.2 Inspect persisted identity consumers before changing a string
 
@@ -158,6 +179,22 @@ Solver search/orchestration/identity/stage changes: targeted compatibility tests
 Workflow or package-script aliases: workflow lint/current repository checks plus the relevant command smoke test.
 
 No rename PR may be merged with an unexplained solved-set change.
+
+### 3.6 Mechanical rename invariants
+
+For structured or persisted identifiers, "the tests pass" is not enough. Add the following invariants where applicable:
+
+- `parse(format(x))` round-trips every canonical attempt/stage/config identity;
+- every currently constructible live solver action has a unique canonical identity;
+- every supported legacy identity parses to exactly one canonical structured identity;
+- two behaviorally distinct legacy identities may not collapse to one canonical identity;
+- canonical formatting is deterministic and snapshot-tested;
+- CLI examples quote canonical identities containing shell metacharacters such as `|`;
+- normalize/denormalize round trips preserve existing level wire fields and persistent fingerprints byte-for-byte unless a separately authorized schema migration says otherwise;
+- direct symbol/file renames leave no live old-name imports, spawns, workflow filters, or package aliases after their compatibility window closes;
+- behavior-preserving solver renames compare representative attempt order, stage order, work/node accounting, and solved outcomes before/after, not merely final solved count.
+
+For workflow/file changes, run a case-sensitive path audit. The current repository already contains at least one naming-era hazard of this class: `.github/workflows/audit-export.yml` watches `modules/Solver.ts` while the live facade is `modules/solver.ts`. Correct stale trigger paths when that workflow is migrated; do not preserve them as historical spelling.
 
 ## 4. Canonical rename inventory
 
@@ -333,6 +370,24 @@ Stage migration must update all of:
 
 Add a single `normalizeSolverStageId()` compatibility function and route every historical-data reader through it. Do not duplicate old-to-new maps.
 
+#### Scheduler mode and stage metadata
+
+The current public/research scheduler vocabulary also carries historical names and must be migrated with the stage IDs.
+
+| Current | Canonical | Migration |
+|---|---|---|
+| scheduler mode `legacy` | `production` | dual-read if persisted |
+| scheduler mode `portfolio-experiment` | `legacy-latency-portfolio-experiment` | dual-read if persisted |
+| `PortfolioExperimentDefinition` | `LegacyLatencyPortfolioExperimentDefinition` | direct type rename |
+| `portfolioExperiment` option | `legacyLatencyPortfolioExperiment` | dual-read only if external/generated configs persist it |
+| result field `portfolio` | `legacyLatencyPortfolioExperiment` | dual-read generated JSON, single-write canonical |
+| attempt `schedulerPhase: 'portfolio'` | `'legacy-latency-portfolio'` | dual-read if persisted |
+| `StageBudgetPolicyId: 'additive-fraction'` | `'additive-wall-multiplier'` | direct/internal unless persisted |
+
+`SolverStageDisposition` must describe current policy, not promotion history. Rename it to `SolverStagePolicyStatus`; canonical current values are `production-default`, `opt-in`, and `experiment-only`. Existing `promoted` rows normalize to `production-default`; the fact that a stage was promoted belongs in the experiment ledger/report history rather than the runtime policy-status enum.
+
+Do not retain a generic `legacy` scheduler mode after migration. "Legacy latency" remains in the historical wall-clock experiment's identity specifically because its historical scheduling semantics are the selected behavior.
+
 ### 4.7 False-goal / trap search
 
 Use **false-goal triggerability** as the internal domain term. "Trap" may remain player-facing copy where the game UI intentionally uses that word.
@@ -366,6 +421,28 @@ For compatibility, the old `findTrapSpots` public adapter may exist only during 
 
 Rename `trap-search.ts` to `false-goal-trigger-search.ts` and update imports, comments, tool names, tests, editor diagnostics, and solver API ports.
 
+The internal boundary migration is also fixed, not left to implementer invention:
+
+| Current | Canonical |
+|---|---|
+| worker request `TRAP` | `FALSE_GOAL_TRIGGER_SEARCH` |
+| worker event `TRAP_PROGRESS` | `FALSE_GOAL_TRIGGER_SEARCH_PROGRESS` |
+| worker event `TRAP_RESULT` | `FALSE_GOAL_TRIGGER_SEARCH_RESULT` |
+| `trap-scan-controller.ts` | `false-goal-trigger-scan-controller.ts` |
+| `trap-scan-core.ts` | `false-goal-trigger-scan-core.ts` |
+| `createTrapScanController` | `createFalseGoalTriggerScanController` |
+| `runTrapSearch` | `runFalseGoalTriggerSearch` |
+| editor `trapScanState` | `falseGoalTriggerScanState` |
+| editor `validTrapSpots` | `triggerableFalseGoalCells` |
+| editor `trapParityCandidates` | `falseGoalTriggerParityCandidates` |
+| corresponding `*TrapSpots` / `*TrapParityCandidates` state actions | `*TriggerableFalseGoalCells` / `*FalseGoalTriggerParityCandidates` |
+| `trap-search-audit.mjs` | `audit-false-goal-triggerability.mjs` |
+| npm `solver:trap-audit` | `solver:audit-false-goal-triggerability` |
+
+The canonical worker/result status values are `complete`, `partial`, and `aborted`. Legacy `done` and `timeout` values are read only where historical/generated payloads require them. Update editor completion checks in the same PR so no live caller still tests `status === 'done'`.
+
+Player-facing "Trap" / "Trap Spots" wording may remain where it is intentionally UI language. Internal code, worker protocol, telemetry, and developer tooling use false-goal triggerability terminology.
+
 ### 4.8 Repair completion helper and prune pipeline
 
 | Current | Canonical |
@@ -381,7 +458,15 @@ The rename must not alter the helper's bound, reconstruction behavior, or prunin
 
 If `REPAIR_EXTRA_BUDGET_FRACTION` still exists after the current budget-model migration reaches the file, rename it to `REPAIR_ADDITIVE_BUDGET_MULTIPLIER`. Its value and semantics remain unchanged. If the prerequisite budget migration removes the constant entirely, do not recreate it solely to perform the rename.
 
-The word `fraction` must not be used for values such as `6.0` that are additive multipliers.
+Also rename the live option/local vocabulary that exposes the same >1 quantity:
+
+| Current | Canonical |
+|---|---|
+| `repairBudgetFractionOverride` | `repairAdditiveBudgetMultiplierOverride` |
+| resolved/local `repairBudgetFraction` | `repairAdditiveBudgetMultiplier` |
+| stage budget policy `additive-fraction` | `additive-wall-multiplier` |
+
+The word `fraction` is reserved for quantities constrained to `[0,1]`. A value that may legitimately be `6.0` is a multiplier. Do not mechanically rename genuine reserve/share fractions that are clamped to `[0,1]`.
 
 All time-valued options/fields must carry an `Ms` suffix unless the type itself is an explicitly named duration object.
 
@@ -487,6 +572,8 @@ Do not add new exports to `LevelUtils` during the cleanup.
 
 These are late-stage application cleanups because they touch broad surfaces but have low persisted-data risk.
 
+The word `core` is not banned globally. The problem with top-level `modules/core.ts` is its mixed-responsibility bag. Retain narrowly qualified `*-core.ts` modules when "core" has a documented architectural meaning, specifically the pure transition/input cores described by ADR 0006. Likewise, `state/actions/core-actions.ts` may retain its name while it specifically means actions on the top-level/core state slice. The permanent naming authority must record this distinction so future agents do not "clean up" intentional `*-core` architecture.
+
 ## 5. Research and tooling rename inventory
 
 The following public/surfaced tool names are canonical.
@@ -561,6 +648,51 @@ Rename surfaced tools according to Section 2.6 when touched by this cleanup:
 - diagnostic bounded samplers may retain `probe`.
 
 Do not perform blind filename replacement across cold historical scripts. The surfaced-tool inventory in `docs/tooling-catalog.md`, `scripts/README.md`, `.github/workflows/README.md`, and `package.json` is the required migration scope.
+
+### 5.9 Surfaced pilot commands
+
+The following commands are already surfaced and therefore are no longer unnamed/disposable pilots. Give them behavior names:
+
+| Current file / alias | Canonical file / alias |
+|---|---|
+| `stress/winning-lineage-pilot.mjs` / `solver:winning-lineage-pilot` | `stress/collect-known-solution-prefix-survival.mjs` / `solver:collect-known-solution-prefix-survival` |
+| `stress/winning-prefix-atlas-pilot.mjs` / `solver:winning-prefix-atlas-pilot` | `stress/collect-known-solution-prefix-branches.mjs` / `solver:collect-known-solution-prefix-branches` |
+| `stress/producer-population-pilot.mjs` / `solver:producer-population-pilot` | `stress/compare-search-producer-populations.mjs` / `solver:compare-search-producer-populations` |
+| `stress/residual-interface-mining-pilot.mjs` / `solver:residual-interface-pilot` | `stress/analyze-residual-interfaces.mjs` / `solver:analyze-residual-interfaces` |
+| `stress/repair-rollback-census-pilot.mjs` / `solver:repair-rollback-pilot` | `stress/census-repair-rollback-windows.mjs` / `solver:census-repair-rollback-windows` |
+| `stress/symmetry-repair-seed-pilot.mjs` / `solver:symmetry-repair-seed-pilot` | `stress/compare-symmetry-repair-seed.mjs` / `solver:compare-symmetry-repair-seed` |
+
+Historical report filenames containing `pilot` remain frozen.
+
+### 5.10 Live workflow and dataset-tool identities
+
+A script rename is incomplete if the workflow, package alias, environment variable, artifact, or concurrency identity keeps the misleading term.
+
+Canonical live mappings:
+
+| Current | Canonical |
+|---|---|
+| `.github/workflows/atlas-sweep.yml` | `.github/workflows/collect-prune-gap-labels.yml` |
+| workflow display/concurrency "atlas-sweep" | "collect-prune-gap-labels" |
+| `.github/workflows/cpsat-explicit-prefix-oracle.yml` | `.github/workflows/cpsat-explicit-prefix-reference.yml` |
+| workflow/job display "oracle" for that CP-SAT model | "reference" |
+| `.github/workflows/family-wide-trove.yml` | `.github/workflows/collect-variant-family-dataset.yml` |
+| `family-wide-trove-manifest.mjs` | `build-variant-family-dataset-manifest.mjs` |
+| `family-wide-trove-shard-run.mjs` | `collect-variant-family-dataset-shard.mjs` |
+| `family-wide-trove-shard-slice.mjs` | `plan-variant-family-dataset-shard.mjs` |
+| `family-wide-trove-combine.mjs` | `merge-variant-family-dataset-shards.mjs` |
+| `family-trove-doctor.mjs` | `validate-variant-family-dataset-worktree.mjs` |
+| npm `family:trove:doctor` | `family:validate-dataset-worktree` |
+| env `PATHFINDER_VARIANT_TROVE` | `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT` |
+| local `TROVE_BRANCH` | `VARIANT_FAMILY_DATASET_BRANCH` |
+| `.github/workflows/audit-export.yml` | `.github/workflows/solver-diagnostics.yml` |
+| workflow display "Audit Export" | "Solver diagnostics and hint capture" |
+
+The dataset-root environment variable uses dual-read/single-prefer-new for one compatibility window because developers or CI may have it configured outside git. New docs/workflows write only `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT`.
+
+When renaming workflows, also migrate current job labels/IDs, concurrency groups, newly emitted artifact names, default input descriptions, and current README/catalog entries. Historical workflow-run artifacts retain their historical names. Fix the stale `modules/Solver.ts` path filter in the diagnostics workflow to the live `modules/solver.ts` spelling.
+
+`method-probe` remains valid terminology because it is genuinely bounded diagnostic single-method execution; do not rename it merely because other uses of "probe" are being corrected.
 
 ## 6. Data and corpus terminology
 
@@ -643,7 +775,7 @@ Each entry must contain:
 {
   "old": "string",
   "new": "string",
-  "kind": "symbol|stage-id|attempt-id|tool|file|doc|field|term",
+  "kind": "symbol|stage-id|attempt-id|tool|file|doc|field|term|workflow|package-alias|env|protocol|status-value",
   "risk": "low|medium|high",
   "persistence": "none|dual-read|frozen-history",
   "phase": 1,
@@ -652,7 +784,7 @@ Each entry must contain:
 }
 ```
 
-Populate it with every explicit mapping in Sections 4-8 before implementing code renames. The ledger is the checklist of record. A rename PR marks only its own entries `done`.
+Populate it with every explicit mapping in Sections 4-8 before implementing code renames, including workflow/package/env/protocol mappings. Also add an entry for each potentially confusing live term that the final census intentionally retains; for retained terms, set `old` and `new` to the same canonical spelling and explain the contextual justification in `notes` (for example the ADR-0006 `*-core` convention or genuine bounded `method-probe`). The ledger is the checklist of record. A rename PR marks only its own entries `done`.
 
 When the cleanup is complete, archive the final ledger under `docs/archive/snapshots/` and replace the temporary live file with a short completion note in the permanent naming/vocabulary authority.
 
@@ -674,6 +806,14 @@ PR 1 must also create `docs/naming-and-vocabulary.md` containing:
 ## 11. Required PR sequence
 
 Do not reorder these phases unless a prerequisite change on `main` makes an entry already obsolete. If that happens, mark the ledger entry `done` with the superseding commit and continue.
+
+### Mandatory preflight before PR 1
+
+- reconcile this branch with latest `main` under Section 0;
+- regenerate the live naming census and close every unclassified surfaced hit;
+- verify every explicit mapping still points at a live concept or a documented historical reader;
+- populate rename and retained-term ledger entries before code changes;
+- run the documentation-link check after resolving any rebase conflicts.
 
 ### PR 1: Contract, ledger, and discoverability
 
@@ -722,31 +862,39 @@ This PR is high risk and requires full CI.
 - update attempt formatting already prepared by PR 4;
 - update operational taxonomy and census tooling.
 
-### PR 6: Solver stage identity migration
+### PR 6: Solver stage and scheduler identity migration
 
 - add `normalizeSolverStageId`;
 - migrate every stage mapping in Section 4.6;
-- update all stage producers/consumers/telemetry/provenance/budget planners;
-- historical fixtures prove old stage IDs remain readable;
+- migrate scheduler modes, experiment option/result names, scheduler phase vocabulary, stage policy-status vocabulary, and additive-wall-multiplier policy names;
+- update all stage/scheduler producers, consumers, worker/report telemetry, provenance, budget planners, and public ports;
+- historical fixtures prove old stage IDs and persisted scheduler modes remain readable;
+- identity round-trip/collision tests from Section 3.6;
 - full CI.
 
 ### PR 7: False-goal triggerability API
 
 - file/API/result/status/field renames;
+- worker request/progress/result protocol renames;
+- editor scan controller/core/state/action renames;
+- audit tool/package alias rename;
 - legacy adapter during migration only;
-- migrate editor, solver facade, ports, tools, and tests;
+- migrate editor, solver facade, ports, tools, workers, and tests atomically;
 - remove adapter after no live consumer remains;
-- verify partial-search semantics are unchanged.
+- verify `done -> complete` and `timeout -> partial` compatibility plus unchanged partial-search semantics.
 
-### PR 8: Reference/referee/tool semantics
+### PR 8: Reference/referee/tool/workflow semantics
 
 - hint oracle rename;
 - CP-SAT reference names;
 - offline replay rename;
 - technique census analysis rename;
-- atlas/trove/lineage surfaced-tool renames;
+- atlas/dataset/lineage surfaced-tool renames;
+- surfaced pilot-command renames from Section 5.9;
+- dataset worktree/env-var migration;
 - audit diagnostics rename;
-- package aliases/catalog/workflow docs updated together.
+- workflow filenames, display/job names, concurrency groups, current artifact names, path filters, package aliases, catalogs, and workflow docs updated together;
+- correct the existing `modules/Solver.ts` workflow path-filter case mismatch.
 
 ### PR 9: Regression/performance CLI vocabulary
 
@@ -842,15 +990,20 @@ Every implementation PR must explicitly check the relevant rows below in its PR 
 - generated JSON readers;
 - historical fixture tests.
 
-### Tool/file/CLI rename
+### Tool/file/CLI/workflow rename
 
 - physical filename;
 - imports/spawns;
-- `package.json`;
+- `package.json` and aggregate test/CI aliases;
 - shell commands embedded in docs;
+- environment-variable names and compatibility reads;
 - `scripts/README.md`;
 - `docs/tooling-catalog.md`;
 - `.github/workflows/README.md`;
+- workflow filename and displayed `name:`;
+- workflow job IDs/names;
+- workflow `paths`/`paths-ignore` exact-case filters;
+- workflow concurrency groups, cache keys, new artifact names, and input descriptions;
 - workflow YAML run steps;
 - tooling census metadata;
 - test snapshots;
@@ -909,11 +1062,18 @@ The cleanup is complete only when all of the following are true.
 13. Current normalized code uses `requiredLength` and `requiredIntersections`; old wire fields remain readable.
 14. `core.ts` and `level-utils.ts` are gone.
 15. The current solver workstream document does not confuse workstream ID with execution rank.
-16. Current tool names conform to Section 2.6 for every surfaced tool touched by this plan.
-17. `npm run check:documentation-links` passes.
-18. Full `npm run ci` passes after the final alias removals.
-19. Representative historical attempt/stage/generated JSON fixtures parse to the new canonical model.
-20. No frozen report or historical evidence file was mass-rewritten for cosmetic naming.
+16. Every live surfaced tool/package/workflow name is either canonical under Section 2.6 or has an explicit retained-term ledger entry; no surfaced `pilot` remains.
+17. Current scheduler mode is `production`; the historical wall-clock experiment is explicitly `legacy-latency-portfolio-experiment`; generic `legacy` is not a live scheduler identity.
+18. False-goal internal code, worker protocol, editor state/actions, telemetry, and developer tools use triggerability terminology; only deliberate player-facing copy may say "Trap".
+19. Live variant-family dataset tooling/workflows/env vars do not use `trove`; historical branch/report/artifact names may.
+20. Workflow names, path filters, concurrency identifiers, and newly emitted artifact names have been audited; no current workflow references a stale case-sensitive source path such as `modules/Solver.ts`.
+21. Attempt/action identity formatters pass round-trip, injectivity/collision, legacy-normalization, and deterministic-format tests.
+22. `npm run check:documentation-links` passes.
+23. Full `npm run ci` passes after the final alias removals.
+24. Representative historical attempt/stage/scheduler/generated JSON fixtures parse to the new canonical model.
+25. Normalize/denormalize and representative corpus round trips preserve the existing level wire format and persistent fingerprints.
+26. No frozen report or historical evidence file was mass-rewritten for cosmetic naming.
+27. A final current-`main` naming census has zero unclassified live hits; every retained potentially ambiguous term is justified in the completed ledger.
 
 ## 14. Stop conditions
 
@@ -923,7 +1083,9 @@ Stop an individual rename PR and report the conflict instead of improvising if:
 - a historical identity cannot be parsed without ambiguity;
 - two legacy strings collapse onto one new identity while still representing materially different behavior;
 - a supposedly local name is part of a persisted schema not covered by this plan;
-- current `main` has already replaced the concept with a different architecture.
+- current `main` has already replaced the concept with a different architecture;
+- a newly discovered live surface would require inventing a canonical name not fixed by this plan;
+- a workflow/file rename reveals a stale path or trigger whose correction could change when automation runs.
 
 In those cases, preserve the plan's canonical vocabulary, document the concrete blocker in the ledger, and split the schema/behavior problem into a separately reviewed prerequisite. Do not choose a different name locally.
 
