@@ -957,7 +957,7 @@ test('interleaved main-loop reserve gives every late config/gate pair its own sl
 // resources simultaneously, and before the fix, runGateSerialAttempts/runInterleavedAttempts' WORK
 // stop condition had no `ci >= lateConfigStart` carve-out the way the NODE-side check did -- an
 // early config that consumed more than its fair share of WORK (measured directly on real generated
-// raised-cap levels: confirm-residual-001's 25 archetype-eligible-and-residual rows each spent
+// raised-cap levels: confirm-residual-001's 25 routing-regime-eligible-and-residual rows each spent
 // orders of magnitude more canonical work than nodes per attempt) could exhaust the loop's work
 // pool before ever reaching the reserve-protected late suffix, even while the NODE dimension still
 // had ample headroom -- the trailing configs the reserve exists to protect never got dispatched.
