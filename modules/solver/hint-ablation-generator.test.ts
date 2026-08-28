@@ -175,7 +175,7 @@ test('an exhausted work budget halts the run early with no errors', async () => 
 // that nothing downstream ever read back out, so it was silently dropped before ever reaching the
 // persisted HintProvenanceEntry — a baseline win from admissible-order-search was indistinguishable
 // from an ordinary default-profile DFS/beam win). Uses a mock solverApi (real
-// prepareLevelForSolver/validateCandidatePath, a controlled .solve) since the real solver only
+// prepareLevelForSolver/validateCandidatePath, a controlled .solveLevel) since the real solver only
 // reaches its admissible-order-search last-resort tier on levels everything else already fails —
 // not practical to force on demand, and not what this test is verifying anyway (that's
 // admissible-order-search.test.ts's job; this is purely about provenance wiring). ---
@@ -192,7 +192,7 @@ test('a baseline win with admissibleOrder: true gets a distinguishing phase, not
     const mockSolver = {
         prepareLevelForSolver: realSolver.prepareLevelForSolver,
         validateCandidatePath: realSolver.validateCandidatePath,
-        solve: async () => ({
+        solveLevel: async () => ({
             ok: true,
             solution: validPath,
             attempts: [{ ok: true, profile: 'default', admissibleOrder: true }],
