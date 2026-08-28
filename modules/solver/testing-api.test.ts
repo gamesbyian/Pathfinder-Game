@@ -53,7 +53,7 @@ test('createSolverTestingApi returns an isolated frozen helper facade', () => {
 
 test('Solver instance no longer exposes the deprecated underscore aliases', () => {
     const solver = createSolver();
-    for (const prop of ['_normalizeRawLevel', '_buildDistMap', '_classifyRoutingRegime', '_getAttemptConfigs', '_prepLevel']) {
+    for (const prop of ['_normalizeRawLevel', '_buildDistMap', '_detectArchetype', '_getAttemptConfigs', '_prepLevel']) {
         assert.equal((solver as any)[prop], undefined, `${prop} was removed — use SOLVER_TESTING_API instead`);
     }
 });
