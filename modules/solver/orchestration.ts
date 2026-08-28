@@ -1713,7 +1713,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // worked against the NODE dimension: runInterleavedAttempts/runGateSerialAttempts's own WORK-budget
     // stop conditions had no equivalent carve-out, so a work-expensive early config population could
     // exhaust `workBudget` while `nodeBudget` still had headroom, silently defeating the reserve --
-    // confirmed directly on real generated levels in that confirmation attempt (25/25 archetype-
+    // confirmed directly on real generated levels in that confirmation attempt (25/25 routing-regime-
     // eligible-and-residual rows truncated after only 4 of 6 configs despite the node reserve
     // nominally protecting the trailing 5).
     //
