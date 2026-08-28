@@ -290,6 +290,8 @@ export interface PrepLevel {
     /** Research-only beam observer. Absent in every production call. The observer receives copied
      * replay-complete paths and may label them, but cannot affect search decisions. */
     _beamResearchObserver?: BeamResearchObserver | null;
+    /** Research-only isConnected() rejection observer — see ConnectivityRejectionObserver's doc. */
+    _connectivityRejectionObserver?: ConnectivityRejectionObserver | null;
     /** Test-only: force beamSearchFromGate's dedup/diversity keying onto the delimited-string
      *  fallback path even when the fast numeric encoding would fit — see beamNumericDedupKey's own
      *  comment in search.ts. Lets a differential test run the SAME level/search through both key
@@ -390,6 +392,35 @@ export interface RepairChoiceResearchRecord {
     mode: 'only' | 'greedy' | 'explore' | 'must-turn-override'; primaryDraws: number[]; biasDraw: number | null;
 }
 export interface RepairChoiceResearchObserver { observe(record: RepairChoiceResearchRecord): void; }
+
+/** Research-only isConnected() rejection observer (see docs/solver-optimization-current-queue.md
+ *  item #0's "learned-failure search" thread and reports/2026-08-24-learned-failure-certificate-
+ *  audit.md's Stage A). Absent in every production call; observing an already-computed rejection
+ *  reason changes no pruning/ordering/budget decision. */
+export type ConnectivityRejectionSubtype = 'goal' | 'must-pass' | 'must-cross' | 'volume';
+
+export interface ConnectivityRejectionRecord {
+    subtype: ConnectivityRejectionSubtype;
+    /** Index into level.mustPassKeys/mustCrossKeys; present only for the matching subtype. */
+    objectiveIndex?: number;
+    pos: number;
+    /** Reuses nogood-cache.ts's repair-state signature — an exact-state fingerprint, not a proof of
+     *  future-state equivalence (see that file's own caveat). */
+    stateFingerprint: string;
+    intNeeded: number;
+    mpVisitedMask: number;
+    mustCrossMask: number;
+    /** isConnected's reserved-intersection-wall regime (mcOpenMask !== 0) was active for this call. */
+    reservedWallActive: boolean;
+    freshVolume: number;
+    /** Only meaningful on portal-free levels, mirroring isConnected's own volume-check gating. */
+    remainingSteps: number | null;
+    /** prep._workMeter.units at the moment of rejection — a work-point proxy for Stage A's "how far
+     *  into the search do failures occur" question. */
+    work: number;
+}
+
+export interface ConnectivityRejectionObserver { observe(record: ConnectivityRejectionRecord): void; }
 
 /** Undo token returned by `applyMove` (landmark fields present only when hasLandmarkConstraints). */
 export interface UndoToken {

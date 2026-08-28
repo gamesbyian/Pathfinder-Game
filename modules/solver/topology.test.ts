@@ -105,6 +105,70 @@ test('volume prune: fires when too few fresh cells remain for the required lengt
     assert.equal(isConnected(K(1, 1), stateAt(fits, fPrep, [K(1, 1)]), fits, fPrep), true);
 });
 
+// Research-only _connectivityRejectionObserver (2026-08-28, queue item #0's learned-failure Stage
+// A — see reports/2026-08-24-learned-failure-certificate-audit.md). Reuses each subtype's own
+// fixture above; the point of this test is the observer's own contract, not re-proving those prunes.
+test('_connectivityRejectionObserver reports the correct subtype without changing isConnected\'s result', () => {
+    function observeRejection(next: number, state: any, level: any, prep: any) {
+        const records: any[] = [];
+        prep._connectivityRejectionObserver = { observe: (record: any) => records.push(record) };
+        const result = isConnected(next, state, level, prep);
+        prep._connectivityRejectionObserver = null;
+        return { result, records };
+    }
+
+    // Goal unreachable.
+    const walled = makeLevel({ blocks: [{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }], reqLen: 6 });
+    const wPrep = prepLevel(walled);
+    const goalOut = observeRejection(K(1, 1), stateAt(walled, wPrep, [K(1, 1)]), walled, wPrep);
+    assert.equal(goalOut.result, false);
+    assert.equal(goalOut.records.length, 1);
+    assert.equal(goalOut.records[0].subtype, 'goal');
+    assert.equal(goalOut.records[0].objectiveIndex, undefined);
+    assert.equal(goalOut.records[0].pos, K(1, 1));
+    assert.equal(typeof goalOut.records[0].stateFingerprint, 'string');
+    assert.equal(goalOut.records[0].work, wPrep._workMeter.units, 'work is read at the moment of rejection, after this call\'s own flood fill');
+
+    // Pending must-pass unreachable.
+    const mpPocket = makeLevel({
+        grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },
+        blocks: [{ x: 4, y: 3 }, { x: 5, y: 2 }], mustPass: [{ x: 5, y: 3 }], reqLen: 4,
+    });
+    const mpPrep = prepLevel(mpPocket);
+    const mpOut = observeRejection(K(1, 1), stateAt(mpPocket, mpPrep, [K(1, 1)]), mpPocket, mpPrep);
+    assert.equal(mpOut.result, false);
+    assert.equal(mpOut.records[0].subtype, 'must-pass');
+    assert.equal(mpOut.records[0].objectiveIndex, 0);
+
+    // Pending must-cross unreachable.
+    const mcPocket = makeLevel({
+        grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },
+        blocks: [{ x: 4, y: 3 }, { x: 5, y: 2 }], mustCross: [{ x: 5, y: 3 }], reqLen: 4,
+    });
+    const mcPrep = prepLevel(mcPocket);
+    const mcOut = observeRejection(K(1, 1), stateAt(mcPocket, mcPrep, [K(1, 1)]), mcPocket, mcPrep);
+    assert.equal(mcOut.result, false);
+    assert.equal(mcOut.records[0].subtype, 'must-cross');
+    assert.equal(mcOut.records[0].objectiveIndex, 0);
+
+    // Volume shortage.
+    const tiny = makeLevel({ grid: { w: 3, h: 1 }, goal: { x: 3, y: 1 }, reqLen: 6 });
+    const tPrep = prepLevel(tiny);
+    const volOut = observeRejection(K(1, 1), stateAt(tiny, tPrep, [K(1, 1)]), tiny, tPrep);
+    assert.equal(volOut.result, false);
+    assert.equal(volOut.records[0].subtype, 'volume');
+    assert.equal(volOut.records[0].objectiveIndex, undefined);
+    assert.equal(typeof volOut.records[0].freshVolume, 'number');
+    assert.equal(typeof volOut.records[0].remainingSteps, 'number');
+
+    // A passing call reports nothing.
+    const fits = makeLevel({ grid: { w: 3, h: 1 }, goal: { x: 3, y: 1 }, reqLen: 2 });
+    const fPrep = prepLevel(fits);
+    const passOut = observeRejection(K(1, 1), stateAt(fits, fPrep, [K(1, 1)]), fits, fPrep);
+    assert.equal(passOut.result, true);
+    assert.equal(passOut.records.length, 0);
+});
+
 test('visited cells act as walls with no intersection budget, but stay traversable with budget', () => {
     // 3x3: walk down the middle column, splitting the grid. With reqInt 0 the two
     // halves disconnect (goal side unreachable from the left half); with reqInt 1 the

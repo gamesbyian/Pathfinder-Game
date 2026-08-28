@@ -1,8 +1,9 @@
 import { KEY_SPACE, popcount } from './encoding.js';
 import { getRealLengthFromState } from './solution.js';
 import { CONNECTIVITY_WORK_UNITS, workMeter } from './work-meter.js';
+import { stateSignature } from './nogood-cache.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { SolverSearchState, PrepLevel } from './types.js';
+import type { SolverSearchState, PrepLevel, ConnectivityRejectionSubtype, ConnectivityRejectionObserver } from './types.js';
 
 const _reachQ   = new Int32Array(512); // BFS queue; max grid is 15x15=225 cells
 let _reachGen   = 0;
@@ -320,6 +321,23 @@ function _floodFillReachability(pos: number, state: SolverSearchState, level: No
 
 const EMPTY_KEYS: ArrayLike<number> = [];
 
+// Plain module-level function, not a closure captured inside isConnected — see that function's own
+// comment on why. Called only on the (already rare relative to total isConnected calls) rejection
+// path, and only when a research observer is actually attached.
+function _reportConnectivityRejection(
+    research: ConnectivityRejectionObserver, subtype: ConnectivityRejectionSubtype, objectiveIndex: number | undefined,
+    pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
+    intNeeded: number, mcOpenMask: number, freshVolume: number, remainingStepsKnown?: number,
+): void {
+    research.observe({
+        subtype, objectiveIndex, pos, stateFingerprint: stateSignature(state),
+        intNeeded, mpVisitedMask: state.mpVisitedMask, mustCrossMask: state.mustCrossMask,
+        reservedWallActive: mcOpenMask !== 0, freshVolume,
+        remainingSteps: remainingStepsKnown ?? (level.portalMap.size === 0 ? level.reqLen - getRealLengthFromState(state) : null),
+        work: prep._workMeter.units,
+    });
+}
+
 // Connectivity prune: checks that goal + unsatisfied objectives are reachable from pos,
 // and (for non-MC levels) that enough fresh cells exist to complete the path.
 // Flood fill traverses cells that are either unvisited, or (if intersections still needed)
@@ -386,12 +404,32 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     const axisExhausted = (!_cfg || _cfg.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED) as boolean;
     const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, axisExhausted, mcOpenMask, level.mustCrossKeys);
 
-    if (!_reached(level.goalKey)) return false;
+    // Research-only rejection observer (see ConnectivityRejectionObserver's doc in types.ts and
+    // docs/solver-optimization-current-queue.md item #0's learned-failure Stage A). `research` is
+    // undefined on every production call, so each `if (research)` below is a single false branch —
+    // this changes no pruning/ordering/budget decision, only whether an already-computed rejection
+    // is also reported. Reporting itself is a call to the module-level `_reportConnectivityRejection`
+    // (not an inline closure) for the same hot-path reason `_reachCanEnter` above is module-level:
+    // isConnected runs 10^5-10^6 times per level, and a closure allocated on every call — even one
+    // that does nothing when research is absent — was measured elsewhere in this file (PF_BEAM_DEBUG)
+    // to be a meaningful cost share.
+    const research = prep._connectivityRejectionObserver;
+
+    if (!_reached(level.goalKey)) {
+        if (research) _reportConnectivityRejection(research, 'goal', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume);
+        return false;
+    }
     for (let i = 0; i < level.mustPassKeys.length; i++) {
-        if (!(state.mpVisitedMask & (1 << i)) && !_reached(level.mustPassKeys[i])) return false;
+        if (!(state.mpVisitedMask & (1 << i)) && !_reached(level.mustPassKeys[i])) {
+            if (research) _reportConnectivityRejection(research, 'must-pass', i, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume);
+            return false;
+        }
     }
     for (let i = 0; i < level.mustCrossKeys.length; i++) {
-        if ((state.mustCrossMask & (1 << i)) !== 0 && !_reached(level.mustCrossKeys[i])) return false;
+        if ((state.mustCrossMask & (1 << i)) !== 0 && !_reached(level.mustCrossKeys[i])) {
+            if (research) _reportConnectivityRejection(research, 'must-cross', i, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume);
+            return false;
+        }
     }
     // Volume check (mirrors V1's _checkTopology): not enough accessible fresh cells to finish.
     // Disabled for portal levels only (portal jumps visit a destination cell for 0 path
@@ -399,7 +437,10 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     // accounts for the extra revisit steps — the double-count concern was unfounded.
     if (level.portalMap.size === 0) {
         const rSteps = level.reqLen - getRealLengthFromState(state);
-        if (freshVolume + intNeeded < rSteps) return false;
+        if (freshVolume + intNeeded < rSteps) {
+            if (research) _reportConnectivityRejection(research, 'volume', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, rSteps);
+            return false;
+        }
     }
     return true;
 }
