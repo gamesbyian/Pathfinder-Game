@@ -18,7 +18,7 @@ Important distinctions:
 - `STRATEGY_REPAIR_PROBE`: disables only early probe; fallback remains.
 - `STRATEGY_REPAIR_MUSTTURN_BIAS`: only biased repair attempt.
 - `STRATEGY_LOWER_BOUND_MEMO`: exact MP/MC bounds without memoization.
-- `STRATEGY_ARCHETYPE_ROUTING`: catch-all rule instead of feature/archetype routing.
+- `STRATEGY_ROUTING_REGIME_SELECTION`: catch-all rule instead of feature/routing-regime selection.
 - `STRATEGY_MIN_BUDGET_FLOOR`: disables `minBudgetFraction` floors.
 - `STRATEGY_REPAIR_ELITE_SPLICE`, `STRATEGY_REPAIR_STAGNATION_BURST`, `STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST`: repair exploration mechanisms.
 - `SCORE_MUST_TURN_EXIT_GUIDANCE`: exit guidance separate from must-turn urgency.
