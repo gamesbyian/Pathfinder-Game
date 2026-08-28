@@ -23,7 +23,7 @@
 # 2026-08-25 throughput pass keeps that assignment model but makes its buckets finer to reduce tail
 # latency, matching the queue-based pattern already used by other variable-runtime batch workflows.
 name: atlas-sweep (grow the CP-SAT-labelled branch atlas)
-run-name: "Atlas sweep · ${{ inputs.corpus }} · every=${{ inputs.every }} · shards=${{ inputs.shard_count }}"
+run-name: "Atlas sweep · ${{ inputs.backfill_run_id && format('backfill {0}', inputs.backfill_run_id) || 'fresh' }} · ${{ inputs.corpus }} · shards=${{ inputs.shard_count }}"
 
 on:
   workflow_dispatch:
