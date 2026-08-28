@@ -35,22 +35,22 @@ export const PORTFOLIO_EXPERIMENT = Object.freeze({
     pass2Ms: 2000,
     pass3Ms: 5000,
     pass2Configs: new Set([
-        'beam:intersectionHarvest@beam5000(diverse)',
-        'dfs:perimeterSweep/perimeterCW',
-        'beam:perimeterSweep/perimeterCW@beam2000',
+        'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+        'dfs|score=perimeterSweep|bias=perimeterCW',
+        'beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain',
     ]),
     pass3Configs: new Set([
-        'beam:intersectionHarvest@beam5000(diverse)',
-        'beam:objectiveFirst@beam5000(diverse)',
-        'beam:objectiveFirst@beam5000',
-        'beam:perimeterSweep/perimeterCW@beam2000',
+        'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+        'beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets',
+        'beam|score=objectiveFirst|bias=none|width=5000|retention=plain',
+        'beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain',
     ]),
     conditionalPasses: [
         {
             passNumber: 4,
             capMs: 60000,
             configs: new Set([
-                'dfs:repair:repair',
+                'repair|score=repair|guidance=standard',
             ]),
             when: {
                 minReqInt: 7,
@@ -63,7 +63,7 @@ export const PORTFOLIO_EXPERIMENT = Object.freeze({
             passNumber: 4,
             capMs: 2000,
             configs: new Set([
-                'dfs:repair:repair',
+                'repair|score=repair|guidance=standard',
             ]),
             when: {
                 minReqInt: 9,
@@ -73,7 +73,7 @@ export const PORTFOLIO_EXPERIMENT = Object.freeze({
             passNumber: 4,
             capMs: 10000,
             configs: new Set([
-                'dfs:repair:repair(mustTurnBiased)',
+                'repair|score=repair|guidance=must-turn-biased',
             ]),
             when: {
                 minReqInt: 7,
