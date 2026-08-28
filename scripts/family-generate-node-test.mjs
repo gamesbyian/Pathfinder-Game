@@ -323,7 +323,7 @@ async function main() {
             assertSiblingValid(sibling, parent, witnessPath);
         }
 
-        // ── Test 9: re-embed mode — the first COUSIN tier: grid grows, navDensity drops, reqLen/reqInt fixed ──
+        // ── Test 9: re-embed mode — the first COUSIN tier: grid grows, required path coverage ratio drops, reqLen/reqInt fixed ──
         const reDir = path.join(tempDir, 're-embed');
         const reOut = path.join(reDir, 'out.json');
         const biggerW = parent.grid.w + 4, biggerH = parent.grid.h + 4;
