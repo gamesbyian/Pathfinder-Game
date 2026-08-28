@@ -1,10 +1,9 @@
 # First equal-work technique-census pilot design
 
-> **Status:** EXECUTED / CONCLUDED. Corrected canonical result: [EW1 equal-work technique census pilot](2026-08-28-ew1-equal-work-technique-census-pilot.md), run 33156541827.
-> **Date:** 2026-08-28
-> **Queue:** solver optimization #2, equal-work evidence substrate.
-> **Evidence role:** development/value-of-information.
-> **Decision:** the first decision-bearing equal-work census should be a bounded hard-residual sample at one 10,000,000-work cap, not a second full 76K-cell census and not a sweep of many arbitrary work caps.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-08-28 — corrected EW1 run 33156541827 completed 2,015/2,015 cells under the prespecified 60-level, 10M-work design
+> **Decision:** the bounded 60-level EW1 design was sufficient; it validated the cheap-beam-screen / protected-deep-search architecture in canonical work and does not earn a larger equal-work mirror census
+> **Remaining gate:** none for EW1 itself; queue #2 proceeds to current-production lifecycle reach/work joining and a production-shaped static fixed-work repricing experiment
 
 ## Question
 
