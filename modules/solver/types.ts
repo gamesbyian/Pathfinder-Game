@@ -418,9 +418,38 @@ export interface ConnectivityRejectionRecord {
     /** prep._workMeter.units at the moment of rejection — a work-point proxy for Stage A's "how far
      *  into the search do failures occur" question. */
     work: number;
+    /** Present only when the observer opted in via `includeBoundarySketch` (Stage B — see that
+     *  report's own "structural reason sketch" section). Read from the flood fill's own scratch
+     *  (already materialized at the rejection point); never a second flood fill. */
+    boundarySketch?: ConnectivityBoundarySketch;
 }
 
-export interface ConnectivityRejectionObserver { observe(record: ConnectivityRejectionRecord): void; }
+/** Stage B (docs/solver-optimization-current-queue.md item #0's learned-failure thread): a bounded,
+ *  conservative sketch of the flood fill that just rejected — NOT itself a proven reason. Two
+ *  rejections sharing a sketch means their reached region and immediate boundary blockers matched;
+ *  it does not by itself prove they share a sound logical cause (see that report's own caution that
+ *  a coarse/geometric match is discovery evidence, not a certificate). */
+export interface ConnectivityBoundarySketch {
+    /** Canonical per-row reached-set bitmask (hex-encoded, one 32-bit word per grid row) — the exact
+     *  same representation `_rowReached` already holds when the bit-parallel flood fill ran, read
+     *  directly rather than rebuilt. Two rejections with an identical fingerprint reached the exact
+     *  same set of cells (not merely the same resource-state tuple). */
+    reachedFingerprint: string;
+    /** Cells adjacent to the reached region that were NOT reached, with the specific reason
+     *  `_reachCanEnter` would have rejected them for. Deduplicated; unbounded in principle but never
+     *  larger than the grid's own cell count (<=225 per CLAUDE.md). */
+    boundaryBlockers: { cell: number; reason: ConnectivityBoundaryBlockerReason }[];
+}
+
+export type ConnectivityBoundaryBlockerReason = 'static' | 'used-flipper' | 'axis-exhausted' | 'visited-wall';
+
+export interface ConnectivityRejectionObserver {
+    observe(record: ConnectivityRejectionRecord): void;
+    /** Opt-in Stage B mode: also compute and attach `boundarySketch` to every record. Off by
+     *  default (Stage A's own scope) since scanning/canonicalizing the boundary has a real cost
+     *  that should be measured separately from Stage A's plain field capture. */
+    includeBoundarySketch?: boolean;
+}
 
 /** Undo token returned by `applyMove` (landmark fields present only when hasLandmarkConstraints). */
 export interface UndoToken {

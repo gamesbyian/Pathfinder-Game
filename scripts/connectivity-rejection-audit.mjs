@@ -35,6 +35,7 @@ const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map
     const [k, ...v] = a.split('=');
     return [k, v.join('=')];
 }));
+const flags = new Set(argv.filter(a => a.startsWith('--') && !a.includes('=')));
 
 const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels-random.json';
 const LEVEL_SPEC = args.get('--levels') || 'pos:1-40';
@@ -48,6 +49,11 @@ const WORK_BUDGET = Number(args.get('--work-budget') || 500_000);
 const TIME_BUDGET_MS = Number(args.get('--time-budget-ms') || 30_000);
 const OUT_FILE = args.get('--out') || 'reports/stress/connectivity-rejection-audit.json';
 const SUMMARY_OUT_FILE = args.get('--summary-out') || OUT_FILE.replace(/\.json$/u, '-summary.md');
+// Stage B (--boundary-sketch): also computes each rejection's reached-set fingerprint and boundary-
+// blocker sketch (modules/solver/types.ts's ConnectivityBoundarySketch). Real but bounded extra
+// cost per rejection (a grid-sized scan, never a second flood fill) -- left off by default so a
+// plain Stage A run stays as cheap as before this flag existed.
+const BOUNDARY_SKETCH = flags.has('--boundary-sketch');
 
 function selectLevelsBySpec(levels, spec) {
     if (!spec) return levels.map((entry, i) => ({ entry, pos: i + 1 }));
@@ -80,7 +86,7 @@ for (const { entry, pos } of sample) {
     const { id, stressMeta: _sm, ...rawLevel } = entry;
     const level = Solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
     const records = [];
-    const observer = { observe: (record) => records.push(record) };
+    const observer = { observe: (record) => records.push(record), includeBoundarySketch: BOUNDARY_SKETCH };
     let result;
     const t0 = Date.now();
     try {
@@ -135,6 +141,44 @@ const coarseKeysWithCrossStateRecurrence = [...coarseToFingerprints.values()].fi
 const coarseKeysWithCrossLevelRecurrence = [...coarseToLevels.values()].filter(set => set.size > 1).length;
 const distinctCoarseKeys = coarseToFingerprints.size;
 
+// Stage B (--boundary-sketch only): within the dominant coarse cluster (goal subtype, no pending
+// must-pass/must-cross obligation, no reserved wall -- the cluster the Stage A report identified as
+// the one worth checking), do two DIFFERENT exact states (same coarse key, different
+// stateFingerprint) also share the SAME reached-set fingerprint or the SAME normalized boundary-
+// blocker set? That recurrence -- not the coarse key alone -- is what would make the boundary sketch
+// a genuinely sufficient learned-failure certificate rather than just another coarse label.
+let boundarySketchStage = null;
+if (BOUNDARY_SKETCH) {
+    const normalizedBlockerSet = sketch => sketch.boundaryBlockers.map(b => `${b.cell}:${b.reason}`).sort().join(',');
+    const dominantRecords = allRecords.filter(r => r.subtype === 'goal' && r.mpVisitedMask === 0
+        && r.mustCrossMask === 0 && !r.reservedWallActive && r.boundarySketch);
+    const fingerprintToStates = new Map();
+    const blockerSetToStates = new Map();
+    for (const r of dominantRecords) {
+        const fp = r.boundarySketch.reachedFingerprint;
+        if (!fingerprintToStates.has(fp)) fingerprintToStates.set(fp, new Set());
+        fingerprintToStates.get(fp).add(r.stateFingerprint);
+        const bs = normalizedBlockerSet(r.boundarySketch);
+        if (!blockerSetToStates.has(bs)) blockerSetToStates.set(bs, new Set());
+        blockerSetToStates.get(bs).add(r.stateFingerprint);
+    }
+    const distinctReachedFingerprints = fingerprintToStates.size;
+    const reachedFingerprintsWithCrossStateRecurrence = [...fingerprintToStates.values()].filter(set => set.size > 1).length;
+    const distinctBlockerSets = blockerSetToStates.size;
+    const blockerSetsWithCrossStateRecurrence = [...blockerSetToStates.values()].filter(set => set.size > 1).length;
+    boundarySketchStage = {
+        dominantClusterRecords: dominantRecords.length,
+        distinctReachedFingerprints,
+        reachedFingerprintsWithCrossStateRecurrence,
+        reachedFingerprintsWithCrossStateRecurrenceRate: distinctReachedFingerprints
+            ? +(100 * reachedFingerprintsWithCrossStateRecurrence / distinctReachedFingerprints).toFixed(1) : 0,
+        distinctBlockerSets,
+        blockerSetsWithCrossStateRecurrence,
+        blockerSetsWithCrossStateRecurrenceRate: distinctBlockerSets
+            ? +(100 * blockerSetsWithCrossStateRecurrence / distinctBlockerSets).toFixed(1) : 0,
+    };
+}
+
 // Q4: work-point distribution.
 function percentile(sorted, p) {
     if (sorted.length === 0) return null;
@@ -165,6 +209,7 @@ const summary = {
     },
     workBySubtype,
     levelsWithZeroRejections: levelSummaries.filter(l => l.rejectionCount === 0).length,
+    ...(boundarySketchStage ? { boundarySketchStage } : {}),
 };
 
 console.log('\n=== Stage A summary ===');
@@ -195,6 +240,10 @@ ${distinctCoarseKeys} distinct coarse (subtype, objective, pending-mask, reserve
 ## Work-point distribution by subtype
 
 ${Object.entries(workBySubtype).map(([k, v]) => `- ${k}: min=${v.min}, p50=${v.p50}, p90=${v.p90}, max=${v.max}`).join('\n')}
-`;
+${boundarySketchStage ? `
+## Stage B: boundary-sketch recurrence (dominant cluster: goal, no pending obligation, no reserved wall)
+
+${boundarySketchStage.dominantClusterRecords} records in the dominant cluster. ${boundarySketchStage.distinctReachedFingerprints} distinct reached-set fingerprints, of which ${boundarySketchStage.reachedFingerprintsWithCrossStateRecurrence} (${boundarySketchStage.reachedFingerprintsWithCrossStateRecurrenceRate}%) recur across more than one exact state. ${boundarySketchStage.distinctBlockerSets} distinct normalized boundary-blocker sets, of which ${boundarySketchStage.blockerSetsWithCrossStateRecurrence} (${boundarySketchStage.blockerSetsWithCrossStateRecurrenceRate}%) recur across more than one exact state.
+` : ''}`;
 writeFileSync(path.resolve(SUMMARY_OUT_FILE), summaryMd);
 console.log(`Wrote ${SUMMARY_OUT_FILE}`);

@@ -3,7 +3,7 @@ import { getRealLengthFromState } from './solution.js';
 import { CONNECTIVITY_WORK_UNITS, workMeter } from './work-meter.js';
 import { stateSignature } from './nogood-cache.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { SolverSearchState, PrepLevel, ConnectivityRejectionSubtype, ConnectivityRejectionObserver } from './types.js';
+import type { SolverSearchState, PrepLevel, ConnectivityRejectionSubtype, ConnectivityRejectionObserver, ConnectivityBoundarySketch, ConnectivityBoundaryBlockerReason } from './types.js';
 
 const _reachQ   = new Int32Array(512); // BFS queue; max grid is 15x15=225 cells
 let _reachGen   = 0;
@@ -321,13 +321,78 @@ function _floodFillReachability(pos: number, state: SolverSearchState, level: No
 
 const EMPTY_KEYS: ArrayLike<number> = [];
 
+// Stage B (docs/solver-optimization-current-queue.md item #0's learned-failure thread; see
+// ConnectivityBoundarySketch's own doc in types.ts). Diagnostic-only, called only when a research
+// observer opted in via `includeBoundarySketch` AND a rejection already fired — never on the hot
+// path, so it deliberately does NOT share code with `_reachCanEnter`/the flood-fill functions above
+// (those must stay allocation-/branch-minimal; this trades that for readability). Mirrors
+// `_reachCanEnter`'s exact check order so its classification agrees with what actually decided
+// reachability; kept in sync by comment cross-reference rather than by calling it, since
+// `_reachCanEnter` returns a bool where this needs to say WHICH check fired.
+function _classifyBoundaryBlocker(
+    nk: number, maxVisit: number, pos: number, state: SolverSearchState, prep: PrepLevel,
+    mcOpenMask: number, mcKeys: ArrayLike<number>, axisExhausted: boolean,
+): ConnectivityBoundaryBlockerReason | null {
+    if (prep.flipperIndexMap) {
+        const fi = (prep.flipperIndexMap[nk] - 1);
+        if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) return 'used-flipper';
+    }
+    if (axisExhausted && nk !== pos && state.edgeUsage[nk] === 3) return 'axis-exhausted';
+    if (prep.reachBlockedArr[nk] !== 0) return 'static';
+    // A genuine boundary cell (adjacent to a reached cell, itself not reached) can't actually reach
+    // either of these two branches — both would have made `_reachCanEnter` return true, and the cell
+    // would then have been reached. Returning null here (never blaming "visited-wall") surfaces that
+    // inconsistency instead of silently mislabeling it, since this is the diagnostic-only mirror of
+    // `_reachCanEnter`'s logic, not a re-derivation with its own independent authority.
+    if (state.visited[nk] <= maxVisit || nk === pos) return null;
+    if (mcOpenMask !== 0 && _mcOpenHas(nk, mcOpenMask, mcKeys)) return null;
+    return 'visited-wall';
+}
+
+// Builds the reached-set fingerprint and boundary-blocker sketch from the flood fill that JUST ran
+// (reads `_reached()` — the exact same result `isConnected`'s own checks just used — never a second
+// flood fill). Mode-agnostic: works whether the last fill used the bit-parallel `_rowReached` path
+// or the plain-BFS `_reachGenBuf` fallback, since both are read through the same `_reached()`
+// accessor. Grid cells are <=225 for every real level (CLAUDE.md), so this is a bounded scan, not
+// proportional to search depth or corpus size.
+function _computeBoundarySketch(
+    level: NormalizedLevel, state: SolverSearchState, prep: PrepLevel,
+    maxVisit: number, pos: number, mcOpenMask: number, mcKeys: ArrayLike<number>, axisExhausted: boolean,
+): ConnectivityBoundarySketch {
+    const { w, h } = level.grid;
+    const rowWords: number[] = new Array(h);
+    const blockers: { cell: number; reason: ConnectivityBoundaryBlockerReason }[] = [];
+    const blockerSeen = new Set<number>();
+    const tryBlocker = (nk: number) => {
+        if (_reached(nk) || blockerSeen.has(nk)) return;
+        blockerSeen.add(nk);
+        const reason = _classifyBoundaryBlocker(nk, maxVisit, pos, state, prep, mcOpenMask, mcKeys, axisExhausted);
+        if (reason) blockers.push({ cell: nk, reason });
+    };
+    for (let y = 0; y < h; y++) {
+        let word = 0;
+        for (let x = 0; x < w; x++) {
+            const k = (y << 16) | x;
+            if (!_reached(k)) continue;
+            word |= (1 << x);
+            if (x + 1 < w) tryBlocker(k + 1);
+            if (x > 0) tryBlocker(k - 1);
+            if (y + 1 < h) tryBlocker(k + 0x10000);
+            if (y > 0) tryBlocker(k - 0x10000);
+        }
+        rowWords[y] = word;
+    }
+    return { reachedFingerprint: rowWords.map(word => word.toString(16)).join(','), boundaryBlockers: blockers };
+}
+
 // Plain module-level function, not a closure captured inside isConnected — see that function's own
 // comment on why. Called only on the (already rare relative to total isConnected calls) rejection
 // path, and only when a research observer is actually attached.
 function _reportConnectivityRejection(
     research: ConnectivityRejectionObserver, subtype: ConnectivityRejectionSubtype, objectiveIndex: number | undefined,
     pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
-    intNeeded: number, mcOpenMask: number, freshVolume: number, remainingStepsKnown?: number,
+    intNeeded: number, mcOpenMask: number, freshVolume: number, maxVisit: number, axisExhausted: boolean,
+    remainingStepsKnown?: number,
 ): void {
     research.observe({
         subtype, objectiveIndex, pos, stateFingerprint: stateSignature(state),
@@ -335,6 +400,9 @@ function _reportConnectivityRejection(
         reservedWallActive: mcOpenMask !== 0, freshVolume,
         remainingSteps: remainingStepsKnown ?? (level.portalMap.size === 0 ? level.reqLen - getRealLengthFromState(state) : null),
         work: prep._workMeter.units,
+        ...(research.includeBoundarySketch
+            ? { boundarySketch: _computeBoundarySketch(level, state, prep, maxVisit, pos, mcOpenMask, level.mustCrossKeys, axisExhausted) }
+            : {}),
     });
 }
 
@@ -416,18 +484,18 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     const research = prep._connectivityRejectionObserver;
 
     if (!_reached(level.goalKey)) {
-        if (research) _reportConnectivityRejection(research, 'goal', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume);
+        if (research) _reportConnectivityRejection(research, 'goal', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, maxVisit, axisExhausted);
         return false;
     }
     for (let i = 0; i < level.mustPassKeys.length; i++) {
         if (!(state.mpVisitedMask & (1 << i)) && !_reached(level.mustPassKeys[i])) {
-            if (research) _reportConnectivityRejection(research, 'must-pass', i, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume);
+            if (research) _reportConnectivityRejection(research, 'must-pass', i, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, maxVisit, axisExhausted);
             return false;
         }
     }
     for (let i = 0; i < level.mustCrossKeys.length; i++) {
         if ((state.mustCrossMask & (1 << i)) !== 0 && !_reached(level.mustCrossKeys[i])) {
-            if (research) _reportConnectivityRejection(research, 'must-cross', i, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume);
+            if (research) _reportConnectivityRejection(research, 'must-cross', i, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, maxVisit, axisExhausted);
             return false;
         }
     }
@@ -438,7 +506,7 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     if (level.portalMap.size === 0) {
         const rSteps = level.reqLen - getRealLengthFromState(state);
         if (freshVolume + intNeeded < rSteps) {
-            if (research) _reportConnectivityRejection(research, 'volume', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, rSteps);
+            if (research) _reportConnectivityRejection(research, 'volume', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, maxVisit, axisExhausted, rSteps);
             return false;
         }
     }
