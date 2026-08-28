@@ -1,6 +1,6 @@
 # Reserve-preserving STANDARD intersection-harvest exposure
 
-> **Status:** prespecified development descendant; selected tuning replay executing.
+> **Status:** CLOSED NEGATIVE at selected mechanism replay; disjoint Gate 2 was correctly never executed.
 > **Date frozen:** 2026-08-28, before descendant replay outcome.
 > **Candidate:** `STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE`.
 > **Evidence role:** tuning/development. No independent-confirmation claim.
@@ -35,9 +35,24 @@ Pass only if:
 
 This replay is tuning evidence by construction and cannot promote anything.
 
+## Gate 1 result
+
+GitHub Actions run `33151801662` completed the selected two-row mechanism replay.
+
+| level | control | reserve-preserving treatment | interpretation |
+|---|---|---|---|
+| `R02440` | fail | **solve** | the inserted `beam:intersectionHarvest@beam2000` still directly rescues the known gain, now earlier in the ladder |
+| `R02965` | **solve** | fail | preserving suffix membership is insufficient to preserve the old winner's usable work |
+
+Result: **+1 / -1**. Gate 1 required treatment to solve both rows, so the descendant fails immediately.
+
+The remaining mechanism is budget dilution inside the preserved suffix. On `R02965`, the old winning `beam:objectiveFirst@beam5000` remains protected, but the newly inserted 2K beam consumes work before it. Control gives the 5K objective attempt about 6.797M work and it solves after about 6.466M. Treatment leaves it about 6.327M and it stops about 134K work short of the known solve. The fixed-work envelope is doing exactly what it should: a useful extra action is not free merely because suffix membership is preserved.
+
+This closes the descendant. Do not execute the prespecified disjoint Gate 2, and do not tune another nearby placement from these two selected rows without a materially new scheduler premise.
+
 ## Gate 2: disjoint development cohort
 
-Only if Gate 1 passes, execute `.github/workflows/codex-highint-reserve-preserving-development.yml`.
+Gate 1 did not pass. The workflow below was prespecified but **never executed**, preserving the disjoint cohort.
 
 The cohort is frozen before Gate 1 outcome:
 
@@ -65,4 +80,4 @@ No confirmation cohort is reserved yet. If and only if the disjoint development 
 
 ## Production state
 
-Default remains OFF. No live interactive production behavior changes from either parent or descendant; finite-node-budget late-reserve mechanics are offline/batch behavior.
+Default remains OFF. Both the append-last parent and reserve-preserving descendant are closed negatives. No live interactive production behavior changed.
