@@ -648,6 +648,24 @@ jobs:
           if-no-files-found: warn
           retention-days: 90
 
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="reports/stress/typical-budget-corpus1.json" \
+            --include="reports/stress/typical-budget-corpus2.json" \
+            --source-artifact="typical-budget-baseline-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Commit the new baseline and diff to main
         # Also gated on the ref: now that shards follow the dispatch, a branch run produces numbers
         # from branch code, and committing those to main's continuity baseline would silently corrupt
