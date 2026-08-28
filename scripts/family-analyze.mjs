@@ -54,8 +54,14 @@ const hasNavDensity = manifest.variants.some(v => v.navDensity != null);
 console.log(`Family ${manifest.familyId} — parent ${manifest.parentLevelId} (${manifest.selectedWitnessSource}, len ${manifest.selectedWitnessLength}, reqInt ${manifest.selectedWitnessIntersectionCount})${manifest.parentNavDensity != null ? `, parent navDensity ${manifest.parentNavDensity.toFixed(3)}` : ''}`);
 console.log(`${manifest.acceptedCount}/${manifest.requestedCount} siblings generated (mode: ${manifest.familyMode ?? 'local-mutant'}), ${manifest.movableInstanceCount} movable instance(s) available under strict inventory.\n`);
 
+function canonicalWinningConfig(value) {
+    if (!value) return '-';
+    try { return normalizeAttemptIdentityKey(String(value)); }
+    catch { return String(value); }
+}
+
 if (parentRow) {
-    console.log(`Parent solve:   ok=${parentRow.ok} nodes=${parentRow.nodesExpanded ?? '-'} ms=${parentRow.totalMs ?? '-'} config=${parentRow.winningConfig ?? '-'}\n`);
+    console.log(`Parent solve:   ok=${parentRow.ok} nodes=${parentRow.nodesExpanded ?? '-'} ms=${parentRow.totalMs ?? '-'} config=${canonicalWinningConfig(parentRow.winningConfig)}\n`);
 }
 
 const header = ['variant', 'objectType', 'move', ...(hasNavDensity ? ['navDensity'] : []), 'ok', 'nodes', 'ms', 'config', 'ΔnodesVsParent', 'ΔmsVsParent'];
@@ -76,7 +82,7 @@ for (const v of manifest.variants) {
         row ? row.ok : '?',
         row?.nodesExpanded ?? '-',
         row?.totalMs ?? '-',
-        row?.winningConfig ?? '-',
+        canonicalWinningConfig(row?.winningConfig),
         dNodes ?? '-',
         dMs ?? '-',
     ].join('\t'));
