@@ -68,6 +68,7 @@ function isBaseT1(row) {
 }
 
 const censusByLevelTechnique = new Map();
+const techniques = new Set();
 for (const row of censusRows) {
     if (!isBaseT1(row)) continue;
     const id = row.levelId ?? corpusRows[(row.levelPos ?? 0) - 1]?.id;
@@ -80,10 +81,10 @@ for (const row of censusRows) {
         throw new Error(`Conflicting base T1 census rows for ${id}/${technique}`);
     }
     if (!prior) censusByLevelTechnique.set(key, row);
+    techniques.add(technique);
 }
 
 const levelInfo = new Map();
-const techniques = new Set();
 for (const id of currentResidual) {
     const { row: raw } = corpusById.get(id);
     const { id: _id, stressMeta: _stressMeta, ...rawLevel } = raw;
