@@ -182,6 +182,19 @@ The census is now correctly labeled but still executes equal-node cells. A futur
 equal-work census mode would give Priority-1 scheduler research a directly priced action map without
 discarding the valuable existing node-depth curves.
 
+**2026-08-28, execution capability added:** `scripts/technique-census-cell.mjs`'s `runCell` now
+supports an optional `cell.workBudget` that bounds a cell by canonical work (dividing/sharing it
+across gates/configs the same way the default mode divides nodes) instead of raw nodes, mirroring
+`method-probe.mjs`'s existing `--work-budget` deterministic mode. Every existing node-budget-only
+cell (T1/T3) is completely unaffected — `useWork` gates the new code path off entirely when
+`workBudget` is absent. Deliberately **not** done: wiring an actual equal-work plan TIER
+(`build-technique-census-plan.mjs` population/scale choice) or `combine-technique-census-shards.mjs`
+summary-bucket support for the new `work-budget-reached`/`deadline-truncated` statuses — choosing a
+real population/scale for equal-work evidence is itself a decision-bearing research choice needing
+its own premise/pilot per the operating model, not a plumbing task. This closes the "the primitive
+capability doesn't exist yet" half of the gap; the remaining half is a future gated research step.
+See [`2026-08-28-discovery-work-meter-session-scope-fix.md`](2026-08-28-discovery-work-meter-session-scope-fix.md).
+
 ### 6. Mutable work cap remains in search compatibility state
 
 `withWorkCapScope()` removes several ownership hazards but search primitives still read
