@@ -44,6 +44,10 @@ test('continuation and restart arms spend the same canonical work envelope on a 
 
     assert.equal(result.continuation.solved, false);
     assert.equal(result.restart.solved, false);
+    assert.equal(result.continuation.stopReason, 'work-budget');
+    assert.equal(result.restart.stopReason, 'work-budget');
+    assert.equal(result.continuation.deadlineTruncated, false);
+    assert.equal(result.restart.deadlineTruncated, false);
 
     // Up to the work meter's own check granularity (repairSearchFromGate checks the cap once per
     // restart, not per unit), neither arm may exceed the requested envelope.
@@ -61,6 +65,23 @@ test('continuation and restart arms spend the same canonical work envelope on a 
     // the same search.
     assert.ok(Number.isFinite(result.continuation.bestBadness), `continuation bestBadness not finite: ${result.continuation.bestBadness}`);
     assert.ok(Number.isFinite(result.restart.bestBadness), `restart bestBadness not finite: ${result.restart.bestBadness}`);
+});
+
+test('a binding wall deadline is surfaced as invalid equal-work evidence and does not continue the restart arm', async () => {
+    const level = makeImpossibleLevel();
+    const result = await runRepairRestartVsContinuation(
+        K(1, 1), level, () => prepLevel(level), POLICY_PROFILES.repair, 20_000, { budgetMs: 0 },
+    );
+
+    assert.equal(result.continuation.solved, false);
+    assert.equal(result.continuation.stopReason, 'wall-clock');
+    assert.equal(result.continuation.deadlineTruncated, true);
+
+    assert.equal(result.restart.solved, false);
+    assert.equal(result.restart.stopReason, 'wall-clock');
+    assert.equal(result.restart.deadlineTruncated, true);
+    assert.deepEqual(result.restart.seedSalts, [0],
+        'a right-censored seed 0 must not be silently rescued by reallocating its unspent split to seed 1');
 });
 
 test('restart arm runs a genuinely fresh seed 1 and SUMS both seeds\' work, not just the last seed', async () => {
