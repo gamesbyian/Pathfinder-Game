@@ -1,8 +1,8 @@
-import { classifyRoutingRegime, getRequiredPathCoverageRatio } from './routing regime.js';
+import { classifyRoutingRegime, getRequiredPathCoverageRatio } from './archetype.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER, TEMPLATE_CONFIG_KEYS, TEMPLATES } from './policy.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, AttemptConfig, StructuralTemplate } from './types.js';
-import { defaultConfig } from './ablation-config.js';
+import { canonicalAblationFeatureName, defaultConfig } from './ablation-config.js';
 
 /**
  * Attempt-policy selection is a **pure function of level features** — never of level identity.
@@ -602,8 +602,18 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     let configs: AttemptConfig[] | null = null;
     // Ablation: STRATEGY_ROUTING_REGIME_SELECTION — disabling forces every level through the catch-all
     // rule below regardless of classified routing regime/features, isolating how much the feature-based
-    // routing itself contributes (vs. the config bundles it selects among).
-    if (!cfg || cfg.STRATEGY_ROUTING_REGIME_SELECTION) {
+    // routing itself contributes (vs. the config bundles it selects among). Direct testing/tooling callers
+    // may still supply the historical key; normalized orchestration configs expose canonical keys only.
+    const hasOwn = (key: string) => cfg != null && Object.prototype.hasOwnProperty.call(cfg, key);
+    const canonicalRoutingValue = hasOwn('STRATEGY_ROUTING_REGIME_SELECTION')
+        ? cfg!.STRATEGY_ROUTING_REGIME_SELECTION : undefined;
+    const legacyRoutingValue = hasOwn('STRATEGY_ARCHETYPE_ROUTING')
+        ? (cfg as Record<string, unknown>).STRATEGY_ARCHETYPE_ROUTING as boolean : undefined;
+    if (canonicalRoutingValue !== undefined && legacyRoutingValue !== undefined
+        && canonicalRoutingValue !== legacyRoutingValue)
+        throw new Error('Conflicting ablation values for canonical feature STRATEGY_ROUTING_REGIME_SELECTION');
+    const routingRegimeSelectionEnabled = canonicalRoutingValue ?? legacyRoutingValue ?? true;
+    if (routingRegimeSelectionEnabled) {
         for (const rule of ATTEMPT_POLICY) {
             if (rule.when(f)) { configs = rule.build(f, cfg); break; }
         }
@@ -622,7 +632,7 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     // solve rate, not evidence against the mechanism). See
     // reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md for the full record.
     //
-    // docs/solver-optimization-workstreams.md Priority 1's post-976 portfolio rejoin
+    // docs/solver-optimization-workstreams.md workstream 1's post-976 portfolio rejoin
     // (reports/2026-08-25-post-976-portfolio-exposure-rejoin.md) found `beam:intersectionHarvest@
     // beam5000` and `beam:objectiveFirst@beam5000` (the PLAIN WIDE beams, not their `(diverse)`
     // siblings already used elsewhere in this file) each absent from production on exactly the same
@@ -735,11 +745,18 @@ export function getConfiguredAttemptConfigs(level: NormalizedLevel, cfg: Ablatio
     // This helper is also a public testing/tooling boundary, so it cannot assume callers already
     // passed through orchestration.ts's Proxy normalizer. Materialize production defaults here;
     // otherwise a sparse or explicit-undefined config silently disables unrelated routing tiers.
-    const normalizedCfg = cfg == null
-        ? null
-        : {
-            ...defaultConfig(),
-            ...Object.fromEntries(Object.entries(cfg).filter(([, value]) => value !== undefined)),
-        };
+    let normalizedCfg: AblationConfig | null = null;
+    if (cfg != null) {
+        const canonicalOverrides: AblationConfig = {};
+        for (const [rawKey, value] of Object.entries(cfg)) {
+            if (value === undefined) continue;
+            const key = canonicalAblationFeatureName(rawKey);
+            if (Object.prototype.hasOwnProperty.call(canonicalOverrides, key)
+                && canonicalOverrides[key] !== value)
+                throw new Error(`Conflicting ablation values for canonical feature ${key}`);
+            canonicalOverrides[key] = value;
+        }
+        normalizedCfg = { ...defaultConfig(), ...canonicalOverrides };
+    }
     return applyAttemptConfigOptions(getAttemptConfigs(level, normalizedCfg), normalizedCfg);
 }
