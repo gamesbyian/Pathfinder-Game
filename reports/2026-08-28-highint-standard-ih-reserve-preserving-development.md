@@ -1,10 +1,9 @@
 # Reserve-preserving STANDARD intersection-harvest exposure
 
-> **Status:** CLOSED NEGATIVE at selected mechanism replay; disjoint Gate 2 was correctly never executed.
-> **Date frozen:** 2026-08-28, before descendant replay outcome.
-> **Candidate:** `STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE`.
-> **Evidence role:** tuning/development. No independent-confirmation claim.
-> **Parent:** `STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE`, closed negative.
+> **Status:** concluded-negative
+> **Last evidence:** 2026-08-28 — selected mechanism replay run 33151801662 was +1/-1: R02440 rescued, R02965 still regressed
+> **Decision:** close the reserve-preserving placement descendant; preserving suffix membership did not preserve usable work for the old winner
+> **Remaining gate:** none; the prespecified disjoint Gate 2 was correctly never executed
 
 ## New premise
 
