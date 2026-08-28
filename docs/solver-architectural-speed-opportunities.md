@@ -1,6 +1,6 @@
 # Solver architectural speed opportunities
 
-> **Status:** active supporting program; [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns rank.
+> **Status:** active supporting program; [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns current execution priority.
 > **Current boundary:** broad per-candidate native/WASM migration is closed after the 2026-08-24 substrate audit. Reopen only if a genuinely compact kernel/interface emerges.
 
 Use with [`solver-architecture.md`](solver-architecture.md), [`solver-budget-determinism.md`](solver-budget-determinism.md), and [`solver-research-operating-model.md`](solver-research-operating-model.md).
