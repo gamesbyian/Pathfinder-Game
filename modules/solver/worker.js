@@ -6,7 +6,7 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 //   { type: 'SOLVE',     id, levelRaw, budgetMs, solveOpts? }  — solve a raw (1-indexed) level.
 //                                                    solveOpts carries every other SolveOpts field
 //                                                    (see orchestration.ts) the caller wants
-//                                                    forwarded — ablation/nodeBudget/workBudget/
+//                                                    forwarded — ablation/nodeBudget/baseWorkBudget/workBudget/
 //                                                    disableExtraBudgetPasses/lifecycleTelemetry/
 //                                                    etc. timeBudgetMs and yieldFn are NOT part of
 //                                                    it; they stay the dedicated budgetMs param and
@@ -166,7 +166,7 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
     if (type !== 'SOLVE') return;
 
     // solveOpts carries every other SolveOpts field the client-side adapter was asked to forward
-    // (ablation, nodeBudget, workBudget, disableExtraBudgetPasses, lifecycleTelemetry, the various
+    // (ablation, nodeBudget, baseWorkBudget/workBudget, disableExtraBudgetPasses, lifecycleTelemetry, the various
     // *BudgetFractionOverride fields, etc.) — see solver-worker-client.ts's own comment for why this
     // exists (fixed 2026-08-20: the adapter used to silently drop everything but timeBudgetMs).
     // timeBudgetMs/yieldFn are still handled via the dedicated budgetMs param and this worker's own
