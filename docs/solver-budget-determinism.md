@@ -1,7 +1,7 @@
 # Solver work budgets and determinism
 
 > **Status:** current contract; main-ladder allocation migration complete, additive-tier compatibility debt explicitly tracked.
-> **Allocation policy:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md); [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) owns rank and next gate.
+> **Allocation policy:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md); [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns rank and next gate.
 > **Priority:** remaining budget-model completion is active queue item #2 and is a prerequisite to new scheduler repricing policy.
 > **Current budget-depth evidence:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
 > **History:** [`archive/snapshots/solver-budget-determinism-2026-08-20.md`](archive/snapshots/solver-budget-determinism-2026-08-20.md).
