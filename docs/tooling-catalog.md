@@ -8,7 +8,7 @@ Task-oriented entry points for existing developer, solver, corpus, hint, family,
 
 Use this short preflight before choosing a command:
 
-1. Read [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md). A specialist tool's local “next question” does not outrank the live queue.
+1. Read [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md). A specialist tool's local “next question” does not override the current execution priority.
 2. Classify the question: correctness, routing, allocation, search quality, retention/representation, implementation speed, or generalization.
 3. Decide whether the run is **discovery/tuning, confirmation, transfer, or forensic**. A new seed from the same generator is confirmation, not cross-generator transfer.
 4. If the treatment was selected from prior results, do not use the selected-on population as sole confirmation.
