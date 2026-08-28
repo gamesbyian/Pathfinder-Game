@@ -211,6 +211,7 @@ const overall = aggregate
     .filter(row => row.archetype === '*')
     .sort((a, b) => b.isolatedSolves - a.isolatedSolves
         || a.nodesPerObservedSolve - b.nodesPerObservedSolve);
+const beamRanked = ranked.filter(row => row.technique.startsWith('beam:'));
 
 const result = {
     generatedAt: new Date().toISOString(),
@@ -224,6 +225,7 @@ const result = {
     censusPartialShards: censusDocument.partialShards ?? [],
     rankingSemantics: 'technique x current detectArchetype; only current residual levels where production getAttemptConfigs() lacks the exact base technique key; frozen base T1 census only',
     rankedTechniqueArchetypeCandidates: ranked,
+    rankedBeamTechniqueArchetypeCandidates: beamRanked,
     overallTechniqueCandidates: overall,
 };
 
@@ -247,6 +249,13 @@ for (const row of ranked.slice(0, 20)) {
         `nodes/win=${row.nodesPerObservedSolve}`,
         `ids=${row.winningIds.map(x => x.id + ':' + x.nodes).join(',')}`,
     ].join(' | '));
+}
+console.log('');
+console.log('TOP BEAM-ONLY CANDIDATES WITH WINNING FEATURES');
+for (const row of beamRanked.slice(0, 12)) {
+    console.log(`${row.technique} | arch=${row.archetype} | absent=${row.absentResidualLevels} | observed=${row.censusObservedLevels} | wins=${row.isolatedSolves} | nodes/win=${row.nodesPerObservedSolve}`);
+    for (const win of row.winningIds)
+        console.log(`  ${win.id} nodes=${win.nodes} gate=${win.gate ?? '-'} features=${JSON.stringify(win.features)}`);
 }
 console.log('');
 console.log('OVERALL MISSING TECHNIQUES');
