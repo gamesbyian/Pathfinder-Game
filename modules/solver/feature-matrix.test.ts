@@ -115,7 +115,7 @@ test('multi-gate: solver may start from any gate and the referee accepts the sta
 });
 
 test('dense near-Hamiltonian level engages the DFS ordering regime', async () => {
-    // 4x4, path covers 15 of 16 cells (navDensity ≈ 0.94 ≥ DENSE_LEVEL_NAV_DENSITY).
+    // 4x4, path covers 15 of 16 cells (requiredPathCoverageRatio ≈ 0.94 ≥ DENSE_LEVEL_COVERAGE_THRESHOLD).
     await solveAndReferee(raw({
         grid: { w: 4, h: 4 },
         gates: [{ x: 1, y: 1 }],
