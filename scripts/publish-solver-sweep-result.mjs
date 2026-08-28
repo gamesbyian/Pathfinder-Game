@@ -21,6 +21,9 @@ if (!primary) {
 }
 const outDir = values.get('out') || 'logs/solver-sweep-result';
 const sourceArtifact = values.get('source-artifact') || null;
+const shardsExpected = values.has('shards-expected') ? Number(values.get('shards-expected')) : null;
+const shardsObserved = values.has('shards-observed') ? Number(values.get('shards-observed')) : null;
+const provenanceOut = values.get('provenance-out') || null;
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
 
@@ -97,6 +100,24 @@ if (control && treatment) {
 const runUrl = process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID
   ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
   : null;
+let dispatchInputs = {};
+try {
+  if (process.env.GITHUB_EVENT_PATH && fs.existsSync(process.env.GITHUB_EVENT_PATH)) {
+    const event = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+    dispatchInputs = event?.inputs && typeof event.inputs === 'object' ? event.inputs : {};
+  }
+} catch (error) {
+  console.warn('publish-solver-sweep-result: could not read dispatch inputs:', error.message);
+}
+
+const shardCompleteness = Number.isFinite(shardsExpected) && Number.isFinite(shardsObserved)
+  ? {
+      expected: shardsExpected,
+      observed: shardsObserved,
+      complete: shardsExpected === shardsObserved,
+    }
+  : null;
+
 const manifest = {
   schemaVersion: 1,
   kind: 'pathfinder-solver-sweep-result',
@@ -111,9 +132,28 @@ const manifest = {
   sha: process.env.GITHUB_SHA || null,
   runUrl,
   sourceArtifact,
+  dispatchInputs,
+  shardCompleteness,
   entries,
 };
 fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+
+if (provenanceOut) {
+  fs.mkdirSync(path.dirname(provenanceOut), { recursive: true });
+  fs.writeFileSync(provenanceOut, JSON.stringify({
+    kind: 'pathfinder-gha-source-run',
+    workflow: manifest.workflow,
+    runId: manifest.runId,
+    runAttempt: manifest.runAttempt,
+    runUrl: manifest.runUrl,
+    sha: manifest.sha,
+    ref: manifest.ref,
+    refName: manifest.refName,
+    event: manifest.event,
+    dispatchInputs,
+    shardCompleteness,
+  }, null, 2) + '\n');
+}
 
 const lines = ['# Solver sweep result', ''];
 if (manifest.workflow) lines.push(`- Workflow: ${manifest.workflow}`);
@@ -121,6 +161,8 @@ if (manifest.runId) lines.push(`- Run: ${runUrl ? `[${manifest.runId}](${runUrl}
 if (manifest.sha) lines.push(`- Commit: \`${manifest.sha}\``);
 if (manifest.refName) lines.push(`- Ref: \`${manifest.refName}\``);
 if (sourceArtifact) lines.push(`- Legacy/specialized artifact: \`${sourceArtifact}\``);
+if (Object.keys(dispatchInputs).length) lines.push(`- Dispatch inputs: recorded in \`manifest.json\``);
+if (shardCompleteness) lines.push(`- Shards: ${shardCompleteness.observed}/${shardCompleteness.expected} ${shardCompleteness.complete ? 'complete' : '**INCOMPLETE**'}`);
 lines.push('- Standard artifact: `solver-sweep-result`');
 lines.push(`- Primary result: ${entries[0].missing ? '**missing**' : `\`${entries[0].published}\``}`);
 
