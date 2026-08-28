@@ -36,6 +36,7 @@
 # target it at all -- GitHub requires a workflow file to exist on the default branch before it's
 # dispatchable, even against a different ref's own copy of the file.
 name: Family wide research trove (research branch only)
+run-name: "Family trove · shards=${{ inputs.shards }} · variants=${{ inputs.variant_count }} · recover=${{ inputs.recover_run_id || 'fresh' }}"
 
 on:
   workflow_dispatch:
@@ -294,6 +295,9 @@ jobs:
         run: |
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/families/2026-08-07-wide-trove-summary.md" \
+            --shards-expected="${{ inputs.shards }}" \
+            --shards-observed="$(find logs/family-census -maxdepth 1 -name 'wide-shard-*-summary.jsonl' | wc -l | tr -d ' ')" \
+            --provenance-out="reports/families/2026-08-07-wide-trove-source-run.json" \
             --source-artifact="family-wide-trove-combined"
 
       - name: Upload standard solver sweep result
