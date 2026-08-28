@@ -11,30 +11,25 @@
  * same early-return shape as the real ladder, just over a hand-picked config list instead of the
  * full feature-routed one.
  *
- * --only=<key>[,<key>...] (required) selects configs by their canonical attemptConfigKey() string
- * (the same format solveLevel()'s own Attempt records use — see orchestration.ts):
- *   dfs:objectiveFirst
- *   dfs:perimeterSweep/perimeterCW
- *   beam:objectiveFirst@beam2000
- *   beam:intersectionHarvest@beam5000(diverse)
- *   dfs:repair:repair
- *   dfs:repair:repair(mustTurnBiased)
- *   dfs:repair:repair(turnBiased)
- *   ida:default                 (admissible-order-search.ts prototype; <profile> is the tie-break
- *                                 profile, e.g. ida:objectiveFirst, ida:mustCrossFirst)
- *   ida:none                    (skips the tie-break entirely -- reproduces the technique's
- *                                 original ordering, from before any profile tie-broke ties)
- *   ida:default(lds)            (admissibleOrderSearchLDS: cheap low-discrepancy probe waves
- *                                 before the same unbounded fallback -- TESTED AND REJECTED
- *                                 2026-07-24, kept only as a documented negative result, see
- *                                 AttemptConfig.admissibleOrderLds's own doc)
+ * --only=<key>[,<key>...] accepts canonical attempt identities (legacy compact keys remain
+ * readable during migration). Canonical examples containing "|" must be shell-quoted:
+ *   'dfs|score=objectiveFirst|bias=none'
+ *   'dfs|score=perimeterSweep|bias=perimeterCW'
+ *   'beam|score=objectiveFirst|bias=none|width=2000|retention=plain'
+ *   'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets'
+ *   'repair|score=repair|guidance=standard'
+ *   'repair|score=repair|guidance=must-turn-biased'
+ *   'repair|score=repair|guidance=turn-biased'
+ *   'admissible-order|tieBreak=default|lds=off'
+ *   'admissible-order|tieBreak=none|lds=off'
+ *   'admissible-order|tieBreak=default|lds=on'
  * Run with --list-profiles / --list-templates to see the valid profile/template name vocabulary.
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/method-probe.mjs -- \
  *     --corpus=data/stress/stress-levels-random.json \
  *     --levels=pos:1-50 \
- *     --only=dfs:repair:repair(turnBiased) \
+ *     --only='repair|score=repair|guidance=turn-biased' \
  *     --budget-ms=600000 --work-budget=50000000 --node-budget=20000000 \
  *     --out=/tmp/probe.json --summary-out=/tmp/probe-summary.md
  *
@@ -65,7 +60,7 @@ const { prepLevel, runAttempt, attemptConfigKey } = SOLVER_TESTING_API;
 
 if (flags.has('--list-profiles')) {
     console.log('Profiles:', PROFILE_ORDER.join(', '), '(plus "repair" for repair-family configs)');
-    console.log('admissible-order-search.ts (prototype): "ida:<profile>", e.g. "ida:default" -- <profile> selects the soft-score TIE-BREAK profile, not the primary ordering (that\'s always admissible slack). "ida:none" skips the tie-break entirely (the technique\'s original ordering).');
+    console.log('Admissible-order identity: admissible-order|tieBreak=<profile-or-none>|lds=<on|off>; tieBreak selects only the soft-score tie-break, not primary admissible-slack ordering.');
     process.exit(0);
 }
 if (flags.has('--list-templates')) {
@@ -87,7 +82,7 @@ const ONLY = args.get('--only');
 if (!ONLY) { console.error('--only=<attemptConfigKey>[,<key>...] is required. Run with --list-profiles/--list-templates for the vocabulary.'); process.exit(1); }
 let configs;
 try {
-    configs = ONLY.split(',').map(k => k.trim()).filter(Boolean).map(k => ({ key: k, config: parseAttemptConfigKey(k) }));
+    configs = ONLY.split(',').map(k => k.trim()).filter(Boolean).map(k => { const config = parseAttemptConfigKey(k); return { key: attemptConfigKey(config), config }; });
 } catch (err) {
     console.error(err.message);
     process.exit(1);
