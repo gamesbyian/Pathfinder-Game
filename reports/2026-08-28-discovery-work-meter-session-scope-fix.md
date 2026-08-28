@@ -2,8 +2,8 @@
 
 > **Status:** concluded-positive
 > **Last evidence:** 2026-08-28 — implemented on top of `d833b16` (queue #2's post-976 head)
-> **Decision:** `createDiversificationSession` (`modules/solver/diversification.ts`) and three of `scripts/hint-workbench.mjs`'s own top-level steps (`runAblationUi`, `runCandidateGrid`, `runPortalGrid`) now accumulate a session-local work counter from each solve's own `SolveResult.workSpent` instead of reading the realm-global `workMeter`. Along the way, a real bug was found and fixed: `runCandidateGrid`'s corner-flip mutation candidates were never actually reaching the acceptance pipeline (see below).
-> **Remaining gate:** `modules/solver/hint-ablation-generator.ts` (~30 `workMeter.units`/`workCeiling` sites across its phase loops) and `hint-workbench.mjs`'s `runEnumeration` `shouldStop` callback (a secondary, non-binding hang-safety net inside `variety-search.ts`'s `run()`) still read the realm-global meter. Both are explicitly flagged as follow-up debt, not silently left.
+> **Decision:** Every discovery-tooling caller capable of owning its own work scope now does: `createDiversificationSession` (`modules/solver/diversification.ts`), `modules/solver/hint-ablation-generator.ts`'s `createHintAblationGenerator` (baseline phase + `runCascade`/`runStrategyPhase`, ~30 sites across all 7 phase loops), and three of `scripts/hint-workbench.mjs`'s own top-level steps (`runAblationUi`, `runCandidateGrid`, `runPortalGrid`) all accumulate a session-local work counter from each solve's own `SolveResult.workSpent` instead of reading the realm-global `workMeter`. Along the way, a real bug was found and fixed: `runCandidateGrid`'s corner-flip mutation candidates were never actually reaching the acceptance pipeline (see below).
+> **Remaining gate:** only `hint-workbench.mjs`'s `runEnumeration` `shouldStop` callback (a secondary, non-binding hang-safety net inside `variety-search.ts`'s `run()`, which has no caller-visible per-step result to intercept) still reads the realm-global meter — explicitly flagged in place, not silently left. Closing it requires plumbing a session-scoped counter into `variety-search.ts` itself, a materially different (and lower-priority, since this bound is already non-binding) change than the caller-owned-accumulation pattern used everywhere else.
 
 ## Scope
 
@@ -48,21 +48,29 @@ Fix: wrap the mutation as `record({ solution: mutation.path, attemptInfo: null }
 
 A defensive comment was added at `record()`'s own definition (`runCandidateGrid`) describing its expected input shape, so the same mistake is caught by inspection rather than by a silent no-op if it recurs (e.g. in a future non-solve candidate source).
 
+### `hint-ablation-generator.ts` (~30 sites)
+
+Same pattern as `diversification.ts`, applied to `RunCtx` (already threaded through `runCascade`/`runStrategyPhase`/every phase loop in `createHintAblationGenerator`): added `ctx.workSpent`, changed `ctx.workCeiling`'s meaning from an absolute `workMeter.units` checkpoint to a session-relative budget, and replaced every `workMeter.units >= workCeiling` / `workMeter.units < workCeiling` (26 checks: 2 inside the two helpers via `ctx.workCeiling`, 1 in the baseline-phase gate, 15 `>=`/6 `<` across the cascade/swap/portalCascade/swapPortal/combined/swapCombined phase loops, plus the two initialization sites) with the equivalent `ctx.workSpent` comparison. `createHintAblationGenerator`'s own public `workBudget`/`wallClockDeadlineMs` options were already amount-shaped (not absolute checkpoints), so no external caller (`hint-workbench.mjs`'s `runAblationFull`, `scripts/hint-diversification.mjs`, `hint-ablation-generator.test.ts`) needed any change — this was purely an internal representation fix.
+
+Verified with a real end-to-end run against level 1 (`data/levels.json`, 227 existing hints): a generous `--wall-ms=9000` ablation-full run completes all 7 phases (`haltedByWorkBudget: false`, `combosTried` baseline 1 / cascade 6 / swap 4 / portalCascade 8 / swapPortal 16 / combined 36 / swapCombined 24, 22 accepted candidates), and a starved `--wall-ms=1` run correctly halts after 1 combo (`phasesRun: ['baseline', 'cascade']`, `haltedByWorkBudget: true`) — confirming the ceiling still functions as a real stopping condition, not just a type-correct no-op.
+
 ### Left as documented remaining debt
 
-- `hint-ablation-generator.ts`'s ~30 sites are the single largest remaining piece of this debt item. They are structurally the same fix (session-local accumulation from each `solverApi.solve()`'s `workSpent`) but scattered across many nested phase loops (baseline/cascade/strategy/swap/portalCascade/swapPortal/combined/swapCombined) in a single large file; converting them is a self-contained follow-up, not folded into this pass to keep this change reviewable and its verification precise.
-- `runEnumeration`'s `shouldStop` callback fires from inside `variety-search.ts`'s own `run()` call, which has no caller-visible per-step result to sum a `workSpent` delta from the outside — closing this one requires either plumbing a session-scoped counter into `variety-search.ts` itself or accepting that this specific bound is already secondary/non-binding (the deterministic `nodeBudget` governs the discovered set; this callback only prevents hangs). Documented in place at the call site.
+`runEnumeration`'s `shouldStop` callback fires from inside `variety-search.ts`'s own `run()` call, which has no caller-visible per-step result to sum a `workSpent` delta from the outside — closing this one requires either plumbing a session-scoped counter into `variety-search.ts` itself or accepting that this specific bound is already secondary/non-binding (the deterministic `nodeBudget` governs the discovered set; this callback only prevents hangs). Documented in place at the call site.
 
 ## Verification
 
 - `node_modules/.bin/vitest run modules/solver/diversification.test.ts` — 7/7 pass (integration tests use the real solver against a small portal fixture; unaffected by the ceiling-contract change since all call sites were updated together).
+- `node_modules/.bin/vitest run modules/solver/hint-ablation-generator.test.ts` — 7/7 pass.
 - `node_modules/.bin/tsx scripts/hint-workbench-node-test.mjs` — passes (exit 0); this suite does not exercise `candidate-grid`/`portal-grid`, so it did not previously catch the corner-flip bug.
+- `node_modules/.bin/tsx scripts/hint-diversification-node-test.mjs` — passes (exit 0); exercises `createHintAblationGenerator` through the legacy CLI wrapper.
 - `node_modules/.bin/tsc --noEmit -p tsconfig.json` — clean.
 - `node scripts/check-solver-budget-boundaries.mjs` — still passes; this change does not touch any of the 9 inventoried `orchestration.ts` ms-derived allocation sites.
 - `node_modules/.bin/eslint` on the touched files — clean.
-- Manual `candidate-grid` run against real level 1 (above) — corner-flip fix confirmed functional, not just type-correct.
-- `npm run ci` — see this report's commit for the run log.
+- Manual `candidate-grid` run against real level 1 — corner-flip fix confirmed functional, not just type-correct (31 corner-flip candidates evaluated, 12 accepted; 0 before the fix).
+- Manual `ablation-full` runs against real level 1 — both the generous-budget (all 7 phases complete, 22 accepted) and starved-budget (`--wall-ms=1`, halts after 1 combo) paths behave correctly, confirming the ceiling still functions as a real stopping condition.
+- `npm run ci` — run twice (once after the `diversification.ts`/`hint-workbench.mjs` pass, once after adding `hint-ablation-generator.ts`); see this report's commit(s) for the run logs. Both green: 100 vitest files / 1268 tests, 34 `test:node` scripts, all checks.
 
 ## Production impact
 
-No production solver ordering/scoring/pruning/budget changed. `diversification.ts`/`hint-workbench.mjs` are discovery-tooling-only modules (CLI hint workbench; `diversification.ts`'s session is not yet wired into any browser caller). The corner-flip fix changes candidate-grid's own **output** (it now actually produces the candidates its own documentation always claimed it did) but does not change any accepted candidate's validation: every corner-flip candidate still passes through the same downstream `validateCandidatePath`/acceptance pipeline as every other generator's candidates before being saved.
+No production solver ordering/scoring/pruning/budget changed. `diversification.ts`/`hint-ablation-generator.ts`/`hint-workbench.mjs` are discovery-tooling-only modules (CLI hint workbench and hint-diversification tooling; `diversification.ts`'s session is not yet wired into any browser caller). The corner-flip fix changes candidate-grid's own **output** (it now actually produces the candidates its own documentation always claimed it did) but does not change any accepted candidate's validation: every corner-flip candidate still passes through the same downstream `validateCandidatePath`/acceptance pipeline as every other generator's candidates before being saved.
