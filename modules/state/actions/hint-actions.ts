@@ -6,13 +6,13 @@ import { resolveEngineState } from './shared.js';
 import type { StateOrEngine } from './shared.js';
 import type { EngineLevel } from '../../domain/level-schema.js';
 
-/** reqLen / navigable area — mirrors solver's getNavigableDensity (kept local so the hint slice
- *  doesn't depend on the solver layer). Feeds hint curation's near-Hamiltonian crossing-rescue. */
-function navigableDensity(level: EngineLevel | null | undefined): number {
+/** Required path length / non-gate winning-path cell count — mirrors solver's
+ *  getRequiredPathCoverageRatio (kept local so the hint slice does not depend on the solver layer). */
+function requiredPathCoverageRatio(level: EngineLevel | null | undefined): number {
     if (!level) return 0;
-    const navArea = Math.max(1, level.grid.w * level.grid.h
+    const nonGateWinningPathCellCount = Math.max(1, level.grid.w * level.grid.h
         - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size - level.gateKeys.length);
-    return level.reqLen / navArea;
+    return level.reqLen / nonGateWinningPathCellCount;
 }
 
 export function resetHintAnimationClock(stateOrEngine: StateOrEngine, { alpha = 0, index }: { alpha?: number; index?: number } = {}) {
@@ -88,7 +88,7 @@ export function setHintPaths(
     hinter.heatmap = buildPathListHeatmap(pathList);
     if (curate) {
         const sel = selectDisplayHints(pathList, {
-            requiredPathCoverageRatio: navigableDensity(engineState.level),
+            requiredPathCoverageRatio: requiredPathCoverageRatio(engineState.level),
             mustCrossKeys: engineState.level?.mustCrossKeys,
         });
         hinter.displayIndices = sel.indices;
