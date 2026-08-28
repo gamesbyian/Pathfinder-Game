@@ -88,7 +88,8 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
         const spentUnits = () => useWork ? (prep._workMeter.units - workStart) : prep._metrics.nodesExpanded;
         const totalBudget = useWork ? cell.workBudget : cell.nodeBudget;
 
-        const configs = cell.techniqueKeys.map(key => ({ key, config: getParsedConfig(key) }));
+        const configs = cell.techniqueKeys.map(rawKey => { const config = getParsedConfig(rawKey); return { key: attemptConfigKey(config), config }; });
+        const canonicalTechniqueKeys = configs.map(({ key }) => key);
         const attempts = [];
         const gateSummaries = [];
         let solution = null;
@@ -160,7 +161,7 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
 
         return {
             cellId: cell.cellId, tier: cell.tier, corpus: cell.corpus, levelId: entry.id ?? null, levelPos: cell.levelPos,
-            techniqueKeys: cell.techniqueKeys, variantLabel: cell.variantLabel ?? null,
+            techniqueKeys: canonicalTechniqueKeys, variantLabel: cell.variantLabel ?? null,
             pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
             ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget,
             ...(useWork ? { workBudget: cell.workBudget, workSpent, deadlineTruncated } : {}),
