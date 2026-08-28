@@ -1,5 +1,5 @@
 import { PORTFOLIO_EXPERIMENT } from './portfolio-experiment.js';
-import { legacyMsToWork } from './budget-units.js';
+import { legacyMsToWork, scaledStageWorkBudget } from './budget-units.js';
 import { withWorkCapScope } from './budget-context.js';
 import { OPT_IN_FEATURES } from './ablation-config.js';
 import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS, repairAttempt } from './attempts.js';
@@ -1921,8 +1921,23 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // own override just above and repairElitePrefixDfsRetry's below): this loop's `runAttempt` calls
     // used to silently inherit whatever `prep._workCap` the main loop (or the probe just above) last
     // wrote, which can already be exhausted on exactly the levels this loop exists for.
+    //
+    // `repairFallbackWorkBudget` is sized off the solve's own resolved `workBudget` (queue #2 step-3
+    // migration, 2026-08-28 — second site after dedup-near-tie-retry; see
+    // reports/2026-08-28-dedup-near-tie-retry-work-dose-migration.md for the full account of what
+    // this pattern does and does not preserve), not re-derived from `timeBudgetMs` a second time.
+    // Behavior-preserving for live play (this loop never runs there — repairConfigs is empty unless
+    // a repair-eligible level reaches it, and both real interactive callers still zero
+    // `repairBudgetFraction` via `disableExtraBudgetPasses`) and for the plain-default no-override
+    // call shape (`REPAIR_EXTRA_BUDGET_FRACTION` is the integer `6.0`, so `legacyMsToWork` linearity
+    // makes the two formulas produce the identical number there). NOT behavior-preserving for the
+    // offline capability-sweep call shape (explicit `workBudget` disproportionate to a huge
+    // non-binding `timeBudgetMs`) — same genuine, deliberate dose correction as the first site.
+    // `repairFallbackTotalBudget` (ms) is kept: it still sizes the per-gate wall-deadline slice
+    // (`repairBudget` below) passed to `runAttempt`, a genuine latency safety bound subordinate to
+    // `prep._workCap` for actual allocation, not a work-sizing input in its own right.
     const repairFallbackTotalBudget = Math.floor(timeBudgetMs * repairBudgetFraction);
-    const repairFallbackWorkBudget = legacyMsToWork(repairFallbackTotalBudget, MIN_ATTEMPT_WORK);
+    const repairFallbackWorkBudget = scaledStageWorkBudget(workBudget, repairBudgetFraction, MIN_ATTEMPT_WORK);
     await withWorkCapScope(prep, prep._workMeter.units + repairFallbackWorkBudget, async () => {
         for (const repairConfig of repairConfigs) {
             if (result.solution) break;
@@ -2156,16 +2171,35 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // when the ordinary main loop tries the identical config with a full pool), well short given
         // a node costs more than 1 work unit. Same "extend, don't carve from the existing pool"
         // philosophy REPAIR_EXTRA_BUDGET_FRACTION's own comment documents for wall time, applied to
-        // work: a fresh `prep._workMeter.units` mark plus a work budget sized off this tier's own ms
-        // allocation via the legacy ms-to-work conversion, the same conversion solveLevel's own top-level
-        // workBudget uses when a caller doesn't supply one explicitly.
+        // work: a fresh `prep._workMeter.units` mark plus a work budget sized off this tier's own
+        // fraction of the solve's own resolved `workBudget` (queue #2 step-3 migration, 2026-08-28
+        // — see docs/solver-budget-determinism.md's additive-tier debt inventory). Previously this
+        // work pool was re-derived from `timeBudgetMs` a second time via the legacy ms-to-work
+        // conversion, which meant an explicit `baseWorkBudget` override that disagreed with what
+        // `timeBudgetMs` implied was silently ignored for THIS tier's own dose, and changing only
+        // the (intended non-binding) deadline could change how much work this tier bought. Deriving
+        // from `workBudget` instead reproduces the exact same number in the common (no override)
+        // case — `legacyMsToWork` is linear and `workBudget` already equals what that same
+        // conversion of `timeBudgetMs` would give there, and `dedupRetryBudgetFraction` is always
+        // an integer (1.0) — so this IS a behavior-preserving representation change for that common
+        // case and for every live-play call (both real interactive callers force this tier's own
+        // fraction to 0 regardless). It is deliberately NOT behavior-preserving when a caller
+        // supplies an explicit `baseWorkBudget`/`workBudget` disproportionate to a huge non-binding
+        // `timeBudgetMs` (the offline capability-sweep/confirmation-workflow call shape): there, the
+        // old code's effectively-infinite ms-derived pool is replaced by the caller's real, much
+        // smaller `workBudget` — a genuine, deliberate dose correction for that stratum, not a
+        // silent no-op. See reports/2026-08-28-dedup-near-tie-retry-work-dose-migration.md for the
+        // full account and what was verified for each call shape. `dedupRetryTotalBudget` (ms) is
+        // kept for `totalBudgetMs` below: that field is a genuine wall-clock safety deadline, not a
+        // work-sizing input, and must stay scaled by the same fraction as the work pool so it
+        // remains non-binding relative to the (now correctly bounded) allocation on a slow host.
         const dedupRetryTotalBudget = Math.floor(timeBudgetMs * dedupRetryBudgetFraction);
         const dedupRetryResult = await runWholeLadderRetryTier({
             stageId: 'dedup-near-tie-retry', proxyOverrides: { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
             totalBudgetMs: dedupRetryTotalBudget, nodeCeiling: dedupRetryNodeCeiling,
-            workBudget: legacyMsToWork(dedupRetryTotalBudget, MIN_ATTEMPT_WORK),
+            workBudget: scaledStageWorkBudget(workBudget, dedupRetryBudgetFraction, MIN_ATTEMPT_WORK),
             workStart: prep._workMeter.units,
             staircase: retryTierStaircase,
         });
