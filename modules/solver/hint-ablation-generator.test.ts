@@ -41,7 +41,7 @@ function rawForcedPortalLevel(hints: number[][] = []): any {
 }
 
 const PHASES_ALL = { baseline: true, cascade: true, swap: true, portalCascade: true, swapPortal: true, combined: true, swapCombined: true };
-const BUDGETS = { attemptBudgetMs: 400, baselineBudgetMs: 2000, wallClockDeadlineMs: 20_000 };
+const BUDGETS = { attemptBudgetMs: 400, baselineBudgetMs: 2000, workBudget: 67_000_000 };
 
 let fullHarvestPromise: ReturnType<typeof createHintAblationGenerator> | null = null;
 let baselineHarvestPromise: ReturnType<typeof createHintAblationGenerator> | null = null;
@@ -67,7 +67,8 @@ deepTest('a full run finds novel validated hints across phases, all of which use
     const result = await fullHarvest();
 
     assert.ok(result.novel.length > 0, 'should discover at least one novel hint');
-    assert.equal(result.report.haltedByWallClock, false);
+    assert.equal(result.report.haltedByWorkBudget, false);
+    assert.equal(result.report.haltedByWallClock, false, 'legacy alias mirrors the work-budget field');
     assert.deepEqual(result.report.errors, []);
     assert.ok(result.report.baselineWinner, 'baseline should find a winning profile');
 
@@ -147,10 +148,25 @@ test('combined-only phase set finds zero triples without prior evidence, but suc
     assert.ok(withEvidence.report.combosTried.combined > 0, 'evidence-bounded triple from the seeded hint was tried');
 });
 
-test('an expired deadline halts the run early with no errors', async () => {
+test('legacy wallClockDeadlineMs remains a compatibility shim for the deterministic work ceiling', async () => {
     const raw = rawForcedPortalLevel();
-    const result = await createHintAblationGenerator(raw, 1, { solverApi, attemptBudgetMs: 400, baselineBudgetMs: 2000, wallClockDeadlineMs: 0, phases: PHASES_ALL });
+    const result = await createHintAblationGenerator(raw, 1, {
+        solverApi,
+        attemptBudgetMs: 400,
+        baselineBudgetMs: 2000,
+        wallClockDeadlineMs: 0,
+        phases: PHASES_ALL,
+    });
+    assert.equal(result.report.haltedByWorkBudget, true);
     assert.equal(result.report.haltedByWallClock, true);
+    assert.deepEqual(result.report.errors, []);
+});
+
+test('an exhausted work budget halts the run early with no errors', async () => {
+    const raw = rawForcedPortalLevel();
+    const result = await createHintAblationGenerator(raw, 1, { solverApi, attemptBudgetMs: 400, baselineBudgetMs: 2000, workBudget: 0, phases: PHASES_ALL });
+    assert.equal(result.report.haltedByWorkBudget, true);
+    assert.equal(result.report.haltedByWallClock, true, 'legacy alias mirrors the work-budget field');
     assert.deepEqual(result.report.errors, []);
 });
 

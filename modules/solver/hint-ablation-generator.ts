@@ -48,7 +48,11 @@ export interface AblationGeneratorOptions {
     // Budget and timing.
     attemptBudgetMs?: number;
     baselineBudgetMs?: number;
-    wallClockDeadlineMs?: number; // elapsed ms from now; generator stops if exceeded.
+    /** Preferred whole-generator deterministic ceiling in canonical work units. */
+    workBudget?: number;
+    /** @deprecated Compatibility shim for older --wall-ms callers. This is converted ONCE to
+     * canonical work; it is not an elapsed-time deadline and never reads Date.now(). */
+    wallClockDeadlineMs?: number;
 
     // Phase selection (all default to true if omitted).
     phases?: {
@@ -88,6 +92,8 @@ export interface AblationGeneratorResult {
         phasesRun: string[];
         combosTried: Record<string, number>;
         errors: string[];
+        haltedByWorkBudget: boolean;
+        /** @deprecated Persisted compatibility alias. Same value as haltedByWorkBudget. */
         haltedByWallClock: boolean;
     };
 }
@@ -112,7 +118,7 @@ function isReversedPhase(phase: string): boolean {
 // recorded); falls back to an unattributed baseline-shaped event rather than throwing.
 function candidateEventFromDiscovery(
     path: number[], index: number, disc: { path: number[]; provenance: any } | undefined,
-    levelNumber: number, batchMeta: { attemptBudgetMs?: number; baselineBudgetMs?: number; wallClockDeadlineMs?: number; phasesRun: string[] },
+    levelNumber: number, batchMeta: { attemptBudgetMs?: number; baselineBudgetMs?: number; workBudget?: number; wallClockDeadlineMs?: number; phasesRun: string[] },
 ): HintCandidateEvent {
     const prov = disc?.provenance ?? {};
     const phase: string | undefined = prov.phase;
@@ -257,8 +263,8 @@ interface FoundEntry {
     seedSalt: number | null;
 }
 
-/** Work units per millisecond of a caller's `--wall-ms`, mirroring orchestration.ts's
- *  DEFAULT_WORK_PER_MS. See work-meter.ts for why work is the unit. */
+/** Work units per millisecond for the deprecated ms-shaped compatibility input, mirroring
+ * orchestration.ts's DEFAULT_WORK_PER_MS. New callers should pass workBudget directly. */
 const GENERATOR_WORK_PER_MS = 3350;
 
 interface RunCtx {
@@ -278,13 +284,13 @@ interface RunCtx {
 // deadline hits, no config survives the disable set, or the solver stops returning a
 // solution. Shared by gate-direction (A/B), portal-exit (C), and combined (F) phases —
 // they differ only in which forcing options they pass and how they log errors.
-async function runCascade(target: any, solveOptsBase: any, label: string, ctx: RunCtx): Promise<{ found: FoundEntry[], haltedByWallClock: boolean }> {
+async function runCascade(target: any, solveOptsBase: any, label: string, ctx: RunCtx): Promise<{ found: FoundEntry[], haltedByWorkBudget: boolean }> {
     const disabled = new Set<string>();
     const found: FoundEntry[] = [];
     let round = 0;
-    let haltedByWallClock = false;
+    let haltedByWorkBudget = false;
     while (true) {
-        if (workMeter.units >= ctx.workCeiling) { haltedByWallClock = true; break; }
+        if (workMeter.units >= ctx.workCeiling) { haltedByWorkBudget = true; break; }
         if (disabled.size > 0 && !anyConfigSurvives(target, disabled)) break;
 
         const cfg = disabled.size > 0 ? withFeaturesDisabled([...disabled]) : null;
@@ -326,18 +332,18 @@ async function runCascade(target: any, solveOptsBase: any, label: string, ctx: R
         if (!disableKey || disabled.has(disableKey)) break; // safety: can't make further progress
         disabled.add(disableKey);
     }
-    return { found, haltedByWallClock };
+    return { found, haltedByWorkBudget };
 }
 
 // Generic strategy phase: independently disables each STRATEGY_ flag (one at a time,
 // starting from the full-feature baseline) and keeps any solution found. Shared by the
 // same three axis types as runCascade, and only run when the paired cascade found at
 // least one solution (mirrors the legacy script's gating).
-async function runStrategyPhase(target: any, solveOptsBase: any, label: string, ctx: RunCtx): Promise<{ found: FoundEntry[], haltedByWallClock: boolean }> {
+async function runStrategyPhase(target: any, solveOptsBase: any, label: string, ctx: RunCtx): Promise<{ found: FoundEntry[], haltedByWorkBudget: boolean }> {
     const found: FoundEntry[] = [];
-    let haltedByWallClock = false;
+    let haltedByWorkBudget = false;
     for (const flag of STRATEGY_FLAGS) {
-        if (workMeter.units >= ctx.workCeiling) { haltedByWallClock = true; break; }
+        if (workMeter.units >= ctx.workCeiling) { haltedByWorkBudget = true; break; }
         let result;
         try {
             // disableExtraBudgetPasses: same reasoning as runCascade's identical option -- one
@@ -365,14 +371,14 @@ async function runStrategyPhase(target: any, solveOptsBase: any, label: string, 
             });
         }
     }
-    return { found, haltedByWallClock };
+    return { found, haltedByWorkBudget };
 }
 
 /**
  * Create a hint ablation generator for full diversification phases. Runs each enabled
- * phase to completion or until the wall-clock deadline, considering (deduping and
- * validating) every candidate path found along the way, and returns the novel ones as
- * shared HintCandidateEvent objects (Component 3).
+ * phase to completion or until the deterministic whole-generator work ceiling, considering
+ * (deduping and validating) every candidate path found along the way, and returns the novel
+ * ones as shared HintCandidateEvent objects (Component 3).
  */
 export async function createHintAblationGenerator(
     rawLevel: any,
@@ -382,11 +388,13 @@ export async function createHintAblationGenerator(
     const solverApi = options.solverApi;
     const attemptBudgetMs = options.attemptBudgetMs ?? 4000;
     const baselineBudgetMs = options.baselineBudgetMs ?? 8000;
-    const wallClockDeadlineMs = options.wallClockDeadlineMs ?? 150 * 60 * 1000;
-    // Wall-clock budget in, WORK ceiling out: converted once here at the run boundary, using the
-    // same measured rate solveLevel uses for its own ms->work shim, so an existing --wall-ms caller
-    // keeps roughly its intended cost while the ladder itself becomes machine-independent.
-    const workCeiling = workMeter.units + Math.max(1, Math.floor(wallClockDeadlineMs * GENERATOR_WORK_PER_MS));
+    const legacyWallClockDeadlineMs = options.wallClockDeadlineMs ?? 150 * 60 * 1000;
+    // Preferred callers specify work directly. The old ms-shaped option remains only as a
+    // compatibility shim and is converted once at this boundary; live host speed never enters.
+    const workBudget = options.workBudget == null
+        ? Math.max(1, Math.floor(legacyWallClockDeadlineMs * GENERATOR_WORK_PER_MS))
+        : Math.max(0, Math.floor(options.workBudget));
+    const workCeiling = workMeter.units + workBudget;
 
     const level = solverApi.prepareLevelForSolver(rawLevel, { source: 'raw', levelNumber });
     const existingSigs = new Set((rawLevel.hints || []).map(pathSignature));
@@ -398,7 +406,7 @@ export async function createHintAblationGenerator(
         baseline: 0, cascade: 0, swap: 0, portalCascade: 0, swapPortal: 0, combined: 0, swapCombined: 0,
     };
     const phasesRun: string[] = [];
-    let haltedByWallClock = false;
+    let haltedByWorkBudget = workMeter.units >= workCeiling;
     let baselineWinner: string | null = null;
 
     const ctx: RunCtx = { solverApi, attemptBudgetMs, errors, workCeiling };
@@ -474,19 +482,19 @@ export async function createHintAblationGenerator(
     }
 
     // Phase A/B: gate x first-step-direction cascade + strategy (forward).
-    if (phases.cascade && !haltedByWallClock) {
+    if (phases.cascade && !haltedByWorkBudget) {
         phasesRun.push('cascade');
         for (const gateKey of level.gateKeys) {
-            if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+            if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
             const gateLevel = { ...level, gateKeys: [gateKey] };
             const directions = enumerateDirections(gateLevel, gateKey);
 
             for (const direction of directions) {
-                if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+                if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
                 combosTried.cascade++;
 
                 const cascadeOutcome = await runCascade(gateLevel, { forcedFirstStepKey: direction }, `gate=${gateKey} dir=${direction}`, ctx);
-                if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
+                if (cascadeOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                 for (const r of cascadeOutcome.found) {
                     consider(r.path, {
                         phase: 'cascade',
@@ -507,7 +515,7 @@ export async function createHintAblationGenerator(
 
                 if (cascadeOutcome.found.length > 0 && workMeter.units < workCeiling) {
                     const strategyOutcome = await runStrategyPhase(gateLevel, { forcedFirstStepKey: direction }, `gate=${gateKey} dir=${direction}`, ctx);
-                    if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
+                    if (strategyOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                     for (const r of strategyOutcome.found) {
                         consider(r.path, {
                             phase: 'strategy',
@@ -534,22 +542,22 @@ export async function createHintAblationGenerator(
     // at the original goal, end at the original gate) and reverse the resulting path back
     // before validating. Surfaces paths the forward search's direction-sensitive heuristics
     // would never produce.
-    if (phases.swap && !haltedByWallClock) {
+    if (phases.swap && !haltedByWorkBudget) {
         phasesRun.push('swap');
         for (const gateKey of level.gateKeys) {
-            if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+            if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
             for (const flipFlippers of flipperVariants) {
-                if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+                if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
                 const swapLevel = buildSwapLevel(level, gateKey, flipFlippers);
                 const swapGateKey = swapLevel.gateKeys[0];
                 const directions = enumerateDirections(swapLevel, swapGateKey);
 
                 for (const direction of directions) {
-                    if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+                    if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
                     combosTried.swap++;
 
                     const cascadeOutcome = await runCascade(swapLevel, { forcedFirstStepKey: direction }, `swap gate=${gateKey} dir=${direction} flip=${flipFlippers}`, ctx);
-                    if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
+                    if (cascadeOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                     for (const r of cascadeOutcome.found) {
                         consider(r.path.slice().reverse(), {
                             phase: 'swap-cascade',
@@ -571,7 +579,7 @@ export async function createHintAblationGenerator(
 
                     if (cascadeOutcome.found.length > 0 && workMeter.units < workCeiling) {
                         const strategyOutcome = await runStrategyPhase(swapLevel, { forcedFirstStepKey: direction }, `swap gate=${gateKey} dir=${direction} flip=${flipFlippers}`, ctx);
-                        if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
+                        if (strategyOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                         for (const r of strategyOutcome.found) {
                             consider(r.path.slice().reverse(), {
                                 phase: 'swap-strategy',
@@ -598,19 +606,19 @@ export async function createHintAblationGenerator(
 
     // Phase C: portal-exit-direction cascade/strategy, scoped to portal destinations an
     // existing/novel hint already proves reachable.
-    if (phases.portalCascade && !haltedByWallClock) {
+    if (phases.portalCascade && !haltedByWorkBudget) {
         phasesRun.push('portalCascade');
         const portalDests = findPortalExitPoints(level, evidenceHints());
         for (const destKey of portalDests) {
-            if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+            if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
             const directions = enumeratePortalExitDirections(level, destKey);
 
             for (const direction of directions) {
-                if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+                if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
                 combosTried.portalCascade++;
 
                 const cascadeOutcome = await runCascade(level, { forcedPortalExitKey: { from: destKey, to: direction } }, `portalDest=${destKey} dir=${direction}`, ctx);
-                if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
+                if (cascadeOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                 for (const r of cascadeOutcome.found) {
                     consider(r.path, {
                         phase: 'portal-cascade',
@@ -631,7 +639,7 @@ export async function createHintAblationGenerator(
 
                 if (cascadeOutcome.found.length > 0 && workMeter.units < workCeiling) {
                     const strategyOutcome = await runStrategyPhase(level, { forcedPortalExitKey: { from: destKey, to: direction } }, `portalDest=${destKey} dir=${direction}`, ctx);
-                    if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
+                    if (strategyOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                     for (const r of strategyOutcome.found) {
                         consider(r.path, {
                             phase: 'portal-strategy',
@@ -658,26 +666,26 @@ export async function createHintAblationGenerator(
     // but targets the post-jump move Phase C forces. For every forward portal jump X->Y
     // found in evidence hints (reversed), the REVERSE-direction search hits the same jump
     // as Y->X, so X is the destination key to force a direction at in the reverse search.
-    if (phases.swapPortal && !haltedByWallClock) {
+    if (phases.swapPortal && !haltedByWorkBudget) {
         phasesRun.push('swapPortal');
         const reversedHintsForPortalScan = evidenceHints().map(h => h.slice().reverse());
         const swapPortalDests = findPortalExitPoints(level, reversedHintsForPortalScan);
         for (const gateKey of level.gateKeys) {
-            if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+            if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
             for (const flipFlippers of flipperVariants) {
-                if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+                if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
                 const swapLevel = buildSwapLevel(level, gateKey, flipFlippers);
 
                 for (const destKey of swapPortalDests) {
-                    if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+                    if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
                     const directions = enumeratePortalExitDirections(swapLevel, destKey);
 
                     for (const direction of directions) {
-                        if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+                        if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
                         combosTried.swapPortal++;
 
                         const cascadeOutcome = await runCascade(swapLevel, { forcedPortalExitKey: { from: destKey, to: direction } }, `swap portalDest=${destKey} dir=${direction} flip=${flipFlippers}`, ctx);
-                        if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
+                        if (cascadeOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                         for (const r of cascadeOutcome.found) {
                             consider(r.path.slice().reverse(), {
                                 phase: 'swap-portal-cascade',
@@ -700,7 +708,7 @@ export async function createHintAblationGenerator(
 
                         if (cascadeOutcome.found.length > 0 && workMeter.units < workCeiling) {
                             const strategyOutcome = await runStrategyPhase(swapLevel, { forcedPortalExitKey: { from: destKey, to: direction } }, `swap portalDest=${destKey} dir=${direction} flip=${flipFlippers}`, ctx);
-                            if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
+                            if (strategyOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                             for (const r of strategyOutcome.found) {
                                 consider(r.path.slice().reverse(), {
                                     phase: 'swap-portal-strategy',
@@ -731,21 +739,21 @@ export async function createHintAblationGenerator(
     // Only tries (gate, direction, portalDest) triples an existing/novel hint already
     // proves are jointly reachable; the exit DIRECTION at that destination is still varied
     // exhaustively, since that's the one crossing genuinely untested by Phase A/B/C/D.
-    if (phases.combined && !haltedByWallClock) {
+    if (phases.combined && !haltedByWorkBudget) {
         phasesRun.push('combined');
         const gatePortalTriples = findGatePortalTriples(level, evidenceHints());
         for (const { startKey: triGateKey, direction: triDirection, destKey: triDestKey } of gatePortalTriples) {
-            if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+            if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
             const gateLevel = { ...level, gateKeys: [triGateKey] };
             const exitDirections = enumeratePortalExitDirections(gateLevel, triDestKey);
 
             for (const exitDir of exitDirections) {
-                if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+                if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
                 combosTried.combined++;
 
                 const solveOptsBase = { forcedFirstStepKey: triDirection, forcedPortalExitKey: { from: triDestKey, to: exitDir } };
                 const cascadeOutcome = await runCascade(gateLevel, solveOptsBase, `combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir}`, ctx);
-                if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
+                if (cascadeOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                 for (const r of cascadeOutcome.found) {
                     consider(r.path, {
                         phase: 'combined-cascade',
@@ -768,7 +776,7 @@ export async function createHintAblationGenerator(
 
                 if (cascadeOutcome.found.length > 0 && workMeter.units < workCeiling) {
                     const strategyOutcome = await runStrategyPhase(gateLevel, solveOptsBase, `combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir}`, ctx);
-                    if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
+                    if (strategyOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                     for (const r of strategyOutcome.found) {
                         consider(r.path, {
                             phase: 'combined-strategy',
@@ -795,24 +803,24 @@ export async function createHintAblationGenerator(
 
     // Phase G: gate/goal-swap x combined gate+direction x portal-exit-direction. Mirrors
     // Phase F for the reversed problem, the way Phase E mirrors Phase C for Phase D.
-    if (phases.swapCombined && !haltedByWallClock) {
+    if (phases.swapCombined && !haltedByWorkBudget) {
         phasesRun.push('swapCombined');
         const reversedForCombined = evidenceHints().map(h => h.slice().reverse());
         const swapGatePortalTriples = findGatePortalTriples(level, reversedForCombined);
         for (const { direction: triDirection, destKey: triDestKey, endKey: triGateKey } of swapGatePortalTriples) {
-            if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+            if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
             for (const flipFlippers of flipperVariants) {
-                if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+                if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
                 const swapLevel = buildSwapLevel(level, triGateKey, flipFlippers);
                 const exitDirections = enumeratePortalExitDirections(swapLevel, triDestKey);
 
                 for (const exitDir of exitDirections) {
-                    if (workMeter.units >= workCeiling) { haltedByWallClock = true; break; }
+                    if (workMeter.units >= workCeiling) { haltedByWorkBudget = true; break; }
                     combosTried.swapCombined++;
 
                     const solveOptsBase = { forcedFirstStepKey: triDirection, forcedPortalExitKey: { from: triDestKey, to: exitDir } };
                     const cascadeOutcome = await runCascade(swapLevel, solveOptsBase, `swap combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir} flip=${flipFlippers}`, ctx);
-                    if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
+                    if (cascadeOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                     for (const r of cascadeOutcome.found) {
                         consider(r.path.slice().reverse(), {
                             phase: 'swap-combined-cascade',
@@ -836,7 +844,7 @@ export async function createHintAblationGenerator(
 
                     if (cascadeOutcome.found.length > 0 && workMeter.units < workCeiling) {
                         const strategyOutcome = await runStrategyPhase(swapLevel, solveOptsBase, `swap combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir} flip=${flipFlippers}`, ctx);
-                        if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
+                        if (strategyOutcome.haltedByWorkBudget) haltedByWorkBudget = true;
                         for (const r of strategyOutcome.found) {
                             consider(r.path.slice().reverse(), {
                                 phase: 'swap-combined-strategy',
@@ -863,7 +871,13 @@ export async function createHintAblationGenerator(
         }
     }
 
-    const batchMeta = { attemptBudgetMs, baselineBudgetMs, wallClockDeadlineMs, phasesRun };
+    const batchMeta = {
+        attemptBudgetMs,
+        baselineBudgetMs,
+        workBudget,
+        ...(options.workBudget == null ? { wallClockDeadlineMs: legacyWallClockDeadlineMs } : {}),
+        phasesRun,
+    };
     const novelSigs = new Set(novel.map(pathSignature));
     return {
         // Each novel path gets ITS OWN discovery's provenance (phase/gateKey/direction/portalDest/
@@ -889,7 +903,10 @@ export async function createHintAblationGenerator(
             phasesRun,
             combosTried,
             errors,
-            haltedByWallClock,
+            haltedByWorkBudget,
+            // Persisted compatibility alias for older report consumers. This field no longer
+            // means a real wall-clock observation; it is identical to haltedByWorkBudget.
+            haltedByWallClock: haltedByWorkBudget,
         },
     };
 }

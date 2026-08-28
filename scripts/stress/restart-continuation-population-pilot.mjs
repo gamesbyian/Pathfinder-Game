@@ -35,8 +35,10 @@
  *
  * `--budget-ms=<ms>` (default 120000, this tool's original hardcoded per-arm wall-clock deadline)
  * must stay large enough that `--work-budget`, not this wall clock, is what actually stops a slow
- * arm — check with a small `--limit` smoke run at the intended `--work-budget` before a full pilot;
- * a silently wall-clock-truncated arm is not an equal-work comparison. See the same design report.
+ * arm. The harness reports the bound that stopped each arm and this pilot FAILS CLOSED if any arm
+ * is wall-clock-truncated, so a right-censored run cannot be mistaken for equal-work evidence.
+ * A small `--limit` timing smoke is still useful for sizing the safety deadline efficiently. See
+ * the same design report.
  *
  * `--count-only`: print just the post-badness-filter population size (before offset/sample-every/
  * limit) and exit without running anything — for a GHA planning job to shard a full population by
@@ -144,8 +146,8 @@ for (const lv of selected) {
     const result = await runRepairRestartVsContinuation(gateKey, level, () => prepLevel(level), profile, workBudget, { budgetMs, restartSplitFraction });
     const elapsedMs = Date.now() - start;
     console.log(`${lv.id} (pos ${lv.level}, censusBestBadness=${censusBestBadness}): `
-        + `continuation solved=${result.continuation.solved} workSpent=${result.continuation.workSpent} bestBadness=${result.continuation.bestBadness} | `
-        + `restart solved=${result.restart.solved} workSpent=${result.restart.workSpent} bestBadness=${result.restart.bestBadness} seeds=[${result.restart.seedSalts.join(',')}] | ${elapsedMs}ms`);
+        + `continuation solved=${result.continuation.solved} workSpent=${result.continuation.workSpent} stop=${result.continuation.stopReason} bestBadness=${result.continuation.bestBadness} | `
+        + `restart solved=${result.restart.solved} workSpent=${result.restart.workSpent} stop=${result.restart.stopReason} bestBadness=${result.restart.bestBadness} seeds=[${result.restart.seedSalts.join(',')}] | ${elapsedMs}ms`);
     results.push({ id: lv.id, level: lv.level, gateKey, censusBestBadness, elapsedMs, ...result });
 }
 
@@ -153,13 +155,35 @@ const gains = results.filter(r => r.restart.solved && !r.continuation.solved).ma
 const losses = results.filter(r => !r.restart.solved && r.continuation.solved).map(r => r.id);
 const bothSolved = results.filter(r => r.restart.solved && r.continuation.solved).length;
 const neitherSolved = results.filter(r => !r.restart.solved && !r.continuation.solved).length;
+const deadlineTruncatedIds = results
+    .filter(r => r.continuation.deadlineTruncated || r.restart.deadlineTruncated)
+    .map(r => r.id);
+const validEqualWorkComparison = deadlineTruncatedIds.length === 0;
 
 console.log(`\nSummary over ${results.length} levels: continuation solved ${results.filter(r => r.continuation.solved).length}, restart solved ${results.filter(r => r.restart.solved).length}`);
 console.log(`both solved: ${bothSolved}, neither solved: ${neitherSolved}, restart-only gains: ${gains.length} [${gains.join(',')}], restart-only losses: ${losses.length} [${losses.join(',')}]`);
 
 mkdirSync(path.dirname(outPath), { recursive: true });
 writeFileSync(outPath, JSON.stringify({
-    censusPath, censusCommit: census.commitSha, corpusPath, workBudget, sampleEvery,
-    populationSize: candidates.length, sampledSize: selected.length, results,
+    censusPath,
+    censusCommit: census.commitSha,
+    corpusPath,
+    workBudget,
+    budgetMs,
+    restartSplitFraction,
+    minBadness,
+    maxBadness: Number.isFinite(maxBadness) ? maxBadness : null,
+    offset,
+    sampleEvery,
+    limit: Number.isFinite(limit) ? limit : null,
+    populationSize: candidates.length,
+    sampledSize: selected.length,
+    validEqualWorkComparison,
+    deadlineTruncatedIds,
+    results,
 }, null, 2));
 console.log(`\nWrote ${outPath}`);
+if (!validEqualWorkComparison) {
+    console.error(`INVALID EQUAL-WORK PILOT: wall-clock deadline truncated ${deadlineTruncatedIds.length} level(s): ${deadlineTruncatedIds.join(',')}`);
+    process.exitCode = 2;
+}

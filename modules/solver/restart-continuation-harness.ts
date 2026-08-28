@@ -1,6 +1,7 @@
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, ScoringProfile } from './types.js';
 import { repairSearchFromGate } from './repair-search.js';
+import type { RepairStopReason } from './repair-search.js';
 
 export interface RepairArmResult {
     solved: boolean;
@@ -17,6 +18,11 @@ export interface RepairArmResult {
      *  diagnose search-quality failure before prescribing more of the same search. `null` when
      *  solved (repairSearchFromGate does not report a badness for a success). */
     bestBadness: number | null;
+    /** Why an unsolved arm stopped. `null` on success. A wall-clock stop means the requested
+     * deterministic work envelope did not complete and the arm is invalid as equal-work evidence. */
+    stopReason: RepairStopReason | null;
+    /** Convenience projection for research callers that must fail closed on wall interference. */
+    deadlineTruncated: boolean;
 }
 
 export interface RestartVsContinuationResult {
@@ -66,17 +72,18 @@ export async function runRepairRestartVsContinuation(
     const restartSplitFraction = opts.restartSplitFraction ?? 0.5;
     if (!(restartSplitFraction > 0 && restartSplitFraction < 1)) throw new Error(`restartSplitFraction must be in (0, 1), got ${restartSplitFraction}`);
 
-    async function runArm(prep: PrepLevel, seedSalt: number, workCap: number): Promise<{ solved: boolean; workSpentDelta: number; nodesExpandedDelta: number; bestBadness: number | null }> {
+    async function runArm(prep: PrepLevel, seedSalt: number, workCap: number): Promise<{ solved: boolean; workSpentDelta: number; nodesExpandedDelta: number; bestBadness: number | null; stopReason: RepairStopReason | null }> {
         const workBefore = prep._workMeter.units;
         const nodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
         prep._workCap = workCap;
-        const out: { nodesExpanded?: number; bestBadness?: number } = {};
+        const out: { nodesExpanded?: number; bestBadness?: number; stopReason?: RepairStopReason } = {};
         const solution = await repairSearchFromGate(gateKey, level, prep, profile, budgetMs, Date.now(), null, null, false, nodeBudget, out, seedSalt);
         return {
             solved: solution !== null,
             workSpentDelta: prep._workMeter.units - workBefore,
             nodesExpandedDelta: (prep._metrics ? prep._metrics.nodesExpanded : nodesBefore) - nodesBefore,
             bestBadness: solution !== null ? null : (out.bestBadness ?? null),
+            stopReason: solution !== null ? null : (out.stopReason ?? null),
         };
     }
 
@@ -86,6 +93,8 @@ export async function runRepairRestartVsContinuation(
     const continuation: RepairArmResult = {
         solved: continuationArm.solved, workSpent: continuationArm.workSpentDelta,
         nodesExpanded: continuationArm.nodesExpandedDelta, seedSalts: [0], bestBadness: continuationArm.bestBadness,
+        stopReason: continuationArm.stopReason,
+        deadlineTruncated: continuationArm.stopReason === 'wall-clock',
     };
 
     const restartPrep = makePrep();
@@ -93,25 +102,38 @@ export async function runRepairRestartVsContinuation(
     const seed0Share = Math.floor(workBudget * restartSplitFraction);
     const seed0 = await runArm(restartPrep, 0, restartPrep._workMeter.units + seed0Share);
     const restart: RepairArmResult = seed0.solved
-        ? { solved: true, workSpent: seed0.workSpentDelta, nodesExpanded: seed0.nodesExpandedDelta, seedSalts: [0], bestBadness: null }
-        : await (async () => {
-            const remaining = Math.max(0, workBudget - seed0.workSpentDelta);
-            const seed1 = await runArm(restartPrep, 1, restartPrep._workMeter.units + remaining);
-            return {
-                solved: seed1.solved,
-                workSpent: seed0.workSpentDelta + seed1.workSpentDelta,
-                nodesExpanded: seed0.nodesExpandedDelta + seed1.nodesExpandedDelta,
-                seedSalts: [0, 1],
-                // The BEST of the two seeds, not just seed 1's own number: repairSearchFromGate's
-                // `bestBadnessEver` is local to each call (resets to Infinity per seed), so a naive
-                // "report the last seed's bestBadness" would understate the restart arm whenever
-                // seed 0 found a better near-miss before being abandoned — exactly the progress a
-                // fresh seed 1 has no way to know about or recover.
-                bestBadness: seed1.bestBadness == null ? seed0.bestBadness
-                    : seed0.bestBadness == null ? seed1.bestBadness
-                    : Math.min(seed0.bestBadness, seed1.bestBadness),
-            };
-        })();
+        ? {
+            solved: true, workSpent: seed0.workSpentDelta, nodesExpanded: seed0.nodesExpandedDelta,
+            seedSalts: [0], bestBadness: null, stopReason: null, deadlineTruncated: false,
+        }
+        : seed0.stopReason === 'wall-clock'
+            // Do not "rescue" a right-censored first half by giving seed 1 the unspent work.
+            // Once wall time prevents seed 0 from reaching its prescribed split, this arm is no
+            // longer the requested treatment and must surface as invalid evidence immediately.
+            ? {
+                solved: false, workSpent: seed0.workSpentDelta, nodesExpanded: seed0.nodesExpandedDelta,
+                seedSalts: [0], bestBadness: seed0.bestBadness, stopReason: 'wall-clock', deadlineTruncated: true,
+            }
+            : await (async () => {
+                const remaining = Math.max(0, workBudget - seed0.workSpentDelta);
+                const seed1 = await runArm(restartPrep, 1, restartPrep._workMeter.units + remaining);
+                return {
+                    solved: seed1.solved,
+                    workSpent: seed0.workSpentDelta + seed1.workSpentDelta,
+                    nodesExpanded: seed0.nodesExpandedDelta + seed1.nodesExpandedDelta,
+                    seedSalts: [0, 1],
+                    // The BEST of the two seeds, not just seed 1's own number: repairSearchFromGate's
+                    // `bestBadnessEver` is local to each call (resets to Infinity per seed), so a naive
+                    // "report the last seed's bestBadness" would understate the restart arm whenever
+                    // seed 0 found a better near-miss before being abandoned — exactly the progress a
+                    // fresh seed 1 has no way to know about or recover.
+                    bestBadness: seed1.bestBadness == null ? seed0.bestBadness
+                        : seed0.bestBadness == null ? seed1.bestBadness
+                        : Math.min(seed0.bestBadness, seed1.bestBadness),
+                    stopReason: seed1.stopReason,
+                    deadlineTruncated: seed1.stopReason === 'wall-clock',
+                };
+            })();
 
     return { workBudget, restartSplitFraction, continuation, restart };
 }

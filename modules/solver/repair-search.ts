@@ -35,6 +35,8 @@ import type { AblationConfig, BeamResearchRecord, PrepLevel, ScoringProfile, Str
 
 type YieldFn = (() => Promise<void>) | null;
 
+export type RepairStopReason = 'wall-clock' | 'node-budget' | 'work-budget';
+
 // Debug-only, env-gated instrumentation (mirrors search.ts's _LDS_DEBUG/_BEAM_DEBUG) — zero
 // overhead when unset. Traces how bestBadness evolves over restarts, for diagnosing which
 // deficit term (length/intersections/must-pass/must-cross/…) a stuck level plateaus on.
@@ -990,7 +992,7 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // when-off guarantee (gated, consumes no rand). ON arms, on a must-turn stagnation, a turn-aware bias
 // at the move out of a pending must-turn cell (reward the required-turn exit, penalize the others) —
 // the selective successor to Stage 2/3's flat-cell biases. No production caller passes true.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false, enableElitePrefixDfs = false, enableBeamSeed = false): Promise<number[] | null> {
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number; stopReason?: RepairStopReason } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false, enableElitePrefixDfs = false, enableBeamSeed = false): Promise<number[] | null> {
     const cfg = prep._cfg;
     const eliteResearch = prep._repairEliteResearchObserver;
     const ws = createState(startKey, level, prep, STATE_BUF_REPAIR);
@@ -1101,8 +1103,21 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
 
     while (true) {
         const now = Date.now();
-        if (now - startTime >= budgetMs || nodesExpandedLocal >= nodeBudget || prep._workMeter.units >= (prep._workCap ?? Infinity)) {
-            if (out) { out.nodesExpanded = nodesExpandedLocal; out.timedOut = true; out.bestBadness = bestBadnessEver; }
+        const workBudgetReached = prep._workMeter.units >= (prep._workCap ?? Infinity);
+        const nodeBudgetReached = nodesExpandedLocal >= nodeBudget;
+        const wallClockReached = now - startTime >= budgetMs;
+        if (workBudgetReached || nodeBudgetReached || wallClockReached) {
+            if (out) {
+                out.nodesExpanded = nodesExpandedLocal;
+                out.timedOut = true;
+                out.bestBadness = bestBadnessEver;
+                // Deterministic caps take precedence if more than one bound becomes true on the
+                // same check. A call is "wall-clock" only when elapsed time stopped it BEFORE its
+                // requested deterministic work/node envelope completed.
+                out.stopReason = workBudgetReached ? 'work-budget'
+                    : nodeBudgetReached ? 'node-budget'
+                    : 'wall-clock';
+            }
             if (_SIG_DEBUG) emitSignatureSummary(startKey, sigRestarts, sigCounts!, featGlobal!, featBySig!, sigBadness!, bestBadnessEver);
             return null;
         }
