@@ -81,11 +81,15 @@ on:
         required: false
         default: ''
       node_budget:
-        description: 'Cumulative node ceiling per level, both arms.'
+        description: 'Base node allocation per level, both arms. Legacy additive tiers may spend beyond this nominal value; strict_total_work_budget gives the true whole-solve work ceiling.'
         required: false
         default: '50000000'
+      strict_total_work_budget:
+        description: 'If true, enforce the derived work budget as a true whole-solve ceiling. Default false preserves legacy additive-pass semantics.'
+        required: false
+        default: 'false'
       budget_ms:
-        description: 'Per-level wall budget. Default 24h is intentionally non-binding; node budget is the real ceiling.'
+        description: 'Per-level wall-safety deadline. Default 24h is intentionally non-binding; allocation is governed by node/work inputs, with additive tiers unless strict_total_work_budget=true.'
         required: false
         default: '86400000'
       workers:
@@ -275,12 +279,15 @@ jobs:
             exit 0
           fi
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
           timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus="cohort-download/${{ inputs.cohort_id }}.json" \
             --levels="${{ matrix.shard.levels }}" \
             --budget-ms="${DEADLINE}" \
             --node-budget="${{ inputs.node_budget }}" \
             --work-budget="${work}" \
+            "${strict[@]}" \
             --workers="${{ inputs.workers }}" \
             "${extra[@]}" \
             --out="logs/solver-broad-confirmation/batch-${{ matrix.shard.idx }}.json" \
