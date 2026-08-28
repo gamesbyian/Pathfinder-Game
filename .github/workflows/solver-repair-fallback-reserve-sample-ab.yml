@@ -46,11 +46,15 @@ on:
         required: false
         default: 'repair-fallback-reserve-sample-2026-08-13'
       node_budget:
-        description: 'Corpus-2 cumulative node ceiling per level. Matches solver-stress-refresh.yml''s canonical corpus2_node_budget default.'
+        description: 'Corpus-2 base node allocation per level. Matches solver-stress-refresh.yml''s canonical corpus2_node_budget default; additive tiers can exceed it unless strict_total_work_budget=true.'
         required: false
         default: '50000000'
+      strict_total_work_budget:
+        description: 'If true, enforce the derived work budget as a true whole-solve ceiling. Default false preserves legacy additive-pass semantics.'
+        required: false
+        default: 'false'
       budget_ms:
-        description: 'Per-level wall budget. Default 24h is intentionally non-binding; node budget is the real ceiling.'
+        description: 'Per-level wall-safety deadline. Default 24h is intentionally non-binding; allocation is governed by node/work inputs, with additive tiers unless strict_total_work_budget=true.'
         required: false
         default: '86400000'
       workers:
@@ -183,12 +187,15 @@ jobs:
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
           timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus="${{ matrix.shard.corpus }}" \
             --levels="${{ matrix.shard.levels }}" \
             --budget-ms="${DEADLINE}" \
             --node-budget="${{ inputs.node_budget }}" \
             --work-budget="${work}" \
+            "${strict[@]}" \
             --workers="${{ inputs.workers }}" \
             "${extra[@]}" \
             --out="logs/solver-repair-fallback-reserve-sample/batch-${{ matrix.shard.idx }}.json" \
