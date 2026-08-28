@@ -1,4 +1,4 @@
-import { getNavigableDensity } from './archetype.js';
+import { getRequiredPathCoverageRatio } from './archetype.js';
 import { buildAxisApproachMap, buildDistMap, denseIndex, distMapToArray } from './distance.js';
 import type { DistMapOpts } from './distance.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, NEIGHBOR_DX, NEIGHBOR_DY, PACK } from './encoding.js';
@@ -8,13 +8,13 @@ import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel } from './types.js';
 
 /**
- * navDensity at/above which a level is treated as near-Hamiltonian for DFS must-pass scoring:
+ * requiredPathCoverageRatio at/above which a level is treated as near-Hamiltonian for DFS must-pass scoring:
  * `mustMaskForDFS` is set to 0 (rather than initialMustMask) so must-pass *urgency* scoring does
  * not disrupt the tightly-ordered dense traversal. Must-pass *correctness* is still enforced via
  * `mpVisitedMask` in isSolution/pruning — this only affects move ordering. (A former "Common
  * Gotcha"; now named here so the rule lives with the code, not only in prose.)
  */
-export const DENSE_LEVEL_NAV_DENSITY = 0.70;
+export const DENSE_LEVEL_COVERAGE_THRESHOLD = 0.70;
 
 /**
  * Precompute per-level solver data (distance maps, masks, static adjacency, landmark indexes).
@@ -221,12 +221,12 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     const _mpN = level.mustPassKeys.length, _mcN = level.mustCrossKeys.length;
     prep.initialMustMask      = _mpN > 0 ? ((1 << _mpN) - 1) : 0;
     prep.initialMustCrossMask = _mcN > 0 ? ((1 << _mcN) - 1) : 0;
-    // DFS must-pass scoring: sparse/medium-density levels (< DENSE_LEVEL_NAV_DENSITY) get full must-pass
+    // DFS must-pass scoring: sparse/medium-coverage levels (< DENSE_LEVEL_COVERAGE_THRESHOLD) get full must-pass
     // urgency scoring via initialMustMask so the DFS is guided toward must-pass cells.
-    // Near-Hamiltonian levels (density ≥ 0.70) keep mustMask=0 to
+    // Near-Hamiltonian levels (required path coverage ratio ≥ 0.70) keep mustMask=0 to
     // avoid disrupting the tightly-ordered dense traversal; mpVisitedMask still enforces
     // must-pass correctness in isSolution/pruning for those levels.
-    prep.mustMaskForDFS = (getNavigableDensity(level) >= DENSE_LEVEL_NAV_DENSITY) ? 0 : prep.initialMustMask;
+    prep.mustMaskForDFS = (getRequiredPathCoverageRatio(level) >= DENSE_LEVEL_COVERAGE_THRESHOLD) ? 0 : prep.initialMustMask;
 
     // Flipper index data for the global-flip mechanism.
     const _fKeys = [...level.flippingFilterMap.keys()];
