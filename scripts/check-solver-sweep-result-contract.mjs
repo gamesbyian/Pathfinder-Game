@@ -13,9 +13,13 @@ const workflows = [
   '.github/workflows/solver-repair-fallback-reserve-sample-ab.yml',
   '.github/workflows/technique-census.yml',
   '.github/workflows/method-probe-sweep.yml',
+  '.github/workflows/cpsat-explicit-prefix-oracle.yml',
+  '.github/workflows/cpsat-hint-harvest-sweep-published.yml',
   '.github/workflows/cpsat-hint-harvest-sweep.yml',
   '.github/workflows/atlas-sweep.yml',
   '.github/workflows/family-wide-trove.yml',
+  '.github/workflows/mitm-frontier-sweep.yml',
+  '.github/workflows/solver-elite-prefix-dfs-retry-validate.yml',
 ];
 
 const failures = [];
