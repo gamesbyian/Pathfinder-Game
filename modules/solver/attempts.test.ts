@@ -269,6 +269,56 @@ test('STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE adds only the
   assert.deepEqual(mediumOn, mediumOff, 'flag has no effect outside the two very-high-reqInt rules');
 });
 
+test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps the old protected five-config suffix intact', () => {
+  const sig = c => [c.profileName, c.template?.id ?? null, c.beamWidth ?? null, !!c.diverseBeam];
+
+  const assertPreservesSuffix = level => {
+    const off = getAttemptConfigs(level, null);
+    const on = getAttemptConfigs(level, {
+      ...defaultConfig(),
+      STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE: true,
+    });
+    const candidates = on.filter(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam);
+    assert.equal(candidates.length, 1, 'descendant exposes exactly one STANDARD intersection-harvest beam');
+    assert.deepEqual(on.slice(-5).map(sig), off.slice(-5).map(sig),
+      'all five configs protected before treatment remain the final five configs after treatment');
+    const candidateIndex = on.findIndex(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam);
+    assert.equal(candidateIndex, Math.max(0, off.length - 5),
+      'candidate is inserted immediately before the old protected suffix');
+    assert.deepEqual(on.filter((_, index) => index !== candidateIndex).map(sig), off.map(sig),
+      'removing the inserted action reproduces the production config order exactly');
+  };
+
+  assertPreservesSuffix(makeLevel({ reqLen: 60, reqInt: 8 }));
+  assertPreservesSuffix(makeLevel({
+    reqLen: 60, reqInt: 8,
+    mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
+  }));
+  assertPreservesSuffix(makeLevel({
+    reqLen: 60, reqInt: 8,
+    portalMap: new Map([
+      [PACK(1, 1), PACK(2, 2)], [PACK(2, 2), PACK(1, 1)],
+      [PACK(3, 3), PACK(4, 4)], [PACK(4, 4), PACK(3, 3)],
+    ]),
+  }));
+  assertPreservesSuffix(makeLevel({
+    reqLen: 60, reqInt: 8,
+    mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
+    portalMap: new Map([
+      [PACK(1, 1), PACK(2, 2)], [PACK(2, 2), PACK(1, 1)],
+      [PACK(3, 3), PACK(4, 4)], [PACK(4, 4), PACK(3, 3)],
+    ]),
+  }));
+
+  const both = getAttemptConfigs(makeLevel({ reqLen: 60, reqInt: 8 }), {
+    ...defaultConfig(),
+    STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE: true,
+    STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE: true,
+  });
+  assert.equal(both.filter(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam).length, 1,
+    'descendant supersedes append-last parent if both experimental flags are supplied');
+});
+
 test('STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE is default-ON (promoted 2026-08-27) and appends the plain WIDE beams only for the must-cross+flipper-heavy rule', () => {
   // mustCross>=2 & reqInt=4 & density<0.55 -> must-cross-heavy (not high-intersection-burden);
   // mustPass>=OBJECTIVE_HEAVY_MUSTPASS(3) & flippers>=FLIPPER_HEAVY(2) -> the flipper-heavy rule.
