@@ -1,7 +1,7 @@
 import { PORTFOLIO_EXPERIMENT } from './portfolio-experiment.js';
 import { legacyMsToWork, scaledStageWorkBudget } from './budget-units.js';
 import { withWorkCapScope } from './budget-context.js';
-import { OPT_IN_FEATURES } from './ablation-config.js';
+import { canonicalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
 import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS, repairAttempt } from './attempts.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
@@ -225,7 +225,7 @@ const STAGE_ID_TO_TIER_LABEL: Partial<Record<SolverStageId, string>> = {
  *  labeling (this file's own `finish()`) and for hint provenance
  *  (hint-provenance.ts's `deriveSolveAttemptInfo`, which stores this as `forcing.retryTier` so a
  *  persisted hint can be told apart from an ordinary main-ladder/repair-fallback/admissible-order
- *  find — see docs/solver-optimization-current-queue.md's Priority 0). */
+ *  find — see docs/solver-optimization-workstreams.md's Priority 0). */
 export function classifyAttemptTier(attempt: AttemptTierFlags): string {
     if (attempt.stageId) return STAGE_ID_TO_TIER_LABEL[attempt.stageId] ?? attempt.stageId;
     // Compatibility-only fallback — see this function's own doc comment.
@@ -296,7 +296,7 @@ export interface SolveOpts {
     /** Unit-test-only per-solve dispatch override. Never persisted or exposed by Solver's facade. */
     attemptSearchForTesting?: AttemptSearchDispatch;
     /** Research-only isConnected() rejection observer (see ConnectivityRejectionObserver's doc in
-     *  types.ts and docs/solver-optimization-current-queue.md item #0's learned-failure Stage A).
+     *  types.ts and docs/solver-optimization-workstreams.md item #0's learned-failure Stage A).
      *  Never persisted or exposed by Solver's facade; absent in every production caller. */
     connectivityRejectionObserver?: ConnectivityRejectionObserver;
     portfolioExperiment?: PortfolioExperimentDefinition;
@@ -1443,14 +1443,25 @@ const ABLATION_NON_FLAG_KEYS = new Set(['ATTEMPT_ORDER', '_randomSeed']);
 // See reports/2026-08-08-turnbias-elite-prefix-dfs-ablation-confound.md.
 export function normalizeAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
     if (raw == null) return null;
-    // Optional config properties commonly arrive as explicit `undefined` after object spreads.
-    // Treat that exactly like omission; otherwise `{ STRATEGY_X: undefined }` disables a
-    // default-on strategy while `{}` enables it, despite both representing "no override".
-    const hasOwn = (prop: string) => Object.prototype.hasOwnProperty.call(raw, prop) && raw[prop] !== undefined;
+
+    // Canonicalize historical feature aliases once at the boundary. This is the solver-wide
+    // dual-read/single-write seam: old persisted configs remain readable, while enumeration/spread
+    // of the normalized config exposes only canonical names. Conflicting old+new spellings fail
+    // loudly rather than making precedence depend on object key order.
+    const canonicalRaw: AblationConfig = {};
+    for (const [rawKey, value] of Object.entries(raw)) {
+        if (value === undefined) continue;
+        const key = canonicalAblationFeatureName(rawKey);
+        if (Object.prototype.hasOwnProperty.call(canonicalRaw, key) && canonicalRaw[key] !== value)
+            throw new Error(`Conflicting ablation values for canonical feature ${key}`);
+        canonicalRaw[key] = value;
+    }
+
+    const hasOwn = (prop: string) => Object.prototype.hasOwnProperty.call(canonicalRaw, prop);
     return new Proxy({} as AblationConfig, {
         get(_target, prop) {
             if (typeof prop !== 'string') return undefined;
-            if (hasOwn(prop)) return raw[prop];
+            if (hasOwn(prop)) return canonicalRaw[prop];
             if (ABLATION_NON_FLAG_KEYS.has(prop)) return undefined;
             return !OPT_IN_FEATURES.has(prop);
         },
@@ -1459,10 +1470,10 @@ export function normalizeAblationConfig(raw: AblationConfig | null | undefined):
         },
         getOwnPropertyDescriptor(_target, prop) {
             if (typeof prop !== 'string' || !hasOwn(prop)) return undefined;
-            return { value: raw[prop], writable: true, enumerable: true, configurable: true };
+            return { value: canonicalRaw[prop], writable: true, enumerable: true, configurable: true };
         },
         ownKeys() {
-            return Reflect.ownKeys(raw);
+            return Reflect.ownKeys(canonicalRaw);
         },
     });
 }
@@ -2508,7 +2519,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     // Last-resort SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE retry pass (GOAL_ATTRACTION_LEGACY_
     // DISTANCE_RETRY_BUDGET_FRACTION, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY) — see that
-    // constant's own comment in stage-budget.ts and docs/solver-optimization-current-queue.md
+    // constant's own comment in stage-budget.ts and docs/solver-optimization-workstreams.md
     // Priority 7 for the full rationale. The plain global SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE
     // flag (attempts.ts/scoring.ts) was measured net -5 across three populations (73-level loss
     // population +9/-3; 90-level gain population 0/-11; published corpus unchanged) because it
