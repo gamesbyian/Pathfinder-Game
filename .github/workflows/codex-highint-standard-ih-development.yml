@@ -1,9 +1,7 @@
 name: Codex high-int standard-IH broader A/B
 
 on:
-  push:
-    branches:
-      - codex/missing-exposure-and-budget-audit
+  workflow_dispatch:
 
 permissions:
   contents: read
