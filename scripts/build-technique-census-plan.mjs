@@ -99,6 +99,7 @@ const T4_NODE_BUDGET = Number(args.get('--t4-node-budget') || 50000000);
 // thresholds from each row's measured workSpent; see reports/2026-08-28-equal-work-technique-census-pilot-design.md.
 const EW1_SAMPLE_SIZE = Math.max(0, Number(args.get('--equal-work-sample-size') || 0));
 const EW1_WORK_BUDGET = Number(args.get('--equal-work-budget') || 10000000);
+const EW1_SEED = Number(args.get('--equal-work-seed') || 20260828);
 // Per-attempt wall-clock cap passed to runAttempt -- a belt-and-suspenders backstop alongside the
 // node budget (mirrors method-probe.mjs's own --budget-ms). Generous: the node budget is what's
 // meant to bind in the overwhelming majority of cells.
@@ -269,7 +270,7 @@ const frozenGapLevels = [
     ...corpusLevels.corpus2.filter(l => !isSolved('corpus2', l.id)).map(l => ({ corpus: 'corpus2', ...l })),
 ];
 const ew1Sample = EW1_SAMPLE_SIZE > 0
-    ? seededShuffle(frozenGapLevels, mulberry32(SEED + 2)).slice(0, Math.min(EW1_SAMPLE_SIZE, frozenGapLevels.length))
+    ? seededShuffle(frozenGapLevels, mulberry32(EW1_SEED)).slice(0, Math.min(EW1_SAMPLE_SIZE, frozenGapLevels.length))
     : [];
 
 // ─── Flag classification (2026-08-19, per external design review) ─────────────────────────────────
@@ -440,7 +441,7 @@ const plan = {
         : 'node budgets measure within-technique depth/capability; use canonical workSpent for cross-technique allocation',
     ...(ew1Sample.length ? { equalWorkPilot: {
         tier: 'EW1', sampleSize: ew1Sample.length, workBudget: EW1_WORK_BUDGET,
-        seed: SEED + 2, population: 'frozen production-unsolved corpus1+corpus2',
+        seed: EW1_SEED, population: 'frozen production-unsolved corpus1+corpus2',
     } } : {}),
     commitSha: COMMIT_SHA,
     seed: SEED,
