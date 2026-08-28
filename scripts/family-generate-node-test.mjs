@@ -145,6 +145,10 @@ async function main() {
         assert.equal(manifest.acceptedCount, generated.length);
         assert.equal(manifest.variants.length, generated.length);
         assert.equal(manifest.familyMode, 'local-mutant');
+        assert.ok(Number.isFinite(manifest.parentRequiredPathCoverageRatio));
+        assert.ok(!Object.hasOwn(manifest, 'parentNavDensity'), 'new manifests single-write the canonical parent coverage field');
+        assert.ok(manifest.variants.every(v => Number.isFinite(v.requiredPathCoverageRatio)));
+        assert.ok(manifest.variants.every(v => !Object.hasOwn(v, 'navDensity')), 'new variant rows single-write canonical coverage fields');
 
         const witnessPath = parent.hints[0];
         const seenIds = new Set();
@@ -363,11 +367,12 @@ async function main() {
         // whichever mode wrote last. ─────────────────────────────────────────────────────────────
         const sharedDir = path.join(tempDir, 'shared');
         const lmSharedOut = path.join(sharedDir, 'local-mutant.json');
+        const lmSharedManifestPath = path.join(sharedDir, 'lm-manifest.json');
         const symSharedOut = path.join(sharedDir, 'symmetry.json');
         await runGenerate([
             `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
             `--parent=${parent.id}`, '--mode=local-mutant', '--count=3', '--seed=1',
-            `--out=${rel(lmSharedOut)}`, `--manifest-out=${rel(path.join(sharedDir, 'lm-manifest.json'))}`,
+            `--out=${rel(lmSharedOut)}`, `--manifest-out=${rel(lmSharedManifestPath)}`,
         ]);
         await runGenerate([
             `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
@@ -395,11 +400,21 @@ async function main() {
         }
 
         // ── Test 11: re-running the SAME mode with a different seed ADDS to, not replaces, the
-        // existing output — append-safe re-runs (docs/sibling-cousin-system.md section 23). ──────
+        // existing output — append-safe re-runs (docs/sibling-cousin-system.md section 23).
+        // Simulate a pre-migration manifest so this also proves dual-read/single-write coverage fields.
+        const legacyManifest = JSON.parse(await readFile(lmSharedManifestPath, 'utf8'));
+        legacyManifest.parentNavDensity = legacyManifest.parentRequiredPathCoverageRatio;
+        delete legacyManifest.parentRequiredPathCoverageRatio;
+        for (const variant of legacyManifest.variants) {
+            variant.navDensity = variant.requiredPathCoverageRatio;
+            delete variant.requiredPathCoverageRatio;
+        }
+        await writeFile(lmSharedManifestPath, JSON.stringify(legacyManifest));
+
         const rerunResult = await runGenerate([
             `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
             `--parent=${parent.id}`, '--mode=local-mutant', '--count=2', '--seed=999',
-            `--out=${rel(lmSharedOut)}`, `--manifest-out=${rel(path.join(sharedDir, 'lm-manifest.json'))}`,
+            `--out=${rel(lmSharedOut)}`, `--manifest-out=${rel(lmSharedManifestPath)}`,
         ]);
         assert.match(rerunResult.stdout, /Found 3 existing sibling\(s\)/, 're-run detects and reports the existing siblings');
         const lmAfterRerun = JSON.parse(await readFile(lmSharedOut, 'utf8'));
@@ -407,6 +422,12 @@ async function main() {
         const idsAfterRerun = new Set(lmAfterRerun.map(l => l.id));
         assert.equal(idsAfterRerun.size, 5, 'no id collisions across the two runs');
         for (const originalId of lmIds) assert.ok(idsAfterRerun.has(originalId), `original sibling ${originalId} survived the re-run untouched`);
+        const canonicalizedManifest = JSON.parse(await readFile(lmSharedManifestPath, 'utf8'));
+        assert.ok(Number.isFinite(canonicalizedManifest.parentRequiredPathCoverageRatio));
+        assert.ok(!Object.hasOwn(canonicalizedManifest, 'parentNavDensity'));
+        assert.ok(canonicalizedManifest.variants.every(v => Number.isFinite(v.requiredPathCoverageRatio)));
+        assert.ok(canonicalizedManifest.variants.every(v => !Object.hasOwn(v, 'navDensity')),
+            'append-safe rewrite migrates legacy manifest coverage fields to canonical output');
     } finally {
         await rm(tempDir, { recursive: true, force: true });
     }
