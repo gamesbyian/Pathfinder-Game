@@ -195,7 +195,7 @@ Start with [`tooling-catalog.md`](tooling-catalog.md) and the existing trove bef
 
 ## Research priority
 
-The trove is **evidence, not backlog**. Current family work should support ranked questions from [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md), especially:
+The trove is **evidence, not backlog**. Current family work should support ranked questions from [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md), especially:
 
 1. held-out validation for scheduler/configuration rules;
 2. beam extinction/retention boundaries;
