@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { POLICY_PROFILES } from './policy.js';
+import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { repairSearchFromGate } from './repair-search.js';
 import { withFeatureDisabled } from './ablation-config.js';
@@ -22,7 +22,7 @@ deepTest('closeLengthGap disabled cannot rescue R02560 within the shared regress
     prep._cfg = withFeatureDisabled('STRATEGY_REPAIR_LENGTH_GAP_CLOSE');
     prep._metrics = { nodesExpanded: 0 };
     const path = await repairSearchFromGate(
-        R02560_GATE_KEY, level, prep, POLICY_PROFILES.repair,
+        R02560_GATE_KEY, level, prep, SCORING_PROFILES.repair,
         15000, Date.now(), null, undefined, false, R02560_NODE_BUDGET,
     );
     assert.equal(
