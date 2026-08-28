@@ -145,29 +145,29 @@ for (const technique of [...techniques].sort()) {
     const nodeSpend = observed.reduce((sum, x) => sum + Number(x.row.nodesExpanded ?? 0), 0);
     const byRoutingRegime = new Map();
     for (const id of absent) {
-        const arch = levelInfo.get(id).routingRegime;
-        if (!byRoutingRegime.has(arch)) byRoutingRegime.set(arch, []);
-        byRoutingRegime.get(arch).push(id);
+        const routingRegime = levelInfo.get(id).routingRegime;
+        if (!byRoutingRegime.has(routingRegime)) byRoutingRegime.set(routingRegime, []);
+        byRoutingRegime.get(routingRegime).push(id);
     }
     for (const [routingRegime, ids] of byRoutingRegime) {
         const obs = ids
             .map(id => ({ id, row: censusByLevelTechnique.get(`${id}\0${technique}`) }))
             .filter(x => x.row);
-        const archWins = obs.filter(x => x.row.ok && x.row.refereeValid !== false);
-        if (!archWins.length) continue;
+        const routingRegimeWins = obs.filter(x => x.row.ok && x.row.refereeValid !== false);
+        if (!routingRegimeWins.length) continue;
         const spend = obs.reduce((sum, x) => sum + Number(x.row.nodesExpanded ?? 0), 0);
         aggregate.push({
             technique,
             routingRegime,
             absentResidualLevels: ids.length,
             censusObservedLevels: obs.length,
-            isolatedSolves: archWins.length,
+            isolatedSolves: routingRegimeWins.length,
             censusNodes: spend,
-            nodesPerObservedSolve: archWins.length ? Math.round(spend / archWins.length) : null,
-            winsAtOrBelow250k: archWins.filter(x => x.row.nodesExpanded <= 250_000).length,
-            winsAtOrBelow500k: archWins.filter(x => x.row.nodesExpanded <= 500_000).length,
-            winsAtOrBelow1m: archWins.filter(x => x.row.nodesExpanded <= 1_000_000).length,
-            winningIds: archWins
+            nodesPerObservedSolve: routingRegimeWins.length ? Math.round(spend / routingRegimeWins.length) : null,
+            winsAtOrBelow250k: routingRegimeWins.filter(x => x.row.nodesExpanded <= 250_000).length,
+            winsAtOrBelow500k: routingRegimeWins.filter(x => x.row.nodesExpanded <= 500_000).length,
+            winsAtOrBelow1m: routingRegimeWins.filter(x => x.row.nodesExpanded <= 1_000_000).length,
+            winningIds: routingRegimeWins
                 .map(x => ({
                     id: x.id,
                     nodes: x.row.nodesExpanded,
@@ -193,7 +193,7 @@ for (const technique of [...techniques].sort()) {
                 id: x.id,
                 nodes: x.row.nodesExpanded,
                 gate: x.row.winningGate ?? null,
-                archetype: levelInfo.get(x.id).routingRegime,
+                routingRegime: levelInfo.get(x.id).routingRegime,
                 features: levelInfo.get(x.id).features,
             }))
             .sort((a, b) => a.nodes - b.nodes),
@@ -239,7 +239,7 @@ console.log('TOP TECHNIQUE × ROUTING REGIME MISSING-EXPOSURE CANDIDATES');
 for (const row of ranked.slice(0, 20)) {
     console.log([
         row.technique,
-        `arch=${row.routingRegime}`,
+        `routingRegime=${row.routingRegime}`,
         `absent=${row.absentResidualLevels}`,
         `observed=${row.censusObservedLevels}`,
         `wins=${row.isolatedSolves}`,
@@ -253,7 +253,7 @@ for (const row of ranked.slice(0, 20)) {
 console.log('');
 console.log('TOP BEAM-ONLY CANDIDATES WITH WINNING FEATURES');
 for (const row of beamRanked.slice(0, 12)) {
-    console.log(`${row.technique} | arch=${row.routingRegime} | absent=${row.absentResidualLevels} | observed=${row.censusObservedLevels} | wins=${row.isolatedSolves} | nodes/win=${row.nodesPerObservedSolve}`);
+    console.log(`${row.technique} | routingRegime=${row.routingRegime} | absent=${row.absentResidualLevels} | observed=${row.censusObservedLevels} | wins=${row.isolatedSolves} | nodes/win=${row.nodesPerObservedSolve}`);
     for (const win of row.winningIds)
         console.log(`  ${win.id} nodes=${win.nodes} gate=${win.gate ?? '-'} features=${JSON.stringify(win.features)}`);
 }
