@@ -1,0 +1,190 @@
+name: Codex EW1 equal-work census pilot
+
+on:
+  push:
+    branches:
+      - codex/missing-exposure-and-budget-audit
+    paths:
+      - '.github/workflows/codex-equal-work-census-pilot.yml'
+      - 'scripts/build-technique-census-plan.mjs'
+      - 'scripts/combine-technique-census-shards.mjs'
+      - 'scripts/technique-census-cell.mjs'
+      - 'scripts/technique-census.mjs'
+      - 'scripts/technique-census-worker.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      shard_matrix: ${{ steps.meta.outputs.shard_matrix }}
+      cell_count: ${{ steps.meta.outputs.cell_count }}
+      sample_count: ${{ steps.meta.outputs.sample_count }}
+      plan_sha: ${{ steps.meta.outputs.plan_sha }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Validate equal-work execution primitives
+        run: |
+          node scripts/technique-census-cell-node-test.mjs
+          npm run check:types
+      - name: Build and trim EW1 plan
+        run: |
+          mkdir -p tmp
+          node scripts/run-bundled.mjs scripts/build-technique-census-plan.mjs -- \
+            --t1-sample-size=1 \
+            --t3t4-sample-size=0 \
+            --equal-work-sample-size=60 \
+            --equal-work-budget=10000000 \
+            --equal-work-seed=20260828 \
+            --out=tmp/ew1-plan-full.json
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+          const p = JSON.parse(fs.readFileSync('tmp/ew1-plan-full.json','utf8'));
+          p.cells = p.cells.filter(c => c.tier === 'EW1');
+          p.tierCounts = { EW1: p.cells.length };
+          p.pilotOnly = true;
+          if (!p.cells.length) throw new Error('EW1 plan produced zero cells');
+          if (!p.cells.every(c => c.workBudget === 10000000)) throw new Error('EW1 work budget mismatch');
+          if (p.equalWorkPilot?.sampleSize !== 60 || p.equalWorkPilot?.seed !== 20260828)
+            throw new Error('EW1 sample metadata mismatch');
+          const levelKeys = new Set(p.cells.map(c => c.corpus + '/' + c.levelPos));
+          if (levelKeys.size !== 60) throw new Error('EW1 expected 60 levels, got ' + levelKeys.size);
+          fs.writeFileSync('tmp/ew1-plan.json', JSON.stringify(p));
+          const sha = crypto.createHash('sha256').update(fs.readFileSync('tmp/ew1-plan.json')).digest('hex');
+          fs.writeFileSync('tmp/ew1-meta.json', JSON.stringify({
+            planSha256: sha,
+            cells: p.cells.length,
+            levels: levelKeys.size,
+            techniques: new Set(p.cells.map(c => c.techniqueKeys[0])).size,
+            workBudget: 10000000,
+            seed: 20260828,
+          }, null, 2));
+          console.log(fs.readFileSync('tmp/ew1-meta.json','utf8'));
+          NODE
+      - name: Emit shard matrix
+        id: meta
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+          const p = JSON.parse(fs.readFileSync('tmp/ew1-plan.json','utf8'));
+          const meta = JSON.parse(fs.readFileSync('tmp/ew1-meta.json','utf8'));
+          const shardCount = Math.min(30, Math.max(1, Math.ceil(p.cells.length / 60)));
+          const matrix = Array.from({length: shardCount}, (_,i) => i + 1);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, 'shard_matrix=' + JSON.stringify(matrix) + '\n');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, 'cell_count=' + p.cells.length + '\n');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, 'sample_count=' + meta.levels + '\n');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, 'plan_sha=' + meta.planSha256 + '\n');
+          console.log('shards=' + shardCount + ' cells=' + p.cells.length + ' levels=' + meta.levels);
+          NODE
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ew1-plan
+          path: |
+            tmp/ew1-plan.json
+            tmp/ew1-meta.json
+          if-no-files-found: error
+          retention-days: 30
+
+  run:
+    needs: plan
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: ${{ fromJson(needs.plan.outputs.shard_matrix) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v8
+        with:
+          name: ew1-plan
+          path: tmp
+      - name: Verify plan seal
+        shell: bash
+        run: |
+          actual=$(sha256sum tmp/ew1-plan.json | cut -d' ' -f1)
+          expected="${{ needs.plan.outputs.plan_sha }}"
+          [ "$actual" = "$expected" ] || { echo "::error::EW1 plan hash mismatch"; exit 1; }
+      - name: Run EW1 shard
+        shell: bash
+        run: |
+          mkdir -p "artifact-staging/technique-census-shard-${{ matrix.shard }}"
+          timeout -k 30s --preserve-status 85m node scripts/technique-census.mjs \
+            --plan=tmp/ew1-plan.json \
+            --shard="${{ matrix.shard }}" \
+            --shards="${{ strategy.job-total }}" \
+            --workers=4 \
+            --out="artifact-staging/technique-census-shard-${{ matrix.shard }}/shard-${{ matrix.shard }}.json" \
+            --summary-out="artifact-staging/technique-census-shard-${{ matrix.shard }}/shard-${{ matrix.shard }}-summary.md"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: technique-census-shard-${{ matrix.shard }}
+          path: artifact-staging/technique-census-shard-${{ matrix.shard }}
+          if-no-files-found: error
+          retention-days: 30
+
+  combine:
+    needs: [plan, run]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v8
+        with:
+          name: ew1-plan
+          path: tmp
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: 'technique-census-shard-*'
+          path: artifact-staging
+      - name: Combine EW1 cells
+        run: |
+          node scripts/combine-technique-census-shards.mjs \
+            --staging-dir=artifact-staging \
+            --out-dir=tmp/ew1-combined \
+            --plan=tmp/ew1-plan.json
+      - name: Validate and print EW1 result
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const s = JSON.parse(fs.readFileSync('tmp/ew1-combined/equal-work-summary.json','utf8'));
+          const raw = JSON.parse(fs.readFileSync('tmp/ew1-combined/combined-cells.json','utf8'));
+          const errors = raw.results.filter(r => r.status === 'error');
+          const deadline = raw.results.filter(r => r.status === 'deadline-truncated');
+          const partial = raw.partialShards ?? [];
+          if (errors.length) throw new Error('EW1 has ' + errors.length + ' error cells');
+          if (partial.length) throw new Error('EW1 has partial shards: ' + partial.join(','));
+          console.log('EW1 cells=' + s.cells + ' levels=' + s.levels + ' deadlineTruncated=' + deadline.length);
+          console.log(fs.readFileSync('tmp/ew1-combined/equal-work-summary.md','utf8'));
+          NODE
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ew1-combined
+          path: tmp/ew1-combined
+          if-no-files-found: error
+          retention-days: 30
