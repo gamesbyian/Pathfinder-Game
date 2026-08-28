@@ -60,7 +60,7 @@ test('Solver uses the extracted policy data for default attempt configs', () => 
     falseGoals: [],
   };
   const level = solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: 1 });
-  assert.equal(SOLVER_TESTING_API.detectArchetype(level), 'default');
+  assert.equal(SOLVER_TESTING_API.classifyRoutingRegime(level), 'general');
   const attempts = SOLVER_TESTING_API.getAttemptConfigs(level);
   assert.deepEqual(attempts.slice(0, 4).map(c => c.template?.id), ATTEMPT_CONFIGS.slice(0, 4).map(c => c.template?.id));
   assert.ok(attempts.some(c => c.profileName === 'default' && c.template === null));
