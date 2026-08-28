@@ -16,6 +16,7 @@ Compact entry point for coding/research agents. Load task-specific docs, not the
 | Solver evaluation/generalization | [`docs/solver-evaluation-evidence.md`](docs/solver-evaluation-evidence.md), then [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md) |
 | Variant/family research | [`docs/variant-level-research.md`](docs/variant-level-research.md) |
 | Existing probe/batch/workflow | For a named concept, first run `node scripts/tooling-census.mjs --compact --query=<term>`; use [`docs/tooling-catalog.md`](docs/tooling-catalog.md) for broader tool choice |
+| Completed GHA solver/research run | Read [`.github/workflows/README.md#agent-result-retrieval`](.github/workflows/README.md#agent-result-retrieval); fetch `solver-sweep-result` before enumerating jobs/shards |
 | Prior experiment | [`reports/README.md`](reports/README.md), then the current topic doc |
 | Deferred/reopen idea | [`docs/solver-future-work.md`](docs/solver-future-work.md) |
 | Default-off disposition | [`docs/solver-opt-in-experiment-ledger.md`](docs/solver-opt-in-experiment-ledger.md) |
