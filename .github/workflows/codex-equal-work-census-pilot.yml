@@ -33,7 +33,7 @@ jobs:
       - run: npm ci
       - name: Validate equal-work execution primitives
         run: |
-          node scripts/technique-census-cell-node-test.mjs
+          npm run test:technique-census-cell
           npm run check:types
       - name: Build and trim EW1 plan
         run: |
