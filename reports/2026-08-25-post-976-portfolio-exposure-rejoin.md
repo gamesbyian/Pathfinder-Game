@@ -1,7 +1,7 @@
 # Post-976 portfolio exposure rejoin
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-08-25 — current level-blind Corpus-2 refresh `32835403128` (`976/1700`) joined to frozen technique census `32240161854`
+> **Last evidence:** 2026-08-28 — [`post-promotion residual targeted sweep`](2026-08-28-post-promotion-residual-targeted-sweep.md): after `STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE`'s promotion (and everything else merged since), a level-blind re-sweep of this exact 724-level residual found 3 new solves (`R02151`, `R00817`, `R02010`); 721/724 still unsolved at a 50,000,000-node budget. Confirms this residual is still overwhelmingly open — this report's own "prioritize one cheap missing-exposure beam pilot" recommendation stands unchanged.
 > **Decision:** substantial existing-menu capability still sits behind production exposure and per-action depth. Among the 724 current misses, 139 have at least one observed unablated singleton T1 census solver; the actionable residual is dominated by actions that are not offered in their known-winning form or are offered below their historical solve depth. Prioritize one cheap missing-exposure beam pilot before richer selector machinery or broad new search families.
 > **Remaining gate:** after the already-earned scheduler confirmation resolves, freeze one same-revision fixed-envelope development treatment that broadens exactly one cheap missing-exposure beam action without changing its search semantics; require no solve regression and positive fixed-work value before any broader portfolio construction. Keep the restart equal-work harness as the next independent execution-readiness item.
 > **Evidence role:** development / mined residual analysis, not independent confirmation
