@@ -105,6 +105,7 @@ export const FEATURES: Record<string, string> = {
     STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: 'Production default-OFF; closed retained opt-in: reserve part of the admissible-order tier for non-default profiles. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: 'Production default-ON: appends plain (non-diverse) beam:intersectionHarvest@beam5000 and beam:objectiveFirst@beam5000 as trailing protected-reserve configs to attempts.ts\'s must-cross+flipper-heavy rule only (isMustCrossFlipperHeavy — the one of three must-cross-heavy rules sharing this exposure gap whose trailing-reserve window has room without displacing an existing protected config). Promoted 2026-08-27 after development A/B +3/-0, same-generator confirmation +3/-0 (confirm-residual-003), and a cross-generator topology-composition transfer attempt (confirm-transfer-topology-001) that came back a clean null with zero losses. See attempts.ts\'s STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE comment. Disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: 'Production default-OFF; CLOSED NEGATIVE 2026-08-26: widens stage-budget.ts\'s MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT by one (mirroring the validated 2026-08-22 4->5 increase) AND appends the missing plain WIDE beam to attempts.ts\'s two must-cross-heavy sibling rules ("must-cross, must-pass-heavy": beam:intersectionHarvest@beam5000; "must-cross default": beam:objectiveFirst@beam5000) that STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE\'s rule left untouched. Population-scale development A/B (solver-archetype-sample-ab.yml, 486-level must-cross-heavy sample): control 389/486, treatment 389/486 — 0 gains, 0 losses, with real (nonzero) work/node engagement confirming the mechanism actually ran, not a non-participation artifact. Current disposition: docs/solver-opt-in-experiment-ledger.md. Do not repeat this unchanged form (same two rules, same two beams, same reserve-widen mechanism) without materially new evidence.',
+    STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE: 'Production default-OFF development candidate: appends the existing plain beam:intersectionHarvest@beam2000 action to the two high-intersection-burden rules with reqInt >= POLICY.VERY_HIGH_REQINT (portal-dense and non-portal), where the current ladder offers the WIDE 5000 form but not the STANDARD 2000 form. Selected from the 2026-08-28 current-residual rejoin; requires a strict-total-work matched pilot before any broader claim.',
 
     // ── Templates ──────────────────────────────────────────────────────────────
     TEMPLATE_CORNER_HARVEST:    'cornerHarvest — pulls toward grid corners during harvest phase',
@@ -152,6 +153,7 @@ export const OPT_IN_FEATURES = new Set([
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY',
     'STRATEGY_RETRY_TIER_NODE_STAIRCASE',
     'STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE',
+    'STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE',
 ]);
 
 // ─── Template → config key mapping ────────────────────────────────────────────
