@@ -12,7 +12,8 @@ import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { PORTFOLIO_EXPERIMENT } from '../modules/solver/portfolio-experiment.js';
 import { parseLevelPositions } from './level-data-io.mjs';
-import { attemptConfigKey, attemptRecord } from './portfolio-solve-sweep-lib.mjs';
+import { attemptConfigKey, attemptRecord, canonicalAttemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
+import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
@@ -35,8 +36,8 @@ function levelsFrom(parsed) {
 
 
 function csvSet(value, fallback) {
-    if (!value) return new Set(fallback);
-    return new Set(value.split(',').map(s => s.trim()).filter(Boolean));
+    const raw = value ? value.split(',').map(s => s.trim()).filter(Boolean) : [...fallback];
+    return new Set(raw.map(normalizeAttemptIdentityKey));
 }
 
 function experimentFromArgs() {
@@ -223,7 +224,7 @@ for (const [i, levelNumber] of targets.entries()) {
     const portfolioAttempts = (portfolio.attempts ?? []).filter(a => a?.schedulerPhase === 'portfolio');
     const repeatedAttempts = portfolioAttempts.filter(a => a?.restart);
     for (const attempt of repeatedAttempts) {
-        const config = attempt.configKey ?? attemptConfigKey(attempt);
+        const config = canonicalAttemptConfigKey(attempt);
         addMapCount(repeatedByConfig, config, Number(attempt.elapsedMs) || 0);
         addMapCount(repeatedByConfigGate, `${config}#${attempt.gateKey}`, Number(attempt.elapsedMs) || 0);
     }
@@ -255,7 +256,7 @@ for (const [i, levelNumber] of targets.entries()) {
         lateAndFallbackOnlyWins.push({
             level: levelNumber,
             phase: solvedByFallback ? 'fallback' : `pass${portfolioPass}`,
-            winningConfig: portfolioWinner?.configKey ?? attemptConfigKey(portfolioWinner),
+            winningConfig: canonicalAttemptConfigKey(portfolioWinner),
             gateKey: portfolioWinner?.gateKey ?? null,
             fallbackWinningAttemptElapsedMs: solvedByFallback ? portfolioWinner?.elapsedMs ?? null : null,
             fallbackCumulativeElapsedMs: solvedByFallback ? portfolio.totalMs : null,
@@ -289,7 +290,7 @@ for (const [i, levelNumber] of targets.entries()) {
             fallbackAttemptCount: portfolio?.portfolio?.fallbackAttemptCount ?? 0,
             repeatedAttemptElapsedMs: portfolio?.portfolio?.repeatedAttemptElapsedMs ?? 0,
             repeatedPrefixNodeUpperBound: portfolio?.portfolio?.repeatedPrefixNodeUpperBound ?? 0,
-            winningConfig: portfolioWinner ? (portfolioWinner.configKey ?? attemptConfigKey(portfolioWinner)) : null,
+            winningConfig: portfolioWinner ? (canonicalAttemptConfigKey(portfolioWinner)) : null,
             runtime: portfolioRuntime,
         },
     };
