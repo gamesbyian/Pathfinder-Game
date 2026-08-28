@@ -1,11 +1,11 @@
 # Learned-failure certificate audit
 
 > **Status:** active
-> **Last evidence:** 2026-08-25 — current prune-gauntlet/topology implementation, repair nogood-cache evidence, prior sound DFS/beam recurrence audits, static inspection of `isConnected()`'s rejection control flow, and cross-representation reuse audit
+> **Last evidence:** 2026-08-28 — [`connectivity-rejection Stage A audit`](2026-08-28-connectivity-rejection-stage-a-audit.md): a first, unselected 80-level/67,179-rejection sample. Not a Stage-A negative — coarse-context recurrence (55.9% overall; 11.3% specifically for the dominant, index-free `goal`-unreachable subtype) survives across genuinely different exact states and different levels, earning Stage B.
 > **Decision:** do not build a generic learned-nogood/CDCL layer. The first genuinely plausible learned logical reason is a bounded connectivity-derived structural certificate. The shadow pilot can start cheaper than previously stated: `isConnected()` already knows at the rejection site whether the failure is goal-unreachable, pending-MustPass-unreachable, pending-MustCross-unreachable, or residual-volume shortage, so that subtype plus existing state/resource fields can be logged with no second flood fill. Only pay for component/boundary fingerprints if this first-stage population is large/recurrent enough to justify them. If a future exact frontier/DD experiment independently produces dead interface states, treat those as an opportunistic second certificate population rather than building exact machinery for learning.
-> **Remaining gate:** Stage A: instrument already-scheduled connectivity failures at their existing return sites with rejection subtype, rejected objective (where applicable), existing resource/mask fields, exact-state fingerprint, and normal work/context identity. Measure subtype prevalence and cross-state/cross-parent recurrence without changing search. Stage B only if Stage A has headroom: add conservative reached-component/boundary sketches and test recurrence, soundness, avoided flood-fill work, and earlier firing. Stop if useful reasons become nearly unique or fingerprinting/matching approaches flood-fill cost.
+> **Remaining gate:** Stage A is now implemented (`modules/solver/topology.ts`'s `ConnectivityRejectionObserver`, `scripts/connectivity-rejection-audit.mjs`) and has run once with a positive-enough result to proceed. Stage B: add a bounded conservative boundary/blocker sketch for the dominant `goal`-unreachable, no-pending-obligation coarse cluster (the largest population share and cleanest cross-level signal), and test recurrence, soundness, avoided flood-fill work, and earlier firing per this file's own Stage B success/stop gates. Stop if useful reasons become nearly unique once geometry is represented, or fingerprinting/matching approaches flood-fill cost.
 > **Evidence role:** discovery
-> **Selection:** observational — candidate reason families were narrowed after inspecting existing Pathfinder prune/memoization and recurrence evidence.
+> **Selection:** observational — candidate reason families were narrowed after inspecting existing Pathfinder prune/memoization and recurrence evidence. The Stage A population itself (corpus2 positions 1-80) was prespecified before inspection, not selected after seeing results.
 
 ## Decision context
 
@@ -234,8 +234,7 @@ The broad reference-model support/validation matrix is now closed. Landmark-spec
 - Generic exact-state DFS memoization remains closed/weak.
 - Repair-local experience memory remains useful but non-proof.
 - MustPass/MustCross lower-bound caches already occupy part of the “remember repeated future information” space in a specialized, sound form.
-- The next learned-failure action is **Stage A of the shadow connectivity reason audit**, not a clause database and not yet a boundary-fingerprint implementation.
+- The next learned-failure action is **Stage B of the shadow connectivity reason audit** (a bounded boundary/blocker sketch for the dominant `goal`-subtype coarse cluster) — Stage A ran on 2026-08-28 and was not a negative; see [`2026-08-28-connectivity-rejection-stage-a-audit.md`](2026-08-28-connectivity-rejection-stage-a-audit.md).
 - Dead-state reuse from a frontier/DD experiment is opportunistic only and does not change that rank.
-- If Stage A is negative, deprioritize learned logical failure cheaply and keep #6 focused on restart/continuation-value work.
-- If Stage A is positive but Stage B is negative, likewise stop before any production cache.
+- Stage A was positive on this first sample; if Stage B is negative, stop before any production cache.
 - Only a positive Stage B earns one conservative monotone reason checker before any generic explanation framework.
