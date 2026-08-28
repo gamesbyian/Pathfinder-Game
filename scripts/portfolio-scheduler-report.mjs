@@ -111,6 +111,7 @@ function formatReportMarkdown(summary) {
         `Commit: ${summary.commit}`,
         `Corpus: ${summary.corpus}`,
         `Budget: ${summary.budgetMs}ms`,
+        `Evidence class: ${summary.evidenceClass} (equal-work decision-bearing: ${summary.decisionBearingForEqualWork ? 'yes' : 'no'})`,
         `Levels run: ${summary.levelsRun}`,
         '',
         '## Experiment definition',
@@ -300,6 +301,8 @@ for (const [i, levelNumber] of targets.entries()) {
 
 const summary = {
     generatedAt: new Date().toISOString(),
+    evidenceClass: 'legacy-wall-clock-scheduler-experiment',
+    decisionBearingForEqualWork: false,
     commit,
     corpus: path.relative(root, corpusPath),
     budgetMs,
