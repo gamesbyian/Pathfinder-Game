@@ -30,8 +30,11 @@ const args = new Map(process.argv.slice(2).map(value => {
 const sampleFile = args.get('--corpus2-sample');
 const outputFile = args.get('--github-output') || process.env.GITHUB_OUTPUT;
 const shardCount = Math.max(1, Number(args.get('--corpus2-shards') || 20));
+const corpus1File = args.get('--corpus1-file') || 'data/stress/stress-levels.json';
+const corpus2File = args.get('--corpus2-file') || 'data/stress/stress-levels-random.json';
+const publishedFile = args.get('--published-file') || 'data/levels.json';
 if (!sampleFile || !outputFile) {
-    throw new Error('Usage: plan-ab-corpus-shards.mjs --corpus2-sample=<file> [--corpus2-shards=20] [--github-output=<file>]');
+    throw new Error('Usage: plan-ab-corpus-shards.mjs --corpus2-sample=<file> [--corpus2-shards=20] [--corpus1-file=<file>] [--corpus2-file=<file>] [--published-file=<file>] [--github-output=<file>]');
 }
 
 const levelCount = file => {
@@ -60,7 +63,6 @@ function shardCorpus(idx, corpus, corpusKey, positionTokens, count) {
     return shards;
 }
 
-const corpus1File = 'data/stress/stress-levels.json';
 const corpus1Count = levelCount(corpus1File);
 // Same levels-per-shard density Corpus 2's sample is realizing, applied to Corpus 1 so a shard
 // there costs about as much wall time as a Corpus 2 shard. Falls back to the requested Corpus 2
@@ -72,12 +74,11 @@ const corpus1ShardCount = tokens.length > 0
     : Math.max(1, Math.min(shardCount, corpus1Count));
 const corpus1Tokens = Array.from({ length: corpus1Count }, (_, i) => String(i + 1));
 
-const publishedFile = 'data/levels.json';
 const publishedCount = levelCount(publishedFile);
 
 const shards = [
     ...shardCorpus('corpus1', corpus1File, 'corpus1', corpus1Tokens, corpus1ShardCount),
-    ...shardCorpus('corpus2', 'data/stress/stress-levels-random.json', 'corpus2', tokens, shardCount),
+    ...shardCorpus('corpus2', corpus2File, 'corpus2', tokens, shardCount),
     ...shardCorpus('published', publishedFile, 'published', Array.from({ length: publishedCount }, (_, i) => String(i + 1)), 1),
 ];
 

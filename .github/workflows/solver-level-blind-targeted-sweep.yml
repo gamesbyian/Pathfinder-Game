@@ -95,12 +95,12 @@ jobs:
       shard_count: ${{ steps.plan.outputs.shard_count }}
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -144,7 +144,7 @@ jobs:
           echo "shard_count=$(jq '.shard | length' logs/solver-targeted-sweep/shard-plan.json)" >> "$GITHUB_OUTPUT"
 
       - name: Upload the shard plan for traceability
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: targeted-shard-plan
           path: logs/solver-targeted-sweep/shard-plan.json
@@ -164,12 +164,12 @@ jobs:
       matrix: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -211,7 +211,7 @@ jobs:
 
       - name: Upload this shard's raw results as an artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: targeted-shard-${{ matrix.shard.idx }}
           path: |
@@ -245,21 +245,17 @@ jobs:
       contents: read
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Download every shard's artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: 'targeted-shard-[0-9]*'
           path: artifact-staging/downloaded
@@ -279,7 +275,7 @@ jobs:
             exit 1
           fi
           FILES=$(ls logs/solver-targeted-sweep/batch-*.json | paste -sd, -)
-          npm run solver:combine-corpus2-batches -- --in="${FILES}" --out=logs/solver-targeted-sweep/combined.json
+          node scripts/portfolio-sweep-reports-to-benchmark.mjs --in="${FILES}" --out=logs/solver-targeted-sweep/combined.json
 
       - name: Print a solved-count summary to the job log
         shell: bash
@@ -293,7 +289,7 @@ jobs:
           "
 
       - name: Upload the combined result as an artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: targeted-sweep-combined
           path: logs/solver-targeted-sweep/combined.json

@@ -12,6 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
+import process from 'node:process';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -46,7 +47,7 @@ async function writeFixtureLevel(fixtureDirAbs) {
 }
 
 async function runDiversification(args) {
-    return execFile('npx', ['tsx', 'scripts/hint-diversification.mjs', ...args], {
+    return execFile(process.execPath, ['--import', 'tsx', 'scripts/hint-diversification.mjs', ...args], {
         cwd: ROOT,
         maxBuffer: 10 * 1024 * 1024,
     });

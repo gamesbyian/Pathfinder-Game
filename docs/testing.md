@@ -32,36 +32,57 @@ Test-wall-time figures are measurements, not contracts: fixture changes, runner 
 |---|---|---|
 | Static | `npm run check` | lint/architecture, types, security/CSP, data/docs invariants |
 | Unit/integration | `test:unit` / `test:coverage` | Vitest logic/controller tests; coverage in `test:coverage` |
-| Node harnesses | `test:node` / `test:node:fast` | boot/data/oracle/loader/Firestore/bundled-level/CLI harnesses |
+| Node harnesses | `test:node` | boot/data/loader/Firestore/bundled-level/CLI/research-tool software contracts |
 | Browser e2e | `test:e2e` | production Vite bundle in Chromium |
 | Visual | `test:visual` | modal/overlay screenshots |
 | Solver/data research | solver/stress/ablation/hint/level tools | experimental evidence on demand; outside ordinary `ci` |
 
-`test:node:fast` currently includes every Node validator; it leaves room to exclude future genuinely slow validators. Former slow hint-workbench/diversification validators now use cheap fixtures with the same plumbing.
+`test:node` is the ordinary Node/CLI software-contract graph. It intentionally excludes `test:hint-path-oracle`: `check:level-data-validity` already validates every runtime-shipped level structurally and every associated stored hint against the PLAY referee across published, stress-corpus-1, and stress-corpus-2. The oracle remains available on demand when its richer per-level/per-hint diagnostic report is needed. CLI/analyzer harnesses should use synthetic fixtures unless the real repository asset itself is the contract being checked.
 
-Local `ci` runs `check`, `test:coverage`, then `test:node`. Each has internal concurrency; running them concurrently on one 4-core machine can oversubscribe it. In GitHub Actions those legs use separate runners. Vitest/proof jobs omit archived `logs/`, dated `reports/`, and standing `data/stress/` corpora they do not consume; build keeps runtime stress assets but omits logs/reports. The 33 ordinary Node harnesses use the lean checkout, while the three evidence-integrity harnesses (`test:plan-ab-corpus-shards`, `test:technique-campaign-analysis`, `test:technique-census-second-order`) run in a separate full-checkout job. Local `test:node` remains one authoritative unpartitioned graph. Repository-wide static hygiene keeps a full checkout because it intentionally scans tracked artifacts. `package.json` is authoritative for the local graph.
+Local `ci` runs `check`, `test:coverage`, then `test:node`. The major phases remain serial because each has internal concurrency; running coverage/check/Node concurrently on one 4-core machine can oversubscribe it. Heavy implementation proofs are ordinary deep Vitest files locally: the two deadlock root subtrees and the enabled/disabled R02560 repair-regression halves can therefore use Vitest's existing file worker pool inside the single coverage phase. In GitHub Actions one `deep-proofs` job owns those four exact files while `deep-verification` skips only the delegated copies. Actions runs only one ordinary covered Vitest population; the former duplicate `unit-tests-fast` PR job was removed once covered/deep Vitest became comparably fast. Node/CLI tests use the lean checkout because historical research reports and standing stress corpora are no longer ordinary test fixtures. Repository-wide static hygiene keeps a full checkout because it intentionally scans tracked artifacts. `package.json` is authoritative for the local graph.
 
 ## Fast vs deep
 
-`deepTest` is for expense intrinsic to an implementation proof: exhaustive soundness, real regression rescue, or real cross-tier budget behavior. `SOLVER_DEEP_TESTS=0` skips them; `test:unit:fast`/`ci:fast` set it. Every PR still runs every deep proof. `deep-verification` owns coverage plus the ordinary deep tests; the exhaustive must-cross deadlock-soundness property is the one exception to single-runner execution because its fixed 5x5 search tree has exactly two root moves. Actions runs those two disjoint root subtrees in separate `deadlock-soundness-0` / `deadlock-soundness-1` jobs while the coverage job skips only that duplicate execution. With `SOLVER_DEADLOCK_PROOF_ROOT` unset, local `npm run ci` still runs the original whole tree serially. The split is execution plumbing only; it does not narrow the proof population.
+`deepTest` is for expense intrinsic to an implementation proof: exhaustive soundness, real regression rescue, or real cross-tier budget behavior. `SOLVER_DEEP_TESTS=0` skips them; `test:unit:fast`/`ci:fast` set it. Every PR still runs every deep proof. The expensive deadlock-soundness proof is represented by two deep Vitest files, one for each root move of the fixed 5x5 must-cross fixture; those subtrees are disjoint and collectively exhaustive, and each file repeats the negligible must-turn fixture so it independently exercises every helper/control. The provisional R02560 close-length-gap integration witness is two deep files sharing the same 900,000-node boundary: production-default enabled must solve, while disabling only that feature must not. It remains only because the earlier synthetic trap failed to isolate this mechanism correctly; replacement by a smaller faithful witness is preferred. Local coverage runs all four through Vitest's normal worker pool. Actions runs those same four files together in one `deep-proofs` job and sets proof-specific skip flags only on the coverage job, so the proof population is unchanged and not duplicated.
 
 Do not mark a test deep merely because it is slow. Stub search when assertions only need scheduling/routing/budget behavior; `orchestration.test.ts` uses `attemptSearchForTesting` / `exhaustingDispatch` for this.
 
 A deep test can prove a specific invariant over its fixtures. It does not make a selected heuristic treatment statistically independent or generally effective.
 
+### Historical level witnesses
+
+A production/stress level may document where a regression was discovered, but ordinary correctness CI should prefer the smallest synthetic or distilled witness that exercises the implementation invariant. Do not make “this historical level still solves” a permanent correctness contract merely because it was once solved in research.
+
+A real corpus level may remain executable in CI only when the relevant mechanism cannot yet be reproduced faithfully by a smaller fixture. Such a dependency must:
+
+- name the implementation invariant it isolates, not merely the solve outcome;
+- use deterministic/matched budgets where the budget boundary is part of that invariant;
+- be documented as **provisional**, with replacement by a synthetic/distilled witness as the intended end state; and
+- never be cited as evidence of general solver effectiveness or promotion quality.
+
+Historical level IDs are encouraged in comments as provenance when the actual test uses a distilled fixture. Solver/corpus effectiveness belongs in research/benchmark gates, not correctness CI.
+
+### Frozen research evidence is not a software compatibility API
+
+Dated reports, campaign directories, run-ID snapshots, and derived research tables record what a particular tool/code/protocol produced at that time. Ordinary CI must not require the **current** analyzer to reproduce those historical bytes forever. That turns legitimate analyzer evolution into a fake software regression and forces every checkout to carry archival evidence.
+
+Current analyzer/parser/math behavior belongs in synthetic software-contract tests. Historical reproducibility belongs to the artifact's recorded source commit/protocol and is checked on demand when auditing or intentionally regenerating that evidence. A derived artifact that is explicitly designated as a current repository authority may have a freshness check, but that status must be documented; age alone does not make a snapshot a CI fixture.
+
+For example, `test:technique-campaign-analysis` and `test:technique-census-second-order` test their analyzers with synthetic inputs. The dated August campaign and census run remain evidence, not permanent backward-compatibility test vectors. `node scripts/technique-census-second-order.mjs --check` remains available for an intentional census re-derivation audit.
+
 ## Timing instrumentation
 
 Measure before guessing:
 
-- `test:coverage` writes `tmp/vitest-timings.json` and reports slow files/tests via `vitest-slow-test-report.mjs`.
+- `test:coverage` writes `tmp/vitest-timings.json` and reports slow files/tests via `vitest-slow-test-report.mjs`; file-level proof partitioning uses Vitest's ordinary worker scheduling rather than another runner layer.
 - `check`/`test:node` use `run-scripts-parallel.mjs`, which reports subcommand time.
-- Actions separates `checks`, `unit-tests-fast`, `node-tests-fast`, `build`, `deep-verification`, and the two `deadlock-soundness-*` root partitions.
+- Actions has six non-overlapping jobs: full-tree non-lint repository checks (`checks`), lean lint (`checks-lint`), lean Node/CLI contracts (`node-tests`), `build`, `deep-proofs`, and covered `deep-verification`. Local `npm run check` remains serial lint → validator fan-out because racing those CPU-heavy halves on one machine measured slower.
 
 When optimizing test runtime, profile the actual suite/subcommand before deleting coverage or weakening a proof. Prefer cheaper fixtures, targeted stubs, concurrency fixes, and tiering over making important validation disappear.
 
 ## Static checks
 
-`npm run check` covers architecture lint, types, security/secrets/dependencies/CSP, modal accessibility, CSS/canvas-theme checks, `check:no-solver-level-numbers`, hint validity, level provenance/corpus formatting, and documentation/workflow discovery.
+`npm run check` covers architecture lint, types, security/secrets/dependencies/CSP, modal accessibility, CSS/canvas-theme checks, `check:no-solver-level-numbers`, runtime level/hint validity, level provenance/corpus formatting, documentation/workflow discovery, and the maintained GitHub Action runtime-major policy. `check:validators` is the parallel non-lint validator fan-out; `check:nonlint` adds the two structural prechecks and exists so Actions can run that half independently of `check:lint`. These scripts partition execution only; `check` remains the authoritative local composition.
 
 A PLAY-valid stored hint proves a solution, not cold solver capability; use shared provenance classification for capability claims.
 

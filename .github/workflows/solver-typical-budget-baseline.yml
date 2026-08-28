@@ -124,7 +124,7 @@ jobs:
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # The DISPATCHED ref, not a hardcoded 'main'. This was `ref: main` and silently defeated
           # every branch dispatch: a run launched on a feature branch measured main's code instead,
@@ -132,7 +132,7 @@ jobs:
           # because the ablated arm named a flag main does not define and failed loudly; the other
           # arm had "succeeded" while measuring the wrong commit.
           ref: ${{ github.ref }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
       - name: Build and validate the shard plan
@@ -162,11 +162,11 @@ jobs:
         include: ${{ fromJson(needs.plan.outputs.matrix || '[]') }}
     steps:
       - name: Check out main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}      # see the plan job's note — must follow the dispatch
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -297,7 +297,7 @@ jobs:
       # uploading zero bytes for 9 of 20 shards while still reporting success.
       - name: Upload this shard's results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: typical-shard-${{ matrix.shard }}
           path: artifact-staging/typical-shard-${{ matrix.shard }}
@@ -325,12 +325,12 @@ jobs:
       actions: read   # required to download artifacts from ANOTHER run (recovery mode)
     steps:
       - name: Check out main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}      # see the plan job's note — must follow the dispatch
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -349,7 +349,7 @@ jobs:
       # count a multiple of 100 if it matters).
       - name: Download every shard's artifact (same-run path — no run-id, see above)
         if: ${{ inputs.combine_from_run_id == '' }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: 'typical-shard-*'
           path: artifact-staging/downloaded
@@ -357,7 +357,7 @@ jobs:
 
       - name: Download an earlier run's shard artifacts (recovery mode only)
         if: ${{ inputs.combine_from_run_id != '' }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: 'typical-shard-*'
           path: artifact-staging/downloaded
@@ -639,7 +639,7 @@ jobs:
 
       - name: Upload everything as an artifact (always, even when not committing)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: typical-budget-baseline-combined
           path: |

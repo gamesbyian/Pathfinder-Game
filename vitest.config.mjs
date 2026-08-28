@@ -11,7 +11,7 @@ export default defineConfig({
             'scripts/**/*-unit-tests.mjs',
             'scripts/path-state-invariant-tests.mjs',
         ],
-        exclude: ['node_modules/**', 'dist/**'],
+        exclude: ['node_modules/**', 'dist/**', 'modules/**/*-test-support.test.ts'],
         // Solver suites can solve/exhaustively enumerate real or synthetic states; hosted-runner
         // variance has exceeded 60s for the deadlock-soundness property.
         testTimeout: 90000,

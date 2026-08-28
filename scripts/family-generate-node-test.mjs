@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 /**
  * CLI smoke coverage for scripts/family-generate.mjs: the sibling/cousin research system's
- * local-mutant generator (docs/sibling-cousin-system.md). Fixtures are drawn from the REAL
- * published corpus (data/levels.json) rather than hand-built, because every entry there is
- * already referee-valid (enforced by check:hint-validity/test:hint-path-oracle in CI) — hand-
- * crafting a witness path with a genuine self-crossing (for mustCross coverage) or turn cells
- * (for landmark coverage) risks an accidentally-illegal fixture, which a search over already-
- * proven-valid real levels avoids entirely. This proves the CLI end to end: extras conversion,
+ * local-mutant generator (docs/sibling-cousin-system.md). Fixtures are deliberately synthetic,
+ * small, and independently referee-validated below. That keeps CLI correctness independent of the
+ * live published corpus and makes landmark/filter coverage unconditional instead of silently
+ * disappearing when today's corpus happens not to contain a matching specimen. This proves the
+ * CLI end to end: extras conversion,
  * single-object relocation + re-validation, landmark-derived-coordinate exclusion, static-filter
  * preservation (buildRawLevel hardcodes `filters: []` — see family-generate.mjs's own comment),
  * provenance stamping, and manifest/hint-file output — not the underlying witness.mjs primitives,
@@ -18,66 +17,79 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
+import { buildBundle } from './run-bundled.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { readLevelsWithHints, writeLevelsWithHints } = await import('./level-data-io.mjs');
+const FAMILY_GENERATE_BUNDLE = buildBundle('scripts/family-generate.mjs');
+const { writeLevelsWithHints } = await import('./level-data-io.mjs');
 const { validateRawLevel } = await import('../modules/domain/level-schema.js');
 const { validateCandidatePath } = await import('../modules/domain/path-validator.js');
 const { parseRawLevel } = await import('../modules/domain/level-codec.js');
 const { getLevelFingerprintSource } = await import('../modules/domain/level-fingerprint.js');
 
 async function runGenerate(args) {
-    return execFile('node', ['scripts/run-bundled.mjs', 'scripts/family-generate.mjs', ...args], {
+    return execFile('node', [FAMILY_GENERATE_BUNDLE, ...args], {
         cwd: ROOT,
         maxBuffer: 10 * 1024 * 1024,
     });
 }
 
-/** First level in data/levels.json with >=1 stored hint and >=`minMovable` combined
- *  blocks/mustPass/mustCross/geese/falseGoals instances (movable under strict inventory). */
-function findMovableFixture(levels, minMovable = 2) {
-    for (let i = 0; i < levels.length; i++) {
-        const lv = levels[i];
-        if (!Array.isArray(lv.hints) || lv.hints.length === 0) continue;
-        const movable = (lv.blocks?.length || 0) + (lv.mustPass?.length || 0)
-            + (lv.mustCross?.length || 0) + (lv.geese?.length || 0) + (lv.falseGoals?.length || 0);
-        if (movable >= minMovable) return { level: lv, position: i + 1 };
-    }
-    throw new Error(`no data/levels.json entry with a stored hint and >=${minMovable} movable instances`);
+const pack = (x, y) => (x | (y << 16)) >>> 0;
+const witnessPath = [
+    pack(0,0), pack(1,0), pack(2,0), pack(3,0), pack(4,0),
+    pack(4,1), pack(4,2), pack(4,3), pack(4,4),
+];
+
+function fixtureLevel(id, overrides = {}) {
+    const level = {
+        id,
+        grid: { w: 5, h: 5 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 5, y: 5 },
+        reqLen: 8,
+        reqInt: 0,
+        blocks: [{ x: 2, y: 3 }, { x: 3, y: 3 }],
+        mustPass: [],
+        mustCross: [],
+        filters: [],
+        flippingFilters: [],
+        portals: [],
+        geese: [],
+        falseGoals: [],
+        landmarks: [],
+        hints: [witnessPath],
+        designerName: '',
+        description: '',
+        difficulty: null,
+        ...overrides,
+    };
+    const normalized = parseRawLevel(level, 0);
+    assert.ok(normalized, `${id}: synthetic fixture parses`);
+    const referee = validateCandidatePath(normalized, witnessPath);
+    assert.ok(referee.ok, `${id}: synthetic witness is PLAY-valid: ${referee.reason}`);
+    return level;
 }
 
-/** First level with a stored hint, >=1 landmark, AND a redundant landmark-derived blocks/mustPass
- *  entry (the real editor-export shape — see extrasFromParent's landmarkDerivedCoordSets comment). */
-function findLandmarkFixture(levels) {
-    for (let i = 0; i < levels.length; i++) {
-        const lv = levels[i];
-        if (!Array.isArray(lv.hints) || lv.hints.length === 0) continue;
-        if (!Array.isArray(lv.landmarks) || lv.landmarks.length === 0) continue;
-        const landmarkKeys = new Set(lv.landmarks.map(l => `${l.x},${l.y}`));
-        const hasRedundant = (lv.blocks || []).some(b => landmarkKeys.has(`${b.x},${b.y}`))
-            || (lv.mustPass || []).some(m => landmarkKeys.has(`${m.x},${m.y}`));
-        if (hasRedundant) return { level: lv, position: i + 1 };
-    }
-    return null;
+function movableFixture() {
+    return fixtureLevel('TGEN01');
 }
 
-/** First level with a stored hint, >=1 static filter, AND >=2 movable objects — >=1 alone isn't
- *  enough to reliably test filter preservation: a single movable instance can legitimately have
- *  ZERO alternative legal cells (e.g. a lone mustCross when the witness only self-crosses once,
- *  which is the real "family capacity: 0" case data/levels.json's P00012 hits), producing zero
- *  siblings through no fault of the generator. >=2 instances makes it very likely at least one
- *  has somewhere to move. */
-function findFilterFixture(levels) {
-    for (let i = 0; i < levels.length; i++) {
-        const lv = levels[i];
-        if (!Array.isArray(lv.hints) || lv.hints.length === 0) continue;
-        if (!Array.isArray(lv.filters) || lv.filters.length === 0) continue;
-        const movable = (lv.blocks?.length || 0) + (lv.mustPass?.length || 0)
-            + (lv.mustCross?.length || 0) + (lv.geese?.length || 0) + (lv.falseGoals?.length || 0);
-        if (movable >= 2) return { level: lv, position: i + 1 };
-    }
-    return null;
+function landmarkFixture() {
+    // Published/editor wire exports redundantly encode an impassable decorative landmark in
+    // blocks. The generator must recognize those coordinates as one conceptual object.
+    return fixtureLevel('TGEN02', {
+        blocks: [{ x: 2, y: 3 }, { x: 3, y: 3 }, { x: 4, y: 3 }],
+        landmarks: [{ x: 2, y: 3, objectType: 'park', role: 'decorative' }],
+    });
+}
+
+function filterFixture() {
+    // The witness traverses (3,1) horizontally, so this static filter is a real constraint that
+    // must survive every generated sibling unchanged.
+    return fixtureLevel('TGEN03', {
+        filters: [{ x: 3, y: 1, axis: 1 }],
+    });
 }
 
 async function writeFixtureCorpus(dirAbs, level) {
@@ -110,10 +122,8 @@ async function main() {
     await mkdir(path.join(ROOT, 'tmp'), { recursive: true });
     const tempDir = await mkdtemp(path.join(ROOT, 'tmp', 'family-generate-test-'));
     try {
-        const allLevels = readLevelsWithHints(path.join(ROOT, 'data/levels.json'));
-
         // ── Test 1: happy path — generic movable objects, strict-inventory local mutants ──────
-        const { level: parent } = findMovableFixture(allLevels, 2);
+        const parent = movableFixture();
         const fixtureDir = path.join(tempDir, 'movable');
         const fixtureLevelsPathAbs = await writeFixtureCorpus(fixtureDir, parent);
         const outPath = path.join(tempDir, 'movable', 'out.json');
@@ -201,50 +211,41 @@ async function main() {
         }
 
         // ── Test 3: landmark-derived blocks/mustPass are excluded, never double-placed ─────────
-        const landmarkFixture = findLandmarkFixture(allLevels);
-        if (landmarkFixture) {
-            const { level: lmParent } = landmarkFixture;
-            const lmDir = path.join(tempDir, 'landmark');
-            const lmLevelsPathAbs = await writeFixtureCorpus(lmDir, lmParent);
-            const lmOut = path.join(lmDir, 'out.json');
-            const lmResult = await runGenerate([
-                `--parent-corpus=${path.relative(ROOT, lmLevelsPathAbs)}`,
-                `--parent=${lmParent.id}`, '--count=3', '--seed=7',
-                `--out=${rel(lmOut)}`, `--manifest-out=${rel(path.join(lmDir, 'manifest.json'))}`,
-            ]);
-            assert.doesNotMatch(lmResult.stderr || '', /INTERNAL/, 'no internal round-trip failure on a landmark-bearing parent');
-            const lmGenerated = JSON.parse(await readFile(lmOut, 'utf8'));
-            for (const sibling of lmGenerated) {
-                assert.equal(sibling.landmarks.length, lmParent.landmarks.length, 'landmark count preserved (strict inventory)');
-                const landmarkKeys = new Set(sibling.landmarks.map(l => `${l.x},${l.y}`));
-                for (const b of sibling.blocks) assert.ok(!landmarkKeys.has(`${b.x},${b.y}`), 'no block duplicated onto a landmark cell');
-                for (const m of sibling.mustPass) assert.ok(!landmarkKeys.has(`${m.x},${m.y}`), 'no mustPass duplicated onto a landmark cell');
-                assertSiblingValid(sibling, lmParent, lmParent.hints[0]);
-            }
-        } else {
-            console.log('  (skipped: no landmark+redundant-encoding fixture found in the live corpus)');
+        const lmParent = landmarkFixture();
+        const lmDir = path.join(tempDir, 'landmark');
+        const lmLevelsPathAbs = await writeFixtureCorpus(lmDir, lmParent);
+        const lmOut = path.join(lmDir, 'out.json');
+        const lmResult = await runGenerate([
+            `--parent-corpus=${path.relative(ROOT, lmLevelsPathAbs)}`,
+            `--parent=${lmParent.id}`, '--count=3', '--seed=7',
+            `--out=${rel(lmOut)}`, `--manifest-out=${rel(path.join(lmDir, 'manifest.json'))}`,
+        ]);
+        assert.doesNotMatch(lmResult.stderr || '', /INTERNAL/, 'no internal round-trip failure on a landmark-bearing parent');
+        const lmGenerated = JSON.parse(await readFile(lmOut, 'utf8'));
+        assert.ok(lmGenerated.length >= 1, 'synthetic landmark fixture must exercise at least one generated sibling');
+        for (const sibling of lmGenerated) {
+            assert.equal(sibling.landmarks.length, lmParent.landmarks.length, 'landmark count preserved (strict inventory)');
+            const landmarkKeys = new Set(sibling.landmarks.map(l => `${l.x},${l.y}`));
+            for (const b of sibling.blocks) assert.ok(!landmarkKeys.has(`${b.x},${b.y}`), 'no block duplicated onto a landmark cell');
+            for (const m of sibling.mustPass) assert.ok(!landmarkKeys.has(`${m.x},${m.y}`), 'no mustPass duplicated onto a landmark cell');
+            assertSiblingValid(sibling, lmParent, lmParent.hints[0]);
         }
 
         // ── Test 4: static filters are carried through unchanged, never dropped ────────────────
-        const filterFixture = findFilterFixture(allLevels);
-        if (filterFixture) {
-            const { level: fParent } = filterFixture;
-            const fDir = path.join(tempDir, 'filter');
-            const fLevelsPathAbs = await writeFixtureCorpus(fDir, fParent);
-            const fOut = path.join(fDir, 'out.json');
-            await runGenerate([
-                `--parent-corpus=${path.relative(ROOT, fLevelsPathAbs)}`,
-                `--parent=${fParent.id}`, '--count=3', '--seed=3',
-                `--out=${rel(fOut)}`, `--manifest-out=${rel(path.join(fDir, 'manifest.json'))}`,
-            ]);
-            const fGenerated = JSON.parse(await readFile(fOut, 'utf8'));
-            assert.ok(fGenerated.length >= 1, 'at least one sibling generated for the filter fixture');
-            for (const sibling of fGenerated) {
-                assert.deepEqual(sibling.filters, fParent.filters, 'static filters carried through unchanged');
-                assertSiblingValid(sibling, fParent, fParent.hints[0]);
-            }
-        } else {
-            console.log('  (skipped: no static-filter fixture found in the live corpus)');
+        const fParent = filterFixture();
+        const fDir = path.join(tempDir, 'filter');
+        const fLevelsPathAbs = await writeFixtureCorpus(fDir, fParent);
+        const fOut = path.join(fDir, 'out.json');
+        await runGenerate([
+            `--parent-corpus=${path.relative(ROOT, fLevelsPathAbs)}`,
+            `--parent=${fParent.id}`, '--count=3', '--seed=3',
+            `--out=${rel(fOut)}`, `--manifest-out=${rel(path.join(fDir, 'manifest.json'))}`,
+        ]);
+        const fGenerated = JSON.parse(await readFile(fOut, 'utf8'));
+        assert.ok(fGenerated.length >= 1, 'at least one sibling generated for the filter fixture');
+        for (const sibling of fGenerated) {
+            assert.deepEqual(sibling.filters, fParent.filters, 'static filters carried through unchanged');
+            assertSiblingValid(sibling, fParent, fParent.hints[0]);
         }
 
         // ── Test 5: symmetry mode — all 7 non-identity variants, transformed-witness provenance ──

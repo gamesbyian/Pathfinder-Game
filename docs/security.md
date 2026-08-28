@@ -1,7 +1,7 @@
 # Pathfinder security model
 
 > **Read for:** Firestore authorization, Firebase config/secrets, debug exposure, and security-change workflow.
-> **Separate contract:** [`content-security-policy.md`](content-security-policy.md) for CSP; allowed browser dependencies are enforced by `check:third-party` ([`scripts/check-third-party-dependencies.mjs`](../scripts/check-third-party-dependencies.mjs)).
+> **Separate contract:** [`content-security-policy.md`](content-security-policy.md) for CSP; allowed browser dependencies are enforced by `check:browser-external-dependencies` ([`scripts/check-browser-external-dependencies.mjs`](../scripts/check-browser-external-dependencies.mjs)).
 
 Pathfinder is a static browser app with Firebase Auth/Firestore and no private application server. Firestore rules are the backend authorization boundary; client-side checks are UX only.
 
@@ -59,6 +59,6 @@ Never commit service-account JSON, private keys, bearer/refresh tokens, deployme
 
 CSP is enforced through `index.html` from `security/csp-policy.json`; `check:csp` and `tests/csp.spec.mjs` guard drift/behavior. Firebase and Tone are bundled by Vite; Google Fonts and Firebase/Google runtime origins are explicitly allowlisted. See [`content-security-policy.md`](content-security-policy.md).
 
-- `check:secret-hygiene`, `check:third-party`, and `check:csp` run in `npm run ci`.
+- `check:secret-hygiene`, `check:browser-external-dependencies`, and `check:csp` run in `npm run ci`.
 - Firestore access changes must keep `firestore.rules`, `scripts/firestore-rules-test.mjs`, and this document aligned.
 - New external browser origins require both the dependency allowlist and `security/csp-policy.json` to change.

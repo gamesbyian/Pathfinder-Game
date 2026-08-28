@@ -110,12 +110,17 @@ jobs:
       total_levels: ${{ steps.plan.outputs.total_levels }}
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+          sparse-checkout-cone-mode: false
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -143,7 +148,7 @@ jobs:
             --corpus2-shards="${{ inputs.shard_count }}"
 
       - name: Upload the sample + shard plan for traceability
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: repair-probe-adaptive-sample-plan
           path: logs/solver-repair-probe-adaptive-sample/
@@ -162,12 +167,17 @@ jobs:
       matrix: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+          sparse-checkout-cone-mode: false
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -206,7 +216,7 @@ jobs:
 
       - name: Upload shard artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: repair-probe-adaptive-sample-shard-${{ matrix.shard.idx }}
           path: |
@@ -231,12 +241,17 @@ jobs:
       contents: read
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+          sparse-checkout-cone-mode: false
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
@@ -245,7 +260,7 @@ jobs:
         run: npm ci
 
       - name: Download shard artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: 'repair-probe-adaptive-sample-shard-*'
           path: artifact-staging/downloaded
@@ -302,7 +317,7 @@ jobs:
 
       - name: Upload combined results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: repair-probe-adaptive-sample-ab-combined
           path: |

@@ -17,10 +17,6 @@
       "lifecycle": "specialist-forensic",
       "note": "Diagnoses ambiguous or unmatched family-result identity before migration or namespacing."
     },
-    "scripts/audit-technique-census-duplicates.mjs": {
-      "lifecycle": "specialist-forensic",
-      "note": "Diagnoses duplicate cells in a specific technique-census artifact; not a standard census entry point."
-    },
     "scripts/stress/axis-reach-probe.mjs": {
       "lifecycle": "cold-research",
       "note": "Axis-aware connectivity candidate was implemented and reverted twice after matched-budget regressions; retain as reproducible negative evidence/template, not a live optimization direction."

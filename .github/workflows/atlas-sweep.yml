@@ -81,20 +81,20 @@ jobs:
     steps:
       - name: Check out the dispatched commit exactly
         if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Setup Node
         if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
 
       - name: Setup Python
         if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -145,7 +145,7 @@ jobs:
 
       - name: Upload this shard's results
         if: ${{ always() && matrix.shard <= fromJSON(inputs.shard_count) }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: atlas-sweep-shard-${{ steps.range.outputs.nn }}
           path: artifact-staging/atlas-sweep-shard-${{ steps.range.outputs.nn }}/
@@ -162,19 +162,19 @@ jobs:
       contents: write
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Download all shard artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: atlas-sweep-shard-*
           path: artifact-staging
           merge-multiple: true
 
       - name: Upload combined atlas additions (also kept as a downloadable artifact regardless of the commit below)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: atlas-sweep-combined
           path: artifact-staging/reports/stress/
@@ -210,12 +210,12 @@ jobs:
       actions: read
     steps:
       - name: Check out the dispatched commit exactly
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
       - name: Download all shard artifacts from the given run
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: atlas-sweep-shard-*
           path: artifact-staging

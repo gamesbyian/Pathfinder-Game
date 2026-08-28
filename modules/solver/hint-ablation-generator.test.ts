@@ -43,10 +43,28 @@ function rawForcedPortalLevel(hints: number[][] = []): any {
 const PHASES_ALL = { baseline: true, cascade: true, swap: true, portalCascade: true, swapPortal: true, combined: true, swapCombined: true };
 const BUDGETS = { attemptBudgetMs: 400, baselineBudgetMs: 2000, wallClockDeadlineMs: 20_000 };
 
+let fullHarvestPromise: ReturnType<typeof createHintAblationGenerator> | null = null;
+let baselineHarvestPromise: ReturnType<typeof createHintAblationGenerator> | null = null;
+
+function fullHarvest() {
+    fullHarvestPromise ??= createHintAblationGenerator(rawForcedPortalLevel(), 1, {
+        solverApi, ...BUDGETS, phases: PHASES_ALL,
+    });
+    return fullHarvestPromise;
+}
+
+function baselineHarvest() {
+    baselineHarvestPromise ??= createHintAblationGenerator(rawForcedPortalLevel(), 1, {
+        solverApi, ...BUDGETS,
+        phases: { baseline: true, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: false, swapCombined: false },
+    });
+    return baselineHarvestPromise;
+}
+
 // Full-run integration tests: real solver search across real ablation phases is the point.
 deepTest('a full run finds novel validated hints across phases, all of which use the required portal', async () => {
     const raw = rawForcedPortalLevel();
-    const result = await createHintAblationGenerator(raw, 1, { solverApi, ...BUDGETS, phases: PHASES_ALL });
+    const result = await fullHarvest();
 
     assert.ok(result.novel.length > 0, 'should discover at least one novel hint');
     assert.equal(result.report.haltedByWallClock, false);
@@ -84,8 +102,7 @@ deepTest('a full run finds novel validated hints across phases, all of which use
 });
 
 deepTest('already-known hints are not re-reported as novel on a second run', async () => {
-    const raw = rawForcedPortalLevel();
-    const first = await createHintAblationGenerator(raw, 1, { solverApi, ...BUDGETS, phases: PHASES_ALL });
+    const first = await fullHarvest();
     assert.ok(first.novel.length > 0);
 
     const second = await createHintAblationGenerator(rawForcedPortalLevel(first.novel), 1, { solverApi, ...BUDGETS, phases: PHASES_ALL });
@@ -119,10 +136,7 @@ test('combined-only phase set finds zero triples without prior evidence, but suc
     // Seed evidence via a baseline-only run (the fixture forces every solution through the
     // portal), then re-run combined-only with that path as the level's existing hints — the
     // evidence-bounded triple must now be found and exercised.
-    const forward = await createHintAblationGenerator(raw, 1, {
-        solverApi, ...BUDGETS,
-        phases: { baseline: true, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: false, swapCombined: false },
-    });
+    const forward = await baselineHarvest();
     assert.ok(forward.novel.length > 0, 'baseline should find the (forced-portal) solution');
 
     const withEvidence = await createHintAblationGenerator(rawForcedPortalLevel(forward.novel), 1, {
@@ -153,12 +167,9 @@ test('an expired deadline halts the run early with no errors', async () => {
 test('a baseline win with admissibleOrder: true gets a distinguishing phase, not the plain "baseline" label', async () => {
     const raw = rawForcedPortalLevel();
     const realSolver = createSolver();
-    // Run the real solver once (baseline phase only) to get a genuinely valid solution path to
-    // replay through the mock, so validateCandidatePath succeeds without hand-deriving cell keys.
-    const real = await createHintAblationGenerator(raw, 1, {
-        solverApi: realSolver, ...BUDGETS,
-        phases: { baseline: true, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: false, swapCombined: false },
-    });
+    // Reuse the independently exercised baseline-only harvest as the valid-path prerequisite for
+    // the provenance mock; the mock itself still runs in a fresh generator instance below.
+    const real = await baselineHarvest();
     assert.ok(real.novel.length > 0, 'sanity check on the fixture');
     const validPath = real.novel[0];
 

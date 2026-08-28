@@ -8,14 +8,20 @@ on:
       - firestore.indexes.json
   workflow_dispatch:
 
+# A ruleset release mutates one shared remote resource. Queue a newer deployment behind the
+# current one rather than racing releases or cancelling midway through a write.
+concurrency:
+  group: deploy-firestore-rules
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm

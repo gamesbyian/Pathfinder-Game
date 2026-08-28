@@ -30,27 +30,7 @@ if (requestedNames.length === 0) {
   process.exit(2);
 }
 
-// CI may partition one authoritative script list across runners without duplicating that list in
-// package.json. Unset everywhere else, so local commands retain their exact existing graph.
-const skippedNames = new Set(
-  (process.env.PATHFINDER_SKIP_NPM_SCRIPTS ?? '')
-    .split(',')
-    .map(name => name.trim())
-    .filter(Boolean),
-);
-const unknownSkips = [...skippedNames].filter(name => !requestedNames.includes(name));
-if (unknownSkips.length > 0) {
-  console.error(`PATHFINDER_SKIP_NPM_SCRIPTS named scripts not present in this run: ${unknownSkips.join(', ')}`);
-  process.exit(2);
-}
-const names = requestedNames.filter(name => !skippedNames.has(name));
-if (names.length === 0) {
-  console.error('PATHFINDER_SKIP_NPM_SCRIPTS removed every requested script');
-  process.exit(2);
-}
-if (skippedNames.size > 0) {
-  console.log(`Partitioned run: skipping ${[...skippedNames].join(', ')}`);
-}
+const names = requestedNames;
 
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
