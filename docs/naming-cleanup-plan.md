@@ -514,12 +514,16 @@ Required canonical forms in new/current text and exported APIs:
 - `knownSolutionPrefixSurvival` for the current beam "winning lineage" concept;
 - `residualLevelSet`, `residualSearchState`, or another explicit qualifier instead of naked `residual` in APIs.
 
-Rename current instrument names:
+Rename current instrument and implementation names:
 
 - `solver-winning-lineage-survival-analysis.md` -> `solver-known-solution-prefix-survival.md`;
-- `analyze-lineage-mechanics.mjs` -> `analyze-known-solution-prefix-survival.mjs`.
+- `analyze-lineage-mechanics.mjs` -> `analyze-known-solution-prefix-survival.mjs`;
+- `modules/solver/research-lineage.ts` -> `modules/solver/known-solution-prefix-survival.ts`;
+- `WinningPrefixIndex` -> `KnownSolutionPrefixIndex`;
+- `WinningLineageObserver` -> `KnownSolutionPrefixSurvivalObserver`;
+- `LineageStageSummary` -> `KnownSolutionPrefixStageSummary`.
 
-The word `lineage` may remain in historical reports.
+Update the research-observer type references, tests, testing API, beam instrumentation, and current analysis/collector imports in the same PR. The word `lineage` may remain only in historical reports/artifacts and legacy-field readers.
 
 ### 4.12 Runtime action vocabulary
 
@@ -647,6 +651,8 @@ Rename surfaced tools according to Section 2.6 when touched by this cleanup:
 - isolated technique execution -> run;
 - diagnostic bounded samplers may retain `probe`.
 
+In particular, `repair-direct-probe.mjs` is isolated technique execution rather than a diagnostic sampler. Rename it to `run-repair-search.mjs`, and rename `repair-direct-probe-worker.mjs` to `run-repair-search-worker.mjs`. Update current documentation/reproduction commands together.
+
 Do not perform blind filename replacement across cold historical scripts. The surfaced-tool inventory in `docs/tooling-catalog.md`, `scripts/README.md`, `.github/workflows/README.md`, and `package.json` is the required migration scope.
 
 ### 5.9 Surfaced pilot commands
@@ -661,8 +667,9 @@ The following commands are already surfaced and therefore are no longer unnamed/
 | `stress/residual-interface-mining-pilot.mjs` / `solver:residual-interface-pilot` | `stress/analyze-residual-interfaces.mjs` / `solver:analyze-residual-interfaces` |
 | `stress/repair-rollback-census-pilot.mjs` / `solver:repair-rollback-pilot` | `stress/census-repair-rollback-windows.mjs` / `solver:census-repair-rollback-windows` |
 | `stress/symmetry-repair-seed-pilot.mjs` / `solver:symmetry-repair-seed-pilot` | `stress/compare-symmetry-repair-seed.mjs` / `solver:compare-symmetry-repair-seed` |
+| `stress/restart-continuation-population-pilot.mjs` | `stress/compare-repair-restart-continuation-population.mjs` |
 
-Historical report filenames containing `pilot` remain frozen.
+The restart/continuation tool is not currently a package alias, but it is active durable research machinery referenced by current decision documents, so its lifecycle label is still inappropriate. Historical report filenames containing `pilot` remain frozen.
 
 ### 5.10 Live workflow and dataset-tool identities
 
@@ -687,6 +694,14 @@ Canonical live mappings:
 | local `TROVE_BRANCH` | `VARIANT_FAMILY_DATASET_BRANCH` |
 | `.github/workflows/audit-export.yml` | `.github/workflows/solver-diagnostics.yml` |
 | workflow display "Audit Export" | "Solver diagnostics and hint capture" |
+| `stress/confirm-residual-001-archetype-audit.mjs` | `stress/audit-candidate-eligibility-and-participation.mjs` |
+| `stress/select-repair-probe-adaptive-sample.mjs` | `stress/select-early-repair-search-adaptive-sample.mjs` |
+| `stress/repair-probe-badness-report.mjs` | `stress/early-repair-search-badness-report.mjs` |
+| `.github/workflows/solver-repair-probe-adaptive-sample-ab.yml` | `.github/workflows/solver-early-repair-search-adaptive-sample-ab.yml` |
+| `portfolio-scheduler-report.mjs` / npm `solver:portfolio-report` | `legacy-latency-portfolio-report.mjs` / `solver:legacy-latency-portfolio-report` |
+| `portfolio-historical-replay.mjs` / npm `solver:portfolio-replay` | `legacy-latency-portfolio-replay.mjs` / `solver:legacy-latency-portfolio-replay` |
+
+The `confirm-residual-001` diagnostic explicitly describes itself as durable general tooling, so its permanent name must describe its reusable job rather than the cohort that caused it to be written. The early-repair-search filenames migrate in the same PR as the stage identity so current tools/workflows do not preserve `repair-probe` after the runtime stage has changed.
 
 The dataset-root environment variable uses dual-read/single-prefer-new for one compatibility window because developers or CI may have it configured outside git. New docs/workflows write only `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT`.
 
@@ -867,6 +882,7 @@ This PR is high risk and requires full CI.
 - add `normalizeSolverStageId`;
 - migrate every stage mapping in Section 4.6;
 - migrate scheduler modes, experiment option/result names, scheduler phase vocabulary, stage policy-status vocabulary, and additive-wall-multiplier policy names;
+- rename live filenames/workflows whose identity is the renamed stage, including the early-repair-search adaptive sampler/report/workflow;
 - update all stage/scheduler producers, consumers, worker/report telemetry, provenance, budget planners, and public ports;
 - historical fixtures prove old stage IDs and persisted scheduler modes remain readable;
 - identity round-trip/collision tests from Section 3.6;
@@ -889,8 +905,9 @@ This PR is high risk and requires full CI.
 - CP-SAT reference names;
 - offline replay rename;
 - technique census analysis rename;
-- atlas/dataset/lineage surfaced-tool renames;
-- surfaced pilot-command renames from Section 5.9;
+- atlas/dataset/lineage surfaced-tool renames, including the live research-lineage module/types;
+- surfaced pilot-command renames from Section 5.9, including the active restart/continuation population tool;
+- durable cohort-named diagnostic rename;
 - dataset worktree/env-var migration;
 - audit diagnostics rename;
 - workflow filenames, display/job names, concurrency groups, current artifact names, path filters, package aliases, catalogs, and workflow docs updated together;
