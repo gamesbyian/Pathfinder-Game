@@ -140,7 +140,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             // interactive human-waiting context whose progress bar promises ~30s, and any last-resort
             // pass's extra budget would silently break that. Uses the convenience flag so a future
             // new pass is covered automatically.
-            const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn, disableExtraBudgetPasses: true });
+            const result = await solverApi.solveLevel(solveLevel, { timeBudgetMs: budgetMs, yieldFn, disableExtraBudgetPasses: true });
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                 const levelRevision = await getLevelFingerprint(solveLevel);
