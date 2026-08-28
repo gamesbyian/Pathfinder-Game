@@ -90,6 +90,7 @@ Measure before guessing:
 - `check`/`test:node` use `run-scripts-parallel.mjs`, which reports subcommand time.
 - Actions has six non-overlapping jobs: full-tree non-lint repository checks (`checks`), lean lint (`checks-lint`), lean Node/CLI contracts (`node-tests`), `build`, `deep-proofs`, and covered `deep-verification`. Local `npm run check` remains serial lint → validator fan-out because racing those CPU-heavy halves on one machine measured slower.
 - ESLint's content-addressed per-file cache lives at `.cache/eslint`. Local runs reuse it directly; Actions restores the newest cache from the same config/package-lock generation and saves a per-commit successor, so the same invalidation rules apply in both environments.
+- `checks` and `build` initially omit the ~2,000 runtime level/hint files from sparse checkout. Actions restores an exact runtime-data cache keyed from the Git object IDs of every shipped corpus/hint tree; a cache miss materializes those exact paths from Git and seeds the cache. There is no fallback-key reuse, so a changed runtime-data tree cannot receive stale files.
 
 When optimizing test runtime, profile the actual suite/subcommand before deleting coverage or weakening a proof. Prefer cheaper fixtures, targeted stubs, concurrency fixes, and tiering over making important validation disappear.
 
