@@ -2050,6 +2050,55 @@ test('dedup-near-tie-retry pass can solve a level the main loop misses, and disa
     assert.equal(result.attempts.at(-1)?.dedupNearTieRetry, true);
 });
 
+// 2026-08-28: dedup-near-tie-retry was the first tier migrated off queue #2 step 3's ms-derived
+// work-dose debt (docs/solver-budget-determinism.md's "Remaining ms-shaped allocation debt";
+// scaledStageWorkBudget in budget-units.ts). These two tests are this tier's own version of the
+// main-ladder invariant already pinned above ('a non-binding deadline cannot resize an
+// explicit-work main-ladder trajectory'): a non-binding deadline change alone must not resize this
+// tier's own work dose, and an explicit baseWorkBudget now genuinely sizes it instead of being
+// silently ignored in favor of a fresh timeBudgetMs-derived pool.
+function isolateDedupNearTieRetryOpts(overrides = {}) {
+    return {
+        attemptBudgetTelemetry: true,
+        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
+        attractionDiversityBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
+        repairLateProbeNodeBudgetOverride: 0,
+        ...overrides,
+    };
+}
+
+test('dedup-near-tie-retry work dose no longer resizes with a non-binding deadline change', async () => {
+    const run = (timeBudgetMs: number) => solveLevel(makeAttractionDiversityGatedInfeasibleLevel(),
+        isolateDedupNearTieRetryOpts({ timeBudgetMs, workBudget: 200_000 }));
+    const shortDeadline = await run(1000);
+    const longDeadline = await run(600_000);
+    const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
+        .filter(a => a.dedupNearTieRetry === true)
+        .map(a => a.allocatedWorkCeiling);
+    const shortDose = dose(shortDeadline);
+    assert.ok(shortDose.length > 0, 'expected at least one dedup-near-tie-retry attempt');
+    assert.deepEqual(dose(longDeadline), shortDose,
+        'this tier\'s own work pool must depend on workBudget, not on the (non-binding) deadline');
+});
+
+test('dedup-near-tie-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
+    const solveWith = (baseWorkBudget: number) => solveLevel(makeAttractionDiversityGatedInfeasibleLevel(),
+        isolateDedupNearTieRetryOpts({ timeBudgetMs: 1000, baseWorkBudget }));
+    const small = await solveWith(200_000);
+    const large = await solveWith(20_000_000);
+    const ceiling = (result: Awaited<ReturnType<typeof solveLevel>>) =>
+        result.attempts.find(a => a.dedupNearTieRetry === true)?.allocatedWorkCeiling ?? null;
+    const smallCeiling = ceiling(small);
+    const largeCeiling = ceiling(large);
+    assert.ok(smallCeiling != null && largeCeiling != null, 'expected a dedup-near-tie-retry attempt in both runs');
+    assert.ok((largeCeiling as number) > (smallCeiling as number),
+        'an explicit baseWorkBudget must now size this tier\'s own dose');
+});
+
 // ── STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY ───────────────────────────────
 //
 // Opt-in, default OFF (see ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION's own comment in

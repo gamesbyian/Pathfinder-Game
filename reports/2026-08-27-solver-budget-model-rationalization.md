@@ -158,6 +158,15 @@ constant/fraction independent of the caller's own `nodeBudget`/`workBudget`
 ran 1.5x-467x the nominal `workBudget` — a `node_budget` input to a capability sweep or confirmation
 workflow is not a real per-level ceiling unless `strictTotalWorkBudget` is also set.
 
+**2026-08-28, same day: first site migrated, and node_budget legibility documented in place.**
+`dedup-near-tie-retry` is now sized from the solve's resolved `workBudget` instead of a second
+`timeBudgetMs`-derived conversion (proven behavior-preserving for live play and the plain-default
+call shape; a genuine, deliberate dose correction — not a no-op — for the offline capability-sweep
+call shape specifically). The `node_budget` inputs on the confirmation/sweep workflows and
+`level-blind-capability-sweep.mjs` itself now state the starting-allocation-not-ceiling fact this
+audit found, in place, rather than only in this report. See
+[`2026-08-28-dedup-near-tie-retry-work-dose-migration.md`](2026-08-28-dedup-near-tie-retry-work-dose-migration.md).
+
 ### 2. One direct per-seed ms-to-work compatibility site
 
 Repair-late-probe multi-seed retry still creates each round's work allowance from the base

@@ -81,7 +81,7 @@ on:
         required: false
         default: ''
       node_budget:
-        description: 'Cumulative node ceiling per level, both arms.'
+        description: 'Cumulative node ceiling per level, both arms. This is a per-level STARTING allocation, not a hard per-level cost ceiling: additive fallback/retry tiers can spend several times this much real work beyond it once the main ladder is exhausted (measured 1.5x-467x on a sample; see reports/2026-08-28-additive-tier-participation-audit.md). Pass --strict-total-work-budget for a true whole-solve work cap; this workflow does not do so by default, so it is not a solve-set-preserving substitution here without separate parity evidence.'
         required: false
         default: '50000000'
       budget_ms:
