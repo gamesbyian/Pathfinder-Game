@@ -68,7 +68,7 @@ for (const position of positions) {
         const runs = [];
         for (let repeat = 1; repeat <= repeats; repeat++) {
             const started = performance.now();
-            const result = await Solver.solve(level, {
+            const result = await Solver.solveLevel(level, {
                 timeBudgetMs: budgetMs,
                 nodeBudget: nodeBudget ?? undefined,
                 workBudget: workBudget ?? undefined,

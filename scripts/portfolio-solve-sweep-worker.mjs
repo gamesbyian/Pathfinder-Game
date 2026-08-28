@@ -48,7 +48,7 @@ runWorkerMain(async (task) => {
             const resolvedSolveOpts = solveOpts.portfolioExperiment
                 ? { ...solveOpts, portfolioExperiment: deserializePortfolioExperiment(solveOpts.portfolioExperiment) }
                 : solveOpts;
-            result = await Solver.solve(level, resolvedSolveOpts);
+            result = await Solver.solveLevel(level, resolvedSolveOpts);
         }
     } catch (err) {
         // Per-level solve errors are ordinary results; runWorkerMain errors are pool-fatal.

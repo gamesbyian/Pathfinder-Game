@@ -1,16 +1,17 @@
 import assert from 'node:assert/strict';
 import { familyMetadataOf, summarizeFamilyWinningAttempts } from './winning-attempt-family-lib.mjs';
 const levels=[
- {id:'v1',parentId:'P2',mode:'swap',ok:true,attempts:[{ok:false},{ok:true,config:'b',workSpent:10,elapsedMs:999}]},
- {id:'v2',parentId:'P1',mode:'swap',ok:true,attempts:[{ok:true,config:'a',workSpent:30}]},
- {id:'v3',parentId:'P1',mode:'move',ok:true,attempts:[{ok:true,config:'a',nodesExpanded:20}]},
- {id:'v4',parentId:'P1',mode:'move',ok:true,attempts:[{ok:true,config:'b',elapsedMs:40}]},
+ {id:'v1',parentId:'P2',mode:'swap',ok:true,attempts:[{ok:false},{ok:true,config:'beam:objectiveFirst@beam2000',workSpent:10,elapsedMs:999}]},
+ {id:'v2',parentId:'P1',mode:'swap',ok:true,attempts:[{ok:true,config:'dfs:default',workSpent:30}]},
+ {id:'v3',parentId:'P1',mode:'move',ok:true,attempts:[{ok:true,config:'dfs|score=default|bias=none',nodesExpanded:20}]},
+ {id:'v4',parentId:'P1',mode:'move',ok:true,attempts:[{ok:true,config:'beam|score=objectiveFirst|bias=none|width=2000|retention=plain',elapsedMs:40}]},
 ];
-levels.push({id:'v5',parentId:'P3',mode:'move',ok:true,attempts:[{ok:true,config:'c',workSpent:null,nodesExpanded:12}]});
+levels.push({id:'v5',parentId:'P3',mode:'move',ok:true,attempts:[{ok:true,config:'ida:none',workSpent:null,nodesExpanded:12}]});
 const byParent=summarizeFamilyWinningAttempts(levels,{groupBy:'parentId'});
 assert.deepEqual(byParent.map(x=>x.group),['P1','P2','P3']);
 assert.equal(byParent[0].solvedVariantCount,3);
 assert.equal(byParent[0].winnerConcentration,2/3);
+assert.deepEqual(byParent[0].winnerDistribution, {'beam|score=objectiveFirst|bias=none|width=2000|retention=plain':1,'dfs|score=default|bias=none':2});
 assert.ok(byParent[0].winnerEntropyBits>0);
 assert.equal(byParent[1].medianWinningWork,10);
 assert.equal(byParent[1].winningWorkUnit,'workSpent');assert.deepEqual(byParent[1].workAvailability,{workSpent:1,nodesExpanded:0,elapsedMs:1});

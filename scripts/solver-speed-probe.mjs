@@ -92,7 +92,7 @@ for (const n of targets) {
     let ok = false, nodes = 0;
     try {
         const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: n });
-        const res = await Solver.solve(level, {
+        const res = await Solver.solveLevel(level, {
             timeBudgetMs: budgetMs,
             nodeBudget,
             ...(workBudget !== undefined ? { workBudget } : {}),

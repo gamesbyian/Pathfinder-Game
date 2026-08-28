@@ -105,7 +105,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             // worth the broken promise here. Uses the convenience flag (rather than naming each
             // override individually) so a future new last-resort pass is covered automatically —
             // see disableExtraBudgetPasses's own comment on SolveOpts for why this matters.
-            const result = await solverApi.solve(level, { timeBudgetMs: budgetMs, yieldFn, disableExtraBudgetPasses: true });
+            const result = await solverApi.solveLevel(level, { timeBudgetMs: budgetMs, yieldFn, disableExtraBudgetPasses: true });
             updateProgressDisplay();
             await overlayMinTimer;
             if (result.ok && Array.isArray(result.solution) && result.solution.length > 0) {

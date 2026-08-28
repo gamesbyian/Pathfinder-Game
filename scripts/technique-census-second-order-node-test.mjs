@@ -4,17 +4,17 @@ import { analyzeTechniqueCensus, binaryMutualInformation,
     validateTechniqueBudgetCurves } from './technique-census-second-order.mjs';
 
 const result = analyzeTechniqueCensus({ results: [
-    { tier: 'T1', corpus: 'corpus2', levelId: 'a', levelPos: 1, techniqueKeys: ['beam:a'], ok: true, status: 'success', nodesExpanded: 90 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'a', levelPos: 1, techniqueKeys: ['beam|score=a|bias=none|width=2000|retention=plain'], ok: true, status: 'success', nodesExpanded: 90 },
     // Exact duplicate input rows are audited and collapsed rather than inflating the analysis.
-    { tier: 'T1', corpus: 'corpus2', levelId: 'a', levelPos: 1, techniqueKeys: ['beam:a'], ok: true, status: 'success', nodesExpanded: 90 },
-    { tier: 'T1', corpus: 'corpus2', levelId: 'a', levelPos: 1, techniqueKeys: ['dfs:b'], ok: false, status: 'node-budget-reached', nodesExpanded: 500 },
-    { tier: 'T1', corpus: 'corpus2', levelId: 'b', levelPos: 2, techniqueKeys: ['beam:a'], ok: false, status: 'exhausted', nodesExpanded: 40 },
-    { tier: 'T1', corpus: 'corpus2', levelId: 'b', levelPos: 2, techniqueKeys: ['dfs:b'], ok: true, status: 'success', nodesExpanded: 200 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'a', levelPos: 1, techniqueKeys: ['beam|score=a|bias=none|width=2000|retention=plain'], ok: true, status: 'success', nodesExpanded: 90 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'a', levelPos: 1, techniqueKeys: ['dfs|score=b|bias=none'], ok: false, status: 'node-budget-reached', nodesExpanded: 500 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'b', levelPos: 2, techniqueKeys: ['beam|score=a|bias=none|width=2000|retention=plain'], ok: false, status: 'exhausted', nodesExpanded: 40 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'b', levelPos: 2, techniqueKeys: ['dfs|score=b|bias=none'], ok: true, status: 'success', nodesExpanded: 200 },
     // A partial technique must not receive an artificially favorable cover score.
-    { tier: 'T1', corpus: 'corpus2', levelId: 'a', levelPos: 1, techniqueKeys: ['beam:partial'], ok: true, status: 'success', nodesExpanded: 1 },
-    { tier: 'T1', corpus: 'corpus2', levelId: 'c', levelPos: 3, techniqueKeys: ['beam:a'], ok: false, status: 'exhausted', nodesExpanded: 30 },
-    { tier: 'T1', corpus: 'corpus2', levelId: 'c', levelPos: 3, techniqueKeys: ['dfs:b'], ok: false, status: 'node-budget-reached', nodesExpanded: 500 },
-    { tier: 'T3', corpus: 'corpus2', levelId: 'c', levelPos: 3, techniqueKeys: ['beam:a', 'dfs:b'], ok: false, status: 'exhausted', nodesExpanded: 10 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'a', levelPos: 1, techniqueKeys: ['beam|score=partial|bias=none|width=2000|retention=plain'], ok: true, status: 'success', nodesExpanded: 1 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'c', levelPos: 3, techniqueKeys: ['beam|score=a|bias=none|width=2000|retention=plain'], ok: false, status: 'exhausted', nodesExpanded: 30 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'c', levelPos: 3, techniqueKeys: ['dfs|score=b|bias=none'], ok: false, status: 'node-budget-reached', nodesExpanded: 500 },
+    { tier: 'T3', corpus: 'corpus2', levelId: 'c', levelPos: 3, techniqueKeys: ['beam|score=a|bias=none|width=2000|retention=plain', 'dfs|score=b|bias=none'], ok: false, status: 'exhausted', nodesExpanded: 10 },
 ] }, [
     { corpus: 'corpus2', levelId: 'a', wasSolvedByProduction: false },
     { corpus: 'corpus2', levelId: 'b', wasSolvedByProduction: false },
@@ -40,31 +40,31 @@ assert.equal(exactDiscordancePValue(1000, 1000), 1,
 assert.ok(Number.isFinite(exactDiscordancePValue(900, 1100)) && exactDiscordancePValue(900, 1100) > 0,
     'large imbalanced populations retain a representable nonzero exact p-value');
 assert.equal(result.completeTechniqueCover.eligibleTechniques, 2);
-assert.deepEqual(result.greedyCostWeightedCover.map(row => row.technique), ['beam:a', 'dfs:b']);
-assert.deepEqual(result.greedyCoverageFirstCover.map(row => row.technique), ['beam:a', 'dfs:b']);
+assert.deepEqual(result.greedyCostWeightedCover.map(row => row.technique), ['beam|score=a|bias=none|width=2000|retention=plain', 'dfs|score=b|bias=none']);
+assert.deepEqual(result.greedyCoverageFirstCover.map(row => row.technique), ['beam|score=a|bias=none|width=2000|retention=plain', 'dfs|score=b|bias=none']);
 assert.equal(result.populationCovers.productionUnsolved.oracleUnion, 2);
 assert.deepEqual(result.populationCovers.productionUnsolved.coverageFirst.map(row => row.technique),
-    ['beam:a', 'dfs:b']);
+    ['beam|score=a|bias=none|width=2000|retention=plain', 'dfs|score=b|bias=none']);
 assert.equal(result.populationCovers.productionSolved.oracleUnion, 0);
-assert.equal(result.isolatedTechniqueEconomics.find(row => row.technique === 'dfs:b').substitutedByCheaper, 0);
+assert.equal(result.isolatedTechniqueEconomics.find(row => row.technique === 'dfs|score=b|bias=none').substitutedByCheaper, 0);
 assert.equal(result.fragileLevels.length, 2);
 assert.deepEqual(result.levelTechniquePhenotypes.map(row => [row.techniques, row.levels]), [
-    [[], 1], [['beam:a'], 1], [['dfs:b'], 1],
+    [[], 1], [['beam|score=a|bias=none|width=2000|retention=plain'], 1], [['dfs|score=b|bias=none'], 1],
 ]);
 assert.deepEqual(result.failureFingerprints, [
-    { fingerprint: 'beam:exhausted|dfs:node-cap|ida:not-sampled|repair:not-sampled', levels: 1 },
+    { fingerprint: 'beam:exhausted|dfs:node-cap|admissible-order:not-sampled|repair:not-sampled', levels: 1 },
 ]);
 assert.equal(result.bestConditionalByFailureStatus.length, 0, 'fixture strata stay below the 100-row report threshold');
 assert.equal(result.productionCrossRun.matchedOracleLevels, 2);
 assert.equal(result.productionCrossRun.productionFailedWithinIsolated1M, 1);
 assert.equal(result.productionCrossRun.medianProductionToIsolatedNodeRatio, 451);
-assert.deepEqual(result.solveHazards.find(row => row.technique === 'beam:a').intervals[0], {
+assert.deepEqual(result.solveHazards.find(row => row.technique === 'beam|score=a|bias=none|width=2000|retention=plain').intervals[0], {
     lower: 0, upper: 100, atRisk: 3, solves: 1, hazard: 1 / 3,
 });
 const gapCurves = result.techniqueBudgetCurves.populations.productionUnsolved;
-const beamCurve = gapCurves.techniques.find(row => row.technique === 'beam:a');
-const dfsCurve = gapCurves.techniques.find(row => row.technique === 'dfs:b');
-const partialCurve = gapCurves.techniques.find(row => row.technique === 'beam:partial');
+const beamCurve = gapCurves.techniques.find(row => row.technique === 'beam|score=a|bias=none|width=2000|retention=plain');
+const dfsCurve = gapCurves.techniques.find(row => row.technique === 'dfs|score=b|bias=none');
+const partialCurve = gapCurves.techniques.find(row => row.technique === 'beam|score=partial|bias=none|width=2000|retention=plain');
 assert.deepEqual(beamCurve.terminationCounts, { exhausted: 2, success: 1 });
 assert.equal(beamCurve.maxObservedNodes, 90);
 assert.equal(beamCurve.maxSolvedNodes, 90);
@@ -92,7 +92,7 @@ assert.equal(partialCurve.caps[0].exclusiveSolvesAtEqualCap, null,
     'partial techniques are not treated as full-population equal-cap competitors');
 assert.deepEqual(beamCurve.caps.map(row => row.exclusiveSolvesAtEqualCap), [1, 1],
     'equal-cap exclusivity ignores excluded partial cells but compares every complete technique');
-assert.deepEqual(gapCurves.comparisonUniverse.excludedPartiallySampledTechniques, ['beam:partial']);
+assert.deepEqual(gapCurves.comparisonUniverse.excludedPartiallySampledTechniques, ['beam|score=partial|bias=none|width=2000|retention=plain']);
 assert.equal(validateTechniqueBudgetCurves(result.techniqueBudgetCurves), result.techniqueBudgetCurves);
 assert.throws(() => analyzeTechniqueCensus({ results: [] }, [], [250, 100]),
     /positive, strictly increasing safe integers/);
@@ -115,18 +115,18 @@ const renderedFixture = renderTechniqueCensusSecondOrder(result, 'fixture');
 assert.equal(renderTechniqueCensusSecondOrder(result, 'fixture'), renderedFixture,
     'deterministic input produces deterministic Markdown');
 assert.equal(JSON.stringify(analyzeTechniqueCensus({ results: [
-    { tier: 'T1', corpus: 'corpus2', levelId: 'x', levelPos: 1, techniqueKeys: ['beam:x'], ok: true, status: 'success', nodesExpanded: 5 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'x', levelPos: 1, techniqueKeys: ['beam|score=x|bias=none|width=2000|retention=plain'], ok: true, status: 'success', nodesExpanded: 5 },
 ] }, [{ corpus: 'corpus2', levelId: 'x', wasSolvedByProduction: false }], [10])),
 JSON.stringify(analyzeTechniqueCensus({ results: [
-    { tier: 'T1', corpus: 'corpus2', levelId: 'x', levelPos: 1, techniqueKeys: ['beam:x'], ok: true, status: 'success', nodesExpanded: 5 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'x', levelPos: 1, techniqueKeys: ['beam|score=x|bias=none|width=2000|retention=plain'], ok: true, status: 'success', nodesExpanded: 5 },
 ] }, [{ corpus: 'corpus2', levelId: 'x', wasSolvedByProduction: false }], [10])),
 'deterministic input produces deterministic derived JSON');
 
 const pathology = analyzeTechniqueCensus({ results: [
-    { tier: 'T1', corpus: 'corpus2', levelId: 'gain', levelPos: 1, techniqueKeys: ['beam:x'], ok: false, status: 'exhausted', nodesExpanded: 10 },
-    { tier: 'T1', corpus: 'corpus2', levelId: 'gain', levelPos: 1, techniqueKeys: ['beam:x'], variantLabel: 'beam:x+dedup-near-tie-retention-off', ok: true, status: 'success', nodesExpanded: 10 },
-    { tier: 'T1', corpus: 'corpus2', levelId: 'loss', levelPos: 2, techniqueKeys: ['beam:x'], ok: true, status: 'success', nodesExpanded: 10 },
-    { tier: 'T1', corpus: 'corpus2', levelId: 'loss', levelPos: 2, techniqueKeys: ['beam:x'], variantLabel: 'beam:x+dedup-near-tie-retention-off', ok: false, status: 'exhausted', nodesExpanded: 10 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'gain', levelPos: 1, techniqueKeys: ['beam|score=x|bias=none|width=2000|retention=plain'], ok: false, status: 'exhausted', nodesExpanded: 10 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'gain', levelPos: 1, techniqueKeys: ['beam|score=x|bias=none|width=2000|retention=plain'], variantLabel: 'beam|score=x|bias=none|width=2000|retention=plain+dedup-near-tie-retention-off', ok: true, status: 'success', nodesExpanded: 10 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'loss', levelPos: 2, techniqueKeys: ['beam|score=x|bias=none|width=2000|retention=plain'], ok: true, status: 'success', nodesExpanded: 10 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'loss', levelPos: 2, techniqueKeys: ['beam|score=x|bias=none|width=2000|retention=plain'], variantLabel: 'beam|score=x|bias=none|width=2000|retention=plain+dedup-near-tie-retention-off', ok: false, status: 'exhausted', nodesExpanded: 10 },
 ] }, [
     { corpus: 'corpus2', levelId: 'gain', wasSolvedByProduction: false },
     { corpus: 'corpus2', levelId: 'loss', wasSolvedByProduction: false },
@@ -139,10 +139,10 @@ assert.equal(pathology.flagPathologies[0].lost.meanObjectDensity, 0.4);
 assert.equal(pathology.flagPathologies[0].gained.mechanicPrevalence.mustCross, 1);
 
 const economics = analyzeTechniqueCensus({ results: [
-    { tier: 'T1', corpus: 'corpus2', levelId: 'one', levelPos: 1, techniqueKeys: ['beam:objectiveFirst@beam2000'], ok: true, status: 'success', nodesExpanded: 100 },
-    { tier: 'T1', corpus: 'corpus2', levelId: 'one', levelPos: 1, techniqueKeys: ['beam:objectiveFirst@beam5000'], ok: false, status: 'exhausted', nodesExpanded: 300 },
-    { tier: 'T1', corpus: 'corpus2', levelId: 'two', levelPos: 2, techniqueKeys: ['beam:objectiveFirst@beam2000'], ok: false, status: 'exhausted', nodesExpanded: 200 },
-    { tier: 'T1', corpus: 'corpus2', levelId: 'two', levelPos: 2, techniqueKeys: ['beam:objectiveFirst@beam5000'], ok: true, status: 'success', nodesExpanded: 400 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'one', levelPos: 1, techniqueKeys: ['beam|score=objectiveFirst|bias=none|width=2000|retention=plain'], ok: true, status: 'success', nodesExpanded: 100 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'one', levelPos: 1, techniqueKeys: ['beam|score=objectiveFirst|bias=none|width=5000|retention=plain'], ok: false, status: 'exhausted', nodesExpanded: 300 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'two', levelPos: 2, techniqueKeys: ['beam|score=objectiveFirst|bias=none|width=2000|retention=plain'], ok: false, status: 'exhausted', nodesExpanded: 200 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'two', levelPos: 2, techniqueKeys: ['beam|score=objectiveFirst|bias=none|width=5000|retention=plain'], ok: true, status: 'success', nodesExpanded: 400 },
 ] }, [
     { corpus: 'corpus2', levelId: 'one', wasSolvedByProduction: false },
     { corpus: 'corpus2', levelId: 'two', wasSolvedByProduction: false },
@@ -154,11 +154,11 @@ assert.equal(widthEconomics.productionUnsolvedEconomics.leftMedianExhaustedNodes
 assert.equal(widthEconomics.productionUnsolvedEconomics.rightMedianExhaustedNodes, 300);
 
 const reverse = analyzeTechniqueCensus({ results: [
-    { tier: 'T1', corpus: 'corpus2', levelId: 'reverse', levelPos: 1, techniqueKeys: ['beam:x'], ok: false, status: 'exhausted', nodesExpanded: 20 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'reverse', levelPos: 1, techniqueKeys: ['beam|score=x|bias=none|width=2000|retention=plain'], ok: false, status: 'exhausted', nodesExpanded: 20 },
 ] }, [
     { corpus: 'corpus2', levelId: 'reverse', wasSolvedByProduction: true, solvedByT1: [] },
 ], [100], [], [], [
-    { corpus: 'corpus2', id: 'reverse', ok: true, winningConfig: 'beam:x', lifecycleWinningTechnique: 'admissible-order', attemptCount: 3, nodesExpanded: 40 },
+    { corpus: 'corpus2', id: 'reverse', ok: true, winningConfig: 'beam|score=x|bias=none|width=2000|retention=plain', lifecycleWinningTechnique: 'admissible-order', attemptCount: 3, nodesExpanded: 40 },
 ]);
 assert.equal(reverse.reverseOracle.reproducedProductionSolved, 1);
 assert.equal(reverse.reverseOracle.rows[0].matchingIsolatedStatus, 'exhausted');

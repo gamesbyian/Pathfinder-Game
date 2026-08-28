@@ -11,6 +11,7 @@
  *     --solve-result=/tmp/family-P00086-solve.json --parent-solve-result=/tmp/parent-P00086-solve.json
  */
 import { readFileSync } from 'node:fs';
+import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 import process from 'node:process';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -49,16 +50,24 @@ function describeMutation(m) {
     }
 }
 
-const hasNavDensity = manifest.variants.some(v => v.navDensity != null);
+const coverageRatioOf = variant => variant?.requiredPathCoverageRatio ?? variant?.navDensity ?? null;
+const parentRequiredPathCoverageRatio = manifest.parentRequiredPathCoverageRatio ?? manifest.parentNavDensity ?? null;
+const hasRequiredPathCoverageRatio = manifest.variants.some(v => coverageRatioOf(v) != null);
 
-console.log(`Family ${manifest.familyId} — parent ${manifest.parentLevelId} (${manifest.selectedWitnessSource}, len ${manifest.selectedWitnessLength}, reqInt ${manifest.selectedWitnessIntersectionCount})${manifest.parentNavDensity != null ? `, parent navDensity ${manifest.parentNavDensity.toFixed(3)}` : ''}`);
+console.log(`Family ${manifest.familyId} — parent ${manifest.parentLevelId} (${manifest.selectedWitnessSource}, len ${manifest.selectedWitnessLength}, reqInt ${manifest.selectedWitnessIntersectionCount})${parentRequiredPathCoverageRatio != null ? `, parent requiredPathCoverageRatio ${parentRequiredPathCoverageRatio.toFixed(3)}` : ''}`);
 console.log(`${manifest.acceptedCount}/${manifest.requestedCount} siblings generated (mode: ${manifest.familyMode ?? 'local-mutant'}), ${manifest.movableInstanceCount} movable instance(s) available under strict inventory.\n`);
 
-if (parentRow) {
-    console.log(`Parent solve:   ok=${parentRow.ok} nodes=${parentRow.nodesExpanded ?? '-'} ms=${parentRow.totalMs ?? '-'} config=${parentRow.winningConfig ?? '-'}\n`);
+function canonicalWinningConfig(value) {
+    if (!value) return '-';
+    try { return normalizeAttemptIdentityKey(String(value)); }
+    catch { return String(value); }
 }
 
-const header = ['variant', 'objectType', 'move', ...(hasNavDensity ? ['navDensity'] : []), 'ok', 'nodes', 'ms', 'config', 'ΔnodesVsParent', 'ΔmsVsParent'];
+if (parentRow) {
+    console.log(`Parent solve:   ok=${parentRow.ok} nodes=${parentRow.nodesExpanded ?? '-'} ms=${parentRow.totalMs ?? '-'} config=${canonicalWinningConfig(parentRow.winningConfig)}\n`);
+}
+
+const header = ['variant', 'objectType', 'move', ...(hasRequiredPathCoverageRatio ? ['requiredPathCoverageRatio'] : []), 'ok', 'nodes', 'ms', 'config', 'ΔnodesVsParent', 'ΔmsVsParent'];
 console.log(header.join('\t'));
 for (const v of manifest.variants) {
     const row = rowsById.get(v.variantId);
@@ -72,11 +81,11 @@ for (const v of manifest.variants) {
         v.variantId,
         m.role ? `${m.objectType}(${m.role})` : m.objectType,
         moveDesc,
-        ...(hasNavDensity ? [v.navDensity != null ? v.navDensity.toFixed(3) : '-'] : []),
+        ...(hasRequiredPathCoverageRatio ? [coverageRatioOf(v) != null ? coverageRatioOf(v).toFixed(3) : '-'] : []),
         row ? row.ok : '?',
         row?.nodesExpanded ?? '-',
         row?.totalMs ?? '-',
-        row?.winningConfig ?? '-',
+        canonicalWinningConfig(row?.winningConfig),
         dNodes ?? '-',
         dMs ?? '-',
     ].join('\t'));

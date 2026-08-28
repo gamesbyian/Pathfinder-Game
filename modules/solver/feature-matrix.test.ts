@@ -32,7 +32,7 @@ function raw(overrides: any = {}) {
 
 async function solveAndReferee(rawLevel: any, { refereeCheck = true }: any = {}) {
     const level = solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
-    const result = await solver.solve(level, { timeBudgetMs: 10000 });
+    const result = await solver.solveLevel(level, { timeBudgetMs: 10000 });
     assert.equal(result.ok, true, `solver must solve: ${result.status}`);
     assert.ok(Array.isArray(result.solution) && result.solution.length > 1);
     if (refereeCheck) {
@@ -99,7 +99,7 @@ test('hazards: solver ignores geese and false goals (MoveContext.SOLVER) but avo
         reqLen: 7, reqInt: 0,
     });
     const level = solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
-    const result = await solver.solve(level, { timeBudgetMs: 10000 });
+    const result = await solver.solveLevel(level, { timeBudgetMs: 10000 });
     assert.equal(result.ok, true, result.status);
     const solution = result.solution!;
     assert.equal(solution[solution.length - 1], K(5, 4), 'ends on the true goal');
@@ -150,7 +150,7 @@ test('infeasible level: solver reports failure rather than a bogus path', async 
     assert.equal(feasibleDiagnostics.rejected.PRUNE_PARITY, undefined,
         'the exact four-edge oracle path remains available');
 
-    const result = await solver.solve(level, { timeBudgetMs: 2000, disableExtraBudgetPasses: true });
+    const result = await solver.solveLevel(level, { timeBudgetMs: 2000, disableExtraBudgetPasses: true });
     assert.equal(result.ok, false);
     assert.equal(result.solution, null);
 });

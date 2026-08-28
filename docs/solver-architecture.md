@@ -261,8 +261,8 @@ Time fractions cannot protect a last tier from cumulative `nodeBudget`. `ADMISSI
 
 - Only finite node budgets when the tier will run; reserve/run predicates must match.
 - `nodeBudgetReached` reports early-tier truncation even if final total < external cap.
-- 2026-07-30 20M-node corpus2 target: participation 73/141 -> 141/141, **+21 net** (22 gained, 1 lost), referee-valid `ida:*`.
-- Earlier `ida:default` may consume reserve before a later winner; no sub-slicing because it won 21/22 gains.
+- 2026-07-30 20M-node corpus2 target: participation 73/141 -> 141/141, **+21 net** (22 gained, 1 lost), referee-valid admissible-order attempts.
+- Earlier `admissible-order|tieBreak=default|lds=off` may consume reserve before a later winner; no sub-slicing because it won 21/22 gains.
 - Flags: `--admissible-order-budget-fraction`, `--admissible-order-node-reserve-fraction`, `--disable-extra-budget-passes`; race pool does not support this tier/node budget.
 
 Report: [`reports/2026-07-30-admissible-order-node-reserve.md`](../reports/2026-07-30-admissible-order-node-reserve.md).

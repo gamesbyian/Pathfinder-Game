@@ -46,6 +46,7 @@ function syntheticManifest() {
     };
 }
 
+// Legacy compact winningConfig inputs below are intentional dual-read fixtures.
 function syntheticSolveResult() {
     return {
         summary: {},
@@ -76,16 +77,16 @@ async function main() {
         assert.match(noParent.stdout, /Family family-TEST-w0 — parent TEST/);
         assert.match(noParent.stdout, /2\/2 siblings generated \(mode: local-mutant\), 3 movable instance\(s\)/);
         assert.doesNotMatch(noParent.stdout, /Parent solve:/, 'no parent-solve line without --parent-solve-result');
-        assert.match(noParent.stdout, /F00TEST-01\tblocks\t\(5,1\)->\(5,3\)\ttrue\t500\t20\tdfs:perimeterSweep\/cornerHarvest\t-\t-/);
+        assert.match(noParent.stdout, /F00TEST-01\tblocks\t\(5,1\)->\(5,3\)\ttrue\t500\t20\tdfs\|score=perimeterSweep\|bias=cornerHarvest\t-\t-/);
         assert.match(noParent.stdout, /F00TEST-02\tmustTurn\(mustTurn\)\t\(2,2\)->\(4,4\)\tfalse\t900000\t15000\t-\t-\t-/);
 
         // ── With a parent solve result: exact hand-computed deltas ──────────────────────────────────
         const withParent = await runAnalyze([
             `--manifest=${manifestPath}`, `--solve-result=${solveResultPath}`, `--parent-solve-result=${parentSolveResultPath}`,
         ]);
-        assert.match(withParent.stdout, /Parent solve:\s+ok=true nodes=1000 ms=40 config=dfs:perimeterSweep\/cornerHarvest/);
+        assert.match(withParent.stdout, /Parent solve:\s+ok=true nodes=1000 ms=40 config=dfs\|score=perimeterSweep\|bias=cornerHarvest/);
         // F00TEST-01: 500-1000 = -500 nodes, 20-40 = -20 ms.
-        assert.match(withParent.stdout, /F00TEST-01\tblocks\t\(5,1\)->\(5,3\)\ttrue\t500\t20\tdfs:perimeterSweep\/cornerHarvest\t-500\t-20/);
+        assert.match(withParent.stdout, /F00TEST-01\tblocks\t\(5,1\)->\(5,3\)\ttrue\t500\t20\tdfs\|score=perimeterSweep\|bias=cornerHarvest\t-500\t-20/);
         // F00TEST-02: 900000-1000 = 899000 nodes, 15000-40 = 14960 ms — a real regression, exposed
         // exactly as a large positive delta rather than hidden behind an absolute-only report.
         assert.match(withParent.stdout, /F00TEST-02\tmustTurn\(mustTurn\)\t\(2,2\)->\(4,4\)\tfalse\t900000\t15000\t-\t899000\t14960/);
@@ -105,7 +106,7 @@ async function main() {
 
         // ── density-sweep mutationManifest shape: {operation:'add'|'remove', count, ...}, no
         // from/to at all — this crashed the original implementation (assumed every mutation was a
-        // {from,to} move). Also exercises the navDensity column, shown only when present. ─────────
+        // {from,to} move). Also exercises dual-read of legacy navDensity fields while displaying canonical requiredPathCoverageRatio. ─────────
         const densityManifestPath = path.join(tempDir, 'density-manifest.json');
         const densityManifest = {
             familyId: 'family-TEST-w0', parentLevelId: 'TEST', selectedWitnessSource: 'hint[0]',
@@ -124,9 +125,9 @@ async function main() {
         };
         await writeFile(densityManifestPath, JSON.stringify(densityManifest));
         const densityResult = await runAnalyze([`--manifest=${densityManifestPath}`, `--solve-result=${solveResultPath}`]);
-        assert.match(densityResult.stdout, /parent navDensity 0\.750/);
+        assert.match(densityResult.stdout, /parent requiredPathCoverageRatio 0\.750/);
         assert.match(densityResult.stdout, /mode: density-sweep/);
-        assert.match(densityResult.stdout, /variant\tobjectType\tmove\tnavDensity\tok\t/, 'navDensity column appears when variants carry it');
+        assert.match(densityResult.stdout, /variant\tobjectType\tmove\trequiredPathCoverageRatio\tok\t/, 'canonical coverage column appears when legacy manifest variants carry navDensity');
         assert.match(densityResult.stdout, /F00TEST-04\tblocks\t-2 \(now 4\)\t0\.700\t\?\t-\t-\t-\t-\t-/);
         assert.match(densityResult.stdout, /F00TEST-05\tblocks\t\+3 \(now 9\)\t0\.830\t\?\t-\t-\t-\t-\t-/);
 

@@ -80,6 +80,7 @@
  * failures as "re-check sequentially".
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { formatAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -197,18 +198,22 @@ const corpus = JSON.parse(readFileSync(path.resolve(ROOT, cfg.corpusFile), 'utf8
 const corpusLevels = Array.isArray(corpus) ? corpus : corpus.levels;
 let levels = sampleDeterministic(filterByMechanic(selectLevelsBySpec(corpusLevels, cfg.levelSpec), cfg.filterMechanic), cfg.sample, cfg.seed);
 
-// Human-readable label for console/summary output (a different format from portfolio-solve-sweep-
-// lib.mjs's machine-consumed attemptConfigKey -- kept separate deliberately, but it has to make the
-// same distinctions or the summary misattributes wins). '@ida' mirrors that key's 'ida:' family:
-// an admissible-order attempt has no beamWidth, so without it every one of them read as '@dfs'.
-const attemptLabel = a => `${a.profile}${a.template ? `/${a.template}` : ''}` +
-    (a.admissibleOrder ? '@ida' : a.beamWidth ? `@beam${a.beamWidth}` : '@dfs') +
-    (a.admissibleOrderLds ? '(lds)' : '') +
-    (a.diverseBeam ? '(diverse)' : '') +
-    (a.repair ? (a.repairMustTurnBiased ? '(repair-biased)' : a.repairTurnBiased ? '(repair-turnBiased)' : '(repair)') : '');
+// Current console/summary output uses the same canonical config identity as persisted reports.
+const attemptLabel = a => formatAttemptIdentityKey({
+    profileName: a.profile ?? 'unknown',
+    templateId: a.template ?? null,
+    beamWidth: a.beamWidth,
+    diverseBeam: a.diverseBeam,
+    repair: a.repair,
+    repairMustTurnBiased: a.repairMustTurnBiased,
+    repairTurnBiased: a.repairTurnBiased,
+    admissibleOrder: a.admissibleOrder,
+    admissibleOrderNoTieBreak: a.admissibleOrderNoTieBreak,
+    admissibleOrderLds: a.admissibleOrderLds,
+});
 
 /** Sequential engine: the exact single-threaded PRODUCTION solveLevel(). */
-const solveSequential = (raw, level) => Solver.solve(level, {
+const solveSequential = (raw, level) => Solver.solveLevel(level, {
     timeBudgetMs: cfg.budgetMs,
     ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
     ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairBudgetFractionOverride: cfg.repairBudgetFraction } : {}),

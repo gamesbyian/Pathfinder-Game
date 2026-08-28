@@ -54,7 +54,7 @@ test('racedAttemptRecord expands bounded worker errors with attempt identity', (
   assert.equal(record.allocatedBudgetMs, 50);
   assert.deepEqual(record.error, {
     name: 'TypeError', message: 'dispatch failed', gateKey: 7,
-    configKey: 'beam:default/portal@beam500', profile: 'default', template: 'portal',
+    configKey: 'beam|score=default|bias=portal|width=500|retention=plain', profile: 'default', template: 'portal',
   });
 });
 
@@ -138,7 +138,7 @@ test('solveLevelRaced works with poolSize=1 (degenerate single-worker pool)', as
 test('solveLevelRaced finds an equally-valid solution to the same level as sequential solveLevel', async () => {
   const raw = rawLevel({ grid: { w: 6, h: 6 }, goal: { x: 6, y: 6 }, reqLen: 10 });
   const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
-  const seq = await Solver.solve(level, { timeBudgetMs: 3000 });
+  const seq = await Solver.solveLevel(level, { timeBudgetMs: 3000 });
   const raced = await solveLevelRaced(raw, { timeBudgetMs: 3000, poolSize: 2 });
   assert.equal(seq.ok, true);
   assert.equal(raced.ok, true);

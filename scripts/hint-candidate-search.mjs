@@ -103,7 +103,7 @@ async function solveAttempt(level, opts, errors) {
         // hint-ablation-generator.ts's runCascade/runStrategyPhase, which set this for the same
         // reason (the workbench's own ported candidate-grid step gained the identical fix
         // alongside this one — see reports/2026-07-25-hint-tool-comparison.md).
-        const result = await Solver.solve(level, { ...opts, disableExtraBudgetPasses: true });
+        const result = await Solver.solveLevel(level, { ...opts, disableExtraBudgetPasses: true });
         return result?.ok && result.solution ? result.solution : null;
     } catch (err) {
         errors.push(err?.message || String(err));

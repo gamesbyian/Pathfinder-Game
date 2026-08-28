@@ -595,7 +595,7 @@ async function solveGridAttempt(gridLevel, solveOpts, errors) {
         // grid. Same reasoning as hint-ablation-generator.ts's runCascade/runStrategyPhase, which
         // set this for the identical reason. Caught live: an early portal-grid test against S00103
         // (4 gates, 2 portals) averaged ~4.1s/combo against an 800ms nominal budget before this fix.
-        const result = await Solver.solve(gridLevel, { ...solveOpts, disableExtraBudgetPasses: true });
+        const result = await Solver.solveLevel(gridLevel, { ...solveOpts, disableExtraBudgetPasses: true });
         // workSpent is reported even on a failed/no-solution attempt (SolveResult.workSpent is
         // always set — see orchestration.ts's finish()) so the caller's session-local work
         // accounting counts a losing probe's cost exactly like the old realm-global read did.

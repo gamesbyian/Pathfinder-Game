@@ -8,6 +8,7 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { normalizeAttemptIdentityKey, parseAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
 
 const argv = process.argv.slice(2);
 const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -38,7 +39,7 @@ const t1Base = (t1Doc.results ?? []).filter(r =>
 if (!ew.length) throw new Error('equal-work input contains no EW1 rows');
 
 const idOf = r => r.levelId ?? r.id ?? null;
-const techOf = r => r.techniqueKeys?.[0] ?? null;
+const techOf = r => r.techniqueKeys?.[0] ? normalizeAttemptIdentityKey(r.techniqueKeys[0]) : null;
 const cellKey = r => `${r.corpus}/${idOf(r)}/${techOf(r)}`;
 const levelKey = r => `${r.corpus}/${idOf(r)}`;
 const t1ByCell = new Map(t1Base.map(r => [cellKey(r), r]));
@@ -63,11 +64,10 @@ function median(values) {
     return s.length % 2 ? s[i] : Math.round((s[i - 1] + s[i]) / 2);
 }
 function family(key) {
-    if (key.startsWith('beam:')) return 'beam';
-    if (key.startsWith('dfs:repair')) return 'repair';
-    if (key.startsWith('ida:')) return 'ida';
-    if (key.startsWith('dfs:')) return 'dfs';
-    return 'other';
+    const fields = parseAttemptIdentityKey(key);
+    if (fields.repair) return 'repair';
+    if (fields.admissibleOrder) return 'admissible-order';
+    return fields.beamWidth ? 'beam' : 'dfs';
 }
 const thresholds = [500_000, 2_000_000, 5_000_000, 10_000_000];
 

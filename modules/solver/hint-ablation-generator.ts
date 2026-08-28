@@ -313,7 +313,7 @@ async function runCascade(target: any, solveOptsBase: any, label: string, ctx: R
             // caused a given round's win/loss. The unconstrained baseline solve above (phase 0)
             // deliberately does NOT set this, since its whole point is the honest full-default
             // winner including every last-resort tier.
-            result = await ctx.solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg, disableExtraBudgetPasses: true });
+            result = await ctx.solverApi.solveLevel(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg, disableExtraBudgetPasses: true });
         } catch (e) {
             ctx.errors.push(`${label} round=${round}: ${(e as Error)?.message}`);
             break;
@@ -359,7 +359,7 @@ async function runStrategyPhase(target: any, solveOptsBase: any, label: string, 
         try {
             // disableExtraBudgetPasses: same reasoning as runCascade's identical option -- one
             // narrow STRATEGY_ flag isolated per iteration under a tight per-attempt budget.
-            result = await ctx.solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag), disableExtraBudgetPasses: true });
+            result = await ctx.solverApi.solveLevel(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag), disableExtraBudgetPasses: true });
         } catch (e) {
             ctx.errors.push(`strategy=${flag} ${label}: ${(e as Error)?.message}`);
             continue;
@@ -457,7 +457,7 @@ export async function createHintAblationGenerator(
     if (phases.baseline && ctx.workSpent < workCeiling) {
         phasesRun.push('baseline');
         try {
-            const base = await solverApi.solve(level, { timeBudgetMs: baselineBudgetMs });
+            const base = await solverApi.solveLevel(level, { timeBudgetMs: baselineBudgetMs });
             ctx.workSpent += base?.workSpent ?? 0;
             if (base?.ok && base.solution) {
                 const winner = base.attempts?.find((a: any) => a.ok);

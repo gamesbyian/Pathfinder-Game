@@ -24,11 +24,11 @@ export const MAXIMALLY_POPULATED_SOLVER_ATTEMPT = Object.freeze({
   outcome: 'error',
   error: Object.freeze({
     name: 'TypeError', message: 'fixture dispatch failure', gateKey: 589833,
-    configKey: 'beam:perimeterSweep/perimeterCW@beam2000(diverse)',
+    configKey: 'beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=mechanic-buckets',
     profile: 'perimeterSweep', template: 'perimeterCW',
   }),
   passNumber: 3,
-  configKey: 'beam:perimeterSweep/perimeterCW@beam2000(diverse)',
+  configKey: 'beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=mechanic-buckets',
   restart: true,
   schedulerPhase: 'portfolio',
   diverseBeam: true,

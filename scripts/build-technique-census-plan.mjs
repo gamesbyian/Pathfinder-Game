@@ -73,6 +73,7 @@ import process from 'node:process';
 import { execSync } from 'node:child_process';
 
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
+import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
 const argv = process.argv.slice(2);
 const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -188,7 +189,7 @@ const ALL_TECHNIQUE_KEYS = [...techniqueKeySet].sort();
 // regime) — so it is deliberately NOT done here, only cells with a PROVEN, code-verified identical
 // outcome are skipped.
 //
-// The one confirmed case: `dfs:repair:repair(mustTurnBiased)` layers a PURE ADDITIVE bias on top of
+// The one confirmed case: `repair|score=repair|guidance=must-turn-biased` layers a PURE ADDITIVE bias on top of
 // ordinary repair (repair-search.ts) via a second, independently-seeded RNG stream (`rand2`) that is
 // only ever CONSUMED when `ws.mustTurnMask !== 0` (repair-search.ts line ~359) — a bit that can never
 // be set on a level with zero must-turn landmarks. The primary stream (`rand`) is seeded identically
@@ -199,7 +200,7 @@ const ALL_TECHNIQUE_KEYS = [...techniqueKeySet].sort();
 // (`if (f.mustTurn > 0) configs = [...configs, repairMustTurnBiasedAttempt()]`) — this mirrors an
 // eligibility constraint the ladder itself already enforces, not a new one invented for the census.
 const TECHNIQUE_ELIGIBILITY = new Map([
-    ['dfs:repair:repair(mustTurnBiased)', raw => (raw.landmarks ?? []).some(l => typeof l.role === 'string' && l.role.startsWith('mustTurn'))],
+    ['repair|score=repair|guidance=must-turn-biased', raw => (raw.landmarks ?? []).some(l => typeof l.role === 'string' && l.role.startsWith('mustTurn'))],
 ]);
 function techniqueEligible(key, raw) {
     const check = TECHNIQUE_ELIGIBILITY.get(key);
@@ -296,13 +297,13 @@ const ew1Sample = EW1_SAMPLE_SIZE > 0
 // change whether a prune condition can fire, so this asks no materially new question. Reopen only
 // with a formulation that's actually different, not a cleaner budget on the same one.
 const T1_PROMOTED_VARIANTS = [
-    { label: 'beam:mustCrossFirst@beam2000+mc-neighbor-budget-off', techniqueKey: 'beam:mustCrossFirst@beam2000', ablation: { enable: [], disable: ['PRUNE_MC_NEIGHBOR_BUDGET'] }, eligible: raw => (raw.mustCross?.length ?? 0) > 0 },
-    { label: 'dfs:mustCrossFirst+mc-neighbor-budget-off', techniqueKey: 'dfs:mustCrossFirst', ablation: { enable: [], disable: ['PRUNE_MC_NEIGHBOR_BUDGET'] }, eligible: raw => (raw.mustCross?.length ?? 0) > 0 },
-    { label: 'beam:intersectionHarvest@beam5000+connectivity-axis-exhausted-off', techniqueKey: 'beam:intersectionHarvest@beam5000', ablation: { enable: [], disable: ['PRUNE_CONNECTIVITY_AXIS_EXHAUSTED'] }, eligible: () => true },
-    { label: 'beam:objectiveFirst@beam5000+connectivity-axis-exhausted-off', techniqueKey: 'beam:objectiveFirst@beam5000', ablation: { enable: [], disable: ['PRUNE_CONNECTIVITY_AXIS_EXHAUSTED'] }, eligible: () => true },
-    { label: 'beam:intersectionHarvest@beam5000+dedup-near-tie-retention-off', techniqueKey: 'beam:intersectionHarvest@beam5000', ablation: { enable: [], disable: ['STRATEGY_DEDUP_NEAR_TIE_RETENTION'] }, eligible: () => true },
-    { label: 'beam:objectiveFirst@beam5000+dedup-near-tie-retention-off', techniqueKey: 'beam:objectiveFirst@beam5000', ablation: { enable: [], disable: ['STRATEGY_DEDUP_NEAR_TIE_RETENTION'] }, eligible: () => true },
-    // dfs:repair:repair(turnBiased) does not exist without its own flag -- there is no default-arm
+    { label: 'beam|score=mustCrossFirst|bias=none|width=2000|retention=plain+mc-neighbor-budget-off', techniqueKey: 'beam|score=mustCrossFirst|bias=none|width=2000|retention=plain', ablation: { enable: [], disable: ['PRUNE_MC_NEIGHBOR_BUDGET'] }, eligible: raw => (raw.mustCross?.length ?? 0) > 0 },
+    { label: 'dfs|score=mustCrossFirst|bias=none+mc-neighbor-budget-off', techniqueKey: 'dfs|score=mustCrossFirst|bias=none', ablation: { enable: [], disable: ['PRUNE_MC_NEIGHBOR_BUDGET'] }, eligible: raw => (raw.mustCross?.length ?? 0) > 0 },
+    { label: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain+connectivity-axis-exhausted-off', techniqueKey: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain', ablation: { enable: [], disable: ['PRUNE_CONNECTIVITY_AXIS_EXHAUSTED'] }, eligible: () => true },
+    { label: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain+connectivity-axis-exhausted-off', techniqueKey: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain', ablation: { enable: [], disable: ['PRUNE_CONNECTIVITY_AXIS_EXHAUSTED'] }, eligible: () => true },
+    { label: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain+dedup-near-tie-retention-off', techniqueKey: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain', ablation: { enable: [], disable: ['STRATEGY_DEDUP_NEAR_TIE_RETENTION'] }, eligible: () => true },
+    { label: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain+dedup-near-tie-retention-off', techniqueKey: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain', ablation: { enable: [], disable: ['STRATEGY_DEDUP_NEAR_TIE_RETENTION'] }, eligible: () => true },
+    // repair|score=repair|guidance=turn-biased does not exist without its own flag -- there is no default-arm
     // baseline to promote FROM; it's included here anyway (rather than left at T4's smaller sample)
     // because it's a genuine, cheap, distinct algorithmic variant per point 1's own framing, not
     // because a toggle comparison is meaningful for it specifically.
@@ -315,11 +316,11 @@ const T1_PROMOTED_VARIANTS = [
     // a ladder's list -- a routing decision this census never makes (it constructs the config
     // directly and calls runAttempt). Setting it would have implied the toggle does something here;
     // it doesn't, so it's omitted rather than left in as misleading decoration.
-    { label: 'dfs:repair:repair(turnBiased)', techniqueKey: 'dfs:repair:repair(turnBiased)', ablation: null, eligible: raw => (raw.landmarks ?? []).some(l => typeof l.role === 'string' && l.role.startsWith('mustTurn')) },
+    { label: 'repair|score=repair|guidance=turn-biased', techniqueKey: 'repair|score=repair|guidance=turn-biased', ablation: null, eligible: raw => (raw.landmarks ?? []).some(l => typeof l.role === 'string' && l.role.startsWith('mustTurn')) },
 ];
 
 // ─── T4's remaining curated flag experiments (smaller sample -- exploratory, not yet evidenced) ────
-// Empty as of 2026-08-19: the one candidate here, STRATEGY_ARCHETYPE_ROUTING off (testing dfs:default
+// Empty as of 2026-08-19: the one candidate here, STRATEGY_ROUTING_REGIME_SELECTION off (testing dfs|score=default|bias=none
 // as the catch-all fallback in isolation), was found and REMOVED after a direct architectural check,
 // not a soft judgment call -- that flag is read ONLY inside attempts.ts's getAttemptConfigs, which
 // decides which configs a LADDER routes to. This census never calls getAttemptConfigs; every cell
@@ -344,26 +345,26 @@ const FLAG_EXPERIMENTS = [];
 // different approaches to the same archetype (DFS vs. beam vs. admissible-order under the same
 // profile emphasis), not an exhaustive cross-product.
 const TECHNIQUE_PAIRS = [
-    ['dfs:objectiveFirst', 'beam:objectiveFirst@beam5000(diverse)'],
-    ['dfs:mustCrossFirst', 'ida:mustCrossFirst'],
-    ['dfs:perimeterSweep/cornerHarvest', 'beam:perimeterSweep/perimeterCW@beam2000'],
-    ['beam:intersectionHarvest@beam5000', 'beam:intersectionHarvest@beam5000(diverse)'],
-    ['dfs:repair:repair', 'dfs:repair:repair(mustTurnBiased)'],
-    ['ida:default', 'ida:none'],
-    ['dfs:harvestThenFinish', 'beam:harvestThenFinish@beam2000'],
-    ['dfs:knotBuilder', 'beam:knotBuilder@beam2000'],
-    ['dfs:nearClosureRescue', 'ida:nearClosureRescue'],
-    ['dfs:portalFirstTransfer', 'dfs:portalCommitted'],
+    ['dfs|score=objectiveFirst|bias=none', 'beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets'],
+    ['dfs|score=mustCrossFirst|bias=none', 'admissible-order|tieBreak=mustCrossFirst|lds=off'],
+    ['dfs|score=perimeterSweep|bias=cornerHarvest', 'beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain'],
+    ['beam|score=intersectionHarvest|bias=none|width=5000|retention=plain', 'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets'],
+    ['repair|score=repair|guidance=standard', 'repair|score=repair|guidance=must-turn-biased'],
+    ['admissible-order|tieBreak=default|lds=off', 'admissible-order|tieBreak=none|lds=off'],
+    ['dfs|score=harvestThenFinish|bias=none', 'beam|score=harvestThenFinish|bias=none|width=2000|retention=plain'],
+    ['dfs|score=knotBuilder|bias=none', 'beam|score=knotBuilder|bias=none|width=2000|retention=plain'],
+    ['dfs|score=nearClosureRescue|bias=none', 'admissible-order|tieBreak=nearClosureRescue|lds=off'],
+    ['dfs|score=portalFirstTransfer|bias=none', 'dfs|score=portalCommitted|bias=none'],
 ];
 for (const pair of TECHNIQUE_PAIRS) for (const k of pair) {
     if (!ALL_TECHNIQUE_KEYS.includes(k)) throw new Error(`T3 pair references unknown technique key "${k}" -- not in the live-derived ALL_TECHNIQUE_KEYS list.`);
 }
 for (const exp of FLAG_EXPERIMENTS) for (const k of exp.techniqueKeys) {
-    if (k.includes('(turnBiased)')) continue; // only reachable WITH its own flag -- can't appear in the live-derived default-ladder list
+    if (k === 'repair|score=repair|guidance=turn-biased') continue; // only reachable WITH its own flag -- can't appear in the live-derived default-ladder list
     if (!ALL_TECHNIQUE_KEYS.includes(k)) throw new Error(`T4 experiment "${exp.name}" references unknown technique key "${k}".`);
 }
 for (const variant of T1_PROMOTED_VARIANTS) {
-    if (variant.techniqueKey.includes('(turnBiased)')) continue;
+    if (variant.techniqueKey === 'repair|score=repair|guidance=turn-biased') continue;
     if (!ALL_TECHNIQUE_KEYS.includes(variant.techniqueKey)) throw new Error(`T1 promoted variant "${variant.label}" references unknown technique key "${variant.techniqueKey}".`);
 }
 
@@ -379,7 +380,7 @@ function pushCell(tier, level, techniqueKeys, nodeBudget, ablation, extra = {}) 
     cells.push({
         cellId: `${tier}-${String(cellSeq).padStart(7, '0')}`,
         tier, corpus: level.corpus, levelPos: level.pos, levelId: level.id,
-        techniqueKeys, nodeBudget, budgetMs: ATTEMPT_BUDGET_MS,
+        techniqueKeys: techniqueKeys.map(normalizeAttemptIdentityKey), nodeBudget, budgetMs: ATTEMPT_BUDGET_MS,
         ablation: ablation ?? null,
         ...extra,
     });
@@ -407,7 +408,7 @@ for (const level of t1Sample) {
 // degenerates to testing only the other member (method-probe's shared-budget semantics mean the
 // ineligible member never gets any real nodes once the eligible one has run) -- pure duplicate
 // compute with T1's own cell for that same (level, technique), not a genuine pair test. The only
-// pair this currently affects is dfs:repair:repair + dfs:repair:repair(mustTurnBiased) on
+// pair this currently affects is repair|score=repair|guidance=standard + repair|score=repair|guidance=must-turn-biased on
 // zero-must-turn levels.
 for (const level of t3t4Sample) for (const pair of TECHNIQUE_PAIRS) {
     if (pair.every(k => techniqueEligible(k, level.raw))) pushCell('T3', level, pair, T3_NODE_BUDGET, null, { pairLabel: pair.join('+') });

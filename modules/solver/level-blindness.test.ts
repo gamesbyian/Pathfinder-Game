@@ -55,8 +55,8 @@ test('runtime solve is invariant to saved hints and non-mechanical exact-level m
     assert.notDeepEqual(clean.hints, loaded.hints);
 
     const opts = { timeBudgetMs: 10_000, nodeBudget: 500_000, workBudget: 1_000_000 };
-    const a = await solver.solve(clean, opts);
-    const b = await solver.solve(loaded, opts);
+    const a = await solver.solveLevel(clean, opts);
+    const b = await solver.solveLevel(loaded, opts);
 
     assert.equal(a.ok, true);
     assert.equal(b.ok, true);

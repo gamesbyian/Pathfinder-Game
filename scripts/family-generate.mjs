@@ -410,7 +410,7 @@ function generateOneSibling(ctx, extras, mutationTypes, attemptLog) {
  *  show up via their blocks-derived cell in a normalized level, but at the wire-extras level here
  *  landmarks are tracked separately — mirror that by also subtracting impassable landmark roles,
  *  matching landmarkDerivedCoordSets' own categorization (surround/adjacentTurn/decorative). */
-function navDensityOf(witnessObj, extras) {
+function requiredPathCoverageRatioOf(witnessObj, extras) {
     const impassableLandmarks = extras.landmarks.filter(lm => lm.role !== 'mustPass' && lm.role !== 'mustTurn').length;
     const navArea = witnessObj.w * witnessObj.h
         - extras.blocks.length - extras.geese.length - extras.falseGoals.length
@@ -675,7 +675,7 @@ async function main() {
             randomSeed: SEED, inventoryPolicy, parentContentHash, variantContentHash: levelFp,
             generatorImplementation,
             mutationManifest: mutation, generationAttempts: attempts,
-            navDensity: navDensityOf(witnessObj, extras),
+            requiredPathCoverageRatio: requiredPathCoverageRatioOf(witnessObj, extras),
         });
         return true;
     }
@@ -686,7 +686,7 @@ async function main() {
         for (let d = BLOCK_DELTA_MIN; d <= BLOCK_DELTA_MAX; d++) if (d !== 0) deltas.push(d);
         requestedCount = deltas.length;
         attemptBudget = deltas.length;
-        console.log(`Density sweep: block deltas ${deltas.join(', ')} (parent navDensity ${navDensityOf(witness, baseExtras).toFixed(3)}, ${baseExtras.blocks.length} block(s)).`);
+        console.log(`Density sweep: block deltas ${deltas.join(', ')} (parent requiredPathCoverageRatio ${requiredPathCoverageRatioOf(witness, baseExtras).toFixed(3)}, ${baseExtras.blocks.length} block(s)).`);
         for (const delta of deltas) {
             attempts++;
             const applied = applyDensityDelta(ctx, baseExtras, delta);
@@ -695,9 +695,9 @@ async function main() {
             const ok = await tryAccept({
                 extras: applied.extras, mutation, relation: 'density-sweep', witnessRelation: 'exact-coordinate',
                 inventoryPolicy: 'density-relaxed',
-                description: `Density-sweep sibling of ${parentId}: ${delta > 0 ? '+' : ''}${delta} block(s) (navDensity ${navDensityOf(witness, applied.extras).toFixed(3)}; witness/reqLen/reqInt preserved).`,
+                description: `Density-sweep sibling of ${parentId}: ${delta > 0 ? '+' : ''}${delta} block(s) (requiredPathCoverageRatio ${requiredPathCoverageRatioOf(witness, applied.extras).toFixed(3)}; witness/reqLen/reqInt preserved).`,
             });
-            if (ok) console.log(`  delta ${delta > 0 ? '+' : ''}${delta}: accepted ${accepted[accepted.length - 1].id} — navDensity -> ${navDensityOf(witness, applied.extras).toFixed(3)}`);
+            if (ok) console.log(`  delta ${delta > 0 ? '+' : ''}${delta}: accepted ${accepted[accepted.length - 1].id} — requiredPathCoverageRatio -> ${requiredPathCoverageRatioOf(witness, applied.extras).toFixed(3)}`);
         }
     } else if (MODE === 'local-mutant') {
         requestedCount = COUNT;
@@ -831,7 +831,7 @@ async function main() {
                 inventoryPolicy: 'strict', witnessObj: eWitness, witnessTag: 'transformed',
                 description: `Re-embedded cousin of ${parentId}: ${witness.w}x${witness.h} content placed at offset (${ox},${oy}) in a ${newW}x${newH} grid.`,
             });
-            if (ok) console.log(`  offset (${ox},${oy}): accepted ${accepted[accepted.length - 1].id} — navDensity -> ${navDensityOf(eWitness, eExtras).toFixed(3)}`);
+            if (ok) console.log(`  offset (${ox},${oy}): accepted ${accepted[accepted.length - 1].id} — requiredPathCoverageRatio -> ${requiredPathCoverageRatioOf(eWitness, eExtras).toFixed(3)}`);
         }
     }
 
@@ -849,7 +849,16 @@ async function main() {
 
     const manifestAbs = resolveFromRoot(MANIFEST_FILE);
     const existingManifest = existsSync(manifestAbs) ? JSON.parse(readFileSync(manifestAbs, 'utf8')) : null;
-    const allVariants = [...(existingManifest?.variants ?? []), ...variantManifests];
+    const canonicalizeVariantManifest = variant => {
+        if (!variant || typeof variant !== 'object') return variant;
+        const requiredPathCoverageRatio = variant.requiredPathCoverageRatio ?? variant.navDensity;
+        const { navDensity: _legacyNavDensity, ...rest } = variant;
+        return requiredPathCoverageRatio == null ? rest : { ...rest, requiredPathCoverageRatio };
+    };
+    const allVariants = [
+        ...(existingManifest?.variants ?? []).map(canonicalizeVariantManifest),
+        ...variantManifests.map(canonicalizeVariantManifest),
+    ];
     const generationRun = {
         createdTimestamp: new Date().toISOString(), randomSeed: SEED,
         generatorVersion: GENERATOR_VERSION, generatorImplementation,
@@ -866,7 +875,7 @@ async function main() {
         lastUpdatedTimestamp: new Date().toISOString(),
         requestedCount, acceptedCount: allVariants.length, generationAttempts: attempts, attemptBudget,
         movableInstanceCount: availableInstances.length,
-        parentNavDensity: navDensityOf(witness, baseExtras),
+        parentRequiredPathCoverageRatio: requiredPathCoverageRatioOf(witness, baseExtras),
         variants: allVariants,
     };
     if (!existsSync(path.dirname(manifestAbs))) mkdirSync(path.dirname(manifestAbs), { recursive: true });

@@ -29,7 +29,7 @@ Operational similarity is itself a **diagnostic proxy**, not an optimization obj
 | Beam dedup / near-tie | Changes which approximately related frontier states survive. |
 | Admissible-order search | Primary ordering becomes least admissible slack first; DFS-shaped search/state/pruning remain. |
 | Admissible-order profile | Soft scoring only breaks equal-slack ties. |
-| `ida:none` | Equal-slack children receive no soft-score tie-break; more distinctive than the sibling profile names imply. |
+| `admissible-order|tieBreak=none|lds=off` | Equal-slack children receive no soft-score tie-break; more distinctive than the sibling profile names imply. |
 | Repair | Seeded randomized restart / elite / splice / ruin-and-recreate dynamics; strongest genuinely different paradigm in current production. |
 | Prune ablation/retry | Changes feasible explored tree while underlying search family may stay the same. |
 | Retry/budget tranche | Often changes only residual context and amount of work, not the search mechanism. |
@@ -38,13 +38,13 @@ A profile name is therefore not a research claim. `harvestThenFinish`, `portalFi
 
 ## What current evidence says
 
-The census gives outcome overlap and shows substantial redundancy among some DFS/admissible configurations, plus important non-monotonicity such as width/diversity inversions and `ida:none` exclusives.
+The census gives outcome overlap and shows substantial redundancy among some DFS/admissible configurations, plus important non-monotonicity such as width/diversity inversions and `admissible-order|tieBreak=none|lds=off` exclusives.
 
 The bounded operational-similarity substrate is implemented through `scripts/technique-operational-similarity.mjs`, ordering observers in `method-probe.mjs`, bounded beam traces, and the paired deterministic DFS/admissible runner `scripts/paired-deterministic-trace.mjs`. Initial work found:
 
 - ordinary DFS profiles often cluster tightly in local ranking;
 - equal-slack states are common enough that admissible tie-breaking can matter materially;
-- `ida:none` is operationally more distinct than its sibling label suggests;
+- `admissible-order|tieBreak=none|lds=off` is operationally more distinct than its sibling label suggests;
 - bounded 2K/5K beam traces can diverge strongly in retained-frontier regions, so width is not merely “same search plus more states.”
 
 The August 23 pilot record is preserved in [`../reports/2026-08-23-operational-similarity-substrate.md`](../reports/2026-08-23-operational-similarity-substrate.md). Its former open-ended next gates are superseded by the current decision-driven policy.
@@ -91,7 +91,7 @@ Do **not** run an all-techniques × all-levels operational census by default. St
 - singleton/doubleton capability levels;
 - CW/CCW mirror inversions;
 - beam width/plain-diverse inversions;
-- `ida:none` versus canonical tie-break profiles;
+- `admissible-order|tieBreak=none|lds=off` versus canonical tie-break profiles;
 - repair-only versus mixed phenotypes;
 - representative same-outcome controls.
 

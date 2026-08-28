@@ -9,7 +9,8 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { PORTFOLIO_EXPERIMENT } from '../modules/solver/portfolio-experiment.js';
-import { attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
+import { canonicalAttemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
+import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
@@ -24,8 +25,8 @@ if (inputs.length === 0) {
 
 
 function csvSet(value, fallback) {
-    if (!value) return new Set(fallback);
-    return new Set(value.split(',').map(s => s.trim()).filter(Boolean));
+    const raw = value ? value.split(',').map(s => s.trim()).filter(Boolean) : [...fallback];
+    return new Set(raw.map(normalizeAttemptIdentityKey));
 }
 
 function experimentFromArgs() {
@@ -83,7 +84,7 @@ for (const input of inputs) {
         wins.push({
             source: input,
             level: level?.level ?? level?.id ?? null,
-            configKey: attempt.configKey ?? attemptConfigKey(attempt),
+            configKey: canonicalAttemptConfigKey(attempt),
             gateKey: attempt.gateKey ?? null,
             elapsedMs,
             allocatedBudgetMs: Number.isFinite(Number(attempt?.allocatedBudgetMs)) ? Number(attempt.allocatedBudgetMs) : null,

@@ -37,10 +37,23 @@ test('inferredVariantLabel / techniqueCensusIdentityKey basic behavior', () => {
     assert.equal(inferredVariantLabel(explicit), 'foo');
     assert.equal(techniqueCensusIdentityKey(explicit), 'foo');
 
-    const ablated = { tier: 'T1', techniqueKeys: ['bar'], ablation: { enable: ['STRATEGY_FOO'], disable: [] } };
-    assert.equal(inferredVariantLabel(ablated), 'bar+foo-on');
+    const ablated = { tier: 'T1', techniqueKeys: ['dfs:default'], ablation: { enable: ['STRATEGY_FOO'], disable: [] } };
+    assert.equal(inferredVariantLabel(ablated), 'dfs|score=default|bias=none+foo-on');
 
-    const plain = { tier: 'T1', techniqueKeys: ['baz'] };
+    const plain = { tier: 'T1', techniqueKeys: ['beam:objectiveFirst@beam2000'] };
     assert.equal(inferredVariantLabel(plain), null);
-    assert.equal(techniqueCensusIdentityKey(plain), 'baz');
+    assert.equal(techniqueCensusIdentityKey(plain), 'beam|score=objectiveFirst|bias=none|width=2000|retention=plain');
+});
+
+test('dedupeTechniqueCensusResults treats legacy and canonical attempt keys as one cell identity', () => {
+    const legacy = {
+        cellId: 'T1-legacy-canonical', tier: 'T1', techniqueKeys: ['dfs:default'],
+        ok: true, status: 'success', nodesExpanded: 10, totalMs: 50,
+    };
+    const canonical = {
+        ...legacy, techniqueKeys: ['dfs|score=default|bias=none'], totalMs: 60,
+    };
+    const { results, duplicatesRemoved } = dedupeTechniqueCensusResults([legacy, canonical]);
+    assert.equal(duplicatesRemoved, 1);
+    assert.deepEqual(results[0].techniqueKeys, ['dfs|score=default|bias=none']);
 });

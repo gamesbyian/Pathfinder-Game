@@ -128,7 +128,7 @@ async function* cascadeSteps(solverApi: any, target: any, solveOptsBase: any, la
             // caused a given round's win/loss. Mirrors hint-ablation-generator.ts's runCascade
             // (this is a browser-safe port of the same CLI tool); the unconstrained baseline solve
             // (createDiversificationSession's own phase 0) deliberately does NOT set this.
-            result = await solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg, disableExtraBudgetPasses: true, yieldFn: ctx.yieldFn });
+            result = await solverApi.solveLevel(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg, disableExtraBudgetPasses: true, yieldFn: ctx.yieldFn });
         } catch (e) {
             if ((e as any)?.message !== 'Solver:cancelled') ctx.report.errors.push(`${label}: ${(e as any)?.message}`);
             return;
@@ -167,7 +167,7 @@ async function* strategySteps(solverApi: any, target: any, solveOptsBase: any, l
             // disableExtraBudgetPasses: same reasoning as cascadeSteps's identical option -- one
             // flag's isolated effect per call, not muddied by an unrelated last-resort tier's own
             // extra budget.
-            result = await solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag), disableExtraBudgetPasses: true, yieldFn: ctx.yieldFn });
+            result = await solverApi.solveLevel(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag), disableExtraBudgetPasses: true, yieldFn: ctx.yieldFn });
         } catch (e) {
             if ((e as any)?.message !== 'Solver:cancelled') ctx.report.errors.push(`strategy=${flag} ${label}: ${(e as any)?.message}`);
             continue;
@@ -322,7 +322,7 @@ export function createDiversificationSession(level: any, existingHints: number[]
         if (phase === 'baseline') {
             if (!shouldStop()) {
                 try {
-                    const base = await solverApi.solve(level, { timeBudgetMs: baselineBudgetMs, yieldFn: ctx.yieldFn });
+                    const base = await solverApi.solveLevel(level, { timeBudgetMs: baselineBudgetMs, yieldFn: ctx.yieldFn });
                     ctx.sessionWork += base?.workSpent ?? 0;
                     if (base?.ok && base.solution) {
                         const winner = base.attempts?.find((a: any) => a.ok);

@@ -31,6 +31,7 @@ import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { PORTFOLIO_EXPERIMENT } from '../modules/solver/portfolio-experiment.js';
+import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 import { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } from './level-data-io.mjs';
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 import { createHintCapture } from './hint-capture-lib.mjs';
@@ -158,8 +159,8 @@ if (primeWinner && racePoolSize > 0) {
 }
 
 function csvSet(value, fallback) {
-    if (!value) return new Set(fallback);
-    return new Set(value.split(',').map(s => s.trim()).filter(Boolean));
+    const raw = value ? value.split(',').map(s => s.trim()).filter(Boolean) : [...fallback];
+    return new Set(raw.map(normalizeAttemptIdentityKey));
 }
 
 function experimentFromArgs() {
@@ -378,7 +379,7 @@ function primeAttemptFor(id) {
     }
     return {
         gateKey: Number(rec.gateKey),
-        configKey: rec.winningConfig,
+        configKey: normalizeAttemptIdentityKey(rec.winningConfig),
         ...(repairSeedKnown ? { seedSalt: winnerAttempt.seedSalt ?? 0 } : {}),
         ...(primeNodeBudget ? { nodeBudget: primeNodeBudget } : {}),
     };
@@ -689,7 +690,7 @@ if (workerCount <= 1) {
                     // run combines the two.
                     ablation: solveOpts.ablation, // race.mjs reads levelOpts.ablation; must be threaded explicitly here
                 })
-                : await Solver.solve(getPrepared(levelNumber), solveOptsFor(solveOpts, raw?.id));
+                : await Solver.solveLevel(getPrepared(levelNumber), solveOptsFor(solveOpts, raw?.id));
             attachRefereeValid(levelNumber, result);
         } catch (err) {
             // One bad level (a solver exception, not just a failed-to-solve result) must not take

@@ -2,8 +2,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
-import { familyMetadataOf, summarizeFamilyWinningAttempts } from './winning-attempt-family-lib.mjs';
-import { attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
+import { familyMetadataOf, summarizeFamilyWinningAttempts, winnerConfig } from './winning-attempt-family-lib.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
@@ -67,7 +66,7 @@ for (const file of inputFiles) {
     rows.push({
       source: file,
       level: level.level ?? level.id ?? null,
-      config: attempt.configKey ?? attempt.config ?? attemptConfigKey(attempt),
+      config: winnerConfig(attempt),
       elapsedMs,
       nodesExpanded: numericOrNull(attempt?.nodesExpanded),
       allocatedBudgetMs,

@@ -84,7 +84,7 @@ for (const levelNumber of levelNumbers) {
 
     const t0 = Date.now();
     let result;
-    try { result = await Solver.solve(level, { timeBudgetMs: budgetMs, ...(workBudget !== undefined ? { workBudget } : {}) }); }
+    try { result = await Solver.solveLevel(level, { timeBudgetMs: budgetMs, ...(workBudget !== undefined ? { workBudget } : {}) }); }
     catch (e) { results.push({ level: levelNumber, status: 'error', error: `solve: ${e?.message}`, elapsedMs: Date.now() - t0 }); errorCount++; console.log(`  L${levelNumber}: ERROR — ${e?.message}`); continue; }
 
     const elapsed = Date.now() - t0;

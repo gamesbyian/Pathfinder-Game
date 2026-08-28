@@ -65,7 +65,7 @@ test('buildRow records per-attempt badness/timing telemetry', () => {
     assert.equal(row.attempts[0].timedOut, true);
     assert.equal(row.attempts[1].beamWidth, 5000);
     assert.equal(row.attempts[1].diverseBeam, true);
-    assert.deepEqual(row.failedStrategies, ['dfs:perimeterSweep/perimeterCW']);
+    assert.deepEqual(row.failedStrategies, ['dfs|score=perimeterSweep|bias=perimeterCW']);
 });
 
 test('buildRow defaults attempts/refereeValid safely when result has neither', () => {
@@ -92,24 +92,24 @@ test('failedStrategies only lists non-winning attempts, using the same key as wi
         ],
     };
     const row = buildRow(1, 'R00001', result, 'legacy');
-    assert.equal(row.winningConfig, 'dfs:c');
-    assert.deepEqual(row.failedStrategies, ['dfs:a', 'dfs:b:repair']);
+    assert.equal(row.winningConfig, 'dfs|score=c|bias=none');
+    assert.deepEqual(row.failedStrategies, ['dfs|score=a|bias=none', 'repair|score=repair|guidance=standard']);
 });
 
 test('action identity separates stage and repair seed while config identity remains compatible', () => {
     const salt0 = { stageId: 'repair-probe', gateKey: 10, profile: 'repair', template: null, beamWidth: null, repair: true, ok: false, elapsedMs: 1 };
     const salt1 = { ...salt0, seedSalt: 1, ok: true };
-    assert.equal(attemptConfigKey(salt0), 'dfs:repair:repair');
-    assert.equal(attemptConfigKey(salt1), 'dfs:repair:repair');
-    assert.equal(attemptActionKey(salt0), 'repair-probe|dfs:repair:repair|seedSalt=0');
-    assert.equal(attemptActionKey(salt1), 'repair-probe|dfs:repair:repair|seedSalt=1');
+    assert.equal(attemptConfigKey(salt0), 'repair|score=repair|guidance=standard');
+    assert.equal(attemptConfigKey(salt1), 'repair|score=repair|guidance=standard');
+    assert.equal(attemptActionKey(salt0), 'repair-probe|repair|score=repair|guidance=standard|seedSalt=0');
+    assert.equal(attemptActionKey(salt1), 'repair-probe|repair|score=repair|guidance=standard|seedSalt=1');
 
     const row = buildRow(1, 'R00001', { ok: true, status: 'success', attempts: [salt0, salt1] }, 'legacy');
-    assert.equal(row.winningConfig, 'dfs:repair:repair', 'legacy config-family summary stays unchanged');
-    assert.equal(row.winningActionKey, 'repair-probe|dfs:repair:repair|seedSalt=1');
-    assert.deepEqual(row.failedActionKeys, ['repair-probe|dfs:repair:repair|seedSalt=0']);
-    assert.equal(row.attempts[0].actionKey, 'repair-probe|dfs:repair:repair|seedSalt=0');
-    assert.equal(row.attempts[1].actionKey, 'repair-probe|dfs:repair:repair|seedSalt=1');
+    assert.equal(row.winningConfig, 'repair|score=repair|guidance=standard', 'legacy config-family summary stays unchanged');
+    assert.equal(row.winningActionKey, 'repair-probe|repair|score=repair|guidance=standard|seedSalt=1');
+    assert.deepEqual(row.failedActionKeys, ['repair-probe|repair|score=repair|guidance=standard|seedSalt=0']);
+    assert.equal(row.attempts[0].actionKey, 'repair-probe|repair|score=repair|guidance=standard|seedSalt=0');
+    assert.equal(row.attempts[1].actionKey, 'repair-probe|repair|score=repair|guidance=standard|seedSalt=1');
 });
 
 test('historical attempts without stageId do not get a fabricated action identity', () => {
@@ -127,17 +127,17 @@ test('historical attempts without stageId do not get a fabricated action identit
 // non-turn-biased) repair config. Found while measuring --prime-winner's hit rate on repair winners:
 // a level whose baseline-recorded winningConfig silently omitted "(turnBiased)" made the prime
 // replay a different, non-turn-biased search, missing even with the exact right seed.
-test('attemptConfigKey includes the (turnBiased) suffix for a repairTurnBiased winner', () => {
+test('attemptConfigKey emits turn-biased repair guidance for a repairTurnBiased winner', () => {
     const key = attemptConfigKey({ profile: 'default', repair: true, repairTurnBiased: true });
-    assert.equal(key, 'dfs:default:repair(turnBiased)');
+    assert.equal(key, 'repair|score=repair|guidance=turn-biased');
 });
 
-test('attemptConfigKey prefers (mustTurnBiased) over (turnBiased) when both flags are set', () => {
+test('attemptConfigKey prefers must-turn-biased guidance when both repair bias flags are set', () => {
     // Mirrors orchestration.ts's own precedence (repairMustTurnBiased checked first) -- the two are
     // mutually exclusive in practice (repair-search.ts never sets both on the same attempt), but the
     // key derivation must still agree with the source of truth on which one wins if it ever happened.
     const key = attemptConfigKey({ profile: 'default', repair: true, repairMustTurnBiased: true, repairTurnBiased: true });
-    assert.equal(key, 'dfs:default:repair(mustTurnBiased)');
+    assert.equal(key, 'repair|score=repair|guidance=must-turn-biased');
 });
 
 // ── admissible-order-search tier telemetry ───────────────────────────────────
@@ -147,18 +147,18 @@ test('attemptConfigKey prefers (mustTurnBiased) over (turnBiased) when both flag
 // the 240-shard high-budget sweep carried any admissible-order marker, despite 486 levels in that
 // sweep demonstrably reaching the tier -- every one of its wins was silently attributed to DFS.
 
-test('attemptConfigKey gives an admissible-order attempt the ida: family, not dfs:', () => {
-    assert.equal(attemptConfigKey({ profile: 'mustCrossFirst', admissibleOrder: true }), 'ida:mustCrossFirst');
+test('attemptConfigKey emits the admissible-order family', () => {
+    assert.equal(attemptConfigKey({ profile: 'mustCrossFirst', admissibleOrder: true }), 'admissible-order|tieBreak=mustCrossFirst|lds=off');
 });
 
-test('attemptConfigKey maps the no-tie-break entry to ida:none', () => {
+test('attemptConfigKey maps the no-tie-break entry to admissible-order|tieBreak=none|lds=off', () => {
     // 'none' is not a real policy profile -- it is this tier's own no-tie-break marker, which is the
     // ONLY reason the gap was detectable at all before this fix (a `dfs:none` key in a report).
-    assert.equal(attemptConfigKey({ profile: 'none', admissibleOrder: true, admissibleOrderNoTieBreak: true }), 'ida:none');
+    assert.equal(attemptConfigKey({ profile: 'none', admissibleOrder: true, admissibleOrderNoTieBreak: true }), 'admissible-order|tieBreak=none|lds=off');
 });
 
-test('attemptConfigKey appends (lds) for the discrepancy-limited variant', () => {
-    assert.equal(attemptConfigKey({ profile: 'default', admissibleOrder: true, admissibleOrderLds: true }), 'ida:default(lds)');
+test('attemptConfigKey emits lds=on for the discrepancy-limited variant', () => {
+    assert.equal(attemptConfigKey({ profile: 'default', admissibleOrder: true, admissibleOrderLds: true }), 'admissible-order|tieBreak=default|lds=on');
 });
 
 test('attemptRecord preserves the admissible-order dispatch flags', () => {
@@ -192,7 +192,7 @@ test('attemptRecord omits absent optional fields rather than emitting undefined'
 });
 
 test('attempt errors and their aggregate signal survive report projection', () => {
-    const error = { name: 'TypeError', message: 'dispatch failed', gateKey: 9, configKey: 'dfs:x', profile: 'x', template: null, stack: 'must not persist' };
+    const error = { name: 'TypeError', message: 'dispatch failed', gateKey: 9, configKey: 'dfs|score=x|bias=none', profile: 'x', template: null, stack: 'must not persist' };
     const row = buildRow(4, 'R00004', {
         ok: false, status: 'attempt-error', attempts: [{
             gateKey: 9, profile: 'x', template: null, beamWidth: null, ok: false,
@@ -204,7 +204,7 @@ test('attempt errors and their aggregate signal survive report projection', () =
     assert.equal(row.attempts[0].outcome, 'error');
     assert.deepEqual(row.attempts[0].error, {
         name: 'TypeError', message: 'dispatch failed', gateKey: 9,
-        configKey: 'dfs:x', profile: 'x', template: null,
+        configKey: 'dfs|score=x|bias=none', profile: 'x', template: null,
     });
 });
 
@@ -228,7 +228,7 @@ test('maximal Attempt round-trips completely through attemptRecord and buildRow'
         for (const field of INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS) {
             assert.ok(!(field in projected), `${field} is intentionally transient`);
         }
-        assert.equal(projected.actionKey, 'repair-late-probe|ida:none(lds)|seedSalt=7', 'derived action identity must survive projection');
+        assert.equal(projected.actionKey, 'repair-late-probe|admissible-order|tieBreak=none|lds=on|seedSalt=7', 'derived action identity must survive projection');
     }
     assert.equal(row.hadAttemptError, true);
 });

@@ -51,13 +51,10 @@ function createSolver(): SolverApi {
         return rawLevel;
     };
 
-    const universalSolveLevel = (level: any, opts: any = {}) => solveLevel(level, opts);
 
     return {
         prepareLevelForSolver: prepareLevelForSolver,
-        universalSolveLevel,
-        solveLevel: universalSolveLevel,
-        solve: (level: any, opts: any = {}) => solveLevel(level, opts),
+        solveLevel,
         findTrapSpots: (level: any, opts: any = {}) => findTrapSpots(level, opts),
         classifyFalseGoals: (level: any, result: any) => classifyFalseGoals(level, result),
         getTrapSpotBudgetMs,

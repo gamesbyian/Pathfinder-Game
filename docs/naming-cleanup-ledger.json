@@ -33,7 +33,7 @@
       "persistence": "none",
       "phase": 3,
       "status": "done",
-      "notes": "Internal feature field. Implemented in naming-cleanup PR 3."
+      "notes": "Internal feature field. Implemented in naming-cleanup PR 3. Additional persisted family-manifest propagation found during PR 4: legacy navDensity/parentNavDensity remain dual-read; new writes use requiredPathCoverageRatio/parentRequiredPathCoverageRatio."
     },
     {
       "old": "NEAR_HAMILTONIAN_DENSITY",
@@ -202,8 +202,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 4,
-      "status": "pending",
-      "notes": "Legacy parser input; canonical writer uses structured grammar."
+      "status": "done",
+      "notes": "Legacy parser input; canonical writer uses structured grammar. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "dfs:*",
@@ -212,8 +212,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 4,
-      "status": "pending",
-      "notes": "Legacy parser input."
+      "status": "done",
+      "notes": "Legacy parser input. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "beam:*@beam*",
@@ -222,8 +222,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 4,
-      "status": "pending",
-      "notes": "Legacy parser input."
+      "status": "done",
+      "notes": "Legacy parser input. Implemented in naming-cleanup PR 4."
     },
     {
       "old": ":repair legacy attempt form",
@@ -232,8 +232,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 4,
-      "status": "pending",
-      "notes": "Legacy parser input."
+      "status": "done",
+      "notes": "Legacy parser input. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "--technique=<attemptConfigKey>",
@@ -242,8 +242,8 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 4,
-      "status": "pending",
-      "notes": "select-attempt-exposure compatibility window."
+      "status": "done",
+      "notes": "select-attempt-exposure compatibility window. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "TECHNIQUE (select-attempt-exposure)",
@@ -252,8 +252,8 @@
       "risk": "low",
       "persistence": "none",
       "phase": 4,
-      "status": "pending",
-      "notes": "Local CLI variable."
+      "status": "done",
+      "notes": "Local CLI variable. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "technique (select-attempt-exposure result)",
@@ -262,8 +262,8 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 4,
-      "status": "pending",
-      "notes": "New JSON writes canonical field."
+      "status": "done",
+      "notes": "New JSON writes canonical field. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "rankedTechniqueArchetypeCandidates",
@@ -272,8 +272,8 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 4,
-      "status": "pending",
-      "notes": "Missing-exposure analyzer."
+      "status": "done",
+      "notes": "Missing-exposure analyzer. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "rankedBeamTechniqueArchetypeCandidates",
@@ -282,8 +282,8 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 4,
-      "status": "pending",
-      "notes": "Missing-exposure analyzer."
+      "status": "done",
+      "notes": "Missing-exposure analyzer. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "overallTechniqueCandidates",
@@ -292,8 +292,8 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 4,
-      "status": "pending",
-      "notes": "Missing-exposure analyzer."
+      "status": "done",
+      "notes": "Missing-exposure analyzer. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "technique (exact attemptConfigKey result)",
@@ -302,8 +302,8 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 4,
-      "status": "pending",
-      "notes": "Missing-exposure analyzer."
+      "status": "done",
+      "notes": "Missing-exposure analyzer. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "censusByLevelTechnique",
@@ -312,8 +312,8 @@
       "risk": "low",
       "persistence": "none",
       "phase": 4,
-      "status": "pending",
-      "notes": "Internal analyzer map."
+      "status": "done",
+      "notes": "Internal analyzer map. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "universalSolveLevel",
@@ -322,8 +322,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 4,
-      "status": "pending",
-      "notes": "Remove alias after repository consumers migrate."
+      "status": "done",
+      "notes": "Remove alias after repository consumers migrate. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "solve (solver facade alias)",
@@ -332,8 +332,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 4,
-      "status": "pending",
-      "notes": "Remove redundant solver alias."
+      "status": "done",
+      "notes": "Remove redundant solver alias. Implemented in naming-cleanup PR 4."
     },
     {
       "old": "POLICY_PROFILES",
