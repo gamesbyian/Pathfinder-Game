@@ -86,7 +86,7 @@ Use this short preflight before choosing a command:
 | Families | `family:generate`, `family:index`, `family:show`, `family:query`, `family:coverage`, `family:analyze`, `family:boundary-report`, `family:parent-hint-replay`, `stress:family-pair-divergence`, `solver:winning-attempts`; use `--trove-root`; [`variant-level-research.md`](variant-level-research.md) |
 | Hints | `hints:workbench`, `hints:workbench-parallel`, `hints:expansion-audit`, `hints:discover-candidates`, `hints:expand`, `hints:diversify`, `hints:calibrate-weights`, `hints:complete-sharded`; compact inspection: `hint-query.mjs`; [`hint-workbench.md`](hint-workbench.md) |
 | Level/data | `levels:import-published`, `levels:generate-heatmaps`, `levels:ratings-report`, `check:level-data-validity`, `check:level-provenance`, `check:corpus-level-formatting`, `facts:levels` / `check:current-level-facts`; compact corpus query: `scripts/corpus-query.mjs` |
-| Remote research | [`.github/workflows/README.md`](../.github/workflows/README.md) |
+| Remote research | `npm run gha:result -- --run=<run-id>` for completed-run retrieval; [`.github/workflows/README.md`](../.github/workflows/README.md) for workflow selection/fallbacks |
 | Research status | `research:index`; structured current evidence plus non-authoritative discovery metadata for older reports |
 | Artifact provenance | `scripts/artifact-query.mjs`; compact view over tracked exception metadata |
 
