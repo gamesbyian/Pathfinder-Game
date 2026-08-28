@@ -143,6 +143,21 @@ These sites are now frozen by the CI ratchet. Migrating them can change producti
 must be handled as either a behavior-preserving representation proof or an explicit scheduler-policy
 experiment.
 
+**2026-08-28:** [`additive-tier-participation-audit.md`](2026-08-28-additive-tier-participation-audit.md)
+establishes two things about this debt without touching any production code. First, a static trace:
+both real interactive production callers (`solver-controller.ts`, `review-controller.ts`) pass
+`disableExtraBudgetPasses: true`, which zeroes every one of these 9 sites' own participation
+condition (plus `repair-late-probe`/its multi-seed retry) — none of them ever run for a real player,
+so migrating any of their formulas carries zero live-play risk. Second, an empirical 10-level
+capability-sweep-shaped run: these tiers are not negligible on offline populations (10/10 levels
+engaged at least one, 30% were solved by one), and several derive their budget from a fixed
+constant/fraction independent of the caller's own `nodeBudget`/`workBudget`
+(`REPAIR_LATE_PROBE_NODE_BUDGET = 5,000,000`; `DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION`/
+`CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION`/`MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION`/
+`GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION = 1.0`), so real per-level cost on this sample
+ran 1.5x-467x the nominal `workBudget` — a `node_budget` input to a capability sweep or confirmation
+workflow is not a real per-level ceiling unless `strictTotalWorkBudget` is also set.
+
 ### 2. One direct per-seed ms-to-work compatibility site
 
 Repair-late-probe multi-seed retry still creates each round's work allowance from the base
