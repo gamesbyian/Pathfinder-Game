@@ -33,6 +33,7 @@
 # a residual-miss analysis, not just this one candidate.
 
 name: Solver two-phase residual confirmation
+run-name: "Residual confirm · ${{ inputs.cohort_id }} · flags=${{ inputs.enable_flags || 'control' }}"
 
 on:
   workflow_dispatch:
@@ -588,5 +589,25 @@ jobs:
           path: |
             reports/stress/residual-confirmation-phase2-control.json
             reports/stress/residual-confirmation-phase2-treatment.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="reports/stress/residual-confirmation-phase2-control.json" \
+            --include="reports/stress/residual-confirmation-phase2-treatment.json" \
+            --shards-expected="$(( ${{ needs.freeze-residual.outputs.phase2_shard_count }} * 2 ))" \
+            --shards-observed="$(find logs/solver-residual-confirmation-control logs/solver-residual-confirmation-treatment -maxdepth 1 -name 'phase2-batch-*.json' ! -name '*-flags.json' | wc -l | tr -d ' ')" \
+            --source-artifact="residual-confirmation-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
           if-no-files-found: error
           retention-days: 90

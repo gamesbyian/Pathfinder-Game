@@ -10,8 +10,12 @@ import type { SolverSearchState } from './types.js';
 
 /** Fine-grained repair-state signature used for within-call experience matching. `ints` is required
  * because identical edgeUsage can encode paths with different intersection counts. Full strings
- * avoid hash collisions, but equality here should not be read as a proof of future-state equivalence. */
-function stateSignature(ws: SolverSearchState): string {
+ * avoid hash collisions, but equality here should not be read as a proof of future-state equivalence.
+ * Exported for topology.ts's research-only ConnectivityRejectionObserver (see docs/solver-
+ * optimization-current-queue.md item #0 and reports/2026-08-24-learned-failure-certificate-audit.md's
+ * Stage A) — a second, unrelated observational consumer of the same "exact-state fingerprint"
+ * concept. Not a production search dependency in either caller. */
+export function stateSignature(ws: SolverSearchState): string {
     const pos = ws.path[ws.path.length - 1];
     const seen = new Set<number>();
     let visitedPart = '';

@@ -32,6 +32,34 @@ The harvester downloads artifacts with `gh run download`. Do not replace that wi
 
 This retention layer is a safety net. Individual workflows may still save hints immediately when convenient, but branch-local persistence is no longer the only durable copy. Variant-family hints under `data/families` are intentionally outside this canonical-level harvester because they belong to generated variant levels and are retained by the family research trove instead.
 
+## Agent result retrieval
+
+Every maintained solver/research sweep publishes a predictable front-door artifact named `solver-sweep-result`. This is the first place agents should read after a run completes.
+
+The artifact contains:
+
+- `summary.md` — human-readable run provenance plus automatically derived solved/work counts when the result shape exposes them; paired control/treatment outputs also get gained/lost and work-delta summaries.
+- `manifest.json` — stable machine-readable provenance: workflow, run id/attempt, SHA, ref, event, run URL, legacy artifact name, publication status, and source-to-published file mapping.
+- `result.*` or `result/` — the primary decision-bearing output.
+- `files/` — any secondary decision-bearing outputs needed to interpret the primary result.
+
+The publisher also appends `summary.md` to `$GITHUB_STEP_SUMMARY`, so the final job has a useful web-UI summary instead of requiring console-log archaeology.
+
+**Retrieval order for agents:**
+
+1. Prefer the repo helper: `npm run gha:result -- --run=<run-id>`. If the run id is not known, use `npm run gha:result -- --workflow=<workflow-file-or-name>` (optionally `--branch=<branch>`); it resolves the latest matching run, downloads only `solver-sweep-result`, and prints `summary.md`.
+2. Read `summary.md`, then `manifest.json`, then the referenced result file(s). Add `--json` to print the manifest too, or `--out=<dir>` to retain the downloaded standard artifact.
+3. The manifest includes the exact dispatch inputs in addition to workflow/run/SHA/ref provenance. When the workflow exposes reliable shard identity, the summary also reports observed/expected shard completeness.
+4. Only enumerate final jobs, legacy artifacts, or shard artifacts when the standard artifact reports missing/incomplete output or when debugging a failed/cancelled run.
+
+The raw GitHub CLI equivalent remains `gh run download <run-id> -n solver-sweep-result`, but agents should normally use `gha:result` so pagination and artifact naming are not repeatedly rediscovered.
+
+Do not begin a successful-run analysis by listing every shard job or artifact. GitHub and connector listings are paginated, and large sweeps can place the combine job or decision-bearing artifact beyond the first page. The standard artifact exists specifically to make shard count irrelevant to ordinary result retrieval.
+
+Legacy workflow-specific combined artifacts remain for compatibility and richer/raw retention. `solver-sweep-result` is an additional retrieval interface, not a replacement for evidence retention.
+
+Workflow `run-name` values also include the inputs most useful for distinguishing nearby dispatches in the Actions list. Workflows that commit durable research reports write a small `gha-source-run` provenance sidecar with the originating run URL/id, SHA/ref, dispatch inputs, and completeness record, so agents can navigate report → run without reconstructing history.
+
 ## Core capability
 
 - `solver-stress-refresh.yml` — canonical level-blind full refresh over Corpus 1 + Corpus 2. Default 60 shards / 20 lanes / 4 workers; node/work ceilings normally bind. Hint capture is always on; deterministic runs defer canonical hint persistence to the harvester.

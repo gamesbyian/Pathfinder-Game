@@ -14,7 +14,7 @@ import { formatAttemptIdentityKey } from './attempt-identity.mjs';
 import { buildRetryTierAblationOverride, runWholeLadderRetryTier } from './stage-executors.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit } from './types.js';
+import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit, ConnectivityRejectionObserver } from './types.js';
 
 type YieldFn = (() => Promise<void>) | null;
 type AttemptSearchDispatch = typeof runAttemptSearch;
@@ -295,6 +295,10 @@ export interface SolveOpts {
     schedulerMode?: 'legacy' | 'portfolio-experiment';
     /** Unit-test-only per-solve dispatch override. Never persisted or exposed by Solver's facade. */
     attemptSearchForTesting?: AttemptSearchDispatch;
+    /** Research-only isConnected() rejection observer (see ConnectivityRejectionObserver's doc in
+     *  types.ts and docs/solver-optimization-current-queue.md item #0's learned-failure Stage A).
+     *  Never persisted or exposed by Solver's facade; absent in every production caller. */
+    connectivityRejectionObserver?: ConnectivityRejectionObserver;
     portfolioExperiment?: PortfolioExperimentDefinition;
     /** Overrides REPAIR_EXTRA_BUDGET_FRACTION for this solve only — offline batch tooling's cost
      *  control (see docs/solver-architecture.md's cost-gotcha note). A DEDICATED top-level option,
@@ -1482,6 +1486,7 @@ async function runPortfolioExperiment(
     const prepStart = Date.now();
     const prep = prepLevel(level);
     if (opts.attemptSearchForTesting) testAttemptDispatches.set(prep, opts.attemptSearchForTesting);
+    if (opts.connectivityRejectionObserver) prep._connectivityRejectionObserver = opts.connectivityRejectionObserver;
     const prepMs = Date.now() - prepStart;
     const cfg = normalizeAblationConfig(opts.ablation);
     prep._cfg = cfg;
@@ -1607,6 +1612,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     prep._attemptBudgetTelemetry = opts.attemptBudgetTelemetry === true || opts.lifecycleTelemetry === true
         || opts.strictTotalWorkBudget === true;
     if (opts.attemptSearchForTesting) testAttemptDispatches.set(prep, opts.attemptSearchForTesting);
+    if (opts.connectivityRejectionObserver) prep._connectivityRejectionObserver = opts.connectivityRejectionObserver;
     const gateKeys = Array.isArray(level.gateKeys) ? level.gateKeys : [];
 
     // Ablation config: attach to prep so all inner functions can read it. Normalized (see

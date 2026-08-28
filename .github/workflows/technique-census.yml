@@ -57,6 +57,7 @@
 # exactly which cells did and didn't complete; any gap is closed by a follow-up dispatch with
 # --skip-existing pointed at the prior partial output, not by re-running everything.
 name: Technique capability census (isolated single-/paired-/flag-technique, full budget)
+run-name: "Technique census · workers=${{ inputs.workers }}"
 
 on:
   workflow_dispatch:
@@ -245,6 +246,26 @@ jobs:
         with:
           name: technique-census-combined
           path: reports/stress/technique-census/${{ github.run_id }}/
+          retention-days: 90
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="reports/stress/technique-census/${{ github.run_id }}" \
+            --shards-expected="120" \
+            --shards-observed="$(find artifact-staging -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
+            --provenance-out="reports/stress/technique-census/${{ github.run_id }}/gha-source-run.json" \
+            --source-artifact="technique-census-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
           retention-days: 90
 
       - name: Persist the run summary and any newly discovered hints

@@ -10,6 +10,7 @@ Before opening large evidence/data files:
 - level corpora: `node scripts/corpus-query.mjs --corpus=stress2` for a summary; add filters, `--list`, or deterministic `--sample=N`; use `--full` only when exact level payloads are needed;
 - hint/provenance evidence: `npx tsx scripts/hint-query.mjs --id=<ID> [--levels=<corpus>]`; filter by cold-evidence class, source, solver, technique, or retry tier; use `--full` only for exact paths/provenance;
 - tracked raw artifacts: `node scripts/artifact-query.mjs`, optionally `--query=...` or `--role=...`;
+- completed GHA solver/research runs: `npm run gha:result -- --run=<run-id>`; use `--workflow=<name>` when the run id is unknown, `--json` for the manifest, or `--out=<dir>` to retain the standard result. Do not enumerate shards for a normal successful run.
 - script/tool lookup: `node scripts/tooling-census.mjs --compact --query=<term>` returns matching files, npm aliases, lifecycle labels, and compact reference counts without dumping the full census;
 - lifecycle review: `node scripts/tooling-census.mjs --orphans` lists executable-looking files with no package alias, workflow/doc surface, or script caller; use `--json` only when machine-readable detail is actually needed.
 

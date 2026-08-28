@@ -105,6 +105,150 @@ test('volume prune: fires when too few fresh cells remain for the required lengt
     assert.equal(isConnected(K(1, 1), stateAt(fits, fPrep, [K(1, 1)]), fits, fPrep), true);
 });
 
+// Research-only _connectivityRejectionObserver (2026-08-28, queue item #0's learned-failure Stage
+// A — see reports/2026-08-24-learned-failure-certificate-audit.md). Reuses each subtype's own
+// fixture above; the point of this test is the observer's own contract, not re-proving those prunes.
+test('_connectivityRejectionObserver reports the correct subtype without changing isConnected\'s result', () => {
+    function observeRejection(next: number, state: any, level: any, prep: any) {
+        const records: any[] = [];
+        prep._connectivityRejectionObserver = { observe: (record: any) => records.push(record) };
+        const result = isConnected(next, state, level, prep);
+        prep._connectivityRejectionObserver = null;
+        return { result, records };
+    }
+
+    // Goal unreachable.
+    const walled = makeLevel({ blocks: [{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }], reqLen: 6 });
+    const wPrep = prepLevel(walled);
+    const goalOut = observeRejection(K(1, 1), stateAt(walled, wPrep, [K(1, 1)]), walled, wPrep);
+    assert.equal(goalOut.result, false);
+    assert.equal(goalOut.records.length, 1);
+    assert.equal(goalOut.records[0].subtype, 'goal');
+    assert.equal(goalOut.records[0].objectiveIndex, undefined);
+    assert.equal(goalOut.records[0].pos, K(1, 1));
+    assert.equal(typeof goalOut.records[0].stateFingerprint, 'string');
+    assert.equal(goalOut.records[0].work, wPrep._workMeter.units, 'work is read at the moment of rejection, after this call\'s own flood fill');
+
+    // Pending must-pass unreachable.
+    const mpPocket = makeLevel({
+        grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },
+        blocks: [{ x: 4, y: 3 }, { x: 5, y: 2 }], mustPass: [{ x: 5, y: 3 }], reqLen: 4,
+    });
+    const mpPrep = prepLevel(mpPocket);
+    const mpOut = observeRejection(K(1, 1), stateAt(mpPocket, mpPrep, [K(1, 1)]), mpPocket, mpPrep);
+    assert.equal(mpOut.result, false);
+    assert.equal(mpOut.records[0].subtype, 'must-pass');
+    assert.equal(mpOut.records[0].objectiveIndex, 0);
+
+    // Pending must-cross unreachable.
+    const mcPocket = makeLevel({
+        grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },
+        blocks: [{ x: 4, y: 3 }, { x: 5, y: 2 }], mustCross: [{ x: 5, y: 3 }], reqLen: 4,
+    });
+    const mcPrep = prepLevel(mcPocket);
+    const mcOut = observeRejection(K(1, 1), stateAt(mcPocket, mcPrep, [K(1, 1)]), mcPocket, mcPrep);
+    assert.equal(mcOut.result, false);
+    assert.equal(mcOut.records[0].subtype, 'must-cross');
+    assert.equal(mcOut.records[0].objectiveIndex, 0);
+
+    // Volume shortage.
+    const tiny = makeLevel({ grid: { w: 3, h: 1 }, goal: { x: 3, y: 1 }, reqLen: 6 });
+    const tPrep = prepLevel(tiny);
+    const volOut = observeRejection(K(1, 1), stateAt(tiny, tPrep, [K(1, 1)]), tiny, tPrep);
+    assert.equal(volOut.result, false);
+    assert.equal(volOut.records[0].subtype, 'volume');
+    assert.equal(volOut.records[0].objectiveIndex, undefined);
+    assert.equal(typeof volOut.records[0].freshVolume, 'number');
+    assert.equal(typeof volOut.records[0].remainingSteps, 'number');
+
+    // A passing call reports nothing.
+    const fits = makeLevel({ grid: { w: 3, h: 1 }, goal: { x: 3, y: 1 }, reqLen: 2 });
+    const fPrep = prepLevel(fits);
+    const passOut = observeRejection(K(1, 1), stateAt(fits, fPrep, [K(1, 1)]), fits, fPrep);
+    assert.equal(passOut.result, true);
+    assert.equal(passOut.records.length, 0);
+});
+
+// Stage B: opt-in boundarySketch (2026-08-28 — see ConnectivityBoundarySketch's doc in types.ts and
+// reports/2026-08-24-learned-failure-certificate-audit.md's own Stage B section). Reuses fixtures
+// from earlier tests in this file so each blocker reason is exercised against a scenario already
+// independently proven to produce it.
+test('_connectivityRejectionObserver.includeBoundarySketch reports the reached-set fingerprint and correctly categorized boundary blockers', () => {
+    function observeWithSketch(next: number, state: any, level: any, prep: any) {
+        const records: any[] = [];
+        prep._connectivityRejectionObserver = { observe: (record: any) => records.push(record), includeBoundarySketch: true };
+        const result = isConnected(next, state, level, prep);
+        prep._connectivityRejectionObserver = null;
+        return { result, records };
+    }
+
+    // Off by default: the plain (non-Stage-B) observer test above never sees a boundarySketch field.
+    const walled = makeLevel({ blocks: [{ x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }], reqLen: 6 });
+    const wPrep = prepLevel(walled);
+    const plainRecords: any[] = [];
+    wPrep._connectivityRejectionObserver = { observe: (record: any) => plainRecords.push(record) };
+    isConnected(K(1, 1), stateAt(walled, wPrep, [K(1, 1)]), walled, wPrep);
+    wPrep._connectivityRejectionObserver = null;
+    assert.equal(plainRecords[0].boundarySketch, undefined);
+
+    // 'static': the wall of blocks sealing off the goal column.
+    const wPrep2 = prepLevel(walled);
+    const goalOut = observeWithSketch(K(1, 1), stateAt(walled, wPrep2, [K(1, 1)]), walled, wPrep2);
+    const sketch = goalOut.records[0].boundarySketch;
+    assert.equal(typeof sketch.reachedFingerprint, 'string');
+    assert.ok(sketch.boundaryBlockers.length > 0);
+    assert.ok(sketch.boundaryBlockers.every((b: any) => b.reason === 'static'),
+        'every boundary cell here is one of the three placed blocks');
+    const blockedCells = new Set(sketch.boundaryBlockers.map((b: any) => b.cell));
+    for (const cell of [K(4, 1), K(4, 2), K(4, 3)]) assert.ok(blockedCells.has(cell), `${cell} should be a reported static blocker`);
+
+    // 'used-flipper': the crossed, now-unusable flipper cell.
+    const flipperLevel = makeLevel({
+        grid: { w: 5, h: 2 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },
+        mustPass: [{ x: 2, y: 2 }],
+        blocks: [{ x: 1, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }, { x: 5, y: 2 }],
+        flippingFilters: [{ x: 3, y: 1, axis: 1 }],
+        reqLen: 6, reqInt: 1,
+    });
+    const flipPrep = prepLevel(flipperLevel);
+    const flipState = stateAt(flipperLevel, flipPrep, [K(1, 1), K(2, 1), K(3, 1), K(4, 1)]);
+    const flipOut = observeWithSketch(K(4, 1), flipState, flipperLevel, flipPrep);
+    const flipSketch = flipOut.records[0].boundarySketch;
+    const flipperBlocker = flipSketch.boundaryBlockers.find((b: any) => b.cell === K(3, 1));
+    assert.ok(flipperBlocker, 'the used flipper cell must appear as a boundary blocker');
+    assert.equal(flipperBlocker.reason, 'used-flipper');
+
+    // 'axis-exhausted': the both-axes-spent turn cell from the axis-exhaustion test above.
+    const axisLevel = makeLevel({
+        grid: { w: 3, h: 3 }, gates: [{ x: 2, y: 1 }], goal: { x: 2, y: 3 },
+        reqLen: 6, reqInt: 1,
+        blocks: [{ x: 1, y: 1 }, { x: 1, y: 3 }, { x: 3, y: 3 }],
+    });
+    const axisPrep = prepLevel(axisLevel);
+    const axisState = stateAt(axisLevel, axisPrep, [K(2, 1), K(2, 2), K(1, 2)]);
+    const axisOut = observeWithSketch(K(1, 2), axisState, axisLevel, axisPrep);
+    const axisSketch = axisOut.records[0].boundarySketch;
+    const axisBlocker = axisSketch.boundaryBlockers.find((b: any) => b.cell === K(2, 2));
+    assert.ok(axisBlocker, 'the both-axes-spent cell must appear as a boundary blocker');
+    assert.equal(axisBlocker.reason, 'axis-exhausted');
+
+    // 'visited-wall': the reqInt=0 middle-column split from the visited-wall test above.
+    const splitLevel = makeLevel({ grid: { w: 3, h: 3 }, gates: [{ x: 2, y: 1 }], goal: { x: 3, y: 3 }, reqLen: 6, reqInt: 0 });
+    const splitPrep = prepLevel(splitLevel);
+    const splitState = stateAt(splitLevel, splitPrep, [K(2, 1), K(2, 2), K(2, 3)]);
+    const splitOut = observeWithSketch(K(1, 3), { ...splitState, path: [...splitState.path, K(1, 3)] }, splitLevel, splitPrep);
+    const splitSketch = splitOut.records[0].boundarySketch;
+    const splitBlocker = splitSketch.boundaryBlockers.find((b: any) => b.cell === K(2, 3));
+    assert.ok(splitBlocker, 'the visited middle-column cell must appear as a boundary blocker');
+    assert.equal(splitBlocker.reason, 'visited-wall');
+
+    // Two structurally identical rejections (same fixture, same call) must produce identical
+    // fingerprints -- this is the property Stage B's own recurrence analysis depends on.
+    const wPrep3 = prepLevel(walled);
+    const repeatOut = observeWithSketch(K(1, 1), stateAt(walled, wPrep3, [K(1, 1)]), walled, wPrep3);
+    assert.equal(repeatOut.records[0].boundarySketch.reachedFingerprint, sketch.reachedFingerprint);
+});
+
 test('visited cells act as walls with no intersection budget, but stay traversable with budget', () => {
     // 3x3: walk down the middle column, splitting the grid. With reqInt 0 the two
     // halves disconnect (goal side unreachable from the left half); with reqInt 1 the

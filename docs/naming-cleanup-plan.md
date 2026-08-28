@@ -21,6 +21,34 @@ A current-`main` change that makes a planned mapping obsolete is not a reason to
 
 The cleanup is only comprehensive when the final audit has **zero unclassified live naming hits**. The ledger therefore records both renames and explicit retained-term exemptions for potentially confusing vocabulary that is intentionally correct in context.
 
+
+### 0.1 Reconciliation completed against current `main` (2026-08-28)
+
+Preflight reconciled this plan against `main` at `e6050e2da7b7` after the CI/budget/tooling changes that landed after the plan branch point. The implementation branch now carries current `main` as a parent; this record closes the mandatory pre-PR-1 latest-main gate for that snapshot only. Every later implementation PR must repeat Section 0 if unrelated solver/application work has merged.
+
+Naming-relevant changes since the branch point were classified as follows:
+
+| New/current surface | Classification | Disposition |
+|---|---|---|
+| `SolveOpts.baseWorkBudget` | superseded by newer architecture | Retain as the preferred base-allocation name. Do not recreate an older generic budget name. |
+| `SolveOpts.workBudget` | intentional compatibility term | Retain as a legacy read/API alias while current workflows/artifacts still depend on it; current docs must continue to qualify it as a base allocation rather than a whole-solve cap. |
+| `LEGACY_MS_TO_WORK_RATE` / `legacyMsToWork` | intentional retained term | Retain. Here `legacy` is behaviorally meaningful: these names identify an explicitly quarantined compatibility conversion and are permitted by Section 2.1. |
+| `strictTotalWorkBudget` | intentional retained term | Retain for the current experiment-only whole-solve envelope. Future scheduler APIs may use `totalWorkCap`, but this cleanup must not turn that policy/design question into a mechanical rename. |
+| `solver-sweep-result` / manifest kind `pathfinder-solver-sweep-result` | intentional retained protocol name | Retain. It identifies the standardized solver-sweep result contract precisely. |
+| `gha-source-run` / `pathfinder-gha-source-run` | intentional retained provenance name | Retain. It describes GHA source-run provenance rather than an implementation history label. |
+| `publish-solver-sweep-result.mjs` | intentional retained tool | Retain: operation-first and behavior-descriptive. |
+| `check-solver-sweep-result-contract.mjs` / `check:solver-sweep-results` | intentional retained tool/alias | Retain: deterministic contract validation with an honest `check` verb. |
+| `gha:result` / `scripts/gha-result.mjs` | rename | Rename to `gha:fetch-result` / `scripts/fetch-gha-result.mjs`; it actively resolves/downloads a completed run artifact, so a retrieval verb is clearer than a noun-only surfaced command. |
+| new `run-name`/artifact/provenance surfaces across the 18 maintained evidence workflows | covered live surface | Treat as propagation targets for any workflow/tool terminology renamed later; do not rewrite historical run artifacts. |
+| `solver-archetype-sample-ab.yml` display/artifact strings | covered existing rename | Include workflow display name, run-name, artifact/source-artifact names, paths and docs in PR 3's archetype -> routing-regime migration. |
+| `additive-tier-participation-audit.mjs` | intentional retained tool | Retain: it is a bounded systematic audit of additive-tier participation, and both nouns describe actual runtime structure. |
+| `connectivity-rejection-audit.mjs` | intentional retained tool | Retain: it systematically audits connectivity rejection behavior rather than naming an experimental origin. |
+| `technique-census-cell.mjs` | covered existing taxonomy cleanup | Keep the live file until PR 8's technique-census analysis rename; include the new cell helper/test in that migration rather than leaving a split vocabulary. |
+
+The fresh census also confirmed that newly committed dated reports, solver-workflow logs, and generated hint/evidence files are frozen evidence for naming-cleanup purposes. They are not rename targets merely because they contain legacy strings.
+
+No production solver behavior, budget allocation, experiment disposition, corpus identity, or evidence content is changed by this reconciliation.
+
 ## 1. Goals and non-goals
 
 The cleanup has four goals:
@@ -709,6 +737,28 @@ When renaming workflows, also migrate current job labels/IDs, concurrency groups
 
 `method-probe` remains valid terminology because it is genuinely bounded diagnostic single-method execution; do not rename it merely because other uses of "probe" are being corrected.
 
+
+### 5.10 GitHub Actions result retrieval
+
+The standardized result publisher and protocol names introduced after this plan's original audit are already behavior-descriptive and remain canonical:
+
+- `solver-sweep-result`;
+- `pathfinder-solver-sweep-result`;
+- `gha-source-run`;
+- `pathfinder-gha-source-run`;
+- `publish-solver-sweep-result.mjs`;
+- `check-solver-sweep-result-contract.mjs`;
+- package alias `check:solver-sweep-results`.
+
+Rename only the noun-only retrieval command:
+
+| Current | Canonical |
+|---|---|
+| `scripts/gha-result.mjs` | `scripts/fetch-gha-result.mjs` |
+| package alias `gha:result` | `gha:fetch-result` |
+
+Update `AGENTS.md`, `scripts/README.md`, `docs/tooling-catalog.md`, `.github/workflows/README.md`, the contract checker, package aliases, and current workflow/tooling documentation together. The artifact/provenance protocol strings themselves do not change.
+
 ## 6. Data and corpus terminology
 
 Canonical corpus names remain:
@@ -911,6 +961,7 @@ This PR is high risk and requires full CI.
 - dataset worktree/env-var migration;
 - audit diagnostics rename;
 - workflow filenames, display/job names, concurrency groups, current artifact names, path filters, package aliases, catalogs, and workflow docs updated together;
+- rename the completed-run retrieval helper `gha:result` / `gha-result.mjs` to `gha:fetch-result` / `fetch-gha-result.mjs` while retaining the `solver-sweep-result` and `gha-source-run` protocol names;
 - correct the existing `modules/Solver.ts` workflow path-filter case mismatch.
 
 ### PR 9: Regression/performance CLI vocabulary
