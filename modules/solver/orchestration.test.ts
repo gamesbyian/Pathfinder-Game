@@ -1825,6 +1825,33 @@ test('normalizeAblationConfig defaults every OTHER opt-in-only flag to false, no
     assert.equal(cfg.STRATEGY_REPAIR_NOGOOD_CACHE, true, 'a standard default-on flag is unaffected');
 });
 
+test('normalizeAblationConfig dual-reads the legacy routing flag and single-writes the canonical name', () => {
+    const cfg = normalizeAblationConfig({ STRATEGY_ARCHETYPE_ROUTING: false })!;
+    assert.equal(cfg.STRATEGY_ROUTING_REGIME_SELECTION, false);
+    assert.equal(Object.hasOwn(cfg, 'STRATEGY_ROUTING_REGIME_SELECTION'), true);
+    assert.equal(Object.hasOwn(cfg, 'STRATEGY_ARCHETYPE_ROUTING'), false);
+    assert.deepEqual(
+        Object.keys({ ...cfg }).filter(key => key.includes('ROUTING')),
+        ['STRATEGY_ROUTING_REGIME_SELECTION'],
+    );
+});
+
+test('normalizeAblationConfig rejects conflicting legacy/canonical routing flag values', () => {
+    assert.throws(
+        () => normalizeAblationConfig({
+            STRATEGY_ARCHETYPE_ROUTING: false,
+            STRATEGY_ROUTING_REGIME_SELECTION: true,
+        }),
+        /Conflicting ablation values for canonical feature STRATEGY_ROUTING_REGIME_SELECTION/,
+    );
+});
+
+test('ablation defaults emit only the canonical routing flag name', () => {
+    const defaults = defaultConfig();
+    assert.equal(defaults.STRATEGY_ROUTING_REGIME_SELECTION, true);
+    assert.equal(Object.hasOwn(defaults, 'STRATEGY_ARCHETYPE_ROUTING'), false);
+});
+
 test('normalizeAblationConfig: opt-in flags stay off when a DIFFERENT flag is named', () => {
     const cfg = normalizeAblationConfig({ STRATEGY_REPAIR_NOGOOD_CACHE: false })!;
     assert.equal(cfg.STRATEGY_REPAIR_TURN_BIAS, false);
