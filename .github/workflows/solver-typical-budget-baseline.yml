@@ -41,6 +41,7 @@
 # in the combine job stays because a truncated level IS indeterminate rather than unsolved when it
 # does happen — it is just not the cost control it was originally written as.
 name: Solver typical-budget baseline (corpus-1 + corpus-2)
+run-name: "Typical baseline · flags=${{ inputs.enable_flags || 'control' }} · shards=${{ inputs.shards }}"
 
 on:
   workflow_dispatch:
@@ -655,6 +656,9 @@ jobs:
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/typical-budget-corpus1.json" \
             --include="reports/stress/typical-budget-corpus2.json" \
+            --shards-expected="${{ inputs.shards }}" \
+            --shards-observed="$(find logs/typical-budget-baseline -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
+            --provenance-out="reports/stress/typical-budget-source-run-${{ github.run_id }}.json" \
             --source-artifact="typical-budget-baseline-combined"
 
       - name: Upload standard solver sweep result
