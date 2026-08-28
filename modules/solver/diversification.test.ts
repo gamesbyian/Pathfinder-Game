@@ -15,7 +15,6 @@ import {
     pathSignature, mergeUniqueHints, knownHintCount, hintButtonLabel,
     createDiversificationSession,
 } from './diversification.js';
-import { workMeter } from './work-meter.js';
 
 const solverApi = createSolver();
 
@@ -52,7 +51,7 @@ function portalHarvest() {
             });
             const events: string[] = [];
             const { novel, report, isComplete } = await session.runUntil(
-                () => workMeter.units + 500_000_000,
+                () => 500_000_000,
                 { onProgress: (e: any) => events.push(e.type) },
             );
             return { level, session, novel, report, isComplete, events };
@@ -100,7 +99,7 @@ deepTest('already-known hints are not re-reported as novel', async () => {
     const firstRun = await portalHarvest();
     assert.ok(firstRun.novel.length > 0);
     const second = createDiversificationSession(level, firstRun.novel, { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
-    const secondRun = await second.runUntil(() => workMeter.units + 500_000_000, {});
+    const secondRun = await second.runUntil(() => 500_000_000, {});
     const firstSigs = new Set(firstRun.novel.map(pathSignature));
     for (const h of secondRun.novel) {
         assert.equal(firstSigs.has(pathSignature(h)), false, 'no re-reported hint');
@@ -110,23 +109,25 @@ deepTest('already-known hints are not re-reported as novel', async () => {
 deepTest('an exhausted work ceiling halts the session early and marks it resumable (not complete)', async () => {
     const level = portalLevel();
     const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 500, baselineBudgetMs: 500 });
-    // runUntil now takes an absolute workMeter.units ceiling, not a Date.now() deadline — the
-    // bound decides which hints are found, so it must not depend on host speed. See work-meter.ts.
-    const res = await session.runUntil(() => workMeter.units - 1, {});
+    // runUntil takes a session-local work ceiling (measured from this session's own zero baseline,
+    // not a Date.now() deadline or an absolute realm-global workMeter.units checkpoint) — the bound
+    // decides which hints are found, so it must not depend on host speed or unrelated concurrent
+    // solver activity in the same realm. See work-meter.ts and diversification.ts's ctx.sessionWork.
+    const res = await session.runUntil(() => -1, {});
     assert.equal(res.isComplete, false);
     assert.equal(session.isComplete, false);
     assert.equal(res.report.haltedByWorkBudget, true);
     assert.equal(res.report.haltedByWallClock, true, 'legacy alias mirrors the work-budget field');
 
     // Resuming with a real ceiling picks up where it stopped and completes.
-    const resumed = await session.runUntil(() => workMeter.units + 500_000_000, {});
+    const resumed = await session.runUntil(() => 500_000_000, {});
     assert.equal(resumed.isComplete, true);
 });
 
 test('maxHints caps the harvest and reports the halt', async () => {
     const level = portalLevel();
     const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
-    const res = await session.runUntil(() => workMeter.units + 500_000_000, { maxHints: 1 });
+    const res = await session.runUntil(() => 500_000_000, { maxHints: 1 });
     assert.ok(res.novel.length <= 1);
     if (res.novel.length === 1) {
         assert.equal(res.report.haltedByMaxHints, true);
@@ -139,7 +140,7 @@ test('cancellation is observed and reported without an error entry', async () =>
     const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
     let calls = 0;
     const res = await session.runUntil(
-        () => workMeter.units + 500_000_000,
+        () => 500_000_000,
         { isCancelled: () => ++calls > 3 },
     );
     assert.equal(res.report.haltedByCancel, true);
@@ -169,7 +170,7 @@ deepTest('a baseline win with admissibleOrder: true gets a distinguishing phase 
     const mockedLevel = portalLevel();
     const mocked = createDiversificationSession(mockedLevel, [], { solverApi: mockSolver, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
     const provenanceEvents: any[] = [];
-    const res = await mocked.runUntil(() => workMeter.units + 500_000_000, {
+    const res = await mocked.runUntil(() => 500_000_000, {
         onProgress: (e: any) => { if (e.type === 'hint-found') provenanceEvents.push(e.provenance); },
     });
     assert.ok(res.novel.length > 0);

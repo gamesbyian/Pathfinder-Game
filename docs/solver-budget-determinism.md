@@ -33,6 +33,8 @@ Both counters use the same work unit:
 
 `applyMove()` and `isConnected()` increment both. Keep internal checks on `prep._workMeter`; cumulative tooling must not assume the global counter is session-isolated when unrelated solves can coexist. Isolated multi-solve budgets should use caller-owned scope or sum `SolveResult.workSpent`. Migration direction: [`architecture-unification-debt.md`](architecture-unification-debt.md).
 
+`modules/solver/diversification.ts`'s `createDiversificationSession` and `scripts/hint-workbench.mjs`'s `runAblationUi`/`runCandidateGrid`/`runPortalGrid` follow the caller-owned pattern: each accumulates its own session-local counter from every `solverApi.solve()` call's `workSpent` (win or lose) instead of reading the realm-global counter, so an unrelated solve elsewhere in the same realm cannot pad or steal that session's own budget accounting. `modules/solver/hint-ablation-generator.ts` and `hint-workbench.mjs`'s `runEnumeration` hang-safety callback still read the realm-global counter — remaining migration debt, see [`../reports/2026-08-28-discovery-work-meter-session-scope-fix.md`](../reports/2026-08-28-discovery-work-meter-session-scope-fix.md).
+
 ## Budget roles
 
 | Field | Role |

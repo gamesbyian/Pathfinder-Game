@@ -17,7 +17,6 @@
 // so far — never assuming saved hints exist, since the diverse search is meant to work
 // from nothing on a freshly authored level.
 import { getAttemptConfigs } from './attempts.js';
-import { workMeter } from './work-meter.js';
 import { TEMPLATE_CONFIG_KEYS } from './policy.js';
 import { prepLevel } from './prep.js';
 import { createState, getNeighbors } from './search-state.js';
@@ -134,6 +133,10 @@ async function* cascadeSteps(solverApi: any, target: any, solveOptsBase: any, la
             if ((e as any)?.message !== 'Solver:cancelled') ctx.report.errors.push(`${label}: ${(e as any)?.message}`);
             return;
         }
+        // Session-owned work accounting (see ctx.sessionWork's doc in createDiversificationSession):
+        // every solve this generator makes counts toward the session total, win or lose, so a string
+        // of narrow losing probes still spends down the budget exactly like the old realm-global read did.
+        ctx.sessionWork += result?.workSpent ?? 0;
         if (!result?.ok || !result.solution) return;
         const winner = result.attempts?.find((a: any) => a.ok);
         const attemptInfo = deriveSolveAttemptInfo(result.attempts);
@@ -169,6 +172,7 @@ async function* strategySteps(solverApi: any, target: any, solveOptsBase: any, l
             if ((e as any)?.message !== 'Solver:cancelled') ctx.report.errors.push(`strategy=${flag} ${label}: ${(e as any)?.message}`);
             continue;
         }
+        ctx.sessionWork += result?.workSpent ?? 0;
         if (result?.ok && result.solution) {
             const winner = result.attempts?.find((a: any) => a.ok);
             const attemptInfo = deriveSolveAttemptInfo(result.attempts);
@@ -260,11 +264,20 @@ export function createDiversificationSession(level: any, existingHints: number[]
     let phase = 'baseline'; // 'baseline' -> 'gate-direction' -> 'portal-direction' -> 'done'
     let gateCombos: any[] | null = null;
     let portalCombos: any[] | null = null;
-    const ctx: any = { attemptBudgetMs, yieldFn: null, report };
+    // Session-owned work counter (2026-08-28 caller-owned-work-scope fix — queue item #2 debt #4:
+    // "module-global discovery work meter"). Every solve THIS session performs adds its own
+    // `SolveResult.workSpent` here; the session never reads the realm-global `workMeter` shared by
+    // every other concurrent solve in the process. That global was fine for the CLI's own strictly
+    // sequential, single-session-at-a-time callers, but this session is explicitly designed to also
+    // run inside the live game (see this file's header comment), where an unrelated solve elsewhere
+    // in the same realm running while this session is mid-`runUntil()` would previously have
+    // silently stolen or padded this session's own work-ceiling accounting, making which hints get
+    // found depend on unrelated concurrent activity instead of just this session's own work.
+    const ctx: any = { attemptBudgetMs, yieldFn: null, report, sessionWork: 0 };
 
     function buildResult(getWorkCeiling: () => number, isCancelled: () => boolean, maxHints: number) {
         report.novelFound = novel.length;
-        report.haltedByWorkBudget = workMeter.units >= getWorkCeiling();
+        report.haltedByWorkBudget = ctx.sessionWork >= getWorkCeiling();
         // Compatibility alias for older UI/report consumers.
         report.haltedByWallClock = report.haltedByWorkBudget;
         report.haltedByMaxHints = novel.length >= maxHints;
@@ -278,12 +291,13 @@ export function createDiversificationSession(level: any, existingHints: number[]
     }
 
     /**
-     * @param getWorkCeiling - an absolute `workMeter.units` ceiling, read live so an in-progress
-     *   run can still be extended (e.g. a "+1 minute" button) by mutating the closure value it
-     *   reads. WORK rather than a Date.now() deadline because this bound decides how far the
-     *   cascade gets and therefore WHICH HINTS ARE FOUND — gating that on wall clock made the
-     *   discovered set, and the provenance corpus built from it, a function of host speed.
-     *   See work-meter.ts and docs/solver-budget-determinism.md.
+     * @param getWorkCeiling - this session's own work budget, measured from this session's zero
+     *   baseline (NOT an absolute `workMeter.units` checkpoint — see ctx.sessionWork above), read
+     *   live so an in-progress run can still be extended (e.g. a "+1 minute" button) by mutating the
+     *   closure value it reads (e.g. `ceiling += moreWork`). WORK rather than a Date.now() deadline
+     *   because this bound decides how far the cascade gets and therefore WHICH HINTS ARE FOUND —
+     *   gating that on wall clock made the discovered set, and the provenance corpus built from it, a
+     *   function of host speed. See work-meter.ts and docs/solver-budget-determinism.md.
      */
     async function runUntil(
         getWorkCeiling: () => number,
@@ -291,8 +305,8 @@ export function createDiversificationSession(level: any, existingHints: number[]
     ) {
         const { maxHints = Infinity, onProgress = () => {}, isCancelled = () => false } = runOpts;
         ctx.yieldFn = makeYieldFn(isCancelled);
-        const shouldStop = () => workMeter.units >= getWorkCeiling() || isCancelled() || novel.length >= maxHints;
-        const workLeft = () => getWorkCeiling() - workMeter.units;
+        const shouldStop = () => ctx.sessionWork >= getWorkCeiling() || isCancelled() || novel.length >= maxHints;
+        const workLeft = () => getWorkCeiling() - ctx.sessionWork;
 
         function consider(path: number[], provenance: any) {
             const sig = pathSignature(path);
@@ -309,6 +323,7 @@ export function createDiversificationSession(level: any, existingHints: number[]
             if (!shouldStop()) {
                 try {
                     const base = await solverApi.solve(level, { timeBudgetMs: baselineBudgetMs, yieldFn: ctx.yieldFn });
+                    ctx.sessionWork += base?.workSpent ?? 0;
                     if (base?.ok && base.solution) {
                         const winner = base.attempts?.find((a: any) => a.ok);
                         report.baselineWinner = winner?.profile ?? null;

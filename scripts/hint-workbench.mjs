@@ -336,6 +336,14 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
             // the failure mode that skipped re-attribution on large levels. This secondary
             // hang-safety bound is now WORK too (opts.enumWallMs converted at the same rate), so
             // even the non-binding safety net cannot make the discovered set host-dependent.
+            // Still reads the realm-global workMeter (unlike runAblationUi/runCandidateGrid/
+            // runPortalGrid/diversification.ts's session-local accounting, fixed 2026-08-28):
+            // shouldStop fires from INSIDE variety-search's own run() call, which owns no
+            // caller-visible per-step result to sum a workSpent delta from, so there's no
+            // solveGridAttempt()-style return value to intercept here. Contamination risk is lower
+            // than the fixed sites because this bound is explicitly secondary/non-binding (the
+            // deterministic nodeBudget above already governs the discovered set) — remaining debt,
+            // see docs/solver-budget-determinism.md's "module-global discovery work meter" item.
             cancelled = workMeter.units - startedWork >= legacyMsToWork(opts.enumWallMs, 1);
             return cancelled;
         },
@@ -416,7 +424,10 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
     // Wall-clock budget in, WORK ceiling out — converted once here at the run boundary using the
     // same measured rate solveLevel's own ms->work shim uses, so an existing --wall-ms caller keeps
     // roughly its intended cost while WHICH HINTS GET FOUND stops depending on host speed.
-    const workCeiling = workMeter.units + legacyMsToWork(opts.wallMs, 1);
+    // Session-local budget (see diversification.ts's ctx.sessionWork): runUntil()'s ceiling is now
+    // measured from the session's own zero baseline, not an absolute realm-global workMeter.units
+    // checkpoint, so no `workMeter.units +` prefix here.
+    const workCeiling = legacyMsToWork(opts.wallMs, 1);
     // The cascade doesn't track nodesExpanded/elapsedMs per found candidate (only wall-clock
     // budgets per phase), but onProgress does report each find's phase/profile/template — capture
     // it here (in the same order `novel` is pushed, since consider() does both synchronously) so
@@ -585,12 +596,21 @@ async function solveGridAttempt(gridLevel, solveOpts, errors) {
         // set this for the identical reason. Caught live: an early portal-grid test against S00103
         // (4 gates, 2 portals) averaged ~4.1s/combo against an 800ms nominal budget before this fix.
         const result = await Solver.solve(gridLevel, { ...solveOpts, disableExtraBudgetPasses: true });
-        if (!result?.ok || !result.solution) return { solution: null, attemptInfo: null };
+        // workSpent is reported even on a failed/no-solution attempt (SolveResult.workSpent is
+        // always set — see orchestration.ts's finish()) so the caller's session-local work
+        // accounting counts a losing probe's cost exactly like the old realm-global read did.
+        const workSpent = result?.workSpent ?? 0;
+        if (!result?.ok || !result.solution) return { solution: null, attemptInfo: null, workSpent };
         const attemptInfo = deriveSolveAttemptInfo(result.attempts);
-        return { solution: result.solution, attemptInfo };
+        return { solution: result.solution, attemptInfo, workSpent };
     } catch (err) {
         errors.push(err?.message || String(err));
-        return { solution: null, attemptInfo: null };
+        // A thrown solve (rare -- genuine errors only, not ordinary exhaustion) can't report the
+        // work it spent before throwing: unlike the old realm-global workMeter read, session-local
+        // accounting has no way to recover that partial cost from here. Conservative in the safe
+        // direction only: the session may run slightly longer than its nominal budget on that rare
+        // path, never shorter.
+        return { solution: null, attemptInfo: null, workSpent: 0 };
     }
 }
 
@@ -598,13 +618,24 @@ async function runCandidateGrid(level, raw, existingHints, opts, levelNumber) {
     // Wall-clock budget in, WORK ceiling out — converted once here at the run boundary using the
     // same measured rate solveLevel's own ms->work shim uses, so an existing --wall-ms caller keeps
     // roughly its intended cost while WHICH HINTS GET FOUND stops depending on host speed.
-    const workCeiling = workMeter.units + legacyMsToWork(opts.wallMs, 1);
-    const timedOut = () => workMeter.units >= workCeiling;
+    // Session-local accounting (2026-08-28 caller-owned-work-scope fix — see
+    // docs/solver-budget-determinism.md's "module-global discovery work meter" debt item): this
+    // step's own `workSpent` accumulator, fed by every solveGridAttempt() result `record()` sees
+    // below, replaces a direct read of the realm-global workMeter so an unrelated solve elsewhere in
+    // the same process can no longer pad or steal this step's own budget accounting.
+    const workBudget = legacyMsToWork(opts.wallMs, 1);
+    let workSpent = 0;
+    const timedOut = () => workSpent >= workBudget;
     const candidates = [];
     const errors = [];
     let cancelled = false;
 
+    // Expects a `{ solution, attemptInfo, workSpent? }` object (solveGridAttempt()'s own return
+    // shape) — NOT a bare path array. A bare array's `.solution` is undefined, so it silently no-ops
+    // here instead of throwing; wrap a non-solve candidate as `{ solution: path, attemptInfo: null }`
+    // (see the corner-flip loop above for why that mistake is easy to make and easy to miss).
     const record = (result, provenance) => {
+        workSpent += result?.workSpent ?? 0;
         if (!result?.solution) return;
         const attemptInfo = result.attemptInfo;
         candidates.push({
@@ -640,7 +671,14 @@ async function runCandidateGrid(level, raw, existingHints, opts, levelNumber) {
     const cornerFlipSample = shuffleCopy(existingHints, cornerFlipRng).slice(0, opts.seeds);
     for (const [hintIndex, hint] of cornerFlipSample.entries()) {
         for (const mutation of cornerFlipMutations(hint, raw.grid)) {
-            record(mutation.path, { phase: 'corner-flip', hintIndex, index: mutation.index, replaced: mutation.replaced, replacement: mutation.replacement });
+            // record() reads `result.solution`/`result.attemptInfo` (the solveGridAttempt() shape);
+            // a mutation has neither a real attempt nor any workSpent (no solve call — see the
+            // header comment above), so wrap the path instead of passing it bare. A bare path array
+            // silently vanished here for as long as this step has existed (candidates.push never
+            // ran, `candidates` array size unaffected, no error) since `path.solution` is undefined
+            // -- zero "corner-flip" provenance entries ever reached data/hints/*.json. Fixed
+            // 2026-08-28; see this fix's report for the before/after evidence.
+            record({ solution: mutation.path, attemptInfo: null }, { phase: 'corner-flip', hintIndex, index: mutation.index, replaced: mutation.replaced, replacement: mutation.replacement });
         }
     }
 
@@ -710,13 +748,16 @@ async function runPortalGrid(level, opts, levelNumber) {
     // Wall-clock budget in, WORK ceiling out — converted once here at the run boundary using the
     // same measured rate solveLevel's own ms->work shim uses, so an existing --wall-ms caller keeps
     // roughly its intended cost while WHICH HINTS GET FOUND stops depending on host speed.
-    const workCeiling = workMeter.units + legacyMsToWork(opts.wallMs, 1);
-    const timedOut = () => workMeter.units >= workCeiling;
+    // Session-local accounting — see runCandidateGrid's identical comment above.
+    const workBudget = legacyMsToWork(opts.wallMs, 1);
+    let workSpent = 0;
+    const timedOut = () => workSpent >= workBudget;
     const portalDests = [...new Set([...level.portalMap.values()].map(p => p.dest))];
     let combosTried = 0;
     let cancelled = false;
 
     const record = (result, provenance) => {
+        workSpent += result?.workSpent ?? 0;
         if (!result?.solution) return;
         const attemptInfo = result.attemptInfo;
         candidates.push({
