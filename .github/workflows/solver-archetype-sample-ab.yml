@@ -25,6 +25,7 @@
 # node_budget -- then compare each run's combined solved count/gains/losses (per-id, from each run's
 # reports/stress/archetype-sample-ab.json artifact).
 name: Solver archetype-gated routing sample A/B
+run-name: "Archetype sample · ${{ inputs.archetypes }} · flags=${{ inputs.enable_flags || 'control' }}"
 
 on:
   workflow_dispatch:
@@ -304,6 +305,8 @@ jobs:
         run: |
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/archetype-sample-ab.json" \
+            --shards-expected="${{ needs.plan.outputs.shard_count }}" \
+            --shards-observed="$(find logs/solver-archetype-sample -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
             --source-artifact="archetype-sample-ab-combined"
 
       - name: Upload standard solver sweep result
