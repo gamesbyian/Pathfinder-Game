@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from 'node:fs';
 import { POLICY_PROFILES } from '../modules/solver/policy.js';
+import { normalizeAttemptIdentityKey, parseAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
 const argv = new Map(process.argv.slice(2).filter(x => x.includes('=')).map(x => { const [k, ...v] = x.split('='); return [k, v.join('=')]; }));
 const source = argv.get('--source') ?? 'reports/stress/technique-census/32240161854/second-order-analysis.json';
@@ -11,29 +12,40 @@ const census = JSON.parse(readFileSync(source, 'utf8'));
 const cells = JSON.parse(readFileSync(cellsSource, 'utf8')).results.filter(row => row.tier === 'T1' && row.techniqueKeys?.length === 1);
 
 function describe(key) {
-    const family = key.startsWith('dfs:repair:') ? 'repair' : key.split(':')[0];
-    const rest = family === 'repair' ? key.slice('dfs:repair:'.length) : key.slice(family.length + 1);
-    const profile = family === 'repair' ? 'repair' : rest.split(/[\/@(]/)[0];
+    const canonicalKey = normalizeAttemptIdentityKey(key);
+    const fields = parseAttemptIdentityKey(canonicalKey);
+    const searchFamily = fields.repair ? 'repair'
+        : fields.admissibleOrder ? 'admissible-order'
+            : fields.beamWidth ? 'beam' : 'dfs';
+    const scoringProfile = fields.repair ? 'repair'
+        : fields.admissibleOrderNoTieBreak ? null : fields.profileName;
+    const repairGuidance = fields.repairMustTurnBiased ? 'must-turn-biased'
+        : fields.repairTurnBiased ? 'turn-biased'
+            : fields.repair ? 'standard' : null;
     return {
-        searchFamily: family === 'ida' ? 'admissible-order' : family,
-        scoringProfile: family === 'ida' && profile === 'none' ? null : profile,
-        scoringWeights: profile && POLICY_PROFILES[profile] ? POLICY_PROFILES[profile] : null,
-        structuralTemplate: rest.includes('/') ? rest.split('/')[1].split('@')[0] : null,
-        beamWidth: Number(rest.match(/@beam(\d+)/)?.[1]) || null,
-        diverseBeamRetention: rest.includes('(diverse)'),
-        dedupNearTieMode: rest.includes('dedup') ? rest.match(/\(([^)]+)\)/)?.[1] ?? 'enabled' : 'default',
+        searchFamily,
+        scoringProfile,
+        scoringWeights: scoringProfile && POLICY_PROFILES[scoringProfile] ? POLICY_PROFILES[scoringProfile] : null,
+        structuralTemplate: fields.templateId ?? null,
+        beamWidth: fields.beamWidth ?? null,
+        diverseBeamRetention: !!fields.diverseBeam,
+        dedupNearTieMode: 'default',
         pruneChanges: [],
-        admissibleTieBreakMode: family === 'ida' ? (profile === 'none' ? 'none' : profile) : null,
-        repairVariantBiasSeedMode: family === 'repair' ? rest : null,
+        admissibleTieBreakMode: fields.admissibleOrder
+            ? (fields.admissibleOrderNoTieBreak ? 'none' : fields.profileName) : null,
+        repairVariantBiasSeedMode: repairGuidance,
         retryContext: null,
         budgetBand: null,
     };
 }
 const byTechnique = new Map();
-for (const row of cells) byTechnique.set(row.techniqueKeys[0], [...(byTechnique.get(row.techniqueKeys[0]) ?? []), row]);
+for (const row of cells) {
+    const key = normalizeAttemptIdentityKey(row.techniqueKeys[0]);
+    byTechnique.set(key, [...(byTechnique.get(key) ?? []), row]);
+}
 const techniqueKeys = [...byTechnique.keys()].sort();
 const pairOutcome = new Map([...census.closestTechniquePairs, ...census.mostDistinctTechniquePairs]
-    .map(pair => [[pair.a, pair.b].sort().join('\0'), pair]));
+    .map(pair => [[normalizeAttemptIdentityKey(pair.a), normalizeAttemptIdentityKey(pair.b)].sort().join('\0'), pair]));
 function exactCohort(left, right) {
     const l = new Map((byTechnique.get(left) ?? []).map(r => [`${r.corpus}/${r.levelPos}`, r]));
     const r = new Map((byTechnique.get(right) ?? []).map(x => [`${x.corpus}/${x.levelPos}`, x]));
@@ -50,18 +62,20 @@ function weightDifferences(left, right) {
     return Object.fromEntries(terms.map(term => [term, { left: left[term] ?? 1, right: right[term] ?? 1, delta: (right[term] ?? 1) - (left[term] ?? 1) }]));
 }
 const controlledPairs = census.controlledComparisons.map(pair => {
-    const left = describe(pair.left), right = describe(pair.right);
-    const indexedOutcome = pairOutcome.get([pair.left, pair.right].sort().join('\0'));
+    const leftKey = normalizeAttemptIdentityKey(pair.left);
+    const rightKey = normalizeAttemptIdentityKey(pair.right);
+    const left = describe(leftKey), right = describe(rightKey);
+    const indexedOutcome = pairOutcome.get([leftKey, rightKey].sort().join('\0'));
     const union = pair.all.leftOnly + pair.all.rightOnly + pair.all.both;
     const outcome = indexedOutcome ?? {
         common: pair.all.common, disagreement: pair.all.leftOnly + pair.all.rightOnly,
         jaccard: union ? pair.all.both / union : null, mutualInformationBits: null,
     };
     return {
-        label: pair.label, leftTechnique: pair.left, rightTechnique: pair.right,
+        label: pair.label, leftTechnique: leftKey, rightTechnique: rightKey,
         implementation: { left, right, perTermScoringWeightDifferences: weightDifferences(left.scoringWeights, right.scoringWeights), sourceProxyOnly: true },
         outcomeSimilarity: { jaccard: outcome.jaccard, mutualInformationBits: outcome.mutualInformationBits ?? null, disagreement: outcome.disagreement, common: outcome.common },
-        diagnosticCohort: exactCohort(pair.left, pair.right),
+        diagnosticCohort: exactCohort(leftKey, rightKey),
         operationalSimilarity: { status: 'not-measured-by-source-proxy', localRanking: null, boundedTrace: null, beamFrontier: null, admissibleSlack: null, repairFingerprint: null },
     };
 });
