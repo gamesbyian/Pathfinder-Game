@@ -35,7 +35,7 @@
  *     --corpus=data/stress/stress-levels-random.json \
  *     --levels=pos:1-50 \
  *     --only=dfs:repair:repair(turnBiased) \
- *     --budget-ms=8000 --node-budget=20000000 \
+ *     --budget-ms=600000 --work-budget=50000000 --node-budget=20000000 \
  *     --out=/tmp/probe.json --summary-out=/tmp/probe-summary.md
  *
  *   node scripts/run-bundled.mjs scripts/method-probe.mjs -- --list-profiles
@@ -93,16 +93,22 @@ try {
     process.exit(1);
 }
 if (configs.length === 0) { console.error('--only: no valid config keys after parsing.'); process.exit(1); }
-// BUDGET_MS is a PER-ATTEMPT wall-clock cap: each (gate, config) pair gets its own fresh
-// BUDGET_MS window, same as a single attempt in the real ladder. NODE_BUDGET is a SHARED,
-// CUMULATIVE ceiling across every gate/config tried for one level (mirroring solveLevel()'s own
-// external nodeBudget semantics — see orchestration.ts) — an expensive first config in the
-// --only list can exhaust it before a later one gets a fair share, exactly as it would in
-// production under a bounded external node budget. This is intentional fidelity, not a bug: put
-// the config you actually want signal on FIRST, or give NODE_BUDGET enough headroom for all of
-// them, or probe one config at a time for a clean per-method read.
+// Preferred research mode: --work-budget supplies one SHARED, cumulative canonical-work ceiling
+// across every gate/config tried for a level. --budget-ms then becomes only a per-attempt safety
+// deadline; if it binds before work/node exhaustion the row is marked deadlineTruncated and a
+// work-bounded run exits non-zero rather than turning right-censored work into a clean negative.
+//
+// Legacy mode (no --work-budget) preserves the historical semantics: BUDGET_MS is a real per-attempt
+// wall-clock search cap and NODE_BUDGET is the shared cumulative ceiling. NODE_BUDGET remains useful
+// in either mode as a technique-local/diagnostic guard, but cross-technique cost comparisons should
+// use work. As before, multiple --only configs share the level envelope, so probe one config at a
+// time when you want a clean per-method dose.
 const BUDGET_MS = Number(args.get('--budget-ms') || 8000);
 const NODE_BUDGET = args.has('--node-budget') ? Number(args.get('--node-budget')) : Infinity;
+const WORK_BUDGET = args.has('--work-budget') ? Number(args.get('--work-budget')) : Infinity;
+if (!(BUDGET_MS > 0)) { console.error('--budget-ms must be positive.'); process.exit(1); }
+if (args.has('--node-budget') && !(NODE_BUDGET > 0)) { console.error('--node-budget must be positive when supplied.'); process.exit(1); }
+if (args.has('--work-budget') && !(WORK_BUDGET > 0)) { console.error('--work-budget must be positive when supplied.'); process.exit(1); }
 const OUT_FILE = args.get('--out') || null;
 const SUMMARY_OUT_FILE = args.get('--summary-out') || null;
 const ORDERING_PROFILES = (args.get('--ordering-profiles') || '').split(',').map(value => value.trim()).filter(Boolean);
@@ -200,7 +206,7 @@ const corpus = JSON.parse(readFileSync(path.resolve(ROOT, CORPUS_FILE), 'utf8'))
 const corpusLevels = Array.isArray(corpus) ? corpus : corpus.levels;
 const levels = LEVEL_SPEC ? selectLevelsBySpec(corpusLevels, LEVEL_SPEC) : corpusLevels;
 
-console.log(`method-probe: ${levels.length} level(s), corpus=${CORPUS_FILE}, only=[${configs.map(c => c.key).join(', ')}], budget=${BUDGET_MS}ms, node-budget=${NODE_BUDGET === Infinity ? 'inf' : NODE_BUDGET}`);
+console.log(`method-probe: ${levels.length} level(s), corpus=${CORPUS_FILE}, only=[${configs.map(c => c.key).join(', ')}], deadline=${BUDGET_MS}ms, work-budget=${WORK_BUDGET === Infinity ? '(legacy wall-bounded mode)' : WORK_BUDGET}, node-budget=${NODE_BUDGET === Infinity ? 'inf' : NODE_BUDGET}`);
 
 async function probeLevel(entry) {
     const { id, stressMeta: _stressMeta, ...raw } = entry;
@@ -208,6 +214,9 @@ async function probeLevel(entry) {
     const prep = prepLevel(level);
     prep._cfg = null;
     prep._metrics = { nodesExpanded: 0 };
+    prep._attemptBudgetTelemetry = Number.isFinite(WORK_BUDGET);
+    const workStart = prep._workMeter.units;
+    if (Number.isFinite(WORK_BUDGET)) prep._workCap = workStart + WORK_BUDGET;
     prep._forcedFirstStepKey = null;
     prep._forcedPortalExitKey = null;
     const orderingRecords = [];
@@ -221,11 +230,14 @@ async function probeLevel(entry) {
     let solution = null;
     let winningKey = null;
     let winningGate = null;
+    let deadlineTruncated = false;
+    let wallBoundedAttemptObserved = false;
     const startTime = Date.now();
     outer:
     for (const gateKey of level.gateKeys) {
         for (const { key, config } of configs) {
-            if (prep._metrics.nodesExpanded >= NODE_BUDGET) break outer;
+            const workSpentBefore = prep._workMeter.units - workStart;
+            if (prep._metrics.nodesExpanded >= NODE_BUDGET || workSpentBefore >= WORK_BUDGET) break outer;
             const remaining = NODE_BUDGET === Infinity ? Infinity : Math.max(0, NODE_BUDGET - prep._metrics.nodesExpanded);
             const beamTrace = BEAM_TRACE_LIMIT > 0 ? createBeamTraceCollector(BEAM_TRACE_LIMIT) : null;
             prep._beamResearchObserver = beamTrace;
@@ -234,16 +246,40 @@ async function probeLevel(entry) {
             attempts.push({ configKey: key, gateKey, ...r.attempt,
                 ...(beamTrace ? { beamOperationalTrace: beamTrace.snapshot() } : {}) });
             if (r.path) { solution = r.path; winningKey = key; winningGate = gateKey; break outer; }
+
+            if (r.attempt.outcome === 'timed-out') {
+                wallBoundedAttemptObserved = true;
+                if (Number.isFinite(WORK_BUDGET)) {
+                    const workReached = prep._workMeter.units - workStart >= WORK_BUDGET;
+                    const nodeReached = prep._metrics.nodesExpanded >= NODE_BUDGET;
+                    if (!workReached && !nodeReached) {
+                        deadlineTruncated = true;
+                        break outer;
+                    }
+                }
+            }
         }
     }
+    const workSpent = prep._workMeter.units - workStart;
+    const status = solution ? 'success'
+        : deadlineTruncated ? 'deadline-truncated'
+        : workSpent >= WORK_BUDGET ? 'work-budget-reached'
+        : prep._metrics.nodesExpanded >= NODE_BUDGET ? 'node-budget-reached'
+        : wallBoundedAttemptObserved ? 'wall-bounded-legacy'
+        : 'exhausted';
     return {
         id,
         ok: !!solution,
+        status,
         winningConfigKey: winningKey,
         winningGate,
         solution,
         totalMs: Date.now() - startTime,
         nodesExpanded: prep._metrics.nodesExpanded,
+        workSpent,
+        workBudget: Number.isFinite(WORK_BUDGET) ? WORK_BUDGET : null,
+        deadlineTruncated,
+        validDeterministicEvidence: Number.isFinite(WORK_BUDGET) ? !deadlineTruncated : false,
         attempts,
         ...(ORDERING_PROFILES.length ? { orderingResearch: summarizeOrdering(orderingRecords, orderingObserved) } : {}),
     };
@@ -259,23 +295,33 @@ for (let i = 0; i < levels.length; i++) {
     results.push(r);
     console.log(`  [${i + 1}/${levels.length}] ${entry.id ?? '?'} ok=${r.ok ? '✓' : '✗'}${r.ok ? ` via ${r.winningConfigKey}` : ''}`);
     // Report/persist between levels, not only at the end — see CLAUDE.md's batch-tool requirement.
-    if (OUT_FILE) writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify({ corpus: CORPUS_FILE, only: configs.map(c => c.key), budgetMs: BUDGET_MS, nodeBudget: NODE_BUDGET === Infinity ? null : NODE_BUDGET, levels: results }, null, 1));
+    if (OUT_FILE) writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify({
+        corpus: CORPUS_FILE, only: configs.map(c => c.key), budgetMs: BUDGET_MS,
+        workBudget: WORK_BUDGET === Infinity ? null : WORK_BUDGET,
+        nodeBudget: NODE_BUDGET === Infinity ? null : NODE_BUDGET, levels: results,
+    }, null, 1));
 }
 
 const solvedCount = results.filter(r => r.ok).length;
-console.log(`Result: solved=${solvedCount}/${levels.length}`);
+const deadlineTruncatedIds = results.filter(r => r.deadlineTruncated).map(r => r.id);
+console.log(`Result: solved=${solvedCount}/${levels.length}${deadlineTruncatedIds.length ? `; DEADLINE-TRUNCATED=${deadlineTruncatedIds.length}` : ''}`);
+if (Number.isFinite(WORK_BUDGET) && deadlineTruncatedIds.length) {
+    console.error(`INVALID WORK-BOUNDED PROBE: wall deadline truncated ${deadlineTruncatedIds.length} level(s): ${deadlineTruncatedIds.join(',')}`);
+    process.exitCode = 2;
+}
 
 if (SUMMARY_OUT_FILE) {
     const lines = [
         `# method-probe: ${configs.map(c => c.key).join(', ')}`,
         '',
-        `Corpus: \`${CORPUS_FILE}\` — ${levels.length} level(s), budget=${BUDGET_MS}ms, node-budget=${NODE_BUDGET === Infinity ? 'inf' : NODE_BUDGET}`,
+        `Corpus: \`${CORPUS_FILE}\` — ${levels.length} level(s), deadline=${BUDGET_MS}ms, work-budget=${WORK_BUDGET === Infinity ? 'legacy wall-bounded' : WORK_BUDGET}, node-budget=${NODE_BUDGET === Infinity ? 'inf' : NODE_BUDGET}`,
         '',
         `**Solved: ${solvedCount}/${levels.length}**`,
+        deadlineTruncatedIds.length ? `**Invalid equal-work rows (deadline-truncated): ${deadlineTruncatedIds.join(', ')}**` : '',
         '',
-        '| id | ok | winning config | nodes | ms |',
-        '|---|---|---|---|---|',
-        ...results.map(r => `| ${r.id ?? '?'} | ${r.ok ? '✓' : '✗'} | ${r.winningConfigKey ?? '—'} | ${r.nodesExpanded ?? '—'} | ${r.totalMs ?? '—'} |`),
+        '| id | status | winning config | work | nodes | ms |',
+        '|---|---|---|---:|---:|---:|',
+        ...results.map(r => `| ${r.id ?? '?'} | ${r.status ?? (r.ok ? 'success' : 'failed')} | ${r.winningConfigKey ?? '—'} | ${r.workSpent ?? '—'} | ${r.nodesExpanded ?? '—'} | ${r.totalMs ?? '—'} |`),
     ];
     mkdirSync(path.dirname(path.resolve(ROOT, SUMMARY_OUT_FILE)), { recursive: true });
     writeFileSync(path.resolve(ROOT, SUMMARY_OUT_FILE), lines.join('\n') + '\n');
