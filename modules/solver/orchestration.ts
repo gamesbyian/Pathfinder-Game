@@ -1,4 +1,6 @@
 import { PORTFOLIO_EXPERIMENT } from './portfolio-experiment.js';
+import { legacyMsToWork } from './budget-units.js';
+import { withWorkCapScope } from './budget-context.js';
 import { OPT_IN_FEATURES } from './ablation-config.js';
 import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS, repairAttempt } from './attempts.js';
 import { POLICY_PROFILES } from './policy.js';
@@ -274,15 +276,17 @@ export interface SolveOpts {
      *  each seed-salt ROUND (up to REPAIR_PROBE_BIASED_NODE_BUDGET, 6,000,000) rather than mid-round,
      *  so a budget below a single biased round's cost can still overshoot by up to that round. */
     nodeBudget?: number;
-    /** Total WORK this solve may spend (work-meter.ts's unit: applyMove + 12*isConnected), and the
-     *  quantity the attempt ladder divides between gate x config pairs. This is the budget that
-     *  matters: it is machine-independent, so the same (level, workBudget) produces the same search
-     *  on any host under any load. Defaults to `timeBudgetMs * DEFAULT_WORK_PER_MS` so ms-shaped
-     *  callers keep roughly their intended cost; pass it explicitly (CI, benches, corpus runs, any
-     *  A/B) to pin the result exactly regardless of what the clock does. */
+    /** Preferred name for the solver's base canonical WORK allocation (work-meter.ts's unit:
+     *  applyMove + 12*isConnected). The main attempt ladder divides this between gate x config pairs.
+     *  Under historical production semantics this is NOT necessarily a whole-solve cap: additive
+     *  fallback/retry stages may receive fresh work beyond it. */
+    baseWorkBudget?: number;
+    /** @deprecated Compatibility name for baseWorkBudget. If both are supplied they must match.
+     *  Kept because existing workflows/artifacts use this public field extensively. If neither is
+     *  supplied, legacy ms-shaped callers normalize once through budget-units.ts. */
     workBudget?: number;
-    /** Experiment-only whole-solve enforcement. Omitted/false preserves the historical production
-     * scheduler, where `workBudget` sizes the main ladder and additive tiers can exceed it. */
+    /** Experiment-only whole-solve enforcement: turns `workBudget` from the legacy scheduler's base
+     * allocation into an immutable total work cap. Omitted/false preserves production additive tiers. */
     strictTotalWorkBudget?: boolean;
     /** Opt-in diagnostic attempt-ceiling fields. Omitted keeps ordinary result objects unchanged. */
     attemptBudgetTelemetry?: boolean;
@@ -506,7 +510,8 @@ interface SolveResult { ok: boolean; status: string; solution: number[] | null; 
     /** Work units this solve spent (work-meter.ts). Machine-independent, unlike totalMs, and
      *  comparable across techniques, unlike nodesExpanded. */
     workSpent?: number;
-    /** The work budget this solve was allotted — pairs with workSpent for provenance/cost analysis. */
+    /** The solve's configured base work allocation. It is a true whole-solve ceiling only when
+     * strictTotalWorkBudget was enabled; legacy additive stages may otherwise spend beyond it. */
     workBudget?: number;
     /** The wall-clock deadline cut this run short while work budget remained — so the result is
      *  INDETERMINATE, not a reproducible negative. Never record such a run as "unsolved". */
@@ -689,13 +694,8 @@ const ADAPTIVE_GATE_WEIGHT_FLOOR = 0.35;
  *  a ladder the ms allocator would have kept going. */
 const MIN_ATTEMPT_WORK = 2000;
 
-/** Work units per requested millisecond, used only to derive a `workBudget` for a caller that
- *  supplies only `timeBudgetMs`. A compatibility shim, not a law: work rate was measured at ~3.35M
- *  work/s uniformly across techniques (that uniformity is the point of the unit — see
- *  work-meter.ts), so this approximates what the requested milliseconds would actually have bought.
- *  Determinism does not come from this constant — it comes from passing `workBudget` explicitly,
- *  which every offline/CI/A-B caller should do. */
-const DEFAULT_WORK_PER_MS = 3350;
+/** The ms-to-work calibration lives in budget-units.ts so every compatibility boundary shares one
+ * committed value. Allocation determinism comes from explicit work budgets, not from that rate. */
 
 export function attemptBudgetShare(remaining: number, unitsLeft: number, minFloorBase: number, minBudgetFraction: number): number {
     const evenShare = Math.floor(remaining / unitsLeft);
@@ -1584,9 +1584,12 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // The ladder always divides WORK, never wall clock. `timeBudgetMs` survives only as an outer
     // deadline that can truncate a solve, never as an input to an allocation or escalation
     // decision, so a solve is a function of (level, workBudget). See work-meter.ts.
-    const workBudget = Number(opts.workBudget) > 0
-        ? Number(opts.workBudget)
-        : Math.max(MIN_ATTEMPT_WORK, Math.floor(timeBudgetMs * DEFAULT_WORK_PER_MS));
+    const explicitBaseWorkBudget = Number(opts.baseWorkBudget) > 0 ? Number(opts.baseWorkBudget) : null;
+    const legacyWorkBudget = Number(opts.workBudget) > 0 ? Number(opts.workBudget) : null;
+    if (explicitBaseWorkBudget !== null && legacyWorkBudget !== null && explicitBaseWorkBudget !== legacyWorkBudget) {
+        throw new Error(`baseWorkBudget (${explicitBaseWorkBudget}) and legacy workBudget (${legacyWorkBudget}) disagree`);
+    }
+    const workBudget = explicitBaseWorkBudget ?? legacyWorkBudget ?? legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);
     const yieldFn = typeof opts.yieldFn === 'function' ? opts.yieldFn : null;
     if (opts.schedulerMode === 'portfolio-experiment') {
         return runPortfolioExperiment(level, opts, timeBudgetMs, yieldFn);
@@ -1912,11 +1915,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // own override just above and repairElitePrefixDfsRetry's below): this loop's `runAttempt` calls
     // used to silently inherit whatever `prep._workCap` the main loop (or the probe just above) last
     // wrote, which can already be exhausted on exactly the levels this loop exists for.
-    const repairFallbackOriginalWorkCap = prep._workCap;
-    try {
-        const repairFallbackTotalBudget = Math.floor(timeBudgetMs * repairBudgetFraction);
-        const repairFallbackWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(repairFallbackTotalBudget * DEFAULT_WORK_PER_MS));
-        prep._workCap = Math.min(prep._workMeter.units + repairFallbackWorkBudget, prep._strictWorkCap ?? Infinity);
+    const repairFallbackTotalBudget = Math.floor(timeBudgetMs * repairBudgetFraction);
+    const repairFallbackWorkBudget = legacyMsToWork(repairFallbackTotalBudget, MIN_ATTEMPT_WORK);
+    await withWorkCapScope(prep, prep._workMeter.units + repairFallbackWorkBudget, async () => {
         for (const repairConfig of repairConfigs) {
             if (result.solution) break;
             if (prep._metrics.nodesExpanded >= repairFallbackNodeCeiling) break;
@@ -1940,9 +1941,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 if (r.path) { result.solution = r.path; break; }
             }
         }
-    } finally {
-        prep._workCap = repairFallbackOriginalWorkCap;
-    }
+    });
 
     // Last-resort attraction-diversity pass (ATTRACTION_DIVERSITY_BUDGET_FRACTION, attempts.ts's
     // ATTRACTION_DIVERSITY_CANDIDATE_FLAGS) — a whole extra rerun of the SAME mainConfigs ladder,
@@ -2152,7 +2151,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // a node costs more than 1 work unit. Same "extend, don't carve from the existing pool"
         // philosophy REPAIR_EXTRA_BUDGET_FRACTION's own comment documents for wall time, applied to
         // work: a fresh `prep._workMeter.units` mark plus a work budget sized off this tier's own ms
-        // allocation via DEFAULT_WORK_PER_MS, the same conversion solveLevel's own top-level
+        // allocation via the legacy ms-to-work conversion, the same conversion solveLevel's own top-level
         // workBudget uses when a caller doesn't supply one explicitly.
         const dedupRetryTotalBudget = Math.floor(timeBudgetMs * dedupRetryBudgetFraction);
         const dedupRetryResult = await runWholeLadderRetryTier({
@@ -2160,7 +2159,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
             totalBudgetMs: dedupRetryTotalBudget, nodeCeiling: dedupRetryNodeCeiling,
-            workBudget: Math.max(MIN_ATTEMPT_WORK, Math.floor(dedupRetryTotalBudget * DEFAULT_WORK_PER_MS)),
+            workBudget: legacyMsToWork(dedupRetryTotalBudget, MIN_ATTEMPT_WORK),
             workStart: prep._workMeter.units,
             staircase: retryTierStaircase,
         });
@@ -2194,13 +2193,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // mutable field those two functions last wrote before this tier runs (from the main loop,
         // ordinarily) — nothing resets it fresh for a `runAttempt`-direct caller positioned this late,
         // so without this override this tier would silently inherit a stale, likely-already-exceeded
-        // cap and find nothing regardless of its own node ceiling. Restored in `finally` purely for
-        // hygiene — this is the ladder's last tier, so nothing downstream reads `prep._workCap` again.
-        const originalWorkCap = prep._workCap;
-        try {
-            const nonDefaultRetryTotalBudget = Math.floor(timeBudgetMs * nonDefaultRetryBudgetFraction);
-            const nonDefaultRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(nonDefaultRetryTotalBudget * DEFAULT_WORK_PER_MS));
-            prep._workCap = Math.min(prep._workMeter.units + nonDefaultRetryWorkBudget, prep._strictWorkCap ?? Infinity);
+        // cap and find nothing regardless of its own node ceiling. withWorkCapScope owns/restores the
+        // compatibility field lexically so no later stage can inherit this tier's cap.
+        const nonDefaultRetryTotalBudget = Math.floor(timeBudgetMs * nonDefaultRetryBudgetFraction);
+        const nonDefaultRetryWorkBudget = legacyMsToWork(nonDefaultRetryTotalBudget, MIN_ATTEMPT_WORK);
+        await withWorkCapScope(prep, prep._workMeter.units + nonDefaultRetryWorkBudget, async () => {
             // Same per-profile/per-gate loop shape as the admissible-order tier's own pass above
             // (deliberately NOT a single combined runInterleavedAttempts/runGateSerialAttempts call —
             // see that tier's own comment for why: every validated admissible-order solve was found
@@ -2226,9 +2223,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                     if (r.path) { result.solution = r.path; break; }
                 }
             }
-        } finally {
-            prep._workCap = originalWorkCap;
-        }
+        });
     }
 
     // Last-resort connectivity-axis-exhausted retry pass (CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_
@@ -2259,7 +2254,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
             totalBudgetMs: connectivityRetryTotalBudget, nodeCeiling: connectivityRetryNodeCeiling,
-            workBudget: Math.max(MIN_ATTEMPT_WORK, Math.floor(connectivityRetryTotalBudget * DEFAULT_WORK_PER_MS)),
+            workBudget: legacyMsToWork(connectivityRetryTotalBudget, MIN_ATTEMPT_WORK),
             workStart: prep._workMeter.units,
             staircase: retryTierStaircase,
         });
@@ -2292,38 +2287,35 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         const originalCfg = prep._cfg;
         const repairElitePrefixDfsRetryCfg = buildRetryTierAblationOverride(originalCfg, { STRATEGY_REPAIR_ELITE_PREFIX_DFS: true });
         prep._cfg = repairElitePrefixDfsRetryCfg;
-        // FRESH, ADDITIVE `prep._workCap` override — same "extend, don't share the depleted pool"
-        // philosophy as the non-default-retry tier's own override above (that tier's own history:
-        // `prep._workCap` is a single mutable field this tier's own `runAttempt`-direct calls would
-        // otherwise silently inherit stale from whichever earlier tier last wrote it).
-        const originalWorkCap = prep._workCap;
+        // FRESH, ADDITIVE work scope — same "extend, don't share the depleted pool" philosophy as
+        // the non-default-retry tier above, but with lexical ownership/restoration.
+        const repairElitePrefixDfsRetryTotalBudget = Math.floor(timeBudgetMs * repairElitePrefixDfsRetryBudgetFraction);
+        const repairElitePrefixDfsRetryWorkBudget = legacyMsToWork(repairElitePrefixDfsRetryTotalBudget, MIN_ATTEMPT_WORK);
         try {
-            const repairElitePrefixDfsRetryTotalBudget = Math.floor(timeBudgetMs * repairElitePrefixDfsRetryBudgetFraction);
-            const repairElitePrefixDfsRetryWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(repairElitePrefixDfsRetryTotalBudget * DEFAULT_WORK_PER_MS));
-            prep._workCap = Math.min(prep._workMeter.units + repairElitePrefixDfsRetryWorkBudget, prep._strictWorkCap ?? Infinity);
-            // Same per-config/per-gate loop shape as the ordinary repair fallback loop above.
-            for (const repairConfig of repairConfigs) {
-                if (result.solution) break;
-                if (prep._metrics.nodesExpanded >= repairElitePrefixDfsRetryNodeCeiling) break;
-                const retryStart = Date.now();
-                for (let gi = 0; gi < activeGates.length; gi++) {
+            await withWorkCapScope(prep, prep._workMeter.units + repairElitePrefixDfsRetryWorkBudget, async () => {
+                // Same per-config/per-gate loop shape as the ordinary repair fallback loop above.
+                for (const repairConfig of repairConfigs) {
+                    if (result.solution) break;
                     if (prep._metrics.nodesExpanded >= repairElitePrefixDfsRetryNodeCeiling) break;
-                    const gateKey = activeGates[gi];
-                    const elapsed = Date.now() - retryStart;
-                    const gatesLeft = activeGates.length - gi;
-                    const retryBudget = Math.floor((repairElitePrefixDfsRetryTotalBudget - elapsed) / gatesLeft);
-                    if (retryBudget < 50) break;
-                    const remainingNodeBudget = repairElitePrefixDfsRetryNodeCeiling === Infinity
-                        ? Infinity
-                        : Math.max(0, repairElitePrefixDfsRetryNodeCeiling - prep._metrics.nodesExpanded);
-                    const r = await runAttempt(gateKey, level, prep, repairConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
-                    result.attempts.push(withSolverStage(r.attempt, 'repair-elite-prefix-dfs-retry'));
-                    if (r.path) { result.solution = r.path; break; }
+                    const retryStart = Date.now();
+                    for (let gi = 0; gi < activeGates.length; gi++) {
+                        if (prep._metrics.nodesExpanded >= repairElitePrefixDfsRetryNodeCeiling) break;
+                        const gateKey = activeGates[gi];
+                        const elapsed = Date.now() - retryStart;
+                        const gatesLeft = activeGates.length - gi;
+                        const retryBudget = Math.floor((repairElitePrefixDfsRetryTotalBudget - elapsed) / gatesLeft);
+                        if (retryBudget < 50) break;
+                        const remainingNodeBudget = repairElitePrefixDfsRetryNodeCeiling === Infinity
+                            ? Infinity
+                            : Math.max(0, repairElitePrefixDfsRetryNodeCeiling - prep._metrics.nodesExpanded);
+                        const r = await runAttempt(gateKey, level, prep, repairConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
+                        result.attempts.push(withSolverStage(r.attempt, 'repair-elite-prefix-dfs-retry'));
+                        if (r.path) { result.solution = r.path; break; }
+                    }
                 }
-            }
+            });
         } finally {
             prep._cfg = originalCfg;
-            prep._workCap = originalWorkCap;
         }
     }
 
@@ -2354,8 +2346,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // THE DEFECT. runGateSerialAttempts/runInterleavedAttempts divide budget BETWEEN configs in
         // WORK units (`attemptBudgetShare` over `workBudget`), but treat the node ceiling as a
         // single shared ABSOLUTE cap with no per-config subdivision unless the staircase is used.
-        // Every retry tier sizes its fresh work budget as `timeBudgetMs * fraction *
-        // DEFAULT_WORK_PER_MS` — and under the capability protocol `timeBudgetMs` is a deliberately
+        // Every retry tier sizes its fresh work budget as `timeBudgetMs * fraction and converts that legacy ms-shaped amount to work` — and under the capability protocol `timeBudgetMs` is a deliberately
         // NON-BINDING 24h deadline (`deterministic=true`, see docs/solver-budget-determinism.md).
         // That makes the work pool ~2.9e11 units, so the work-based division never bites, and the
         // FIRST config simply runs until the tier's absolute node ceiling is gone. Measured directly
@@ -2387,7 +2378,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
             totalBudgetMs: mcNeighborBudgetRetryTotalBudget, nodeCeiling: mcNeighborBudgetRetryNodeCeiling,
-            workBudget: Math.max(MIN_ATTEMPT_WORK, Math.floor(mcNeighborBudgetRetryTotalBudget * DEFAULT_WORK_PER_MS)),
+            workBudget: legacyMsToWork(mcNeighborBudgetRetryTotalBudget, MIN_ATTEMPT_WORK),
             workStart: prep._workMeter.units,
             staircase: true,
         });
@@ -2443,10 +2434,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // `prep._workMeter.units >= (prep._workCap ?? Infinity)` as a hard stop, so a stale, already-spent
         // cap would make this tier's very first `runAttempt` call terminate immediately regardless of
         // its own generous node/time budget.
-        const originalWorkCap = prep._workCap;
-        try {
-            const repairLateProbeWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(repairLateProbeTotalBudget * DEFAULT_WORK_PER_MS));
-            prep._workCap = Math.min(prep._workMeter.units + repairLateProbeWorkBudget, prep._strictWorkCap ?? Infinity);
+        const repairLateProbeWorkBudget = legacyMsToWork(repairLateProbeTotalBudget, MIN_ATTEMPT_WORK);
+        await withWorkCapScope(prep, prep._workMeter.units + repairLateProbeWorkBudget, async () => {
             for (let gi = 0; gi < activeGates.length; gi++) {
                 if (prep._metrics.nodesExpanded >= repairLateProbeNodeCeiling) break;
                 const ownBudgetRemaining = repairLateProbeNodeBudget - (prep._metrics.nodesExpanded - repairLateProbeEntryNodes);
@@ -2464,9 +2453,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 result.attempts.push(withSolverStage(r.attempt, 'repair-late-probe'));
                 if (r.path) { result.solution = r.path; break; }
             }
-        } finally {
-            prep._workCap = originalWorkCap;
-        }
+        });
     }
 
     // Last-resort SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE retry pass (GOAL_ATTRACTION_LEGACY_
@@ -2500,7 +2487,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
             totalBudgetMs: goalAttractionLegacyDistanceRetryTotalBudget, nodeCeiling: goalAttractionLegacyDistanceRetryNodeCeiling,
-            workBudget: Math.max(MIN_ATTEMPT_WORK, Math.floor(goalAttractionLegacyDistanceRetryTotalBudget * DEFAULT_WORK_PER_MS)),
+            workBudget: legacyMsToWork(goalAttractionLegacyDistanceRetryTotalBudget, MIN_ATTEMPT_WORK),
             workStart: prep._workMeter.units,
             staircase: retryTierStaircase,
         });
@@ -2531,7 +2518,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 if (prep._metrics.nodesExpanded >= repairLateProbeMultiSeedRetryNodeCeiling) break;
                 const roundStart = Date.now();
                 const roundEntryNodes = prep._metrics.nodesExpanded;
-                const roundWorkBudget = Math.max(MIN_ATTEMPT_WORK, Math.floor(timeBudgetMs * DEFAULT_WORK_PER_MS));
+                const roundWorkBudget = legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);
                 prep._workCap = Math.min(prep._workMeter.units + roundWorkBudget, prep._strictWorkCap ?? Infinity);
                 for (let gi = 0; gi < activeGates.length; gi++) {
                     if (prep._metrics.nodesExpanded >= repairLateProbeMultiSeedRetryNodeCeiling) break;
