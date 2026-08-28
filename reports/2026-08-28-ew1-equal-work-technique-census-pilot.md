@@ -1,13 +1,9 @@
 # EW1 equal-work technique census pilot
 
-> **Status:** concluded / canonical bounded pilot.
-> **Corrected solver run:** GitHub Actions `33156541827`.
-> **Population:** 60 deterministic frozen-gap levels.
-> **Seed:** `20260828`.
-> **Cell budget:** 10,000,000 canonical work units.
-> **Techniques:** 34 mechanically eligible base actions.
-> **Planned/executed cells:** 2,015 / 2,015.
-> **Evidence role:** development pricing evidence for scheduler architecture, not a production policy by itself.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-08-28 — corrected run 33156541827: 2,015/2,015 cells, zero errors/deadline truncations, 12/60 oracle union, all cells held to the intended ~10M work envelope
+> **Decision:** accept corrected EW1 as the canonical bounded equal-work pilot; beams dominate the shallow work frontier but DFS/IDA/repair retain distinct exclusive capability, supporting cheap screens first and protected/competitive deep continuations
+> **Remaining gate:** none for this pilot; do not expand EW1 merely for smoother rankings
 
 ## Why this pilot exists
 
