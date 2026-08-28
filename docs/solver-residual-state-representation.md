@@ -1,6 +1,6 @@
 # Solver residual-state representation research
 
-> **Role:** durable cross-cutting research reference for how Pathfinder should *reason about* unresolved futures. This is not a production architecture, implementation mandate, or ranked queue. Current priority remains [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md); research/promotion rules remain [`solver-research-operating-model.md`](solver-research-operating-model.md).
+> **Role:** durable cross-cutting research reference for how Pathfinder should *reason about* unresolved futures. This is not a production architecture, implementation mandate, or ranked queue. Current priority remains [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); research/promotion rules remain [`solver-research-operating-model.md`](solver-research-operating-model.md).
 
 This document consolidates the external-literature concepts that now recur across beam retention, residual feasibility, exact/reference work, repair, learned failure, and later dynamic scheduling.
 
@@ -162,7 +162,7 @@ Pathfinder does not currently possess the algebra/proof required for such a guar
 - a lower-score survivor can be valuable if it preserves an otherwise absent future class;
 - pairwise distance is secondary to set-level extension coverage.
 
-Current beam gates remain in [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md).
+Current beam gates remain in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 
 ## Interface width, basin width, and backdoor depth are different
 
