@@ -78,6 +78,10 @@ This prerequisite does **not** require converting production to `strictTotalWork
 
 Before live reordering, materialize comparable current action/reach/`workSpent` data and build:
 
+### Equal-work calibration now available
+
+The bounded EW1 pilot ([2026-08-28 report](../reports/2026-08-28-ew1-equal-work-technique-census-pilot.md)) supplies the first decision-bearing cross-family calibration in canonical work: 60 frozen-gap levels, 34 base techniques, 2,015 eligible cells at 10M work each. Corrected run 33156541827 produced a 12/60 oracle union with beams solving 8 levels, 6 beam-exclusive; IDA 3 levels, 2 exclusive; ordinary DFS 2, 1 exclusive; repair 2, 1 exclusive. Every beam naturally exhausted below 10M while almost every unsuccessful DFS/IDA/repair cell consumed the cap. Treat this as strong support for **cheap beam screens first, protected distinct deep capability later, and competitive DFS/IDA continuation entitlement**. Do not expand EW1 just for smoother rankings; join these prices to current production reach/work before the next static matched-work A/B.
+
 ### Residual/tranche table
 
 For each material action/context/tranche report eligible/reached population; risk set at tranche start; solves/unique marginal solves; natural exhaustion vs censoring; solved/failed `workSpent`; failed-work tax; overlap/substitution with alternatives; current reach; evidence provenance; uncertainty/denominator.
