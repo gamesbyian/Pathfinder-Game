@@ -361,6 +361,24 @@ jobs:
           }
           "
 
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json" \
+            --include="reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json" \
+            --source-artifact="committed high-budget combined reports"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Commit newly-solved hints + combined reports + updated telemetry directly to main
         shell: bash
         run: |
