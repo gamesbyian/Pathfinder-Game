@@ -11,6 +11,7 @@
  *     --solve-result=/tmp/family-P00086-solve.json --parent-solve-result=/tmp/parent-P00086-solve.json
  */
 import { readFileSync } from 'node:fs';
+import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 import process from 'node:process';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
