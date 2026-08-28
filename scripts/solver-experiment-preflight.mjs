@@ -2,7 +2,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { compareExperimentArms, levelSelectionHash, validateExperimentManifest } from './experiment-manifest-lib.mjs';
+import { compareExperimentArms, EXPERIMENT_BUDGET_PROTOCOLS, levelSelectionHash, validateExperimentManifest } from './experiment-manifest-lib.mjs';
 import { defaultConfig } from '../modules/solver/ablation-config.js';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => {
@@ -48,6 +48,10 @@ if (unknownFlags.length) throw new Error(`unknown solver flags: ${unknownFlags.j
 const workflow = args.get('--workflow') ?? 'direct';
 const workflowInputs = parseWorkflowInputs();
 const solverFlags = { ...productionFlags, ...flags };
+const budgetProtocol = args.get('--budget-protocol') ?? 'production-additive';
+if (!EXPERIMENT_BUDGET_PROTOCOLS.includes(budgetProtocol)) {
+    throw new Error(`--budget-protocol must be one of: ${EXPERIMENT_BUDGET_PROTOCOLS.join(', ')}`);
+}
 
 if (workflow === 'solver-stress-refresh') {
     const enabled = (workflowInputs.enable_flags ?? '').split(',').filter(Boolean);
@@ -71,9 +75,10 @@ const manifest = validateExperimentManifest({
     arm, solverFlags, workflow, workflowInputs,
     seeds: (args.get('--seeds') ?? '').split(',').filter(Boolean).map(Number),
     canonicalWorkBudget: Number(required('--work-budget')), wallDeadlineMs: Number(required('--wall-deadline-ms')),
+    budgetProtocol,
     profile: required('--profile'), instrumentation: args.get('--instrumentation') ?? 'off', output,
     createdAt: new Date().toISOString(),
 });
 mkdirSync(path.dirname(output), { recursive: true });
 writeFileSync(output, `${JSON.stringify(manifest, null, 2)}\n`);
-console.log(`Preflight OK: ${arm}, ${requested.length} levels, ${manifest.solverRef}, workflow=${workflow}, ${output}`);
+console.log(`Preflight OK: ${arm}, ${requested.length} levels, ${manifest.solverRef}, workflow=${workflow}, budgetProtocol=${budgetProtocol}, ${output}`);
