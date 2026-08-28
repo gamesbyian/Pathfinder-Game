@@ -213,8 +213,8 @@ console.log(`portfolio-scheduler-report: corpus=${path.relative(root, corpusPath
 for (const [i, levelNumber] of targets.entries()) {
     const raw = rawLevels[levelNumber - 1];
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
-    const legacy = await Solver.solve(level, { timeBudgetMs: budgetMs });
-    const portfolio = await Solver.solve(level, { timeBudgetMs: budgetMs, schedulerMode: 'portfolio-experiment', portfolioExperiment });
+    const legacy = await Solver.solveLevel(level, { timeBudgetMs: budgetMs });
+    const portfolio = await Solver.solveLevel(level, { timeBudgetMs: budgetMs, schedulerMode: 'portfolio-experiment', portfolioExperiment });
 
     const portfolioPass = passForPortfolioWin(portfolio);
     const solvedBeforeFallback = !!portfolio?.portfolio?.solvedBeforeFallback;
