@@ -2,7 +2,7 @@
 // Distance is edge Jaccard, augmented with crossing placement on near-Hamiltonian levels and
 // must-cross order where applicable. Coverage by (gate, portal signature) takes precedence over cap.
 // Heatmaps still use the full path list.
-import { buildPathFeatures, featureDistance, portalSignature, NEAR_HAMILTONIAN_DENSITY } from './path-features.js';
+import { buildPathFeatures, featureDistance, portalSignature, NEAR_HAMILTONIAN_COVERAGE_THRESHOLD } from './path-features.js';
 import type { PathFeatures } from './path-features.js';
 
 export interface HintDisplaySelection {
@@ -47,11 +47,11 @@ const _memo = new WeakMap<number[][], { floor: number; cap: number; useCrossings
 /** Curated display subset plus whether all hidden paths are similar. */
 export function selectDisplayHints(
     pathList: number[][],
-    opts: { floor?: number; cap?: number; navDensity?: number; mustCrossKeys?: number[] } = {},
+    opts: { floor?: number; cap?: number; requiredPathCoverageRatio?: number; mustCrossKeys?: number[] } = {},
 ): HintDisplaySelection {
     const floor = opts.floor ?? DEFAULT_FLOOR;
     const cap = opts.cap ?? DEFAULT_CAP;
-    const useCrossings = (opts.navDensity ?? 0) >= NEAR_HAMILTONIAN_DENSITY;
+    const useCrossings = (opts.requiredPathCoverageRatio ?? 0) >= NEAR_HAMILTONIAN_COVERAGE_THRESHOLD;
     // Order varies only with at least two must-cross squares.
     const mcKeys = (opts.mustCrossKeys && opts.mustCrossKeys.length >= 2) ? opts.mustCrossKeys : [];
     const mcKey = mcKeys.join(',');
