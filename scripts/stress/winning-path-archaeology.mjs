@@ -11,7 +11,7 @@
  *   - rank: the known winning move's 1-indexed rank among those candidates sorted by score
  *     descending (matching production's own `pool.sort((a, b) => b.score - a.score)` convention);
  *   - scoreGap: score(rank-1 candidate) - score(winning candidate), 0 when the winner IS rank 1.
- * Levels are also cold-solved (via the same Solver.solve() production entrypoint, a modest
+ * Levels are also cold-solved (via the same Solver.solveLevel() production entrypoint, a modest
  * exploratory budget — see BUDGET below, NOT the authoritative corpus baseline) so results can be
  * bucketed by solved-vs-unsolved and compared.
  *
@@ -102,7 +102,7 @@ for (const { raw, idx } of sample) {
 
     let coldSolved = null;
     try {
-        const coldResult = await Solver.solve(prodLevel, { timeBudgetMs: COLD_SOLVE_TIME_BUDGET_MS, workBudget: COLD_SOLVE_WORK_BUDGET });
+        const coldResult = await Solver.solveLevel(prodLevel, { timeBudgetMs: COLD_SOLVE_TIME_BUDGET_MS, workBudget: COLD_SOLVE_WORK_BUDGET });
         coldSolved = !!(coldResult && coldResult.ok && coldResult.solution);
     } catch (e) {
         console.warn(`  ${levelId}: cold-solve threw (${e.message}), recording coldSolved=null`);
