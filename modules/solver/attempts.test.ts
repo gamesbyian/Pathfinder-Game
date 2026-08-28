@@ -270,9 +270,9 @@ test('STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE adds only the
 });
 
 test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps the old protected five-config suffix intact', () => {
-  const sig = c => [c.profileName, c.template?.id ?? null, c.beamWidth ?? null, !!c.diverseBeam];
+  const sig = (c: any) => [c.profileName, c.template?.id ?? null, c.beamWidth ?? null, !!c.diverseBeam];
 
-  const assertPreservesSuffix = level => {
+  const assertPreservesSuffix = (level: any) => {
     const off = getAttemptConfigs(level, null);
     const on = getAttemptConfigs(level, {
       ...defaultConfig(),
