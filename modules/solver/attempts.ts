@@ -1,7 +1,7 @@
 import { classifyRoutingRegime, getRequiredPathCoverageRatio } from './archetype.js';
-import { ATTEMPT_CONFIGS, PROFILE_ORDER, TEMPLATE_CONFIG_KEYS, TEMPLATES } from './policy.js';
+import { ATTEMPT_CONFIGS, SCORING_PROFILE_ORDER, ORDERING_BIAS_CONFIG_KEYS, STRUCTURAL_ORDERING_BIASES } from './policy.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { AblationConfig, AttemptConfig, StructuralTemplate } from './types.js';
+import type { AblationConfig, AttemptConfig, StructuralOrderingBias } from './types.js';
 import { canonicalAblationFeatureName, defaultConfig } from './ablation-config.js';
 
 /**
@@ -31,11 +31,11 @@ const POLICY = {
     COMBO_MUSTCROSS: 3,
     /** must-pass count paired with COMBO_MUSTCROSS. */
     COMBO_MUSTPASS: 2,
-    /** flipping-filter count ≥ this: a progressive diverse-beam ladder is the sole strategy. */
+    /** flipping-filter count ≥ this: a progressive mechanic-bucket-beam ladder is the sole strategy. */
     FLIPPER_HEAVY: 2,
     /** must-cross count ≥ this on a medium-high-int level: plain narrow beams collapse to one
      *  structural mode (all survivors share the same crossing pattern) and the DFS fallbacks
-     *  can't thread the weave either — a diverse WIDE beam, bucketed by flipper/must-cross
+     *  can't thread the weave either — a mechanic-bucket WIDE beam, bucketed by flipper/must-cross
      *  state and budget-floored against ladder fragmentation, finds the threaded solution
      *  (stress-corpus finding on mechanic-interaction levels). */
     HIGHINT_MC_DIVERSE: 2,
@@ -98,22 +98,22 @@ export function extractFeatures(level: NormalizedLevel): LevelFeatures {
 
 // ─── Config vocabulary ──────────────────────────────────────────────────────
 // dfs(): a DFS attempt (no beamWidth). beam(): a beam attempt of the given width. Both take an
-// optional template and extra fields (minBudgetFraction / diverseBeam). These replace the repeated
+// optional orderingBias and extra fields (minBudgetFraction / mechanicBucketRetention). These replace the repeated
 // inline object literals so each policy bundle reads as intent, not boilerplate.
-const dfs = (profileName: string, template: StructuralTemplate | null = null): AttemptConfig => ({ profileName, template });
+const dfs = (scoringProfileId: string, orderingBias: StructuralOrderingBias | null = null): AttemptConfig => ({ scoringProfileId, orderingBias });
 const beam = (
-    profileName: string, beamWidth: number, template: StructuralTemplate | null = null,
-    extra: { minBudgetFraction?: number; diverseBeam?: boolean } = {},
-): AttemptConfig => ({ profileName, template, beamWidth, ...extra });
+    scoringProfileId: string, beamWidth: number, orderingBias: StructuralOrderingBias | null = null,
+    extra: { minBudgetFraction?: number; mechanicBucketRetention?: boolean } = {},
+): AttemptConfig => ({ scoringProfileId, orderingBias, beamWidth, ...extra });
 
-const { perimeterCW, perimeterCCW, cornerHarvest, sideCommitment } = TEMPLATES;
+const { perimeterCW, perimeterCCW, cornerHarvest, sideCommitment } = STRUCTURAL_ORDERING_BIASES;
 
-/** Lead profiles first, then the rest of PROFILE_ORDER, then the non-null template configs. */
+/** Lead profiles first, then the rest of SCORING_PROFILE_ORDER, then the non-null orderingBias configs. */
 function profilesFirst(lead: string[]): AttemptConfig[] {
-    const order = [...lead, ...PROFILE_ORDER.filter(p => !lead.includes(p))];
+    const order = [...lead, ...SCORING_PROFILE_ORDER.filter(p => !lead.includes(p))];
     return [
         ...order.map(p => dfs(p)),
-        ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
+        ...ATTEMPT_CONFIGS.filter(c => c.orderingBias !== null),
     ];
 }
 
@@ -136,11 +136,11 @@ const isMustCross = (f: LevelFeatures) => f.routingRegime === 'must-cross-heavy'
 export const isMustCrossFlipperHeavy = (f: LevelFeatures) =>
     isMustCross(f) && f.mustPass >= POLICY.OBJECTIVE_HEAVY_MUSTPASS && f.flippers >= POLICY.FLIPPER_HEAVY;
 
-/** Diverse WIDE beams for must-cross-threaded high-int levels — see POLICY.HIGHINT_MC_DIVERSE.
+/** Mechanic-bucket WIDE beams for must-cross-threaded high-int levels — see POLICY.HIGHINT_MC_DIVERSE.
  *  Budget floors keep them viable against per-gate/per-config ladder fragmentation. */
 const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= POLICY.HIGHINT_MC_DIVERSE ? [
-    beam('intersectionHarvest', BEAM.WIDE, null, { diverseBeam: true, minBudgetFraction: 0.35 }),
-    beam('objectiveFirst', BEAM.WIDE, null, { diverseBeam: true, minBudgetFraction: 0.25 }),
+    beam('intersectionHarvest', BEAM.WIDE, null, { mechanicBucketRetention: true, minBudgetFraction: 0.35 }),
+    beam('objectiveFirst', BEAM.WIDE, null, { mechanicBucketRetention: true, minBudgetFraction: 0.25 }),
 ] : [];
 
 /** See POLICY.REPAIR_MC_MIN/REPAIR_MP_MIN. Orchestration (solveLevel) gives this attempt its
@@ -183,22 +183,22 @@ const needsRepairFallback = (f: LevelFeatures, cfg: AblationConfig | null = null
 // Exported for orchestration.ts's STRATEGY_REPAIR_LATE_PROBE tier, which needs to build a plain
 // repair AttemptConfig itself when repairConfigs is empty (needsRepairFallback was false) — see
 // that tier's own comment.
-export const repairAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true });
+export const repairAttempt = (): AttemptConfig => ({ scoringProfileId: 'repair', orderingBias: null, repair: true });
 /** A second repair attempt, appended only when the level has must-turn cells (so a level with
  *  none can never reach it) and only ever run after the ordinary repairAttempt above has already
  *  failed — see AttemptConfig.repairMustTurnBiased and data/stress/README.md's S043 writeup. */
-const repairMustTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true, repairMustTurnBiased: true });
+const repairMustTurnBiasedAttempt = (): AttemptConfig => ({ scoringProfileId: 'repair', orderingBias: null, repair: true, repairMustTurnBiased: true });
 /** A third repair attempt (turn-aware selective bias, see AttemptConfig.repairTurnBiased). Added ONLY
  *  under an explicit STRATEGY_REPAIR_TURN_BIAS flag (default-off in production) and only on must-turn
  *  levels, placed FIRST among the repair configs (see the append site below) so it solves fast rather
  *  than being buried; pending corpus-2 validation. */
-const repairTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true, repairTurnBiased: true });
+const repairTurnBiasedAttempt = (): AttemptConfig => ({ scoringProfileId: 'repair', orderingBias: null, repair: true, repairTurnBiased: true });
 
 /** admissible-order-search.ts winners as a last-resort tier — orchestration.ts's solveLevel pulls
  *  these out of the returned config list (same pattern as repairConfigs) and runs each ENTRY as its
  *  own sequential sub-pass with its own full, unshared budget slice (divided across gates only,
  *  never diluted by sibling entries — see that call site's own comment), ONLY after the main
- *  ladder, repair fallback, and attraction-diversity pass have all already failed. `profileName`
+ *  ladder, repair fallback, and attraction-diversity pass have all already failed. `scoringProfileId`
  *  selects the TIE-BREAK profile (admissible slack is always the primary ordering — see that file's
  *  own doc), not a DFS/beam scoring profile in the usual sense; 'none' is a sentinel meaning "no
  *  tie-break at all" (admissibleOrderAttempt below sets admissibleOrderNoTieBreak for it instead of
@@ -217,16 +217,16 @@ const repairTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', t
  *  `--only=ida:<key>` runs, never multiple entries sharing one call) — fixed by giving each entry
  *  its own sequential sub-pass instead (see orchestration.ts's call site).
  *
- *  The remaining 8 PROFILE_ORDER entries scored 0 hits on local sampling and were never validated at
+ *  The remaining 8 SCORING_PROFILE_ORDER entries scored 0 hits on local sampling and were never validated at
  *  full-corpus scale — left out until that validation exists. Unconditional (not feature-gated): the
  *  validated wins span multiple routing regimes with no single predictive feature found yet, mirroring
  *  ATTRACTION_DIVERSITY_CANDIDATE_FLAGS's own "no shared structural predictor found" reasoning above.
  *  Gated only by ablation flag STRATEGY_ADMISSIBLE_ORDER (default-on — absent/null cfg enables it,
  *  matching every other stable strategy flag's polarity). */
 export const ADMISSIBLE_ORDER_PROFILES = ['default', 'none', 'mustCrossFirst', 'intersectionHarvest', 'nearClosureRescue'] as const;
-const admissibleOrderAttempt = (profileName: string): AttemptConfig => profileName === 'none'
-    ? { profileName: 'none', template: null, admissibleOrder: true, admissibleOrderNoTieBreak: true }
-    : { profileName, template: null, admissibleOrder: true };
+const admissibleOrderAttempt = (scoringProfileId: string): AttemptConfig => scoringProfileId === 'none'
+    ? { scoringProfileId: 'none', orderingBias: null, admissibleOrder: true, admissibleOrderNoTieBreak: true }
+    : { scoringProfileId, orderingBias: null, admissibleOrder: true };
 
 /** Which of the two biased repair techniques is more LIKELY to be the level's real winner, when
  *  STRATEGY_REPAIR_TURN_BIAS is on — used only to decide ORDER (which runs first) and probe-budget
@@ -300,12 +300,12 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         build: () => profilesFirst(['nearClosureRescue', 'harvestThenFinish', 'finishFirst', 'perimeterSweep']),
     },
     {
-        // Must-cross-threaded levels: the diverse beams are the ones that actually solve this
+        // Must-cross-threaded levels: the mechanic-bucket beams are the ones that actually solve this
         // routing regime (the plain WIDE beams never do — stress-corpus finding, same reasoning as
         // the non-portal sibling rule below) — put them first so the 0.35/0.25 minBudgetFraction
         // floors are computed against the full remaining budget instead of being squeezed by two
-        // non-diverse beams that each burn a full even share first. Mirrors the shipped
-        // diverse-beam-first reorder for the non-portal rule (see data/stress/README.md's S017
+        // non-mechanic-bucket beams that each burn a full even share first. Mirrors the shipped
+        // mechanic-bucket-beam-first reorder for the non-portal rule (see data/stress/README.md's S017
         // writeup); this rule had the same plain-beams-first ordering bug, just undiscovered
         // until a portal-dense + must-cross-threaded stress level (S049) surfaced it. No-op on
         // levels below POLICY.HIGHINT_MC_DIVERSE (mcDiverseThread returns [] there), so their
@@ -341,10 +341,10 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         ],
     },
     {
-        // Must-cross-threaded levels: the diverse beams are the ones that actually solve this
+        // Must-cross-threaded levels: the mechanic-bucket beams are the ones that actually solve this
         // routing regime (the plain WIDE beams never do — stress-corpus finding) — put them first so
         // the 0.35/0.25 minBudgetFraction floors are computed against the full remaining budget
-        // instead of being squeezed by two non-diverse beams that each burn a full even share first.
+        // instead of being squeezed by two non-mechanic-bucket beams that each burn a full even share first.
         why: 'very-high reqInt, non-portal: intersectionHarvest beam wins directly, DFS fallbacks follow',
         when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT,
         build: (f, cfg) => [
@@ -405,7 +405,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             return [
                 beam('perimeterSweep', BEAM.STANDARD, perimeterCW, { minBudgetFraction: beamFloor }),
                 beam('perimeterSweep', BEAM.STANDARD, perimeterCCW, { minBudgetFraction: beamFloor }),
-                // Must-cross-threaded: diverse WIDE beams right after the proven perimeter winners.
+                // Must-cross-threaded: mechanic-bucket WIDE beams right after the proven perimeter winners.
                 ...mcDiverseThread(f),
                 beam('intersectionHarvest', BEAM.STANDARD),
                 beam('objectiveFirst', BEAM.STANDARD),
@@ -432,7 +432,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // entries get a protected node-budget reserve regardless of what earlier configs consume, so
         // this placement recovers previously-unsolved levels (where earlier DFS attempts can burn
         // their full allocated time without concluding) while costing nothing on already-solving
-        // levels — the main loop exits on first success, so an already-fast template/profile win
+        // levels — the main loop exits on first success, so an already-fast orderingBias/profile win
         // never even reaches these trailing beam configs. A first attempt at leading with beam
         // instead recovered the same levels but cost every already-solving level in this routing regime
         // 1-6+ seconds of needless beam search first (measured on the published corpus: +94% total
@@ -447,21 +447,21 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         when: f => f.routingRegime === 'multi-portal',
         build: () => [
             dfs('portalFirstTransfer'), dfs('portalCommitted'),
-            ...PROFILE_ORDER.filter(p => p !== 'portalFirstTransfer' && p !== 'portalCommitted').map(p => dfs(p)),
-            ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
+            ...SCORING_PROFILE_ORDER.filter(p => p !== 'portalFirstTransfer' && p !== 'portalCommitted').map(p => dfs(p)),
+            ...ATTEMPT_CONFIGS.filter(c => c.orderingBias !== null),
             beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
             beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
         ],
     },
     {
-        why: 'must-cross + flipper-heavy with many objectives: diverse beam, then DFS fallbacks (see BEAM comment above — wider tiers removed, proven not to help this routing regime)',
+        why: 'must-cross + flipper-heavy with many objectives: mechanic-bucket beam, then DFS fallbacks (see BEAM comment above — wider tiers removed, proven not to help this routing regime)',
         when: isMustCrossFlipperHeavy,
         build: () => [
-            // Diverse beam buckets candidates by (flipperUsedMask, mustCrossMask) so all valid flipper
+            // Mechanic-bucket beam buckets candidates by (flipperUsedMask, mustCrossMask) so all valid flipper
             // orderings stay alive. The repair fallback (attempts.ts's needsRepairFallback, always
             // present here — this rule's predicate implies it) now solves nearly everything in this
             // routing regime via its own early probe before this main loop even runs.
-            beam('intersectionHarvest', BEAM.WIDE, null, { diverseBeam: true }),
+            beam('intersectionHarvest', BEAM.WIDE, null, { mechanicBucketRetention: true }),
             dfs('objectiveFirst'), dfs('intersectionHarvest'),
             // Cross-referencing the 2026-08-20 technique census against the 2026-08-21 capability
             // run (docs/solver-optimization-workstreams.md) found this rule offers no
@@ -486,14 +486,14 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // here was plain dfs:perimeterSweep/perimeterCW. Trailing, protected-reserve placement.
             dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW),
             // Follow-up (docs/solver-optimization-workstreams.md / solver-future-work.md
-            // "must-cross-heavy diverse-beam gaps"): this rule never offers a diverse WIDE beam at all
+            // "must-cross-heavy mechanic-bucket-beam gaps"): this rule never offers a mechanic-bucket WIDE beam at all
             // (mcDiverseThread isn't used here) — R02299's cheap (281,990-node) isolated win was
-            // beam:objectiveFirst@beam5000(diverse). Previously left open because this rule's
+            // beam:objectiveFirst@beam5000(mechanic-bucket). Previously left open because this rule's
             // MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT-4 reserve window was already fully spent on the
             // perimeter-DFS fix directly above; landed together with the reserve count's validated
             // 4->5 increase (stage-budget.ts) so this 5th trailing config gets the same protection
             // without displacing dfs:perimeterSweep/perimeterCW out of the window.
-            beam('objectiveFirst', BEAM.WIDE, null, { diverseBeam: true }),
+            beam('objectiveFirst', BEAM.WIDE, null, { mechanicBucketRetention: true }),
             // Ablation: STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE (default-OFF, NEW unvalidated
             // pilot, 2026-08-26 — see that flag's own comment in ablation-config.ts). This rule's
             // window is once again fully spent (the 8th config above already fills the 5-slot
@@ -517,7 +517,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         ],
     },
     {
-        why: 'must-cross default: template DFS solves simple MC levels fast, then beams, then DFS profiles',
+        why: 'must-cross default: orderingBias DFS solves simple MC levels fast, then beams, then DFS profiles',
         when: isMustCross,
         build: (f, cfg) => [
             dfs('perimeterSweep', cornerHarvest), dfs('perimeterSweep', perimeterCW),
@@ -531,12 +531,12 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // perimeterSweep/perimeterCCW@beam2000. Trailing, protected-reserve placement.
             beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
             // Follow-up (docs/solver-optimization-workstreams.md / solver-future-work.md
-            // "must-cross-heavy diverse-beam gaps"): this catch-all never offers a diverse WIDE beam
+            // "must-cross-heavy mechanic-bucket-beam gaps"): this catch-all never offers a mechanic-bucket WIDE beam
             // either (mcDiverseThread isn't used here) — R02159's cheap (578,428-node) isolated win
-            // was beam:intersectionHarvest@beam5000(diverse). Previously left open for the same
+            // was beam:intersectionHarvest@beam5000(mechanic-bucket). Previously left open for the same
             // full-reserve-window reason as this rule's must-pass-heavy sibling above; landed together
             // with the validated MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT 4->5 increase.
-            beam('intersectionHarvest', BEAM.WIDE, null, { diverseBeam: true }),
+            beam('intersectionHarvest', BEAM.WIDE, null, { mechanicBucketRetention: true }),
             // Ablation: STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE (default-OFF, NEW unvalidated
             // pilot, 2026-08-26 — see that flag's own comment in ablation-config.ts and this rule's
             // must-pass-heavy sibling above, which shares the identical reasoning). Window full again
@@ -556,10 +556,10 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // Placed as the LAST two configs deliberately (not first, not right after the templates):
         // mainConfigs' last MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (stage-budget.ts, 5) entries get a
         // protected node-budget reserve regardless of what earlier configs consume, so this placement
-        // recovers previously-unsolved levels (where the 4 template DFS attempts can each burn their
+        // recovers previously-unsolved levels (where the 4 orderingBias DFS attempts can each burn their
         // full ~20-30s allocated slice without concluding, otherwise starving anything placed right
         // after them) while costing nothing on already-solving levels — the main loop exits on first
-        // success, so an already-fast template/profile win never even reaches these trailing beam
+        // success, so an already-fast orderingBias/profile win never even reaches these trailing beam
         // configs. Two earlier placements were tried and reverted: right after the 4 templates (beam
         // never got a real node share, 0/25 sampled recoveries) and leading the whole list (recovered
         // levels, but cost every already-solving level in this routing regime 1-6+ seconds of needless
@@ -569,12 +569,12 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // Workstream 1): same additional gap as the multi-portal rule's own follow-up comment —
         // beam:perimeterSweep/perimeterCW(CCW)@beam2000 is independently the cheap census winner on
         // more of this routing regime's oracle-union population than the WIDE configs alone reach.
-        why: 'general, no must-pass: CCW template before CW (open grids where CW times out), then profiles, beams last (protected reserve slice)',
+        why: 'general, no must-pass: CCW orderingBias before CW (open grids where CW times out), then profiles, beams last (protected reserve slice)',
         when: f => f.mustPass === 0,
         build: () => [
             dfs('perimeterSweep', cornerHarvest), dfs('perimeterSweep', perimeterCCW),
             dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', sideCommitment),
-            ...PROFILE_ORDER.map(p => dfs(p)),
+            ...SCORING_PROFILE_ORDER.map(p => dfs(p)),
             beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
             beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
         ],
@@ -582,11 +582,11 @@ const ATTEMPT_POLICY: PolicyRule[] = [
     {
         // Same beam-routing-gap fix and same late-placement reasoning as the sibling rule above (see
         // its comment) — this catch-all previously never offered beam search either.
-        why: 'default: standard template sweep, then all profiles, beams last (protected reserve slice)',
+        why: 'default: standard orderingBias sweep, then all profiles, beams last (protected reserve slice)',
         when: () => true,
         build: () => [
-            ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
-            ...PROFILE_ORDER.map(p => dfs(p)),
+            ...ATTEMPT_CONFIGS.filter(c => c.orderingBias !== null),
+            ...SCORING_PROFILE_ORDER.map(p => dfs(p)),
             beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
             beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
         ],
@@ -634,7 +634,7 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     //
     // docs/solver-optimization-workstreams.md workstream 1's post-976 portfolio rejoin
     // (reports/2026-08-25-post-976-portfolio-exposure-rejoin.md) found `beam:intersectionHarvest@
-    // beam5000` and `beam:objectiveFirst@beam5000` (the PLAIN WIDE beams, not their `(diverse)`
+    // beam5000` and `beam:objectiveFirst@beam5000` (the PLAIN WIDE beams, not their `(mechanic-bucket)`
     // siblings already used elsewhere in this file) each absent from production on exactly the same
     // 62 current Corpus-2 misses, with isolated census wins at the cheapest observed nodes/solve of
     // any beam identity in that report's exposure-economics table. A follow-up classification
@@ -712,14 +712,14 @@ export function applyAttemptConfigOptions(baseConfigs: AttemptConfig[], cfg: Abl
         // Repair machinery flags: STRATEGY_REPAIR_FALLBACK drops both repair attempts (and with
         // them the early probe, which iterates the same configs); STRATEGY_REPAIR_MUSTTURN_BIAS
         // drops only the biased second attempt. Checked before the profile filter because the
-        // repair profile is deliberately outside PROFILE_ORDER/PROFILE_CONFIG_KEY.
+        // repair profile is deliberately outside SCORING_PROFILE_ORDER/PROFILE_CONFIG_KEY.
         if (c.repair && 'STRATEGY_REPAIR_FALLBACK' in cfg && !cfg.STRATEGY_REPAIR_FALLBACK) return false;
         if (c.repairMustTurnBiased && 'STRATEGY_REPAIR_MUSTTURN_BIAS' in cfg && !cfg.STRATEGY_REPAIR_MUSTTURN_BIAS) return false;
-        if (c.template && c.template.id) {
-            const tKey = TEMPLATE_CONFIG_KEYS[c.template.id];
+        if (c.orderingBias && c.orderingBias.id) {
+            const tKey = ORDERING_BIAS_CONFIG_KEYS[c.orderingBias.id];
             if (tKey && tKey in cfg && !cfg[tKey]) return false;
         }
-        const pKey = `PROFILE_${c.profileName}`;
+        const pKey = `PROFILE_${c.scoringProfileId}`;
         if (pKey in cfg && !cfg[pKey]) return false;
         return true;
     });
@@ -733,9 +733,9 @@ export function applyAttemptConfigOptions(baseConfigs: AttemptConfig[], cfg: Abl
         configs = shuffleAttemptConfigs(configs, cfg._randomSeed ?? 42);
     } else if (cfg.ATTEMPT_ORDER === 'profile-grouped') {
         configs = [
-            ...configs.filter(c => !c.template && !c.beamWidth),
-            ...configs.filter(c => !!c.template),
-            ...configs.filter(c => c.beamWidth && !c.template),
+            ...configs.filter(c => !c.orderingBias && !c.beamWidth),
+            ...configs.filter(c => !!c.orderingBias),
+            ...configs.filter(c => c.beamWidth && !c.orderingBias),
         ];
     }
     return configs;
