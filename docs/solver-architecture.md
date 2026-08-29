@@ -6,7 +6,7 @@
 >
 > **Corpus caveat:** before stress pass-rate tuning, read [`data/stress/README.md`](../data/stress/README.md), especially “Corpus 1: hypothesis-driven.” Some batches target historical weaknesses and are not independent generalization evidence.
 
-Technique/config names do not by themselves imply distinct search behavior. See [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) when comparing profiles, templates, beam retention modes, admissible-order, repair, retries, or budget contexts.
+Technique/config names do not by themselves imply distinct search behavior. See [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) when comparing scoring profiles, structural ordering biases, beam retention modes, admissible-order, repair, retries, or budget contexts.
 
 ## Core flow
 
@@ -21,7 +21,7 @@ Technique/config names do not by themselves imply distinct search behavior. See 
 `getAttemptConfigs(level)` returns:
 
 ```js
-{ profileName, template: Object|null, beamWidth?, minBudgetFraction?, diverseBeam? }
+{ scoringProfileId, orderingBias: Object|null, beamWidth?, minBudgetFraction?, mechanicBucketRetention? }
 ```
 
 `beamWidth` selects beam; otherwise DFS. `minBudgetFraction` protects critical configs from dilution.
@@ -40,26 +40,26 @@ Technique/config names do not by themselves imply distinct search behavior. See 
 
 `modules/solver/attempts.ts` is authoritative: first-match-wins `ATTEMPT_POLICY` over `LevelFeatures`, thresholds in `POLICY.*`, bundles from `dfs()`/`beam()`/`profilesFirst()`.
 
-- **sparse-low-intersection:** `nearClosureRescue -> harvestThenFinish -> finishFirst -> perimeterSweep`, then templates.
+- **sparse-low-intersection:** `nearClosureRescue -> harvestThenFinish -> finishFirst -> perimeterSweep`, then structural ordering biases.
 - **intersection-heavy:**
   - `reqInt >= POLICY.VERY_HIGH_REQINT (7)`: beam first; portal-dense (`portals >= 2`) leads `objectiveFirst`, otherwise `intersectionHarvest`; DFS fallback.
   - `requiredPathCoverageRatio >= POLICY.NEAR_HAMILTONIAN_COVERAGE_THRESHOLD (0.82)`: DFS perimeter both directions; skip leading beams.
   - otherwise perimeter/objective beams first; long multi-gate (`reqLen >= 90 && gates >= 2`) gets budget floors; DFS prefers objectives when `mustPass >= 3`, CCW when `reqInt <= 4 && mustPass = 0`.
-- **multi-portal:** `portalFirstTransfer`, `portalCommitted`, then templates.
+- **multi-portal:** `portalFirstTransfer`, `portalCommitted`, then structural ordering biases.
 - **must-cross-heavy:**
   - `mustPass >= 3 && flippers >= 2`: diverse `intersectionHarvest` beam 5000, then DFS; 15000/50000 tiers were removed after zero-yield natural exhaustion.
   - `mustPass >= 3`: objective/must-cross beams first.
   - `mustCross >= 3 && mustPass >= 2`: beam first.
   - otherwise cornerHarvest/perimeterCW DFS, beams, DFS profiles.
-- **default:** with `mustPass = 0`, CCW before CW; otherwise default template order, then profiles.
+- **default:** with `mustPass = 0`, CCW before CW; otherwise default structural-ordering-bias order, then scoring profiles.
 
 ```js
 const ATTEMPT_CONFIGS = [
-  { profileName: 'perimeterSweep', template: TEMPLATES.cornerHarvest  },
-  { profileName: 'perimeterSweep', template: TEMPLATES.perimeterCW    },
-  { profileName: 'perimeterSweep', template: TEMPLATES.perimeterCCW   },
-  { profileName: 'perimeterSweep', template: TEMPLATES.sideCommitment },
-  ...PROFILE_ORDER.map(profileName => ({ profileName, template: null })),
+  { scoringProfileId: 'perimeterSweep', orderingBias: STRUCTURAL_ORDERING_BIASES.cornerHarvest  },
+  { scoringProfileId: 'perimeterSweep', orderingBias: STRUCTURAL_ORDERING_BIASES.perimeterCW    },
+  { scoringProfileId: 'perimeterSweep', orderingBias: STRUCTURAL_ORDERING_BIASES.perimeterCCW   },
+  { scoringProfileId: 'perimeterSweep', orderingBias: STRUCTURAL_ORDERING_BIASES.sideCommitment },
+  ...SCORING_PROFILE_ORDER.map(scoringProfileId => ({ scoringProfileId, orderingBias: null })),
 ];
 // 16 total
 ```
@@ -81,11 +81,11 @@ The ladder is hand-tuned. Historical corpus1 analysis found 79% of solved-level 
 - Frontier walking is parent-tree ordered to reduce replay. `insOrd` restores the generation order that score-order walking would have produced before dedup/cull; mid-phase terminal/budget checks still occur in tree order.
 - Uses DFS pruning; `scoreAndSort` uses `_sas[4]` `Float64Array` scratch + insertion sort.
 - Default width 2000; hard width 5000.
-- **Dedup:** non-portal beams merge the deliberately coarse tuple `(key, ints, mpVisitedMask, mustCrossMask, flipperUsedMask, surroundMask, mustTurnMask, adjTurnMask)`, keeping the highest score plus an optional near-tie runner-up. This is width/diversity management, not exact future-state equivalence. The tuple normally uses a per-level mixed-radix numeric fast path and falls back to an exact delimited string when the composed product is unsafe. **Known schema-boundary defect:** the current flipper radix is still computed with an int32 shift, so schema-valid 31/32-flipper levels do not have the intended collision-free numeric guarantee; see [`solver-correctness-hardening.md`](solver-correctness-hardening.md). Current published/stress corpora are below that boundary. The representation is intended as a pure speed choice; merge semantics are unchanged.
+- **Coarse state merge:** non-portal beams merge the deliberately coarse tuple `(key, ints, mpVisitedMask, mustCrossMask, flipperUsedMask, surroundMask, mustTurnMask, adjTurnMask)`, keeping the highest score plus an optional near-tie runner-up. This is width/diversity management, not exact future-state equivalence. The tuple normally uses a per-level mixed-radix numeric fast path and falls back to an exact delimited string when the composed product is unsafe. **Known schema-boundary defect:** the current flipper radix is still computed with an int32 shift, so schema-valid 31/32-flipper levels do not have the intended collision-free numeric guarantee; see [`solver-correctness-hardening.md`](solver-correctness-hardening.md). Current published/stress corpora are below that boundary. The representation is intended as a pure speed choice; merge semantics are unchanged.
 
-  The older fixed-width numeric packing was removed after real Corpus-2 masks exceeded four bits and corrupted adjacent fields. The 2026-08-23 design replaced it with per-level mixed-radix bases plus a string fallback, but the current flipper-base implementation has the 31/32 edge defect above. Fully sound beam-state dedup was separately measured at only ~0.019% true-duplicate slots; removing the coarse mechanism cost real solves. See [`../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md) and [`../reports/2026-08-23-beam-dedup-numeric-key-arena.md`](../reports/2026-08-23-beam-dedup-numeric-key-arena.md).
-- **Diverse beam:** `_diverseSelect` buckets by `(flipperUsedMask, mustCrossMask)` and guarantees `floor(beamWidth/numBuckets)` per bucket before filling globally. Its positional numeric fast path shares the same 31/32-flipper radix defect; see [`solver-correctness-hardening.md`](solver-correctness-hardening.md).
-- Must-cross+flipper fallback is diverse bw=5000.
+  The older fixed-width numeric packing was removed after real Corpus-2 masks exceeded four bits and corrupted adjacent fields. The 2026-08-23 design replaced it with per-level mixed-radix bases plus a string fallback, but the current flipper-base implementation has the 31/32 edge defect above. Exact beam-state deduplication was separately measured at only ~0.019% true-duplicate slots; removing the coarse mechanism cost real solves. See [`../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md) and [`../reports/2026-08-23-beam-dedup-numeric-key-arena.md`](../reports/2026-08-23-beam-dedup-numeric-key-arena.md).
+- **Mechanic-bucket retention:** `_diverseSelect` buckets by `(flipperUsedMask, mustCrossMask)` and guarantees `floor(beamWidth/numBuckets)` per bucket before filling globally. Its positional numeric fast path shares the same 31/32-flipper radix defect; see [`solver-correctness-hardening.md`](solver-correctness-hardening.md).
+- Must-cross+flipper fallback uses mechanic-bucket retention at width 5000.
 
 ## Key state
 
@@ -155,7 +155,7 @@ npm run check:audit-output -- logs/solver-direct/full.json
 | `--output=...` | none | JSON report. |
 | `--verbose` | off | Per-attempt logs. |
 
-Audit rows include level/status/ok/elapsed/nodes/solvedBy and per-attempt gate/profile/template/beam/success/elapsed/budget/nodes.
+Audit rows include level/status/ok/elapsed/nodes/solvedBy and per-attempt gate/scoring-profile/ordering-bias/beam/success/elapsed/budget/nodes.
 
 Use `solver:direct` to inspect attempt order/winner/budget/nodes; if policy is at fault change `attempts.ts`, then rerun targets, full audit, `npm run ci`, and `solver:bench -- --check`. `audit:newhint:full` retains rolling history beside `logs/solver-workflow/latest.json` (`95 MB`, 4000 entries).
 
@@ -170,7 +170,7 @@ npm run solver:audit-false-goal-triggerability -- --levels=all --extended-budget
 npm run solver:audit-false-goal-triggerability -- --check-false-goals --fg-budget=90000
 ```
 
-False-goal timeouts are `inconclusive`, never invalid. `worker.js` handles `TRAP`; `solver-worker-client.ts` streams `TRAP_PROGRESS` (~100 ms) / `TRAP_RESULT`. `trap-scan-controller.ts` owns background parity/confirmed overlays, explicit scan/cancel/budget escalation, `editor.falseGoalTriggerScanState = stale|scanning|done|partial|failed`, mutation invalidation via `clearEditorTriggerableFalseGoalCells`, and main-thread fallback.
+False-goal timeouts are `inconclusive`, never invalid. `worker.js` handles `FALSE_GOAL_TRIGGER_SEARCH`; `solver-worker-client.ts` streams `FALSE_GOAL_TRIGGER_SEARCH_PROGRESS` / `FALSE_GOAL_TRIGGER_SEARCH_RESULT`. `trap-scan-controller.ts` owns background parity/confirmed overlays, explicit scan/cancel/budget escalation, `editor.falseGoalTriggerScanState = stale|scanning|complete|partial|failed`, mutation invalidation via `clearEditorTriggerableFalseGoalCells`, and main-thread fallback.
 
 ## Parallel Find-all enumeration (browser)
 
@@ -226,7 +226,7 @@ Shared `level-data-io.mjs` parsers reject bare numeric ambiguity:
 
 ## Offline portfolio experiment
 
-`opts.schedulerMode = 'portfolio-experiment'` is offline-only; live Play/Editor/Review/hint discovery use `'legacy'`. Its `pass1Ms`/`pass2Ms`/`pass3Ms` policy is explicitly a **legacy wall-clock scheduler experiment**, useful for historical latency/architecture questions but not machine-independent equal-work evidence. Best published 2026-07-12 variant was **1.51×** legacy with equal solves; a later repair-speed change moved a stress comparison from **0.57×** to **1.45×**, illustrating exactly why elapsed-time thresholds are host/implementation sensitive. New scheduler research should use work quanta rather than extending this ms policy. See `reports/portfolio/portfolio-scheduler-decision.md` and 2026-07-16 reverification.
+`opts.schedulerMode = 'legacy-latency-portfolio-experiment'` is offline-only; live Play/Editor/Review/hint discovery use `'production'`. Its `pass1Ms`/`pass2Ms`/`pass3Ms` policy is explicitly a **legacy wall-clock scheduler experiment**, useful for historical latency/architecture questions but not machine-independent equal-work evidence. Best published 2026-07-12 variant was **1.51×** legacy with equal solves; a later repair-speed change moved a stress comparison from **0.57×** to **1.45×**, illustrating exactly why elapsed-time thresholds are host/implementation sensitive. New scheduler research should use work quanta rather than extending this ms policy. See `reports/portfolio/portfolio-scheduler-decision.md` and 2026-07-16 reverification.
 
 Tools: `solver:portfolio-report`, `solver:portfolio-replay`, `portfolio-solve-sweep.mjs`. The sweep supports JSONL `--resume`, mechanic filters, baseline/priority ordering, dependency-hashed negative `--attempt-cache`, child `--workers`, and `--race-pool-size`; legacy scheduler required for race pools, which are incompatible with `--node-budget`.
 

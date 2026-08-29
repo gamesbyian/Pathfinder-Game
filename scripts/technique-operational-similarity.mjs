@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from 'node:fs';
-import { POLICY_PROFILES } from '../modules/solver/policy.js';
+import { SCORING_PROFILES } from '../modules/solver/policy.js';
 import { normalizeAttemptIdentityKey, parseAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
 const argv = new Map(process.argv.slice(2).filter(x => x.includes('=')).map(x => { const [k, ...v] = x.split('='); return [k, v.join('=')]; }));
@@ -18,21 +18,21 @@ function describe(key) {
         : fields.admissibleOrder ? 'admissible-order'
             : fields.beamWidth ? 'beam' : 'dfs';
     const scoringProfile = fields.repair ? 'repair'
-        : fields.admissibleOrderNoTieBreak ? null : fields.profileName;
+        : fields.admissibleOrderNoTieBreak ? null : fields.scoringProfileId;
     const repairGuidance = fields.repairMustTurnBiased ? 'must-turn-biased'
         : fields.repairTurnBiased ? 'turn-biased'
             : fields.repair ? 'standard' : null;
     return {
         searchFamily,
-        scoringProfile,
-        scoringWeights: scoringProfile && POLICY_PROFILES[scoringProfile] ? POLICY_PROFILES[scoringProfile] : null,
-        structuralTemplate: fields.templateId ?? null,
+        scoringProfileId: scoringProfile,
+        scoringWeights: scoringProfile && SCORING_PROFILES[scoringProfile] ? SCORING_PROFILES[scoringProfile] : null,
+        structuralOrderingBiasId: fields.orderingBiasId ?? null,
         beamWidth: fields.beamWidth ?? null,
-        diverseBeamRetention: !!fields.diverseBeam,
-        dedupNearTieMode: 'default',
+        mechanicBucketRetention: !!fields.mechanicBucketRetention,
+        coarseStateNearTieRetentionMode: 'default',
         pruneChanges: [],
-        admissibleTieBreakMode: fields.admissibleOrder
-            ? (fields.admissibleOrderNoTieBreak ? 'none' : fields.profileName) : null,
+        admissibleTieBreakScoringProfileId: fields.admissibleOrder
+            ? (fields.admissibleOrderNoTieBreak ? 'none' : fields.scoringProfileId) : null,
         repairVariantBiasSeedMode: repairGuidance,
         retryContext: null,
         budgetBand: null,
