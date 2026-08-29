@@ -159,7 +159,7 @@
     "test:winning-attempt-family": "node scripts/winning-attempt-family-lib-node-test.mjs",
     "solver:winning-attempts": "node scripts/analyze-solver-winning-attempts.mjs",
     "solver:portfolio-report": "node scripts/run-bundled.mjs scripts/portfolio-scheduler-report.mjs",
-    "solver:portfolio-replay": "node scripts/portfolio-historical-replay.mjs",
+    "solver:portfolio-replay": "node scripts/run-bundled.mjs scripts/portfolio-historical-replay.mjs",
     "test:technique-campaign-analysis": "node scripts/analyze-technique-campaign-node-test.mjs",
     "test:technique-census-result-lib": "node scripts/technique-census-result-lib-node-test.mjs",
     "test:technique-census-second-order": "node scripts/technique-census-second-order-node-test.mjs",
