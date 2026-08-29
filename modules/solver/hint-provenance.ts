@@ -61,7 +61,7 @@ interface SolveAttemptInfo {
     repairMustTurnBiased: boolean | null;
     repairTurnBiased: boolean | null;
     /** Winner came from the goal-attraction-disabled-retry forced-flag rerun. */
-    attractionDiversity: boolean;
+    goalAttractionDisabledRetry: boolean;
     /** Force-enabled last-resort retry tier, else null. */
     retryTier: string | null;
 }
@@ -80,7 +80,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
         return {
             technique: 'solve-unknown', scoringProfileId: null, orderingBiasId: null, beamWidth: null, mechanicBucketRetention: null,
             gateKey: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null,
-            randomSeed: null, seedSalt: null, repairMustTurnBiased: null, repairTurnBiased: null, attractionDiversity: false,
+            randomSeed: null, seedSalt: null, repairMustTurnBiased: null, repairTurnBiased: null, goalAttractionDisabledRetry: false,
             retryTier: null,
         };
     }
@@ -102,12 +102,12 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
         seedSalt: winner.repair ? (winner.seedSalt ?? 0) : null,
         repairMustTurnBiased: winner.repair ? !!winner.repairMustTurnBiased : null,
         repairTurnBiased: winner.repair ? !!winner.repairTurnBiased : null,
-        attractionDiversity: !!winner.attractionDiversity,
+        goalAttractionDisabledRetry: attemptTierLabel === 'goal-attraction-disabled-retry',
         retryTier: RETRY_TIER_LABELS.has(attemptTierLabel) ? attemptTierLabel : null,
     };
 }
 
-/** Provenance for the single solution returned by solveLevel()/Solver.solve(). */
+/** Provenance for the single solution returned by solveLevel(). */
 export function provenanceFromSolveResult(result: SolveResultLike, ctx: ProvenanceContext = {}): HintProvenanceEntry {
     const info = deriveSolveAttemptInfo(result.attempts);
     return makeProvenanceEntry(info.technique, {
@@ -138,7 +138,7 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
             forcingRepairMustTurnBiased: info.repairMustTurnBiased,
             forcingRepairTurnBiased: info.repairTurnBiased,
         } : {}),
-        ...(info.attractionDiversity ? {
+        ...(info.goalAttractionDisabledRetry ? {
             forcingDisabledFeatures: [...ATTRACTION_DIVERSITY_CANDIDATE_FLAGS],
         } : {}),
         ...(info.retryTier !== null ? { forcingRetryTier: info.retryTier } : {}),
