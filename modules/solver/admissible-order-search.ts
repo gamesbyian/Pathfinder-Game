@@ -37,13 +37,13 @@ import type { PrepLevel, ScoringProfile, UndoToken } from './types.js';
 // have been applied yet"), so this tie-break is cheap relative to the slack computation itself,
 // which does need apply/undo per candidate (the admissible bounds are state-dependent).
 //
-// The tie-break PROFILE is caller-supplied (threaded from AttemptConfig.profileName via
+// The tie-break PROFILE is caller-supplied (threaded from AttemptConfig.scoringProfileId via
 // attempt-dispatch.ts, same field every other search dispatches on — repurposed here rather than
-// adding a new one, since admissibleOrderSearch has no other use for profileName) rather than a
+// adding a new one, since admissibleOrderSearch has no other use for scoringProfileId) rather than a
 // fixed constant: measured 2026-07-24 that which profile breaks ties matters (see
 // reports/2026-07-24-admissible-order-search-corpus2-validation.md's tuning-round history) —
 // different weight balances thread different additional levels through the same admissible-slack
-// primary ordering. scripts/method-probe.mjs's `ida:<profileName>` key format selects it directly.
+// primary ordering. scripts/method-probe.mjs's `ida:<scoringProfileId>` key format selects it directly.
 
 type YieldFn = (() => Promise<void>) | null;
 // disc: cumulative discrepancy to REACH this node (sum of chosen child-indices along the path) —

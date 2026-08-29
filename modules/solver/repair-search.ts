@@ -31,7 +31,7 @@ import { createNogoodCache } from './nogood-cache.js';
 import { beamSearchFromGate } from './search.js';
 import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { AblationConfig, BeamResearchRecord, PrepLevel, ScoringProfile, StructuralTemplate, SolverSearchState, UndoToken } from './types.js';
+import type { AblationConfig, BeamResearchRecord, PrepLevel, ScoringProfile, StructuralOrderingBias, SolverSearchState, UndoToken } from './types.js';
 
 type YieldFn = (() => Promise<void>) | null;
 
@@ -326,7 +326,7 @@ type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
 // ADDED for a move into a guide elite's cell — the recombination bias. Same soft, re-rank-only shape.
 // turnBias (shared turn-aware bias, false in every production run): when true, at the move out of a
 // pending must-turn cell, reward the required-turn exit and penalize the others (see preferredTurnExit).
-function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, rand: () => number, rand2: (() => number) | null, epsilon: number, liveUndo: UndoToken[], penaltyCells: Map<number, number> | null = null, guideCells: Set<number> | null = null, turnBias = false): PlyOutcome {
+function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, orderingBias: StructuralOrderingBias | null, rand: () => number, rand2: (() => number) | null, epsilon: number, liveUndo: UndoToken[], penaltyCells: Map<number, number> | null = null, guideCells: Set<number> | null = null, turnBias = false): PlyOutcome {
     const pos = ws.path[ws.path.length - 1];
     const cfg = prep._cfg;
     let neighbors = getNeighbors(pos, ws, level, prep);
@@ -390,7 +390,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
 
         if (verdict === 'pass') {
             const rStepsForScore = level.reqLen - realLen;
-            let sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, template, curCtx);
+            let sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, orderingBias, curCtx);
             if (penaltyCells !== null) { const pen = penaltyCells.get(next); if (pen !== undefined) sc -= pen; }
             if (guideCells !== null && guideCells.has(next)) sc += GUIDE_REWARD;
             if (turnBias && posIsPendingMustTurn) sc += (next === preferredTurnTarget) ? TURN_BIAS_REWARD : -TURN_BIAS_PENALTY;
@@ -513,7 +513,7 @@ const LENGTH_GAP_CLOSE_STRUCTURAL_SLACK = 1;
 // here. On failure, ws/liveUndo are restored to the exact state they had on entry (via
 // replayToPrefix) so the caller's existing near-miss bookkeeping is unaffected either way.
 // Ablation: STRATEGY_REPAIR_LENGTH_GAP_CLOSE (see repairSearchFromGate's call site).
-function closeLengthGap(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], floor: number, nodeBudget: number): { solved: boolean; nodes: number } {
+function closeLengthGap(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, orderingBias: StructuralOrderingBias | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], floor: number, nodeBudget: number): { solved: boolean; nodes: number } {
     const originalPath = ws.path.slice();
     const suffixLen = originalPath.length - 1 - floor; // steps between floor and the dead end
     // The reconstruction below (rebuilding one DFS frame per already-taken step) costs roughly
@@ -528,7 +528,7 @@ function closeLengthGap(ws: SolverSearchState, level: NormalizedLevel, prep: Pre
     const currentFrameChildren = (): number[] => {
         const pos = ws.path[ws.path.length - 1];
         const children = getNeighbors(pos, ws, level, prep);
-        scoreAndSort(children, pos, ws, level, prep, profile, template);
+        scoreAndSort(children, pos, ws, level, prep, profile, orderingBias);
         return children;
     };
 
@@ -645,7 +645,7 @@ function closeLengthGap(ws: SolverSearchState, level: NormalizedLevel, prep: Pre
  *  nothing across firings — see reports/2026-08-07-repair-elite-prefix-dfs.md). Only checked when
  *  a NEW path-length record is set (not every node), since computeBadness isn't free and
  *  backtracking revisits shallower depths far more often than it sets new depth records. */
-function boundedDfsFromHere(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], floor: number, nodeBudget: number): { solved: boolean; nodes: number; bestPath: number[] | null; bestBadness: number } {
+function boundedDfsFromHere(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, orderingBias: StructuralOrderingBias | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], floor: number, nodeBudget: number): { solved: boolean; nodes: number; bestPath: number[] | null; bestBadness: number } {
     const childLists: number[][] = [];
     const childIdx: number[] = [];
     let nodes = 0;
@@ -656,7 +656,7 @@ function boundedDfsFromHere(ws: SolverSearchState, level: NormalizedLevel, prep:
     const currentFrameChildren = (): number[] => {
         const pos = ws.path[ws.path.length - 1];
         const children = getNeighbors(pos, ws, level, prep);
-        scoreAndSort(children, pos, ws, level, prep, profile, template);
+        scoreAndSort(children, pos, ws, level, prep, profile, orderingBias);
         return children;
     };
     childLists.push(currentFrameChildren());
@@ -729,7 +729,7 @@ const ELITE_PREFIX_DFS_TOTAL_BUDGET = 90000;
  *  the single best (lowest-badness) intermediate found across every attempt in this call (see
  *  boundedDfsFromHere) — the caller is expected to feed it back via considerElite, matching
  *  relinkPaths' own "best recombined intermediate becomes new search material" pattern. */
-export function elitePrefixDfsRepair(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], elites: { path: number[]; badness: number }[], startKey: number, totalNodeBudget: number): { solved: boolean; nodes: number; bestPath: number[] | null; bestBadness: number } {
+export function elitePrefixDfsRepair(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, orderingBias: StructuralOrderingBias | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], elites: { path: number[]; badness: number }[], startKey: number, totalNodeBudget: number): { solved: boolean; nodes: number; bestPath: number[] | null; bestBadness: number } {
     let totalNodes = 0;
     let bestBadness = Infinity, bestPath: number[] | null = null;
     const eliteCount = Math.min(elites.length, ELITE_PREFIX_DFS_ELITE_COUNT);
@@ -743,7 +743,7 @@ export function elitePrefixDfsRepair(ws: SolverSearchState, level: NormalizedLev
             const floor = liveUndo.length;
             const remaining = Math.min(ELITE_PREFIX_DFS_NODE_BUDGET_PER_ATTEMPT, totalNodeBudget - totalNodes);
             if (remaining <= 0) break;
-            const result = boundedDfsFromHere(ws, level, prep, profile, template, cfg, liveUndo, floor, remaining);
+            const result = boundedDfsFromHere(ws, level, prep, profile, orderingBias, cfg, liveUndo, floor, remaining);
             totalNodes += result.nodes;
             if (result.solved) return { solved: true, nodes: totalNodes, bestPath: null, bestBadness: 0 };
             if (result.bestPath && result.bestBadness < bestBadness) { bestBadness = result.bestBadness; bestPath = result.bestPath; }
@@ -992,7 +992,7 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // when-off guarantee (gated, consumes no rand). ON arms, on a must-turn stagnation, a turn-aware bias
 // at the move out of a pending must-turn cell (reward the required-turn exit, penalize the others) —
 // the selective successor to Stage 2/3's flat-cell biases. No production caller passes true.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number; stopReason?: RepairStopReason } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false, enableElitePrefixDfs = false, enableBeamSeed = false): Promise<number[] | null> {
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number; stopReason?: RepairStopReason } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false, enableElitePrefixDfs = false, enableBeamSeed = false): Promise<number[] | null> {
     const cfg = prep._cfg;
     const eliteResearch = prep._repairEliteResearchObserver;
     const ws = createState(startKey, level, prep, STATE_BUF_REPAIR);
@@ -1059,7 +1059,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
             if (record.stage === 'post-diversity-selection' || record.stage === 'post-score-width-cull') survivorPaths = record.paths;
         } };
         const beamNodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
-        await beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, BEAM_SEED_WIDTH, yieldFn, false, null, BEAM_SEED_NODE_BUDGET);
+        await beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, orderingBias, BEAM_SEED_WIDTH, yieldFn, false, null, BEAM_SEED_NODE_BUDGET);
         prep._beamResearchObserver = prevBeamObserver;
         // Charged against THIS call's own local counter — the same one the restart loop's own
         // termination check reads below — so the ordinary restart loop's share shrinks by exactly
@@ -1169,7 +1169,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
 
         let outcome: PlyOutcome = 'continue';
         while (outcome === 'continue') {
-            outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo, activePenalty, guideCells, turnBiasActive);
+            outcome = takePly(ws, level, prep, profile, orderingBias, rand, rand2, epsilon, liveUndo, activePenalty, guideCells, turnBiasActive);
             if (prep._metrics) prep._metrics.nodesExpanded++;
             nodesExpandedLocal++;
             // Nogood cache (see nogood-cache.ts): checked once per COMMITTED step, not once per
@@ -1208,7 +1208,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
                 && deficit <= slack && nodesExpandedLocal < nodeBudget) {
             const closeBudget = Math.min(LENGTH_GAP_CLOSE_NODE_BUDGET, nodeBudget - nodesExpandedLocal);
             const _lgcLenDeficit = _LENGTH_GAP_DEBUG ? computeBadness(ws, level) : 0;
-            const closeResult = closeLengthGap(ws, level, prep, profile, template, cfg, liveUndo, spliceFloor, closeBudget);
+            const closeResult = closeLengthGap(ws, level, prep, profile, orderingBias, cfg, liveUndo, spliceFloor, closeBudget);
             nodesExpandedLocal += closeResult.nodes;
             if (prep._metrics) prep._metrics.nodesExpanded += closeResult.nodes;
             if (_LENGTH_GAP_DEBUG) {
@@ -1342,7 +1342,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
             // scattered across the top elites' own paths, not just this restart's own dead end.
             if ((!cfg || cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS) && enableElitePrefixDfs && elites.length > 0 && nodesExpandedLocal < nodeBudget) {
                 const epdBudget = Math.min(ELITE_PREFIX_DFS_TOTAL_BUDGET, nodeBudget - nodesExpandedLocal);
-                const epd = elitePrefixDfsRepair(ws, level, prep, profile, template, cfg, liveUndo, elites, startKey, epdBudget);
+                const epd = elitePrefixDfsRepair(ws, level, prep, profile, orderingBias, cfg, liveUndo, elites, startKey, epdBudget);
                 nodesExpandedLocal += epd.nodes;
                 if (prep._metrics) prep._metrics.nodesExpanded += epd.nodes;
                 if (_ELITE_PREFIX_DFS_DEBUG) {

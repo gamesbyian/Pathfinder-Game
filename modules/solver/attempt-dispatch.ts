@@ -30,8 +30,8 @@ export function runAttemptSearch(
   out: AttemptSearchOut = null,
   seedSalt = 0,
 ): Promise<number[] | null> {
-  const { beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
-  const template = attemptConfig.template ?? null;
+  const { beamWidth, mechanicBucketRetention, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
+  const orderingBias = attemptConfig.orderingBias ?? null;
   const admissibleOrderProfile = admissibleOrderNoTieBreak ? null : profile;
   // These repair mechanisms are explicit opt-ins; absence/false must not activate them.
   const cfg = prep._cfg;
@@ -42,8 +42,8 @@ export function runAttemptSearch(
       ? admissibleOrderSearchLDS(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
       : admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
     : repair
-    ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased, !!enableElitePrefixDfs, !!enableBeamSeed)
+    ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased, !!enableElitePrefixDfs, !!enableBeamSeed)
     : beamWidth
-    ? beamSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn, diverseBeam, out, nodeBudget)
-    : dfsFromGateLDS(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, out, nodeBudget);
+    ? beamSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, beamWidth, yieldFn, mechanicBucketRetention, out, nodeBudget)
+    : dfsFromGateLDS(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, yieldFn, out, nodeBudget);
 }

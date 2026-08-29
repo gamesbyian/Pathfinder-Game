@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-import { POLICY_PROFILES } from './policy.js';
+import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { repairSearchFromGate } from './repair-search.js';
 import {
@@ -22,7 +22,7 @@ deepTest('closeLengthGap enabled rescues R02560 within the shared regression nod
     prep._metrics = { nodesExpanded: 0 };
     const out: { nodesExpanded?: number } = {};
     const path = await repairSearchFromGate(
-        R02560_GATE_KEY, level, prep, POLICY_PROFILES.repair,
+        R02560_GATE_KEY, level, prep, SCORING_PROFILES.repair,
         15000, Date.now(), null, undefined, false, R02560_NODE_BUDGET, out,
     );
     assert.ok(path, 'expected production-default closeLengthGap to solve within the shared node budget');

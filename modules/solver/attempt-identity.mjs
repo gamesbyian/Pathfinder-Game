@@ -10,10 +10,10 @@
  *   admissible-order|tieBreak=<profile-or-none>|lds=<on|off>
  *
  * @typedef {Object} AttemptIdentityFields
- * @property {string} profileName
- * @property {string | null} templateId
+ * @property {string} scoringProfileId
+ * @property {string | null} orderingBiasId
  * @property {number | null} [beamWidth]
- * @property {boolean} [diverseBeam]
+ * @property {boolean} [mechanicBucketRetention]
  * @property {boolean} [repair]
  * @property {boolean} [repairMustTurnBiased]
  * @property {boolean} [repairTurnBiased]
@@ -44,20 +44,20 @@ export function parseAttemptIdentityKey(key) {
     if (typeof key !== 'string' || key.length === 0) throw new Error('Attempt identity must be a non-empty string.');
 
     let m = canonicalDfs.exec(key);
-    if (m) return { profileName: m[1], templateId: nullableBias(m[2]) };
+    if (m) return { scoringProfileId: m[1], orderingBiasId: nullableBias(m[2]) };
 
     m = canonicalBeam.exec(key);
     if (m) return {
-        profileName: m[1],
-        templateId: nullableBias(m[2]),
+        scoringProfileId: m[1],
+        orderingBiasId: nullableBias(m[2]),
         beamWidth: Number(m[3]),
-        ...(m[4] === 'mechanic-buckets' ? { diverseBeam: true } : {}),
+        ...(m[4] === 'mechanic-buckets' ? { mechanicBucketRetention: true } : {}),
     };
 
     m = canonicalRepair.exec(key);
     if (m) return {
-        profileName: 'repair',
-        templateId: null,
+        scoringProfileId: 'repair',
+        orderingBiasId: null,
         repair: true,
         ...(m[1] === 'must-turn-biased' ? { repairMustTurnBiased: true } : {}),
         ...(m[1] === 'turn-biased' ? { repairTurnBiased: true } : {}),
@@ -67,8 +67,8 @@ export function parseAttemptIdentityKey(key) {
     if (m) {
         const noTieBreak = m[1] === 'none';
         return {
-            profileName: noTieBreak ? 'none' : m[1],
-            templateId: null,
+            scoringProfileId: noTieBreak ? 'none' : m[1],
+            orderingBiasId: null,
             admissibleOrder: true,
             ...(noTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
             ...(m[2] === 'on' ? { admissibleOrderLds: true } : {}),
@@ -79,8 +79,8 @@ export function parseAttemptIdentityKey(key) {
     if (m) {
         const noTieBreak = m[1] === 'none';
         return {
-            profileName: noTieBreak ? 'none' : m[1],
-            templateId: null,
+            scoringProfileId: noTieBreak ? 'none' : m[1],
+            orderingBiasId: null,
             admissibleOrder: true,
             ...(noTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
             ...(m[2] ? { admissibleOrderLds: true } : {}),
@@ -89,18 +89,18 @@ export function parseAttemptIdentityKey(key) {
 
     m = legacySearch.exec(key);
     if (m) {
-        const [, mode, profileName, templateId, beamWidth, diverse, repairMarker, biased] = m;
+        const [, mode, scoringProfileId, orderingBiasId, beamWidth, mechanicBuckets, repairMarker, biased] = m;
         if (mode === 'beam' && !beamWidth) throw new Error('"' + key + '" says beam but has no @beamN width.');
         if (mode === 'dfs' && beamWidth) throw new Error('"' + key + '" says dfs but has a @beamN width.');
-        if (profileName !== 'repair' && (repairMarker || biased))
-            throw new Error('"' + key + '" has a repair marker but profileName is not "repair".');
+        if (scoringProfileId !== 'repair' && (repairMarker || biased))
+            throw new Error('"' + key + '" has a repair marker but scoring profile is not "repair".');
         if (!repairMarker && biased) throw new Error('"' + key + '" has a biased marker without ":repair".');
         if (repairMarker && mode !== 'dfs') throw new Error('"' + key + '" encodes repair under a non-DFS legacy mode.');
         return {
-            profileName,
-            templateId: templateId ?? null,
+            scoringProfileId,
+            orderingBiasId: orderingBiasId ?? null,
             ...(beamWidth ? { beamWidth: Number(beamWidth) } : {}),
-            ...(diverse ? { diverseBeam: true } : {}),
+            ...(mechanicBuckets ? { mechanicBucketRetention: true } : {}),
             ...(repairMarker ? { repair: true } : {}),
             ...(biased === '(mustTurnBiased)' ? { repairMustTurnBiased: true } : {}),
             ...(biased === '(turnBiased)' ? { repairTurnBiased: true } : {}),
@@ -113,7 +113,7 @@ export function parseAttemptIdentityKey(key) {
 /** @param {AttemptIdentityFields} fields @returns {string} */
 export function formatAttemptIdentityKey(fields) {
     if (fields.admissibleOrder) {
-        const tieBreak = fields.admissibleOrderNoTieBreak ? 'none' : fields.profileName;
+        const tieBreak = fields.admissibleOrderNoTieBreak ? 'none' : fields.scoringProfileId;
         return 'admissible-order|tieBreak=' + tieBreak + '|lds=' + (fields.admissibleOrderLds ? 'on' : 'off');
     }
 
@@ -124,14 +124,14 @@ export function formatAttemptIdentityKey(fields) {
         return 'repair|score=repair|guidance=' + guidance;
     }
 
-    const bias = fields.templateId ?? 'none';
+    const bias = fields.orderingBiasId ?? 'none';
     if (fields.beamWidth) {
         if (!Number.isSafeInteger(fields.beamWidth) || fields.beamWidth <= 0)
             throw new Error('Beam attempt identity requires a positive integer width.');
-        return 'beam|score=' + fields.profileName + '|bias=' + bias + '|width=' + fields.beamWidth
-            + '|retention=' + (fields.diverseBeam ? 'mechanic-buckets' : 'plain');
+        return 'beam|score=' + fields.scoringProfileId + '|bias=' + bias + '|width=' + fields.beamWidth
+            + '|retention=' + (fields.mechanicBucketRetention ? 'mechanic-buckets' : 'plain');
     }
-    return 'dfs|score=' + fields.profileName + '|bias=' + bias;
+    return 'dfs|score=' + fields.scoringProfileId + '|bias=' + bias;
 }
 
 /** @param {string} key @returns {string} */

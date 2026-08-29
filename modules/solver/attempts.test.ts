@@ -4,7 +4,7 @@ import { test } from 'vitest';
 import { SOLVER_TESTING_API } from '../solver.js';
 import { ADMISSIBLE_ORDER_PROFILES, applyAttemptConfigOptions, getAttemptConfigs, getConfiguredAttemptConfigs } from './attempts.js';
 import { PACK } from './encoding.js';
-import { ATTEMPT_CONFIGS, PROFILE_ORDER } from './policy.js';
+import { ATTEMPT_CONFIGS, SCORING_PROFILE_ORDER } from './policy.js';
 import { defaultConfig } from './ablation-config.js';
 import type { NormalizedLevel } from '../domain/types.js';
 
@@ -64,37 +64,37 @@ test('repairTurnBiased attempt is default-off; under STRATEGY_REPAIR_TURN_BIAS B
   assert.equal(highRepairs[2].repairMustTurnBiased, true, 'high reqInt: mustTurnBiased is the fallback, still tried, placed last');
 });
 
-test('default attempt order keeps template sweep before profile fallbacks, with beams trailing last', () => {
+test('default attempt order keeps orderingBias sweep before profile fallbacks, with beams trailing last', () => {
   const attempts = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] }));
-  assert.deepEqual(attempts.slice(0, 4).map(c => c.template?.id), ATTEMPT_CONFIGS.slice(0, 4).map(c => c.template?.id));
+  assert.deepEqual(attempts.slice(0, 4).map(c => c.orderingBias?.id), ATTEMPT_CONFIGS.slice(0, 4).map(c => c.orderingBias?.id));
   // Excludes the admissible-order-search last-resort tier appended at the very end (see
   // ADMISSIBLE_ORDER_PROFILES) -- this assertion is specifically about the main DFS/beam profile
   // ordering, not that unconditionally-appended, always-last tier.
   const nonAdmissibleOrder = attempts.filter(c => !c.admissibleOrder);
-  assert.deepEqual(nonAdmissibleOrder.slice(4, 16).map(c => c.profileName), PROFILE_ORDER);
+  assert.deepEqual(nonAdmissibleOrder.slice(4, 16).map(c => c.scoringProfileId), SCORING_PROFILE_ORDER);
   // Beam-routing-gap fix (technique census, run 32240161854): the catch-all rule now offers beam
   // search too, placed LAST (within the main loop's protected late-reserve config-count window --
   // see the rule's own comment for why leading with beam was tried and reverted). A follow-up pass
   // added perimeterSweep CW/CCW STANDARD beams after the original WIDE pair, same trailing position.
-  assert.deepEqual(nonAdmissibleOrder.slice(16).map(c => [c.profileName, c.beamWidth]), [
+  assert.deepEqual(nonAdmissibleOrder.slice(16).map(c => [c.scoringProfileId, c.beamWidth]), [
     ['objectiveFirst', 5000],
     ['intersectionHarvest', 5000],
     ['perimeterSweep', 2000],
     ['perimeterSweep', 2000],
   ]);
-  assert.deepEqual(attempts.filter(c => c.admissibleOrder).map(c => c.profileName), ADMISSIBLE_ORDER_PROFILES);
+  assert.deepEqual(attempts.filter(c => c.admissibleOrder).map(c => c.scoringProfileId), ADMISSIBLE_ORDER_PROFILES);
 });
 
 test('default no-must-pass levels prefer perimeterCCW before perimeterCW, with beams trailing last', () => {
   const attempts = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [] }));
-  assert.deepEqual(attempts.slice(0, 4).map(c => c.template?.id), [
+  assert.deepEqual(attempts.slice(0, 4).map(c => c.orderingBias?.id), [
     'cornerHarvest',
     'perimeterCCW',
     'perimeterCW',
     'sideCommitment',
   ]);
   const nonAdmissibleOrder = attempts.filter(c => !c.admissibleOrder);
-  assert.deepEqual(nonAdmissibleOrder.slice(-4).map(c => [c.profileName, c.beamWidth]), [
+  assert.deepEqual(nonAdmissibleOrder.slice(-4).map(c => [c.scoringProfileId, c.beamWidth]), [
     ['objectiveFirst', 5000],
     ['intersectionHarvest', 5000],
     ['perimeterSweep', 2000],
@@ -104,14 +104,14 @@ test('default no-must-pass levels prefer perimeterCCW before perimeterCW, with b
 
 test('sparse-low-intersection attempts prioritize closure rescue profiles before templates', () => {
   const attempts = getAttemptConfigs(makeLevel({ reqLen: 10, reqInt: 1 }));
-  assert.deepEqual(attempts.slice(0, 4).map(c => c.profileName), [
+  assert.deepEqual(attempts.slice(0, 4).map(c => c.scoringProfileId), [
     'nearClosureRescue',
     'harvestThenFinish',
     'finishFirst',
     'perimeterSweep',
   ]);
-  assert.equal(attempts.slice(0, 4).every(c => c.template === null), true);
-  assert.equal(attempts.some(c => c.template?.id === 'cornerHarvest'), true);
+  assert.equal(attempts.slice(0, 4).every(c => c.orderingBias === null), true);
+  assert.equal(attempts.some(c => c.orderingBias?.id === 'cornerHarvest'), true);
 });
 
 test('multi-portal levels lead with portal profiles, with beam configs trailing last', () => {
@@ -121,13 +121,13 @@ test('multi-portal levels lead with portal profiles, with beam configs trailing 
     reqLen: 40, reqInt: 2,
     portalMap: new Map([[PACK(1, 1), PACK(2, 2)], [PACK(2, 2), PACK(1, 1)], [PACK(3, 3), PACK(4, 4)], [PACK(4, 4), PACK(3, 3)]]),
   }));
-  assert.deepEqual(attempts.slice(0, 2).map(c => c.profileName), ['portalFirstTransfer', 'portalCommitted']);
+  assert.deepEqual(attempts.slice(0, 2).map(c => c.scoringProfileId), ['portalFirstTransfer', 'portalCommitted']);
   // Beam-routing-gap fix (technique census, run 32240161854): beam search trails last (within the
   // main loop's protected late-reserve config-count window -- see the rule's own comment for why
   // leading with beam was tried and reverted). A follow-up pass added perimeterSweep CW/CCW
   // STANDARD beams after the original WIDE pair, same trailing position.
   const nonAdmissibleOrder = attempts.filter(c => !c.admissibleOrder);
-  assert.deepEqual(nonAdmissibleOrder.slice(-4).map(c => [c.profileName, c.beamWidth]), [
+  assert.deepEqual(nonAdmissibleOrder.slice(-4).map(c => [c.scoringProfileId, c.beamWidth]), [
     ['objectiveFirst', 5000],
     ['intersectionHarvest', 5000],
     ['perimeterSweep', 2000],
@@ -137,7 +137,7 @@ test('multi-portal levels lead with portal profiles, with beam configs trailing 
 
 test('high-intersection dense levels lead with beam configs', () => {
   const attempts = getAttemptConfigs(makeLevel({ reqLen: 60, reqInt: 7 }));
-  assert.deepEqual(attempts.slice(0, 2).map(c => [c.profileName, c.beamWidth]), [
+  assert.deepEqual(attempts.slice(0, 2).map(c => [c.scoringProfileId, c.beamWidth]), [
     ['intersectionHarvest', 5000],
     ['objectiveFirst', 5000],
   ]);
@@ -147,25 +147,25 @@ test('high-intersection dense levels lead with beam configs', () => {
 test('STRATEGY_ROUTING_REGIME_SELECTION disabled forces the catch-all rule regardless of features', () => {
   const level = makeLevel({ reqLen: 60, reqInt: 7 });
   const routed = getAttemptConfigs(level);
-  assert.deepEqual(routed.slice(0, 2).map(c => [c.profileName, c.beamWidth]), [
+  assert.deepEqual(routed.slice(0, 2).map(c => [c.scoringProfileId, c.beamWidth]), [
     ['intersectionHarvest', 5000],
     ['objectiveFirst', 5000],
   ]);
 
   const forcedDefault = getAttemptConfigs(level, { STRATEGY_ROUTING_REGIME_SELECTION: false });
-  assert.deepEqual(forcedDefault.slice(0, 4).map(c => c.template?.id), [
+  assert.deepEqual(forcedDefault.slice(0, 4).map(c => c.orderingBias?.id), [
     'cornerHarvest', 'perimeterCW', 'perimeterCCW', 'sideCommitment',
   ]);
   // This level is also repair-eligible (isHighInt && reqInt>=7), so a repair attempt gets appended
   // after the rule's own list too -- filter both trailing tiers to isolate the rule's own ordering.
   const forcedNonAdmissibleOrder = forcedDefault.filter(c => !c.admissibleOrder && !c.repair);
-  assert.deepEqual(forcedNonAdmissibleOrder.slice(-4).map(c => [c.profileName, c.beamWidth]), [
+  assert.deepEqual(forcedNonAdmissibleOrder.slice(-4).map(c => [c.scoringProfileId, c.beamWidth]), [
     ['objectiveFirst', 5000],
     ['intersectionHarvest', 5000],
     ['perimeterSweep', 2000],
     ['perimeterSweep', 2000],
   ]);
-  assert.notDeepEqual(forcedDefault.map(c => c.profileName), routed.map(c => c.profileName));
+  assert.notDeepEqual(forcedDefault.map(c => c.scoringProfileId), routed.map(c => c.scoringProfileId));
 
   // Passing no ablation config at all (the production call shape) must stay byte-identical
   // to the pre-existing routed behavior.
@@ -178,13 +178,13 @@ test('applyAttemptConfigOptions filters disabled templates and profiles', () => 
     TEMPLATE_CORNER_HARVEST: false,
     PROFILE_default: false,
   });
-  assert.equal(filtered.some(c => c.template?.id === 'cornerHarvest'), false);
-  assert.equal(filtered.some(c => c.profileName === 'default'), false);
+  assert.equal(filtered.some(c => c.orderingBias?.id === 'cornerHarvest'), false);
+  assert.equal(filtered.some(c => c.scoringProfileId === 'default'), false);
   assert.equal(filtered.length < base.length, true);
 });
 
 test('applyAttemptConfigOptions does not restore the base ladder when every config is disabled', () => {
-  const base = [{ profileName: 'default', template: null }];
+  const base = [{ scoringProfileId: 'default', orderingBias: null }];
   assert.deepEqual(applyAttemptConfigOptions(base, { PROFILE_default: false }), []);
 });
 
@@ -195,25 +195,25 @@ test('applyAttemptConfigOptions supports reverse, random, and profile-grouped or
   const randomA = applyAttemptConfigOptions(base, { ATTEMPT_ORDER: 'random', _randomSeed: 123 });
   const randomB = applyAttemptConfigOptions(base, { ATTEMPT_ORDER: 'random', _randomSeed: 123 });
   assert.deepEqual(randomA, randomB, 'same seed should produce stable order');
-  assert.notDeepEqual(randomA.map(c => [c.profileName, c.template?.id ?? null]), base.map(c => [c.profileName, c.template?.id ?? null]));
+  assert.notDeepEqual(randomA.map(c => [c.scoringProfileId, c.orderingBias?.id ?? null]), base.map(c => [c.scoringProfileId, c.orderingBias?.id ?? null]));
 
   const seedZero = applyAttemptConfigOptions(base, { ATTEMPT_ORDER: 'random', _randomSeed: 0 });
   const seedFortyTwo = applyAttemptConfigOptions(base, { ATTEMPT_ORDER: 'random', _randomSeed: 42 });
   assert.notDeepEqual(seedZero, seedFortyTwo, 'seed zero must not silently fall back to seed 42');
 
   const grouped = applyAttemptConfigOptions([
-    { profileName: 'a', template: { id: 't' } },
-    { profileName: 'b', template: null, beamWidth: 2000 },
-    { profileName: 'c', template: null },
+    { scoringProfileId: 'a', orderingBias: { id: 't' } },
+    { scoringProfileId: 'b', orderingBias: null, beamWidth: 2000 },
+    { scoringProfileId: 'c', orderingBias: null },
   ], { ATTEMPT_ORDER: 'profile-grouped' });
-  assert.deepEqual(grouped.map(c => c.profileName), ['c', 'a', 'b']);
+  assert.deepEqual(grouped.map(c => c.scoringProfileId), ['c', 'a', 'b']);
 });
 
 test('getConfiguredAttemptConfigs combines base ordering with ablation options', () => {
   const level = makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] });
   const cfg = { TEMPLATE_CORNER_HARVEST: false };
   const configured = getConfiguredAttemptConfigs(level, { ...cfg, ATTEMPT_ORDER: 'reverse' });
-  assert.equal(configured.some(c => c.template?.id === 'cornerHarvest'), false);
+  assert.equal(configured.some(c => c.orderingBias?.id === 'cornerHarvest'), false);
   const normalized = { ...defaultConfig(), ...cfg };
   assert.deepEqual(configured, [...applyAttemptConfigOptions(getAttemptConfigs(level, normalized), normalized)].reverse());
 });
@@ -223,23 +223,23 @@ test('getConfiguredAttemptConfigs normalizes sparse and undefined overrides at i
   const baseline = getConfiguredAttemptConfigs(level, null);
   const sparse = getConfiguredAttemptConfigs(level, { PRUNE_PARITY: false, PROFILE_default: undefined });
   assert.equal(sparse.length, baseline.length, 'unrelated sparse flags must not collapse the attempt ladder');
-  assert.equal(sparse.some(c => c.profileName === 'default'), true, 'undefined profile flag means no override');
+  assert.equal(sparse.some(c => c.scoringProfileId === 'default'), true, 'undefined profile flag means no override');
   assert.equal(sparse.some(c => c.admissibleOrder), baseline.some(c => c.admissibleOrder), 'default-on tiers remain present');
 });
 
 test('STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE adds only the missing STANDARD intersection-harvest beam to very-high-reqInt high-intersection rules', () => {
   const nonPortal = makeLevel({ reqLen: 60, reqInt: 8 });
   const off = getAttemptConfigs(nonPortal, null);
-  assert.equal(off.some(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam), false,
+  assert.equal(off.some(c => c.scoringProfileId === 'intersectionHarvest' && c.beamWidth === 2000 && !c.mechanicBucketRetention), false,
     'production default leaves the STANDARD intersection-harvest beam absent in the very-high-reqInt rule');
 
   const on = getAttemptConfigs(nonPortal, {
     ...defaultConfig(),
     STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE: true,
   });
-  const added = on.filter(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam);
+  const added = on.filter(c => c.scoringProfileId === 'intersectionHarvest' && c.beamWidth === 2000 && !c.mechanicBucketRetention);
   assert.equal(added.length, 1, 'treatment adds exactly one STANDARD intersection-harvest beam');
-  const withoutAdded = on.filter(c => !(c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam));
+  const withoutAdded = on.filter(c => !(c.scoringProfileId === 'intersectionHarvest' && c.beamWidth === 2000 && !c.mechanicBucketRetention));
   assert.deepEqual(withoutAdded, off, 'treatment is purely additive inside the selected rule');
 
   const portalDense = makeLevel({
@@ -254,8 +254,8 @@ test('STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE adds only the
     ...defaultConfig(),
     STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE: true,
   });
-  assert.equal(portalOff.some(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam), false);
-  assert.equal(portalOn.filter(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam).length, 1,
+  assert.equal(portalOff.some(c => c.scoringProfileId === 'intersectionHarvest' && c.beamWidth === 2000 && !c.mechanicBucketRetention), false);
+  assert.equal(portalOn.filter(c => c.scoringProfileId === 'intersectionHarvest' && c.beamWidth === 2000 && !c.mechanicBucketRetention).length, 1,
     'portal-dense sibling rule gets the same single missing action');
 
   // Below VERY_HIGH_REQINT, the medium-high-int rule already contains the STANDARD beam.
@@ -270,7 +270,7 @@ test('STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE adds only the
 });
 
 test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps the old protected five-config suffix intact', () => {
-  const sig = (c: any) => [c.profileName, c.template?.id ?? null, c.beamWidth ?? null, !!c.diverseBeam];
+  const sig = (c: any) => [c.scoringProfileId, c.orderingBias?.id ?? null, c.beamWidth ?? null, !!c.mechanicBucketRetention];
 
   const assertPreservesSuffix = (level: any) => {
     const off = getAttemptConfigs(level, null);
@@ -278,7 +278,7 @@ test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps t
       ...defaultConfig(),
       STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE: true,
     });
-    const candidates = on.filter(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam);
+    const candidates = on.filter(c => c.scoringProfileId === 'intersectionHarvest' && c.beamWidth === 2000 && !c.mechanicBucketRetention);
     assert.equal(candidates.length, 1, 'descendant exposes exactly one STANDARD intersection-harvest beam');
 
     // The reserve applies to ordinary main-loop configs only; getAttemptConfigs() appends
@@ -287,7 +287,7 @@ test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps t
     const onMain = on.filter(c => !c.repair && !c.admissibleOrder);
     assert.deepEqual(onMain.slice(-5).map(sig), offMain.slice(-5).map(sig),
       'all five main-loop configs protected before treatment remain the final five main-loop configs after treatment');
-    const candidateIndex = onMain.findIndex(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam);
+    const candidateIndex = onMain.findIndex(c => c.scoringProfileId === 'intersectionHarvest' && c.beamWidth === 2000 && !c.mechanicBucketRetention);
     assert.equal(candidateIndex, Math.max(0, offMain.length - 5),
       'candidate is inserted immediately before the old protected main-loop suffix');
     assert.deepEqual(onMain.filter((_, index) => index !== candidateIndex).map(sig), offMain.map(sig),
@@ -320,7 +320,7 @@ test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps t
     STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE: true,
     STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE: true,
   });
-  assert.equal(both.filter(c => c.profileName === 'intersectionHarvest' && c.beamWidth === 2000 && !c.diverseBeam).length, 1,
+  assert.equal(both.filter(c => c.scoringProfileId === 'intersectionHarvest' && c.beamWidth === 2000 && !c.mechanicBucketRetention).length, 1,
     'descendant supersedes append-last parent if both experimental flags are supplied');
 });
 
@@ -339,20 +339,20 @@ test('STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE is default-ON (promoted 2026
   // must include the plain WIDE beams now that this flag is default-ON.
   const on = getAttemptConfigs(level, null);
   const onExplicit = getAttemptConfigs(level, defaultConfig());
-  const plainWide = on.filter(c => c.beamWidth === 5000 && !c.diverseBeam);
-  assert.deepEqual(plainWide.map(c => c.profileName), ['intersectionHarvest', 'objectiveFirst'],
+  const plainWide = on.filter(c => c.beamWidth === 5000 && !c.mechanicBucketRetention);
+  assert.deepEqual(plainWide.map(c => c.scoringProfileId), ['intersectionHarvest', 'objectiveFirst'],
     'production default now appends exactly the two plain WIDE beams, trailing, in this order');
-  assert.deepEqual(onExplicit.filter(c => c.beamWidth === 5000 && !c.diverseBeam).map(c => c.profileName),
-    plainWide.map(c => c.profileName), 'null cfg and explicit defaultConfig() agree');
-  assert.equal(on.some(c => c.beamWidth === 5000 && c.diverseBeam), true, 'sanity: the existing diverse WIDE beam is untouched');
+  assert.deepEqual(onExplicit.filter(c => c.beamWidth === 5000 && !c.mechanicBucketRetention).map(c => c.scoringProfileId),
+    plainWide.map(c => c.scoringProfileId), 'null cfg and explicit defaultConfig() agree');
+  assert.equal(on.some(c => c.beamWidth === 5000 && c.mechanicBucketRetention), true, 'sanity: the existing diverse WIDE beam is untouched');
 
   const off = getAttemptConfigs(level, { ...defaultConfig(), STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: false });
-  assert.equal(off.some(c => c.beamWidth === 5000 && !c.diverseBeam), false,
+  assert.equal(off.some(c => c.beamWidth === 5000 && !c.mechanicBucketRetention), false,
     'explicitly disabling restores the pre-promotion ladder');
   // The two configs are inserted right after the routing-regime rule's own main-loop configs, before
   // repair-fallback/admissible-order are appended (getAttemptConfigs's own ordering) — so removing
   // them from `on` must reproduce `off` exactly: purely additive, nothing else moved.
-  const withoutPlainWide = on.filter(c => !(c.beamWidth === 5000 && !c.diverseBeam && !c.repair));
+  const withoutPlainWide = on.filter(c => !(c.beamWidth === 5000 && !c.mechanicBucketRetention && !c.repair));
   assert.deepEqual(withoutPlainWide, off, 'the flag is purely additive; nothing existing is reordered or removed');
 
   // A must-cross-heavy level that does NOT match the flipper-heavy sub-rule (flippers < FLIPPER_HEAVY)
@@ -363,7 +363,7 @@ test('STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE is default-ON (promoted 2026
     mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
   });
   const nonFlipperOn = getAttemptConfigs(nonFlipperLevel, null);
-  assert.equal(nonFlipperOn.some(c => c.beamWidth === 5000 && !c.diverseBeam), false,
+  assert.equal(nonFlipperOn.some(c => c.beamWidth === 5000 && !c.mechanicBucketRetention), false,
     'flag has no effect outside isMustCrossFlipperHeavy');
 });
 
@@ -376,11 +376,11 @@ test('STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE appends one plain WIDE beam
     mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
   });
   const mustPassHeavyOff = getAttemptConfigs(mustPassHeavyLevel, null);
-  assert.equal(mustPassHeavyOff.some(c => c.beamWidth === 5000 && !c.diverseBeam), false, 'production default: no plain WIDE beam here');
+  assert.equal(mustPassHeavyOff.some(c => c.beamWidth === 5000 && !c.mechanicBucketRetention), false, 'production default: no plain WIDE beam here');
   const mustPassHeavyOn = getAttemptConfigs(mustPassHeavyLevel, { ...defaultConfig(), STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: true });
-  const mustPassHeavyPlainWide = mustPassHeavyOn.filter(c => c.beamWidth === 5000 && !c.diverseBeam);
-  assert.deepEqual(mustPassHeavyPlainWide.map(c => c.profileName), ['intersectionHarvest'], 'appends exactly the missing plain intersectionHarvest WIDE beam');
-  const mustPassHeavyWithoutNew = mustPassHeavyOn.filter(c => !(c.beamWidth === 5000 && !c.diverseBeam && !c.repair));
+  const mustPassHeavyPlainWide = mustPassHeavyOn.filter(c => c.beamWidth === 5000 && !c.mechanicBucketRetention);
+  assert.deepEqual(mustPassHeavyPlainWide.map(c => c.scoringProfileId), ['intersectionHarvest'], 'appends exactly the missing plain intersectionHarvest WIDE beam');
+  const mustPassHeavyWithoutNew = mustPassHeavyOn.filter(c => !(c.beamWidth === 5000 && !c.mechanicBucketRetention && !c.repair));
   assert.deepEqual(mustPassHeavyWithoutNew, mustPassHeavyOff, 'purely additive; nothing existing reordered or removed');
 
   // isMustCross, mustPass<OBJECTIVE_HEAVY_MUSTPASS, below COMBO_MUSTCROSS/COMBO_MUSTPASS -> the
@@ -390,11 +390,11 @@ test('STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE appends one plain WIDE beam
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
   });
   const mustCrossDefaultOff = getAttemptConfigs(mustCrossDefaultLevel, null);
-  assert.equal(mustCrossDefaultOff.some(c => c.beamWidth === 5000 && !c.diverseBeam), false, 'production default: no plain WIDE beam here');
+  assert.equal(mustCrossDefaultOff.some(c => c.beamWidth === 5000 && !c.mechanicBucketRetention), false, 'production default: no plain WIDE beam here');
   const mustCrossDefaultOn = getAttemptConfigs(mustCrossDefaultLevel, { ...defaultConfig(), STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: true });
-  const mustCrossDefaultPlainWide = mustCrossDefaultOn.filter(c => c.beamWidth === 5000 && !c.diverseBeam);
-  assert.deepEqual(mustCrossDefaultPlainWide.map(c => c.profileName), ['objectiveFirst'], 'appends exactly the missing plain objectiveFirst WIDE beam');
-  const mustCrossDefaultWithoutNew = mustCrossDefaultOn.filter(c => !(c.beamWidth === 5000 && !c.diverseBeam && !c.repair));
+  const mustCrossDefaultPlainWide = mustCrossDefaultOn.filter(c => c.beamWidth === 5000 && !c.mechanicBucketRetention);
+  assert.deepEqual(mustCrossDefaultPlainWide.map(c => c.scoringProfileId), ['objectiveFirst'], 'appends exactly the missing plain objectiveFirst WIDE beam');
+  const mustCrossDefaultWithoutNew = mustCrossDefaultOn.filter(c => !(c.beamWidth === 5000 && !c.mechanicBucketRetention && !c.repair));
   assert.deepEqual(mustCrossDefaultWithoutNew, mustCrossDefaultOff, 'purely additive; nothing existing reordered or removed');
 
   // This flag must have NO effect on the flipper-heavy rule (that's the OTHER flag's job, already
@@ -411,7 +411,7 @@ test('STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE appends one plain WIDE beam
     STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: true,
     STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: false,
   });
-  assert.equal(flipperHeavyOn.some(c => c.beamWidth === 5000 && !c.diverseBeam), false, 'flag has no effect on the flipper-heavy rule');
+  assert.equal(flipperHeavyOn.some(c => c.beamWidth === 5000 && !c.mechanicBucketRetention), false, 'flag has no effect on the flipper-heavy rule');
 });
 
 test('SOLVER_TESTING_API exposes the extracted attempt-order helper', () => {
@@ -427,12 +427,12 @@ test('must-cross-threaded medium-high-int levels get floored diverse wide beams'
   // bucketed WIDE beam solves these in seconds while the shipped ladder times out).
   const level = makeLevel({ reqLen: 55, reqInt: 5, mustCrossKeys: [PACK(4, 4), PACK(6, 6)] });
   const attempts = getAttemptConfigs(level);
-  const diverse = attempts.filter(c => c.diverseBeam);
+  const diverse = attempts.filter(c => c.mechanicBucketRetention);
   assert.equal(diverse.length >= 2, true, 'expected diverse beam attempts');
-  assert.equal(diverse.some(c => c.profileName === 'intersectionHarvest' && (c.minBudgetFraction ?? 0) > 0), true,
+  assert.equal(diverse.some(c => c.scoringProfileId === 'intersectionHarvest' && (c.minBudgetFraction ?? 0) > 0), true,
     'diverse intersectionHarvest beam needs a budget floor to survive ladder fragmentation');
-  const perimeterIdx = attempts.findIndex(c => c.beamWidth && c.template?.id === 'perimeterCW');
-  const diverseIdx = attempts.findIndex(c => c.diverseBeam);
+  const perimeterIdx = attempts.findIndex(c => c.beamWidth && c.orderingBias?.id === 'perimeterCW');
+  const diverseIdx = attempts.findIndex(c => c.mechanicBucketRetention);
   assert.equal(perimeterIdx >= 0 && perimeterIdx < diverseIdx, true,
     'proven perimeter beam winners still lead; diverse beams follow');
 });
@@ -440,13 +440,13 @@ test('must-cross-threaded medium-high-int levels get floored diverse wide beams'
 test('medium-high-int levels without must-cross keep the plain beam ladder', () => {
   const level = makeLevel({ reqLen: 55, reqInt: 5, mustCrossKeys: [] });
   const attempts = getAttemptConfigs(level);
-  assert.equal(attempts.some(c => c.diverseBeam), false);
+  assert.equal(attempts.some(c => c.mechanicBucketRetention), false);
 });
 
 test('very-high-reqInt levels with must-cross threading also get the diverse beams', () => {
   const level = makeLevel({ reqLen: 60, reqInt: 8, mustCrossKeys: [PACK(4, 4), PACK(6, 6)] });
   const attempts = getAttemptConfigs(level);
-  assert.equal(attempts.some(c => c.diverseBeam && c.profileName === 'intersectionHarvest'), true);
+  assert.equal(attempts.some(c => c.mechanicBucketRetention && c.scoringProfileId === 'intersectionHarvest'), true);
 });
 
 test('STRATEGY_REPAIR_FALLBACK / STRATEGY_REPAIR_MUSTTURN_BIAS filter the repair attempts', () => {

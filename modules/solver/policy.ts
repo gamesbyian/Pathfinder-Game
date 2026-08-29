@@ -1,7 +1,7 @@
-// Solver scoring profiles and structural templates, separate from search implementation.
-import type { ScoringProfile, StructuralTemplate } from './types.js';
+// Solver scoring profiles and structural ordering biases, separate from search implementation.
+import type { ScoringProfile, StructuralOrderingBias } from './types.js';
 
-export const POLICY_PROFILES: Readonly<Record<string, ScoringProfile>> = Object.freeze({
+export const SCORING_PROFILES: Readonly<Record<string, ScoringProfile>> = Object.freeze({
     default:             Object.freeze({ goalAttractionWeight: 0.4,  objectiveAttractionWeight: 2.5,  finishCommitmentWeight: 0.6,  perimeterBiasWeight: 1,    mustPassUrgencyWeight: 1.25, mustCrossUrgencyWeight: 1,    intersectionSetupWeight: 1,    antiDitherWeight: 1,    revisitPenaltyWeight: 1    }),
     perimeterSweep:      Object.freeze({ goalAttractionWeight: 0.6,  objectiveAttractionWeight: 0.95, finishCommitmentWeight: 0.45, perimeterBiasWeight: 2.05, mustPassUrgencyWeight: 1.1,  mustCrossUrgencyWeight: 1.15, intersectionSetupWeight: 1.1,  antiDitherWeight: 0.55, revisitPenaltyWeight: 0.65 }),
     harvestThenFinish:   Object.freeze({ goalAttractionWeight: 0.82, objectiveAttractionWeight: 1.35, finishCommitmentWeight: 0.72, perimeterBiasWeight: 1.15, mustPassUrgencyWeight: 1.35, mustCrossUrgencyWeight: 1.4,  intersectionSetupWeight: 1.15, antiDitherWeight: 0.85, revisitPenaltyWeight: 0.85 }),
@@ -20,13 +20,13 @@ export const POLICY_PROFILES: Readonly<Record<string, ScoringProfile>> = Object.
     repair:              Object.freeze({ goalAttractionWeight: 0.7,  objectiveAttractionWeight: 1.65, finishCommitmentWeight: 0.65, perimeterBiasWeight: 1.1,  mustPassUrgencyWeight: 1.85, mustCrossUrgencyWeight: 1.8,  intersectionSetupWeight: 1.2,  antiDitherWeight: 1,    revisitPenaltyWeight: 0.9, mustTurnUrgencyWeight: 0, mustTurnExitGuidanceWeight: 0 }),
 });
 
-export const PROFILE_ORDER = Object.freeze([
+export const SCORING_PROFILE_ORDER = Object.freeze([
     'harvestThenFinish', 'objectiveFirst', 'knotBuilder', 'perimeterSweep',
     'mustCrossFirst', 'intersectionHarvest', 'finishFirst', 'nearClosureRescue',
     'portalFirstTransfer', 'portalCommitted', 'closureCommitment', 'default'
 ]);
 
-export const TEMPLATES: Readonly<Record<string, StructuralTemplate>> = Object.freeze({
+export const STRUCTURAL_ORDERING_BIASES: Readonly<Record<string, StructuralOrderingBias>> = Object.freeze({
     perimeterCW:    Object.freeze({ id: 'perimeterCW',    perimeterDir: 'cw',  edgeDriftPenalty: 22, branchBiasBoost: 26, directionPenalty: 16 }),
     perimeterCCW:   Object.freeze({ id: 'perimeterCCW',   perimeterDir: 'ccw', edgeDriftPenalty: 22, branchBiasBoost: 26, directionPenalty: 16 }),
     cornerHarvest:  Object.freeze({ id: 'cornerHarvest',  prefersCorner: true, cornerMissPenalty: 14 }),
@@ -37,7 +37,7 @@ export const TEMPLATES: Readonly<Record<string, StructuralTemplate>> = Object.fr
     sideYHigh:      Object.freeze({ id: 'sideYHigh', sideAxis: 'y', sideDir: +1, sideBiasBoost: 14, sideViolation: 10 }),
 });
 
-export const TEMPLATE_CONFIG_KEYS: Readonly<Record<string, string>> = Object.freeze({
+export const ORDERING_BIAS_CONFIG_KEYS: Readonly<Record<string, string>> = Object.freeze({
     cornerHarvest:  'TEMPLATE_CORNER_HARVEST',
     perimeterCW:    'TEMPLATE_PERIMETER_CW',
     perimeterCCW:   'TEMPLATE_PERIMETER_CCW',
@@ -49,9 +49,9 @@ export const TEMPLATE_CONFIG_KEYS: Readonly<Record<string, string>> = Object.fre
 });
 
 export const ATTEMPT_CONFIGS = Object.freeze([
-    Object.freeze({ profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest    }),
-    Object.freeze({ profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW      }),
-    Object.freeze({ profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCCW     }),
-    Object.freeze({ profileName: 'perimeterSweep',    template: TEMPLATES.sideCommitment   }),
-    ...PROFILE_ORDER.map(profileName => Object.freeze({ profileName, template: null })),
+    Object.freeze({ scoringProfileId: 'perimeterSweep',    orderingBias: STRUCTURAL_ORDERING_BIASES.cornerHarvest    }),
+    Object.freeze({ scoringProfileId: 'perimeterSweep',    orderingBias: STRUCTURAL_ORDERING_BIASES.perimeterCW      }),
+    Object.freeze({ scoringProfileId: 'perimeterSweep',    orderingBias: STRUCTURAL_ORDERING_BIASES.perimeterCCW     }),
+    Object.freeze({ scoringProfileId: 'perimeterSweep',    orderingBias: STRUCTURAL_ORDERING_BIASES.sideCommitment   }),
+    ...SCORING_PROFILE_ORDER.map(scoringProfileId => Object.freeze({ scoringProfileId, orderingBias: null })),
 ]);

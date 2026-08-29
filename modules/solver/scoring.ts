@@ -4,12 +4,12 @@ import { getRealLengthFromState } from './solution.js';
 import { turnDirection } from '../domain/geometry.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { SolverSearchState, PrepLevel, ScoringProfile, StructuralTemplate } from './types.js';
+import type { SolverSearchState, PrepLevel, ScoringProfile, StructuralOrderingBias } from './types.js';
 
-// Pre-compute template bonus for a candidate move.
+// Pre-compute orderingBias bonus for a candidate move.
 // Returns the bonus to add to the DFS score (higher = preferred).
-export function computeTemplateBonus(target: number, pos: number, level: NormalizedLevel, template: StructuralTemplate | null | undefined, rRatio: number): number {
-    if (!template) return 0;
+export function computeTemplateBonus(target: number, pos: number, level: NormalizedLevel, orderingBias: StructuralOrderingBias | null | undefined, rRatio: number): number {
+    if (!orderingBias) return 0;
     const { w, h } = level.grid;
     const tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
     const px = pos   & 0xFFFF, py = (pos   >>> 16) & 0xFFFF;
@@ -17,7 +17,7 @@ export function computeTemplateBonus(target: number, pos: number, level: Normali
     const edgeNext = Math.min(tx, ty, (w - 1) - tx, (h - 1) - ty);
     let bonus = 0;
 
-    if (template.perimeterDir) {
+    if (orderingBias.perimeterDir) {
         // Phase-aware perimeter gradient: mirrors V1's harvest→knot transition.
         // During harvest (rRatio<0.45): full perimeter pull. During knot (rRatio>0.45):
         // gradually relax so the solver can build interior intersections.
@@ -34,17 +34,17 @@ export function computeTemplateBonus(target: number, pos: number, level: Normali
             const cx = (w - 1) / 2, cy = (h - 1) / 2;
             const cross = (px - cx) * (ty - cy) - (py - cy) * (tx - cx);
             if (cross !== 0) {
-                const correctDir = (template.perimeterDir === 'cw') ? (cross < 0) : (cross > 0);
-                bonus += correctDir ? (template.branchBiasBoost ?? 0) : -(template.directionPenalty ?? 0);
+                const correctDir = (orderingBias.perimeterDir === 'cw') ? (cross < 0) : (cross > 0);
+                bonus += correctDir ? (orderingBias.branchBiasBoost ?? 0) : -(orderingBias.directionPenalty ?? 0);
             }
         }
         // Penalty for leaving perimeter, scaled with phase (relaxes in knot phase)
         if (edgeNow === 0 && edgeNext > 0) {
-            bonus -= Math.round((template.edgeDriftPenalty ?? 0) * perimScale);
+            bonus -= Math.round((orderingBias.edgeDriftPenalty ?? 0) * perimScale);
         }
     }
 
-    if (template.prefersCorner) {
+    if (orderingBias.prefersCorner) {
         if (rRatio < 0.58) {
             const cornerDist = Math.min(tx + ty, (w - 1 - tx) + ty, tx + (h - 1 - ty), (w - 1 - tx) + (h - 1 - ty));
             if (cornerDist <= 2) {
@@ -55,7 +55,7 @@ export function computeTemplateBonus(target: number, pos: number, level: Normali
         }
     }
 
-    if (template.prefersSide && rRatio < 0.65 && w > 4) {
+    if (orderingBias.prefersSide && rRatio < 0.65 && w > 4) {
         const midX = (w - 1) / 2;
         const pSide = px - midX, tSide = tx - midX;
         const pSign = Math.sign(pSide), tSign = Math.sign(tSide);
@@ -65,12 +65,12 @@ export function computeTemplateBonus(target: number, pos: number, level: Normali
         }
     }
 
-    if (template.sideAxis && rRatio < 0.68) {
-        const mid    = template.sideAxis === 'x' ? (w - 1) / 2 : (h - 1) / 2;
-        const tCoord = template.sideAxis === 'x' ? tx : ty;
+    if (orderingBias.sideAxis && rRatio < 0.68) {
+        const mid    = orderingBias.sideAxis === 'x' ? (w - 1) / 2 : (h - 1) / 2;
+        const tCoord = orderingBias.sideAxis === 'x' ? tx : ty;
         const side   = Math.sign(tCoord - mid);
-        if (side === template.sideDir)       bonus += (template.sideBiasBoost ?? 0) * 3;
-        else if (side === -(template.sideDir ?? 0)) bonus -= (template.sideViolation ?? 0)  * 3;
+        if (side === orderingBias.sideDir)       bonus += (orderingBias.sideBiasBoost ?? 0) * 3;
+        else if (side === -(orderingBias.sideDir ?? 0)) bonus -= (orderingBias.sideViolation ?? 0)  * 3;
     }
 
     return bonus;
@@ -194,7 +194,7 @@ const _pooledCtx: CurUrgencyContext = {
  *  guidance, a dedicated biased-repair attempt — see data/stress/README.md), and repair's randomized
  *  restart search is *already* documented as measurably more sensitive to scoreMove's exact
  *  balance than DFS/beam's deterministic search — exactly why `mustTurnUrgencyWeight` and
- *  `mustTurnExitGuidanceWeight` are independently zeroed for `POLICY_PROFILES.repair` while every
+ *  `mustTurnExitGuidanceWeight` are independently zeroed for `SCORING_PROFILES.repair` while every
  *  other profile keeps those terms at full strength. Same shape of problem, same fix: repair keeps
  *  the ORIGINAL per-candidate (axis-timing-buggy, but apparently load-bearing for this specific
  *  fragile level) must-cross computation, while DFS and beam — whose deterministic, non-restart
@@ -283,7 +283,7 @@ export function __buildFreshCurUrgencyContextForTests(pos: number, state: Solver
 // curCtx: optional precomputed CurUrgencyContext for this `pos` (see its own doc comment) — when
 // omitted, scoreMove recomputes the same values inline, so every existing caller/test keeps its
 // exact current behaviour unless it explicitly opts in.
-export function scoreMove(target: number, pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, rStepsAfterMove: number, template?: StructuralTemplate | null, curCtx?: CurUrgencyContext | null): number {
+export function scoreMove(target: number, pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, rStepsAfterMove: number, orderingBias?: StructuralOrderingBias | null, curCtx?: CurUrgencyContext | null): number {
     // Prefer curCtx's precomputed weights (built once per candidate batch — see
     // CurUrgencyContext.weights) over re-resolving profile.<field> ?? 1 on every call. Byte-
     // identical either way (rw's fields ARE that exact `?? 1` resolution); `rw` is null for any
@@ -321,7 +321,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // V1 drops perimeterBias from 1.65 (harvest) to 0.45 (knot) so the solver can
     // leave the perimeter to build intersections / MC crossings in the mid phase.
     // Only applies to directional CW/CCW templates to avoid disturbing non-perimeter configs.
-    const phasePerimScale = (template && template.perimeterDir && rRatio > 0.45)
+    const phasePerimScale = (orderingBias && orderingBias.perimeterDir && rRatio > 0.45)
         ? Math.max(0.22, 1.0 - (rRatio - 0.45) * 1.42)  // 1.0→0.22 over rRatio 0.45→1.0
         : 1.0;
 
@@ -466,7 +466,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // none — leaving a directional (cw/ccw, not "either") turn requirement to pure incidental
     // momentum; stress-corpus finding, see data/stress/README.md.
     //
-    // POLICY_PROFILES.repair sets mustTurnUrgencyWeight to 0 (see policy.ts), fully opting
+    // SCORING_PROFILES.repair sets mustTurnUrgencyWeight to 0 (see policy.ts), fully opting
     // repair-search.ts out of this term: repair's randomized-restart exploration was measured
     // to be sensitive to scoreMove's exact balance in a way DFS/beam are not — adding this term
     // at ANY tried weight fixed one repair-search plateau but broke a different one on the same
@@ -503,7 +503,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // than mustTurnUrgencyWeight. That theory held right up until this term
     // was fixed to actually fire under repair's calling convention (see the "before/after-apply
     // split" comment below) — at that point it turned out to be just as destabilizing, and
-    // POLICY_PROFILES.repair now zeroes it too. See policy.ts and data/stress/README.md's S043
+    // SCORING_PROFILES.repair now zeroes it too. See policy.ts and data/stress/README.md's S043
     // writeup for the reproducible A/B; the real fix for the level that needed this term lives
     // in repair-search.ts's own exploration sampling instead, gated to a separate attempt.
     //
@@ -646,8 +646,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // Revisit penalty
     if ((!cfg || cfg.SCORE_REVISIT_PENALTY) && state.visited[target] > 0) score -= wrv * 8;
 
-    // Structural template bias (overrides/supplements profile heuristics)
-    if ((!cfg || cfg.SCORE_TEMPLATE_BONUS) && template) score += computeTemplateBonus(target, pos, level, template, rRatio);
+    // Structural orderingBias bias (overrides/supplements profile heuristics)
+    if ((!cfg || cfg.SCORE_TEMPLATE_BONUS) && orderingBias) score += computeTemplateBonus(target, pos, level, orderingBias, rRatio);
 
     return score;
 }
@@ -656,7 +656,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
 const _sas = new Float64Array(4); // scores indexed by neighbor position
 
 // Sort neighbors in-place: best-first at index 0 (DFS iterates with childIdx++).
-export function scoreAndSort(neighbors: number[], pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template?: StructuralTemplate | null): void {
+export function scoreAndSort(neighbors: number[], pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, orderingBias?: StructuralOrderingBias | null): void {
     const n = neighbors.length;
     if (n <= 1) return;
     const realLen = getRealLengthFromState(state);
@@ -668,12 +668,12 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
         const nk = neighbors[i];
         const isJump = !!(portalEntry && portalEntry.dest === nk);
         const nRSteps = level.reqLen - realLen - (isJump ? 0 : 1);
-        _sas[i] = scoreMove(nk, pos, state, level, prep, profile, nRSteps, template, curCtx);
+        _sas[i] = scoreMove(nk, pos, state, level, prep, profile, nRSteps, orderingBias, curCtx);
     }
     const research = prep._orderingResearchObserver;
     if (research) {
         const candidates = [...neighbors];
-        const policies = (research.policies ?? [{ id: 'active', profile, template }])
+        const policies = (research.policies ?? [{ id: 'active', profile, orderingBias }])
             .filter((policy): policy is typeof policy & { profile: ScoringProfile } => policy.profile !== null);
         const rankings = policies.map(policy => {
             const ctx = buildCurUrgencyContext(pos, state, level, prep, true, policy.profile);
@@ -681,7 +681,7 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
                 const isJump = !!(portalEntry && portalEntry.dest === candidate);
                 const remaining = level.reqLen - realLen - (isJump ? 0 : 1);
                 return { candidate, index, score: scoreMove(candidate, pos, state, level, prep,
-                    policy.profile, remaining, policy.template, ctx) };
+                    policy.profile, remaining, policy.orderingBias, ctx) };
             }).sort((a, b) => b.score - a.score || a.index - b.index);
             return { policyId: policy.id, order: scored.map(row => row.candidate), scores: scored.map(row => row.score) };
         });
@@ -690,14 +690,14 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
             const leftRanking = rankings[leftIndex], rightRanking = rankings[rightIndex];
             if (leftRanking.order[0] === rightRanking.order[0]) continue;
             const leftPolicy = policies[leftIndex], rightPolicy = policies[rightIndex];
-            if (leftPolicy.template !== rightPolicy.template) continue;
+            if (leftPolicy.orderingBias !== rightPolicy.orderingBias) continue;
             const leftTop = leftRanking.order[0], rightTop = rightRanking.order[0];
             const margin = (policy: ScoringProfile): number => {
                 const ctx = buildCurUrgencyContext(pos, state, level, prep, true, policy);
                 const remaining = (candidate: number) => level.reqLen - realLen
                     - (portalEntry?.dest === candidate ? 0 : 1);
-                return scoreMove(leftTop, pos, state, level, prep, policy, remaining(leftTop), leftPolicy.template, ctx)
-                    - scoreMove(rightTop, pos, state, level, prep, policy, remaining(rightTop), leftPolicy.template, ctx);
+                return scoreMove(leftTop, pos, state, level, prep, policy, remaining(leftTop), leftPolicy.orderingBias, ctx)
+                    - scoreMove(rightTop, pos, state, level, prep, policy, remaining(rightTop), leftPolicy.orderingBias, ctx);
             };
             const leftMargin = margin(leftPolicy.profile), rightMargin = margin(rightPolicy.profile);
             const terms = [...new Set([...Object.keys(leftPolicy.profile), ...Object.keys(rightPolicy.profile)])].sort();

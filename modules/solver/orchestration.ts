@@ -3,7 +3,7 @@ import { legacyMsToWork, scaledStageWorkBudget } from './budget-units.js';
 import { withWorkCapScope } from './budget-context.js';
 import { canonicalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
 import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS, repairAttempt } from './attempts.js';
-import { POLICY_PROFILES } from './policy.js';
+import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { repairPrimarySeed } from './repair-search.js';
@@ -56,7 +56,7 @@ interface PortfolioExperimentDefinition {
 export interface Attempt {
     /** Canonical policy-stage identity; legacy booleans below are compatibility projections. */
     stageId: SolverStageId;
-    gateKey: number; profile: string; template: string | null; beamWidth: number | null;
+    gateKey: number; scoringProfileId: string; orderingBiasId: string | null; beamWidth: number | null;
     ok: boolean; elapsedMs: number; allocatedBudgetMs: number;
     /** Diagnostic-only ceilings visible at dispatch. Null denotes an uncapped currency. */
     allocatedWorkCeiling?: number | null;
@@ -67,13 +67,13 @@ export interface Attempt {
      *  crash from an ordinary negative search result. */
     outcome: 'success' | 'exhausted' | 'timed-out' | 'budget-starved' | 'error';
     /** Bounded, JSON-safe description only; arbitrary thrown values and stacks are never retained. */
-    error?: { name: string; message: string; gateKey: number; configKey: string; profile: string; template: string | null };
+    error?: { name: string; message: string; gateKey: number; configKey: string; scoringProfileId: string; orderingBiasId: string | null };
     passNumber?: number; configKey?: string; restart?: boolean; schedulerPhase?: 'portfolio' | 'fallback';
     /** Diagnostic-only passthrough of the originating AttemptConfig's dispatch flags — not read
      *  by any solving logic, purely so external tooling (stress benchmark, audits) can tell a
      *  diverse beam / repair attempt apart from a plain one without re-deriving it from profile
      *  name and beamWidth. */
-    diverseBeam?: boolean;
+    mechanicBucketRetention?: boolean;
     repair?: boolean;
     repairMustTurnBiased?: boolean;
     /** Diagnostic-only passthrough for the experimental turn-aware bias attempt (see
@@ -490,7 +490,7 @@ export interface SolveOpts {
     /** Winner-first pre-attempt (offline re-verify tooling only). Names one (configKey, gateKey)
      *  pair — from a compiled baseline's recorded winner — to try as a SINGLE attempt before the
      *  normal probe/ladder. `configKey` is matched against this level's own configured attempt list
-     *  via attemptConfigKey (so the full config object, including its template/diverseBeam, is
+     *  via attemptConfigKey (so the full config object, including its orderingBias/mechanicBucketRetention, is
      *  recovered from the current code, not reconstructed from the lossy baseline record); a miss
      *  (key no longer present, gate not active, or the attempt doesn't solve) falls straight through
      *  to the full flow below, having spent at most this one bounded attempt. Its `nodeBudget`
@@ -579,8 +579,8 @@ export async function runAttempt(
     // this parameter existed. No effect on beam/DFS (they don't take a seedSalt at all).
     seedSalt = 0,
 ): Promise<AttemptResult> {
-    const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
-    const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
+    const { scoringProfileId, orderingBias, beamWidth, mechanicBucketRetention, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
+    const profile = SCORING_PROFILES[scoringProfileId] ?? SCORING_PROFILES.default;
     // Always non-null internally so every branch below can report through the same object,
     // whether or not the caller supplied one (runRepairProbe passes its own, to also read
     // nodesExpanded back for its cross-gate node-budget accounting; ordinary callers don't).
@@ -612,8 +612,8 @@ export async function runAttempt(
             message: bounded(safeField('message') ?? err, 'Unknown attempt error', 500),
             gateKey,
             configKey: bounded(attemptConfigKey(attemptConfig), 'unknown', 240),
-            profile: bounded(profileName, 'unknown', 120),
-            template: template?.id == null ? null : bounded(template.id, 'unknown', 120),
+            scoringProfileId: bounded(scoringProfileId, 'unknown', 120),
+            orderingBiasId: orderingBias?.id == null ? null : bounded(orderingBias.id, 'unknown', 120),
         };
     }
     const attMs = Date.now() - attStart;
@@ -625,8 +625,8 @@ export async function runAttempt(
         path,
         attempt: withSolverStage({
             gateKey,
-            profile: profileName,
-            template: template?.id ?? null,
+            scoringProfileId,
+            orderingBiasId: orderingBias?.id ?? null,
             beamWidth: beamWidth ?? null,
             ok: !!path,
             outcome: path ? 'success' : attemptError ? 'error' : budgetStarvedAtDispatch ? 'budget-starved'
@@ -645,7 +645,7 @@ export async function runAttempt(
             ...(!path && !attemptError && searchOut.timedOut !== undefined ? { timedOut: searchOut.timedOut } : {}),
             ...(!path && !attemptError && Number.isFinite(searchOut.bestBadness) ? { bestBadness: searchOut.bestBadness } : {}),
             ...(!path && !attemptError && Number.isFinite(searchOut.finalBadness) ? { finalBadness: searchOut.finalBadness } : {}),
-            ...(diverseBeam ? { diverseBeam: true } : {}),
+            ...(mechanicBucketRetention ? { mechanicBucketRetention: true } : {}),
             ...(repair ? { repair: true } : {}),
             ...(repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
             ...(repairTurnBiased ? { repairTurnBiased: true } : {}),
@@ -1357,8 +1357,8 @@ async function runRepairProbe(
 // AttemptIdentityFields on its own side rather than importing this thin adapter).
 export function attemptConfigKey(config: AttemptConfig): string {
     return formatAttemptIdentityKey({
-        profileName: config.profileName, templateId: config.template?.id ?? null,
-        beamWidth: config.beamWidth, diverseBeam: config.diverseBeam, repair: config.repair,
+        scoringProfileId: config.scoringProfileId, templateId: config.orderingBias?.id ?? null,
+        beamWidth: config.beamWidth, mechanicBucketRetention: config.mechanicBucketRetention, repair: config.repair,
         repairMustTurnBiased: config.repairMustTurnBiased, repairTurnBiased: config.repairTurnBiased,
         admissibleOrder: config.admissibleOrder, admissibleOrderNoTieBreak: config.admissibleOrderNoTieBreak,
         admissibleOrderLds: config.admissibleOrderLds,
@@ -1642,7 +1642,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // search-state.js. No effect on normal play/solve — never set in production.
     prep._forcedPortalExitKey = (opts.forcedPortalExitKey != null) ? opts.forcedPortalExitKey : null;
 
-    // Build attempt configs, then apply ablation profile/template filters and ordering overrides.
+    // Build attempt configs, then apply ablation profile/orderingBias filters and ordering overrides.
     const baseConfigs = getConfiguredAttemptConfigs(level, cfg);
     const activeGates = getActiveGates(level, gateKeys, cfg);
 
@@ -1659,7 +1659,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION) — 'default' excluded, since it already
     // gets a full unreduced shot in the admissible-order tier's own earlier pass and this tier never
     // reruns it.
-    const admissibleOrderNonDefaultConfigs = admissibleOrderConfigs.filter(c => c.profileName !== 'default');
+    const admissibleOrderNonDefaultConfigs = admissibleOrderConfigs.filter(c => c.scoringProfileId !== 'default');
     const mainConfigs = baseConfigs.filter(c => !c.repair && !c.admissibleOrder);
 
     // opts.repairBudgetFractionOverride (NOT an ablation flag — see SolveOpts's field comment for
@@ -1748,7 +1748,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         const classify = classifyAttemptTier;
         const hasRepairConfig = baseConfigs.some(config => config.repair);
         const hasMainConfig = baseConfigs.some(config => !config.repair && !config.admissibleOrder);
-        const hasNonDefaultAdmissibleOrderConfig = baseConfigs.some(config => config.admissibleOrder && config.profileName !== 'default');
+        const hasNonDefaultAdmissibleOrderConfig = baseConfigs.some(config => config.admissibleOrder && config.scoringProfileId !== 'default');
         // Canonical eligibility: buildSolverStagePlan (stage-plan.ts) pairs every SOLVER_STAGE_IDS
         // entry (stage-policy.ts) with the SAME eligibility booleans stageBudgetPlan computed and
         // the real dispatch below gates on — one canonical source, not a second hand-written
@@ -2112,7 +2112,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // other profile checks the full nodeBudget, unchanged — see
             // ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION's own comment. Equals nodeBudget whenever
             // that reserve is ineligible (default OFF), so this is a strict no-op in that case.
-            const profileCeiling = admissibleOrderConfig.profileName === 'default'
+            const profileCeiling = admissibleOrderConfig.scoringProfileId === 'default'
                 ? admissibleOrderDefaultProfileCeiling
                 : nodeBudget;
             if (prep._metrics.nodesExpanded >= profileCeiling) break;
