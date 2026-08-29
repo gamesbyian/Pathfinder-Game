@@ -62,7 +62,7 @@ function winningAttempt(result, phase = null) {
 }
 
 function passForPortfolioWin(result) {
-    const winner = winningAttempt(result, 'portfolio');
+    const winner = winningAttempt(result, 'legacy-latency-portfolio') ?? winningAttempt(result, 'portfolio');
     return Number.isFinite(Number(winner?.passNumber)) ? Number(winner.passNumber) : null;
 }
 
