@@ -386,8 +386,8 @@ Gate status by subsection:
 
 - **3.1 live execution-surface inventory: PARTIAL.** Package commands, script entrypoints, workflow targets, current-doc references for exact tool rows, CI command reachability, remaining-phase module files/exported symbol owners, and concrete generated-report path relationships are now mechanically inspectable. Application/public port semantics and report producer-vs-consumer role classification still need deeper audit.
 - **3.2 cheap smoke coverage: PARTIAL.** The variant-family dataset boundary doctor now has real Node-20 CI smoke coverage. Other Phase-8 uncovered commands identified by the inventory still need case-by-case treatment.
-- **3.3 shared transports/duplicated mappings: NOT YET COMPLETED by this pass.**
-- **3.4 compatibility-normalization quarantine: NOT YET COMPLETED by this pass.**
+- **3.3 shared transports/duplicated mappings: PARTIAL.** Existing `check:solveopts-transport-parity` permanently covers the observed dual-read SolveOpts forwarding failure class, and the public `SolverApi.solveLevel` boundary now consumes the owning `SolveOpts` type rather than `any`. The remaining audit is to document future-phase transport ownership and any duplication that cannot be mechanically removed before a rename.
+- **3.4 compatibility-normalization quarantine: COMPLETE FOR ENTRY READINESS.** The remaining 22 Phase-8-14 `dual-read` ledger rows have been separated into command aliases versus real data/value boundaries. Package aliases are owned only by `package.json` compatibility entries and must not create internal dual-name knowledge. The real boundary families and their owners are recorded below; implementation remains in the relevant future phase, but the ownership/normalization location is fixed before renaming.
 - **3.5 runtime/type seams: PARTIAL.** The new doctor smoke exercises a real plain-Node Phase-8 boundary, and `check:plain-node-import-boundaries` now mechanically prevents the known plain-Node-to-TypeScript import failure class across surfaced package/workflow roots. Literal workflow path filters are now exact-case/existence checked as well. The public `SolverApi.solveLevel` option boundary now consumes orchestration's real `SolveOpts` type, and false-goal search/classification ports use their owning result types instead of `any`, closing a concrete compile-time hole that could admit stale option/result names. Non-import runtime seams and broader dynamic application bags still need review.
 - **3.6 rename-impact/census tooling: PARTIAL.** Exact tool/package/workflow/doc/module/symbol surface matching and CI exposure are now available. The inventory accepts inclusive phase ranges (for example `--phase=8-14`) and records old-name references separately from canonical-name references with a reconciliation state per ledger row, making obsolete/mixed/current mappings visible. Compatibility-read-vs-canonical-writer semantics still require boundary-aware review rather than pure text matching.
 - **3.7 current-main reconciliation of Phases 8-14: NOT YET COMPLETED by this pass.**
@@ -404,3 +404,24 @@ npm run check:plain-node-import-boundaries
 ```
 
 Do not infer from this progress record that the Phase-8 gate can be opened. Its purpose is to replace one part of the previous manual census with durable machinery and to give the next table-setting pass a concrete list of uncovered surfaces to work down.
+
+
+### Compatibility-boundary ownership for remaining phases
+
+The future ledger contains 22 intentional `dual-read` rows. Twelve are npm/package aliases in Phase 8, three are package aliases in Phase 9, and seven are real value/data boundaries. Command aliases are compatibility at the command-dispatch surface only: the old alias may invoke the canonical command for one migration window, but scripts/modules must use one canonical internal name.
+
+The real value/data boundaries are:
+
+| Phase | Legacy -> canonical | Owning compatibility boundary | Single-write rule |
+| --- | --- | --- | --- |
+| 8 | `knownHardCluster` -> `hardClusterHeuristicMatch` | solver-diagnostics generated-report normalization/reader boundary around the current audit-export tool family | current diagnostics writer emits only canonical after Phase 8; historical report readers accept legacy |
+| 8 | `recommendedGating` -> `derivedGatingCandidate` | same solver-diagnostics generated-report boundary | same |
+| 8 | `PATHFINDER_VARIANT_TROVE` -> `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT` | variant-family dataset root resolver used by the dataset doctor/workflow family | prefer canonical env input, accept legacy for one compatibility window, never copy both names deeper into tool logic |
+| 10 | stage budget policy `additive-fraction` -> `additive-wall-multiplier` | stage-policy/report compatibility boundary | **definition is already canonical on current main**; Phase 10 must audit historical readers only and must not recreate the old definition |
+| 11 | runtime `variant` -> `orientation` | engine-state + level-transform boundary | runtime/application state becomes canonical orientation; research level-variant vocabulary remains separate and unchanged |
+| 13 | normalized `reqLen` -> `requiredLength` | raw-to-normalized level parser | raw wire input remains `reqLen`; normalized/runtime objects expose only `requiredLength` after migration |
+| 13 | normalized `reqInt` -> `requiredIntersections` | raw-to-normalized level parser | raw wire input remains `reqInt`; normalized/runtime objects expose only `requiredIntersections` after migration |
+
+Current compatibility infrastructure relevant to these migrations is deliberately centralized: solver stage IDs use `stage-id-normalization.mjs`, scheduler modes use `scheduler-mode-normalization.mjs`, routing regimes use `routing-regime-normalization.mjs`, and hint/provenance persistence uses `hint-runtime.mjs`. Future phases must extend the owning boundary above rather than introducing a second legacy-to-canonical map in workers, reports, or UI code.
+
+This audit also changes the interpretation of the Phase-10 budget-policy ledger row: its canonical definition has already landed before Phase 10, while historical compatibility remains unproven. Treat it as a partially superseded contract migration, not a fresh definition rename.
