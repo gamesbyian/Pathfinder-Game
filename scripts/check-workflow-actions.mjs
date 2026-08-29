@@ -29,6 +29,18 @@ for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name
     if (actual !== required) failures.push(`${name}: ${action}@${actual}; expected ${action}@${required}`);
   }
 
+  // Literal workflow path filters are also live consumers of repository paths. On the Linux
+  // runner, stale case or a renamed file can silently stop a workflow from triggering.
+  for (const block of source.matchAll(/^\s*paths:\s*\n((?:\s+-\s+[^\n]+\n?)+)/gmu)) {
+    for (const item of block[1].matchAll(/^\s*-\s+['"]?([^'"#\n]+?)['"]?\s*$/gmu)) {
+      const filterPath = item[1].trim();
+      if (!filterPath.includes('/') || /[*?\[\]{}$!]/u.test(filterPath)) continue;
+      if (!existsSync(path.join(root, filterPath))) {
+        failures.push(`${name}: paths filter references missing or wrong-case repository path ${filterPath}`);
+      }
+    }
+  }
+
   // Workflow shell steps are a live consumer surface. A renamed/deleted local script must not
   // survive here merely because package.json and unit tests never execute that workflow.
   for (const match of source.matchAll(/\b(?:node|tsx)\s+((?:\.\/)?scripts\/[A-Za-z0-9_./-]+\.(?:mjs|js|cjs|ts|tsx))/g)) {
@@ -52,4 +64,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`  - ${failure}`);
   process.exit(1);
 }
-console.log('Workflow actions, local workflow entrypoints, and Phase 1-7 live consumers are valid.');
+console.log('Workflow actions, literal path filters, local workflow entrypoints, and Phase 1-7 live consumers are valid.');
