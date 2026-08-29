@@ -27,6 +27,11 @@ test('legacy markers derive from canonical stages', () => {
     assert.deepEqual(legacyStageTags('must-cross-neighbor-prune-disabled-retry'), { mcNeighborBudgetRetry: true });
     assert.deepEqual(legacyStageTags('main-search'), {});
 });
+test('withSolverStage single-writes canonical stageId without legacy boolean tags', () => {
+    assert.deepEqual(withSolverStage({ ok: true }, 'early-repair-search'), { ok: true, stageId: 'early-repair-search' });
+    assert.deepEqual(withSolverStage({ ok: true }, 'goal-attraction-disabled-retry'), { ok: true, stageId: 'goal-attraction-disabled-retry' });
+});
+
 test('budget envelopes preserve currencies, reserve direction, scope, and override origin', () => {
     const ordinary = createBudgetEnvelope({ stageId: 'main-search', wallMs: 20_000, workUnits: 67_000_000 });
     assert.deepEqual([ordinary.wall.ceiling, ordinary.work.ceiling, ordinary.nodes.ceiling], [20_000, 67_000_000, null]);
