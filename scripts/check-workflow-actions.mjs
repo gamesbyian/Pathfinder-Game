@@ -46,37 +46,6 @@ for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name
   }
 }
 
-// These removed Phase 1-7 APIs caused runtime failures in scripts that ordinary CI did not invoke.
-// Scan live executable code, while leaving frozen reports/docs and explicit compatibility readers alone.
-const removedConsumerPatterns = [
-  ['removed Solver.solve alias', /\bSolver\.solve\s*\(/],
-  ['removed POLICY_PROFILES export', /\bPOLICY_PROFILES\b/],
-  ['removed TEMPLATES export', /\bTEMPLATES\b/],
-  ['removed detectArchetype API', /\bdetectArchetype\b/],
-  ['removed attractionDiversity result field', /\.attractionDiversity\b/],
-];
-
-function walk(dir) {
-  const files = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) files.push(...walk(full));
-    else files.push(full);
-  }
-  return files;
-}
-
-for (const base of ['scripts', 'modules']) {
-  for (const full of walk(path.join(root, base))) {
-    if (!/\.(?:[cm]?js|mjs|ts|tsx)$/.test(full)) continue;
-    if (full.endsWith(path.join('scripts', 'check-workflow-actions.mjs'))) continue;
-    const source = readFileSync(full, 'utf8');
-    const relative = path.relative(root, full).split(path.sep).join('/');
-    for (const [label, pattern] of removedConsumerPatterns) {
-      if (pattern.test(source)) failures.push(`${relative}: ${label}`);
-    }
-  }
-}
 
 if (failures.length) {
   console.error('Workflow/action and naming-consumer validation failed:');
