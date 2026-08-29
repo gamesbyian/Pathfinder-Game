@@ -71,7 +71,7 @@ Do not tune scheduler caps or technique value around unexplained stage-history d
 
 ## Closed work not to rediscover unchanged
 
-- Exact DFS/beam transposition caching with sound identity had poor payoff; coarse beam dedup is width/diversity policy, not exact equivalence.
+- Exact DFS/beam transposition caching with sound identity had poor payoff; coarse state merge is a deliberately lossy frontier-retention policy, not exact equivalence.
 - Do **not** treat an earlier packing audit as blanket closure. The 2026-08 hardening pass found two later counterexamples created by domain/representation drift: (a) must-pass lower-bound memoization reserved only 24 mask bits although normalized must-pass/must-turn cardinality is schema-valid through 30; the fixed key now reserves 30 bits and a 25-objective fixture exercises the former alias; (b) beam's later cardinality-derived numeric flipper radix still uses an int32 shift and is unsound at the validator's 31/32-filter boundary (open above). Re-audit consumers whenever cardinality or encoding contracts change.
 - The MITM frontier key was fixed for missing future state and rerun; exact frontier growth is now the conclusion.
 - Flipping-filter single-use/global crossing-order parity is settled semantics; the open beam bug above is representation identity, not mechanic semantics.
