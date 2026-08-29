@@ -45,7 +45,7 @@ test('buildRetryTierAblationOverride: null/undefined originalCfg is a no-op fall
 
 function fakeAttempt(extra: Partial<Attempt> = {}): Attempt {
     return {
-        stageId: 'main-loop', gateKey: 1, profile: 'default', template: null, beamWidth: null,
+        stageId: 'main-search', gateKey: 1, profile: 'default', template: null, beamWidth: null,
         ok: false, elapsedMs: 1, allocatedBudgetMs: 1, outcome: 'exhausted', ...extra,
     } as Attempt;
 }
@@ -56,7 +56,7 @@ test('runWholeLadderRetryTier: installs the Proxy override as prep._cfg during t
     prep._cfg = originalCfg;
     let cfgDuringCall: unknown;
     const result = await runWholeLadderRetryTier({
-        stageId: 'dedup-near-tie-retry', proxyOverrides: { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
+        stageId: 'coarse-state-near-tie-retention-disabled-retry', proxyOverrides: { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
         activeGates: [1], mainConfigs: [], level: makeLineLevel(), prep, yieldFn: null,
         runLadder: async () => {
             cfgDuringCall = prep._cfg;
@@ -68,7 +68,7 @@ test('runWholeLadderRetryTier: installs the Proxy override as prep._cfg during t
     assert.equal((cfgDuringCall as Record<string, unknown>).STRATEGY_DEDUP_NEAR_TIE_RETENTION, false);
     assert.equal((cfgDuringCall as Record<string, unknown>).EXISTING_FLAG, true, 'originalCfg still falls through while overridden');
     assert.equal(prep._cfg, originalCfg, 'prep._cfg must be restored to the ORIGINAL object after the call');
-    assert.equal(result.attempts[0].stageId, 'dedup-near-tie-retry');
+    assert.equal(result.attempts[0].stageId, 'coarse-state-near-tie-retention-disabled-retry');
 });
 
 test('runWholeLadderRetryTier: restores prep._cfg even when runLadder throws', async () => {
@@ -76,7 +76,7 @@ test('runWholeLadderRetryTier: restores prep._cfg even when runLadder throws', a
     const originalCfg = null;
     prep._cfg = originalCfg;
     await assert.rejects(runWholeLadderRetryTier({
-        stageId: 'attraction-diversity', proxyOverrides: {},
+        stageId: 'goal-attraction-disabled-retry', proxyOverrides: {},
         activeGates: [1], mainConfigs: [], level: makeLineLevel(), prep, yieldFn: null,
         runLadder: async () => { throw new Error('boom'); },
         totalBudgetMs: 1000, nodeCeiling: 100, workBudget: 100, workStart: 0, staircase: false,
@@ -87,13 +87,13 @@ test('runWholeLadderRetryTier: restores prep._cfg even when runLadder throws', a
 test('runWholeLadderRetryTier: every returned attempt is tagged with the canonical stageId', async () => {
     const prep = prepLevel(makeLineLevel());
     const result = await runWholeLadderRetryTier({
-        stageId: 'connectivity-axis-exhausted-retry', proxyOverrides: { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false },
+        stageId: 'connectivity-axis-prune-disabled-retry', proxyOverrides: { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false },
         activeGates: [1], mainConfigs: [], level: makeLineLevel(), prep, yieldFn: null,
         runLadder: async () => ({ solution: [1, 2, 3], attempts: [fakeAttempt(), fakeAttempt({ ok: true, outcome: 'success' })] }),
         totalBudgetMs: 1000, nodeCeiling: 100, workBudget: 100, workStart: 0, staircase: false,
     });
     assert.equal(result.attempts.length, 2);
-    assert.ok(result.attempts.every(attempt => attempt.stageId === 'connectivity-axis-exhausted-retry'));
+    assert.ok(result.attempts.every(attempt => attempt.stageId === 'connectivity-axis-prune-disabled-retry'));
     assert.deepEqual(result.solution, [1, 2, 3]);
 });
 
@@ -102,7 +102,7 @@ test('runWholeLadderRetryTier: staircase=true passes cumulative entry/0 to runLa
     prep._metrics = { nodesExpanded: 4242 };
     let seenArgs: unknown[] = [];
     const staircaseOn = await runWholeLadderRetryTier({
-        stageId: 'mc-neighbor-budget-retry', proxyOverrides: { PRUNE_MC_NEIGHBOR_BUDGET: false },
+        stageId: 'must-cross-neighbor-prune-disabled-retry', proxyOverrides: { PRUNE_MC_NEIGHBOR_BUDGET: false },
         activeGates: [1], mainConfigs: [], level: makeLineLevel(), prep, yieldFn: null,
         runLadder: async (...args) => { seenArgs = args; return { solution: null, attempts: [fakeAttempt({ mainLoopLateReserve: true })] }; },
         totalBudgetMs: 1000, nodeCeiling: 100, workBudget: 100, workStart: 0, staircase: true,
@@ -114,7 +114,7 @@ test('runWholeLadderRetryTier: staircase=true passes cumulative entry/0 to runLa
     assert.equal(staircaseOn.attempts[0].mainLoopLateReserve, undefined, 'staircase mode strips the borrowed mainLoopLateReserve tag');
 
     const staircaseOff = await runWholeLadderRetryTier({
-        stageId: 'dedup-near-tie-retry', proxyOverrides: { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
+        stageId: 'coarse-state-near-tie-retention-disabled-retry', proxyOverrides: { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
         activeGates: [1], mainConfigs: [], level: makeLineLevel(), prep, yieldFn: null,
         runLadder: async (...args) => { seenArgs = args; return { solution: null, attempts: [fakeAttempt({ mainLoopLateReserve: true })] }; },
         totalBudgetMs: 1000, nodeCeiling: 100, workBudget: 100, workStart: 0, staircase: false,
