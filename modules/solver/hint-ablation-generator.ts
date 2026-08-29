@@ -339,7 +339,7 @@ async function runCascade(target: any, solveOptsBase: any, label: string, ctx: R
             seedSalt: attemptInfo.seedSalt,
         });
 
-        const disableKey = winner?.orderingBiasId ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.scoringProfileId];
+        const disableKey = winner?.orderingBiasId ? TEMPLATE_CONFIG_KEY[winner.orderingBiasId] : PROFILE_CONFIG_KEY[winner?.scoringProfileId];
         if (!disableKey || disabled.has(disableKey)) break; // safety: can't make further progress
         disabled.add(disableKey);
     }
