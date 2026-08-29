@@ -331,7 +331,7 @@ export function createDiversificationSession(level: any, existingHints: number[]
                         // hint-ablation-generator.ts's matching baseline-phase fix for why an earlier
                         // version of this using such a field was silently dropped before persisting)
                         // is what makes an admissible-order-search win distinguishable from an
-                        // ordinary default-profile DFS/beam win: both would otherwise report the
+                        // ordinary default scoring-profile DFS/beam win: both would otherwise report the
                         // identical scoringProfileId: 'default' with no way to tell them apart downstream.
                         const phase = winner?.admissibleOrder ? 'baseline-admissible-order' : 'baseline';
                         const attemptInfo = deriveSolveAttemptInfo(base.attempts);
