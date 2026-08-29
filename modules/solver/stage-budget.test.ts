@@ -103,6 +103,29 @@ test('disableExtraBudgetPasses zeroes every retry-tier budget fraction unless an
     assert.equal(overridden.repairBudgetFraction, 0);
 });
 
+test('legacy near-tie budget override option names normalize to the canonical plan fields', () => {
+    const legacy = computeStageBudgetPlan({
+        ...baseInput,
+        nodeBudget: 50_000_000,
+        opts: {
+            dedupNearTieRetryBudgetFractionOverride: 1.75,
+            dedupNearTieRetryNodeReserveFractionOverride: 0.4,
+        },
+    });
+    const canonical = computeStageBudgetPlan({
+        ...baseInput,
+        nodeBudget: 50_000_000,
+        opts: {
+            coarseStateNearTieRetentionRetryBudgetFractionOverride: 1.75,
+            coarseStateNearTieRetentionRetryNodeReserveFractionOverride: 0.4,
+        },
+    });
+    assert.equal(legacy.coarseStateNearTieRetentionRetryBudgetFraction, canonical.coarseStateNearTieRetentionRetryBudgetFraction);
+    assert.equal(legacy.coarseStateNearTieRetentionRetryNodeReserveFraction, canonical.coarseStateNearTieRetentionRetryNodeReserveFraction);
+    assert.equal(legacy.coarseStateNearTieRetentionRetryNodeReserve, canonical.coarseStateNearTieRetentionRetryNodeReserve);
+    assert.equal(legacy.coarseStateNearTieRetentionRetryNodeCeiling, canonical.coarseStateNearTieRetentionRetryNodeCeiling);
+});
+
 test('repair-shrink-recovery: no-op when nothing was shrunk, and repays the full withheld budget (not just the difference) when it was', () => {
     const nodeBudget = 50_000_000;
     const plan = computeStageBudgetPlan({
