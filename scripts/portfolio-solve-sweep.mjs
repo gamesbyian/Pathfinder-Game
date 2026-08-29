@@ -4,7 +4,7 @@
  *
  * Modes:
  * - `--scheduler-mode=production`: normal solver batch runs and feature/heuristic probes.
- * - `--scheduler-mode=production-latency-portfolio-experiment`: historical portfolio-tier experiment with fallback.
+ * - `--scheduler-mode=legacy-latency-portfolio-experiment`: historical portfolio-tier experiment with fallback.
  *
  * Prefer `--work-budget` for cross-technique comparisons. Runtime validation below reports unsupported
  * option combinations (notably race-pool/node/admissible-order interactions), and deprecated
