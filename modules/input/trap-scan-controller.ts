@@ -50,10 +50,10 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
         if (c) {
             try {
                 return await c.findTriggerableFalseGoalCells(level, {
-                    timeLimit: budgetMs,
+                    timeLimitMs: budgetMs,
                     shouldCancel,
                     onProgress: (p: any) => {
-                        if (p.newSpots?.length) onSpots(p.newSpots);
+                        if (p.newTriggerableCells?.length) onSpots(p.newTriggerableCells);
                         if (p.totalGates != null && onGateProgress) onGateProgress(p);
                     },
                 });
@@ -64,8 +64,8 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
         }
         const pending: number[] = [];
         return solverApi.findTriggerableFalseGoalCells(level, {
-            timeLimit: budgetMs,
-            onSpot: (k: number) => pending.push(k),
+            timeLimitMs: budgetMs,
+            onTriggerableCell: (k: number) => pending.push(k),
             onProgress: (p: any) => { if (onGateProgress) onGateProgress(p); },
             yieldFn: async () => {
                 if (pending.length) onSpots(pending.splice(0));
@@ -99,7 +99,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
                 onGateProgress: hooks.onGateProgress,
             });
             if (scanInvalidated(token)) return null;
-            setEditorTriggerableFalseGoalCells(state, res.spots);
+            setEditorTriggerableFalseGoalCells(state, res.triggerableCells);
             const complete = res.status === 'complete';
             setEditorFalseGoalTriggerScanState(state, complete ? 'complete' : 'partial');
             // A complete sweep resolves every candidate: only confirmed spots remain.
