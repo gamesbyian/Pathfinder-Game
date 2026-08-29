@@ -7,7 +7,7 @@ import { deriveSolveAttemptInfo, provenanceFromSolveResult, hintsFromVarietyResu
 import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from './testing-fixtures.js';
 
 const PERSISTENT_ATTEMPT_FIELDS = new Set([
-  'profile', 'template', 'beamWidth', 'diverseBeam', 'gateKey', 'elapsedMs', 'nodesExpanded',
+  'scoringProfileId', 'orderingBiasId', 'beamWidth', 'mechanicBucketRetention', 'gateKey', 'elapsedMs', 'nodesExpanded',
   'allocatedBudgetMs', 'randomSeed', 'seedSalt', 'repairMustTurnBiased', 'repairTurnBiased',
   'attractionDiversity',
 ]);
@@ -37,10 +37,10 @@ test('maximal Attempt has an explicit, complete provenance projection contract',
     status: 'success', attempts: [successfulAttempt], nodesExpanded: 9000, totalMs: 654,
   });
   const destinations: Record<string, unknown> = {
-    profile: entry.solver.profile,
-    template: entry.solver.template,
+    scoringProfileId: entry.solver.profile,
+    orderingBiasId: entry.solver.template,
     beamWidth: entry.solver.beamWidth,
-    diverseBeam: entry.solver.diverseBeam,
+    mechanicBucketRetention: entry.solver.diverseBeam,
     gateKey: entry.solver.gateKey,
     elapsedMs: entry.search.elapsedMs,
     nodesExpanded: entry.search.nodesExpanded,
