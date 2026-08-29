@@ -1,6 +1,6 @@
 import type { RequireDeps } from '../state.js';
 // Editor toolbar controller: grid transforms, palette drag, pencil/eraser,
-// undo/reset/new-level, help modal, metrics copy, trap-spot solver, and
+// undo/reset/new-level, help modal, metrics copy, false-goal triggerability search, and
 // live editor-input bindings.
 import { clearEditorTriggerableFalseGoalCells, markDirty, setEditorModified, setEditorPendingPortal, toggleEditorMirrorHorizontal } from '../state-actions.js';
 import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
@@ -352,7 +352,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     // The search itself runs through the false-goal-trigger scan controller (off-thread worker,
     // triggerable cells streamed onto the grid mid-search). This handler owns the explicit-run
     // UX: the progress overlay, cancel, and result messaging. There is no retry
-    // popup — a timed-out sweep says so in its message, and pressing Trap Spots again
+    // popup — a partial sweep says so in its message, and pressing Trap Spots again
     // re-runs with an escalated budget (computeFalseGoalTriggerRetryBudget doubles it, capped).
 
     (document.getElementById('editTrapSpotsBtn') as any).onclick = async () => {
