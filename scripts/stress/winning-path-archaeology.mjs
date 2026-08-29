@@ -5,7 +5,7 @@
  *
  * WHAT THIS MEASURES: for each sampled level with a known, PLAY-valid winning path (a stored hint,
  * any provenance), replay the path step by step through the REAL production primitives
- * (getNeighbors/scoreMove/applyMove/undoMove, POLICY_PROFILES.default — the exact functions
+ * (getNeighbors/scoreMove/applyMove/undoMove, SCORING_PROFILES.default — the exact functions
  * dfsFromGate/beamSearchFromGate themselves call) and record, at each step:
  *   - candidateCount: how many legal moves scoreMove was asked to rank from this position;
  *   - rank: the known winning move's 1-indexed rank among those candidates sorted by score
@@ -46,7 +46,7 @@ installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../../modules/solver.ts');
 const { undoMove } = await import('../../modules/solver/search-state.ts');
 const { scoreMove } = await import('../../modules/solver/scoring.ts');
-const { POLICY_PROFILES } = await import('../../modules/solver/policy.ts');
+const { SCORING_PROFILES } = await import('../../modules/solver/policy.ts');
 const { getRealLengthFromState } = await import('../../modules/solver/solution.ts');
 const Solver = createSolver();
 const { prepLevel, createState, getNeighbors, applyMove } = SOLVER_TESTING_API;
@@ -126,7 +126,7 @@ for (const { raw, idx } of sample) {
             const undo = applyMove(cand, state, prodLevel, prep, isJump);
             const realLen = getRealLengthFromState(state);
             const rSteps = prodLevel.reqLen - realLen;
-            const score = scoreMove(cand, pos, state, prodLevel, prep, POLICY_PROFILES.default, rSteps, null, null);
+            const score = scoreMove(cand, pos, state, prodLevel, prep, SCORING_PROFILES.default, rSteps, null, null);
             scored.push({ cand, score });
             undoMove(undo, state);
         }
