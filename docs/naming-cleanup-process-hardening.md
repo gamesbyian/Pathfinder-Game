@@ -1,8 +1,8 @@
 # Naming-cleanup process hardening
 
-Status: **completed pre-Phase-8 prerequisite; merged via PR #1580. The controls in this document remain mandatory for Phase 8 and later.**
+Status: **completed pre-Phase-8 technical prerequisite; merged via PR #1580, then strengthened by a second implementation-history review before Phase 8 began. The controls in this document remain mandatory for Phase 8 and later.**
 
-This document records the process failures exposed while implementing and repeatedly auditing Phases 1-7 of [`naming-cleanup-plan.md`](naming-cleanup-plan.md), and defines the table-setting work completed before Phase 8 begins. It is explanatory and procedural. Canonical vocabulary remains owned by [`naming-and-vocabulary.md`](naming-and-vocabulary.md); exact rename mappings and phase sequence remain owned by the naming-cleanup plan; machine-readable entry state remains in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json).
+This document records the process failures exposed while implementing and repeatedly auditing Phases 1-7 of [`naming-cleanup-plan.md`](naming-cleanup-plan.md), and defines the table-setting and execution controls for the remaining phases. The implementation chronology and rationale behind these controls live in [`naming-cleanup-history-and-lessons.md`](naming-cleanup-history-and-lessons.md). Canonical vocabulary remains owned by [`naming-and-vocabulary.md`](naming-and-vocabulary.md); exact rename mappings and phase sequence remain owned by the naming-cleanup plan; machine-readable entry state remains in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json); durable batch evidence uses [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md).
 
 The central lesson is that this cleanup is not safely modeled as a collection of textual renames. Most consequential rows are **contract migrations** crossing definitions, transports, persisted representations, tools, workflows, reports, application state, and historical readers. A phase is not complete merely because the planned definition changed and the normal CI floor is green.
 
@@ -123,6 +123,44 @@ Required control:
 - exploratory branches must be either merged/reapplied promptly or explicitly recorded as superseded with no unique commits;
 - do not use a long-lived branch as an informal queue of partially merged work.
 
+### 2.9 Phase scope was larger than one audit context could safely hold
+
+Observed shape: a single numbered phase could contain unrelated tool families, workflow identities, compatibility boundaries, generated schemas, module/type renames, and documentation changes. Even when every mapping belonged under one semantic milestone, one implementation PR created too many independent propagation graphs to audit reliably.
+
+Required control:
+
+- treat a phase as a milestone, not an instruction to create one giant PR;
+- split remaining high-surface phases into serial batches grouped by compatibility owner and execution domain;
+- merge each batch to `main` before branching the next one;
+- prohibit stacked implementation batches by default;
+- run a final phase-wide closeout on the merged tree after all batches are complete.
+
+Phase 8 is explicitly serialized as 8A-8H in [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md).
+
+### 2.10 Verification state lacked durable evidence
+
+Observed shape: the ledger could say a dimension was complete, but later agents still had to reconstruct what had actually been searched, which runtime was exercised, what compatibility fixture was used, and whether behavior was compared before/after. PR bodies and chat context were inconsistent historical records; some substantial implementation PRs had empty bodies.
+
+Required control:
+
+- every Phase-8+ implementation batch creates a checked-in execution record before editing;
+- ledger verification fields summarize evidence in that record rather than replacing it;
+- medium/high-risk behavior-preserving batches capture a before-change observable and compare the same observable after implementation;
+- record exact commands, fixtures, runtime boundaries, consumer-audit findings, and pre-merge comparison;
+- a row cannot move to `in-progress` or `done` without a valid `verificationRecord` path once the stronger ledger contract applies.
+
+### 2.11 Duplicate/no-op merges exposed missing PR authority checks
+
+Observed shape: PRs #1581 and #1582 carried the same Phase-8-readiness closeout patch and both merged. At the time of the second history review, GitHub still contained 37 branches whose names included `naming-cleanup`. A branch name or recently opened PR therefore cannot be trusted as proof of unique work.
+
+Required control:
+
+- before starting a batch, search open PRs and similarly named branches and compare plausible predecessors to current `main`;
+- recover unique relevant commits explicitly and record the disposition; otherwise treat historical branches as evidence, not authority;
+- before merge, compare the PR head against current `main` and verify the intended diff is non-empty and not already applied;
+- close/supersede a duplicate or empty PR instead of merging it merely because CI is green;
+- record the active batch branch and checked-in record in the ledger's `activeExecution` object while work is in progress.
+
 ## 3. Mandatory table-setting gate before Phase 8
 
 No Phase-8 implementation rename may begin until a dedicated hardening pass completes the following work on current `main`.
@@ -227,17 +265,29 @@ Only then may the ledger's Phase-8 gate become `ready`.
 
 ## 4. Execution model for Phase 8 onward
 
-Each phase now has five explicit stages.
+Each implementation **batch** has explicit entry, implementation, validation, closeout, parity, and merge barriers. A multi-batch phase advances only after a final merged-tree phase closeout.
+
+### Stage 0: execution authority / batch claim
+
+Before any canonical edit:
+
+1. start from current `main` and record the full SHA;
+2. search open naming-cleanup PRs and similarly named branches;
+3. compare plausible predecessor/sibling branches against current `main`, recovering unique relevant work or recording them as superseded;
+4. create the checked-in batch record from [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md);
+5. set the ledger's `activeExecution` object to the one active phase/batch/branch/record;
+6. do not begin a second implementation batch while the first is unmerged.
 
 ### Stage A: entry / impact map
 
 Before editing:
 
 1. update from current `main`;
-2. select the phase's ledger rows;
-3. fill the contract-migration matrix from [`change-recipes.md`](change-recipes.md);
-4. identify which normal CI checks actually exercise each live consumer;
-5. add missing tests/checks before or with the implementation when practical.
+2. select only the batch's ledger rows;
+3. fill the contract-migration matrix in the checked-in execution record using [`change-recipes.md`](change-recipes.md);
+4. identify which normal CI checks actually exercise each live consumer and record the real runtime/path;
+5. capture a before-change observable baseline for every applicable medium/high-risk migration;
+6. add missing tests/checks before or with the implementation when practical.
 
 ### Stage B: implementation
 
@@ -260,7 +310,7 @@ A separate pass must approach the phase from consumers inward. It must inspect/e
 - application/UI consumers where applicable;
 - historical compatibility paths.
 
-The closeout audit must not simply reread the implementation diff or trust the ledger's current state.
+The closeout audit must not simply reread the implementation diff or trust the ledger's current state. Prefer a fresh agent/session for this pass when available. If the implementation agent performs the closeout, record that fact and still begin from the consumer/surface inventory rather than the implementation diff.
 
 ### Stage E: behavioral/evidence parity and phase closure
 
@@ -274,7 +324,23 @@ For solver/application behavior-preserving migrations, compare the relevant befo
 - round-trip bytes/fingerprints;
 - workflow command/path resolution.
 
-Only after Stages A-E may the phase advance `lastCompletedPhase`.
+Only after Stages 0 and A-E are complete may a batch close its rows.
+
+### Stage F: pre-merge barrier
+
+Before merge:
+
+1. reconcile/update against current `main` when required by the plan;
+2. compare the PR head to current `main` and verify the intended diff is non-empty and not already present;
+3. verify no next-batch implementation is stacked in the PR;
+4. verify targeted validation, required aggregate CI, ledger state, and the checked-in execution record agree;
+5. record the current-main SHA, head SHA, and comparison result in the batch record.
+
+If the diff is empty or already applied, close/supersede rather than merge a duplicate/no-op PR.
+
+### Phase-wide merged-tree closeout
+
+After the last batch of a multi-batch phase merges, run the phase census and consumer-inward audit again on current `main`. Only that merged-tree closeout may advance `lastCompletedPhase`.
 
 ## 5. Contract-migration matrix
 
@@ -316,7 +382,7 @@ Manual search remains necessary for semantic drift, but it should be the last li
 
 ## 7. Ledger completion model for future phases
 
-The ledger remains the checklist of record, but it is no longer sufficient for a future row to carry only `status`.
+The ledger remains the machine-readable checklist of record, but it is no longer sufficient for a future row to carry only `status`, and the ledger is not itself the evidence record.
 
 For Phase 8 onward each entry has a `verification` object with these fields:
 
@@ -329,7 +395,7 @@ For Phase 8 onward each entry has a `verification` object with these fields:
 
 Values are `pending`, `done`, or `not-applicable`. A row may use `not-applicable` only with a short explanation in `notes` or the phase PR.
 
-A future row can become `status: "done"` only when every verification field is `done` or `not-applicable`.
+A future row can become `status: "done"` only when every verification field is `done` or `not-applicable`. Under completion contract v3, every Phase-8+ row that is `in-progress` or `done` must also point at a checked-in `verificationRecord`; Phase-8 rows must identify their assigned serial `batch`. The top-level `activeExecution` object identifies the one implementation batch currently allowed to be in progress.
 
 The ledger also carries a Phase-8 hardening gate. Until that gate is marked ready, agents must not begin PR 8 implementation.
 
@@ -343,14 +409,15 @@ If hardening exposes an already-live Phase-1-7 regression, fix it and record it 
 
 ## 9. Handoff for the next agent
 
-The table-setting prerequisite is complete and merged via PR #1580 (merge commit `02abde6c651a7070e7be10775f75c177b1bdb23b`). The next naming-cleanup agent may begin Phase 8, but only as a separate implementation PR using the strengthened execution model in Sections 4-7:
+The table-setting prerequisite is complete and merged via PR #1580 (merge commit `02abde6c651a7070e7be10775f75c177b1bdb23b`). The next naming-cleanup agent may begin **Phase 8A only**, using the serial execution model in Sections 4-7 and the Phase-8 batch authority in [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md):
 
 1. start from current `main` and repeat the plan's Section 0 reconciliation if newer unrelated work has merged;
-2. select only the Phase-8 ledger rows and complete the contract-migration matrix before editing;
+2. claim only the 8A ledger rows, create the 8A checked-in execution record, and set `activeExecution` before editing;
 3. use the checked-in surface inventory and CI/smoke coverage to identify every live consumer and any remaining structurally-only or manually audited surface;
 4. preserve legacy-read/canonical-write boundaries and frozen evidence exactly as classified;
-5. run targeted contract validation and a consumer-inward closeout audit before marking any row done;
-6. leave Phase 9 untouched until every applicable Phase-8 verification dimension is complete.
+5. run targeted contract validation, before/after parity where applicable, and a consumer-inward closeout audit before marking any row done;
+6. merge 8A, verify current `main`, clear the active batch, then branch 8B from that new `main`; do not stack 8B;
+7. leave Phase 9 untouched until the merged-tree Phase-8 closeout is complete and every Phase-8 verification dimension is resolved.
 
 The repository now contains substantially more machine-enforced proof than the Phase-1-7 cycle did; the next agent should use those checks as an entry map, not as a substitute for the required adversarial audit.
 
@@ -504,3 +571,16 @@ These are intentionally recorded rather than silently treated as covered:
 **READY FOR PHASE 8 AFTER THIS HARDENING PR IS ACCEPTED.**
 
 The refreshed census commit is `5db2769282d690ce7c12bdcd6aebf064ca467476`. Every remaining ledger row has a migration class and completed pre-implementation surface inventory. Phase 8 implementation, targeted validation, adversarial consumer audit, behavioral/evidence parity, and closeout audit all remain pending. This hardening pass stops at the gate and does not perform any Phase-8 canonical rename.
+
+## 13. Second hardening review before Phase 8
+
+A second history review was performed after the technical gate had been marked ready and before any Phase-8 canonical rename began. This did not reopen or invalidate the technical work from #1580. It addressed process liabilities that the first hardening pass had documented but had not yet made sufficiently durable:
+
+- preserved the PR-by-PR failure history and derived rules in [`naming-cleanup-history-and-lessons.md`](naming-cleanup-history-and-lessons.md);
+- converted Phase 8 from one 68-row implementation PR into eight serial batches grouped by compatibility owner/execution domain;
+- added [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md) so impact maps, validation topology, before/after parity, consumer audits, and pre-merge comparisons survive the agent/session that performed them;
+- strengthened the ledger contract with per-row batch/evidence pointers and one top-level active-execution claim;
+- added explicit no-stacking and duplicate/no-op pre-merge rules;
+- split later broad/high-risk phases into prep/atomic-switch/merged-tree-closeout or smaller domain batches in the plan.
+
+No Phase-8 canonical rename is part of this second hardening review. Its purpose is to make the already-ready technical substrate much harder to use in the same failure-prone way as Phases 1-7.
