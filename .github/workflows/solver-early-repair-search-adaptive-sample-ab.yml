@@ -4,7 +4,7 @@
 #
 # Deliberately NOT a full-corpus refresh, and NOT solver-stress-refresh.yml's canonical full-1700
 # capability workflow: this flag can only ever change a level's outcome if the level is repair-gated
-# AND carries a must-turn cell (the only thing that makes a biased repair-probe tier exist at all) --
+# AND carries a must-turn cell (the only thing that makes a biased early-repair-search tier exist at all) --
 # 512/1700 Corpus-2 levels as of 2026-08-12. A uniform random sample of the full corpus would waste
 # most of its compute re-confirming zero-effect on levels that are structurally guaranteed
 # byte-identical either way. This workflow instead draws a deterministic seeded subsample from the
@@ -36,7 +36,7 @@
 # min_scale left blank throughout (the sweep holds MIN_SCALE fixed), then compare each run's combined
 # artifact the same way as the on/off A/B above.
 name: Solver early-repair-search adaptive-budget sample A/B
-run-name: "Repair-probe sample · flags=${{ inputs.enable_flags || 'control' }} · gate=${{ inputs.repair_probe_adaptive_badness_gate }}"
+run-name: "Early-repair-search sample · flags=${{ inputs.enable_flags || 'control' }} · gate=${{ inputs.repair_probe_adaptive_badness_gate }}"
 
 on:
   workflow_dispatch:
