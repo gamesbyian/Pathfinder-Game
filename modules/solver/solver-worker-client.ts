@@ -129,7 +129,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
         //   timeLimitMs  — search budget in ms
         //   onProgress   — receives every FALSE_GOAL_TRIGGER_SEARCH_PROGRESS payload ({ newTriggerableCells, gate counters })
         //   shouldCancel — polled every 50ms; returning true sends CANCEL (the search then
-        //                  resolves normally with status 'aborted' and its partial spots)
+        //                  resolves normally with status 'aborted' and its partial triggerable cells)
         // Resolves to the FALSE_GOAL_TRIGGER_SEARCH_RESULT payload with `triggerableCells` rebuilt as a Set<number>.
         findTriggerableFalseGoalCells(level: any, opts: FalseGoalTriggerWorkerOpts = {}) {
             const id = _nextId++;
