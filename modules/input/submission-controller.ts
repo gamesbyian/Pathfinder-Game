@@ -108,13 +108,13 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 const fgLevel = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
                 const trapBudget = Math.min(solverApi.getFalseGoalTriggerSearchBudgetMs(fgLevel), 8000);
                 const trapRes = await solverApi.findTriggerableFalseGoalCells(fgLevel, {
-                    timeLimit: trapBudget,
+                    timeLimitMs: trapBudget,
                     yieldFn: async () => { await new Promise((r: any) => setTimeout(r, 0)); },
                     onProgress: ({ gatesProcessed, totalGates }: any) =>
                         ui.setSubmitStep('smStep-validate', 'running', `Checking trap placement… gate ${gatesProcessed}/${totalGates}`),
                 });
                 const dead = Array.from(solverApi.classifyFalseGoalTriggerability(fgLevel, trapRes).entries())
-                    .filter(([, st]: any) => st === 'unreachable')
+                    .filter(([, st]: any) => st === 'untriggerable')
                     .map(([k]: any) => k);
                 if (dead.length > 0) {
                     const coords = dead.map((k: any) => { const p = levelUtils.UNPACK(k); return `(${p.x + 1},${p.y + 1})`; }).join(', ');

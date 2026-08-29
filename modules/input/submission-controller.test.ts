@@ -205,6 +205,91 @@ test('an unexpected throw outside the per-step guards still surfaces a clear mod
     assert.ok(dismissShown, 'the dismiss button must be shown so the modal is never stuck');
 });
 
+test('submission-time false-goal check passes the capped budget as timeLimitMs and surfaces untriggerable cells', async () => {
+    const elements = installDocumentStub();
+    const workingLevel = parseRawLevel({
+        grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 },
+        reqLen: 8, reqInt: 0, blocks: [], geese: [], falseGoals: [{ x: 3, y: 3 }], mustPass: [], mustCross: [],
+        filters: [], flippingFilters: [], portals: [],
+    })!;
+    const submitSteps: any[] = [];
+    let capturedOpts: any = null;
+
+    const submitted = new Promise<void>((resolve) => {
+        const persistence = {
+            getCurrentUser: () => ({ uid: 'tester' }),
+            findDuplicateLevel: async () => ({ duplicate: null, fingerprint: 'v2:test', warnings: [] }),
+            submitLevel: async () => { resolve(); },
+        };
+        createSubmissionController({
+            core: { REVIEW: 2, OVERLAY_NONE: 0, SOLVER_RUNNING: 9 },
+            state: {
+                ENGINE: {
+                    solver: { controller: null, abortRequested: false },
+                    editor: { workingLevel },
+                    foundHintsSinceLoad: [],
+                    nav: { path: [] },
+                    mode: 0,
+                    review: { currentIdx: 0 },
+                },
+            },
+            ui: {
+                closeAllModals() {},
+                showMessage() {},
+                resetSubmitModal() {},
+                showSubmitModal() {},
+                setSubmitStep(stepId: string, status: string, detail: any) { submitSteps.push({ stepId, status, detail }); },
+                setSubmitStepCountdown() {},
+                showSubmitDismiss() {},
+                getValue: (id: string) => id === 'editReqLen' ? '8' : '0',
+                setModalContent() {},
+                setSolverControlsEnabled() {},
+                setFoundHintsSinceLoad() {},
+                setButtonState() {},
+                hideSubmitModal() {},
+                updateLevelDisplay() {},
+                setSolutionOutput() {},
+                copyText: async () => {},
+            },
+            engine: {
+                solver: { startSolverRun() {}, endSolverRun() {} },
+                overlays: { setOverlayState() {}, startHintAnimation() {} },
+                review: { setReviewSubmissions() {}, loadReviewLevel() {} },
+                hints: { setHintPaths() {}, pinCurrentHint() {}, clearPersistedHint() {}, pinCurrentHeatmap() {}, clearPersistedHeatmap() {} },
+            },
+            levelUtils: { cloneLevelWithReq, UNPACK: (k: number) => ({ x: k & 0xFFFF, y: k >> 16 }) },
+            editor: { applyMetricsFromUI() {}, validateWorkingLevel: () => ({ ok: true }) },
+            persistence,
+            solverApi: {
+                validateCandidatePath: (_level: any, path: number[]) => ({ ok: true, path }),
+                createVarietySearch: () => ({ run: async () => ({ newlySaved: [] }) }),
+                // Budget well above the 8s submission-time cap, so the test proves the
+                // controller actually clamps it rather than passing the raw value through.
+                getFalseGoalTriggerSearchBudgetMs: () => 30000,
+                findTriggerableFalseGoalCells: async (_level: any, opts: any) => {
+                    capturedOpts = opts;
+                    return { status: 'complete', triggerableCells: new Set(), gatesProcessed: 1, gatesCompleted: 1, totalGates: 1 };
+                },
+                classifyFalseGoalTriggerability: (level: any) =>
+                    new Map(Array.from(level.falseGoalKeys as Set<number>).map((k) => [k, 'untriggerable'])),
+            },
+            data: { getHints: async () => [], getLevels: () => [] },
+            reportError: (label: string, err: any) => { throw new Error(`${label}: ${err?.message || err}`); },
+        } as any);
+    });
+
+    elements.get('reviewSubmitBtn').onclick();
+    await submitted;
+
+    assert.ok(capturedOpts, 'findTriggerableFalseGoalCells should have been called');
+    assert.equal(capturedOpts.timeLimitMs, 8000, 'the submission-time cap must reach the solver API as timeLimitMs, not timeLimit');
+    assert.equal('timeLimit' in capturedOpts, false, 'the legacy field name must not be sent');
+
+    const warnStep = submitSteps.find((s) => s.status === 'warn');
+    assert.ok(warnStep, 'an untriggerable false goal must produce a warning step');
+    assert.ok(String(warnStep.detail).includes('can never be triggered'), 'the warning should describe the dead false goal');
+});
+
 test('re-submitting an already-locally-published level with a new hint contributes only the new hint', async () => {
     const elements = installDocumentStub();
     const rawLevel = {

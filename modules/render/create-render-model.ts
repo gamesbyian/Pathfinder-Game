@@ -192,8 +192,8 @@ export function createRenderModel({ eng, core, themes }: any, reqLenPreview: any
         mustPassOnCanvas,
         mustPassInOverlay,
         // editor
-        editorValidTrapSpots: new Set(eng.editor.validTrapSpots),
-        editorTrapCandidates: new Set(eng.editor.trapParityCandidates),
+        editorTriggerableFalseGoalCells: new Set(eng.editor.triggerableFalseGoalCells),
+        editorFalseGoalTriggerParityCandidates: new Set(eng.editor.falseGoalTriggerParityCandidates),
         editorPendingPortal:  eng.editor.pendingPortal,
         // landmark constraint state
         unsatisfiedSurroundNeighbors,

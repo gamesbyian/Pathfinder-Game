@@ -9,6 +9,7 @@
 import type { EngineLevel } from './domain/level-schema.js';
 import type { PackedKey } from './domain/cell-key.js';
 import type { Attempt } from './solver/orchestration.js';
+import type { FalseGoalTriggerSearchOptions } from './solver/false-goal-trigger-search.js';
 
 export interface LevelBounds { minX: number; minY: number; maxX: number; maxY: number; }
 
@@ -123,7 +124,7 @@ export interface DataService {
 export interface SolverApi {
     prepareLevelForSolver(rawLevel: any, opts?: any): any;
     solveLevel(level: any, opts?: any): Promise<SolveResult>;
-    findTriggerableFalseGoalCells(level: any, opts?: any): Promise<any>;
+    findTriggerableFalseGoalCells(level: any, opts?: FalseGoalTriggerSearchOptions): Promise<any>;
     classifyFalseGoalTriggerability(level: any, result: any): any;
     getFalseGoalTriggerSearchBudgetMs(level: any): number;
     validateCandidatePath(level: any, pathCoordsOrKeys: any[]): PathValidation;

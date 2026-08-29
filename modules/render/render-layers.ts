@@ -73,9 +73,9 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
     // Drawn beneath the confirmed-spot style; a cell upgrades to the solid dashed
     // outline the moment the trap scan confirms it. Candidates clear when a sweep
     // completes, so a lone faint outline always means "scan still undecided here".
-    if (model.isEditorMode && model.editorTrapCandidates.size > 0) {
-        model.editorTrapCandidates.forEach((k: any) => {
-            if (model.editorValidTrapSpots.has(k)) return;
+    if (model.isEditorMode && model.editorFalseGoalTriggerParityCandidates.size > 0) {
+        model.editorFalseGoalTriggerParityCandidates.forEach((k: any) => {
+            if (model.editorTriggerableFalseGoalCells.has(k)) return;
             const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
             const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2;
             ctx.save();
@@ -88,8 +88,8 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
     }
 
     // --- Editor trap spots ---
-    if (model.isEditorMode && model.editorValidTrapSpots.size > 0) {
-        model.editorValidTrapSpots.forEach((k: any) => {
+    if (model.isEditorMode && model.editorTriggerableFalseGoalCells.size > 0) {
+        model.editorTriggerableFalseGoalCells.forEach((k: any) => {
             const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
             const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2;
             ctx.save();
