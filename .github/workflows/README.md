@@ -70,7 +70,7 @@ Workflow `run-name` values also include the inputs most useful for distinguishin
 ## Sample A/B
 
 - `solver-routing-regime-sample-ab.yml` — 60 shards / 20 lanes / 4 workers.
-- `solver-repair-probe-adaptive-sample-ab.yml` — 60 shards / 20 lanes / 4 workers.
+- `solver-early-repair-search-adaptive-sample-ab.yml` — 60 shards / 20 lanes / 4 workers.
 - `solver-repair-fallback-reserve-sample-ab.yml` — 60 shards / 20 lanes / 4 workers.
 
 These use non-binding deterministic deadlines by default, so node/work budgets remain the comparison basis while cross-level parallelism changes calendar time. Their artifact/report evidence is still harvested even though they do not eagerly mutate canonical hints during the experiment.
