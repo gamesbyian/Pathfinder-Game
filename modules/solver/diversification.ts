@@ -123,7 +123,7 @@ async function* cascadeSteps(solverApi: any, target: any, solveOptsBase: any, la
             // disableExtraBudgetPasses: this cascade repeatedly re-solves under a tight
             // ctx.attemptBudgetMs specifically to isolate the effect of disabling ONE MORE narrow
             // STRATEGY_/PROFILE_ flag per round -- an unrelated last-resort search tier (repair
-            // fallback / attraction-diversity / admissible-order-search) adding its own extra
+            // repair fallback / goal-attraction-disabled-retry / admissible-order-fallback) adding its own extra
             // budget on top would both blow the round's timing and muddy which flag actually
             // caused a given round's win/loss. Mirrors hint-ablation-generator.ts's runCascade
             // (this is a browser-safe port of the same CLI tool); the unconstrained baseline solve
@@ -143,11 +143,11 @@ async function* cascadeSteps(solverApi: any, target: any, solveOptsBase: any, la
         yield {
             kind: 'cascade',
             path: result.solution,
-            profile: winner?.scoringProfileId ?? null,
-            template: winner?.orderingBiasId ?? null,
+            scoringProfileId: winner?.scoringProfileId ?? null,
+            orderingBiasId: winner?.orderingBiasId ?? null,
             disabledFeatures: [...disabled],
             beamWidth: attemptInfo.beamWidth,
-            diverseBeam: attemptInfo.mechanicBucketRetention,
+            mechanicBucketRetention: attemptInfo.mechanicBucketRetention,
             attemptIndex: attemptInfo.attemptIndex,
             nodesExpanded: attemptInfo.nodesExpanded,
             elapsedMs: attemptInfo.elapsedMs,
@@ -179,11 +179,11 @@ async function* strategySteps(solverApi: any, target: any, solveOptsBase: any, l
             yield {
                 kind: 'strategy',
                 path: result.solution,
-                profile: winner?.scoringProfileId ?? null,
-                template: winner?.orderingBiasId ?? null,
+                scoringProfileId: winner?.scoringProfileId ?? null,
+                orderingBiasId: winner?.orderingBiasId ?? null,
                 disabledFeatures: [flag],
                 beamWidth: attemptInfo.beamWidth,
-                diverseBeam: attemptInfo.mechanicBucketRetention,
+                mechanicBucketRetention: attemptInfo.mechanicBucketRetention,
                 attemptIndex: attemptInfo.attemptIndex,
                 nodesExpanded: attemptInfo.nodesExpanded,
                 elapsedMs: attemptInfo.elapsedMs,
@@ -332,15 +332,15 @@ export function createDiversificationSession(level: any, existingHints: number[]
                         // version of this using such a field was silently dropped before persisting)
                         // is what makes an admissible-order-search win distinguishable from an
                         // ordinary default-profile DFS/beam win: both would otherwise report the
-                        // identical profile: 'default' with no way to tell them apart downstream.
+                        // identical scoringProfileId: 'default' with no way to tell them apart downstream.
                         const phase = winner?.admissibleOrder ? 'baseline-admissible-order' : 'baseline';
                         const attemptInfo = deriveSolveAttemptInfo(base.attempts);
                         consider(base.solution, {
                             phase,
-                            profile: winner?.scoringProfileId ?? null,
-                            template: winner?.orderingBiasId ?? null,
+                            scoringProfileId: winner?.scoringProfileId ?? null,
+                            orderingBiasId: winner?.orderingBiasId ?? null,
                             beamWidth: attemptInfo.beamWidth,
-                            diverseBeam: attemptInfo.mechanicBucketRetention,
+                            mechanicBucketRetention: attemptInfo.mechanicBucketRetention,
                             attemptIndex: attemptInfo.attemptIndex,
                             nodesExpanded: attemptInfo.nodesExpanded,
                             elapsedMs: attemptInfo.elapsedMs,
@@ -378,11 +378,11 @@ export function createDiversificationSession(level: any, existingHints: number[]
                     phase: entry.kind,
                     gateKey: meta.gateKey,
                     direction: meta.direction,
-                    profile: entry.profile,
-                    template: entry.template,
+                    scoringProfileId: entry.scoringProfileId,
+                    orderingBiasId: entry.orderingBiasId,
                     disabledFeatures: entry.disabledFeatures,
                     beamWidth: entry.beamWidth,
-                    diverseBeam: entry.diverseBeam,
+                    mechanicBucketRetention: entry.mechanicBucketRetention,
                     attemptIndex: entry.attemptIndex,
                     nodesExpanded: entry.nodesExpanded,
                     elapsedMs: entry.elapsedMs,
@@ -425,11 +425,11 @@ export function createDiversificationSession(level: any, existingHints: number[]
                     phase: entry.kind === 'cascade' ? 'portal-cascade' : 'portal-strategy',
                     portalDest: meta.destKey,
                     portalExitDirection: meta.direction,
-                    profile: entry.profile,
-                    template: entry.template,
+                    scoringProfileId: entry.scoringProfileId,
+                    orderingBiasId: entry.orderingBiasId,
                     disabledFeatures: entry.disabledFeatures,
                     beamWidth: entry.beamWidth,
-                    diverseBeam: entry.diverseBeam,
+                    mechanicBucketRetention: entry.mechanicBucketRetention,
                     attemptIndex: entry.attemptIndex,
                     nodesExpanded: entry.nodesExpanded,
                     elapsedMs: entry.elapsedMs,
