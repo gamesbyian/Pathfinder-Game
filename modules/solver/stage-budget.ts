@@ -1076,7 +1076,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // PROMOTED to default-ON (see the constant's own comment) — standard `(!cfg || cfg.FLAG)`
     // convention, same as admissibleOrderTierWillRun just below, not the opt-in `cfg && ... === true`
     // shape this used before promotion.
-    const dedupRetryTierWillRun = dedupRetryBudgetFraction > 0 && !!(!cfg || cfg.STRATEGY_DEDUP_NEAR_TIE_RETRY);
+    const dedupRetryTierWillRun = dedupRetryBudgetFraction > 0 && !!(!cfg || cfg.STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY);
     const dedupRetryNodeReserve = (dedupRetryTierWillRun && nodeBudget !== Infinity)
         ? Math.floor(nodeBudget * dedupRetryNodeReserveFraction)
         : 0;
