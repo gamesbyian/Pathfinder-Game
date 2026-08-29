@@ -15,7 +15,7 @@ import { validateCandidatePath } from '../domain/path-validator.js';
 import { selectDisplayHints } from '../domain/hint-selection.js';
 import { pathSignature } from '../domain/path-features.js';
 import { enumerateFromGate, anchoredFromSeed } from './hint-enumeration.js';
-import { getRequiredPathCoverageRatio } from './archetype.js';
+import { getRequiredPathCoverageRatio } from './routing-regime.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, ScoringProfile } from './types.js';
 
