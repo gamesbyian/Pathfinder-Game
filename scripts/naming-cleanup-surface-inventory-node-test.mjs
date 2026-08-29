@@ -100,7 +100,8 @@ const reconciliationCounts = Object.fromEntries(
 console.log(`Naming-cleanup Phase 8-14 reconciliation states: ${JSON.stringify(reconciliationCounts)}`);
 for (const row of rangeInventory.ledgerEntries.filter(row =>
   row.reconciliationState === 'no-current-live-reference-review' ||
-  row.reconciliationState === 'mixed-old-and-canonical')) {
+  row.reconciliationState === 'mixed-old-and-canonical' ||
+  row.reconciliationState === 'canonical-live')) {
   console.log(`RECONCILE phase=${row.phase} state=${row.reconciliationState} kind=${row.kind} old=${row.old} new=${row.new}`);
 }
 console.log('Naming-cleanup Phase 8-14 range reconciliation inventory is available.');
