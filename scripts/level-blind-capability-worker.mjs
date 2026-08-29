@@ -31,7 +31,7 @@ runWorkerMain(async ({ solveCorpusPath, levelIndex, solveOpts }) => {
     // No opts.levelNumber / level id: normalized solver identity is constant/anonymous rather than
     // a corpus-position signal that a future seed/order policy could accidentally exploit.
     const prepared = Solver.prepareLevelForSolver(raw, { source: 'raw' });
-    const result = await Solver.solve(prepared, solveOpts);
+    const result = await Solver.solveLevel(prepared, solveOpts);
     if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
         result.refereeValid = Solver.validateCandidatePath(prepared, result.solution).ok;
     }
