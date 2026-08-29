@@ -95,6 +95,29 @@ if (gate?.status === 'blocked' && Number(ledger.lastCompletedPhase) >= 8) {
   failures.push(`lastCompletedPhase is ${ledger.lastCompletedPhase} while the Phase-8 gate is blocked`);
 }
 
+if (gate?.status === 'ready') {
+  const progress = gate.progress;
+  if (!progress || typeof progress !== 'object' || Array.isArray(progress)) {
+    failures.push('phase8Gate.status is ready but progress record is missing');
+  } else {
+    if ((progress.partial ?? []).length) {
+      failures.push(`phase8Gate.status is ready but progress.partial is non-empty: ${progress.partial.join(', ')}`);
+    }
+    if ((progress.remaining ?? []).length) {
+      failures.push(`phase8Gate.status is ready but progress.remaining is non-empty: ${progress.remaining.join(', ')}`);
+    }
+    if (typeof progress.reconciledAgainstMain !== 'string' || !/^[0-9a-f]{40}$/u.test(progress.reconciledAgainstMain)) {
+      failures.push('phase8Gate.status is ready but progress.reconciledAgainstMain is not a full commit SHA');
+    }
+  }
+
+  const futureRowsWithoutInventory = (ledger.entries ?? [])
+    .filter(entry => entry.phase >= 8 && entry.verification?.surfaceInventory !== 'done');
+  if (futureRowsWithoutInventory.length) {
+    failures.push(`phase8Gate.status is ready but ${futureRowsWithoutInventory.length} Phase-8+ row(s) lack completed surface inventory`);
+  }
+}
+
 if (failures.length) {
   console.error('Naming-cleanup ledger contract check failed:');
   for (const failure of failures) console.error(`  - ${failure}`);
