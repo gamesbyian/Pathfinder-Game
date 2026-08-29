@@ -169,7 +169,7 @@ const summaryMd = `# Additive-tier participation audit
 
 Population: ${sample.length} levels from \`${CORPUS_FILE}\` (${LEVEL_SPEC}), node budget ${NODE_BUDGET.toLocaleString()}, work budget ${WORK_BUDGET.toLocaleString()}, time budget ${TIME_BUDGET_MS.toLocaleString()}ms. No \`disableExtraBudgetPasses\`, no \`strictTotalWorkBudget\` -- matches a real capability-sweep/confirmation-workflow call shape, not the interactive game path (which disables every tier below).
 
-${solvedLevels}/${totalLevels} levels solved. ${levelsWithAnyAdditiveTierAttempt}/${totalLevels} levels (${summary.levelsWithAnyAdditiveTierAttemptRate}%) produced at least one additive-tier attempt. ${levelsWonByAdditiveTier}/${totalLevels} levels (${summary.levelsWonByAdditiveTierRate}%) were solved BY an additive tier (i.e. main-loop/repair-probe alone would not have found this solution within this budget).
+${solvedLevels}/${totalLevels} levels solved. ${levelsWithAnyAdditiveTierAttempt}/${totalLevels} levels (${summary.levelsWithAnyAdditiveTierAttemptRate}%) produced at least one additive-tier attempt. ${levelsWonByAdditiveTier}/${totalLevels} levels (${summary.levelsWonByAdditiveTierRate}%) were solved BY an additive tier (i.e. main-search/early-repair-search alone would not have found this solution within this budget).
 
 ## Per-tier participation and win rate
 
