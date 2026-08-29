@@ -67,13 +67,15 @@ export function computeFalseGoalTriggerRetryBudget(prevTimeLimit: number | undef
 }
 
 export interface FalseGoalTriggerSearchOutcome {
-    status?: string;
+    /** Canonical status plus historical generated-payload spellings accepted on read. */
+    status?: 'complete' | 'partial' | 'aborted' | 'done' | 'timeout';
+    /** @deprecated Historical payload field; canonical callers use status. */
     timedOut?: boolean;
     gatesCompleted?: number;
     totalGates?: number;
 }
 
-export interface TrapReportDecision {
+export interface FalseGoalTriggerReportDecision {
     message: string;
     tone: 'info' | 'warning';
     /** true → the search was incomplete (timed out); pressing Trap Spots again re-runs it
@@ -86,9 +88,10 @@ export interface TrapReportDecision {
  * An incomplete sweep is ALWAYS surfaced — even when spots were found — so a partial
  * result is never shown as if it were complete.
  */
-export function decideFalseGoalTriggerReport(res: FalseGoalTriggerSearchOutcome, foundCount: number): TrapReportDecision {
+export function decideFalseGoalTriggerReport(res: FalseGoalTriggerSearchOutcome, foundCount: number): FalseGoalTriggerReportDecision {
     const s = (n: number) => (n === 1 ? '' : 's');
-    if (res.status === 'aborted') {
+    const canonicalStatus = res.status === 'done' ? 'complete' : res.status === 'timeout' ? 'partial' : res.status;
+    if (canonicalStatus === 'aborted') {
         return {
             message: foundCount > 0
                 ? `Search cancelled — ${foundCount} spot${s(foundCount)} found so far (incomplete).`
@@ -97,7 +100,8 @@ export function decideFalseGoalTriggerReport(res: FalseGoalTriggerSearchOutcome,
             offerRetry: false,
         };
     }
-    if (!res.timedOut) {
+    const incomplete = canonicalStatus === 'partial' || res.timedOut === true;
+    if (!incomplete) {
         return foundCount > 0
             ? { message: `Found ${foundCount} spot${s(foundCount)}.`, tone: 'info', offerRetry: false }
             : { message: 'No valid trap spots — no path can end on any empty cell at these settings.', tone: 'warning', offerRetry: false };
