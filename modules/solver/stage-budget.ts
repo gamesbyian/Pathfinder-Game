@@ -1609,7 +1609,7 @@ export function envelopeNodeCeiling(envelope: BudgetEnvelope): number {
 
 /** One BudgetEnvelope per policy stage this plan covers, built directly from the plan's own
  *  numbers (never a second, independent computation) — see stage-policy.ts's SolverStageId for
- *  the full stage vocabulary; portfolio-only stages are covered by portfolio-experiment.ts's own
+ *  the full stage vocabulary; portfolio-only stages are covered by legacy-latency-portfolio-experiment.ts's own
  *  scheduler, not this cascade. */
 export function buildStageBudgetEnvelopes(plan: StageBudgetPlan, input: { timeBudgetMs: number; nodeBudget: number }): Partial<Record<SolverStageId, BudgetEnvelope>> {
     const { timeBudgetMs, nodeBudget } = input;
