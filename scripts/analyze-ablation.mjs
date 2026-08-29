@@ -128,7 +128,8 @@ const _scoringProfileRuns = ranked.filter(d => (d.delta.tags.includes('scoring-p
 const _orderingBiasRuns = ranked.filter(d => (d.delta.tags.includes('ordering-bias') || d.delta.tags.includes('template'))
     && (d.delta.name.startsWith('ordering-bias-off:') || d.delta.name.startsWith('template-off:')));
 const orderRuns     = ranked.filter(d => d.delta.tags.includes('order'));
-const pairRuns      = ranked.filter(d => d.delta.tags.includes('pair') || (d.delta.tags.includes('combination') && !d.delta.tags.includes('template')));
+const pairRuns      = ranked.filter(d => d.delta.tags.includes('pair') || (d.delta.tags.includes('combination')
+    && !d.delta.tags.includes('ordering-bias') && !d.delta.tags.includes('template')));
 
 // ─── Scoring-profile win analysis ──────────────────────────────────────────────
 
@@ -145,8 +146,8 @@ function findScoringProfileSoloDelta(scoringProfileId) {
 function analyseScoringProfileWins() {
     const profileWins = new Map();
     for (const lr of (baseline.levels ?? [])) {
-        if (!lr.ok || !lr.solvedBy) continue;
-        const p = lr.solvedBy;
+        const p = lr.solvedByScoringProfileId ?? lr.solvedBy ?? null;
+        if (!lr.ok || !p) continue;
         if (!profileWins.has(p)) profileWins.set(p, []);
         profileWins.get(p).push(lr.level);
     }
