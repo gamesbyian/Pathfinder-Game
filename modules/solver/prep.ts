@@ -44,7 +44,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     prep.gridW = level.grid.w;
     // Threaded through every buildDistMap/buildAxisApproachMap call below so these distance
     // heuristics agree with staticNeighborKeys' own false-goal allowance (same opts field) —
-    // trap search's prep (prepLevel(level, { allowFalseGoalNeighbors: true })) needs its distance
+    // false-goal trigger search's prep (prepLevel(level, { allowFalseGoalNeighbors: true })) needs its distance
     // maps to treat false goals as passable exactly where its move generation does, or its own
     // lower-bound pruning would reject reachable false-goal candidates as a false negative.
     const distOpts: DistMapOpts = { allowFalseGoalNeighbors: opts.allowFalseGoalNeighbors };
@@ -379,11 +379,11 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         || prep.initialMustTurnMask !== 0
         || prep.initialAdjTurnMask  !== 0;
 
-    // Cells that can never be valid false-goal (trap spot) locations:
+    // Cells that can never be valid false-goal locations:
     // goal, gates, must-pass, must-cross, filters, flipping filters, portal terminals.
     // Also includes impassable landmark cells (already in blockSet, but explicit for clarity).
     // A false goal cannot share a cell with any other object.
-    prep.trapInvalidSet = new Set([
+    prep.invalidFalseGoalCellSet = new Set([
         level.goalKey,
         ...level.gateKeys,
         ...level.mustPassKeys,
@@ -403,7 +403,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // V for d=2,3) doesn't need its own storage slot since it's implied by the fixed
     // direction order (NEIGHBOR_AXIS in encoding.ts) — search-state.ts derives it the same
     // way, so the two files must keep the same direction order. Excludes: blocks, geese,
-    // false goals (unless trap search needs existing false goals as endpoint candidates),
+    // false goals (unless false-goal trigger search needs existing false goals as endpoint candidates),
     // gate cells, and neighbors that violate static (regular) filter constraints. Flipping-
     // filter and portal constraints remain dynamic.
     //
