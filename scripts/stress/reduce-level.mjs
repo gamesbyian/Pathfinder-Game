@@ -21,7 +21,7 @@
  *      no benefit to chunk-based acceleration — trying every single-element removal to a fixed
  *      point is already fast at this scale). Each candidate removal is accepted only if the
  *      production solver still reproduces the SAME interestingness signature (status category),
- *      checked via Solver.solve's nodeBudget option (orchestration.ts) rather than wall-clock,
+ *      checked via Solver.solveLevel's nodeBudget option (orchestration.ts) rather than wall-clock,
  *      consistent with this session's finding that wall-clock timing is unreliable in
  *      CPU-throttled environments.
  *
@@ -52,7 +52,7 @@ const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels-random.js
 const LEVEL_ID = args.get('--id');
 const NODE_BUDGET = Number(args.get('--node-budget') || 15_000_000);
 const TIME_BUDGET_MS = Number(args.get('--time-budget-ms') || 30000);
-// Without an explicit workBudget, Solver.solve() derives one from TIME_BUDGET_MS alone (x
+// Without an explicit workBudget, Solver.solveLevel() derives one from TIME_BUDGET_MS alone (x
 // DEFAULT_WORK_PER_MS, orchestration.ts) -- at this tool's defaults that's ~100.5M work units
 // against a 15M node ceiling, a 6.7x ratio loose enough that the ladder's own per-attempt
 // fair-division doesn't bind before a single early attempt does: confirmed directly (2026-08-06),
@@ -125,7 +125,7 @@ async function solveAndClassify(raw, { mainLoopOnly = false } = {}) {
     catch (err) { return { signature: 'error', detail: `normalize: ${err?.message}` }; }
     let result;
     try {
-        result = await Solver.solve(level, {
+        result = await Solver.solveLevel(level, {
             timeBudgetMs: TIME_BUDGET_MS,
             nodeBudget: NODE_BUDGET,
             workBudget: WORK_BUDGET,
