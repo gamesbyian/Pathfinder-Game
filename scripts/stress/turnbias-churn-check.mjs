@@ -76,7 +76,7 @@ for (const entry of candidates) {
     if (onSolved) solvedOn++;
     if (offSolved) solvedOff++;
     if (onSolved !== offSolved) {
-        flips.push({ id: id ?? '(no id)', solvedOn, offSolved, winningConfigOn: onResult.attempts?.[onResult.attempts.length - 1]?.profile, winningConfigOff: offResult.attempts?.[offResult.attempts.length - 1]?.profile });
+        flips.push({ id: id ?? '(no id)', solvedOn, offSolved, winningScoringProfileIdOn: onResult.attempts?.find(a => a.ok)?.scoringProfileId ?? null, winningScoringProfileIdOff: offResult.attempts?.find(a => a.ok)?.scoringProfileId ?? null });
         console.log(`${id}: FLIP onSolved=${onSolved} offSolved=${offSolved}`);
     }
     if (i % 10 === 0) console.log(`  ...${i}/${candidates.length} (solvedOn=${solvedOn} solvedOff=${solvedOff} flips=${flips.length})`);
