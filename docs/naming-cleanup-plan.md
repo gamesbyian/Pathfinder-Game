@@ -1097,7 +1097,7 @@ This is a blocking prerequisite, not an implementation phase and not permission 
 
 - `closeLengthGap` rename;
 - hard-prune pipeline rename;
-- budget multiplier/time-unit names;
+- budget multiplier/time-unit names; the `StageBudgetPolicyId` spelling `additive-wall-multiplier` is already canonical on current main, so do not recreate that definition rename; audit only its historical-reader compatibility while migrating the still-live repair budget option/local names;
 - no resource-policy change.
 
 Coordinate this PR with the active budget-model workstream so a symbol already removed by budget rationalization is marked superseded rather than recreated.
