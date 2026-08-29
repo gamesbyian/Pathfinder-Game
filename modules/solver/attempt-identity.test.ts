@@ -10,23 +10,23 @@ import { attemptConfigKey } from './orchestration.js';
 import type { AttemptConfig } from './types.js';
 
 const canonicalCases = [
-    [{ scoringProfileId: 'default', templateId: null }, 'dfs|score=default|bias=none'],
-    [{ scoringProfileId: 'default', templateId: 'cornerHarvest' }, 'dfs|score=default|bias=cornerHarvest'],
-    [{ scoringProfileId: 'default', templateId: null, beamWidth: 5000 }, 'beam|score=default|bias=none|width=5000|retention=plain'],
-    [{ scoringProfileId: 'objectiveFirst', templateId: null, beamWidth: 5000, mechanicBucketRetention: true }, 'beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets'],
-    [{ scoringProfileId: 'repair', templateId: null, repair: true }, 'repair|score=repair|guidance=standard'],
-    [{ scoringProfileId: 'repair', templateId: null, repair: true, repairMustTurnBiased: true }, 'repair|score=repair|guidance=must-turn-biased'],
-    [{ scoringProfileId: 'repair', templateId: null, repair: true, repairTurnBiased: true }, 'repair|score=repair|guidance=turn-biased'],
-    [{ scoringProfileId: 'default', templateId: null, admissibleOrder: true }, 'admissible-order|tieBreak=default|lds=off'],
-    [{ scoringProfileId: 'none', templateId: null, admissibleOrder: true, admissibleOrderNoTieBreak: true }, 'admissible-order|tieBreak=none|lds=off'],
-    [{ scoringProfileId: 'default', templateId: null, admissibleOrder: true, admissibleOrderLds: true }, 'admissible-order|tieBreak=default|lds=on'],
+    [{ scoringProfileId: 'default', orderingBiasId: null }, 'dfs|score=default|bias=none'],
+    [{ scoringProfileId: 'default', orderingBiasId: 'cornerHarvest' }, 'dfs|score=default|bias=cornerHarvest'],
+    [{ scoringProfileId: 'default', orderingBiasId: null, beamWidth: 5000 }, 'beam|score=default|bias=none|width=5000|retention=plain'],
+    [{ scoringProfileId: 'objectiveFirst', orderingBiasId: null, beamWidth: 5000, mechanicBucketRetention: true }, 'beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets'],
+    [{ scoringProfileId: 'repair', orderingBiasId: null, repair: true }, 'repair|score=repair|guidance=standard'],
+    [{ scoringProfileId: 'repair', orderingBiasId: null, repair: true, repairMustTurnBiased: true }, 'repair|score=repair|guidance=must-turn-biased'],
+    [{ scoringProfileId: 'repair', orderingBiasId: null, repair: true, repairTurnBiased: true }, 'repair|score=repair|guidance=turn-biased'],
+    [{ scoringProfileId: 'default', orderingBiasId: null, admissibleOrder: true }, 'admissible-order|tieBreak=default|lds=off'],
+    [{ scoringProfileId: 'none', orderingBiasId: null, admissibleOrder: true, admissibleOrderNoTieBreak: true }, 'admissible-order|tieBreak=none|lds=off'],
+    [{ scoringProfileId: 'default', orderingBiasId: null, admissibleOrder: true, admissibleOrderLds: true }, 'admissible-order|tieBreak=default|lds=on'],
 ] as const;
 
 test('formatAttemptIdentityKey emits the canonical structured grammar for every family', () => {
     for (const [fields, key] of canonicalCases) assert.equal(formatAttemptIdentityKey(fields), key);
     assert.equal(
         formatAttemptIdentityKey({
-            scoringProfileId: 'repair', templateId: null, repair: true,
+            scoringProfileId: 'repair', orderingBiasId: null, repair: true,
             repairMustTurnBiased: true, repairTurnBiased: true,
         }),
         'repair|score=repair|guidance=must-turn-biased',
@@ -78,12 +78,12 @@ test('malformed or contradictory identities are rejected rather than guessed', (
 });
 
 test('formatAttemptActionKey layers stage and deterministic repair seed over canonical config identity', () => {
-    const repair = { scoringProfileId: 'repair', templateId: null, repair: true };
-    assert.equal(formatAttemptActionKey({ ...repair, stageId: 'repair-probe' }), 'repair-probe|repair|score=repair|guidance=standard|seedSalt=0');
-    assert.equal(formatAttemptActionKey({ ...repair, stageId: 'repair-probe', seedSalt: 1 }), 'repair-probe|repair|score=repair|guidance=standard|seedSalt=1');
+    const repair = { scoringProfileId: 'repair', orderingBiasId: null, repair: true };
+    assert.equal(formatAttemptActionKey({ ...repair, stageId: 'early-repair-search' }), 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=0');
+    assert.equal(formatAttemptActionKey({ ...repair, stageId: 'early-repair-search', seedSalt: 1 }), 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=1');
     assert.equal(formatAttemptActionKey({ ...repair, stageId: 'repair-fallback', seedSalt: 1 }), 'repair-fallback|repair|score=repair|guidance=standard|seedSalt=1');
-    assert.equal(formatAttemptActionKey({ scoringProfileId: 'default', templateId: null, stageId: 'main-loop' }), 'main-loop|dfs|score=default|bias=none');
-    assert.throws(() => formatAttemptActionKey({ scoringProfileId: 'default', templateId: null, stageId: '' }), /requires stageId/);
+    assert.equal(formatAttemptActionKey({ scoringProfileId: 'default', orderingBiasId: null, stageId: 'main-search' }), 'main-search|dfs|score=default|bias=none');
+    assert.throws(() => formatAttemptActionKey({ scoringProfileId: 'default', orderingBiasId: null, stageId: '' }), /requires stageId/);
 });
 
 test('orchestration attemptConfigKey agrees with canonical formatter for every supported family', () => {
@@ -102,7 +102,7 @@ test('orchestration attemptConfigKey agrees with canonical formatter for every s
     for (const config of cases) {
         const expected = formatAttemptIdentityKey({
             scoringProfileId: config.scoringProfileId,
-            templateId: config.orderingBias?.id ?? null,
+            orderingBiasId: config.orderingBias?.id ?? null,
             beamWidth: config.beamWidth,
             mechanicBucketRetention: config.mechanicBucketRetention,
             repair: config.repair,

@@ -5,8 +5,9 @@ import { formatAttemptActionKey, formatAttemptIdentityKey, normalizeAttemptIdent
 /** Reconstruct canonical config identity from a persisted Attempt shape. */
 export function attemptConfigKey(attempt) {
     return formatAttemptIdentityKey({
-        profileName: attempt?.profile ?? 'unknown', templateId: attempt?.template ?? null,
-        beamWidth: attempt?.beamWidth, diverseBeam: attempt?.diverseBeam, repair: attempt?.repair,
+        scoringProfileId: attempt?.scoringProfileId ?? attempt?.profile ?? 'unknown',
+        orderingBiasId: attempt?.orderingBiasId ?? attempt?.template ?? null,
+        beamWidth: attempt?.beamWidth, mechanicBucketRetention: attempt?.mechanicBucketRetention ?? attempt?.diverseBeam, repair: attempt?.repair,
         repairMustTurnBiased: attempt?.repairMustTurnBiased, repairTurnBiased: attempt?.repairTurnBiased,
         admissibleOrder: attempt?.admissibleOrder, admissibleOrderNoTieBreak: attempt?.admissibleOrderNoTieBreak,
         admissibleOrderLds: attempt?.admissibleOrderLds,
@@ -29,8 +30,9 @@ export function attemptActionKey(attempt) {
     if (!attempt?.stageId) return null;
     return formatAttemptActionKey({
         stageId: attempt.stageId,
-        profileName: attempt?.profile ?? 'unknown', templateId: attempt?.template ?? null,
-        beamWidth: attempt?.beamWidth, diverseBeam: attempt?.diverseBeam, repair: attempt?.repair,
+        scoringProfileId: attempt?.scoringProfileId ?? attempt?.profile ?? 'unknown',
+        orderingBiasId: attempt?.orderingBiasId ?? attempt?.template ?? null,
+        beamWidth: attempt?.beamWidth, mechanicBucketRetention: attempt?.mechanicBucketRetention ?? attempt?.diverseBeam, repair: attempt?.repair,
         repairMustTurnBiased: attempt?.repairMustTurnBiased, repairTurnBiased: attempt?.repairTurnBiased,
         admissibleOrder: attempt?.admissibleOrder, admissibleOrderNoTieBreak: attempt?.admissibleOrderNoTieBreak,
         admissibleOrderLds: attempt?.admissibleOrderLds,
@@ -38,8 +40,13 @@ export function attemptActionKey(attempt) {
     });
 }
 
+function schedulerPhaseMatches(actual, expected) {
+    if (!expected) return true;
+    if (expected === 'legacy-latency-portfolio') return actual === expected || actual === 'portfolio';
+    return actual === expected;
+}
 export function winningAttempt(result, phase = null) {
-    return (Array.isArray(result?.attempts) ? result.attempts : []).find(a => a?.ok && (!phase || a.schedulerPhase === phase)) ?? null;
+    return (Array.isArray(result?.attempts) ? result.attempts : []).find(a => a?.ok && schedulerPhaseMatches(a.schedulerPhase, phase)) ?? null;
 }
 
 function projectedAttemptError(error) {
@@ -58,18 +65,20 @@ function projectedAttemptError(error) {
         message: bounded(field('message'), 'Unknown attempt error', 500),
         gateKey: Number.isFinite(field('gateKey')) ? field('gateKey') : null,
         configKey,
-        profile: bounded(field('profile'), 'unknown', 120),
-        template: field('template') == null ? null : bounded(field('template'), 'unknown', 120),
+        scoringProfileId: bounded(field('scoringProfileId') ?? field('profile'), 'unknown', 120),
+        orderingBiasId: (field('orderingBiasId') ?? field('template')) == null
+            ? null
+            : bounded(field('orderingBiasId') ?? field('template'), 'unknown', 120),
     };
 }
 
 /** Prefer phase-specific portfolio/fallback winner, then any successful attempt for legacy/race modes. */
 export function anyWinningAttempt(result) {
-    return winningAttempt(result, 'portfolio') ?? winningAttempt(result, 'fallback') ?? winningAttempt(result, null);
+    return winningAttempt(result, 'legacy-latency-portfolio') ?? winningAttempt(result, 'fallback') ?? winningAttempt(result, null);
 }
 
 export function passForWin(result) {
-    const winner = winningAttempt(result, 'portfolio');
+    const winner = winningAttempt(result, 'legacy-latency-portfolio');
     return Number.isFinite(Number(winner?.passNumber)) ? Number(winner.passNumber) : null;
 }
 
@@ -79,7 +88,10 @@ export function attemptRecord(a) {
     return {
         ...(a.stageId !== undefined ? { stageId: a.stageId } : {}),
         ...(actionKey !== null ? { actionKey } : {}),
-        gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
+        gateKey: a.gateKey,
+        scoringProfileId: a.scoringProfileId ?? a.profile,
+        orderingBiasId: a.orderingBiasId ?? a.template ?? null,
+        beamWidth: a.beamWidth,
         ok: a.ok, elapsedMs: a.elapsedMs,
         ...(a.outcome !== undefined ? { outcome: a.outcome } : {}),
         // Whitelist error fields; never persist arbitrary thrown objects/stacks.
@@ -93,7 +105,7 @@ export function attemptRecord(a) {
         ...(a.timedOut !== undefined ? { timedOut: a.timedOut } : {}),
         ...(a.bestBadness !== undefined ? { bestBadness: a.bestBadness } : {}),
         ...(a.finalBadness !== undefined ? { finalBadness: a.finalBadness } : {}),
-        ...(a.diverseBeam ? { diverseBeam: true } : {}),
+        ...(a.mechanicBucketRetention || a.diverseBeam ? { mechanicBucketRetention: true } : {}),
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
         ...(a.repairTurnBiased ? { repairTurnBiased: true } : {}),
@@ -122,10 +134,11 @@ export function attemptRecord(a) {
 /** Build one persisted row. Hint saving and referee computation remain caller-owned. */
 export function buildRow(levelNumber, id, result, schedulerMode) {
     const pass = passForWin(result);
-    const solvedBeforeFallback = !!result?.portfolio?.solvedBeforeFallback;
+    const legacyLatencyPortfolio = result?.legacyLatencyPortfolioExperiment ?? result?.portfolio;
+    const solvedBeforeFallback = !!legacyLatencyPortfolio?.solvedBeforeFallback;
     const solvedByFallback = !!result?.ok && !solvedBeforeFallback;
     const winner = anyWinningAttempt(result);
-    const phaseLabel = pass ? `pass${pass}` : (solvedByFallback ? (schedulerMode === 'legacy' ? 'legacy' : 'fallback') : '');
+    const phaseLabel = pass ? `pass${pass}` : (solvedByFallback ? (schedulerMode === 'production' || schedulerMode === 'legacy' ? 'legacy' : 'fallback') : '');
     const attempts = (Array.isArray(result?.attempts) ? result.attempts : []).map(attemptRecord);
     const persistedWinner = attempts.find(attempt => attempt.ok) ?? null;
     return {
@@ -141,7 +154,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         // Cross-technique host-independent cost; deadline-truncated failure is indeterminate.
         workSpent: result?.workSpent ?? null,
         deadlineTruncated: !!result?.deadlineTruncated,
-        techniqueLifecycle: result?.techniqueLifecycle ?? null,
+        stageLifecycle: result?.stageLifecycle ?? result?.techniqueLifecycle ?? null,
         refereeValid: result?.refereeValid ?? null,
         solvedBeforeFallback,
         solvedByFallback,
@@ -188,6 +201,6 @@ export function tallyPass(passCounts, row, schedulerMode) {
     else if (row.pass === 2) passCounts.pass2 += 1;
     else if (row.pass === 3) passCounts.pass3 += 1;
     else if (row.pass && row.pass > 3) passCounts.conditional += 1;
-    else if (row.solvedByFallback) passCounts[schedulerMode === 'legacy' ? 'legacy' : 'fallback'] += 1;
+    else if (row.solvedByFallback) passCounts[schedulerMode === 'production' || schedulerMode === 'legacy' ? 'legacy' : 'fallback'] += 1;
     else passCounts.unsolved += 1;
 }

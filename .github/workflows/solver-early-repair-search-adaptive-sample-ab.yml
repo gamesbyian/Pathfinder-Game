@@ -4,11 +4,11 @@
 #
 # Deliberately NOT a full-corpus refresh, and NOT solver-stress-refresh.yml's canonical full-1700
 # capability workflow: this flag can only ever change a level's outcome if the level is repair-gated
-# AND carries a must-turn cell (the only thing that makes a biased repair-probe tier exist at all) --
+# AND carries a must-turn cell (the only thing that makes a biased early-repair-search tier exist at all) --
 # 512/1700 Corpus-2 levels as of 2026-08-12. A uniform random sample of the full corpus would waste
 # most of its compute re-confirming zero-effect on levels that are structurally guaranteed
 # byte-identical either way. This workflow instead draws a deterministic seeded subsample from the
-# ELIGIBLE population specifically (scripts/stress/select-repair-probe-adaptive-sample.mjs), plus a
+# ELIGIBLE population specifically (scripts/stress/select-early-repair-search-adaptive-sample.mjs), plus a
 # small control sample from the ineligible remainder to empirically catch anything a code trace
 # missed. Same seed -> same sample, always (reproducible, matching scripts/stress/benchmark.mjs's
 # --sample=N --seed= convention).
@@ -35,8 +35,8 @@
 # per candidate gate (blank baseline, then 8, then 6) with identical seed/sample/node_budget and
 # min_scale left blank throughout (the sweep holds MIN_SCALE fixed), then compare each run's combined
 # artifact the same way as the on/off A/B above.
-name: Solver repair-probe adaptive-budget sample A/B
-run-name: "Repair-probe sample · flags=${{ inputs.enable_flags || 'control' }} · gate=${{ inputs.repair_probe_adaptive_badness_gate }}"
+name: Solver early-repair-search adaptive-budget sample A/B
+run-name: "Early-repair-search sample · flags=${{ inputs.enable_flags || 'control' }} · gate=${{ inputs.repair_probe_adaptive_badness_gate }}"
 
 on:
   workflow_dispatch:
@@ -99,7 +99,7 @@ on:
         default: ''
 
 concurrency:
-  group: solver-repair-probe-adaptive-sample-ab
+  group: solver-early-repair-search-adaptive-sample-ab
   cancel-in-progress: false
 
 jobs:
@@ -136,27 +136,27 @@ jobs:
       - name: Select the deterministic stratified sample
         shell: bash
         run: |
-          mkdir -p logs/solver-repair-probe-adaptive-sample
-          node scripts/stress/select-repair-probe-adaptive-sample.mjs \
+          mkdir -p logs/solver-early-repair-search-adaptive-sample
+          node scripts/stress/select-early-repair-search-adaptive-sample.mjs \
             --corpus=data/stress/stress-levels-random.json \
             --eligible-sample="${{ inputs.eligible_sample }}" \
             --control-sample="${{ inputs.control_sample }}" \
             --seed="${{ inputs.seed }}" \
-            --out=logs/solver-repair-probe-adaptive-sample/sample.txt
+            --out=logs/solver-early-repair-search-adaptive-sample/sample.txt
 
       - name: Split into even shards
         id: plan
         shell: bash
         run: |
           node scripts/plan-ab-corpus-shards.mjs \
-            --corpus2-sample="logs/solver-repair-probe-adaptive-sample/sample.txt" \
+            --corpus2-sample="logs/solver-early-repair-search-adaptive-sample/sample.txt" \
             --corpus2-shards="${{ inputs.shard_count }}"
 
       - name: Upload the sample + shard plan for traceability
         uses: actions/upload-artifact@v7
         with:
-          name: repair-probe-adaptive-sample-plan
-          path: logs/solver-repair-probe-adaptive-sample/
+          name: early-repair-search-adaptive-sample-plan
+          path: logs/solver-early-repair-search-adaptive-sample/
           retention-days: 90
 
   solve-shards:
@@ -198,7 +198,7 @@ jobs:
           DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
         run: |
           set +e
-          mkdir -p logs/solver-repair-probe-adaptive-sample
+          mkdir -p logs/solver-early-repair-search-adaptive-sample
           extra=()
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
@@ -216,8 +216,8 @@ jobs:
             "${strict[@]}" \
             --workers="${{ inputs.workers }}" \
             "${extra[@]}" \
-            --out="logs/solver-repair-probe-adaptive-sample/batch-${{ matrix.shard.idx }}.json" \
-            --summary-out="logs/solver-repair-probe-adaptive-sample/batch-${{ matrix.shard.idx }}-summary.md"
+            --out="logs/solver-early-repair-search-adaptive-sample/batch-${{ matrix.shard.idx }}.json" \
+            --summary-out="logs/solver-early-repair-search-adaptive-sample/batch-${{ matrix.shard.idx }}-summary.md"
           status=$?
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
@@ -226,10 +226,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: repair-probe-adaptive-sample-shard-${{ matrix.shard.idx }}
+          name: early-repair-search-adaptive-sample-shard-${{ matrix.shard.idx }}
           path: |
-            logs/solver-repair-probe-adaptive-sample/batch-${{ matrix.shard.idx }}.json
-            logs/solver-repair-probe-adaptive-sample/batch-${{ matrix.shard.idx }}-summary.md
+            logs/solver-early-repair-search-adaptive-sample/batch-${{ matrix.shard.idx }}.json
+            logs/solver-early-repair-search-adaptive-sample/batch-${{ matrix.shard.idx }}-summary.md
           if-no-files-found: error
           retention-days: 90
 
@@ -270,17 +270,17 @@ jobs:
       - name: Download shard artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: 'repair-probe-adaptive-sample-shard-*'
+          pattern: 'early-repair-search-adaptive-sample-shard-*'
           path: artifact-staging/downloaded
           merge-multiple: true
 
       - name: Combine into one report (subset-shaped -- NEVER the full-corpus baseline)
         shell: bash
         run: |
-          mkdir -p logs/solver-repair-probe-adaptive-sample reports/stress
-          cp -a artifact-staging/downloaded/. logs/solver-repair-probe-adaptive-sample/
-          FILES=$(ls logs/solver-repair-probe-adaptive-sample/batch-*.json 2>/dev/null | paste -sd, -)
-          [ -n "$FILES" ] && npm run solver:combine-corpus2-batches -- --allow-mixed-corpora --in="${FILES}" --out=reports/stress/repair-probe-adaptive-sample-ab.json
+          mkdir -p logs/solver-early-repair-search-adaptive-sample reports/stress
+          cp -a artifact-staging/downloaded/. logs/solver-early-repair-search-adaptive-sample/
+          FILES=$(ls logs/solver-early-repair-search-adaptive-sample/batch-*.json 2>/dev/null | paste -sd, -)
+          [ -n "$FILES" ] && npm run solver:combine-corpus2-batches -- --allow-mixed-corpora --in="${FILES}" --out=reports/stress/early-repair-search-adaptive-sample-ab.json
 
       - name: Verify complete coverage
         id: coverage
@@ -289,7 +289,7 @@ jobs:
           node -e "
           const fs = require('node:fs');
           const expectedTotal = ${{ needs.plan.outputs.total_levels }};
-          const report = JSON.parse(fs.readFileSync('reports/stress/repair-probe-adaptive-sample-ab.json', 'utf8'));
+          const report = JSON.parse(fs.readFileSync('reports/stress/early-repair-search-adaptive-sample-ab.json', 'utf8'));
           const rows = report.levels ?? [];
           if (rows.length !== expectedTotal) { console.error(\`incomplete: \${rows.length}/\${expectedTotal}\`); process.exit(1); }
           console.log(\`complete: \${rows.length}/\${expectedTotal}\`);
@@ -300,7 +300,7 @@ jobs:
         run: |
           node -e "
           const fs = require('node:fs');
-          const r = JSON.parse(fs.readFileSync('reports/stress/repair-probe-adaptive-sample-ab.json', 'utf8'));
+          const r = JSON.parse(fs.readFileSync('reports/stress/early-repair-search-adaptive-sample-ab.json', 'utf8'));
           const rows = r.levels ?? [];
           const solved = rows.filter(x => x.ok).length;
           const nodes = rows.reduce((n,x) => n + (x.nodesExpanded || 0), 0);
@@ -310,27 +310,27 @@ jobs:
           console.log('Solved ids: ' + rows.filter(x => x.ok).map(x => x.id ?? String(x.level)).sort().join(','));
           "
 
-      - name: Print repair-probe badness distribution
+      - name: Print early-repair-search badness distribution
         shell: bash
         # Only the eligible (repair-gated AND has mustTurn) population ever runs a biased repair-probe
         # tier, so this is a no-op summary (0 levels) on the control-only ineligible sample -- printed
         # to the JOB CONSOLE LOG specifically (not just the uploaded artifact) because this session's
         # egress policy has been observed blocking the artifact-download zip (Azure blob storage,
-        # 403) -- console output survives that. See scripts/stress/repair-probe-badness-report.mjs and
+        # 403) -- console output survives that. See scripts/stress/early-repair-search-badness-report.mjs and
         # REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE's own comment in orchestration.ts for why this
         # data matters: recalibrating that constant needs the ordinaryBestBadness distribution, not
         # just the solved-count this workflow already printed above.
         run: |
-          node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in=reports/stress/repair-probe-adaptive-sample-ab.json
+          node scripts/run-bundled.mjs scripts/stress/early-repair-search-badness-report.mjs -- --in=reports/stress/early-repair-search-adaptive-sample-ab.json
 
       - name: Upload combined results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: repair-probe-adaptive-sample-ab-combined
+          name: early-repair-search-adaptive-sample-ab-combined
           path: |
-            reports/stress/repair-probe-adaptive-sample-ab.json
-            logs/solver-repair-probe-adaptive-sample/
+            reports/stress/early-repair-search-adaptive-sample-ab.json
+            logs/solver-early-repair-search-adaptive-sample/
           if-no-files-found: error
           retention-days: 90
 
@@ -339,10 +339,10 @@ jobs:
         shell: bash
         run: |
           node scripts/publish-solver-sweep-result.mjs \
-            --primary="reports/stress/repair-probe-adaptive-sample-ab.json" \
+            --primary="reports/stress/early-repair-search-adaptive-sample-ab.json" \
             --shards-expected="${{ needs.plan.outputs.shard_count }}" \
-            --shards-observed="$(find logs/solver-repair-probe-adaptive-sample -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
-            --source-artifact="repair-probe-adaptive-sample-ab-combined"
+            --shards-observed="$(find logs/solver-early-repair-search-adaptive-sample -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
+            --source-artifact="early-repair-search-adaptive-sample-ab-combined"
 
       - name: Upload standard solver sweep result
         if: always()

@@ -42,11 +42,11 @@ import { makeAttemptConfigKeyParser } from './attempt-config-key.mjs';
 export async function createCellRunner({ runAttemptForTesting } = {}) {
     installBrowserStubs();
     const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
-    const { TEMPLATES, POLICY_PROFILES } = await import('../modules/solver/policy.js');
+    const { STRUCTURAL_ORDERING_BIASES, SCORING_PROFILES } = await import('../modules/solver/policy.js');
     const Solver = createSolver();
     const { prepLevel, attemptConfigKey, normalizeAblationConfig } = SOLVER_TESTING_API;
     const runAttempt = runAttemptForTesting ?? SOLVER_TESTING_API.runAttempt;
-    const parseAttemptConfigKey = makeAttemptConfigKeyParser({ TEMPLATES, POLICY_PROFILES, attemptConfigKey });
+    const parseAttemptConfigKey = makeAttemptConfigKeyParser({ STRUCTURAL_ORDERING_BIASES, SCORING_PROFILES, attemptConfigKey });
 
     const CORPUS_FILES = { published: 'data/levels.json', corpus1: 'data/stress/stress-levels.json', corpus2: 'data/stress/stress-levels-random.json' };
     const corpusCache = new Map();

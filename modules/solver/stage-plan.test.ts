@@ -21,13 +21,13 @@ test('buildSolverStagePlan covers every SOLVER_STAGE_IDS entry, in declared orde
     const plan = buildSolverStagePlan({ budgetPlan, mainLoopEligible: true });
     assert.deepEqual(plan.map(entry => entry.spec.id), [...SOLVER_STAGE_IDS]);
     // Stages this pre-probe plan cannot resolve report `undefined`, never a guessed boolean.
-    assert.equal(plan.find(entry => entry.spec.id === 'prime')!.eligible, undefined);
-    assert.equal(plan.find(entry => entry.spec.id === 'portfolio-pass')!.eligible, undefined);
-    assert.equal(plan.find(entry => entry.spec.id === 'portfolio-fallback')!.eligible, undefined);
-    assert.equal(plan.find(entry => entry.spec.id === 'repair-probe-shrink-recovery')!.eligible, undefined);
+    assert.equal(plan.find(entry => entry.spec.id === 'explicit-prime')!.eligible, undefined);
+    assert.equal(plan.find(entry => entry.spec.id === 'legacy-latency-portfolio-pass')!.eligible, undefined);
+    assert.equal(plan.find(entry => entry.spec.id === 'legacy-latency-portfolio-fallback')!.eligible, undefined);
+    assert.equal(plan.find(entry => entry.spec.id === 'repair-shrink-recovery')!.eligible, undefined);
     // Every other stage resolves to a real boolean.
     for (const entry of plan) {
-        if (['prime', 'portfolio-pass', 'portfolio-fallback', 'repair-probe-shrink-recovery'].includes(entry.spec.id)) continue;
+        if (['explicit-prime', 'legacy-latency-portfolio-pass', 'legacy-latency-portfolio-fallback', 'repair-shrink-recovery'].includes(entry.spec.id)) continue;
         assert.equal(typeof entry.eligible, 'boolean', `${entry.spec.id} must resolve to a boolean`);
     }
 });
@@ -37,27 +37,27 @@ test('buildSolverStagePlan.eligible agrees with computeStageBudgetPlan.xTierWill
     const budgetPlan = computeStageBudgetPlan({ ...baseInput, nodeBudget, initialMustCrossMask: 0b1, repairConfigsCount: 0 });
     const plan = buildSolverStagePlan({ budgetPlan, mainLoopEligible: true });
     const eligible = (id: string) => plan.find(entry => entry.spec.id === id)!.eligible;
-    assert.equal(eligible('repair-probe'), budgetPlan.repairProbeTierWillRun);
+    assert.equal(eligible('early-repair-search'), budgetPlan.repairProbeTierWillRun);
     assert.equal(eligible('repair-fallback'), budgetPlan.repairFallbackTierWillRun);
-    assert.equal(eligible('attraction-diversity'), budgetPlan.diversityTierWillRun);
-    assert.equal(eligible('admissible-order'), budgetPlan.admissibleOrderTierWillRun);
-    assert.equal(eligible('dedup-near-tie-retry'), budgetPlan.dedupRetryTierWillRun);
-    assert.equal(eligible('admissible-order-non-default-retry'), budgetPlan.nonDefaultRetryTierWillRun);
-    assert.equal(eligible('connectivity-axis-exhausted-retry'), budgetPlan.connectivityRetryTierWillRun);
+    assert.equal(eligible('goal-attraction-disabled-retry'), budgetPlan.diversityTierWillRun);
+    assert.equal(eligible('admissible-order-fallback'), budgetPlan.admissibleOrderTierWillRun);
+    assert.equal(eligible('coarse-state-near-tie-retention-disabled-retry'), budgetPlan.dedupRetryTierWillRun);
+    assert.equal(eligible('admissible-order-alternate-tiebreak-retry'), budgetPlan.nonDefaultRetryTierWillRun);
+    assert.equal(eligible('connectivity-axis-prune-disabled-retry'), budgetPlan.connectivityRetryTierWillRun);
     assert.equal(eligible('repair-elite-prefix-dfs-retry'), budgetPlan.repairElitePrefixDfsRetryTierWillRun);
-    assert.equal(eligible('mc-neighbor-budget-retry'), budgetPlan.mcNeighborBudgetRetryTierWillRun);
-    // repairConfigsCount: 0 makes repair-late-probe's structural precondition hold.
-    assert.equal(eligible('repair-late-probe'), true);
-    assert.equal(eligible('repair-late-probe'), budgetPlan.repairLateProbeTierWillRun);
+    assert.equal(eligible('must-cross-neighbor-prune-disabled-retry'), budgetPlan.mcNeighborBudgetRetryTierWillRun);
+    // repairConfigsCount: 0 makes late-repair-search's structural precondition hold.
+    assert.equal(eligible('late-repair-search'), true);
+    assert.equal(eligible('late-repair-search'), budgetPlan.repairLateProbeTierWillRun);
 });
 
-test('repair-probe-shrink-recovery resolves once repairProbeShrunkTierCount is supplied', () => {
+test('repair-shrink-recovery resolves once repairProbeShrunkTierCount is supplied', () => {
     const budgetPlan = computeStageBudgetPlan({
         ...baseInput, nodeBudget: 50_000_000,
         cfg: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true, STRATEGY_REPAIR_PROBE: true, STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: true },
     });
     const noneShrunk = buildSolverStagePlan({ budgetPlan, mainLoopEligible: true, repairProbeShrunkTierCount: 0 });
-    assert.equal(noneShrunk.find(entry => entry.spec.id === 'repair-probe-shrink-recovery')!.eligible, false);
+    assert.equal(noneShrunk.find(entry => entry.spec.id === 'repair-shrink-recovery')!.eligible, false);
     const oneShrunk = buildSolverStagePlan({ budgetPlan, mainLoopEligible: true, repairProbeShrunkTierCount: 1 });
-    assert.equal(oneShrunk.find(entry => entry.spec.id === 'repair-probe-shrink-recovery')!.eligible, true);
+    assert.equal(oneShrunk.find(entry => entry.spec.id === 'repair-shrink-recovery')!.eligible, true);
 });

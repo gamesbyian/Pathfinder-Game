@@ -7,7 +7,7 @@ import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 installBrowserStubs();
 const { createSolver } = await import('../../modules/solver.js');
 const { prepLevel } = await import('../../modules/solver/prep.js');
-const { POLICY_PROFILES } = await import('../../modules/solver/policy.js');
+const { SCORING_PROFILES } = await import('../../modules/solver/policy.js');
 const { runAttemptSearch } = await import('../../modules/solver/attempt-dispatch.js');
 
 const Solver = createSolver();
@@ -35,7 +35,7 @@ parentPort.on('message', async (msg) => {
         const prepared = getPrepped(levelKey, rawLevel, ablationCfg);
         const level = prepared.level;
         prep = prepared.prep;
-        const profile = POLICY_PROFILES[attemptConfig.profileName] ?? POLICY_PROFILES.default;
+        const profile = SCORING_PROFILES[attemptConfig.scoringProfileId] ?? SCORING_PROFILES.default;
         // Workers do not cooperatively yield; race cancellation terminates losing workers.
         const out = {};
         const solved = await runAttemptSearch(attemptConfig, gateKey, level, prep, profile, budgetMs, Date.now(), null, Infinity, out);

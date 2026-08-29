@@ -31,7 +31,7 @@ import { legacyMsToWork } from './budget-units.js';
 import { createState, getNeighbors } from './search-state.js';
 import { AXIS_H, AXIS_V } from './encoding.js';
 import { getAttemptConfigs } from './attempts.js';
-import { TEMPLATE_CONFIG_KEYS } from './policy.js';
+import { ORDERING_BIAS_CONFIG_KEYS } from './policy.js';
 import { prepLevel } from './prep.js';
 import { deriveSolveAttemptInfo } from './hint-provenance.js';
 import {
@@ -159,11 +159,11 @@ function flipAxis(ax: number): number {
 function anyConfigSurvives(level: any, disabledKeys: Set<string>): boolean {
     const baseConfigs = getAttemptConfigs(level);
     return baseConfigs.some(c => {
-        if (c.template) {
-            const tKey = (TEMPLATE_CONFIG_KEYS as Record<string, string>)[(c.template as any).id];
+        if (c.orderingBias) {
+            const tKey = (ORDERING_BIAS_CONFIG_KEYS as Record<string, string>)[(c.orderingBias as any).id];
             if (tKey && disabledKeys.has(tKey)) return false;
         }
-        const pKey = `PROFILE_${c.profileName}`;
+        const pKey = `PROFILE_${c.scoringProfileId}`;
         if (disabledKeys.has(pKey)) return false;
         return true;
     });
@@ -327,8 +327,8 @@ async function runCascade(target: any, solveOptsBase: any, label: string, ctx: R
         const attemptInfo = deriveSolveAttemptInfo(result.attempts);
         found.push({
             path: result.solution,
-            profile: winner?.profile ?? null,
-            template: winner?.template ?? null,
+            profile: winner?.scoringProfileId ?? null,
+            template: winner?.orderingBiasId ?? null,
             disabledFeatures: [...disabled],
             beamWidth: attemptInfo.beamWidth,
             diverseBeam: attemptInfo.diverseBeam,
@@ -339,7 +339,7 @@ async function runCascade(target: any, solveOptsBase: any, label: string, ctx: R
             seedSalt: attemptInfo.seedSalt,
         });
 
-        const disableKey = winner?.template ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.profile];
+        const disableKey = winner?.orderingBiasId ? TEMPLATE_CONFIG_KEY[winner.orderingBiasId] : PROFILE_CONFIG_KEY[winner?.scoringProfileId];
         if (!disableKey || disabled.has(disableKey)) break; // safety: can't make further progress
         disabled.add(disableKey);
     }
@@ -370,8 +370,8 @@ async function runStrategyPhase(target: any, solveOptsBase: any, label: string, 
             const attemptInfo = deriveSolveAttemptInfo(result.attempts);
             found.push({
                 path: result.solution,
-                profile: winner?.profile ?? null,
-                template: winner?.template ?? null,
+                profile: winner?.scoringProfileId ?? null,
+                template: winner?.orderingBiasId ?? null,
                 disabledFeatures: [flag],
                 beamWidth: attemptInfo.beamWidth,
                 diverseBeam: attemptInfo.diverseBeam,
@@ -461,7 +461,7 @@ export async function createHintAblationGenerator(
             ctx.workSpent += base?.workSpent ?? 0;
             if (base?.ok && base.solution) {
                 const winner = base.attempts?.find((a: any) => a.ok);
-                baselineWinner = winner?.profile ?? null;
+                baselineWinner = winner?.scoringProfileId ?? null;
                 // profile mirrors what the cascade/strategy FoundEntry already carries (see
                 // runCascade/runStrategyPhase). The phase suffix below is what actually makes an
                 // admissible-order-search baseline win distinguishable from an ordinary
@@ -481,8 +481,8 @@ export async function createHintAblationGenerator(
                     generator: 'ablation-full',
                     levelNumber,
                     phase,
-                    profile: winner?.profile ?? null,
-                    template: winner?.template ?? null,
+                    profile: winner?.scoringProfileId ?? null,
+                    template: winner?.orderingBiasId ?? null,
                     beamWidth: attemptInfo.beamWidth,
                     diverseBeam: attemptInfo.diverseBeam,
                     attemptIndex: attemptInfo.attemptIndex,

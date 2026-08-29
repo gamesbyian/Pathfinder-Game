@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Reports the repair-probe ordinary-tier bestBadness distribution and biased-tier outcomes from
+ * Reports the early-repair-search ordinary-tier bestBadness distribution and biased-tier outcomes from
  * one or more level-blind-capability-sweep / portfolio-solve-sweep report JSON files, using the
  * `repairProbe` attempt tag (orchestration.ts's Attempt.repairProbe) to isolate probe-phase repair
  * attempts from the same repair config's later full-budget fallback run -- both produce
@@ -17,7 +17,7 @@
  * (n=1 for the "biased tier needed its full budget" case).
  *
  * Usage (via run-bundled, because the gate/min-scale constants are imported from orchestration.ts):
- *   node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in=reports/stress/repair-probe-adaptive-sample-ab.json
+ *   node scripts/run-bundled.mjs scripts/stress/early-repair-search-badness-report.mjs -- --in=reports/stress/early-repair-search-adaptive-sample-ab.json
  *
  * `--gate=<n>` / `--min-scale=<n>` override the imported production constants. Use them ONLY to
  * replay a historical report against the constants that were live when it was produced; the
@@ -58,7 +58,7 @@ function loadRows(file) {
     return rows;
 }
 
-// One row's repair-probe-only view. Ordinary tier's bestBadness is the signal
+// One row's early-repair-search-only view. Ordinary tier's bestBadness is the signal
 // STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET actually gates on; biased tier's own outcome shows
 // what the (possibly scaled) budget achieved.
 function levelBadnessInfo(row) {
@@ -104,7 +104,7 @@ const perFile = files.map(f => loadRows(f).map(levelBadnessInfo));
 const [primary] = perFile;
 const eligible = primary.filter(r => r.hasBiasedTier);
 
-console.log(`repair-probe-badness-report: ${files[0]} -- ${primary.length} levels, ${eligible.length} with a biased-tier attempt (the only population this flag can affect)`);
+console.log(`early-repair-search-badness-report: ${files[0]} -- ${primary.length} levels, ${eligible.length} with a biased-tier attempt (the only population this flag can affect)`);
 if (eligible.length === 0) {
     console.log('No biased-tier attempts found in this report -- either no repair-gated/must-turn levels were solved, or the report predates the repairProbe attempt tag (orchestration.ts).');
 } else {

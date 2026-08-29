@@ -32,8 +32,8 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 // Outbound message types:
 //   { type: 'RESULT',            id, ok, status, solution, solutions, elapsedMs, nodesExpanded,
 //                                attempts, deadlineTruncated?, nodeBudgetReached?, workSpent?,
-//                                workBudget?, solvedByPrime?, techniqueLifecycle?, schedulerMode?,
-//                                portfolio?, cancelled? } — see buildSolveWorkerResult's own
+//                                workBudget?, solvedByPrime?, stageLifecycle?, schedulerMode?,
+//                                legacyLatencyPortfolioExperiment?, cancelled? } — see buildSolveWorkerResult's own
 //                                comment (worker-result-serialization.mjs) for why this mirrors the
 //                                full on-thread SolveResult shape.
 //   { type: 'TRAP_PROGRESS',     id, newSpots: number[], gatesProcessed?, gatesCompleted?, totalGates? }

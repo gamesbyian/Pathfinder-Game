@@ -22,18 +22,18 @@ export interface SolverStagePlanInput {
 /** Eligibility fields owned by StageBudgetPlan. */
 function budgetPlanEligibility(id: SolverStageId, plan: StageBudgetPlan): boolean | undefined {
     switch (id) {
-        case 'repair-probe': return !!plan.repairProbeTierWillRun;
+        case 'early-repair-search': return !!plan.repairProbeTierWillRun;
         case 'repair-fallback': return !!plan.repairFallbackTierWillRun;
-        case 'attraction-diversity': return !!plan.diversityTierWillRun;
-        case 'admissible-order': return !!plan.admissibleOrderTierWillRun;
-        case 'dedup-near-tie-retry': return !!plan.dedupRetryTierWillRun;
-        case 'admissible-order-non-default-retry': return !!plan.nonDefaultRetryTierWillRun;
-        case 'connectivity-axis-exhausted-retry': return !!plan.connectivityRetryTierWillRun;
+        case 'goal-attraction-disabled-retry': return !!plan.diversityTierWillRun;
+        case 'admissible-order-fallback': return !!plan.admissibleOrderTierWillRun;
+        case 'coarse-state-near-tie-retention-disabled-retry': return !!plan.dedupRetryTierWillRun;
+        case 'admissible-order-alternate-tiebreak-retry': return !!plan.nonDefaultRetryTierWillRun;
+        case 'connectivity-axis-prune-disabled-retry': return !!plan.connectivityRetryTierWillRun;
         case 'repair-elite-prefix-dfs-retry': return !!plan.repairElitePrefixDfsRetryTierWillRun;
-        case 'mc-neighbor-budget-retry': return !!plan.mcNeighborBudgetRetryTierWillRun;
-        case 'repair-late-probe': return !!plan.repairLateProbeTierWillRun;
-        case 'goal-attraction-legacy-distance-retry': return !!plan.goalAttractionLegacyDistanceRetryTierWillRun;
-        case 'repair-late-probe-multi-seed-retry': return !!plan.repairLateProbeMultiSeedRetryTierWillRun;
+        case 'must-cross-neighbor-prune-disabled-retry': return !!plan.mcNeighborBudgetRetryTierWillRun;
+        case 'late-repair-search': return !!plan.repairLateProbeTierWillRun;
+        case 'guidance-goal-distance-retry': return !!plan.goalAttractionLegacyDistanceRetryTierWillRun;
+        case 'late-repair-multiseed-retry': return !!plan.repairLateProbeMultiSeedRetryTierWillRun;
         default: return undefined;
     }
 }
@@ -41,8 +41,8 @@ function budgetPlanEligibility(id: SolverStageId, plan: StageBudgetPlan): boolea
 export function buildSolverStagePlan(input: SolverStagePlanInput): SolverStagePlan {
     const { budgetPlan, mainLoopEligible, repairProbeShrunkTierCount } = input;
     return SOLVER_STAGE_IDS.map((id): SolverStagePlanEntry => {
-        if (id === 'main-loop') return { spec: solverStageSpec(id), eligible: mainLoopEligible };
-        if (id === 'repair-probe-shrink-recovery') {
+        if (id === 'main-search') return { spec: solverStageSpec(id), eligible: mainLoopEligible };
+        if (id === 'repair-shrink-recovery') {
             const eligible = repairProbeShrunkTierCount === undefined
                 ? undefined
                 : !!budgetPlan.shrinkRecoveryEnabled && repairProbeShrunkTierCount > 0;

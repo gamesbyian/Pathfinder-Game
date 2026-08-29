@@ -20,10 +20,10 @@
  * same --seed always produces the same sample.
  *
  * Usage:
- *   node scripts/stress/select-repair-probe-adaptive-sample.mjs \
+ *   node scripts/stress/select-early-repair-search-adaptive-sample.mjs \
  *     --corpus=data/stress/stress-levels-random.json \
  *     --eligible-sample=250 --control-sample=50 --seed=<commit-sha-or-any-string> \
- *     --out=logs/solver-stress-refresh/repair-probe-adaptive-sample-2026-08-12.txt
+ *     --out=logs/solver-stress-refresh/early-repair-search-adaptive-sample-2026-08-12.txt
  *
  * Output: TWO files.
  *   --out=<path>.txt        one "pos:N" token per line (portfolio-solve-sweep.mjs's --levels=
@@ -49,7 +49,7 @@ for (const arg of process.argv.slice(2)) {
 const corpusFile = argMap.get('--corpus') || 'data/stress/stress-levels-random.json';
 const eligibleSampleSize = Number(argMap.get('--eligible-sample') || 250);
 const controlSampleSize = Number(argMap.get('--control-sample') || 50);
-const seedStr = argMap.get('--seed') || process.env.GITHUB_SHA || 'repair-probe-adaptive-sample';
+const seedStr = argMap.get('--seed') || process.env.GITHUB_SHA || 'early-repair-search-adaptive-sample';
 const outFile = argMap.get('--out');
 if (!outFile) { console.error('--out is required'); process.exit(2); }
 

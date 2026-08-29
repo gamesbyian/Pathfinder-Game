@@ -21,7 +21,7 @@
 // the exact level orchestration.ts's ADAPTIVE_GATE_THRESHOLD comment documents as the original
 // dilution-discovery level) blew through the overall wall-clock cap before the config ladder
 // ever reached the combo that actually solves it. Per-job budgets here:
-//   - main-loop (DFS/beam) jobs: timeBudgetMs shared across (mainConfigs × activeGates) pairs,
+//   - main-search (DFS/beam) jobs: timeBudgetMs shared across (mainConfigs × activeGates) pairs,
 //     honoring each config's minBudgetFraction floor exactly as runInterleavedAttempts does
 //     (just evaluated once, at round 0/elapsed-0, rather than adaptively re-weighted per round —
 //     racing doesn't have "rounds" the same way, since jobs run to completion independently)
@@ -30,30 +30,30 @@
 //     each other, only within one config across gates, same as sequential)
 // Scheduling: two independent queues (repair, main), each in the same priority order the policy
 // already produces, with a bounded slice of the worker pool reserved for repair so it runs
-// CONCURRENTLY with the main-loop ladder instead of strictly after — see the long comment below
+// CONCURRENTLY with the main-search ladder instead of strictly after — see the long comment below
 // for why a single combined priority-ordered queue (repair sorted last, as the policy naturally
 // produces it) measurably regressed levels where repair is fast.
 //
 // Third phase (2026-07-16): after repair+main both exhaust, a single-queue rerun of mainConfigs
 // with orchestration.ts's ATTRACTION_DIVERSITY_CANDIDATE_FLAGS forced off — the raced equivalent
-// of solveLevel()'s own post-repair-loop attraction-diversity pass. Deliberately run STRICTLY
+// of solveLevel()'s own post-repair-loop goal-attraction-disabled-retry pass. Deliberately run STRICTLY
 // AFTER phase 1 resolves (not reserved-and-concurrent from t=0 the way repair is): repair earns a
 // concurrent reserved slice because it's known to help a real, common, feature-gated population
 // from the start of the search; this last-resort phase only matters for the rare case where
 // EVERYTHING else already failed, so reserving workers for it up front would only ever dilute the
 // common case for no benefit on levels that solve via phase 1 anyway — the same reasoning
 // REPAIR_EXTRA_BUDGET_FRACTION's own additive-after-not-during budget model already uses, just
-// applied to phase 1 vs. phase 2 rather than main-loop vs. repair. Reuses the SAME persistent
+// applied to phase 1 vs. phase 2 rather than main-search vs. repair. Reuses the SAME persistent
 // worker slots (no new spawn cost) — see runOneLevel's phase-2 block below.
 //
 // Determinism note: this phase adds a NEW source to the racing-vs-sequential nondeterminism
 // already documented for phase 1 (see stress:benchmark's own CLI warning below and the
 // Determinism Report referenced in docs/solver-architecture.md) — not just WHEN a level solves,
 // but sometimes WHICH mechanism gets credit. A level whose phase-1 win is itself timing-sensitive
-// (some runs solve via ordinary main-loop scheduling, others need phase 2's flag-disabled rerun)
+// (some runs solve via ordinary main-search scheduling, others need phase 2's flag-disabled rerun)
 // can report a different winningStrategy/attractionDiversity flag across repeated raced runs of
 // the exact identical level — confirmed directly during this session's own verification (the same
-// real corpus-2 level solved via a plain main-loop attempt in one run and via this phase in
+// real corpus-2 level solved via a plain main-search attempt in one run and via this phase in
 // another). Not a correctness concern (every returned path is still independently referee-valid),
 // but don't treat one raced run's specific winning attempt as a stable fact about a level the way
 // you could for the deterministic sequential engine.
@@ -78,10 +78,10 @@ import { attemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
 import { withSolverStage } from '../../modules/solver/stage-policy.js';
 
 // The policy-level stage IDs (stage-policy.ts's SOLVER_STAGE_IDS) this raced engine actually
-// implements: main-loop + repair-fallback racing concurrently (phase 1), then attraction-diversity
-// (phase 2). Every other stage in the full sequential ladder (repair-probe, admissible-order,
-// dedup-near-tie-retry, admissible-order-non-default-retry, connectivity-axis-exhausted-retry,
-// repair-elite-prefix-dfs-retry, mc-neighbor-budget-retry, repair-late-probe, repair-probe-shrink-
+// implements: main-search + repair-fallback racing concurrently (phase 1), then goal-attraction-disabled-retry
+// (phase 2). Every other stage in the full sequential ladder (early-repair-search, admissible-order,
+// coarse-state-near-tie-retention-disabled-retry, admissible-order-alternate-tiebreak-retry, connectivity-axis-prune-disabled-retry,
+// repair-elite-prefix-dfs-retry, must-cross-neighbor-prune-disabled-retry, late-repair-search, repair-shrink-
 // recovery) is sequential-only — this file does not reimplement a different, narrower ladder for
 // them, it simply does not run them at all. A raced solve is therefore NOT a complete substitute
 // for the sequential engine on a level that only solves via one of the unraced tiers; callers that
@@ -90,7 +90,7 @@ import { withSolverStage } from '../../modules/solver/stage-policy.js';
 // modules/solver/race-stage-parity.test.ts for the shared-stage contract this file and
 // orchestration.ts both honor (same eligible stage IDs, same budget-fraction constants —
 // imported from orchestration.js below, never a second hardcoded copy).
-export const RACE_SUPPORTED_STAGE_IDS = Object.freeze(['main-loop', 'repair-fallback', 'attraction-diversity']);
+export const RACE_SUPPORTED_STAGE_IDS = Object.freeze(['main-search', 'repair-fallback', 'goal-attraction-disabled-retry']);
 
 // process.cwd(), not import.meta.url-relative math: this module is usually loaded as a
 // dependency of some OTHER entry that scripts/run-bundled.mjs esbuild-bundles, which flattens
@@ -121,13 +121,13 @@ function ensureWorkerBundle() {
 }
 
 /** Materialize the dispatched configuration on a worker result without maintaining separate,
- * drifting record shapes for the ordinary and attraction-diversity phases. */
+ * drifting record shapes for the ordinary and goal-attraction-disabled-retry phases. */
 export function racedAttemptRecord(job, msg, extra = {}) {
     const cfg = job?.attemptConfig;
     return withSolverStage({
-        gateKey: job?.gateKey, profile: cfg?.profileName, template: cfg?.template?.id ?? null,
+        gateKey: job?.gateKey, scoringProfileId: cfg?.scoringProfileId, orderingBiasId: cfg?.orderingBias?.id ?? null,
         beamWidth: cfg?.beamWidth ?? null,
-        ...(cfg?.diverseBeam ? { diverseBeam: true } : {}),
+        ...(cfg?.mechanicBucketRetention ? { mechanicBucketRetention: true } : {}),
         ...(cfg?.repair ? { repair: true } : {}),
         ...(cfg?.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
         ...(cfg?.repairTurnBiased ? { repairTurnBiased: true } : {}),
@@ -140,17 +140,17 @@ export function racedAttemptRecord(job, msg, extra = {}) {
             name: msg.error.name, message: msg.error.message, gateKey: job?.gateKey,
             configKey: attemptConfigKey({
                 ...cfg,
-                profile: cfg?.profileName,
+                scoringProfileId: cfg?.scoringProfileId,
                 // attemptConfigKey consumes a persisted-attempt shape, where template is its ID;
                 // race jobs carry the live AttemptConfig object instead.
-                template: cfg?.template?.id ?? null,
+                orderingBiasId: cfg?.orderingBias?.id ?? null,
             }),
-            profile: cfg?.profileName ?? 'unknown',
-            template: cfg?.template?.id ?? null,
+            scoringProfileId: cfg?.scoringProfileId ?? 'unknown',
+            orderingBiasId: cfg?.orderingBias?.id ?? null,
         } } : {}),
         ...(msg.allocatedBudgetMs !== undefined ? { allocatedBudgetMs: msg.allocatedBudgetMs } : {}),
         elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
-    }, extra.stageId ?? (cfg?.repair ? 'repair-fallback' : 'main-loop'));
+    }, extra.stageId ?? (cfg?.repair ? 'repair-fallback' : 'main-search'));
 }
 
 /**
@@ -271,13 +271,13 @@ export function createRacePool(opts = {}) {
         // A first version of this file kept repair jobs in strict priority order anyway (they sort
         // last in getConfiguredAttemptConfigs's own output) and measured a real regression: on
         // levels where a repair attempt is fast (a few seconds), it still had to wait in the FIFO
-        // queue behind every main-loop config ahead of it, because repair jobs don't fail fast the
+        // queue behind every main-search config ahead of it, because repair jobs don't fail fast the
         // way DFS/beam do (no natural "exhausted" signal — an iterated-local-search that's going to
         // fail burns its FULL budget before giving up) — so reordering repair to the FRONT of one
         // shared queue would risk the opposite problem, starving the main loop's worker slots on the
         // (much more common) levels where repair never had a chance to begin with.
         // Fix: reserve a small, bounded slice of the pool exclusively for repair jobs — run
-        // concurrently with (not before or after) the main-loop ladder — so repair gets a genuine
+        // concurrently with (not before or after) the main-search ladder — so repair gets a genuine
         // head start without starving the common case. A worker whose OWN queue empties pulls from
         // the other queue instead of idling, so no worker sits unused while jobs remain.
         const numGates = Math.max(1, activeGates.length);
@@ -482,7 +482,7 @@ export function createRacePool(opts = {}) {
 
         if (phase1Result.ok) return phase1Result;
 
-        // Last-resort attraction-diversity phase (2026-07-16, orchestration.ts's own
+        // Last-resort goal-attraction-disabled-retry phase (2026-07-16, orchestration.ts's own
         // ATTRACTION_DIVERSITY_BUDGET_FRACTION/ATTRACTION_DIVERSITY_CANDIDATE_FLAGS) — the raced
         // equivalent of solveLevel()'s post-repair-loop pass: after phase 1 (repair + main, above)
         // fails on every gate, rerun mainConfigsList once more with the candidate SCORE_* flags
@@ -604,7 +604,7 @@ export function createRacePool(opts = {}) {
                 const onMessage = (msg) => {
                     if (msg?.type !== 'result') return;
                     const job = jobById.get(msg.jobId);
-                    attempts.push(racedAttemptRecord(job, msg, { stageId: 'attraction-diversity' }));
+                    attempts.push(racedAttemptRecord(job, msg, { stageId: 'goal-attraction-disabled-retry' }));
                     slot.busy = false;
                     if (msg.ok && !settled) {
                         finish({ ok: true, status: 'success', solution: msg.path, solutions: [msg.path], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
@@ -668,11 +668,11 @@ export function createRacePool(opts = {}) {
  * @param {object} rawLevel - wire-format level (source:'raw', same shape stress:benchmark/
  *   solver:bench pass to Solver.prepareLevelForSolver)
  * @param {object} [opts]
- * @param {number} [opts.timeBudgetMs=20000] - per main-loop-job budget (repair jobs get this * REPAIR_EXTRA_BUDGET_FRACTION)
+ * @param {number} [opts.timeBudgetMs=20000] - per main-search-job budget (repair jobs get this * REPAIR_EXTRA_BUDGET_FRACTION)
  * @param {object|null} [opts.ablation=null] - same shape as Solver.solve's opts.ablation
  * @param {number} [opts.poolSize] - worker count; default availableParallelism()-1 (min 1)
  * @param {number} [opts.overallBudgetMs] - hard wall-clock cap for phase 1 (main+repair) only;
- *   default timeBudgetMs*(REPAIR_EXTRA_BUDGET_FRACTION+1). The attraction-diversity phase (below)
+ *   default timeBudgetMs*(REPAIR_EXTRA_BUDGET_FRACTION+1). The goal-attraction-disabled-retry phase (below)
  *   runs AFTER this and has its own separate timer, so the true worst-case wall time is this plus
  *   timeBudgetMs*attractionDiversityBudgetFractionOverride (or *ATTRACTION_DIVERSITY_BUDGET_
  *   FRACTION if unset) — not folded into overallBudgetMs itself, mirroring how orchestration.ts's

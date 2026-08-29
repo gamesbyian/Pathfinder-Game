@@ -14,8 +14,8 @@
 //   const result = await client.solve(rawLevel, { timeBudgetMs: 30000, yieldFn });
 //   // result: the full SolveResult shape (orchestration.ts) plus `type`/`id` — ok, status,
 //   // solution, solutions, elapsedMs, nodesExpanded, attempts, deadlineTruncated,
-//   // nodeBudgetReached, workSpent, workBudget, solvedByPrime, techniqueLifecycle,
-//   // schedulerMode, portfolio. See worker-result-serialization.mjs's buildSolveWorkerResult.
+//   // nodeBudgetReached, workSpent, workBudget, solvedByPrime, stageLifecycle,
+//   // schedulerMode, legacyLatencyPortfolioExperiment. See worker-result-serialization.mjs's buildSolveWorkerResult.
 //   (A URL argument is also accepted and constructed here — used by tests.)
 //
 // Input-format note: this solve()'s levelRaw must be RAW wire format (1-indexed coords) —
@@ -88,7 +88,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
             // test-only attemptSearchForTesting) wouldn't mean anything across a real worker
             // boundary anyway. Everything else (ablation, nodeBudget, baseWorkBudget/workBudget,
             // disableExtraBudgetPasses, lifecycleTelemetry, every *BudgetFractionOverride field,
-            // primeAttempt, portfolioExperiment, schedulerMode, ...) is plain data and forwarded
+            // primeAttempt, legacyLatencyPortfolioExperiment, schedulerMode, ...) is plain data and forwarded
             // as-is — see this file's own header comment for why this exists.
             const solveOpts: Record<string, unknown> = {};
             for (const [key, value] of Object.entries(opts)) {

@@ -9,7 +9,7 @@ const workflows = [
   '.github/workflows/solver-broad-confirmation.yml',
   '.github/workflows/solver-residual-confirmation.yml',
   '.github/workflows/solver-routing-regime-sample-ab.yml',
-  '.github/workflows/solver-repair-probe-adaptive-sample-ab.yml',
+  '.github/workflows/solver-early-repair-search-adaptive-sample-ab.yml',
   '.github/workflows/solver-repair-fallback-reserve-sample-ab.yml',
   '.github/workflows/technique-census.yml',
   '.github/workflows/method-probe-sweep.yml',

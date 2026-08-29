@@ -45,8 +45,9 @@ runWorkerMain(async (task) => {
             });
         } else {
             const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
-            const resolvedSolveOpts = solveOpts.portfolioExperiment
-                ? { ...solveOpts, portfolioExperiment: deserializePortfolioExperiment(solveOpts.portfolioExperiment) }
+            const serializedPortfolio = solveOpts.legacyLatencyPortfolioExperiment ?? solveOpts.portfolioExperiment;
+            const resolvedSolveOpts = serializedPortfolio
+                ? { ...solveOpts, legacyLatencyPortfolioExperiment: deserializePortfolioExperiment(serializedPortfolio) }
                 : solveOpts;
             result = await Solver.solveLevel(level, resolvedSolveOpts);
         }

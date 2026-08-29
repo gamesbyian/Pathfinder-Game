@@ -8,7 +8,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { PORTFOLIO_EXPERIMENT } from '../modules/solver/portfolio-experiment.js';
+import { LEGACY_LATENCY_PORTFOLIO_EXPERIMENT } from '../modules/solver/legacy-latency-portfolio-experiment.js';
 import { canonicalAttemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
 import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
@@ -31,12 +31,12 @@ function csvSet(value, fallback) {
 
 function experimentFromArgs() {
     return {
-        pass1Ms: Number(argMap.get('--pass1-ms') || PORTFOLIO_EXPERIMENT.pass1Ms),
-        pass2Ms: Number(argMap.get('--pass2-ms') || PORTFOLIO_EXPERIMENT.pass2Ms),
-        pass3Ms: Number(argMap.get('--pass3-ms') || PORTFOLIO_EXPERIMENT.pass3Ms),
-        pass2Configs: csvSet(argMap.get('--pass2-configs'), PORTFOLIO_EXPERIMENT.pass2Configs),
-        pass3Configs: csvSet(argMap.get('--pass3-configs'), PORTFOLIO_EXPERIMENT.pass3Configs),
-        conditionalPasses: PORTFOLIO_EXPERIMENT.conditionalPasses,
+        pass1Ms: Number(argMap.get('--pass1-ms') || LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass1Ms),
+        pass2Ms: Number(argMap.get('--pass2-ms') || LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass2Ms),
+        pass3Ms: Number(argMap.get('--pass3-ms') || LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass3Ms),
+        pass2Configs: csvSet(argMap.get('--pass2-configs'), LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass2Configs),
+        pass3Configs: csvSet(argMap.get('--pass3-configs'), LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass3Configs),
+        conditionalPasses: LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.conditionalPasses,
     };
 }
 

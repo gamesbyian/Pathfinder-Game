@@ -195,7 +195,7 @@ test('a baseline win with admissibleOrder: true gets a distinguishing phase, not
         solveLevel: async () => ({
             ok: true,
             solution: validPath,
-            attempts: [{ ok: true, profile: 'default', admissibleOrder: true }],
+            attempts: [{ ok: true, scoringProfileId: 'default', admissibleOrder: true }],
         }),
     };
 

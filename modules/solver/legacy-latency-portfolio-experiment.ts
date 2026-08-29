@@ -1,5 +1,5 @@
 // LEGACY WALL-CLOCK SCHEDULER EXPERIMENT.
-// Shared fast-portfolio scheduler experiment definition. Runtime orchestration and offline
+// Shared historical latency-portfolio scheduler experiment definition. Runtime orchestration and offline
 // replay/report tools consume the same tier thresholds and config sets from this module.
 //
 // Its pass caps are intentionally historical milliseconds. That makes this useful for latency/
@@ -26,11 +26,11 @@
  *       minFlippingFilters?: number,
  *     }>,
  *   }>>,
- * }>} PortfolioExperimentDefinition
+ * }>} LegacyLatencyPortfolioExperimentDefinition
  */
 
-/** @type {PortfolioExperimentDefinition} */
-export const PORTFOLIO_EXPERIMENT = Object.freeze({
+/** @type {LegacyLatencyPortfolioExperimentDefinition} */
+export const LEGACY_LATENCY_PORTFOLIO_EXPERIMENT = Object.freeze({
     pass1Ms: 500,
     pass2Ms: 2000,
     pass3Ms: 5000,

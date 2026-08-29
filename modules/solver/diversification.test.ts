@@ -164,7 +164,7 @@ deepTest('a baseline win with admissibleOrder: true gets a distinguishing phase 
         solveLevel: async () => ({
             ok: true,
             solution: validPath,
-            attempts: [{ ok: true, profile: 'default', admissibleOrder: true }],
+            attempts: [{ ok: true, scoringProfileId: 'default', admissibleOrder: true }],
         }),
     };
     const mockedLevel = portalLevel();

@@ -10,10 +10,10 @@ export const MAXIMALLY_POPULATED_SOLVER_ATTEMPT = Object.freeze({
   // reads `stageId` first, so this fixture's canonical/legacy fields must agree on which stage this
   // "maximal" attempt represents, even though every OTHER legacy boolean below is also populated
   // (deliberately over-specified, for field-projection round-trip coverage, not stage consistency).
-  stageId: 'repair-late-probe',
+  stageId: 'late-repair-search',
   gateKey: 589833,
-  profile: 'perimeterSweep',
-  template: 'perimeterCW',
+  scoringProfileId: 'perimeterSweep',
+  orderingBiasId: 'perimeterCW',
   beamWidth: 2000,
   ok: false,
   elapsedMs: 321,
@@ -25,13 +25,13 @@ export const MAXIMALLY_POPULATED_SOLVER_ATTEMPT = Object.freeze({
   error: Object.freeze({
     name: 'TypeError', message: 'fixture dispatch failure', gateKey: 589833,
     configKey: 'beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=mechanic-buckets',
-    profile: 'perimeterSweep', template: 'perimeterCW',
+    scoringProfileId: 'perimeterSweep', orderingBiasId: 'perimeterCW',
   }),
   passNumber: 3,
   configKey: 'beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=mechanic-buckets',
   restart: true,
-  schedulerPhase: 'portfolio',
-  diverseBeam: true,
+  schedulerPhase: 'legacy-latency-portfolio',
+  mechanicBucketRetention: true,
   repair: true,
   repairMustTurnBiased: true,
   repairTurnBiased: true,

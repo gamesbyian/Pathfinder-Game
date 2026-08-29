@@ -5,7 +5,7 @@
  * Includes every field the direct (on-thread) SolveResult carries (see orchestration.ts's own
  * interface) — fixed 2026-08-20: this used to return only a fixed subset (ok/status/solution/
  * elapsedMs/nodesExpanded/attempts/deadlineTruncated), silently dropping solutions/
- * nodeBudgetReached/workSpent/workBudget/solvedByPrime/techniqueLifecycle/schedulerMode/portfolio
+ * nodeBudgetReached/workSpent/workBudget/solvedByPrime/stageLifecycle/schedulerMode/legacyLatencyPortfolioExperiment
  * for any caller that swapped the worker client in for the direct solver — the whole point of the
  * client's own "drop-in swap for on-thread solving" doc comment. Every one of these fields is
  * plain, structured-clone-safe data (numbers/strings/booleans/plain objects/arrays), so there is no
@@ -26,8 +26,8 @@ export function buildSolveWorkerResult(id, result) {
     workSpent: result.workSpent,
     workBudget: result.workBudget,
     solvedByPrime: result.solvedByPrime,
-    techniqueLifecycle: result.techniqueLifecycle,
+    stageLifecycle: result.stageLifecycle ?? result.techniqueLifecycle,
     schedulerMode: result.schedulerMode,
-    portfolio: result.portfolio,
+    legacyLatencyPortfolioExperiment: result.legacyLatencyPortfolioExperiment ?? result.portfolio,
   };
 }

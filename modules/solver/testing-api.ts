@@ -6,7 +6,7 @@ import { prepLevel } from './prep.js';
 import { createState, getNeighbors, applyMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { isSolutionState } from './solution.js';
-import { POLICY_PROFILES } from './policy.js';
+import { SCORING_PROFILES } from './policy.js';
 import { PACK } from './encoding.js';
 import { runAttempt, attemptConfigKey, normalizeAblationConfig } from './orchestration.js';
 import { WinningLineageObserver, WinningPrefixIndex } from './research-lineage.js';
@@ -35,7 +35,7 @@ export function createSolverTestingApi() {
         scoreMove,
         buildCurUrgencyContext,
         isSolutionState,
-        POLICY_PROFILES,
+        SCORING_PROFILES,
         PACK,
         // Single-attempt primitive + its canonical key format — added for scripts/method-probe.mjs
         // (run ONE attempt config against ONE gate directly, bypassing the full ladder/probe/

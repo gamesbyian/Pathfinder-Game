@@ -30,11 +30,11 @@ test('every stage race.mjs claims to support is a real, canonical SolverStageId'
 test('race.mjs intentionally supports a documented SUBSET of the full sequential ladder, not a silently different one', () => {
     const unraced = SOLVER_STAGE_IDS.filter(id => !RACE_SUPPORTED_STAGE_IDS.includes(id));
     assert.deepEqual(unraced, [
-        'prime', 'repair-probe', 'repair-probe-shrink-recovery', 'admissible-order',
-        'dedup-near-tie-retry', 'admissible-order-non-default-retry', 'connectivity-axis-exhausted-retry',
-        'repair-elite-prefix-dfs-retry', 'mc-neighbor-budget-retry', 'repair-late-probe',
-        'goal-attraction-legacy-distance-retry', 'repair-late-probe-multi-seed-retry',
-        'portfolio-pass', 'portfolio-fallback',
+        'explicit-prime', 'early-repair-search', 'repair-shrink-recovery', 'admissible-order-fallback',
+        'coarse-state-near-tie-retention-disabled-retry', 'admissible-order-alternate-tiebreak-retry', 'connectivity-axis-prune-disabled-retry',
+        'repair-elite-prefix-dfs-retry', 'must-cross-neighbor-prune-disabled-retry', 'late-repair-search',
+        'guidance-goal-distance-retry', 'late-repair-multiseed-retry',
+        'legacy-latency-portfolio-pass', 'legacy-latency-portfolio-fallback',
     ]);
 });
 
