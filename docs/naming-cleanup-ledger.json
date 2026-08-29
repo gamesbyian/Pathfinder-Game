@@ -1131,7 +1131,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Completion search can satisfy all remaining constraints."
+      "notes": "Completion search can satisfy all remaining constraints.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "solved by closeLengthGap",
@@ -1149,7 +1150,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Current docs/reports wording only."
+      "notes": "Current docs/reports wording only.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "prune-gauntlet.ts",
@@ -1167,7 +1169,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Central hard-prune evaluation pipeline."
+      "notes": "Central hard-prune evaluation pipeline.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "prune gauntlet",
@@ -1185,7 +1188,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Current docs/comments."
+      "notes": "Current docs/comments.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "REPAIR_EXTRA_BUDGET_FRACTION",
@@ -1203,7 +1207,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Only if constant still exists; value 6.0 is multiplier."
+      "notes": "Only if constant still exists; value 6.0 is multiplier.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "repairBudgetFractionOverride",
@@ -1221,7 +1226,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Quantity can exceed 1."
+      "notes": "Quantity can exceed 1.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "repairBudgetFraction",
@@ -1239,7 +1245,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Resolved/local quantity."
+      "notes": "Resolved/local quantity.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "additive-fraction",
@@ -1257,7 +1264,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Stage budget policy spelling."
+      "notes": "Stage budget policy spelling.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "runtime variant",
@@ -1275,7 +1283,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Runtime rotation/reflection only; research level variant retained."
+      "notes": "Runtime rotation/reflection only; research level variant retained.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "setVariant",
@@ -1293,7 +1302,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Runtime orientation setter."
+      "notes": "Runtime orientation setter.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "eng.variant",
@@ -1311,7 +1321,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Runtime engine state."
+      "notes": "Runtime engine state.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "geometry argument variant",
@@ -1329,7 +1340,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Rotation/reflection argument."
+      "notes": "Rotation/reflection argument.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "8 transform variants",
@@ -1347,7 +1359,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Current runtime docs only."
+      "notes": "Current runtime docs only.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "solver-winning-lineage-survival-analysis.md",
@@ -1365,7 +1378,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Current instrument doc rename."
+      "notes": "Current instrument doc rename.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "analyze-lineage-mechanics.mjs",
@@ -1383,7 +1397,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Current analyzer."
+      "notes": "Current analyzer.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "modules/solver/research-lineage.ts",
@@ -1401,7 +1416,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Research observer module."
+      "notes": "Research observer module.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "WinningPrefixIndex",
@@ -1419,7 +1435,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Observer type."
+      "notes": "Observer type.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "WinningLineageObserver",
@@ -1437,7 +1454,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Observer type."
+      "notes": "Observer type.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "LineageStageSummary",
@@ -1455,7 +1473,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Summary type."
+      "notes": "Summary type.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "naked profile",
@@ -1473,7 +1492,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Use scoringProfile/solutionProfile as appropriate."
+      "notes": "Use scoringProfile/solutionProfile as appropriate.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "naked fingerprint",
@@ -1491,7 +1511,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Use level/solver/solutionFingerprint."
+      "notes": "Use level/solver/solutionFingerprint.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "naked family",
@@ -1509,7 +1530,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Use levelFamily/attemptFamily/searchFamily."
+      "notes": "Use levelFamily/attemptFamily/searchFamily.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "winning lineage",
@@ -1527,7 +1549,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Historical artifacts retain lineage."
+      "notes": "Historical artifacts retain lineage.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "naked residual API term",
@@ -1545,7 +1568,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Use residualLevelSet/residualSearchState/etc."
+      "notes": "Use residualLevelSet/residualSearchState/etc.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "ActionType command members",
@@ -1563,7 +1587,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "MOVE/UNDO/RESET/level navigation."
+      "notes": "MOVE/UNDO/RESET/level navigation.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "ActionType event members",
@@ -1581,7 +1606,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "BACKTRACK/PORTAL_TRAVERSE/hazards/WIN/logic state."
+      "notes": "BACKTRACK/PORTAL_TRAVERSE/hazards/WIN/logic state.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "event variable carrying command",
@@ -1599,7 +1625,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Match type role."
+      "notes": "Match type role.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "command variable carrying event",
@@ -1617,7 +1644,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Match type role."
+      "notes": "Match type role.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "modules/core.ts",
@@ -1635,7 +1663,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Extract responsibilities then delete mixed bag."
+      "notes": "Extract responsibilities then delete mixed bag.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "SOUND_BUS",
@@ -1653,7 +1682,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Move to audio-service.ts."
+      "notes": "Move to audio-service.ts.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "createCore",
@@ -1671,7 +1701,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Remove after consumers migrate."
+      "notes": "Remove after consumers migrate.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "modules/level-utils.ts",
@@ -1689,7 +1720,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Compatibility facade deleted after migration."
+      "notes": "Compatibility facade deleted after migration.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "HinterState",
@@ -1707,7 +1739,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Hint display/animation/pinning state."
+      "notes": "Hint display/animation/pinning state.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "ENGINE (mutable state property)",
@@ -1725,7 +1758,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Avoid constant-looking mutable state."
+      "notes": "Avoid constant-looking mutable state.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "publicDrawPath",
@@ -1743,7 +1777,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Name behavior, not visibility."
+      "notes": "Name behavior, not visibility.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "pendingAction",
@@ -1761,7 +1796,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Existing value is queued confirmation action."
+      "notes": "Existing value is queued confirmation action.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "*-core.ts (ADR 0006 qualified cores)",
@@ -1779,7 +1815,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Intentional retained architecture term."
+      "notes": "Intentional retained architecture term.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "state/actions/core-actions.ts",
@@ -1797,7 +1834,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Intentional retained core-state-slice action module."
+      "notes": "Intentional retained core-state-slice action module.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "normalized reqLen",
@@ -1815,7 +1853,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Raw wire field reqLen remains serialized compatibility spelling."
+      "notes": "Raw wire field reqLen remains serialized compatibility spelling.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "normalized reqInt",
@@ -1833,7 +1872,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Raw wire field reqInt remains serialized compatibility spelling."
+      "notes": "Raw wire field reqInt remains serialized compatibility spelling.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "raw wire reqLen",
@@ -1851,7 +1891,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Intentional retained serialized field."
+      "notes": "Intentional retained serialized field.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "raw wire reqInt",
@@ -1869,7 +1910,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Intentional retained serialized field."
+      "notes": "Intentional retained serialized field.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "solver:bench",
@@ -1887,7 +1929,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "One compatibility PR; solved-set regression, not speed."
+      "notes": "One compatibility PR; solved-set regression, not speed.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "solver:speed-probe",
@@ -1905,7 +1948,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Performance measurement."
+      "notes": "Performance measurement.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "stress:benchmark",
@@ -1923,7 +1967,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Actual corpus solver measurement."
+      "notes": "Actual corpus solver measurement.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "run-solverv2-direct.mjs",
@@ -1941,7 +1986,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Remove stale v2 history; solver:direct alias retained."
+      "notes": "Remove stale v2 history; solver:direct alias retained.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "scripts/portfolio-sweep-reports-to-benchmark.mjs",
@@ -1959,7 +2005,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Generic report combination."
+      "notes": "Generic report combination.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "solver:combine-corpus2-batches",
@@ -1977,7 +2024,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Combiner now used beyond Corpus 2."
+      "notes": "Combiner now used beyond Corpus 2.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "reports/stress/benchmark-parallel.json",
@@ -1995,7 +2043,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "New live output path; frozen outputs untouched."
+      "notes": "New live output path; frozen outputs untouched.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "reports/stress/benchmark-latest-random.json",
@@ -2013,7 +2062,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "New live output path; no random corpus identity."
+      "notes": "New live output path; no random corpus identity.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "hint-path-oracle.mjs",
@@ -2031,7 +2081,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Uses canonical referee, not independent oracle."
+      "notes": "Uses canonical referee, not independent oracle.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "test:hint-path-oracle",
@@ -2049,7 +2100,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Update current docs/workflows."
+      "notes": "Update current docs/workflows.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "cpsat-full-probe.py",
@@ -2067,7 +2119,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Support matrix is not full mechanics."
+      "notes": "Support matrix is not full mechanics.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "cpsat-explicit-prefix-oracle.mjs",
@@ -2085,7 +2138,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Execution seam around CP-SAT reference model."
+      "notes": "Execution seam around CP-SAT reference model.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "atlas-sweep.mjs",
@@ -2103,7 +2157,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Collects labelled branch data."
+      "notes": "Collects labelled branch data.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "branch atlas",
@@ -2121,7 +2176,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Current docs/tool output."
+      "notes": "Current docs/tool output.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "family-wide-trove-manifest.mjs",
@@ -2139,7 +2195,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Variant-family dataset terminology."
+      "notes": "Variant-family dataset terminology.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "trove",
@@ -2157,7 +2214,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Current docs/tool output."
+      "notes": "Current docs/tool output.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "winning-path archaeology",
@@ -2175,7 +2233,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Current docs/tool output."
+      "notes": "Current docs/tool output.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "technique-census-second-order.mjs",
@@ -2193,7 +2252,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Behavior-descriptive analyzer name."
+      "notes": "Behavior-descriptive analyzer name.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "technique-census-second-order-analysis.md",
@@ -2211,7 +2271,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Current instrument doc."
+      "notes": "Current instrument doc.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "run-audit-export.mjs",
@@ -2229,7 +2290,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Diagnostic analysis, not generic audit export."
+      "notes": "Diagnostic analysis, not generic audit export.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "knownHardCluster",
@@ -2247,7 +2309,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Heuristic, not known fact."
+      "notes": "Heuristic, not known fact.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "recommendedGating",
@@ -2265,7 +2328,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Generated candidate, not normative recommendation."
+      "notes": "Generated candidate, not normative recommendation.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "audit:newhint:full",
@@ -2283,7 +2347,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Opaque historical alias."
+      "notes": "Opaque historical alias.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "repair-direct-probe.mjs",
@@ -2301,7 +2366,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Isolated technique execution, not diagnostic probe."
+      "notes": "Isolated technique execution, not diagnostic probe.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "repair-direct-probe-worker.mjs",
@@ -2319,7 +2385,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Worker follows tool rename."
+      "notes": "Worker follows tool rename.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "stress/winning-lineage-pilot.mjs",
@@ -2337,7 +2404,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Surfaced durable collector."
+      "notes": "Surfaced durable collector.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "solver:winning-lineage-pilot",
@@ -2355,7 +2423,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Surfaced durable command."
+      "notes": "Surfaced durable command.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "stress/winning-prefix-atlas-pilot.mjs",
@@ -2373,7 +2442,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Surfaced durable collector."
+      "notes": "Surfaced durable collector.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "solver:winning-prefix-atlas-pilot",
@@ -2391,7 +2461,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Surfaced durable command."
+      "notes": "Surfaced durable command.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "stress/producer-population-pilot.mjs",
@@ -2409,7 +2480,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Surfaced durable comparison."
+      "notes": "Surfaced durable comparison.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "solver:producer-population-pilot",
@@ -2427,7 +2499,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Surfaced durable command."
+      "notes": "Surfaced durable command.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "stress/residual-interface-mining-pilot.mjs",
@@ -2445,7 +2518,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Surfaced durable analyzer."
+      "notes": "Surfaced durable analyzer.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "solver:residual-interface-pilot",
@@ -2463,7 +2537,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Surfaced durable command."
+      "notes": "Surfaced durable command.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "stress/repair-rollback-census-pilot.mjs",
@@ -2481,7 +2556,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Surfaced durable census."
+      "notes": "Surfaced durable census.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "solver:repair-rollback-pilot",
@@ -2499,7 +2575,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Surfaced durable command."
+      "notes": "Surfaced durable command.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "stress/symmetry-repair-seed-pilot.mjs",
@@ -2517,7 +2594,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Surfaced durable comparison."
+      "notes": "Surfaced durable comparison.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "solver:symmetry-repair-seed-pilot",
@@ -2535,7 +2613,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Surfaced durable command."
+      "notes": "Surfaced durable command.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "stress/restart-continuation-population-pilot.mjs",
@@ -2553,7 +2632,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Active durable research machinery."
+      "notes": "Active durable research machinery.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "stress/analyze-equal-work-census-pilot.mjs",
@@ -2571,7 +2651,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Now surfaced durable analyzer."
+      "notes": "Now surfaced durable analyzer.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": ".github/workflows/atlas-sweep.yml",
@@ -2589,7 +2670,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Update display/concurrency/artifact names."
+      "notes": "Update display/concurrency/artifact names.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "workflow atlas-sweep display/concurrency",
@@ -2607,7 +2689,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Historical run identities remain."
+      "notes": "Historical run identities remain.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": ".github/workflows/cpsat-explicit-prefix-oracle.yml",
@@ -2625,7 +2708,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Reference model terminology."
+      "notes": "Reference model terminology.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "CP-SAT workflow/job oracle display",
@@ -2643,7 +2727,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Current workflow only."
+      "notes": "Current workflow only.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": ".github/workflows/family-wide-trove.yml",
@@ -2661,7 +2746,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Dataset collection terminology."
+      "notes": "Dataset collection terminology.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "family-wide-trove-shard-run.mjs",
@@ -2679,7 +2765,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Dataset shard execution."
+      "notes": "Dataset shard execution.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "family-wide-trove-shard-slice.mjs",
@@ -2697,7 +2784,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Dataset shard planning."
+      "notes": "Dataset shard planning.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "family-wide-trove-combine.mjs",
@@ -2715,7 +2803,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Dataset merge."
+      "notes": "Dataset merge.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "family-trove-doctor.mjs",
@@ -2733,7 +2822,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Validation tool."
+      "notes": "Validation tool.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "family:trove:doctor",
@@ -2751,7 +2841,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Update docs/workflows."
+      "notes": "Update docs/workflows.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "PATHFINDER_VARIANT_TROVE",
@@ -2769,7 +2860,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "External developer/CI env compatibility window."
+      "notes": "External developer/CI env compatibility window.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "TROVE_BRANCH",
@@ -2787,7 +2879,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Local script variable."
+      "notes": "Local script variable.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": ".github/workflows/audit-export.yml",
@@ -2805,7 +2898,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Update display/job/artifact/concurrency names."
+      "notes": "Update display/job/artifact/concurrency names.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "Audit Export",
@@ -2823,7 +2917,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Workflow display."
+      "notes": "Workflow display.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "stress/confirm-residual-001-archetype-audit.mjs",
@@ -2841,7 +2936,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Durable general diagnostic."
+      "notes": "Durable general diagnostic.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "stress/select-repair-probe-adaptive-sample.mjs",
@@ -3049,7 +3145,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Historical wall-clock portfolio semantics."
+      "notes": "Historical wall-clock portfolio semantics.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "solver:portfolio-report",
@@ -3067,7 +3164,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Historical wall-clock portfolio semantics."
+      "notes": "Historical wall-clock portfolio semantics.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "portfolio-historical-replay.mjs",
@@ -3085,7 +3183,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Historical wall-clock portfolio semantics."
+      "notes": "Historical wall-clock portfolio semantics.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "solver:portfolio-replay",
@@ -3103,7 +3202,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Historical wall-clock portfolio semantics."
+      "notes": "Historical wall-clock portfolio semantics.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "scripts/gha-result.mjs",
@@ -3121,7 +3221,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Retrieval verb."
+      "notes": "Retrieval verb.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "gha:result",
@@ -3139,7 +3240,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Completed-run retrieval."
+      "notes": "Completed-run retrieval.",
+      "migrationClass": "compatibility-boundary-migration"
     },
     {
       "old": "docs/solver-optimization-current-queue.md",
@@ -3187,7 +3289,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Offline replay is not production shadowing."
+      "notes": "Offline replay is not production shadowing.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "interface-probe-harness.mjs",
@@ -3205,7 +3308,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Offline replay harness."
+      "notes": "Offline replay harness.",
+      "migrationClass": "direct-current-surface-rename"
     },
     {
       "old": "producer -> receptor",
@@ -3223,7 +3327,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Standard consumer terminology."
+      "notes": "Standard consumer terminology.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "receptor limitation",
@@ -3241,7 +3346,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Current docs."
+      "notes": "Current docs.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "receptor can rediscover",
@@ -3259,7 +3365,8 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Current docs."
+      "notes": "Current docs.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history"
     },
     {
       "old": "baseWorkBudget",
