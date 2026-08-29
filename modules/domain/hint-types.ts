@@ -2,19 +2,39 @@
 // Provenance has three axes: solver/config, search cost/result, and run context.
 // Unknown tracked fields are explicit null/false, not omitted. Pure geometry code still uses
 // bare number[] paths; Hint is the persistence/transport boundary shape.
+//
+// Runtime normalization lives in plain JS so native-Node tooling can share the exact same logic
+// without importing TypeScript directly.
+import {
+    SOLVER_ID as RUNTIME_SOLVER_ID,
+    WITNESS_GENERATOR_ID as RUNTIME_WITNESS_GENERATOR_ID,
+    HUMAN_PLAYER_ID as RUNTIME_HUMAN_PLAYER_ID,
+    INHERITED_WITNESS_ID as RUNTIME_INHERITED_WITNESS_ID,
+    TRANSFORMED_WITNESS_ID as RUNTIME_TRANSFORMED_WITNESS_ID,
+    EXTERNAL_SOLVER_ID as RUNTIME_EXTERNAL_SOLVER_ID,
+    makeProvenanceEntry as makeProvenanceEntryRuntime,
+    hintPathSignature as hintPathSignatureRuntime,
+    toHint as toHintRuntime,
+    hintPaths as hintPathsRuntime,
+    dedupeProvenanceEntries as dedupeProvenanceEntriesRuntime,
+    mergeHints as mergeHintsRuntime,
+    upgradeProvenanceEntry as upgradeProvenanceEntryRuntime,
+    upgradeLegacyHints as upgradeLegacyHintsRuntime,
+    reconcileHints as reconcileHintsRuntime,
+} from './hint-runtime.mjs';
 
 /** Production solver provenance id. */
-export const SOLVER_ID = 'pathfinder-solver';
+export const SOLVER_ID = RUNTIME_SOLVER_ID;
 /** Historical stress-generator witness id; spelling must match stored data. */
-export const WITNESS_GENERATOR_ID = 'stress-generator-witness';
+export const WITNESS_GENERATOR_ID = RUNTIME_WITNESS_GENERATOR_ID;
 /** Human Play/submission solve, distinct from algorithmic provenance. */
-export const HUMAN_PLAYER_ID = 'human-player';
+export const HUMAN_PLAYER_ID = RUNTIME_HUMAN_PLAYER_ID;
 /** Parent witness reused byte-for-byte in a generated variant. */
-export const INHERITED_WITNESS_ID = 'sibling-inherited-witness';
+export const INHERITED_WITNESS_ID = RUNTIME_INHERITED_WITNESS_ID;
 /** Parent witness deterministically transformed into variant coordinates. */
-export const TRANSFORMED_WITNESS_ID = 'sibling-transformed-witness';
+export const TRANSFORMED_WITNESS_ID = RUNTIME_TRANSFORMED_WITNESS_ID;
 /** Independent external constraint-solver find; backend is recorded in technique. */
-export const EXTERNAL_SOLVER_ID = 'external-constraint-solver';
+export const EXTERNAL_SOLVER_ID = RUNTIME_EXTERNAL_SOLVER_ID;
 
 /** Deliberate search overrides. A non-null object means forcing is meaningful for this technique;
  * individual null fields mean that choice was not forced. */
@@ -154,185 +174,48 @@ export interface MakeProvenanceEntryOptions {
     foundAt?: string;
 }
 
-function forcingFromOpts(opts: MakeProvenanceEntryOptions): HintSolverForcing | null {
-    const hasForcing = opts.forcingGateKey !== undefined || opts.forcingDirection !== undefined
-        || opts.forcingPortalDest !== undefined || opts.forcingPortalExitDirection !== undefined
-        || opts.forcingReversed !== undefined || opts.forcingFlippedFilters !== undefined
-        || opts.forcingDisabledFeatures !== undefined
-        || opts.forcingAnchorSeed !== undefined || opts.forcingAnchorDepth !== undefined
-        || opts.forcingRepairMustTurnBiased !== undefined || opts.forcingRepairTurnBiased !== undefined
-        || opts.forcingRetryTier !== undefined;
-    if (!hasForcing) return null;
-    return {
-        gateKey: opts.forcingGateKey ?? null,
-        direction: opts.forcingDirection ?? null,
-        portalDest: opts.forcingPortalDest ?? null,
-        portalExitDirection: opts.forcingPortalExitDirection ?? null,
-        reversed: opts.forcingReversed ?? null,
-        flippedFilters: opts.forcingFlippedFilters ?? null,
-        disabledFeatures: opts.forcingDisabledFeatures ?? null,
-        anchorSeed: opts.forcingAnchorSeed ?? null,
-        anchorDepth: opts.forcingAnchorDepth ?? null,
-        repairMustTurnBiased: opts.forcingRepairMustTurnBiased ?? null,
-        repairTurnBiased: opts.forcingRepairTurnBiased ?? null,
-        retryTier: opts.forcingRetryTier ?? null,
-    };
-}
-
-export function makeProvenanceEntry(technique: string, opts: MakeProvenanceEntryOptions = {}): HintProvenanceEntry {
-    return {
-        solver: {
-            id: opts.solverId ?? SOLVER_ID,
-            version: opts.solverVersion ?? null,
-            technique,
-            scoringProfileId: opts.scoringProfileId ?? null,
-            orderingBiasId: opts.orderingBiasId ?? null,
-            beamWidth: opts.beamWidth ?? null,
-            mechanicBucketRetention: opts.mechanicBucketRetention ?? null,
-            gateKey: opts.gateKey ?? null,
-            forcing: forcingFromOpts(opts),
-            attemptIndex: opts.attemptIndex ?? null,
-        },
-        search: {
-            nodesExpanded: opts.nodesExpanded ?? null,
-            elapsedMs: opts.elapsedMs ?? null,
-            budgetMs: opts.budgetMs ?? null,
-            workSpent: opts.workSpent ?? null,
-            workBudget: opts.workBudget ?? null,
-            cumulativeNodesExpanded: opts.cumulativeNodesExpanded ?? null,
-            cumulativeElapsedMs: opts.cumulativeElapsedMs ?? null,
-            cumulativeBudgetMs: opts.cumulativeBudgetMs ?? null,
-            termination: opts.termination ?? 'unknown',
-            randomSeed: opts.randomSeed ?? null,
-            seedSalt: opts.seedSalt ?? null,
-        },
-        context: {
-            usedExistingHints: opts.usedExistingHints ?? false,
-            hintGuided: opts.hintGuided ?? false,
-            levelRevision: opts.levelRevision ?? null,
-            isolatedTechnique: opts.isolatedTechnique ?? false,
-        },
-        foundAt: opts.foundAt ?? new Date().toISOString(),
-    };
+export function makeProvenanceEntry(
+    technique: string,
+    opts: MakeProvenanceEntryOptions = {},
+): HintProvenanceEntry {
+    return makeProvenanceEntryRuntime(technique, opts) as HintProvenanceEntry;
 }
 
 export function hintPathSignature(path: number[]): string {
-    return path.join(',');
+    return hintPathSignatureRuntime(path);
 }
 
 /** Wrap a bare path as a canonical Hint. */
 export function toHint(path: number[], provenance: HintProvenanceEntry[] = []): Hint {
-    return { path, provenance };
+    return toHintRuntime(path, provenance) as Hint;
 }
 
 /** Return bare paths for geometry-only consumers. */
 export function hintPaths(hints: Hint[]): number[][] {
-    return hints.map(h => h.path);
+    return hintPathsRuntime(hints);
 }
 
 /** Remove byte-identical provenance events while preserving order. */
 export function dedupeProvenanceEntries(entries: HintProvenanceEntry[]): HintProvenanceEntry[] {
-    const seen = new Set<string>();
-    const out: HintProvenanceEntry[] = [];
-    for (const e of entries) {
-        const key = JSON.stringify(e);
-        if (seen.has(key)) continue;
-        seen.add(key);
-        out.push(e);
-    }
-    return out;
+    return dedupeProvenanceEntriesRuntime(entries) as HintProvenanceEntry[];
 }
 
 /** Merge by path signature, appending/deduping provenance for rediscovered paths. */
 export function mergeHints(existing: Hint[], incoming: Hint[]): Hint[] {
-    const bySig = new Map<string, Hint>();
-    const order: string[] = [];
-    for (const hint of existing) {
-        const sig = hintPathSignature(hint.path);
-        if (!bySig.has(sig)) { bySig.set(sig, { path: hint.path, provenance: [...hint.provenance] }); order.push(sig); }
-    }
-    for (const hint of incoming) {
-        const sig = hintPathSignature(hint.path);
-        const current = bySig.get(sig);
-        if (current) current.provenance.push(...hint.provenance);
-        else { bySig.set(sig, { path: hint.path, provenance: [...hint.provenance] }); order.push(sig); }
-    }
-    return order.map(sig => { const h = bySig.get(sig)!; return { path: h.path, provenance: dedupeProvenanceEntries(h.provenance) }; });
+    return mergeHintsRuntime(existing, incoming) as Hint[];
 }
 
-function isNestedProvenanceEntry(raw: any): boolean {
-    return !!raw && typeof raw === 'object' && raw.solver && typeof raw.solver === 'object';
-}
-
-/** Upgrade legacy flat/transitional provenance. Nested entries are normalized too:
- * historical profile/template/diverseBeam fields are accepted on read, but canonical callers
- * receive scoringProfileId/orderingBiasId/mechanicBucketRetention only. */
+/** Upgrade legacy flat/transitional provenance to the canonical nested shape. */
 export function upgradeProvenanceEntry(raw: any): HintProvenanceEntry {
-    if (isNestedProvenanceEntry(raw)) {
-        const legacySolver = raw.solver || {};
-        const solver: HintSolverProvenance = {
-            ...legacySolver,
-            id: legacySolver.technique === WITNESS_GENERATOR_ID && legacySolver.id !== WITNESS_GENERATOR_ID
-                ? WITNESS_GENERATOR_ID : legacySolver.id,
-            scoringProfileId: legacySolver.scoringProfileId ?? legacySolver.profile ?? null,
-            orderingBiasId: legacySolver.orderingBiasId ?? legacySolver.template ?? null,
-            mechanicBucketRetention: legacySolver.mechanicBucketRetention ?? legacySolver.diverseBeam ?? null,
-        };
-        delete (solver as any).profile;
-        delete (solver as any).template;
-        delete (solver as any).diverseBeam;
-        return {
-            ...raw,
-            solver,
-            search: legacySolver.technique === WITNESS_GENERATOR_ID && legacySolver.id !== WITNESS_GENERATOR_ID
-                ? { ...raw.search, termination: 'witness' } : raw.search,
-        } as HintProvenanceEntry;
-    }
-    const technique = raw?.technique || raw?.solverTechnique || 'unknown';
-    const isWitness = technique === WITNESS_GENERATOR_ID || raw?.metadataStatus === 'witness';
-    return makeProvenanceEntry(technique, {
-        solverId: isWitness ? WITNESS_GENERATOR_ID : SOLVER_ID,
-        nodesExpanded: raw?.nodesExpanded ?? null,
-        elapsedMs: raw?.elapsedMs ?? raw?.solveTimeMs ?? null,
-        termination: isWitness ? 'witness' : 'unknown',
-        foundAt: typeof raw?.foundAt === 'string' ? raw.foundAt : undefined,
-    });
+    return upgradeProvenanceEntryRuntime(raw) as HintProvenanceEntry;
 }
 
 /** Upgrade bare paths or older Hint/provenance shapes to canonical Hint[]. Malformed entries drop. */
 export function upgradeLegacyHints(raw: unknown): Hint[] {
-    if (!Array.isArray(raw)) return [];
-    const out: Hint[] = [];
-    for (const entry of raw) {
-        if (Array.isArray(entry)) { if (entry.length > 0) out.push(toHint(entry, [])); continue; }
-        if (entry && typeof entry === 'object' && Array.isArray((entry as any).path)) {
-            const path = (entry as any).path;
-            const provenance = Array.isArray((entry as any).provenance)
-                ? (entry as any).provenance.map(upgradeProvenanceEntry)
-                : [];
-            if (path.length > 0) out.push(toHint(path, provenance));
-        }
-    }
-    return out;
+    return upgradeLegacyHintsRuntime(raw) as Hint[];
 }
 
-/** Reconcile authoritative path membership with provenance keyed by path signature. Paths lacking
- * a matching record are preserved with empty provenance; duplicate paths collapse. */
+/** Reconcile authoritative path membership with provenance keyed by path signature. */
 export function reconcileHints(paths: number[][], records: Hint[]): Hint[] {
-    const provenanceBySig = new Map<string, HintProvenanceEntry[]>();
-    for (const rec of records || []) {
-        const sig = hintPathSignature(rec.path);
-        const list = provenanceBySig.get(sig);
-        if (list) list.push(...(rec.provenance || []));
-        else provenanceBySig.set(sig, [...(rec.provenance || [])]);
-    }
-    const seen = new Set<string>();
-    const out: Hint[] = [];
-    for (const path of paths || []) {
-        const sig = hintPathSignature(path);
-        if (seen.has(sig)) continue;
-        seen.add(sig);
-        out.push(toHint(path, dedupeProvenanceEntries(provenanceBySig.get(sig) || [])));
-    }
-    return out;
+    return reconcileHintsRuntime(paths, records) as Hint[];
 }
