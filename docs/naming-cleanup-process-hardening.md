@@ -354,3 +354,48 @@ The next naming-cleanup agent's task is **table-setting, not Phase 8 implementat
 7. leave Phase 8 blocked unless every readiness requirement is actually satisfied.
 
 The following agent should then be able to execute Phase 8 from a current, consumer-aware impact map with substantially less dependence on private agent memory and substantially more repository-enforced proof.
+
+
+## 10. Table-setting progress
+
+### 2026-08-29: execution-surface inventory and first smoke coverage
+
+This pass advances the hardening gate against `main` at `5db2769282d690ce7c12bdcd6aebf064ca467476`. The Phase-8 gate remains **blocked**.
+
+Completed infrastructure:
+
+- added `scripts/naming-cleanup-surface-inventory.mjs` / `npm run naming:surface-inventory`;
+- the inventory derives the actual PR-CI package roots from `.github/workflows/ci.yml`, follows package-script dependencies, maps local script targets and workflow targets, and can filter exact planned surfaces by naming-cleanup phase;
+- surfaced script coverage is deliberately classified as **direct CI execution**, **CI test reference**, **workflow-path structural only**, or **uncovered by known CI** rather than collapsed into a single boolean;
+- added a regression test for the inventory's Phase-8 classification so changes to CI/package wiring cannot silently change what the hardening process thinks is covered;
+- added `scripts/check-naming-cleanup-ledger.mjs` to the normal validation graph, enforcing the prospective Phase-8+ verification object, forbidding `done` rows with pending verification, and preventing Phase-8+ implementation state while the gate is blocked;
+- added a plain-Node synthetic smoke for `family-trove-doctor.mjs`, exercising its `--json`, `--root`, and legacy `PATHFINDER_VARIANT_TROVE` root-selection contract without requiring the historical multi-gigabyte dataset.
+
+Representative findings encoded by the new inventory:
+
+- `test:hint-path-oracle` is a surfaced Phase-8 package command but is **not reachable from the PR-CI command graph**. Its full command reads the split `data/hints/` artifact, which the Node-test sparse checkout intentionally does not materialize. It therefore still needs either a cheap synthetic/narrow smoke mode or a deliberate CI data/command decision before the Phase-8 rename can claim targeted command coverage.
+- `stress/restart-continuation-population-pilot.mjs` is not directly run by CI, but its current CLI contract is referenced by the CI-reachable `restart-continuation-population-pilot-cli-node-test.mjs`. The inventory records this as **CI test reference**, not direct execution.
+- workflow-local script targets receive **structural** existence validation through the CI-reachable `check:workflow-actions`; this does not prove workflow input/output or behavioral semantics. The known `audit-export.yml` exact-case `modules/Solver.ts` path-filter defect remains a planned Phase-8 correction and is not silently treated as covered by the structural check.
+- `family-trove-doctor.mjs` previously had a surfaced package alias but no PR-CI execution. Its new synthetic smoke closes that specific runtime/CLI blind spot and establishes a pre-migration test for the legacy dataset-root environment variable.
+
+Gate status by subsection:
+
+- **3.1 live execution-surface inventory: PARTIAL.** Package commands, script entrypoints, workflow targets, current-doc references for exact tool rows, and CI command reachability are now mechanically inspectable. Public module/port surfaces and generated-report producer/consumer relationships still need inventory.
+- **3.2 cheap smoke coverage: PARTIAL.** The variant-family dataset boundary doctor now has real Node-20 CI smoke coverage. Other Phase-8 uncovered commands identified by the inventory still need case-by-case treatment.
+- **3.3 shared transports/duplicated mappings: NOT YET COMPLETED by this pass.**
+- **3.4 compatibility-normalization quarantine: NOT YET COMPLETED by this pass.**
+- **3.5 runtime/type seams: PARTIAL.** The new doctor smoke exercises a real plain-Node Phase-8 boundary and the inventory exposes workflow structural coverage separately; the broader `.mjs`/`.ts`, weak-port-type, and exact-case path audit remains.
+- **3.6 rename-impact/census tooling: PARTIAL.** Exact Phase tool/package/workflow/doc surface matching and CI exposure are now available. The broader per-concept classification of old-name residue, compatibility reads, canonical writers, and unexercised non-tool consumers remains to be built or reconciled with existing checks.
+- **3.7 current-main reconciliation of Phases 8-14: NOT YET COMPLETED by this pass.**
+- **3.8 Phase-8 readiness record: NOT READY.**
+
+Useful commands for the next pass:
+
+```sh
+npm run naming:surface-inventory -- --compact --phase=8
+npm run naming:surface-inventory -- --compact --phase=8 --uncovered
+npm run naming:surface-inventory -- --json --phase=8
+npm run check:naming-cleanup-ledger
+```
+
+Do not infer from this progress record that the Phase-8 gate can be opened. Its purpose is to replace one part of the previous manual census with durable machinery and to give the next table-setting pass a concrete list of uncovered surfaces to work down.
