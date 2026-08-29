@@ -253,16 +253,31 @@ const moduleRows = moduleFiles.map(file => {
 
 const reportPathPattern = /\breports\/[A-Za-z0-9_./{}$-]+(?:\.(?:json|jsonl|md|csv|txt))?/gu;
 const reportPathRefs = new Map();
+function reportRoleForLine(line) {
+  if (/\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream)\b/u.test(line)) return 'producer';
+  if (/\b(?:readFile|readFileSync|createReadStream)\b/u.test(line)) return 'consumer';
+  if (/\b(?:upload-artifact|git\s+add|tee)\b/u.test(line)) return 'producer-or-publisher';
+  return 'reference';
+}
 for (const [file, source] of sourceByFile) {
   if (!file.startsWith('scripts/') && !file.startsWith('modules/') && !file.startsWith('.github/workflows/')) continue;
-  for (const match of source.matchAll(reportPathPattern)) {
-    const reportPath = match[0];
-    if (!reportPathRefs.has(reportPath)) reportPathRefs.set(reportPath, new Set());
-    reportPathRefs.get(reportPath).add(file);
+  const lines = source.split('\n');
+  for (const [lineIndex, line] of lines.entries()) {
+    for (const match of line.matchAll(reportPathPattern)) {
+      const reportPath = match[0];
+      if (!reportPathRefs.has(reportPath)) reportPathRefs.set(reportPath, []);
+      reportPathRefs.get(reportPath).push({ file, line: lineIndex + 1, role: reportRoleForLine(line) });
+    }
   }
 }
 const reportSurfaces = [...reportPathRefs.entries()]
-  .map(([reportPath, files]) => ({ reportPath, referencedBy: [...files].sort() }))
+  .map(([reportPath, references]) => ({
+    reportPath,
+    references: references.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line),
+    producers: [...new Set(references.filter(ref => ref.role.startsWith('producer')).map(ref => ref.file))].sort(),
+    consumers: [...new Set(references.filter(ref => ref.role === 'consumer').map(ref => ref.file))].sort(),
+    referencedBy: [...new Set(references.map(ref => ref.file))].sort(),
+  }))
   .sort((a, b) => a.reportPath.localeCompare(b.reportPath));
 
 const scriptRows = scriptFiles.map(file => {
