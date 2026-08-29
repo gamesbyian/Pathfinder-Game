@@ -1,10 +1,10 @@
 # Naming cleanup implementation plan
 
-Status: **active implementation plan; Phases 1-7 are implemented and repeatedly audited, but PR 8 is blocked on the process-hardening gate in [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md)**. The original latest-`main` preflight was completed at `e236a51d3af9` (2026-08-28); every future implementation phase must reconcile again against current `main`. The canonical naming decisions in this document remain authoritative, but no implementation PR may outrank newer implementation on `main`.
+Status: **active implementation plan; Phases 1-7 are implemented and repeatedly audited, the mandatory pre-Phase-8 process-hardening gate is complete on `main` via PR #1580, and Phase 8 has not started yet**. The original latest-`main` preflight was completed at `e236a51d3af9` (2026-08-28); every future implementation phase must reconcile again against current `main`. The canonical naming decisions in this document remain authoritative, but no implementation PR may outrank newer implementation on `main`.
 
 This is a **behavior-preserving naming and vocabulary migration** unless a section explicitly says that an obsolete compatibility surface is removed after its consumers are migrated. Do not change solver policy, attempt order, scoring weights, eligibility, budgets, pruning behavior, random seeds, corpus contents, or evidence disposition as part of this work.
 
-Use `docs/change-recipes.md` for every cross-boundary rename. Before PR 8, complete the mandatory table-setting work in `docs/naming-cleanup-process-hardening.md`; that document records the failure classes discovered during the Phase-1-7 implementation/audit cycle and the stronger verification model required for the remaining phases. Historical reports, archived snapshots, frozen logs, immutable workflow artifacts, and committed evidence files remain unchanged unless a parser must be taught to read their legacy identifiers.
+Use `docs/change-recipes.md` for every cross-boundary rename. The mandatory pre-Phase-8 table-setting work in `docs/naming-cleanup-process-hardening.md` is complete and merged via PR #1580; that document records the failure classes discovered during the Phase-1-7 implementation/audit cycle and the stronger verification model required for the remaining phases. Historical reports, archived snapshots, frozen logs, immutable workflow artifacts, and committed evidence files remain unchanged unless a parser must be taught to read their legacy identifiers.
 
 ## 0. Latest-main reconciliation and scope closure
 
@@ -75,7 +75,7 @@ Complete [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardenin
 7. reconcile every remaining Phase-8-14 mapping and retained term against current `main`;
 8. record the refreshed census commit, remaining unexercised surfaces, and readiness result in the hardening document/ledger.
 
-Until this gate is recorded as **ready** in `docs/naming-cleanup-ledger.json`, PR 8 is blocked. The hardening pass may add tests/checks/shared compatibility infrastructure and may fix any newly discovered Phase-1-7 regression, but it must not opportunistically perform Phase-8 canonical renames. Partial table-setting progress is recorded in `docs/naming-cleanup-process-hardening.md` Section 10 and the ledger gate's `progress` object; partial progress does not relax this block.
+The gate is now recorded as **ready** in `docs/naming-cleanup-ledger.json` and the hardening work is merged via PR #1580 (merge commit `02abde6c651a7070e7be10775f75c177b1bdb23b`). Phase 8 may begin only in a separate implementation PR that follows the strengthened entry/impact-map process below. The hardening pass itself performed no Phase-8 canonical rename.
 
 
 ## 1. Goals and non-goals
