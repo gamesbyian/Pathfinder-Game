@@ -26,7 +26,7 @@ test('classifyAttemptTier maps every canonical stageId to its own label (or the 
 });
 
 test('classifyAttemptTier falls back to the legacy boolean chain ONLY when stageId is absent (compatibility for historical/duck-typed records)', () => {
-    assert.equal(classifyAttemptTier({ repairLateProbe: true }), 'repair-late-probe');
+    assert.equal(classifyAttemptTier({ repairLateProbe: true }), 'late-repair-search');
     assert.equal(classifyAttemptTier({ repair: true }), 'repair-fallback');
     assert.equal(classifyAttemptTier({}), 'main-ladder');
 });
