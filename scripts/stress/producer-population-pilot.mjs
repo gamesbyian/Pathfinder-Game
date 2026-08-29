@@ -85,7 +85,7 @@ for (const raw of selected) {
     const seenDepthBucket = new Set();
     const beamPrep = api.prepLevel(level); beamPrep._cfg = null; beamPrep._metrics = { nodesExpanded: 0 };
     beamPrep._beamResearchObserver = { observe: record => {
-        if (!['post-score-width-cull', 'post-diversity-selection'].includes(record.stage)) return;
+        if (!['post-score-width-cull', 'post-mechanic-bucket-selection'].includes(record.stage)) return;
         const bucket = Math.floor(10 * record.depth / Math.max(1, level.reqLen));
         if (seenDepthBucket.has(bucket)) return;
         seenDepthBucket.add(bucket);
