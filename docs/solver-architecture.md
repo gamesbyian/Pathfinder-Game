@@ -166,11 +166,11 @@ With wall-bounded runs, faster code searches farther. Pin a non-binding wall dea
 ### Trap audits/runtime
 
 ```bash
-npm run solver:trap-audit -- --levels=all --extended-budget=60000
-npm run solver:trap-audit -- --check-false-goals --fg-budget=90000
+npm run solver:audit-false-goal-triggerability -- --levels=all --extended-budget=60000
+npm run solver:audit-false-goal-triggerability -- --check-false-goals --fg-budget=90000
 ```
 
-False-goal timeouts are `inconclusive`, never invalid. `worker.js` handles `TRAP`; `solver-worker-client.ts` streams `TRAP_PROGRESS` (~100 ms) / `TRAP_RESULT`. `trap-scan-controller.ts` owns background parity/confirmed overlays, explicit scan/cancel/budget escalation, `editor.trapScanState = stale|scanning|done|partial|failed`, mutation invalidation via `clearEditorValidTrapSpots`, and main-thread fallback.
+False-goal timeouts are `inconclusive`, never invalid. `worker.js` handles `TRAP`; `solver-worker-client.ts` streams `TRAP_PROGRESS` (~100 ms) / `TRAP_RESULT`. `trap-scan-controller.ts` owns background parity/confirmed overlays, explicit scan/cancel/budget escalation, `editor.falseGoalTriggerScanState = stale|scanning|done|partial|failed`, mutation invalidation via `clearEditorTriggerableFalseGoalCells`, and main-thread fallback.
 
 ## Parallel Find-all enumeration (browser)
 

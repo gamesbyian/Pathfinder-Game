@@ -158,20 +158,20 @@ test('infeasible level: solver reports failure rather than a bogus path', async 
 test('trap search finds viable false-goal spots and classifies dead ones', async () => {
     const rawLevel = raw({ grid: { w: 4, h: 3 }, reqLen: 5, reqInt: 0 });
     const level = solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
-    const budget = solver.getTrapSpotBudgetMs(level);
+    const budget = solver.getFalseGoalTriggerSearchBudgetMs(level);
     assert.ok(budget > 0);
-    const res = await solver.findTrapSpots(level, { timeLimit: Math.min(budget, 3000) });
-    assert.equal(res.ok, true);
-    assert.ok(res.spots instanceof Set && res.spots.size > 0, 'an open 4x3 grid has viable trap endpoints');
-    assert.ok(!res.spots.has(K(4, 3)), 'the true goal is never a trap spot');
+    const res = await solver.findTriggerableFalseGoalCells(level, { timeLimitMs: Math.min(budget, 3000) });
+    assert.equal(res.status, 'complete');
+    assert.ok(res.triggerableCells instanceof Set && res.triggerableCells.size > 0, 'an open 4x3 grid has triggerable false-goal endpoints');
+    assert.ok(!res.triggerableCells.has(K(4, 3)), 'the true goal is never a triggerable false-goal cell');
 
-    // classifyFalseGoals: a false goal parked on a found spot classifies as reachable;
-    // one in a sealed pocket classifies as dead (unreachable).
-    const spotKey: number = res.spots.values().next().value;
+    // classifyFalseGoalTriggerability: a false goal parked on a found cell classifies as triggerable;
+    // one excluded by a complete search classifies as untriggerable.
+    const spotKey: number = res.triggerableCells.values().next().value;
     const withFg = solver.prepareLevelForSolver({
         ...rawLevel,
         falseGoals: [{ x: (spotKey & 0xFFFF) + 1, y: ((spotKey >>> 16) & 0xFFFF) + 1 }],
     }, { source: 'raw' });
-    const classified = solver.classifyFalseGoals(withFg, await solver.findTrapSpots(withFg, { timeLimit: 3000 }));
-    assert.equal(classified.get(spotKey), 'reachable');
+    const classified = solver.classifyFalseGoalTriggerability(withFg, await solver.findTriggerableFalseGoalCells(withFg, { timeLimitMs: 3000 }));
+    assert.equal(classified.get(spotKey), 'triggerable');
 });

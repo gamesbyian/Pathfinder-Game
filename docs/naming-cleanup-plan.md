@@ -461,7 +461,7 @@ Canonical API:
 
 | Current | Canonical |
 |---|---|
-| `findTrapSpots` | `findTriggerableFalseGoalCells` |
+| `findTriggerableFalseGoalCells` | `findTriggerableFalseGoalCells` |
 | `TrapSearchResult` | `FalseGoalTriggerSearchResult` |
 | `TrapProgress` | `FalseGoalTriggerSearchProgress` |
 | `TrapOpts` | `FalseGoalTriggerSearchOptions` |
@@ -469,9 +469,9 @@ Canonical API:
 | `FalseGoalStatus` | `FalseGoalTriggerability` |
 | `reachable` | `triggerable` |
 | `unreachable` | `untriggerable` |
-| `classifyFalseGoals` | `classifyFalseGoalTriggerability` |
+| `classifyFalseGoalTriggerability` | `classifyFalseGoalTriggerability` |
 | `isParityReachableEndpoint` | `isParityCompatibleEndpoint` |
-| `getTrapSpotBudgetMs` | `getFalseGoalTriggerSearchBudgetMs` |
+| `getFalseGoalTriggerSearchBudgetMs` | `getFalseGoalTriggerSearchBudgetMs` |
 | `timeLimit` | `timeLimitMs` |
 
 Canonical result status values:
@@ -482,7 +482,7 @@ Canonical result status values:
 
 Remove the misleading `ok` field from the canonical result. `partial` covers timeout/incomplete enumeration. Do not keep a separate `timedOut` boolean in the canonical structure; derive incompleteness from `status !== 'complete'`.
 
-For compatibility, the old `findTrapSpots` public adapter may exist only during the migration PR series and must project the canonical result back to the historical shape for any remaining live consumer. Once all repository consumers use the new API, remove the adapter. Historical serialized data readers, if any, retain legacy-field support.
+For compatibility, the old `findTriggerableFalseGoalCells` public adapter may exist only during the migration PR series and must project the canonical result back to the historical shape for any remaining live consumer. Once all repository consumers use the new API, remove the adapter. Historical serialized data readers, if any, retain legacy-field support.
 
 Rename `trap-search.ts` to `false-goal-trigger-search.ts` and update imports, comments, tool names, tests, editor diagnostics, and solver API ports.
 
@@ -497,12 +497,12 @@ The internal boundary migration is also fixed, not left to implementer invention
 | `trap-scan-core.ts` | `false-goal-trigger-scan-core.ts` |
 | `createTrapScanController` | `createFalseGoalTriggerScanController` |
 | `runTrapSearch` | `runFalseGoalTriggerSearch` |
-| editor `trapScanState` | `falseGoalTriggerScanState` |
-| editor `validTrapSpots` | `triggerableFalseGoalCells` |
-| editor `trapParityCandidates` | `falseGoalTriggerParityCandidates` |
+| editor `falseGoalTriggerScanState` | `falseGoalTriggerScanState` |
+| editor `triggerableFalseGoalCells` | `triggerableFalseGoalCells` |
+| editor `falseGoalTriggerParityCandidates` | `falseGoalTriggerParityCandidates` |
 | corresponding `*TrapSpots` / `*TrapParityCandidates` state actions | `*TriggerableFalseGoalCells` / `*FalseGoalTriggerParityCandidates` |
 | `trap-search-audit.mjs` | `audit-false-goal-triggerability.mjs` |
-| npm `solver:trap-audit` | **solver:audit-false-goal-triggerability** |
+| npm `solver:audit-false-goal-triggerability` | **solver:audit-false-goal-triggerability** |
 
 The canonical worker/result status values are `complete`, `partial`, and `aborted`. Legacy `done` and `timeout` values are read only where historical/generated payloads require them. Update editor completion checks in the same PR so no live caller still tests `status === 'done'`.
 

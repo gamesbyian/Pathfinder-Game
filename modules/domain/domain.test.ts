@@ -1421,17 +1421,17 @@ test('createEditorState: returns object with correct initial field values', () =
     assert.equal(s.isModified,       false, 'isModified starts false');
     assert.equal(s.mirrorHorizontal, true,  'mirrorHorizontal starts true');
     assert.ok(Array.isArray(s.undoStack),         'undoStack is an array');
-    assert.ok(s.validTrapSpots instanceof Set,    'validTrapSpots is a Set');
-    assert.equal(s.trapScanState, 'stale',        'trapScanState starts stale');
-    assert.ok(s.trapParityCandidates instanceof Set, 'trapParityCandidates is a Set');
+    assert.ok(s.triggerableFalseGoalCells instanceof Set,    'triggerableFalseGoalCells is a Set');
+    assert.equal(s.falseGoalTriggerScanState, 'stale',        'falseGoalTriggerScanState starts stale');
+    assert.ok(s.falseGoalTriggerParityCandidates instanceof Set, 'falseGoalTriggerParityCandidates is a Set');
 });
 
 test('createEditorState: each call returns independent collections', () => {
     const a = createEditorState();
     const b = createEditorState();
     assert.notStrictEqual(a.undoStack,      b.undoStack,      'undoStack is not shared');
-    assert.notStrictEqual(a.validTrapSpots, b.validTrapSpots, 'validTrapSpots is not shared');
-    assert.notStrictEqual(a.trapParityCandidates, b.trapParityCandidates, 'trapParityCandidates is not shared');
+    assert.notStrictEqual(a.triggerableFalseGoalCells, b.triggerableFalseGoalCells, 'triggerableFalseGoalCells is not shared');
+    assert.notStrictEqual(a.falseGoalTriggerParityCandidates, b.falseGoalTriggerParityCandidates, 'falseGoalTriggerParityCandidates is not shared');
 });
 
 // ---------------------------------------------------------------------------

@@ -1,8 +1,8 @@
 // Editor slice state actions (engineState.editor.*): working level, tool/pencil state,
-// undo stack, drag state, trap spots, and session reset.
+// undo stack, drag state, triggerable false-goal cells, and session reset.
 import { resolveEngineState } from './shared.js';
 import type { StateOrEngine } from './shared.js';
-import type { EditorState, TrapScanState } from '../../editor/editor-model.js';
+import type { EditorState, FalseGoalTriggerScanState } from '../../editor/editor-model.js';
 
 // The editor working level and dragged object are the editor boundary's deliberately-loose
 // shapes; reference the EditorState contract's field types rather than re-declaring them, so
@@ -115,17 +115,17 @@ export function popEditorUndoStack(stateOrEngine: StateOrEngine) {
     return editor.undoStack.pop();
 }
 
-// Clearing the spots is the single invalidation point for trap-scan results: every
+// Clearing the spots is the single invalidation point for false-goal-trigger-scan results: every
 // level-mutating path routes through here, so it also marks the scan stale and drops
 // the candidate overlay — an in-flight scan observes the state change and aborts.
-export function clearEditorValidTrapSpots(stateOrEngine: StateOrEngine) {
+export function clearEditorTriggerableFalseGoalCells(stateOrEngine: StateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
     if (!editor) return null;
-    editor.validTrapSpots.clear();
-    editor.trapParityCandidates?.clear();
-    editor.trapScanState = 'stale';
-    return editor.validTrapSpots;
+    editor.triggerableFalseGoalCells.clear();
+    editor.falseGoalTriggerParityCandidates?.clear();
+    editor.falseGoalTriggerScanState = 'stale';
+    return editor.triggerableFalseGoalCells;
 }
 
 export function setEditorDraggedFromGrid(stateOrEngine: StateOrEngine, draggedFromGrid: unknown) {
@@ -152,37 +152,37 @@ export function setEditorDraggedObject(stateOrEngine: StateOrEngine, draggedObje
     return editor.draggedObject;
 }
 
-export function setEditorValidTrapSpots(stateOrEngine: StateOrEngine, validTrapSpots: Set<number> = new Set()) {
+export function setEditorTriggerableFalseGoalCells(stateOrEngine: StateOrEngine, triggerableFalseGoalCells: Set<number> = new Set()) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
     if (!editor) return null;
-    editor.validTrapSpots = validTrapSpots || new Set();
-    return editor.validTrapSpots;
+    editor.triggerableFalseGoalCells = triggerableFalseGoalCells || new Set();
+    return editor.triggerableFalseGoalCells;
 }
 
 /** Streaming variant: merge newly-found spots into the existing set (mid-scan). */
-export function addEditorValidTrapSpots(stateOrEngine: StateOrEngine, keys: Iterable<number>) {
+export function addEditorTriggerableFalseGoalCells(stateOrEngine: StateOrEngine, keys: Iterable<number>) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
     if (!editor) return null;
-    for (const k of keys) editor.validTrapSpots.add(k);
-    return editor.validTrapSpots;
+    for (const k of keys) editor.triggerableFalseGoalCells.add(k);
+    return editor.triggerableFalseGoalCells;
 }
 
-export function setEditorTrapScanState(stateOrEngine: StateOrEngine, trapScanState: TrapScanState) {
+export function setEditorFalseGoalTriggerScanState(stateOrEngine: StateOrEngine, falseGoalTriggerScanState: FalseGoalTriggerScanState) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
     if (!editor) return undefined;
-    editor.trapScanState = trapScanState;
-    return editor.trapScanState;
+    editor.falseGoalTriggerScanState = falseGoalTriggerScanState;
+    return editor.falseGoalTriggerScanState;
 }
 
-export function setEditorTrapParityCandidates(stateOrEngine: StateOrEngine, candidates: Set<number> = new Set()) {
+export function setEditorFalseGoalTriggerParityCandidates(stateOrEngine: StateOrEngine, candidates: Set<number> = new Set()) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
     if (!editor) return null;
-    editor.trapParityCandidates = candidates || new Set();
-    return editor.trapParityCandidates;
+    editor.falseGoalTriggerParityCandidates = candidates || new Set();
+    return editor.falseGoalTriggerParityCandidates;
 }
 
 export function setEditorSelectedTool(stateOrEngine: StateOrEngine, selectedTool: string | null) {
@@ -212,7 +212,7 @@ export function toggleEditorMirrorHorizontal(stateOrEngine: StateOrEngine) {
 interface ResetEditorSessionOptions {
     workingLevel?: WorkingLevel;
     isPencilMode?: boolean;
-    clearTrapSpots?: boolean;
+    clearTriggerableFalseGoalCells?: boolean;
     emptyClickCount?: number;
     isModified?: boolean;
 }
@@ -223,7 +223,7 @@ export function resetEditorSession(stateOrEngine: StateOrEngine, options: ResetE
     }
     setEditorPencilMode(stateOrEngine, options.isPencilMode ?? false);
     clearEditorUndoStack(stateOrEngine);
-    if (options.clearTrapSpots !== false) clearEditorValidTrapSpots(stateOrEngine);
+    if (options.clearTriggerableFalseGoalCells !== false) clearEditorTriggerableFalseGoalCells(stateOrEngine);
     setEditorEmptyClickCount(stateOrEngine, options.emptyClickCount ?? 0);
     setEditorModified(stateOrEngine, options.isModified ?? false);
     return resolveEngineState(stateOrEngine)?.editor ?? null;

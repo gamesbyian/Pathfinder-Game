@@ -1,6 +1,6 @@
 import {
     clearEditorUndoStack,
-    clearEditorValidTrapSpots,
+    clearEditorTriggerableFalseGoalCells,
     clearNavigationUndoStack,
     clearRipples,
     markDirty,
@@ -93,7 +93,7 @@ export function createLevelFlowController({
         setEditorWorkingLevel(state, levelUtils.deepCloneLevel(state.ENGINE.level));
         setEditorPencilMode(state, false);
         clearEditorUndoStack(state);
-        clearEditorValidTrapSpots(state);
+        clearEditorTriggerableFalseGoalCells(state);
         setEditorEmptyClickCount(state, 0);
         ui.setInputValue('editReqLen', state.ENGINE.editor.workingLevel.reqLen || 0);
         ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.reqInt || 0);

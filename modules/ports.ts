@@ -123,9 +123,9 @@ export interface DataService {
 export interface SolverApi {
     prepareLevelForSolver(rawLevel: any, opts?: any): any;
     solveLevel(level: any, opts?: any): Promise<SolveResult>;
-    findTrapSpots(level: any, opts?: any): Promise<any>;
-    classifyFalseGoals(level: any, result: any): any;
-    getTrapSpotBudgetMs(level: any): number;
+    findTriggerableFalseGoalCells(level: any, opts?: any): Promise<any>;
+    classifyFalseGoalTriggerability(level: any, result: any): any;
+    getFalseGoalTriggerSearchBudgetMs(level: any): number;
     validateCandidatePath(level: any, pathCoordsOrKeys: any[]): PathValidation;
     /** Create a resumable variety-search session over a normalized level (Editor/Review Solve). */
     createVarietySearch(level: any, existingHints: number[][], config: any): { run(runOpts: any): Promise<any> };

@@ -99,21 +99,21 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // warn (non-blocking) about any false goals that can never be triggered: no
         // path can end on those cells, so the trap would never fire. This advises
         // the maker to relocate them (via the "Trap Spots" button) but never blocks the
-        // submission. Only definitively-dead spots are reported (classifyFalseGoals
+        // submission. Only definitively-dead spots are reported (classifyFalseGoalTriggerability
         // returns 'unreachable' only when proven), so there are no false alarms even
         // if the bounded check times out.
         let trapWarned = false;
         if (l.falseGoalKeys && l.falseGoalKeys.size > 0) {
             try {
                 const fgLevel = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
-                const trapBudget = Math.min(solverApi.getTrapSpotBudgetMs(fgLevel), 8000);
-                const trapRes = await solverApi.findTrapSpots(fgLevel, {
+                const trapBudget = Math.min(solverApi.getFalseGoalTriggerSearchBudgetMs(fgLevel), 8000);
+                const trapRes = await solverApi.findTriggerableFalseGoalCells(fgLevel, {
                     timeLimit: trapBudget,
                     yieldFn: async () => { await new Promise((r: any) => setTimeout(r, 0)); },
                     onProgress: ({ gatesProcessed, totalGates }: any) =>
                         ui.setSubmitStep('smStep-validate', 'running', `Checking trap placement… gate ${gatesProcessed}/${totalGates}`),
                 });
-                const dead = Array.from(solverApi.classifyFalseGoals(fgLevel, trapRes).entries())
+                const dead = Array.from(solverApi.classifyFalseGoalTriggerability(fgLevel, trapRes).entries())
                     .filter(([, st]: any) => st === 'unreachable')
                     .map(([k]: any) => k);
                 if (dead.length > 0) {

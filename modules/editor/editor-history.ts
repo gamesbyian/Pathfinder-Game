@@ -36,8 +36,8 @@ export function restoreEditorSnapshot(
     editorState.workingLevel.portalMap.forEach((v: any, k: number) => { if (v.dest === -1) pendingPortal = k; });
     editorState.pendingPortal = pendingPortal;
     hinterState.pathList = [];
-    editorState.validTrapSpots.clear();
-    editorState.trapParityCandidates?.clear();
-    editorState.trapScanState = 'stale';
+    editorState.triggerableFalseGoalCells.clear();
+    editorState.falseGoalTriggerParityCandidates?.clear();
+    editorState.falseGoalTriggerScanState = 'stale';
     return { pendingPortal };
 }
