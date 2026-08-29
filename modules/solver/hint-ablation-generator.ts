@@ -159,11 +159,11 @@ function flipAxis(ax: number): number {
 function anyConfigSurvives(level: any, disabledKeys: Set<string>): boolean {
     const baseConfigs = getAttemptConfigs(level);
     return baseConfigs.some(c => {
-        if (c.template) {
-            const tKey = (ORDERING_BIAS_CONFIG_KEYS as Record<string, string>)[(c.template as any).id];
+        if (c.orderingBias) {
+            const tKey = (ORDERING_BIAS_CONFIG_KEYS as Record<string, string>)[(c.orderingBias as any).id];
             if (tKey && disabledKeys.has(tKey)) return false;
         }
-        const pKey = `PROFILE_${c.profileName}`;
+        const pKey = `PROFILE_${c.scoringProfileId}`;
         if (disabledKeys.has(pKey)) return false;
         return true;
     });
