@@ -482,8 +482,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "repair-probe",
@@ -492,8 +492,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "main-loop",
@@ -502,8 +502,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "repair-fallback",
@@ -512,8 +512,8 @@
       "risk": "low",
       "persistence": "none",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Intentional retained stage ID."
+      "status": "done",
+      "notes": "Intentional retained stage ID. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "attraction-diversity",
@@ -522,8 +522,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "repair-probe-shrink-recovery",
@@ -532,8 +532,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "admissible-order",
@@ -542,8 +542,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "dedup-near-tie-retry",
@@ -552,8 +552,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "admissible-order-non-default-retry",
@@ -562,8 +562,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "connectivity-axis-exhausted-retry",
@@ -572,8 +572,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "repair-elite-prefix-dfs-retry",
@@ -582,8 +582,8 @@
       "risk": "low",
       "persistence": "none",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Intentional retained stage ID."
+      "status": "done",
+      "notes": "Intentional retained stage ID. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "mc-neighbor-budget-retry",
@@ -592,8 +592,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "repair-late-probe",
@@ -602,8 +602,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "goal-attraction-legacy-distance-retry",
@@ -612,8 +612,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "repair-late-probe-multi-seed-retry",
@@ -622,8 +622,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "portfolio-pass",
@@ -632,8 +632,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "portfolio-fallback",
@@ -642,8 +642,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Central normalizeSolverStageId compatibility."
+      "status": "done",
+      "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE",
@@ -652,8 +652,8 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Behavior is guidance-distance selection."
+      "status": "done",
+      "notes": "Behavior is guidance-distance selection. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "portfolio-experiment.ts",
@@ -662,8 +662,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Historical latency scheduler identity."
+      "status": "done",
+      "notes": "Historical latency scheduler identity. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "PORTFOLIO_EXPERIMENT",
@@ -672,8 +672,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Historical latency scheduler identity."
+      "status": "done",
+      "notes": "Historical latency scheduler identity. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "techniqueLifecycle",
@@ -682,8 +682,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Keys are solver stages."
+      "status": "done",
+      "notes": "Keys are solver stages. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "scheduler mode legacy",
@@ -692,8 +692,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Generic legacy mode removed after migration."
+      "status": "done",
+      "notes": "Generic legacy mode removed after migration. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "scheduler mode portfolio-experiment",
@@ -702,8 +702,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Persisted scheduler mode."
+      "status": "done",
+      "notes": "Persisted scheduler mode. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "PortfolioExperimentDefinition",
@@ -712,8 +712,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Type rename."
+      "status": "done",
+      "notes": "Type rename. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "portfolioExperiment option",
@@ -722,8 +722,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Dual-read only where external/generated configs persist."
+      "status": "done",
+      "notes": "Dual-read only where external/generated configs persist. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "portfolio result field",
@@ -732,8 +732,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Generated JSON single-write canonical."
+      "status": "done",
+      "notes": "Generated JSON single-write canonical. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "schedulerPhase: portfolio",
@@ -742,8 +742,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Attempt telemetry."
+      "status": "done",
+      "notes": "Attempt telemetry. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "StageBudgetPolicyId: additive-fraction",
@@ -752,8 +752,8 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Wall multiplier, not [0,1] fraction."
+      "status": "done",
+      "notes": "Wall multiplier, not [0,1] fraction. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "SolverStageDisposition",
@@ -762,8 +762,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Runtime policy status, not history."
+      "status": "done",
+      "notes": "Runtime policy status, not history. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "SolverStagePolicyStatus: promoted",
@@ -772,8 +772,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Promotion history belongs in evidence ledger."
+      "status": "done",
+      "notes": "Promotion history belongs in evidence ledger. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "findTrapSpots",
@@ -2052,8 +2052,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Migrate with stage identity."
+      "status": "done",
+      "notes": "Migrate with stage identity. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "stress/repair-probe-badness-report.mjs",
@@ -2062,8 +2062,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Migrate with stage identity."
+      "status": "done",
+      "notes": "Migrate with stage identity. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": ".github/workflows/solver-repair-probe-adaptive-sample-ab.yml",
@@ -2072,8 +2072,8 @@
       "risk": "medium",
       "persistence": "frozen-history",
       "phase": 6,
-      "status": "in-progress",
-      "notes": "Migrate with stage identity."
+      "status": "done",
+      "notes": "Migrate with stage identity. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
       "old": "portfolio-scheduler-report.mjs",
@@ -2376,6 +2376,6 @@
       "notes": "Closed negative default-off experiment ID; delete later rather than rename."
     }
   ],
-  "lastCompletedPhase": 5,
+  "lastCompletedPhase": 6,
   "lastUpdated": "2026-08-28"
 }
