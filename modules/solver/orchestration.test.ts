@@ -1767,7 +1767,7 @@ test('lifecycle telemetry classifies newer retry tiers as their own technique, n
     assert.equal(result.ok, true, 'the must-cross-neighbor-prune-disabled-retry-only mock must win');
     const winningAttempts = result.attempts.filter(a => a.ok);
     assert.equal(winningAttempts.length, 1);
-    assert.equal(winningAttempts[0].mcNeighborBudgetRetry, true, 'the winning attempt must be tagged by its real tier');
+    assert.equal(winningAttempts[0].stageId, 'must-cross-neighbor-prune-disabled-retry', 'the winning attempt must be tagged by its real tier');
     const lifecycle = result.stageLifecycle as Record<string, any>;
     assert.ok(lifecycle['must-cross-neighbor-prune-disabled-retry'], 'the new category must exist in the lifecycle map');
     assert.equal(lifecycle['must-cross-neighbor-prune-disabled-retry'].reached, true);
@@ -1777,7 +1777,7 @@ test('lifecycle telemetry classifies newer retry tiers as their own technique, n
     // and attempt.admissibleOrder are both unset -- exactly what the old classify()'s final
     // fallback branch matched).
     const mainLadderAttempts = result.attempts.filter(a => !a.repair && !a.admissibleOrder && a.stageId !== 'goal-attraction-disabled-retry'
-        && !a.mcNeighborBudgetRetry && !a.connectivityAxisExhaustedRetry && !a.coarseStateNearTieRetentionRetry);
+        && a.stageId !== 'must-cross-neighbor-prune-disabled-retry' && a.stageId !== 'connectivity-axis-prune-disabled-retry' && a.stageId !== 'coarse-state-near-tie-retention-disabled-retry');
     assert.equal(lifecycle['main-ladder'].attempts, mainLadderAttempts.length,
         'main-ladder must not absorb attempts that belong to a newer retry tier');
 });
@@ -2009,7 +2009,7 @@ test('shrink recovery re-runs the shrunk biased config at its FULL probe budget'
     assert.ok(shrunk < REPAIR_PROBE_BIASED_NODE_BUDGET, 'sanity: the shrink actually fired');
     assert.ok(biasedBudgets.includes(shrunk), 'sanity: the original probe attempt was the shrunken one');
     // Every recovery attempt is still a probe attempt, so probe-population tooling keeps counting it.
-    assert.equal(recovery[0].repairProbe, true);
+    assert.equal(recovery[0].stageId, 'repair-shrink-recovery');
 });
 
 test('shrink recovery can solve a level the shrink otherwise loses', async () => {
@@ -2187,7 +2187,7 @@ test('coarse-state-near-tie-retention-disabled-retry pass can solve a level the 
         attemptSearchForTesting: dispatch,
     });
     assert.equal(result.ok, true, 'the retention-off retry wins');
-    assert.equal(result.attempts.at(-1)?.coarseStateNearTieRetentionRetry, true);
+    assert.equal(result.attempts.at(-1)?.stageId, 'coarse-state-near-tie-retention-disabled-retry');
 });
 
 // 2026-08-28: coarse-state-near-tie-retention-disabled-retry was the first tier migrated off queue #2 step 3's ms-derived
@@ -2265,7 +2265,7 @@ test('admissible-order-alternate-tiebreak-retry pass can solve a level the admis
         attemptSearchForTesting: dispatch,
     });
     assert.equal(result.ok, true, 'the non-default retry wins');
-    assert.equal(result.attempts.at(-1)?.admissibleOrderNonDefaultRetry, true);
+    assert.equal(result.attempts.at(-1)?.stageId, 'admissible-order-alternate-tiebreak-retry');
     assert.equal(result.attempts.filter(a => a.stageId === 'admissible-order-alternate-tiebreak-retry' && a.scoringProfileId === 'default').length, 0, "'default' is never retried by this tier");
 });
 
@@ -2517,7 +2517,7 @@ test('connectivity-axis-prune-disabled-retry pass can solve a level the main loo
         attemptSearchForTesting: dispatch,
     });
     assert.equal(result.ok, true, 'the connectivity-axis-exhausted-off retry wins');
-    assert.equal(result.attempts.at(-1)?.connectivityAxisExhaustedRetry, true);
+    assert.equal(result.attempts.at(-1)?.stageId, 'connectivity-axis-prune-disabled-retry');
 });
 
 // ── STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY ─────────────────────────────────────
@@ -2537,7 +2537,7 @@ test('connectivity-axis-prune-disabled-retry pass can solve a level the main loo
 test('repair-elite-prefix-dfs-retry pass reruns the repair ladder once more after everything else fails', async () => {
     // Isolate from every other default-on last-resort tier (none of which touch repairConfigs) so
     // "ordinaryRepairAttempts" below counts only the ordinary repair-fallback loop's own attempts —
-    // and exclude the early repair PROBE's own attempts (a.repairProbe === true), which also carry
+    // and exclude early-repair-search attempts by canonical stageId, which also carry
     // repair === true but run before the main loop, not as part of the fallback loop this tier reruns.
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
@@ -2724,7 +2724,7 @@ test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses,
         attemptSearchForTesting: dispatch,
     });
     assert.equal(result.ok, true, 'the elite-prefix-dfs-on retry wins');
-    assert.equal(result.attempts.at(-1)?.repairElitePrefixDfsRetry, true);
+    assert.equal(result.attempts.at(-1)?.stageId, 'repair-elite-prefix-dfs-retry');
 });
 
 test('retry-tier config Proxies do not leak unrelated opt-in flags to true (regression, fixed 2026-08-20)', async () => {
