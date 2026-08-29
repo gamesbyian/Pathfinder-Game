@@ -32,7 +32,7 @@ Use when changing hard prunes, state identity, solver/runtime rules, reusable sc
 
 `validateRawLevel` permits up to 32 flipping filters because `flipperUsedMask` legitimately uses all 32 int32 bits. The underlying transition state is sound at that boundary: bit 31 is a negative signed int32 value but nonzero membership checks, `popcount`, apply, and undo handle it correctly; `flipper-cardinality.test.ts` pins that behavior.
 
-Beam's numeric state-identity fast path does **not** currently share that full-domain guarantee. `search.ts` derives `_flipperBase` as `1 << prep.flipperKeys.length`. JavaScript bitwise shifts are int32: at 31 filters this becomes `-2147483648`, and at 32 the shift count wraps so it becomes `1`. `flipperUsedMask` itself is also signed when bit 31 is set. Therefore the mixed-radix beam dedup key and diverse-beam `(mustCrossMask, flipperUsedMask)` bucket encoding are not collision-free on schema-valid 31/32-filter levels even though their comments claim cardinality-derived exactness.
+Beam's numeric state-identity fast path does **not** currently share that full-domain guarantee. `search.ts` derives `_flipperBase` as `1 << prep.flipperKeys.length`. JavaScript bitwise shifts are int32: at 31 filters this becomes `-2147483648`, and at 32 the shift count wraps so it becomes `1`. `flipperUsedMask` itself is also signed when bit 31 is set. Therefore the mixed-radix coarse-state key and mechanic-bucket-retention `(mustCrossMask, flipperUsedMask)` bucket encoding are not collision-free on schema-valid 31/32-filter levels even though their comments claim cardinality-derived exactness.
 
 Required repair before claiming solver correctness over that domain:
 
