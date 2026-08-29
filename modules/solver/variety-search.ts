@@ -80,14 +80,14 @@ export interface VarietySavedMeta {
      *  suffix, a hint found via admissible-slack ordering is byte-identical in its persisted
      *  provenance to one found via plain random order — a real gap found and closed 2026-07-25. */
     technique: string;
-    /** Tie-break profile identity, mirroring HintSolverProvenance.profile's established meaning for
+    /** Tie-break profile identity, mirroring HintSolverProvenance.scoringProfileId's established meaning for
      *  admissible-order-family techniques ("the tie-break profile, not the primary ordering, which
      *  is always admissible slack" — see that field's own doc). null when orderBy isn't
      *  'admissible-slack', or when it is but no tie-break was applied (tieBreakProfile: null).
      *  'flat' (not a POLICY_PROFILES name) when the flat all-default-weights profile ({}) was used —
      *  named distinctly from POLICY_PROFILES.default so a reader can't mistake it for that
      *  differently-tuned profile. */
-    profile: string | null;
+    scoringProfileId: string | null;
     /** Prefix-anchored (System B) finds only: stable compact id of the seed hint this completion was
      *  anchored on, and the anchor depth. null for enumerate-targeted/complete finds. The real
      *  differentiator between prefix-anchored rediscoveries of the same path (see hint-types.ts
@@ -140,8 +140,8 @@ export function createVarietySearch(
     const rng = config.rng;
     const orderBy = config.orderBy;
     const tieBreakProfile = config.tieBreakProfile;
-    // See VarietySavedMeta.technique/profile's own doc for why a technique-string suffix + a
-    // reused `profile` field, not a new boolean, is the fix here — computed once per session since
+    // See VarietySavedMeta.technique/scoringProfileId's own doc for why a technique-string suffix + a
+    // reused `scoringProfileId` field, not a new boolean, is the fix here — computed once per session since
     // orderBy/tieBreakProfile don't vary per run().
     const orderSuffix = orderBy === 'admissible-slack' ? ':admissible-slack' : '';
     const orderProfile: string | null = orderBy === 'admissible-slack' ? (tieBreakProfile ? 'flat' : null) : null;
@@ -182,7 +182,7 @@ export function createVarietySearch(
         const techniqueForCurrentPhase = { value: (mode === 'complete' ? 'enumerate-complete' : 'enumerate-targeted') + orderSuffix };
         // Which seed hint (+ depth) the current phase is prefix-anchoring on; null outside System B.
         const anchorForCurrentPhase: { seed: string | null; depth: number | null } = { seed: null, depth: null };
-        const meta = () => ({ technique: techniqueForCurrentPhase.value, profile: orderProfile, anchorSeed: anchorForCurrentPhase.seed, anchorDepth: anchorForCurrentPhase.depth });
+        const meta = () => ({ technique: techniqueForCurrentPhase.value, scoringProfileId: orderProfile, anchorSeed: anchorForCurrentPhase.seed, anchorDepth: anchorForCurrentPhase.depth });
         const consider = (candidate: number[], nodesExpanded: number | null = null, elapsedMs: number | null = null) => {
             if (sigs.has(pathSignature(candidate))) {
                 rediscovered.push({ path: candidate, nodesExpanded, elapsedMs, ...meta() });
