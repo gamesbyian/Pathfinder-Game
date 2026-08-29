@@ -360,6 +360,9 @@ Rename code concepts:
 | `template` in attempt config | `orderingBias` |
 | `templateId` | `orderingBiasId` |
 | `TEMPLATE_CONFIG_KEYS` | `ORDERING_BIAS_CONFIG_KEYS` |
+| `SCORE_TEMPLATE_BONUS` | `SCORE_ORDERING_BIAS_BONUS` |
+| `computeTemplateBonus` | `computeOrderingBiasBonus` |
+| `TEMPLATE_*` ablation feature keys | `ORDERING_BIAS_*` |
 
 The profile IDs such as `objectiveFirst`, `harvestThenFinish`, `knotBuilder`, and `perimeterSweep` remain as historical/stable profile identifiers, but every current doc, CLI, telemetry display, and research table must qualify them as scoring profiles. Do not call them techniques without also naming the search family.
 
