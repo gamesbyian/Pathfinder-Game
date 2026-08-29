@@ -354,11 +354,11 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
     // variety-search already tracks real nodesExpanded/elapsedMs/technique per candidate
     // (newlySavedMeta, 1:1 aligned with newlySaved) — carry it straight through instead of
     // re-deriving it, so cost/technique data reflects the actual search that found each path.
-    // savedMeta.technique/profile already carry the orderBy suffix/tie-break identity (see
+    // savedMeta.technique/scoringProfileId already carry the orderBy suffix/tie-break identity (see
     // VarietySavedMeta's own doc in variety-search.ts) -- .startsWith, not ===, below, since the
     // suffix means the string is no longer exactly 'prefix-anchored' under admissible-slack mode.
     const candidates = result.newlySaved.map((candidatePath, index) => {
-        const savedMeta = result.newlySavedMeta[index] ?? { nodesExpanded: null, elapsedMs: null, technique, profile: null };
+        const savedMeta = result.newlySavedMeta[index] ?? { nodesExpanded: null, elapsedMs: null, technique, scoringProfileId: null };
         return {
             path: candidatePath,
             generator: technique,
@@ -378,7 +378,7 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
             },
             diagnostics: { cancelled },
             technique: savedMeta.technique,
-            profile: savedMeta.profile ?? null,
+            scoringProfileId: savedMeta.scoringProfileId ?? savedMeta.profile ?? null,
             nodesExpanded: savedMeta.nodesExpanded,
             elapsedMs: savedMeta.elapsedMs,
             budgetMs: opts.wallMs,
@@ -396,7 +396,7 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
         path: entry.path,
         generator: technique,
         technique: entry.technique,
-        profile: entry.profile ?? null,
+        scoringProfileId: entry.scoringProfileId ?? entry.profile ?? null,
         nodesExpanded: entry.nodesExpanded,
         elapsedMs: entry.elapsedMs,
         budgetMs: opts.wallMs,
