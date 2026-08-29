@@ -1,10 +1,10 @@
 # Naming cleanup implementation plan
 
-Status: **approved vocabulary and implementation plan; latest-`main` preflight complete at `e236a51d3af9` (2026-08-28)**. The canonical naming decisions in this document are authoritative for this cleanup, but no implementation PR may outrank newer implementation on `main`. Repeat Section 0 whenever unrelated solver/application work has merged since the previous naming-cleanup PR.
+Status: **active implementation plan; Phases 1-7 are implemented and repeatedly audited, but PR 8 is blocked on the process-hardening gate in [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md)**. The original latest-`main` preflight was completed at `e236a51d3af9` (2026-08-28); every future implementation phase must reconcile again against current `main`. The canonical naming decisions in this document remain authoritative, but no implementation PR may outrank newer implementation on `main`.
 
 This is a **behavior-preserving naming and vocabulary migration** unless a section explicitly says that an obsolete compatibility surface is removed after its consumers are migrated. Do not change solver policy, attempt order, scoring weights, eligibility, budgets, pruning behavior, random seeds, corpus contents, or evidence disposition as part of this work.
 
-Use `docs/change-recipes.md` for every cross-boundary rename. Historical reports, archived snapshots, frozen logs, immutable workflow artifacts, and committed evidence files remain unchanged unless a parser must be taught to read their legacy identifiers.
+Use `docs/change-recipes.md` for every cross-boundary rename. Before PR 8, complete the mandatory table-setting work in `docs/naming-cleanup-process-hardening.md`; that document records the failure classes discovered during the Phase-1-7 implementation/audit cycle and the stronger verification model required for the remaining phases. Historical reports, archived snapshots, frozen logs, immutable workflow artifacts, and committed evidence files remain unchanged unless a parser must be taught to read their legacy identifiers.
 
 ## 0. Latest-main reconciliation and scope closure
 
@@ -59,6 +59,24 @@ GitHub code search is not indexed for this repository, so the refreshed live-sur
 The refreshed delta census has **zero unclassified naming-relevant hits introduced since the previous reconciliation**. Older live surfaces remain governed by the explicit mappings and retained-term rules in Sections 4-8 and must be rechecked by PR 1's full ledger population.
 
 No production solver behavior, work allocation, experiment disposition, corpus identity, or frozen evidence content changes in this reconciliation.
+
+### 0.2 Mandatory pre-Phase-8 process-hardening gate
+
+Phases 1-7 were followed by repeated forensic audits that found real consumer, transport, runtime, data-completeness, and application regressions after the relevant ledger rows had been marked done. The repository therefore has a new blocking prerequisite before PR 8.
+
+Complete [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md) Sections 3.1-3.8 against current `main` before any PR-8 rename is implemented. In summary, the table-setting pass must:
+
+1. inventory maintained commands, scripts, workers, workflows, generated-data consumers, and public ports relevant to Phases 8-14, including whether normal CI actually executes them;
+2. add cheap smoke/contract coverage for live surfaces where the existing validation floor does not exercise the migrated boundary;
+3. audit duplicated option/result/config transports and centralize them or add parity/sentinel checks;
+4. verify compatibility normalizers are explicit boundaries: legacy read, canonical internal form, canonical single-write;
+5. audit plain-Node/TypeScript runtime seams, weakly typed ports, and exact-case physical paths;
+6. strengthen rename-impact/census tooling so omissions are visible rather than depending on agent memory;
+7. reconcile every remaining Phase-8-14 mapping and retained term against current `main`;
+8. record the refreshed census commit, remaining unexercised surfaces, and readiness result in the hardening document/ledger.
+
+Until this gate is recorded as **ready** in `docs/naming-cleanup-ledger.json`, PR 8 is blocked. The hardening pass may add tests/checks/shared compatibility infrastructure and may fix any newly discovered Phase-1-7 regression, but it must not opportunistically perform Phase-8 canonical renames.
+
 
 ## 1. Goals and non-goals
 
@@ -145,6 +163,10 @@ Lifecycle labels are not operations. `pilot`, dates, experiment origin, and `leg
 
 Every rename PR must perform all checks in this section before merge.
 
+For Phase 8 onward, any rename crossing a module boundary, transport, persisted representation, surfaced tool/workflow, generated artifact, application state boundary, or current authority is a **contract migration**. Before editing, complete the contract-migration matrix in `docs/change-recipes.md` and classify every potentially relevant surface as **migrate**, **compatibility read**, **retained/frozen**, or **not applicable**, with the evidence/test that supports the classification. “No search hit” is not by itself evidence that a category is not applicable.
+
+Phase closure has five stages: impact map, implementation, targeted contract validation, adversarial consumer audit, and behavioral/evidence parity. A phase may not advance `lastCompletedPhase` merely because its implementation tests and aggregate CI are green.
+
 ### 3.1 Search the complete live surface
 
 Search for both the old symbol/string and any common textual variants across:
@@ -216,6 +238,8 @@ Internal TypeScript symbol renames: targeted tests plus `npm run ci:fast`.
 Solver search/orchestration/identity/stage changes: targeted compatibility tests plus full `npm run ci`.
 
 Workflow or package-script aliases: workflow lint/current repository checks plus the relevant command smoke test.
+
+A green aggregate suite is evidence only for surfaces it actually exercises. For every maintained command/tool/workflow touched by the phase, identify the concrete check/test that executes or structurally validates it; add a cheap smoke/contract test when none exists and the surface can be exercised without expensive research compute. Plain-Node tooling whose runtime boundary changes must be verified under the repository's minimum supported Node version, including nested subprocesses when applicable.
 
 No rename PR may be merged with an unexplained solved-set change.
 
@@ -917,6 +941,21 @@ Each entry must contain:
 
 Populate it with every explicit mapping in Sections 4-8 before implementing code renames, including workflow/package/env/protocol mappings. Also add an entry for each potentially confusing live term that the final census intentionally retains; for retained terms, set `old` and `new` to the same canonical spelling and explain the contextual justification in `notes` (for example the ADR-0006 `*-core` convention or genuine bounded `method-probe`). The ledger is the checklist of record. A rename PR marks only its own entries `done`.
 
+For Phase 8 onward, each ledger entry also carries:
+
+```json
+"verification": {
+  "surfaceInventory": "pending|done|not-applicable",
+  "implementation": "pending|done|not-applicable",
+  "targetedValidation": "pending|done|not-applicable",
+  "consumerAudit": "pending|done|not-applicable",
+  "behavioralParity": "pending|done|not-applicable",
+  "closeoutAudit": "pending|done|not-applicable"
+}
+```
+
+A Phase-8+ entry may become `status: "done"` only when every verification dimension is `done` or `not-applicable`. `not-applicable` requires an explicit rationale in the entry notes or phase PR. This model is prospective: do not manufacture retroactive verification claims for Phases 1-7; their later audit history remains recorded in the ledger closeout notes and the process-hardening document.
+
 When the cleanup is complete, archive the final ledger under `docs/archive/snapshots/` and replace the temporary live file with a short completion note in the permanent naming/vocabulary authority.
 
 ## 10. Permanent naming authority
@@ -1019,6 +1058,16 @@ This PR is high risk and requires full CI.
 - remove adapter after no live consumer remains;
 - verify `done -> complete` and `timeout -> partial` compatibility plus unchanged partial-search semantics.
 
+### Mandatory hardening PR before PR 8
+
+This is a blocking prerequisite, not an implementation phase and not permission to start PR 8.
+
+- complete `docs/naming-cleanup-process-hardening.md` Sections 3.1-3.8;
+- add/strengthen repository checks, smoke tests, parity tests, typing, and shared compatibility infrastructure needed to prevent the Phase-1-7 failure classes;
+- reconcile Phases 8-14 and their ledger rows against current `main`;
+- initialize/resolve the Phase-8+ ledger verification dimensions and mark the top-level Phase-8 gate `ready` only when the documented readiness record is complete;
+- do not perform any canonical PR-8 rename in this hardening PR.
+
 ### PR 8: Reference/referee/tool/workflow semantics
 
 - hint oracle rename;
@@ -1092,7 +1141,7 @@ Coordinate this PR with the active budget-model workstream so a symbol already r
 
 ## 12. Per-phase propagation checklist
 
-Every implementation PR must explicitly check the relevant rows below in its PR description.
+Every implementation PR must explicitly check the relevant rows below in its PR description. For Phase 8 onward, these lists supplement rather than replace the contract-migration matrix in `docs/change-recipes.md`. The PR must also identify which concrete test/check executes each surfaced consumer; unexercised live surfaces require an explicit manual audit step or a justified `not-applicable`/structural-validation classification.
 
 ### Solver symbols/configuration
 
@@ -1218,6 +1267,10 @@ The cleanup is complete only when all of the following are true.
 29. Current attempt-exposure tooling uses `routingRegime` and `attemptConfigIdentity`, not `archetype` and `technique`, for those exact concepts.
 30. No surfaced equal-work analysis command retains `pilot` in its permanent name.
 31. Maintained solver-sweep report combination uses `combine-solver-sweep-reports` / **solver:combine-sweep-reports**, and current Corpus 1/2 output paths do not use `parallel`, `random`, or unqualified `benchmark` as corpus identity.
+32. The pre-Phase-8 process-hardening gate was completed against a recorded current-`main` commit before PR 8 began.
+33. Every Phase-8+ ledger entry has all applicable verification dimensions resolved to `done` or `not-applicable`; no row is `done` with pending verification.
+34. Every maintained command/tool/workflow touched by Phases 8-14 has either executable smoke/contract coverage or an explicit documented structural/manual validation path; aggregate CI is not cited for an unexecuted surface.
+35. Each completed Phase 8+ has a consumer-inward closeout audit distinct from the implementation pass.
 
 ## 14. Stop conditions
 
@@ -1230,6 +1283,7 @@ Stop an individual rename PR and report the conflict instead of improvising if:
 - current `main` has already replaced the concept with a different architecture;
 - a newly discovered live surface would require inventing a canonical name not fixed by this plan;
 - a workflow/file rename reveals a stale path or trigger whose correction could change when automation runs.
+- a high-risk cross-boundary rename has no credible way to identify or validate a live consumer/transport surface; first improve the inventory/checking substrate or record the blocker rather than declaring the row complete.
 
 In those cases, preserve the plan's canonical vocabulary, document the concrete blocker in the ledger, and split the schema/behavior problem into a separately reviewed prerequisite. Do not choose a different name locally.
 
