@@ -143,8 +143,8 @@ async function* cascadeSteps(solverApi: any, target: any, solveOptsBase: any, la
         yield {
             kind: 'cascade',
             path: result.solution,
-            profile: winner?.profile ?? null,
-            template: winner?.template ?? null,
+            profile: winner?.scoringProfileId ?? null,
+            template: winner?.orderingBiasId ?? null,
             disabledFeatures: [...disabled],
             beamWidth: attemptInfo.beamWidth,
             diverseBeam: attemptInfo.diverseBeam,
@@ -154,7 +154,7 @@ async function* cascadeSteps(solverApi: any, target: any, solveOptsBase: any, la
             randomSeed: attemptInfo.randomSeed,
             seedSalt: attemptInfo.seedSalt,
         };
-        const disableKey = winner?.template ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.profile];
+        const disableKey = winner?.orderingBiasId ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.scoringProfileId];
         if (!disableKey || disabled.has(disableKey)) return; // safety: can't make further progress
         disabled.add(disableKey);
     }
@@ -179,8 +179,8 @@ async function* strategySteps(solverApi: any, target: any, solveOptsBase: any, l
             yield {
                 kind: 'strategy',
                 path: result.solution,
-                profile: winner?.profile ?? null,
-                template: winner?.template ?? null,
+                profile: winner?.scoringProfileId ?? null,
+                template: winner?.orderingBiasId ?? null,
                 disabledFeatures: [flag],
                 beamWidth: attemptInfo.beamWidth,
                 diverseBeam: attemptInfo.diverseBeam,
@@ -326,7 +326,7 @@ export function createDiversificationSession(level: any, existingHints: number[]
                     ctx.sessionWork += base?.workSpent ?? 0;
                     if (base?.ok && base.solution) {
                         const winner = base.attempts?.find((a: any) => a.ok);
-                        report.baselineWinner = winner?.profile ?? null;
+                        report.baselineWinner = winner?.scoringProfileId ?? null;
                         // The phase suffix (not a separate admissibleOrder field -- see
                         // hint-ablation-generator.ts's matching baseline-phase fix for why an earlier
                         // version of this using such a field was silently dropped before persisting)
@@ -337,8 +337,8 @@ export function createDiversificationSession(level: any, existingHints: number[]
                         const attemptInfo = deriveSolveAttemptInfo(base.attempts);
                         consider(base.solution, {
                             phase,
-                            profile: winner?.profile ?? null,
-                            template: winner?.template ?? null,
+                            profile: winner?.scoringProfileId ?? null,
+                            template: winner?.orderingBiasId ?? null,
                             beamWidth: attemptInfo.beamWidth,
                             diverseBeam: attemptInfo.diverseBeam,
                             attemptIndex: attemptInfo.attemptIndex,
