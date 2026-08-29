@@ -170,7 +170,7 @@ npm run solver:audit-false-goal-triggerability -- --levels=all --extended-budget
 npm run solver:audit-false-goal-triggerability -- --check-false-goals --fg-budget=90000
 ```
 
-False-goal timeouts are `inconclusive`, never invalid. `worker.js` handles `FALSE_GOAL_TRIGGER_SEARCH`; `solver-worker-client.ts` streams `FALSE_GOAL_TRIGGER_SEARCH_PROGRESS` / `FALSE_GOAL_TRIGGER_SEARCH_RESULT`. `trap-scan-controller.ts` owns background parity/confirmed overlays, explicit scan/cancel/budget escalation, `editor.falseGoalTriggerScanState = stale|scanning|complete|partial|failed`, mutation invalidation via `clearEditorTriggerableFalseGoalCells`, and main-thread fallback.
+False-goal timeouts are `inconclusive`, never invalid. `worker.js` handles `FALSE_GOAL_TRIGGER_SEARCH`; `solver-worker-client.ts` streams `FALSE_GOAL_TRIGGER_SEARCH_PROGRESS` / `FALSE_GOAL_TRIGGER_SEARCH_RESULT`. `false-goal-trigger-scan-controller.ts` owns background parity/confirmed overlays, explicit scan/cancel/budget escalation, `editor.falseGoalTriggerScanState = stale|scanning|complete|partial|failed`, mutation invalidation via `clearEditorTriggerableFalseGoalCells`, and main-thread fallback.
 
 ## Parallel Find-all enumeration (browser)
 
