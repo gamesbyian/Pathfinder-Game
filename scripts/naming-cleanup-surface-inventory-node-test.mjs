@@ -86,4 +86,15 @@ assert.deepEqual(rangeInventory.phaseRange, [8, 14]);
 assert.equal(rangeInventory.ledgerEntries.length, 107);
 assert.ok(rangeInventory.ledgerEntries.every(row => typeof row.reconciliationState === 'string'));
 assert.ok(rangeInventory.ledgerEntries.some(row => row.reconciliationState === 'old-live'));
+const reconciliationCounts = Object.fromEntries(
+  [...new Set(rangeInventory.ledgerEntries.map(row => row.reconciliationState))]
+    .sort()
+    .map(state => [state, rangeInventory.ledgerEntries.filter(row => row.reconciliationState === state).length]),
+);
+console.log(`Naming-cleanup Phase 8-14 reconciliation states: ${JSON.stringify(reconciliationCounts)}`);
+for (const row of rangeInventory.ledgerEntries.filter(row =>
+  row.reconciliationState === 'no-current-live-reference-review' ||
+  row.reconciliationState === 'mixed-old-and-canonical')) {
+  console.log(`RECONCILE phase=${row.phase} state=${row.reconciliationState} kind=${row.kind} old=${row.old} new=${row.new}`);
+}
 console.log('Naming-cleanup Phase 8-14 range reconciliation inventory is available.');
