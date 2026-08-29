@@ -139,7 +139,10 @@ export interface SolverApi {
     prepareLevelForSolver(rawLevel: unknown, opts?: PrepareLevelForSolverOptions): NormalizedLevel;
     solveLevel(level: NormalizedLevel, opts?: SolveOpts): Promise<SolveResult>;
     findTriggerableFalseGoalCells(level: NormalizedLevel, opts?: FalseGoalTriggerSearchOptions): Promise<FalseGoalTriggerSearchResult>;
-    classifyFalseGoalTriggerability(level: NormalizedLevel, result: FalseGoalTriggerSearchResult): FalseGoalTriggerability;
+    classifyFalseGoalTriggerability(
+        level: NormalizedLevel,
+        result: Pick<FalseGoalTriggerSearchResult, 'status' | 'triggerableCells' | 'gatesCompleted' | 'totalGates'>,
+    ): Map<number, FalseGoalTriggerability>;
     getFalseGoalTriggerSearchBudgetMs(level: any): number;
     validateCandidatePath(level: any, pathCoordsOrKeys: any[]): PathValidation;
     /** Create a resumable variety-search session over a normalized level (Editor/Review Solve). */
