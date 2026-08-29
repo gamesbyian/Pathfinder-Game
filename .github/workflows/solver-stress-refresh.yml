@@ -69,7 +69,7 @@ on:
         required: false
         default: 'false'
       lifecycle_telemetry:
-        description: 'true adds --lifecycle-telemetry to both corpus solves (per-technique eligible/reached/starved/exhausted record on every row -- see modules/solver/orchestration.ts finish()) and has the combine job emit a mass-weighted failure map (scripts/stress/lifecycle-failure-map.mjs) over the full unsolved population. Opt-in: adds negligible per-level overhead (post-processing only) but the resulting combined benchmark files carry a techniqueLifecycle field on every row, which older analysis tooling does not expect.'
+        description: 'true adds --lifecycle-telemetry to both corpus solves (per-stage eligible/reached/starved/exhausted record on every row -- see modules/solver/orchestration.ts finish()) and has the combine job emit a mass-weighted failure map (scripts/stress/lifecycle-failure-map.mjs) over the full unsolved population. Opt-in: adds negligible per-level overhead (post-processing only) and newly generated combined solver-measurement files carry the canonical stageLifecycle field on every row.'
         required: false
         default: 'false'
       shard_count:

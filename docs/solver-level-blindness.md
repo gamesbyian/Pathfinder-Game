@@ -22,7 +22,7 @@ The solver may use the current puzzle, current-invocation state/telemetry, gener
 
 A capability solve must not use:
 
-- prior winning strategy/profile/template/gate/seed/attempt;
+- prior winning search action/scoring profile/ordering bias/gate/seed/attempt;
 - saved solutions or hints as guidance;
 - historical solved status, timing, nodes, badness, or family outcome for allocation/routing;
 - exact-level attempt caches;

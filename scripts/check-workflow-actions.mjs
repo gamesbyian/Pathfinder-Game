@@ -1,10 +1,6 @@
 #!/usr/bin/env node
-/** Keep official GitHub Actions on the maintained Node-24-generation majors.
- *
- * Project runtime Node versions are separate: setup-node may still install Node 20 for Pathfinder.
- * This check concerns the JavaScript runtime embedded inside the action wrapper itself.
- */
-import { readFileSync, readdirSync } from 'node:fs';
+/** Keep official GitHub Actions on maintained majors and reject stale workflow/script consumers. */
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
 const expected = new Map([
@@ -24,6 +20,7 @@ const failures = [];
 
 for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name)).sort()) {
   const source = readFileSync(path.join(workflowDir, name), 'utf8');
+
   for (const match of source.matchAll(/uses:\s*(actions\/[A-Za-z0-9_-]+)@([^\s#]+)/g)) {
     const action = match[1];
     const required = expected.get(action);
@@ -31,12 +28,28 @@ for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name
     const actual = match[2].replace(/['"]/g, '');
     if (actual !== required) failures.push(`${name}: ${action}@${actual}; expected ${action}@${required}`);
   }
+
+  // Workflow shell steps are a live consumer surface. A renamed/deleted local script must not
+  // survive here merely because package.json and unit tests never execute that workflow.
+  for (const match of source.matchAll(/\b(?:node|tsx)\s+((?:\.\/)?scripts\/[A-Za-z0-9_./-]+\.(?:mjs|js|cjs|ts|tsx))/g)) {
+    const scriptPath = match[1].replace(/^\.\//, '');
+    if (!existsSync(path.join(root, scriptPath))) {
+      failures.push(`${name}: references missing local script ${scriptPath}`);
+    }
+  }
+
+  if (source.includes('repair-probe-badness-report.mjs')) {
+    failures.push(`${name}: references deleted repair-probe-badness-report.mjs`);
+  }
+  if (source.includes('Solver archetype-gated routing sample A/B')) {
+    failures.push(`${name}: watches stale pre-rename workflow display name`);
+  }
 }
 
+
 if (failures.length) {
-  console.error('Outdated official GitHub Action wrapper(s):');
+  console.error('Workflow/action and naming-consumer validation failed:');
   for (const failure of failures) console.error(`  - ${failure}`);
-  console.error('Update the action major after reviewing that release\'s migration notes.');
   process.exit(1);
 }
-console.log('Official GitHub Action wrappers use the repository-approved Node-24-generation majors.');
+console.log('Workflow actions, local workflow entrypoints, and Phase 1-7 live consumers are valid.');

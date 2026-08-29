@@ -109,15 +109,15 @@ const semanticAt = (level, prep, selectedPath, depth, keyMap = key => key) => {
     const legal = api.getNeighbors(pos, state, level, prep);
     const pruneVerdicts = {};
     const scores = {};
-    const curCtx = api.buildCurUrgencyContext(pos, state, level, prep, true, profile);
+    const curCtx = api.buildCurUrgencyContext(pos, state, level, prep, true, scoringProfile);
     for (const child of legal) {
         const candidateState = replayPrefix(level, prep, selectedPath, depth);
         const portal = level.portalMap.get(pos);
         api.applyMove(child, candidateState, level, prep, !!(portal && !candidateState.lastWasPortalJump && portal.dest === child));
         pruneVerdicts[keyMap(child)] = api.evaluatePrunedMove(child, api.getRealLengthFromState(candidateState), candidateState,
             level, prep, prep._cfg, false);
-        scores[keyMap(child)] = api.scoreMove(child, pos, candidateState, level, prep, profile,
-            level.reqLen - api.getRealLengthFromState(candidateState), template, curCtx);
+        scores[keyMap(child)] = api.scoreMove(child, pos, candidateState, level, prep, scoringProfile,
+            level.reqLen - api.getRealLengthFromState(candidateState), orderingBias, curCtx);
     }
     const goalDistance = prep.distMap.get(pos) ?? null;
     const orderedPruneVerdicts = Object.fromEntries(Object.entries(pruneVerdicts).sort(([a], [b]) => Number(a) - Number(b)));
@@ -129,8 +129,8 @@ const semanticAt = (level, prep, selectedPath, depth, keyMap = key => key) => {
             mustCross: state.mustCrossMask ? api.mustCrossLowerBound(pos, state, level, prep) : 0 },
         pruneVerdicts: orderedPruneVerdicts, scoreComponents: { totalByCandidate: orderedScores },
         neutralMetrics: { intersections: state.ints, realLength: api.getRealLengthFromState(state), portalJumps: state.portalJumps },
-        directionalPolicies: [template?.perimeterDir ? `perimeter:${template.perimeterDir}` : null,
-            template?.sideAxis ? `side-axis:${template.sideAxis}` : null].filter(Boolean) };
+        directionalPolicies: [orderingBias?.perimeterDir ? `perimeter:${orderingBias.perimeterDir}` : null,
+            orderingBias?.sideAxis ? `side-axis:${orderingBias.sideAxis}` : null].filter(Boolean) };
 };
 const semanticSteps = [];
 if (transform !== null && !leftTrace.error && !rightTrace.error) for (let depth = 0; depth < Math.min(parentPath.length, variantPath.length) - 1; depth++) {
@@ -148,8 +148,8 @@ const output = {
     mutation: edge.mutationManifest,
     attemptContext: {
         source: args.get('--profile') || args.get('--template') ? 'specified' : winningAttempt ? 'observed' : 'default',
-        profile: profileName,
-        template: templateId,
+        scoringProfileId,
+        orderingBiasId,
     },
     pathSource: args.get('--path') ? 'explicit' : 'result',
     validation,

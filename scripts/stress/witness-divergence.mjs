@@ -26,7 +26,7 @@
  *   - finalStateIsSolution: sanity check (should always be true).
  *
  * Uses only SCORING_PROFILES.default / no structural ordering bias — a single common baseline for
- * comparability across the whole corpus, not the exact profile/template mix a real solve
+ * comparability across the whole corpus, not the exact scoring-profile/ordering-bias mix a real solve
  * attempt would use for that level's features.
  *
  * Run via the esbuild wrapper (imports TS modules):
@@ -74,7 +74,7 @@ function traceWitness(entry) {
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
     const prep = prepLevel(level);
     const keys = witness.map(([x, y]) => PACK(x - 1, y - 1));
-    const profile = SCORING_PROFILES.default;
+    const scoringProfile = SCORING_PROFILES.default;
 
     const state = createState(keys[0], level, prep);
     let cumulativeDiscrepancy = 0;
@@ -92,7 +92,7 @@ function traceWitness(entry) {
             // meaningful (rare/expected only if this fires at all) — portal-jump detection
             // below still applies.
         } else if (neighbors.length > 1) {
-            scoreAndSort(neighbors, pos, state, level, prep, profile, null);
+            scoreAndSort(neighbors, pos, state, level, prep, scoringProfile, null);
             const rank = neighbors.indexOf(nextKey);
             cumulativeDiscrepancy += rank;
             if (rank > maxStepRank) maxStepRank = rank;
@@ -152,7 +152,9 @@ mkdirSync(path.dirname(path.resolve(ROOT, OUT_FILE)), { recursive: true });
 writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify({
     corpus: CORPUS_FILE,
     generatedAt: new Date().toISOString(),
-    profile: 'default (no structural ordering bias) — a common baseline, not each level\'s real attempt policy',
+    scoringProfileId: 'default',
+    orderingBiasId: null,
+    scoringContextNote: 'Common baseline, not each level\'s real attempt policy',
     total: results.length,
     errors: errorCount,
     invalidWitnessSteps: invalidCount,

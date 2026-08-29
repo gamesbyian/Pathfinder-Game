@@ -32,7 +32,7 @@ Use when changing hard prunes, state identity, solver/runtime rules, reusable sc
 
 `validateRawLevel` permits up to 32 flipping filters because `flipperUsedMask` legitimately uses all 32 int32 bits. The underlying transition state is sound at that boundary: bit 31 is a negative signed int32 value but nonzero membership checks, `popcount`, apply, and undo handle it correctly; `flipper-cardinality.test.ts` pins that behavior.
 
-Beam's numeric state-identity fast path does **not** currently share that full-domain guarantee. `search.ts` derives `_flipperBase` as `1 << prep.flipperKeys.length`. JavaScript bitwise shifts are int32: at 31 filters this becomes `-2147483648`, and at 32 the shift count wraps so it becomes `1`. `flipperUsedMask` itself is also signed when bit 31 is set. Therefore the mixed-radix beam dedup key and diverse-beam `(mustCrossMask, flipperUsedMask)` bucket encoding are not collision-free on schema-valid 31/32-filter levels even though their comments claim cardinality-derived exactness.
+Beam's numeric state-identity fast path does **not** currently share that full-domain guarantee. `search.ts` derives `_flipperBase` as `1 << prep.flipperKeys.length`. JavaScript bitwise shifts are int32: at 31 filters this becomes `-2147483648`, and at 32 the shift count wraps so it becomes `1`. `flipperUsedMask` itself is also signed when bit 31 is set. Therefore the mixed-radix coarse-state key and mechanic-bucket-retention `(mustCrossMask, flipperUsedMask)` bucket encoding are not collision-free on schema-valid 31/32-filter levels even though their comments claim cardinality-derived exactness.
 
 Required repair before claiming solver correctness over that domain:
 
@@ -71,7 +71,7 @@ Do not tune scheduler caps or technique value around unexplained stage-history d
 
 ## Closed work not to rediscover unchanged
 
-- Exact DFS/beam transposition caching with sound identity had poor payoff; coarse beam dedup is width/diversity policy, not exact equivalence.
+- Exact DFS/beam transposition caching with sound identity had poor payoff; coarse state merge is a deliberately lossy frontier-retention policy, not exact equivalence.
 - Do **not** treat an earlier packing audit as blanket closure. The 2026-08 hardening pass found two later counterexamples created by domain/representation drift: (a) must-pass lower-bound memoization reserved only 24 mask bits although normalized must-pass/must-turn cardinality is schema-valid through 30; the fixed key now reserves 30 bits and a 25-objective fixture exercises the former alias; (b) beam's later cardinality-derived numeric flipper radix still uses an int32 shift and is unsound at the validator's 31/32-filter boundary (open above). Re-audit consumers whenever cardinality or encoding contracts change.
 - The MITM frontier key was fixed for missing future state and rerun; exact frontier growth is now the conclusion.
 - Flipping-filter single-use/global crossing-order parity is settled semantics; the open beam bug above is representation identity, not mechanic semantics.

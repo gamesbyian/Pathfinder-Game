@@ -9,7 +9,7 @@
  * Read-only, no solving. For each of the closest solved/unsolved pairs (by the same z-scored
  * feature distance nearest-solved-neighbor.mjs uses), reports:
  *   - the solved twin's WINNING technique (winningConfig), attempt count, nodes/time to solve;
- *   - the unsolved twin's FULL attempt ladder (profile/template/beamWidth/finalBadness/
+ *   - the unsolved twin's FULL attempt ladder (scoringProfileId/orderingBiasId/beamWidth/finalBadness/
  *     nodesExpanded/timedOut per attempt);
  *   - whether the solved twin's winning technique was even ATTEMPTED on the unsolved twin, and if
  *     so, how far it got (finalBadness) compared to a clean win (badness 0).
@@ -31,6 +31,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { levelFeatures } from './features.mjs';
 import { attemptRecord } from '../portfolio-solve-sweep-lib.mjs';
+import { parseAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
 
 const ROOT = process.cwd();
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -88,21 +89,18 @@ const nearestPairs = unsolvedRows.map(u => {
 console.log(`near-twin-response-comparison: ${nearestPairs.length} closest solved/unsolved pairs corpus-wide.\n`);
 
 const report = [];
-// winningConfig format: "<technique>:<profile>[/<template>][@beam<width>]" (e.g.
-// "beam:perimeterSweep/perimeterCW@beam2000", "dfs:repair:repair") -- extract just the profile
-// segment so it can be matched against attempts[].scoringProfileId directly (attempts[] doesn't record its
-// own "technique" the same way winningConfig strings do).
-function extractProfile(winningConfig) {
+// winningConfig may be canonical or historical. Route both through the shared attempt-identity
+// parser rather than slicing compact strings locally.
+function extractScoringProfileId(winningConfig) {
     if (!winningConfig) return null;
-    const afterFirstColon = winningConfig.split(':')[1];
-    if (!afterFirstColon) return null;
-    return afterFirstColon.split('/')[0].split('@')[0];
+    try { return parseAttemptIdentityKey(winningConfig).scoringProfileId; }
+    catch { return null; }
 }
 
 for (const { unsolved, solved, distance } of nearestPairs) {
     const uBase = unsolved.base, sBase = solved.base;
     const winningTechnique = sBase.winningConfig;
-    const winningProfile = extractProfile(winningTechnique);
+    const winningScoringProfileId = extractScoringProfileId(winningTechnique);
     const attempts = (uBase.attempts || []).map(a => {
         const projected = attemptRecord(a);
         return {
@@ -114,7 +112,7 @@ for (const { unsolved, solved, distance } of nearestPairs) {
         };
     });
     const bestBadness = Math.min(...attempts.map(a => Number.isFinite(a.finalBadness) ? a.finalBadness : Infinity), Infinity);
-    const matchingAttempts = attempts.filter(a => winningProfile && a.scoringProfileId === winningProfile);
+    const matchingAttempts = attempts.filter(a => winningScoringProfileId && a.scoringProfileId === winningScoringProfileId);
     // A "matching" attempt with zero nodesExpanded got no real budget at all -- present in the
     // ladder in name only, not a genuine attempt at the technique. Distinguishing this from a
     // real, node-spending attempt matters: the former is specialist starvation (a scheduling
@@ -126,17 +124,17 @@ for (const { unsolved, solved, distance } of nearestPairs) {
         : 'real-attempt';
 
     console.log(`${unsolved.id} (bestBadness=${Number.isFinite(bestBadness) ? bestBadness : 'n/a'}, dist=${distance.toFixed(3)}) vs solved ${solved.id}:`);
-    console.log(`  solved twin won via: ${winningTechnique} (profile=${winningProfile}), ${sBase.attemptCount ?? 1} attempt(s), ${sBase.nodesExpanded} nodes, ${sBase.totalMs}ms`);
+    console.log(`  solved twin won via: ${winningTechnique} (scoringProfileId=${winningScoringProfileId}), ${sBase.attemptCount ?? 1} attempt(s), ${sBase.nodesExpanded} nodes, ${sBase.totalMs}ms`);
     console.log(`  unsolved twin's ladder: ${attempts.length} attempts, best badness ${Number.isFinite(bestBadness) ? bestBadness : 'n/a'}, category=${category}`);
     if (category === 'never-attempted') {
-        console.log(`  -> the solved twin's winning PROFILE (${winningProfile}) was NEVER ATTEMPTED on the unsolved twin (routing gap)`);
+        console.log(`  -> the solved twin's winning PROFILE (${winningScoringProfileId}) was NEVER ATTEMPTED on the unsolved twin (routing gap)`);
     } else if (category === 'starved-zero-nodes') {
         console.log(`  -> the winning profile appears in the ladder (${matchingAttempts.length}x) but got ZERO nodesExpanded every time (starved of budget, not a real attempt)`);
     } else {
         const bestMatch = realMatchingAttempts.reduce((a, b) => (a.finalBadness ?? Infinity) < (b.finalBadness ?? Infinity) ? a : b);
         console.log(`  -> the winning profile WAS genuinely attempted (${realMatchingAttempts.length} real, ${matchingAttempts.length - realMatchingAttempts.length} starved), best result: badness ${bestMatch.finalBadness ?? 'n/a'} (${bestMatch.timedOut ? 'timed out' : 'exhausted'}, ${bestMatch.nodesExpanded} nodes)`);
     }
-    report.push({ unsolvedId: unsolved.id, solvedId: solved.id, distance, bestBadness: Number.isFinite(bestBadness) ? bestBadness : null, winningTechnique, winningProfile, attempts, category });
+    report.push({ unsolvedId: unsolved.id, solvedId: solved.id, distance, bestBadness: Number.isFinite(bestBadness) ? bestBadness : null, winningTechnique, winningScoringProfileId, attempts, category });
     console.log('');
 }
 

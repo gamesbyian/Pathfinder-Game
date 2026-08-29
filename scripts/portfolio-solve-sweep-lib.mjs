@@ -138,7 +138,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
     const solvedBeforeFallback = !!legacyLatencyPortfolio?.solvedBeforeFallback;
     const solvedByFallback = !!result?.ok && !solvedBeforeFallback;
     const winner = anyWinningAttempt(result);
-    const phaseLabel = pass ? `pass${pass}` : (solvedByFallback ? (schedulerMode === 'production' || schedulerMode === 'legacy' ? 'legacy' : 'fallback') : '');
+    const phaseLabel = pass ? `pass${pass}` : (solvedByFallback ? (schedulerMode === 'production' || schedulerMode === 'legacy' ? 'production' : 'fallback') : '');
     const attempts = (Array.isArray(result?.attempts) ? result.attempts : []).map(attemptRecord);
     const persistedWinner = attempts.find(attempt => attempt.ok) ?? null;
     return {
@@ -201,6 +201,6 @@ export function tallyPass(passCounts, row, schedulerMode) {
     else if (row.pass === 2) passCounts.pass2 += 1;
     else if (row.pass === 3) passCounts.pass3 += 1;
     else if (row.pass && row.pass > 3) passCounts.conditional += 1;
-    else if (row.solvedByFallback) passCounts[schedulerMode === 'production' || schedulerMode === 'legacy' ? 'legacy' : 'fallback'] += 1;
+    else if (row.solvedByFallback) passCounts[schedulerMode === 'production' || schedulerMode === 'legacy' ? 'production' : 'fallback'] += 1;
     else passCounts.unsolved += 1;
 }

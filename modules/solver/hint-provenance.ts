@@ -14,6 +14,7 @@ type AttemptLike = Omit<Partial<Attempt>, 'stageId'> & {
     template?: string | null;
     diverseBeam?: boolean;
     dedupNearTieRetry?: boolean;
+    attractionDiversity?: boolean;
 };
 
 interface SolveResultLike {
@@ -102,7 +103,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
         seedSalt: winner.repair ? (winner.seedSalt ?? 0) : null,
         repairMustTurnBiased: winner.repair ? !!winner.repairMustTurnBiased : null,
         repairTurnBiased: winner.repair ? !!winner.repairTurnBiased : null,
-        goalAttractionDisabledRetry: attemptTierLabel === 'goal-attraction-disabled-retry',
+        goalAttractionDisabledRetry: attemptTierLabel === 'goal-attraction-disabled-retry' || winner.attractionDiversity === true,
         retryTier: RETRY_TIER_LABELS.has(attemptTierLabel) ? attemptTierLabel : null,
     };
 }

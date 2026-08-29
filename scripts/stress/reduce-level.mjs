@@ -357,7 +357,7 @@ const mainLoopControl = repairParticipated
     : null;
 if (mainLoopControl) console.log(`  Repair-gated control signature (repair disabled): ${mainLoopControl.signature}.`);
 
-console.log(`\nPhase 2 (solver-in-the-loop, target signature=${targetSignature}${mainLoopControl ? `, main-loop control=${mainLoopControl.signature}` : ''}):`);
+console.log(`\nPhase 2 (solver-in-the-loop, target signature=${targetSignature}${mainLoopControl ? `, main-search control=${mainLoopControl.signature}` : ''}):`);
 const p2 = await phase2(p1.raw, targetSignature, MAX_ITERATIONS, mainLoopControl?.signature ?? null);
 console.log(`  ${p2.steps.length} step(s) applied, ${p2.iterations} candidate solve(s), size now ${sizeMeasure(p2.raw)}.`);
 for (const s of p2.steps) console.log(`    - ${s}`);

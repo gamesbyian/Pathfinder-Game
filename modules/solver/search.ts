@@ -86,7 +86,7 @@ export function __reconstructBeamPathForTests(node: BeamPathNode, scratch: numbe
 
 // ─── Core DFS ─────────────────────────────────────────────────────────────────
 
-// Iterative DFS from `startKey` using policy `profile` (and optional `template`).
+// Iterative DFS from `startKey` using policy `profile` (and optional `orderingBias`).
 // levelStartTime + levelBudgetMs: hard wall-clock cap for the whole level.
 // maxDiscrepancy: Limited Discrepancy Search bound. A "discrepancy" is choosing a
 //   non-greedy child; the j-th best child (0-indexed) costs j discrepancies. With
@@ -99,14 +99,14 @@ export function __reconstructBeamPathForTests(node: BeamPathNode, scratch: numbe
 // deterministic, machine-speed-independent cap used by dfsFromGateLDS's probe waves (see its
 // comment) so probe escalation decisions depend on work done, not wall-clock luck under
 // contention. Infinity (default) preserves the pre-existing ms-only behavior exactly.
-async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralOrderingBias | null, maxDiscrepancy = Infinity, yieldFn: YieldFn = null, out: { timedOut?: boolean; nodesExpanded?: number; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
+async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, orderingBias: StructuralOrderingBias | null, maxDiscrepancy = Infinity, yieldFn: YieldFn = null, out: { timedOut?: boolean; nodesExpanded?: number; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
     const state = createState(startKey, level, prep, STATE_BUF_DFS);
     const cfg = prep._cfg; // null = no ablation (all features enabled)
 
     // Stack entry: { key, children, childIdx, undoInfo, disc } where disc = cumulative
     // discrepancy to REACH this node (sum of chosen child-indices along the path).
     const children0 = pruneFirstStepNeighbors(startKey, getNeighbors(startKey, state, level, prep), prep);
-    scoreAndSort(children0, startKey, state, level, prep, profile, template);
+    scoreAndSort(children0, startKey, state, level, prep, profile, orderingBias);
     const stack: DfsFrame[] = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null, disc: 0 }];
 
     let nodesExpanded = 0;
@@ -222,7 +222,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         // Expand next
         const nextNeighbors = getNeighbors(next, state, level, prep);
         if (nextNeighbors.length === 0 && rSteps > 0) { if (_DFS_DEBUG) _dbgInstantRejects++; undoMove(undo, state); continue; }
-        scoreAndSort(nextNeighbors, next, state, level, prep, profile, template);
+        scoreAndSort(nextNeighbors, next, state, level, prep, profile, orderingBias);
         if (_DFS_DEBUG) _dbgPushNodesAt.push(nodesExpanded);
         stack.push({ key: next, children: nextNeighbors, childIdx: 0, undoInfo: undo, disc: childDisc });
     }
@@ -388,7 +388,7 @@ const COARSE_STATE_NEAR_TIE_RETENTION_MARGIN = 0.01;
 // budget check and the final unbounded pass's own out) — a probe wave hitting ITS OWN smaller
 // probeCapMs is not by itself a level-wide timeout (plenty of levelBudgetMs may remain for the
 // final pass), so probe-internal timedOut flags are deliberately not surfaced here.
-export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralOrderingBias | null, yieldFn?: YieldFn, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
+export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, orderingBias: StructuralOrderingBias | null, yieldFn?: YieldFn, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
     const cfg = prep._cfg;
     // nodeBudget (default Infinity => inert): a caller-supplied cumulative-remaining node cap for
     // this whole LDS invocation (offline batch tooling only). dfsFromGate's own nodeBudget param is
@@ -398,7 +398,7 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
     // When STRATEGY_LDS is disabled, skip probe waves and run plain best-first DFS directly.
     if (cfg && !cfg.STRATEGY_LDS) {
         const bypassOut: { timedOut?: boolean; finalBadness?: number } = {};
-        const path = await dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity, yieldFn, bypassOut, nodeBudget);
+        const path = await dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, orderingBias, Infinity, yieldFn, bypassOut, nodeBudget);
         if (out) { out.timedOut = !!bypassOut.timedOut; out.finalBadness = bypassOut.finalBadness; }
         return path;
     }
@@ -417,7 +417,7 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
         if (remainingNodeBudget <= 0) break;
         const w0 = Date.now();
         const probeOut: { timedOut?: boolean; nodesExpanded?: number } = { timedOut: false };
-        const path = await dfsFromGate(startKey, level, prep, profile, probeCapMs, levelStartTime, template, k, yieldFn, probeOut, remainingNodeBudget);
+        const path = await dfsFromGate(startKey, level, prep, profile, probeCapMs, levelStartTime, orderingBias, k, yieldFn, probeOut, remainingNodeBudget);
         probeNodesUsed += probeOut.nodesExpanded ?? remainingNodeBudget;
         if (_LDS_DEBUG) console.error(`    [lds] k=${k} ${Date.now()-w0}ms nodes=${probeOut.nodesExpanded ?? 0} ${path?'SOLVED':probeOut.timedOut?'timeout':'exhausted'}`);
         if (path) return path;
@@ -431,7 +431,7 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
     if (finalNodeBudget <= 0) { if (out) out.timedOut = true; return null; }
     if (yieldFn) await yieldFn();
     const finalOut: { timedOut?: boolean; finalBadness?: number } = {};
-    const path = await dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity, yieldFn, finalOut, finalNodeBudget);
+    const path = await dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, orderingBias, Infinity, yieldFn, finalOut, finalNodeBudget);
     if (out) { out.timedOut = !!finalOut.timedOut; out.finalBadness = finalOut.finalBadness; }
     if (_LDS_DEBUG) console.error(`    [lds] k=Inf ${path?'SOLVED':'-'}`);
     return path;
@@ -500,7 +500,7 @@ function _mechanicBucketSelect(sorted: BeamNode[], beamWidth: number, flipperBas
 // search state — at that instant; `ws` always reflects a real reached position (whichever
 // frontier node it was last replayed to), never garbage, but is not a tracked best-ever minimum
 // the way repair-search's bestBadness is.
-export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
+export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
     const ws = createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     const research = prep._beamResearchObserver;
@@ -739,7 +739,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     }
                 }
                 if (ok) {
-                    const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template, curCtx);
+                    const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, orderingBias, curCtx);
                     // Constraint-state fields snapshotted from ws right after this candidate's move —
                     // used by beamStateKey (coarse-state merge) and _mechanicBucketSelect below. Stored as
                     // scalars, not the joined delimited string, because most phases never reach the

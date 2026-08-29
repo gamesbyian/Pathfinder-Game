@@ -32,7 +32,6 @@ test('maximal Attempt has an explicit, complete provenance projection contract',
     assert.equal(memberships, 1, `${field} must belong to exactly one provenance set`);
   }
 
-  const info = deriveSolveAttemptInfo([successfulAttempt]);
   const entry = provenanceFromSolveResult({
     status: 'success', attempts: [successfulAttempt], nodesExpanded: 9000, totalMs: 654,
   });

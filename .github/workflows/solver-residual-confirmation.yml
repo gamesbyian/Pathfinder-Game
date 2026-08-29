@@ -18,7 +18,7 @@
 # levels the current ladder fails to solve -- but applied to a fresh generated pool instead of the
 # existing corpus:
 #   Phase 1: generate a fresh pool, run the CONTROL ladder alone across it, freeze the subset it
-#            fails to solve (no archetype-rate guessing needed -- this population *is* fresh-
+#            fails to solve (no routing-regime-rate guessing needed -- this population *is* fresh-
 #            generated "repair-resistant" by the same construction that made the original
 #            development population participate).
 #   Phase 2: run the real control/treatment A/B only on that frozen residual.

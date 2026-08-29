@@ -92,7 +92,7 @@ Good questions include:
 - what structural change flips beam vs repair value;
 - when useful budget depth changes after density/re-embedding;
 - which transformations expose orientation-sensitive ordering/retention;
-- whether a scoring/template/width/seed configuration remains valuable across held-out parents;
+- whether a scoring-profile/ordering-bias/beam-width/seed configuration remains valuable across held-out parents;
 - whether an apparent predictor survives after removing family-specific geometry.
 
 For configuration search, use whole-parent splits and racing/successive elimination. Do not give every candidate every sibling merely because the data exist. Optimize marginal portfolio value at fixed `workSpent`, not total wins over correlated rows.
