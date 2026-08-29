@@ -5,7 +5,7 @@
 // ratings. One Firestore doc per distinct discovered path, under
 // artifacts/{appId}/local_level_hints/{fingerprint}/entries/{entryId}.
 import { collection, doc, getDocs, getCountFromServer, setDoc, Timestamp } from 'firebase/firestore';
-import { toHint, mergeHints, type Hint, type HintProvenanceEntry } from '../domain/hint-types.js';
+import { toHint, mergeHints, upgradeProvenanceEntry, type Hint, type HintProvenanceEntry } from '../domain/hint-types.js';
 
 const MAX_HINTS_PER_LEVEL = 5000;
 
@@ -37,7 +37,7 @@ export function createLocalLevelHintsRepository(client: any) {
         snapshot.forEach((snap: any) => {
             const data = snap.data() || {};
             if (!Array.isArray(data.path) || !data.provenance) return;
-            hints.push(toHint(data.path, [data.provenance as HintProvenanceEntry]));
+            hints.push(toHint(data.path, [upgradeProvenanceEntry(data.provenance)]));
         });
         return mergeHints([], hints);
     }
