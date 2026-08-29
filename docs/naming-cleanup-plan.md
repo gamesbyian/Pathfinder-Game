@@ -509,6 +509,17 @@ The canonical worker/result status values are `complete`, `partial`, and `aborte
 
 Player-facing "Trap" / "Trap Spots" wording may remain where it is intentionally UI language. Internal code, worker protocol, telemetry, and developer tooling use false-goal triggerability terminology.
 
+Phase-7 forensic re-audit additions (2026-08-29): the original explicit inventory missed several live internal names and one half-migrated progress field. These are part of PR 7's canonical migration, not a new behavior change:
+
+| Missed live surface | Canonical |
+|---|---|
+| `isConnectedForTrap` | `isConnectedForFalseGoalTriggerSearch` |
+| `PrepLevel.trapInvalidSet` | `PrepLevel.invalidFalseGoalCellSet` |
+| scan-controller callback `onSpots` | `onTriggerableCells` |
+| editor progress callback field `spots` | `triggerableCells` |
+
+The progress-field correction is functional as well as terminological: canonical search progress already emitted `triggerableCells`, so the stale editor destructuring could display an undefined count. Historical worker payload normalization remains centralized at the worker-client boundary; live editor helpers consume canonical statuses and fields only.
+
 ### 4.8 Repair completion helper and prune pipeline
 
 | Current | Canonical |
