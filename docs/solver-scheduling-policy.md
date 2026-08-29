@@ -37,7 +37,7 @@ Forbidden steering includes exact identity/corpus position, saved hints/solution
 
 Use a stable research identity for each meaningful candidate action. Keep two layers distinct:
 
-- **search-action identity:** engine/family, profile/weights, template, width/diversity, seed/restart semantics, behavior-changing flags;
+- **search-action identity:** engine/family, scoring profile/weights, ordering bias, beam width/mechanic-bucket retention, seed/restart semantics, behavior-changing flags;
 - **execution context:** stage/tier, predecessor contract, forced overrides, fresh vs continuation, allocated tranche, accounting scope, typed producer inputs.
 
 A continuation tranche is separately valued: `repair 20M→30M` need not have the same value as `repair 0→10M`. Do not proliferate permanent profile names merely to encode explored combinations.
