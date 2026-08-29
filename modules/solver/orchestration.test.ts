@@ -116,7 +116,7 @@ test('attempt exceptions are recorded and the ladder continues to a later succes
         name: 'TypeError', message: 'deterministic dispatch failure',
         gateKey: result.attempts[0].gateKey,
         configKey: attemptConfigKey(getConfiguredAttemptConfigs(makeLineLevel(), null)[0]),
-        profile: result.attempts[0].profile, orderingBias: result.attempts[0].orderingBias,
+        profile: result.attempts[0].scoringProfileId, orderingBiasId: result.attempts[0].orderingBiasId,
     });
     assert.equal(result.attempts.some(a => a.outcome === 'success'), true);
 });
@@ -158,8 +158,8 @@ test('an error attempt preserves repair identity, allocation, node usage, and se
     const attempt = result.attempts[0];
     assert.equal(attempt.outcome, 'error');
     assert.equal(attempt.gateKey, gateKey);
-    assert.equal(attempt.profile, repairConfig.scoringProfileId);
-    assert.equal(attempt.orderingBias, repairConfig.orderingBias?.id ?? null);
+    assert.equal(attempt.scoringProfileId, repairConfig.scoringProfileId);
+    assert.equal(attempt.orderingBiasId, repairConfig.orderingBias?.id ?? null);
     assert.equal(attempt.repair, true);
     assert.equal(attempt.allocatedBudgetMs, 50);
     assert.equal(attempt.nodesExpanded, 7);
@@ -1419,8 +1419,8 @@ test('admissible-order-fallback profile reserve is inert by default (cfg=null) e
     // earlyTierNodeBudget = 1000 - floor(1000*0.4) = 600 (main loop consumes exactly this, see the
     // numeric test below for the full derivation); with this flag off, 'default' gets the whole
     // remaining 400 and every other profile is starved, exactly the pre-mechanism/R03148 shape.
-    assert.equal(admissibleOrderAttempts.filter(a => a.profile !== 'default').every(a => (a.nodesExpanded ?? 0) === 0), true, 'no room was withheld for the non-default profiles: the reserve did not activate');
-    assert.equal(admissibleOrderAttempts.find(a => a.profile === 'default')?.nodesExpanded, 400, '\'default\' alone spends the whole undivided admissible-order-fallback reserve, exactly the pre-reserve/R03148 behavior');
+    assert.equal(admissibleOrderAttempts.filter(a => a.scoringProfileId !== 'default').every(a => (a.nodesExpanded ?? 0) === 0), true, 'no room was withheld for the non-default profiles: the reserve did not activate');
+    assert.equal(admissibleOrderAttempts.find(a => a.scoringProfileId === 'default')?.nodesExpanded, 400, '\'default\' alone spends the whole undivided admissible-order-fallback reserve, exactly the pre-reserve/R03148 behavior');
 });
 
 test('admissible-order-fallback profile reserve gives non-default profiles room without shrinking default\'s guaranteed floor', async () => {
@@ -1454,7 +1454,7 @@ test('admissible-order-fallback profile reserve gives non-default profiles room 
     // ProfileCeiling=1000 (off) vs 800 (on); every OTHER profile's own ceiling stays the full 1000
     // nodeBudget in both arms.
     const mainLoopNodes = (result: typeof off) => result.attempts.filter(a => !a.repair && !a.attractionDiversity && !a.admissibleOrder).reduce((n, a) => n + (a.nodesExpanded ?? 0), 0);
-    const byProfile = (result: typeof off, profile: string) => result.attempts.find(a => a.admissibleOrder === true && a.profile === profile);
+    const byProfile = (result: typeof off, profile: string) => result.attempts.find(a => a.admissibleOrder === true && a.scoringProfileId === profile);
     assert.equal(mainLoopNodes(off), 600, 'main loop spends the untouched earlyTierNodeBudget identically in both arms');
     assert.equal(mainLoopNodes(on), 600, 'byte-identical to the off arm: nothing before the admissible-order-fallback tier depends on this flag');
     assert.equal(byProfile(off, 'default')?.nodesExpanded, 400, 'off: \'default\' alone spends the whole undivided reserve (600 early + 400 default = 1000)');
@@ -1487,7 +1487,7 @@ test('admissible-order-fallback profile reserve is a no-op when admissibleOrderN
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     const admissibleOrderAttempts = result.attempts.filter(a => a.admissibleOrder === true);
-    assert.equal(admissibleOrderAttempts.filter(a => a.profile !== 'default').every(a => (a.nodesExpanded ?? 0) === 0), true, 'nothing withheld for the non-default profiles to spend');
+    assert.equal(admissibleOrderAttempts.filter(a => a.scoringProfileId !== 'default').every(a => (a.nodesExpanded ?? 0) === 0), true, 'nothing withheld for the non-default profiles to spend');
     assert.equal(result.nodesExpanded, 1000, 'the main loop (600) + \'default\' alone (400) spend the entire (undivided) nodeBudget, exactly as if the flag were off');
 });
 
@@ -1610,8 +1610,8 @@ test('a non-binding deadline cannot resize an explicit-work main-ladder trajecto
     const trajectory = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts.map(attempt => ({
         stageId: attempt.stageId,
         gateKey: attempt.gateKey,
-        profile: attempt.profile,
-        orderingBias: attempt.orderingBias,
+        scoringProfileId: attempt.scoringProfileId,
+        orderingBias: attempt.orderingBiasId,
         beamWidth: attempt.beamWidth,
         outcome: attempt.outcome,
         nodesExpanded: attempt.nodesExpanded,
@@ -2214,7 +2214,7 @@ test('admissible-order-alternate-tiebreak-retry pass can solve a level the admis
     });
     assert.equal(result.ok, true, 'the non-default retry wins');
     assert.equal(result.attempts.at(-1)?.admissibleOrderNonDefaultRetry, true);
-    assert.equal(result.attempts.filter(a => a.admissibleOrderNonDefaultRetry === true && a.profile === 'default').length, 0, "'default' is never retried by this tier");
+    assert.equal(result.attempts.filter(a => a.admissibleOrderNonDefaultRetry === true && a.scoringProfileId === 'default').length, 0, "'default' is never retried by this tier");
 });
 
 test('admissible-order-alternate-tiebreak-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
