@@ -75,7 +75,7 @@ Complete [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardenin
 7. reconcile every remaining Phase-8-14 mapping and retained term against current `main`;
 8. record the refreshed census commit, remaining unexercised surfaces, and readiness result in the hardening document/ledger.
 
-Until this gate is recorded as **ready** in `docs/naming-cleanup-ledger.json`, PR 8 is blocked. The hardening pass may add tests/checks/shared compatibility infrastructure and may fix any newly discovered Phase-1-7 regression, but it must not opportunistically perform Phase-8 canonical renames.
+Until this gate is recorded as **ready** in `docs/naming-cleanup-ledger.json`, PR 8 is blocked. The hardening pass may add tests/checks/shared compatibility infrastructure and may fix any newly discovered Phase-1-7 regression, but it must not opportunistically perform Phase-8 canonical renames. Partial table-setting progress is recorded in `docs/naming-cleanup-process-hardening.md` Section 10 and the ledger gate's `progress` object; partial progress does not relax this block.
 
 
 ## 1. Goals and non-goals
