@@ -59,7 +59,7 @@ const Solver = createSolver();
 const { prepLevel, runAttempt, attemptConfigKey } = SOLVER_TESTING_API;
 
 if (flags.has('--list-profiles')) {
-    console.log('Profiles:', PROFILE_ORDER.join(', '), '(plus "repair" for repair-family configs)');
+    console.log('Profiles:', SCORING_PROFILE_ORDER.join(', '), '(plus "repair" for repair-family configs)');
     console.log('Admissible-order identity: admissible-order|tieBreak=<profile-or-none>|lds=<on|off>; tieBreak selects only the soft-score tie-break, not primary admissible-slack ordering.');
     process.exit(0);
 }
