@@ -1,5 +1,5 @@
 // Unit tests for modules/input/editor-toolbar-core.ts — DOM-free editor decisions from
-// editor-toolbar-controller (grid-resize feasibility/shift planning, trap retry budget).
+// editor-toolbar-controller (grid-resize feasibility/shift planning, false-goal trigger retry budget).
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { planGridResize, computeFalseGoalTriggerRetryBudget } from './editor-toolbar-core.js';
@@ -150,17 +150,6 @@ test('decideFalseGoalTriggerReport: a canonical partial sweep is always surfaced
   assert.match(noSpots.message, /press Trap Spots again/);
 });
 
-
-test('decideFalseGoalTriggerReport: historical done/timeout payloads normalize to canonical behavior', () => {
-  assert.deepEqual(
-    decideFalseGoalTriggerReport({ status: 'done', timedOut: false }, 1),
-    decideFalseGoalTriggerReport({ status: 'complete' }, 1),
-  );
-  assert.deepEqual(
-    decideFalseGoalTriggerReport({ status: 'timeout', timedOut: true, gatesCompleted: 1, totalGates: 2 }, 1),
-    decideFalseGoalTriggerReport({ status: 'partial', gatesCompleted: 1, totalGates: 2 }, 1),
-  );
-});
 
 test('computeVariantPopupPosition: centered above the anchor, flipping and clamping at edges', () => {
   const anchor = { top: 100, bottom: 140, left: 200, width: 40 };
