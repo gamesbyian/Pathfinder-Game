@@ -7,14 +7,14 @@
  * note) -- the two problems it diagnoses are general, not specific to that one cohort:
  *
  * 1. A two-phase residual design guarantees every residual row is a CONTROL-FAILURE (survives the
- *    whole ladder). It does NOT guarantee archetype eligibility for a given candidate's own gate
+ *    whole ladder). It does NOT guarantee routing regime eligibility for a given candidate's own gate
  *    (e.g. isMustCrossFlipperHeavy: arch === 'must-cross-heavy' && mustPass >= 3 && flippers >= 2)
  *    -- those are independent conditions, and a candidate's new configs can only ever execute on a
  *    level satisfying BOTH. Given a sealed pool and a sealed phase-1 combined control report, this
  *    computes exactly (via the real production extractFeatures/isMustCrossFlipperHeavy functions,
- *    not a reimplementation) how many control-failure rows also satisfy a given archetype gate.
- * 2. Even a genuinely archetype-eligible, control-failure row can still show zero participation for
- *    a reason that has nothing to do with archetype classification: a scheduling/budget gap. Found
+ *    not a reimplementation) how many control-failure rows also satisfy a given routing regime gate.
+ * 2. Even a genuinely routing regime-eligible, control-failure row can still show zero participation for
+ *    a reason that has nothing to do with routing regime classification: a scheduling/budget gap. Found
  *    for confirm-residual-001 specifically -- MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT did not protect
  *    a rule's trailing configs once a level's actual nodesExpanded overshot the nominal node_budget
  *    by ~4.5x under non-strict ("legacy additive-pass") semantics -- this script's --dump-full-
@@ -23,7 +23,7 @@
  *    any future candidate confirmation that comes back with unexpected zero participation.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/stress/confirm-residual-001-archetype-audit.mjs -- \
+ *   node scripts/run-bundled.mjs scripts/stress/confirm-residual-001-routing regime-audit.mjs -- \
  *     --pool=<sealed-pool.json> --phase1-report=<sealed-phase1-control-report.json> \
  *     [--phase2-treatment-report=<sealed-phase2-treatment-report.json>] \
  *     [--dump-full-attempts-for-id=<levelId>] \
@@ -57,7 +57,7 @@ const { solveLevel } = await import('../../modules/solver/orchestration.js');
 
 // The real sweep pipeline (level-blind-capability-sweep.mjs) reduces each raw level to ONLY these
 // fields before the solver ever sees it (level-blindness: no identity/history/hints/baseline).
-// Reproduced here to check whether that reduction changes the computed archetype/features versus
+// Reproduced here to check whether that reduction changes the computed routing regime/features versus
 // computing them from the full raw pool record.
 const PUZZLE_FIELDS = [
     'grid', 'gates', 'goal', 'reqLen', 'reqInt', 'blocks', 'geese', 'falseGoals', 'mustPass',
@@ -74,7 +74,7 @@ function classify(rawOrReduced, levelNumber) {
     const level = normalizeRawLevel(rawOrReduced, levelNumber);
     const f = extractFeatures(level);
     const eligible = isMustCrossFlipperHeavy(f);
-    return { arch: f.arch, mustPass: f.mustPass, flippers: f.flippers, reqInt: f.reqInt, eligible };
+    return { routingRegime: f.routingRegime, mustPass: f.mustPass, flippers: f.flippers, reqInt: f.reqInt, eligible };
 }
 
 const poolParsed = JSON.parse(readFileSync(path.resolve(poolPath), 'utf8'));
@@ -89,15 +89,15 @@ let archEligible = 0;
 let archEligibleAndSolved = 0;
 let archEligibleAndFailed = 0;
 const eligibleFailedIds = [];
-const archCounts = new Map();
+const routingRegimeCounts = new Map();
 
 let mismatches = 0;
 for (let i = 0; i < poolLevels.length; i++) {
     const raw = poolLevels[i];
     const rawClass = classify(raw, i + 1);
-    archCounts.set(rawClass.arch, (archCounts.get(rawClass.arch) ?? 0) + 1);
+    routingRegimeCounts.set(rawClass.routingRegime, (routingRegimeCounts.get(rawClass.routingRegime) ?? 0) + 1);
     const reducedClass = classify(mechanicsOnlyLevel(raw), i + 1);
-    if (reducedClass.eligible !== rawClass.eligible || reducedClass.arch !== rawClass.arch) {
+    if (reducedClass.eligible !== rawClass.eligible || reducedClass.routingRegime !== rawClass.routingRegime) {
         mismatches++;
         if (mismatches <= 5) {
             console.log(`MISMATCH ${raw.id}: raw=${JSON.stringify(rawClass)} mechanics-only=${JSON.stringify(reducedClass)}`);
@@ -113,26 +113,28 @@ for (let i = 0; i < poolLevels.length; i++) {
 }
 if (mismatches > 0) console.log(`\n*** ${mismatches}/${poolLevels.length} levels classify DIFFERENTLY under raw vs. mechanics-only-reduced fields ***\n`);
 
-console.log(`archetype distribution: ${JSON.stringify(Object.fromEntries(archCounts))}`);
+console.log(`routing regime distribution: ${JSON.stringify(Object.fromEntries(routingRegimeCounts))}`);
 console.log(`isMustCrossFlipperHeavy-eligible in pool: ${archEligible}/${poolLevels.length} (${(100 * archEligible / poolLevels.length).toFixed(2)}%)`);
 console.log(`  of those, solved by control: ${archEligibleAndSolved}`);
 console.log(`  of those, control-failure (in the residual): ${archEligibleAndFailed}`);
-console.log(`archetype-eligible-and-in-residual IDs (${eligibleFailedIds.length}): ${eligibleFailedIds.join(',')}`);
+console.log(`routing regime-eligible-and-in-residual IDs (${eligibleFailedIds.length}): ${eligibleFailedIds.join(',')}`);
 
 if (treatmentReportPath) {
     const treatment = JSON.parse(readFileSync(path.resolve(treatmentReportPath), 'utf8'));
     const treatmentRows = treatment.levels ?? [];
     const byId = new Map(treatmentRows.map(r => [r.id ?? String(r.level), r]));
-    console.log('\n--- treatment-arm attempt detail for each archetype-eligible-and-residual row ---');
+    console.log('\n--- treatment-arm attempt detail for each routing regime-eligible-and-residual row ---');
     for (const id of eligibleFailedIds) {
         const row = byId.get(id);
         if (!row) { console.log(`${id}: NOT FOUND in treatment report`); continue; }
         const attempts = row.attempts ?? [];
         const repairAttempts = attempts.filter(a => a.repair);
         const repairWork = repairAttempts.reduce((n, a) => n + (a.nodesExpanded || 0), 0);
-        const newConfigAttempts = attempts.filter(a =>
-            (a.actionKey || '').includes('beam:intersectionHarvest@beam5000') && !(a.actionKey || '').includes('diverse')
-            || (a.actionKey || '').includes('beam:objectiveFirst@beam5000') && !(a.actionKey || '').includes('diverse'));
+        const newConfigAttempts = attempts.filter(a => {
+            const key = a.actionKey || '';
+            return key.includes('|beam|score=intersectionHarvest|bias=none|width=5000|retention=plain')
+                || key.includes('|beam|score=objectiveFirst|bias=none|width=5000|retention=plain');
+        });
         console.log(`${id}: ok=${row.ok} workSpent=${row.workSpent} nodesExpanded=${row.nodesExpanded} attemptCount=${attempts.length} repairAttempts=${repairAttempts.length} repairNodesExpanded=${repairWork} newCandidateConfigAttempts=${newConfigAttempts.length}${newConfigAttempts.length ? ' [' + newConfigAttempts.map(a => `${a.actionKey}:outcome=${a.outcome}:nodes=${a.nodesExpanded}`).join(' | ') + ']' : ''}`);
     }
     const dumpId = argMap.get('--dump-full-attempts-for-id');
@@ -140,7 +142,7 @@ if (treatmentReportPath) {
         const row = byId.get(dumpId);
         console.log(`\n--- full attempt sequence for ${dumpId} ---`);
         console.log(JSON.stringify((row?.attempts ?? []).map(a => ({
-            stageId: a.stageId, actionKey: a.actionKey, profile: a.profile, beamWidth: a.beamWidth,
+            stageId: a.stageId, actionKey: a.actionKey, scoringProfileId: a.scoringProfileId, orderingBiasId: a.orderingBiasId ?? null, beamWidth: a.beamWidth, mechanicBucketRetention: a.mechanicBucketRetention ?? false,
             outcome: a.outcome, allocatedBudgetMs: a.allocatedBudgetMs, nodesExpanded: a.nodesExpanded,
             ok: a.ok, timedOut: a.timedOut,
         })), null, 1));
@@ -154,7 +156,7 @@ if (treatmentReportPath) {
             const normalized = normalizeRawLevel(rawDump, levelNumber);
             const directConfigs = getConfiguredAttemptConfigs(normalized, { STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: true });
             console.log(`\n--- ${dumpId}: getConfiguredAttemptConfigs(level, {STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: true}) called directly, right here, right now ---`);
-            console.log(JSON.stringify(directConfigs.map(c => ({ profileName: c.profileName, beamWidth: c.beamWidth ?? null, templateId: c.template?.id ?? null, diverseBeam: c.diverseBeam ?? null, repair: c.repair ?? null }))));
+            console.log(JSON.stringify(directConfigs.map(c => ({ scoringProfileId: c.scoringProfileId, beamWidth: c.beamWidth ?? null, orderingBiasId: c.orderingBias?.id ?? null, mechanicBucketRetention: c.mechanicBucketRetention ?? null, repair: c.repair ?? null }))));
         } else {
             console.log(`\n${dumpId} not found in pool levels (checked ${poolLevels.length} raw records by .id)`);
         }
