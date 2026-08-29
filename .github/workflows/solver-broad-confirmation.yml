@@ -2,7 +2,7 @@
 # a control/treatment level-blind capability A/B against it, in a single workflow run so both arms
 # provably see the byte-identical artifact.
 #
-# WHY A SINGLE RUN, NOT TWO DISPATCHES (unlike solver-archetype-sample-ab.yml and its siblings):
+# WHY A SINGLE RUN, NOT TWO DISPATCHES (unlike solver-routing-regime-sample-ab.yml and its siblings):
 # reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md found that independently
 # invoking the level generator with the same seed in separate jobs did NOT reliably produce
 # byte-identical cohort files -- the valid protocol materializes the cohort exactly ONCE, seals its
@@ -37,10 +37,10 @@
 #   4. verify the seal in every solve shard before search;
 #   5. combine each arm separately and print the aggregate solved/gains/losses verdict.
 #
-# Unlike the archetype-sample A/B workflows, this cohort is NOT required to also include Corpus 1
+# Unlike the routing-regime-sample A/B workflows, this cohort is NOT required to also include Corpus 1
 # or published levels -- confirm-broad-001/002 tested their generated cohort alone, and a uniform
-# random raised-cap cohort already contains a natural mix of archetypes (confirm-broad-002
-# meaningfully exercised an archetype-gated candidate this way). If a future candidate's gate is so
+# random raised-cap cohort already contains a natural mix of routing regimes (confirm-broad-002
+# meaningfully exercised an routing-regime-gated candidate this way). If a future candidate's gate is so
 # narrow that a plain 256-level uniform-random cohort would not participate enough to be
 # informative, raise `count` or say so in the run's own report rather than adding Corpus 1/published
 # here by default.
