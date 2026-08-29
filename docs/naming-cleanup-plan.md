@@ -75,7 +75,7 @@ Complete [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardenin
 7. reconcile every remaining Phase-8-14 mapping and retained term against current `main`;
 8. record the refreshed census commit, remaining unexercised surfaces, and readiness result in the hardening document/ledger.
 
-Until this gate is recorded as **ready** in `docs/naming-cleanup-ledger.json`, PR 8 is blocked. The hardening pass may add tests/checks/shared compatibility infrastructure and may fix any newly discovered Phase-1-7 regression, but it must not opportunistically perform Phase-8 canonical renames.
+Until this gate is recorded as **ready** in `docs/naming-cleanup-ledger.json`, PR 8 is blocked. The hardening pass may add tests/checks/shared compatibility infrastructure and may fix any newly discovered Phase-1-7 regression, but it must not opportunistically perform Phase-8 canonical renames. Partial table-setting progress is recorded in `docs/naming-cleanup-process-hardening.md` Section 10 and the ledger gate's `progress` object; partial progress does not relax this block.
 
 
 ## 1. Goals and non-goals
@@ -810,7 +810,7 @@ The `confirm-residual-001` diagnostic explicitly describes itself as durable gen
 
 The dataset-root environment variable uses dual-read/single-prefer-new for one compatibility window because developers or CI may have it configured outside git. New docs/workflows write only `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT`.
 
-When renaming workflows, also migrate current job labels/IDs, concurrency groups, newly emitted artifact names, default input descriptions, and current README/catalog entries. Historical workflow-run artifacts retain their historical names. Fix the stale **modules/Solver.ts** path filter in the diagnostics workflow to the live `modules/solver.ts` spelling.
+When renaming workflows, also migrate current job labels/IDs, concurrency groups, newly emitted artifact names, default input descriptions, and current README/catalog entries. Historical workflow-run artifacts retain their historical names. The former mixed-case diagnostics-workflow solver-facade path filter has already been fixed to the live `modules/solver.ts` spelling by the mandatory hardening PR, with literal workflow path filters now existence/case checked. Do not repeat that subtask in PR 8.
 
 `method-probe` remains valid terminology because it is genuinely bounded diagnostic single-method execution; do not rename it merely because other uses of "probe" are being corrected.
 
@@ -1081,7 +1081,7 @@ This is a blocking prerequisite, not an implementation phase and not permission 
 - audit diagnostics rename;
 - workflow filenames, display/job names, concurrency groups, current artifact names, path filters, package aliases, catalogs, and workflow docs updated together;
 - rename the completed-run retrieval helper `gha:result` / `gha-result.mjs` to **gha:fetch-result** / `fetch-gha-result.mjs` while retaining the `solver-sweep-result` and `gha-source-run` protocol names;
-- correct the existing **modules/Solver.ts** workflow path-filter case mismatch.
+- the former mixed-case solver-facade workflow path-filter defect was already corrected and permanently guarded by the mandatory hardening PR; treat that PR-8 subtask as superseded, not work to repeat.
 
 ### PR 9: Regression/performance CLI vocabulary
 
@@ -1097,7 +1097,7 @@ This is a blocking prerequisite, not an implementation phase and not permission 
 
 - `closeLengthGap` rename;
 - hard-prune pipeline rename;
-- budget multiplier/time-unit names;
+- budget multiplier/time-unit names; the `StageBudgetPolicyId` spelling `additive-wall-multiplier` is already canonical on current main, so do not recreate that definition rename; audit only its historical-reader compatibility while migrating the still-live repair budget option/local names;
 - no resource-policy change.
 
 Coordinate this PR with the active budget-model workstream so a symbol already removed by budget rationalization is marked superseded rather than recreated.

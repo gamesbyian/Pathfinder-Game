@@ -11,7 +11,8 @@ import { createVarietySearch as makeVarietySearch } from './solver/variety-searc
 import { getFalseGoalTriggerSearchBudgetMs, solveLevel } from './solver/orchestration.js';
 import { SOLVER_TESTING_API } from './solver/testing-api.js';
 import { findTriggerableFalseGoalCells, classifyFalseGoalTriggerability } from './solver/false-goal-trigger-search.js';
-import type { SolverApi } from './ports.js';
+import type { PrepareLevelForSolverOptions, SolverApi } from './ports.js';
+import type { NormalizedLevel } from './domain/types.js';
 
 // ─── Solver policy, encoding, distance, and solution primitives live in modules/solver/ ─
 
@@ -42,13 +43,17 @@ import type { SolverApi } from './ports.js';
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 function createSolver(): SolverApi {
-    const prepareLevelForSolver = (rawLevel: any, opts: any = {}): any => {
+    const prepareLevelForSolver = (
+        rawLevel: unknown,
+        opts: PrepareLevelForSolverOptions = {},
+    ): NormalizedLevel => {
         if (!rawLevel || typeof rawLevel !== 'object') throw new Error('Solver: missing level');
+        const candidate = rawLevel as Record<string, unknown>;
         // Raw normalisation — applied when opts.source === 'raw' or the level is in raw wire format.
-        if ((opts.source === 'raw') || (rawLevel?.goal && Array.isArray(rawLevel?.gates) && !Array.isArray(rawLevel?.gateKeys))) {
+        if ((opts.source === 'raw') || (candidate.goal && Array.isArray(candidate.gates) && !Array.isArray(candidate.gateKeys))) {
             return normalizeRawLevel(rawLevel, opts.levelNumber ?? opts.level ?? null);
         }
-        return rawLevel;
+        return rawLevel as NormalizedLevel;
     };
 
 

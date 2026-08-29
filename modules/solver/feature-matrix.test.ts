@@ -167,7 +167,9 @@ test('trap search finds viable false-goal spots and classifies dead ones', async
 
     // classifyFalseGoalTriggerability: a false goal parked on a found cell classifies as triggerable;
     // one excluded by a complete search classifies as untriggerable.
-    const spotKey: number = res.triggerableCells.values().next().value;
+    const firstTriggerable = res.triggerableCells.values().next().value;
+    assert.notEqual(firstTriggerable, undefined);
+    const spotKey = firstTriggerable as number;
     const withFg = solver.prepareLevelForSolver({
         ...rawLevel,
         falseGoals: [{ x: (spotKey & 0xFFFF) + 1, y: ((spotKey >>> 16) & 0xFFFF) + 1 }],

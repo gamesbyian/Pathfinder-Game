@@ -8,8 +8,13 @@
 
 import type { EngineLevel } from './domain/level-schema.js';
 import type { PackedKey } from './domain/cell-key.js';
-import type { Attempt } from './solver/orchestration.js';
-import type { FalseGoalTriggerSearchOptions } from './solver/false-goal-trigger-search.js';
+import type { Attempt, SolveOpts } from './solver/orchestration.js';
+import type { NormalizedLevel } from './domain/types.js';
+import type {
+    FalseGoalTriggerSearchOptions,
+    FalseGoalTriggerSearchResult,
+    FalseGoalTriggerability,
+} from './solver/false-goal-trigger-search.js';
 
 export interface LevelBounds { minX: number; minY: number; maxX: number; maxY: number; }
 
@@ -120,12 +125,24 @@ export interface DataService {
     isLoaded(): boolean;
 }
 
-/** `solverApi` — the hint-solver facade built by `createSolver`. */
+export interface PrepareLevelForSolverOptions {
+    source?: string;
+    levelNumber?: number | null;
+    /** @deprecated Historical alias for levelNumber, retained at this normalization boundary. */
+    level?: number | null;
+}
+
+/** `solverApi` — the hint-solver facade built by `createSolver`.
+ * High-risk solver option/result boundaries deliberately use the owning solver contracts rather
+ * than `any`, so rename-era option drift is rejected by TypeScript at application call sites. */
 export interface SolverApi {
-    prepareLevelForSolver(rawLevel: any, opts?: any): any;
-    solveLevel(level: any, opts?: any): Promise<SolveResult>;
-    findTriggerableFalseGoalCells(level: any, opts?: FalseGoalTriggerSearchOptions): Promise<any>;
-    classifyFalseGoalTriggerability(level: any, result: any): any;
+    prepareLevelForSolver(rawLevel: unknown, opts?: PrepareLevelForSolverOptions): NormalizedLevel;
+    solveLevel(level: NormalizedLevel, opts?: SolveOpts): Promise<SolveResult>;
+    findTriggerableFalseGoalCells(level: NormalizedLevel, opts?: FalseGoalTriggerSearchOptions): Promise<FalseGoalTriggerSearchResult>;
+    classifyFalseGoalTriggerability(
+        level: NormalizedLevel,
+        result: Pick<FalseGoalTriggerSearchResult, 'status' | 'triggerableCells' | 'gatesCompleted' | 'totalGates'>,
+    ): Map<number, FalseGoalTriggerability>;
     getFalseGoalTriggerSearchBudgetMs(level: any): number;
     validateCandidatePath(level: any, pathCoordsOrKeys: any[]): PathValidation;
     /** Create a resumable variety-search session over a normalized level (Editor/Review Solve). */
