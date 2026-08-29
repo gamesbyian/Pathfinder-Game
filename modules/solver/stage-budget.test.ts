@@ -43,10 +43,10 @@ test('offline finite nodeBudget: admissible-order-fallback reserve is withheld f
     // nodeBudget MINUS the admissible-order-fallback tier's own slice.
     assert.equal(plan.admissibleOrderNodeReserve, Math.floor(nodeBudget * ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION));
     assert.equal(plan.earlyTierNodeBudget, nodeBudget - plan.admissibleOrderNodeReserve);
-    // Additive stack: dedup-retry -> admissible-order-alternate-tiebreak-retry -> connectivity-retry ->
+    // Additive stack: coarse-state-near-tie-retention retry -> admissible-order-alternate-tiebreak-retry -> connectivity-retry ->
     // repair-elite-prefix-dfs-retry -> must-cross-neighbor-prune-disabled-retry -> late-repair-search, each stacked
     // on the IMMEDIATELY PRECEDING tier's own ceiling, never on plain nodeBudget directly (except
-    // dedup-retry, the first additive tier, which stacks on nodeBudget itself).
+    // coarse-state-near-tie-retention retry, the first additive tier, which stacks on nodeBudget itself).
     assert.equal(plan.coarseStateNearTieRetentionRetryNodeReserve, Math.floor(nodeBudget * COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION));
     assert.equal(plan.coarseStateNearTieRetentionRetryNodeCeiling, nodeBudget + plan.coarseStateNearTieRetentionRetryNodeReserve);
     assert.equal(plan.nonDefaultRetryNodeReserve, Math.floor(nodeBudget * ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION));
