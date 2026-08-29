@@ -111,7 +111,7 @@ test('computeFalseGoalTriggerRetryBudget: caps at 480s', () => {
     assert.equal(computeFalseGoalTriggerRetryBudget(300000, 30000), 480000);
 });
 
-// ── §3 additions: trap-report decision + variant popup placement ─────────────────
+// ── §3 additions: false-goal-trigger report decision + variant popup placement ─────────────────
 
 import { decideFalseGoalTriggerReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
 
@@ -124,23 +124,23 @@ test('decideFalseGoalTriggerReport: aborted searches warn and never offer a retr
 });
 
 test('decideFalseGoalTriggerReport: complete searches report found/none without a retry', () => {
-  assert.deepEqual(decideFalseGoalTriggerReport({ status: 'done', timedOut: false }, 1),
+  assert.deepEqual(decideFalseGoalTriggerReport({ status: 'complete' }, 1),
     { message: 'Found 1 spot.', tone: 'info', offerRetry: false });
-  const none = decideFalseGoalTriggerReport({ status: 'done', timedOut: false }, 0);
+  const none = decideFalseGoalTriggerReport({ status: 'complete' }, 0);
   assert.match(none.message, /No valid trap spots/);
   assert.equal(none.tone, 'warning');
   assert.equal(none.offerRetry, false);
 });
 
-test('decideFalseGoalTriggerReport: a timed-out sweep is always surfaced as incomplete and offers a retry', () => {
-  const withSpots = decideFalseGoalTriggerReport({ status: 'timeout', timedOut: true, gatesCompleted: 1, totalGates: 3 }, 2);
+test('decideFalseGoalTriggerReport: a canonical partial sweep is always surfaced as incomplete and offers a retry', () => {
+  const withSpots = decideFalseGoalTriggerReport({ status: 'partial', gatesCompleted: 1, totalGates: 3 }, 2);
   // "fully swept" (not "after N/M gates"): gatesCompleted counts exhaustively-proven
   // gates, so spots can be found while the count is still 0.
   assert.match(withSpots.message, /Found 2 spots so far.*only 1 of 3 gates fully swept/);
   assert.equal(withSpots.tone, 'warning');
   assert.equal(withSpots.offerRetry, true);
 
-  const noSpots = decideFalseGoalTriggerReport({ status: 'timeout', timedOut: true, gatesCompleted: 0, totalGates: 2 }, 0);
+  const noSpots = decideFalseGoalTriggerReport({ status: 'partial', gatesCompleted: 0, totalGates: 2 }, 0);
   assert.match(noSpots.message, /0 of 2 gates fully swept and no spots found yet/);
   assert.equal(noSpots.offerRetry, true);
 
@@ -148,6 +148,18 @@ test('decideFalseGoalTriggerReport: a timed-out sweep is always surfaced as inco
   // message must carry that guidance itself.
   assert.match(withSpots.message, /press Trap Spots again/);
   assert.match(noSpots.message, /press Trap Spots again/);
+});
+
+
+test('decideFalseGoalTriggerReport: historical done/timeout payloads normalize to canonical behavior', () => {
+  assert.deepEqual(
+    decideFalseGoalTriggerReport({ status: 'done', timedOut: false }, 1),
+    decideFalseGoalTriggerReport({ status: 'complete' }, 1),
+  );
+  assert.deepEqual(
+    decideFalseGoalTriggerReport({ status: 'timeout', timedOut: true, gatesCompleted: 1, totalGates: 2 }, 1),
+    decideFalseGoalTriggerReport({ status: 'partial', gatesCompleted: 1, totalGates: 2 }, 1),
+  );
 });
 
 test('computeVariantPopupPosition: centered above the anchor, flipping and clamping at edges', () => {
