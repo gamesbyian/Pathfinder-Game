@@ -335,10 +335,10 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     const goalDistCur    = getDistanceFromArray(prep.goalDistArr, pos, prep.gridW);
     const goalDistTarget = getDistanceFromArray(prep.goalDistArr, target, prep.gridW);
     if (!cfg || cfg.SCORE_GOAL_ATTRACTION) {
-        // SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE (opt-in, see its own ablation-config.ts comment):
+        // SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE (opt-in, see its own ablation-config.ts comment):
         // reads the guidance-only sibling array instead of the corrected one above, for THIS term
         // only — goalDistCur/goalDistTarget above stay untouched for SCORE_FINISH_COMMITMENT.
-        const useLegacyGoalDist = !!(cfg && cfg.SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE === true);
+        const useLegacyGoalDist = !!(cfg && cfg.SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE === true);
         const attrDistCur    = useLegacyGoalDist ? getDistanceFromArray(prep.guidanceGoalDistArr, pos, prep.gridW)    : goalDistCur;
         const attrDistTarget = useLegacyGoalDist ? getDistanceFromArray(prep.guidanceGoalDistArr, target, prep.gridW) : goalDistTarget;
         if (Number.isFinite(attrDistCur) && Number.isFinite(attrDistTarget)) {
