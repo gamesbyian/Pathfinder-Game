@@ -114,34 +114,34 @@ export interface Attempt {
      *  apart from an ordinary main-search attempt using the exact same config without re-deriving it
      *  from attempt order/count. Not read by any solving logic. */
     attractionDiversity?: boolean;
-    /** True only for attempts run by the 2026-08-15 STRATEGY_DEDUP_NEAR_TIE_RETRY last-resort pass
-     *  (see DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION) — same diagnostic-only shape as
+    /** True only for attempts run by the 2026-08-15 STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY last-resort pass
+     *  (see COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION) — same diagnostic-only shape as
      *  attractionDiversity above. Not read by any solving logic. */
-    dedupNearTieRetry?: boolean;
+    coarseStateNearTieRetentionRetry?: boolean;
     /** True only for attempts run by the 2026-08-15 STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY
      *  last-resort pass (see ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION) — same
-     *  diagnostic-only shape as attractionDiversity/dedupNearTieRetry above. Not read by any
+     *  diagnostic-only shape as attractionDiversity/coarseStateNearTieRetentionRetry above. Not read by any
      *  solving logic. */
     admissibleOrderNonDefaultRetry?: boolean;
     /** True only for attempts run by the 2026-08-16 STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY
      *  last-resort pass (see CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION) — same
-     *  diagnostic-only shape as attractionDiversity/dedupNearTieRetry/admissibleOrderNonDefaultRetry
+     *  diagnostic-only shape as attractionDiversity/coarseStateNearTieRetentionRetry/admissibleOrderNonDefaultRetry
      *  above. Not read by any solving logic. */
     connectivityAxisExhaustedRetry?: boolean;
     /** True only for attempts run by the 2026-08-16 STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY
      *  last-resort pass (see REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION) — same diagnostic-only
-     *  shape as attractionDiversity/dedupNearTieRetry/admissibleOrderNonDefaultRetry/
+     *  shape as attractionDiversity/coarseStateNearTieRetentionRetry/admissibleOrderNonDefaultRetry/
      *  connectivityAxisExhaustedRetry above. Not read by any solving logic. */
     repairElitePrefixDfsRetry?: boolean;
     /** True only for attempts run by the 2026-08-19 STRATEGY_MC_NEIGHBOR_BUDGET_RETRY last-resort
      *  pass (see MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION) — same diagnostic-only shape as
-     *  attractionDiversity/dedupNearTieRetry/admissibleOrderNonDefaultRetry/
+     *  attractionDiversity/coarseStateNearTieRetentionRetry/admissibleOrderNonDefaultRetry/
      *  connectivityAxisExhaustedRetry/repairElitePrefixDfsRetry above. Not read by any solving
      *  logic. */
     mcNeighborBudgetRetry?: boolean;
     /** True only for attempts run by the 2026-08-20 STRATEGY_REPAIR_LATE_PROBE last-resort pass
      *  (see REPAIR_LATE_PROBE_NODE_BUDGET) — same diagnostic-only shape as
-     *  attractionDiversity/dedupNearTieRetry/admissibleOrderNonDefaultRetry/
+     *  attractionDiversity/coarseStateNearTieRetentionRetry/admissibleOrderNonDefaultRetry/
      *  connectivityAxisExhaustedRetry/repairElitePrefixDfsRetry/mcNeighborBudgetRetry above. Not
      *  read by any solving logic. */
     repairLateProbe?: boolean;
@@ -190,7 +190,7 @@ export interface AttemptTierFlags {
     repairElitePrefixDfsRetry?: boolean;
     mcNeighborBudgetRetry?: boolean;
     connectivityAxisExhaustedRetry?: boolean;
-    dedupNearTieRetry?: boolean;
+    coarseStateNearTieRetentionRetry?: boolean;
     admissibleOrderNonDefaultRetry?: boolean;
     admissibleOrder?: boolean;
     repairProbe?: boolean;
@@ -236,7 +236,7 @@ export function classifyAttemptTier(attempt: AttemptTierFlags): string {
         : attempt.repairElitePrefixDfsRetry ? 'repair-elite-prefix-dfs-retry'
             : attempt.mcNeighborBudgetRetry ? 'must-cross-neighbor-prune-disabled-retry'
                 : attempt.connectivityAxisExhaustedRetry ? 'connectivity-axis-prune-disabled-retry'
-                    : attempt.dedupNearTieRetry ? 'coarse-state-near-tie-retention-disabled-retry'
+                    : attempt.coarseStateNearTieRetentionRetry ? 'coarse-state-near-tie-retention-disabled-retry'
                         : attempt.admissibleOrderNonDefaultRetry ? 'admissible-order-alternate-tiebreak-retry'
                             : attempt.admissibleOrder ? 'admissible-order-fallback'
                                 : attempt.repairProbe ? 'early-repair-search'
@@ -336,43 +336,43 @@ export interface SolveOpts {
      *  review-controller.ts's interactive call sites) preserves ATTRACTION_DIVERSITY_BUDGET_
      *  FRACTION exactly. */
     attractionDiversityBudgetFractionOverride?: number;
-    /** Overrides DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION for this solve only — same dedicated
+    /** Overrides COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape and rationale as attractionDiversityBudgetFractionOverride above (NOT
      *  an ablation flag; a batch-tooling caller may want to isolate this pass's own cost). Undefined
      *  (production default, and solver-controller.ts/review-controller.ts's interactive call sites)
-     *  preserves DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION exactly. */
-    dedupNearTieRetryBudgetFractionOverride?: number;
-    /** Overrides DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION for this solve only — same dedicated
+     *  preserves COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION exactly. */
+    coarseStateNearTieRetentionRetryBudgetFractionOverride?: number;
+    /** Overrides COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION for this solve only — same dedicated
      *  top-level-option shape as admissibleOrderNodeReserveFractionOverride above, but NOT the same
      *  mechanism as of REVISION 2 (see the constant's own comment): this fraction is ADDITIVE headroom
      *  for the retry tier's own ceiling, not withheld from any earlier tier. 0 restores the tier's
      *  ceiling to plain `nodeBudget` (no extra headroom at all). Undefined (production default)
      *  preserves the constant exactly. */
-    dedupNearTieRetryNodeReserveFractionOverride?: number;
+    coarseStateNearTieRetentionRetryNodeReserveFractionOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION for this solve only — same
-     *  dedicated top-level-option shape as dedupNearTieRetryBudgetFractionOverride above (NOT an
+     *  dedicated top-level-option shape as coarseStateNearTieRetentionRetryBudgetFractionOverride above (NOT an
      *  ablation flag). Undefined (production default, and solver-controller.ts/review-controller.ts's
      *  interactive call sites) preserves ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION exactly. */
     admissibleOrderNonDefaultRetryBudgetFractionOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION for this solve only —
-     *  same ADDITIVE-headroom shape as dedupNearTieRetryNodeReserveFractionOverride above (see that
+     *  same ADDITIVE-headroom shape as coarseStateNearTieRetentionRetryNodeReserveFractionOverride above (see that
      *  field's own comment): this fraction extends the retry tier's own ceiling past `nodeBudget`,
      *  never withheld from any earlier tier. 0 restores the tier's ceiling to plain `nodeBudget`.
      *  Undefined (production default) preserves the constant exactly. */
     admissibleOrderNonDefaultRetryNodeReserveFractionOverride?: number;
     /** Overrides CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION for this solve only — same
-     *  dedicated top-level-option shape as dedupNearTieRetryBudgetFractionOverride above (NOT an
+     *  dedicated top-level-option shape as coarseStateNearTieRetentionRetryBudgetFractionOverride above (NOT an
      *  ablation flag). Undefined (production default, and solver-controller.ts/review-controller.ts's
      *  interactive call sites) preserves CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION exactly. */
     connectivityAxisExhaustedRetryBudgetFractionOverride?: number;
     /** Overrides CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION for this solve only — same
-     *  ADDITIVE-headroom shape as dedupNearTieRetryNodeReserveFractionOverride above (see that
+     *  ADDITIVE-headroom shape as coarseStateNearTieRetentionRetryNodeReserveFractionOverride above (see that
      *  field's own comment): this fraction extends the retry tier's own ceiling past `nodeBudget`,
      *  never withheld from any earlier tier. 0 restores the tier's ceiling to plain `nodeBudget`.
      *  Undefined (production default) preserves the constant exactly. */
     connectivityAxisExhaustedRetryNodeReserveFractionOverride?: number;
     /** Overrides REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION for this solve only — same dedicated
-     *  top-level-option shape as dedupNearTieRetryBudgetFractionOverride above (NOT an ablation
+     *  top-level-option shape as coarseStateNearTieRetentionRetryBudgetFractionOverride above (NOT an ablation
      *  flag). Undefined (production default) preserves the constant exactly. Unlike its three
      *  promoted siblings, this tier is still opt-in (STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY must
      *  also be explicitly set true in `ablation`) — this override only controls the BUDGET once the
@@ -380,21 +380,21 @@ export interface SolveOpts {
      *  lifecycle stage. */
     repairElitePrefixDfsRetryBudgetFractionOverride?: number;
     /** Overrides REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION for this solve only — same
-     *  ADDITIVE-headroom shape as dedupNearTieRetryNodeReserveFractionOverride above (see that
+     *  ADDITIVE-headroom shape as coarseStateNearTieRetentionRetryNodeReserveFractionOverride above (see that
      *  field's own comment): this fraction extends the retry tier's own ceiling past the preceding
      *  tier's own ceiling, never withheld from any earlier tier. 0 restores the tier's ceiling to
      *  the preceding tier's own ceiling exactly. Undefined (production default) preserves the
      *  constant exactly. */
     repairElitePrefixDfsRetryNodeReserveFractionOverride?: number;
     /** Overrides MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION for this solve only — same dedicated
-     *  top-level-option shape as dedupNearTieRetryBudgetFractionOverride above (NOT an ablation
+     *  top-level-option shape as coarseStateNearTieRetentionRetryBudgetFractionOverride above (NOT an ablation
      *  flag). Undefined (production default) preserves the constant exactly. STRATEGY_MC_NEIGHBOR_
      *  BUDGET_RETRY is PROMOTED to default-ON (2026-08-19, GHA run 32224200709: corpus1 95/102
      *  identical solved set, corpus2 819→828, +9, zero regressions) — this override only controls the
      *  BUDGET; the tier now runs by default like its three promoted siblings above. */
     mcNeighborBudgetRetryBudgetFractionOverride?: number;
     /** Overrides MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION for this solve only — same ADDITIVE-
-     *  headroom shape as dedupNearTieRetryNodeReserveFractionOverride above (see that field's own
+     *  headroom shape as coarseStateNearTieRetentionRetryNodeReserveFractionOverride above (see that field's own
      *  comment): this fraction extends the retry tier's own ceiling past the preceding tier's own
      *  ceiling, never withheld from any earlier tier. 0 restores the tier's ceiling to the preceding
      *  tier's own ceiling exactly. Undefined (production default) preserves the constant exactly. */
@@ -471,7 +471,7 @@ export interface SolveOpts {
      *  REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE exactly. */
     repairProbeAdaptiveBiasedMinScaleOverride?: number;
     /** Convenience for offline batch tooling: sets repairBudgetFractionOverride,
-     *  attractionDiversityBudgetFractionOverride, dedupNearTieRetryBudgetFractionOverride,
+     *  attractionDiversityBudgetFractionOverride, coarseStateNearTieRetentionRetryBudgetFractionOverride,
      *  admissibleOrderBudgetFractionOverride, admissibleOrderNonDefaultRetryBudgetFractionOverride,
      *  connectivityAxisExhaustedRetryBudgetFractionOverride,
      *  repairElitePrefixDfsRetryBudgetFractionOverride,
@@ -943,7 +943,7 @@ export {
     ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION, ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION,
     MAIN_LOOP_LATE_RESERVE_FRACTION, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT, REPAIR_FALLBACK_NODE_RESERVE_FRACTION,
     ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION, REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION,
-    DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION, DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION,
+    COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION, COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION,
     ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION,
     CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION,
     REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION, REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION,
@@ -1700,10 +1700,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // straight off stageBudgetPlan) stays reachable on stageBudgetPlan itself without a redundant
     // local alias.
     const {
-        repairBudgetFraction, diversityBudgetFraction, dedupRetryBudgetFraction, nonDefaultRetryBudgetFraction,
+        repairBudgetFraction, diversityBudgetFraction, coarseStateNearTieRetentionRetryBudgetFraction, nonDefaultRetryBudgetFraction,
         connectivityRetryBudgetFraction, repairElitePrefixDfsRetryBudgetFraction, mcNeighborBudgetRetryBudgetFraction,
         admissibleOrderBudgetFraction, admissibleOrderTierWillRun, admissibleOrderNodeReserve,
-        dedupRetryTierWillRun, dedupRetryNodeCeiling,
+        coarseStateNearTieRetentionRetryTierWillRun, coarseStateNearTieRetentionRetryNodeCeiling,
         nonDefaultRetryTierWillRun, nonDefaultRetryNodeCeiling,
         connectivityRetryTierWillRun, connectivityRetryNodeCeiling,
         repairElitePrefixDfsRetryTierWillRun, repairElitePrefixDfsRetryNodeCeiling,
@@ -2147,25 +2147,25 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         }
     }
 
-    // Last-resort coarse-state-near-tie-retention-disabled-retry pass (DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION,
-    // STRATEGY_DEDUP_NEAR_TIE_RETRY) — see that flag's own comment in ablation-config.ts and
-    // DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's own comment above for the full rationale. Same
+    // Last-resort coarse-state-near-tie-retention-disabled-retry pass (COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION,
+    // STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY) — see that flag's own comment in ablation-config.ts and
+    // COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION's own comment above for the full rationale. Same
     // Proxy-override shape as the goal-attraction-disabled-retry pass above, toggling
-    // STRATEGY_DEDUP_NEAR_TIE_RETENTION instead of SCORE_GOAL_ATTRACTION. PROMOTED to default-ON (see
+    // STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION instead of SCORE_GOAL_ATTRACTION. PROMOTED to default-ON (see
     // the constant's own comment) — the flag check below (`!cfg ||` ...) is the standard default-on
     // convention, so this block runs for every caller unless `disableExtraBudgetPasses: true` zeroes
     // its budget fraction (both interactive solve UIs) or `cfg` explicitly disables the flag.
     //
     // REVISION 3 (2026-08-15, same day as REVISION 2 above): moved to run LAST — after early-repair-search-
     // shrink-recovery AND the admissible-order-fallback tier, not before them — because REVISION 2's additive
-    // `dedupRetryNodeCeiling` created a NEW starvation bug the moment it was tested locally against
+    // `coarseStateNearTieRetentionRetryNodeCeiling` created a NEW starvation bug the moment it was tested locally against
     // three of the 65 REVISION-1 collateral levels (R00050/R00059/R00238, all solved via `ida:default`
     // in the with-fix baseline, needing 37.6M-48.4M of the 50M ceiling): with this tier positioned
     // BEFORE the admissible-order-fallback tier, its own extended ceiling let it burn `prep._metrics.
     // nodesExpanded` all the way past the original `nodeBudget` (up to `nodeBudget +
-    // dedupRetryNodeReserve`) on every one of the ~1666 levels that don't need it — and the
+    // coarseStateNearTieRetentionRetryNodeReserve`) on every one of the ~1666 levels that don't need it — and the
     // admissible-order-fallback tier's own entry guard (`nodesExpanded >= profileCeiling`, itself derived from
-    // plain `nodeBudget`, unaware of dedupRetryNodeCeiling) then trips immediately, skipping the tier
+    // plain `nodeBudget`, unaware of coarseStateNearTieRetentionRetryNodeCeiling) then trips immediately, skipping the tier
     // ENTIRELY rather than merely shrinking its share. Extending one tier's ceiling doesn't help if a
     // LATER tier's own guard still checks the unextended `nodeBudget` — the fix has to be "run last, so
     // nothing downstream can be starved" rather than "run early with a bigger ceiling." This is the
@@ -2175,21 +2175,21 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     //
     // With this reorder, every earlier tier (main loop, repair fallback, goal-attraction-disabled-retry,
     // repair-shrink-recovery, admissible-order-fallback) is COMPLETELY unaffected by this tier's
-    // existence — none of their own ceilings reference dedupRetryNodeReserve or dedupRetryNodeCeiling
+    // existence — none of their own ceilings reference coarseStateNearTieRetentionRetryNodeReserve or coarseStateNearTieRetentionRetryNodeCeiling
     // at all (see earlyTierNodeBudget's own comment). This tier's additive extension only ever spends
     // room past every other tier's own full-strength, unshrunk attempt — genuine bonus room, not
     // borrowed from (or lent to) anyone. This reordering, combined with the additive reserve above,
     // IS what full-corpus GHA run 31902837955 validated (764/1700, +40, zero losses) — see
-    // DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's own PROMOTION comment for the result.
-    // `dedupRetryTierWillRun` is the SAME predicate dedupRetryNodeReserve is derived from — the two
+    // COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION's own PROMOTION comment for the result.
+    // `coarseStateNearTieRetentionRetryTierWillRun` is the SAME predicate coarseStateNearTieRetentionRetryNodeReserve is derived from — the two
     // must stay in lockstep (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own history: drift either way
     // strands the reserve or spends one that was never allocated).
-    if (!result.solution && dedupRetryTierWillRun && prep._metrics.nodesExpanded < dedupRetryNodeCeiling) {
+    if (!result.solution && coarseStateNearTieRetentionRetryTierWillRun && prep._metrics.nodesExpanded < coarseStateNearTieRetentionRetryNodeCeiling) {
         // FRESH, ADDITIVE work allocation — deliberately NOT (workBudget, workStart) shared with
         // every earlier tier. That shared pool is already largely spent by the time this tier runs
         // (main loop + repair fallback + goal-attraction-disabled-retry + admissible-order-fallback all draw from it),
         // which starves runGateSerialAttempts/runInterleavedAttempts's own work-based
-        // attemptBudgetShare split even though dedupRetryNodeReserve genuinely protected the NODE
+        // attemptBudgetShare split even though coarseStateNearTieRetentionRetryNodeReserve genuinely protected the NODE
         // ceiling — found directly: R00180's winning config (beam:objectiveFirst@beam5000
         // (diverse), needs ~5.1M nodes) got only 3.7M WORK units under the shared pool (vs. 10.9M
         // when the ordinary main loop tries the identical config with a full pool), well short given
@@ -2204,7 +2204,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // the (intended non-binding) deadline could change how much work this tier bought. Deriving
         // from `workBudget` instead reproduces the exact same number in the common (no override)
         // case — `legacyMsToWork` is linear and `workBudget` already equals what that same
-        // conversion of `timeBudgetMs` would give there, and `dedupRetryBudgetFraction` is always
+        // conversion of `timeBudgetMs` would give there, and `coarseStateNearTieRetentionRetryBudgetFraction` is always
         // an integer (1.0) — so this IS a behavior-preserving representation change for that common
         // case and for every live-play call (both real interactive callers force this tier's own
         // fraction to 0 regardless). It is deliberately NOT behavior-preserving when a caller
@@ -2213,22 +2213,22 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // old code's effectively-infinite ms-derived pool is replaced by the caller's real, much
         // smaller `workBudget` — a genuine, deliberate dose correction for that stratum, not a
         // silent no-op. See reports/2026-08-28-coarse-state-near-tie-retention-disabled-retry-work-dose-migration.md for the
-        // full account and what was verified for each call shape. `dedupRetryTotalBudget` (ms) is
+        // full account and what was verified for each call shape. `coarseStateNearTieRetentionRetryTotalBudget` (ms) is
         // kept for `totalBudgetMs` below: that field is a genuine wall-clock safety deadline, not a
         // work-sizing input, and must stay scaled by the same fraction as the work pool so it
         // remains non-binding relative to the (now correctly bounded) allocation on a slow host.
-        const dedupRetryTotalBudget = Math.floor(timeBudgetMs * dedupRetryBudgetFraction);
-        const dedupRetryResult = await runWholeLadderRetryTier({
+        const coarseStateNearTieRetentionRetryTotalBudget = Math.floor(timeBudgetMs * coarseStateNearTieRetentionRetryBudgetFraction);
+        const coarseStateNearTieRetentionRetryResult = await runWholeLadderRetryTier({
             stageId: 'coarse-state-near-tie-retention-disabled-retry', proxyOverrides: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION: false },
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
-            totalBudgetMs: dedupRetryTotalBudget, nodeCeiling: dedupRetryNodeCeiling,
-            workBudget: scaledStageWorkBudget(workBudget, dedupRetryBudgetFraction, MIN_ATTEMPT_WORK),
+            totalBudgetMs: coarseStateNearTieRetentionRetryTotalBudget, nodeCeiling: coarseStateNearTieRetentionRetryNodeCeiling,
+            workBudget: scaledStageWorkBudget(workBudget, coarseStateNearTieRetentionRetryBudgetFraction, MIN_ATTEMPT_WORK),
             workStart: prep._workMeter.units,
             staircase: retryTierStaircase,
         });
-        result.attempts.push(...dedupRetryResult.attempts);
-        if (dedupRetryResult.solution) result.solution = dedupRetryResult.solution;
+        result.attempts.push(...coarseStateNearTieRetentionRetryResult.attempts);
+        if (coarseStateNearTieRetentionRetryResult.solution) result.solution = coarseStateNearTieRetentionRetryResult.solution;
     }
 
     // Last-resort admissible-order-fallback non-default-profile retry pass
@@ -2241,7 +2241,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     //
     // Positioned dead last — AFTER the coarse-state-near-tie-retention-disabled-retry tier above, for the identical reason that
     // tier itself was moved to run after the admissible-order-fallback tier (REVISION 3, see
-    // dedupRetryNodeReserve's own comment): nothing may run after this tier that still checks an
+    // coarseStateNearTieRetentionRetryNodeReserve's own comment): nothing may run after this tier that still checks an
     // unextended `nodeBudget`/`earlyTierNodeBudget`-derived ceiling, or this tier's own additive
     // extension would starve it. Nothing does — this is the true end of the ladder.
     //
@@ -2250,7 +2250,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // either way strands the reserve or spends one that was never allocated).
     if (!result.solution && nonDefaultRetryTierWillRun && prep._metrics.nodesExpanded < nonDefaultRetryNodeCeiling) {
         // FRESH, ADDITIVE `prep._workCap` override — same "extend, don't share the depleted pool"
-        // philosophy as dedupRetryWorkStart/dedupRetryWorkBudget above, applied here even though this
+        // philosophy as coarseStateNearTieRetentionRetryWorkStart/coarseStateNearTieRetentionRetryWorkBudget above, applied here even though this
         // tier calls `runAttempt` directly (like the admissible-order-fallback tier's own per-profile loop)
         // rather than through runInterleavedAttempts/runGateSerialAttempts's shared-pool
         // attemptBudgetShare machinery dedup-retry's bug came from. `prep._workCap` is still a SINGLE
@@ -2304,7 +2304,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // FRACTION, STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY) — see that flag's own comment in
     // ablation-config.ts and the constant's own comment above for the full rationale. Same
     // Proxy-override shape as the coarse-state-near-tie-retention-disabled-retry pass above, toggling
-    // PRUNE_CONNECTIVITY_AXIS_EXHAUSTED instead of STRATEGY_DEDUP_NEAR_TIE_RETENTION. PROMOTED to
+    // PRUNE_CONNECTIVITY_AXIS_EXHAUSTED instead of STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION. PROMOTED to
     // default-ON (2026-08-16, run 31918095910: corpus1 95/95 unchanged, corpus2 +10/-0) - the flag
     // check below (`!cfg ||` ...) is the promoted-default convention, matching its two sibling tiers;
     // an explicit `{STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false}` still disables it.
