@@ -42,7 +42,7 @@ const run = async (level, gate) => {
     const choices = [];
     const prep = api.prepLevel(level); prep._cfg = null; prep._metrics = { nodesExpanded: 0 }; prep._repairResearchSeed = researchSeed;
     prep._repairChoiceResearchObserver = { observe: record => { if (choices.length < recordLimit) choices.push(record); } };
-    const solution = await repairSearchFromGate(gate, level, prep, api.POLICY_PROFILES.repair, 120000, Date.now(), null,
+    const solution = await repairSearchFromGate(gate, level, prep, api.SCORING_PROFILES.repair, 120000, Date.now(), null,
         null, false, nodeBudget, {});
     return { solution, nodesExpanded: prep._metrics.nodesExpanded, choices };
 };
