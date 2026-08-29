@@ -3510,7 +3510,32 @@
       "rename-impact/census tooling hardening",
       "current-main reconciliation of Phases 8-14",
       "Phase-8 readiness record with refreshed census commit"
-    ]
+    ],
+    "progress": {
+      "startedAgainstMain": "5db2769282d690ce7c12bdcd6aebf064ca467476",
+      "completed": [
+        "CI-enforced Phase-8+ ledger completion contract",
+        "mechanical package/script/workflow CI-exposure inventory",
+        "representative Phase-8 inventory classification regression test",
+        "plain-Node family-trove-doctor CLI/root-selection smoke"
+      ],
+      "partial": [
+        "live execution-surface inventory",
+        "cheap smoke coverage",
+        "runtime/type seam audit",
+        "rename-impact/census tooling"
+      ],
+      "remaining": [
+        "public module/port and generated-report surface inventory",
+        "remaining uncovered Phase-8 command smoke/structural decisions",
+        "shared transport and duplicated mapping audit",
+        "compatibility-normalization boundary audit",
+        "broader mjs/ts, weak typing, and exact-case path audit",
+        "Phases 8-14 current-main reconciliation",
+        "final Phase-8 readiness record"
+      ],
+      "notes": "See docs/naming-cleanup-process-hardening.md Section 10. Gate intentionally remains blocked."
+    }
   },
   "processHardeningNotes": "Prospective completion model added after repeated Phase 1-7 forensic audits. Phase 8 is blocked until docs/naming-cleanup-process-hardening.md Sections 3.1-3.8 are completed against current main. Phase 8+ rows may not become status=done while any applicable verification field is pending. Phases 1-7 are not retroactively assigned verification claims."
 }
