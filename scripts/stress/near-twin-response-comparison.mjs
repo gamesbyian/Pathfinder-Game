@@ -90,7 +90,7 @@ console.log(`near-twin-response-comparison: ${nearestPairs.length} closest solve
 const report = [];
 // winningConfig format: "<technique>:<profile>[/<template>][@beam<width>]" (e.g.
 // "beam:perimeterSweep/perimeterCW@beam2000", "dfs:repair:repair") -- extract just the profile
-// segment so it can be matched against attempts[].profile directly (attempts[] doesn't record its
+// segment so it can be matched against attempts[].scoringProfileId directly (attempts[] doesn't record its
 // own "technique" the same way winningConfig strings do).
 function extractProfile(winningConfig) {
     if (!winningConfig) return null;
@@ -114,7 +114,7 @@ for (const { unsolved, solved, distance } of nearestPairs) {
         };
     });
     const bestBadness = Math.min(...attempts.map(a => Number.isFinite(a.finalBadness) ? a.finalBadness : Infinity), Infinity);
-    const matchingAttempts = attempts.filter(a => winningProfile && a.profile === winningProfile);
+    const matchingAttempts = attempts.filter(a => winningProfile && a.scoringProfileId === winningProfile);
     // A "matching" attempt with zero nodesExpanded got no real budget at all -- present in the
     // ladder in name only, not a genuine attempt at the technique. Distinguishing this from a
     // real, node-spending attempt matters: the former is specialist starvation (a scheduling
