@@ -810,7 +810,7 @@ The `confirm-residual-001` diagnostic explicitly describes itself as durable gen
 
 The dataset-root environment variable uses dual-read/single-prefer-new for one compatibility window because developers or CI may have it configured outside git. New docs/workflows write only `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT`.
 
-When renaming workflows, also migrate current job labels/IDs, concurrency groups, newly emitted artifact names, default input descriptions, and current README/catalog entries. Historical workflow-run artifacts retain their historical names. Fix the stale **modules/Solver.ts** path filter in the diagnostics workflow to the live `modules/solver.ts` spelling.
+When renaming workflows, also migrate current job labels/IDs, concurrency groups, newly emitted artifact names, default input descriptions, and current README/catalog entries. Historical workflow-run artifacts retain their historical names. The former mixed-case diagnostics-workflow solver-facade path filter has already been fixed to the live `modules/solver.ts` spelling by the mandatory hardening PR, with literal workflow path filters now existence/case checked. Do not repeat that subtask in PR 8.
 
 `method-probe` remains valid terminology because it is genuinely bounded diagnostic single-method execution; do not rename it merely because other uses of "probe" are being corrected.
 
