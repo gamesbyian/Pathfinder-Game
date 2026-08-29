@@ -1081,7 +1081,7 @@ This is a blocking prerequisite, not an implementation phase and not permission 
 - audit diagnostics rename;
 - workflow filenames, display/job names, concurrency groups, current artifact names, path filters, package aliases, catalogs, and workflow docs updated together;
 - rename the completed-run retrieval helper `gha:result` / `gha-result.mjs` to **gha:fetch-result** / `fetch-gha-result.mjs` while retaining the `solver-sweep-result` and `gha-source-run` protocol names;
-- correct the existing **modules/Solver.ts** workflow path-filter case mismatch.
+- the former mixed-case solver-facade workflow path-filter defect was already corrected and permanently guarded by the mandatory hardening PR; treat that PR-8 subtask as superseded, not work to repeat.
 
 ### PR 9: Regression/performance CLI vocabulary
 
