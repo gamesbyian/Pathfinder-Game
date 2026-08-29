@@ -35,10 +35,31 @@ test('budget envelopes preserve currencies, reserve direction, scope, and overri
     const retry = createBudgetEnvelope({ stageId: 'connectivity-axis-prune-disabled-retry', nodeCeiling: 12_000_000, headroom: { kind: 'additive', amount: 2_000_000, sourceStageId: 'main-search' } });
     assert.equal(retry.headroom.kind, 'additive'); assert.equal(retry.nodes.ceiling, 12_000_000);
 });
-test('legacy stage IDs normalize to canonical identities without changing canonical IDs', () => {
-    assert.equal(normalizeSolverStageId('repair-probe'), 'early-repair-search');
-    assert.equal(normalizeSolverStageId('main-loop'), 'main-search');
-    assert.equal(normalizeSolverStageId('portfolio-pass'), 'legacy-latency-portfolio-pass');
-    assert.equal(normalizeSolverStageId('guidance-goal-distance-retry'), 'guidance-goal-distance-retry');
+test('every historical stage ID normalizes to exactly one canonical identity without changing canonical IDs', () => {
+    const historicalCases = {
+        prime: 'explicit-prime',
+        'repair-probe': 'early-repair-search',
+        'main-loop': 'main-search',
+        'attraction-diversity': 'goal-attraction-disabled-retry',
+        'repair-probe-shrink-recovery': 'repair-shrink-recovery',
+        'admissible-order': 'admissible-order-fallback',
+        'dedup-near-tie-retry': 'coarse-state-near-tie-retention-disabled-retry',
+        'admissible-order-non-default-retry': 'admissible-order-alternate-tiebreak-retry',
+        'connectivity-axis-exhausted-retry': 'connectivity-axis-prune-disabled-retry',
+        'mc-neighbor-budget-retry': 'must-cross-neighbor-prune-disabled-retry',
+        'repair-late-probe': 'late-repair-search',
+        'goal-attraction-legacy-distance-retry': 'guidance-goal-distance-retry',
+        'repair-late-probe-multi-seed-retry': 'late-repair-multiseed-retry',
+        'portfolio-pass': 'legacy-latency-portfolio-pass',
+        'portfolio-fallback': 'legacy-latency-portfolio-fallback',
+    } as const;
+    for (const [legacy, canonical] of Object.entries(historicalCases)) {
+        assert.equal(normalizeSolverStageId(legacy), canonical, legacy);
+    }
+    for (const canonical of SOLVER_STAGE_IDS) {
+        assert.equal(normalizeSolverStageId(canonical), canonical, canonical);
+    }
+    assert.equal(new Set(Object.values(historicalCases)).size, Object.keys(historicalCases).length,
+        'distinct historical stage IDs must not collapse to one canonical identity');
     assert.throws(() => normalizeSolverStageId('not-a-stage'), /Unknown solver stage/);
 });
