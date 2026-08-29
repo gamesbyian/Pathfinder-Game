@@ -429,9 +429,9 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
     // checkpoint, so no `workMeter.units +` prefix here.
     const workCeiling = legacyMsToWork(opts.wallMs, 1);
     // The cascade doesn't track nodesExpanded/elapsedMs per found candidate (only wall-clock
-    // budgets per phase), but onProgress does report each find's phase/profile/template — capture
+    // budgets per phase), but onProgress does report each find's phase/scoring-profile/ordering-bias — capture
     // it here (in the same order `novel` is pushed, since consider() does both synchronously) so
-    // the accepted hint's provenance at least names which cascade phase/profile found it.
+    // the accepted hint's provenance at least names which cascade phase/scoring profile found it.
     const foundProvenance = [];
     const result = await session.runUntil(() => workCeiling, {
         maxHints: opts.maxAccepted,
@@ -589,8 +589,8 @@ async function solveGridAttempt(gridLevel, solveOpts, errors) {
     try {
         // disableExtraBudgetPasses: candidate-grid/portal-grid deliberately run many narrow, cheap
         // probes under a tight timeBudgetMs -- without this, each individual solve can silently
-        // balloon to up to (1 + 6 + 1 + N) x timeBudgetMs (repair fallback / attraction-diversity /
-        // admissible-order-search's own extra-budget tiers; see CLAUDE.md's solver-architecture
+        // balloon to up to (1 + 6 + 1 + N) x timeBudgetMs (repair fallback / goal-attraction-disabled-retry /
+        // admissible-order-fallback's own extra-budget tiers; see CLAUDE.md's solver-architecture
         // gotcha on this), defeating the whole point of a tight per-attempt budget across a large
         // grid. Same reasoning as hint-ablation-generator.ts's runCascade/runStrategyPhase, which
         // set this for the identical reason. Caught live: an early portal-grid test against S00103
@@ -895,8 +895,8 @@ function hintProvenanceEntryForEvent(event, levelRevision = null) {
     });
 }
 
-// Collapse rediscovery provenance to one entry per (path, DISCOVERY CONDITION) — technique/profile/
-// template/forcing/seed/context/termination, i.e. "how was it found", excluding the incidental search
+// Collapse rediscovery provenance to one entry per (path, DISCOVERY CONDITION) — technique/scoring-profile/
+// ordering-bias/forcing/seed/context/termination, i.e. "how was it found", excluding the incidental search
 // metrics (nodesExpanded/elapsedMs/foundAt). A single enumeration run re-reaches the same solution
 // from many internal anchors and fires a rediscovery event each time; those share a condition and
 // differ only in node count (measured, on P00157, at 88% redundant), which is search noise, not
@@ -910,7 +910,8 @@ function dedupeRediscoveryByCondition(items) {
         const c = it.provenance?.context || {};
         const se = it.provenance?.search || {};
         const key = JSON.stringify([
-            it.path.join(','), s.id, s.technique, s.profile, s.template, s.forcing,
+            it.path.join(','), s.id, s.technique,
+            s.scoringProfileId ?? s.profile, s.orderingBiasId ?? s.template, s.forcing,
             c.hintGuided, c.usedExistingHints, c.levelRevision, se.randomSeed, se.termination,
         ]);
         if (seen.has(key)) continue;
