@@ -173,30 +173,29 @@ function findOrderingBiasOffDelta(orderingBiasId) {
 }
 
 function analyseOrderingBiasWins() {
-    const templateWins = new Map();
+    const orderingBiasWins = new Map();
     for (const lr of (baseline.levels ?? [])) {
         if (!lr.ok || !lr.attempts) continue;
         const winAttempt = lr.attempts.find(a => a.ok);
         const t = winAttempt?.orderingBiasId ?? winAttempt?.template ?? null;
         if (!t) continue;
-        if (!templateWins.has(t)) templateWins.set(t, []);
-        templateWins.get(t).push(lr.level);
+        if (!orderingBiasWins.has(t)) orderingBiasWins.set(t, []);
+        orderingBiasWins.get(t).push(lr.level);
     }
 
-    const templateUniqueWins = new Map();
-    for (const [t, levels] of templateWins) {
+    const orderingBiasUniqueWins = new Map();
+    for (const [t, levels] of orderingBiasWins) {
         const offRun = findOrderingBiasOffDelta(t);
-        if (!offRun) { templateUniqueWins.set(t, []); continue; }
-        if (!offRun) { templateUniqueWins.set(t, []); continue; }
+        if (!offRun) { orderingBiasUniqueWins.set(t, []); continue; }
         const offFailed = new Set(offRun.delta.uniqueFailures);
-        templateUniqueWins.set(t, levels.filter(l => offFailed.has(l)));
+        orderingBiasUniqueWins.set(t, levels.filter(l => offFailed.has(l)));
     }
 
-    return { templateWins, templateUniqueWins };
+    return { orderingBiasWins, orderingBiasUniqueWins };
 }
 
 const { profileWins, profileUniqueWins } = analyseScoringProfileWins();
-const { templateWins, templateUniqueWins } = analyseOrderingBiasWins();
+const { orderingBiasWins, orderingBiasUniqueWins } = analyseOrderingBiasWins();
 
 // ─── Redundancy detection ─────────────────────────────────────────────────────
 
@@ -338,14 +337,14 @@ const analysis = {
         })
         .sort((a, b) => (b.uniqueWins.length - a.uniqueWins.length) || (b.wins - a.wins)),
 
-    orderingBiasRanking: [...templateWins.entries()]
+    orderingBiasRanking: [...orderingBiasWins.entries()]
         .map(([t, levels]) => {
             const offDelta = findOrderingBiasOffDelta(t)?.delta ?? null;
             return {
                 orderingBiasId:  t,
                 wins:            levels.length,
                 winLevels:       levels.slice().sort((a, b) => a - b),
-                uniqueWins:      templateUniqueWins.get(t) ?? [],
+                uniqueWins:      orderingBiasUniqueWins.get(t) ?? [],
                 importanceScore: offDelta?.importanceScore ?? null,
                 tier:            offDelta?.tier ?? 'unknown',
             };
