@@ -64,7 +64,7 @@ test('buildRow records per-attempt badness/timing telemetry', () => {
     assert.equal(row.attempts[0].finalBadness, 4);
     assert.equal(row.attempts[0].timedOut, true);
     assert.equal(row.attempts[1].beamWidth, 5000);
-    assert.equal(row.attempts[1].diverseBeam, true);
+    assert.equal(row.attempts[1].mechanicBucketRetention, true);
     assert.deepEqual(row.failedStrategies, ['dfs|score=perimeterSweep|bias=perimeterCW']);
 });
 
@@ -192,7 +192,7 @@ test('attemptRecord omits absent optional fields rather than emitting undefined'
 });
 
 test('attempt errors and their aggregate signal survive report projection', () => {
-    const error = { name: 'TypeError', message: 'dispatch failed', gateKey: 9, configKey: 'dfs|score=x|bias=none', profile: 'x', template: null, stack: 'must not persist' };
+    const error = { name: 'TypeError', message: 'dispatch failed', gateKey: 9, configKey: 'dfs|score=x|bias=none', scoringProfileId: 'x', orderingBiasId: null, stack: 'must not persist' };
     const row = buildRow(4, 'R00004', {
         ok: false, status: 'attempt-error', attempts: [{
             gateKey: 9, profile: 'x', template: null, beamWidth: null, ok: false,
@@ -228,7 +228,7 @@ test('maximal Attempt round-trips completely through attemptRecord and buildRow'
         for (const field of INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS) {
             assert.ok(!(field in projected), `${field} is intentionally transient`);
         }
-        assert.equal(projected.actionKey, 'repair-late-probe|admissible-order|tieBreak=none|lds=on|seedSalt=7', 'derived action identity must survive projection');
+        assert.equal(projected.actionKey, 'late-repair-search|admissible-order|tieBreak=none|lds=on|seedSalt=7', 'derived action identity must survive projection');
     }
     assert.equal(row.hadAttemptError, true);
 });
