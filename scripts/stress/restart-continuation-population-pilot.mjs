@@ -87,7 +87,7 @@ const outPath = argMap.get('--out') || path.join(root, 'tmp/restart-continuation
 installBrowserStubs();
 const { createSolver } = await import('../../modules/solver.js');
 const { prepLevel } = await import('../../modules/solver/prep.js');
-const { POLICY_PROFILES } = await import('../../modules/solver/policy.js');
+const { SCORING_PROFILES } = await import('../../modules/solver/policy.js');
 const { runRepairRestartVsContinuation } = await import('../../modules/solver/restart-continuation-harness.js');
 
 const Solver = createSolver();
@@ -141,7 +141,7 @@ for (const lv of selected) {
     const gateKey = repairAttempt.gateKey;
     const censusBestBadness = repairAttempt.bestBadness;
     if (!level.gateKeys.includes(gateKey)) { console.error(`SKIP ${lv.id}: census gateKey ${gateKey} not present on re-prepared level`); continue; }
-    const profile = POLICY_PROFILES.repair ?? POLICY_PROFILES.default;
+    const profile = SCORING_PROFILES.repair ?? SCORING_PROFILES.default;
     const start = Date.now();
     const result = await runRepairRestartVsContinuation(gateKey, level, () => prepLevel(level), profile, workBudget, { budgetMs, restartSplitFraction });
     const elapsedMs = Date.now() - start;
