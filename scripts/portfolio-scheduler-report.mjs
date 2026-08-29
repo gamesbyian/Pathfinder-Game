@@ -10,7 +10,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { PORTFOLIO_EXPERIMENT } from '../modules/solver/portfolio-experiment.js';
+import { LEGACY_LATENCY_PORTFOLIO_EXPERIMENT } from '../modules/solver/legacy-latency-portfolio-experiment.js';
 import { parseLevelPositions } from './level-data-io.mjs';
 import { attemptConfigKey, attemptRecord, canonicalAttemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
 import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
@@ -42,12 +42,12 @@ function csvSet(value, fallback) {
 
 function experimentFromArgs() {
     return {
-        pass1Ms: Number(argMap.get('--pass1-ms') || PORTFOLIO_EXPERIMENT.pass1Ms),
-        pass2Ms: Number(argMap.get('--pass2-ms') || PORTFOLIO_EXPERIMENT.pass2Ms),
-        pass3Ms: Number(argMap.get('--pass3-ms') || PORTFOLIO_EXPERIMENT.pass3Ms),
-        pass2Configs: csvSet(argMap.get('--pass2-configs'), PORTFOLIO_EXPERIMENT.pass2Configs),
-        pass3Configs: csvSet(argMap.get('--pass3-configs'), PORTFOLIO_EXPERIMENT.pass3Configs),
-        conditionalPasses: PORTFOLIO_EXPERIMENT.conditionalPasses,
+        pass1Ms: Number(argMap.get('--pass1-ms') || LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass1Ms),
+        pass2Ms: Number(argMap.get('--pass2-ms') || LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass2Ms),
+        pass3Ms: Number(argMap.get('--pass3-ms') || LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass3Ms),
+        pass2Configs: csvSet(argMap.get('--pass2-configs'), LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass2Configs),
+        pass3Configs: csvSet(argMap.get('--pass3-configs'), LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass3Configs),
+        conditionalPasses: LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.conditionalPasses,
     };
 }
 
@@ -74,7 +74,7 @@ function sumAttempts(result, predicate = () => true) {
 
 function summarizeRuntime(result, mode) {
     if (mode === 'portfolio') {
-        const breakdown = result?.portfolio?.runtimeBreakdown;
+        const breakdown = result?.legacyLatencyPortfolioExperiment?.runtimeBreakdown;
         if (breakdown) return breakdown;
         const fallbackSearchMs = sumAttempts(result, a => a?.schedulerPhase === 'fallback');
         const portfolioAttemptSearchMs = sumAttempts(result, a => a?.schedulerPhase === 'portfolio');
@@ -117,12 +117,12 @@ function formatReportMarkdown(summary) {
         '',
         '## Experiment definition',
         '',
-        `- Pass 1 cap: ${summary.portfolioExperiment.pass1Ms}ms`,
-        `- Pass 2 cap: ${summary.portfolioExperiment.pass2Ms}ms`,
-        `- Pass 3 cap: ${summary.portfolioExperiment.pass3Ms}ms`,
-        `- Pass 2 configs: ${summary.portfolioExperiment.pass2Configs.join(', ') || '(none)'}`,
-        `- Pass 3 configs: ${summary.portfolioExperiment.pass3Configs.join(', ') || '(none)'}`,
-        `- Conditional passes: ${summary.portfolioExperiment.conditionalPasses.length ? summary.portfolioExperiment.conditionalPasses.map(p => `pass ${p.passNumber} @ ${p.capMs}ms (${p.configs.join(', ')})`).join('; ') : '(none)'}`,
+        `- Pass 1 cap: ${summary.legacyLatencyPortfolioExperiment.pass1Ms}ms`,
+        `- Pass 2 cap: ${summary.legacyLatencyPortfolioExperiment.pass2Ms}ms`,
+        `- Pass 3 cap: ${summary.legacyLatencyPortfolioExperiment.pass3Ms}ms`,
+        `- Pass 2 configs: ${summary.legacyLatencyPortfolioExperiment.pass2Configs.join(', ') || '(none)'}`,
+        `- Pass 3 configs: ${summary.legacyLatencyPortfolioExperiment.pass3Configs.join(', ') || '(none)'}`,
+        `- Conditional passes: ${summary.legacyLatencyPortfolioExperiment.conditionalPasses.length ? summary.legacyLatencyPortfolioExperiment.conditionalPasses.map(p => `pass ${p.passNumber} @ ${p.capMs}ms (${p.configs.join(', ')})`).join('; ') : '(none)'}`,
         '',
         '## Solve retention',
         '',
@@ -188,7 +188,7 @@ const targets = levelFilter
     ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
     : Array.from({ length: rawLevels.length }, (_, i) => i + 1);
 const commit = (() => { try { return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
-const portfolioExperiment = experimentFromArgs();
+const legacyLatencyPortfolioExperiment = experimentFromArgs();
 
 const passSolved = { pass1: 0, pass2: 0, pass3: 0, conditional: 0, fallback: 0, unsolved: 0 };
 const repeatedByConfig = new Map();
@@ -214,10 +214,10 @@ for (const [i, levelNumber] of targets.entries()) {
     const raw = rawLevels[levelNumber - 1];
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
     const legacy = await Solver.solveLevel(level, { timeBudgetMs: budgetMs });
-    const portfolio = await Solver.solveLevel(level, { timeBudgetMs: budgetMs, schedulerMode: 'portfolio-experiment', portfolioExperiment });
+    const portfolio = await Solver.solveLevel(level, { timeBudgetMs: budgetMs, schedulerMode: 'legacy-latency-portfolio-experiment', legacyLatencyPortfolioExperiment });
 
     const portfolioPass = passForPortfolioWin(portfolio);
-    const solvedBeforeFallback = !!portfolio?.portfolio?.solvedBeforeFallback;
+    const solvedBeforeFallback = !!portfolio?.legacyLatencyPortfolioExperiment?.solvedBeforeFallback;
     const solvedByFallback = !!portfolio?.ok && !solvedBeforeFallback;
     const legacyWinner = winningAttempt(legacy);
     const portfolioWinner = winningAttempt(portfolio, 'portfolio') ?? winningAttempt(portfolio, 'fallback');
@@ -249,8 +249,8 @@ for (const [i, levelNumber] of targets.entries()) {
     fallbackSearchMs += Number(portfolioRuntime.fallbackSearchMs) || 0;
     schedulerOverheadMs += Number(portfolioRuntime.schedulerOverheadMs) || 0;
     prepMs += Number(portfolioRuntime.prepMs) || 0;
-    totalRepeatedAttemptElapsedMs += Number(portfolio?.portfolio?.repeatedAttemptElapsedMs) || 0;
-    totalRepeatedPrefixNodeUpperBound += Number(portfolio?.portfolio?.repeatedPrefixNodeUpperBound) || 0;
+    totalRepeatedAttemptElapsedMs += Number(portfolio?.legacyLatencyPortfolioExperiment?.repeatedAttemptElapsedMs) || 0;
+    totalRepeatedPrefixNodeUpperBound += Number(portfolio?.legacyLatencyPortfolioExperiment?.repeatedPrefixNodeUpperBound) || 0;
 
     if (solvedByFallback || (portfolioPass && portfolioPass > 1)) {
         lateAndFallbackOnlyWins.push({
@@ -287,9 +287,9 @@ for (const [i, levelNumber] of targets.entries()) {
             nodesExpanded: portfolio.nodesExpanded,
             solvedBeforeFallback,
             pass: portfolioPass,
-            fallbackAttemptCount: portfolio?.portfolio?.fallbackAttemptCount ?? 0,
-            repeatedAttemptElapsedMs: portfolio?.portfolio?.repeatedAttemptElapsedMs ?? 0,
-            repeatedPrefixNodeUpperBound: portfolio?.portfolio?.repeatedPrefixNodeUpperBound ?? 0,
+            fallbackAttemptCount: portfolio?.legacyLatencyPortfolioExperiment?.fallbackAttemptCount ?? 0,
+            repeatedAttemptElapsedMs: portfolio?.legacyLatencyPortfolioExperiment?.repeatedAttemptElapsedMs ?? 0,
+            repeatedPrefixNodeUpperBound: portfolio?.legacyLatencyPortfolioExperiment?.repeatedPrefixNodeUpperBound ?? 0,
             winningConfig: portfolioWinner ? (canonicalAttemptConfigKey(portfolioWinner)) : null,
             runtime: portfolioRuntime,
         },
@@ -307,13 +307,13 @@ const summary = {
     commit,
     corpus: path.relative(root, corpusPath),
     budgetMs,
-    portfolioExperiment: {
-        pass1Ms: portfolioExperiment.pass1Ms,
-        pass2Ms: portfolioExperiment.pass2Ms,
-        pass3Ms: portfolioExperiment.pass3Ms,
-        pass2Configs: [...portfolioExperiment.pass2Configs],
-        pass3Configs: [...portfolioExperiment.pass3Configs],
-        conditionalPasses: (portfolioExperiment.conditionalPasses ?? []).map(pass => ({
+    legacyLatencyPortfolioExperiment: {
+        pass1Ms: legacyLatencyPortfolioExperiment.pass1Ms,
+        pass2Ms: legacyLatencyPortfolioExperiment.pass2Ms,
+        pass3Ms: legacyLatencyPortfolioExperiment.pass3Ms,
+        pass2Configs: [...legacyLatencyPortfolioExperiment.pass2Configs],
+        pass3Configs: [...legacyLatencyPortfolioExperiment.pass3Configs],
+        conditionalPasses: (legacyLatencyPortfolioExperiment.conditionalPasses ?? []).map(pass => ({
             passNumber: pass.passNumber,
             capMs: pass.capMs,
             configs: [...pass.configs],
