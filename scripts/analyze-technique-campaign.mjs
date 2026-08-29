@@ -8,12 +8,13 @@ const directory = process.argv[2] ?? 'reports/experiments/2026-08-13-technique-t
 const output = process.argv[3] ?? path.join(directory, 'aggregate.json');
 const root = process.cwd();
 const sha256 = value => createHash('sha256').update(value).digest('hex');
-const technique = attempt => attempt.admissibleOrder ? 'admissible-order'
-    : attempt.repairProbe ? 'repair-probe'
-        : attempt.repair ? 'repair-fallback'
-            : attempt.attractionDiversity ? 'attraction-diversity'
-                : attempt.mainLoopLateReserve ? 'main-loop-late-reserve'
-                    : attempt.beamWidth ? 'beam' : 'dfs';
+const technique = attempt => attempt.stageId
+    ?? (attempt.admissibleOrder ? 'admissible-order-fallback'
+        : attempt.repairProbe ? 'early-repair-search'
+            : attempt.repair ? 'repair-fallback'
+                : attempt.attractionDiversity ? 'goal-attraction-disabled-retry'
+                    : attempt.mainLoopLateReserve ? 'main-search-late-reserve'
+                        : attempt.beamWidth ? 'beam' : 'dfs');
 const finite = value => Number.isFinite(Number(value)) ? Number(value) : null;
 // Search primitives check work at bounded checkpoints rather than before every apply/connectivity
 // debit. Strict mode must stay within this instrumentation tolerance; larger excess is invalid.
@@ -63,8 +64,9 @@ for (const file of files) {
             [...(experiment.artifacts ?? []), ...(experiment.artifact ? [experiment.artifact] : [])].includes(file));
         const issue = message => (owner?.status?.includes('invalid') ? warnings : errors).push(message);
         for (const level of document.levels) {
-            if (!level.techniqueLifecycle) issue(`${file}:${level.id ?? level.level}: lifecycle telemetry missing`);
-            for (const [name, lifecycle] of Object.entries(level.techniqueLifecycle ?? {})) {
+            const stageLifecycle = level.stageLifecycle ?? level.techniqueLifecycle;
+            if (!stageLifecycle) issue(`${file}:${level.id ?? level.level}: lifecycle telemetry missing`);
+            for (const [name, lifecycle] of Object.entries(stageLifecycle ?? {})) {
                 for (const field of ['mechanicallyEligible','instantiated','reached','skippedBecauseSolvedEarlier',
                     'starvedByNodeBudget','starvedByWorkBudget','skippedByRoutingOrConfiguration',
                     'exhaustedSearchSpace','stoppedByDeadline','allocatedNodeCeilings','allocatedWorkCeilings',
@@ -88,7 +90,7 @@ for (const file of files) {
                 if (attempts.some(attempt => attempt.workSpent == null))
                     issue(`${file}:${level.id ?? level.level}: partially missing per-attempt work`);
                 const attemptWork = attempts.reduce((sum, attempt) => sum + Number(attempt.workSpent ?? 0), 0);
-                const lifecycleWork = Object.values(level.techniqueLifecycle ?? {})
+                const lifecycleWork = Object.values(stageLifecycle ?? {})
                     .reduce((sum, lifecycle) => sum + Number(lifecycle.actualWork ?? 0), 0);
                 if (attemptWork !== lifecycleWork || attemptWork !== Number(level.workSpent))
                     issue(`${file}:${level.id ?? level.level}: attempt/lifecycle/level work totals disagree`);

@@ -4,7 +4,7 @@
  *
  * DIFFERENT PHILOSOPHY from generate.mjs's batches A-F: that corpus was deliberately
  * hypothesis-driven (witness geometry and mechanic placement chosen to target specific
- * solver archetypes/policy thresholds). This one is deliberately NOT — it exists to
+ * solver routingRegimes/policy thresholds). This one is deliberately NOT — it exists to
  * evaluate the solver without having been shaped by knowledge of its current strengths
  * or weaknesses, so it can't overfit to today's solver the way a hypothesis-driven
  * corpus structurally can. Concretely, that means:
@@ -16,7 +16,7 @@
  *     game has (except static filters — see below) gets the same treatment: a coin-flip
  *     presence check, then (when present) a count drawn from the upper half of its range.
  *     None are deliberately left out or under-weighted relative to the others.
- *   - no imports from modules/solver/attempts.ts, policy.ts, archetype.ts, or any other
+ *   - no imports from modules/solver/attempts.ts, policy.ts, routingRegime.ts, or any other
  *     solver-STRATEGY module, and no audit-history-fitted model. The only solver-adjacent
  *     import is normalizeRawLevel (pure wire-format normalization, required by the
  *     referee) — the solver's SEARCH never runs during generation, same as before, but
@@ -507,8 +507,8 @@ function deriveTags(raw, features) {
     if (lmCount('decorative') > 0) tags.push('decorated');
     if (raw.geese.length > 0) tags.push(`geese-${raw.geese.length}`);
     if (raw.falseGoals.length > 0) tags.push(`falseGoals-${raw.falseGoals.length}`);
-    if (features.navDensity >= 0.9) tags.push('very-dense');
-    else if (features.navDensity >= 0.7) tags.push('dense');
+    if (features.requiredPathCoverageRatio >= 0.9) tags.push('very-dense');
+    else if (features.requiredPathCoverageRatio >= 0.7) tags.push('dense');
     if (features.reqInt >= 10) tags.push('high-reqInt');
     return tags;
 }
@@ -593,7 +593,7 @@ function main() {
         masterSeed: existingWrapper?.masterSeed ?? MASTER_SEED,
         description: ENVELOPE_CAPS
             ? 'In-envelope solver stress stratum (reports/2026-08-06-game-rules-solver-alignment-plan.md Section 4). SAME generator/philosophy as stress-levels-random.json (witness paths are unbiased random walks, mechanic placement is uniform-random over legal cells, zero scoring bias) but with object caps restored to CLAUDE.md\'s documented per-level maxima instead of raised +4 -- see mechanicCaps below. NOT player content; never loaded by the app. Grids are 11x11-15x15 (square); no static filters (flipping filters only), no multi-gate levels. Exists to give a regression signal for "can the solver solve levels players will actually encounter," tracked independently from stress-levels-random.json\'s deliberately-hard-tail research population. Every level carries a hidden witness solution and was validated with the exact domain referee at generation time. The production solver did not participate in generation in any form.'
-            : 'Uniform-random solver stress corpus. NOT hypothesis-driven (unlike stress-levels.json\'s batches A-F): witness paths are unbiased random walks and mechanic placement is uniform-random over legal cells, so this corpus was not shaped by any knowledge of the solver\'s current behavior. NOT player content; never loaded by the app. Object caps: mustPass/mustCross/flippingFilters/mustTurn/surround/adjacentTurn/geese/falseGoals up to 8, portal pairs up to 7; grids are 11x11-15x15 (square); no static filters (flipping filters only), no multi-gate levels. Every mechanic the game has (other than static filters) is represented with equal treatment (a presence check, then a favour-larger-numbers-when-present count) -- none are deliberately left out. Every level carries a hidden witness solution and was validated with the exact domain referee at generation time. The production solver did not participate in generation in any form (not even for archetype/challenge labeling) and has NOT been run against this corpus yet.',
+            : 'Uniform-random solver stress corpus. NOT hypothesis-driven (unlike stress-levels.json\'s batches A-F): witness paths are unbiased random walks and mechanic placement is uniform-random over legal cells, so this corpus was not shaped by any knowledge of the solver\'s current behavior. NOT player content; never loaded by the app. Object caps: mustPass/mustCross/flippingFilters/mustTurn/surround/adjacentTurn/geese/falseGoals up to 8, portal pairs up to 7; grids are 11x11-15x15 (square); no static filters (flipping filters only), no multi-gate levels. Every mechanic the game has (other than static filters) is represented with equal treatment (a presence check, then a favour-larger-numbers-when-present count) -- none are deliberately left out. Every level carries a hidden witness solution and was validated with the exact domain referee at generation time. The production solver did not participate in generation in any form (not even for routingRegime/challenge labeling) and has NOT been run against this corpus yet.',
         gridSizeRange: [MIN_GRID, MAX_GRID],
         mechanicCaps: Object.fromEntries(Object.entries(MECH).map(([k, v]) => [k, v.max])),
         generationStats: stats,
@@ -641,7 +641,7 @@ function acceptLevel(i, candidate, accepted, noveltyPool, mechCounts, gridSizes,
             structuralComplexity: complexity,
             noveltyScore: Number(novelty.noveltyScore.toFixed(3)),
             nearestNeighbor: novelty.nearestId,
-            navDensity: Number(features.navDensity.toFixed(3)),
+            requiredPathCoverageRatio: Number(features.requiredPathCoverageRatio.toFixed(3)),
             mechanicCounts: placed,
         },
     };

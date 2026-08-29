@@ -134,8 +134,8 @@ export function enumerateKnownPrefixBranches({ api, level, prep, knownSolutions,
         const pos = state.path.at(-1);
         const legal = api.getNeighbors(pos, state, level, prep);
         const ranked = [...legal];
-        if (ranked.length > 1 && api.scoreAndSort && api.POLICY_PROFILES) {
-            api.scoreAndSort(ranked, pos, state, level, prep, api.POLICY_PROFILES.default, null);
+        if (ranked.length > 1 && api.scoreAndSort && api.SCORING_PROFILES) {
+            api.scoreAndSort(ranked, pos, state, level, prep, api.SCORING_PROFILES.default, null);
         }
         for (const child of legal) {
             const childState = replay(group.prefix);

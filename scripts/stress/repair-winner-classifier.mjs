@@ -82,7 +82,7 @@ const crossValidated = numericFeatures.map(feature => {
     return { feature, ...metrics(predictions), rules };
 }).sort((a, b) => b.f1 - a.f1 || b.recall - a.recall || b.precision - a.precision);
 
-const historicalRule = { feature: 'navDensity', threshold: 0.524, direction: '<=' };
+const historicalRule = { feature: 'requiredPathCoverageRatio', threshold: 0.524, direction: '<=' };
 const historicalMetrics = metrics(rows.map(row => ({
     predicted: predicts(row, historicalRule.feature, historicalRule), actual: row.repair,
 })));

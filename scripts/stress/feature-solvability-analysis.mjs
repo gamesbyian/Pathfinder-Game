@@ -3,23 +3,23 @@
  * Corpus-wide discriminative analysis: which level FEATURES actually separate solved from
  * unsolved levels in a compiled baseline. Read-only, no solving — joins an existing compiled
  * baseline's ok/failed labels against `levelFeatures()` (the same feature extractor the novelty
- * and clustering tools use, which mirrors solver/archetype.ts's own navDensity/archetype logic).
+ * and clustering tools use, which mirrors solver/routingRegime.ts's own requiredPathCoverageRatio/routingRegime logic).
  *
  * Why this exists, and what it is NOT:
  *
  *   `cluster-unsolved-failures.mjs` reports `byArchetype` COUNTS over the unsolved population.
- *   Counts alone cannot distinguish "this archetype is hard" from "this archetype is most of the
+ *   Counts alone cannot distinguish "this routingRegime is hard" from "this routingRegime is most of the
  *   corpus" — and for stress-corpus-2 the difference is decisive: `high-intersection-burden` is
- *   the majority archetype corpus-wide, so it dominates every failure bucket while carrying almost
+ *   the majority routingRegime corpus-wide, so it dominates every failure bucket while carrying almost
  *   no difficulty signal (enrichment ~1.0x). Reading those count tables as a difficulty ranking
  *   has previously mis-aimed campaign targeting. This script reports SOLVE RATES and enrichment
  *   factors instead, so a feature's apparent prevalence in the failure set is always divided
  *   through by its prevalence in the corpus.
  *
- *   It also reports every effect CONTROLLED for navDensity, because navDensity (= reqLen /
+ *   It also reports every effect CONTROLLED for requiredPathCoverageRatio, because requiredPathCoverageRatio (= reqLen /
  *   navigable area — how much of the free board the solution must consume) is both the strongest
  *   single discriminator and correlated with most mechanic counts. An uncontrolled feature effect
- *   is frequently just navDensity in disguise.
+ *   is frequently just requiredPathCoverageRatio in disguise.
  *
  * This measures ASSOCIATION on observational data, not causation: it says which regimes the solver
  * currently fails in, never why. Use it to pick where to aim a diagnosis (witness-divergence,
@@ -70,8 +70,8 @@ for (const raw of corpusLevels) {
     rows.push({
         id: raw.id,
         ok,
-        archetype: f.archetype,
-        navDensity: f.navDensity,
+        routingRegime: f.routingRegime,
+        requiredPathCoverageRatio: f.requiredPathCoverageRatio,
         reqLen: f.reqLen,
         reqInt: f.reqInt,
         area: f.area,
@@ -86,7 +86,7 @@ for (const raw of corpusLevels) {
         adjTurn: f.adjTurn,
         // Total outstanding turn/landmark obligations. Decorative landmarks are deliberately
         // excluded: they are impassable but carry no path obligation, so they belong to
-        // navDensity (via `blocks`), not to constraint load.
+        // requiredPathCoverageRatio (via `blocks`), not to constraint load.
         turnLoad: f.mustTurn + f.adjTurn + f.surround,
         attemptCount: attempts.length,
         bestBadness: badnesses.length ? Math.min(...badnesses) : null,
@@ -105,20 +105,20 @@ console.log(`${path.basename(BASELINE_FILE)}: ${rows.length} levels | solved ${s
 // ─── Archetype solve rates + enrichment (the base-rate correction) ───────────
 console.log('ARCHETYPE — solve rate and enrichment in the unsolved population');
 console.log('  enrichment = share of unsolved / share of corpus.  1.0 = carries no difficulty signal.');
-const archetypes = [...new Set(rows.map(r => r.archetype))];
-const archetypeReport = archetypes.map(a => {
-    const grp = rows.filter(r => r.archetype === a);
+const routingRegimes = [...new Set(rows.map(r => r.routingRegime))];
+const routingRegimeReport = routingRegimes.map(a => {
+    const grp = rows.filter(r => r.routingRegime === a);
     const share = grp.length / rows.length;
-    const unsolvedShare = unsolved.filter(r => r.archetype === a).length / unsolved.length;
-    return { archetype: a, n: grp.length, solveRate: rate(grp), share, unsolvedShare, enrichment: unsolvedShare / share };
+    const unsolvedShare = unsolved.filter(r => r.routingRegime === a).length / unsolved.length;
+    return { routingRegime: a, n: grp.length, solveRate: rate(grp), share, unsolvedShare, enrichment: unsolvedShare / share };
 }).sort((x, y) => y.n - x.n);
-for (const a of archetypeReport) {
-    console.log(`  ${a.archetype.padEnd(26)} n=${String(a.n).padStart(4)}  solved=${pct(a.solveRate).padStart(6)}` +
+for (const a of routingRegimeReport) {
+    console.log(`  ${a.routingRegime.padEnd(26)} n=${String(a.n).padStart(4)}  solved=${pct(a.solveRate).padStart(6)}` +
         `  corpus=${pct(a.share).padStart(6)}  unsolved=${pct(a.unsolvedShare).padStart(6)}  enrichment=${a.enrichment.toFixed(3)}x`);
 }
 
 // ─── Feature separation (Cohen's d) ─────────────────────────────────────────
-const FEATURES = ['navDensity', 'turnLoad', 'reqLen', 'mustCross', 'mustTurn', 'adjTurn', 'surround',
+const FEATURES = ['requiredPathCoverageRatio', 'turnLoad', 'reqLen', 'mustCross', 'mustTurn', 'adjTurn', 'surround',
     'portalPairs', 'blocks', 'area', 'flippers', 'geese', 'reqInt', 'mustPass'];
 
 console.log('\n\nFEATURE SEPARATION (Cohen\'s d; positive = higher in the UNSOLVED population)');
@@ -134,7 +134,7 @@ for (const s of separation) {
         `  d=${s.d.toFixed(3).padStart(7)}  ${'#'.repeat(Math.min(40, Math.round(Math.abs(s.d) * 40)))}`);
 }
 
-// ─── navDensity-controlled effects ──────────────────────────────────────────
+// ─── requiredPathCoverageRatio-controlled effects ──────────────────────────────────────────
 const NAV_BANDS = [[0, 0.65], [0.65, 0.75], [0.75, 0.85], [0.85, 99]];
 const PREDICATES = [
     ['mustTurn >= 4', r => r.mustTurn >= 4],
@@ -147,14 +147,14 @@ const PREDICATES = [
     ['mustPass >= 4', r => r.mustPass >= 4],
 ];
 
-console.log('\n\nnavDensity-CONTROLLED EFFECT (solve-rate delta in percentage points, feature present vs absent)');
+console.log('\n\nrequiredPathCoverageRatio-CONTROLLED EFFECT (solve-rate delta in percentage points, feature present vs absent)');
 console.log(`  ${'feature'.padEnd(18)}${NAV_BANDS.map(([a, b]) => `nav[${a},${b === 99 ? '+' : b})`.padStart(16)).join('')}`);
 const controlled = [];
 for (const [label, pred] of PREDICATES) {
     let line = `  ${label.padEnd(18)}`;
     const deltas = [];
     for (const [lo, hi] of NAV_BANDS) {
-        const band = rows.filter(r => r.navDensity >= lo && r.navDensity < hi);
+        const band = rows.filter(r => r.requiredPathCoverageRatio >= lo && r.requiredPathCoverageRatio < hi);
         const no = band.filter(r => !pred(r)), yes = band.filter(r => pred(r));
         if (no.length < 15 || yes.length < 15) { line += 'n<15'.padStart(16); deltas.push(null); continue; }
         const delta = (rate(yes) - rate(no)) * 100;
@@ -197,9 +197,9 @@ if (OUT_FILE) {
         total: rows.length,
         solved: solved.length,
         unsolved: unsolved.length,
-        archetypes: archetypeReport,
+        routingRegimes: routingRegimeReport,
         separation,
-        navDensityControlled: { navBands: NAV_BANDS, features: controlled },
+        requiredPathCoverageRatioControlled: { navBands: NAV_BANDS, features: controlled },
         turnLoad: loadReport,
         badness: badnessReport,
         levels: rows,

@@ -54,7 +54,7 @@ function main() {
             batch: m.generationBatch,
             grid: `${lvl.grid.w}x${lvl.grid.h}`,
             reqLen: lvl.reqLen, reqInt: lvl.reqInt,
-            archetype: m.archetype,
+            routingRegime: m.routingRegime,
             featureTags: m.featureTags,
             novelty: m.noveltyScore,
             complexity: m.structuralComplexity,

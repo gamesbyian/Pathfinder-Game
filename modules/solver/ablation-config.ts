@@ -35,7 +35,7 @@ export const FEATURES: Record<string, string> = {
     SCORE_PHASE_SCALING:        'Phase-based goal/perimeter weight scaling (harvest → finish)',
     SCORE_ANTI_DITHER:          'U-turn penalty (immediate backtrack)',
     SCORE_REVISIT_PENALTY:      'Already-visited cell penalty',
-    SCORE_TEMPLATE_BONUS:       'Structural template geometric bonus (perimeter / corner / side)',
+    SCORE_ORDERING_BIAS_BONUS:  'Structural ordering-bias geometric bonus (perimeter / corner / side)',
     SCORE_SURROUND_URGENCY:     'Urgency reward toward unvisited surround-landmark neighbors',
     SCORE_ADJ_TURN_URGENCY:     'Urgency reward toward unsatisfied adjacent-turn landmark objects',
     SCORE_MUST_TURN_URGENCY:    'Distance-to-cell reward toward unsatisfied must-turn landmark cells',
@@ -109,14 +109,14 @@ export const FEATURES: Record<string, string> = {
     STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE: 'Production default-OFF development descendant: exposes the same beam:intersectionHarvest@beam2000 action as STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE, but inserts it immediately before each affected rule\'s previously protected five-config late-reserve suffix instead of appending it after that suffix. Motivated by the parent treatment\'s R02965 development regression: append-last changed suffix membership and starved the existing beam:objectiveFirst@beam5000 winner. This descendant preserves the pre-treatment protected suffix membership without widening the reserve or changing total-work policy.',
 
     // ── Structural ordering biases ──────────────────────────────────────────────────────────────
-    TEMPLATE_CORNER_HARVEST:    'cornerHarvest — pulls toward grid corners during harvest phase',
-    TEMPLATE_PERIMETER_CW:      'perimeterCW — clockwise perimeter traversal bias',
-    TEMPLATE_PERIMETER_CCW:     'perimeterCCW — counter-clockwise perimeter traversal bias',
-    TEMPLATE_SIDE_COMMITMENT:   'sideCommitment — penalises crossing the grid midline',
-    TEMPLATE_SIDE_X_LOW:        'sideXLow — bias toward x < midX (interior-gate levels)',
-    TEMPLATE_SIDE_X_HIGH:       'sideXHigh — bias toward x > midX',
-    TEMPLATE_SIDE_Y_LOW:        'sideYLow — bias toward y < midY',
-    TEMPLATE_SIDE_Y_HIGH:       'sideYHigh — bias toward y > midY',
+    ORDERING_BIAS_CORNER_HARVEST:    'cornerHarvest — pulls toward grid corners during harvest phase',
+    ORDERING_BIAS_PERIMETER_CW:      'perimeterCW — clockwise perimeter traversal bias',
+    ORDERING_BIAS_PERIMETER_CCW:     'perimeterCCW — counter-clockwise perimeter traversal bias',
+    ORDERING_BIAS_SIDE_COMMITMENT:   'sideCommitment — penalises crossing the grid midline',
+    ORDERING_BIAS_SIDE_X_LOW:        'sideXLow — bias toward x < midX (interior-gate levels)',
+    ORDERING_BIAS_SIDE_X_HIGH:       'sideXHigh — bias toward x > midX',
+    ORDERING_BIAS_SIDE_Y_LOW:        'sideYLow — bias toward y < midY',
+    ORDERING_BIAS_SIDE_Y_HIGH:       'sideYHigh — bias toward y > midY',
 
     // ── Profiles ──────────────────────────────────────────────────────────────
     // These are scoreMove weight vectors, not independent search algorithms. Exact current
@@ -166,6 +166,15 @@ export const LEGACY_FEATURE_ALIASES: Readonly<Record<string, string>> = Object.f
     STRATEGY_STATE_DEDUP: 'STRATEGY_COARSE_STATE_MERGE',
     STRATEGY_DEDUP_NEAR_TIE_RETENTION: 'STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION',
     STRATEGY_DEDUP_NEAR_TIE_RETRY: 'STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY',
+    SCORE_TEMPLATE_BONUS: 'SCORE_ORDERING_BIAS_BONUS',
+    TEMPLATE_CORNER_HARVEST: 'ORDERING_BIAS_CORNER_HARVEST',
+    TEMPLATE_PERIMETER_CW: 'ORDERING_BIAS_PERIMETER_CW',
+    TEMPLATE_PERIMETER_CCW: 'ORDERING_BIAS_PERIMETER_CCW',
+    TEMPLATE_SIDE_COMMITMENT: 'ORDERING_BIAS_SIDE_COMMITMENT',
+    TEMPLATE_SIDE_X_LOW: 'ORDERING_BIAS_SIDE_X_LOW',
+    TEMPLATE_SIDE_X_HIGH: 'ORDERING_BIAS_SIDE_X_HIGH',
+    TEMPLATE_SIDE_Y_LOW: 'ORDERING_BIAS_SIDE_Y_LOW',
+    TEMPLATE_SIDE_Y_HIGH: 'ORDERING_BIAS_SIDE_Y_HIGH',
 });
 
 /** Normalize one historical feature name to the canonical registry key. */
@@ -179,18 +188,18 @@ export function isKnownAblationFeatureName(featureName: string): boolean {
     return canonicalAblationFeatureName(featureName) in FEATURES;
 }
 
-// ─── Template → config key mapping ────────────────────────────────────────────
+// ─── Ordering-bias → config key mapping ──────────────────────────────────────
 
 /** @type {Record<string, string>} */
 export const ORDERING_BIAS_FEATURE_KEYS: Record<string, string> = {
-    cornerHarvest:  'TEMPLATE_CORNER_HARVEST',
-    perimeterCW:    'TEMPLATE_PERIMETER_CW',
-    perimeterCCW:   'TEMPLATE_PERIMETER_CCW',
-    sideCommitment: 'TEMPLATE_SIDE_COMMITMENT',
-    sideXLow:       'TEMPLATE_SIDE_X_LOW',
-    sideXHigh:      'TEMPLATE_SIDE_X_HIGH',
-    sideYLow:       'TEMPLATE_SIDE_Y_LOW',
-    sideYHigh:      'TEMPLATE_SIDE_Y_HIGH',
+    cornerHarvest:  'ORDERING_BIAS_CORNER_HARVEST',
+    perimeterCW:    'ORDERING_BIAS_PERIMETER_CW',
+    perimeterCCW:   'ORDERING_BIAS_PERIMETER_CCW',
+    sideCommitment: 'ORDERING_BIAS_SIDE_COMMITMENT',
+    sideXLow:       'ORDERING_BIAS_SIDE_X_LOW',
+    sideXHigh:      'ORDERING_BIAS_SIDE_X_HIGH',
+    sideYLow:       'ORDERING_BIAS_SIDE_Y_LOW',
+    sideYHigh:      'ORDERING_BIAS_SIDE_Y_HIGH',
 };
 
 // ─── Profile → config key mapping ────────────────────────────────────────────
@@ -216,7 +225,7 @@ export const FEATURE_GROUPS = {
     scoring:   Object.keys(FEATURES).filter(k => k.startsWith('SCORE_')),
     pruning:   Object.keys(FEATURES).filter(k => k.startsWith('PRUNE_')),
     strategy:  Object.keys(FEATURES).filter(k => k.startsWith('STRATEGY_')),
-    orderingBiases: Object.keys(FEATURES).filter(k => k.startsWith('TEMPLATE_')),
+    orderingBiases: Object.keys(FEATURES).filter(k => k.startsWith('ORDERING_BIAS_')),
     scoringProfiles: Object.keys(FEATURES).filter(k => k.startsWith('PROFILE_')),
 };
 
@@ -384,7 +393,7 @@ export function buildExperimentList(phase = 'full'): any[] {
             // Both "anti-noise" mechanisms
             ['SCORE_ANTI_DITHER', 'SCORE_REVISIT_PENALTY'],
             // Perimeter direction pair
-            ['TEMPLATE_PERIMETER_CW', 'TEMPLATE_PERIMETER_CCW'],
+            ['ORDERING_BIAS_PERIMETER_CW', 'ORDERING_BIAS_PERIMETER_CCW'],
             // Both lower bound types
             ['PRUNE_MUST_PASS_LB', 'PRUNE_MUST_CROSS_LB'],
             // LDS + connectivity (both reduce wasted search)
@@ -397,8 +406,8 @@ export function buildExperimentList(phase = 'full'): any[] {
             ['SCORE_MC_APPROACH_GUIDANCE', 'SCORE_FLIPPER_URGENCY'],
             // Phase scaling + finish commitment (both end-game mechanics)
             ['SCORE_PHASE_SCALING', 'SCORE_FINISH_COMMITMENT'],
-            // Template bonus + perimeter bias (overlapping perimeter guidance)
-            ['SCORE_TEMPLATE_BONUS', 'SCORE_PERIMETER_BIAS'],
+            // Ordering-bias bonus + perimeter bias (overlapping perimeter guidance)
+            ['SCORE_ORDERING_BIAS_BONUS', 'SCORE_PERIMETER_BIAS'],
         ];
         for (const [a, b] of interestingPairs) {
             experiments.push({
@@ -428,7 +437,7 @@ function _groupOf(key: string): string {
     if (key.startsWith('SCORE_'))    return 'scoring';
     if (key.startsWith('PRUNE_'))    return 'pruning';
     if (key.startsWith('STRATEGY_')) return 'strategy';
-    if (key.startsWith('TEMPLATE_')) return 'ordering-bias';
+    if (key.startsWith('ORDERING_BIAS_')) return 'ordering-bias';
     if (key.startsWith('PROFILE_'))  return 'scoring-profile';
     return 'other';
 }

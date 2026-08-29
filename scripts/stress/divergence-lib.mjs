@@ -1,5 +1,5 @@
 /** Shared real-search-state path replay used by hint and family-pair diagnostics. */
-export function tracePathRanks({ api, level, prep, path, profile, template = null, configOverride = null }) {
+export function tracePathRanks({ api, level, prep, path, scoringProfile, orderingBias = null, configOverride = null }) {
     if (!Array.isArray(path) || path.length < 2) {
         return { error: 'path must contain at least two keys', cumulativeDiscrepancy: null, perStep: [], finalIsSolution: false };
     }
@@ -27,7 +27,7 @@ export function tracePathRanks({ api, level, prep, path, profile, template = nul
             };
         }
         const arr = [...neighbors];
-        if (arr.length > 1) scoreAndSort(arr, pos, state, level, localPrep, profile, template);
+        if (arr.length > 1) scoreAndSort(arr, pos, state, level, localPrep, scoringProfile, orderingBias);
         const rank = arr.indexOf(nextKey);
         cumulativeDiscrepancy += Math.max(0, rank);
         perStep.push({ step: i, rank: Math.max(0, rank), topChoice: arr[0] ?? null, nCandidates: arr.length });
@@ -108,7 +108,7 @@ export function compareAblations(left, right) {
     });
 }
 
-/** Compare symmetry-mapped semantic snapshots. Directional template fields are annotations, not
+/** Compare symmetry-mapped semantic snapshots. Directional ordering-bias fields are annotations, not
  * invariant claims. Callers build snapshots through SOLVER_TESTING_API and canonical geometry. */
 export function compareSemanticSnapshots(left, right, mapKey = key => key) {
     const normalize = values => [...new Set((values ?? []).map(mapKey))].sort((a, b) => a - b);

@@ -10,7 +10,7 @@
  * first, the level is derived from it, and each decoration step is kept only if the
  * witness still passes the exact domain referee (validateCandidatePath, PLAY rules).
  * The production solver's SEARCH never participates; the only solver imports are the
- * pure feature classifiers (archetype/density) used for prediction metadata.
+ * pure feature classifiers (routingRegime/density) used for prediction metadata.
  *
  * The corpus is stored outside data/, is never referenced by the app, and therefore
  * can never appear in the normal level selector.
@@ -104,11 +104,11 @@ function challengeOf(features, modelBundle) {
     if (features.gates >= 3) score += 0.10;
     if (features.portalPairs >= 2) score += 0.06;
     if (features.flippers >= 2 && features.mustCross >= 2) score += 0.10;
-    if (features.navDensity >= 0.78 && features.navDensity <= 0.86) score += 0.08;
+    if (features.requiredPathCoverageRatio >= 0.78 && features.requiredPathCoverageRatio <= 0.86) score += 0.08;
     if (features.reqInt >= 7) score += 0.08;
     if (features.reqLen >= 70) score += 0.05;
-    if (features.archetype === 'high-intersection-burden' && wd && wd.perimeterFrac < 0.2) score += 0.08;
-    if (features.archetype === 'near-closure' && wd && wd.closureRatio < 0.12) score += 0.04;
+    if (features.routingRegime === 'high-intersection-burden' && wd && wd.perimeterFrac < 0.2) score += 0.08;
+    if (features.routingRegime === 'near-closure' && wd && wd.closureRatio < 0.12) score += 0.04;
     for (const [name, maxV] of Object.entries(maxima)) {
         if (features[name] !== undefined && features[name] > maxV * 1.25) extrapolating = true;
     }
@@ -360,13 +360,13 @@ function opGeese(ctx, n) {
     return placed;
 }
 
-/** Add geese until navigable density reaches `target` (archetype-threshold gaming). */
+/** Add geese until navigable density reaches `target` (routingRegime-threshold gaming). */
 function opGeeseToDensity(ctx, target) {
     let added = 0;
     for (let guard = 0; guard < 200; guard++) {
         const raw = buildRawLevel(ctx.witness, ctx.extras);
         const f = levelFeatures(raw, null);
-        if (f.navDensity >= target) return { added, reached: true };
+        if (f.requiredPathCoverageRatio >= target) return { added, reached: true };
         if (opGeese(ctx, 1) === 0) return { added, reached: false };
         added++;
     }
@@ -567,7 +567,7 @@ const BATCHES = [
     {
         letter: 'E',
         name: 'anti-heuristic',
-        theory: 'Deliberately oppose the attempt policy in solver/attempts.ts: bait the near-closure rule with delayed closure, force interior routing where perimeter templates lead, starve multi-gate budget division below the reqLen>=90 floor, trigger the flipper diverse-beam ladder on levels a plain DFS would crush, and game the navDensity archetype thresholds with hazard padding.',
+        theory: 'Deliberately oppose the attempt policy in solver/attempts.ts: bait the near-closure rule with delayed closure, force interior routing where perimeter templates lead, starve multi-gate budget division below the reqLen>=90 floor, trigger the flipper diverse-beam ladder on levels a plain DFS would crush, and game the requiredPathCoverageRatio routingRegime thresholds with hazard padding.',
         confidence: 0.55,
         build(rng, i, _H) {
             const recipe = i % 5;
@@ -650,7 +650,7 @@ function buildDelayedClosure(rng) {
     return {
         ctx,
         notes: 'Anti-heuristic e1 (delayed closure): goal sits beside the gate and density<0.35, so nearClosureRescue/finishFirst lead — but the witness detours across the whole grid before closing.',
-        accept: (features) => features.archetype === 'near-closure',
+        accept: (features) => features.routingRegime === 'near-closure',
     };
 }
 
@@ -676,7 +676,7 @@ function buildInteriorHighInt(rng) {
     return {
         ctx,
         notes: 'Anti-heuristic e2 (interior routing): reqInt>=5 at mid density routes the policy to perimeter-first beams, but the witness, its crossings and all objectives are interior and the rim is partially blocked.',
-        accept: (features) => features.archetype === 'high-intersection-burden',
+        accept: (features) => features.routingRegime === 'high-intersection-burden',
     };
 }
 
@@ -733,12 +733,12 @@ function buildFlipperLadderBait(rng) {
     return {
         ctx,
         notes: 'Anti-heuristic e4 (ladder bait): feature combo (mustCross>=2 + mustPass>=3 + flippers>=2) makes the progressive diverse-beam ladder the sole strategy on a small grid where DFS would finish in milliseconds.',
-        accept: (features) => features.archetype === 'must-cross-heavy' && features.flippers >= 2,
+        accept: (features) => features.routingRegime === 'must-cross-heavy' && features.flippers >= 2,
     };
 }
 
 function buildDensityThresholdGame(rng) {
-    // Hazard padding shrinks navigable area so navDensity crosses the 0.82
+    // Hazard padding shrinks navigable area so requiredPathCoverageRatio crosses the 0.82
     // near-Hamiltonian threshold: DFS-perimeter leads, yet the walk is interior-loopy.
     const w = randInt(rng, 9, 12); const h = w;
     const area = w * h;
@@ -759,15 +759,15 @@ function buildDensityThresholdGame(rng) {
     opMustPass(ctx, randInt(rng, 1, 2), 'interior');
     return {
         ctx,
-        notes: 'Anti-heuristic e5 (threshold gaming): goose padding pushes navDensity just past the 0.82 near-Hamiltonian cutoff so DFS-perimeter leads, but the true walk is an interior knot the solver must find with its least-suited ordering.',
-        accept: (features) => features.navDensity >= 0.82,
+        notes: 'Anti-heuristic e5 (threshold gaming): goose padding pushes requiredPathCoverageRatio just past the 0.82 near-Hamiltonian cutoff so DFS-perimeter leads, but the true walk is an interior knot the solver must find with its least-suited ordering.',
+        accept: (features) => features.requiredPathCoverageRatio >= 0.82,
     };
 }
 
 // ─── Feature tags ────────────────────────────────────────────────────────────
 
 function deriveTags(features, witness, extras) {
-    const tags = [features.archetype];
+    const tags = [features.routingRegime];
     const wd = features.witness;
     if (features.gates >= 3) tags.push('multi-gate');
     if (extras.decoyPortals.length > 0) tags.push('decoy-portals');
@@ -775,9 +775,9 @@ function deriveTags(features, witness, extras) {
     if (features.flippers >= 2) tags.push('flipper-heavy');
     if (features.portalPairs > 0) tags.push('portals');
     if (features.reqInt >= 5) tags.push('crossing-rich');
-    if (features.navDensity < 0.35) tags.push('sparse');
-    if (features.navDensity >= 0.82) tags.push('near-hamiltonian');
-    else if (features.navDensity >= 0.78) tags.push('threshold-density');
+    if (features.requiredPathCoverageRatio < 0.35) tags.push('sparse');
+    if (features.requiredPathCoverageRatio >= 0.82) tags.push('near-hamiltonian');
+    else if (features.requiredPathCoverageRatio >= 0.78) tags.push('threshold-density');
     if (features.reqLen >= 60) tags.push('long-path');
     if (features.area <= 36) tags.push('tiny-grid');
     if (features.area >= 169) tags.push('large-grid');
@@ -939,8 +939,8 @@ function acceptLevel(batch, i, candidate, accepted, noveltyPool) {
             predictionConfidence: Number(confidence.toFixed(2)),
             noveltyScore: Number(novelty.noveltyScore.toFixed(3)),
             nearestNeighbor: novelty.nearestId,
-            archetype: features.archetype,
-            navDensity: Number(features.navDensity.toFixed(3)),
+            routingRegime: features.routingRegime,
+            requiredPathCoverageRatio: Number(features.requiredPathCoverageRatio.toFixed(3)),
             witnessProfile: summarizeWitness(features.witness),
             generatorNotes: notes,
         },

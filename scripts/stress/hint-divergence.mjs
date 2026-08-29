@@ -22,7 +22,7 @@
  *     discrepancy). A LARGE, ISOLATED delta on one flag is the signature that justified the
  *     attraction-diversity pass; near-uniform small deltas mean no single term is responsible.
  *   - The same replay under every OTHER profile with NO ordering-bias forcing, to separate "a rigid
- *     ordering bias's own bonus term explains the gap" (expected, not a bug — see SCORE_TEMPLATE_BONUS)
+ *     ordering bias's own bonus term explains the gap" (expected, not a bug — see SCORE_ORDERING_BIAS_BONUS)
  *     from "free scoring also can't find this shape" (would be the more interesting finding).
  *
  * This is a diagnostic, not a fix generator. See reports/2026-07-29-hint-shape-divergence-diagnosis.md
@@ -117,7 +117,7 @@ if (TARGET_PATH_ARG) {
 // --- Replay: rank of the target's own move among scoreAndSort's greedy ordering, per step ---
 function traceRankOnly(cfgOverride, profileOverride = winningProfile, orderingBiasOverride = winningOrderingBias) {
     const result = tracePathRanks({ api: { createState, getNeighbors, applyMove, scoreAndSort, isSolutionState }, level, prep, path: targetPath,
-        profile: profileOverride, template: orderingBiasOverride, configOverride: cfgOverride });
+        scoringProfile: profileOverride, orderingBias: orderingBiasOverride, configOverride: cfgOverride });
     return { ...result, finalIsSolution: result.finalIsSolution };
 }
 

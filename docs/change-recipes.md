@@ -49,7 +49,7 @@ Do not infer stage identity later from attempt order when the solver can emit it
 
 ## Solver heuristic, routing, or allocation experiment
 
-Before changing scoring, retention, archetype routing, action order, eligibility, reserves, or budget shares:
+Before changing scoring, retention, routing-regime selection, action order, eligibility, reserves, or budget shares:
 
 1. classify the failure being targeted: correctness, routing, allocation, search quality, or representation/retention;
 2. state the causal premise and the observation that supports it;

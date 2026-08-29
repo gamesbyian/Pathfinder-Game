@@ -416,6 +416,36 @@
       "notes": "Config-key mapping. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "old": "SCORE_TEMPLATE_BONUS",
+      "new": "SCORE_ORDERING_BIAS_BONUS",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 5,
+      "status": "done",
+      "notes": "Missed from the original Phase 5 ledger scope. Canonical ablation/config writes use ordering-bias vocabulary; the historical key remains accepted on read."
+    },
+    {
+      "old": "computeTemplateBonus",
+      "new": "computeOrderingBiasBonus",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 5,
+      "status": "done",
+      "notes": "Missed from the original Phase 5 ledger scope. Internal scoring helper rename completed in the consumer-regression follow-up."
+    },
+    {
+      "old": "TEMPLATE_* ablation feature keys",
+      "new": "ORDERING_BIAS_* ablation feature keys",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 5,
+      "status": "done",
+      "notes": "Missed from the original Phase 5 ledger scope. Current ablation surfaces write ORDERING_BIAS_* keys while the canonical config reader accepts historical TEMPLATE_* aliases."
+    },
+    {
       "old": "diverse beam",
       "new": "mechanic-bucket retention",
       "kind": "term",

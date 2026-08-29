@@ -14,17 +14,17 @@ export function levelFeatures(raw, witnessPairs = null) {
     const landmarks = Array.isArray(raw.landmarks) ? raw.landmarks : [];
     const lmByRole = (re) => landmarks.filter(lm => re.test(lm.role || '')).length;
     const impassableLm = lmByRole(/^(surround|adjacentTurn|decorative)/);
-    // Navigable density mirrors solver/archetype.ts getNavigableDensity: grid minus
+    // Required path coverage ratio mirrors solver/routing-regime.ts getRequiredPathCoverageRatio: grid minus
     // blocks/geese/false-goals/gates (impassable landmarks count as blocks).
-    const navArea = Math.max(1, area - count(raw.blocks) - impassableLm - count(raw.geese)
+    const nonGateWinningPathCellCount = Math.max(1, area - count(raw.blocks) - impassableLm - count(raw.geese)
         - count(raw.falseGoals) - count(raw.gates));
-    const navDensity = raw.reqLen / navArea;
+    const requiredPathCoverageRatio = raw.reqLen / nonGateWinningPathCellCount;
     const f = {
         w, h, area,
         aspect: Math.max(w, h) / Math.min(w, h),
         reqLen: raw.reqLen,
         reqInt: raw.reqInt,
-        navDensity,
+        requiredPathCoverageRatio,
         gates: count(raw.gates),
         blocks: count(raw.blocks) + impassableLm,
         mustPass: count(raw.mustPass) + lmByRole(/^mustPass$/),
@@ -37,7 +37,7 @@ export function levelFeatures(raw, witnessPairs = null) {
         surround: lmByRole(/^surround$/),
         mustTurn: lmByRole(/^mustTurn/),
         adjTurn: lmByRole(/^adjacentTurn/),
-        archetype: detectArchetypeFromRaw(raw, navDensity),
+        routingRegime: classifyRoutingRegimeFromRaw(raw, requiredPathCoverageRatio),
         gateLayout: raw.gates.map(g => [g.x, g.y]),
         goal: [raw.goal.x, raw.goal.y],
         blockOccupancy: occupancyGrid((raw.blocks || [])
@@ -50,15 +50,15 @@ export function levelFeatures(raw, witnessPairs = null) {
     return f;
 }
 
-/** Mirrors solver/archetype.ts detectArchetype so predictions can reason about policy routing. */
-export function detectArchetypeFromRaw(raw, navDensity) {
+/** Mirrors solver/routingRegime.ts detectArchetype so predictions can reason about policy routing. */
+export function classifyRoutingRegimeFromRaw(raw, requiredPathCoverageRatio) {
     const portalTerminals = (raw.portals?.length || 0) * 2;
-    if (raw.reqInt <= 1 && navDensity < 0.35) return 'near-closure';
-    if ((raw.reqInt >= 5 && navDensity >= 0.45) || (raw.reqInt >= 4 && navDensity >= 0.55) || raw.reqInt >= 10)
-        return 'high-intersection-burden';
+    if (raw.reqInt <= 1 && requiredPathCoverageRatio < 0.35) return 'sparse-low-intersection';
+    if ((raw.reqInt >= 5 && requiredPathCoverageRatio >= 0.45) || (raw.reqInt >= 4 && requiredPathCoverageRatio >= 0.55) || raw.reqInt >= 10)
+        return 'intersection-heavy';
     if ((raw.mustCross?.length || 0) >= 2 && raw.reqInt >= 2) return 'must-cross-heavy';
-    if (portalTerminals >= 4) return 'portal-heavy';
-    return 'default';
+    if (portalTerminals >= 4) return 'multi-portal';
+    return 'general';
 }
 
 const OCC = 6; // downsample resolution for occupancy grids
@@ -160,8 +160,8 @@ export function levelDistance(fa, fb) {
     add(0.6, relDiff(fa.aspect, fb.aspect));
     add(1.2, relDiff(fa.reqLen, fb.reqLen));
     add(1.2, relDiff(fa.reqInt, fb.reqInt));
-    add(1.0, Math.abs(fa.navDensity - fb.navDensity));
-    add(0.8, fa.archetype === fb.archetype ? 0 : 1);
+    add(1.0, Math.abs(fa.requiredPathCoverageRatio - fb.requiredPathCoverageRatio));
+    add(0.8, fa.routingRegime === fb.routingRegime ? 0 : 1);
     add(0.5, relDiff(fa.gates, fb.gates));
     for (const key of ['mustPass', 'mustCross', 'portalPairs', 'flippers', 'surround', 'mustTurn', 'adjTurn', 'geese', 'falseGoals'])
         add(0.35, relDiff(fa[key], fb[key]));
@@ -265,7 +265,7 @@ function mechanicInteraction(raw) {
 // ─── Challenge model (ridge regression on audit history) ────────────────────
 
 export const MODEL_FEATURE_NAMES = [
-    'area', 'aspect', 'reqLen', 'reqInt', 'navDensity', 'gates', 'blocks',
+    'area', 'aspect', 'reqLen', 'reqInt', 'requiredPathCoverageRatio', 'gates', 'blocks',
     'mustPass', 'mustCross', 'portalPairs', 'flippers', 'geese',
 ];
 

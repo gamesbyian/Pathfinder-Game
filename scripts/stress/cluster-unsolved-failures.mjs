@@ -106,7 +106,7 @@ function classify(lv) {
     return { tags, badness: levelBadnessOf(lv) };
 }
 
-const clusters = new Map(); // tag -> array of {id, badness, archetype, features}
+const clusters = new Map(); // tag -> array of {id, badness, routingRegime, features}
 const unsolved = benchmark.levels.filter(lv => !lv.ok);
 
 for (const lv of unsolved) {
@@ -116,7 +116,7 @@ for (const lv of unsolved) {
     const { tags, badness } = classify(lv);
     for (const tag of tags) {
         if (!clusters.has(tag)) clusters.set(tag, []);
-        clusters.get(tag).push({ id: lv.id, badness, archetype: features.archetype, navDensity: features.navDensity, reqInt: features.reqInt, mustCross: features.mustCross, mustPass: features.mustPass, surround: features.surround });
+        clusters.get(tag).push({ id: lv.id, badness, routingRegime: features.routingRegime, requiredPathCoverageRatio: features.requiredPathCoverageRatio, reqInt: features.reqInt, mustCross: features.mustCross, mustPass: features.mustPass, surround: features.surround });
     }
 }
 
@@ -124,7 +124,7 @@ const summary = {};
 for (const [tag, members] of clusters) {
     members.sort((a, b) => (a.badness ?? Infinity) - (b.badness ?? Infinity));
     const byArchetype = {};
-    for (const m of members) byArchetype[m.archetype] = (byArchetype[m.archetype] ?? 0) + 1;
+    for (const m of members) byArchetype[m.routingRegime] = (byArchetype[m.routingRegime] ?? 0) + 1;
     summary[tag] = { count: members.length, byArchetype, closestMisses: members.slice(0, 10).map(m => m.id) };
 }
 
@@ -150,7 +150,7 @@ if (clusters.has('beam-collapse')) {
 }
 for (const [tag, s] of Object.entries(summary)) {
     console.log(`${tag}: ${s.count} level(s)`);
-    console.log(`  by archetype: ${JSON.stringify(s.byArchetype)}`);
+    console.log(`  by routingRegime: ${JSON.stringify(s.byArchetype)}`);
     console.log(`  closest misses: ${s.closestMisses.join(',')}`);
 }
 console.log(`\nWrote ${OUT_FILE}`);

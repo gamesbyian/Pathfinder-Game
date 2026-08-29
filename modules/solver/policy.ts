@@ -38,14 +38,14 @@ export const STRUCTURAL_ORDERING_BIASES: Readonly<Record<string, StructuralOrder
 });
 
 export const ORDERING_BIAS_CONFIG_KEYS: Readonly<Record<string, string>> = Object.freeze({
-    cornerHarvest:  'TEMPLATE_CORNER_HARVEST',
-    perimeterCW:    'TEMPLATE_PERIMETER_CW',
-    perimeterCCW:   'TEMPLATE_PERIMETER_CCW',
-    sideCommitment: 'TEMPLATE_SIDE_COMMITMENT',
-    sideXLow:       'TEMPLATE_SIDE_X_LOW',
-    sideXHigh:      'TEMPLATE_SIDE_X_HIGH',
-    sideYLow:       'TEMPLATE_SIDE_Y_LOW',
-    sideYHigh:      'TEMPLATE_SIDE_Y_HIGH',
+    cornerHarvest:  'ORDERING_BIAS_CORNER_HARVEST',
+    perimeterCW:    'ORDERING_BIAS_PERIMETER_CW',
+    perimeterCCW:   'ORDERING_BIAS_PERIMETER_CCW',
+    sideCommitment: 'ORDERING_BIAS_SIDE_COMMITMENT',
+    sideXLow:       'ORDERING_BIAS_SIDE_X_LOW',
+    sideXHigh:      'ORDERING_BIAS_SIDE_X_HIGH',
+    sideYLow:       'ORDERING_BIAS_SIDE_Y_LOW',
+    sideYHigh:      'ORDERING_BIAS_SIDE_Y_HIGH',
 });
 
 export const ATTEMPT_CONFIGS = Object.freeze([

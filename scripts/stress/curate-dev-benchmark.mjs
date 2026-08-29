@@ -15,7 +15,7 @@
  *     still timing out, plausibly solvable with more budget — genuinely different failure modes).
  *   - "near misses"                    -> badness (rank-levels.mjs's levelBadness: min tracked
  *     distance-from-solution across all attempts).
- *   - "diverse mechanics"              -> archetype (features.mjs's detectArchetypeFromRaw, the
+ *   - "diverse mechanics"              -> routingRegime (features.mjs's classifyRoutingRegimeFromRaw, the
  *     solver's own attempt-ladder routing bucket) + raw mechanic counts.
  *   - "avoid redundant failure clusters" -> greedy farthest-point selection on structural distance
  *     (features.mjs's levelDistance/noveltyAgainstPool) blended with failedStrategies-set overlap,
@@ -32,11 +32,11 @@
  * ## Algorithm (simple, hand-auditable — see docs/solver-dev-tooling-plan.md's rank-levels.mjs
  * rationale for why a learned ranker would be over-engineering at this corpus size)
  *
- *   1. Stratify all unsolved levels by (archetype, stability) — up to 5x2 = 10 buckets, typically
+ *   1. Stratify all unsolved levels by (routingRegime, stability) — up to 5x2 = 10 buckets, typically
  *      fewer populated (near-closure levels are essentially always solved, for instance).
  *   2. Give every non-empty stratum a floor (--floor, default 8) so nothing gets crowded out, then
  *      distribute the remaining budget proportional to sqrt(stratum size) — linear-proportional
- *      would let one dominant archetype (in this corpus, high-intersection-burden/budget-edge)
+ *      would let one dominant routingRegime (in this corpus, high-intersection-burden/budget-edge)
  *      swallow almost the whole benchmark; sqrt still respects size ordering but gives small,
  *      rare-but-informative strata (e.g. must-cross-heavy/known-unsolved) a meaningfully larger
  *      share than their raw count would imply.
@@ -46,7 +46,7 @@
  *        - diversity half: greedy farthest-point selection against the GLOBALLY selected-so-far
  *          pool (not just this stratum), on a blended structural + failure-signature distance —
  *          this is what suppresses "the same failure, over and over" across the whole benchmark,
- *          not just within one archetype.
+ *          not just within one routingRegime.
  *   4. Final dedup pass: any pair of selected levels closer than --dedup-threshold on the blended
  *      distance gets pruned (keep the lower-badness one) and backfilled from its stratum's
  *      remaining pool, since the near-miss half isn't diversity-filtered against itself.
@@ -110,7 +110,7 @@ for (const lv of benchmark.levels) {
     const wd = witnessDivergenceById.get(lv.id) || null;
     candidates.push({
         id: lv.id,
-        archetype: features.archetype,
+        routingRegime: features.routingRegime,
         stability: stabilityOf(lv),
         badness: levelBadness(lv),
         nodesExpanded: lv.nodesExpanded ?? null,
@@ -149,11 +149,11 @@ function minDistanceToPool(candidate, pool) {
     return min;
 }
 
-// ─── Stratify by (archetype, stability) ──────────────────────────────────────
+// ─── Stratify by (routingRegime, stability) ──────────────────────────────────────
 
 const strataMap = new Map();
 for (const c of candidates) {
-    const key = `${c.archetype}/${c.stability}`;
+    const key = `${c.routingRegime}/${c.stability}`;
     if (!strataMap.has(key)) strataMap.set(key, []);
     strataMap.get(key).push(c);
 }
@@ -238,7 +238,7 @@ function dedupPass(selectedList) {
                     const bj = Number.isFinite(selectedList[j].badness) ? selectedList[j].badness : Infinity;
                     const dropIdx = bi <= bj ? j : i;
                     const dropped = selectedList[dropIdx];
-                    const stratumKey = `${dropped.archetype}/${dropped.stability}`;
+                    const stratumKey = `${dropped.routingRegime}/${dropped.stability}`;
                     const stratum = strataMap.get(stratumKey);
                     const selectedIds = new Set(selectedList.map(s => s.id));
                     const backfillPool = stratum.filter(m => !selectedIds.has(m.id) && m.id !== dropped.id);
@@ -271,7 +271,7 @@ const strataReport = strata.map(st => ({
     key: st.key,
     poolSize: st.members.length,
     quota: st.quota,
-    selected: finalSelection.filter(c => `${c.archetype}/${c.stability}` === st.key).length,
+    selected: finalSelection.filter(c => `${c.routingRegime}/${c.stability}` === st.key).length,
 }));
 
 const mean = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
@@ -282,7 +282,7 @@ const levels = finalSelection
     .sort((a, b) => a.id.localeCompare(b.id))
     .map(c => ({
         id: c.id,
-        archetype: c.archetype,
+        routingRegime: c.routingRegime,
         stability: c.stability,
         badness: c.badness,
         nodesExpanded: c.nodesExpanded,
@@ -296,7 +296,7 @@ const levels = finalSelection
             portalPairs: c.features.portalPairs, flippers: c.features.flippers,
             surround: c.features.surround, mustTurn: c.features.mustTurn, adjTurn: c.features.adjTurn,
         },
-        navDensity: Number(c.features.navDensity.toFixed(4)),
+        requiredPathCoverageRatio: Number(c.features.requiredPathCoverageRatio.toFixed(4)),
         failedStrategies: Array.from(c.failedStrategies),
         selection: selectionLog.get(c.id) || null,
     }));
@@ -306,7 +306,7 @@ const output = {
     description: 'Curated development benchmark: a fixed, information-dense subset of Corpus 2\'s '
         + 'unsolved levels for iterative solver work — see scripts/stress/curate-dev-benchmark.mjs '
         + 'for the selection algorithm. NOT a difficulty-sorted top-N; selected for coverage across '
-        + 'failure mode (exhausted vs. timed-out), mechanic archetype, near-miss depth, and '
+        + 'failure mode (exhausted vs. timed-out), mechanic routingRegime, near-miss depth, and '
         + 'structural/failure-signature diversity.',
     sources: { benchmark: BENCHMARK_FILE, witnessDivergence: WITNESS_DIVERGENCE_FILE, corpus: CORPUS_FILE },
     params: { target: TARGET, floor: FLOOR, dedupThreshold: DEDUP_THRESHOLD },

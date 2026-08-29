@@ -8,7 +8,7 @@
  *
  * Read-only, no solving — joins the compiled baseline's ok labels against levelFeatures().
  *
- * METHOD. Feature vector: reqLen, reqInt, navDensity, mustPass, mustCross, portalPairs, flippers,
+ * METHOD. Feature vector: reqLen, reqInt, requiredPathCoverageRatio, mustPass, mustCross, portalPairs, flippers,
  * staticFilters, geese, falseGoals, surround, mustTurn, adjTurn — the same components
  * feature-solvability-analysis.mjs measures discriminative power for. Each feature is z-scored
  * using the FULL corpus's own mean/stddev (not just the solved or unsolved subset) so distances
@@ -57,7 +57,7 @@ const corpusLevels = Array.isArray(corpus) ? corpus : corpus.levels;
 
 const byId = new Map(baseline.levels.map(l => [l.id, l]));
 
-const FEATURE_KEYS = ['reqLen', 'reqInt', 'navDensity', 'mustPass', 'mustCross', 'portalPairs', 'flippers', 'staticFilters', 'geese', 'falseGoals', 'surround', 'mustTurn', 'adjTurn'];
+const FEATURE_KEYS = ['reqLen', 'reqInt', 'requiredPathCoverageRatio', 'mustPass', 'mustCross', 'portalPairs', 'flippers', 'staticFilters', 'geese', 'falseGoals', 'surround', 'mustTurn', 'adjTurn'];
 
 const rows = [];
 for (const raw of corpusLevels) {

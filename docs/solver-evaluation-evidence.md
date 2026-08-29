@@ -87,7 +87,7 @@ Do not give every change the same ceremony.
 |---|---|
 | Correctness fix with a soundness argument, or implementation optimization with identical search trace/outcomes | targeted regression/soundness or trace-parity evidence; no statistical holdout required |
 | One prespecified narrow treatment with little/no tuning | level-blind matched-work development A/B; use a small independent confirmation block when the effect is small, rare, or promotion risk is meaningful |
-| Candidate selected/tuned from multiple rules, thresholds, configurations, seeds, archetypes, or residual analyses | independent confirmation is the default before broad default-on promotion |
+| Candidate selected/tuned from multiple rules, thresholds, configurations, seeds, routing regimes, or residual analyses | independent confirmation is the default before broad default-on promotion |
 | Heavily tuned/global scheduler, learned policy, automatic configurator, or candidate surviving a large search space | grouped/independent confirmation plus cross-distribution transfer/challenge before a broad generalization claim |
 | Broad claim such as “generalizes to unseen Pathfinder levels” | distributionally independent transfer/challenge evidence, regardless of how clean the development result looked |
 

@@ -1,5 +1,7 @@
 # Scripts and local tooling
 
+> **Historical path note:** `scripts/stress/` is the historical directory name for the current solver-research toolset. Treat its maintained contents as **solver research scripts**; the directory is intentionally not being moved during the naming cleanup because that would create needless path and provenance churn.
+
 For a named concept, start with `node scripts/tooling-census.mjs --compact --query=<term>` rather than opening the full `package.json` or listing every script. Use [`../docs/tooling-catalog.md`](../docs/tooling-catalog.md) when the task is broader or the query does not resolve the right tool family. `package.json` remains the exhaustive npm-alias list; it is not an exhaustive inventory of executable-looking files.
 
 ## Cheap discovery first
