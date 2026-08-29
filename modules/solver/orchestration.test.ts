@@ -2008,7 +2008,7 @@ test('shrink recovery re-runs the shrunk biased config at its FULL probe budget'
     assert.ok((recovery[0].nodesExpanded ?? 0) > shrunk, 'strictly more than the shrunken grant');
     assert.ok(shrunk < REPAIR_PROBE_BIASED_NODE_BUDGET, 'sanity: the shrink actually fired');
     assert.ok(biasedBudgets.includes(shrunk), 'sanity: the original probe attempt was the shrunken one');
-    // Every recovery attempt is still a probe attempt, so probe-population tooling keeps counting it.
+    // Recovery attempts are identified by their canonical stage rather than a second legacy probe tag.
     assert.equal(recovery[0].stageId, 'repair-shrink-recovery');
 });
 
@@ -2019,7 +2019,7 @@ test('shrink recovery can solve a level the shrink otherwise loses', async () =>
         attemptSearchForTesting: shrinkRecoveryDispatch([], true),
     });
     assert.equal(result.ok, true, 'the full-budget re-run wins');
-    assert.equal(result.attempts.at(-1)?.repairProbeShrinkRecovery, true);
+    assert.equal(result.attempts.at(-1)?.stageId, 'repair-shrink-recovery');
 });
 
 test('shrink recovery does not run when the shrink never fired (promising ordinary bestBadness)', async () => {
