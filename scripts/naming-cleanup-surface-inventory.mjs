@@ -395,6 +395,22 @@ function reconciliationState(entry, oldRefs, newRefs) {
   if (entry.persistence === 'frozen-history') return 'no-current-live-reference-frozen-history';
   return 'no-current-live-reference-review';
 }
+function surfaceCategory(file) {
+  if (file === 'package.json') return 'package-command';
+  if (file.startsWith('.github/workflows/')) return 'workflow';
+  if (file === 'modules/ports.ts') return 'public-port';
+  if (/worker/iu.test(file) && (file.startsWith('modules/') || file.startsWith('scripts/'))) return 'worker-transport';
+  if (file.startsWith('modules/solver/')) return 'solver-internal';
+  if (/^modules\/(?:input|engine|state|runtime|editor|render|ui)\//u.test(file) || /^modules\/(?:state|renderer|level-utils)\./u.test(file)) return 'application';
+  if (file.startsWith('scripts/')) return 'tool-or-report-transport';
+  if (file.startsWith('docs/') || file === 'AGENTS.md' || file === 'README.md') return 'documentation';
+  return 'other';
+}
+
+function referenceCategories(files) {
+  return [...new Set(files.map(surfaceCategory))].sort();
+}
+
 
 const selectedLedgerEntries = (ledger.entries ?? [])
   .filter(entry => PHASE_MIN == null || (entry.phase >= PHASE_MIN && entry.phase <= PHASE_MAX))
@@ -413,6 +429,8 @@ const selectedLedgerEntries = (ledger.entries ?? [])
       referenceFiles: referenceMatches(entry),
       oldReferenceFiles,
       newReferenceFiles,
+      oldReferenceCategories: referenceCategories(oldReferenceFiles),
+      newReferenceCategories: referenceCategories(newReferenceFiles),
       reconciliationState: reconciliationState(entry, oldReferenceFiles, newReferenceFiles),
     };
   });
