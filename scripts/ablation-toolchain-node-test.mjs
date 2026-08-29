@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { buildExperimentList } from '../modules/solver/ablation-config.ts';
+import { buildExperimentList, canonicalAblationFeatureName } from '../modules/solver/ablation-config.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -20,6 +20,11 @@ const legacyTemplates = buildExperimentList('templates');
 assert.ok(canonicalBiases.length > 1, 'ordering-biases must include more than baseline');
 assert.deepEqual(legacyTemplates.map(x => x.name), canonicalBiases.map(x => x.name),
     'legacy templates selector must normalize to ordering-biases');
+
+assert.equal(canonicalAblationFeatureName('SCORE_TEMPLATE_BONUS'), 'SCORE_ORDERING_BIAS_BONUS');
+assert.equal(canonicalAblationFeatureName('TEMPLATE_PERIMETER_CW'), 'ORDERING_BIAS_PERIMETER_CW');
+assert.ok(canonicalBiases.some(x => x.name === 'ordering-bias-off:perimeterCW'),
+    'current ordering-bias experiment names must stay canonical while old feature flags remain readable');
 
 const runnerSource = await readFile(path.join(repoRoot, 'scripts/run-ablation.mjs'), 'utf8');
 assert.match(runnerSource, /Solver\.solveLevel\(/, 'ablation runner must use the canonical solver API');
