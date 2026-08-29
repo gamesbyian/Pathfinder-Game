@@ -1,5 +1,5 @@
 import { getAttemptConfigs } from './attempts.js';
-import { classifyRoutingRegime, normalizeRoutingRegime } from './archetype.js';
+import { classifyRoutingRegime, normalizeRoutingRegime } from './routing-regime.js';
 import { buildDistMap } from './distance.js';
 import { normalizeRawLevel } from './normalization.js';
 import { prepLevel } from './prep.js';

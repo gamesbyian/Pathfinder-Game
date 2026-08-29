@@ -7,7 +7,7 @@ import {
   getNonGateWinningPathCellCount,
   getRequiredPathCoverageRatio,
   normalizeRoutingRegime,
-} from './archetype.js';
+} from './routing-regime.js';
 import { PACK } from './encoding.js';
 import type { NormalizedLevel } from '../domain/types.js';
 

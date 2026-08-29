@@ -2374,6 +2374,16 @@
       "phase": 1,
       "status": "done",
       "notes": "Closed negative default-off experiment ID; delete later rather than rename."
+    },
+    {
+      "old": "modules/solver/archetype.ts",
+      "new": "modules/solver/routing-regime.ts",
+      "kind": "file",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 3,
+      "status": "done",
+      "notes": "Late phase-3 audit residue: contents already used routing-regime terminology; physical module and test filenames now match the canonical concept."
     }
   ],
   "lastCompletedPhase": 6,

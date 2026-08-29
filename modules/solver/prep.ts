@@ -1,4 +1,4 @@
-import { getRequiredPathCoverageRatio } from './archetype.js';
+import { getRequiredPathCoverageRatio } from './routing-regime.js';
 import { buildAxisApproachMap, buildDistMap, denseIndex, distMapToArray } from './distance.js';
 import type { DistMapOpts } from './distance.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, NEIGHBOR_DX, NEIGHBOR_DY, PACK } from './encoding.js';

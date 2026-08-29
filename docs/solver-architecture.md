@@ -163,7 +163,7 @@ Use `solver:direct` to inspect attempt order/winner/budget/nodes; if policy is a
 
 With wall-bounded runs, faster code searches farther. Pin a non-binding wall deadline and deterministic node/work budget; an order-preserving pure speed change should produce identical search work. Compare interleaved wall medians; shared hosts vary ±5–10%. See [`reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md) and [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md).
 
-### Trap audits/runtime
+### False-goal triggerability audits/runtime
 
 ```bash
 npm run solver:audit-false-goal-triggerability -- --levels=all --extended-budget=60000
@@ -247,9 +247,9 @@ Tools: `solver:portfolio-report`, `solver:portfolio-replay`, `portfolio-solve-sw
 
 Solver allocation's target currency is machine-independent work `applyMove + 12 * isConnected`. The main ladder already divides work, not elapsed milliseconds. A finite inventoried set of additive legacy tiers still derives fresh work from ms-shaped stage fractions; `check:solver-budget-boundaries` prevents that debt from growing while it is migrated. Internal search loops may also honor technique/node caps. See [`solver-budget-determinism.md`](solver-budget-determinism.md).
 
-## Attraction-diversity pass
+## Goal-attraction-disabled retry
 
-After main + repair fail, `solveLevel()` may rerun `mainConfigs` with `ATTRACTION_DIVERSITY_CANDIDATE_FLAGS` (currently `SCORE_GOAL_ATTRACTION`) disabled under `ATTRACTION_DIVERSITY_BUDGET_FRACTION = 1.0`.
+`goal-attraction-disabled-retry` runs after `main-search` and `repair-fallback` fail. `solveLevel()` reruns `mainConfigs` with `ATTRACTION_DIVERSITY_CANDIDATE_FLAGS` (currently `SCORE_GOAL_ATTRACTION`) disabled under `ATTRACTION_DIVERSITY_BUDGET_FRACTION = 1.0`.
 
 - `attractionDiversityBudgetFractionOverride`; interactive UIs set 0 along with repair extra budget.
 - Gate: `STRATEGY_ATTRACTION_DIVERSITY`; zero cost to earlier solves.

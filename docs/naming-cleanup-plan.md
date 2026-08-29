@@ -256,6 +256,7 @@ The names below are fixed. Do not substitute alternatives.
 | `.github/workflows/solver-archetype-sample-ab.yml` | `.github/workflows/solver-routing-regime-sample-ab.yml` | workflow rename; historical runs keep old identity |
 | workflow/input/output `archetype` / `archetypes` for that sampler | `routingRegime` / `routing_regimes` | live workflow/tool schema rename |
 | "archetype" when referring to this classifier | "routing regime" | live docs/telemetry labels |
+| former `archetype.ts` / `archetype.test.ts` solver module paths | `modules/solver/routing-regime.ts` / `routing-regime.test.ts` | direct file rename; this module now contains routing-regime classification only |
 | `default` routing value | `general` | dual-read if persisted |
 | `near-closure` | `sparse-low-intersection` | dual-read if persisted |
 | `high-intersection-burden` | `intersection-heavy` | dual-read if persisted |

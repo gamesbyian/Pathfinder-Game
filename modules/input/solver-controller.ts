@@ -9,7 +9,7 @@ import { mergeHints } from '../domain/hint-types.js';
 import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 import { SOLVER_VERSION } from '../build-info.js';
 import { buildVarietySearchSummary, customTier, formatMinSec, isSessionStale, shouldOfferExtend, VARIETY_TIERS, FIND_ALL_TIER, FIND_ALL_NOCAP_TIER } from './solver-core.js';
-import { getRequiredPathCoverageRatio } from '../solver/archetype.js';
+import { getRequiredPathCoverageRatio } from '../solver/routing-regime.js';
 import { DENSE_LEVEL_COVERAGE_THRESHOLD } from '../solver/prep.js';
 import { createEnumerationPoolClient } from '../solver/solver-worker-client.js';
 import { defaultReportError } from '../error-reporting.js';

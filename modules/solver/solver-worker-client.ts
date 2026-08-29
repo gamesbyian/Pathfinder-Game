@@ -182,7 +182,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
 // a candidate becomes an accepted, saved solution.
 import { prepLevel } from './prep.js';
 import { createState, getNeighbors } from './search-state.js';
-import { getRequiredPathCoverageRatio } from './archetype.js';
+import { getRequiredPathCoverageRatio } from './routing-regime.js';
 import { validateCandidatePath } from '../domain/path-validator.js';
 import { selectDisplayHints } from '../domain/hint-selection.js';
 import { pathSignature } from '../domain/path-features.js';

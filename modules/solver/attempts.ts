@@ -1,4 +1,4 @@
-import { classifyRoutingRegime, getRequiredPathCoverageRatio } from './archetype.js';
+import { classifyRoutingRegime, getRequiredPathCoverageRatio } from './routing-regime.js';
 import { ATTEMPT_CONFIGS, SCORING_PROFILE_ORDER, ORDERING_BIAS_CONFIG_KEYS, STRUCTURAL_ORDERING_BIASES } from './policy.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, AttemptConfig, StructuralOrderingBias } from './types.js';
@@ -198,7 +198,7 @@ const repairTurnBiasedAttempt = (): AttemptConfig => ({ scoringProfileId: 'repai
  *  these out of the returned config list (same pattern as repairConfigs) and runs each ENTRY as its
  *  own sequential sub-pass with its own full, unshared budget slice (divided across gates only,
  *  never diluted by sibling entries — see that call site's own comment), ONLY after the main
- *  ladder, repair fallback, and attraction-diversity pass have all already failed. `scoringProfileId`
+ *  ladder, repair fallback, and goal-attraction-disabled-retry stage have all already failed. `scoringProfileId`
  *  selects the TIE-BREAK profile (admissible slack is always the primary ordering — see that file's
  *  own doc), not a DFS/beam scoring profile in the usual sense; 'none' is a sentinel meaning "no
  *  tie-break at all" (admissibleOrderAttempt below sets admissibleOrderNoTieBreak for it instead of
@@ -212,9 +212,9 @@ const repairTurnBiasedAttempt = (): AttemptConfig => ({ scoringProfileId: 'repai
  *  before that same-day change), then the 3 lower-yield tie-break profiles ('mustCrossFirst',
  *  'intersectionHarvest', 'nearClosureRescue', a handful each from a full-corpus GitHub Actions
  *  sweep). A first version of this list gave every entry ONE combined budget total (the
- *  attraction-diversity pass's shared-rerun shape), which starved 'default' below the full,
+ *  goal-attraction-disabled-retry stage's shared-rerun shape), which starved 'default' below the full,
  *  unshared per-entry budget every validated solve actually used (method-probe.mjs's standalone
- *  `--only=ida:<key>` runs, never multiple entries sharing one call) — fixed by giving each entry
+ *  canonical `--only='admissible-order|tieBreak=<key>|lds=off'` runs, never multiple entries sharing one call) — fixed by giving each entry
  *  its own sequential sub-pass instead (see orchestration.ts's call site).
  *
  *  The remaining 8 SCORING_PROFILE_ORDER entries scored 0 hits on local sampling and were never validated at
@@ -269,7 +269,7 @@ function predictLikelyBiasedRepairTechnique(f: LevelFeatures): 'mustTurnBiased' 
  *  R02795, 2/3 for R00156), not because it's known to be the most broadly useful; the others are
  *  listed here for whoever widens this later, not currently used. Consumed by orchestration.ts's
  *  solveLevel — see ATTRACTION_DIVERSITY_BUDGET_FRACTION there for how it's scoped (a whole extra
- *  rerun of the main-loop ladder with these flags off, own separate small budget, only ever run
+ *  rerun of the main-search ladder with these flags off, own separate small budget, only ever run
  *  after the entire normal ladder AND repair fallback have already failed, so it costs nothing on
  *  any level that solves earlier). Not gated by level features (unlike needsRepairFallback) — the
  *  5 known fragile cases span 4 different routing regimes with no shared structural predictor found yet
