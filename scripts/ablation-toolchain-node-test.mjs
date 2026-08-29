@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { buildExperimentList } from '../modules/solver/ablation-config.js';
+import { buildExperimentList } from '../modules/solver/ablation-config.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -59,7 +59,7 @@ try {
         ],
     };
     await writeFile(input, JSON.stringify(data));
-    const run = spawnSync(process.execPath, ['scripts/analyze-ablation.mjs', `--input=${input}`, `--output=${output}`], {
+    const run = spawnSync(process.execPath, ['scripts/run-bundled.mjs', 'scripts/analyze-ablation.mjs', '--', `--input=${input}`, `--output=${output}`], {
         cwd: repoRoot, encoding: 'utf8',
     });
     assert.equal(run.status, 0, `analyzer failed:\nstdout:\n${run.stdout}\nstderr:\n${run.stderr}`);
