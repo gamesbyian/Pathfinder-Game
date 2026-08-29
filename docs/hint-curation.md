@@ -20,7 +20,7 @@ How Play mode chooses a small, varied subset from a level's stored solutions. Hi
 Path distance is in `[0,1]` and uses the maximum applicable variety axis:
 
 1. **Edge-set Jaccard**, always. Portal jumps are excluded because they are not drawn segments.
-2. **Self-intersection-cell Jaccard** when `navDensity >= 0.82`. Near-Hamiltonian paths often share most edges while crossing locations differ.
+2. **Self-intersection-cell Jaccard** when `requiredPathCoverageRatio >= 0.82`. Near-Hamiltonian paths often share most edges while crossing locations differ.
 3. **Must-cross order** when there are at least two must-cross cells. First-entry and completion order are compared separately with normalized Kendall tau. Any non-zero order difference is lifted to at least `MUSTCROSS_ORDER_MIN = 0.66` so it clears the ordinary diversity floor.
 
 Shared feature/distance primitives live in [`modules/domain/path-features.ts`](../modules/domain/path-features.ts) and are reused by discovery policy so the two systems do not define variety independently.
@@ -51,7 +51,7 @@ Coverage overrides the distance floor and may exceed the display cap if mandator
 | `NEAR_HAMILTONIAN_DENSITY` | 0.82 | Enables crossing-location distance. |
 | `MUSTCROSS_ORDER_MIN` | 0.66 | Minimum distance for differing must-cross order. |
 
-`navDensity = reqLen / navArea`, where `navArea = w*h - blocks - geese - falseGoals - gates`.
+`requiredPathCoverageRatio = reqLen / nonGateWinningPathCellCount`, where `nonGateWinningPathCellCount = w*h - blocks - geese - falseGoals - gates`.
 
 ## Display behavior
 

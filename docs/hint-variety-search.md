@@ -39,7 +39,7 @@ Shown hints preserve play curation coverage: at least one per gate, portal-use c
 
 ### Curation
 
-`selectDisplayHints(pool, { cap, navDensity, mustCrossKeys })` in `modules/domain/` produces the shown subset; distance/coverage primitives live in `path-features.ts`. `decideCandidateAcceptance` never filters Solve saves.
+`selectDisplayHints(pool, { cap, requiredPathCoverageRatio, mustCrossKeys })` in `modules/domain/` produces the shown subset; distance/coverage primitives live in `path-features.ts`. `decideCandidateAcceptance` never filters Solve saves.
 
 ### Variety session
 
@@ -81,7 +81,7 @@ Pool creation/run failure falls back to main-thread complete mode for the browse
 
 `solveOptionsModal` contains tier/custom and Find-all controls. Find-all requires `confirmFindAll`; Find 1 and the running overlay are unchanged. Overlay shows progress/cancel; budget-limited runs can extend; no-cap prompts at 2,500.
 
-For `navDensity >= DENSE_LEVEL_NAV_DENSITY (0.70)`, pre-start copy warns exhaustive completion is unlikely and favors **no cap** over **up to 1,000**. This changes UX only.
+For `requiredPathCoverageRatio >= DENSE_LEVEL_COVERAGE_THRESHOLD (0.70)`, pre-start copy warns exhaustive completion is unlikely and favors **no cap** over **up to 1,000**. This changes UX only.
 
 Editor merges the full pool into `foundHintsSinceLoad` via `setFoundHintsSinceLoad` + `mergeUniqueHints`; it feeds the working level/heatmap and persists on save. Review uses the same pool and persists it through approval/submission.
 
@@ -113,4 +113,4 @@ Tier node/restart/seed/time defaults remain first-pass values because published 
 - Keep tier ceilings unless usage shows slowness.
 - Review findings persist with the working level/`foundHintsSinceLoad` on approval or maker submission; no separate solve-only Firestore write.
 - Up-to-1,000 hard-stops at 1,000. No-cap pauses at 2,500; decline = `capped`, continue = resume to 5,000. The pause is not a separate `VarietyOutcome`.
-- Complete DFS is never feature-gated. `DENSE_LEVEL_NAV_DENSITY` 0.70 changes warning copy only.
+- Complete DFS is never feature-gated. `DENSE_LEVEL_COVERAGE_THRESHOLD` 0.70 changes warning copy only.

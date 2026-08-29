@@ -112,7 +112,7 @@ function traceWitness(entry) {
         invalidAtStep,
         finalStateIsSolution: isSolutionState(state, level),
         mechanicCounts: stressMeta?.mechanicCounts ?? null,
-        navDensity: stressMeta?.navDensity ?? null,
+        requiredPathCoverageRatio: stressMeta?.requiredPathCoverageRatio ?? null,
     };
 }
 
