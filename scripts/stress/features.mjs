@@ -50,7 +50,7 @@ export function levelFeatures(raw, witnessPairs = null) {
     return f;
 }
 
-/** Mirrors solver/routingRegime.ts detectArchetype so predictions can reason about policy routing. */
+/** Mirrors solver/routing-regime.ts classifyRoutingRegime so predictions can reason about policy routing. */
 export function classifyRoutingRegimeFromRaw(raw, requiredPathCoverageRatio) {
     const portalTerminals = (raw.portals?.length || 0) * 2;
     if (raw.reqInt <= 1 && requiredPathCoverageRatio < 0.35) return 'sparse-low-intersection';
