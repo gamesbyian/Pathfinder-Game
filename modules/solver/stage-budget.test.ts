@@ -5,7 +5,7 @@ import {
     ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION, COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION,
     ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION,
     MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION,
-    REPAIR_LATE_PROBE_NODE_BUDGET, MAIN_LOOP_LATE_RESERVE_FRACTION, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT,
+    REPAIR_LATE_PROBE_NODE_BUDGET, MAIN_SEARCH_LATE_RESERVE_FRACTION, MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT,
 } from './stage-budget.js';
 import { defaultConfig } from './ablation-config.js';
 
@@ -25,10 +25,10 @@ test('production/interactive shape (Infinity nodeBudget) is a strict no-op: ever
     for (const ceiling of [
         plan.admissibleOrderNodeReserve, plan.coarseStateNearTieRetentionRetryNodeReserve, plan.nonDefaultRetryNodeReserve,
         plan.connectivityRetryNodeReserve, plan.repairElitePrefixDfsRetryNodeReserve, plan.mcNeighborBudgetRetryNodeReserve,
-        plan.repairFallbackNodeReserve, plan.attractionDiversityNodeReserve,
+        plan.repairFallbackNodeReserve, plan.goalAttractionDisabledRetryNodeReserve,
     ]) assert.equal(ceiling, 0, 'every reserve must be exactly 0 with no finite nodeBudget to withhold from');
     for (const ceiling of [
-        plan.earlyTierNodeBudget, plan.mainLoopEarlyNodeBudget, plan.mainLoopNodeBudget, plan.coarseStateNearTieRetentionRetryNodeCeiling,
+        plan.earlyTierNodeBudget, plan.mainSearchEarlyNodeBudget, plan.mainSearchNodeBudget, plan.coarseStateNearTieRetentionRetryNodeCeiling,
         plan.nonDefaultRetryNodeCeiling, plan.connectivityRetryNodeCeiling, plan.repairElitePrefixDfsRetryNodeCeiling,
         plan.mcNeighborBudgetRetryNodeCeiling, plan.repairFallbackNodeCeilingBase, plan.admissibleOrderDefaultProfileCeiling,
     ]) assert.equal(ceiling, Infinity);
@@ -97,7 +97,7 @@ test('disableExtraBudgetPasses zeroes every retry-tier budget fraction unless an
     // An explicit per-tier override still wins over the blanket suppression.
     const overridden = computeStageBudgetPlan({
         ...baseInput, nodeBudget: Infinity,
-        opts: { disableExtraBudgetPasses: true, attractionDiversityBudgetFractionOverride: 2.5 },
+        opts: { disableExtraBudgetPasses: true, goalAttractionDisabledRetryBudgetFractionOverride: 2.5 },
     });
     assert.equal(overridden.diversityBudgetFraction, 2.5);
     assert.equal(overridden.repairBudgetFraction, 0);
@@ -126,20 +126,63 @@ test('legacy near-tie budget override option names normalize to the canonical pl
     assert.equal(legacy.coarseStateNearTieRetentionRetryNodeCeiling, canonical.coarseStateNearTieRetentionRetryNodeCeiling);
 });
 
+test('legacy attractionDiversity budget/reserve override option names normalize to the canonical goalAttractionDisabledRetry plan fields', () => {
+    const legacy = computeStageBudgetPlan({
+        ...baseInput,
+        nodeBudget: 50_000_000,
+        opts: {
+            attractionDiversityBudgetFractionOverride: 2.5,
+            attractionDiversityNodeReserveFractionOverride: 0.3,
+        },
+    });
+    const canonical = computeStageBudgetPlan({
+        ...baseInput,
+        nodeBudget: 50_000_000,
+        opts: {
+            goalAttractionDisabledRetryBudgetFractionOverride: 2.5,
+            goalAttractionDisabledRetryNodeReserveFractionOverride: 0.3,
+        },
+    });
+    assert.equal(legacy.diversityBudgetFraction, canonical.diversityBudgetFraction);
+    assert.equal(legacy.goalAttractionDisabledRetryNodeReserve, canonical.goalAttractionDisabledRetryNodeReserve);
+});
+
+test('legacy mainLoopLateReserve override option names normalize to the canonical mainSearchLateReserve plan fields', () => {
+    const legacy = computeStageBudgetPlan({
+        ...baseInput,
+        nodeBudget: 50_000_000,
+        opts: {
+            mainLoopLateReserveFractionOverride: 0.4,
+            mainLoopLateReserveConfigCountOverride: 3,
+        },
+    });
+    const canonical = computeStageBudgetPlan({
+        ...baseInput,
+        nodeBudget: 50_000_000,
+        opts: {
+            mainSearchLateReserveFractionOverride: 0.4,
+            mainSearchLateReserveConfigCountOverride: 3,
+        },
+    });
+    assert.equal(legacy.mainSearchLateReserveFraction, canonical.mainSearchLateReserveFraction);
+    assert.equal(legacy.mainSearchLateReserveConfigCount, canonical.mainSearchLateReserveConfigCount);
+    assert.equal(legacy.mainSearchLateReserve, canonical.mainSearchLateReserve);
+});
+
 test('repair-shrink-recovery: no-op when nothing was shrunk, and repays the full withheld budget (not just the difference) when it was', () => {
     const nodeBudget = 50_000_000;
     const plan = computeStageBudgetPlan({
         ...baseInput, nodeBudget,
-        opts: { repairProbeShrinkRecoveryNodeReserveFractionOverride: 0.5 },
+        opts: { repairShrinkRecoveryNodeReserveFractionOverride: 0.5 },
         // Providing ANY cfg object turns off every OTHER unset flag (the documented ablation-config
         // gotcha — see SolveOpts's repairBudgetFractionOverride comment), so every flag this tier's
         // own eligibility reads must be explicitly set true here.
-        cfg: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true, STRATEGY_REPAIR_PROBE: true, STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: true },
+        cfg: { STRATEGY_REPAIR_SHRINK_RECOVERY: true, STRATEGY_EARLY_REPAIR_SEARCH: true, STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET: true },
     });
     const noShrink = computeShrinkRecoveryBudget(plan, []);
     assert.equal(noShrink.shrinkRecoveryDebt, 0);
     assert.equal(noShrink.shrinkRecoveryNodeReserve, 0);
-    assert.equal(noShrink.mainLoopNodeBudgetFinal, plan.mainLoopNodeBudget);
+    assert.equal(noShrink.mainSearchNodeBudgetFinal, plan.mainSearchNodeBudget);
     assert.equal(noShrink.repairFallbackNodeCeiling, plan.repairFallbackNodeCeilingBase);
     assert.equal(noShrink.diversityNodeCeiling, plan.earlyTierNodeBudget);
 
@@ -147,14 +190,14 @@ test('repair-shrink-recovery: no-op when nothing was shrunk, and repays the full
     assert.equal(shrunk.shrinkRecoveryDebt, 6_000_000);
     // Reserve is capped at `fraction * earlyTierNodeBudget`, never more than the actual debt.
     assert.equal(shrunk.shrinkRecoveryNodeReserve, Math.min(6_000_000, Math.floor(plan.earlyTierNodeBudget * 0.5)));
-    assert.equal(shrunk.mainLoopNodeBudgetFinal, plan.mainLoopNodeBudget - shrunk.shrinkRecoveryNodeReserve);
+    assert.equal(shrunk.mainSearchNodeBudgetFinal, plan.mainSearchNodeBudget - shrunk.shrinkRecoveryNodeReserve);
 });
 
 test('buildStageBudgetEnvelopes projects the exact same node ceilings the plan computed — one canonical number, two read paths', () => {
     const nodeBudget = 50_000_000;
     const plan = computeStageBudgetPlan({ ...baseInput, nodeBudget, initialMustCrossMask: 0b1 });
     const envelopes = buildStageBudgetEnvelopes(plan, { timeBudgetMs: baseInput.timeBudgetMs, nodeBudget });
-    assert.equal(envelopeNodeCeiling(envelopes['main-search']!), plan.mainLoopEarlyNodeBudget);
+    assert.equal(envelopeNodeCeiling(envelopes['main-search']!), plan.mainSearchEarlyNodeBudget);
     assert.equal(envelopeNodeCeiling(envelopes['repair-fallback']!), plan.repairFallbackNodeCeilingBase);
     assert.equal(envelopeNodeCeiling(envelopes['goal-attraction-disabled-retry']!), plan.earlyTierNodeBudget);
     assert.equal(envelopeNodeCeiling(envelopes['admissible-order-fallback']!), nodeBudget);
@@ -173,41 +216,41 @@ test('main-search late-suffix reserve fraction/count overrides are honored and c
     const nodeBudget = 50_000_000;
     const plan = computeStageBudgetPlan({
         ...baseInput, nodeBudget, mainConfigsCount: 3,
-        opts: { mainLoopLateReserveFractionOverride: 0.3, mainLoopLateReserveConfigCountOverride: 10 },
+        opts: { mainSearchLateReserveFractionOverride: 0.3, mainSearchLateReserveConfigCountOverride: 10 },
     });
-    assert.equal(plan.mainLoopLateReserveFraction, 0.3);
+    assert.equal(plan.mainSearchLateReserveFraction, 0.3);
     // Clamped to mainConfigsCount (3), not the requested 10.
-    assert.equal(plan.mainLoopLateReserveConfigCount, 3);
-    assert.equal(plan.mainLoopLateReserve, Math.floor(plan.earlyTierNodeBudget * 0.3));
-    assert.equal(plan.mainLoopEarlyNodeBudget, plan.earlyTierNodeBudget - plan.mainLoopLateReserve);
+    assert.equal(plan.mainSearchLateReserveConfigCount, 3);
+    assert.equal(plan.mainSearchLateReserve, Math.floor(plan.earlyTierNodeBudget * 0.3));
+    assert.equal(plan.mainSearchEarlyNodeBudget, plan.earlyTierNodeBudget - plan.mainSearchLateReserve);
 });
 
 test('STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE widens the reserve window by exactly one, only when enabled', () => {
     const nodeBudget = 50_000_000;
 
     const off = computeStageBudgetPlan({ ...baseInput, nodeBudget, mainConfigsCount: 20 });
-    assert.equal(off.mainLoopLateReserveConfigCount, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT, 'default (cfg: null) is unaffected');
+    assert.equal(off.mainSearchLateReserveConfigCount, MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT, 'default (cfg: null) is unaffected');
 
     const cfgOff = computeStageBudgetPlan({ ...baseInput, nodeBudget, mainConfigsCount: 20, cfg: defaultConfig() });
-    assert.equal(cfgOff.mainLoopLateReserveConfigCount, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT, 'production defaultConfig() (flag off) is unaffected');
+    assert.equal(cfgOff.mainSearchLateReserveConfigCount, MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT, 'production defaultConfig() (flag off) is unaffected');
 
     const on = computeStageBudgetPlan({
         ...baseInput, nodeBudget, mainConfigsCount: 20,
         cfg: { ...defaultConfig(), STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: true },
     });
-    assert.equal(on.mainLoopLateReserveConfigCount, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT + 1, 'flag on widens the window by exactly one');
+    assert.equal(on.mainSearchLateReserveConfigCount, MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT + 1, 'flag on widens the window by exactly one');
 
     // An explicit opts override still wins over the flag, same precedence as every other override here.
     const overridden = computeStageBudgetPlan({
         ...baseInput, nodeBudget, mainConfigsCount: 20,
         cfg: { ...defaultConfig(), STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE: true },
-        opts: { mainLoopLateReserveConfigCountOverride: 2 },
+        opts: { mainSearchLateReserveConfigCountOverride: 2 },
     });
-    assert.equal(overridden.mainLoopLateReserveConfigCount, 2, 'explicit override takes precedence over the flag');
+    assert.equal(overridden.mainSearchLateReserveConfigCount, 2, 'explicit override takes precedence over the flag');
 });
 
-test('MAIN_LOOP_LATE_RESERVE_FRACTION default is honored when no override is supplied', () => {
+test('MAIN_SEARCH_LATE_RESERVE_FRACTION default is honored when no override is supplied', () => {
     const nodeBudget = 50_000_000;
     const plan = computeStageBudgetPlan({ ...baseInput, nodeBudget });
-    assert.equal(plan.mainLoopLateReserveFraction, MAIN_LOOP_LATE_RESERVE_FRACTION);
+    assert.equal(plan.mainSearchLateReserveFraction, MAIN_SEARCH_LATE_RESERVE_FRACTION);
 });

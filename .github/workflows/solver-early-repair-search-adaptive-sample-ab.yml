@@ -1,4 +1,4 @@
-# Stratified-sample level-blind capability A/B for STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET
+# Stratified-sample level-blind capability A/B for STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET
 # (modules/solver/orchestration.ts; see reports/2026-08-12-repair-probe-early-main-loop-starvation.md
 # and docs/solver-opt-in-experiment-ledger.md).
 #
@@ -23,13 +23,13 @@
 # solver-highbudget-unsolved-sweep.yml). Artifact-only: this workflow never commits to main.
 #
 # Usage: dispatch twice with identical inputs except enable_flags -- once blank (control), once
-# enable_flags=STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (treatment) -- then compare each run's
-# combined solved count/gains/losses (per-id, from each run's reports/stress/repair-probe-adaptive-
-# sample-ab.json artifact).
+# enable_flags=STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET (treatment) -- then compare each run's
+# combined solved count/gains/losses (per-id, from each run's
+# reports/stress/early-repair-search-adaptive-sample-ab.json artifact).
 #
 # GATE/MIN_SCALE RECALIBRATION REUSE (2026-08-13, docs/future-work.md item 4b,
 # reports/2026-08-13-existing-solve-data-tuning-opportunities.md): the same eligible population is
-# the only one REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE can ever affect, so this
+# the only one EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE can ever affect, so this
 # workflow doubles as the gate-value sweep entrypoint via the repair_probe_adaptive_badness_gate /
 # repair_probe_adaptive_min_scale inputs (both blank = production defaults 10 / 0.35). Dispatch once
 # per candidate gate (blank baseline, then 8, then 6) with identical seed/sample/node_budget and
@@ -78,7 +78,7 @@ on:
         required: false
         default: '20'
       enable_flags:
-        description: 'Comma-separated ablation flags to turn ON. Leave blank for the control arm; set to STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET for the treatment arm.'
+        description: 'Comma-separated ablation flags to turn ON. Leave blank for the control arm; set to STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET for the treatment arm.'
         required: false
         default: ''
       disable_flags:
@@ -90,11 +90,11 @@ on:
         required: false
         default: 'true'
       repair_probe_adaptive_badness_gate:
-        description: 'Overrides REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE (production default 10) for this run only -- for the docs/future-work.md item 4b gate recalibration sweep (10/8/6). Leave blank to use the production default.'
+        description: 'Overrides EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE (production default 10) for this run only -- for the docs/future-work.md item 4b gate recalibration sweep (10/8/6). Leave blank to use the production default.'
         required: false
         default: ''
       repair_probe_adaptive_min_scale:
-        description: 'Overrides REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE (production default 0.35) for this run only. Leave blank to use the production default -- the item 4b sweep holds this fixed at 0.35 across all gate arms.'
+        description: 'Overrides EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE (production default 0.35) for this run only. Leave blank to use the production default -- the item 4b sweep holds this fixed at 0.35 across all gate arms.'
         required: false
         default: ''
 
@@ -202,8 +202,8 @@ jobs:
           extra=()
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
-          [ -n "${{ inputs.repair_probe_adaptive_badness_gate }}" ] && extra+=("--repair-probe-adaptive-badness-gate=${{ inputs.repair_probe_adaptive_badness_gate }}")
-          [ -n "${{ inputs.repair_probe_adaptive_min_scale }}" ] && extra+=("--repair-probe-adaptive-min-scale=${{ inputs.repair_probe_adaptive_min_scale }}")
+          [ -n "${{ inputs.repair_probe_adaptive_badness_gate }}" ] && extra+=("--early-repair-search-adaptive-badness-gate=${{ inputs.repair_probe_adaptive_badness_gate }}")
+          [ -n "${{ inputs.repair_probe_adaptive_min_scale }}" ] && extra+=("--early-repair-search-adaptive-min-scale=${{ inputs.repair_probe_adaptive_min_scale }}")
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
           [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
@@ -317,7 +317,7 @@ jobs:
         # to the JOB CONSOLE LOG specifically (not just the uploaded artifact) because this session's
         # egress policy has been observed blocking the artifact-download zip (Azure blob storage,
         # 403) -- console output survives that. See scripts/stress/early-repair-search-badness-report.mjs and
-        # REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE's own comment in orchestration.ts for why this
+        # EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE's own comment in orchestration.ts for why this
         # data matters: recalibrating that constant needs the ordinaryBestBadness distribution, not
         # just the solved-count this workflow already printed above.
         run: |

@@ -18,7 +18,7 @@ const baseInput = {
 
 test('buildSolverStagePlan covers every SOLVER_STAGE_IDS entry, in declared order, with an explicit eligible/undefined verdict', () => {
     const budgetPlan = computeStageBudgetPlan(baseInput);
-    const plan = buildSolverStagePlan({ budgetPlan, mainLoopEligible: true });
+    const plan = buildSolverStagePlan({ budgetPlan, mainSearchEligible: true });
     assert.deepEqual(plan.map(entry => entry.spec.id), [...SOLVER_STAGE_IDS]);
     // Stages this pre-probe plan cannot resolve report `undefined`, never a guessed boolean.
     assert.equal(plan.find(entry => entry.spec.id === 'explicit-prime')!.eligible, undefined);
@@ -35,9 +35,9 @@ test('buildSolverStagePlan covers every SOLVER_STAGE_IDS entry, in declared orde
 test('buildSolverStagePlan.eligible agrees with computeStageBudgetPlan.xTierWillRun for every retry tier — one canonical source, two read paths', () => {
     const nodeBudget = 50_000_000;
     const budgetPlan = computeStageBudgetPlan({ ...baseInput, nodeBudget, initialMustCrossMask: 0b1, repairConfigsCount: 0 });
-    const plan = buildSolverStagePlan({ budgetPlan, mainLoopEligible: true });
+    const plan = buildSolverStagePlan({ budgetPlan, mainSearchEligible: true });
     const eligible = (id: string) => plan.find(entry => entry.spec.id === id)!.eligible;
-    assert.equal(eligible('early-repair-search'), budgetPlan.repairProbeTierWillRun);
+    assert.equal(eligible('early-repair-search'), budgetPlan.earlyRepairSearchTierWillRun);
     assert.equal(eligible('repair-fallback'), budgetPlan.repairFallbackTierWillRun);
     assert.equal(eligible('goal-attraction-disabled-retry'), budgetPlan.diversityTierWillRun);
     assert.equal(eligible('admissible-order-fallback'), budgetPlan.admissibleOrderTierWillRun);
@@ -51,13 +51,13 @@ test('buildSolverStagePlan.eligible agrees with computeStageBudgetPlan.xTierWill
     assert.equal(eligible('late-repair-search'), budgetPlan.repairLateProbeTierWillRun);
 });
 
-test('repair-shrink-recovery resolves once repairProbeShrunkTierCount is supplied', () => {
+test('repair-shrink-recovery resolves once earlyRepairSearchShrunkTierCount is supplied', () => {
     const budgetPlan = computeStageBudgetPlan({
         ...baseInput, nodeBudget: 50_000_000,
-        cfg: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true, STRATEGY_REPAIR_PROBE: true, STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: true },
+        cfg: { STRATEGY_REPAIR_SHRINK_RECOVERY: true, STRATEGY_EARLY_REPAIR_SEARCH: true, STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET: true },
     });
-    const noneShrunk = buildSolverStagePlan({ budgetPlan, mainLoopEligible: true, repairProbeShrunkTierCount: 0 });
+    const noneShrunk = buildSolverStagePlan({ budgetPlan, mainSearchEligible: true, earlyRepairSearchShrunkTierCount: 0 });
     assert.equal(noneShrunk.find(entry => entry.spec.id === 'repair-shrink-recovery')!.eligible, false);
-    const oneShrunk = buildSolverStagePlan({ budgetPlan, mainLoopEligible: true, repairProbeShrunkTierCount: 1 });
+    const oneShrunk = buildSolverStagePlan({ budgetPlan, mainSearchEligible: true, earlyRepairSearchShrunkTierCount: 1 });
     assert.equal(oneShrunk.find(entry => entry.spec.id === 'repair-shrink-recovery')!.eligible, true);
 });

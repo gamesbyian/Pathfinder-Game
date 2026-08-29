@@ -47,7 +47,7 @@ const approvedLegacyTimeDerivedAllocations = new Set([
     'const connectivityRetryTotalBudget = Math.floor(timeBudgetMs * connectivityRetryBudgetFraction);',
     'const repairElitePrefixDfsRetryTotalBudget = Math.floor(timeBudgetMs * repairElitePrefixDfsRetryBudgetFraction);',
     'const mcNeighborBudgetRetryTotalBudget = Math.floor(timeBudgetMs * mcNeighborBudgetRetryBudgetFraction);',
-    'const goalAttractionLegacyDistanceRetryTotalBudget = Math.floor(timeBudgetMs * goalAttractionLegacyDistanceRetryBudgetFraction);',
+    'const goalAttractionGuidanceDistanceRetryTotalBudget = Math.floor(timeBudgetMs * goalAttractionGuidanceDistanceRetryBudgetFraction);',
 ]);
 const liveLegacyLines = orchestration.split('\n')
     .map(line => line.trim())

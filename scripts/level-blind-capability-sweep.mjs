@@ -46,20 +46,28 @@ const strictTotalWorkBudget = flags.has('--strict-total-work-budget');
 const attemptBudgetTelemetry = flags.has('--attempt-budget-telemetry');
 const lifecycleTelemetry = flags.has('--lifecycle-telemetry');
 const runStartedAt = new Date().toISOString();
-const mainLoopLateReserveFraction = argMap.has('--main-loop-late-reserve-fraction')
-    ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
-const mainLoopLateReserveConfigCount = argMap.has('--main-loop-late-reserve-config-count')
-    ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
+// --main-search-late-reserve-* is canonical; --main-loop-late-reserve-* is accepted as a legacy
+// alias for one migration window (naming-cleanup-ledger.json), same dual-read shape as the
+// SolveOpts override fields these flags feed.
+const mainSearchLateReserveFraction = argMap.has('--main-search-late-reserve-fraction')
+    ? Number(argMap.get('--main-search-late-reserve-fraction'))
+    : argMap.has('--main-loop-late-reserve-fraction') ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
+const mainSearchLateReserveConfigCount = argMap.has('--main-search-late-reserve-config-count')
+    ? Number(argMap.get('--main-search-late-reserve-config-count'))
+    : argMap.has('--main-loop-late-reserve-config-count') ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
 const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction')
     ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
 // 2026-08-13 (docs/future-work.md item 4b): lets a matched sweep compare candidate
-// REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE values against the production defaults
+// EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE values against the production defaults
 // (10, 0.35) without editing modules/solver/orchestration.ts. Same optional/omitted-means-
-// production-default shape as the main-loop-late-reserve flags above.
-const repairProbeAdaptiveBadnessGate = argMap.has('--repair-probe-adaptive-badness-gate')
-    ? Number(argMap.get('--repair-probe-adaptive-badness-gate')) : undefined;
-const repairProbeAdaptiveMinScale = argMap.has('--repair-probe-adaptive-min-scale')
-    ? Number(argMap.get('--repair-probe-adaptive-min-scale')) : undefined;
+// production-default shape as the main-search-late-reserve flags above. --early-repair-search-
+// adaptive-* is canonical; --repair-probe-adaptive-* is accepted as a legacy alias.
+const earlyRepairSearchAdaptiveBadnessGate = argMap.has('--early-repair-search-adaptive-badness-gate')
+    ? Number(argMap.get('--early-repair-search-adaptive-badness-gate'))
+    : argMap.has('--repair-probe-adaptive-badness-gate') ? Number(argMap.get('--repair-probe-adaptive-badness-gate')) : undefined;
+const earlyRepairSearchAdaptiveMinScale = argMap.has('--early-repair-search-adaptive-min-scale')
+    ? Number(argMap.get('--early-repair-search-adaptive-min-scale'))
+    : argMap.has('--repair-probe-adaptive-min-scale') ? Number(argMap.get('--repair-probe-adaptive-min-scale')) : undefined;
 // 2026-08-22 (docs/solver-future-work.md's "repair-fallback gate widening" reconciliation): lets a
 // matched sweep compare a candidate STRATEGY_REPAIR_LATE_PROBE node cap against the shipped
 // REPAIR_LATE_PROBE_NODE_BUDGET default (2,000,000, stage-budget.ts) without editing that constant.
@@ -151,11 +159,11 @@ if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
 if (strictTotalWorkBudget) solveOpts.strictTotalWorkBudget = true;
 if (attemptBudgetTelemetry) solveOpts.attemptBudgetTelemetry = true;
 if (lifecycleTelemetry) solveOpts.lifecycleTelemetry = true;
-if (Number.isFinite(mainLoopLateReserveFraction)) solveOpts.mainLoopLateReserveFractionOverride = mainLoopLateReserveFraction;
-if (Number.isFinite(mainLoopLateReserveConfigCount)) solveOpts.mainLoopLateReserveConfigCountOverride = mainLoopLateReserveConfigCount;
+if (Number.isFinite(mainSearchLateReserveFraction)) solveOpts.mainSearchLateReserveFractionOverride = mainSearchLateReserveFraction;
+if (Number.isFinite(mainSearchLateReserveConfigCount)) solveOpts.mainSearchLateReserveConfigCountOverride = mainSearchLateReserveConfigCount;
 if (Number.isFinite(admissibleOrderNodeReserveFraction)) solveOpts.admissibleOrderNodeReserveFractionOverride = admissibleOrderNodeReserveFraction;
-if (Number.isFinite(repairProbeAdaptiveBadnessGate)) solveOpts.repairProbeAdaptiveBiasedBadnessGateOverride = repairProbeAdaptiveBadnessGate;
-if (Number.isFinite(repairProbeAdaptiveMinScale)) solveOpts.repairProbeAdaptiveBiasedMinScaleOverride = repairProbeAdaptiveMinScale;
+if (Number.isFinite(earlyRepairSearchAdaptiveBadnessGate)) solveOpts.earlyRepairSearchAdaptiveBiasedBadnessGateOverride = earlyRepairSearchAdaptiveBadnessGate;
+if (Number.isFinite(earlyRepairSearchAdaptiveMinScale)) solveOpts.earlyRepairSearchAdaptiveBiasedMinScaleOverride = earlyRepairSearchAdaptiveMinScale;
 if (Number.isFinite(repairLateProbeNodeBudget)) solveOpts.repairLateProbeNodeBudgetOverride = repairLateProbeNodeBudget;
 if (ablation) solveOpts.ablation = ablation;
 
@@ -178,11 +186,11 @@ function writeReport() {
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
         workBudget: Number.isFinite(workBudget) ? workBudget : null,
         workers, enableFlags, disableFlags, strictTotalWorkBudget, attemptBudgetTelemetry, lifecycleTelemetry, runStartedAt,
-        mainLoopLateReserveFraction: Number.isFinite(mainLoopLateReserveFraction) ? mainLoopLateReserveFraction : null,
-        mainLoopLateReserveConfigCount: Number.isFinite(mainLoopLateReserveConfigCount) ? mainLoopLateReserveConfigCount : null,
+        mainSearchLateReserveFraction: Number.isFinite(mainSearchLateReserveFraction) ? mainSearchLateReserveFraction : null,
+        mainSearchLateReserveConfigCount: Number.isFinite(mainSearchLateReserveConfigCount) ? mainSearchLateReserveConfigCount : null,
         admissibleOrderNodeReserveFraction: Number.isFinite(admissibleOrderNodeReserveFraction) ? admissibleOrderNodeReserveFraction : null,
-        repairProbeAdaptiveBadnessGate: Number.isFinite(repairProbeAdaptiveBadnessGate) ? repairProbeAdaptiveBadnessGate : null,
-        repairProbeAdaptiveMinScale: Number.isFinite(repairProbeAdaptiveMinScale) ? repairProbeAdaptiveMinScale : null,
+        earlyRepairSearchAdaptiveBadnessGate: Number.isFinite(earlyRepairSearchAdaptiveBadnessGate) ? earlyRepairSearchAdaptiveBadnessGate : null,
+        earlyRepairSearchAdaptiveMinScale: Number.isFinite(earlyRepairSearchAdaptiveMinScale) ? earlyRepairSearchAdaptiveMinScale : null,
         repairLateProbeNodeBudget: Number.isFinite(repairLateProbeNodeBudget) ? repairLateProbeNodeBudget : null,
         levelsRequested: targets.length, levelsRun: levels.length, solvedCount: solved,
         unsolvedCount: levels.length - solved, saveHints, hintChanges,

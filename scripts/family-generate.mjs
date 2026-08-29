@@ -405,7 +405,7 @@ function generateOneSibling(ctx, extras, mutationTypes, attemptLog) {
     return null;
 }
 
-/** navDensity exactly as solver/archetype.ts's getNavigableDensity computes it:
+/** requiredPathCoverageRatio exactly as solver/routing-regime.ts's getRequiredPathCoverageRatio computes it:
  *  reqLen / (w*h - blocks - geese - falseGoals - gates). Landmarks that ARE impassable already
  *  show up via their blocks-derived cell in a normalized level, but at the wire-extras level here
  *  landmarks are tracked separately — mirror that by also subtracting impassable landmark roles,

@@ -33,10 +33,16 @@ const repairBudgetFraction = args.has('--repair-budget-fraction') ? Number(args.
 if (repairBudgetFraction !== null && (!Number.isFinite(repairBudgetFraction) || repairBudgetFraction < 0)) {
     throw new Error('--repair-budget-fraction must be a finite number >= 0');
 }
-const schedulerMode = args.get('--scheduler-mode') || 'legacy';
-if (!['legacy', 'portfolio-experiment'].includes(schedulerMode)) {
-    throw new Error('--scheduler-mode must be legacy or portfolio-experiment');
+// Accept both the canonical scheduler-mode names and their legacy aliases (live workflows still
+// pass `legacy`); normalize to the canonical spelling so the solver call and this tool's own
+// output metadata single-write only the current vocabulary.
+const SCHEDULER_MODE_ALIASES = Object.freeze({ legacy: 'production', 'portfolio-experiment': 'legacy-latency-portfolio-experiment' });
+const CANONICAL_SCHEDULER_MODES = ['production', 'legacy-latency-portfolio-experiment'];
+const rawSchedulerMode = args.get('--scheduler-mode') || 'legacy';
+if (!Object.keys(SCHEDULER_MODE_ALIASES).includes(rawSchedulerMode) && !CANONICAL_SCHEDULER_MODES.includes(rawSchedulerMode)) {
+    throw new Error('--scheduler-mode must be one of: production, legacy-latency-portfolio-experiment (legacy aliases: legacy, portfolio-experiment)');
 }
+const schedulerMode = SCHEDULER_MODE_ALIASES[rawSchedulerMode] ?? rawSchedulerMode;
 const levelFilter = parseLevelPositions(args.get('--levels') || 'pos:1');
 
 installBrowserStubs();

@@ -297,7 +297,7 @@ const _LDS_PROBE_FLOOR_MS = 1000;
 const _LDS_PROBE_MAX_FRACTION = 0.6;
 
 /** Feature-scaled node budget for dfsFromGateLDS's probe phase (k∈{0,1,2,4,8}), covering the
- *  SAME "wall-clock decides which branch wins" determinism risk `runRepairProbe` had (see
+ *  SAME "wall-clock decides which branch wins" determinism risk `runEarlyRepairSearch` had (see
  *  docs/solver-architecture.md's "Wall-clock-gated search probes" section): under CPU/memory
  *  contention the same nominal probeCapMs window covers fewer actual search nodes, so a probe
  *  wave that would land the solution on an uncontended run can miss it on a contended one,

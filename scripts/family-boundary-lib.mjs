@@ -43,8 +43,7 @@ function concentrationEvidence(parent, solvedRows, configs) {
     if (solved(parent) || !solvedRows.length || !Object.keys(configs.counts).length) return null;
     const dominantConfig = Object.entries(configs.counts).sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0]))[0][0];
     const attempts = parent?.attempts ?? [];
-    const matching = attempts.filter(a => attemptConfig(a) === dominantConfig || a.technique === dominantConfig ||
-        (a.profile&&dominantConfig.includes(`:${a.profile}`)&&(a.repair?dominantConfig.includes('repair'):a.beamWidth?dominantConfig.includes('beam'):dominantConfig.includes('dfs'))));
+    const matching = attempts.filter(a => attemptConfig(a) === dominantConfig || a.technique === dominantConfig);
     const allocationValues = matching.map(a => finite(a.workSpent)).filter(Number.isFinite);
     const allocation = allocationValues.reduce((a,b)=>a+b,0);
     const terminations = [...new Set(matching.map(a => a.timedOut === true ? 'timeout' : a.timedOut === false && !solved(a) ? 'exhausted' : a.termination ?? a.status).filter(Boolean))].sort();

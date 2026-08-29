@@ -32,7 +32,7 @@ Use a non-binding wall deadline when the question is deterministic search work. 
 | `--work-budget=<n>` | unlimited | Preferred machine-independent work cap; see [`solver-budget-determinism.md`](solver-budget-determinism.md) |
 | `--node-budget=<n>` | unlimited | Legacy/technique-specific cap; not cross-technique comparable |
 | `--repair-budget-fraction=<n>` | solver default | Use `0` for a bounded diagnostic when repair overrun would confound the question |
-| `--scheduler-mode=<mode>` | `legacy` | `legacy` or opt-in `portfolio-experiment` |
+| `--scheduler-mode=<mode>` | `production` | `production` or opt-in `legacy-latency-portfolio-experiment` (legacy aliases `legacy`/`portfolio-experiment` accepted, normalized internally) |
 | `--output=<path>` | `logs/req-length-sweep/latest.json` | JSON output |
 
 ## Report semantics

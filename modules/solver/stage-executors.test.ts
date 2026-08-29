@@ -97,29 +97,29 @@ test('runWholeLadderRetryTier: every returned attempt is tagged with the canonic
     assert.deepEqual(result.solution, [1, 2, 3]);
 });
 
-test('runWholeLadderRetryTier: staircase=true passes cumulative entry/0 to runLadder and strips mainLoopLateReserve; staircase=false passes undefined/undefined and keeps it', async () => {
+test('runWholeLadderRetryTier: staircase=true passes cumulative entry/0 to runLadder and strips mainSearchLateReserve; staircase=false passes undefined/undefined and keeps it', async () => {
     const prep = prepLevel(makeLineLevel());
     prep._metrics = { nodesExpanded: 4242 };
     let seenArgs: unknown[] = [];
     const staircaseOn = await runWholeLadderRetryTier({
         stageId: 'must-cross-neighbor-prune-disabled-retry', proxyOverrides: { PRUNE_MC_NEIGHBOR_BUDGET: false },
         activeGates: [1], mainConfigs: [], level: makeLineLevel(), prep, yieldFn: null,
-        runLadder: async (...args) => { seenArgs = args; return { solution: null, attempts: [fakeAttempt({ mainLoopLateReserve: true })] }; },
+        runLadder: async (...args) => { seenArgs = args; return { solution: null, attempts: [fakeAttempt({ mainSearchLateReserve: true })] }; },
         totalBudgetMs: 1000, nodeCeiling: 100, workBudget: 100, workStart: 0, staircase: true,
     });
     // Positional args: (activeGates, baseConfigs, level, prep, timeBudgetMs, levelStartTime, yieldFn,
     // nodeBudget, workBudget, workStart, earlyConfigNodeBudget, lateConfigStart) — indices 10/11.
     assert.equal(seenArgs[10], 4242, 'earlyConfigNodeBudget must be the cumulative node count AT CALL TIME');
     assert.equal(seenArgs[11], 0, 'lateConfigStart must be 0 (every config becomes a staircase step)');
-    assert.equal(staircaseOn.attempts[0].mainLoopLateReserve, undefined, 'staircase mode strips the borrowed mainLoopLateReserve tag');
+    assert.equal(staircaseOn.attempts[0].mainSearchLateReserve, undefined, 'staircase mode strips the borrowed mainSearchLateReserve tag');
 
     const staircaseOff = await runWholeLadderRetryTier({
         stageId: 'coarse-state-near-tie-retention-disabled-retry', proxyOverrides: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION: false },
         activeGates: [1], mainConfigs: [], level: makeLineLevel(), prep, yieldFn: null,
-        runLadder: async (...args) => { seenArgs = args; return { solution: null, attempts: [fakeAttempt({ mainLoopLateReserve: true })] }; },
+        runLadder: async (...args) => { seenArgs = args; return { solution: null, attempts: [fakeAttempt({ mainSearchLateReserve: true })] }; },
         totalBudgetMs: 1000, nodeCeiling: 100, workBudget: 100, workStart: 0, staircase: false,
     });
     assert.equal(seenArgs[10], undefined, 'staircase off: earlyConfigNodeBudget must stay undefined (runner defaults to plain nodeBudget)');
     assert.equal(seenArgs[11], undefined, 'staircase off: lateConfigStart must stay undefined (runner defaults to baseConfigs.length)');
-    assert.equal(staircaseOff.attempts[0].mainLoopLateReserve, true, 'staircase off: an incidental mainLoopLateReserve tag from the runner is left alone');
+    assert.equal(staircaseOff.attempts[0].mainSearchLateReserve, true, 'staircase off: an incidental mainSearchLateReserve tag from the runner is left alone');
 });

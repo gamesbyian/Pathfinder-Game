@@ -14,15 +14,15 @@ export type SolverStagePlan = SolverStagePlanEntry[];
 export interface SolverStagePlanInput {
     budgetPlan: StageBudgetPlan;
     /** Main loop has at least one configured attempt. */
-    mainLoopEligible: boolean;
+    mainSearchEligible: boolean;
     /** Known only after repair probe; omission leaves shrink-recovery eligibility undefined. */
-    repairProbeShrunkTierCount?: number;
+    earlyRepairSearchShrunkTierCount?: number;
 }
 
 /** Eligibility fields owned by StageBudgetPlan. */
 function budgetPlanEligibility(id: SolverStageId, plan: StageBudgetPlan): boolean | undefined {
     switch (id) {
-        case 'early-repair-search': return !!plan.repairProbeTierWillRun;
+        case 'early-repair-search': return !!plan.earlyRepairSearchTierWillRun;
         case 'repair-fallback': return !!plan.repairFallbackTierWillRun;
         case 'goal-attraction-disabled-retry': return !!plan.diversityTierWillRun;
         case 'admissible-order-fallback': return !!plan.admissibleOrderTierWillRun;
@@ -32,20 +32,20 @@ function budgetPlanEligibility(id: SolverStageId, plan: StageBudgetPlan): boolea
         case 'repair-elite-prefix-dfs-retry': return !!plan.repairElitePrefixDfsRetryTierWillRun;
         case 'must-cross-neighbor-prune-disabled-retry': return !!plan.mcNeighborBudgetRetryTierWillRun;
         case 'late-repair-search': return !!plan.repairLateProbeTierWillRun;
-        case 'guidance-goal-distance-retry': return !!plan.goalAttractionLegacyDistanceRetryTierWillRun;
+        case 'guidance-goal-distance-retry': return !!plan.goalAttractionGuidanceDistanceRetryTierWillRun;
         case 'late-repair-multiseed-retry': return !!plan.repairLateProbeMultiSeedRetryTierWillRun;
         default: return undefined;
     }
 }
 
 export function buildSolverStagePlan(input: SolverStagePlanInput): SolverStagePlan {
-    const { budgetPlan, mainLoopEligible, repairProbeShrunkTierCount } = input;
+    const { budgetPlan, mainSearchEligible, earlyRepairSearchShrunkTierCount } = input;
     return SOLVER_STAGE_IDS.map((id): SolverStagePlanEntry => {
-        if (id === 'main-search') return { spec: solverStageSpec(id), eligible: mainLoopEligible };
+        if (id === 'main-search') return { spec: solverStageSpec(id), eligible: mainSearchEligible };
         if (id === 'repair-shrink-recovery') {
-            const eligible = repairProbeShrunkTierCount === undefined
+            const eligible = earlyRepairSearchShrunkTierCount === undefined
                 ? undefined
-                : !!budgetPlan.shrinkRecoveryEnabled && repairProbeShrunkTierCount > 0;
+                : !!budgetPlan.shrinkRecoveryEnabled && earlyRepairSearchShrunkTierCount > 0;
             return { spec: solverStageSpec(id), eligible };
         }
         return { spec: solverStageSpec(id), eligible: budgetPlanEligibility(id, budgetPlan) };

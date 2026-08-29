@@ -58,7 +58,7 @@ test('classifyProvenanceSource: unknown solver id -> other; null entry -> other'
     assert.equal(classifyProvenanceSource(null), 'other');
 });
 
-// The Priority 0 regression this bucket exists for (docs/solver-optimization-current-queue.md):
+// The Priority 0 regression this bucket exists for (docs/solver-optimization-workstreams.md):
 // an isolated single-technique run (e.g. technique-census tooling) still carries
 // solver.id === SOLVER_ID, so without this check it would be misread as ordinary production-
 // solver capability evidence — the same contamination behind e.g. R02900.

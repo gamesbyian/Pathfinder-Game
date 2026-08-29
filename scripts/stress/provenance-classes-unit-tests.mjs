@@ -53,7 +53,7 @@ describe('classifyProvenanceClass', () => {
         assert.throws(() => classifyProvenanceClass(entry(), { standard: 'loose' }), /unknown cold-evidence standard/);
     });
 
-    // The Priority 0 regression this field exists for (docs/solver-optimization-current-queue.md):
+    // The Priority 0 regression this field exists for (docs/solver-optimization-workstreams.md):
     // an isolated single-technique run (e.g. technique-census tooling) still carries
     // solver.id === SOLVER_ID, so without this check it would be misread as ordinary cold
     // production-solver capability evidence.

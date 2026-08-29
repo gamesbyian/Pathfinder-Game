@@ -2,7 +2,7 @@
 /**
  * Selects a deterministic, seeded stratified Corpus-2 sample for A/B testing a routing-regime-gated
  * ATTEMPT_POLICY routing change (modules/solver/attempts.ts) — the general form of
- * select-repair-probe-adaptive-sample.mjs's eligibility-sample pattern, generalized from one
+ * select-early-repair-search-adaptive-sample.mjs's eligibility-sample pattern, generalized from one
  * hardcoded mechanic predicate to any set of classifyRoutingRegime() routing regimes.
  *
  * An ATTEMPT_POLICY rule change can only ever affect a level's outcome if the level's detected
@@ -14,14 +14,14 @@
  * other routing regime, to empirically catch anything outside the intended scope, not just to trust the
  * routing-regime list.
  *
- * Unlike select-repair-probe-adaptive-sample.mjs's looksRepairGated() (a sample-selection-only
+ * Unlike select-early-repair-search-adaptive-sample.mjs's looksRepairGated() (a sample-selection-only
  * APPROXIMATION of a mechanic predicate, since the real predicate needs a full solve to evaluate),
  * classifyRoutingRegime() is exactly what production routing calls — SOLVER_TESTING_API exposes it
  * directly and it takes only normalized level data, no solve. This selector's "eligible" population
  * is therefore exact, not an approximation.
  *
  * Uses the exact same seeded-sampling convention as scripts/stress/benchmark.mjs and
- * select-repair-probe-adaptive-sample.mjs (FNV-1a hash -> mulberry32 -> Fisher-Yates): same corpus +
+ * select-early-repair-search-adaptive-sample.mjs (FNV-1a hash -> mulberry32 -> Fisher-Yates): same corpus +
  * same --seed always produces the same sample.
  *
  * Usage:
@@ -32,7 +32,7 @@
  *     --eligible-sample=250 --control-sample=50 --seed=<commit-sha-or-any-string> \
  *     --out=logs/solver-routing-regime-sample/sample.txt
  *
- * Output: TWO files, same shape as select-repair-probe-adaptive-sample.mjs.
+ * Output: TWO files, same shape as select-early-repair-search-adaptive-sample.mjs.
  *   --out=<path>.txt        one "pos:N" token per line (plan-ab-corpus-shards.mjs's
  *                            --corpus2-sample= expects this), eligible sample first then control.
  *   <path>.ids.txt          the same rows as level ids + classified routing regime, for human review and
@@ -46,7 +46,7 @@ import { fileURLToPath } from 'node:url';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 
 // This script imports modules/solver.js (classifyRoutingRegime needs the real TS solver code, unlike
-// select-repair-probe-adaptive-sample.mjs's raw-JSON-only looksRepairGated approximation), so it
+// select-early-repair-search-adaptive-sample.mjs's raw-JSON-only looksRepairGated approximation), so it
 // must run through scripts/run-bundled.mjs, not plain node. run-bundled.mjs bundles the entry into
 // .solver-tools/ (ONE level under the repo root — see its own header comment), so ROOT is one
 // `..` from the running file's own directory, not two.
@@ -78,7 +78,7 @@ const outFile = argMap.get('--out');
 if (!outFile) { console.error('--out is required'); process.exit(2); }
 
 // Same convention as scripts/stress/benchmark.mjs's hashSeed/mulberry32/sampleDeterministic (also
-// used by select-repair-probe-adaptive-sample.mjs).
+// used by select-early-repair-search-adaptive-sample.mjs).
 function hashSeed(str) {
     let h = 0x811c9dc5;
     for (let i = 0; i < str.length; i++) {

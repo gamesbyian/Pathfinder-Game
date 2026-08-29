@@ -41,7 +41,7 @@ on:
         required: false
         default: ''
       main_loop_late_reserve_fraction:
-        description: 'Optional STRATEGY_MAIN_LOOP_LATE_RESERVE fraction; blank for control.'
+        description: 'Optional STRATEGY_MAIN_SEARCH_LATE_RESERVE fraction; blank for control.'
         required: false
         default: ''
       main_loop_late_reserve_config_count:
@@ -185,8 +185,8 @@ jobs:
           extra=("--save-hints")
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
-          [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-loop-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
-          [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ] && extra+=("--main-loop-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}")
+          [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-search-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
+          [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ] && extra+=("--main-search-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}")
           [ -n "${{ inputs.repair_late_probe_node_budget }}" ] && extra+=("--repair-late-probe-node-budget=${{ inputs.repair_late_probe_node_budget }}")
           [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
           work=$(( ${{ inputs.corpus1_node_budget }} * 134 / 100 ))
@@ -218,8 +218,8 @@ jobs:
           extra=("--save-hints")
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
-          [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-loop-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
-          [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ] && extra+=("--main-loop-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}")
+          [ -n "${{ inputs.main_loop_late_reserve_fraction }}" ] && extra+=("--main-search-late-reserve-fraction=${{ inputs.main_loop_late_reserve_fraction }}")
+          [ -n "${{ inputs.main_loop_late_reserve_config_count }}" ] && extra+=("--main-search-late-reserve-config-count=${{ inputs.main_loop_late_reserve_config_count }}")
           [ -n "${{ inputs.repair_late_probe_node_budget }}" ] && extra+=("--repair-late-probe-node-budget=${{ inputs.repair_late_probe_node_budget }}")
           [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
           work=$(( ${{ inputs.corpus2_node_budget }} * 134 / 100 ))

@@ -2,7 +2,7 @@ import { LEGACY_LATENCY_PORTFOLIO_EXPERIMENT } from './legacy-latency-portfolio-
 import { legacyMsToWork, scaledStageWorkBudget } from './budget-units.js';
 import { withWorkCapScope } from './budget-context.js';
 import { canonicalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
-import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS, repairAttempt } from './attempts.js';
+import { getConfiguredAttemptConfigs, GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS, repairAttempt } from './attempts.js';
 import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
@@ -80,7 +80,7 @@ export interface Attempt {
      *  AttemptConfig.repairTurnBiased) — lets tooling tell it apart from an ordinary repair attempt.
      *  Not read by any solving logic. */
     repairTurnBiased?: boolean;
-    /** Repair attempts only, diagnostic-only (see runRepairProbe's multi-seed retry) — absent
+    /** Repair attempts only, diagnostic-only (see runEarlyRepairSearch's multi-seed retry) — absent
      *  (equivalent to 0) for the first, ordinary-seed round; present and nonzero only for a retry
      *  round reached after every active gate already failed at every earlier seed. Not read by
      *  any solving logic, purely so external tooling can tell a retry-round win apart from an
@@ -109,39 +109,39 @@ export interface Attempt {
      *  genuinely exhausted their search space rather than timing out. */
     finalBadness?: number;
     /** True only for attempts run by the 2026-07-16 goal-attraction-disabled-retry last-resort pass (see
-     *  ATTRACTION_DIVERSITY_BUDGET_FRACTION below) — diagnostic-only passthrough, same pattern as
+     *  GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION below) — diagnostic-only passthrough, same pattern as
      *  `repair`/`repairMustTurnBiased` above, so external tooling and tests can tell these attempts
      *  apart from an ordinary main-search attempt using the exact same config without re-deriving it
      *  from attempt order/count. Not read by any solving logic. */
-    attractionDiversity?: boolean;
+    goalAttractionDisabledRetry?: boolean;
     /** True only for attempts run by the 2026-08-15 STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY last-resort pass
      *  (see COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION) — same diagnostic-only shape as
-     *  attractionDiversity above. Not read by any solving logic. */
+     *  goalAttractionDisabledRetry above. Not read by any solving logic. */
     coarseStateNearTieRetentionRetry?: boolean;
     /** True only for attempts run by the 2026-08-15 STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY
      *  last-resort pass (see ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION) — same
-     *  diagnostic-only shape as attractionDiversity/coarseStateNearTieRetentionRetry above. Not read by any
+     *  diagnostic-only shape as goalAttractionDisabledRetry/coarseStateNearTieRetentionRetry above. Not read by any
      *  solving logic. */
     admissibleOrderNonDefaultRetry?: boolean;
     /** True only for attempts run by the 2026-08-16 STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY
      *  last-resort pass (see CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION) — same
-     *  diagnostic-only shape as attractionDiversity/coarseStateNearTieRetentionRetry/admissibleOrderNonDefaultRetry
+     *  diagnostic-only shape as goalAttractionDisabledRetry/coarseStateNearTieRetentionRetry/admissibleOrderNonDefaultRetry
      *  above. Not read by any solving logic. */
     connectivityAxisExhaustedRetry?: boolean;
     /** True only for attempts run by the 2026-08-16 STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY
      *  last-resort pass (see REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION) — same diagnostic-only
-     *  shape as attractionDiversity/coarseStateNearTieRetentionRetry/admissibleOrderNonDefaultRetry/
+     *  shape as goalAttractionDisabledRetry/coarseStateNearTieRetentionRetry/admissibleOrderNonDefaultRetry/
      *  connectivityAxisExhaustedRetry above. Not read by any solving logic. */
     repairElitePrefixDfsRetry?: boolean;
     /** True only for attempts run by the 2026-08-19 STRATEGY_MC_NEIGHBOR_BUDGET_RETRY last-resort
      *  pass (see MC_NEIGHBOR_BUDGET_RETRY_BUDGET_FRACTION) — same diagnostic-only shape as
-     *  attractionDiversity/coarseStateNearTieRetentionRetry/admissibleOrderNonDefaultRetry/
+     *  goalAttractionDisabledRetry/coarseStateNearTieRetentionRetry/admissibleOrderNonDefaultRetry/
      *  connectivityAxisExhaustedRetry/repairElitePrefixDfsRetry above. Not read by any solving
      *  logic. */
     mcNeighborBudgetRetry?: boolean;
     /** True only for attempts run by the 2026-08-20 STRATEGY_REPAIR_LATE_PROBE last-resort pass
      *  (see REPAIR_LATE_PROBE_NODE_BUDGET) — same diagnostic-only shape as
-     *  attractionDiversity/coarseStateNearTieRetentionRetry/admissibleOrderNonDefaultRetry/
+     *  goalAttractionDisabledRetry/coarseStateNearTieRetentionRetry/admissibleOrderNonDefaultRetry/
      *  connectivityAxisExhaustedRetry/repairElitePrefixDfsRetry/mcNeighborBudgetRetry above. Not
      *  read by any solving logic. */
     repairLateProbe?: boolean;
@@ -159,13 +159,13 @@ export interface Attempt {
     admissibleOrderLds?: boolean;
     /** @deprecated Historical attempt telemetry field accepted on read only.
      * Current attempts identify this tier with stageId='early-repair-search'. */
-    repairProbe?: boolean;
+    earlyRepairSearch?: boolean;
     /** @deprecated Historical attempt telemetry field accepted on read only.
      * Current attempts identify this tier with stageId='repair-shrink-recovery'. */
-    repairProbeShrinkRecovery?: boolean;
+    repairShrinkRecovery?: boolean;
     /** Diagnostic-only: this ordinary main-search attempt belongs to the late suffix allowed to
      *  consume the experimental reserved node slice. Never set when the experiment is disabled. */
-    mainLoopLateReserve?: boolean;
+    mainSearchLateReserve?: boolean;
 }
 /** The subset of Attempt's fields classifyAttemptTier actually reads — kept as its own minimal
  *  structural type (rather than requiring the full Attempt interface) so a duck-typed caller like
@@ -185,9 +185,9 @@ export interface AttemptTierFlags {
     dedupNearTieRetry?: boolean;
     admissibleOrderNonDefaultRetry?: boolean;
     admissibleOrder?: boolean;
-    repairProbe?: boolean;
+    earlyRepairSearch?: boolean;
     repair?: boolean;
-    attractionDiversity?: boolean;
+    goalAttractionDisabledRetry?: boolean;
 }
 
 /** Maps a canonical `stageId` to classifyAttemptTier's own (pre-existing, string-literal) label
@@ -230,17 +230,17 @@ export function classifyAttemptTier(attempt: AttemptTierFlags): string {
                     : (attempt.coarseStateNearTieRetentionRetry || attempt.dedupNearTieRetry) ? 'coarse-state-near-tie-retention-disabled-retry'
                         : attempt.admissibleOrderNonDefaultRetry ? 'admissible-order-alternate-tiebreak-retry'
                             : attempt.admissibleOrder ? 'admissible-order-fallback'
-                                : attempt.repairProbe ? 'early-repair-search'
+                                : attempt.earlyRepairSearch ? 'early-repair-search'
                                     : attempt.repair ? 'repair-fallback'
-                                        : attempt.attractionDiversity ? 'goal-attraction-disabled-retry'
+                                        : attempt.goalAttractionDisabledRetry ? 'goal-attraction-disabled-retry'
                                             : 'main-ladder';
 }
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
 interface SearchResult { solution: number[] | null; attempts: Attempt[]; earlyNodeBudgetReached?: boolean; earlyWorkBudgetReached?: boolean; shrunkBiased?: ShrunkBiasedTier[]; }
 
-/** One biased early-repair-search tier whose node budget STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET
+/** One biased early-repair-search tier whose node budget STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET
  *  reduced, recorded so a later tier can restore what was withheld — see
- *  STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY. `fullNodeBudget` is the budget the tier would have had
+ *  STRATEGY_REPAIR_SHRINK_RECOVERY. `fullNodeBudget` is the budget the tier would have had
  *  with the mechanism off; `grantedNodeBudget` is what it actually got. */
 interface ShrunkBiasedTier { config: AttemptConfig; fullNodeBudget: number; grantedNodeBudget: number; }
 // Exported so the worker-client adapter (solver-worker-client.ts) can type its own `solve()`
@@ -267,7 +267,7 @@ export interface SolveOpts {
      *  256 nodes). So overshoot is bounded by ~one check interval (tens to a few hundred nodes),
      *  NOT by a whole attempt's or the repair probe's internal ceiling the way it was before this
      *  was threaded through beam/DFS. The one remaining coarse case: the repair probe still bounds
-     *  each seed-salt ROUND (up to REPAIR_PROBE_BIASED_NODE_BUDGET, 6,000,000) rather than mid-round,
+     *  each seed-salt ROUND (up to EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET, 6,000,000) rather than mid-round,
      *  so a budget below a single biased round's cost can still overshoot by up to that round. */
     nodeBudget?: number;
     /** Preferred name for the solver's base canonical WORK allocation (work-meter.ts's unit:
@@ -303,7 +303,7 @@ export interface SolveOpts {
      *  is the only way those default enabled, so passing ANY ablation object, even a sparse one
      *  that only sets an unrelated field, silently disables every OTHER unset strategy flag
      *  (STRATEGY_GATE_INTERLEAVING, STRATEGY_MIN_BUDGET_FLOOR, STRATEGY_ADAPTIVE_GATE_BUDGET,
-     *  STRATEGY_REPAIR_PROBE, and repair-search.ts's stagnation-burst/elite-splice flags). This
+     *  STRATEGY_EARLY_REPAIR_SEARCH, and repair-search.ts's stagnation-burst/elite-splice flags). This
      *  bug shipped once already (this field was originally REPAIR_BUDGET_FRACTION_OVERRIDE inside
      *  `ablation`) and silently broke every solve that used it — caught via a cross-check against
      *  scripts/solver-parallel/race.mjs, not by the original change's own testing, since that
@@ -311,7 +311,7 @@ export interface SolveOpts {
      *  by moving it out of `ablation` entirely, same as `nodeBudget` above. Undefined (every
      *  existing/production caller) preserves REPAIR_EXTRA_BUDGET_FRACTION exactly. */
     repairBudgetFractionOverride?: number;
-    /** Overrides ATTRACTION_DIVERSITY_BUDGET_FRACTION for this solve only — same dedicated
+    /** Overrides GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape as repairBudgetFractionOverride above, and for the same reason (NOT
      *  an ablation flag). Deliberately a SEPARATE override from repairBudgetFractionOverride, not
      *  reusing it: they gate two independently-costed extensions (repair's iterated-local-search
@@ -324,11 +324,13 @@ export interface SolveOpts {
      *  6x repair extension too, reintroducing exactly the multi-minute-per-level cost this
      *  session's repair-budget-fraction policy (docs/solver-architecture.md) was written to avoid
      *  in solver-testing workflows. Undefined (production default, and solver-controller.ts /
-     *  review-controller.ts's interactive call sites) preserves ATTRACTION_DIVERSITY_BUDGET_
+     *  review-controller.ts's interactive call sites) preserves GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_
      *  FRACTION exactly. */
+    goalAttractionDisabledRetryBudgetFractionOverride?: number;
+    /** @deprecated Historical option name accepted on read only. */
     attractionDiversityBudgetFractionOverride?: number;
     /** Overrides COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION for this solve only — same dedicated
-     *  top-level-option shape and rationale as attractionDiversityBudgetFractionOverride above (NOT
+     *  top-level-option shape and rationale as goalAttractionDisabledRetryBudgetFractionOverride above (NOT
      *  an ablation flag; a batch-tooling caller may want to isolate this pass's own cost). Undefined
      *  (production default, and solver-controller.ts/review-controller.ts's interactive call sites)
      *  preserves COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION exactly. */
@@ -429,44 +431,54 @@ export interface SolveOpts {
      *  whole main loop). Undefined (production default) preserves the constant exactly.
      *  Opt-in, default OFF (unlike the admissible-order-fallback reserve) — see the constant's own comment. */
     repairFallbackNodeReserveFractionOverride?: number;
-    /** STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY's reserve fraction; defaults to
-     *  REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION. Same override rationale as its siblings. */
-    repairProbeShrinkRecoveryNodeReserveFractionOverride?: number;
-    /** Override for ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION for this solve only — same shape,
+    /** STRATEGY_REPAIR_SHRINK_RECOVERY's reserve fraction; defaults to
+     *  REPAIR_SHRINK_RECOVERY_NODE_RESERVE_FRACTION. Same override rationale as its siblings. */
+    repairShrinkRecoveryNodeReserveFractionOverride?: number;
+    /** Override for GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION for this solve only — same shape,
      *  rationale, and opt-in-default-OFF status as repairFallbackNodeReserveFractionOverride above
-     *  (STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE being off already zeroes this reserve through its
+     *  (STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE being off already zeroes this reserve through its
      *  own run condition, so it is likewise not covered by `disableExtraBudgetPasses`). 0 restores
      *  the pre-reserve behavior (the diversity pass shares its ceiling with the repair fallback loop
      *  undivided). Undefined (production default) preserves the constant exactly. */
+    goalAttractionDisabledRetryNodeReserveFractionOverride?: number;
+    /** @deprecated Historical option name accepted on read only. */
     attractionDiversityNodeReserveFractionOverride?: number;
     /** Override for the ordinary main-search late-suffix reserve fraction (production default-ON,
-     *  see MAIN_LOOP_LATE_RESERVE_FRACTION). Only takes effect when a finite `nodeBudget` is set
+     *  see MAIN_SEARCH_LATE_RESERVE_FRACTION). Only takes effect when a finite `nodeBudget` is set
      *  (offline batch tooling) — never affects interactive Play/Editor/Review solves. The fraction
      *  is withheld from the repair probe and the main loop's early config prefix, then becomes
      *  available to the final N ordinary configs without reordering them. */
+    mainSearchLateReserveFractionOverride?: number;
+    /** @deprecated Historical option name accepted on read only. */
     mainLoopLateReserveFractionOverride?: number;
     /** Number of final ordinary configs eligible for the experimental reserve. See the fraction
      *  override above. Values are clamped to the main config count; 0 disables the reserve. */
+    mainSearchLateReserveConfigCountOverride?: number;
+    /** @deprecated Historical option name accepted on read only. */
     mainLoopLateReserveConfigCountOverride?: number;
-    /** Override for REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE for this solve only — same
+    /** Override for EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE for this solve only — same
      *  dedicated-override shape as the reserve-fraction overrides above (NOT an ablation flag: the
-     *  gate is read unconditionally inside the STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET branch,
+     *  gate is read unconditionally inside the STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET branch,
      *  so there is no existing opt-in/opt-out plumbing to piggyback on, and a fresh ablation flag
      *  would conflate "use the adaptive mechanism at all" with "which gate value" — two different
      *  questions). Exists so a matched batch-tooling sweep (recalibrating the gate from tagged
-     *  repairProbe telemetry per docs/future-work.md item 4b) can compare candidate gate values
+     *  earlyRepairSearch telemetry per docs/future-work.md item 4b) can compare candidate gate values
      *  against the production default without editing the constant and rebuilding. Undefined
-     *  (every production/interactive caller) preserves REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE
+     *  (every production/interactive caller) preserves EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE
      *  exactly. */
+    earlyRepairSearchAdaptiveBiasedBadnessGateOverride?: number;
+    /** @deprecated Historical option name accepted on read only. */
     repairProbeAdaptiveBiasedBadnessGateOverride?: number;
-    /** Override for REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE for this solve only — same shape and
-     *  rationale as repairProbeAdaptiveBiasedBadnessGateOverride above; kept as a separate field
+    /** Override for EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE for this solve only — same shape and
+     *  rationale as earlyRepairSearchAdaptiveBiasedBadnessGateOverride above; kept as a separate field
      *  (not folded into one object) to match every other override in this file being a single
      *  scalar. Undefined (every production/interactive caller) preserves
-     *  REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE exactly. */
+     *  EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE exactly. */
+    earlyRepairSearchAdaptiveBiasedMinScaleOverride?: number;
+    /** @deprecated Historical option name accepted on read only. */
     repairProbeAdaptiveBiasedMinScaleOverride?: number;
     /** Convenience for offline batch tooling: sets repairBudgetFractionOverride,
-     *  attractionDiversityBudgetFractionOverride, coarseStateNearTieRetentionRetryBudgetFractionOverride,
+     *  goalAttractionDisabledRetryBudgetFractionOverride, coarseStateNearTieRetentionRetryBudgetFractionOverride,
      *  admissibleOrderBudgetFractionOverride, admissibleOrderNonDefaultRetryBudgetFractionOverride,
      *  connectivityAxisExhaustedRetryBudgetFractionOverride,
      *  repairElitePrefixDfsRetryBudgetFractionOverride,
@@ -474,7 +486,7 @@ export interface SolveOpts {
      *  (purely additive — an explicit value on any individual override still wins over this, so a
      *  caller can still isolate one extension's cost while suppressing the others via this flag).
      *  Exists because the individual overrides were deliberately kept separate (see
-     *  attractionDiversityBudgetFractionOverride's own comment for why — a solver-testing sweep
+     *  goalAttractionDisabledRetryBudgetFractionOverride's own comment for why — a solver-testing sweep
      *  legitimately wants to disable just one of them sometimes), which means "no extra-budget-pass
      *  cost, period" requires remembering every one of them — documented in CLAUDE.md's
      *  solver-architecture gotchas as something "a future new batch tool needs to wire up... from
@@ -557,7 +569,7 @@ export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: 
     return feasible.length > 0 ? feasible : gateKeys;
 }
 
-// nodeBudget/nodesOut: optional, repair-only (see runRepairProbe) — a deterministic,
+// nodeBudget/nodesOut: optional, repair-only (see runEarlyRepairSearch) — a deterministic,
 // machine-speed-independent cap used ONLY by the early repair probe so its win/loss decision
 // depends on work done, not wall-clock luck under contention (see docs/solver-architecture.md's
 // "Wall-clock-gated search probes" section). Infinity/null preserve prior ms-only behavior
@@ -571,7 +583,7 @@ export async function runAttempt(
     gateKey: number, level: NormalizedLevel, prep: PrepLevel,
     attemptConfig: AttemptConfig, attBudget: number, attStart: number, yieldFn: YieldFn,
     nodeBudget = Infinity, nodesOut: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number; finalBadness?: number } | null = null,
-    // Repair-only (see runRepairProbe's multi-seed retry) — additively XORed into
+    // Repair-only (see runEarlyRepairSearch's multi-seed retry) — additively XORed into
     // repairSearchFromGate's own gate-derived PRNG seed (repair-search.ts), so a retry round
     // samples a genuinely different randomized search trajectory over the exact same level/gate
     // instead of repeating byte-for-byte the same (possibly unlucky) run. 0 (default, every
@@ -582,7 +594,7 @@ export async function runAttempt(
     const { scoringProfileId, orderingBias, beamWidth, mechanicBucketRetention, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
     const profile = SCORING_PROFILES[scoringProfileId] ?? SCORING_PROFILES.default;
     // Always non-null internally so every branch below can report through the same object,
-    // whether or not the caller supplied one (runRepairProbe passes its own, to also read
+    // whether or not the caller supplied one (runEarlyRepairSearch passes its own, to also read
     // nodesExpanded back for its cross-gate node-budget accounting; ordinary callers don't).
     const searchOut = nodesOut ?? {};
     const nodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
@@ -764,7 +776,7 @@ async function runInterleavedAttempts(
                 return { solution: null, attempts, earlyNodeBudgetReached, earlyWorkBudgetReached };
             }
             // WORK-side mirror of the node-side check just above (2026-08-26 fix for the
-            // confirm-residual-001 gap — see solveLevel's mainLoopLateWorkReserveEligible comment for
+            // confirm-residual-001 gap — see solveLevel's mainSearchLateWorkReserveEligible comment for
             // the full rationale). Before this, the only work-budget stop condition in this loop was
             // the flat check that used to live where budgetLeft is now computed below
             // (`workSpent >= workBudget`), with no reserve carve-out at all: a work-expensive early
@@ -821,7 +833,7 @@ async function runInterleavedAttempts(
             // The attempt's ms figure is the DEADLINE's remainder, not a share — it can truncate
             // the attempt but never sized it. prep._workCap (above) is what actually bounds it.
             const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], timeBudgetMs - elapsed, Date.now(), yieldFn, remainingNodeBudget);
-            if (ci >= lateConfigStart) result.attempt.mainLoopLateReserve = true;
+            if (ci >= lateConfigStart) result.attempt.mainSearchLateReserve = true;
             if (ci < lateConfigStart && (prep._metrics ? prep._metrics.nodesExpanded : 0) >= earlyConfigNodeBudget) {
                 earlyNodeBudgetReached = earlyConfigNodeBudget < nodeBudget;
             }
@@ -867,7 +879,7 @@ async function runGateSerialAttempts(
         const gateBudget = Math.floor((workBudget - workSpent) / gatesLeft);
         // WORK-side mirror of earlyConfigNodeBudget, sized fresh per gate (2026-08-26 fix for the
         // confirm-residual-001 gap — see runInterleavedAttempts's identical-purpose configWorkBudget,
-        // and solveLevel's mainLoopLateWorkReserveEligible comment, for the full rationale). Unlike
+        // and solveLevel's mainSearchLateWorkReserveEligible comment, for the full rationale). Unlike
         // the node dimension, work here is already divided into a fresh per-gate slice (gateBudget,
         // just above) rather than one shared global pool, so the reserve is carved as a FRACTION of
         // each gate's own slice rather than an absolute global ceiling threaded in from the caller.
@@ -912,7 +924,7 @@ async function runGateSerialAttempts(
             // Remaining GLOBAL node budget — see runInterleavedAttempts's identical recompute.
             const remainingNodeBudget = configNodeBudget === Infinity ? Infinity : Math.max(0, configNodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
             const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], timeBudgetMs - (Date.now() - levelStartTime), Date.now(), yieldFn, remainingNodeBudget);
-            if (ci >= lateConfigStart) result.attempt.mainLoopLateReserve = true;
+            if (ci >= lateConfigStart) result.attempt.mainSearchLateReserve = true;
             if (ci < lateConfigStart && (prep._metrics ? prep._metrics.nodesExpanded : 0) >= earlyConfigNodeBudget) {
                 earlyNodeBudgetReached = earlyConfigNodeBudget < nodeBudget;
             }
@@ -931,10 +943,10 @@ async function runGateSerialAttempts(
 // here so existing external consumers (scripts/solver-parallel/race.mjs) keep importing them from
 // this module's public surface unchanged.
 export {
-    REPAIR_EXTRA_BUDGET_FRACTION, ATTRACTION_DIVERSITY_BUDGET_FRACTION, ADMISSIBLE_ORDER_BUDGET_FRACTION,
+    REPAIR_EXTRA_BUDGET_FRACTION, GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_BUDGET_FRACTION,
     ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION, ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION,
-    MAIN_LOOP_LATE_RESERVE_FRACTION, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT, REPAIR_FALLBACK_NODE_RESERVE_FRACTION,
-    ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION, REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION,
+    MAIN_SEARCH_LATE_RESERVE_FRACTION, MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT, REPAIR_FALLBACK_NODE_RESERVE_FRACTION,
+    GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION, REPAIR_SHRINK_RECOVERY_NODE_RESERVE_FRACTION,
     COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION, COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION,
     ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION,
     CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION,
@@ -953,7 +965,7 @@ import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from './stage-budget.js
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
- *  repair fallback, tried BEFORE the ordinary DFS/beam main loop — see runRepairProbe.
+ *  repair fallback, tried BEFORE the ordinary DFS/beam main loop — see runEarlyRepairSearch.
  *
  *  Stress-corpus finding: on the repair-gated feature regime (attempts.ts's
  *  needsRepairFallback), the winning repair attempt itself typically finishes in well under
@@ -1020,12 +1032,12 @@ import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from './stage-budget.js
  *  Re-measure (repairSearchFromGate called directly per the recipe above, NOT the full
  *  2000-level stress corpus — too slow for this kind of per-level direct-replay measurement)
  *  before changing either value. */
-const REPAIR_PROBE_ORDINARY_NODE_BUDGET = 2_000_000;
-// Exported for orchestration.test.ts's STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET regression
+const EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET = 2_000_000;
+// Exported for orchestration.test.ts's STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET regression
 // tests, which assert the exact scaled node budget a mocked biased-tier attempt is called with.
-export const REPAIR_PROBE_BIASED_NODE_BUDGET = 6_000_000;
+export const EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET = 6_000_000;
 
-/** Per-attempt wall-clock trip-wire for `runRepairProbe` (see its own call site's comment): meant
+/** Per-attempt wall-clock trip-wire for `runEarlyRepairSearch` (see its own call site's comment): meant
  *  to catch only a genuinely pathological per-node cost or host distress, never to be the actual
  *  deciding factor — the node budgets above are. A flat 30-second value (this constant's value
  *  until 2026-08-12) assumed >=66,667 nodes/sec was always achievable, which measured CPU
@@ -1036,7 +1048,7 @@ export const REPAIR_PROBE_BIASED_NODE_BUDGET = 6_000_000;
  *  as a function of how contended the host happened to be — see
  *  reports/2026-08-12-worker-count-sensitivity-early-repair-search-wallclock.md. A flat constant (rather
  *  than one derived per-attempt from `gateNodeBudget`) is sufficient here because `gateNodeBudget`
- *  is always <= REPAIR_PROBE_BIASED_NODE_BUDGET (6,000,000): 20 minutes for that many nodes needs
+ *  is always <= EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET (6,000,000): 20 minutes for that many nodes needs
  *  only ~5,000 nodes/sec sustained, roughly 7-8x below the measured contended rate above and
  *  >100x below nominal uncontended throughput (~650,000 nodes/sec, measured on the same host) —
  *  generous enough to survive materially worse contention than what was measured, while staying a
@@ -1044,12 +1056,12 @@ export const REPAIR_PROBE_BIASED_NODE_BUDGET = 6_000_000;
  *  Hint", Review's approval solve): both pass `repairBudgetFractionOverride: 0`, which skips the
  *  probe outright (see its call site's own `repairBudgetFraction !== 0` gate) rather than relying
  *  on this cap to bound it. */
-export const REPAIR_PROBE_ATTEMPT_MS_CAP = 1_200_000;
+export const EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP = 1_200_000;
 
-/** How much of REPAIR_PROBE_BIASED_NODE_BUDGET the heuristically-PREDICTED technique gets when both
+/** How much of EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET the heuristically-PREDICTED technique gets when both
  *  biased tiers are present (attempts.ts's predictLikelyBiasedRepairTechnique, under
  *  STRATEGY_REPAIR_TURN_BIAS) — the other (fallback) tier gets the remainder. 0.75 chosen to keep
- *  the predicted tier close to its full pre-split calibration (see REPAIR_PROBE_BIASED_NODE_BUDGET's
+ *  the predicted tier close to its full pre-split calibration (see EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET's
  *  own comment) while still giving the fallback technique a real, non-zero shot. Two prior designs
  *  measured on a full corpus-2 refresh and rejected: an even 50/50 split (net -3 vs. the run before
  *  it: each half-budget attempt too weak to reproduce known wins like S043's 4.3M-node need against
@@ -1057,33 +1069,33 @@ export const REPAIR_PROBE_ATTEMPT_MS_CAP = 1_200_000;
  *  the predictor's own ~74% accuracy means a real fraction of levels get zero chance via the
  *  technique they actually needed). See reports/2026-07-23-turnbias-corpus2-ab-validation.md's
  *  "Update" sections for both prior measurements. Needs its own corpus-2 A/B before promotion. */
-const REPAIR_PROBE_PREDICTED_TIER_SHARE = 0.75;
+const EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE = 0.75;
 
-/** STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (production default-ON as of 2026-08-13, promoted
+/** STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET (production default-ON as of 2026-08-13, promoted
  *  — see the "PROMOTION" paragraph at the end of this comment for the decision and its caveats):
  *  a single-signal, single-recipient instance of "online failure-conditioned allocation"
  *  (docs/solver-interoperability-and-cooperation-plan.md §17, docs/future-work.md item #4).
  *
  *  BACKGROUND — this is a *refinement*, not a confirmation, of the hypothesis that motivated it.
  *  The 2026-08-12 main-search-late-reserve full-corpus sweep (635/1700, down from 694 in a since-
- *  found-confounded A/B arm) was suspected to be explained by runRepairProbe's wall-clock-fix
+ *  found-confounded A/B arm) was suspected to be explained by runEarlyRepairSearch's wall-clock-fix
  *  (2bfefc660) now letting a contended probe attempt spend its FULL intended node budget instead
- *  of being silently truncated, starving `STRATEGY_MAIN_LOOP_LATE_RESERVE`'s reserved slice —
+ *  of being silently truncated, starving `STRATEGY_MAIN_SEARCH_LATE_RESERVE`'s reserved slice —
  *  see reports/2026-08-12-main-search-late-reserve-population-ab.md's "Follow-up" section. Tracing
  *  the actual code (this file's reserve resolution, above solveLevel's probe call site) shows that
  *  hypothesis is WRONG AS STATED: both the admissible-order-fallback reserve and the main-search late reserve
  *  are computed and carved out of `nodeBudget` BEFORE the probe ever runs, and the probe's own
- *  external node ceiling (`mainLoopEarlyNodeBudget`, passed as this function's `nodeBudget` param)
+ *  external node ceiling (`mainSearchEarlyNodeBudget`, passed as this function's `nodeBudget` param)
  *  already excludes both — the probe is structurally incapable of spending into either reserve.
  *
  *  What IS real, confirmed directly on a small local sample (a dozen repair-gated Corpus-2 levels,
  *  15,000,000-node budget, `--workers=1`, uncontended — see
  *  reports/2026-08-12-early-repair-search-early-main-search-starvation.md): the repair probe and the
  *  "early" (pre-late-reserve) main-search configs draw from the SAME unprotected shared pool,
- *  `mainLoopEarlyNodeBudget`, with the probe going first and taking whatever it needs (up to its
+ *  `mainSearchEarlyNodeBudget`, with the probe going first and taking whatever it needs (up to its
  *  own fixed worst case, ~10,000,000 with one biased tier) before the early main-search configs ever
  *  get a turn. On 7 of 12 sample levels the probe alone consumed the entire pool
- *  (mainLoopEarlyNodeBudget itself, ~9,562,500 at this budget), leaving the early main-search
+ *  (mainSearchEarlyNodeBudget itself, ~9,562,500 at this budget), leaving the early main-search
  *  configs exactly zero nodes. A blanket, level-blind STATIC shrink of the probe's own budget
  *  (tested locally via a scale factor matching the measured pre-fix contended-throughput ratio,
  *  ~0.55) is a real but ZERO-SUM lever on this sample: it recovered one level (R00602: probe
@@ -1107,13 +1119,13 @@ const REPAIR_PROBE_PREDICTED_TIER_SHARE = 0.75;
  *  BADNESS_GATE, as R02823's did), and a bounded shrink (never below MIN_SCALE — a participation
  *  floor, never zero, per solver-interoperability-and-cooperation-plan.md §17.3) when it doesn't.
  *  Freeing nodes this way benefits whichever tier runs next against the same shared ceiling
- *  (mainLoopEarlyNodeBudget) — normally the early main-search configs — without touching either
+ *  (mainSearchEarlyNodeBudget) — normally the early main-search configs — without touching either
  *  protected reserve or requiring a new recipient-side change.
  *
  *  CALIBRATION CAVEAT: MIN_SCALE=0.35 is still picked from the original n=12 local sample (n=1 for
  *  the "needs full budget" case) — a starting point, not a re-derived constant. Re-measure before
  *  changing it, per this file's own established discipline for tuned constants (see e.g.
- *  REPAIR_PROBE_ORDINARY_SEED_SALTS's calibration history above). BADNESS_GATE has since been
+ *  EARLY_REPAIR_SEARCH_ORDINARY_SEED_SALTS's calibration history above). BADNESS_GATE has since been
  *  re-derived once — see GATE RECALIBRATION below.
  *
  *  PROMOTION (2026-08-13): a 300-level stratified level-blind GHA A/B (250 of the 512-level
@@ -1144,8 +1156,8 @@ const REPAIR_PROBE_PREDICTED_TIER_SHARE = 0.75;
  *  size, real production node budget) the on/off promotion above used. See
  *  reports/2026-08-12-early-repair-search-early-main-search-starvation.md's "Gate/min-scale recalibration:
  *  GHA A/B" section for the full per-arm breakdown and run ids. */
-export const REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE = 6;
-export const REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE = 0.35;
+export const EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE = 6;
+export const EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE = 0.35;
 
 /** Additional seeds (see runAttempt's seedSalt param) to retry an already-failed ORDINARY probe
  *  round with, before falling through to the full (much more expensive) ladder.
@@ -1197,34 +1209,34 @@ export const REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE = 0.35;
  *  again, especially if a *different* repair-gated level (a new publish, or a stress-corpus case)
  *  is found needing a seed beyond 1.
  *
- *  Deliberately scoped to the ORDINARY tier only (REPAIR_PROBE_ORDINARY_NODE_BUDGET), not the
+ *  Deliberately scoped to the ORDINARY tier only (EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET), not the
  *  must-turn-biased one: no rescue evidence was gathered for the biased tier, and its own history
  *  (see repair-search.ts's EXIT_GUIDANCE_EPSILON_BOOST comment — S030 regressed at every nonzero
  *  nudge tried, even on an independent RNG stream) shows it's unusually sensitive to any change, so
  *  widening it without specific evidence is a needless risk. Each retry salt gets the SAME node
  *  budget as the first round — strictly additive: only reached when every active gate has already
  *  failed at every earlier salt, so a level whose probe already succeeds on the first (default)
- *  seed is completely unaffected. Ablation: STRATEGY_REPAIR_PROBE_MULTI_SEED (default enabled).
+ *  seed is completely unaffected. Ablation: STRATEGY_EARLY_REPAIR_SEARCH_MULTI_SEED (default enabled).
  *  Re-verify with a full-corpus before/after speed sweep (not just solver:bench --check — see
  *  CLAUDE.md's gotcha on this and docs/testing.md's "Speed, separately from solvability") before
  *  changing this list again. */
-const REPAIR_PROBE_ORDINARY_SEED_SALTS = [0, 1];
+const EARLY_REPAIR_SEARCH_ORDINARY_SEED_SALTS = [0, 1];
 
 /** Tries each repairConfig (ordinary, then must-turn-biased if present) at a per-config node
- *  budget (REPAIR_PROBE_ORDINARY_NODE_BUDGET / _BIASED_NODE_BUDGET — see their comment) split
+ *  budget (EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET / _BIASED_NODE_BUDGET — see their comment) split
  *  across activeGates by nodes consumed so far (mirrors the per-gate ms-budget split the
  *  full-budget repair loop in solveLevel uses, just node-counted and at much smaller totals).
  *  The outer per-gate/per-attempt ms budget (attBudget, below) stays a generous, effectively
  *  non-binding safety net — the node budget is what actually decides the probe's outcome. The
- *  ORDINARY config is additionally retried across REPAIR_PROBE_ORDINARY_SEED_SALTS (see its own
+ *  ORDINARY config is additionally retried across EARLY_REPAIR_SEARCH_ORDINARY_SEED_SALTS (see its own
  *  comment) before moving on to the next config or giving up — every salt after the first only
  *  runs if every active gate already failed at every earlier salt; the must-turn-biased config
  *  always runs at a single seed (salt 0), unchanged from before this retry existed.
  *
  *  BUG FIXED 2026-07-17: `nodeBudget` (the caller's EXTERNAL SolveOpts.nodeBudget, offline-tooling
  *  only — see that field's own comment) was never threaded into this function at all, so the probe
- *  always ran its full internal worst case (ordinary tier up to REPAIR_PROBE_ORDINARY_SEED_SALTS.
- *  length × REPAIR_PROBE_ORDINARY_NODE_BUDGET, plus REPAIR_PROBE_BIASED_NODE_BUDGET on must-turn
+ *  always ran its full internal worst case (ordinary tier up to EARLY_REPAIR_SEARCH_ORDINARY_SEED_SALTS.
+ *  length × EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET, plus EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET on must-turn
  *  levels — up to ~10,000,000 nodes combined) regardless of how small an external budget the caller
  *  asked for. solveLevel()'s own re-check *after* the probe returns (`if
  *  (prep._metrics.nodesExpanded >= nodeBudget) ...`) only ever reports the overshoot, it can't
@@ -1241,18 +1253,18 @@ const REPAIR_PROBE_ORDINARY_SEED_SALTS = [0, 1];
  *  smallest independently-costed probe unit) and bailing out early if it's already exhausted —
  *  same granularity/precision caveat as every other nodeBudget check in this file (can still
  *  overshoot by up to one seed-salt round's own cost, never by the full combined worst case). */
-async function runRepairProbe(
+async function runEarlyRepairSearch(
     repairConfigs: AttemptConfig[], activeGates: number[], level: NormalizedLevel,
     prep: PrepLevel, yieldFn: YieldFn, cfg: AblationConfig | null, nodeBudget = Infinity,
-    badnessGate = REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, minScale = REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE,
+    badnessGate = EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE, minScale = EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     const shrunkBiased: ShrunkBiasedTier[] = [];
-    // REPAIR_PROBE_BIASED_NODE_BUDGET was calibrated (see its own comment) against exactly one
+    // EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET was calibrated (see its own comment) against exactly one
     // biased tier's worst case (repairMustTurnBiased, the only one that existed at the time). When a
     // second biased tier is also present (repairTurnBiased, under STRATEGY_REPAIR_TURN_BIAS, in
     // attempts.ts's non-exclusive predicted-then-fallback order), weight the fixed budget between
-    // them by REPAIR_PROBE_PREDICTED_TIER_SHARE (see its own comment for why a plain 50/50 split and
+    // them by EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE (see its own comment for why a plain 50/50 split and
     // full exclusion were both tried and rejected) instead of granting each the full amount — two
     // full-budget biased tiers running sequentially would otherwise burn double the calibrated cost
     // before the main loop/fallback ever gets a share of a bounded external nodeBudget (confirmed:
@@ -1264,29 +1276,29 @@ async function runRepairProbe(
     // first-in-array accident.
     const biasedConfigCount = repairConfigs.filter(c => c.repairMustTurnBiased || c.repairTurnBiased).length;
     const biasedNodeBudgetForTier = (indexAmongBiased: number): number => {
-        if (biasedConfigCount <= 1) return REPAIR_PROBE_BIASED_NODE_BUDGET;
-        const share = indexAmongBiased === 0 ? REPAIR_PROBE_PREDICTED_TIER_SHARE : 1 - REPAIR_PROBE_PREDICTED_TIER_SHARE;
-        return Math.floor(REPAIR_PROBE_BIASED_NODE_BUDGET * share);
+        if (biasedConfigCount <= 1) return EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET;
+        const share = indexAmongBiased === 0 ? EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE : 1 - EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE;
+        return Math.floor(EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET * share);
     };
     let biasedSeen = 0;
     for (const repairConfig of repairConfigs) {
         // The turn-biased attempt, like the must-turn-biased one, is a heavier single-seed search
         // (see repair-search.ts) — give it the biased probe budget and a single seed salt.
         const isBiased = repairConfig.repairMustTurnBiased || repairConfig.repairTurnBiased;
-        let fixedProbeNodeBudget = isBiased ? biasedNodeBudgetForTier(biasedSeen++) : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
-        // STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (production default-ON as of 2026-08-13 —
-        // see REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE's own comment for the full derivation):
+        let fixedProbeNodeBudget = isBiased ? biasedNodeBudgetForTier(biasedSeen++) : EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET;
+        // STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET (production default-ON as of 2026-08-13 —
+        // see EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE's own comment for the full derivation):
         // scale the biased tier's node budget down when the ordinary tier's own live bestBadness
         // evidence (already reported by repairSearchFromGate on every failed attempt,
         // current-invocation only) shows no sign repair is close. Strict no-op whenever the
         // ordinary tier hasn't run, reported no finite badness, or already looks promising
         // (badness <= the gate). Standard (!cfg || cfg.FLAG) convention, NOT opt-in (cfg &&
         // cfg.FLAG === true) — matching PRUNE_MC_NEIGHBOR_BUDGET's and
-        // STRATEGY_MAIN_LOOP_LATE_RESERVE's own promotions and the wiring-gap lesson both shipped
+        // STRATEGY_MAIN_SEARCH_LATE_RESERVE's own promotions and the wiring-gap lesson both shipped
         // with (docs/solver-opt-in-experiment-ledger.md): the opt-in convention stays inert
         // whenever cfg is null, which is every production interactive solve and any CLI run
         // without --enable-flags.
-        if (isBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET)) {
+        if (isBiased && (!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET)) {
             const ordinaryBestBadness = attempts.reduce((min, a) => (
                 a.repair && !a.repairMustTurnBiased && !a.repairTurnBiased && Number.isFinite(a.bestBadness)
                     ? Math.min(min, a.bestBadness as number) : min
@@ -1298,7 +1310,7 @@ async function runRepairProbe(
                 ));
                 const fullNodeBudget = fixedProbeNodeBudget;
                 fixedProbeNodeBudget = Math.floor(fixedProbeNodeBudget * scale);
-                // Record what was withheld so STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY can restore it
+                // Record what was withheld so STRATEGY_REPAIR_SHRINK_RECOVERY can restore it
                 // if every other tier later fails. Recorded even when the flag is off — this is
                 // pure bookkeeping on an already-computed value, it changes no search behavior, and
                 // making it conditional would mean the recovery tier's eligibility depended on two
@@ -1308,8 +1320,8 @@ async function runRepairProbe(
                 }
             }
         }
-        const seedSalts = (!isBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_MULTI_SEED))
-            ? REPAIR_PROBE_ORDINARY_SEED_SALTS : [0];
+        const seedSalts = (!isBiased && (!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH_MULTI_SEED))
+            ? EARLY_REPAIR_SEARCH_ORDINARY_SEED_SALTS : [0];
         for (const seedSalt of seedSalts) {
             // Cap THIS round's own node budget by whatever's left of the external ceiling, not just
             // check whether it's already been exceeded — a single round can cost up to
@@ -1334,12 +1346,12 @@ async function runRepairProbe(
                 // real-world cost for a probe-worthy (node-budget-bounded) win — the node budget
                 // above is the actual decision; this only guards against a pathological
                 // per-node-cost level or a bug in the node-count mechanism itself. See
-                // REPAIR_PROBE_ATTEMPT_MS_CAP's own comment: it must be generous enough to survive
+                // EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP's own comment: it must be generous enough to survive
                 // real CPU contention too, not just a fast/idle host.
                 const nodesOut: { nodesExpanded?: number } = {};
-                const r = await runAttempt(gateKey, level, prep, repairConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, Date.now(), yieldFn, gateNodeBudget, nodesOut, seedSalt);
+                const r = await runAttempt(gateKey, level, prep, repairConfig, EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP, Date.now(), yieldFn, gateNodeBudget, nodesOut, seedSalt);
                 // stageId is the canonical persisted identity; historical readers may still accept
-                // repairProbe, but current writers do not emit that legacy boolean.
+                // earlyRepairSearch, but current writers do not emit that legacy boolean.
                 attempts.push(withSolverStage(r.attempt, 'early-repair-search'));
                 nodesUsed += nodesOut.nodesExpanded ?? gateNodeBudget;
                 if (r.path) return { solution: r.path, attempts, shrunkBiased };
@@ -1394,7 +1406,7 @@ function legacyLatencyPortfolioFeatureGateMatches(level: NormalizedLevel, gate: 
  *
  * Every one of those `(!cfg || cfg.SOME_FLAG)` read sites treats "no ablation config at all" as
  * the ONLY way an unset flag defaults to `true` — so a caller-supplied PARTIAL object (e.g.
- * `{ STRATEGY_REPAIR_PROBE: true }`) makes every OTHER unset flag read as `undefined` (falsy),
+ * `{ STRATEGY_EARLY_REPAIR_SEARCH: true }`) makes every OTHER unset flag read as `undefined` (falsy),
  * silently disabling it. This is exactly the bug SolveOpts's repairBudgetFractionOverride field
  * comment documents shipping to production once already, and the reason this file's own
  * goal-attraction-disabled-retry pass below builds its overlay config through a hand-rolled Proxy instead
@@ -1700,20 +1712,20 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         repairElitePrefixDfsRetryTierWillRun, repairElitePrefixDfsRetryNodeCeiling,
         mcNeighborBudgetRetryTierWillRun, mcNeighborBudgetRetryNodeCeiling,
         repairLateProbeNodeBudget, repairLateProbeTierWillRun, repairLateProbeNodeCeiling,
-        goalAttractionLegacyDistanceRetryBudgetFraction, goalAttractionLegacyDistanceRetryTierWillRun,
-        goalAttractionLegacyDistanceRetryNodeCeiling,
+        goalAttractionGuidanceDistanceRetryBudgetFraction, goalAttractionGuidanceDistanceRetryTierWillRun,
+        goalAttractionGuidanceDistanceRetryNodeCeiling,
         repairLateProbeMultiSeedRetryTierWillRun, repairLateProbeMultiSeedRetryNodeCeiling,
         retryTierStaircase, earlyTierNodeBudget, admissibleOrderDefaultProfileCeiling,
-        mainLoopLateReserve, mainLoopEarlyNodeBudget, mainLoopLateConfigStart,
-        mainLoopLateReserveEnabled, mainLoopLateReserveFraction, mainLoopLateReserveConfigCount,
-        repairFallbackNodeReserve, attractionDiversityNodeReserve,
+        mainSearchLateReserve, mainSearchEarlyNodeBudget, mainSearchLateConfigStart,
+        mainSearchLateReserveEnabled, mainSearchLateReserveFraction, mainSearchLateReserveConfigCount,
+        repairFallbackNodeReserve, goalAttractionDisabledRetryNodeReserve,
         shrinkRecoveryEnabled,
     } = stageBudgetPlan;
-    // WORK-budget mirror of mainLoopLateReserve/mainLoopEarlyNodeBudget above (2026-08-26 fix for the
+    // WORK-budget mirror of mainSearchLateReserve/mainSearchEarlyNodeBudget above (2026-08-26 fix for the
     // confirm-residual-001 scheduling gap -- see docs/solver-opt-in-experiment-ledger.md's
     // STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE row and
     // reports/2026-08-26-mustcross-flipper-wide-beam-exposure-development-ab.md's confirm-residual-001
-    // subsection). MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT's protection for the trailing configs only ever
+    // subsection). MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT's protection for the trailing configs only ever
     // worked against the NODE dimension: runInterleavedAttempts/runGateSerialAttempts's own WORK-budget
     // stop conditions had no equivalent carve-out, so a work-expensive early config population could
     // exhaust `workBudget` while `nodeBudget` still had headroom, silently defeating the reserve --
@@ -1727,15 +1739,15 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // config-count policy as the node-side reserve, mirrored onto the other resource dimension; see
     // that reserve's own comment (stage-budget.ts) for the eligibility/rounding-to-zero rationale,
     // which applies identically here.
-    const mainLoopLateWorkReserveEligible = mainLoopLateReserveEnabled
-        && mainLoopLateReserveFraction > 0
-        && mainLoopLateReserveConfigCount > 0
+    const mainSearchLateWorkReserveEligible = mainSearchLateReserveEnabled
+        && mainSearchLateReserveFraction > 0
+        && mainSearchLateReserveConfigCount > 0
         && workBudget !== Infinity;
-    const mainLoopLateWorkReserve = mainLoopLateWorkReserveEligible
-        ? Math.floor(workBudget * mainLoopLateReserveFraction)
+    const mainSearchLateWorkReserve = mainSearchLateWorkReserveEligible
+        ? Math.floor(workBudget * mainSearchLateReserveFraction)
         : 0;
-    const mainLoopEarlyWorkBudget = mainLoopLateWorkReserve > 0
-        ? workBudget - mainLoopLateWorkReserve
+    const mainSearchEarlyWorkBudget = mainSearchLateWorkReserve > 0
+        ? workBudget - mainSearchLateWorkReserve
         : workBudget;
     // Canonical per-stage BudgetEnvelope projection of the same plan (stage-policy.ts) — every
     // node ceiling above is a bare scalar for the SAME reason dispatch reads it that way (see
@@ -1761,7 +1773,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // `eligible: undefined` and are filtered out; every other stage is covered and in the
         // same declared order as before (stage-policy.ts's SOLVER_STAGE_IDS order matches this
         // telemetry's own historical row order exactly).
-        const solverStagePlan = buildSolverStagePlan({ budgetPlan: stageBudgetPlan, mainLoopEligible: hasMainConfig });
+        const solverStagePlan = buildSolverStagePlan({ budgetPlan: stageBudgetPlan, mainSearchEligible: hasMainConfig });
         const runnable = new Map<string, boolean>(
             solverStagePlan
                 .filter((entry): entry is typeof entry & { eligible: boolean } => entry.eligible !== undefined)
@@ -1851,16 +1863,16 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     }
     const probeAttempts: Attempt[] = primeMissAttempt ? [primeMissAttempt] : [];
     let shrunkBiasedTiers: ShrunkBiasedTier[] = [];
-    if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
+    if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH)) {
         // No `prep._workCap` override here, deliberately: this probe runs BEFORE the main ladder
         // (`runInterleavedAttempts`/`runGateSerialAttempts`, below) ever executes, so — unlike every
         // tier further down this function — there is no earlier attempt that could have left a stale
         // cap for it to inherit. `prep._workCap` is genuinely unset (null) at this point in normal
         // (non-strict) mode; pinned by orchestration.test.ts's own
         // 'strictTotalWorkBudget installs one remaining-work cap across every additive path' test.
-        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, mainLoopEarlyNodeBudget,
-            opts.repairProbeAdaptiveBiasedBadnessGateOverride ?? REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE,
-            opts.repairProbeAdaptiveBiasedMinScaleOverride ?? REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE);
+        const probe = await runEarlyRepairSearch(repairConfigs, activeGates, level, prep, yieldFn, cfg, mainSearchEarlyNodeBudget,
+            opts.earlyRepairSearchAdaptiveBiasedBadnessGateOverride ?? opts.repairProbeAdaptiveBiasedBadnessGateOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE,
+            opts.earlyRepairSearchAdaptiveBiasedMinScaleOverride ?? opts.repairProbeAdaptiveBiasedMinScaleOverride ?? EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE);
         probeAttempts.push(...probe.attempts);
         shrunkBiasedTiers = probe.shrunkBiased ?? [];
         if (probe.solution) {
@@ -1868,7 +1880,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             const nodesExpanded = prep._metrics.nodesExpanded;
             return finish({ ok: true, status: 'success', solution: probe.solution, solutions: [probe.solution], attempts: probeAttempts, totalMs, nodesExpanded, workSpent: prep._workMeter.units - workStart, workBudget });
         }
-        // The probe now self-limits against the external nodeBudget (see runRepairProbe's own
+        // The probe now self-limits against the external nodeBudget (see runEarlyRepairSearch's own
         // comment) but only between seed-salt rounds, its smallest independently-costed unit — it
         // can still overshoot by up to one round's own cost, so re-check before spending any more
         // nodes in the main loop.
@@ -1879,15 +1891,15 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // than end the solve — returning here would spend the reserve on nothing, which is the
         // precise failure this reserve exists to fix. Falling through is safe and needs no further
         // guards: the main loop's runners, the repair loop and the diversity pass each re-check their
-        // own ceiling (`mainLoopNodeBudget` / `repairFallbackNodeCeiling` / `earlyTierNodeBudget`) and
+        // own ceiling (`mainSearchNodeBudget` / `repairFallbackNodeCeiling` / `earlyTierNodeBudget`) and
         // no-op, so control reaches whichever tier has room having spent no extra nodes.
-        if (prep._metrics.nodesExpanded >= mainLoopEarlyNodeBudget && admissibleOrderNodeReserve === 0 && mainLoopLateReserve === 0 && repairFallbackNodeReserve === 0 && attractionDiversityNodeReserve === 0) {
+        if (prep._metrics.nodesExpanded >= mainSearchEarlyNodeBudget && admissibleOrderNodeReserve === 0 && mainSearchLateReserve === 0 && repairFallbackNodeReserve === 0 && goalAttractionDisabledRetryNodeReserve === 0) {
             const totalMs = Date.now() - levelStartTime;
             return finish({ ok: false, status: hasAttemptError(probeAttempts) ? 'attempt-error' : 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true, workSpent: prep._workMeter.units - workStart, workBudget });
         }
     }
 
-    // Now that the probe has run, size STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY's reserve to the ACTUAL
+    // Now that the probe has run, size STRATEGY_REPAIR_SHRINK_RECOVERY's reserve to the ACTUAL
     // debt it must repay. The recovery re-runs a shrunk config from scratch (repairSearchFromGate
     // has no resume API), so repaying only the withheld difference is not enough — it needs the
     // tier's FULL budget to reach the point the shrink cut off. Reserving `full - granted` was tried
@@ -1895,19 +1907,19 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // 5,965,490 its winning attempt actually needs.
     //
     // Carved from `earlyTierNodeBudget` as a PEER of admissibleOrderNodeReserve rather than nested
-    // inside `mainLoopLateReserve` (where the two opt-in reserves above sit): a full biased budget
+    // inside `mainSearchLateReserve` (where the two opt-in reserves above sit): a full biased budget
     // is 6,000,000 nodes, larger than the whole late-reserve slice at any realistic ceiling, so a
     // nested slice structurally cannot fund this tier. Bounded by `shrinkRecoveryFraction` of the
     // early-tier ceiling so it can never starve the tiers it sits behind.
     const shrinkRecoveryBudget = computeShrinkRecoveryBudget(stageBudgetPlan, shrunkBiasedTiers);
-    const { shrinkRecoveryNodeReserve, mainLoopNodeBudgetFinal, repairFallbackNodeCeiling, diversityNodeCeiling } = shrinkRecoveryBudget;
+    const { shrinkRecoveryNodeReserve, mainSearchNodeBudgetFinal, repairFallbackNodeCeiling, diversityNodeCeiling } = shrinkRecoveryBudget;
 
     // Multi-gate levels: interleave configs across gates (config-outer, gate-inner).
     // This prevents Gate 1 exhausting its full budget before Gate 2 ever gets to try
     // Config 1 — crucial when Gate 1 is structurally infeasible but parity-feasible.
     // Ablation: STRATEGY_GATE_INTERLEAVING can force the gate-outer (non-interleaved) loop.
     //
-    // Deliberately timed from mainLoopStartTime (now), NOT levelStartTime: both main-search
+    // Deliberately timed from mainSearchStartTime (now), NOT levelStartTime: both main-search
     // runners compute each attempt's share as timeBudgetMs minus elapsed-since-start, so
     // timing them from the original levelStartTime would let the probe's wall-clock silently
     // shrink the main loop's own budget — reintroducing exactly the "reserve budget up front"
@@ -1915,21 +1927,21 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // first version of this probe used levelStartTime here and was caught by a full-corpus
     // regression sweep: several fast main-search solves (S038, S050, S026, S027, S110, S023,
     // S018) lost just enough of their first attempt's budget to fail it, cascading into the
-    // full repair fallback chain (some 50-100x slower). mainLoopStartTime gives the main loop
+    // full repair fallback chain (some 50-100x slower). mainSearchStartTime gives the main loop
     // its full, untouched timeBudgetMs window regardless of how long the probe ran.
     const useInterleaving = (!cfg || cfg.STRATEGY_GATE_INTERLEAVING);
-    const mainLoopStartTime = Date.now();
+    const mainSearchStartTime = Date.now();
     const result = useInterleaving && activeGates.length > 1
-        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, mainLoopNodeBudgetFinal, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart, mainLoopEarlyWorkBudget)
-        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, mainLoopNodeBudgetFinal, workBudget, workStart, mainLoopEarlyNodeBudget, mainLoopLateConfigStart, mainLoopLateWorkReserveEligible ? mainLoopLateReserveFraction : 0);
+        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainSearchStartTime, yieldFn, mainSearchNodeBudgetFinal, workBudget, workStart, mainSearchEarlyNodeBudget, mainSearchLateConfigStart, mainSearchEarlyWorkBudget)
+        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainSearchStartTime, yieldFn, mainSearchNodeBudgetFinal, workBudget, workStart, mainSearchEarlyNodeBudget, mainSearchLateConfigStart, mainSearchLateWorkReserveEligible ? mainSearchLateReserveFraction : 0);
     result.attempts = [...probeAttempts, ...result.attempts];
-    const mainLoopEarlyTiersHitNodeCeiling = result.earlyNodeBudgetReached === true;
-    const mainLoopEarlyTiersHitWorkCeiling = result.earlyWorkBudgetReached === true;
+    const mainSearchEarlyTiersHitNodeCeiling = result.earlyNodeBudgetReached === true;
+    const mainSearchEarlyTiersHitWorkCeiling = result.earlyWorkBudgetReached === true;
 
     // repairBudgetFraction was already resolved above (before the early probe) — reused here
     // unchanged for the full-budget fallback loop, same as before this fix. Checks against
     // `repairFallbackNodeCeiling`, NOT `earlyTierNodeBudget` directly, so this loop cannot spend the
-    // goal-attraction-disabled-retry pass's own reserved slice — see ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION's
+    // goal-attraction-disabled-retry pass's own reserved slice — see GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION's
     // own comment. Identical to `earlyTierNodeBudget` whenever that reserve is ineligible (default).
     //
     // FRESH, ADDITIVE `prep._workCap` override (2026-08-20 fix, same rationale as the early probe's
@@ -1979,14 +1991,14 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         }
     });
 
-    // Last-resort goal-attraction-disabled-retry pass (ATTRACTION_DIVERSITY_BUDGET_FRACTION, attempts.ts's
-    // ATTRACTION_DIVERSITY_CANDIDATE_FLAGS) — a whole extra rerun of the SAME mainConfigs ladder,
+    // Last-resort goal-attraction-disabled-retry pass (GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION, attempts.ts's
+    // GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS) — a whole extra rerun of the SAME mainConfigs ladder,
     // with the candidate scoring flag(s) disabled for its duration, only after the main loop AND
     // repair fallback have both already failed on every gate. See the fraction constant's own
     // comment for why a whole-ladder rerun (not one narrow attempt) is needed, and why the budget
     // is small and strictly additive, same pattern as the repair loop just above.
     //
-    // opts.attractionDiversityBudgetFractionOverride is its OWN dedicated override, deliberately
+    // opts.goalAttractionDisabledRetryBudgetFractionOverride is its OWN dedicated override, deliberately
     // separate from repairBudgetFractionOverride (see that field's own comment on SolveOpts for
     // why) — solver-controller.ts / review-controller.ts pass 0 for both, to keep their interactive
     // progress bar's ~30s promise; a solver-testing sweep can pass 0 for just this one to isolate
@@ -1995,9 +2007,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // 0 for both at once (see its own comment on SolveOpts) — prefer it over remembering both
     // individual overrides unless a sweep specifically needs to isolate just one.
     // (diversityBudgetFraction itself is resolved earlier, alongside repairBudgetFraction — see that
-    // resolution's own comment for why ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION's eligibility check
+    // resolution's own comment for why GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION's eligibility check
     // needs it before this point.)
-    if (!result.solution && diversityBudgetFraction > 0 && (!cfg || cfg.STRATEGY_ATTRACTION_DIVERSITY) && prep._metrics.nodesExpanded < earlyTierNodeBudget) {
+    if (!result.solution && diversityBudgetFraction > 0 && (!cfg || cfg.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY) && prep._metrics.nodesExpanded < earlyTierNodeBudget) {
         // SCORE_* flags don't affect getConfiguredAttemptConfigs's config selection (only
         // STRATEGY_*/PROFILE_*/TEMPLATE_* do), so reusing mainConfigs (built under the original
         // cfg) under the executor's overridden prep._cfg selects the exact same attempts the
@@ -2018,7 +2030,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // matters for a tier whose ceiling is genuinely protected but whose work share isn't).
         const diversityResult = await runWholeLadderRetryTier({
             stageId: 'goal-attraction-disabled-retry',
-            proxyOverrides: Object.fromEntries((ATTRACTION_DIVERSITY_CANDIDATE_FLAGS as readonly string[]).map(flag => [flag, false])),
+            proxyOverrides: Object.fromEntries((GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS as readonly string[]).map(flag => [flag, false])),
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
             totalBudgetMs: Math.floor(timeBudgetMs * diversityBudgetFraction),
@@ -2029,9 +2041,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         if (diversityResult.solution) result.solution = diversityResult.solution;
     }
 
-    // STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: restore what the adaptive shrink withheld, but only
+    // STRATEGY_REPAIR_SHRINK_RECOVERY: restore what the adaptive shrink withheld, but only
     // once the main loop, repair fallback and goal-attraction-disabled-retry pass have all already failed —
-    // see REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION's own comment for why the placement
+    // see REPAIR_SHRINK_RECOVERY_NODE_RESERVE_FRACTION's own comment for why the placement
     // (not an immediate retry) is what preserves the shrink's savings, and why the tier needs its
     // own withheld slice rather than a reorder.
     //
@@ -2050,7 +2062,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 // pattern the diversity pass already uses against its own ceiling.
                 // The reserve is a FLOOR, not merely a derived remainder. Every node check in this
                 // file is round-granular and may overshoot its ceiling by up to one attempt's own
-                // cost ("can still overshoot by up to one round's own cost" — see runRepairProbe's
+                // cost ("can still overshoot by up to one round's own cost" — see runEarlyRepairSearch's
                 // own comment), and a single main-search attempt can be tens of millions of nodes. On
                 // R00408 the main loop overshot its reduced ceiling by ~375,000 nodes and ate that
                 // much of this tier's slice, leaving 5,624,791 against the 5,965,490 its winning
@@ -2070,7 +2082,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 const gateNodeBudget = Math.min(shrunk.fullNodeBudget, Math.floor(remaining / gatesLeft));
                 if (gateNodeBudget <= shrunk.grantedNodeBudget) break;
                 const nodesOut: { nodesExpanded?: number } = {};
-                const r = await runAttempt(activeGates[gi], level, prep, shrunk.config, REPAIR_PROBE_ATTEMPT_MS_CAP,
+                const r = await runAttempt(activeGates[gi], level, prep, shrunk.config, EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP,
                     Date.now(), yieldFn, gateNodeBudget, nodesOut);
                 result.attempts.push(withSolverStage(r.attempt, 'repair-shrink-recovery'));
                 if (r.path) result.solution = r.path;
@@ -2521,8 +2533,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         });
     }
 
-    // Last-resort SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE retry pass (GOAL_ATTRACTION_LEGACY_
-    // DISTANCE_RETRY_BUDGET_FRACTION, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY) — see that
+    // Last-resort SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE retry pass (GOAL_ATTRACTION_GUIDANCE_
+    // DISTANCE_RETRY_BUDGET_FRACTION, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY) — see that
     // constant's own comment in stage-budget.ts and docs/solver-optimization-workstreams.md
     // Priority 7 for the full rationale. The plain global SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE
     // flag (attempts.ts/scoring.ts) was measured net -5 across three populations (73-level loss
@@ -2542,22 +2554,22 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // this one that still checks an unextended ceiling, or this tier's own additive extension would
     // starve it.
     //
-    // `goalAttractionLegacyDistanceRetryTierWillRun` is the SAME predicate
-    // goalAttractionLegacyDistanceRetryNodeReserve is derived from (stage-budget.ts) — the two must
+    // `goalAttractionGuidanceDistanceRetryTierWillRun` is the SAME predicate
+    // goalAttractionGuidanceDistanceRetryNodeReserve is derived from (stage-budget.ts) — the two must
     // stay in lockstep.
-    if (!result.solution && goalAttractionLegacyDistanceRetryTierWillRun && prep._metrics.nodesExpanded < goalAttractionLegacyDistanceRetryNodeCeiling) {
-        const goalAttractionLegacyDistanceRetryTotalBudget = Math.floor(timeBudgetMs * goalAttractionLegacyDistanceRetryBudgetFraction);
-        const goalAttractionLegacyDistanceRetryResult = await runWholeLadderRetryTier({
+    if (!result.solution && goalAttractionGuidanceDistanceRetryTierWillRun && prep._metrics.nodesExpanded < goalAttractionGuidanceDistanceRetryNodeCeiling) {
+        const goalAttractionGuidanceDistanceRetryTotalBudget = Math.floor(timeBudgetMs * goalAttractionGuidanceDistanceRetryBudgetFraction);
+        const goalAttractionGuidanceDistanceRetryResult = await runWholeLadderRetryTier({
             stageId: 'guidance-goal-distance-retry', proxyOverrides: { SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE: true },
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
-            totalBudgetMs: goalAttractionLegacyDistanceRetryTotalBudget, nodeCeiling: goalAttractionLegacyDistanceRetryNodeCeiling,
-            workBudget: legacyMsToWork(goalAttractionLegacyDistanceRetryTotalBudget, MIN_ATTEMPT_WORK),
+            totalBudgetMs: goalAttractionGuidanceDistanceRetryTotalBudget, nodeCeiling: goalAttractionGuidanceDistanceRetryNodeCeiling,
+            workBudget: legacyMsToWork(goalAttractionGuidanceDistanceRetryTotalBudget, MIN_ATTEMPT_WORK),
             workStart: prep._workMeter.units,
             staircase: retryTierStaircase,
         });
-        result.attempts.push(...goalAttractionLegacyDistanceRetryResult.attempts);
-        if (goalAttractionLegacyDistanceRetryResult.solution) result.solution = goalAttractionLegacyDistanceRetryResult.solution;
+        result.attempts.push(...goalAttractionGuidanceDistanceRetryResult.attempts);
+        if (goalAttractionGuidanceDistanceRetryResult.solution) result.solution = goalAttractionGuidanceDistanceRetryResult.solution;
     }
 
     // Last-resort late-repair-search MULTI-SEED retry (REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_
@@ -2614,7 +2626,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // truncated at the reduced ceiling to fund the reserve (see earlyTiersHitNodeCeiling). With no
     // reserve (every production caller, and any run with an infinite nodeBudget) the second term is
     // always false and this is bit-identical to the original `nodesExpanded >= nodeBudget`.
-    const nodeBudgetReached = nodeBudget !== Infinity && (nodesExpanded >= nodeBudget || earlyTiersHitNodeCeiling || mainLoopEarlyTiersHitNodeCeiling);
+    const nodeBudgetReached = nodeBudget !== Infinity && (nodesExpanded >= nodeBudget || earlyTiersHitNodeCeiling || mainSearchEarlyTiersHitNodeCeiling);
     if (result.solution) {
         return finish({ ok: true, status: 'success', solution: result.solution, solutions: [result.solution], attempts: result.attempts, totalMs, nodesExpanded, workSpent: prep._workMeter.units - workStart, workBudget });
     }
@@ -2630,14 +2642,14 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const workSpent = prep._workMeter.units - workStart;
     // Mirrors nodeBudgetReached's own reduced-ceiling accounting above, now that the main loop's
     // WORK dimension can also be truncated below the full workBudget by its own late reserve
-    // (mainLoopEarlyWorkBudget/mainLoopEarlyTiersHitWorkCeiling): without the OR term, a level whose
+    // (mainSearchEarlyWorkBudget/mainSearchEarlyTiersHitWorkCeiling): without the OR term, a level whose
     // early configs were cut off at that reduced ceiling, but whose later tiers (repair fallback,
     // admissible order) then exhaust their own search naturally below the full workBudget, would
     // report workBudgetReached: false / status 'failed' — hiding that the main loop itself was
     // budget-limited, not searched out. Bit-identical to the plain `workSpent >= workBudget` check
     // whenever the reserve never triggered (every caller before this fix, and any run with an
     // infinite workBudget).
-    const workBudgetReached = workBudget !== Infinity && (workSpent >= workBudget || mainLoopEarlyTiersHitWorkCeiling);
+    const workBudgetReached = workBudget !== Infinity && (workSpent >= workBudget || mainSearchEarlyTiersHitWorkCeiling);
     const deadlineTruncated = totalMs >= timeBudgetMs && !nodeBudgetReached && !workBudgetReached;
     // A technique exception is not evidence that the level exhausted, timed out, or consumed its
     // node allowance. Attempts after it still run, but an unsuccessful aggregate remains visibly

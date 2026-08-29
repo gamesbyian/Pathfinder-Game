@@ -17,9 +17,9 @@ const PERSISTENT_ATTEMPT_FIELDS = new Set([
     'stageId', 'gateKey', 'scoringProfileId', 'orderingBiasId', 'beamWidth', 'ok', 'elapsedMs', 'allocatedBudgetMs',
     'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'mechanicBucketRetention',
     'repair', 'repairMustTurnBiased', 'repairTurnBiased', 'seedSalt', 'randomSeed',
-    'nodesExpanded', 'timedOut', 'bestBadness', 'finalBadness', 'attractionDiversity',
+    'nodesExpanded', 'timedOut', 'bestBadness', 'finalBadness', 'goalAttractionDisabledRetry',
     'admissibleOrder', 'admissibleOrderNoTieBreak', 'admissibleOrderLds',
-    'mainLoopLateReserve', 'repairProbe', 'repairProbeShrinkRecovery',
+    'mainSearchLateReserve', 'earlyRepairSearch', 'repairShrinkRecovery',
     'allocatedWorkCeiling', 'allocatedNodeCeiling', 'workSpent', 'coarseStateNearTieRetentionRetry',
     'admissibleOrderNonDefaultRetry', 'connectivityAxisExhaustedRetry',
     'repairElitePrefixDfsRetry', 'mcNeighborBudgetRetry', 'repairLateProbe',
@@ -110,6 +110,27 @@ test('action identity separates stage and repair seed while config identity rema
     assert.deepEqual(row.failedActionKeys, ['early-repair-search|repair|score=repair|guidance=standard|seedSalt=0']);
     assert.equal(row.attempts[0].actionKey, 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=0');
     assert.equal(row.attempts[1].actionKey, 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=1');
+});
+
+test('attemptActionKey normalizes a legacy stage id to its canonical form', () => {
+    const legacyStage = { stageId: 'repair-probe', gateKey: 10, profile: 'repair', template: null, beamWidth: null, repair: true, ok: true, elapsedMs: 1, seedSalt: 0 };
+    assert.equal(attemptActionKey(legacyStage), 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=0',
+        'a persisted attempt carrying the historical repair-probe stage id must collapse onto the canonical early-repair-search action key');
+});
+
+test('attemptRecord dual-reads the legacy attractionDiversity/mainLoopLateReserve/repairProbe(ShrinkRecovery) telemetry fields into their canonical names', () => {
+    const legacy = { gateKey: 1, profile: 'default', ok: true, elapsedMs: 1, attractionDiversity: true, mainLoopLateReserve: true, repairProbe: true, repairProbeShrinkRecovery: true };
+    const canonical = { gateKey: 1, profile: 'default', ok: true, elapsedMs: 1, goalAttractionDisabledRetry: true, mainSearchLateReserve: true, earlyRepairSearch: true, repairShrinkRecovery: true };
+    const legacyRec = attemptRecord(legacy);
+    const canonicalRec = attemptRecord(canonical);
+    assert.deepEqual(legacyRec, canonicalRec, 'a legacy-tagged attempt must project to the exact same canonical-only record as one already carrying the canonical fields');
+    for (const staleKey of ['attractionDiversity', 'mainLoopLateReserve', 'repairProbe', 'repairProbeShrinkRecovery']) {
+        assert.equal(staleKey in legacyRec, false, `${staleKey} must not appear in the canonical-write output`);
+    }
+    assert.equal(legacyRec.goalAttractionDisabledRetry, true);
+    assert.equal(legacyRec.mainSearchLateReserve, true);
+    assert.equal(legacyRec.earlyRepairSearch, true);
+    assert.equal(legacyRec.repairShrinkRecovery, true);
 });
 
 test('historical attempts without stageId do not get a fabricated action identity', () => {

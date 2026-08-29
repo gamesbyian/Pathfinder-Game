@@ -108,6 +108,15 @@ test('attractionDiversityBudgetFractionOverride: 0 suppresses the raced diversit
   assert.equal(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'), false);
 }, 20000);
 
+test('goalAttractionDisabledRetryBudgetFractionOverride: 0 suppresses the raced diversity phase (canonical name, same as the legacy attractionDiversityBudgetFractionOverride above)', async () => {
+  const raw = parityPreservingInfeasibleLevel();
+  const result = await solveLevelRaced(raw, {
+    timeBudgetMs: 500, poolSize: 2, goalAttractionDisabledRetryBudgetFractionOverride: 0,
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'), false);
+}, 20000);
+
 test('a sparse raced ablation override preserves unrelated production-default strategies', async () => {
   const result = await solveLevelRaced(parityPreservingInfeasibleLevel(), {
     timeBudgetMs: 500,
@@ -123,7 +132,7 @@ test('an undefined raced ablation property does not override its production defa
   const result = await solveLevelRaced(parityPreservingInfeasibleLevel(), {
     timeBudgetMs: 500,
     poolSize: 2,
-    ablation: { STRATEGY_ATTRACTION_DIVERSITY: undefined },
+    ablation: { STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY: undefined },
   });
   assert.equal(result.ok, false);
   assert.ok(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'));

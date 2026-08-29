@@ -159,11 +159,11 @@ const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= PO
  *  must-cross/must-pass clause is: repair only ever runs after the entire existing bundle has
  *  already failed, so a level that solves via any earlier attempt is completely unaffected.
  *
- *  This gate is NOT purely additive, though: `orchestration.ts`'s `runRepairProbe` runs
+ *  This gate is NOT purely additive, though: `orchestration.ts`'s `runEarlyRepairSearch` runs
  *  unconditionally, win-or-lose, on every solve of any level this predicate matches, BEFORE the
  *  main loop (`repairConfigs.length > 0` is its own eligibility check, driven directly by this
  *  function). A level that never solves via repair still pays the probe's full bounded node cost
- *  every time — `REPAIR_PROBE_ORDINARY_NODE_BUDGET`'s own comment documents ~10.7s of measured
+ *  every time — `EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET`'s own comment documents ~10.7s of measured
  *  dead-search overhead on one such level. `docs/solver-optimization-workstreams.md` Workstream 1's
  *  2026-08-22 follow-up mining pass found the CURRENT (narrow) gate already taxes more levels than
  *  it helps (48 fast-solving vs 13 repair-needing, full-corpus scan) and left widening this gate to
@@ -202,7 +202,7 @@ const repairTurnBiasedAttempt = (): AttemptConfig => ({ scoringProfileId: 'repai
  *  selects the TIE-BREAK profile (admissible slack is always the primary ordering — see that file's
  *  own doc), not a DFS/beam scoring profile in the usual sense; 'none' is a sentinel meaning "no
  *  tie-break at all" (admissibleOrderAttempt below sets admissibleOrderNoTieBreak for it instead of
- *  doing a real POLICY_PROFILES lookup).
+ *  doing a real SCORING_PROFILES lookup).
  *
  *  Order matters: the call site stops at the first entry that solves, so this list is ordered by
  *  validated yield, most first (reports/2026-07-24-admissible-order-search-corpus2-validation.md):
@@ -220,7 +220,7 @@ const repairTurnBiasedAttempt = (): AttemptConfig => ({ scoringProfileId: 'repai
  *  The remaining 8 SCORING_PROFILE_ORDER entries scored 0 hits on local sampling and were never validated at
  *  full-corpus scale — left out until that validation exists. Unconditional (not feature-gated): the
  *  validated wins span multiple routing regimes with no single predictive feature found yet, mirroring
- *  ATTRACTION_DIVERSITY_CANDIDATE_FLAGS's own "no shared structural predictor found" reasoning above.
+ *  GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS's own "no shared structural predictor found" reasoning above.
  *  Gated only by ablation flag STRATEGY_ADMISSIBLE_ORDER (default-on — absent/null cfg enables it,
  *  matching every other stable strategy flag's polarity). */
 export const ADMISSIBLE_ORDER_PROFILES = ['default', 'none', 'mustCrossFirst', 'intersectionHarvest', 'nearClosureRescue'] as const;
@@ -230,7 +230,7 @@ const admissibleOrderAttempt = (scoringProfileId: string): AttemptConfig => scor
 
 /** Which of the two biased repair techniques is more LIKELY to be the level's real winner, when
  *  STRATEGY_REPAIR_TURN_BIAS is on — used only to decide ORDER (which runs first) and probe-budget
- *  WEIGHT (see REPAIR_PROBE_PREDICTED_TIER_SHARE in orchestration.ts), never to exclude the other
+ *  WEIGHT (see EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE in orchestration.ts), never to exclude the other
  *  technique outright.
  *
  *  History of this decision (see reports/2026-07-23-turnbias-corpus2-ab-validation.md's "Update"
@@ -268,14 +268,14 @@ function predictLikelyBiasedRepairTechnique(f: LevelFeatures): 'mustTurnBiased' 
  *  below because it showed the best within-level generalization in that diagnosis (2/2 for
  *  R02795, 2/3 for R00156), not because it's known to be the most broadly useful; the others are
  *  listed here for whoever widens this later, not currently used. Consumed by orchestration.ts's
- *  solveLevel — see ATTRACTION_DIVERSITY_BUDGET_FRACTION there for how it's scoped (a whole extra
+ *  solveLevel — see GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION there for how it's scoped (a whole extra
  *  rerun of the main-search ladder with these flags off, own separate small budget, only ever run
  *  after the entire normal ladder AND repair fallback have already failed, so it costs nothing on
  *  any level that solves earlier). Not gated by level features (unlike needsRepairFallback) — the
  *  5 known fragile cases span 4 different routing regimes with no shared structural predictor found yet
  *  (same report), so an unconditional last-resort tier is the defensible starting point; narrow it
  *  to a feature gate once/if a real one is found. */
-export const ATTRACTION_DIVERSITY_CANDIDATE_FLAGS = ['SCORE_GOAL_ATTRACTION'] as const;
+export const GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS = ['SCORE_GOAL_ATTRACTION'] as const;
 // ['SCORE_OBJECTIVE_ATTRACTION', 'SCORE_INTERSECTION_SETUP', 'SCORE_SURROUND_URGENCY', 'SCORE_PERIMETER_BIAS']
 
 /** One attempt-policy rule: a feature predicate + the config bundle it selects. First match wins. */
@@ -389,7 +389,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // sideCommitment` was independently the cheap-to-moderate isolated winner on multiple
             // still-unsolved levels of this routing regime (R02858, R03226, R02903), the single best-
             // coverage candidate technique found for this rule. Trailing, protected-reserve
-            // placement — lands in the 5th slot the MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT 4->5
+            // placement — lands in the 5th slot the MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT 4->5
             // increase opened up, so it adds coverage without evicting anything protected before
             // this session's changes (see stage-budget.ts's own comment on that increase).
             dfs('perimeterSweep', sideCommitment),
@@ -428,7 +428,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // gap (43 of 69 zero-beam oracle-union levels, vs. 26 across the two sibling default rules
         // fixed above) — profilesFirst() built this routing regime's list purely from DFS profiles and
         // templates too, with no beam offered at all. Placed as the LAST two configs deliberately
-        // (not first): mainConfigs' last MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (stage-budget.ts, 5)
+        // (not first): mainConfigs' last MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT (stage-budget.ts, 5)
         // entries get a protected node-budget reserve regardless of what earlier configs consume, so
         // this placement recovers previously-unsolved levels (where earlier DFS attempts can burn
         // their full allocated time without concluding) while costing nothing on already-solving
@@ -489,7 +489,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // "must-cross-heavy mechanic-bucket-beam gaps"): this rule never offers a mechanic-bucket WIDE beam at all
             // (mcDiverseThread isn't used here) — R02299's cheap (281,990-node) isolated win was
             // beam:objectiveFirst@beam5000(mechanic-bucket). Previously left open because this rule's
-            // MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT-4 reserve window was already fully spent on the
+            // MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT-4 reserve window was already fully spent on the
             // perimeter-DFS fix directly above; landed together with the reserve count's validated
             // 4->5 increase (stage-budget.ts) so this 5th trailing config gets the same protection
             // without displacing dfs:perimeterSweep/perimeterCW out of the window.
@@ -535,7 +535,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // either (mcDiverseThread isn't used here) — R02159's cheap (578,428-node) isolated win
             // was beam:intersectionHarvest@beam5000(mechanic-bucket). Previously left open for the same
             // full-reserve-window reason as this rule's must-pass-heavy sibling above; landed together
-            // with the validated MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT 4->5 increase.
+            // with the validated MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT 4->5 increase.
             beam('intersectionHarvest', BEAM.WIDE, null, { mechanicBucketRetention: true }),
             // Ablation: STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE (default-OFF, NEW unvalidated
             // pilot, 2026-08-26 — see that flag's own comment in ablation-config.ts and this rule's
@@ -554,7 +554,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // profiles, so it never offered beam search at all — a real capability gap on exactly the
         // open, low-constraint levels this rule matches, where beam disproportionately wins cheaply.
         // Placed as the LAST two configs deliberately (not first, not right after the templates):
-        // mainConfigs' last MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (stage-budget.ts, 5) entries get a
+        // mainConfigs' last MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT (stage-budget.ts, 5) entries get a
         // protected node-budget reserve regardless of what earlier configs consume, so this placement
         // recovers previously-unsolved levels (where the 4 orderingBias DFS attempts can each burn their
         // full ~20-30s allocated slice without concluding, otherwise starving anything placed right
@@ -641,7 +641,7 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     // (2026-08-26) found all 62 are `must-cross-heavy`, split across three ATTEMPT_POLICY rules —
     // this one (isMustCrossFlipperHeavy, 30/62), "must-cross, must-pass-heavy" (28/62), and
     // "must-cross default" (4/62). Only THIS rule's build() has fewer than
-    // MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT (stage-budget.ts, 5) existing entries (4): appending both
+    // MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT (stage-budget.ts, 5) existing entries (4): appending both
     // plain WIDE beams here still fits entirely inside the protected trailing-reserve window at no
     // cost to (no eviction of) any existing protected config, unlike its two sibling rules whose
     // windows are already full — see stage-budget.ts's own 4->5 reserve-count-increase comment for
@@ -667,7 +667,7 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
             // repair, for the early-probe latency win — the same reasoning turnBiased's original,
             // flag-independent placement used, now applied to whichever technique is actually
             // predicted); the other becomes a genuine fallback AFTER ordinary repair (a real, if
-            // smaller, shot — see REPAIR_PROBE_PREDICTED_TIER_SHARE in orchestration.ts for how the
+            // smaller, shot — see EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE in orchestration.ts for how the
             // probe budget is weighted between the two).
             const predicted = predictLikelyBiasedRepairTechnique(f);
             const predictedAttempt = predicted === 'turnBiased' ? repairTurnBiasedAttempt() : repairMustTurnBiasedAttempt();

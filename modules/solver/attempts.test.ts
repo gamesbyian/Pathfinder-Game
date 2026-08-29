@@ -115,7 +115,7 @@ test('sparse-low-intersection attempts prioritize closure rescue profiles before
 });
 
 test('multi-portal levels lead with portal profiles, with beam configs trailing last', () => {
-  // portalMap.size >= 4 (2+ pairs) triggers the multi-portal routing regime (archetype.ts); reqInt kept
+  // portalMap.size >= 4 (2+ pairs) triggers the multi-portal routing regime (routing-regime.ts); reqInt kept
   // low enough to avoid the intersection-heavy rule matching first.
   const attempts = getAttemptConfigs(makeLevel({
     reqLen: 40, reqInt: 2,

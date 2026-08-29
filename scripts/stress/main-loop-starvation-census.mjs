@@ -61,22 +61,27 @@ const CORPORA = [
 const COLD_PREFIXES = ['dfs', 'beam', 'repair', 'admissible-order', 'enumerate-complete'];
 
 function configSig(a) {
-    if (a.admissibleOrder) return ['admissible-order', a.profile ?? null, !!a.admissibleOrderNoTieBreak];
+    const scoringProfileId = a.scoringProfileId ?? a.profile ?? null;
+    const orderingBiasId = a.orderingBiasId ?? a.template ?? null;
+    const mechanicBucketRetention = !!(a.mechanicBucketRetention ?? a.diverseBeam);
+    if (a.admissibleOrder) return ['admissible-order', scoringProfileId, !!a.admissibleOrderNoTieBreak];
     if (a.repair) return ['repair', !!a.repairMustTurnBiased, !!a.repairTurnBiased];
-    if (a.beamWidth) return ['beam', a.profile ?? null, a.template ?? null, a.beamWidth, !!a.diverseBeam];
-    return ['dfs', a.profile ?? null, a.template ?? null];
+    if (a.beamWidth) return ['beam', scoringProfileId, orderingBiasId, a.beamWidth, mechanicBucketRetention];
+    return ['dfs', scoringProfileId, orderingBiasId];
 }
 
 function hintSig(s) {
     const t = s.technique || '';
+    const scoringProfileId = s.scoringProfileId ?? s.profile ?? null;
+    const orderingBiasId = s.orderingBiasId ?? s.template ?? null;
+    const mechanicBucketRetention = !!(s.mechanicBucketRetention ?? s.diverseBeam);
     if (t.startsWith('admissible-order')) {
-        const prof = s.profile ?? null;
-        const noTieBreak = prof === null || prof === 'none';
-        return ['admissible-order', noTieBreak ? null : prof, noTieBreak];
+        const noTieBreak = scoringProfileId === null || scoringProfileId === 'none';
+        return ['admissible-order', noTieBreak ? null : scoringProfileId, noTieBreak];
     }
     if (t.startsWith('repair')) return ['repair', false, false]; // coarse -- see file doc
-    if (t.startsWith('beam')) return ['beam', s.profile ?? null, s.template ?? null, s.beamWidth ?? null, !!s.diverseBeam];
-    if (t.startsWith('dfs') || t.startsWith('enumerate-complete')) return ['dfs', s.profile ?? null, s.template ?? null];
+    if (t.startsWith('beam')) return ['beam', scoringProfileId, orderingBiasId, s.beamWidth ?? null, mechanicBucketRetention];
+    if (t.startsWith('dfs') || t.startsWith('enumerate-complete')) return ['dfs', scoringProfileId, orderingBiasId];
     return null;
 }
 const sigKey = (sig) => sig.join('');

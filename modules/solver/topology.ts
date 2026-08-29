@@ -321,7 +321,7 @@ function _floodFillReachability(pos: number, state: SolverSearchState, level: No
 
 const EMPTY_KEYS: ArrayLike<number> = [];
 
-// Stage B (docs/solver-optimization-current-queue.md item #0's learned-failure thread; see
+// Stage B (docs/solver-optimization-workstreams.md item #0's learned-failure thread; see
 // ConnectivityBoundarySketch's own doc in types.ts). Diagnostic-only, called only when a research
 // observer opted in via `includeBoundarySketch` AND a rejection already fired — never on the hot
 // path, so it deliberately does NOT share code with `_reachCanEnter`/the flood-fill functions above
@@ -473,7 +473,7 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, axisExhausted, mcOpenMask, level.mustCrossKeys);
 
     // Research-only rejection observer (see ConnectivityRejectionObserver's doc in types.ts and
-    // docs/solver-optimization-current-queue.md item #0's learned-failure Stage A). `research` is
+    // docs/solver-optimization-workstreams.md item #0's learned-failure Stage A). `research` is
     // undefined on every production call, so each `if (research)` below is a single false branch —
     // this changes no pruning/ordering/budget decision, only whether an already-computed rejection
     // is also reported. Reporting itself is a call to the module-level `_reportConnectivityRejection`

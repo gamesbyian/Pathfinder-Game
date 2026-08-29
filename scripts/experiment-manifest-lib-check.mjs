@@ -62,7 +62,7 @@ const reserveControl = { ...control, workflowInputs: {
     ...control.workflowInputs, enable_flags: '', main_loop_late_reserve_fraction: '', main_loop_late_reserve_config_count: '4',
 } };
 const reserveTreatment = { ...treatment, workflowInputs: {
-    ...treatment.workflowInputs, enable_flags: 'STRATEGY_MAIN_LOOP_LATE_RESERVE', main_loop_late_reserve_fraction: '0.10', main_loop_late_reserve_config_count: '4',
+    ...treatment.workflowInputs, enable_flags: 'STRATEGY_MAIN_SEARCH_LATE_RESERVE', main_loop_late_reserve_fraction: '0.10', main_loop_late_reserve_config_count: '4',
 } };
 assert.deepEqual(compareExperimentArms(reserveControl, reserveTreatment, 'TARGET', {
     allowedWorkflowInputDifferences: ['enable_flags', 'main_loop_late_reserve_fraction'],

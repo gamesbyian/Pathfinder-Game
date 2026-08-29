@@ -84,8 +84,8 @@ export interface VarietySavedMeta {
      *  admissible-order-family techniques ("the tie-break profile, not the primary ordering, which
      *  is always admissible slack" — see that field's own doc). null when orderBy isn't
      *  'admissible-slack', or when it is but no tie-break was applied (tieBreakProfile: null).
-     *  'flat' (not a POLICY_PROFILES name) when the flat all-default-weights profile ({}) was used —
-     *  named distinctly from POLICY_PROFILES.default so a reader can't mistake it for that
+     *  'flat' (not a SCORING_PROFILES name) when the flat all-default-weights profile ({}) was used —
+     *  named distinctly from SCORING_PROFILES.default so a reader can't mistake it for that
      *  differently-tuned profile. */
     scoringProfileId: string | null;
     /** Prefix-anchored (System B) finds only: stable compact id of the seed hint this completion was

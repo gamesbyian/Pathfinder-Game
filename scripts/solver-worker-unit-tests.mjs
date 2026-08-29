@@ -347,7 +347,7 @@ test('client.solve() forwards the full SolveOpts as solveOpts, minus timeBudgetM
     const sent = [];
     const fakeWorker = { onmessage: null, onerror: null, postMessage: (m) => sent.push(m), terminate() {} };
     const client = createSolverWorkerClient(fakeWorker);
-    const ablation = { STRATEGY_REPAIR_PROBE: false };
+    const ablation = { STRATEGY_EARLY_REPAIR_SEARCH: false };
     const attemptSearchForTesting = () => null;
     client.solve({ fake: 'level' }, {
         timeBudgetMs: 5000,

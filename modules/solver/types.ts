@@ -98,7 +98,7 @@ export interface AttemptConfig {
     /** Only meaningful alongside `admissibleOrder: true`. Skips the soft-score tie-break entirely
      *  (admissible-order-search.ts's rankByAdmissibleSlack receives `null` instead of a resolved
      *  ScoringProfile), reproducing the technique's ORIGINAL ordering from before the same-day
-     *  tuning experiment made the tie-break unconditional — see that file's own doc. `profileName`
+     *  tuning experiment made the tie-break unconditional — see that file's own doc. `scoringProfileId`
      *  is ignored when this is set (still required as a string by the type, conventionally 'none').
      *  A real, if small, population of the technique's earliest validated solves specifically
      *  needed this no-tie-break ordering and stopped reproducing once every profile (including
@@ -393,7 +393,7 @@ export interface RepairChoiceResearchRecord {
 }
 export interface RepairChoiceResearchObserver { observe(record: RepairChoiceResearchRecord): void; }
 
-/** Research-only isConnected() rejection observer (see docs/solver-optimization-current-queue.md
+/** Research-only isConnected() rejection observer (see docs/solver-optimization-workstreams.md
  *  item #0's "learned-failure search" thread and reports/2026-08-24-learned-failure-certificate-
  *  audit.md's Stage A). Absent in every production call; observing an already-computed rejection
  *  reason changes no pruning/ordering/budget decision. */
@@ -424,7 +424,7 @@ export interface ConnectivityRejectionRecord {
     boundarySketch?: ConnectivityBoundarySketch;
 }
 
-/** Stage B (docs/solver-optimization-current-queue.md item #0's learned-failure thread): a bounded,
+/** Stage B (docs/solver-optimization-workstreams.md item #0's learned-failure thread): a bounded,
  *  conservative sketch of the flood fill that just rejected — NOT itself a proven reason. Two
  *  rejections sharing a sketch means their reached region and immediate boundary blockers matched;
  *  it does not by itself prove they share a sound logical cause (see that report's own caution that

@@ -1,6 +1,6 @@
 // Maps solver/variety-search results into the canonical Hint provenance schema.
 import { makeProvenanceEntry, toHint } from '../domain/hint-types.js';
-import { ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } from './attempts.js';
+import { GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS } from './attempts.js';
 import { classifyAttemptTier } from './orchestration.js';
 import type { Hint, HintProvenanceEntry } from '../domain/hint-types.js';
 import type { Attempt } from './orchestration.js';
@@ -14,7 +14,7 @@ type AttemptLike = Omit<Partial<Attempt>, 'stageId'> & {
     template?: string | null;
     diverseBeam?: boolean;
     dedupNearTieRetry?: boolean;
-    attractionDiversity?: boolean;
+    goalAttractionDisabledRetry?: boolean;
 };
 
 interface SolveResultLike {
@@ -103,7 +103,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
         seedSalt: winner.repair ? (winner.seedSalt ?? 0) : null,
         repairMustTurnBiased: winner.repair ? !!winner.repairMustTurnBiased : null,
         repairTurnBiased: winner.repair ? !!winner.repairTurnBiased : null,
-        goalAttractionDisabledRetry: attemptTierLabel === 'goal-attraction-disabled-retry' || winner.attractionDiversity === true,
+        goalAttractionDisabledRetry: attemptTierLabel === 'goal-attraction-disabled-retry' || winner.goalAttractionDisabledRetry === true,
         retryTier: RETRY_TIER_LABELS.has(attemptTierLabel) ? attemptTierLabel : null,
     };
 }
@@ -140,7 +140,7 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
             forcingRepairTurnBiased: info.repairTurnBiased,
         } : {}),
         ...(info.goalAttractionDisabledRetry ? {
-            forcingDisabledFeatures: [...ATTRACTION_DIVERSITY_CANDIDATE_FLAGS],
+            forcingDisabledFeatures: [...GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS],
         } : {}),
         ...(info.retryTier !== null ? { forcingRetryTier: info.retryTier } : {}),
     });

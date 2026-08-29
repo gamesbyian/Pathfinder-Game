@@ -15,7 +15,7 @@ Exact flags, groups, descriptions, and defaults live in `modules/solver/ablation
 Important distinctions:
 
 - `STRATEGY_REPAIR_FALLBACK`: removes repair configs and early probe.
-- `STRATEGY_REPAIR_PROBE`: disables only early probe; fallback remains.
+- `STRATEGY_EARLY_REPAIR_SEARCH`: disables only early probe; fallback remains.
 - `STRATEGY_REPAIR_MUSTTURN_BIAS`: only biased repair attempt.
 - `STRATEGY_LOWER_BOUND_MEMO`: exact MP/MC bounds without memoization.
 - `STRATEGY_ROUTING_REGIME_SELECTION`: catch-all rule instead of feature/routing-regime selection.

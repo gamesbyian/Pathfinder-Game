@@ -52,18 +52,31 @@ const outFile = argMap.get('--out') || 'reports/portfolio/solve-sweep.json';
 const summaryOutFile = argMap.get('--summary-out') || outFile.replace(/\.json$/u, '-summary.md');
 const corpusPath = argMap.get('--corpus') || path.join(root, 'data', 'levels.json');
 const saveHints = flags.has('--save-hints');
+// No silent default: this is the historical experiment scheduler's opt-in flag, and defaulting an
+// unrecognized/omitted value into that path is the wrong failure mode for a behavior-preserving
+// migration. Every live workflow already passes --scheduler-mode explicitly (currently `legacy`).
 const rawSchedulerMode = argMap.get('--scheduler-mode');
 const schedulerMode = rawSchedulerMode === 'legacy' || rawSchedulerMode === 'production'
     ? 'production'
-    : 'legacy-latency-portfolio-experiment';
+    : rawSchedulerMode === 'legacy-latency-portfolio-experiment' || rawSchedulerMode === 'portfolio-experiment'
+        ? 'legacy-latency-portfolio-experiment'
+        : (() => { throw new Error(`--scheduler-mode must be one of: production, legacy-latency-portfolio-experiment (legacy aliases: legacy, portfolio-experiment); got ${JSON.stringify(rawSchedulerMode)}`); })();
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
 const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined;
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;
-const attractionDiversityBudgetFraction = argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined;
+// Canonical flag names below accept their pre-phase-6-derived-vocabulary legacy spelling as an
+// alias for one migration window (naming-cleanup-ledger.json), same shape as --scheduler-mode above.
+const goalAttractionDisabledRetryBudgetFraction = argMap.has('--goal-attraction-disabled-retry-budget-fraction')
+    ? Number(argMap.get('--goal-attraction-disabled-retry-budget-fraction'))
+    : argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined;
 const admissibleOrderBudgetFraction = argMap.has('--admissible-order-budget-fraction') ? Number(argMap.get('--admissible-order-budget-fraction')) : undefined;
 const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction') ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
-const mainLoopLateReserveFraction = argMap.has('--main-loop-late-reserve-fraction') ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
-const mainLoopLateReserveConfigCount = argMap.has('--main-loop-late-reserve-config-count') ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
+const mainSearchLateReserveFraction = argMap.has('--main-search-late-reserve-fraction')
+    ? Number(argMap.get('--main-search-late-reserve-fraction'))
+    : argMap.has('--main-loop-late-reserve-fraction') ? Number(argMap.get('--main-loop-late-reserve-fraction')) : undefined;
+const mainSearchLateReserveConfigCount = argMap.has('--main-search-late-reserve-config-count')
+    ? Number(argMap.get('--main-search-late-reserve-config-count'))
+    : argMap.has('--main-loop-late-reserve-config-count') ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
 const disableExtraBudgetPasses = flags.has('--disable-extra-budget-passes');
 // DEPRECATED --baseline-budget: per-level adaptive node budgets scaled off recorded per-level
 // nodesExpanded, instead of one flat --node-budget on every level. Rationale (measured on
@@ -290,11 +303,11 @@ if (schedulerMode === 'legacy-latency-portfolio-experiment') solveOpts.legacyLat
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
 if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
 if (Number.isFinite(repairBudgetFraction)) solveOpts.repairBudgetFractionOverride = repairBudgetFraction;
-if (Number.isFinite(attractionDiversityBudgetFraction)) solveOpts.attractionDiversityBudgetFractionOverride = attractionDiversityBudgetFraction;
+if (Number.isFinite(goalAttractionDisabledRetryBudgetFraction)) solveOpts.goalAttractionDisabledRetryBudgetFractionOverride = goalAttractionDisabledRetryBudgetFraction;
 if (Number.isFinite(admissibleOrderBudgetFraction)) solveOpts.admissibleOrderBudgetFractionOverride = admissibleOrderBudgetFraction;
 if (Number.isFinite(admissibleOrderNodeReserveFraction)) solveOpts.admissibleOrderNodeReserveFractionOverride = admissibleOrderNodeReserveFraction;
-if (Number.isFinite(mainLoopLateReserveFraction)) solveOpts.mainLoopLateReserveFractionOverride = mainLoopLateReserveFraction;
-if (Number.isFinite(mainLoopLateReserveConfigCount)) solveOpts.mainLoopLateReserveConfigCountOverride = mainLoopLateReserveConfigCount;
+if (Number.isFinite(mainSearchLateReserveFraction)) solveOpts.mainSearchLateReserveFractionOverride = mainSearchLateReserveFraction;
+if (Number.isFinite(mainSearchLateReserveConfigCount)) solveOpts.mainSearchLateReserveConfigCountOverride = mainSearchLateReserveConfigCount;
 // Set LAST of the fraction group on purpose: orchestration.ts resolves each individual override with
 // `?? (disableExtraBudgetPasses ? 0 : undefined)`, so an explicit --repair-budget-fraction etc. still
 // wins over this flag — the additive semantics its own SolveOpts comment promises.
@@ -363,7 +376,7 @@ function primeAttemptFor(id) {
     // threading an AD-scoring flag through primeAttempt is future work.
     // --prime-include-all opts into priming every winner kind regardless (accepting the lower hit
     // rate and miss cost on repair winners that fail either gate, and on AD winners) for experiments.
-    const winnerKind = winnerAttempt?.attractionDiversity ? 'ad' : winnerAttempt?.repair ? 'repair' : 'normal';
+    const winnerKind = winnerAttempt?.goalAttractionDisabledRetry ? 'ad' : winnerAttempt?.repair ? 'repair' : 'normal';
     const repairSeedKnown = winnerKind === 'repair' && winnerAttempt?.randomSeed !== undefined;
     // Eligibility gate (default, non-include-all path): seed known AND its own recorded cost fits
     // this run's budget. Deliberately separate from repairSeedKnown above — under --prime-include-all
@@ -531,7 +544,7 @@ for (const row of cachedSkipRows) recordRow(row, { fromCheckpointOrCache: true }
 
 const effectiveParallelism = workerCount * Math.max(1, racePoolSize);
 const cpuCount = os.cpus().length;
-console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(attractionDiversityBudgetFraction) ? ` attraction-diversity-budget-fraction=${attractionDiversityBudgetFraction}` : ''}${Number.isFinite(admissibleOrderBudgetFraction) ? ` admissible-order-budget-fraction=${admissibleOrderBudgetFraction}` : ''}${Number.isFinite(admissibleOrderNodeReserveFraction) ? ` admissible-order-node-reserve-fraction=${admissibleOrderNodeReserveFraction}` : ''}${Number.isFinite(mainLoopLateReserveFraction) ? ` main-loop-late-reserve-fraction=${mainLoopLateReserveFraction}` : ''}${Number.isFinite(mainLoopLateReserveConfigCount) ? ` main-loop-late-reserve-config-count=${mainLoopLateReserveConfigCount}` : ''}${disableExtraBudgetPasses ? ' disable-extra-budget-passes' : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
+console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(goalAttractionDisabledRetryBudgetFraction) ? ` goal-attraction-disabled-retry-budget-fraction=${goalAttractionDisabledRetryBudgetFraction}` : ''}${Number.isFinite(admissibleOrderBudgetFraction) ? ` admissible-order-budget-fraction=${admissibleOrderBudgetFraction}` : ''}${Number.isFinite(admissibleOrderNodeReserveFraction) ? ` admissible-order-node-reserve-fraction=${admissibleOrderNodeReserveFraction}` : ''}${Number.isFinite(mainSearchLateReserveFraction) ? ` main-search-late-reserve-fraction=${mainSearchLateReserveFraction}` : ''}${Number.isFinite(mainSearchLateReserveConfigCount) ? ` main-search-late-reserve-config-count=${mainSearchLateReserveConfigCount}` : ''}${disableExtraBudgetPasses ? ' disable-extra-budget-passes' : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
 if (adaptiveBudget) {
     const assigned = toActuallyRun.map(n => nodeBudgetFor(rawLevels[n - 1]?.id));
     const capped = assigned.filter(b => b !== undefined).sort((a, b) => a - b);
@@ -684,7 +697,7 @@ if (workerCount <= 1) {
                 ? await racePool.solveLevel(raw, {
                     timeBudgetMs: budgetMs,
                     repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride,
-                    attractionDiversityBudgetFractionOverride: solveOpts.attractionDiversityBudgetFractionOverride,
+                    goalAttractionDisabledRetryBudgetFractionOverride: solveOpts.goalAttractionDisabledRetryBudgetFractionOverride,
                     // NOT threaded here, deliberately: race.mjs reimplements the attempt ladder and
                     // has no admissible-order tier and no nodeBudget handling at all (grep it — the
                     // fields simply have no reader). Passing them would look like support and change

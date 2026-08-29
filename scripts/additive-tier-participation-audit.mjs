@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Additive-tier participation audit (docs/solver-optimization-current-queue.md item #2, step 3:
+ * Additive-tier participation audit (docs/solver-optimization-workstreams.md item #2, step 3:
  * "one additive tier at a time"; reports/2026-08-27-solver-budget-model-rationalization.md's "Nine
  * ms-shaped additive allocation sites").
  *

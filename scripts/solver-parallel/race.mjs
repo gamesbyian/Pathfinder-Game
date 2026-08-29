@@ -35,7 +35,7 @@
 // produces it) measurably regressed levels where repair is fast.
 //
 // Third phase (2026-07-16): after repair+main both exhaust, a single-queue rerun of mainConfigs
-// with orchestration.ts's ATTRACTION_DIVERSITY_CANDIDATE_FLAGS forced off — the raced equivalent
+// with orchestration.ts's GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS forced off — the raced equivalent
 // of solveLevel()'s own post-repair-loop goal-attraction-disabled-retry pass. Deliberately run STRICTLY
 // AFTER phase 1 resolves (not reserved-and-concurrent from t=0 the way repair is): repair earns a
 // concurrent reserved slice because it's known to help a real, common, feature-gated population
@@ -222,22 +222,29 @@ export function createRacePool(opts = {}) {
 
     async function runOneLevel(rawLevel, levelOpts) {
         if (shutdownCalled) throw new Error('createRacePool: solveLevel() called after shutdown()');
-        const { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } = await import('../../modules/solver/attempts.js');
-        const { getActiveGates, REPAIR_EXTRA_BUDGET_FRACTION, ATTRACTION_DIVERSITY_BUDGET_FRACTION } = await import('../../modules/solver/orchestration.js');
+        const { getConfiguredAttemptConfigs, GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS } = await import('../../modules/solver/attempts.js');
+        const { getActiveGates, REPAIR_EXTRA_BUDGET_FRACTION, GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION } = await import('../../modules/solver/orchestration.js');
         const { createSolver } = await import('../../modules/solver.js');
-        const { defaultConfig } = await import('../../modules/solver/ablation-config.js');
+        const { defaultConfig, canonicalAblationFeatureName } = await import('../../modules/solver/ablation-config.js');
         const Solver = createSolver();
 
         const timeBudgetMs = Number(levelOpts.timeBudgetMs) > 0 ? Number(levelOpts.timeBudgetMs) : 20000;
         // Workers need a structured-cloneable plain object, so the sequential engine's Proxy
         // normalizer cannot cross this boundary. Materialize production defaults first: passing a
         // sparse `{FLAG:false}` object directly used to make every other `cfg.STRATEGY_*` read
-        // undefined/falsy, silently disabling unrelated raced phases and attempt tiers.
+        // undefined/falsy, silently disabling unrelated raced phases and attempt tiers. Keys are
+        // canonicalized (mirroring normalizeAblationConfig's dual-read) so a caller still using a
+        // legacy flag spelling (e.g. STRATEGY_ATTRACTION_DIVERSITY) lands on the canonical key
+        // this plain object and every downstream `cfg.STRATEGY_X` read actually checks.
         const ablationCfg = levelOpts.ablation == null
             ? null
             : {
                 ...defaultConfig(),
-                ...Object.fromEntries(Object.entries(levelOpts.ablation).filter(([, value]) => value !== undefined)),
+                ...Object.fromEntries(
+                    Object.entries(levelOpts.ablation)
+                        .filter(([, value]) => value !== undefined)
+                        .map(([key, value]) => [canonicalAblationFeatureName(key), value]),
+                ),
             };
         // levelOpts.repairBudgetFractionOverride (orchestration.ts's SolveOpts field, added for
         // offline batch-tooling cost control — see docs/solver-architecture.md's cost-gotcha
@@ -483,18 +490,18 @@ export function createRacePool(opts = {}) {
         if (phase1Result.ok) return phase1Result;
 
         // Last-resort goal-attraction-disabled-retry phase (2026-07-16, orchestration.ts's own
-        // ATTRACTION_DIVERSITY_BUDGET_FRACTION/ATTRACTION_DIVERSITY_CANDIDATE_FLAGS) — the raced
+        // GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION/GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS) — the raced
         // equivalent of solveLevel()'s post-repair-loop pass: after phase 1 (repair + main, above)
         // fails on every gate, rerun mainConfigsList once more with the candidate SCORE_* flags
         // forced off, in its own separate additive budget, sharing the SAME persistent worker
         // slots (no new spawn cost). A single queue (no repair sub-queue — attempts.ts's diversity
         // config carries no `.repair` flag), so this reuses the simpler single-queue shape of
         // phase 1's own no-repair case rather than needing a second dual-queue implementation.
-        const diversityFractionOverride = Number(levelOpts.attractionDiversityBudgetFractionOverride);
+        const diversityFractionOverride = Number(levelOpts.goalAttractionDisabledRetryBudgetFractionOverride ?? levelOpts.attractionDiversityBudgetFractionOverride);
         const diversityBudgetFraction = Number.isFinite(diversityFractionOverride) && diversityFractionOverride >= 0
             ? diversityFractionOverride
-            : ATTRACTION_DIVERSITY_BUDGET_FRACTION;
-        const diversityGateEnabled = !ablationCfg || ablationCfg.STRATEGY_ATTRACTION_DIVERSITY;
+            : GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION;
+        const diversityGateEnabled = !ablationCfg || ablationCfg.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY;
         if (diversityBudgetFraction <= 0 || !diversityGateEnabled || mainConfigsList.length === 0) {
             return phase1Result;
         }
@@ -510,7 +517,7 @@ export function createRacePool(opts = {}) {
         const diversityAblationCfg = {
             ...defaultConfig(),
             ...(ablationCfg ?? {}),
-            ...Object.fromEntries(ATTRACTION_DIVERSITY_CANDIDATE_FLAGS.map(flag => [flag, false])),
+            ...Object.fromEntries(GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS.map(flag => [flag, false])),
         };
 
         const diversityBudgetMs = timeBudgetMs * diversityBudgetFraction;
@@ -674,14 +681,15 @@ export function createRacePool(opts = {}) {
  * @param {number} [opts.overallBudgetMs] - hard wall-clock cap for phase 1 (main+repair) only;
  *   default timeBudgetMs*(REPAIR_EXTRA_BUDGET_FRACTION+1). The goal-attraction-disabled-retry phase (below)
  *   runs AFTER this and has its own separate timer, so the true worst-case wall time is this plus
- *   timeBudgetMs*attractionDiversityBudgetFractionOverride (or *ATTRACTION_DIVERSITY_BUDGET_
- *   FRACTION if unset) — not folded into overallBudgetMs itself, mirroring how orchestration.ts's
+ *   timeBudgetMs*goalAttractionDisabledRetryBudgetFractionOverride (or *GOAL_ATTRACTION_DISABLED_
+ *   RETRY_BUDGET_FRACTION if unset) — not folded into overallBudgetMs itself, mirroring how orchestration.ts's
  *   sequential engine also times its post-repair-loop pass separately from timeBudgetMs.
  * @param {number} [opts.repairBudgetFractionOverride] - overrides REPAIR_EXTRA_BUDGET_FRACTION for
  *   this call only; see orchestration.ts's SolveOpts field of the same name.
- * @param {number} [opts.attractionDiversityBudgetFractionOverride] - overrides
- *   ATTRACTION_DIVERSITY_BUDGET_FRACTION for this call only, independent of the repair override
+ * @param {number} [opts.goalAttractionDisabledRetryBudgetFractionOverride] - overrides
+ *   GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION for this call only, independent of the repair override
  *   above; 0 disables the phase entirely. See orchestration.ts's SolveOpts field of the same name.
+ *   `attractionDiversityBudgetFractionOverride` is still accepted as a legacy alias.
  * @returns {Promise<{ok: boolean, status: string, solution: number[]|null, solutions: number[][], attempts: object[], totalMs: number, nodesExpanded: number}>}
  */
 export async function solveLevelRaced(rawLevel, opts = {}) {

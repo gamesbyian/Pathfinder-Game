@@ -12,7 +12,7 @@
 import assert from 'node:assert/strict';
 import { RACE_SUPPORTED_STAGE_IDS } from './race.mjs';
 import { SOLVER_STAGE_IDS, solverStageSpec } from '../../modules/solver/stage-policy.js';
-import { REPAIR_EXTRA_BUDGET_FRACTION, ATTRACTION_DIVERSITY_BUDGET_FRACTION } from '../../modules/solver/orchestration.js';
+import { REPAIR_EXTRA_BUDGET_FRACTION, GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION } from '../../modules/solver/orchestration.js';
 
 let passed = 0;
 function test(name, fn) {
@@ -40,9 +40,9 @@ test('race.mjs intentionally supports a documented SUBSET of the full sequential
 
 test('race.mjs\'s repair/diversity budget-fraction constants come from orchestration.ts\'s own re-export, not a second hardcoded copy', () => {
     assert.equal(typeof REPAIR_EXTRA_BUDGET_FRACTION, 'number');
-    assert.equal(typeof ATTRACTION_DIVERSITY_BUDGET_FRACTION, 'number');
+    assert.equal(typeof GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION, 'number');
     assert.ok(REPAIR_EXTRA_BUDGET_FRACTION > 0);
-    assert.ok(ATTRACTION_DIVERSITY_BUDGET_FRACTION > 0);
+    assert.ok(GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION > 0);
 });
 
 console.log(`\nrace-stage-parity tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);

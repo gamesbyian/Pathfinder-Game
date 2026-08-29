@@ -4,7 +4,7 @@ import type { NormalizedLevel } from '../domain/types.js';
 import { PACK } from './encoding.js';
 import { solveLevel } from './orchestration.js';
 
-function makeLateRepairProbeEligibleInfeasibleLevel(): NormalizedLevel {
+function makeLateEarlyRepairSearchEligibleInfeasibleLevel(): NormalizedLevel {
     return {
         grid: { w: 3, h: 1 },
         gateKeys: [PACK(0, 0)],
@@ -25,14 +25,14 @@ function makeLateRepairProbeEligibleInfeasibleLevel(): NormalizedLevel {
 }
 
 test('disableExtraBudgetPasses suppresses late repair probe when no explicit override is supplied', async () => {
-    const level = makeLateRepairProbeEligibleInfeasibleLevel();
+    const level = makeLateEarlyRepairSearchEligibleInfeasibleLevel();
 
     const enabled = await solveLevel(level, {
         timeBudgetMs: 1000,
         ablation: { STRATEGY_REPAIR_LATE_PROBE: true },
         repairLateProbeNodeBudgetOverride: 100,
         repairBudgetFractionOverride: 0,
-        attractionDiversityBudgetFractionOverride: 0,
+        goalAttractionDisabledRetryBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,

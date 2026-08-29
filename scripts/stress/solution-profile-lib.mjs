@@ -50,7 +50,7 @@ import { readLevelsWithHints, parseLevelSelector } from '../level-data-io.mjs';
 // non-`other` categories: an isolated single-technique run (e.g. technique-census tooling) still
 // carries `solver.id === SOLVER_ID` (the same search code ran), so without this check it would
 // silently fall into `production-solver` — the exact contamination
-// docs/solver-optimization-current-queue.md's Priority 0 traced (e.g. R02900: a technique-census
+// docs/solver-optimization-workstreams.md's Priority 0 traced (e.g. R02900: a technique-census
 // win persisted and later misread as evidence the real competitively-budgeted ladder can solve the
 // level, when `Solver.solve(level,{})` still failed after hundreds of millions of nodes).
 

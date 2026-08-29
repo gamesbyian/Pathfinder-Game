@@ -1,5 +1,16 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { normalizeRoutingRegime } from '../modules/solver/routing-regime.ts';
+
+// Corpora on disk carry a mix of legacy stressMeta.archetype/navDensity (older generated levels)
+// and canonical stressMeta.routingRegime/requiredPathCoverageRatio (scripts/stress/generate.mjs's
+// current output) -- dual-read both directions so this query tool works over either vintage.
+// normalizeRoutingRegime() throws on a value it doesn't recognize; fall back to the raw string
+// rather than crashing the query, since this is read-only display tooling over arbitrary corpora.
+function safeNormalizeRoutingRegime(value) {
+    if (value == null) return null;
+    try { return normalizeRoutingRegime(value); } catch { return value; }
+}
 
 export const CORPUS_ALIASES = Object.freeze({
     published: 'data/levels.json',
@@ -36,8 +47,8 @@ export function describeLevel(level) {
         objectDensity: area ? Number((objects / area).toFixed(4)) : null,
         tags: meta.featureTags ?? [],
         batch: meta.generationBatch ?? null,
-        archetype: meta.archetype ?? null,
-        navDensity: meta.navDensity ?? null,
+        routingRegime: safeNormalizeRoutingRegime(meta.routingRegime ?? meta.archetype ?? null),
+        requiredPathCoverageRatio: meta.requiredPathCoverageRatio ?? meta.navDensity ?? null,
         predictedChallenge: meta.predictedSolverChallenge ?? null,
     };
 }
@@ -45,7 +56,7 @@ export function describeLevel(level) {
 function hasMechanic(item, mechanic) {
     const key = mechanic.toLowerCase();
     if (item.tags.some(tag => tag.toLowerCase().includes(key))) return true;
-    if (item.archetype?.toLowerCase().includes(key)) return true;
+    if (item.routingRegime?.toLowerCase().includes(key)) return true;
     return Object.entries(item.counts).some(([name, value]) => value > 0 && name.toLowerCase().includes(key));
 }
 
