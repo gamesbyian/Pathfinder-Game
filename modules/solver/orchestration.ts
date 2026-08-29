@@ -554,9 +554,6 @@ export function getFalseGoalTriggerSearchBudgetMs(level: NormalizedLevel): numbe
     return Math.min(120000, Math.max(10000, 5000 + perGateCost * gates));
 }
 
-/** @deprecated Use getFalseGoalTriggerSearchBudgetMs(). */
-export const getTrapSpotBudgetMs = getFalseGoalTriggerSearchBudgetMs;
-
 export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: AblationConfig | null): number[] {
     if (level.portalMap.size !== 0 || (cfg && !cfg.STRATEGY_PARITY_GATE_FILTER)) return gateKeys;
 
