@@ -16,7 +16,7 @@ const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--')).m
 for (const key of ['--parent-levels', '--variant-levels', '--manifest', '--variant-id']) {
     if (args.get(key)) continue;
     console.error('Usage: --parent-levels=<json> --variant-levels=<json> --manifest=<json> --variant-id=<id> ' +
-        '[--path=k,k,...|--result=<json>] [--profile=default] [--template=<id>] [--out=<json>]');
+        '[--path=k,k,...|--result=<json>] [--scoring-profile=default] [--ordering-bias=<id>] [--out=<json>]');
     process.exit(2);
 }
 const levelsOf = file => {
@@ -60,19 +60,19 @@ const Solver = createSolver();
 const parent = Solver.prepareLevelForSolver(parentRaw, { source: 'raw' });
 const variant = Solver.prepareLevelForSolver(variantRaw, { source: 'raw' });
 const winningAttempt = observedRow?.attempts?.find(attempt => attempt.ok || attempt.status === 'success') ?? null;
-const profileName = args.get('--profile') || winningAttempt?.profile || 'default';
-const profile = api.POLICY_PROFILES[profileName];
-if (!profile) throw new Error(`unknown profile ${profileName}`);
-const templateId = args.get('--template') ?? winningAttempt?.template ?? null;
-const template = templateId
-    ? api.getAttemptConfigs(variant).find(config => config.profileName === profileName && config.template?.id === templateId)?.template ?? null
+const scoringProfileId = args.get('--scoring-profile') ?? args.get('--profile') ?? winningAttempt?.scoringProfileId ?? winningAttempt?.profile ?? 'default';
+const scoringProfile = api.SCORING_PROFILES[scoringProfileId];
+if (!scoringProfile) throw new Error(`unknown scoring profile ${scoringProfileId}`);
+const orderingBiasId = args.get('--ordering-bias') ?? args.get('--template') ?? winningAttempt?.orderingBiasId ?? winningAttempt?.template ?? null;
+const orderingBias = orderingBiasId
+    ? api.getAttemptConfigs(variant).find(config => config.scoringProfileId === scoringProfileId && config.orderingBias?.id === orderingBiasId)?.orderingBias ?? null
     : null;
-if (templateId && !template) throw new Error(`template ${templateId} is not available for profile ${profileName}`);
+if (orderingBiasId && !orderingBias) throw new Error(`ordering bias ${orderingBiasId} is not available for scoring profile ${scoringProfileId}`);
 
 const parentPrep = api.prepLevel(parent);
 const variantPrep = api.prepLevel(variant);
 const trace = (level, prep, selectedPath, configOverride) => tracePathRanks({
-    api, level, prep, path: selectedPath, profile, template, configOverride,
+    api, level, prep, path: selectedPath, scoringProfile, orderingBias, configOverride,
 });
 const leftTrace = trace(parent, parentPrep, parentPath, null);
 const rightTrace = trace(variant, variantPrep, variantPath, null);
