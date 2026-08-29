@@ -4,6 +4,10 @@
 // many maintained tools. modules/domain/hint-types.ts owns the TypeScript interfaces and typed
 // wrappers/re-exports; do not fork normalization behavior between the two files.
 
+/** @typedef {import('./hint-types.js').MakeProvenanceEntryOptions} MakeProvenanceEntryOptions */
+/** @typedef {import('./hint-types.js').HintProvenanceEntry} HintProvenanceEntry */
+/** @typedef {import('./hint-types.js').Hint} Hint */
+
 export const SOLVER_ID = 'pathfinder-solver';
 export const WITNESS_GENERATOR_ID = 'stress-generator-witness';
 export const HUMAN_PLAYER_ID = 'human-player';
@@ -11,6 +15,7 @@ export const INHERITED_WITNESS_ID = 'sibling-inherited-witness';
 export const TRANSFORMED_WITNESS_ID = 'sibling-transformed-witness';
 export const EXTERNAL_SOLVER_ID = 'external-constraint-solver';
 
+/** @param {MakeProvenanceEntryOptions} opts */
 function forcingFromOpts(opts) {
     const hasForcing = opts.forcingGateKey !== undefined || opts.forcingDirection !== undefined
         || opts.forcingPortalDest !== undefined || opts.forcingPortalExitDirection !== undefined
@@ -36,6 +41,7 @@ function forcingFromOpts(opts) {
     };
 }
 
+/** @param {string} technique @param {MakeProvenanceEntryOptions} [opts] @returns {HintProvenanceEntry} */
 export function makeProvenanceEntry(technique, opts = {}) {
     return {
         solver: {
@@ -73,18 +79,22 @@ export function makeProvenanceEntry(technique, opts = {}) {
     };
 }
 
+/** @param {number[]} path */
 export function hintPathSignature(path) {
     return path.join(',');
 }
 
+/** @param {number[]} path @param {HintProvenanceEntry[]} [provenance] @returns {Hint} */
 export function toHint(path, provenance = []) {
     return { path, provenance };
 }
 
+/** @param {Hint[]} hints @returns {number[][]} */
 export function hintPaths(hints) {
     return hints.map(h => h.path);
 }
 
+/** @param {HintProvenanceEntry[]} entries @returns {HintProvenanceEntry[]} */
 export function dedupeProvenanceEntries(entries) {
     const seen = new Set();
     const out = [];
@@ -97,6 +107,7 @@ export function dedupeProvenanceEntries(entries) {
     return out;
 }
 
+/** @param {Hint[]} existing @param {Hint[]} incoming @returns {Hint[]} */
 export function mergeHints(existing, incoming) {
     const bySig = new Map();
     const order = [];
@@ -122,10 +133,12 @@ export function mergeHints(existing, incoming) {
     });
 }
 
+/** @param {any} raw */
 function isNestedProvenanceEntry(raw) {
     return !!raw && typeof raw === 'object' && raw.solver && typeof raw.solver === 'object';
 }
 
+/** @param {any} raw @returns {HintProvenanceEntry} */
 export function upgradeProvenanceEntry(raw) {
     if (isNestedProvenanceEntry(raw)) {
         const legacySolver = raw.solver || {};
@@ -158,6 +171,7 @@ export function upgradeProvenanceEntry(raw) {
     });
 }
 
+/** @param {unknown} raw @returns {Hint[]} */
 export function upgradeLegacyHints(raw) {
     if (!Array.isArray(raw)) return [];
     const out = [];
@@ -177,6 +191,7 @@ export function upgradeLegacyHints(raw) {
     return out;
 }
 
+/** @param {number[][]} paths @param {Hint[]} records @returns {Hint[]} */
 export function reconcileHints(paths, records) {
     const provenanceBySig = new Map();
     for (const rec of records || []) {
