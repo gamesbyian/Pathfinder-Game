@@ -3,7 +3,7 @@ import { popcount } from './encoding.js';
 import { prepLevel } from './prep.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { getRealLengthFromState, structuralDeficit } from './solution.js';
-import { isConnectedForTrap } from './topology.js';
+import { isConnectedForFalseGoalTriggerSearch } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, UndoToken } from './types.js';
@@ -76,7 +76,7 @@ async function dfsEnumerateTriggerableFalseGoalCells(
             state.ints + popcount(state.mustCrossMask) > level.reqInt) { undoMove(undo, state); continue; }
         if (curRealLen === level.reqLen) {
             if (state.ints === level.reqInt && structuralDeficit(state, level) === 0 &&
-                !prep.trapInvalidSet.has(next)) recordTriggerableCell(next);
+                !prep.invalidFalseGoalCellSet.has(next)) recordTriggerableCell(next);
             undoMove(undo, state);
             continue;
         }
@@ -121,7 +121,7 @@ async function dfsEnumerateTriggerableFalseGoalCells(
 
                 if (level.reqInt - state.ints > rSteps) { chainDone = true; break; }
 
-                if (!isConnectedForTrap(cur, state, level, prep)) { chainDone = true; break; }
+                if (!isConnectedForFalseGoalTriggerSearch(cur, state, level, prep)) { chainDone = true; break; }
 
                 chainNeighbors = curNeighbors;
                 break;
@@ -143,7 +143,7 @@ async function dfsEnumerateTriggerableFalseGoalCells(
             }
             if (curRealLen === level.reqLen) {
                 if (state.ints === level.reqInt && structuralDeficit(state, level) === 0 &&
-                    !prep.trapInvalidSet.has(forcedNext)) recordTriggerableCell(forcedNext);
+                    !prep.invalidFalseGoalCellSet.has(forcedNext)) recordTriggerableCell(forcedNext);
                 undoMove(forcedUndo, state); chainDone = true; break;
             }
 
@@ -162,8 +162,8 @@ async function dfsEnumerateTriggerableFalseGoalCells(
     return true;
 }
 
-/** Result of a false-goal-trigger search. `gatesCompleted` < `totalGates` (or `timedOut`)
- *  means the spot set is partial — a cell's absence does NOT prove it invalid. */
+/** Result of a false-goal-trigger search. `gatesCompleted` < `totalGates`
+ *  means the triggerable-cell set is partial — a cell's absence does NOT prove it invalid. */
 export interface FalseGoalTriggerSearchResult {
     status: 'complete' | 'partial' | 'aborted';
     triggerableCells: Set<number>;
