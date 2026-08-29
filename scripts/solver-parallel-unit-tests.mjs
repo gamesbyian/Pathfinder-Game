@@ -31,21 +31,21 @@ test('racedAttemptRecord preserves every dispatch-identity flag in every race ph
   const job = {
     gateKey: 7,
     attemptConfig: {
-      profileName: 'none', template: null, repair: true, repairTurnBiased: true,
+      scoringProfileId: 'none', orderingBias: null, repair: true, repairTurnBiased: true,
       admissibleOrder: true, admissibleOrderNoTieBreak: true, admissibleOrderLds: true,
     },
   };
-  assert.deepEqual(racedAttemptRecord(job, { ok: false, outcome: 'exhausted', elapsedMs: 12 }, { stageId: 'attraction-diversity' }), {
-    gateKey: 7, profile: 'none', template: null, beamWidth: null,
+  assert.deepEqual(racedAttemptRecord(job, { ok: false, outcome: 'exhausted', elapsedMs: 12 }, { stageId: 'goal-attraction-disabled-retry' }), {
+    gateKey: 7, scoringProfileId: 'none', orderingBias: null, beamWidth: null,
     repair: true, repairTurnBiased: true,
     admissibleOrder: true, admissibleOrderNoTieBreak: true, admissibleOrderLds: true,
-    attractionDiversity: true, stageId: 'attraction-diversity',
+    attractionDiversity: true, stageId: 'goal-attraction-disabled-retry',
     ok: false, outcome: 'exhausted', elapsedMs: 12, nodesExpanded: 0,
   });
 });
 
 test('racedAttemptRecord expands bounded worker errors with attempt identity', () => {
-  const job = { gateKey: 7, attemptConfig: { profileName: 'default', template: { id: 'portal' }, beamWidth: 500 } };
+  const job = { gateKey: 7, attemptConfig: { scoringProfileId: 'default', orderingBias: { id: 'portal' }, beamWidth: 500 } };
   const record = racedAttemptRecord(job, {
     ok: false, outcome: 'error', allocatedBudgetMs: 50, elapsedMs: 3,
     error: { name: 'TypeError', message: 'dispatch failed' },
@@ -54,7 +54,7 @@ test('racedAttemptRecord expands bounded worker errors with attempt identity', (
   assert.equal(record.allocatedBudgetMs, 50);
   assert.deepEqual(record.error, {
     name: 'TypeError', message: 'dispatch failed', gateKey: 7,
-    configKey: 'beam|score=default|bias=portal|width=500|retention=plain', profile: 'default', template: 'portal',
+    configKey: 'beam|score=default|bias=portal|width=500|retention=plain', scoringProfileId: 'default', orderingBias: 'portal',
   });
 });
 
