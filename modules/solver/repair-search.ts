@@ -1050,13 +1050,13 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     if (enableBeamSeed) {
         const prevBeamObserver = prep._beamResearchObserver;
         let survivorPaths: number[][] = [];
-        // 'post-diversity-selection' is the final retained frontier when diverse selection ran;
+        // 'post-mechanic-bucket-selection' is the final retained frontier when mechanic-bucket selection ran;
         // 'post-score-width-cull' is the equivalent boundary when it didn't (same convention
         // scripts/stress/producer-population-pilot.mjs's own offline pilot already uses). Only the
         // LAST record of either kind matters — each phase overwrites the previous one, so this ends
         // up holding the beam's final surviving frontier, not an intermediate one.
         prep._beamResearchObserver = { observe: (record: BeamResearchRecord) => {
-            if (record.stage === 'post-diversity-selection' || record.stage === 'post-score-width-cull') survivorPaths = record.paths;
+            if (record.stage === 'post-mechanic-bucket-selection' || record.stage === 'post-score-width-cull') survivorPaths = record.paths;
         } };
         const beamNodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
         await beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, orderingBias, BEAM_SEED_WIDTH, yieldFn, false, null, BEAM_SEED_NODE_BUDGET);
