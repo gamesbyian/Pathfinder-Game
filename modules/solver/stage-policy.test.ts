@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createBudgetEnvelope, legacyStageTags, normalizeSolverStageId, SOLVER_STAGE_IDS, SOLVER_STAGE_SPECS, solverStageSpec } from './stage-policy.js';
+import { createBudgetEnvelope, legacyStageTags, normalizeSolverStageId, SOLVER_STAGE_IDS, SOLVER_STAGE_SPECS, solverStageSpec, withSolverStage } from './stage-policy.js';
 test('every policy stage has exactly one canonical spec and label', () => {
     assert.equal(Object.keys(SOLVER_STAGE_SPECS).length, SOLVER_STAGE_IDS.length);
     assert.equal(new Set(SOLVER_STAGE_IDS).size, SOLVER_STAGE_IDS.length);
