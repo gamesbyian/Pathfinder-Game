@@ -169,7 +169,7 @@
     "check:current-level-facts": "node scripts/current-level-facts.mjs --check",
     "test:current-level-facts": "node scripts/current-level-facts-node-test.mjs",
     "check:text-source-files": "node scripts/check-text-source-files.mjs",
-    "check:validators": "node scripts/run-scripts-parallel.mjs check:current-level-facts check:solver-budget-boundaries check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:solver-sweep-results check:workflow-actions check:browser-external-dependencies check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:naming-cleanup-ledger check:naming-consumer-residue check:solveopts-transport-parity check:canvas-theme-coverage check:level-data-validity check:level-provenance check:corpus-level-formatting",
+    "check:validators": "node scripts/run-scripts-parallel.mjs check:current-level-facts check:solver-budget-boundaries check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:solver-sweep-results check:workflow-actions check:plain-node-import-boundaries check:browser-external-dependencies check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:naming-cleanup-ledger check:naming-consumer-residue check:solveopts-transport-parity check:canvas-theme-coverage check:level-data-validity check:level-provenance check:corpus-level-formatting",
     "check:nonlint": "npm run check:dead-scripts && npm run check:text-source-files && npm run check:validators",
     "check:level-data-validity": "tsx scripts/check-level-data-validity.mjs",
     "check:workflow-actions": "node scripts/check-workflow-actions.mjs",
@@ -181,7 +181,8 @@
     "check:naming-cleanup-ledger": "node scripts/check-naming-cleanup-ledger.mjs",
     "naming:surface-inventory": "node scripts/naming-cleanup-surface-inventory.mjs",
     "test:naming-cleanup-surface-inventory": "node scripts/naming-cleanup-surface-inventory-node-test.mjs",
-    "test:family-trove-doctor": "node scripts/family-trove-doctor-node-test.mjs"
+    "test:family-trove-doctor": "node scripts/family-trove-doctor-node-test.mjs",
+    "check:plain-node-import-boundaries": "node scripts/check-plain-node-import-boundaries.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
