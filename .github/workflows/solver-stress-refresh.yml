@@ -428,12 +428,12 @@ jobs:
           }
           NODE
 
-      - name: Print repair-probe badness distribution
+      - name: Print early-repair-search badness distribution
         if: steps.coverage.outputs.complete == 'true'
         shell: bash
         run: |
-          node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in=reports/stress/benchmark-parallel.json
-          node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in=reports/stress/benchmark-latest-random.json
+          node scripts/run-bundled.mjs scripts/stress/early-repair-search-badness-report.mjs -- --in=reports/stress/benchmark-parallel.json
+          node scripts/run-bundled.mjs scripts/stress/early-repair-search-badness-report.mjs -- --in=reports/stress/benchmark-latest-random.json
 
       - name: Upload combined results
         if: always()
