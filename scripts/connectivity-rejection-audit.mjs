@@ -3,7 +3,7 @@
  * Learned-failure Stage A: rejection-population audit (docs/solver-optimization-current-queue.md
  * item #0, reports/2026-08-24-learned-failure-certificate-audit.md).
  *
- * Runs the real production solver ladder (Solver.solve, unmodified budgets/policy) over a level
+ * Runs the real production solver ladder (Solver.solveLevel, unmodified budgets/policy) over a level
  * sample with modules/solver/topology.ts's isConnected() rejection observer attached
  * (SolveOpts.connectivityRejectionObserver), collecting every already-computed connectivity
  * rejection this search performs. Purely observational: the observer changes no pruning/ordering/
@@ -90,7 +90,7 @@ for (const { entry, pos } of sample) {
     let result;
     const t0 = Date.now();
     try {
-        result = await Solver.solve(level, {
+        result = await Solver.solveLevel(level, {
             workBudget: WORK_BUDGET,
             strictTotalWorkBudget: true,
             timeBudgetMs: TIME_BUDGET_MS,
