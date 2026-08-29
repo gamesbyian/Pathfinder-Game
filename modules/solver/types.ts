@@ -239,7 +239,7 @@ export interface PrepLevel {
     objectiveDistMaps: Map<number, number>[];
     mustTurnKeys: number[];
     /** cells that can't host a false goal */
-    trapInvalidSet: Set<number>;
+    invalidFalseGoalCellSet: Set<number>;
     surroundInitNeighborMasks?: Uint8Array | number[];
     surroundNeighborIndex?: Map<number, SurroundNbr[]>;
     /** packed key → index into mustTurnKeys, or -1 if not a must-turn cell (always present,
