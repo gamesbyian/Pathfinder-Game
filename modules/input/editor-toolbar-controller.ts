@@ -4,10 +4,10 @@ import type { RequireDeps } from '../state.js';
 // live editor-input bindings.
 import { clearEditorTriggerableFalseGoalCells, markDirty, setEditorModified, setEditorPendingPortal, toggleEditorMirrorHorizontal } from '../state-actions.js';
 import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
-import { planGridResize, computeTrapRetryBudget, decideTrapReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
+import { planGridResize, computeFalseGoalTriggerRetryBudget, decideFalseGoalTriggerReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
 import { defaultReportError } from '../error-reporting.js';
 
-export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate, trapScan }: any) {
+export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate, falseGoalTriggerScan }: any) {
 
     // --- Grid transform orchestration ---
     // Pure level coord mapping is in levelUtils.applyCoordMapToLevel /
@@ -349,7 +349,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     });
 
     // --- Trap-spot solver ---
-    // The search itself runs through the trap-scan controller (off-thread worker,
+    // The search itself runs through the false-goal-trigger scan controller (off-thread worker,
     // spots streamed onto the grid mid-search). This handler owns the explicit-run
     // UX: the progress overlay, cancel, and result messaging. There is no retry
     // popup — a timed-out sweep says so in its message, and pressing Trap Spots again
@@ -378,8 +378,8 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             return;
         }
         const baseBudgetMs = solverApi.getFalseGoalTriggerSearchBudgetMs(l);
-        const budgetMs = (state.ENGINE.editor.falseGoalTriggerScanState === 'partial' && trapScan.getLastBudgetMs() > 0)
-            ? computeTrapRetryBudget(trapScan.getLastBudgetMs(), baseBudgetMs)
+        const budgetMs = (state.ENGINE.editor.falseGoalTriggerScanState === 'partial' && falseGoalTriggerScan.getLastBudgetMs() > 0)
+            ? computeTrapRetryBudget(falseGoalTriggerScan.getLastBudgetMs(), baseBudgetMs)
             : baseBudgetMs;
 
         let _cancelled = false;
@@ -399,7 +399,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             ui.setSolverTimerText('0.0s');
             ui.setSolverProgress(0);
             const overlayMinTimer = new Promise((r: any) => setTimeout(r, 400));
-            const res = await trapScan.scan(budgetMs, {
+            const res = await falseGoalTriggerScan.scan(budgetMs, {
                 shouldCancel: () => _cancelled,
                 // Per-gate progress: the search reports which gate it's on so the user can
                 // watch a multi-gate sweep advance rather than staring at a static spinner.
@@ -418,7 +418,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                 ui.showMessage('Search failed: unexpected error.', 'error');
             }
         } catch (err: any) {
-            reportError('editor.trap-search', err);
+            reportError('editor.false-goal-trigger-search', err);
             ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {
