@@ -19,7 +19,7 @@ const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([
   'mainLoopLateReserve', 'repairProbe', 'repairProbeShrinkRecovery',
   // Consulted by orchestration.ts's classifyAttemptTier to derive the single retryTier field
   // (below), not copied onto provenance 1:1 under their own attempt-field names.
-  'dedupNearTieRetry', 'admissibleOrderNonDefaultRetry', 'connectivityAxisExhaustedRetry',
+  'coarseStateNearTieRetentionRetry', 'admissibleOrderNonDefaultRetry', 'connectivityAxisExhaustedRetry',
   'mcNeighborBudgetRetry', 'repairElitePrefixDfsRetry', 'repairLateProbe',
 ]);
 
@@ -249,8 +249,11 @@ test('provenanceFromSolveResult maps an goal-attraction-disabled-retry winner on
 // force-enabled last-resort passes carried the exact same provenance shape as an ordinary
 // main-ladder/repair-fallback win, with no way to tell them apart from the stored hint alone.
 test('deriveSolveAttemptInfo records which force-enabled retry tier won, distinct from an ordinary win', () => {
-  const dedupRetry = deriveSolveAttemptInfo([{ profile: 'objectiveFirst', beamWidth: 5000, dedupNearTieRetry: true, ok: true }]);
-  assert.equal(dedupRetry.retryTier, 'coarse-state-near-tie-retention-disabled-retry');
+  const canonicalRetry = deriveSolveAttemptInfo([{ scoringProfileId: 'objectiveFirst', beamWidth: 5000, coarseStateNearTieRetentionRetry: true, ok: true }]);
+  assert.equal(canonicalRetry.retryTier, 'coarse-state-near-tie-retention-disabled-retry');
+
+  const legacyRetry = deriveSolveAttemptInfo([{ profile: 'objectiveFirst', beamWidth: 5000, dedupNearTieRetry: true, ok: true }]);
+  assert.equal(legacyRetry.retryTier, 'coarse-state-near-tie-retention-disabled-retry', 'historical attempt field remains readable');
 
   const admissibleRetry = deriveSolveAttemptInfo([{ profile: 'none', admissibleOrder: true, admissibleOrderNonDefaultRetry: true, ok: true }]);
   assert.equal(admissibleRetry.retryTier, 'admissible-order-alternate-tiebreak-retry');
