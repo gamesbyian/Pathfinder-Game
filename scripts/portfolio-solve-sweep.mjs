@@ -512,7 +512,7 @@ let fallbackOnlyCount = 0;
 let unsolvedCount = 0;
 let primeHitCount = 0;
 let processedForConsole = 0;
-const passCounts = { pass1: 0, pass2: 0, pass3: 0, conditional: 0, fallback: 0, legacy: 0, unsolved: 0 };
+const passCounts = { pass1: 0, pass2: 0, pass3: 0, conditional: 0, fallback: 0, production: 0, unsolved: 0 };
 
 function recordRow(row, { fromCheckpointOrCache = false } = {}) {
     levelRows.set(row.level, row);
@@ -658,7 +658,7 @@ function writeReport() {
         `- Pass 3: ${passCounts.pass3}`,
         `- Conditional: ${passCounts.conditional}`,
         `- Fallback (portfolio mode's embedded legacy-equivalent phase): ${passCounts.fallback}`,
-        `- Legacy (plain legacy-mode solve): ${passCounts.legacy}`,
+        `- Production (plain production solve): ${passCounts.production}`,
         `- Unsolved: ${passCounts.unsolved}`,
         '',
         '## Portfolio-tier finds (solvedBeforeFallback)',
