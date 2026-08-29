@@ -47,7 +47,7 @@ Technique/config names do not by themselves imply distinct search behavior. See 
   - otherwise perimeter/objective beams first; long multi-gate (`reqLen >= 90 && gates >= 2`) gets budget floors; DFS prefers objectives when `mustPass >= 3`, CCW when `reqInt <= 4 && mustPass = 0`.
 - **multi-portal:** `portalFirstTransfer`, `portalCommitted`, then structural ordering biases.
 - **must-cross-heavy:**
-  - `mustPass >= 3 && flippers >= 2`: diverse `intersectionHarvest` beam 5000, then DFS; 15000/50000 tiers were removed after zero-yield natural exhaustion.
+  - `mustPass >= 3 && flippers >= 2`: mechanic-bucket-retaining `intersectionHarvest` beam 5000, then DFS; 15000/50000 tiers were removed after zero-yield natural exhaustion.
   - `mustPass >= 3`: objective/must-cross beams first.
   - `mustCross >= 3 && mustPass >= 2`: beam first.
   - otherwise cornerHarvest/perimeterCW DFS, beams, DFS profiles.

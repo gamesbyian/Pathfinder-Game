@@ -512,7 +512,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // Coarse state merge: safe when there are no portals (portals aren't captured in sc).
     // Ablation: STRATEGY_COARSE_STATE_MERGE can disable this optimisation independently.
     const useCoarseStateMerge = level.portalMap.size === 0 && (!cfg || cfg.STRATEGY_COARSE_STATE_MERGE);
-    // Ablation: STRATEGY_MECHANIC_BUCKET_RETENTION can disable diverse selection even when the config requests it.
+    // Ablation: STRATEGY_MECHANIC_BUCKET_RETENTION can disable mechanic-bucket retention even when the config requests it.
     const effectiveMechanicBucketRetention = mechanicBucketRetention && (!cfg || cfg.STRATEGY_MECHANIC_BUCKET_RETENTION);
     // Fast numeric coarse-state-merge/mechanic-bucket-retention keys, computed once per call (not per candidate/phase) from
     // this level's OWN mechanic cardinalities — never a fixed-width assumption, which is exactly
@@ -885,7 +885,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             const retained = research && effectiveMechanicBucketRetention ? new Set(frontier) : null;
             const actuallyCulled = research && pool.length > beamWidth
                 ? (retained ? pool.filter(c => !retained.has(c)) : pool.slice(beamWidth)) : null;
-            if (actuallyCulled) emit(effectiveMechanicBucketRetention ? 'diversity-culled' : 'score-width-culled', actuallyCulled, {
+            if (actuallyCulled) emit(effectiveMechanicBucketRetention ? 'mechanic-bucket-culled' : 'score-width-culled', actuallyCulled, {
                 beamWidth, cutoffScore: pool[beamWidth - 1]?.score ?? null,
                 firstCulledScore: pool[beamWidth]?.score ?? null,
                 equalScoreAtCutoff: pool.filter(c => c.score === pool[beamWidth - 1]?.score).length,
@@ -897,7 +897,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 culled: actuallyCulled.map(c => ({ path: [..._reconstructBeamPath(c, [])], rank: pool.indexOf(c) + 1,
                     score: c.score, scoreMarginToCutoff: (pool[beamWidth - 1]?.score ?? c.score) - c.score })),
             });
-            if (research) emit(effectiveMechanicBucketRetention ? 'post-diversity-selection' : 'post-score-width-cull', frontier);
+            if (research) emit(effectiveMechanicBucketRetention ? 'post-mechanic-bucket-selection' : 'post-score-width-cull', frontier);
         } else {
             frontier = cands;
             if (research) {

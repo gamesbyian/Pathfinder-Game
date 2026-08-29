@@ -38,7 +38,7 @@ A profile name is therefore not a research claim. `harvestThenFinish`, `portalFi
 
 ## What current evidence says
 
-The census gives outcome overlap and shows substantial redundancy among some DFS/admissible configurations, plus important non-monotonicity such as width/diversity inversions and `admissible-order|tieBreak=none|lds=off` exclusives.
+The census gives outcome overlap and shows substantial redundancy among some DFS/admissible configurations, plus important non-monotonicity such as width/mechanic-bucket-retention inversions and `admissible-order|tieBreak=none|lds=off` exclusives.
 
 The bounded operational-similarity substrate is implemented through `scripts/technique-operational-similarity.mjs`, ordering observers in `method-probe.mjs`, bounded beam traces, and the paired deterministic DFS/admissible runner `scripts/paired-deterministic-trace.mjs`. Initial work found:
 
@@ -49,7 +49,7 @@ The bounded operational-similarity substrate is implemented through `scripts/tec
 
 The August 23 pilot record is preserved in [`../reports/2026-08-23-operational-similarity-substrate.md`](../reports/2026-08-23-operational-similarity-substrate.md). Its former open-ended next gates are superseded by the current decision-driven policy.
 
-The paired-trace continuation also produced an important evidence-pipeline correction: eight rows formerly described as predecessor-conditioned admissible-order wins were actually later mechanic-bucket-retention beam retry wins misattributed by a stale lifecycle reducer, and the isolated census comparison did not contain the exact winning diverse-beam + retry-override cells. The former cross-stage admissible P0 is therefore retired; see [`../reports/2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md`](../reports/2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md).
+The paired-trace continuation also produced an important evidence-pipeline correction: eight rows formerly described as predecessor-conditioned admissible-order wins were actually later mechanic-bucket-retention beam retry wins misattributed by a stale lifecycle reducer, and the isolated census comparison did not contain the exact winning mechanic-bucket-retention beam + retry-override cells. The former cross-stage admissible P0 is therefore retired; see [`../reports/2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md`](../reports/2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md).
 
 These findings came from bounded selected cohorts and forensic reconstruction. They are evidence about those operational/causal questions, not population prevalence estimates.
 

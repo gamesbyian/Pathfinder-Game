@@ -105,13 +105,13 @@ export class WinningLineageObserver implements BeamResearchObserver {
     summary(reqLen: number): Record<string, unknown> {
         // Removal-event records describe what left a population, not the surviving population.
         // Only boundary snapshots participate in extinction accounting.
-        const boundaries = this.stages.filter(s => !['generated', 'hard-pruned', 'dedup-removed', 'score-width-culled', 'diversity-culled'].includes(s.stage));
+        const boundaries = this.stages.filter(s => !['generated', 'hard-pruned', 'coarse-state-merge-removed', 'score-width-culled', 'mechanic-bucket-culled'].includes(s.stage));
         const supported = boundaries.filter(s => s.supportedCandidates > 0);
         const losses = boundaries.filter((s, i) => i > 0 && boundaries[i - 1].supportedCandidates > 0 && s.supportedCandidates === 0)
             .map(loss => {
                 const lossIndex = this.stages.indexOf(loss);
                 const removal = this.stages.slice(0, lossIndex).reverse().find(s => s.depth === loss.depth &&
-                    s.supportedCandidates > 0 && ['hard-pruned', 'dedup-removed', 'score-width-culled', 'diversity-culled'].includes(s.stage));
+                    s.supportedCandidates > 0 && ['hard-pruned', 'coarse-state-merge-removed', 'score-width-culled', 'mechanic-bucket-culled'].includes(s.stage));
                 return { ...loss, lossCause: removal?.stage ?? (loss.stage === 'incoming-frontier' ? 'not-generated' : loss.stage) };
             });
         const last = supported.at(-1) ?? null;
