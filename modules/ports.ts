@@ -37,9 +37,9 @@ export interface SolveResult {
     workBudget?: number;
     deadlineTruncated?: boolean;
     solvedByPrime?: boolean;
-    techniqueLifecycle?: Record<string, unknown>;
-    schedulerMode?: 'legacy' | 'portfolio-experiment';
-    portfolio?: {
+    stageLifecycle?: Record<string, unknown>;
+    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment';
+    legacyLatencyPortfolioExperiment?: {
         solvedBeforeFallback: boolean;
         fallbackAttemptCount: number;
         repeatedAttemptElapsedMs: number;
