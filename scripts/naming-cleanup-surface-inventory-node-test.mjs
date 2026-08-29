@@ -29,9 +29,11 @@ assert.ok(hintValidator, 'Phase-8 inventory should map hint-path-oracle.mjs');
 assert.ok(hintValidator.packageAliases.includes('test:hint-path-oracle'));
 assert.equal(
   hintValidator.coverageStatus,
-  'uncovered-by-known-ci',
-  'test:hint-path-oracle is surfaced but is not currently reachable from the PR CI command graph',
+  'ci-test-reference',
+  'hint-path-oracle should be distinguished from direct package-command execution',
 );
+assert.equal(hintValidator.ciDirectAliases.length, 0);
+assert.ok(hintValidator.ciTestReferences.length > 0);
 
 const restartComparison = inventory.scripts.find(
   row => row.file === 'scripts/stress/restart-continuation-population-pilot.mjs',
