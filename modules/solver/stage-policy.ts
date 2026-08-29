@@ -51,7 +51,7 @@ const rows = [
     ['goal-attraction-disabled-retry', 40, 'production-default', 'retry', 'candidate flag active and extra passes enabled', 'configured-main', 'withheld-node-reserve', 'goal-attraction-disabled-retry'],
     ['repair-shrink-recovery', 50, 'opt-in', 'retry', 'a biased probe was shrunk and recovery enabled', 'configured-repair', 'withheld-node-reserve', 'repair-shrink-recovery'],
     ['admissible-order-fallback', 60, 'production-default', 'fallback', 'admissible-order-fallback tier enabled', 'admissible-order-profiles', 'withheld-node-reserve', null],
-    ['coarse-state-near-tie-retention-disabled-retry', 70, 'production-default', 'retry', 'dedup retry flag and budget enabled', 'configured-main', 'additive-node-headroom', 'coarse-state-near-tie-retention-disabled-retry'],
+    ['coarse-state-near-tie-retention-disabled-retry', 70, 'production-default', 'retry', 'coarse-state near-tie retention retry flag and budget enabled', 'configured-main', 'additive-node-headroom', 'coarse-state-near-tie-retention-disabled-retry'],
     ['admissible-order-alternate-tiebreak-retry', 80, 'production-default', 'retry', 'non-default admissible retry enabled', 'admissible-order-profiles', 'additive-node-headroom', 'admissible-order-alternate-tiebreak-retry'],
     ['connectivity-axis-prune-disabled-retry', 90, 'production-default', 'retry', 'connectivity retry enabled', 'configured-main', 'additive-node-headroom', 'connectivity-axis-prune-disabled-retry'],
     ['repair-elite-prefix-dfs-retry', 100, 'opt-in', 'retry', 'elite-prefix repair retry enabled', 'configured-repair', 'additive-node-headroom', 'repair-elite-prefix-dfs-retry'],
@@ -89,13 +89,13 @@ export function createBudgetEnvelope(input: { stageId: SolverStageId; wallMs?: n
     const headroom: BudgetEnvelope['headroom'] = input.headroom ?? { kind: 'none', amount: 0, sourceStageId: null };
     return Object.freeze({ stageId: input.stageId, scope: input.scope ?? 'stage-local', wall: currency(input.wallMs), work: currency(input.workUnits), nodes: currency(input.nodeCeiling), headroom, strictTotalWork: input.strictTotalWork ?? false });
 }
-type LegacyStageTags = { attractionDiversity?: boolean; repairProbe?: boolean; repairProbeShrinkRecovery?: boolean; dedupNearTieRetry?: boolean; admissibleOrderNonDefaultRetry?: boolean; connectivityAxisExhaustedRetry?: boolean; repairElitePrefixDfsRetry?: boolean; mcNeighborBudgetRetry?: boolean; repairLateProbe?: boolean };
+type LegacyStageTags = { attractionDiversity?: boolean; repairProbe?: boolean; repairProbeShrinkRecovery?: boolean; coarseStateNearTieRetentionRetry?: boolean; admissibleOrderNonDefaultRetry?: boolean; connectivityAxisExhaustedRetry?: boolean; repairElitePrefixDfsRetry?: boolean; mcNeighborBudgetRetry?: boolean; repairLateProbe?: boolean };
 export function legacyStageTags(stageId: SolverStageId): LegacyStageTags {
     switch (stageId) {
         case 'early-repair-search': return { repairProbe: true };
         case 'goal-attraction-disabled-retry': return { attractionDiversity: true };
         case 'repair-shrink-recovery': return { repairProbe: true, repairProbeShrinkRecovery: true };
-        case 'coarse-state-near-tie-retention-disabled-retry': return { dedupNearTieRetry: true };
+        case 'coarse-state-near-tie-retention-disabled-retry': return { coarseStateNearTieRetentionRetry: true };
         case 'admissible-order-alternate-tiebreak-retry': return { admissibleOrderNonDefaultRetry: true };
         case 'connectivity-axis-prune-disabled-retry': return { connectivityAxisExhaustedRetry: true };
         case 'repair-elite-prefix-dfs-retry': return { repairElitePrefixDfsRetry: true };

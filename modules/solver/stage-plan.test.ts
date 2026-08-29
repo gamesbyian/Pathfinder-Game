@@ -41,7 +41,7 @@ test('buildSolverStagePlan.eligible agrees with computeStageBudgetPlan.xTierWill
     assert.equal(eligible('repair-fallback'), budgetPlan.repairFallbackTierWillRun);
     assert.equal(eligible('goal-attraction-disabled-retry'), budgetPlan.diversityTierWillRun);
     assert.equal(eligible('admissible-order-fallback'), budgetPlan.admissibleOrderTierWillRun);
-    assert.equal(eligible('coarse-state-near-tie-retention-disabled-retry'), budgetPlan.dedupRetryTierWillRun);
+    assert.equal(eligible('coarse-state-near-tie-retention-disabled-retry'), budgetPlan.coarseStateNearTieRetentionRetryTierWillRun);
     assert.equal(eligible('admissible-order-alternate-tiebreak-retry'), budgetPlan.nonDefaultRetryTierWillRun);
     assert.equal(eligible('connectivity-axis-prune-disabled-retry'), budgetPlan.connectivityRetryTierWillRun);
     assert.equal(eligible('repair-elite-prefix-dfs-retry'), budgetPlan.repairElitePrefixDfsRetryTierWillRun);

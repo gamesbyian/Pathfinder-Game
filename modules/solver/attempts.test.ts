@@ -429,7 +429,7 @@ test('must-cross-threaded medium-high-int levels get floored diverse wide beams'
   const attempts = getAttemptConfigs(level);
   const diverse = attempts.filter(c => c.mechanicBucketRetention);
   assert.equal(diverse.length >= 2, true, 'expected diverse beam attempts');
-  assert.equal(diverse.some(c => c.scoringProfileId === 'intersectionHarvest' && (c.minBudgetFraction ?? 0) > 0), true,
+  assert.equal(retained.some(c => c.scoringProfileId === 'intersectionHarvest' && (c.minBudgetFraction ?? 0) > 0), true,
     'diverse intersectionHarvest beam needs a budget floor to survive ladder fragmentation');
   const perimeterIdx = attempts.findIndex(c => c.beamWidth && c.orderingBias?.id === 'perimeterCW');
   const diverseIdx = attempts.findIndex(c => c.mechanicBucketRetention);

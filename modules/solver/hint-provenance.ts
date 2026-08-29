@@ -13,6 +13,7 @@ type AttemptLike = Omit<Partial<Attempt>, 'stageId'> & {
     profile?: string;
     template?: string | null;
     diverseBeam?: boolean;
+    dedupNearTieRetry?: boolean;
 };
 
 interface SolveResultLike {

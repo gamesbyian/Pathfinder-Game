@@ -6,7 +6,7 @@ import { test } from 'vitest';
 // modules/solver/lower-bounds.test.ts's identical gate for the full rationale).
 const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
@@ -671,7 +671,7 @@ test('goal-attraction-disabled-retry pass reruns the main ladder once more after
     // repairLateProbeNodeBudgetOverride: 0 similarly isolates this pass from the default-on
     // late-repair-search tier, which targets the same repair-ineligible fixture and would otherwise
     // spend its own flat 2,000,000-node reserve on top of the tiny budget this test measures.
-    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, dedupNearTieRetryBudgetFractionOverride: 0, admissibleOrderNonDefaultRetryBudgetFractionOverride: 0, connectivityAxisExhaustedRetryBudgetFractionOverride: 0, mcNeighborBudgetRetryBudgetFractionOverride: 0, repairLateProbeNodeBudgetOverride: 0, ablation: { STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false } });
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, coarseStateNearTieRetentionRetryBudgetFractionOverride: 0, admissibleOrderNonDefaultRetryBudgetFractionOverride: 0, connectivityAxisExhaustedRetryBudgetFractionOverride: 0, mcNeighborBudgetRetryBudgetFractionOverride: 0, repairLateProbeNodeBudgetOverride: 0, ablation: { STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false } });
     assert.equal(result.ok, false);
     const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
     const mainLoopAttempts = result.attempts.filter(a => a.attractionDiversity !== true);
@@ -792,7 +792,7 @@ test('a nodeBudget with room left after the main loop lets the diversity pass st
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         nodeBudget: 400, // > 288 (main loop alone) -- clears the pass's entry gate
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -856,7 +856,7 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
         timeBudgetMs: 1000,
         nodeBudget: 400,
         admissibleOrderNodeReserveFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -866,7 +866,7 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
     const on = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         nodeBudget: 400,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -1139,7 +1139,7 @@ test('repair-fallback reserve is inert by default (cfg=null) even with a finite 
         ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -1161,7 +1161,7 @@ test('repair-fallback reserve gives the fallback loop room without touching the 
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
         admissibleOrderBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -1207,7 +1207,7 @@ function isolateRepairFallbackOpts(overrides: Record<string, unknown> = {}) {
         nodeBudget: 1000,
         admissibleOrderBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -1261,7 +1261,7 @@ test('repair-fallback reserve is a no-op when mainLoopLateReserve is 0 (accepted
         ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_MAIN_LOOP_LATE_RESERVE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -1286,7 +1286,7 @@ test('goal-attraction-disabled-retry reserve is inert by default (cfg=null) even
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
         ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -1312,7 +1312,7 @@ test('goal-attraction-disabled-retry reserve gives the diversity pass room witho
     const opts = {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
         admissibleOrderBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -1372,7 +1372,7 @@ test('goal-attraction-disabled-retry reserve is a no-op when repairFallbackNodeR
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
         ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -1408,7 +1408,7 @@ test('admissible-order-fallback profile reserve is inert by default (cfg=null) e
         ablation: { STRATEGY_REPAIR_PROBE: false },
         repairBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         mainLoopLateReserveFractionOverride: 0,
         admissibleOrderNodeReserveFractionOverride: 0.4,
@@ -1429,7 +1429,7 @@ test('admissible-order-fallback profile reserve gives non-default profiles room 
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
         repairBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -1477,7 +1477,7 @@ test('admissible-order-fallback profile reserve is a no-op when admissibleOrderN
         ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         repairBudgetFractionOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -1741,7 +1741,7 @@ test('the ordinary repair fallback loop gets fresh work room, not a stale cap le
 
 test('lifecycle telemetry classifies newer retry tiers as their own technique, not main-ladder/repair-fallback/admissible-order-fallback (regression, fixed 2026-08-20)', async () => {
     // Before the fix, `classify()` only knew 5 categories (early-repair-search/repair-fallback/attraction-
-    // diversity/admissible-order-fallback/main-ladder) -- every retry tier added since (dedup-near-tie,
+    // diversity/admissible-order-fallback/main-ladder) -- every retry tier added since (coarse-state-near-tie-retention,
     // connectivity-axis-exhausted, repair-elite-prefix-dfs, mc-neighbor-budget, late-repair-search,
     // admissible-order-fallback-non-default) silently fell into whichever of those 5 buckets its OWN base
     // config type happened to match (must-cross-neighbor-prune-disabled-retry reruns mainConfigs -> 'main-ladder';
@@ -1777,7 +1777,7 @@ test('lifecycle telemetry classifies newer retry tiers as their own technique, n
     // and attempt.admissibleOrder are both unset -- exactly what the old classify()'s final
     // fallback branch matched).
     const mainLadderAttempts = result.attempts.filter(a => !a.repair && !a.admissibleOrder && !a.attractionDiversity
-        && !a.mcNeighborBudgetRetry && !a.connectivityAxisExhaustedRetry && !a.dedupNearTieRetry);
+        && !a.mcNeighborBudgetRetry && !a.connectivityAxisExhaustedRetry && !a.coarseStateNearTieRetentionRetry);
     assert.equal(lifecycle['main-ladder'].attempts, mainLadderAttempts.length,
         'main-ladder must not absorb attempts that belong to a newer retry tier');
 });
@@ -2049,13 +2049,13 @@ test('shrink recovery is inert when the shrink mechanism itself is disabled', as
     assert.equal(result.attempts.some(a => a.repairProbeShrinkRecovery), false);
 });
 
-// ── STRATEGY_DEDUP_NEAR_TIE_RETRY ─────────────────────────────────────────────
+// ── STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY ─────────────────────────────────────────────
 //
-// PROMOTED to default-ON (2026-08-15, same day as built — see DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's
+// PROMOTED to default-ON (2026-08-15, same day as built — see COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION's
 // own comment in orchestration.ts for the full-corpus A/B population-validation history behind the
 // promotion). Reuses the same infeasible-level pattern goal-attraction-disabled-retry's own tests already
 // establish: this level's every attempt is pruned near-instantly by distance/parity regardless of
-// search strategy or STRATEGY_DEDUP_NEAR_TIE_RETENTION, so the inertness/suppression tests below
+// search strategy or STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION, so the inertness/suppression tests below
 // don't depend on the mechanism's own real rescue behavior.
 
 test('coarse-state-near-tie-retention-disabled-retry pass reruns the main ladder once more after main loop and repair fallback fail', async () => {
@@ -2064,7 +2064,7 @@ test('coarse-state-near-tie-retention-disabled-retry pass reruns the main ladder
     // otherwise inflate "mainLoopAttempts" below (their attempts carry none of these three markers).
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
-        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
@@ -2073,8 +2073,8 @@ test('coarse-state-near-tie-retention-disabled-retry pass reruns the main ladder
         repairLateProbeNodeBudgetOverride: 0,
     });
     assert.equal(result.ok, false);
-    const retryAttempts = result.attempts.filter(a => a.dedupNearTieRetry === true);
-    const mainLoopAttempts = result.attempts.filter(a => a.dedupNearTieRetry !== true);
+    const retryAttempts = result.attempts.filter(a => a.coarseStateNearTieRetentionRetry === true);
+    const mainLoopAttempts = result.attempts.filter(a => a.coarseStateNearTieRetentionRetry !== true);
     assert.ok(retryAttempts.length > 0, 'expected at least one coarse-state-near-tie-retention-disabled-retry attempt');
     // The pass reruns the exact same mainConfigs ladder, so (this level being pruned near-instantly
     // regardless of budget, meaning neither run gets cut off partway through) it should run through
@@ -2090,7 +2090,7 @@ test('coarse-state-near-tie-retention-disabled-retry pass is ACTIVE by default (
         admissibleOrderBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
-    assert.ok(result.attempts.some(a => a.dedupNearTieRetry === true), 'expected the promoted default-ON tier to run with cfg=null');
+    assert.ok(result.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), 'expected the promoted default-ON tier to run with cfg=null');
 });
 
 test('disableExtraBudgetPasses: true suppresses the promoted default-ON pass even with cfg=null (the two interactive solve UIs\' real production combination)', async () => {
@@ -2098,17 +2098,17 @@ test('disableExtraBudgetPasses: true suppresses the promoted default-ON pass eve
         timeBudgetMs: 1000,
         disableExtraBudgetPasses: true,
     });
-    assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false);
+    assert.equal(result.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), false);
 });
 
-test('coarse-state-near-tie-retention-disabled-retry pass stays off under an explicit { STRATEGY_DEDUP_NEAR_TIE_RETRY: false }', async () => {
+test('coarse-state-near-tie-retention-disabled-retry pass stays off under the legacy retry alias set false', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
         ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: false },
     });
     assert.equal(result.ok, false);
-    assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false);
+    assert.equal(result.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), false);
 });
 
 
@@ -2119,13 +2119,13 @@ test('coarse-state-near-tie-retention-disabled-retry pass also stays off under t
         ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: false },
     });
     assert.equal(result.ok, false);
-    assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false,
+    assert.equal(result.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), false,
         'legacy and canonical spellings must normalize to identical runtime behavior');
 });
 
 test('a sparse unrelated ablation object leaves the promoted default-ON pass active (the normalizeAblationConfig sparse-default fix this promotion now depends on)', async () => {
     // Since promotion, this flag is unset-means-true (the standard `!cfg || cfg.FLAG` convention),
-    // so a sparse config that only touches a DIFFERENT flag (STRATEGY_DEDUP_NEAR_TIE_RETENTION here)
+    // so a sparse config that only touches a DIFFERENT flag (STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION here)
     // must still leave THIS one active — the opposite assertion from the pre-promotion opt-in test
     // this replaces, and exactly the normalizeAblationConfig sparse-default behavior CLAUDE.md's own
     // gotcha describes (an under-registered opt-in flag silently defaulting to true; here the flag is
@@ -2133,40 +2133,40 @@ test('a sparse unrelated ablation object leaves the promoted default-ON pass act
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
-        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
+        ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION: false },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
-    assert.ok(result.attempts.some(a => a.dedupNearTieRetry === true), 'expected the promoted tier to still run: only an unrelated flag was set');
+    assert.ok(result.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), 'expected the promoted tier to still run: only an unrelated flag was set');
 });
 
-test('dedupNearTieRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
+test('coarseStateNearTieRetentionRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
-        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true },
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: true },
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
     });
-    assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false);
+    assert.equal(result.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), false);
 });
 
 test('disableExtraBudgetPasses: true suppresses the pass even with the flag on, but an explicit override still wins', async () => {
     const suppressed = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
-        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true },
+        ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: true },
         disableExtraBudgetPasses: true,
     });
-    assert.equal(suppressed.attempts.some(a => a.dedupNearTieRetry === true), false);
+    assert.equal(suppressed.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), false);
 
     const overridden = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
-        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true },
+        ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: true },
         disableExtraBudgetPasses: true,
-        dedupNearTieRetryBudgetFractionOverride: DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION,
     });
-    assert.ok(overridden.attempts.some(a => a.dedupNearTieRetry === true));
+    assert.ok(overridden.attempts.some(a => a.coarseStateNearTieRetentionRetry === true));
 });
 
 test('coarse-state-near-tie-retention-disabled-retry pass can solve a level the main loop misses, and disables retention while it runs', async () => {
@@ -2181,13 +2181,13 @@ test('coarse-state-near-tie-retention-disabled-retry pass can solve a level the 
     }) as typeof runAttemptSearch;
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
-        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true },
+        ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: true },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
         attemptSearchForTesting: dispatch,
     });
     assert.equal(result.ok, true, 'the retention-off retry wins');
-    assert.equal(result.attempts.at(-1)?.dedupNearTieRetry, true);
+    assert.equal(result.attempts.at(-1)?.coarseStateNearTieRetentionRetry, true);
 });
 
 // 2026-08-28: coarse-state-near-tie-retention-disabled-retry was the first tier migrated off queue #2 step 3's ms-derived
@@ -2200,7 +2200,7 @@ test('coarse-state-near-tie-retention-disabled-retry pass can solve a level the 
 function isolateDedupNearTieRetryOpts(overrides = {}) {
     return {
         attemptBudgetTelemetry: true,
-        ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
@@ -2217,7 +2217,7 @@ test('coarse-state-near-tie-retention-disabled-retry work dose no longer resizes
     const shortDeadline = await run(1000);
     const longDeadline = await run(600_000);
     const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
-        .filter(a => a.dedupNearTieRetry === true)
+        .filter(a => a.coarseStateNearTieRetentionRetry === true)
         .map(a => a.allocatedWorkCeiling);
     const shortDose = dose(shortDeadline);
     assert.ok(shortDose.length > 0, 'expected at least one coarse-state-near-tie-retention-disabled-retry attempt');
@@ -2231,7 +2231,7 @@ test('coarse-state-near-tie-retention-disabled-retry now honors an explicit base
     const small = await solveWith(200_000);
     const large = await solveWith(20_000_000);
     const ceiling = (result: Awaited<ReturnType<typeof solveLevel>>) =>
-        result.attempts.find(a => a.dedupNearTieRetry === true)?.allocatedWorkCeiling ?? null;
+        result.attempts.find(a => a.coarseStateNearTieRetentionRetry === true)?.allocatedWorkCeiling ?? null;
     const smallCeiling = ceiling(small);
     const largeCeiling = ceiling(large);
     assert.ok(smallCeiling != null && largeCeiling != null, 'expected a coarse-state-near-tie-retention-disabled-retry attempt in both runs');
@@ -2250,7 +2250,7 @@ test('coarse-state-near-tie-retention-disabled-retry now honors an explicit base
 test('admissible-order-alternate-tiebreak-retry pass can solve a level the admissible-order-fallback tier\'s own pass misses, and never retries \'default\'', async () => {
     // Mock: only a non-'default' admissible-order-fallback profile ever solves. admissibleOrderBudgetFractionOverride: 0
     // suppresses the admissible-order-fallback tier's OWN pass entirely (so 'default'/'none' never get tried
-    // there), isolating this tier's own contribution — same isolation shape as the dedup-retry suite's
+    // there), isolating this tier's own contribution — same isolation shape as the coarse-state-near-tie-retention retry suite's
     // own "can solve a level the main loop misses" test.
     const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
         const [config] = args;
@@ -2261,7 +2261,7 @@ test('admissible-order-alternate-tiebreak-retry pass can solve a level the admis
         timeBudgetMs: 1000,
         ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: true },
         admissibleOrderBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         attemptSearchForTesting: dispatch,
     });
     assert.equal(result.ok, true, 'the non-default retry wins');
@@ -2274,7 +2274,7 @@ test('admissible-order-alternate-tiebreak-retry pass is ACTIVE by default (cfg=n
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
     assert.ok(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), 'expected the promoted default-ON tier to run with cfg=null');
@@ -2307,7 +2307,7 @@ test('a sparse unrelated ablation object leaves the promoted default-ON admissib
         repairLateProbeNodeBudgetOverride: 0,
         ablation: { STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: false },
         attractionDiversityBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
     assert.ok(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), 'expected the promoted tier to still run: only an unrelated flag was set');
@@ -2357,7 +2357,7 @@ function isolateAdmissibleOrderNonDefaultRetryOpts(overrides: Record<string, unk
         ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         repairLateProbeNodeBudgetOverride: 0,
         ...overrides,
     };
@@ -2407,7 +2407,7 @@ test('connectivity-axis-prune-disabled-retry pass reruns the main ladder once mo
         ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         repairLateProbeNodeBudgetOverride: 0,
     });
@@ -2427,7 +2427,7 @@ test('connectivity-axis-prune-disabled-retry pass is ACTIVE by default (cfg=null
         repairLateProbeNodeBudgetOverride: 0,
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
@@ -2464,7 +2464,7 @@ test('a sparse unrelated ablation object leaves the promoted default-ON connecti
         ablation: { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
@@ -2544,7 +2544,7 @@ test('repair-elite-prefix-dfs-retry pass reruns the repair ladder once more afte
         ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -2698,7 +2698,7 @@ test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses,
     // override produces, and exactly what the ordinary repair fallback loop's cfg (unset, so
     // opt-in-default-false) never does.
     //
-    // Isolates every sibling default-on retry tier (attractionDiversity/admissibleOrder/dedupNearTieRetry/
+    // Isolates every sibling default-on retry tier (attractionDiversity/admissibleOrder/coarseStateNearTieRetentionRetry/
     // admissibleOrderNonDefaultRetry/connectivityAxisExhaustedRetry) via budget-fraction overrides.
     // Historically load-bearing: each sibling Proxy used to fall through to a blind `true` for any
     // prop it didn't explicitly name, so an earlier sibling tier's own Proxy would satisfy this
@@ -2717,7 +2717,7 @@ test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses,
         ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
@@ -2729,7 +2729,7 @@ test('repair-elite-prefix-dfs-retry pass can solve a level the main loop misses,
 
 test('retry-tier config Proxies do not leak unrelated opt-in flags to true (regression, fixed 2026-08-20)', async () => {
     // Direct regression coverage for the bug the previous test's comment describes: every retry-tier
-    // Proxy (attractionDiversity/dedupNearTieRetry/connectivityAxisExhaustedRetry/
+    // Proxy (attractionDiversity/coarseStateNearTieRetentionRetry/connectivityAxisExhaustedRetry/
     // repairElitePrefixDfsRetry/mcNeighborBudgetRetry) used to fall through to a blind `true` for any
     // prop it didn't explicitly name — so with the real production default `cfg === null`, ANY
     // unrelated opt-in/default-OFF flag (e.g. PRUNE_PORTAL_PARITY_ENVELOPE) would read `true` for the
@@ -2748,7 +2748,7 @@ test('retry-tier config Proxies do not leak unrelated opt-in flags to true (regr
         ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
         attractionDiversityBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
-        dedupNearTieRetryBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,

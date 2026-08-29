@@ -20,7 +20,7 @@ const PERSISTENT_ATTEMPT_FIELDS = new Set([
     'nodesExpanded', 'timedOut', 'bestBadness', 'finalBadness', 'attractionDiversity',
     'admissibleOrder', 'admissibleOrderNoTieBreak', 'admissibleOrderLds',
     'mainLoopLateReserve', 'repairProbe', 'repairProbeShrinkRecovery',
-    'allocatedWorkCeiling', 'allocatedNodeCeiling', 'workSpent', 'dedupNearTieRetry',
+    'allocatedWorkCeiling', 'allocatedNodeCeiling', 'workSpent', 'coarseStateNearTieRetentionRetry',
     'admissibleOrderNonDefaultRetry', 'connectivityAxisExhaustedRetry',
     'repairElitePrefixDfsRetry', 'mcNeighborBudgetRetry', 'repairLateProbe',
 ]);

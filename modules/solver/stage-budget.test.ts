@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import {
     computeStageBudgetPlan, computeShrinkRecoveryBudget, buildStageBudgetEnvelopes, envelopeNodeCeiling,
-    ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION, DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION,
+    ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION, COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION,
     ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION,
     MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION,
     REPAIR_LATE_PROBE_NODE_BUDGET, MAIN_LOOP_LATE_RESERVE_FRACTION, MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT,
@@ -23,12 +23,12 @@ const baseInput = {
 test('production/interactive shape (Infinity nodeBudget) is a strict no-op: every reserve and ceiling collapses to Infinity', () => {
     const plan = computeStageBudgetPlan({ ...baseInput, nodeBudget: Infinity });
     for (const ceiling of [
-        plan.admissibleOrderNodeReserve, plan.dedupRetryNodeReserve, plan.nonDefaultRetryNodeReserve,
+        plan.admissibleOrderNodeReserve, plan.coarseStateNearTieRetentionRetryNodeReserve, plan.nonDefaultRetryNodeReserve,
         plan.connectivityRetryNodeReserve, plan.repairElitePrefixDfsRetryNodeReserve, plan.mcNeighborBudgetRetryNodeReserve,
         plan.repairFallbackNodeReserve, plan.attractionDiversityNodeReserve,
     ]) assert.equal(ceiling, 0, 'every reserve must be exactly 0 with no finite nodeBudget to withhold from');
     for (const ceiling of [
-        plan.earlyTierNodeBudget, plan.mainLoopEarlyNodeBudget, plan.mainLoopNodeBudget, plan.dedupRetryNodeCeiling,
+        plan.earlyTierNodeBudget, plan.mainLoopEarlyNodeBudget, plan.mainLoopNodeBudget, plan.coarseStateNearTieRetentionRetryNodeCeiling,
         plan.nonDefaultRetryNodeCeiling, plan.connectivityRetryNodeCeiling, plan.repairElitePrefixDfsRetryNodeCeiling,
         plan.mcNeighborBudgetRetryNodeCeiling, plan.repairFallbackNodeCeilingBase, plan.admissibleOrderDefaultProfileCeiling,
     ]) assert.equal(ceiling, Infinity);
@@ -43,12 +43,12 @@ test('offline finite nodeBudget: admissible-order-fallback reserve is withheld f
     // nodeBudget MINUS the admissible-order-fallback tier's own slice.
     assert.equal(plan.admissibleOrderNodeReserve, Math.floor(nodeBudget * ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION));
     assert.equal(plan.earlyTierNodeBudget, nodeBudget - plan.admissibleOrderNodeReserve);
-    // Additive stack: dedup-retry -> admissible-order-alternate-tiebreak-retry -> connectivity-retry ->
+    // Additive stack: coarse-state-near-tie-retention retry -> admissible-order-alternate-tiebreak-retry -> connectivity-retry ->
     // repair-elite-prefix-dfs-retry -> must-cross-neighbor-prune-disabled-retry -> late-repair-search, each stacked
     // on the IMMEDIATELY PRECEDING tier's own ceiling, never on plain nodeBudget directly (except
-    // dedup-retry, the first additive tier, which stacks on nodeBudget itself).
-    assert.equal(plan.dedupRetryNodeReserve, Math.floor(nodeBudget * DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION));
-    assert.equal(plan.dedupRetryNodeCeiling, nodeBudget + plan.dedupRetryNodeReserve);
+    // coarse-state-near-tie-retention retry, the first additive tier, which stacks on nodeBudget itself).
+    assert.equal(plan.coarseStateNearTieRetentionRetryNodeReserve, Math.floor(nodeBudget * COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION));
+    assert.equal(plan.coarseStateNearTieRetentionRetryNodeCeiling, nodeBudget + plan.coarseStateNearTieRetentionRetryNodeReserve);
     assert.equal(plan.nonDefaultRetryNodeReserve, Math.floor(nodeBudget * ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION));
     assert.equal(plan.nonDefaultRetryNodeCeiling, nodeBudget + plan.nonDefaultRetryNodeReserve);
     // Unlike the additive tiers above/below it, connectivity-retry's own RESERVE amount is a
@@ -90,7 +90,7 @@ test('late-repair-search: no-repair-config levels get the flat REPAIR_LATE_PROBE
 test('disableExtraBudgetPasses zeroes every retry-tier budget fraction unless an explicit per-tier override wins', () => {
     const suppressed = computeStageBudgetPlan({ ...baseInput, nodeBudget: Infinity, opts: { disableExtraBudgetPasses: true } });
     for (const fraction of [
-        suppressed.repairBudgetFraction, suppressed.diversityBudgetFraction, suppressed.dedupRetryBudgetFraction,
+        suppressed.repairBudgetFraction, suppressed.diversityBudgetFraction, suppressed.coarseStateNearTieRetentionRetryBudgetFraction,
         suppressed.nonDefaultRetryBudgetFraction, suppressed.connectivityRetryBudgetFraction, suppressed.mcNeighborBudgetRetryBudgetFraction,
         suppressed.admissibleOrderBudgetFraction,
     ]) assert.equal(fraction, 0);
@@ -101,6 +101,29 @@ test('disableExtraBudgetPasses zeroes every retry-tier budget fraction unless an
     });
     assert.equal(overridden.diversityBudgetFraction, 2.5);
     assert.equal(overridden.repairBudgetFraction, 0);
+});
+
+test('legacy near-tie budget override option names normalize to the canonical plan fields', () => {
+    const legacy = computeStageBudgetPlan({
+        ...baseInput,
+        nodeBudget: 50_000_000,
+        opts: {
+            dedupNearTieRetryBudgetFractionOverride: 1.75,
+            dedupNearTieRetryNodeReserveFractionOverride: 0.4,
+        },
+    });
+    const canonical = computeStageBudgetPlan({
+        ...baseInput,
+        nodeBudget: 50_000_000,
+        opts: {
+            coarseStateNearTieRetentionRetryBudgetFractionOverride: 1.75,
+            coarseStateNearTieRetentionRetryNodeReserveFractionOverride: 0.4,
+        },
+    });
+    assert.equal(legacy.coarseStateNearTieRetentionRetryBudgetFraction, canonical.coarseStateNearTieRetentionRetryBudgetFraction);
+    assert.equal(legacy.coarseStateNearTieRetentionRetryNodeReserveFraction, canonical.coarseStateNearTieRetentionRetryNodeReserveFraction);
+    assert.equal(legacy.coarseStateNearTieRetentionRetryNodeReserve, canonical.coarseStateNearTieRetentionRetryNodeReserve);
+    assert.equal(legacy.coarseStateNearTieRetentionRetryNodeCeiling, canonical.coarseStateNearTieRetentionRetryNodeCeiling);
 });
 
 test('repair-shrink-recovery: no-op when nothing was shrunk, and repays the full withheld budget (not just the difference) when it was', () => {
@@ -135,7 +158,7 @@ test('buildStageBudgetEnvelopes projects the exact same node ceilings the plan c
     assert.equal(envelopeNodeCeiling(envelopes['repair-fallback']!), plan.repairFallbackNodeCeilingBase);
     assert.equal(envelopeNodeCeiling(envelopes['goal-attraction-disabled-retry']!), plan.earlyTierNodeBudget);
     assert.equal(envelopeNodeCeiling(envelopes['admissible-order-fallback']!), nodeBudget);
-    assert.equal(envelopeNodeCeiling(envelopes['coarse-state-near-tie-retention-disabled-retry']!), plan.dedupRetryNodeCeiling);
+    assert.equal(envelopeNodeCeiling(envelopes['coarse-state-near-tie-retention-disabled-retry']!), plan.coarseStateNearTieRetentionRetryNodeCeiling);
     assert.equal(envelopeNodeCeiling(envelopes['admissible-order-alternate-tiebreak-retry']!), plan.nonDefaultRetryNodeCeiling);
     assert.equal(envelopeNodeCeiling(envelopes['connectivity-axis-prune-disabled-retry']!), plan.connectivityRetryNodeCeiling);
     assert.equal(envelopeNodeCeiling(envelopes['repair-elite-prefix-dfs-retry']!), plan.repairElitePrefixDfsRetryNodeCeiling);

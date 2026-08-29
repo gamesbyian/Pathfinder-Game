@@ -42,7 +42,7 @@ const approvedLegacyTimeDerivedAllocations = new Set([
     'const repairFallbackTotalBudget = Math.floor(timeBudgetMs * repairBudgetFraction);',
     'totalBudgetMs: Math.floor(timeBudgetMs * diversityBudgetFraction),',
     'const admissibleOrderTotalBudget = Math.floor(timeBudgetMs * admissibleOrderBudgetFraction);',
-    'const dedupRetryTotalBudget = Math.floor(timeBudgetMs * dedupRetryBudgetFraction);',
+    'const coarseStateNearTieRetentionRetryTotalBudget = Math.floor(timeBudgetMs * coarseStateNearTieRetentionRetryBudgetFraction);',
     'const nonDefaultRetryTotalBudget = Math.floor(timeBudgetMs * nonDefaultRetryBudgetFraction);',
     'const connectivityRetryTotalBudget = Math.floor(timeBudgetMs * connectivityRetryBudgetFraction);',
     'const repairElitePrefixDfsRetryTotalBudget = Math.floor(timeBudgetMs * repairElitePrefixDfsRetryBudgetFraction);',
@@ -75,7 +75,7 @@ assert.deepEqual(directMsToWorkLines.filter(line => !approvedDirectMsToWorkSites
 // sites in that set carry. Guard against silently reintroducing the old work-dose pattern for each
 // migrated tier. See reports/2026-08-28-dedup-near-tie-retry-work-dose-migration.md for the full
 // account of what this pattern does and does not preserve.
-const migratedWorkDoseSites = ['dedupRetryTotalBudget', 'repairFallbackTotalBudget', 'nonDefaultRetryTotalBudget'];
+const migratedWorkDoseSites = ['coarseStateNearTieRetentionRetryTotalBudget', 'repairFallbackTotalBudget', 'nonDefaultRetryTotalBudget'];
 for (const site of migratedWorkDoseSites) {
     assert.equal(orchestration.includes(`legacyMsToWork(${site}`), false,
         `${site}'s work dose regressed back to a timeBudgetMs-derived legacyMsToWork conversion`);
