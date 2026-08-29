@@ -205,5 +205,5 @@ test('a baseline win with admissibleOrder: true gets a distinguishing phase, not
     });
     assert.equal(mocked.candidates.length, 1);
     assert.equal(mocked.candidates[0].technique, 'ablation-full:baseline-admissible-order', 'the technique string must reflect the admissible-order-search win, not collapse to the plain baseline label');
-    assert.equal(mocked.candidates[0].scoringProfileId, 'default', 'profile still carries the tie-break profile identity, same as before this fix');
+    assert.equal(mocked.candidates[0].profile, 'default', 'profile still carries the tie-break profile identity, same as before this fix');
 });
