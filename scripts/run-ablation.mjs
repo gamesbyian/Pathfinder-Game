@@ -158,14 +158,14 @@ async function runExperiment(experiment, targetEntries) {
         elapsedTimes.push(elapsed);
         totalNodesExpanded += result?.nodesExpanded ?? 0;
 
-        const solvedBy = ok ? (result.attempts?.find(a => a.ok)?.scoringProfileId ?? 'unknown') : null;
+        const solvedByScoringProfileId = ok ? (result.attempts?.find(a => a.ok)?.scoringProfileId ?? 'unknown') : null;
         const entry = {
             level: levelNumber,
             status: result.status,
             ok,
             elapsedMs: elapsed,
             nodesExpanded: result?.nodesExpanded ?? 0,
-            solvedBy,
+            solvedByScoringProfileId,
         };
         if (!concise) {
             entry.attempts = result.attempts;
