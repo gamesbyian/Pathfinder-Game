@@ -74,14 +74,14 @@ for (const raw of selected) {
     // support this cold search and are deliberately excluded rather than counted as extinct.
     const [gateKey, labels] = [...byGate.entries()].sort((a, b) => b[1].length - a[1].length || a[0] - b[0])[0];
     const offPrep = api.prepLevel(level); offPrep._cfg = null; offPrep._metrics = { nodesExpanded: 0 };
-    const offPath = await api.beamSearchFromGate(gateKey, level, offPrep, api.POLICY_PROFILES.default,
+    const offPath = await api.beamSearchFromGate(gateKey, level, offPrep, api.SCORING_PROFILES.default,
         120000, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
     const observer = new api.WinningLineageObserver(new api.WinningPrefixIndex(labels), {
         retainAllRemovalDetails,
         retainRankedPoolDetails,
     });
     const onPrep = api.prepLevel(level); onPrep._cfg = null; onPrep._metrics = { nodesExpanded: 0 }; onPrep._beamResearchObserver = observer;
-    const onPath = await api.beamSearchFromGate(gateKey, level, onPrep, api.POLICY_PROFILES.default,
+    const onPath = await api.beamSearchFromGate(gateKey, level, onPrep, api.SCORING_PROFILES.default,
         120000, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
     const behaviorIdentical = JSON.stringify(offPath) === JSON.stringify(onPath) && offPrep._metrics.nodesExpanded === onPrep._metrics.nodesExpanded;
     if (!behaviorIdentical) throw new Error(`${raw.id}: observer changed path or nodes`);
