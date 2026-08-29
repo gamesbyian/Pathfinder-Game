@@ -77,7 +77,7 @@ function summarizeRuntime(result, mode) {
         const breakdown = result?.legacyLatencyPortfolioExperiment?.runtimeBreakdown;
         if (breakdown) return breakdown;
         const fallbackSearchMs = sumAttempts(result, a => a?.schedulerPhase === 'fallback');
-        const portfolioAttemptSearchMs = sumAttempts(result, a => a?.schedulerPhase === 'portfolio');
+        const portfolioAttemptSearchMs = sumAttempts(result, a => a?.schedulerPhase === 'legacy-latency-portfolio' || a?.schedulerPhase === 'portfolio');
         return {
             prepMs: null,
             portfolioAttemptSearchMs,
@@ -221,7 +221,7 @@ for (const [i, levelNumber] of targets.entries()) {
     const solvedByFallback = !!portfolio?.ok && !solvedBeforeFallback;
     const legacyWinner = winningAttempt(legacy);
     const portfolioWinner = winningAttempt(portfolio, 'portfolio') ?? winningAttempt(portfolio, 'fallback');
-    const portfolioAttempts = (portfolio.attempts ?? []).filter(a => a?.schedulerPhase === 'portfolio');
+    const portfolioAttempts = (portfolio.attempts ?? []).filter(a => a?.schedulerPhase === 'legacy-latency-portfolio' || a?.schedulerPhase === 'portfolio');
     const repeatedAttempts = portfolioAttempts.filter(a => a?.restart);
     for (const attempt of repeatedAttempts) {
         const config = canonicalAttemptConfigKey(attempt);
