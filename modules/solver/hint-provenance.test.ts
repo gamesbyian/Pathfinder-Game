@@ -37,10 +37,10 @@ test('maximal Attempt has an explicit, complete provenance projection contract',
     status: 'success', attempts: [successfulAttempt], nodesExpanded: 9000, totalMs: 654,
   });
   const destinations: Record<string, unknown> = {
-    scoringProfileId: entry.solver.profile,
-    orderingBiasId: entry.solver.template,
+    scoringProfileId: entry.solver.scoringProfileId,
+    orderingBiasId: entry.solver.orderingBiasId,
     beamWidth: entry.solver.beamWidth,
-    mechanicBucketRetention: entry.solver.diverseBeam,
+    mechanicBucketRetention: entry.solver.mechanicBucketRetention,
     gateKey: entry.solver.gateKey,
     elapsedMs: entry.search.elapsedMs,
     nodesExpanded: entry.search.nodesExpanded,
@@ -171,32 +171,32 @@ test('provenanceFromSolveResult leaves forcing null for a non-repair winner (no 
   assert.equal(entry.solver.forcing, null);
 });
 
-// Regression coverage for the broader provenance-gap sweep (2026-07-23): beamWidth/diverseBeam/
+// Regression coverage for the broader provenance-gap sweep (2026-07-23): beamWidth/mechanicBucketRetention/
 // gateKey/seedSalt/attractionDiversity were all previously invisible in the hint corpus, the same
 // class of gap as the repair-bias fix above — "which internal solver config actually won" data that
 // only existed in raw solver Attempt objects, never in the permanent provenance record.
-test('deriveSolveAttemptInfo captures beamWidth/diverseBeam/gateKey for a beam winner', () => {
+test('deriveSolveAttemptInfo captures beamWidth/mechanicBucketRetention/gateKey for a beam winner', () => {
   const info = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', beamWidth: 2000, mechanicBucketRetention: true, gateKey: 655370, ok: true }]);
   assert.equal(info.technique, 'beam');
   assert.equal(info.beamWidth, 2000);
-  assert.equal(info.diverseBeam, true);
+  assert.equal(info.mechanicBucketRetention, true);
   assert.equal(info.gateKey, 655370);
 });
 
-test('deriveSolveAttemptInfo leaves diverseBeam null (not false) for a dfs winner — no beam concept at all', () => {
+test('deriveSolveAttemptInfo leaves mechanicBucketRetention null (not false) for a dfs winner — no beam concept at all', () => {
   const info = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', ok: true, gateKey: 12 }]);
   assert.equal(info.technique, 'dfs');
   assert.equal(info.beamWidth, null);
-  assert.equal(info.diverseBeam, null, 'dfs has no beam-diversity concept — null, not false');
+  assert.equal(info.mechanicBucketRetention, null, 'dfs has no beam-diversity concept — null, not false');
   assert.equal(info.gateKey, 12, 'gateKey is tracked regardless of technique');
 });
 
 test('deriveSolveAttemptInfo labels an admissible-order-fallback winner distinctly, not folded into dfs', () => {
   const info = deriveSolveAttemptInfo([{ profile: 'mustCrossFirst', admissibleOrder: true, ok: true, elapsedMs: 7 }]);
   assert.equal(info.technique, 'admissible-order-fallback', 'previously fell through to "dfs" -- an admissibleOrder winner has no beamWidth/repair flag, so the technique ternary needs its own check for this field or it silently mislabels');
-  assert.equal(info.profile, 'mustCrossFirst', 'profile carries the tie-break profile for this technique');
+  assert.equal(info.scoringProfileId, 'mustCrossFirst', 'scoringProfileId carries the tie-break profile for this technique');
   assert.equal(info.beamWidth, null);
-  assert.equal(info.diverseBeam, null);
+  assert.equal(info.mechanicBucketRetention, null);
 });
 
 test('deriveSolveAttemptInfo records seedSalt as explicit 0 for a repair winner at the default salt (not null)', () => {
@@ -223,14 +223,14 @@ test('deriveSolveAttemptInfo flags attractionDiversity independently of techniqu
   assert.equal(normal.attractionDiversity, false);
 });
 
-test('provenanceFromSolveResult records beamWidth/diverseBeam/gateKey/seedSalt on the entry', () => {
+test('provenanceFromSolveResult records beamWidth/mechanicBucketRetention/gateKey/seedSalt on the entry', () => {
   const result = {
     status: 'success',
     attempts: [{ scoringProfileId: 'perimeterSweep', beamWidth: 2000, mechanicBucketRetention: true, gateKey: 589833, ok: true }],
   };
   const entry = provenanceFromSolveResult(result);
   assert.equal(entry.solver.beamWidth, 2000);
-  assert.equal(entry.solver.diverseBeam, true);
+  assert.equal(entry.solver.mechanicBucketRetention, true);
   assert.equal(entry.solver.gateKey, 589833);
 });
 
