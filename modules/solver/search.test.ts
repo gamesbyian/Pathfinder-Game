@@ -318,14 +318,14 @@ test('beamSearchFromGate honors a finite nodeBudget (caps below solve cost stop 
   assert.equal(slack._metrics!.nodesExpanded, solveNodes, 'a slack cap must not change the node count (production stays byte-identical)');
 });
 
-// Differential test for the fast numeric coarse-state-merge/diversity key (search.ts's beamNumericDedupKey):
+// Differential test for the fast numeric coarse-state-merge/mechanic-bucket key (search.ts's beamNumericCoarseStateKey):
 // exercises must-pass/must-cross/flipper mechanics together (all 7 coarse-state fields nonzero at some
 // point) on an open grid wide enough to blow past a small beamWidth every phase, forcing the
 // coarse-state-merge/near-tie-retention/mechanic-bucket-selection machinery to run repeatedly. Runs the identical search
 // twice -- once through the default numeric path, once forced onto the delimited-string fallback
 // via prep._forceBeamCoarseStateStringKeyForTests -- and asserts byte-identical nodesExpanded and an
 // identical solved path, proving the numeric encoding reproduces the string encoding's coarse-state-merge/
-// mechanic-bucket retention decisions exactly, not just "solves the same level." See beamNumericDedupKey's own
+// mechanic-bucket retention decisions exactly, not just "solves the same level." See beamNumericCoarseStateKey's own
 // comment in search.ts and reports/2026-08-23-beam-dedup-numeric-key-arena.md.
 test('beamSearchFromGate numeric coarse-state key reproduces the string-key fallback exactly (mechanicBucketRetention off)', async () => {
   const level = makeLevel({
