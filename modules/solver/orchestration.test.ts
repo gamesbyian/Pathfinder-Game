@@ -1491,6 +1491,28 @@ test('admissible-order-fallback profile reserve is a no-op when admissibleOrderN
     assert.equal(result.nodesExpanded, 1000, 'the main loop (600) + \'default\' alone (400) spend the entire (undivided) nodeBudget, exactly as if the flag were off');
 });
 
+test('historical scheduler modes remain readable but normalize to canonical behavior', async () => {
+    const production = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000, schedulerMode: 'legacy' });
+    assert.equal(production.ok, true);
+    assert.equal(production.schedulerMode, undefined, 'historical legacy mode reads as canonical production scheduling');
+
+    const historicalPortfolio = await solveLevel(makeLineLevel(), {
+        timeBudgetMs: 1000,
+        schedulerMode: 'portfolio-experiment',
+        portfolioExperiment: {
+            pass1Ms: 500,
+            pass2Ms: 1000,
+            pass3Ms: 2000,
+            pass2Configs: new Set(),
+            pass3Configs: new Set(),
+            conditionalPasses: [],
+        },
+    });
+    assert.equal(historicalPortfolio.ok, true);
+    assert.equal(historicalPortfolio.schedulerMode, 'legacy-latency-portfolio-experiment');
+    assert.equal(historicalPortfolio.attempts.find(attempt => attempt.ok)?.schedulerPhase, 'legacy-latency-portfolio');
+});
+
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {
     const legacy = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000 });
     assert.equal(legacy.schedulerMode, undefined);
