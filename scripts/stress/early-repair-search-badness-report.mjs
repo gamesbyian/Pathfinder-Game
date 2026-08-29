@@ -17,7 +17,7 @@
  * (n=1 for the "biased tier needed its full budget" case).
  *
  * Usage (via run-bundled, because the gate/min-scale constants are imported from orchestration.ts):
- *   node scripts/run-bundled.mjs scripts/stress/early-repair-search-badness-report.mjs -- --in=reports/stress/repair-probe-adaptive-sample-ab.json
+ *   node scripts/run-bundled.mjs scripts/stress/early-repair-search-badness-report.mjs -- --in=reports/stress/early-repair-search-adaptive-sample-ab.json
  *
  * `--gate=<n>` / `--min-scale=<n>` override the imported production constants. Use them ONLY to
  * replay a historical report against the constants that were live when it was produced; the
