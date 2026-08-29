@@ -70,3 +70,20 @@ assert.ok(hintAlias);
 assert.equal(hintAlias.ciCommandReachable, false);
 
 console.log('Naming-cleanup surface inventory classification is stable for representative Phase-8 surfaces.');
+
+
+const rangeRaw = execFileSync(process.execPath, [
+  path.join(root, 'scripts', 'naming-cleanup-surface-inventory.mjs'),
+  '--json',
+  '--phase=8-14',
+], {
+  cwd: root,
+  encoding: 'utf8',
+  maxBuffer: 32 * 1024 * 1024,
+});
+const rangeInventory = JSON.parse(rangeRaw);
+assert.deepEqual(rangeInventory.phaseRange, [8, 14]);
+assert.equal(rangeInventory.ledgerEntries.length, 107);
+assert.ok(rangeInventory.ledgerEntries.every(row => typeof row.reconciliationState === 'string'));
+assert.ok(rangeInventory.ledgerEntries.some(row => row.reconciliationState === 'old-live'));
+console.log('Naming-cleanup Phase 8-14 range reconciliation inventory is available.');
