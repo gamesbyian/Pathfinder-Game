@@ -104,7 +104,9 @@ export function legacyStageTags(stageId: SolverStageId): LegacyStageTags {
         default: return {};
     }
 }
-export function withSolverStage<T extends object>(value: T, stageId: SolverStageId): T & { stageId: SolverStageId } & LegacyStageTags {
+/** Canonical current writer: stage identity is single-written as stageId.
+ * legacyStageTags() remains a compatibility projection for historical records only. */
+export function withSolverStage<T extends object>(value: T, stageId: SolverStageId): T & { stageId: SolverStageId } {
     solverStageSpec(stageId);
-    return { ...value, stageId, ...legacyStageTags(stageId) };
+    return { ...value, stageId };
 }
