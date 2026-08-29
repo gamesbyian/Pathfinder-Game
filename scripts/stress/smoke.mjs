@@ -27,6 +27,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
+import { attemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
 
 const ROOT = process.cwd();
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -66,11 +67,11 @@ for (const entry of pin.levels) {
 
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
     const t0 = Date.now();
-    const result = await Solver.solve(level, { timeBudgetMs: budgetMs });
+    const result = await Solver.solveLevel(level, { timeBudgetMs: budgetMs });
     const elapsed = Date.now() - t0;
     const solvedNow = !!result?.ok;
     const winner = (result.attempts || []).find(a => a.ok);
-    const strategy = winner ? (winner.template ? `${winner.profile}/${winner.template}` : winner.profile) : null;
+    const strategy = winner ? attemptConfigKey(winner) : null;
 
     if (entry.expected === 'solved' && !solvedNow) {
         regressions++;
