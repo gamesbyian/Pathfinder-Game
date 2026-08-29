@@ -65,7 +65,7 @@ test('solveLevelRaced returns a solution that passes the PLAY referee', async ()
   assert.ok(Array.isArray(result.solution) && result.solution.length > 0);
   // The attraction-diversity phase must never engage when phase 1 already solves it — zero cost
   // to an already-solvable level (mirrors orchestration.ts's own `!result.solution` gate).
-  assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
+  assert.equal(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'), false);
 
   const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
   const check = Solver.validateCandidatePath(level, result.solution);
@@ -93,8 +93,8 @@ test('solveLevelRaced runs the attraction-diversity phase after phase 1 exhausts
   const raw = parityPreservingInfeasibleLevel();
   const result = await solveLevelRaced(raw, { timeBudgetMs: 500, poolSize: 2 });
   assert.equal(result.ok, false);
-  const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
-  const phase1Attempts = result.attempts.filter(a => a.attractionDiversity !== true);
+  const diversityAttempts = result.attempts.filter(a => a.stageId === 'goal-attraction-disabled-retry');
+  const phase1Attempts = result.attempts.filter(a => a.stageId !== 'goal-attraction-disabled-retry');
   assert.ok(diversityAttempts.length > 0, 'expected at least one attraction-diversity attempt');
   assert.ok(phase1Attempts.length > 0, 'expected at least one phase-1 attempt');
 }, 20000);
@@ -105,7 +105,7 @@ test('attractionDiversityBudgetFractionOverride: 0 suppresses the raced diversit
     timeBudgetMs: 500, poolSize: 2, attractionDiversityBudgetFractionOverride: 0,
   });
   assert.equal(result.ok, false);
-  assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
+  assert.equal(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'), false);
 }, 20000);
 
 test('a sparse raced ablation override preserves unrelated production-default strategies', async () => {
@@ -115,7 +115,7 @@ test('a sparse raced ablation override preserves unrelated production-default st
     ablation: { PRUNE_PARITY: false },
   });
   assert.equal(result.ok, false);
-  assert.ok(result.attempts.some(a => a.attractionDiversity === true),
+  assert.ok(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'),
     'an unrelated sparse override must not silently disable the default-on diversity phase');
 }, 20000);
 
@@ -126,7 +126,7 @@ test('an undefined raced ablation property does not override its production defa
     ablation: { STRATEGY_ATTRACTION_DIVERSITY: undefined },
   });
   assert.equal(result.ok, false);
-  assert.ok(result.attempts.some(a => a.attractionDiversity === true));
+  assert.ok(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'));
 }, 20000);
 
 test('solveLevelRaced works with poolSize=1 (degenerate single-worker pool)', async () => {
