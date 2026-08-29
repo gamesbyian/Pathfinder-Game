@@ -3607,7 +3607,7 @@
   "phase8Gate": {
     "status": "ready",
     "authority": "docs/naming-cleanup-process-hardening.md",
-    "reason": "Mandatory table-setting hardening is complete against main 5db2769282d690ce7c12bdcd6aebf064ca467476. Phase 8 may begin only after this hardening PR is accepted; this PR itself contains no Phase-8 canonical rename.",
+    "reason": "Mandatory table-setting hardening was completed against main 5db2769282d690ce7c12bdcd6aebf064ca467476 and accepted via PR #1580 (merge commit 02abde6c651a7070e7be10775f75c177b1bdb23b). Phase 8 may begin in a separate implementation PR; the hardening PR itself contained no Phase-8 canonical rename.",
     "requiredBeforeImplementation": [
       "live execution-surface inventory for remaining phases",
       "cheap smoke/contract coverage for relevant unexercised maintained surfaces",
@@ -3645,7 +3645,7 @@
       ],
       "partial": [],
       "remaining": [],
-      "notes": "See docs/naming-cleanup-process-hardening.md Sections 10-12. Gate is ready for a separate Phase-8 implementation PR after this hardening work is accepted.",
+      "notes": "See docs/naming-cleanup-process-hardening.md Sections 10-12. Gate is ready and the hardening work was accepted via PR #1580; Phase 8 must proceed in a separate implementation PR.",
       "reconciledAgainstMain": "5db2769282d690ce7c12bdcd6aebf064ca467476"
     }
   },
