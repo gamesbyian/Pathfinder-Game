@@ -123,23 +123,23 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
     if (type === 'FALSE_GOAL_TRIGGER_SEARCH' || type === 'TRAP') {
         const { level, budgetMs = 30000 } = data;
         try {
-            let pendingSpots = [];
+            let pendingTriggerableCells = [];
             let lastFlush = 0;
             const flush = (progress = null) => {
-                if (pendingSpots.length === 0 && !progress) return;
-                postBack({ type: 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS', id, newTriggerableCells: pendingSpots, ...(progress || {}) });
-                pendingSpots = [];
+                if (pendingTriggerableCells.length === 0 && !progress) return;
+                postBack({ type: 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS', id, newTriggerableCells: pendingTriggerableCells, ...(progress || {}) });
+                pendingTriggerableCells = [];
                 lastFlush = Date.now();
             };
             const result = await findTriggerableFalseGoalCells(level, {
                 timeLimitMs: budgetMs,
-                onTriggerableCell: (k) => pendingSpots.push(k),
+                onTriggerableCell: (k) => pendingTriggerableCells.push(k),
                 onProgress: (p) => flush(p),
                 // The real macrotask hop (not just a microtask) lets queued CANCEL
                 // messages be processed while the search runs.
                 yieldFn: async () => {
                     if (cancelledIds.has(id)) throw new Error('Solver:cancelled');
-                    if (pendingSpots.length > 0 && Date.now() - lastFlush >= 100) flush();
+                    if (pendingTriggerableCells.length > 0 && Date.now() - lastFlush >= 100) flush();
                     await new Promise((r) => setTimeout(r, 0));
                 },
             });
