@@ -343,7 +343,7 @@ const _proc = (globalThis as any).process as { env?: Record<string, string | und
 const _LDS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_LDS_DEBUG === '1');
 // Beam-search cost-breakdown probe (audit/debug-only, env-gated — zero overhead when unset).
 // Measures where beamSearchFromGate wall time actually goes: replaying reconstructed paths
-// vs. generating/pruning/scoring candidates vs. sorting/deduping the candidate pool.
+// vs. generating/pruning/scoring candidates vs. sorting/coarse-state merging the candidate pool.
 const _BEAM_DEBUG = !!(_proc && _proc.env && _proc.env.PF_BEAM_DEBUG === '1');
 // DFS backtrack-depth probe (audit/debug-only, env-gated — zero overhead when unset, same
 // shape as _BEAM_DEBUG/_LDS_DEBUG above). Referenced from dfsFromGate, which is declared
@@ -357,7 +357,7 @@ const _DFS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_DFS_DEBUG === '1');
 
 // 0 = disabled (shipped 2026-08-15 — see reports/2026-08-15-connectivity-axis-exhausted-
 // regression.md for the regression this targets and the validation this margin was picked from):
-// relative score margin (fraction of the winner's score) within which beam state dedup keeps a
+// relative score margin (fraction of the winner's score) within which coarse-state merge retains a
 // collision's runner-up alongside its winner, instead of discarding it outright. Rescues a
 // genuinely-winning-but-locally-lower-scoring lineage from a single close comparison it would
 // otherwise lose. Recovers R02248 (previously unsolved) at +0.3% nodes / +1.8% wall time on the
@@ -365,7 +365,7 @@ const _DFS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_DFS_DEBUG === '1');
 // 20-level mined-regression sample and a 112-level corpus-2 sample. Does NOT recover every known
 // case in the same regression family (R02114, R00592 remain unfixed — see the report's "what this
 // does and does not establish"). 0 must be, and is measured to be, byte-identical in behavior and
-// performance to dedup with no retention widening at all.
+// performance to coarse-state merging with no retention widening at all.
 //
 // CORRECTION (2026-08-15, same day, full-corpus GHA A/B at production 50M node budget): the 112-
 // level sample above was badness-stratified toward HARD levels and completely missed this margin's
@@ -447,16 +447,16 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
 // `1 << flipperCount` — always strictly larger than any real `flipperUsedMask`, so this is an
 // exact, always-collision-free positional encoding, same reasoning as beamNumericCoarseStateKey's own
 // comment). Used to be `(flipperUsedMask << 4) | (mustCrossMask & 0xF)` — a narrower defect than
-// the dedup key's old bug (mustCrossMask's `&0xF` mask sits below flipperUsedMask's shifted
-// range, so it can't corrupt flipperUsedMask's bits the way the old dedup key's fields corrupted
+// the coarse-state key's old bug (mustCrossMask's `&0xF` mask sits below flipperUsedMask's shifted
+// range, so it can't corrupt flipperUsedMask's bits the way the old coarse-state key's fields corrupted
 // each other), but still the same root cause: mustCrossMask silently ALIASES (bits above the 4th
 // discarded, not shifted anywhere) on any level with more than 4 must-cross cells (stress-corpus-2
 // raises the cap to 8) — e.g. mustCrossMask=1 and mustCrossMask=17 (a 5th must-cross cell pending)
 // both truncated to the same bucket. Same class of bug, just feeding a soft diversity heuristic
 // rather than a hard merge/discard decision, so it degraded bucketing precision rather than
-// costing solves outright. Fixed alongside the dedup key, 2026-08-06 — see
+// costing solves outright. Fixed alongside the coarse-state key, 2026-08-06 — see
 // reports/2026-08-06-beam-state-dedup-sound-signature-audit.md. `flipperBase` is always small
-// (well under 2^16 even at stress-corpus-2's raised 8-cell caps), so unlike the dedup key this
+// (well under 2^16 even at stress-corpus-2's raised 8-cell caps), so unlike the coarse-state key this
 // needs no per-level overflow fallback.
 function _mechanicBucketSelect(sorted: BeamNode[], beamWidth: number, flipperBase: number): BeamNode[] {
     const buckets = new Map<number, BeamNode[]>();
@@ -534,7 +534,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     const _intsBase = level.reqInt + 1;
     const _coarseStateKeyProduct = KEY_SPACE * _intsBase * _mpBase * _mcBase * _flipperBase * _surroundBase * _turnBase * _adjBase;
     const _numericCoarseStateKeySafe = Number.isSafeInteger(_coarseStateKeyProduct) && !prep._forceBeamCoarseStateStringKeyForTests;
-    // Numeric dedup key: strict positional (mixed-radix) encoding — every field is strictly
+    // Numeric coarse-state key: strict positional (mixed-radix) encoding — every field is strictly
     // smaller than its own base by construction (masks are `< 2^bitCount`; `ints` is bounded by
     // `evaluatePrunedMove`'s own `state.ints > level.reqInt` reject, so always `<= reqInt`;
     // packed cell keys are always `< KEY_SPACE` for a `<=15x15` grid), so distinct tuples can never
@@ -741,7 +741,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 if (ok) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template, curCtx);
                     // Constraint-state fields snapshotted from ws right after this candidate's move —
-                    // used by beamStateKey (dedup) and beamDiverseKey (_mechanicBucketSelect) below. Stored as
+                    // used by beamStateKey (coarse-state merge) and _mechanicBucketSelect below. Stored as
                     // scalars, not the joined delimited string, because most phases never reach the
                     // coarse-state-merge branch (cands.length <= beamWidth) and building that string per candidate
                     // regardless was pure waste on those phases — see BeamNode's own doc comment.

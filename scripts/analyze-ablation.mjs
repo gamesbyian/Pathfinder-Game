@@ -123,10 +123,6 @@ const ranked = [...deltas].sort((a, b) => b.delta.importanceScore - a.delta.impo
 const singleFeature = ranked.filter(d => d.delta.tags.includes('single-feature')
     && !d.delta.tags.includes('scoring-profile') && !d.delta.tags.includes('profile')
     && !d.delta.tags.includes('ordering-bias') && !d.delta.tags.includes('template'));
-const _scoringProfileRuns = ranked.filter(d => (d.delta.tags.includes('scoring-profile') || d.delta.tags.includes('profile'))
-    && (d.delta.name.startsWith('scoring-profile-off:') || d.delta.name.startsWith('profile-off:')));
-const _orderingBiasRuns = ranked.filter(d => (d.delta.tags.includes('ordering-bias') || d.delta.tags.includes('template'))
-    && (d.delta.name.startsWith('ordering-bias-off:') || d.delta.name.startsWith('template-off:')));
 const orderRuns     = ranked.filter(d => d.delta.tags.includes('order'));
 const pairRuns      = ranked.filter(d => d.delta.tags.includes('pair') || (d.delta.tags.includes('combination')
     && !d.delta.tags.includes('ordering-bias') && !d.delta.tags.includes('template')));
