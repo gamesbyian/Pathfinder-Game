@@ -191,6 +191,8 @@ export interface AttemptTierFlags {
     mcNeighborBudgetRetry?: boolean;
     connectivityAxisExhaustedRetry?: boolean;
     coarseStateNearTieRetentionRetry?: boolean;
+    /** @deprecated Historical attempt telemetry field accepted on read only. */
+    dedupNearTieRetry?: boolean;
     admissibleOrderNonDefaultRetry?: boolean;
     admissibleOrder?: boolean;
     repairProbe?: boolean;
@@ -236,7 +238,7 @@ export function classifyAttemptTier(attempt: AttemptTierFlags): string {
         : attempt.repairElitePrefixDfsRetry ? 'repair-elite-prefix-dfs-retry'
             : attempt.mcNeighborBudgetRetry ? 'must-cross-neighbor-prune-disabled-retry'
                 : attempt.connectivityAxisExhaustedRetry ? 'connectivity-axis-prune-disabled-retry'
-                    : attempt.coarseStateNearTieRetentionRetry ? 'coarse-state-near-tie-retention-disabled-retry'
+                    : (attempt.coarseStateNearTieRetentionRetry || attempt.dedupNearTieRetry) ? 'coarse-state-near-tie-retention-disabled-retry'
                         : attempt.admissibleOrderNonDefaultRetry ? 'admissible-order-alternate-tiebreak-retry'
                             : attempt.admissibleOrder ? 'admissible-order-fallback'
                                 : attempt.repairProbe ? 'early-repair-search'
@@ -342,6 +344,8 @@ export interface SolveOpts {
      *  (production default, and solver-controller.ts/review-controller.ts's interactive call sites)
      *  preserves COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION exactly. */
     coarseStateNearTieRetentionRetryBudgetFractionOverride?: number;
+    /** @deprecated Historical option name accepted on read only. */
+    dedupNearTieRetryBudgetFractionOverride?: number;
     /** Overrides COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION for this solve only — same dedicated
      *  top-level-option shape as admissibleOrderNodeReserveFractionOverride above, but NOT the same
      *  mechanism as of REVISION 2 (see the constant's own comment): this fraction is ADDITIVE headroom
@@ -349,6 +353,8 @@ export interface SolveOpts {
      *  ceiling to plain `nodeBudget` (no extra headroom at all). Undefined (production default)
      *  preserves the constant exactly. */
     coarseStateNearTieRetentionRetryNodeReserveFractionOverride?: number;
+    /** @deprecated Historical option name accepted on read only. */
+    dedupNearTieRetryNodeReserveFractionOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION for this solve only — same
      *  dedicated top-level-option shape as coarseStateNearTieRetentionRetryBudgetFractionOverride above (NOT an
      *  ablation flag). Undefined (production default, and solver-controller.ts/review-controller.ts's
