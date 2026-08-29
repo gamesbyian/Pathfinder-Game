@@ -39,7 +39,7 @@ test('racedAttemptRecord preserves every dispatch-identity flag in every race ph
     gateKey: 7, scoringProfileId: 'none', orderingBiasId: null, beamWidth: null,
     repair: true, repairTurnBiased: true,
     admissibleOrder: true, admissibleOrderNoTieBreak: true, admissibleOrderLds: true,
-    attractionDiversity: true, stageId: 'goal-attraction-disabled-retry',
+    stageId: 'goal-attraction-disabled-retry',
     ok: false, outcome: 'exhausted', elapsedMs: 12, nodesExpanded: 0,
   });
 });
