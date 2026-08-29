@@ -90,7 +90,7 @@ import { withSolverStage } from '../../modules/solver/stage-policy.js';
 // modules/solver/race-stage-parity.test.ts for the shared-stage contract this file and
 // orchestration.ts both honor (same eligible stage IDs, same budget-fraction constants —
 // imported from orchestration.js below, never a second hardcoded copy).
-export const RACE_SUPPORTED_STAGE_IDS = Object.freeze(['main-loop', 'repair-fallback', 'attraction-diversity']);
+export const RACE_SUPPORTED_STAGE_IDS = Object.freeze(['main-search', 'repair-fallback', 'goal-attraction-disabled-retry']);
 
 // process.cwd(), not import.meta.url-relative math: this module is usually loaded as a
 // dependency of some OTHER entry that scripts/run-bundled.mjs esbuild-bundles, which flattens
@@ -150,7 +150,7 @@ export function racedAttemptRecord(job, msg, extra = {}) {
         } } : {}),
         ...(msg.allocatedBudgetMs !== undefined ? { allocatedBudgetMs: msg.allocatedBudgetMs } : {}),
         elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
-    }, extra.stageId ?? (cfg?.repair ? 'repair-fallback' : 'main-loop'));
+    }, extra.stageId ?? (cfg?.repair ? 'repair-fallback' : 'main-search'));
 }
 
 /**
@@ -604,7 +604,7 @@ export function createRacePool(opts = {}) {
                 const onMessage = (msg) => {
                     if (msg?.type !== 'result') return;
                     const job = jobById.get(msg.jobId);
-                    attempts.push(racedAttemptRecord(job, msg, { stageId: 'attraction-diversity' }));
+                    attempts.push(racedAttemptRecord(job, msg, { stageId: 'goal-attraction-disabled-retry' }));
                     slot.busy = false;
                     if (msg.ok && !settled) {
                         finish({ ok: true, status: 'success', solution: msg.path, solutions: [msg.path], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
