@@ -67,7 +67,7 @@ Do not call both routing and search-quality failures “starvation.”
 
 Keep separate:
 
-- **source/config similarity:** shared engine/scorer/weights/template/prunes/context;
+- **source/config similarity:** shared engine/scorer/scoring-profile weights/ordering bias/prunes/context;
 - **outcome similarity:** overlapping solve/fail/work vectors;
 - **operational similarity:** similar encountered choices/frontiers/orderings/retention.
 
