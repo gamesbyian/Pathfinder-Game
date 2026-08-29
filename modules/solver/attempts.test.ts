@@ -172,10 +172,10 @@ test('STRATEGY_ROUTING_REGIME_SELECTION disabled forces the catch-all rule regar
   assert.deepEqual(getAttemptConfigs(level, null), routed);
 });
 
-test('applyAttemptConfigOptions filters disabled templates and profiles', () => {
+test('applyAttemptConfigOptions filters disabled ordering biases and scoring profiles', () => {
   const base = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] }));
   const filtered = applyAttemptConfigOptions(base, {
-    TEMPLATE_CORNER_HARVEST: false,
+    ORDERING_BIAS_CORNER_HARVEST: false,
     PROFILE_default: false,
   });
   assert.equal(filtered.some(c => c.orderingBias?.id === 'cornerHarvest'), false);
@@ -211,7 +211,7 @@ test('applyAttemptConfigOptions supports reverse, random, and profile-grouped or
 
 test('getConfiguredAttemptConfigs combines base ordering with ablation options', () => {
   const level = makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] });
-  const cfg = { TEMPLATE_CORNER_HARVEST: false };
+  const cfg = { ORDERING_BIAS_CORNER_HARVEST: false };
   const configured = getConfiguredAttemptConfigs(level, { ...cfg, ATTEMPT_ORDER: 'reverse' });
   assert.equal(configured.some(c => c.orderingBias?.id === 'cornerHarvest'), false);
   const normalized = { ...defaultConfig(), ...cfg };
