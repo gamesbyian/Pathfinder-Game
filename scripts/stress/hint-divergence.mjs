@@ -2,7 +2,7 @@
 /**
  * Differential diagnosis for a SPECIFIC candidate path against a level's REAL production search,
  * not the generic default baseline. Generalizes witness-divergence.mjs (which replays a stress
- * corpus's hidden witness under `SCORING_PROFILES.default` with no template, for corpus-wide
+ * corpus's hidden witness under `SCORING_PROFILES.default` with no structural ordering bias, for corpus-wide
  * comparability) in two ways this tool needs instead:
  *
  *   1. The target path is any already-known hint on a PUBLISHED level (selected by id, or by
@@ -21,7 +21,7 @@
  *     discrepancy (the R02248 methodology: disable one flag at a time, see which one collapses the
  *     discrepancy). A LARGE, ISOLATED delta on one flag is the signature that justified the
  *     attraction-diversity pass; near-uniform small deltas mean no single term is responsible.
- *   - The same replay under every OTHER profile with NO ordering-bias forcing, to separate "a rigid
+ *   - The same replay under every OTHER scoring profile with NO ordering-bias forcing, to separate "a rigid
  *     ordering bias's own bonus term explains the gap" (expected, not a bug — see SCORE_ORDERING_BIAS_BONUS)
  *     from "free scoring also can't find this shape" (would be the more interesting finding).
  *
@@ -151,7 +151,7 @@ deltas.forEach(d => console.log(`  ${d.flag.padEnd(30)} disabled -> discrepancy=
     `delta=${d.delta >= 0 ? '+' : ''}${d.delta}`));
 
 // --- Untemplated comparison: does free scoring (no structural ordering bias) do any better? ---
-console.log(`\n=== UNTEMPLATED PROFILES (no structural ordering-bias forcing) ===`);
+console.log(`\n=== SCORING PROFILES WITHOUT ORDERING BIAS ===`);
 for (const scoringProfileId of Object.keys(SCORING_PROFILES)) {
     if (scoringProfileId === 'repair') continue; // repair reuses objectiveFirst's weights, not a distinct comparison
     const r = traceRankOnly(null, SCORING_PROFILES[scoringProfileId], null);
