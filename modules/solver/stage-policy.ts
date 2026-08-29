@@ -2,7 +2,7 @@
 export const SOLVER_STAGE_IDS = [
     'explicit-prime', 'early-repair-search', 'main-search', 'repair-fallback', 'goal-attraction-disabled-retry',
     'repair-shrink-recovery', 'admissible-order-fallback', 'coarse-state-near-tie-retention-disabled-retry',
-    'admissible-order-fallback-alternate-tiebreak-retry', 'connectivity-axis-prune-disabled-retry',
+    'admissible-order-alternate-tiebreak-retry', 'connectivity-axis-prune-disabled-retry',
     'repair-elite-prefix-dfs-retry', 'must-cross-neighbor-prune-disabled-retry', 'late-repair-search',
     'guidance-goal-distance-retry', 'late-repair-multiseed-retry',
     'legacy-latency-portfolio-pass', 'legacy-latency-portfolio-fallback',
@@ -31,35 +31,35 @@ export function normalizeSolverStageId(id: string): SolverStageId {
     throw new Error(`Unknown solver stage: ${String(id)}`);
 }
 export type SolverStagePolicyStatus = 'production-default' | 'opt-in' | 'experiment-only';
-export type SolverSchedulerPhase = 'explicit-prime' | 'probe' | 'main' | 'fallback' | 'retry' | 'legacy-latency-portfolio';
-export type StageBudgetPolicyId = 'caller-main' | 'fixed-probe' | 'additive-wall-multiplier' | 'withheld-node-reserve' | 'additive-node-headroom' | 'fixed-node-cap' | 'legacy-latency-portfolio-pass';
+export type SolverSchedulerPhase = 'prime' | 'probe' | 'main' | 'fallback' | 'retry' | 'legacy-latency-portfolio';
+export type StageBudgetPolicyId = 'caller-main' | 'fixed-probe' | 'additive-wall-multiplier' | 'withheld-node-reserve' | 'additive-node-headroom' | 'fixed-node-cap' | 'portfolio-pass';
 export interface SolverStageSpec {
     id: SolverStageId; order: number; disposition: SolverStagePolicyStatus;
     schedulerPhase: SolverSchedulerPhase; eligibility: string;
-    attemptSource: 'configured-main' | 'configured-repair' | 'admissible-order-fallback-profiles' | 'explicit-prime' | 'legacy-latency-portfolio';
+    attemptSource: 'configured-main' | 'configured-repair' | 'admissible-order-profiles' | 'prime' | 'portfolio';
     budgetPolicy: StageBudgetPolicyId; telemetryLabel: SolverStageId; retryIdentity: string | null;
 }
 // Disposition is current policy status, not historical origin. In particular, a retry promoted to
-// production default must say `promoted` here even if its feature began life as an opt-in. Keep this
+// production default must say `production-default` here even if its feature began life as an opt-in. Keep this
 // aligned with ablation-config.ts's OPT_IN_FEATURES/default polarity and the opt-in experiment ledger;
 // schedulers/reports consume this registry as metadata and must not resurrect stale pre-promotion state.
 const rows = [
-    ['explicit-prime', 0, 'experiment-only', 'explicit-prime', 'explicit primeAttempt option', 'explicit-prime', 'fixed-node-cap', null],
+    ['explicit-prime', 0, 'experiment-only', 'prime', 'explicit primeAttempt option', 'prime', 'fixed-node-cap', null],
     ['early-repair-search', 10, 'production-default', 'probe', 'repair configs and repair probe enabled', 'configured-repair', 'fixed-probe', null],
     ['main-search', 20, 'production-default', 'main', 'configured non-repair attempts', 'configured-main', 'caller-main', null],
-    ['repair-fallback', 30, 'production-default', 'fallback', 'configured repair attempts and positive repair fraction', 'configured-repair', 'additive-fraction', null],
+    ['repair-fallback', 30, 'production-default', 'fallback', 'configured repair attempts and positive repair wall multiplier', 'configured-repair', 'additive-wall-multiplier', null],
     ['goal-attraction-disabled-retry', 40, 'production-default', 'retry', 'candidate flag active and extra passes enabled', 'configured-main', 'withheld-node-reserve', 'goal-attraction-disabled-retry'],
     ['repair-shrink-recovery', 50, 'opt-in', 'retry', 'a biased probe was shrunk and recovery enabled', 'configured-repair', 'withheld-node-reserve', 'repair-shrink-recovery'],
-    ['admissible-order-fallback', 60, 'production-default', 'fallback', 'admissible-order-fallback tier enabled', 'admissible-order-fallback-profiles', 'withheld-node-reserve', null],
+    ['admissible-order-fallback', 60, 'production-default', 'fallback', 'admissible-order-fallback tier enabled', 'admissible-order-profiles', 'withheld-node-reserve', null],
     ['coarse-state-near-tie-retention-disabled-retry', 70, 'production-default', 'retry', 'dedup retry flag and budget enabled', 'configured-main', 'additive-node-headroom', 'coarse-state-near-tie-retention-disabled-retry'],
-    ['admissible-order-fallback-alternate-tiebreak-retry', 80, 'production-default', 'retry', 'non-default admissible retry enabled', 'admissible-order-fallback-profiles', 'additive-node-headroom', 'admissible-order-fallback-alternate-tiebreak-retry'],
+    ['admissible-order-alternate-tiebreak-retry', 80, 'production-default', 'retry', 'non-default admissible retry enabled', 'admissible-order-profiles', 'additive-node-headroom', 'admissible-order-alternate-tiebreak-retry'],
     ['connectivity-axis-prune-disabled-retry', 90, 'production-default', 'retry', 'connectivity retry enabled', 'configured-main', 'additive-node-headroom', 'connectivity-axis-prune-disabled-retry'],
     ['repair-elite-prefix-dfs-retry', 100, 'opt-in', 'retry', 'elite-prefix repair retry enabled', 'configured-repair', 'additive-node-headroom', 'repair-elite-prefix-dfs-retry'],
     ['must-cross-neighbor-prune-disabled-retry', 110, 'production-default', 'retry', 'must-cross neighbor retry enabled', 'configured-main', 'additive-node-headroom', 'must-cross-neighbor-prune-disabled-retry'],
     ['late-repair-search', 120, 'production-default', 'retry', 'late repair probe enabled', 'configured-repair', 'fixed-node-cap', 'late-repair-search'],
     ['guidance-goal-distance-retry', 125, 'production-default', 'retry', 'goal-attraction legacy-distance retry enabled', 'configured-main', 'additive-node-headroom', 'guidance-goal-distance-retry'],
     ['late-repair-multiseed-retry', 128, 'production-default', 'retry', 'late-repair-search multi-seed retry enabled and late-repair-search itself eligible', 'configured-repair', 'additive-node-headroom', 'late-repair-multiseed-retry'],
-    ['legacy-latency-portfolio-pass', 20, 'experiment-only', 'legacy-latency-portfolio', 'portfolio pass includes config', 'legacy-latency-portfolio', 'legacy-latency-portfolio-pass', null],
+    ['legacy-latency-portfolio-pass', 20, 'experiment-only', 'legacy-latency-portfolio', 'portfolio pass includes config', 'portfolio', 'portfolio-pass', null],
     ['legacy-latency-portfolio-fallback', 130, 'experiment-only', 'legacy-latency-portfolio', 'portfolio passes did not solve', 'configured-main', 'caller-main', null],
 ] as const;
 export const SOLVER_STAGE_SPECS = Object.freeze(Object.fromEntries(rows.map(([id, order, disposition, schedulerPhase, eligibility, attemptSource, budgetPolicy, retryIdentity]) => [id, Object.freeze({ id, order, disposition, schedulerPhase, eligibility, attemptSource, budgetPolicy, telemetryLabel: id, retryIdentity })])) as unknown as Record<SolverStageId, SolverStageSpec>);
@@ -96,7 +96,7 @@ export function legacyStageTags(stageId: SolverStageId): LegacyStageTags {
         case 'goal-attraction-disabled-retry': return { attractionDiversity: true };
         case 'repair-shrink-recovery': return { repairProbe: true, repairProbeShrinkRecovery: true };
         case 'coarse-state-near-tie-retention-disabled-retry': return { dedupNearTieRetry: true };
-        case 'admissible-order-fallback-alternate-tiebreak-retry': return { admissibleOrderNonDefaultRetry: true };
+        case 'admissible-order-alternate-tiebreak-retry': return { admissibleOrderNonDefaultRetry: true };
         case 'connectivity-axis-prune-disabled-retry': return { connectivityAxisExhaustedRetry: true };
         case 'repair-elite-prefix-dfs-retry': return { repairElitePrefixDfsRetry: true };
         case 'must-cross-neighbor-prune-disabled-retry': return { mcNeighborBudgetRetry: true };
