@@ -154,10 +154,10 @@ async function main() {
                 const prov = disc?.provenance || {};
                 return toHint(hintPath, [makeProvenanceEntry(prov.phase || 'ablation-full', {
                     solverVersion: getCommitSha(),
-                    profile: prov.profile ?? null,
-                    template: prov.template ?? null,
+                    scoringProfileId: prov.scoringProfileId ?? prov.profile ?? null,
+                    orderingBiasId: prov.orderingBiasId ?? prov.template ?? null,
                     beamWidth: prov.beamWidth ?? null,
-                    diverseBeam: prov.diverseBeam ?? null,
+                    mechanicBucketRetention: prov.mechanicBucketRetention ?? prov.diverseBeam ?? null,
                     attemptIndex: prov.attemptIndex ?? null,
                     nodesExpanded: prov.nodesExpanded ?? null,
                     elapsedMs: prov.elapsedMs ?? null,
