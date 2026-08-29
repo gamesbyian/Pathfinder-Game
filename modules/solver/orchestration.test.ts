@@ -1741,7 +1741,7 @@ test('the ordinary repair fallback loop gets fresh work room, not a stale cap le
 
 test('lifecycle telemetry classifies newer retry tiers as their own technique, not main-ladder/repair-fallback/admissible-order-fallback (regression, fixed 2026-08-20)', async () => {
     // Before the fix, `classify()` only knew 5 categories (early-repair-search/repair-fallback/attraction-
-    // diversity/admissible-order-fallback/main-ladder) -- every retry tier added since (dedup-near-tie,
+    // diversity/admissible-order-fallback/main-ladder) -- every retry tier added since (coarse-state-near-tie-retention,
     // connectivity-axis-exhausted, repair-elite-prefix-dfs, mc-neighbor-budget, late-repair-search,
     // admissible-order-fallback-non-default) silently fell into whichever of those 5 buckets its OWN base
     // config type happened to match (must-cross-neighbor-prune-disabled-retry reruns mainConfigs -> 'main-ladder';
@@ -2250,7 +2250,7 @@ test('coarse-state-near-tie-retention-disabled-retry now honors an explicit base
 test('admissible-order-alternate-tiebreak-retry pass can solve a level the admissible-order-fallback tier\'s own pass misses, and never retries \'default\'', async () => {
     // Mock: only a non-'default' admissible-order-fallback profile ever solves. admissibleOrderBudgetFractionOverride: 0
     // suppresses the admissible-order-fallback tier's OWN pass entirely (so 'default'/'none' never get tried
-    // there), isolating this tier's own contribution — same isolation shape as the dedup-retry suite's
+    // there), isolating this tier's own contribution — same isolation shape as the coarse-state-near-tie-retention retry suite's
     // own "can solve a level the main loop misses" test.
     const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
         const [config] = args;
