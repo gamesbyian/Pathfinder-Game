@@ -25,7 +25,7 @@
 #
 # --node-budget IS THE CEILING, AND IT IS NOT OPTIONAL. Measured the hard way on this workflow's
 # first dispatch: `workBudget` bounds each PASS, not the level. The extra-budget passes (repair
-# fallback, attraction-diversity, admissible-order) each get their own allocation on top, so
+# fallback, goal-attraction-disabled-retry, admissible-order) each get their own allocation on top, so
 # corpus-2's R00001 spent 752,011,453 work against a 26,800,000 budget — 28x — and ran for 593
 # SECONDS. `nodeBudget`, by contrast, is cumulative across every attempt (orchestration.ts checks it
 # against the running total), which is what actually caps a level. The first dispatch passed only a

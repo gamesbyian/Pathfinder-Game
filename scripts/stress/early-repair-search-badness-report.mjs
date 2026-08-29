@@ -39,16 +39,18 @@ import {
     EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE,
     EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE,
 } from '../../modules/solver/orchestration.ts';
+import { normalizeSolverStageId } from '../../modules/solver/stage-id-normalization.mjs';
 
-const argMap = new Map();
-for (const arg of process.argv.slice(2)) {
-    const eq = arg.indexOf('=');
-    if (arg.startsWith('--') && eq > 0) argMap.set(arg.slice(0, eq), arg.slice(eq + 1));
+// A historical row may still carry the literal legacy stageId string 'repair-probe' (pre-rename)
+// rather than either the canonical 'early-repair-search' or a null stageId with a legacy boolean
+// flag -- route every stageId through the central normalizer so that case is recognized too,
+// instead of silently falling through neither branch and being dropped.
+export function isEarlyRepairSearchAttempt(a) {
+    if (a.stageId != null) {
+        try { return normalizeSolverStageId(a.stageId) === 'early-repair-search'; } catch { return false; }
+    }
+    return !!(a.earlyRepairSearch ?? a.repairProbe);
 }
-const inArg = argMap.get('--in');
-if (!inArg) { console.error('--in=<report.json>[,<report2.json>] is required'); process.exit(2); }
-const files = inArg.split(',').map(s => s.trim()).filter(Boolean);
-if (files.length > 2) { console.error('--in accepts at most 2 files (a single report, or a matched scaled-vs-unscaled pair).'); process.exit(2); }
 
 function loadRows(file) {
     const parsed = JSON.parse(readFileSync(path.resolve(file), 'utf8'));
@@ -60,9 +62,9 @@ function loadRows(file) {
 // One row's early-repair-search-only view. Ordinary tier's bestBadness is the signal
 // STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET actually gates on; biased tier's own outcome shows
 // what the (possibly scaled) budget achieved.
-function levelBadnessInfo(row) {
+export function levelBadnessInfo(row) {
     const attempts = Array.isArray(row.attempts) ? row.attempts : [];
-    const probe = attempts.filter(a => a.stageId === 'early-repair-search' || (a.stageId == null && (a.earlyRepairSearch ?? a.repairProbe)));
+    const probe = attempts.filter(isEarlyRepairSearchAttempt);
     const ordinary = probe.filter(a => a.repair && !a.repairMustTurnBiased && !a.repairTurnBiased);
     const biased = probe.filter(a => a.repairMustTurnBiased || a.repairTurnBiased);
     const minBadness = list => list.reduce((min, a) => (Number.isFinite(a.bestBadness) ? Math.min(min, a.bestBadness) : min), Infinity);
@@ -84,68 +86,84 @@ function scaleFor(badness, gate, minScale) {
     return Math.min(1, Math.max(minScale, gate / badness));
 }
 
-// Bound to production, never hardcoded — see the module header for the drift bug this replaced.
-const numericArg = (name, fallback) => {
-    if (!argMap.has(name)) return { value: fallback, overridden: false };
-    const value = Number(argMap.get(name));
-    if (!Number.isFinite(value)) { console.error(`${name} must be a finite number`); process.exit(2); }
-    return { value, overridden: true };
-};
-const gateArg = numericArg('--gate', EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE);
-const minScaleArg = numericArg('--min-scale', EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE);
-const CURRENT_GATE = gateArg.value;
-const CURRENT_MIN_SCALE = minScaleArg.value;
-const constantsSource = gateArg.overridden || minScaleArg.overridden
-    ? 'CLI override (historical replay — not production)'
-    : 'imported from orchestration.ts';
-
-const perFile = files.map(f => loadRows(f).map(levelBadnessInfo));
-const [primary] = perFile;
-const eligible = primary.filter(r => r.hasBiasedTier);
-
-console.log(`early-repair-search-badness-report: ${files[0]} -- ${primary.length} levels, ${eligible.length} with a biased-tier attempt (the only population this flag can affect)`);
-if (eligible.length === 0) {
-    console.log('No biased-tier attempts found in this report -- either no repair-gated/must-turn levels were solved, or the report predates the repairProbe attempt tag (orchestration.ts).');
-} else {
-    const buckets = [[0, 5], [6, 10], [11, 15], [16, 20], [21, Infinity]];
-    console.log('\nordinaryBestBadness distribution (levels with a biased tier):');
-    for (const [lo, hi] of buckets) {
-        const inBucket = eligible.filter(r => r.ordinaryBestBadness != null && r.ordinaryBestBadness >= lo && r.ordinaryBestBadness <= hi);
-        const solvedByBiased = inBucket.filter(r => r.biasedSolved).length;
-        const label = hi === Infinity ? `${lo}+` : `${lo}-${hi}`;
-        console.log(`  badness ${label.padEnd(6)} n=${String(inBucket.length).padStart(3)}  biased-tier solved=${solvedByBiased}`);
+function main() {
+    const argMap = new Map();
+    for (const arg of process.argv.slice(2)) {
+        const eq = arg.indexOf('=');
+        if (arg.startsWith('--') && eq > 0) argMap.set(arg.slice(0, eq), arg.slice(eq + 1));
     }
-    const noOrdinary = eligible.filter(r => r.ordinaryBestBadness == null);
-    console.log(`  no ordinary-tier reading n=${noOrdinary.length}  biased-tier solved=${noOrdinary.filter(r => r.biasedSolved).length}`);
+    const inArg = argMap.get('--in');
+    if (!inArg) { console.error('--in=<report.json>[,<report2.json>] is required'); process.exit(2); }
+    const files = inArg.split(',').map(s => s.trim()).filter(Boolean);
+    if (files.length > 2) { console.error('--in accepts at most 2 files (a single report, or a matched scaled-vs-unscaled pair).'); process.exit(2); }
 
-    console.log(`\nCurrent constants: BADNESS_GATE=${CURRENT_GATE} MIN_SCALE=${CURRENT_MIN_SCALE} (${constantsSource})`);
-    for (const r of eligible) {
-        if (r.ordinaryBestBadness == null) continue;
-        r.currentScale = scaleFor(r.ordinaryBestBadness, CURRENT_GATE, CURRENT_MIN_SCALE);
+    // Bound to production, never hardcoded — see the module header for the drift bug this replaced.
+    const numericArg = (name, fallback) => {
+        if (!argMap.has(name)) return { value: fallback, overridden: false };
+        const value = Number(argMap.get(name));
+        if (!Number.isFinite(value)) { console.error(`${name} must be a finite number`); process.exit(2); }
+        return { value, overridden: true };
+    };
+    const gateArg = numericArg('--gate', EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE);
+    const minScaleArg = numericArg('--min-scale', EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE);
+    const CURRENT_GATE = gateArg.value;
+    const CURRENT_MIN_SCALE = minScaleArg.value;
+    const constantsSource = gateArg.overridden || minScaleArg.overridden
+        ? 'CLI override (historical replay — not production)'
+        : 'imported from orchestration.ts';
+
+    const perFile = files.map(f => loadRows(f).map(levelBadnessInfo));
+    const [primary] = perFile;
+    const eligible = primary.filter(r => r.hasBiasedTier);
+
+    console.log(`early-repair-search-badness-report: ${files[0]} -- ${primary.length} levels, ${eligible.length} with a biased-tier attempt (the only population this flag can affect)`);
+    if (eligible.length === 0) {
+        console.log('No biased-tier attempts found in this report -- either no repair-gated/must-turn levels were solved, or the report predates the repairProbe attempt tag (orchestration.ts).');
+    } else {
+        const buckets = [[0, 5], [6, 10], [11, 15], [16, 20], [21, Infinity]];
+        console.log('\nordinaryBestBadness distribution (levels with a biased tier):');
+        for (const [lo, hi] of buckets) {
+            const inBucket = eligible.filter(r => r.ordinaryBestBadness != null && r.ordinaryBestBadness >= lo && r.ordinaryBestBadness <= hi);
+            const solvedByBiased = inBucket.filter(r => r.biasedSolved).length;
+            const label = hi === Infinity ? `${lo}+` : `${lo}-${hi}`;
+            console.log(`  badness ${label.padEnd(6)} n=${String(inBucket.length).padStart(3)}  biased-tier solved=${solvedByBiased}`);
+        }
+        const noOrdinary = eligible.filter(r => r.ordinaryBestBadness == null);
+        console.log(`  no ordinary-tier reading n=${noOrdinary.length}  biased-tier solved=${noOrdinary.filter(r => r.biasedSolved).length}`);
+
+        console.log(`\nCurrent constants: BADNESS_GATE=${CURRENT_GATE} MIN_SCALE=${CURRENT_MIN_SCALE} (${constantsSource})`);
+        for (const r of eligible) {
+            if (r.ordinaryBestBadness == null) continue;
+            r.currentScale = scaleFor(r.ordinaryBestBadness, CURRENT_GATE, CURRENT_MIN_SCALE);
+        }
+        const scaled = eligible.filter(r => r.currentScale != null && r.currentScale < 1);
+        console.log(`Levels where the current constants shrink the biased tier's budget: ${scaled.length}/${eligible.length}`);
+        const shrunkButSolved = scaled.filter(r => r.biasedSolved);
+        if (shrunkButSolved.length > 0) {
+            console.log(`  of those, biased tier still solved despite the shrink: ${shrunkButSolved.map(r => `${r.id}(badness=${r.ordinaryBestBadness},scale=${r.currentScale.toFixed(2)})`).join(', ')}`);
+        }
+        const shrunkAndFailedCloseToZero = scaled.filter(r => !r.biasedSolved && r.biasedBestBadness != null && r.biasedBestBadness <= 3);
+        if (shrunkAndFailedCloseToZero.length > 0) {
+            console.log(`  RISK: shrunk AND failed with a near-miss biasedBestBadness<=3 (candidate evidence the shrink was too aggressive here): ${shrunkAndFailedCloseToZero.map(r => `${r.id}(ordinaryBadness=${r.ordinaryBestBadness},scale=${r.currentScale.toFixed(2)},biasedBestBadness=${r.biasedBestBadness})`).join(', ')}`);
+        }
     }
-    const scaled = eligible.filter(r => r.currentScale != null && r.currentScale < 1);
-    console.log(`Levels where the current constants shrink the biased tier's budget: ${scaled.length}/${eligible.length}`);
-    const shrunkButSolved = scaled.filter(r => r.biasedSolved);
-    if (shrunkButSolved.length > 0) {
-        console.log(`  of those, biased tier still solved despite the shrink: ${shrunkButSolved.map(r => `${r.id}(badness=${r.ordinaryBestBadness},scale=${r.currentScale.toFixed(2)})`).join(', ')}`);
-    }
-    const shrunkAndFailedCloseToZero = scaled.filter(r => !r.biasedSolved && r.biasedBestBadness != null && r.biasedBestBadness <= 3);
-    if (shrunkAndFailedCloseToZero.length > 0) {
-        console.log(`  RISK: shrunk AND failed with a near-miss biasedBestBadness<=3 (candidate evidence the shrink was too aggressive here): ${shrunkAndFailedCloseToZero.map(r => `${r.id}(ordinaryBadness=${r.ordinaryBestBadness},scale=${r.currentScale.toFixed(2)},biasedBestBadness=${r.biasedBestBadness})`).join(', ')}`);
+
+    if (perFile.length === 2) {
+        const [, secondaryRaw] = perFile;
+        const secondaryById = new Map(secondaryRaw.map(r => [r.id, r]));
+        console.log(`\n--- Matched-pair comparison: ${files[0]} vs ${files[1]} ---`);
+        const flips = [];
+        for (const a of primary) {
+            const b = secondaryById.get(a.id);
+            if (!b) continue;
+            if (!(a.hasBiasedTier || b.hasBiasedTier)) continue;
+            if (a.ok !== b.ok) flips.push({ id: a.id, [`ok(${path.basename(files[0])})`]: a.ok, [`ok(${path.basename(files[1])})`]: b.ok, ordinaryBestBadness: a.ordinaryBestBadness ?? b.ordinaryBestBadness });
+        }
+        console.log(`Levels with a biased tier in either arm: flips=${flips.length}`);
+        for (const f of flips) console.log(`  ${JSON.stringify(f)}`);
     }
 }
 
-if (perFile.length === 2) {
-    const [, secondaryRaw] = perFile;
-    const secondaryById = new Map(secondaryRaw.map(r => [r.id, r]));
-    console.log(`\n--- Matched-pair comparison: ${files[0]} vs ${files[1]} ---`);
-    const flips = [];
-    for (const a of primary) {
-        const b = secondaryById.get(a.id);
-        if (!b) continue;
-        if (!(a.hasBiasedTier || b.hasBiasedTier)) continue;
-        if (a.ok !== b.ok) flips.push({ id: a.id, [`ok(${path.basename(files[0])})`]: a.ok, [`ok(${path.basename(files[1])})`]: b.ok, ordinaryBestBadness: a.ordinaryBestBadness ?? b.ordinaryBestBadness });
-    }
-    console.log(`Levels with a biased tier in either arm: flips=${flips.length}`);
-    for (const f of flips) console.log(`  ${JSON.stringify(f)}`);
-}
+// Only run as a CLI, not when levelBadnessInfo/isEarlyRepairSearchAttempt are imported for a unit
+// test (matches scripts/run-bundled.mjs's own CLI-vs-import guard convention).
+if (import.meta.url === `file://${process.argv[1]}`) main();

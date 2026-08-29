@@ -41,6 +41,7 @@ runWorkerMain(async (task) => {
                 timeBudgetMs: solveOpts.timeBudgetMs,
                 repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride,
                 attractionDiversityBudgetFractionOverride: solveOpts.attractionDiversityBudgetFractionOverride,
+                goalAttractionDisabledRetryBudgetFractionOverride: solveOpts.goalAttractionDisabledRetryBudgetFractionOverride,
                 ablation: solveOpts.ablation, // race.mjs consumes levelOpts.ablation; thread it explicitly.
             });
         } else {

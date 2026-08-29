@@ -25,6 +25,24 @@
  * mechanically checkable from the ledger string alone; those are covered by DESCRIPTIVE_PATTERNS
  * below with a hand-written regex, same as the five original patterns were.
  *
+ * KNOWN SCOPE GAP (found during the 2026-08-29 Phase 1-7 regression audit): this guard only
+ * catches a REMOVED old name (persistence: "none") and explicitly does not check "dual-read"
+ * entries at all, on the theory that dual-read code is supposed to still mention the old name so
+ * there is nothing to flag. That reasoning misses a real, recurring bug shape: a canonical field
+ * being read/forwarded correctly on ONE code path (e.g. the sequential solveLevel() call) while a
+ * SIBLING path (e.g. a worker/race-pool transport object) forwards only the legacy alias and never
+ * mentions the canonical name at all -- so the sibling's own "dual-read" is silently dead code.
+ * This exact shape shipped in scripts/portfolio-solve-sweep-worker.mjs (dropped
+ * goalAttractionDisabledRetryBudgetFractionOverride), scripts/stress/elite-prefix-dfs-ab.mjs (read
+ * a fully-removed AttemptConfig field with no fallback at all, not even a legacy one), and
+ * scripts/family-boundary-report.mjs (wrote a canonical VALUE under the legacy field NAME) -- three
+ * different failure shapes a "does the old name still appear" scan cannot distinguish from
+ * legitimate dual-read code. See scripts/check-solveopts-transport-parity.mjs for a narrow,
+ * mechanical check of the first shape (SolveOpts override-field pairs only); the other two shapes
+ * are not mechanically checkable in general and are the reason this remains "at minimum leave a
+ * comment" rather than a broadened guard -- a green run of this file is not proof that every
+ * dual-read pair is honored on every code path.
+ *
  * A new failure means: either the rename regressed (fix the code), or this check's pattern/allowlist
  * needs to change because the underlying ledger classification changed (fix the ledger entry's
  * `persistence` first, THEN this file, with a comment explaining why).

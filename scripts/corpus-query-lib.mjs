@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { normalizeRoutingRegime } from '../modules/solver/routing-regime.ts';
+import { normalizeRoutingRegime } from '../modules/solver/routing-regime-normalization.mjs';
 
 // Corpora on disk carry a mix of legacy stressMeta.archetype/navDensity (older generated levels)
 // and canonical stressMeta.routingRegime/requiredPathCoverageRatio (scripts/stress/generate.mjs's

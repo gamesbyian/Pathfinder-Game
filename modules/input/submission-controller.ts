@@ -100,7 +100,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // path can end on those cells, so the trap would never fire. This advises
         // the maker to relocate them (via the "Trap Spots" button) but never blocks the
         // submission. Only definitively-dead spots are reported (classifyFalseGoalTriggerability
-        // returns 'unreachable' only when proven), so there are no false alarms even
+        // returns 'untriggerable' only when proven), so there are no false alarms even
         // if the bounded check times out.
         let trapWarned = false;
         if (l.falseGoalKeys && l.falseGoalKeys.size > 0) {

@@ -53,6 +53,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
+import { normalizeSolverStageId } from '../../modules/solver/stage-id-normalization.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
@@ -105,7 +106,13 @@ const rawLevels = Array.isArray(corpusParsed) ? corpusParsed : corpusParsed.leve
 // report's own bestBadness distribution) are not close enough for ANY bounded repair work,
 // continuation or restart, to plausibly close, so including them mostly measures "population too
 // hard to be informative" rather than answering the scheduling question.
-const primaryRepairProbe = lv => (lv.attempts || []).find(a => a.repair && a.stageId === 'early-repair-search' && a.seedSalt == null);
+// Route stageId through the central normalizer so a historical row carrying the literal legacy
+// stage id 'repair-probe' is still recognized as the canonical early-repair-search stage, rather
+// than being silently excluded by strict string equality.
+const primaryRepairProbe = lv => (lv.attempts || []).find(a => {
+    if (!a.repair || a.seedSalt != null || a.stageId == null) return false;
+    try { return normalizeSolverStageId(a.stageId) === 'early-repair-search'; } catch { return false; }
+});
 const candidates = census.levels.filter(lv => {
     if (lv.status === 'success') return false;
     const attempt = primaryRepairProbe(lv);

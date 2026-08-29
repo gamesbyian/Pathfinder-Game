@@ -2,7 +2,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { buildBoundaryReport, coalesceAttemptRecords, renderBoundaryMarkdown } from './family-boundary-lib.mjs';
-import { normalizeRoutingRegime } from '../modules/solver/routing-regime.ts';
+import { normalizeRoutingRegime } from '../modules/solver/routing-regime-normalization.mjs';
 
 // Corpora on disk carry a mix of legacy stressMeta.archetype/navDensity and canonical
 // stressMeta.routingRegime/requiredPathCoverageRatio -- dual-read both directions.
@@ -21,7 +21,9 @@ const required = ['--manifests', '--canonical', '--variants'];
 if (required.some(key => !args.get(key))) {
     console.error('Usage: family-boundary-report.mjs --manifests=<json[,json]> --canonical=<baseline.json> ' +
         '--variants=<json[,json]> [--parent-levels=<json[,json]>] [--profile-joins=<json>] ' +
-        '[--relation=<mode>] [--parent=<id>] [--out=<json>] [--markdown=<md>] [--severe-work-ratio=10]');
+        '[--relation=<mode>] [--parent=<id>] [--routing-regime=<regime>] [--out=<json>] [--markdown=<md>] [--severe-work-ratio=10]\n' +
+        '  --routing-regime=<regime> filters on the canonical routing-regime classification (--archetype ' +
+        'accepted as a legacy alias for one migration window).');
     process.exit(2);
 }
 
@@ -51,7 +53,7 @@ manifests = manifests.map(manifest => {
             reqInt: level.reqInt ?? manifest.selectedWitnessIntersectionCount ?? null,
             navDensity: level.stressMeta?.requiredPathCoverageRatio ?? level.stressMeta?.navDensity ?? manifest.parentNavDensity ?? null,
             turnLoad: level.stressMeta?.turnLoad ?? null,
-            archetype: safeNormalizeRoutingRegime(level.stressMeta?.routingRegime ?? level.stressMeta?.archetype ?? null),
+            routingRegime: safeNormalizeRoutingRegime(level.stressMeta?.routingRegime ?? level.stressMeta?.archetype ?? null),
             portalCount: Array.isArray(level.portals) ? level.portals.length : 0,
             mechanicCounts: level.stressMeta?.mechanicCounts ?? null,
         },
@@ -80,9 +82,16 @@ for (const [flag, field, accept] of numericFilters) {
         return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)) && accept(Number(value), threshold);
     });
 }
-if (args.get('--archetype')) {
-    const wanted = safeNormalizeRoutingRegime(args.get('--archetype'));
-    manifests = manifests.filter(manifest => manifest.parentFeatures?.archetype === wanted);
+// --archetype remains a documented legacy input alias for one migration window; both write to the
+// canonical parentFeatures.routingRegime filter. Fail loudly rather than silently pick one if a
+// caller somehow supplies both with different values.
+if (args.has('--routing-regime') && args.has('--archetype') && args.get('--routing-regime') !== args.get('--archetype')) {
+    throw new Error(`--routing-regime and --archetype disagree ("${args.get('--routing-regime')}" vs "${args.get('--archetype')}"); pass only one`);
+}
+const routingRegimeArg = args.get('--routing-regime') ?? args.get('--archetype');
+if (routingRegimeArg) {
+    const wanted = safeNormalizeRoutingRegime(routingRegimeArg);
+    manifests = manifests.filter(manifest => manifest.parentFeatures?.routingRegime === wanted);
 }
 if (args.get('--mechanic')) {
     const [name, minimumRaw] = args.get('--mechanic').split(':');
@@ -111,7 +120,7 @@ const sourceMetadata = documents => documents.map(({ file, document }) => ({
 const profileDocuments = args.get('--profile-joins') ? await loadAll(args.get('--profile-joins')) : [];
 const solutionProfileJoins = extract(profileDocuments, ['joins', 'comparisons']);
 const filterMetadata = Object.fromEntries([...args].filter(([key]) => key === '--relation' || key === '--parent' ||
-    numericFilters.some(([flag]) => flag === key) || key === '--archetype' || key === '--mechanic'));
+    numericFilters.some(([flag]) => flag === key) || key === '--routing-regime' || key === '--archetype' || key === '--mechanic'));
 
 const report = buildBoundaryReport({
     manifests,

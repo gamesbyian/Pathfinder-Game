@@ -41,6 +41,7 @@ import { FEATURES } from '../modules/solver/ablation-config.js';
 import {
     computeCurrentFamilyHashes, loadFamilyCache, saveFamilyCache, relevantFamiliesFor, familiesUnchanged,
 } from './solver-attempt-family-cache.mjs';
+import { normalizeSchedulerMode } from '../modules/solver/scheduler-mode-normalization.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
@@ -56,11 +57,7 @@ const saveHints = flags.has('--save-hints');
 // unrecognized/omitted value into that path is the wrong failure mode for a behavior-preserving
 // migration. Every live workflow already passes --scheduler-mode explicitly (currently `legacy`).
 const rawSchedulerMode = argMap.get('--scheduler-mode');
-const schedulerMode = rawSchedulerMode === 'legacy' || rawSchedulerMode === 'production'
-    ? 'production'
-    : rawSchedulerMode === 'legacy-latency-portfolio-experiment' || rawSchedulerMode === 'portfolio-experiment'
-        ? 'legacy-latency-portfolio-experiment'
-        : (() => { throw new Error(`--scheduler-mode must be one of: production, legacy-latency-portfolio-experiment (legacy aliases: legacy, portfolio-experiment); got ${JSON.stringify(rawSchedulerMode)}`); })();
+const schedulerMode = normalizeSchedulerMode(rawSchedulerMode);
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
 const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined;
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;

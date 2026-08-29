@@ -14,7 +14,7 @@ const standard = value('standard') ?? 'strict';
 const limit = Number(value('limit') ?? 20);
 
 if (!id) {
-    console.error('Usage: npx tsx scripts/hint-query.mjs --id=P00001 [--levels=data/levels.json] [--summary] [--class=cold-capability] [--source=production-solver] [--solver=pathfinder-solver] [--technique=repair] [--retry-tier=repair-late-probe] [--query=text] [--standard=strict|narrow] [--limit=20] [--full]');
+    console.error('Usage: npx tsx scripts/hint-query.mjs --id=P00001 [--levels=data/levels.json] [--summary] [--class=cold-capability] [--source=production-solver] [--solver=pathfinder-solver] [--technique=repair] [--retry-tier=late-repair-search] [--query=text] [--standard=strict|narrow] [--limit=20] [--full]');
     process.exit(2);
 }
 if (!['strict', 'narrow'].includes(standard)) {

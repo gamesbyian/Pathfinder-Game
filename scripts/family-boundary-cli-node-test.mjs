@@ -41,6 +41,9 @@ try {
     assert.equal(report.families[0].canonicalFailureSymmetrySuccess, true);
     assert.equal(report.families[0].minSolvedOrientationWork, 5, 'last redispatch wins');
     assert.equal(report.families[0].features.reqInt, 3);
+    assert.equal(report.families[0].features.routingRegime, 'turns',
+        'parentFeatures must be written under the canonical routingRegime key, not the legacy archetype key');
+    assert.equal('archetype' in report.families[0].features, false, 'the legacy archetype key must not appear in fresh output');
     assert.equal(report.metadata.inputs.canonical[0].commit, 'abc');
     assert.match(await readFile(markdown, 'utf8'), /Status:.*diagnostic artifact/);
 
@@ -48,6 +51,15 @@ try {
     assert.equal(JSON.parse(await readFile(out, 'utf8')).families.length, 1, 'matching structural filters retain the family');
     await execFile('node', [...baseArgs, '--req-int-min=4'], { cwd: ROOT });
     assert.equal(JSON.parse(await readFile(out, 'utf8')).families.length, 0, 'non-matching structural filters exclude the family');
+
+    await execFile('node', [...baseArgs, '--routing-regime=turns'], { cwd: ROOT });
+    assert.equal(JSON.parse(await readFile(out, 'utf8')).families.length, 1, '--routing-regime filters on the canonical parentFeatures.routingRegime field');
+    await execFile('node', [...baseArgs, '--archetype=turns'], { cwd: ROOT });
+    assert.equal(JSON.parse(await readFile(out, 'utf8')).families.length, 1, '--archetype remains accepted as a legacy input alias for --routing-regime');
+    await execFile('node', [...baseArgs, '--routing-regime=general'], { cwd: ROOT });
+    assert.equal(JSON.parse(await readFile(out, 'utf8')).families.length, 0, '--routing-regime excludes a non-matching family');
+    await assert.rejects(execFile('node', [...baseArgs, '--routing-regime=general', '--archetype=turns'], { cwd: ROOT }),
+        /--routing-regime and --archetype disagree/, 'conflicting --routing-regime/--archetype values must fail loudly, not silently pick one');
 } finally {
     await rm(dir, { recursive: true, force: true });
 }
