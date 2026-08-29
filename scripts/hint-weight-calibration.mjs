@@ -5,7 +5,7 @@
  * weights explain the moves taken in the diverse, independently-discovered
  * solution paths produced by scripts/hint-diversification.mjs (see
  * docs/hint-curation.md). Those paths were found by forcing
- * different gates/first-steps and disabling profiles/templates/strategies, so
+ * different gates/first-steps and disabling scoring profiles/ordering biases/strategies, so
  * they represent genuinely different valid solving strategies — not just
  * restatements of whatever the default solver already finds.
  *
@@ -13,7 +13,7 @@
  * this scores all legal candidates with the real scoreMove() under a chosen
  * profile's weights and records the rank of the move the path actually took.
  * That gives a hit-rate / mean-reciprocal-rank measure of how well a weight
- * vector "explains" real valid solving behaviour, broken down by archetype and
+ * vector "explains" real valid solving behaviour, broken down by routing regime and
  * solve phase (harvest/mid/finish).
  *
  * Read-only with respect to production code: never writes to
@@ -46,7 +46,7 @@ const verbose      = argFlags.has('--verbose');
 installBrowserStubs();
 
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
-const { POLICY_PROFILES } = await import('../modules/solver/policy.js');
+const { SCORING_PROFILES } = await import('../modules/solver/policy.js');
 const { scoreMove } = await import('../modules/solver/scoring.js');
 const { createState, applyMove, getNeighbors } = await import('../modules/solver/search-state.js');
 const { getRealLengthFromState } = await import('../modules/solver/solution.js');
@@ -63,7 +63,7 @@ function loadRawLevels() {
 }
 
 // The 9 weight keys scoreMove actually consumes. (A vestigial `antiDeadCorridorWeight` field
-// used to sit unused on every POLICY_PROFILES entry; it was removed.)
+// used to sit unused on every SCORING_PROFILES entry; it was removed.)
 const WEIGHT_KEYS = [
     'goalAttractionWeight', 'objectiveAttractionWeight', 'finishCommitmentWeight',
     'perimeterBiasWeight', 'mustPassUrgencyWeight', 'mustCrossUrgencyWeight',
@@ -74,9 +74,9 @@ function phaseOf(rRatio) { return rRatio < 0.45 ? 'harvest' : rRatio > 0.82 ? 'f
 
 // Replay one verified hint path through the real state machine, scoring every
 // legal candidate at each multi-way decision point with the live scoreMove().
-// Calls onDecision({ archetype, phase, candidates: [{key,score}], expertKey, expertScore })
+// Calls onDecision({ routing regime, phase, candidates: [{key,score}], expertKey, expertScore })
 // for every step where the path actually had a choice to make.
-function replayHintPath(level, prep, archetype, hintPath, profileWeights, onDecision) {
+function replayHintPath(level, prep, routing regime, hintPath, profileWeights, onDecision) {
     if (!Array.isArray(hintPath) || hintPath.length < 2 || !level.gateKeys.includes(hintPath[0])) {
         return { ok: false, reason: 'bad-start' };
     }
@@ -101,7 +101,7 @@ function replayHintPath(level, prep, archetype, hintPath, profileWeights, onDeci
                 return { key, score: scoreMove(key, pos, state, level, prep, profileWeights, nRSteps, null) };
             });
             const expert = scored.find(c => c.key === target);
-            onDecision({ archetype, phase: phaseOf(rRatio), candidates: scored, expertKey: target, expertScore: expert.score });
+            onDecision({ routing regime, phase: phaseOf(rRatio), candidates: scored, expertKey: target, expertScore: expert.score });
         }
 
         const portal = level.portalMap.get(pos);
@@ -138,17 +138,17 @@ function objective(summary) { return summary.top1Rate + 0.1 * summary.mrr; }
 // Evaluate one weight vector against the entire prepared corpus.
 function evaluateWeights(corpus, profileWeights) {
     const overall = newAggregate();
-    const byArchetype = new Map();
+    const byRouting regime = new Map();
     const byPhase = new Map();
     let failedPaths = 0, totalPaths = 0;
 
-    for (const { level, prep, archetype, hints } of corpus) {
+    for (const { level, prep, routing regime, hints } of corpus) {
         for (const hintPath of hints) {
             totalPaths++;
-            const result = replayHintPath(level, prep, archetype, hintPath, profileWeights, d => {
+            const result = replayHintPath(level, prep, routing regime, hintPath, profileWeights, d => {
                 addDecision(overall, d);
-                if (!byArchetype.has(d.archetype)) byArchetype.set(d.archetype, newAggregate());
-                addDecision(byArchetype.get(d.archetype), d);
+                if (!byRouting regime.has(d.routing regime)) byRouting regime.set(d.routing regime, newAggregate());
+                addDecision(byRouting regime.get(d.routing regime), d);
                 if (!byPhase.has(d.phase)) byPhase.set(d.phase, newAggregate());
                 addDecision(byPhase.get(d.phase), d);
             });
@@ -156,11 +156,11 @@ function evaluateWeights(corpus, profileWeights) {
         }
     }
 
-    const perArchetype = {};
-    for (const [k, agg] of byArchetype) perArchetype[k] = summarize(agg);
+    const perRouting regime = {};
+    for (const [k, agg] of byRouting regime) perRouting regime[k] = summarize(agg);
     const perPhase = {};
     for (const [k, agg] of byPhase) perPhase[k] = summarize(agg);
-    return { overall: summarize(overall), perArchetype, perPhase, diagnostics: { totalPaths, failedPaths } };
+    return { overall: summarize(overall), perRouting regime, perPhase, diagnostics: { totalPaths, failedPaths } };
 }
 
 function prepareCorpus(rawLevels, levelNumbers) {
@@ -170,8 +170,8 @@ function prepareCorpus(rawLevels, levelNumbers) {
         if (!raw || !Array.isArray(raw.hints) || raw.hints.length === 0) continue;
         const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
         const prep = SOLVER_TESTING_API.prepLevel(level);
-        const archetype = SOLVER_TESTING_API.detectArchetype(level);
-        corpus.push({ levelNumber, level, prep, archetype, hints: raw.hints });
+        const routing regime = SOLVER_TESTING_API.detectRouting regime(level);
+        corpus.push({ levelNumber, level, prep, routing regime, hints: raw.hints });
     }
     return corpus;
 }
@@ -181,8 +181,8 @@ const fmtPct = x => `${(x * 100).toFixed(1)}%`;
 function printSummaryTable(label, summary) {
     console.log(`\n${label}`);
     console.log(`  decisions=${summary.overall.decisions}  top1=${fmtPct(summary.overall.top1Rate)}  mrr=${summary.overall.mrr.toFixed(3)}  hinge=${summary.overall.meanHingeLoss.toFixed(2)}`);
-    console.log('  by archetype:');
-    for (const [arch, s] of Object.entries(summary.perArchetype)) {
+    console.log('  by routing regime:');
+    for (const [arch, s] of Object.entries(summary.perRouting regime)) {
         console.log(`    ${arch.padEnd(24)} n=${String(s.decisions).padEnd(6)} top1=${fmtPct(s.top1Rate).padEnd(7)} mrr=${s.mrr.toFixed(3)}  hinge=${s.meanHingeLoss.toFixed(2)}`);
     }
     console.log('  by phase:');
@@ -242,14 +242,14 @@ async function main() {
 
     if (profileArg === 'all') {
         if (doSearch) throw new Error('--search requires a single --profile=<name>, not "all"');
-        for (const [name, weights] of Object.entries(POLICY_PROFILES)) {
+        for (const [name, weights] of Object.entries(SCORING_PROFILES)) {
             const summary = evaluateWeights(corpus, weights);
             report.profiles[name] = { weights, summary };
             printSummaryTable(`Profile: ${name}`, summary);
         }
     } else {
-        const baseWeights = POLICY_PROFILES[profileArg];
-        if (!baseWeights) throw new Error(`Unknown profile "${profileArg}". Valid: ${Object.keys(POLICY_PROFILES).join(', ')}`);
+        const baseWeights = SCORING_PROFILES[profileArg];
+        if (!baseWeights) throw new Error(`Unknown profile "${profileArg}". Valid: ${Object.keys(SCORING_PROFILES).join(', ')}`);
         const baseline = evaluateWeights(corpus, baseWeights);
         printSummaryTable(`Profile: ${profileArg} (baseline)`, baseline);
         report.profiles[profileArg] = { weights: baseWeights, summary: baseline };
