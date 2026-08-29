@@ -8,7 +8,7 @@
  *   npm run solver:audit-false-goal-triggerability -- --levels=pos:138,pos:140
  *   npm run solver:audit-false-goal-triggerability -- --extended-budget=120000
  *
- * False-goal viability mode — instead of the timing passes, classify every placed
+ * False-goal triggerability mode — instead of the timing passes, classify every placed
  * false goal as triggerable or not (a false goal can only ever fire if a path can
  * end on its cell). Reports levels whose false goals cannot be triggered by any valid path. Partial searches are reported as "inconclusive", never as invalid.
  *
@@ -174,7 +174,7 @@ console.log(`Pass 2 — extended budget (${fmt(extendedBudgetMs)}) for partial l
 
 const stillPartial = [];
 
-for (const { levelNumber, budgetMs, triggerableCells: _triggerableCellsAfterPartial, gatesProcessed: _gatesProcessed } of partialLevels) {
+for (const { levelNumber, budgetMs } of partialLevels) {
     const raw = rawLevels[levelNumber - 1];
     const level = SOLVER_TESTING_API.normalizeRawLevel(raw, levelNumber);
 
@@ -198,7 +198,7 @@ for (const { levelNumber, budgetMs, triggerableCells: _triggerableCellsAfterPart
 console.log('\n── Summary ──────────────────────────────────────────────────────\n');
 console.log(`Levels run:       ${runCount}`);
 console.log(`Completed (P1):   ${completedCount}`);
-console.log(`Partial (P1):   ${partialCount}`);
+console.log(`Partial (P1):     ${partialCount}`);
 
 if (partialLevels.length > 0) {
     console.log('\nPartial levels:');
