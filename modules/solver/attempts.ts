@@ -1,4 +1,4 @@
-import { classifyRoutingRegime, getRequiredPathCoverageRatio } from './archetype.js';
+import { classifyRoutingRegime, getRequiredPathCoverageRatio } from './routing-regime.js';
 import { ATTEMPT_CONFIGS, SCORING_PROFILE_ORDER, ORDERING_BIAS_CONFIG_KEYS, STRUCTURAL_ORDERING_BIASES } from './policy.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AblationConfig, AttemptConfig, StructuralOrderingBias } from './types.js';
