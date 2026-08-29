@@ -23,7 +23,7 @@
  *   'admissible-order|tieBreak=default|lds=off'
  *   'admissible-order|tieBreak=none|lds=off'
  *   'admissible-order|tieBreak=default|lds=on'
- * Run with --list-profiles / --list-templates to see the valid profile/template name vocabulary.
+ * Run with --list-profiles / --list-ordering-biases to see the valid scoring-profile / structural-ordering-bias vocabulary.
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/method-probe.mjs -- \
@@ -54,7 +54,7 @@ const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
-const { PROFILE_ORDER, TEMPLATES, POLICY_PROFILES } = await import('../modules/solver/policy.js');
+const { SCORING_PROFILE_ORDER, STRUCTURAL_ORDERING_BIASES, SCORING_PROFILES } = await import('../modules/solver/policy.js');
 const Solver = createSolver();
 const { prepLevel, runAttempt, attemptConfigKey } = SOLVER_TESTING_API;
 
@@ -63,14 +63,15 @@ if (flags.has('--list-profiles')) {
     console.log('Admissible-order identity: admissible-order|tieBreak=<profile-or-none>|lds=<on|off>; tieBreak selects only the soft-score tie-break, not primary admissible-slack ordering.');
     process.exit(0);
 }
-if (flags.has('--list-templates')) {
-    console.log('Templates:', Object.keys(TEMPLATES).join(', '));
+if (flags.has('--list-ordering-biases') || flags.has('--list-templates')) {
+    if (flags.has('--list-templates')) console.warn('--list-templates is deprecated; use --list-ordering-biases.');
+    console.log('Structural ordering biases:', Object.keys(STRUCTURAL_ORDERING_BIASES).join(', '));
     process.exit(0);
 }
 
 // Shared parser (scripts/attempt-config-key.mjs) — the error messages there are generic; this
 // tool prefixes them with "--only: " for CLI-appropriate context.
-const parseAttemptConfigKeyRaw = makeAttemptConfigKeyParser({ TEMPLATES, POLICY_PROFILES, attemptConfigKey });
+const parseAttemptConfigKeyRaw = makeAttemptConfigKeyParser({ STRUCTURAL_ORDERING_BIASES, SCORING_PROFILES, attemptConfigKey });
 function parseAttemptConfigKey(key) {
     try { return parseAttemptConfigKeyRaw(key); }
     catch (err) { throw new Error(`--only: ${err.message}`); }
@@ -79,7 +80,7 @@ function parseAttemptConfigKey(key) {
 const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels-random.json';
 const LEVEL_SPEC = args.get('--levels') || null;
 const ONLY = args.get('--only');
-if (!ONLY) { console.error('--only=<attemptConfigKey>[,<key>...] is required. Run with --list-profiles/--list-templates for the vocabulary.'); process.exit(1); }
+if (!ONLY) { console.error('--only=<attemptConfigKey>[,<key>...] is required. Run with --list-profiles/--list-ordering-biases for the vocabulary.'); process.exit(1); }
 let configs;
 try {
     configs = ONLY.split(',').map(k => k.trim()).filter(Boolean).map(k => { const config = parseAttemptConfigKey(k); return { key: attemptConfigKey(config), config }; });
@@ -109,7 +110,7 @@ const SUMMARY_OUT_FILE = args.get('--summary-out') || null;
 const ORDERING_PROFILES = (args.get('--ordering-profiles') || '').split(',').map(value => value.trim()).filter(Boolean);
 const ORDERING_LIMIT = Number(args.get('--ordering-limit') || 4096);
 const BEAM_TRACE_LIMIT = Number(args.get('--beam-trace-limit') || 0);
-for (const profile of ORDERING_PROFILES) if (profile !== 'none' && !POLICY_PROFILES[profile]) {
+for (const profile of ORDERING_PROFILES) if (profile !== 'none' && !SCORING_PROFILES[profile]) {
     console.error(`--ordering-profiles: unknown profile ${profile}`); process.exit(1);
 }
 
@@ -217,7 +218,7 @@ async function probeLevel(entry) {
     const orderingRecords = [];
     let orderingObserved = 0;
     if (ORDERING_PROFILES.length) prep._orderingResearchObserver = {
-        policies: ORDERING_PROFILES.map(id => ({ id, profile: id === 'none' ? null : POLICY_PROFILES[id] })),
+        policies: ORDERING_PROFILES.map(id => ({ id, profile: id === 'none' ? null : SCORING_PROFILES[id] })),
         observe(record) { if (record.candidates.length >= 2) { orderingObserved++; if (orderingRecords.length < ORDERING_LIMIT) orderingRecords.push(record); } },
     };
 

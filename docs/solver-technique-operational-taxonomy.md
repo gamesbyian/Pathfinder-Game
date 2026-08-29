@@ -9,7 +9,7 @@
 
 Technique names can overstate diversity. Many Pathfinder “techniques” are configurations of the same search engine. Keep three kinds of similarity separate:
 
-- **source/config similarity:** shared engine, scorer, weights, template, retention rule, prune set, retry context;
+- **source/config similarity:** shared engine, scorer, scoring weights, structural ordering bias, retention rule, prune set, retry context;
 - **outcome similarity:** solve/fail/work vectors overlap;
 - **operational similarity:** the searches actually make similar choices or retain/explore similar states when faced with comparable situations.
 
@@ -21,14 +21,14 @@ Operational similarity is itself a **diagnostic proxy**, not an optimization obj
 
 | Layer | What actually changes |
 |---|---|
-| Ordinary DFS profile | Shared `scoreMove()` weights change child ordering; DFS/LDS/state/pruning remain shared. |
-| DFS structural template | Adds explicit geometry to child ordering. |
-| Beam profile | Shared scoring vocabulary feeds a retained frontier rather than depth-first commitment. |
+| Ordinary DFS scoring profile | Shared `scoreMove()` weights change child ordering; DFS/LDS/state/pruning remain shared. |
+| DFS structural ordering bias | Adds explicit geometry to child ordering. |
+| Beam scoring profile | Shared scoring vocabulary feeds a retained frontier rather than depth-first commitment. |
 | Beam width | Changes survivor count. |
-| Diverse beam | Changes survivor selection/bucketing. |
-| Beam dedup / near-tie | Changes which approximately related frontier states survive. |
+| Mechanic-bucket retention | Changes survivor selection by `(flipperUsedMask, mustCrossMask)` buckets. |
+| Coarse state merge / near-tie retention | Changes which deliberately coarsened frontier states survive; this is not exact deduplication. |
 | Admissible-order search | Primary ordering becomes least admissible slack first; DFS-shaped search/state/pruning remain. |
-| Admissible-order profile | Soft scoring only breaks equal-slack ties. |
+| Admissible-order scoring profile | Soft scoring only breaks equal-slack ties. |
 | `admissible-order|tieBreak=none|lds=off` | Equal-slack children receive no soft-score tie-break; more distinctive than the sibling profile names imply. |
 | Repair | Seeded randomized restart / elite / splice / ruin-and-recreate dynamics; strongest genuinely different paradigm in current production. |
 | Prune ablation/retry | Changes feasible explored tree while underlying search family may stay the same. |
@@ -49,7 +49,7 @@ The bounded operational-similarity substrate is implemented through `scripts/tec
 
 The August 23 pilot record is preserved in [`../reports/2026-08-23-operational-similarity-substrate.md`](../reports/2026-08-23-operational-similarity-substrate.md). Its former open-ended next gates are superseded by the current decision-driven policy.
 
-The paired-trace continuation also produced an important evidence-pipeline correction: eight rows formerly described as predecessor-conditioned admissible-order wins were actually later diverse-beam retry wins misattributed by a stale lifecycle reducer, and the isolated census comparison did not contain the exact winning diverse-beam + retry-override cells. The former cross-stage admissible P0 is therefore retired; see [`../reports/2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md`](../reports/2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md).
+The paired-trace continuation also produced an important evidence-pipeline correction: eight rows formerly described as predecessor-conditioned admissible-order wins were actually later mechanic-bucket-retention beam retry wins misattributed by a stale lifecycle reducer, and the isolated census comparison did not contain the exact winning diverse-beam + retry-override cells. The former cross-stage admissible P0 is therefore retired; see [`../reports/2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md`](../reports/2026-08-25-paired-deterministic-trace-and-lifecycle-attribution-correction.md).
 
 These findings came from bounded selected cohorts and forensic reconstruction. They are evidence about those operational/causal questions, not population prevalence estimates.
 
@@ -72,10 +72,10 @@ Use only the metrics needed for the current pair/cohort:
 - scoring-term decomposition at divergence;
 - first-divergence depth/state;
 - DFS prefix/subtree overlap under matched deterministic work;
-- beam generated/retained frontier overlap, lineage survival, churn, dedup/near-tie/bucket pressure;
-- width/diversity delta;
+- beam generated/retained frontier overlap, lineage survival, churn, coarse-state-merge/near-tie/mechanic-bucket pressure;
+- width/mechanic-bucket-retention delta;
 - admissible-slack versus soft-score disagreement;
-- structural-template intervention rate;
+- structural-ordering-bias intervention rate;
 - repair-native fingerprints such as restart/elite source, badness trajectory, repeated attractors, and seed sensitivity.
 
 Raw weight-vector distance is a source-level proxy only. Terms have different scales/activation conditions, so Euclidean closeness is not behavioral equivalence.
@@ -90,7 +90,7 @@ Do **not** run an all-techniques × all-levels operational census by default. St
 - high-outcome-similarity pairs nominated for scheduler substitution;
 - singleton/doubleton capability levels;
 - CW/CCW mirror inversions;
-- beam width/plain-diverse inversions;
+- beam width/plain-vs-mechanic-bucket-retention inversions;
 - `admissible-order|tieBreak=none|lds=off` versus canonical tie-break profiles;
 - repair-only versus mixed phenotypes;
 - representative same-outcome controls.
@@ -135,7 +135,7 @@ Operational similarity is supporting evidence, not a runtime historical lookup. 
 - cluster near-duplicate actions;
 - delay/remove redundant deep continuations;
 - protect genuinely complementary actions with modest global coverage;
-- explain why a width/template/profile variant deserves separate action identity;
+- explain why a width/structural-ordering-bias/scoring-profile variant deserves separate action identity;
 - identify live telemetry that distinguishes exhausted versus still-novel exploration.
 
 Production decisions remain level-blind and use legal static/current-solve features only.

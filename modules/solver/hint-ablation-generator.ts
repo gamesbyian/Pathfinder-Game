@@ -35,7 +35,7 @@ import { ORDERING_BIAS_CONFIG_KEYS } from './policy.js';
 import { prepLevel } from './prep.js';
 import { deriveSolveAttemptInfo } from './hint-provenance.js';
 import {
-    TEMPLATE_CONFIG_KEY, PROFILE_CONFIG_KEY, FEATURE_GROUPS,
+    ORDERING_BIAS_FEATURE_KEYS, SCORING_PROFILE_FEATURE_KEYS, FEATURE_GROUPS,
     withFeaturesDisabled, withFeatureDisabled,
 } from './ablation-config.js';
 
@@ -339,7 +339,7 @@ async function runCascade(target: any, solveOptsBase: any, label: string, ctx: R
             seedSalt: attemptInfo.seedSalt,
         });
 
-        const disableKey = winner?.orderingBiasId ? TEMPLATE_CONFIG_KEY[winner.orderingBiasId] : PROFILE_CONFIG_KEY[winner?.scoringProfileId];
+        const disableKey = winner?.orderingBiasId ? ORDERING_BIAS_FEATURE_KEYS[winner.orderingBiasId] : SCORING_PROFILE_FEATURE_KEYS[winner?.scoringProfileId];
         if (!disableKey || disabled.has(disableKey)) break; // safety: can't make further progress
         disabled.add(disableKey);
     }

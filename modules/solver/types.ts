@@ -292,12 +292,12 @@ export interface PrepLevel {
     _beamResearchObserver?: BeamResearchObserver | null;
     /** Research-only isConnected() rejection observer — see ConnectivityRejectionObserver's doc. */
     _connectivityRejectionObserver?: ConnectivityRejectionObserver | null;
-    /** Test-only: force beamSearchFromGate's dedup/diversity keying onto the delimited-string
-     *  fallback path even when the fast numeric encoding would fit — see beamNumericDedupKey's own
+    /** Test-only: force beamSearchFromGate's coarse-state-merge/mechanic-bucket-retention keying onto the delimited-string
+     *  fallback path even when the fast numeric encoding would fit — see beamNumericCoarseStateKey's own
      *  comment in search.ts. Lets a differential test run the SAME level/search through both key
      *  representations and assert byte-identical results. Never read by production code paths;
      *  absent (falsy) preserves the default numeric-when-safe behavior. */
-    _forceBeamDedupStringKeyForTests?: boolean;
+    _forceBeamCoarseStateStringKeyForTests?: boolean;
     /** Research/test-only repair seed control. When absent, the long-standing gate/salt-derived
      * production seeds are used byte-for-byte. Both independent repair streams derive from it. */
     _repairResearchSeed?: number | null;
@@ -369,7 +369,7 @@ export interface PrepLevel {
 }
 
 export type BeamResearchStage = 'incoming-frontier' | 'generated' | 'hard-pruned'
-    | 'post-hard-prune' | 'dedup-removed' | 'post-production-dedup'
+    | 'post-hard-prune' | 'coarse-state-merge-removed' | 'post-production-coarse-state-merge'
     | 'score-width-culled' | 'diversity-culled' | 'post-score-width-cull' | 'post-diversity-selection';
 
 export interface BeamResearchRecord {
