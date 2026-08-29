@@ -53,6 +53,8 @@ function relative(full) {
 
 const scriptFiles = walk(path.join(root, 'scripts'), full => /\.(?:mjs|cjs|js|ts|tsx|py)$/u.test(full))
   .map(relative).sort();
+const moduleFiles = walk(path.join(root, 'modules'), full => /\.(?:mjs|cjs|js|ts|tsx)$/u.test(full))
+  .map(relative).sort();
 const workflowFiles = readdirSync(path.join(root, '.github', 'workflows'))
   .filter(name => /\.ya?ml$/u.test(name))
   .map(name => `.github/workflows/${name}`)
@@ -66,7 +68,7 @@ const docFiles = [
 }).sort();
 
 const sourceByFile = new Map();
-for (const file of [...scriptFiles, ...workflowFiles, ...docFiles]) {
+for (const file of [...scriptFiles, ...moduleFiles, ...workflowFiles, ...docFiles]) {
   try {
     sourceByFile.set(file, readFileSync(path.join(root, file), 'utf8'));
   } catch {
@@ -204,6 +206,54 @@ function fileTextReferences(target, candidate) {
 const currentDocFiles = docFiles.filter(file =>
   !file.startsWith('docs/archive/') && !file.startsWith('docs/history/'));
 
+function exportedSymbols(source) {
+  const out = new Set();
+  for (const match of source.matchAll(/\bexport\s+(?:declare\s+)?(?:abstract\s+)?(?:class|function|const|let|var|type|interface|enum)\s+([A-Za-z_$][\w$]*)/gu)) {
+    out.add(match[1]);
+  }
+  for (const match of source.matchAll(/\bexport\s*\{([^}]+)\}/gu)) {
+    for (const part of match[1].split(',')) {
+      const name = part.trim().split(/\s+as\s+/u)[0]?.trim();
+      if (name && /^[A-Za-z_$][\w$]*$/u.test(name)) out.add(name);
+    }
+  }
+  return [...out].sort();
+}
+
+function referencingFilesForTerms(terms, ownerFile = null) {
+  const cleanTerms = [...new Set(terms.filter(term => typeof term === 'string' && term.length >= 3))];
+  if (!cleanTerms.length) return [];
+  return [...sourceByFile.entries()]
+    .filter(([file, source]) => file !== ownerFile && cleanTerms.some(term => source.includes(term)))
+    .map(([file]) => file)
+    .sort();
+}
+
+const moduleRows = moduleFiles.map(file => {
+  const source = sourceByFile.get(file) ?? '';
+  const exports = exportedSymbols(source);
+  return {
+    file,
+    exports,
+    currentDocRefs: currentDocFiles.filter(doc => fileTextReferences(file, doc)),
+    importOrTextRefs: referencingFilesForTerms([file, path.basename(file)], file),
+  };
+}).sort((a, b) => a.file.localeCompare(b.file));
+
+const reportPathPattern = /\breports\/[A-Za-z0-9_./{}$-]+(?:\.(?:json|jsonl|md|csv|txt))?/gu;
+const reportPathRefs = new Map();
+for (const [file, source] of sourceByFile) {
+  if (!file.startsWith('scripts/') && !file.startsWith('modules/') && !file.startsWith('.github/workflows/')) continue;
+  for (const match of source.matchAll(reportPathPattern)) {
+    const reportPath = match[0];
+    if (!reportPathRefs.has(reportPath)) reportPathRefs.set(reportPath, new Set());
+    reportPathRefs.get(reportPath).add(file);
+  }
+}
+const reportSurfaces = [...reportPathRefs.entries()]
+  .map(([reportPath, files]) => ({ reportPath, referencedBy: [...files].sort() }))
+  .sort((a, b) => a.reportPath.localeCompare(b.reportPath));
+
 const scriptRows = scriptFiles.map(file => {
   const packageAliases = packageRows.filter(row => row.localTargets.includes(file)).map(row => row.name);
   const workflowRefs = workflowRows.filter(row => row.localTargets.includes(file)).map(row => row.file);
@@ -246,6 +296,8 @@ function exactSurfaceMatches(entry) {
     packageAliases: [],
     workflowFiles: [],
     docFiles: [],
+    moduleFiles: [],
+    symbolOwners: [],
   };
 
   if (entry.kind === 'tool' || entry.kind === 'file') {
@@ -253,6 +305,22 @@ function exactSurfaceMatches(entry) {
       ...normalizedToolCandidates(entry.old),
       ...normalizedToolCandidates(entry.new),
     ])].filter(file => scriptFiles.includes(file)).sort();
+    matches.moduleFiles = [entry.old, entry.new]
+      .filter(value => typeof value === 'string')
+      .flatMap(value => {
+        const clean = value.replace(/^\.\//u, '');
+        if (moduleFiles.includes(clean)) return [clean];
+        return moduleFiles.filter(file => path.basename(file) === path.basename(clean));
+      })
+      .filter((value, index, all) => all.indexOf(value) === index)
+      .sort();
+  }
+  if (entry.kind === 'symbol') {
+    const names = [entry.old, entry.new].filter(value => typeof value === 'string');
+    matches.symbolOwners = moduleRows
+      .filter(row => names.some(name => row.exports.includes(name)))
+      .map(row => row.file)
+      .sort();
   }
   if (entry.kind === 'package-alias') {
     matches.packageAliases = [entry.old, entry.new].filter(value => packageByName.has(value)).sort();
@@ -304,10 +372,15 @@ const selectedLedgerEntries = (ledger.entries ?? [])
 const phaseScriptSet = new Set(selectedLedgerEntries.flatMap(entry => entry.surfaces.scriptFiles));
 const phaseAliasSet = new Set(selectedLedgerEntries.flatMap(entry => entry.surfaces.packageAliases));
 const phaseWorkflowSet = new Set(selectedLedgerEntries.flatMap(entry => entry.surfaces.workflowFiles));
+const phaseModuleSet = new Set(selectedLedgerEntries.flatMap(entry => [
+  ...entry.surfaces.moduleFiles,
+  ...entry.surfaces.symbolOwners,
+]));
 
 let selectedScripts = PHASE == null ? scriptRows : scriptRows.filter(row => phaseScriptSet.has(row.file));
 let selectedPackages = PHASE == null ? packageRows : packageRows.filter(row => phaseAliasSet.has(row.name));
 let selectedWorkflows = PHASE == null ? workflowRows : workflowRows.filter(row => phaseWorkflowSet.has(row.file));
+let selectedModules = PHASE == null ? moduleRows : moduleRows.filter(row => phaseModuleSet.has(row.file));
 
 if (UNCOVERED_ONLY) {
   selectedScripts = selectedScripts.filter(row => row.coverageStatus !== 'direct-ci-execution' && row.coverageStatus !== 'ci-test-reference');
@@ -320,6 +393,8 @@ const summary = {
   workflowStructuralRoots,
   packageCommands: packageRows.length,
   scriptFiles: scriptRows.length,
+  moduleFiles: moduleRows.length,
+  reportSurfaces: reportSurfaces.length,
   surfacedScripts: scriptRows.filter(row => row.surfaced).length,
   surfacedScriptsDirectlyExecutedByCi: scriptRows.filter(row => row.surfaced && row.coverageStatus === 'direct-ci-execution').length,
   surfacedScriptsWithCiTestReference: scriptRows.filter(row => row.surfaced && row.coverageStatus === 'ci-test-reference').length,
@@ -335,6 +410,8 @@ const result = {
   ledgerEntries: selectedLedgerEntries,
   packageCommands: selectedPackages,
   scripts: selectedScripts,
+  modules: selectedModules,
+  reportSurfaces,
   workflows: selectedWorkflows,
 };
 
@@ -348,7 +425,7 @@ console.log(`CI package roots: ${ciRoots.join(', ')}`);
 console.log(`Workflow local-path structural validation in CI: ${workflowPathStructuralCheckInCi ? 'yes' : 'no'}${workflowStructuralRoots.length ? ` via ${workflowStructuralRoots.join(', ')}` : ''}`);
 
 if (PHASE != null) {
-  console.log(`Phase ${PHASE}: ${selectedLedgerEntries.length} ledger rows; ${selectedScripts.length} exact script surfaces; ${selectedPackages.length} exact package aliases; ${selectedWorkflows.length} exact workflows.`);
+  console.log(`Phase ${PHASE}: ${selectedLedgerEntries.length} ledger rows; ${selectedScripts.length} exact script surfaces; ${selectedModules.length} module/symbol surfaces; ${selectedPackages.length} exact package aliases; ${selectedWorkflows.length} exact workflows.`);
 }
 
 if (COMPACT_MODE || PHASE != null || UNCOVERED_ONLY) {
@@ -357,6 +434,10 @@ if (COMPACT_MODE || PHASE != null || UNCOVERED_ONLY) {
     const wf = row.workflowRefs.length ? ` workflows=${row.workflowRefs.length}` : '';
     const tests = row.ciTestReferences.length ? ` ciTestRefs=${row.ciTestReferences.join(',')}` : '';
     console.log(`  ${row.coverageStatus.padEnd(29)} ${row.file}${npm}${wf}${tests}`);
+  }
+  for (const row of selectedModules) {
+    const refs = row.importOrTextRefs.length ? ` refs=${row.importOrTextRefs.length}` : '';
+    console.log(`  module ${row.file} exports=${row.exports.join(',') || '(none)'}${refs}`);
   }
   for (const row of selectedPackages) {
     console.log(`  package ${row.ciCommandReachable ? 'CI' : 'NO-CI'} ${row.name} -> ${row.localTargets.join(', ') || '(no local script target)'}`);
