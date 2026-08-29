@@ -125,9 +125,9 @@ function ensureWorkerBundle() {
 export function racedAttemptRecord(job, msg, extra = {}) {
     const cfg = job?.attemptConfig;
     return withSolverStage({
-        gateKey: job?.gateKey, profile: cfg?.profileName, template: cfg?.template?.id ?? null,
+        gateKey: job?.gateKey, scoringProfileId: cfg?.scoringProfileId, orderingBiasId: cfg?.orderingBias?.id ?? null,
         beamWidth: cfg?.beamWidth ?? null,
-        ...(cfg?.diverseBeam ? { diverseBeam: true } : {}),
+        ...(cfg?.mechanicBucketRetention ? { mechanicBucketRetention: true } : {}),
         ...(cfg?.repair ? { repair: true } : {}),
         ...(cfg?.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
         ...(cfg?.repairTurnBiased ? { repairTurnBiased: true } : {}),
@@ -140,13 +140,13 @@ export function racedAttemptRecord(job, msg, extra = {}) {
             name: msg.error.name, message: msg.error.message, gateKey: job?.gateKey,
             configKey: attemptConfigKey({
                 ...cfg,
-                profile: cfg?.profileName,
+                scoringProfileId: cfg?.scoringProfileId,
                 // attemptConfigKey consumes a persisted-attempt shape, where template is its ID;
                 // race jobs carry the live AttemptConfig object instead.
-                template: cfg?.template?.id ?? null,
+                orderingBiasId: cfg?.orderingBias?.id ?? null,
             }),
-            profile: cfg?.profileName ?? 'unknown',
-            template: cfg?.template?.id ?? null,
+            scoringProfileId: cfg?.scoringProfileId ?? 'unknown',
+            orderingBiasId: cfg?.orderingBias?.id ?? null,
         } } : {}),
         ...(msg.allocatedBudgetMs !== undefined ? { allocatedBudgetMs: msg.allocatedBudgetMs } : {}),
         elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
