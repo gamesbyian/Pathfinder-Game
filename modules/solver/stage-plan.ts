@@ -27,7 +27,7 @@ function budgetPlanEligibility(id: SolverStageId, plan: StageBudgetPlan): boolea
         case 'goal-attraction-disabled-retry': return !!plan.diversityTierWillRun;
         case 'admissible-order-fallback': return !!plan.admissibleOrderTierWillRun;
         case 'coarse-state-near-tie-retention-disabled-retry': return !!plan.dedupRetryTierWillRun;
-        case 'admissible-order-fallback-alternate-tiebreak-retry': return !!plan.nonDefaultRetryTierWillRun;
+        case 'admissible-order-alternate-tiebreak-retry': return !!plan.nonDefaultRetryTierWillRun;
         case 'connectivity-axis-prune-disabled-retry': return !!plan.connectivityRetryTierWillRun;
         case 'repair-elite-prefix-dfs-retry': return !!plan.repairElitePrefixDfsRetryTierWillRun;
         case 'must-cross-neighbor-prune-disabled-retry': return !!plan.mcNeighborBudgetRetryTierWillRun;
