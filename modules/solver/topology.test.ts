@@ -8,7 +8,7 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { prepLevel } from './prep.js';
 import { createState, applyMove } from './search-state.js';
-import { __setReachGenerationForTests, isConnected, isConnectedForTrap } from './topology.js';
+import { __setReachGenerationForTests, isConnected, isConnectedForFalseGoalTriggerSearch } from './topology.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import type { PruneDiagnostics } from './prune-gauntlet.js';
 
@@ -418,8 +418,8 @@ test('BFS scratch generation rollover clears tags before reusing generation 1', 
     assert.equal(isConnected(K(1, 1), stateAt(level, prep, [K(1, 1)]), level, prep), false);
 });
 
-test('isConnectedForTrap ignores the goal but still requires objectives to be reachable', () => {
-    // Goal sealed off: trap connectivity passes (any endpoint allowed)…
+test('isConnectedForFalseGoalTriggerSearch ignores the goal but still requires objectives to be reachable', () => {
+    // Goal sealed off: false-goal trigger-search connectivity passes (any endpoint allowed)…
     const goalSealed = makeLevel({
         grid: { w: 5, h: 3 },
         gates: [{ x: 1, y: 1 }],
@@ -428,7 +428,7 @@ test('isConnectedForTrap ignores the goal but still requires objectives to be re
         reqLen: 4,
     });
     const gPrep = prepLevel(goalSealed);
-    assert.equal(isConnectedForTrap(K(1, 1), stateAt(goalSealed, gPrep, [K(1, 1)]), goalSealed, gPrep), true);
+    assert.equal(isConnectedForFalseGoalTriggerSearch(K(1, 1), stateAt(goalSealed, gPrep, [K(1, 1)]), goalSealed, gPrep), true);
 
     // …but an unreachable must-pass still prunes.
     const mpSealed = makeLevel({
@@ -440,7 +440,7 @@ test('isConnectedForTrap ignores the goal but still requires objectives to be re
         reqLen: 4,
     });
     const mPrep = prepLevel(mpSealed);
-    assert.equal(isConnectedForTrap(K(1, 1), stateAt(mpSealed, mPrep, [K(1, 1)]), mpSealed, mPrep), false);
+    assert.equal(isConnectedForFalseGoalTriggerSearch(K(1, 1), stateAt(mpSealed, mPrep, [K(1, 1)]), mpSealed, mPrep), false);
 });
 
 /**
