@@ -9,7 +9,7 @@
  *   node scripts/run-bundled.mjs scripts/run-ablation.mjs [options]
  *
  * Options:
- *   --experiment=<phase>   baseline | single-feature | profiles | templates |
+ *   --experiment=<phase>   baseline | single-feature | scoring-profiles | ordering-biases |
  *                          order | pairs | full  (default: full)
  *   --corpus=<path>        Level corpus: published data/levels.json (default), or a stress-corpus
  *                          file (data/stress/stress-levels.json) — detected by the presence of a
@@ -145,7 +145,7 @@ async function runExperiment(experiment, targetEntries) {
         const t0 = Date.now();
         let result;
         try {
-            result = await Solver.solve(level, { timeBudgetMs: budgetMs, ablation: config });
+            result = await Solver.solveLevel(level, { timeBudgetMs: budgetMs, ablation: config });
         } catch (e) {
             levelResults.push({ level: levelNumber, status: 'error', error: `solve: ${e?.message}`, elapsedMs: Date.now() - t0 });
             errorCount++;
@@ -158,7 +158,7 @@ async function runExperiment(experiment, targetEntries) {
         elapsedTimes.push(elapsed);
         totalNodesExpanded += result?.nodesExpanded ?? 0;
 
-        const solvedBy = ok ? (result.attempts?.find(a => a.ok)?.profile ?? 'unknown') : null;
+        const solvedBy = ok ? (result.attempts?.find(a => a.ok)?.scoringProfileId ?? 'unknown') : null;
         const entry = {
             level: levelNumber,
             status: result.status,
