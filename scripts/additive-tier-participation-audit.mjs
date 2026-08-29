@@ -6,7 +6,7 @@
  *
  * Two questions this answers, both purely by reading existing production telemetry
  * (Attempt.stageId/workSpent/nodesExpanded -- "diagnostic-only... not read by any solving logic",
- * see orchestration.ts's own Attempt interface) from real, UNMODIFIED Solver.solve() calls. No
+ * see orchestration.ts's own Attempt interface) from real, UNMODIFIED Solver.solveLevel() calls. No
  * production code is touched or observed via a new hook; this only aggregates fields the solver
  * already returns.
  *
@@ -104,7 +104,7 @@ for (const { entry, pos } of sample) {
         // attemptBudgetTelemetry: opt-in diagnostic flag (orchestration.ts) -- without it, each
         // Attempt's workSpent/allocatedWorkCeiling fields are omitted entirely (nodesExpanded is
         // still always present). Read-only telemetry, changes no search decision.
-        result = await Solver.solve(level, {
+        result = await Solver.solveLevel(level, {
             nodeBudget: NODE_BUDGET, workBudget: WORK_BUDGET, timeBudgetMs: TIME_BUDGET_MS,
             attemptBudgetTelemetry: true,
         });
