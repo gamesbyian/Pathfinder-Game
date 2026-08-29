@@ -886,6 +886,7 @@ export interface StageBudgetPlanInput {
         | 'repairBudgetFractionOverride' | 'disableExtraBudgetPasses'
         | 'attractionDiversityBudgetFractionOverride'
         | 'coarseStateNearTieRetentionRetryBudgetFractionOverride' | 'coarseStateNearTieRetentionRetryNodeReserveFractionOverride'
+        | 'dedupNearTieRetryBudgetFractionOverride' | 'dedupNearTieRetryNodeReserveFractionOverride'
         | 'admissibleOrderNonDefaultRetryBudgetFractionOverride' | 'admissibleOrderNonDefaultRetryNodeReserveFractionOverride'
         | 'connectivityAxisExhaustedRetryBudgetFractionOverride' | 'connectivityAxisExhaustedRetryNodeReserveFractionOverride'
         | 'repairElitePrefixDfsRetryBudgetFractionOverride' | 'repairElitePrefixDfsRetryNodeReserveFractionOverride'
@@ -940,11 +941,11 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // diversityBudgetFraction just above. STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY is default-ON as of the
     // PROMOTION (see that flag's own comment) — `disableExtraBudgetPasses: true` (both interactive
     // solve UIs) still zeroes this fraction, same as every other extra-budget tier.
-    const coarseStateNearTieRetentionRetryFractionOverride = Number(opts.coarseStateNearTieRetentionRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
+    const coarseStateNearTieRetentionRetryFractionOverride = Number(opts.coarseStateNearTieRetentionRetryBudgetFractionOverride ?? opts.dedupNearTieRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const coarseStateNearTieRetentionRetryBudgetFraction = Number.isFinite(coarseStateNearTieRetentionRetryFractionOverride) && coarseStateNearTieRetentionRetryFractionOverride >= 0
         ? coarseStateNearTieRetentionRetryFractionOverride
         : COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION;
-    const coarseStateNearTieRetentionRetryNodeReserveFractionRaw = Number(opts.coarseStateNearTieRetentionRetryNodeReserveFractionOverride);
+    const coarseStateNearTieRetentionRetryNodeReserveFractionRaw = Number(opts.coarseStateNearTieRetentionRetryNodeReserveFractionOverride ?? opts.dedupNearTieRetryNodeReserveFractionOverride);
     const coarseStateNearTieRetentionRetryNodeReserveFraction = Number.isFinite(coarseStateNearTieRetentionRetryNodeReserveFractionRaw) && coarseStateNearTieRetentionRetryNodeReserveFractionRaw >= 0
         ? Math.min(1, coarseStateNearTieRetentionRetryNodeReserveFractionRaw)
         : COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION;
