@@ -1,14 +1,14 @@
 import type { RequireDeps } from '../state.js';
 // Background false-goal triggerability scan. When the false-goal tool is active and the
 // cached triggerable-cell set is stale, the false-goal trigger search runs off-thread (solver Web Worker)
-// and streams confirmed spots onto the grid as they are found — no blocking
+// and streams confirmed triggerable cells onto the grid as they are found — no blocking
 // overlay, so the maker sees triggerable false-goal cells while placing false goals. The
 // Trap Spots button (editor-toolbar-controller) runs its explicit, deeper scans through the
 // same scan() seam so worker use, streaming, and state updates have one owner.
 //
 // Invalidation model: every level-mutating path calls clearEditorTriggerableFalseGoalCells,
 // which resets falseGoalTriggerScanState to 'stale'. An in-flight scan observes that (or a
-// newer scan's token) and cancels, discarding its stream — so spots on screen
+// newer scan's token) and cancels, discarding its stream — so triggerable cells on screen
 // always describe the level currently on screen.
 import {
     addEditorTriggerableFalseGoalCells, markDirty, setEditorFalseGoalTriggerParityCandidates,
@@ -45,7 +45,7 @@ export function createFalseGoalTriggerScanController({ core, state, ui, levelUti
 
     // Runs the search off-thread when possible; falls back to the cooperative
     // main-thread search (same streaming hooks) if the worker can't be used.
-    async function runFalseGoalTriggerSearch(level: any, budgetMs: number, { shouldCancel, onSpots, onGateProgress }: any) {
+    async function runFalseGoalTriggerSearch(level: any, budgetMs: number, { shouldCancel, onTriggerableCells, onGateProgress }: any) {
         const c = getClient();
         if (c) {
             try {
@@ -53,7 +53,7 @@ export function createFalseGoalTriggerScanController({ core, state, ui, levelUti
                     timeLimitMs: budgetMs,
                     shouldCancel,
                     onProgress: (p: any) => {
-                        if (p.newTriggerableCells?.length) onSpots(p.newTriggerableCells);
+                        if (p.newTriggerableCells?.length) onTriggerableCells(p.newTriggerableCells);
                         if (p.totalGates != null && onGateProgress) onGateProgress(p);
                     },
                 });
@@ -68,7 +68,7 @@ export function createFalseGoalTriggerScanController({ core, state, ui, levelUti
             onTriggerableCell: (k: number) => pending.push(k),
             onProgress: (p: any) => { if (onGateProgress) onGateProgress(p); },
             yieldFn: async () => {
-                if (pending.length) onSpots(pending.splice(0));
+                if (pending.length) onTriggerableCells(pending.splice(0));
                 await new Promise((r: any) => setTimeout(r, 0));
                 if (shouldCancel()) throw new Error('Solver:cancelled');
             },
@@ -91,7 +91,7 @@ export function createFalseGoalTriggerScanController({ core, state, ui, levelUti
         try {
             const res: any = await runFalseGoalTriggerSearch(searchLevel, budgetMs, {
                 shouldCancel: () => scanInvalidated(token) || (hooks.shouldCancel?.() ?? false),
-                onSpots: (keys: number[]) => {
+                onTriggerableCells: (keys: number[]) => {
                     if (scanInvalidated(token)) return;
                     addEditorTriggerableFalseGoalCells(state, keys);
                     markDirty(state);
