@@ -65,11 +65,11 @@ function projectedAttemptError(error) {
 
 /** Prefer phase-specific portfolio/fallback winner, then any successful attempt for legacy/race modes. */
 export function anyWinningAttempt(result) {
-    return winningAttempt(result, 'portfolio') ?? winningAttempt(result, 'fallback') ?? winningAttempt(result, null);
+    return winningAttempt(result, 'legacy-latency-portfolio') ?? winningAttempt(result, 'fallback') ?? winningAttempt(result, null);
 }
 
 export function passForWin(result) {
-    const winner = winningAttempt(result, 'portfolio');
+    const winner = winningAttempt(result, 'legacy-latency-portfolio');
     return Number.isFinite(Number(winner?.passNumber)) ? Number(winner.passNumber) : null;
 }
 
@@ -122,10 +122,11 @@ export function attemptRecord(a) {
 /** Build one persisted row. Hint saving and referee computation remain caller-owned. */
 export function buildRow(levelNumber, id, result, schedulerMode) {
     const pass = passForWin(result);
-    const solvedBeforeFallback = !!result?.portfolio?.solvedBeforeFallback;
+    const legacyLatencyPortfolio = result?.legacyLatencyPortfolioExperiment ?? result?.portfolio;
+    const solvedBeforeFallback = !!legacyLatencyPortfolio?.solvedBeforeFallback;
     const solvedByFallback = !!result?.ok && !solvedBeforeFallback;
     const winner = anyWinningAttempt(result);
-    const phaseLabel = pass ? `pass${pass}` : (solvedByFallback ? (schedulerMode === 'legacy' ? 'legacy' : 'fallback') : '');
+    const phaseLabel = pass ? `pass${pass}` : (solvedByFallback ? (schedulerMode === 'production' || schedulerMode === 'legacy' ? 'legacy' : 'fallback') : '');
     const attempts = (Array.isArray(result?.attempts) ? result.attempts : []).map(attemptRecord);
     const persistedWinner = attempts.find(attempt => attempt.ok) ?? null;
     return {
@@ -141,7 +142,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         // Cross-technique host-independent cost; deadline-truncated failure is indeterminate.
         workSpent: result?.workSpent ?? null,
         deadlineTruncated: !!result?.deadlineTruncated,
-        techniqueLifecycle: result?.techniqueLifecycle ?? null,
+        stageLifecycle: result?.stageLifecycle ?? result?.techniqueLifecycle ?? null,
         refereeValid: result?.refereeValid ?? null,
         solvedBeforeFallback,
         solvedByFallback,
@@ -188,6 +189,6 @@ export function tallyPass(passCounts, row, schedulerMode) {
     else if (row.pass === 2) passCounts.pass2 += 1;
     else if (row.pass === 3) passCounts.pass3 += 1;
     else if (row.pass && row.pass > 3) passCounts.conditional += 1;
-    else if (row.solvedByFallback) passCounts[schedulerMode === 'legacy' ? 'legacy' : 'fallback'] += 1;
+    else if (row.solvedByFallback) passCounts[schedulerMode === 'production' || schedulerMode === 'legacy' ? 'legacy' : 'fallback'] += 1;
     else passCounts.unsolved += 1;
 }
