@@ -22,7 +22,7 @@ export function createInput({ core, state, ui, engine, levelUtils, editor, rende
         createGamepadController({ core, state, ui, engine, levelUtils }, navController);
         createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer });
         createOptionsController({ core, state, ui, engine, themes, data, devCorpus, solverApi, levelUtils, persistence, reportError }, { tryNavigate: navController.tryNavigate });
-        const trapScan = createTrapScanController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError });
+        const falseGoalTriggerScan = createFalseGoalTriggerScanController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError });
         createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError }, { tryNavigate: navController.tryNavigate, falseGoalTriggerScan });
         createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, data, reportError });
         createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, reportError });
