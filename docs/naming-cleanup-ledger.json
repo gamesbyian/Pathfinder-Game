@@ -30,10 +30,10 @@
       "new": "requiredPathCoverageRatio",
       "kind": "field",
       "risk": "medium",
-      "persistence": "none",
+      "persistence": "dual-read",
       "phase": 3,
       "status": "done",
-      "notes": "Internal feature field. Implemented in naming-cleanup PR 3. Additional persisted family-manifest propagation found during PR 4: legacy navDensity/parentNavDensity remain dual-read; new writes use requiredPathCoverageRatio/parentRequiredPathCoverageRatio."
+      "notes": "Internal feature field. Implemented in naming-cleanup PR 3. Additional persisted family-manifest propagation found during PR 4: legacy navDensity/parentNavDensity remain dual-read; new writes use requiredPathCoverageRatio/parentRequiredPathCoverageRatio. Corrected persistence from 'none' to 'dual-read' during the closeout session to match this note: stressMeta.navDensity is a persisted corpus-JSON field, and corpus-query-lib.mjs/family-boundary-report.mjs/analyze-lineage-mechanics.mjs/family-census-combine.mjs all dual-read it alongside requiredPathCoverageRatio (P1 of the closeout session)."
     },
     {
       "old": "NEAR_HAMILTONIAN_DENSITY",
@@ -1020,20 +1020,20 @@
       "new": "triggerableFalseGoalCells",
       "kind": "field",
       "risk": "high",
-      "persistence": "dual-read",
+      "persistence": "none",
       "phase": 7,
       "status": "done",
-      "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
+      "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561. Corrected persistence from 'dual-read' to 'none' during the closeout session: EditorState is pure runtime state, never serialized, so no dual-read was ever implemented or needed -- create-render-model.ts was found reading this exact non-existent legacy field name (both editor trap-spot overlays silently rendered empty) and fixed to read the canonical triggerableFalseGoalCells directly (P0 of the closeout session)."
     },
     {
       "old": "trapParityCandidates",
       "new": "falseGoalTriggerParityCandidates",
       "kind": "field",
       "risk": "high",
-      "persistence": "dual-read",
+      "persistence": "none",
       "phase": 7,
       "status": "done",
-      "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
+      "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561. Corrected persistence from 'dual-read' to 'none' during the closeout session: EditorState is pure runtime state, never serialized, so no dual-read was ever implemented or needed -- create-render-model.ts was found reading this exact non-existent legacy field name (both editor trap-spot overlays silently rendered empty) and fixed to read the canonical falseGoalTriggerParityCandidates directly (P0 of the closeout session)."
     },
     {
       "old": "*TrapSpots state actions",
@@ -2106,6 +2106,156 @@
       "notes": "Migrate with stage identity. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "old": "MAIN_LOOP_LATE_RESERVE_FRACTION / MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT",
+      "new": "MAIN_SEARCH_LATE_RESERVE_FRACTION / MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 6,
+      "status": "done",
+      "notes": "Derived-vocabulary rename discovered unclassified during the closeout session's full-repo audit (stage-budget.ts/orchestration.ts derived the mainLoop* family from the phase-6 main-loop stage-id rename, but the derived constants/locals themselves were never renamed). Direct internal rename across modules/solver/stage-budget.ts, orchestration.ts, their .test.ts files, and every live scripts/.github consumer; naming-consumer-residue guard covers this family is out of its strict scope (SolveOpts override fields kept below) since the bare constants have no legitimate dual-read need."
+    },
+    {
+      "old": "mainLoopLateReserveFractionOverride / mainLoopLateReserveConfigCountOverride (SolveOpts)",
+      "new": "mainSearchLateReserveFractionOverride / mainSearchLateReserveConfigCountOverride",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "done",
+      "notes": "SolveOpts override fields kept as @deprecated dual-read aliases (orchestration.ts) so existing scripts/*.mjs CLI callers (--main-loop-late-reserve-fraction/--main-loop-late-reserve-config-count in level-blind-capability-sweep.mjs and portfolio-solve-sweep.mjs) and .github/workflows/*.yml inputs (solver-stress-refresh.yml) continue to work unchanged. Parity test in stage-budget.test.ts proves identical StageBudgetPlan output for legacy vs. canonical field names. The CLI flag names themselves (--main-loop-late-reserve-*) were NOT renamed to --main-search-late-reserve-* -- see the pending entry below."
+    },
+    {
+      "old": "--main-loop-late-reserve-fraction / --main-loop-late-reserve-config-count (CLI flags)",
+      "new": "--main-search-late-reserve-fraction / --main-search-late-reserve-config-count",
+      "kind": "package-alias",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Not started. scripts/level-blind-capability-sweep.mjs, scripts/portfolio-solve-sweep.mjs, and .github/workflows/solver-stress-refresh.yml still parse/emit the legacy flag spelling; they work correctly today via the SolveOpts dual-read alias above, so this is a cosmetic CLI-vocabulary migration, not a functional gap. Needs: add the canonical flag alongside the legacy one in each script (keep legacy accepted for one migration window per Section 4.6's pattern), migrate the workflow input, then drop the legacy flag."
+    },
+    {
+      "old": "REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE / REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE / REPAIR_PROBE_ATTEMPT_MS_CAP / REPAIR_PROBE_BIASED_NODE_BUDGET / REPAIR_PROBE_ORDINARY_NODE_BUDGET / REPAIR_PROBE_ORDINARY_SEED_SALTS / REPAIR_PROBE_PREDICTED_TIER_SHARE",
+      "new": "EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE / EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE / EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP / EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET / EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET / EARLY_REPAIR_SEARCH_ORDINARY_SEED_SALTS / EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 6,
+      "status": "done",
+      "notes": "Derived-vocabulary rename discovered unclassified during the closeout session's full-repo audit, same shape as the mainLoop* entry above but for the repair-probe/early-repair-search family. The repairProbeShrinkRecovery* sub-family is a SEPARATE stage (repair-shrink-recovery, not early-repair-search) and is tracked in its own entry below, not folded into this one. Direct internal rename across the same file set plus scripts/solver-parallel/race.mjs, race-stage-parity-node-test.mjs, stress/early-repair-search-badness-report.mjs, stress/select-early-repair-search-adaptive-sample.mjs, stress/confirm-residual-001-archetype-audit.mjs, .github/workflows/solver-repair-fallback-reserve-sample-ab.yml (all of which read the per-attempt telemetry field, now dual-read below)."
+    },
+    {
+      "old": "repairProbeAdaptiveBiasedBadnessGateOverride / repairProbeAdaptiveBiasedMinScaleOverride (SolveOpts)",
+      "new": "earlyRepairSearchAdaptiveBiasedBadnessGateOverride / earlyRepairSearchAdaptiveBiasedMinScaleOverride",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "done",
+      "notes": "Same @deprecated dual-read alias / parity-test pattern as mainLoopLateReserve*Override above. CLI flags --repair-probe-adaptive-badness-gate/--repair-probe-adaptive-min-scale (level-blind-capability-sweep.mjs, solver-early-repair-search-adaptive-sample-ab.yml) still use the legacy spelling -- see the pending entry below."
+    },
+    {
+      "old": "--repair-probe-adaptive-badness-gate / --repair-probe-adaptive-min-scale (CLI flags)",
+      "new": "--early-repair-search-adaptive-badness-gate / --early-repair-search-adaptive-min-scale",
+      "kind": "package-alias",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 6,
+      "status": "pending",
+      "notes": "Not started; same disposition as the mainLoop* CLI-flag pending entry above -- works today via the SolveOpts dual-read alias, cosmetic CLI-vocabulary migration remaining."
+    },
+    {
+      "old": "attempt.repairProbe (per-attempt telemetry field)",
+      "new": "attempt.earlyRepairSearch",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "done",
+      "notes": "Persisted Attempt telemetry field (orchestration.ts's Attempt type). portfolio-solve-sweep-lib.mjs's attemptRecord() dual-reads and canonical-writes; analyze-technique-campaign.mjs's technique() classifier and early-repair-search-badness-report.mjs's levelBadnessInfo() dual-read the raw field when reconstructing technique identity for historical rows without a stageId."
+    },
+    {
+      "old": "REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION",
+      "new": "REPAIR_SHRINK_RECOVERY_NODE_RESERVE_FRACTION",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 6,
+      "status": "done",
+      "notes": "Split out from the general repairProbe* family above because this constant and its derived locals/telemetry belong to the distinct repair-shrink-recovery stage, not early-repair-search -- renaming it alongside the general family would have produced the wrong derived name (earlyRepairSearchShrinkRecoveryNodeReserveFraction) for a stage that isn't early-repair-search."
+    },
+    {
+      "old": "repairProbeShrinkRecoveryNodeReserveFractionOverride (SolveOpts)",
+      "new": "repairShrinkRecoveryNodeReserveFractionOverride",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "done",
+      "notes": "@deprecated dual-read alias, same pattern as the sibling override-field entries above. No CLI flag currently exposes this override."
+    },
+    {
+      "old": "attempt.repairProbeShrinkRecovery (per-attempt telemetry field)",
+      "new": "attempt.repairShrinkRecovery",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "done",
+      "notes": "Same dual-read treatment as attempt.repairProbe above, in portfolio-solve-sweep-lib.mjs's attemptRecord()."
+    },
+    {
+      "old": "ATTRACTION_DIVERSITY_BUDGET_FRACTION / ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION / ATTRACTION_DIVERSITY_CANDIDATE_FLAGS",
+      "new": "GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION / GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION / GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 6,
+      "status": "done",
+      "notes": "Derived-vocabulary rename discovered unclassified during the closeout session's full-repo audit, same shape as the mainLoop*/repairProbe* entries above, derived from the phase-6 attraction-diversity -> goal-attraction-disabled-retry stage-id rename. Direct internal rename across modules/solver/attempts.ts (GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS), stage-budget.ts, orchestration.ts, their .test.ts files, and scripts/solver-parallel/race.mjs + race-stage-parity-node-test.mjs (which import these constants directly and would otherwise crash at import time)."
+    },
+    {
+      "old": "attractionDiversityBudgetFractionOverride / attractionDiversityNodeReserveFractionOverride (SolveOpts)",
+      "new": "goalAttractionDisabledRetryBudgetFractionOverride / goalAttractionDisabledRetryNodeReserveFractionOverride",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "done",
+      "notes": "Same @deprecated dual-read alias / parity-test pattern as the other SolveOpts override-field entries above. CLI flag --attraction-diversity-budget-fraction (portfolio-solve-sweep.mjs, scripts/stress/benchmark.mjs's own doc comment) still uses the legacy spelling; not renamed this session (cosmetic, works via the alias)."
+    },
+    {
+      "old": "attempt.attractionDiversity (per-attempt telemetry field)",
+      "new": "attempt.goalAttractionDisabledRetry",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "done",
+      "notes": "Persisted Attempt telemetry field. portfolio-solve-sweep-lib.mjs's attemptRecord() dual-reads and canonical-writes (the exact site the naming-cleanup-plan's own closeout task named); analyze-technique-campaign.mjs's technique() classifier, portfolio-solve-sweep.mjs's winnerKind classification, and confirm-residual-001-archetype-audit.mjs also updated."
+    },
+    {
+      "old": "STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY",
+      "new": "STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "done",
+      "notes": "Matches its sibling SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE -> SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE's already-completed rename. Wired into ablation-config.ts's existing LEGACY_FEATURE_ALIASES / canonicalAblationFeatureName() dual-read seam (same mechanism as STRATEGY_DEDUP_NEAR_TIE_RETRY -> STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY), so every existing enable_flags=/ablation-config caller continues to work. Derived constants GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION/_NODE_RESERVE_FRACTION and local variable family goalAttractionLegacyDistanceRetry* renamed alongside it in stage-budget.ts/orchestration.ts (persistence: none, no dual-read needed for pure internal locals). New regression tests in modules/solver/ablation-config.test.ts."
+    },
+    {
+      "old": "STRATEGY_REPAIR_PROBE / STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET / STRATEGY_REPAIR_PROBE_MULTI_SEED / STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY / STRATEGY_MAIN_LOOP_LATE_RESERVE / STRATEGY_ATTRACTION_DIVERSITY / STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE",
+      "new": "(no canonical name fixed by naming-cleanup-plan.md)",
+      "kind": "symbol",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "pending",
+      "notes": "STOP CONDITION (plan Section 14): these are persisted ablation-flag keys (enable_flags=/disable_flags= workflow inputs, docs/solver-opt-in-experiment-ledger.md entries, ablation-config.ts's FEATURES/OPT_IN_FEATURES), not pure internal symbols -- they derive from the same stage-id families renamed in this phase (repair-probe/early-repair-search, main-loop/main-search, attraction-diversity/goal-attraction-disabled-retry) but naming-cleanup-plan.md Section 4.6 fixes no canonical replacement spelling for them. Renaming them would require inventing a name the plan doesn't authorize, which Section 14 says to stop and document rather than improvise. ablation-config.ts's existing LEGACY_FEATURE_ALIASES/canonicalAblationFeatureName() dual-read seam (used for STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY and STRATEGY_DEDUP_NEAR_TIE_RETRY above) is ready to carry this rename whenever the plan fixes a canonical name for this family; left as a distinct blocked item rather than folded into a 'done' entry above."
+    },
+    {
       "old": "portfolio-scheduler-report.mjs",
       "new": "legacy-latency-portfolio-report.mjs",
       "kind": "tool",
@@ -2456,6 +2606,7 @@
       "notes": "Live editor progress callback was destructuring a non-existent spots count after the canonical progress migration, producing undefined progress text; corrected to consume the canonical field."
     }
   ],
-  "lastCompletedPhase": 7,
-  "lastUpdated": "2026-08-29"
+  "lastCompletedPhase": 5,
+  "lastUpdated": "2026-08-29",
+  "closeoutSessionNotes": "2026-08-29 closeout session (docs/naming-cleanup-plan.md P0-P4 punch list): fixed two functional regressions from incomplete phase-7 propagation (dead editor trap-spot overlays; submission-time false-goal budget field name); added missing dual-reads across research tooling for phases 3/5/6 field renames; completed the phase-6 derived-vocabulary rename (mainLoop*/repairProbe*/attractionDiversity* families and STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY) across modules/solver/'s full definition+test surface and every live consumer this session located; fixed assorted stale doc/comment vocabulary drift; restored and broadened the naming-consumer-residue guard deleted in ad60c19c (scripts/check-naming-consumer-residue.mjs, wired into npm run check, now covers every phase 1-7 ledger entry with persistence 'none' instead of 5 hand-picked patterns) and corrected 3 ledger entries this guard's build surfaced as misclassified (navDensity, validTrapSpots, trapParityCandidates). lastCompletedPhase corrected from 7 to 5: phase 6 is NOT fully clean -- 3 entries are genuinely pending (--main-loop-late-reserve-*/--repair-probe-adaptive-* CLI flag renames, and the STRATEGY_REPAIR_PROBE*/STRATEGY_MAIN_LOOP_LATE_RESERVE/STRATEGY_ATTRACTION_DIVERSITY* ablation-flag rename blocked on naming-cleanup-plan.md fixing no canonical replacement name for that family, per its own Section 14 stop condition). Phase 7 itself has zero pending entries and is genuinely clean. Everything renamed this session keeps existing callers working via @deprecated dual-read aliases with parity tests; nothing here changes solver behavior, scoring, budgets, or pruning."
 }
