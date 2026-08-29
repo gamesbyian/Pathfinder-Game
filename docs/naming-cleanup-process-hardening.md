@@ -369,7 +369,8 @@ Completed infrastructure:
 - surfaced script coverage is deliberately classified as **direct CI execution**, **CI test reference**, **workflow-path structural only**, or **uncovered by known CI** rather than collapsed into a single boolean;
 - added a regression test for the inventory's Phase-8 classification so changes to CI/package wiring cannot silently change what the hardening process thinks is covered;
 - added `scripts/check-naming-cleanup-ledger.mjs` to the normal validation graph, enforcing the prospective Phase-8+ verification object, forbidding `done` rows with pending verification, and preventing Phase-8+ implementation state while the gate is blocked;
-- added a plain-Node synthetic smoke for `family-trove-doctor.mjs`, exercising its `--json`, `--root`, and legacy `PATHFINDER_VARIANT_TROVE` root-selection contract without requiring the historical multi-gigabyte dataset.
+- added a plain-Node synthetic smoke for `family-trove-doctor.mjs`, exercising its `--json`, `--root`, and legacy `PATHFINDER_VARIANT_TROVE` root-selection contract without requiring the historical multi-gigabyte dataset;
+- added `check:plain-node-import-boundaries`, which derives native-`node` script roots from package/workflow surfaces, follows their literal local script imports, and rejects direct TypeScript runtime imports or `.js`/`.mjs` specifiers whose only repository target is TypeScript source. This permanently guards the Node-20 failure class found in #1578 without applying the restriction to deliberate `tsx`/bundled tools.
 
 Representative findings encoded by the new inventory:
 
@@ -384,7 +385,7 @@ Gate status by subsection:
 - **3.2 cheap smoke coverage: PARTIAL.** The variant-family dataset boundary doctor now has real Node-20 CI smoke coverage. Other Phase-8 uncovered commands identified by the inventory still need case-by-case treatment.
 - **3.3 shared transports/duplicated mappings: NOT YET COMPLETED by this pass.**
 - **3.4 compatibility-normalization quarantine: NOT YET COMPLETED by this pass.**
-- **3.5 runtime/type seams: PARTIAL.** The new doctor smoke exercises a real plain-Node Phase-8 boundary and the inventory exposes workflow structural coverage separately; the broader `.mjs`/`.ts`, weak-port-type, and exact-case path audit remains.
+- **3.5 runtime/type seams: PARTIAL.** The new doctor smoke exercises a real plain-Node Phase-8 boundary, and `check:plain-node-import-boundaries` now mechanically prevents the known plain-Node-to-TypeScript import failure class across surfaced package/workflow roots. Weak-port-type auditing, non-import runtime seams, and the broader exact-case workflow/path audit remain.
 - **3.6 rename-impact/census tooling: PARTIAL.** Exact Phase tool/package/workflow/doc surface matching and CI exposure are now available. The broader per-concept classification of old-name residue, compatibility reads, canonical writers, and unexercised non-tool consumers remains to be built or reconciled with existing checks.
 - **3.7 current-main reconciliation of Phases 8-14: NOT YET COMPLETED by this pass.**
 - **3.8 Phase-8 readiness record: NOT READY.**
@@ -396,6 +397,7 @@ npm run naming:surface-inventory -- --compact --phase=8
 npm run naming:surface-inventory -- --compact --phase=8 --uncovered
 npm run naming:surface-inventory -- --json --phase=8
 npm run check:naming-cleanup-ledger
+npm run check:plain-node-import-boundaries
 ```
 
 Do not infer from this progress record that the Phase-8 gate can be opened. Its purpose is to replace one part of the previous manual census with durable machinery and to give the next table-setting pass a concrete list of uncovered surfaces to work down.
