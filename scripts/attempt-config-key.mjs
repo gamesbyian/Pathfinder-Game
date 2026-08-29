@@ -22,7 +22,7 @@ export function makeAttemptConfigKeyParser({ STRUCTURAL_ORDERING_BIASES, SCORING
 
         const config = {
             scoringProfileId: fields.scoringProfileId,
-            template: fields.orderingBiasId ? STRUCTURAL_ORDERING_BIASES[fields.orderingBiasId] : null,
+            orderingBias: fields.orderingBiasId ? STRUCTURAL_ORDERING_BIASES[fields.orderingBiasId] : null,
             ...(fields.beamWidth ? { beamWidth: fields.beamWidth } : {}),
             ...(fields.mechanicBucketRetention ? { mechanicBucketRetention: true } : {}),
             ...(fields.repair ? { repair: true } : {}),
