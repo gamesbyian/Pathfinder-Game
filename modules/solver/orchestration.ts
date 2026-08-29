@@ -32,7 +32,7 @@ function isSolverCancellation(value: unknown): boolean {
 // budget-retry). repair-elite-prefix-dfs-retry still builds its own override directly (a genuinely
 // different execution shape — see stage-executors.ts's own header comment for why it wasn't
 // folded into the same adapter), importing the shared builder rather than keeping a sixth copy.
-interface LegacyLatencyLegacyLatencyPortfolioExperimentDefinition {
+interface LegacyLatencyPortfolioExperimentDefinition {
     pass1Ms: number;
     pass2Ms: number;
     pass3Ms: number;
