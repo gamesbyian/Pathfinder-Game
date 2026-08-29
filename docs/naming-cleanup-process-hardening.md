@@ -1,8 +1,8 @@
 # Naming-cleanup process hardening
 
-Status: **active prerequisite for naming-cleanup PR 8 and later**.
+Status: **completed pre-Phase-8 prerequisite; merged via PR #1580. The controls in this document remain mandatory for Phase 8 and later.**
 
-This document records the process failures exposed while implementing and repeatedly auditing Phases 1-7 of [`naming-cleanup-plan.md`](naming-cleanup-plan.md), and defines the table-setting work that must be completed before Phase 8 begins. It is explanatory and procedural. Canonical vocabulary remains owned by [`naming-and-vocabulary.md`](naming-and-vocabulary.md); exact rename mappings and phase sequence remain owned by the naming-cleanup plan; machine-readable entry state remains in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json).
+This document records the process failures exposed while implementing and repeatedly auditing Phases 1-7 of [`naming-cleanup-plan.md`](naming-cleanup-plan.md), and defines the table-setting work completed before Phase 8 begins. It is explanatory and procedural. Canonical vocabulary remains owned by [`naming-and-vocabulary.md`](naming-and-vocabulary.md); exact rename mappings and phase sequence remain owned by the naming-cleanup plan; machine-readable entry state remains in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json).
 
 The central lesson is that this cleanup is not safely modeled as a collection of textual renames. Most consequential rows are **contract migrations** crossing definitions, transports, persisted representations, tools, workflows, reports, application state, and historical readers. A phase is not complete merely because the planned definition changed and the normal CI floor is green.
 
@@ -343,17 +343,16 @@ If hardening exposes an already-live Phase-1-7 regression, fix it and record it 
 
 ## 9. Handoff for the next agent
 
-The next naming-cleanup agent's task is **table-setting, not Phase 8 implementation**:
+The table-setting prerequisite is complete and merged via PR #1580 (merge commit `02abde6c651a7070e7be10775f75c177b1bdb23b`). The next naming-cleanup agent may begin Phase 8, but only as a separate implementation PR using the strengthened execution model in Sections 4-7:
 
-1. read this document, the naming-cleanup plan, ledger, and rename recipe;
-2. inspect current `main` and recent Phase-1-7 repair PRs;
-3. implement Sections 3.1-3.8 above;
-4. strengthen repository checks/tests where known failure classes can be mechanically prevented;
-5. reconcile Phases 8-14 against that stronger execution model;
-6. update the plan/ledger with any resulting scope changes;
-7. leave Phase 8 blocked unless every readiness requirement is actually satisfied.
+1. start from current `main` and repeat the plan's Section 0 reconciliation if newer unrelated work has merged;
+2. select only the Phase-8 ledger rows and complete the contract-migration matrix before editing;
+3. use the checked-in surface inventory and CI/smoke coverage to identify every live consumer and any remaining structurally-only or manually audited surface;
+4. preserve legacy-read/canonical-write boundaries and frozen evidence exactly as classified;
+5. run targeted contract validation and a consumer-inward closeout audit before marking any row done;
+6. leave Phase 9 untouched until every applicable Phase-8 verification dimension is complete.
 
-The following agent should then be able to execute Phase 8 from a current, consumer-aware impact map with substantially less dependence on private agent memory and substantially more repository-enforced proof.
+The repository now contains substantially more machine-enforced proof than the Phase-1-7 cycle did; the next agent should use those checks as an entry map, not as a substitute for the required adversarial audit.
 
 
 ## 10. Table-setting progress

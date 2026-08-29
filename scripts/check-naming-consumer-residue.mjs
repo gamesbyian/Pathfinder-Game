@@ -73,15 +73,6 @@ const NOT_MECHANICALLY_DERIVABLE = new Set([
     'ATTRACTION_DIVERSITY_BUDGET_FRACTION / ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION / ATTRACTION_DIVERSITY_CANDIDATE_FLAGS',
 ]);
 
-// Ledger entries whose stated field-level `persistence` undercounts a real dual-read need found
-// during implementation (the entry's own free-text `notes` says dual-read; `persistence` was never
-// updated to match). Excluded here rather than mis-flagged; see docs/naming-cleanup-ledger.json's
-// own note on this entry for the correction this file's change should carry.
-const LEDGER_PERSISTENCE_OVERRIDE_NONE_TO_DUAL_READ = new Set([
-    'navDensity', // stressMeta.navDensity is a persisted corpus-JSON field; corpus-query-lib.mjs
-    // and siblings dual-read it alongside requiredPathCoverageRatio -- see naming-cleanup-ledger.json.
-]);
-
 function escapeRegex(value) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -97,8 +88,7 @@ function derivePattern(old) {
 }
 
 const candidates = ledger.entries.filter(e =>
-    e.phase <= 7 && e.status === 'done' && e.persistence === 'none' && e.old !== e.new &&
-    !LEDGER_PERSISTENCE_OVERRIDE_NONE_TO_DUAL_READ.has(e.old));
+    e.phase <= 7 && e.status === 'done' && e.persistence === 'none' && e.old !== e.new);
 
 const patterns = [];
 for (const entry of candidates) {
