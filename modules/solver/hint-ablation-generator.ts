@@ -10,7 +10,7 @@
  * Phases (each independently toggleable via options.phases):
  * - Phase 0 (baseline): unconstrained solve — establishes what wins by default.
  * - Phase A/B (cascade): per-gate x per-first-step-direction cascade (disable the
- *   winning template/profile each round until nothing new survives) + strategy
+ *   winning ordering bias/scoring profile each round until nothing new survives) + strategy
  *   (independently disable each STRATEGY_ flag).
  * - Phase D (swap): gate/goal-swap reversal of Phase A/B — solves the REVERSED
  *   problem (goal->gate) and reverses the resulting path back before validating.
@@ -296,7 +296,7 @@ interface RunCtx {
 }
 
 // Generic cascade: repeatedly solves with `solveOptsBase` plus a growing disabled-feature
-// set (seeded from the winning template/profile of the previous round) until either the
+// set (seeded from the winning ordering bias/scoring profile of the previous round) until either the
 // deadline hits, no config survives the disable set, or the solver stops returning a
 // solution. Shared by gate-direction (A/B), portal-exit (C), and combined (F) phases —
 // they differ only in which forcing options they pass and how they log errors.
@@ -472,7 +472,7 @@ export async function createHintAblationGenerator(
                 // scoringProfileId mirrors what the cascade/strategy FoundEntry already carries (see
                 // runCascade/runStrategyPhase). The phase suffix below is what actually makes an
                 // admissible-order-search baseline win distinguishable from an ordinary
-                // default-profile DFS/beam win in this file's own PERSISTED provenance: both would
+                // default scoring-profile DFS/beam win in this file's own PERSISTED provenance: both would
                 // otherwise report the identical scoringProfileId: 'default' with no way to tell them apart.
                 // (An earlier version of this fix added an `admissibleOrder` field to this object,
                 // but nothing downstream -- candidateEventFromDiscovery below -- ever read it back
@@ -905,7 +905,7 @@ export async function createHintAblationGenerator(
     const novelSigs = new Set(novel.map(pathSignature));
     return {
         // Each novel path gets ITS OWN discovery's provenance (phase/gateKey/direction/portalDest/
-        // portalExitDirection/flipFlippers/profile/template/disabledFeatures) via
+        // portalExitDirection/flipFlippers/scoringProfileId/orderingBiasId/disabledFeatures) via
         // candidateEventFromDiscovery -- NOT one batch-level provenance object shared across every
         // candidate (makeCandidateEvents's usual shape). Every phase in this generator forces a
         // different structural choice per candidate, so collapsing them all to the same shared
