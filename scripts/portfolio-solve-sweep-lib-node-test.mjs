@@ -97,19 +97,19 @@ test('failedStrategies only lists non-winning attempts, using the same key as wi
 });
 
 test('action identity separates stage and repair seed while config identity remains compatible', () => {
-    const salt0 = { stageId: 'repair-probe', gateKey: 10, profile: 'repair', template: null, beamWidth: null, repair: true, ok: false, elapsedMs: 1 };
+    const salt0 = { stageId: 'early-repair-search', gateKey: 10, profile: 'repair', template: null, beamWidth: null, repair: true, ok: false, elapsedMs: 1 };
     const salt1 = { ...salt0, seedSalt: 1, ok: true };
     assert.equal(attemptConfigKey(salt0), 'repair|score=repair|guidance=standard');
     assert.equal(attemptConfigKey(salt1), 'repair|score=repair|guidance=standard');
-    assert.equal(attemptActionKey(salt0), 'repair-probe|repair|score=repair|guidance=standard|seedSalt=0');
-    assert.equal(attemptActionKey(salt1), 'repair-probe|repair|score=repair|guidance=standard|seedSalt=1');
+    assert.equal(attemptActionKey(salt0), 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=0');
+    assert.equal(attemptActionKey(salt1), 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=1');
 
     const row = buildRow(1, 'R00001', { ok: true, status: 'success', attempts: [salt0, salt1] }, 'legacy');
     assert.equal(row.winningConfig, 'repair|score=repair|guidance=standard', 'legacy config-family summary stays unchanged');
-    assert.equal(row.winningActionKey, 'repair-probe|repair|score=repair|guidance=standard|seedSalt=1');
-    assert.deepEqual(row.failedActionKeys, ['repair-probe|repair|score=repair|guidance=standard|seedSalt=0']);
-    assert.equal(row.attempts[0].actionKey, 'repair-probe|repair|score=repair|guidance=standard|seedSalt=0');
-    assert.equal(row.attempts[1].actionKey, 'repair-probe|repair|score=repair|guidance=standard|seedSalt=1');
+    assert.equal(row.winningActionKey, 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=1');
+    assert.deepEqual(row.failedActionKeys, ['early-repair-search|repair|score=repair|guidance=standard|seedSalt=0']);
+    assert.equal(row.attempts[0].actionKey, 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=0');
+    assert.equal(row.attempts[1].actionKey, 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=1');
 });
 
 test('historical attempts without stageId do not get a fabricated action identity', () => {
@@ -220,7 +220,7 @@ test('maximal Attempt round-trips completely through attemptRecord and buildRow'
     const direct = attemptRecord(MAXIMALLY_POPULATED_SOLVER_ATTEMPT);
     const row = buildRow(99, 'fixture', {
         ok: false, status: 'attempt-error', attempts: [MAXIMALLY_POPULATED_SOLVER_ATTEMPT],
-    }, 'portfolio');
+    }, 'legacy-latency-portfolio');
     for (const projected of [direct, row.attempts[0]]) {
         for (const field of PERSISTENT_ATTEMPT_FIELDS) {
             assert.deepEqual(projected[field], MAXIMALLY_POPULATED_SOLVER_ATTEMPT[field], `${field} changed during projection`);
