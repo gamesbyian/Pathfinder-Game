@@ -13,7 +13,7 @@
  * this scores all legal candidates with the real scoreMove() under a chosen
  * profile's weights and records the rank of the move the path actually took.
  * That gives a hit-rate / mean-reciprocal-rank measure of how well a weight
- * vector "explains" real valid solving behaviour, broken down by routing regime and
+ * vector "explains" real valid solving behaviour, broken down by routingRegime and
  * solve phase (harvest/mid/finish).
  *
  * Read-only with respect to production code: never writes to
@@ -74,9 +74,9 @@ function phaseOf(rRatio) { return rRatio < 0.45 ? 'harvest' : rRatio > 0.82 ? 'f
 
 // Replay one verified hint path through the real state machine, scoring every
 // legal candidate at each multi-way decision point with the live scoreMove().
-// Calls onDecision({ routing regime, phase, candidates: [{key,score}], expertKey, expertScore })
+// Calls onDecision({ routingRegime, phase, candidates: [{key,score}], expertKey, expertScore })
 // for every step where the path actually had a choice to make.
-function replayHintPath(level, prep, routing regime, hintPath, profileWeights, onDecision) {
+function replayHintPath(level, prep, routingRegime, hintPath, profileWeights, onDecision) {
     if (!Array.isArray(hintPath) || hintPath.length < 2 || !level.gateKeys.includes(hintPath[0])) {
         return { ok: false, reason: 'bad-start' };
     }
@@ -101,7 +101,7 @@ function replayHintPath(level, prep, routing regime, hintPath, profileWeights, o
                 return { key, score: scoreMove(key, pos, state, level, prep, profileWeights, nRSteps, null) };
             });
             const expert = scored.find(c => c.key === target);
-            onDecision({ routing regime, phase: phaseOf(rRatio), candidates: scored, expertKey: target, expertScore: expert.score });
+            onDecision({ routingRegime, phase: phaseOf(rRatio), candidates: scored, expertKey: target, expertScore: expert.score });
         }
 
         const portal = level.portalMap.get(pos);
@@ -138,17 +138,17 @@ function objective(summary) { return summary.top1Rate + 0.1 * summary.mrr; }
 // Evaluate one weight vector against the entire prepared corpus.
 function evaluateWeights(corpus, profileWeights) {
     const overall = newAggregate();
-    const byRouting regime = new Map();
+    const byRoutingRegime = new Map();
     const byPhase = new Map();
     let failedPaths = 0, totalPaths = 0;
 
-    for (const { level, prep, routing regime, hints } of corpus) {
+    for (const { level, prep, routingRegime, hints } of corpus) {
         for (const hintPath of hints) {
             totalPaths++;
-            const result = replayHintPath(level, prep, routing regime, hintPath, profileWeights, d => {
+            const result = replayHintPath(level, prep, routingRegime, hintPath, profileWeights, d => {
                 addDecision(overall, d);
-                if (!byRouting regime.has(d.routing regime)) byRouting regime.set(d.routing regime, newAggregate());
-                addDecision(byRouting regime.get(d.routing regime), d);
+                if (!byRoutingRegime.has(d.routingRegime)) byRoutingRegime.set(d.routingRegime, newAggregate());
+                addDecision(byRoutingRegime.get(d.routingRegime), d);
                 if (!byPhase.has(d.phase)) byPhase.set(d.phase, newAggregate());
                 addDecision(byPhase.get(d.phase), d);
             });
@@ -156,11 +156,11 @@ function evaluateWeights(corpus, profileWeights) {
         }
     }
 
-    const perRouting regime = {};
-    for (const [k, agg] of byRouting regime) perRouting regime[k] = summarize(agg);
+    const perRoutingRegime = {};
+    for (const [k, agg] of byRoutingRegime) perRoutingRegime[k] = summarize(agg);
     const perPhase = {};
     for (const [k, agg] of byPhase) perPhase[k] = summarize(agg);
-    return { overall: summarize(overall), perRouting regime, perPhase, diagnostics: { totalPaths, failedPaths } };
+    return { overall: summarize(overall), perRoutingRegime, perPhase, diagnostics: { totalPaths, failedPaths } };
 }
 
 function prepareCorpus(rawLevels, levelNumbers) {
@@ -170,8 +170,8 @@ function prepareCorpus(rawLevels, levelNumbers) {
         if (!raw || !Array.isArray(raw.hints) || raw.hints.length === 0) continue;
         const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
         const prep = SOLVER_TESTING_API.prepLevel(level);
-        const routing regime = SOLVER_TESTING_API.detectRouting regime(level);
-        corpus.push({ levelNumber, level, prep, routing regime, hints: raw.hints });
+        const routingRegime = SOLVER_TESTING_API.detectRoutingRegime(level);
+        corpus.push({ levelNumber, level, prep, routingRegime, hints: raw.hints });
     }
     return corpus;
 }
@@ -181,8 +181,8 @@ const fmtPct = x => `${(x * 100).toFixed(1)}%`;
 function printSummaryTable(label, summary) {
     console.log(`\n${label}`);
     console.log(`  decisions=${summary.overall.decisions}  top1=${fmtPct(summary.overall.top1Rate)}  mrr=${summary.overall.mrr.toFixed(3)}  hinge=${summary.overall.meanHingeLoss.toFixed(2)}`);
-    console.log('  by routing regime:');
-    for (const [arch, s] of Object.entries(summary.perRouting regime)) {
+    console.log('  by routingRegime:');
+    for (const [arch, s] of Object.entries(summary.perRoutingRegime)) {
         console.log(`    ${arch.padEnd(24)} n=${String(s.decisions).padEnd(6)} top1=${fmtPct(s.top1Rate).padEnd(7)} mrr=${s.mrr.toFixed(3)}  hinge=${s.meanHingeLoss.toFixed(2)}`);
     }
     console.log('  by phase:');
