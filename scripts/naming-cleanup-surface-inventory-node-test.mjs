@@ -87,6 +87,7 @@ const rangeInventory = JSON.parse(rangeRaw);
 assert.deepEqual(rangeInventory.phaseRange, [8, 14]);
 assert.equal(rangeInventory.ledgerEntries.length, 107);
 assert.ok(rangeInventory.ledgerEntries.every(row => typeof row.reconciliationState === 'string'));
+assert.ok(rangeInventory.ledgerEntries.every(row => Array.isArray(row.oldReferenceCategories)));
 assert.ok(rangeInventory.ledgerEntries.some(row => row.reconciliationState === 'old-live'));
 const reconciliationCounts = Object.fromEntries(
   [...new Set(rangeInventory.ledgerEntries.map(row => row.reconciliationState))]
