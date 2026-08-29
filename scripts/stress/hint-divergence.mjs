@@ -2,27 +2,27 @@
 /**
  * Differential diagnosis for a SPECIFIC candidate path against a level's REAL production search,
  * not the generic default baseline. Generalizes witness-divergence.mjs (which replays a stress
- * corpus's hidden witness under `POLICY_PROFILES.default` with no template, for corpus-wide
+ * corpus's hidden witness under `SCORING_PROFILES.default` with no template, for corpus-wide
  * comparability) in two ways this tool needs instead:
  *
  *   1. The target path is any already-known hint on a PUBLISHED level (selected by id, or by
  *      geometric similarity to a group's median shape — see --target-group), not a stress-corpus
  *      witness.
- *   2. Replay runs under the level's OWN actually-resolved winning attempt profile+template
+ *   2. Replay runs under the level's OWN actually-resolved winning attempt scoring-profile+ordering-bias
  *      (read back from that hint's own provenance and matched against the level's current
  *      `getAttemptConfigs()`), not the generic baseline — the exact gap the 2026-07-17 taxonomy
  *      correction flagged as more informative than the common-baseline replay ("per-level
  *      witness-divergence using each level's own actually-selected attempt-policy profile").
  *
  * Reports, in order:
- *   - cumulativeDiscrepancy under the real winning profile/template (rank-sum of the target
+ *   - cumulativeDiscrepancy under the real winning scoring profile / ordering bias (rank-sum of the target
  *     path's own moves among scoreAndSort's greedy ordering at each step — 0 = greedy-optimal).
  *   - Per-flag SCORE_* ablation: which single scoring term, if any, is the dominant driver of that
  *     discrepancy (the R02248 methodology: disable one flag at a time, see which one collapses the
  *     discrepancy). A LARGE, ISOLATED delta on one flag is the signature that justified the
  *     attraction-diversity pass; near-uniform small deltas mean no single term is responsible.
- *   - The same replay under every OTHER profile with NO template forcing, to separate "a rigid
- *     template's own bonus term explains the gap" (expected, not a bug — see SCORE_TEMPLATE_BONUS)
+ *   - The same replay under every OTHER profile with NO ordering-bias forcing, to separate "a rigid
+ *     ordering bias's own bonus term explains the gap" (expected, not a bug — see SCORE_TEMPLATE_BONUS)
  *     from "free scoring also can't find this shape" (would be the more interesting finding).
  *
  * This is a diagnostic, not a fix generator. See reports/2026-07-29-hint-shape-divergence-diagnosis.md
@@ -61,7 +61,7 @@ const { createSolver, SOLVER_TESTING_API } = await import('../../modules/solver.
 const Solver = createSolver();
 const {
     prepLevel, createState, getNeighbors, applyMove, scoreAndSort, isSolutionState,
-    POLICY_PROFILES, getAttemptConfigs, normalizeAblationConfig,
+    SCORING_PROFILES, getAttemptConfigs, normalizeAblationConfig,
 } = SOLVER_TESTING_API;
 
 const levels = JSON.parse(readFileSync(path.resolve(ROOT, 'data/levels.json'), 'utf8'));
@@ -74,7 +74,7 @@ const W = level.grid.w, H = level.grid.h;
 const hintPath = path.resolve(ROOT, `data/hints/${LEVEL_ID}.json`);
 const doc = JSON.parse(readFileSync(hintPath, 'utf8'));
 
-// --- Pick the replay CONTEXT: the level's real cold-production winner (technique/profile/template) ---
+// --- Pick the replay CONTEXT: the level's real cold-production winner (technique/scoring-profile/ordering-bias) ---
 const coldTechniques = new Set(['dfs', 'beam']);
 const coldWinner = doc.hints.flatMap(h => (h.provenance || []).map(p => ({ h, p })))
     .find(({ p }) => coldTechniques.has((p.solver.technique || '').split(':')[0]) && !p.context?.hintGuided);
@@ -82,19 +82,21 @@ if (!coldWinner) {
     console.error(`No cold dfs/beam provenance entry found for ${LEVEL_ID} — this tool needs a known production winner to replay against.`);
     process.exit(1);
 }
-console.log(`Cold production winner: technique=${coldWinner.p.solver.technique} profile=${coldWinner.p.solver.profile} template=${coldWinner.p.solver.template ?? 'none'}`);
+const winnerScoringProfileId = coldWinner.p.solver.scoringProfileId ?? coldWinner.p.solver.profile;
+const winnerOrderingBiasId = coldWinner.p.solver.orderingBiasId ?? coldWinner.p.solver.template ?? null;
+console.log(`Cold production winner: technique=${coldWinner.p.solver.technique} scoringProfileId=${winnerScoringProfileId} orderingBiasId=${winnerOrderingBiasId ?? 'none'}`);
 
 const configs = getAttemptConfigs(level);
-const matchedConfig = configs.find(c => c.profileName === coldWinner.p.solver.profile
-    && (c.template?.id ?? null) === (coldWinner.p.solver.template ?? null));
+const matchedConfig = configs.find(c => c.scoringProfileId === winnerScoringProfileId
+    && (c.orderingBias?.id ?? null) === winnerOrderingBiasId);
 if (!matchedConfig) {
-    console.error(`No matching config in current getAttemptConfigs() for profile=${coldWinner.p.solver.profile}` +
-        ` template=${coldWinner.p.solver.template} — level features may have changed since this hint was found.`);
+    console.error(`No matching config in current getAttemptConfigs() for scoringProfileId=${winnerScoringProfileId}` +
+        ` orderingBiasId=${winnerOrderingBiasId} — level features may have changed since this hint was found.`);
     process.exit(1);
 }
-const winningProfile = POLICY_PROFILES[matchedConfig.profileName];
-const winningTemplate = matchedConfig.template ?? null;
-console.log(`Replaying under: profile=${matchedConfig.profileName}, template=${winningTemplate?.id ?? 'none'}`);
+const winningProfile = SCORING_PROFILES[matchedConfig.scoringProfileId];
+const winningOrderingBias = matchedConfig.orderingBias ?? null;
+console.log(`Replaying under: scoringProfileId=${matchedConfig.scoringProfileId}, orderingBiasId=${winningOrderingBias?.id ?? 'none'}`);
 
 // --- Pick the TARGET path to diagnose ---
 let targetPath;
@@ -113,14 +115,14 @@ if (TARGET_PATH_ARG) {
 }
 
 // --- Replay: rank of the target's own move among scoreAndSort's greedy ordering, per step ---
-function traceRankOnly(cfgOverride, profileOverride = winningProfile, templateOverride = winningTemplate) {
+function traceRankOnly(cfgOverride, profileOverride = winningProfile, orderingBiasOverride = winningOrderingBias) {
     const result = tracePathRanks({ api: { createState, getNeighbors, applyMove, scoreAndSort, isSolutionState }, level, prep, path: targetPath,
-        profile: profileOverride, template: templateOverride, configOverride: cfgOverride });
+        profile: profileOverride, template: orderingBiasOverride, configOverride: cfgOverride });
     return { ...result, finalIsSolution: result.finalIsSolution };
 }
 
 const baseline = traceRankOnly(null);
-console.log(`\nBASELINE (winning profile/template, all scoring on): cumulativeDiscrepancy=${baseline.cumulativeDiscrepancy}, ` +
+console.log(`\nBASELINE (winning scoring profile / ordering bias, all scoring on): cumulativeDiscrepancy=${baseline.cumulativeDiscrepancy}, ` +
     `finalIsSolution=${baseline.finalIsSolution}`);
 const worst = [...baseline.perStep].filter(s => !s.invalid).sort((a, b) => b.rank - a.rank).slice(0, 8);
 console.log(`Worst-ranked steps: ${worst.map(s => `step${s.step}(rank=${s.rank}/${s.nCandidates})`).join(', ')}`);
@@ -148,10 +150,10 @@ const deltas = scoreFlags.map(flag => {
 deltas.forEach(d => console.log(`  ${d.flag.padEnd(30)} disabled -> discrepancy=${String(d.discrepancy).padStart(4)}  ` +
     `delta=${d.delta >= 0 ? '+' : ''}${d.delta}`));
 
-// --- Untemplated comparison: does free scoring (no rigid template) do any better? ---
-console.log(`\n=== UNTEMPLATED PROFILES (no structural template forcing) ===`);
-for (const profileName of Object.keys(POLICY_PROFILES)) {
-    if (profileName === 'repair') continue; // repair reuses objectiveFirst's weights, not a distinct comparison
-    const r = traceRankOnly(null, POLICY_PROFILES[profileName], null);
-    console.log(`  profile=${profileName.padEnd(20)} template=none  cumulativeDiscrepancy=${r.cumulativeDiscrepancy}  finalIsSolution=${r.finalIsSolution}`);
+// --- Untemplated comparison: does free scoring (no structural ordering bias) do any better? ---
+console.log(`\n=== UNTEMPLATED PROFILES (no structural ordering-bias forcing) ===`);
+for (const scoringProfileId of Object.keys(SCORING_PROFILES)) {
+    if (scoringProfileId === 'repair') continue; // repair reuses objectiveFirst's weights, not a distinct comparison
+    const r = traceRankOnly(null, SCORING_PROFILES[scoringProfileId], null);
+    console.log(`  scoringProfileId=${scoringProfileId.padEnd(20)} orderingBiasId=none  cumulativeDiscrepancy=${r.cumulativeDiscrepancy}  finalIsSolution=${r.finalIsSolution}`);
 }

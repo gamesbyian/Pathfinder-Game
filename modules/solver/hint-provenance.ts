@@ -45,10 +45,10 @@ export interface ProvenanceContext {
 
 interface SolveAttemptInfo {
     technique: string;
-    profile: string | null;
-    template: string | null;
+    scoringProfileId: string | null;
+    orderingBiasId: string | null;
     beamWidth: number | null;
-    diverseBeam: boolean | null;
+    mechanicBucketRetention: boolean | null;
     gateKey: number | null;
     attemptIndex: number | null;
     elapsedMs: number | null;
@@ -77,7 +77,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
     const winner = list.find(a => a.outcome === 'success' || (a.outcome === undefined && a.ok));
     if (!winner) {
         return {
-            technique: 'solve-unknown', profile: null, template: null, beamWidth: null, diverseBeam: null,
+            technique: 'solve-unknown', scoringProfileId: null, orderingBiasId: null, beamWidth: null, mechanicBucketRetention: null,
             gateKey: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null,
             randomSeed: null, seedSalt: null, repairMustTurnBiased: null, repairTurnBiased: null, attractionDiversity: false,
             retryTier: null,
@@ -88,10 +88,10 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
     const attemptIndex = list.indexOf(winner);
     return {
         technique,
-        profile: winner.scoringProfileId ?? winner.profile ?? null,
-        template: winner.orderingBiasId ?? winner.template ?? null,
+        scoringProfileId: winner.scoringProfileId ?? winner.profile ?? null,
+        orderingBiasId: winner.orderingBiasId ?? winner.template ?? null,
         beamWidth: winner.beamWidth ?? null,
-        diverseBeam: winner.beamWidth ? !!(winner.mechanicBucketRetention ?? winner.diverseBeam) : null,
+        mechanicBucketRetention: winner.beamWidth ? !!(winner.mechanicBucketRetention ?? winner.diverseBeam) : null,
         gateKey: winner.gateKey ?? null,
         attemptIndex: attemptIndex >= 0 ? attemptIndex : null,
         elapsedMs: winner.elapsedMs ?? null,
@@ -111,10 +111,10 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
     const info = deriveSolveAttemptInfo(result.attempts);
     return makeProvenanceEntry(info.technique, {
         solverVersion: ctx.solverVersion ?? null,
-        profile: info.profile,
-        template: info.template,
+        scoringProfileId: info.scoringProfileId,
+        orderingBiasId: info.orderingBiasId,
         beamWidth: info.beamWidth,
-        diverseBeam: info.diverseBeam,
+        mechanicBucketRetention: info.mechanicBucketRetention,
         gateKey: info.gateKey,
         attemptIndex: info.attemptIndex,
         nodesExpanded: info.nodesExpanded,

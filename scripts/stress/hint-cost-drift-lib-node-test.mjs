@@ -62,23 +62,30 @@ test('techniqueFamily strips a colon-suffixed variant to its family', () => {
 });
 
 test('configKeyOf differs when budget differs by 60%, matches on everything else', () => {
-    const base = { solver: { technique: 'dfs', profile: 'objectiveFirst' }, search: {} };
+    const base = { solver: { technique: 'dfs', scoringProfileId: 'objectiveFirst' }, search: {} };
     const a = { ...base, search: { budgetMs: 554 } };
     const b = { ...base, search: { budgetMs: 888 } };
     assert.notEqual(configKeyOf(a), configKeyOf(b));
 });
 
 test('configKeyOf matches when budget jitters by a fraction of a percent', () => {
-    const base = { solver: { technique: 'repair', profile: 'repair' }, search: {} };
+    const base = { solver: { technique: 'repair', scoringProfileId: 'repair' }, search: {} };
     const a = { ...base, search: { budgetMs: 5862 } };
     const b = { ...base, search: { budgetMs: 5872 } };
     assert.equal(configKeyOf(a), configKeyOf(b));
 });
 
-test('configKeyOf differs on profile even with identical budget', () => {
-    const a = { solver: { technique: 'dfs', profile: 'perimeterSweep' }, search: { budgetMs: 8000 } };
-    const b = { solver: { technique: 'dfs', profile: 'objectiveFirst' }, search: { budgetMs: 8000 } };
+test('configKeyOf differs on scoring profile even with identical budget', () => {
+    const a = { solver: { technique: 'dfs', scoringProfileId: 'perimeterSweep' }, search: { budgetMs: 8000 } };
+    const b = { solver: { technique: 'dfs', scoringProfileId: 'objectiveFirst' }, search: { budgetMs: 8000 } };
     assert.notEqual(configKeyOf(a), configKeyOf(b));
 });
 
 console.log(`\nhint-cost-drift-lib tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);
+
+
+test('configKeyOf dual-reads legacy persisted solver config names', () => {
+    const canonical = { solver: { technique: 'beam', scoringProfileId: 'objectiveFirst', orderingBiasId: 'perimeterCW', beamWidth: 2000, mechanicBucketRetention: true }, search: { budgetMs: 8000 } };
+    const legacy = { solver: { technique: 'beam', profile: 'objectiveFirst', template: 'perimeterCW', beamWidth: 2000, diverseBeam: true }, search: { budgetMs: 8000 } };
+    assert.equal(configKeyOf(canonical), configKeyOf(legacy));
+});

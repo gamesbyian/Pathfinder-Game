@@ -35,9 +35,9 @@ export const budgetBucket = (ms) => (ms > 0 ? Math.round(Math.log(ms) / BUDGET_B
  *  every one of these matches. */
 export const configKeyOf = (e) => [
     techniqueFamily(e.solver?.technique),
-    e.solver?.profile ?? '-',
-    e.solver?.template ?? '-',
+    e.solver?.scoringProfileId ?? e.solver?.profile ?? '-',
+    e.solver?.orderingBiasId ?? e.solver?.template ?? '-',
     e.solver?.beamWidth ?? '-',
-    e.solver?.diverseBeam ? 'diverse' : '-',
+    (e.solver?.mechanicBucketRetention ?? e.solver?.diverseBeam) ? 'mechanic-buckets' : '-',
     budgetBucket(e.search?.budgetMs ?? 0),
 ].join('|');

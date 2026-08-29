@@ -50,16 +50,16 @@ export interface HintSolverProvenance {
     id: string;
     /** Solver build id when available. */
     version: string | null;
-    /** Search family. Pair with profile/template/forcing for exact configuration. */
+    /** Search family. Pair with scoringProfileId/orderingBiasId/forcing for exact configuration. */
     technique: string;
-    /** Solver policy/tie-break profile when applicable. */
-    profile: string | null;
-    /** Structural template id when applicable. */
-    template: string | null;
+    /** Scoring profile / admissible-order tie-break profile when applicable. */
+    scoringProfileId: string | null;
+    /** Structural ordering-bias id when applicable. */
+    orderingBiasId: string | null;
     /** Beam width; null for non-beam searches. */
     beamWidth: number | null;
-    /** Diverse-beam usage; false for plain beam, null for non-beam. */
-    diverseBeam: boolean | null;
+    /** Mechanic-bucket beam retention; false for plain beam, null for non-beam. */
+    mechanicBucketRetention: boolean | null;
     /** Freely selected winning gate on multi-gate levels; distinct from forcing.gateKey. */
     gateKey: number | null;
     /** Deliberate search overrides, or null when the technique has no forcing concept. */
@@ -117,10 +117,10 @@ export interface Hint {
 export interface MakeProvenanceEntryOptions {
     solverId?: string;
     solverVersion?: string | null;
-    profile?: string | null;
-    template?: string | null;
+    scoringProfileId?: string | null;
+    orderingBiasId?: string | null;
     beamWidth?: number | null;
-    diverseBeam?: boolean | null;
+    mechanicBucketRetention?: boolean | null;
     gateKey?: number | null;
     /** Any forcing* option creates a non-null forcing object; unspecified forcing fields become null. */
     forcingGateKey?: number | null;
@@ -185,10 +185,10 @@ export function makeProvenanceEntry(technique: string, opts: MakeProvenanceEntry
             id: opts.solverId ?? SOLVER_ID,
             version: opts.solverVersion ?? null,
             technique,
-            profile: opts.profile ?? null,
-            template: opts.template ?? null,
+            scoringProfileId: opts.scoringProfileId ?? null,
+            orderingBiasId: opts.orderingBiasId ?? null,
             beamWidth: opts.beamWidth ?? null,
-            diverseBeam: opts.diverseBeam ?? null,
+            mechanicBucketRetention: opts.mechanicBucketRetention ?? null,
             gateKey: opts.gateKey ?? null,
             forcing: forcingFromOpts(opts),
             attemptIndex: opts.attemptIndex ?? null,
@@ -264,14 +264,29 @@ function isNestedProvenanceEntry(raw: any): boolean {
     return !!raw && typeof raw === 'object' && raw.solver && typeof raw.solver === 'object';
 }
 
-/** Upgrade legacy flat/transitional provenance; already-nested entries pass through. */
+/** Upgrade legacy flat/transitional provenance. Nested entries are normalized too:
+ * historical profile/template/diverseBeam fields are accepted on read, but canonical callers
+ * receive scoringProfileId/orderingBiasId/mechanicBucketRetention only. */
 export function upgradeProvenanceEntry(raw: any): HintProvenanceEntry {
     if (isNestedProvenanceEntry(raw)) {
-        // Repair a short-lived migration bug that paired witness technique with the solver id.
-        if (raw.solver?.technique === WITNESS_GENERATOR_ID && raw.solver.id !== WITNESS_GENERATOR_ID) {
-            return { ...raw, solver: { ...raw.solver, id: WITNESS_GENERATOR_ID }, search: { ...raw.search, termination: 'witness' } };
-        }
-        return raw as HintProvenanceEntry;
+        const legacySolver = raw.solver || {};
+        const solver: HintSolverProvenance = {
+            ...legacySolver,
+            id: legacySolver.technique === WITNESS_GENERATOR_ID && legacySolver.id !== WITNESS_GENERATOR_ID
+                ? WITNESS_GENERATOR_ID : legacySolver.id,
+            scoringProfileId: legacySolver.scoringProfileId ?? legacySolver.profile ?? null,
+            orderingBiasId: legacySolver.orderingBiasId ?? legacySolver.template ?? null,
+            mechanicBucketRetention: legacySolver.mechanicBucketRetention ?? legacySolver.diverseBeam ?? null,
+        };
+        delete (solver as any).profile;
+        delete (solver as any).template;
+        delete (solver as any).diverseBeam;
+        return {
+            ...raw,
+            solver,
+            search: legacySolver.technique === WITNESS_GENERATOR_ID && legacySolver.id !== WITNESS_GENERATOR_ID
+                ? { ...raw.search, termination: 'witness' } : raw.search,
+        } as HintProvenanceEntry;
     }
     const technique = raw?.technique || raw?.solverTechnique || 'unknown';
     const isWitness = technique === WITNESS_GENERATOR_ID || raw?.metadataStatus === 'witness';
