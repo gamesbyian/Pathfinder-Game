@@ -429,7 +429,7 @@ test('must-cross-threaded medium-high-int levels get floored mechanic-bucket-ret
   const attempts = getAttemptConfigs(level);
   const retained = attempts.filter(c => c.mechanicBucketRetention);
   assert.equal(retained.length >= 2, true, 'expected mechanic-bucket-retention beam attempts');
-  assert.equal(diverse.some(c => c.scoringProfileId === 'intersectionHarvest' && (c.minBudgetFraction ?? 0) > 0), true,
+  assert.equal(retained.some(c => c.scoringProfileId === 'intersectionHarvest' && (c.minBudgetFraction ?? 0) > 0), true,
     'mechanic-bucket-retention intersectionHarvest beam needs a budget floor to survive ladder fragmentation');
   const perimeterIdx = attempts.findIndex(c => c.beamWidth && c.orderingBias?.id === 'perimeterCW');
   const retainedIdx = attempts.findIndex(c => c.mechanicBucketRetention);
