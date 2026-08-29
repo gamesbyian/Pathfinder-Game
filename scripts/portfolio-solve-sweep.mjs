@@ -368,7 +368,7 @@ function primeAttemptFor(id) {
     // threading an AD-scoring flag through primeAttempt is future work.
     // --prime-include-all opts into priming every winner kind regardless (accepting the lower hit
     // rate and miss cost on repair winners that fail either gate, and on AD winners) for experiments.
-    const winnerKind = winnerAttempt?.attractionDiversity ? 'ad' : winnerAttempt?.repair ? 'repair' : 'normal';
+    const winnerKind = winnerAttempt?.goalAttractionDisabledRetry ? 'ad' : winnerAttempt?.repair ? 'repair' : 'normal';
     const repairSeedKnown = winnerKind === 'repair' && winnerAttempt?.randomSeed !== undefined;
     // Eligibility gate (default, non-include-all path): seed known AND its own recorded cost fits
     // this run's budget. Deliberately separate from repairSeedKnown above — under --prime-include-all

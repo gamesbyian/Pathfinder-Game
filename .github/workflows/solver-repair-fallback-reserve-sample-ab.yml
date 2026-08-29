@@ -295,7 +295,7 @@ jobs:
           const fs = require('node:fs');
           const r = JSON.parse(fs.readFileSync('reports/stress/repair-fallback-reserve-sample-ab.json', 'utf8'));
           const rows = r.levels ?? [];
-          const isFallbackAttempt = a => a.repair && !a.repairProbe && !a.repairMustTurnBiased && !a.repairTurnBiased;
+          const isFallbackAttempt = a => a.repair && !(a.earlyRepairSearch ?? a.repairProbe) && !a.repairMustTurnBiased && !a.repairTurnBiased;
           const withFallback = rows.filter(x => (x.attempts||[]).some(isFallbackAttempt));
           const fallbackWins = withFallback.filter(x => x.ok && (x.attempts||[]).some(a => isFallbackAttempt(a) && a.ok));
           console.log(\`Levels where the repair fallback loop got at least one attempt: \${withFallback.length}/\${rows.length}\`);

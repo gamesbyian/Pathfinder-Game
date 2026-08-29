@@ -53,7 +53,7 @@ const mainLoopLateReserveConfigCount = argMap.has('--main-loop-late-reserve-conf
 const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction')
     ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
 // 2026-08-13 (docs/future-work.md item 4b): lets a matched sweep compare candidate
-// REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE values against the production defaults
+// EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE values against the production defaults
 // (10, 0.35) without editing modules/solver/orchestration.ts. Same optional/omitted-means-
 // production-default shape as the main-loop-late-reserve flags above.
 const repairProbeAdaptiveBadnessGate = argMap.has('--repair-probe-adaptive-badness-gate')

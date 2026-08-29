@@ -43,7 +43,7 @@ Listed only so old experiment names are not mistaken for dangling opt-in tasks. 
 | `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` | Default-ON after population gain; retain as baseline but reprice residual value. |
 | `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` | Default-ON after population gain; retain as baseline but reprice residual value. |
 | `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` | Default-ON after +9 / 0-loss Corpus-2 evidence; material cost makes it a scheduler tail-audit candidate. |
-| `STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY` | Default-ON dead-last descendant of the negative global swap; population test added three solves without losses in reached controls. Reprice through scheduler work rather than increasing reserve in isolation. |
+| `STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY` | Default-ON dead-last descendant of the negative global swap; population test added three solves without losses in reached controls. Reprice through scheduler work rather than increasing reserve in isolation. |
 | `STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY` | Default-ON after five additive rescues without measured losses; can buy substantial failed-tail work, so seed/budget expansion requires fixed-work repricing. |
 | `STRATEGY_REPAIR_LATE_PROBE` | Default-ON after same-commit population gain; future cap growth competes with other actions under shared work. |
 | `STRATEGY_MAIN_LOOP_LATE_RESERVE` | Historical default-ON mechanism. Its broad “give late repair more work” interpretation is closed; do not infer an active research lane from code presence. |

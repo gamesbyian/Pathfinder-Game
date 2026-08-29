@@ -15,7 +15,7 @@
  *    not a reimplementation) how many control-failure rows also satisfy a given routing regime gate.
  * 2. Even a genuinely routing regime-eligible, control-failure row can still show zero participation for
  *    a reason that has nothing to do with routing regime classification: a scheduling/budget gap. Found
- *    for confirm-residual-001 specifically -- MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT did not protect
+ *    for confirm-residual-001 specifically -- MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT did not protect
  *    a rule's trailing configs once a level's actual nodesExpanded overshot the nominal node_budget
  *    by ~4.5x under non-strict ("legacy additive-pass") semantics -- this script's --dump-full-
  *    attempts-for-id and direct getConfiguredAttemptConfigs call are the reusable way to tell
@@ -194,7 +194,7 @@ if (solveDirectId) {
             stageId: a.stageId, actionKey: a.actionKey, outcome: a.outcome,
             nodesExpanded: a.nodesExpanded, allocatedNodeCeiling: a.allocatedNodeCeiling ?? null,
             allocatedWorkCeiling: a.allocatedWorkCeiling ?? null, workSpent: a.workSpent ?? null,
-            mainLoopLateReserve: a.mainLoopLateReserve ?? null, timedOut: a.timedOut ?? null,
+            mainSearchLateReserve: a.mainSearchLateReserve ?? null, timedOut: a.timedOut ?? null,
         })), null, 1));
     }
 }

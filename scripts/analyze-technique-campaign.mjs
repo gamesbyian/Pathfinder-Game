@@ -15,10 +15,10 @@ const sha256 = value => createHash('sha256').update(value).digest('hex');
 const normalizedStageId = id => { try { return normalizeSolverStageId(id); } catch { return id; } };
 const technique = attempt => (attempt.stageId ? normalizedStageId(attempt.stageId) : null)
     ?? (attempt.admissibleOrder ? 'admissible-order-fallback'
-        : attempt.repairProbe ? 'early-repair-search'
+        : (attempt.earlyRepairSearch ?? attempt.repairProbe) ? 'early-repair-search'
             : attempt.repair ? 'repair-fallback'
-                : attempt.attractionDiversity ? 'goal-attraction-disabled-retry'
-                    : attempt.mainLoopLateReserve ? 'main-search-late-reserve'
+                : (attempt.goalAttractionDisabledRetry ?? attempt.attractionDiversity) ? 'goal-attraction-disabled-retry'
+                    : (attempt.mainSearchLateReserve ?? attempt.mainLoopLateReserve) ? 'main-search-late-reserve'
                         : attempt.beamWidth ? 'beam' : 'dfs');
 const finite = value => Number.isFinite(Number(value)) ? Number(value) : null;
 // Search primitives check work at bounded checkpoints rather than before every apply/connectivity

@@ -16,7 +16,7 @@ const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([
   'stageId', 'ok', 'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'repair',
   'timedOut', 'bestBadness', 'finalBadness', 'allocatedWorkCeiling', 'allocatedNodeCeiling',
   'workSpent', 'admissibleOrder', 'admissibleOrderNoTieBreak', 'admissibleOrderLds',
-  'mainLoopLateReserve', 'repairProbe', 'repairProbeShrinkRecovery', 'attractionDiversity',
+  'mainSearchLateReserve', 'earlyRepairSearch', 'repairShrinkRecovery', 'goalAttractionDisabledRetry',
   // Consulted by orchestration.ts's classifyAttemptTier to derive the single retryTier field
   // (below), not copied onto provenance 1:1 under their own attempt-field names.
   'coarseStateNearTieRetentionRetry', 'admissibleOrderNonDefaultRetry', 'connectivityAxisExhaustedRetry',
@@ -170,7 +170,7 @@ test('provenanceFromSolveResult leaves forcing null for a non-repair winner (no 
 });
 
 // Regression coverage for the broader provenance-gap sweep (2026-07-23): beamWidth/mechanicBucketRetention/
-// gateKey/seedSalt/attractionDiversity were all previously invisible in the hint corpus, the same
+// gateKey/seedSalt/goalAttractionDisabledRetry were all previously invisible in the hint corpus, the same
 // class of gap as the repair-bias fix above — "which internal solver config actually won" data that
 // only existed in raw solver Attempt objects, never in the permanent provenance record.
 test('deriveSolveAttemptInfo captures beamWidth/mechanicBucketRetention/gateKey for a beam winner', () => {
@@ -213,7 +213,7 @@ test('deriveSolveAttemptInfo recognizes canonical and historical goal-attraction
   assert.equal(canonical.technique, 'beam');
   assert.equal(canonical.goalAttractionDisabledRetry, true);
 
-  const historical = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, attractionDiversity: true, ok: true }]);
+  const historical = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, goalAttractionDisabledRetry: true, ok: true }]);
   assert.equal(historical.technique, 'repair');
   assert.equal(historical.goalAttractionDisabledRetry, true);
 
@@ -234,7 +234,7 @@ test('provenanceFromSolveResult records beamWidth/mechanicBucketRetention/gateKe
 
 test('provenanceFromSolveResult maps the current single-written goal-attraction stage onto forcing.disabledFeatures', () => {
   const winner = withSolverStage({ scoringProfileId: 'perimeterSweep', beamWidth: 2000, ok: true }, 'goal-attraction-disabled-retry');
-  assert.equal('attractionDiversity' in winner, false, 'current stage writer must not emit the legacy boolean');
+  assert.equal('goalAttractionDisabledRetry' in winner, false, 'current stage writer must not emit the legacy boolean');
   const entry = provenanceFromSolveResult({ status: 'success', attempts: [winner] });
   assert.ok(entry.solver.forcing, 'a goal-attraction-disabled-retry winner must carry forcing metadata');
   assert.deepEqual(entry.solver.forcing.disabledFeatures, ['SCORE_GOAL_ATTRACTION']);
@@ -260,8 +260,8 @@ test('deriveSolveAttemptInfo records which force-enabled retry tier won, distinc
 
   // Attraction-diversity already has its own dedicated forcing field (disabledFeatures) and is
   // deliberately NOT double-recorded as a retryTier.
-  const attractionDiversity = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', beamWidth: 2000, attractionDiversity: true, ok: true }]);
-  assert.equal(attractionDiversity.retryTier, null);
+  const goalAttractionDisabledRetry = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', beamWidth: 2000, goalAttractionDisabledRetry: true, ok: true }]);
+  assert.equal(goalAttractionDisabledRetry.retryTier, null);
 
   // An ordinary main-ladder/repair-fallback win has no retry tier either.
   const ordinaryRepair = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, ok: true }]);

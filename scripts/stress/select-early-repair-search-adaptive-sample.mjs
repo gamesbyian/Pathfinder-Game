@@ -2,7 +2,7 @@
 /**
  * Selects a deterministic, seeded stratified Corpus-2 sample for A/B testing
  * STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (see modules/solver/orchestration.ts's
- * REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE comment and
+ * EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE comment and
  * reports/2026-08-12-repair-probe-early-main-loop-starvation.md).
  *
  * The flag can only ever change a level's node count/outcome if the level is repair-gated

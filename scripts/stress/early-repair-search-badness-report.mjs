@@ -7,7 +7,7 @@
  * from a persisted report alone.
  *
  * Built so recalibrating modules/solver/orchestration.ts's
- * REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE / REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE (see that
+ * EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE / EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE (see that
  * constant's own comment) never again requires a bespoke local diagnostic run: any ordinary batch
  * solve (level-blind-capability-sweep.mjs, portfolio-solve-sweep.mjs) that reaches a repair-gated,
  * must-turn-carrying level already produces this data as a side effect of solving it -- this script
@@ -36,8 +36,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import {
-    REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE,
-    REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE,
+    EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE,
+    EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE,
 } from '../../modules/solver/orchestration.ts';
 
 const argMap = new Map();
@@ -62,7 +62,7 @@ function loadRows(file) {
 // what the (possibly scaled) budget achieved.
 function levelBadnessInfo(row) {
     const attempts = Array.isArray(row.attempts) ? row.attempts : [];
-    const probe = attempts.filter(a => a.stageId === 'early-repair-search' || (a.stageId == null && a.repairProbe));
+    const probe = attempts.filter(a => a.stageId === 'early-repair-search' || (a.stageId == null && (a.earlyRepairSearch ?? a.repairProbe)));
     const ordinary = probe.filter(a => a.repair && !a.repairMustTurnBiased && !a.repairTurnBiased);
     const biased = probe.filter(a => a.repairMustTurnBiased || a.repairTurnBiased);
     const minBadness = list => list.reduce((min, a) => (Number.isFinite(a.bestBadness) ? Math.min(min, a.bestBadness) : min), Infinity);
@@ -91,8 +91,8 @@ const numericArg = (name, fallback) => {
     if (!Number.isFinite(value)) { console.error(`${name} must be a finite number`); process.exit(2); }
     return { value, overridden: true };
 };
-const gateArg = numericArg('--gate', REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE);
-const minScaleArg = numericArg('--min-scale', REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE);
+const gateArg = numericArg('--gate', EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE);
+const minScaleArg = numericArg('--min-scale', EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE);
 const CURRENT_GATE = gateArg.value;
 const CURRENT_MIN_SCALE = minScaleArg.value;
 const constantsSource = gateArg.overridden || minScaleArg.overridden

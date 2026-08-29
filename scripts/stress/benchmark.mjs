@@ -28,7 +28,7 @@
  * slow-but-eventual find becomes a permanent hint — leave this flag unset there. Omit entirely to
  * keep the default 6x (matches this tool's historical behavior exactly).
  *
- * --attraction-diversity-budget-fraction=<n> overrides ATTRACTION_DIVERSITY_BUDGET_FRACTION
+ * --attraction-diversity-budget-fraction=<n> overrides GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION
  * (default 1.0x, the 2026-07-16 fragile-group last-resort pass's own separate extra wall-clock
  * allowance) via SolveOpts.attractionDiversityBudgetFractionOverride — a DEDICATED override, NOT
  * the same flag as --repair-budget-fraction above, specifically so a sweep can isolate one

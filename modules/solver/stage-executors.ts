@@ -73,7 +73,7 @@ export async function runWholeLadderRetryTier(input: WholeLadderRetryTierInput):
             nodeCeiling, workBudget, workStart, staircaseEntry, staircaseStart);
         const attempts = raw.attempts.map(attempt => withSolverStage(attempt, stageId));
         // Staircase reuses lateConfigStart=0, which makes runners set this unrelated main-search tag.
-        if (staircase) for (const attempt of attempts) delete attempt.mainLoopLateReserve;
+        if (staircase) for (const attempt of attempts) delete attempt.mainSearchLateReserve;
         return { attempts, solution: raw.solution };
     } finally {
         prep._cfg = originalCfg;

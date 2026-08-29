@@ -23,7 +23,7 @@ test('production retry metadata reports current production-default policy status
     assert.equal(solverStageSpec('repair-elite-prefix-dfs-retry').disposition, 'opt-in');
 });
 test('legacy markers derive from canonical stages', () => {
-    assert.deepEqual(legacyStageTags('repair-shrink-recovery'), { repairProbe: true, repairProbeShrinkRecovery: true });
+    assert.deepEqual(legacyStageTags('repair-shrink-recovery'), { earlyRepairSearch: true, repairShrinkRecovery: true });
     assert.deepEqual(legacyStageTags('must-cross-neighbor-prune-disabled-retry'), { mcNeighborBudgetRetry: true });
     assert.deepEqual(legacyStageTags('main-search'), {});
 });

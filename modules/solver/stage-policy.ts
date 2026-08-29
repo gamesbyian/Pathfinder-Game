@@ -89,12 +89,12 @@ export function createBudgetEnvelope(input: { stageId: SolverStageId; wallMs?: n
     const headroom: BudgetEnvelope['headroom'] = input.headroom ?? { kind: 'none', amount: 0, sourceStageId: null };
     return Object.freeze({ stageId: input.stageId, scope: input.scope ?? 'stage-local', wall: currency(input.wallMs), work: currency(input.workUnits), nodes: currency(input.nodeCeiling), headroom, strictTotalWork: input.strictTotalWork ?? false });
 }
-type LegacyStageTags = { attractionDiversity?: boolean; repairProbe?: boolean; repairProbeShrinkRecovery?: boolean; coarseStateNearTieRetentionRetry?: boolean; admissibleOrderNonDefaultRetry?: boolean; connectivityAxisExhaustedRetry?: boolean; repairElitePrefixDfsRetry?: boolean; mcNeighborBudgetRetry?: boolean; repairLateProbe?: boolean };
+type LegacyStageTags = { goalAttractionDisabledRetry?: boolean; earlyRepairSearch?: boolean; repairShrinkRecovery?: boolean; coarseStateNearTieRetentionRetry?: boolean; admissibleOrderNonDefaultRetry?: boolean; connectivityAxisExhaustedRetry?: boolean; repairElitePrefixDfsRetry?: boolean; mcNeighborBudgetRetry?: boolean; repairLateProbe?: boolean };
 export function legacyStageTags(stageId: SolverStageId): LegacyStageTags {
     switch (stageId) {
-        case 'early-repair-search': return { repairProbe: true };
-        case 'goal-attraction-disabled-retry': return { attractionDiversity: true };
-        case 'repair-shrink-recovery': return { repairProbe: true, repairProbeShrinkRecovery: true };
+        case 'early-repair-search': return { earlyRepairSearch: true };
+        case 'goal-attraction-disabled-retry': return { goalAttractionDisabledRetry: true };
+        case 'repair-shrink-recovery': return { earlyRepairSearch: true, repairShrinkRecovery: true };
         case 'coarse-state-near-tie-retention-disabled-retry': return { coarseStateNearTieRetentionRetry: true };
         case 'admissible-order-alternate-tiebreak-retry': return { admissibleOrderNonDefaultRetry: true };
         case 'connectivity-axis-prune-disabled-retry': return { connectivityAxisExhaustedRetry: true };

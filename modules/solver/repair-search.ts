@@ -961,7 +961,7 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // repairMustTurnBiasedAttempt (which only ever runs after the ordinary attempt has already
 // failed on every gate) passes true.
 // nodeBudget: optional, in ADDITION to budgetMs (never a substitute for it) — a deterministic,
-// machine-speed-independent cap used by runRepairProbe (orchestration.ts) so the early-probe
+// machine-speed-independent cap used by runEarlyRepairSearch (orchestration.ts) so the early-probe
 // win/loss decision depends on work done, not wall-clock luck under contention. Infinity
 // (default) preserves the pre-existing ms-only behavior exactly. out.nodesExpanded, when
 // provided, is set on every return path so the caller can track cumulative probe consumption
