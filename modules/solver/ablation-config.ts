@@ -166,7 +166,7 @@ export const LEGACY_FEATURE_ALIASES: Readonly<Record<string, string>> = Object.f
 
 /** Normalize one historical feature name to the canonical registry key. */
 export function canonicalAblationFeatureName(featureName: string): string {
-    if (name === 'SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE') return 'SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE';
+    if (featureName === 'SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE') return 'SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE';
     return LEGACY_FEATURE_ALIASES[featureName] ?? featureName;
 }
 
