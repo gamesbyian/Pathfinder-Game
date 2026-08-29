@@ -386,6 +386,17 @@ function referenceMatches(entry) {
   ])].sort();
 }
 
+const reconciliationAuthorityFiles = new Set([
+  'docs/naming-cleanup-plan.md',
+  'docs/naming-cleanup-process-hardening.md',
+  'docs/naming-and-vocabulary.md',
+  'docs/change-recipes.md',
+]);
+
+function reconciliationReferenceFilesForValue(value) {
+  return referenceFilesForValue(value).filter(file => !reconciliationAuthorityFiles.has(file));
+}
+
 function reconciliationState(entry, oldRefs, newRefs) {
   const oldLive = oldRefs.length > 0;
   const newLive = newRefs.length > 0;
@@ -415,8 +426,8 @@ function referenceCategories(files) {
 const selectedLedgerEntries = (ledger.entries ?? [])
   .filter(entry => PHASE_MIN == null || (entry.phase >= PHASE_MIN && entry.phase <= PHASE_MAX))
   .map(entry => {
-    const oldReferenceFiles = referenceFilesForValue(entry.old);
-    const newReferenceFiles = referenceFilesForValue(entry.new);
+    const oldReferenceFiles = reconciliationReferenceFilesForValue(entry.old);
+    const newReferenceFiles = reconciliationReferenceFilesForValue(entry.new);
     return {
       old: entry.old,
       new: entry.new,
