@@ -107,11 +107,11 @@ test('SOLVE result carries the full SolveResult shape, not a fixed subset (regre
     assert.ok(Array.isArray(result.solutions), 'solutions must be present');
     assert.equal(typeof result.workSpent, 'number', 'workSpent must be present');
     assert.equal(typeof result.workBudget, 'number', 'workBudget must be present');
-    // nodeBudgetReached/solvedByPrime/techniqueLifecycle/schedulerMode/portfolio are all legitimately
+    // nodeBudgetReached/solvedByPrime/stageLifecycle/schedulerMode/legacyLatencyPortfolioExperiment are all legitimately
     // undefined on an ordinary successful solve (their own SolveResult fields are optional) -- the
     // point is they're no longer STRIPPED by the serializer, which `'x' in result` (not a value
     // check) verifies regardless of whether this particular solve populated them.
-    for (const field of ['nodeBudgetReached', 'solvedByPrime', 'techniqueLifecycle', 'schedulerMode', 'portfolio']) {
+    for (const field of ['nodeBudgetReached', 'solvedByPrime', 'stageLifecycle', 'schedulerMode', 'legacyLatencyPortfolioExperiment']) {
         assert.ok(field in result, `${field} must survive the worker result serializer`);
     }
 });
@@ -146,7 +146,7 @@ test('SOLVE threads solveOpts through to the real solveLevel() call (regression,
     // Before the fix, the worker's SOLVE handler only ever passed { timeBudgetMs, yieldFn } to
     // solveLevel() -- any other option the caller sent was silently discarded. lifecycleTelemetry
     // is a clean, verifiable signal: it only ever appears on the result when solveLevel() actually
-    // received it, so a populated techniqueLifecycle here proves solveOpts genuinely reached the
+    // received it, so a populated stageLifecycle here proves solveOpts genuinely reached the
     // real solver, not just that the worker accepted the field without using it.
     const posts = [];
     const cancelledIds = new Set();
@@ -156,7 +156,7 @@ test('SOLVE threads solveOpts through to the real solveLevel() call (regression,
     );
     assert.equal(posts[0].type, 'RESULT');
     assert.equal(posts[0].ok, true);
-    assert.ok(posts[0].techniqueLifecycle && typeof posts[0].techniqueLifecycle === 'object',
+    assert.ok(posts[0].stageLifecycle && typeof posts[0].stageLifecycle === 'object',
         'lifecycleTelemetry from solveOpts must have reached the real solveLevel() call');
 });
 
