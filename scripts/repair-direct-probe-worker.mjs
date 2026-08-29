@@ -10,7 +10,7 @@ installBrowserStubs();
 const { createSolver } = await import('../modules/solver.js');
 const { prepLevel } = await import('../modules/solver/prep.js');
 const { repairSearchFromGate } = await import('../modules/solver/repair-search.js');
-const { POLICY_PROFILES } = await import('../modules/solver/policy.js');
+const { SCORING_PROFILES } = await import('../modules/solver/policy.js');
 const Solver = createSolver();
 
 const corpusCache = new Map();
@@ -30,7 +30,7 @@ runWorkerMain(async (task) => {
     const raw = rawLevels[levelNumber - 1];
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
     const gateKey = level.gateKeys[gateIndex];
-    const profile = POLICY_PROFILES.repair ?? POLICY_PROFILES.default;
+    const profile = SCORING_PROFILES.repair ?? SCORING_PROFILES.default;
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
     const out = {};
