@@ -157,21 +157,11 @@ export interface Attempt {
      *  LDS-wrapped admissible-order-fallback winner apart from the plain unbounded search. Not read by any
      *  solving logic. */
     admissibleOrderLds?: boolean;
-    /** True only for attempts run inside runRepairProbe (the early, node-budget-capped probe tier),
-     *  as opposed to the same repair config run later by the full-budget repair fallback loop —
-     *  both produce `repair`-flagged attempts with the same shape, so without this tag external
-     *  tooling cannot tell which phase a given repair attempt's `bestBadness` reading came from.
-     *  Added so REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE (see that constant's own
-     *  comment) can be recalibrated from ordinary batch-tool output alone — filtering persisted
-     *  attempts by `repairProbe && repair && !repairMustTurnBiased && !repairTurnBiased`
-     *  reconstructs exactly the `ordinaryBestBadness` signal runRepairProbe computes internally, and
-     *  the biased probe attempt's own `ok`/`bestBadness` shows what the scaled budget actually
-     *  achieved. Not read by any solving logic. */
+    /** @deprecated Historical attempt telemetry field accepted on read only.
+     * Current attempts identify this tier with stageId='early-repair-search'. */
     repairProbe?: boolean;
-    /** True only for attempts run by the STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY tier — a re-run of a
-     *  biased probe config at the full budget the adaptive shrink withheld from it. Also carries
-     *  `repairProbe: true` (it IS a probe config), so probe-population tooling keeps counting it;
-     *  this flag is what separates a recovered attempt from the original shrunken one. */
+    /** @deprecated Historical attempt telemetry field accepted on read only.
+     * Current attempts identify this tier with stageId='repair-shrink-recovery'. */
     repairProbeShrinkRecovery?: boolean;
     /** Diagnostic-only: this ordinary main-search attempt belongs to the late suffix allowed to
      *  consume the experimental reserved node slice. Never set when the experiment is disabled. */
@@ -203,8 +193,7 @@ export interface AttemptTierFlags {
 /** Maps a canonical `stageId` to classifyAttemptTier's own (pre-existing, string-literal) label
  *  vocabulary, for the two stages where they differ: `main-search` was always labeled 'main-ladder'
  *  here, and a repair-shrink-recovery attempt was always grouped under the broader
- *  'early-repair-search' label (it also carries legacy `repairProbe: true` — see stage-policy.ts's
- *  legacyStageTags). Every other stageId already equals its own label. Kept as its own lookup
+ *  'early-repair-search' label. Every other stageId already equals its own label. Kept as its own lookup
  *  rather than changing the label vocabulary itself, since hint-provenance.ts's `forcing.retryTier`
  *  and this file's own lifecycle telemetry both persist these exact strings. */
 const STAGE_ID_TO_TIER_LABEL: Partial<Record<SolverStageId, string>> = {
@@ -1349,9 +1338,8 @@ async function runRepairProbe(
                 // real CPU contention too, not just a fast/idle host.
                 const nodesOut: { nodesExpanded?: number } = {};
                 const r = await runAttempt(gateKey, level, prep, repairConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, Date.now(), yieldFn, gateNodeBudget, nodesOut, seedSalt);
-                // repairProbe: true marks every attempt this function produces (see Attempt.repairProbe's
-                // own comment) so external tooling can distinguish a probe-phase repair attempt's
-                // bestBadness from the same repair config re-run later by the full-budget fallback loop.
+                // stageId is the canonical persisted identity; historical readers may still accept
+                // repairProbe, but current writers do not emit that legacy boolean.
                 attempts.push(withSolverStage(r.attempt, 'early-repair-search'));
                 nodesUsed += nodesOut.nodesExpanded ?? gateNodeBudget;
                 if (r.path) return { solution: r.path, attempts, shrunkBiased };
