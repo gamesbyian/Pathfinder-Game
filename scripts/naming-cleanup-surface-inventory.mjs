@@ -25,12 +25,23 @@ const JSON_MODE = args.includes('--json');
 const COMPACT_MODE = args.includes('--compact');
 const UNCOVERED_ONLY = args.includes('--uncovered');
 const phaseArg = args.find(arg => arg.startsWith('--phase='));
-const PHASE = phaseArg ? Number(phaseArg.slice('--phase='.length)) : null;
-
-if (phaseArg && !Number.isInteger(PHASE)) {
-  console.error('--phase must be an integer');
-  process.exit(2);
+let PHASE_MIN = null;
+let PHASE_MAX = null;
+if (phaseArg) {
+  const rawPhase = phaseArg.slice('--phase='.length);
+  const range = rawPhase.match(/^(\d+)(?:-(\d+))?$/u);
+  if (!range) {
+    console.error('--phase must be an integer or inclusive range such as 8-14');
+    process.exit(2);
+  }
+  PHASE_MIN = Number(range[1]);
+  PHASE_MAX = Number(range[2] ?? range[1]);
+  if (PHASE_MAX < PHASE_MIN) {
+    console.error('--phase range must be ascending');
+    process.exit(2);
+  }
 }
+const PHASE = PHASE_MIN === PHASE_MAX ? PHASE_MIN : null;
 
 const packageJson = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
 const packageScripts = packageJson.scripts ?? {};
@@ -342,11 +353,9 @@ function exactSurfaceMatches(entry) {
   return matches;
 }
 
-function referenceMatches(entry) {
-  const terms = [entry.old, entry.new]
-    .filter(value => typeof value === 'string' && value.length >= 4)
-    .flatMap(value => [value, path.basename(value)])
-    .filter((value, index, all) => all.indexOf(value) === index);
+function referenceFilesForValue(value) {
+  if (typeof value !== 'string' || value.length < 3) return [];
+  const terms = [...new Set([value, path.basename(value)].filter(term => term.length >= 3))];
   const files = [];
   for (const [file, source] of sourceByFile) {
     if (terms.some(term => source.includes(term))) files.push(file);
@@ -355,19 +364,43 @@ function referenceMatches(entry) {
   return [...new Set(files)].sort();
 }
 
+function referenceMatches(entry) {
+  return [...new Set([
+    ...referenceFilesForValue(entry.old),
+    ...referenceFilesForValue(entry.new),
+  ])].sort();
+}
+
+function reconciliationState(entry, oldRefs, newRefs) {
+  const oldLive = oldRefs.length > 0;
+  const newLive = newRefs.length > 0;
+  if (oldLive && newLive) return 'mixed-old-and-canonical';
+  if (oldLive) return 'old-live';
+  if (newLive) return 'canonical-live';
+  if (entry.persistence === 'frozen-history') return 'no-current-live-reference-frozen-history';
+  return 'no-current-live-reference-review';
+}
+
 const selectedLedgerEntries = (ledger.entries ?? [])
-  .filter(entry => PHASE == null || entry.phase === PHASE)
-  .map(entry => ({
-    old: entry.old,
-    new: entry.new,
-    kind: entry.kind,
-    risk: entry.risk,
-    persistence: entry.persistence,
-    phase: entry.phase,
-    status: entry.status,
-    surfaces: exactSurfaceMatches(entry),
-    referenceFiles: referenceMatches(entry),
-  }));
+  .filter(entry => PHASE_MIN == null || (entry.phase >= PHASE_MIN && entry.phase <= PHASE_MAX))
+  .map(entry => {
+    const oldReferenceFiles = referenceFilesForValue(entry.old);
+    const newReferenceFiles = referenceFilesForValue(entry.new);
+    return {
+      old: entry.old,
+      new: entry.new,
+      kind: entry.kind,
+      risk: entry.risk,
+      persistence: entry.persistence,
+      phase: entry.phase,
+      status: entry.status,
+      surfaces: exactSurfaceMatches(entry),
+      referenceFiles: referenceMatches(entry),
+      oldReferenceFiles,
+      newReferenceFiles,
+      reconciliationState: reconciliationState(entry, oldReferenceFiles, newReferenceFiles),
+    };
+  });
 
 const phaseScriptSet = new Set(selectedLedgerEntries.flatMap(entry => entry.surfaces.scriptFiles));
 const phaseAliasSet = new Set(selectedLedgerEntries.flatMap(entry => entry.surfaces.packageAliases));
@@ -377,10 +410,10 @@ const phaseModuleSet = new Set(selectedLedgerEntries.flatMap(entry => [
   ...entry.surfaces.symbolOwners,
 ]));
 
-let selectedScripts = PHASE == null ? scriptRows : scriptRows.filter(row => phaseScriptSet.has(row.file));
-let selectedPackages = PHASE == null ? packageRows : packageRows.filter(row => phaseAliasSet.has(row.name));
-let selectedWorkflows = PHASE == null ? workflowRows : workflowRows.filter(row => phaseWorkflowSet.has(row.file));
-let selectedModules = PHASE == null ? moduleRows : moduleRows.filter(row => phaseModuleSet.has(row.file));
+let selectedScripts = PHASE_MIN == null ? scriptRows : scriptRows.filter(row => phaseScriptSet.has(row.file));
+let selectedPackages = PHASE_MIN == null ? packageRows : packageRows.filter(row => phaseAliasSet.has(row.name));
+let selectedWorkflows = PHASE_MIN == null ? workflowRows : workflowRows.filter(row => phaseWorkflowSet.has(row.file));
+let selectedModules = PHASE_MIN == null ? moduleRows : moduleRows.filter(row => phaseModuleSet.has(row.file));
 
 if (UNCOVERED_ONLY) {
   selectedScripts = selectedScripts.filter(row => row.coverageStatus !== 'direct-ci-execution' && row.coverageStatus !== 'ci-test-reference');
@@ -406,6 +439,7 @@ const result = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
   phase: PHASE,
+  phaseRange: PHASE_MIN == null ? null : [PHASE_MIN, PHASE_MAX],
   summary,
   ledgerEntries: selectedLedgerEntries,
   packageCommands: selectedPackages,
@@ -424,8 +458,12 @@ console.log(`Naming-cleanup surface inventory: ${summary.surfacedScripts} surfac
 console.log(`CI package roots: ${ciRoots.join(', ')}`);
 console.log(`Workflow local-path structural validation in CI: ${workflowPathStructuralCheckInCi ? 'yes' : 'no'}${workflowStructuralRoots.length ? ` via ${workflowStructuralRoots.join(', ')}` : ''}`);
 
-if (PHASE != null) {
-  console.log(`Phase ${PHASE}: ${selectedLedgerEntries.length} ledger rows; ${selectedScripts.length} exact script surfaces; ${selectedModules.length} module/symbol surfaces; ${selectedPackages.length} exact package aliases; ${selectedWorkflows.length} exact workflows.`);
+if (PHASE_MIN != null) {
+  const label = PHASE_MIN === PHASE_MAX ? `Phase ${PHASE_MIN}` : `Phases ${PHASE_MIN}-${PHASE_MAX}`;
+  console.log(`${label}: ${selectedLedgerEntries.length} ledger rows; ${selectedScripts.length} exact script surfaces; ${selectedModules.length} module/symbol surfaces; ${selectedPackages.length} exact package aliases; ${selectedWorkflows.length} exact workflows.`);
+  const states = new Map();
+  for (const row of selectedLedgerEntries) states.set(row.reconciliationState, (states.get(row.reconciliationState) ?? 0) + 1);
+  console.log(`  reconciliation: ${[...states.entries()].map(([state, count]) => `${state}=${count}`).join(', ')}`);
 }
 
 if (COMPACT_MODE || PHASE != null || UNCOVERED_ONLY) {
