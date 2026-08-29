@@ -328,7 +328,7 @@ export function buildExperimentList(phase = 'full'): any[] {
     }
 
     // ── Scoring-profile-only ablations ────────────────────────────────────────────────
-    if (canonicalPhase === 'profiles' || canonicalPhase === 'full') {
+    if (canonicalPhase === 'scoring-profiles' || canonicalPhase === 'full') {
         for (const scoringProfileId of Object.keys(SCORING_PROFILE_FEATURE_KEYS)) {
             const key = SCORING_PROFILE_FEATURE_KEYS[scoringProfileId];
             experiments.push({
