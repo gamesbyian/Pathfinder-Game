@@ -503,7 +503,7 @@ The internal boundary migration is also fixed, not left to implementer invention
 | editor `trapParityCandidates` | `falseGoalTriggerParityCandidates` |
 | corresponding `*TrapSpots` / `*TrapParityCandidates` state actions | `*TriggerableFalseGoalCells` / `*FalseGoalTriggerParityCandidates` |
 | `trap-search-audit.mjs` | `audit-false-goal-triggerability.mjs` |
-| npm `solver:trap-audit` | **solver:audit-false-goal-triggerability** |
+| historical npm alias **solver:trap-audit** | **solver:audit-false-goal-triggerability** |
 
 The canonical worker/result status values are `complete`, `partial`, and `aborted`. Legacy `done` and `timeout` values are read only where historical/generated payloads require them. Update editor completion checks in the same PR so no live caller still tests `status === 'done'`.
 
