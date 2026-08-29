@@ -217,8 +217,8 @@ test('portfolio errors remain visible when its ordinary fallback is also unsucce
     const result = await solveLevel(level, {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
-        schedulerMode: 'portfolio-experiment',
-        portfolioExperiment: {
+        schedulerMode: 'legacy-latency-portfolio-experiment',
+        legacyLatencyPortfolioExperiment: {
             pass1Ms: 10, pass2Ms: 10, pass3Ms: 10,
             pass2Configs: new Set(), pass3Configs: new Set(),
         },
@@ -1495,16 +1495,16 @@ test('portfolio experiment is opt-in and records config-gate pass metadata', asy
     const legacy = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000 });
     assert.equal(legacy.schedulerMode, undefined);
 
-    const result = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000, schedulerMode: 'portfolio-experiment' });
+    const result = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000, schedulerMode: 'legacy-latency-portfolio-experiment' });
     assert.equal(result.ok, true);
-    assert.equal(result.schedulerMode, 'portfolio-experiment');
-    assert.equal(result.portfolio?.solvedBeforeFallback, true);
-    assert.equal(result.portfolio?.fallbackAttemptCount, 0);
-    assert.equal(typeof result.portfolio?.runtimeBreakdown?.prepMs, 'number');
-    assert.equal(result.portfolio?.runtimeBreakdown?.fallbackSearchMs, 0);
-    assert.equal(result.portfolio?.runtimeBreakdown?.totalMs, result.totalMs);
+    assert.equal(result.schedulerMode, 'legacy-latency-portfolio-experiment');
+    assert.equal(result.legacyLatencyPortfolioExperiment?.solvedBeforeFallback, true);
+    assert.equal(result.legacyLatencyPortfolioExperiment?.fallbackAttemptCount, 0);
+    assert.equal(typeof result.legacyLatencyPortfolioExperiment?.runtimeBreakdown?.prepMs, 'number');
+    assert.equal(result.legacyLatencyPortfolioExperiment?.runtimeBreakdown?.fallbackSearchMs, 0);
+    assert.equal(result.legacyLatencyPortfolioExperiment?.runtimeBreakdown?.totalMs, result.totalMs);
     const winningAttempt = result.attempts.find(attempt => attempt.ok);
-    assert.equal(winningAttempt?.schedulerPhase, 'portfolio');
+    assert.equal(winningAttempt?.schedulerPhase, 'legacy-latency-portfolio');
     assert.equal(winningAttempt?.passNumber, 1);
     assert.equal(typeof winningAttempt?.configKey, 'string');
     assert.equal(winningAttempt?.allocatedBudgetMs, 500);
@@ -2195,7 +2195,7 @@ test('coarse-state-near-tie-retention-disabled-retry now honors an explicit base
 // non-solving budget). Reuses the same infeasible-level pattern the coarse-state-near-tie-retention-disabled-retry suite
 // above already establishes.
 
-test('admissible-order-fallback-alternate-tiebreak-retry pass can solve a level the admissible-order-fallback tier\'s own pass misses, and never retries \'default\'', async () => {
+test('admissible-order-alternate-tiebreak-retry pass can solve a level the admissible-order-fallback tier\'s own pass misses, and never retries \'default\'', async () => {
     // Mock: only a non-'default' admissible-order-fallback profile ever solves. admissibleOrderBudgetFractionOverride: 0
     // suppresses the admissible-order-fallback tier's OWN pass entirely (so 'default'/'none' never get tried
     // there), isolating this tier's own contribution — same isolation shape as the dedup-retry suite's
@@ -2217,7 +2217,7 @@ test('admissible-order-fallback-alternate-tiebreak-retry pass can solve a level 
     assert.equal(result.attempts.filter(a => a.admissibleOrderNonDefaultRetry === true && a.profile === 'default').length, 0, "'default' is never retried by this tier");
 });
 
-test('admissible-order-fallback-alternate-tiebreak-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
+test('admissible-order-alternate-tiebreak-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
@@ -2228,7 +2228,7 @@ test('admissible-order-fallback-alternate-tiebreak-retry pass is ACTIVE by defau
     assert.ok(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), 'expected the promoted default-ON tier to run with cfg=null');
 });
 
-test('disableExtraBudgetPasses: true suppresses the promoted default-ON admissible-order-fallback-alternate-tiebreak-retry pass even with cfg=null (the two interactive solve UIs\' real production combination)', async () => {
+test('disableExtraBudgetPasses: true suppresses the promoted default-ON admissible-order-alternate-tiebreak-retry pass even with cfg=null (the two interactive solve UIs\' real production combination)', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         disableExtraBudgetPasses: true,
@@ -2236,7 +2236,7 @@ test('disableExtraBudgetPasses: true suppresses the promoted default-ON admissib
     assert.equal(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
 });
 
-test('admissible-order-fallback-alternate-tiebreak-retry pass stays off under an explicit { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: false }', async () => {
+test('admissible-order-alternate-tiebreak-retry pass stays off under an explicit { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: false }', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
@@ -2246,7 +2246,7 @@ test('admissible-order-fallback-alternate-tiebreak-retry pass stays off under an
     assert.equal(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
 });
 
-test('a sparse unrelated ablation object leaves the promoted default-ON admissible-order-fallback-alternate-tiebreak-retry pass active', async () => {
+test('a sparse unrelated ablation object leaves the promoted default-ON admissible-order-alternate-tiebreak-retry pass active', async () => {
     // Since promotion, this flag is unset-means-true (the standard `!cfg || cfg.FLAG` convention),
     // so a sparse config that only touches a DIFFERENT flag must still leave THIS one active — same
     // check as the coarse-state-near-tie-retention-disabled-retry suite's own equivalent test.
@@ -2271,7 +2271,7 @@ test('admissibleOrderNonDefaultRetryBudgetFractionOverride: 0 suppresses the pas
     assert.equal(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
 });
 
-test('disableExtraBudgetPasses: true suppresses the admissible-order-fallback-alternate-tiebreak-retry pass even with the flag on, but an explicit override still wins', async () => {
+test('disableExtraBudgetPasses: true suppresses the admissible-order-alternate-tiebreak-retry pass even with the flag on, but an explicit override still wins', async () => {
     const suppressed = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: true },
@@ -2295,7 +2295,7 @@ test('disableExtraBudgetPasses: true suppresses the admissible-order-fallback-al
     assert.ok(overridden.attempts.some(a => a.admissibleOrderNonDefaultRetry === true));
 });
 
-// 2026-08-28: admissible-order-fallback-alternate-tiebreak-retry was the third tier migrated off queue #2 step 3's
+// 2026-08-28: admissible-order-alternate-tiebreak-retry was the third tier migrated off queue #2 step 3's
 // ms-derived work-dose debt (docs/solver-budget-determinism.md's "Remaining ms-shaped allocation
 // debt"; scaledStageWorkBudget in budget-units.ts) -- same pattern and same two tests as
 // coarse-state-near-tie-retention-disabled-retry's/repair-fallback's own pairs above.
@@ -2311,7 +2311,7 @@ function isolateAdmissibleOrderNonDefaultRetryOpts(overrides: Record<string, unk
     };
 }
 
-test('admissible-order-fallback-alternate-tiebreak-retry work dose no longer resizes with a non-binding deadline change', async () => {
+test('admissible-order-alternate-tiebreak-retry work dose no longer resizes with a non-binding deadline change', async () => {
     const level = makeAttractionDiversityGatedInfeasibleLevel();
     const run = (timeBudgetMs: number) => solveLevel(level, isolateAdmissibleOrderNonDefaultRetryOpts({ timeBudgetMs, workBudget: 200_000 }));
     const shortDeadline = await run(1000);
@@ -2320,12 +2320,12 @@ test('admissible-order-fallback-alternate-tiebreak-retry work dose no longer res
         .filter(a => a.admissibleOrderNonDefaultRetry === true)
         .map(a => a.allocatedWorkCeiling);
     const shortDose = dose(shortDeadline);
-    assert.ok(shortDose.length > 0, 'expected at least one admissible-order-fallback-alternate-tiebreak-retry attempt');
+    assert.ok(shortDose.length > 0, 'expected at least one admissible-order-alternate-tiebreak-retry attempt');
     assert.deepEqual(dose(longDeadline), shortDose,
         'this tier\'s own work pool must depend on workBudget, not on the (non-binding) deadline');
 });
 
-test('admissible-order-fallback-alternate-tiebreak-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
+test('admissible-order-alternate-tiebreak-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
     const level = makeAttractionDiversityGatedInfeasibleLevel();
     const solveWith = (baseWorkBudget: number) => solveLevel(level, isolateAdmissibleOrderNonDefaultRetryOpts({ timeBudgetMs: 1000, baseWorkBudget }));
     const small = await solveWith(200_000);
@@ -2334,7 +2334,7 @@ test('admissible-order-fallback-alternate-tiebreak-retry now honors an explicit 
         result.attempts.find(a => a.admissibleOrderNonDefaultRetry === true)?.allocatedWorkCeiling ?? null;
     const smallCeiling = ceiling(small);
     const largeCeiling = ceiling(large);
-    assert.ok(smallCeiling != null && largeCeiling != null, 'expected an admissible-order-fallback-alternate-tiebreak-retry attempt in both runs');
+    assert.ok(smallCeiling != null && largeCeiling != null, 'expected an admissible-order-alternate-tiebreak-retry attempt in both runs');
     assert.ok((largeCeiling as number) > (smallCeiling as number),
         'an explicit baseWorkBudget must now size this tier\'s own dose');
 });
