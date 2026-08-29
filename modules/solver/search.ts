@@ -5,7 +5,7 @@ import { computeBadness, getRealLengthFromState, isSolutionState } from './solut
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import type { PruneDiagnostics } from './prune-gauntlet.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel, UndoToken, ScoringProfile, StructuralTemplate } from './types.js';
+import type { PrepLevel, UndoToken, ScoringProfile, StructuralOrderingBias } from './types.js';
 
 /** A yield callback (cooperative scheduling); throws on cancellation. */
 type YieldFn = (() => Promise<void>) | null;
@@ -99,7 +99,7 @@ export function __reconstructBeamPathForTests(node: BeamPathNode, scratch: numbe
 // deterministic, machine-speed-independent cap used by dfsFromGateLDS's probe waves (see its
 // comment) so probe escalation decisions depend on work done, not wall-clock luck under
 // contention. Infinity (default) preserves the pre-existing ms-only behavior exactly.
-async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, maxDiscrepancy = Infinity, yieldFn: YieldFn = null, out: { timedOut?: boolean; nodesExpanded?: number; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
+async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralOrderingBias | null, maxDiscrepancy = Infinity, yieldFn: YieldFn = null, out: { timedOut?: boolean; nodesExpanded?: number; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
     const state = createState(startKey, level, prep, STATE_BUF_DFS);
     const cfg = prep._cfg; // null = no ablation (all features enabled)
 
@@ -388,7 +388,7 @@ const DEDUP_NEAR_TIE_MARGIN = 0.01;
 // budget check and the final unbounded pass's own out) — a probe wave hitting ITS OWN smaller
 // probeCapMs is not by itself a level-wide timeout (plenty of levelBudgetMs may remain for the
 // final pass), so probe-internal timedOut flags are deliberately not surfaced here.
-export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, yieldFn?: YieldFn, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
+export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralOrderingBias | null, yieldFn?: YieldFn, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
     const cfg = prep._cfg;
     // nodeBudget (default Infinity => inert): a caller-supplied cumulative-remaining node cap for
     // this whole LDS invocation (offline batch tooling only). dfsFromGate's own nodeBudget param is
@@ -500,7 +500,7 @@ function _diverseSelect(sorted: BeamNode[], beamWidth: number, flipperBase: numb
 // search state — at that instant; `ws` always reflects a real reached position (whichever
 // frontier node it was last replayed to), never garbage, but is not a tracked best-ever minimum
 // the way repair-search's bestBadness is.
-export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, beamWidth: number, yieldFn: YieldFn, diverseBeam?: boolean, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
+export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, diverseBeam?: boolean, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
     const ws = createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     const research = prep._beamResearchObserver;
