@@ -1,0 +1,216 @@
+# Naming-cleanup phase/batch execution record template
+
+Copy this file to a stable path such as `docs/naming-cleanup-phase-records/phase-08-batch-8a.md` before implementation begins. The checked-in record is the evidence backing the ledger's Phase-8+ verification fields. It must be updated as the batch progresses.
+
+Do not use a chat transcript, private scratchpad, or PR body as the only copy of this information.
+
+## 0. Execution identity
+
+| Field | Value |
+| --- | --- |
+| Phase | |
+| Batch | |
+| Status | not-started / entry-mapped / implementing / validating / closeout / complete |
+| Base `main` SHA | |
+| Branch | |
+| PR | |
+| Selected ledger rows | |
+| Canonical mappings | |
+| Implementation agent/session | |
+| Closeout auditor | fresh agent/session preferred; record if same |
+
+### Branch/PR authority preflight
+
+- [ ] searched open naming-cleanup PRs;
+- [ ] searched similarly named naming-cleanup branches;
+- [ ] compared any plausible predecessor/sibling branch against current `main`;
+- [ ] recovered or explicitly superseded any unique commits relevant to this batch;
+- [ ] confirmed this is the only active implementation batch;
+- [ ] confirmed the branch starts from the recorded current-`main` SHA.
+
+Record relevant branches/PRs and disposition here:
+
+| Branch / PR | Unique relevant work? | Disposition |
+| --- | --- | --- |
+| | | |
+
+## 1. Scope and stop conditions
+
+State what this batch changes and what it deliberately does not change.
+
+List the ledger rows selected for this batch. If a newly discovered live surface changes the migration contract, update the plan/ledger/record before expanding implementation.
+
+Explicit stop conditions for this batch:
+
+- behavior/resource-policy change discovered;
+- ambiguous historical identity;
+- unowned compatibility boundary;
+- live consumer cannot be identified or credibly validated;
+- current `main` has superseded the planned architecture;
+- required work belongs to another batch/phase.
+
+## 2. Pre-edit impact map
+
+Run the phase-aware inventory and relevant tooling census before editing. Record commands and the meaningful findings, not just “ran successfully.”
+
+Suggested entry commands:
+
+```sh
+npm run naming:surface-inventory -- --compact --phase=<phase>
+npm run naming:surface-inventory -- --compact --phase=<phase> --uncovered
+node scripts/tooling-census.mjs --compact --query=<legacy-term>
+node scripts/tooling-census.mjs --compact --query=<canonical-term>
+```
+
+### Contract-migration matrix
+
+Every plausible category must be classified as **migrate**, **compatibility read**, **retained/frozen**, or **not applicable**. “No search hit” is not evidence by itself.
+
+| Surface | Classification | Concrete locations | Evidence / planned test |
+| --- | --- | --- | --- |
+| Definition / producer | | | |
+| Internal direct consumers | | | |
+| Canonical parser / normalizer | | | |
+| Sequential transport | | | |
+| Alternate worker/race transport | | | |
+| Serialized writer | | | |
+| Historical reader / fixture | | | |
+| Report/export projection | | | |
+| Analyzer/grouping consumers | | | |
+| CLI / package alias | | | |
+| Workflow command/inputs/outputs | | | |
+| Artifact/concurrency/cache/path identifiers | | | |
+| Hint/provenance storage | | | |
+| Application/UI/editor consumer | | | |
+| Current docs/examples | | | |
+| Frozen historical evidence | | | |
+
+## 3. Validation topology
+
+Map live surfaces to the check that really exercises them.
+
+| Surface | Real runtime/path | Existing coverage | Coverage class | Gap/action |
+| --- | --- | --- | --- | --- |
+| | native Node / bundled / worker / browser / workflow / parser | | direct / indirect / structural / none | |
+
+A test that reaches a native-Node tool only through a bundler does not prove the native-Node contract. A workflow path-existence check does not prove workflow input/output semantics.
+
+## 4. Compatibility and frozen-history ownership
+
+For each dual-read or frozen-history row:
+
+| Legacy form | Canonical form | Owning boundary | Legacy read test | Canonical single-write test | Frozen artifacts intentionally unchanged |
+| --- | --- | --- | --- | --- | --- |
+| | | | | | |
+
+Do not duplicate legacy maps in sibling consumers.
+
+## 5. Before-change baseline
+
+For medium/high-risk behavior-preserving work, capture the smallest useful pre-change observable baseline before editing.
+
+Examples:
+
+- exact CLI help/parse shape;
+- representative worker message/result;
+- serializer/parser round trip;
+- report row inclusion/grouping;
+- workflow command/path resolution;
+- UI state/render behavior;
+- solver attempt/stage order, `workSpent`, nodes, and solved outcome where solver behavior is in scope.
+
+| Command / fixture | Before result / fingerprint |
+| --- | --- |
+| | |
+
+If behavioral parity is genuinely not applicable, explain why.
+
+## 6. Implementation log
+
+Record the canonical changes actually made. Keep this concise and consumer-oriented.
+
+If implementation reveals unplanned behavior change or architecture replacement, stop and move the issue back to Section 1 rather than silently absorbing it.
+
+## 7. Targeted contract validation
+
+Record exact commands and outcomes. For each migrated boundary, identify what the test proves.
+
+| Command / test | Boundary proved | Result |
+| --- | --- | --- |
+| | | |
+
+Where practical, the regression test should be capable of failing for the historical bug shape rather than merely asserting that the final command exits zero.
+
+## 8. Consumer-inward closeout audit
+
+This is a distinct pass after implementation. Prefer a fresh agent/session. Start from consumers, not from the diff.
+
+Audit:
+
+- package commands and surfaced CLIs;
+- workers/raced execution;
+- workflows and exact-case targets;
+- generated-data readers/writers/analyzers;
+- current docs/reproduction commands;
+- application/UI/editor consumers where relevant;
+- historical compatibility paths.
+
+Record findings, including “none,” and the auditor identity/session.
+
+## 9. Behavioral/evidence parity
+
+Compare against Section 5.
+
+| Observable | Before | After | Parity |
+| --- | --- | --- | --- |
+| | | | |
+
+Any unexplained behavior/evidence change blocks completion.
+
+## 10. Residue and authority reconciliation
+
+Record:
+
+- legacy-term/residue searches;
+- canonical-term searches;
+- phase-aware surface inventory after implementation;
+- documentation-link check;
+- plan/ledger changes caused by newly discovered scope;
+- intentional retained/frozen hits.
+
+No unclassified live hit may remain in the batch scope.
+
+## 11. Pre-merge barrier
+
+- [ ] branch rebased/updated against current `main` as required;
+- [ ] compare branch head against current `main`;
+- [ ] intended diff is non-empty and contains no already-merged duplicate work;
+- [ ] no unrelated next-batch implementation is stacked in this PR;
+- [ ] targeted validation green;
+- [ ] required aggregate CI green;
+- [ ] ledger fields match the evidence in this record;
+- [ ] PR description links this record and summarizes its unresolved risks;
+- [ ] no unexplained solved-set, report-completeness, UI, or workflow behavior change.
+
+Record current `main`, head SHA, and comparison result.
+
+## 12. Closure and merge handoff
+
+A batch is complete only after its applicable ledger verification dimensions are supported by this record.
+
+After merge:
+
+- next implementation batch starts from the new current `main`, not from this branch;
+- do not keep working on the merged branch as an informal queue;
+- if the next batch finds a regression from this batch, reopen/correct the affected verification state rather than pretending the prior closeout still proves correctness.
+
+Final status:
+
+| Item | Value |
+| --- | --- |
+| PR | |
+| Final head SHA | |
+| Merged? | |
+| Ledger rows closed | |
+| Deferred/superseded rows | |
+| Known structural-only surfaces | |
