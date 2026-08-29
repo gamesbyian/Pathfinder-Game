@@ -6,7 +6,13 @@ import type { Hint, HintProvenanceEntry } from '../domain/hint-types.js';
 import type { Attempt } from './orchestration.js';
 
 /** Partial attempts remain typed from orchestration's canonical Attempt contract. */
-type AttemptLike = Pick<Attempt, 'profile' | 'ok'> & Partial<Omit<Attempt, 'profile' | 'ok'>>;
+type AttemptLike = Partial<Attempt> & {
+    ok?: boolean;
+    /** Historical persisted attempt fields accepted on read only. */
+    profile?: string;
+    template?: string | null;
+    diverseBeam?: boolean;
+};
 
 interface SolveResultLike {
     attempts?: AttemptLike[];
@@ -81,10 +87,10 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
     const attemptIndex = list.indexOf(winner);
     return {
         technique,
-        profile: winner.profile ?? null,
-        template: winner.template ?? null,
+        profile: winner.scoringProfileId ?? winner.profile ?? null,
+        template: winner.orderingBiasId ?? winner.template ?? null,
         beamWidth: winner.beamWidth ?? null,
-        diverseBeam: winner.beamWidth ? !!winner.diverseBeam : null,
+        diverseBeam: winner.beamWidth ? !!(winner.mechanicBucketRetention ?? winner.diverseBeam) : null,
         gateKey: winner.gateKey ?? null,
         attemptIndex: attemptIndex >= 0 ? attemptIndex : null,
         elapsedMs: winner.elapsedMs ?? null,
