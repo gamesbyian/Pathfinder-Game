@@ -10,7 +10,7 @@ test('every policy stage has exactly one canonical spec and label', () => {
 test('production retry metadata reports current production-default policy status', () => {
     for (const id of [
         'coarse-state-near-tie-retention-disabled-retry',
-        'admissible-order-fallback-fallback-alternate-tiebreak-retry',
+        'admissible-order-alternate-tiebreak-retry',
         'connectivity-axis-prune-disabled-retry',
         'must-cross-neighbor-prune-disabled-retry',
         'late-repair-search',
@@ -30,7 +30,7 @@ test('legacy markers derive from canonical stages', () => {
 test('budget envelopes preserve currencies, reserve direction, scope, and override origin', () => {
     const ordinary = createBudgetEnvelope({ stageId: 'main-search', wallMs: 20_000, workUnits: 67_000_000 });
     assert.deepEqual([ordinary.wall.ceiling, ordinary.work.ceiling, ordinary.nodes.ceiling], [20_000, 67_000_000, null]);
-    const offline = createBudgetEnvelope({ stageId: 'admissible-order-fallback-fallback', wallMs: 10_000, workUnits: 100_000, nodeCeiling: 8_000_000, explicitOverride: true, strictTotalWork: true, scope: 'whole-solve', headroom: { kind: 'withheld', amount: 2_000_000, sourceStageId: 'main-search' } });
+    const offline = createBudgetEnvelope({ stageId: 'admissible-order-fallback', wallMs: 10_000, workUnits: 100_000, nodeCeiling: 8_000_000, explicitOverride: true, strictTotalWork: true, scope: 'whole-solve', headroom: { kind: 'withheld', amount: 2_000_000, sourceStageId: 'main-search' } });
     assert.equal(offline.nodes.source, 'explicit-override'); assert.equal(offline.strictTotalWork, true); assert.equal(offline.headroom.kind, 'withheld');
     const retry = createBudgetEnvelope({ stageId: 'connectivity-axis-prune-disabled-retry', nodeCeiling: 12_000_000, headroom: { kind: 'additive', amount: 2_000_000, sourceStageId: 'main-search' } });
     assert.equal(retry.headroom.kind, 'additive'); assert.equal(retry.nodes.ceiling, 12_000_000);
