@@ -1,5 +1,5 @@
 // Pure decision logic extracted from editor-toolbar-controller (DOM-free, unit-tested):
-// the grid-resize feasibility/shift planner and the trap-search retry budget.
+// the grid-resize feasibility/shift planner and the false-goal-trigger-search retry budget.
 
 export interface GridBounds { minX: number; maxX: number; minY: number; maxY: number; }
 export interface Coord { x: number; y: number; }
@@ -59,25 +59,27 @@ export function planGridResize(
 }
 
 /**
- * Trap-search retry budget: double the previous limit (or the base budget), floored at 10s and
+ * False-goal-trigger-search retry budget: double the previous limit (or the base budget), floored at 10s and
  * capped at 480s. (TEMP 2026-03-29: ceiling raised from 120000ms; revert target is 120000ms.)
  */
-export function computeTrapRetryBudget(prevTimeLimit: number | undefined | null, budgetMs: number): number {
+export function computeFalseGoalTriggerRetryBudget(prevTimeLimit: number | undefined | null, budgetMs: number): number {
     return Math.min(480000, Math.max((prevTimeLimit || budgetMs) * 2, 10000));
 }
 
-export interface TrapSearchOutcome {
-    status?: string;
+export interface FalseGoalTriggerSearchOutcome {
+    /** Canonical status plus historical generated-payload spellings accepted on read. */
+    status?: 'complete' | 'partial' | 'aborted' | 'done' | 'timeout';
+    /** @deprecated Historical payload field; canonical callers use status. */
     timedOut?: boolean;
     gatesCompleted?: number;
     totalGates?: number;
 }
 
-export interface TrapReportDecision {
+export interface FalseGoalTriggerReportDecision {
     message: string;
     tone: 'info' | 'warning';
     /** true → the search was incomplete (timed out); pressing Trap Spots again re-runs it
-     *  with an escalated budget (computeTrapRetryBudget) — no confirmation prompt. */
+     *  with an escalated budget (computeFalseGoalTriggerRetryBudget) — no confirmation prompt. */
     offerRetry: boolean;
 }
 
@@ -86,9 +88,10 @@ export interface TrapReportDecision {
  * An incomplete sweep is ALWAYS surfaced — even when spots were found — so a partial
  * result is never shown as if it were complete.
  */
-export function decideTrapReport(res: TrapSearchOutcome, foundCount: number): TrapReportDecision {
+export function decideFalseGoalTriggerReport(res: FalseGoalTriggerSearchOutcome, foundCount: number): FalseGoalTriggerReportDecision {
     const s = (n: number) => (n === 1 ? '' : 's');
-    if (res.status === 'aborted') {
+    const canonicalStatus = res.status === 'done' ? 'complete' : res.status === 'timeout' ? 'partial' : res.status;
+    if (canonicalStatus === 'aborted') {
         return {
             message: foundCount > 0
                 ? `Search cancelled — ${foundCount} spot${s(foundCount)} found so far (incomplete).`
@@ -97,7 +100,8 @@ export function decideTrapReport(res: TrapSearchOutcome, foundCount: number): Tr
             offerRetry: false,
         };
     }
-    if (!res.timedOut) {
+    const incomplete = canonicalStatus === 'partial' || res.timedOut === true;
+    if (!incomplete) {
         return foundCount > 0
             ? { message: `Found ${foundCount} spot${s(foundCount)}.`, tone: 'info', offerRetry: false }
             : { message: 'No valid trap spots — no path can end on any empty cell at these settings.', tone: 'warning', offerRetry: false };

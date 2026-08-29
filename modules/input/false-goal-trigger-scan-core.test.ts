@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { computeParityCandidates } from './trap-scan-core.js';
+import { computeParityCandidates } from './false-goal-trigger-scan-core.js';
 import { PACK } from '../domain/cell-key.js';
 
 // Minimal normalized-level shape covering everything getOccupant and
-// isParityReachableEndpoint read.
+// isParityCompatibleEndpoint read.
 function makeLevel(overrides: any = {}) {
     return {
         grid: { w: 4, h: 4 },

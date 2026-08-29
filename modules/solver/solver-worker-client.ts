@@ -57,8 +57,12 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
     worker.onmessage = ({ data }: MessageEvent) => {
         const handlers = _pending.get(data.id);
         if (!handlers) return;
-        if (data.type === 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS') {
-            if (handlers.onProgress) handlers.onProgress(data);
+        if (data.type === 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS' || data.type === 'TRAP_PROGRESS') {
+            const progress = data.type === 'TRAP_PROGRESS'
+                ? { ...data, type: 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS',
+                    newTriggerableCells: data.newTriggerableCells ?? data.newSpots ?? [] }
+                : data;
+            if (handlers.onProgress) handlers.onProgress(progress);
             return;
         }
         _pending.delete(data.id);
@@ -129,7 +133,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
         //   timeLimitMs  — search budget in ms
         //   onProgress   — receives every FALSE_GOAL_TRIGGER_SEARCH_PROGRESS payload ({ newTriggerableCells, gate counters })
         //   shouldCancel — polled every 50ms; returning true sends CANCEL (the search then
-        //                  resolves normally with status 'aborted' and its partial spots)
+        //                  resolves normally with status 'aborted' and its partial triggerable cells)
         // Resolves to the FALSE_GOAL_TRIGGER_SEARCH_RESULT payload with `triggerableCells` rebuilt as a Set<number>.
         findTriggerableFalseGoalCells(level: any, opts: FalseGoalTriggerWorkerOpts = {}) {
             const id = _nextId++;
@@ -148,7 +152,21 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
                 }
 
                 _pending.set(id, {
-                    resolve: (msg: any) => resolve({ ...msg, triggerableCells: new Set(msg.triggerableCells) }),
+                    resolve: (msg: any) => {
+                        const status = msg.status === 'done' ? 'complete' : msg.status === 'timeout' ? 'partial' : msg.status;
+                        const triggerableCells = msg.triggerableCells ?? msg.spots ?? [];
+                        resolve({
+                            type: 'FALSE_GOAL_TRIGGER_SEARCH_RESULT',
+                            id: msg.id,
+                            status,
+                            triggerableCells: new Set(triggerableCells),
+                            gatesProcessed: msg.gatesProcessed,
+                            gatesCompleted: msg.gatesCompleted,
+                            totalGates: msg.totalGates,
+                            elapsedMs: msg.elapsedMs,
+                            timeLimitMs: msg.timeLimitMs ?? msg.timeLimit,
+                        });
+                    },
                     reject,
                     pollTimer,
                     onProgress: opts.onProgress,

@@ -1,8 +1,8 @@
 import type { RequireDeps } from '../state.js';
-// Background trap-spot scan. When the false-goal tool is active and the
-// cached spot set is stale, the trap search runs off-thread (solver Web Worker)
+// Background false-goal triggerability scan. When the false-goal tool is active and the
+// cached triggerable-cell set is stale, the false-goal trigger search runs off-thread (solver Web Worker)
 // and streams confirmed spots onto the grid as they are found — no blocking
-// overlay, so the maker sees viable trap-spot cells while placing false goals. The
+// overlay, so the maker sees triggerable false-goal cells while placing false goals. The
 // Trap Spots button (editor-toolbar-controller) runs its explicit, deeper scans through the
 // same scan() seam so worker use, streaming, and state updates have one owner.
 //
@@ -14,13 +14,13 @@ import {
     addEditorTriggerableFalseGoalCells, markDirty, setEditorFalseGoalTriggerParityCandidates,
     setEditorFalseGoalTriggerScanState, setEditorTriggerableFalseGoalCells,
 } from '../state-actions.js';
-import { computeParityCandidates } from './trap-scan-core.js';
+import { computeParityCandidates } from './false-goal-trigger-scan-core.js';
 import { createSolverWorkerClient } from '../solver/solver-worker-client.js';
 import { defaultReportError } from '../error-reporting.js';
 
 const WATCH_INTERVAL_MS = 300;
 
-export function createTrapScanController({ core, state, ui, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createFalseGoalTriggerScanController({ core, state, ui, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
     let client: any = null;
     let workerFailed = false;
     let scanToken = 0;              // bump to detach any in-flight scan from state
@@ -37,7 +37,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
                     new Worker(new URL('../solver/worker.js', import.meta.url), { type: 'module' }));
             } catch (err) {
                 workerFailed = true;
-                reportError('trap-scan.worker-create', err);
+                reportError('false-goal-trigger-scan.worker-create', err);
             }
         }
         return client;
@@ -45,7 +45,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
 
     // Runs the search off-thread when possible; falls back to the cooperative
     // main-thread search (same streaming hooks) if the worker can't be used.
-    async function runTrapSearch(level: any, budgetMs: number, { shouldCancel, onSpots, onGateProgress }: any) {
+    async function runFalseGoalTriggerSearch(level: any, budgetMs: number, { shouldCancel, onSpots, onGateProgress }: any) {
         const c = getClient();
         if (c) {
             try {
@@ -59,7 +59,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
                 });
             } catch (err) {
                 workerFailed = true; // worker is unhealthy — main-thread for the rest of the session
-                reportError('trap-scan.worker', err);
+                reportError('false-goal-trigger-scan.worker', err);
             }
         }
         const pending: number[] = [];
@@ -89,7 +89,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
         markDirty(state);
         const searchLevel = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
         try {
-            const res: any = await runTrapSearch(searchLevel, budgetMs, {
+            const res: any = await runFalseGoalTriggerSearch(searchLevel, budgetMs, {
                 shouldCancel: () => scanInvalidated(token) || (hooks.shouldCancel?.() ?? false),
                 onSpots: (keys: number[]) => {
                     if (scanInvalidated(token)) return;
@@ -112,14 +112,14 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
                 setEditorFalseGoalTriggerScanState(state, 'failed'); // retried after the next edit, not in a loop
                 setEditorFalseGoalTriggerParityCandidates(state, new Set());
                 markDirty(state);
-                reportError('trap-scan.search', err);
+                reportError('false-goal-trigger-scan.search', err);
             }
             return null;
         }
     }
 
     /**
-     * Start a trap scan, superseding any in-flight one (the worker processes one
+     * Start a false-goal triggerability scan, superseding any in-flight one (the worker processes one
      * search at a time, so runs are queued and stale runs cancel via their token).
      * hooks: { shouldCancel?, onGateProgress? } — used by the Trap Spots overlay flow.
      * Resolves to the search result, or null when superseded/cancelled/failed.

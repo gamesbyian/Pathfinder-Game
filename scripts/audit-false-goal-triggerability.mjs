@@ -154,11 +154,11 @@ for (let i = 0; i < rawLevels.length; i++) {
 
     if (res .status !== 'complete') {
         timedOutCount++;
-        timedOutLevels.push({ levelNumber, budgetMs, elapsed, spots: res.triggerableCells.size, gatesProcessed: res.gatesProcessed, totalGates: level.gateKeys.length });
-        console.log(`TIMEOUT  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} spots so far   [${levelSummary(raw)}]`);
+        timedOutLevels.push({ levelNumber, budgetMs, elapsed, triggerableCells: res.triggerableCells.size, gatesProcessed: res.gatesProcessed, totalGates: level.gateKeys.length });
+        console.log(`TIMEOUT  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} triggerable cells so far   [${levelSummary(raw)}]`);
     } else {
         completedCount++;
-        console.log(`ok       ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} spots`);
+        console.log(`ok       ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} triggerable cells`);
     }
 }
 
@@ -175,7 +175,7 @@ console.log(`Pass 2 — extended budget (${fmt(extendedBudgetMs)}) for timed-out
 
 const stillTimedOut = [];
 
-for (const { levelNumber, budgetMs, spots: _spotsAfterTimeout, gatesProcessed: _gatesProcessed } of timedOutLevels) {
+for (const { levelNumber, budgetMs, triggerableCells: _triggerableCellsAfterTimeout, gatesProcessed: _gatesProcessed } of timedOutLevels) {
     const raw = rawLevels[levelNumber - 1];
     const level = SOLVER_TESTING_API.normalizeRawLevel(raw, levelNumber);
 
@@ -190,7 +190,7 @@ for (const { levelNumber, budgetMs, spots: _spotsAfterTimeout, gatesProcessed: _
         console.log(`STILL TIMEOUT  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} spots`);
     } else {
         const ratio = (elapsed / budgetMs).toFixed(1);
-        console.log(`DONE  ${fmt(elapsed).padEnd(8)} ${res.triggerableCells.size} spots   needs ${fmt(elapsed)} vs default ${fmt(budgetMs)} (${ratio}x)`);
+        console.log(`DONE  ${fmt(elapsed).padEnd(8)} ${res.triggerableCells.size} triggerable cells   needs ${fmt(elapsed)} vs default ${fmt(budgetMs)} (${ratio}x)`);
     }
 }
 

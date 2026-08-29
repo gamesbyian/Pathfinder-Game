@@ -7,7 +7,7 @@ import { createSubmissionController }     from './input/submission-controller.js
 import { createReviewController }         from './input/review-controller.js';
 import { createSolverController }         from './input/solver-controller.js';
 import { createLevelRatingController }    from './input/level-rating-controller.js';
-import { createTrapScanController }       from './input/trap-scan-controller.js';
+import { createFalseGoalTriggerScanController }       from './input/false-goal-trigger-scan-controller.js';
 import { setGamepadGridPrimaryAction }     from './state-actions.js';
 
 export function createInput({ core, state, ui, engine, levelUtils, editor, renderer, themes, data, devCorpus, solverApi, persistence, reportError }: any) {
@@ -22,8 +22,8 @@ export function createInput({ core, state, ui, engine, levelUtils, editor, rende
         createGamepadController({ core, state, ui, engine, levelUtils }, navController);
         createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer });
         createOptionsController({ core, state, ui, engine, themes, data, devCorpus, solverApi, levelUtils, persistence, reportError }, { tryNavigate: navController.tryNavigate });
-        const trapScan = createTrapScanController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError });
-        createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError }, { tryNavigate: navController.tryNavigate, trapScan });
+        const falseGoalTriggerScan = createFalseGoalTriggerScanController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError });
+        createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError }, { tryNavigate: navController.tryNavigate, falseGoalTriggerScan });
         createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, data, reportError });
         createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, reportError });
         createSolverController({ core, state, ui, engine, levelUtils, solverApi, reportError });

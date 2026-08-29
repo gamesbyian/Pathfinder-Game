@@ -298,31 +298,3 @@ export async function findTriggerableFalseGoalCells(
 
     return finalize(gatesCompleted >= totalGates ? 'complete' : 'partial');
 }
-
-
-
-/** @deprecated Historical adapter. New code must call findTriggerableFalseGoalCells(). */
-export async function findTrapSpots(
-    level: NormalizedLevel,
-    opts: { timeLimit?: number; yieldFn?: (() => Promise<void>); onProgress?: (p: { gatesProcessed: number; gatesCompleted: number; totalGates: number; spots: number }) => void | Promise<void>; onSpot?: (key: number) => void } = {},
-): Promise<{ ok: boolean; status: 'done' | 'timeout' | 'aborted'; spots: Set<number>; timedOut: boolean; gatesProcessed: number; gatesCompleted: number; totalGates: number; elapsedMs: number; timeLimit: number }> {
-    const result = await findTriggerableFalseGoalCells(level, {
-        timeLimitMs: opts.timeLimit,
-        yieldFn: opts.yieldFn,
-        onTriggerableCell: opts.onSpot,
-        onProgress: opts.onProgress
-            ? (p) => opts.onProgress!({ gatesProcessed: p.gatesProcessed, gatesCompleted: p.gatesCompleted, totalGates: p.totalGates, spots: p.triggerableCells })
-            : undefined,
-    });
-    return {
-        ok: result.status !== 'aborted',
-        status: result.status === 'complete' ? 'done' : result.status === 'partial' ? 'timeout' : 'aborted',
-        spots: result.triggerableCells,
-        timedOut: result.status === 'partial',
-        gatesProcessed: result.gatesProcessed,
-        gatesCompleted: result.gatesCompleted,
-        totalGates: result.totalGates,
-        elapsedMs: result.elapsedMs,
-        timeLimit: result.timeLimitMs,
-    };
-}

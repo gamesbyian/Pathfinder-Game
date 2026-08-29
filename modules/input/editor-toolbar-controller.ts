@@ -4,10 +4,10 @@ import type { RequireDeps } from '../state.js';
 // live editor-input bindings.
 import { clearEditorTriggerableFalseGoalCells, markDirty, setEditorModified, setEditorPendingPortal, toggleEditorMirrorHorizontal } from '../state-actions.js';
 import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
-import { planGridResize, computeTrapRetryBudget, decideTrapReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
+import { planGridResize, computeFalseGoalTriggerRetryBudget, decideFalseGoalTriggerReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
 import { defaultReportError } from '../error-reporting.js';
 
-export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate, trapScan }: any) {
+export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate, falseGoalTriggerScan }: any) {
 
     // --- Grid transform orchestration ---
     // Pure level coord mapping is in levelUtils.applyCoordMapToLevel /
@@ -349,11 +349,11 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     });
 
     // --- Trap-spot solver ---
-    // The search itself runs through the trap-scan controller (off-thread worker,
+    // The search itself runs through the false-goal-trigger scan controller (off-thread worker,
     // spots streamed onto the grid mid-search). This handler owns the explicit-run
     // UX: the progress overlay, cancel, and result messaging. There is no retry
     // popup — a timed-out sweep says so in its message, and pressing Trap Spots again
-    // re-runs with an escalated budget (computeTrapRetryBudget doubles it, capped).
+    // re-runs with an escalated budget (computeFalseGoalTriggerRetryBudget doubles it, capped).
 
     (document.getElementById('editTrapSpotsBtn') as any).onclick = async () => {
         const isHelpOpen = ui.isModalOpen('editorHelpModal');
@@ -373,23 +373,23 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         }
         // A complete sweep of this exact level state is already on screen — restate it.
         if (state.ENGINE.editor.falseGoalTriggerScanState === 'complete') {
-            const decision = decideTrapReport({ status: 'complete', timedOut: false }, state.ENGINE.editor.triggerableFalseGoalCells.size);
+            const decision = decideFalseGoalTriggerReport({ status: 'complete', timedOut: false }, state.ENGINE.editor.triggerableFalseGoalCells.size);
             ui.showMessage(decision.message, decision.tone);
             return;
         }
         const baseBudgetMs = solverApi.getFalseGoalTriggerSearchBudgetMs(l);
-        const budgetMs = (state.ENGINE.editor.falseGoalTriggerScanState === 'partial' && trapScan.getLastBudgetMs() > 0)
-            ? computeTrapRetryBudget(trapScan.getLastBudgetMs(), baseBudgetMs)
+        const budgetMs = (state.ENGINE.editor.falseGoalTriggerScanState === 'partial' && falseGoalTriggerScan.getLastBudgetMs() > 0)
+            ? computeFalseGoalTriggerRetryBudget(falseGoalTriggerScan.getLastBudgetMs(), baseBudgetMs)
             : baseBudgetMs;
 
         let _cancelled = false;
-        const cancelTrap = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
-        engine.solver.startSolverRun({ cancel: cancelTrap, abort: cancelTrap });
-        const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelTrap(); }, 100);
-        const trapT0 = Date.now();
+        const cancelFalseGoalTriggerScan = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
+        engine.solver.startSolverRun({ cancel: cancelFalseGoalTriggerScan, abort: cancelFalseGoalTriggerScan });
+        const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelFalseGoalTriggerScan(); }, 100);
+        const falseGoalTriggerScanT0 = Date.now();
         let lastTenths = -1;
         const timerTicker = setInterval(() => {
-            const tenths = Math.floor((Date.now() - trapT0) * 10 / 1000);
+            const tenths = Math.floor((Date.now() - falseGoalTriggerScanT0) * 10 / 1000);
             if (tenths !== lastTenths) { lastTenths = tenths; ui.setSolverTimerText(`${(tenths / 10).toFixed(1)}s`); }
         }, 50);
         try {
@@ -399,7 +399,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             ui.setSolverTimerText('0.0s');
             ui.setSolverProgress(0);
             const overlayMinTimer = new Promise((r: any) => setTimeout(r, 400));
-            const res = await trapScan.scan(budgetMs, {
+            const res = await falseGoalTriggerScan.scan(budgetMs, {
                 shouldCancel: () => _cancelled,
                 // Per-gate progress: the search reports which gate it's on so the user can
                 // watch a multi-gate sweep advance rather than staring at a static spinner.
@@ -411,14 +411,14 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             await overlayMinTimer;
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (res) {
-                const decision = decideTrapReport(res, state.ENGINE.editor.triggerableFalseGoalCells.size);
+                const decision = decideFalseGoalTriggerReport(res, state.ENGINE.editor.triggerableFalseGoalCells.size);
                 ui.showMessage(decision.message, decision.tone);
             } else if (!_cancelled) {
                 // scan() reported the failure through reportError; tell the user here.
                 ui.showMessage('Search failed: unexpected error.', 'error');
             }
         } catch (err: any) {
-            reportError('editor.trap-search', err);
+            reportError('editor.false-goal-trigger-search', err);
             ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {

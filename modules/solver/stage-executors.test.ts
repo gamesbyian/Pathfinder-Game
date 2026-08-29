@@ -56,7 +56,7 @@ test('runWholeLadderRetryTier: installs the Proxy override as prep._cfg during t
     prep._cfg = originalCfg;
     let cfgDuringCall: unknown;
     const result = await runWholeLadderRetryTier({
-        stageId: 'coarse-state-near-tie-retention-disabled-retry', proxyOverrides: { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
+        stageId: 'coarse-state-near-tie-retention-disabled-retry', proxyOverrides: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION: false },
         activeGates: [1], mainConfigs: [], level: makeLineLevel(), prep, yieldFn: null,
         runLadder: async () => {
             cfgDuringCall = prep._cfg;
@@ -65,7 +65,7 @@ test('runWholeLadderRetryTier: installs the Proxy override as prep._cfg during t
         totalBudgetMs: 1000, nodeCeiling: 100, workBudget: 100, workStart: 0, staircase: false,
     });
     assert.notEqual(cfgDuringCall, originalCfg, 'prep._cfg must be swapped to the override during the call');
-    assert.equal((cfgDuringCall as Record<string, unknown>).STRATEGY_DEDUP_NEAR_TIE_RETENTION, false);
+    assert.equal((cfgDuringCall as Record<string, unknown>).STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION, false);
     assert.equal((cfgDuringCall as Record<string, unknown>).EXISTING_FLAG, true, 'originalCfg still falls through while overridden');
     assert.equal(prep._cfg, originalCfg, 'prep._cfg must be restored to the ORIGINAL object after the call');
     assert.equal(result.attempts[0].stageId, 'coarse-state-near-tie-retention-disabled-retry');
@@ -114,7 +114,7 @@ test('runWholeLadderRetryTier: staircase=true passes cumulative entry/0 to runLa
     assert.equal(staircaseOn.attempts[0].mainLoopLateReserve, undefined, 'staircase mode strips the borrowed mainLoopLateReserve tag');
 
     const staircaseOff = await runWholeLadderRetryTier({
-        stageId: 'coarse-state-near-tie-retention-disabled-retry', proxyOverrides: { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
+        stageId: 'coarse-state-near-tie-retention-disabled-retry', proxyOverrides: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION: false },
         activeGates: [1], mainConfigs: [], level: makeLineLevel(), prep, yieldFn: null,
         runLadder: async (...args) => { seenArgs = args; return { solution: null, attempts: [fakeAttempt({ mainLoopLateReserve: true })] }; },
         totalBudgetMs: 1000, nodeCeiling: 100, workBudget: 100, workStart: 0, staircase: false,

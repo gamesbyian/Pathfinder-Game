@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, test, vi } from 'vitest';
 import { PACK } from '../domain/cell-key.js';
-import { createTrapScanController } from './trap-scan-controller.js';
+import { createFalseGoalTriggerScanController } from './false-goal-trigger-scan-controller.js';
 
 function makeLevel() {
     return {
@@ -40,7 +40,7 @@ function makeHarness(solverApi: any, reportError: (...args: any[]) => void = () 
             isDirty: false,
         },
     };
-    const controller = createTrapScanController({
+    const controller = createFalseGoalTriggerScanController({
         core: { EDITOR: 'editor', OVERLAY_NONE: 'none' },
         state,
         ui: { showMessage() {} },
