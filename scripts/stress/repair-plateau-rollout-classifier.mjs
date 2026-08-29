@@ -265,7 +265,7 @@ function levelBase(id, raw, level) {
     return {
         id, provenance: provenance[id] ?? 'unknown', reqLen: level.reqLen,
         blocks: features.blocks, blocksFraction: Number((features.blocks / features.area).toFixed(4)),
-        mustCross: features.mustCross, reqInt: features.reqInt, navDensity: Number(features.navDensity.toFixed(4)),
+        mustCross: features.mustCross, reqInt: features.reqInt, requiredPathCoverageRatio: Number(features.requiredPathCoverageRatio.toFixed(4)),
     };
 }
 

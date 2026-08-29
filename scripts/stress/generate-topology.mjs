@@ -577,7 +577,7 @@ function acceptLevel(i, built, levelSeed, raw, generatedAt) {
             crossingModules: built.topology.crossingTiles.length,
             topologyBlockCandidates: built.topologyBlockCandidateCount,
             structuralComplexity: structuralComplexity(raw, witnessPairs),
-            navDensity: Number(features.navDensity.toFixed(3)),
+            requiredPathCoverageRatio: Number(features.requiredPathCoverageRatio.toFixed(3)),
             mechanicCounts: built.placed,
         },
     };
