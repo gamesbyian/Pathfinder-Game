@@ -402,7 +402,7 @@ test('findTriggerableFalseGoalCells returns valid one-step false-goal cells', as
   const result = await findTriggerableFalseGoalCells(level, { timeLimitMs: 1000 });
   assert.equal(result.status, 'complete');
   assert.equal(result.triggerableCells.has(PACK(1, 0)), true);
-  assert.equal(result.triggerableCells.has(PACK(2, 0)), false, 'the real goal is not a valid false-goal spot');
+  assert.equal(result.triggerableCells.has(PACK(2, 0)), false, 'the real goal is not a triggerable false-goal cell');
 });
 
 
@@ -410,7 +410,6 @@ test('findTriggerableFalseGoalCells highlights an already-placed false goal when
   const falseGoal = PACK(1, 0);
   const level = makeLevel({ reqLen: 1, falseGoalKeys: new Set([falseGoal]) });
   const result = await findTriggerableFalseGoalCells(level, { timeLimitMs: 1000 });
-  assert.equal(result.ok, true);
   assert.equal(result.status, 'complete');
   assert.equal(result.triggerableCells.has(falseGoal), true);
 });
@@ -425,7 +424,6 @@ test('findTriggerableFalseGoalCells does not route through existing false goals 
     falseGoalKeys: new Set([falseGoal]),
   });
   const result = await findTriggerableFalseGoalCells(level, { timeLimitMs: 1000 });
-  assert.equal(result.ok, true);
   assert.equal(result.status, 'complete');
   assert.equal(result.triggerableCells.has(beyondFalseGoal), false);
 });
@@ -433,13 +431,13 @@ test('findTriggerableFalseGoalCells does not route through existing false goals 
 test('findTriggerableFalseGoalCells rejects a length/intersection-matching endpoint that leaves a surround landmark unsatisfied', async () => {
   // 3x3 grid, surround object at the center (1,1) — impassable, all 8 neighbors must be visited.
   // Gate at (0,0); a single step to (1,0) matches reqLen/reqInt but visits only 1 of 8 required
-  // neighbors, so it must NOT be certified as a valid trap spot.
+  // neighbors, so it must NOT be certified as a triggerable false-goal cell.
   const center = PACK(1, 1);
   const baseline = makeLevel({
     grid: { w: 3, h: 3 }, reqLen: 1, reqInt: 0, goalKey: PACK(2, 2), gateKeys: [PACK(0, 0)],
   });
   const baselineResult = await findTriggerableFalseGoalCells(baseline, { timeLimitMs: 1000 });
-  assert.equal(baselineResult.triggerableCells.has(PACK(1, 0)), true, 'sanity: (1,0) is a valid one-step endpoint without the landmark');
+  assert.equal(baselineResult.triggerableCells.has(PACK(1, 0)), true, 'sanity: (1,0) is a triggerable one-step false-goal cell without the landmark');
 
   const withSurround = makeLevel({
     grid: { w: 3, h: 3 }, reqLen: 1, reqInt: 0, goalKey: PACK(2, 2), gateKeys: [PACK(0, 0)],
@@ -447,7 +445,7 @@ test('findTriggerableFalseGoalCells rejects a length/intersection-matching endpo
   });
   const result = await findTriggerableFalseGoalCells(withSurround, { timeLimitMs: 1000 });
   assert.equal(result.triggerableCells.has(PACK(1, 0)), false,
-    'a path that stops one step short must not certify as a trap spot while the surround landmark is unsatisfied');
+    'a path that stops one step short must not certify as a triggerable false-goal cell while the surround landmark is unsatisfied');
 });
 
 test('findTriggerableFalseGoalCells attempts every gate (per-gate budget, no break on a slow gate)', async () => {
@@ -489,18 +487,18 @@ test('isParityCompatibleEndpoint still rules cells out when all portals are pari
   assert.equal(isParityCompatibleEndpoint(level, PACK(5, 0)), true);  // correct parity
 });
 
-test('classifyFalseGoalTriggerability: reachable, parity-dead, and distance-dead false goals', async () => {
-  const reachableFG = PACK(1, 0);   // parity 1, reachable in 1 step
+test('classifyFalseGoalTriggerability: triggerable, parity-dead, and distance-dead false goals', async () => {
+  const triggerableFG = PACK(1, 0);   // parity 1, reachable in 1 step
   const parityDeadFG = PACK(2, 0);  // parity 0 — wrong parity, never an endpoint
   const distanceDeadFG = PACK(3, 0); // parity 1 but unreachable in exactly 1 step
   const level = makeLevel({
     grid: { w: 5, h: 1 }, reqLen: 1, goalKey: PACK(4, 0),
-    falseGoalKeys: new Set([reachableFG, parityDeadFG, distanceDeadFG]),
+    falseGoalKeys: new Set([triggerableFG, parityDeadFG, distanceDeadFG]),
   });
   const result = await findTriggerableFalseGoalCells(level, { timeLimitMs: 1000 });
   assert.equal(result.status, 'complete', 'search completes');
   const classes = classifyFalseGoalTriggerability(level, result);
-  assert.equal(classes.get(reachableFG), 'triggerable');
+  assert.equal(classes.get(triggerableFG), 'triggerable');
   assert.equal(classes.get(parityDeadFG), 'untriggerable');
   assert.equal(classes.get(distanceDeadFG), 'untriggerable');
 });
@@ -508,7 +506,7 @@ test('classifyFalseGoalTriggerability: reachable, parity-dead, and distance-dead
 test('classifyFalseGoalTriggerability: a parity-compatible miss is "unknown" when the search is incomplete', () => {
   const fg = PACK(3, 0); // parity 1 — parity-compatible, so parity can't rule it out
   const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 1, goalKey: PACK(4, 0), falseGoalKeys: new Set([fg]) });
-  // Simulate a partial sweep: not all gates completed, spot not found.
+  // Simulate a partial sweep: not all gates completed, triggerable cell not found.
   const partial = { status: 'partial' as const, triggerableCells: new Set<number>(), gatesCompleted: 0, totalGates: 1 };
   assert.equal(classifyFalseGoalTriggerability(level, partial).get(fg), 'unknown');
 });
