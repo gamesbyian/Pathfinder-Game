@@ -78,14 +78,14 @@ const attemptLabel = attempt => attempt ? attemptConfigKey(attempt) : null;
 function normalizeAttempt(attempt) {
     return {
         gateKey: attempt?.gateKey ?? null,
-        profile: attempt?.profile ?? null,
-        template: attempt?.template ?? null,
+        scoringProfileId: attempt?.scoringProfileId ?? attempt?.profile ?? null,
+        orderingBiasId: attempt?.orderingBiasId ?? attempt?.template ?? null,
         beamWidth: attempt?.beamWidth ?? null,
         ok: !!attempt?.ok,
         status: attempt?.status ?? null,
         elapsedMs: Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : null,
         nodesExpanded: Number.isFinite(attempt?.nodesExpanded) ? attempt.nodesExpanded : null,
-        diverseBeam: !!attempt?.diverseBeam,
+        mechanicBucketRetention: !!(attempt?.mechanicBucketRetention ?? attempt?.diverseBeam),
         repair: !!attempt?.repair,
         repairMustTurnBiased: !!attempt?.repairMustTurnBiased,
         repairTurnBiased: !!attempt?.repairTurnBiased,
@@ -124,7 +124,7 @@ for (const levelNumber of levelOrder) {
     let record;
     try {
         const level = solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
-        const result = await solver.solve(level, { timeBudgetMs: Math.max(budgetMs, budgetMs * 4), workBudget });
+        const result = await solver.solveLevel(level, { timeBudgetMs: Math.max(budgetMs, budgetMs * 4), workBudget });
         const attempts = (result?.attempts || []).map(normalizeAttempt);
         const winnerIndex = attempts.findIndex(a => a.ok);
         const solutionHash = result?.solution ? hashJson(result.solution) : null;

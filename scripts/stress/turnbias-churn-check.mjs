@@ -5,7 +5,7 @@
 // (some solves lost, more gained), not just trusting the raw delta. The GitHub Actions
 // deterministic corpus-2 refresh already gave a matched aggregate (725 -> 728, +3), but its
 // per-level artifact isn't downloadable from this environment (blocked egress host) — this gets
-// the per-level breakdown locally instead, via the real Solver.solve() entrypoint (the full
+// the per-level breakdown locally instead, via the real Solver.solveLevel() entrypoint (the full
 // ladder, not an isolated attempt config, since turn bias's real effect depends on the weighted
 // probe-budget split against repairMustTurnBiased).
 //
@@ -31,7 +31,7 @@ const { normalizeAblationConfig } = SOLVER_TESTING_API;
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 // Defaults tuned for local iteration speed, not fidelity to production budgets — a full
-// Solver.solve() call with the repair fallback can take up to ~(1+6+1)x timeBudgetMs per CLAUDE.md's
+// Solver.solveLevel() call with the repair fallback can take up to ~(1+6+1)x timeBudgetMs per CLAUDE.md's
 // documented worst case, which made an initial 80-level/120s-wall attempt impractically slow (one
 // level took >7 minutes). Prefer the real GitHub Actions solver-stress-refresh.yml dispatch
 // (deterministic:true, enable_flags=<flag>) for an authoritative answer — it now prints per-level
@@ -69,14 +69,14 @@ for (const entry of candidates) {
         console.error(`prep error on ${id}: ${err?.message ?? err}`);
         continue;
     }
-    const onResult = await Solver.solve(level, { ablation: ON_ABLATION, nodeBudget: NODE_BUDGET, timeBudgetMs: WALL_MS });
-    const offResult = await Solver.solve(level, { ablation: OFF_ABLATION, nodeBudget: NODE_BUDGET, timeBudgetMs: WALL_MS });
+    const onResult = await Solver.solveLevel(level, { ablation: ON_ABLATION, nodeBudget: NODE_BUDGET, timeBudgetMs: WALL_MS });
+    const offResult = await Solver.solveLevel(level, { ablation: OFF_ABLATION, nodeBudget: NODE_BUDGET, timeBudgetMs: WALL_MS });
     const onSolved = !!onResult.ok;
     const offSolved = !!offResult.ok;
     if (onSolved) solvedOn++;
     if (offSolved) solvedOff++;
     if (onSolved !== offSolved) {
-        flips.push({ id: id ?? '(no id)', solvedOn, offSolved, winningConfigOn: onResult.attempts?.[onResult.attempts.length - 1]?.profile, winningConfigOff: offResult.attempts?.[offResult.attempts.length - 1]?.profile });
+        flips.push({ id: id ?? '(no id)', solvedOn, offSolved, winningScoringProfileIdOn: onResult.attempts?.find(a => a.ok)?.scoringProfileId ?? null, winningScoringProfileIdOff: offResult.attempts?.find(a => a.ok)?.scoringProfileId ?? null });
         console.log(`${id}: FLIP onSolved=${onSolved} offSolved=${offSolved}`);
     }
     if (i % 10 === 0) console.log(`  ...${i}/${candidates.length} (solvedOn=${solvedOn} solvedOff=${solvedOff} flips=${flips.length})`);

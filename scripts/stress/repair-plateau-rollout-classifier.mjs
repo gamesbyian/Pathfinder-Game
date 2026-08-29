@@ -207,7 +207,7 @@ function buildStateAtPath(pathKeys, level, prep) {
 function closeGapAtDepth(elitePath, depth, level, prep, nodeBudget) {
     const branchPrefix = elitePath.slice(0, depth + 1);
     const { state, liveUndo } = buildStateAtPath(branchPrefix, level, prep);
-    return closeLengthGap(state, level, prep, api.POLICY_PROFILES.repair, null, prep._cfg, liveUndo, 0, nodeBudget);
+    return closeLengthGap(state, level, prep, api.SCORING_PROFILES.repair, null, prep._cfg, liveUndo, 0, nodeBudget);
 }
 
 /** Runs `trials` rollouts from ONE fixed branch point (elitePath truncated to `depth` cells). */
@@ -221,7 +221,7 @@ function rolloutsAtDepth(elitePath, depth, level, prep, trials, seedBase, nodeCa
         let outcome = 'continue';
         let nodes = 0;
         while (outcome === 'continue' && nodes < nodeCap) {
-            outcome = takePly(state, level, prep, api.POLICY_PROFILES.repair, null, rand, null, epsilon, [], null, null, false);
+            outcome = takePly(state, level, prep, api.SCORING_PROFILES.repair, null, rand, null, epsilon, [], null, null, false);
             nodes++;
         }
         results.push({ outcome, nodes, depthReached: state.path.length - 1 });
@@ -320,7 +320,7 @@ if (retreatFile) {
         const arrivals = [];
         prep._repairEliteResearchObserver = { observe: record => arrivals.push(record) };
         const gateKey = level.gateKeys[0];
-        const solved = await repairSearchFromGate(gateKey, level, prep, api.POLICY_PROFILES.repair, 120000, Date.now(), null,
+        const solved = await repairSearchFromGate(gateKey, level, prep, api.SCORING_PROFILES.repair, 120000, Date.now(), null,
             null, false, eliteNodeBudget, {});
 
         const base = levelBase(id, raw, level);

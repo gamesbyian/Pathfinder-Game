@@ -92,14 +92,14 @@ for (const raw of selected) {
         for (const candidate of record.paths.slice(0, 5)) beamArtifacts.push({ producer: 'beam', path: candidate,
             arrivalWork: record.work, metrics: projection(candidate, level, UNPACK) });
     } };
-    await api.beamSearchFromGate(gateKey, level, beamPrep, api.POLICY_PROFILES.default, 120000, Date.now(), null,
+    await api.beamSearchFromGate(gateKey, level, beamPrep, api.SCORING_PROFILES.default, 120000, Date.now(), null,
         beamWidth, null, false, {}, nodeBudget);
 
     const repairArtifacts = [];
     const repairPrep = api.prepLevel(level); repairPrep._cfg = null; repairPrep._metrics = { nodesExpanded: 0 };
     repairPrep._repairEliteResearchObserver = { observe: record => repairArtifacts.push({ ...record,
         arrivalWork: record.arrivalNodes, metrics: projection(record.path, level, UNPACK) }) };
-    await repairSearchFromGate(gateKey, level, repairPrep, api.POLICY_PROFILES.repair, 120000, Date.now(), null,
+    await repairSearchFromGate(gateKey, level, repairPrep, api.SCORING_PROFILES.repair, 120000, Date.now(), null,
         null, false, nodeBudget, {});
     const comparison = compareProducerPopulations(beamArtifacts, repairArtifacts);
     rows.push({ levelId: raw.id, gateKey, nodeBudget, beamWidth, beamNodes: beamPrep._metrics.nodesExpanded,

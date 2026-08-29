@@ -47,7 +47,7 @@ let result;
 try {
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
     const t0 = Date.now();
-    result = await Solver.solve(level, { timeBudgetMs: BUDGET_MS });
+    result = await Solver.solveLevel(level, { timeBudgetMs: BUDGET_MS });
     const elapsedMs = Date.now() - t0;
     const ok = !!result.ok;
     let refereeValid = null;

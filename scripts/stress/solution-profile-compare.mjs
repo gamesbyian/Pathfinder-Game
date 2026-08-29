@@ -31,8 +31,8 @@ import {
     buildBucketProfile, buildSinglePathProfile, extractObjectives, nearestProfiles,
     computeHintSignature, regenerateCorpusProfile,
 } from './solution-profile-lib.mjs';
-import { mustCrossKeysOf, navigableDensity } from '../../modules/domain/hint-novelty.ts';
-import { NEAR_HAMILTONIAN_DENSITY } from '../../modules/domain/path-features.ts';
+import { mustCrossKeysOf, requiredPathCoverageRatio } from '../../modules/domain/hint-novelty.ts';
+import { NEAR_HAMILTONIAN_COVERAGE_THRESHOLD } from '../../modules/domain/path-features.ts';
 
 const ROOT = process.cwd();
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -116,7 +116,7 @@ function buildTargetProfile(levels, levelNumber) {
 
     const objectives = extractObjectives(level);
     const mcKeys = mustCrossKeysOf(level);
-    const useCrossings = navigableDensity(level) >= NEAR_HAMILTONIAN_DENSITY;
+    const useCrossings = requiredPathCoverageRatio(level) >= NEAR_HAMILTONIAN_COVERAGE_THRESHOLD;
 
     if (level.hintRecords && level.hintRecords.length) {
         return {

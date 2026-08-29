@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 /**
  * Reports the early-repair-search ordinary-tier bestBadness distribution and biased-tier outcomes from
- * one or more level-blind-capability-sweep / portfolio-solve-sweep report JSON files, using the
- * `repairProbe` attempt tag (orchestration.ts's Attempt.repairProbe) to isolate probe-phase repair
- * attempts from the same repair config's later full-budget fallback run -- both produce
- * `repair`-flagged attempts with the same shape, so without the tag this split isn't reconstructible
+ * one or more level-blind-capability-sweep / portfolio-solve-sweep report JSON files, using canonical `stageId === 'early-repair-search'` to isolate early repair attempts from the
+ * same repair config's later full-budget fallback run. Historical artifacts without `stageId` may
+ * still carry the legacy `repairProbe` boolean, which is accepted on read only, so the split remains reconstructible
  * from a persisted report alone.
  *
  * Built so recalibrating modules/solver/orchestration.ts's
@@ -63,7 +62,7 @@ function loadRows(file) {
 // what the (possibly scaled) budget achieved.
 function levelBadnessInfo(row) {
     const attempts = Array.isArray(row.attempts) ? row.attempts : [];
-    const probe = attempts.filter(a => a.repairProbe);
+    const probe = attempts.filter(a => a.stageId === 'early-repair-search' || (a.stageId == null && a.repairProbe));
     const ordinary = probe.filter(a => a.repair && !a.repairMustTurnBiased && !a.repairTurnBiased);
     const biased = probe.filter(a => a.repairMustTurnBiased || a.repairTurnBiased);
     const minBadness = list => list.reduce((min, a) => (Number.isFinite(a.bestBadness) ? Math.min(min, a.bestBadness) : min), Infinity);

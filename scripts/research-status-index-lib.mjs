@@ -79,11 +79,13 @@ export function buildResearchStatusIndex(root) {
             decision: metadata[5], remainingGate: metadata[6], artifacts: [...artifacts].sort(),
         });
     }
-    const queuePath = 'docs/solver-optimization-current-queue.md';
-    const queueSource = existsSync(path.join(root, queuePath)) ? readFileSync(path.join(root, queuePath), 'utf8') : '';
-    const queue = tableRows(queueSource, '## Ranked queue').map(([priority, question, state, gate]) => ({
-        topicId: `queue-${priority}`, priority: Number(priority), question,
-        status: normalizedState(state), authority: queuePath, authorityKind: 'current-queue',
+    const workstreamsPath = 'docs/solver-optimization-workstreams.md';
+    const workstreamsSource = existsSync(path.join(root, workstreamsPath)) ? readFileSync(path.join(root, workstreamsPath), 'utf8') : '';
+    // Preserve the public `queue` collection name for index consumers, but source it from the
+    // current authority. Workstream IDs are stable identifiers, explicitly not execution ranks.
+    const queue = tableRows(workstreamsSource, '## Active workstreams').map(([id, question, state, gate]) => ({
+        topicId: `workstream-${id}`, workstreamId: Number(id), question,
+        status: normalizedState(state), authority: workstreamsPath, authorityKind: 'workstreams',
         state, remainingGate: gate,
     }));
     const ledgerPath = 'docs/solver-opt-in-experiment-ledger.md';
@@ -94,12 +96,12 @@ export function buildResearchStatusIndex(root) {
             latestEvidenceOrGate: evidence, authority: ledgerPath, authorityKind: 'opt-in-ledger',
         }));
     return { schemaVersion: 3, scope: 'current-authority-and-top-level-evidence',
-        authorityOrder: ['current-queue', 'opt-in-ledger', 'structured-report', 'legacy-report'], queue, experiments,
+        authorityOrder: ['workstreams', 'opt-in-ledger', 'structured-report', 'legacy-report'], queue, experiments,
         evidence: topics, legacyEvidence };
 }
 
 function compactEntry(kind, entry) {
-    if (kind === 'queue') return { kind, id: entry.topicId, priority: entry.priority, status: entry.status,
+    if (kind === 'queue') return { kind, id: entry.topicId, workstreamId: entry.workstreamId ?? null, status: entry.status,
         question: entry.question, gate: entry.remainingGate, authority: entry.authority };
     if (kind === 'experiment') return { kind, id: entry.experimentId, status: entry.status,
         decision: entry.disposition, evidence: entry.latestEvidenceOrGate, authority: entry.authority };

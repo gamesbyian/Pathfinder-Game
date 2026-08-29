@@ -91,13 +91,13 @@ for (const levelNumber of levelNumbers) {
     const ok = !!result?.ok;
     ok ? solvedCount++ : failCount++;
 
-    const solvedBy = ok ? (result.attempts?.find(a => a.ok)?.profile ?? 'unknown') : null;
+    const solvedByScoringProfileId = ok ? (result.attempts?.find(a => a.ok)?.scoringProfileId ?? 'unknown') : null;
     if (ok) hintCapture.record(raw, result);
-    results.push({ level: levelNumber, status: result.status, ok, elapsedMs: elapsed, solvedBy, attempts: result.attempts });
+    results.push({ level: levelNumber, status: result.status, ok, elapsedMs: elapsed, solvedByScoringProfileId, attempts: result.attempts });
 
     const marker = ok ? '✓' : '✗';
-    if (verbose || !ok) console.log(`  L${levelNumber} ${marker} ${elapsed}ms${ok ? ` [${solvedBy}]` : ''}`);
-    else process.stdout.write(`  L${levelNumber} ${marker} ${elapsed}ms [${solvedBy}]\n`);
+    if (verbose || !ok) console.log(`  L${levelNumber} ${marker} ${elapsed}ms${ok ? ` [score=${solvedByScoringProfileId}]` : ''}`);
+    else process.stdout.write(`  L${levelNumber} ${marker} ${elapsed}ms [score=${solvedByScoringProfileId}]\n`);
 }
 
 const totalMs = Date.now() - runStart;

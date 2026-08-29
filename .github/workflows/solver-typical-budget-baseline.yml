@@ -574,17 +574,17 @@ jobs:
           }
           NODE
 
-      - name: Print repair-probe badness distribution
+      - name: Print early-repair-search badness distribution
         shell: bash
         # Same console-log-only reasoning as the solved-count print above -- this is the workflow
         # disable_flags's own description names as how to A/B whether a default-ON mechanism like
         # STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET is load-bearing, so it's also the natural tool
         # for the still-open BADNESS_GATE/MIN_SCALE recalibration
-        # (docs/solver-opt-in-experiment-ledger.md). See scripts/stress/repair-probe-badness-report.mjs.
+        # (docs/solver-opt-in-experiment-ledger.md). See scripts/stress/early-repair-search-badness-report.mjs.
         run: |
           set -euo pipefail
           for f in reports/stress/typical-budget-corpus1.json reports/stress/typical-budget-corpus2.json; do
-            [ -f "$f" ] && node scripts/run-bundled.mjs scripts/stress/repair-probe-badness-report.mjs -- --in="$f"
+            [ -f "$f" ] && node scripts/run-bundled.mjs scripts/stress/early-repair-search-badness-report.mjs -- --in="$f"
           done
 
       - name: Diff the new baseline against the one currently on main

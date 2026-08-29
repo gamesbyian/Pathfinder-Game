@@ -29,6 +29,7 @@ import { execFileSync } from 'node:child_process';
 
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { retryLevelIsolated } from './retry-isolated.mjs';
+import { attemptConfigKey } from '../portfolio-solve-sweep-lib.mjs';
 
 const ROOT = process.cwd();
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -65,14 +66,14 @@ for (const entry of pin.levels) {
     void id; void stressMeta;
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
     const t0 = Date.now();
-    const result = await Solver.solve(level, { timeBudgetMs: budgetMs });
+    const result = await Solver.solveLevel(level, { timeBudgetMs: budgetMs });
     const elapsed = Date.now() - t0;
     const solvedNow = !!result?.ok;
     const winner = (result.attempts || []).find(a => a.ok);
     measurements.set(entry.id, {
         solvedNow,
         elapsed,
-        strategy: winner ? (winner.template ? `${winner.profile}/${winner.template}` : winner.profile) : null,
+        strategy: winner ? attemptConfigKey(winner) : null,
     });
 
     if (entry.expected === 'solved' && !solvedNow) {
@@ -89,7 +90,7 @@ for (const entry of pin.levels) {
             (RETRY_ON_FAILURE ? ' (confirmed on fresh-process retry)' : ''));
     } else if (entry.expected === 'unsolved' && solvedNow) {
         improvements++;
-        console.log(`  ${entry.id} [${entry.batch}] ★ IMPROVEMENT — known-hard now solved in ${elapsed}ms (${winner?.profile ?? '?'}); update ${SET_FILE}`);
+        console.log(`  ${entry.id} [${entry.batch}] ★ IMPROVEMENT — known-hard now solved in ${elapsed}ms (${winner ? attemptConfigKey(winner) : '?'}); update ${SET_FILE}`);
     } else if (entry.expected === 'solved') {
         held++;
         const drift = entry.baselineMs > 0 ? elapsed / entry.baselineMs : 1;

@@ -37,7 +37,7 @@
  *   --solved-only              the contrast group: levels the solver does find. If the rank
  *                              profile here is no better, the metric is not measuring difficulty.
  *   --sources=witness,hints    which known solutions to use (default both)
- *   --profile=<name>           POLICY_PROFILES key (default 'default')
+ *   --profile=<name>           SCORING_PROFILES key (default 'default')
  *   --limit=<n> --seed=<n>     sample n levels deterministically
  *   --out=<path>               per-level JSON
  */
@@ -51,7 +51,7 @@ const { normalizeRawLevel } = await import('../../modules/solver/normalization.j
 const { prepLevel } = await import('../../modules/solver/prep.js');
 const { createState, applyMove, undoMove, getNeighbors, STATE_BUF_DFS } = await import('../../modules/solver/search-state.js');
 const { scoreAndSort } = await import('../../modules/solver/scoring.js');
-const { POLICY_PROFILES } = await import('../../modules/solver/policy.js');
+const { SCORING_PROFILES } = await import('../../modules/solver/policy.js');
 
 const args = new Map(process.argv.slice(2).filter(a => a.includes('=')).map(a => {
     const [k, ...v] = a.split('='); return [k, v.join('=')];
@@ -78,7 +78,7 @@ const corpus = CORPORA[corpusName];
 if (!corpus) { console.error(`unknown --corpus=${corpusName}`); process.exit(2); }
 
 const profileName = args.get('--profile') || 'default';
-const profile = POLICY_PROFILES[profileName];
+const profile = SCORING_PROFILES[profileName];
 if (!profile) { console.error(`unknown --profile=${profileName}`); process.exit(2); }
 const sources = new Set((args.get('--sources') || 'witness,hints').split(',').map(s => s.trim()));
 

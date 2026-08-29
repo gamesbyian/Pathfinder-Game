@@ -91,7 +91,7 @@ for (const entry of levels) {
         winningStrategy: winner ? label(winner) : null,
         attempts: (result.attempts || []).map(a => ({ ...a, label: label(a) })),
     });
-    console.log(`  ${id} [${batch}] ${ok ? '✓' : '✗'} ${elapsedMs}ms ${ok ? (winner ? winner.profile : '?') : result.status}` +
+    console.log(`  ${id} [${batch}] ${ok ? '✓' : '✗'} ${elapsedMs}ms ${ok ? (winner ? `score=${winner.scoringProfileId ?? 'unknown'}` : '?') : result.status}` +
         (refereeValid === false ? '  !! solver path fails PLAY referee' : ''));
 }
 

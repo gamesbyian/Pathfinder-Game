@@ -62,7 +62,7 @@ installBrowserStubs();
 const { createSolver } = await import('../modules/solver.js');
 const { prepLevel } = await import('../modules/solver/prep.js');
 const { repairSearchFromGate } = await import('../modules/solver/repair-search.js');
-const { POLICY_PROFILES } = await import('../modules/solver/policy.js');
+const { SCORING_PROFILES } = await import('../modules/solver/policy.js');
 const { runRepairRestartVsContinuation } = await import('../modules/solver/restart-continuation-harness.js');
 
 const Solver = createSolver();
@@ -75,7 +75,7 @@ const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
 const gateKeys = Array.isArray(level.gateKeys) ? level.gateKeys : [];
 const gateKey = gateKeys[gateIndex];
 if (gateKey === undefined) { console.error(`--gate-index=${gateIndex}: level has ${gateKeys.length} gate(s).`); process.exit(2); }
-const profile = POLICY_PROFILES.repair ?? POLICY_PROFILES.default;
+const profile = SCORING_PROFILES.repair ?? SCORING_PROFILES.default;
 
 console.log(`repair-direct-probe: level=${levelNumber}${raw.id ? ` (${raw.id})` : ''} gate=${gateIndex}/${gateKeys.length} budget=${budgetMs}ms node-budget=${Number.isFinite(nodeBudget) ? nodeBudget : '(none)'} must-turn-biased=${mustTurnBiased} races=${races}${workBudget !== null ? ` work-budget=${workBudget}` : ''}`);
 
