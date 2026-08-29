@@ -232,7 +232,7 @@ const scriptRows = scriptFiles.map(file => {
 
 function normalizedToolCandidates(value) {
   if (typeof value !== 'string') return [];
-  const clean = value.replace(/^**|**$/gu, '').trim();
+  const clean = value.replace(/^\*\*|\*\*$/gu, '').trim();
   if (!/\.(?:mjs|cjs|js|ts|tsx|py)$/u.test(clean)) return [];
   if (clean.startsWith('scripts/')) return [clean];
   if (clean.startsWith('stress/')) return [`scripts/${clean}`];
