@@ -56,7 +56,7 @@ function _reached(k: number): boolean {
         : _reachGenBuf[k] === _reachGen;
 }
 
-// Shared BFS-neighbor admissibility check for isConnected/isConnectedForTrap. Pulled out to a
+// Shared BFS-neighbor admissibility check for isConnected/isConnectedForFalseGoalTriggerSearch. Pulled out to a
 // plain module-level function (no captured variables) rather than a per-call closure: this is
 // the hottest inner loop in the solver (isConnected runs 10^5-10^6 times on beam-heavy levels),
 // and a fresh closure allocated on every isConnected() call was measured (PF_BEAM_DEBUG) to be
@@ -106,7 +106,7 @@ function _mcOpenHas(nk: number, mcOpenMask: number, mcKeys: ArrayLike<number>): 
     return false;
 }
 
-// Shared flood fill for isConnected/isConnectedForTrap: traverses portal edges (via
+// Shared flood fill for isConnected/isConnectedForFalseGoalTriggerSearch: traverses portal edges (via
 // _reachCanEnter, same admissibility rule as ordinary neighbors — a portal destination can
 // never actually be a flipper cell since the editor enforces one object per cell and portals
 // only ever pair with other portal cells, but routing through the shared helper keeps the two
@@ -513,22 +513,22 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     return true;
 }
 
-// Like isConnected but skips goal-reachability — for trap spot enumeration where
+// Like isConnected but skips goal-reachability — for false-goal triggerability enumeration where
 // any cell can be the endpoint and goal reachability is not required.
 //
-// Note the deliberately stricter maxVisit=1 (vs isConnected's maxVisit=2): trap
+// Note the deliberately stricter maxVisit=1 (vs isConnected's maxVisit=2): false-goal trigger
 // search is a best-effort, time-budgeted enumeration that already exhausts its
 // budget on most levels, so it favors a cheaper, more aggressive connectivity
 // prune. Raising this to 2 to mirror isConnected was measured to find zero
-// additional valid trap spots on both completing and timed-out levels (final
-// spots are gated by a full win-condition check before being added), so the
+// additional triggerable false-goal cells on both completing and partial levels (final
+// triggerable cells are gated by a full win-condition check before being added), so the
 // looser bound buys nothing here — it would only prune less for no benefit.
-export function isConnectedForTrap(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
+export function isConnectedForFalseGoalTriggerSearch(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     const intNeeded = level.reqInt - state.ints;
     const maxVisit = intNeeded > 0 ? 1 : 0;
 
-    const _cfgTrap = prep._cfg;
-    const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, (!_cfgTrap || _cfgTrap.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED) as boolean);
+    const _cfgFalseGoalTriggerSearch = prep._cfg;
+    const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, (!_cfgFalseGoalTriggerSearch || _cfgFalseGoalTriggerSearch.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED) as boolean);
 
     for (let i = 0; i < level.mustPassKeys.length; i++) {
         if (!(state.mpVisitedMask & (1 << i)) && !_reached(level.mustPassKeys[i])) return false;
