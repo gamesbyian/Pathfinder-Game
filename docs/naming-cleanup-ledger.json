@@ -342,8 +342,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 5,
-      "status": "pending",
-      "notes": "Weight configurations, not techniques."
+      "status": "done",
+      "notes": "Weight configurations, not techniques. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "PROFILE_ORDER",
@@ -352,8 +352,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 5,
-      "status": "pending",
-      "notes": "Ordering of scoring profile IDs."
+      "status": "done",
+      "notes": "Ordering of scoring profile IDs. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "profileName (solver action/config)",
@@ -362,8 +362,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 5,
-      "status": "pending",
-      "notes": "Persisted/generated readers require compatibility where applicable."
+      "status": "done",
+      "notes": "Persisted/generated readers require compatibility where applicable. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "TEMPLATES",
@@ -372,8 +372,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 5,
-      "status": "pending",
-      "notes": "Geometry/order biases."
+      "status": "done",
+      "notes": "Geometry/order biases. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "StructuralTemplate",
@@ -382,8 +382,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 5,
-      "status": "pending",
-      "notes": "Type rename."
+      "status": "done",
+      "notes": "Type rename. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "template (attempt config)",
@@ -392,8 +392,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 5,
-      "status": "pending",
-      "notes": "Migrate telemetry/provenance readers."
+      "status": "done",
+      "notes": "Migrate telemetry/provenance readers. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "templateId",
@@ -402,8 +402,8 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 5,
-      "status": "pending",
-      "notes": "Migrate generated readers where persisted."
+      "status": "done",
+      "notes": "Migrate generated readers where persisted. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "TEMPLATE_CONFIG_KEYS",
@@ -412,8 +412,8 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 5,
-      "status": "pending",
-      "notes": "Config-key mapping."
+      "status": "done",
+      "notes": "Config-key mapping. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "diverse beam",
@@ -422,8 +422,8 @@
       "risk": "medium",
       "persistence": "frozen-history",
       "phase": 5,
-      "status": "pending",
-      "notes": "Current docs/display terminology."
+      "status": "done",
+      "notes": "Current docs/display terminology. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "diverseBeam",
@@ -432,8 +432,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 5,
-      "status": "pending",
-      "notes": "Attempt/config telemetry compatibility."
+      "status": "done",
+      "notes": "Attempt/config telemetry compatibility. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "(diverse) attempt-key suffix",
@@ -442,8 +442,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 5,
-      "status": "pending",
-      "notes": "Handled by canonical attempt parser."
+      "status": "done",
+      "notes": "Handled by canonical attempt parser. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "beam dedup coarse key",
@@ -452,8 +452,8 @@
       "risk": "medium",
       "persistence": "frozen-history",
       "phase": 5,
-      "status": "pending",
-      "notes": "Do not imply exact equivalence."
+      "status": "done",
+      "notes": "Do not imply exact equivalence. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "beam dedup coarse merge",
@@ -462,8 +462,8 @@
       "risk": "medium",
       "persistence": "frozen-history",
       "phase": 5,
-      "status": "pending",
-      "notes": "Do not imply exact equivalence."
+      "status": "done",
+      "notes": "Do not imply exact equivalence. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "DEDUP_NEAR_TIE_*",
@@ -472,8 +472,8 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 5,
-      "status": "pending",
-      "notes": "Feature/config aliases accepted through migration."
+      "status": "done",
+      "notes": "Feature/config aliases accepted through migration. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
       "old": "prime",
@@ -482,7 +482,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -492,7 +492,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -502,7 +502,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -512,7 +512,7 @@
       "risk": "low",
       "persistence": "none",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Intentional retained stage ID."
     },
     {
@@ -522,7 +522,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -532,7 +532,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -542,7 +542,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -552,7 +552,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -562,7 +562,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -572,7 +572,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -582,7 +582,7 @@
       "risk": "low",
       "persistence": "none",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Intentional retained stage ID."
     },
     {
@@ -592,7 +592,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -602,7 +602,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -612,7 +612,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -622,7 +622,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -632,7 +632,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -642,7 +642,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Central normalizeSolverStageId compatibility."
     },
     {
@@ -652,7 +652,7 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Behavior is guidance-distance selection."
     },
     {
@@ -662,7 +662,7 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Historical latency scheduler identity."
     },
     {
@@ -672,7 +672,7 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Historical latency scheduler identity."
     },
     {
@@ -682,7 +682,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Keys are solver stages."
     },
     {
@@ -692,7 +692,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Generic legacy mode removed after migration."
     },
     {
@@ -702,7 +702,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Persisted scheduler mode."
     },
     {
@@ -712,7 +712,7 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Type rename."
     },
     {
@@ -722,7 +722,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Dual-read only where external/generated configs persist."
     },
     {
@@ -732,7 +732,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Generated JSON single-write canonical."
     },
     {
@@ -742,7 +742,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Attempt telemetry."
     },
     {
@@ -752,7 +752,7 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Wall multiplier, not [0,1] fraction."
     },
     {
@@ -762,7 +762,7 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Runtime policy status, not history."
     },
     {
@@ -772,7 +772,7 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Promotion history belongs in evidence ledger."
     },
     {
@@ -2052,7 +2052,7 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Migrate with stage identity."
     },
     {
@@ -2062,7 +2062,7 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Migrate with stage identity."
     },
     {
@@ -2072,7 +2072,7 @@
       "risk": "medium",
       "persistence": "frozen-history",
       "phase": 6,
-      "status": "pending",
+      "status": "in-progress",
       "notes": "Migrate with stage identity."
     },
     {
@@ -2376,6 +2376,6 @@
       "notes": "Closed negative default-off experiment ID; delete later rather than rename."
     }
   ],
-  "lastCompletedPhase": 2,
+  "lastCompletedPhase": 5,
   "lastUpdated": "2026-08-28"
 }
