@@ -67,7 +67,7 @@ for (const raw of selected) {
     const arrivals = [];
     const prep = api.prepLevel(level); prep._cfg = null; prep._metrics = { nodesExpanded: 0 };
     prep._repairEliteResearchObserver = { observe: record => arrivals.push(record) };
-    await repairSearchFromGate(gateKey, level, prep, api.POLICY_PROFILES.repair, 120000, Date.now(), null,
+    await repairSearchFromGate(gateKey, level, prep, api.SCORING_PROFILES.repair, 120000, Date.now(), null,
         null, false, nodeBudget, {});
     const unique = new Map();
     for (const record of arrivals) {
