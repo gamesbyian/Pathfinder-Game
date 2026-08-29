@@ -167,7 +167,7 @@ export const ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION = 0.25;
 export const ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION = 0.15;
 
 /** Default reserve fraction/config-count for main-search late-suffix starvation mitigation.
- *  STRATEGY_MAIN_LOOP_LATE_RESERVE is production default-ON as of 2026-08-12; the mechanism is
+ *  STRATEGY_MAIN_SEARCH_LATE_RESERVE is production default-ON as of 2026-08-12; the mechanism is
  *  still a strict no-op unless a finite `nodeBudget` is supplied (offline batch tooling only —
  *  see mainSearchLateReserveEligible below), so this changed no interactive Play/Editor/Review
  *  behavior. 0.15 is the frozen level-blind population A/B's winning arm — see
@@ -204,7 +204,7 @@ export const MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT = 5;
  *  all 6 gave the goal-attraction-disabled-retry pass ZERO attempts — while the admissible-order-fallback tier, which
  *  DOES have its own reserve, got its own slice on every one of the same 6 levels. Same clean
  *  before/after control, same starvation shape as the already-fixed early-repair-search/early-main-search
- *  bug (STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET) and the already-fixed admissible-order-fallback bug
+ *  bug (STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET) and the already-fixed admissible-order-fallback bug
  *  (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION), one tier boundary further down the ladder.
  *
  *  THE MECHANISM (see the read-site's own two-revision history for the full derivation): a flat
@@ -212,7 +212,7 @@ export const MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT = 5;
  *  FRACTION carves from ITS ceiling — two revisions found that both naive placements (before the
  *  probe's own ceiling; independently after it with a Math.max clamp) actively regressed real
  *  solves by taking budget from something already load-bearing (the probe, the main loop's own
- *  attempt shares, or the already-validated STRATEGY_MAIN_LOOP_LATE_RESERVE's entire slice). The
+ *  attempt shares, or the already-validated STRATEGY_MAIN_SEARCH_LATE_RESERVE's entire slice). The
  *  landed mechanism instead takes this fraction OF `mainSearchLateReserve` itself — "of whatever the
  *  late suffix would get, hand some to the fallback loop instead" — which is provably safe for the
  *  probe/early-config prefix (untouched, always) and only partially reduces (not zeroes) the late
@@ -229,7 +229,7 @@ export const MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT = 5;
  *  above. */
 export const REPAIR_FALLBACK_NODE_RESERVE_FRACTION = 0.15;
 
-/** STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE (opt-in, default OFF — NEW, unvalidated mechanism,
+/** STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE (opt-in, default OFF — NEW, unvalidated mechanism,
  *  landed 2026-08-13, same day as and directly motivated by REPAIR_FALLBACK_NODE_RESERVE_FRACTION's
  *  own close-out). Protects the goal-attraction-disabled-retry pass's slice of `earlyTierNodeBudget` from the
  *  repair fallback loop specifically — not just from the main loop, which
@@ -275,11 +275,11 @@ export const REPAIR_FALLBACK_NODE_RESERVE_FRACTION = 0.15;
  *  dedicated A/B. */
 export const GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION = 0.15;
 
-/** STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY's node reserve, as a fraction of whatever
+/** STRATEGY_REPAIR_SHRINK_RECOVERY's node reserve, as a fraction of whatever
  *  `mainSearchLateReserve` remains after the repair-fallback and goal-attraction-disabled-retry reserves have
  *  taken their nested slices.
  *
- *  WHY THIS EXISTS: `STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET` shrinks a biased early-repair-search
+ *  WHY THIS EXISTS: `STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET` shrinks a biased early-repair-search
  *  tier's node budget on the evidence of the ordinary tier's `bestBadness`. That prediction is
  *  TERMINAL today — nothing ever restores the withheld nodes, and no later tier re-runs the biased
  *  config, so a mispredicted level simply loses whatever that tier would have found. Corpus-1's
@@ -1325,7 +1325,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // remainder, so an inexpensive/exhausted suffix never strands budget. Still a strict no-op
     // without a finite `nodeBudget` (see `mainSearchLateReserveEligible` below), so this only affects
     // offline batch tooling, never interactive Play/Editor/Review solves.
-    const mainSearchLateReserveEnabled = !!(!cfg || cfg.STRATEGY_MAIN_LOOP_LATE_RESERVE);
+    const mainSearchLateReserveEnabled = !!(!cfg || cfg.STRATEGY_MAIN_SEARCH_LATE_RESERVE);
     const mainSearchLateReserveFractionRaw = Number(opts.mainSearchLateReserveFractionOverride ?? opts.mainLoopLateReserveFractionOverride);
     const mainSearchLateReserveFraction = Number.isFinite(mainSearchLateReserveFractionRaw) && mainSearchLateReserveFractionRaw >= 0
         ? Math.min(1, mainSearchLateReserveFractionRaw)
@@ -1372,7 +1372,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // goal-attraction-disabled-retry pass share `earlyTierNodeBudget` with the WHOLE main loop (early + late
     // suffix combined), completely unprotected: the main loop always runs first and can consume the
     // entire pool before either ever gets a single node. Same starvation shape as the already-fixed
-    // early-repair-search/early-main-search bug (STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET) and the
+    // early-repair-search/early-main-search bug (STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET) and the
     // already-fixed admissible-order-fallback/everything-before-it bug (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION),
     // one tier boundary further down the ladder — same mechanism as the admissible-order-fallback reserve
     // (a flat carve-out from the ceiling the PRODUCER runs against, computed before the producer
@@ -1410,9 +1410,9 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // mainSearchLateReserve always, since the fraction is clamped to [0,1]) — no clamp needed, and the
     // late suffix keeps a share proportional to (1 - this fraction) rather than losing it outright.
     // ACCEPTED COUPLING: this reserve is a strict no-op whenever `mainSearchLateReserve` is 0 (whether
-    // because STRATEGY_MAIN_LOOP_LATE_RESERVE is off, or its own config-count/fraction rounds to
+    // because STRATEGY_MAIN_SEARCH_LATE_RESERVE is off, or its own config-count/fraction rounds to
     // zero) — there is nothing to carve from without repeating revision 1's mistake. Since
-    // STRATEGY_MAIN_LOOP_LATE_RESERVE is production default-ON, this only matters for a caller that
+    // STRATEGY_MAIN_SEARCH_LATE_RESERVE is production default-ON, this only matters for a caller that
     // explicitly disables it while enabling this flag; not fixed here (would need a second,
     // independent floor computation) per CLAUDE.md's smallest-change guidance — flagged, not solved.
     //
@@ -1444,16 +1444,16 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
         ? Math.floor(mainSearchLateReserve * repairFallbackNodeReserveFraction)
         : 0;
 
-    // STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE (see GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION's
+    // STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE (see GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION's
     // own comment for the full derivation). Nests one level deeper than repairFallbackNodeReserve
     // just above: a fraction OF the remainder `mainSearchLateReserve - repairFallbackNodeReserve`, so
     // `repairFallbackNodeReserve + goalAttractionDisabledRetryNodeReserve <= mainSearchLateReserve` holds by
     // construction (both fractions clamped to [0,1]) — no clamp needed, same soundness argument as
     // the reserve it nests inside. Same opt-in convention and same real-run-condition eligibility
-    // shape (diversityBudgetFraction/STRATEGY_ATTRACTION_DIVERSITY mirror repairConfigsCount>0/
+    // shape (diversityBudgetFraction/STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY mirror repairConfigsCount>0/
     // repairBudgetFraction!==0 above) so a level where the diversity pass would never run doesn't
     // strand nodes reserving for it.
-    const goalAttractionDisabledRetryNodeReserveEnabled = !!(cfg && cfg.STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE === true);
+    const goalAttractionDisabledRetryNodeReserveEnabled = !!(cfg && cfg.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE === true);
     const goalAttractionDisabledRetryNodeReserveFractionRaw = Number(opts.goalAttractionDisabledRetryNodeReserveFractionOverride ?? opts.attractionDiversityNodeReserveFractionOverride);
     const goalAttractionDisabledRetryNodeReserveFraction = Number.isFinite(goalAttractionDisabledRetryNodeReserveFractionRaw) && goalAttractionDisabledRetryNodeReserveFractionRaw >= 0
         ? Math.min(1, goalAttractionDisabledRetryNodeReserveFractionRaw)
@@ -1461,13 +1461,13 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     const goalAttractionDisabledRetryNodeReserveEligible = goalAttractionDisabledRetryNodeReserveEnabled
         && goalAttractionDisabledRetryNodeReserveFraction > 0
         && diversityBudgetFraction !== 0
-        && (!cfg || cfg.STRATEGY_ATTRACTION_DIVERSITY)
+        && (!cfg || cfg.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY)
         && mainSearchLateReserve > repairFallbackNodeReserve;
     const goalAttractionDisabledRetryNodeReserve = goalAttractionDisabledRetryNodeReserveEligible
         ? Math.floor((mainSearchLateReserve - repairFallbackNodeReserve) * goalAttractionDisabledRetryNodeReserveFraction)
         : 0;
 
-    // STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY (see REPAIR_SHRINK_RECOVERY_NODE_RESERVE_FRACTION's
+    // STRATEGY_REPAIR_SHRINK_RECOVERY (see REPAIR_SHRINK_RECOVERY_NODE_RESERVE_FRACTION's
     // own comment for the full derivation). Only the ENABLE/fraction decision can be made here: the
     // reserve's SIZE depends on what the probe actually shrinks, which is not known until the probe
     // has run, so it is computed below once `shrunkBiasedTiers` is populated.
@@ -1475,11 +1475,11 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // OPT-IN convention (`cfg && cfg.FLAG === true`), matching the two new reserves above and NOT
     // the standard `!cfg || cfg.FLAG` the promoted flags use: brand-new and unvalidated, registered
     // in modules/solver/ablation-config.ts's OPT_IN_FEATURES, so it must stay OFF whenever `cfg` is null.
-    const shrinkRecoveryEnabled = !!(cfg && cfg.STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY === true)
+    const shrinkRecoveryEnabled = !!(cfg && cfg.STRATEGY_REPAIR_SHRINK_RECOVERY === true)
         && repairConfigsCount > 0
         && repairBudgetFraction !== 0
-        && (!cfg || cfg.STRATEGY_REPAIR_PROBE)
-        && (!cfg || cfg.STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET);
+        && (!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH)
+        && (!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET);
     const shrinkRecoveryFractionRaw = Number(opts.repairShrinkRecoveryNodeReserveFractionOverride);
     const shrinkRecoveryFraction = Number.isFinite(shrinkRecoveryFractionRaw) && shrinkRecoveryFractionRaw >= 0
         ? Math.min(1, shrinkRecoveryFractionRaw)
@@ -1531,15 +1531,15 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // exactly 0, the same "no repair-related cost, period" signal the later fallback loop already
     // honors. Every other value (undefined/production-default, or any nonzero override) leaves the
     // probe's own fixed node-budget behavior completely unchanged from before this fix.
-    // Ablation: STRATEGY_REPAIR_PROBE skips only the probe (the full-budget fallback loop below
+    // Ablation: STRATEGY_EARLY_REPAIR_SEARCH skips only the probe (the full-budget fallback loop below
     // still runs), isolating the probe's own scheduling contribution from repair-search itself.
 
     // Named eligibility for the three stages whose real dispatch condition (orchestration.ts) is a
     // simple boolean rather than a node-reserve cascade — extracted verbatim from that condition so
     // telemetry (orchestration.ts's `finish()`) can read the SAME value instead of re-deriving it.
-    const earlyRepairSearchTierWillRun = repairConfigsCount > 0 && repairBudgetFraction !== 0 && !!(!cfg || cfg.STRATEGY_REPAIR_PROBE);
+    const earlyRepairSearchTierWillRun = repairConfigsCount > 0 && repairBudgetFraction !== 0 && !!(!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH);
     const repairFallbackTierWillRun = repairConfigsCount > 0 && repairBudgetFraction !== 0;
-    const diversityTierWillRun = diversityBudgetFraction > 0 && !!(!cfg || cfg.STRATEGY_ATTRACTION_DIVERSITY);
+    const diversityTierWillRun = diversityBudgetFraction > 0 && !!(!cfg || cfg.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY);
 
     return {
         earlyRepairSearchTierWillRun, repairFallbackTierWillRun, diversityTierWillRun,
@@ -1571,7 +1571,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
 }
 export type StageBudgetPlan = ReturnType<typeof computeStageBudgetPlan>;
 
-/** Second step, run only after the repair probe: sizes STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY's
+/** Second step, run only after the repair probe: sizes STRATEGY_REPAIR_SHRINK_RECOVERY's
  *  reserve to the ACTUAL debt the probe's adaptive biased-budget shrink left behind, and drops
  *  every post-probe early-tier ceiling by that reserve. Strict no-op (returns the plan's own
  *  pre-shrink ceilings unchanged) whenever nothing was shrunk. */

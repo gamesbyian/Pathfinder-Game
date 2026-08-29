@@ -54,7 +54,7 @@ test('buildSolverStagePlan.eligible agrees with computeStageBudgetPlan.xTierWill
 test('repair-shrink-recovery resolves once earlyRepairSearchShrunkTierCount is supplied', () => {
     const budgetPlan = computeStageBudgetPlan({
         ...baseInput, nodeBudget: 50_000_000,
-        cfg: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true, STRATEGY_REPAIR_PROBE: true, STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: true },
+        cfg: { STRATEGY_REPAIR_SHRINK_RECOVERY: true, STRATEGY_EARLY_REPAIR_SEARCH: true, STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET: true },
     });
     const noneShrunk = buildSolverStagePlan({ budgetPlan, mainSearchEligible: true, earlyRepairSearchShrunkTierCount: 0 });
     assert.equal(noneShrunk.find(entry => entry.spec.id === 'repair-shrink-recovery')!.eligible, false);

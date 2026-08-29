@@ -227,7 +227,7 @@ function techniqueEligible(key, raw) {
 //   R02644 -- the ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE counter-example (needs 'default' to keep
 //     13.2M of a 15M share; docs/solver-opt-in-experiment-ledger.md) -- still unsolved and still the
 //     open half of that mechanism's double-edged-shape evidence.
-// (Corpus-1's R00408 -- the STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET regression target,
+// (Corpus-1's R00408 -- the STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET regression target,
 // reports/2026-08-14-corpus1-repair-probe-adaptive-regression.md -- needs no separate entry: ALL of
 // Corpus-1's unsolved levels are already unconditionally in T1 below.)
 const PRIORITY_LEVEL_IDS = new Set(['R02119', 'R02422', 'R02644']);

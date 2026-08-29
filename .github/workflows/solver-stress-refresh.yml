@@ -41,7 +41,7 @@ on:
         required: false
         default: ''
       main_loop_late_reserve_fraction:
-        description: 'Optional STRATEGY_MAIN_LOOP_LATE_RESERVE fraction; blank for control.'
+        description: 'Optional STRATEGY_MAIN_SEARCH_LATE_RESERVE fraction; blank for control.'
         required: false
         default: ''
       main_loop_late_reserve_config_count:

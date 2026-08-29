@@ -225,19 +225,26 @@ export function createRacePool(opts = {}) {
         const { getConfiguredAttemptConfigs, GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS } = await import('../../modules/solver/attempts.js');
         const { getActiveGates, REPAIR_EXTRA_BUDGET_FRACTION, GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION } = await import('../../modules/solver/orchestration.js');
         const { createSolver } = await import('../../modules/solver.js');
-        const { defaultConfig } = await import('../../modules/solver/ablation-config.js');
+        const { defaultConfig, canonicalAblationFeatureName } = await import('../../modules/solver/ablation-config.js');
         const Solver = createSolver();
 
         const timeBudgetMs = Number(levelOpts.timeBudgetMs) > 0 ? Number(levelOpts.timeBudgetMs) : 20000;
         // Workers need a structured-cloneable plain object, so the sequential engine's Proxy
         // normalizer cannot cross this boundary. Materialize production defaults first: passing a
         // sparse `{FLAG:false}` object directly used to make every other `cfg.STRATEGY_*` read
-        // undefined/falsy, silently disabling unrelated raced phases and attempt tiers.
+        // undefined/falsy, silently disabling unrelated raced phases and attempt tiers. Keys are
+        // canonicalized (mirroring normalizeAblationConfig's dual-read) so a caller still using a
+        // legacy flag spelling (e.g. STRATEGY_ATTRACTION_DIVERSITY) lands on the canonical key
+        // this plain object and every downstream `cfg.STRATEGY_X` read actually checks.
         const ablationCfg = levelOpts.ablation == null
             ? null
             : {
                 ...defaultConfig(),
-                ...Object.fromEntries(Object.entries(levelOpts.ablation).filter(([, value]) => value !== undefined)),
+                ...Object.fromEntries(
+                    Object.entries(levelOpts.ablation)
+                        .filter(([, value]) => value !== undefined)
+                        .map(([key, value]) => [canonicalAblationFeatureName(key), value]),
+                ),
             };
         // levelOpts.repairBudgetFractionOverride (orchestration.ts's SolveOpts field, added for
         // offline batch-tooling cost control — see docs/solver-architecture.md's cost-gotcha
@@ -494,7 +501,7 @@ export function createRacePool(opts = {}) {
         const diversityBudgetFraction = Number.isFinite(diversityFractionOverride) && diversityFractionOverride >= 0
             ? diversityFractionOverride
             : GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION;
-        const diversityGateEnabled = !ablationCfg || ablationCfg.STRATEGY_ATTRACTION_DIVERSITY;
+        const diversityGateEnabled = !ablationCfg || ablationCfg.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY;
         if (diversityBudgetFraction <= 0 || !diversityGateEnabled || mainConfigsList.length === 0) {
             return phase1Result;
         }

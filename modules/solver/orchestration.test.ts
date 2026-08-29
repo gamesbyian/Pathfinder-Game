@@ -330,7 +330,7 @@ function makeRepairGatedInfeasibleLevel() {
 // logic under test — orchestration.ts's own budget apportionment, not this file's search cost —
 // still sees genuine numbers. Using this in place of a real repair/DFS search turns a multi-second
 // node-budget-bound solve into a sub-millisecond one without touching the orchestration code being
-// tested; see the sibling STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET tests above for the same
+// tested; see the sibling STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET tests above for the same
 // pattern applied by hand.
 const exhaustingDispatch: typeof runAttemptSearch = (async (...args: Parameters<typeof runAttemptSearch>) => {
     const prep = args[3];
@@ -356,14 +356,14 @@ test('repair probe retries the ordinary tier across EARLY_REPAIR_SEARCH_ORDINARY
     assert.equal(probeAttempts.every(a => a.nodesExpanded === 2_000_000), true);
 });
 
-test('STRATEGY_REPAIR_PROBE_MULTI_SEED: false restricts the probe to a single seed', async () => {
-    // Must also set STRATEGY_REPAIR_PROBE: true explicitly — passing an ablation object with
+test('STRATEGY_EARLY_REPAIR_SEARCH_MULTI_SEED: false restricts the probe to a single seed', async () => {
+    // Must also set STRATEGY_EARLY_REPAIR_SEARCH: true explicitly — passing an ablation object with
     // any field set makes every OTHER unset STRATEGY_* flag read as false (see SolveOpts's
     // repairBudgetFractionOverride comment), which would otherwise silently skip the probe
     // entirely and make this test pass for the wrong reason.
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 50,
-        ablation: { STRATEGY_REPAIR_PROBE: true, STRATEGY_REPAIR_PROBE_MULTI_SEED: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: true, STRATEGY_EARLY_REPAIR_SEARCH_MULTI_SEED: false },
         attemptSearchForTesting: exhaustingDispatch,
     });
     assert.equal(result.ok, false);
@@ -374,7 +374,7 @@ test('STRATEGY_REPAIR_PROBE_MULTI_SEED: false restricts the probe to a single se
 
 // Same shape as makeRepairGatedInfeasibleLevel, plus a must-turn cell so attempts.ts's needsRepairFallback
 // / mustTurn>0 gating (attempts.ts) also appends the must-turn-biased repair config — the only
-// thing STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET can ever act on (see attempts.test.ts's
+// thing STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET can ever act on (see attempts.test.ts's
 // nearly-identical fixture for the same repair-gated + must-turn combination).
 function makeRepairGatedMustTurnInfeasibleLevel() {
     return {
@@ -384,11 +384,11 @@ function makeRepairGatedMustTurnInfeasibleLevel() {
 }
 
 // Production default-ON as of 2026-08-13 (reports/2026-08-12-early-repair-search-early-main-search-starvation.md).
-// Mirrors the PRUNE_MC_NEIGHBOR_BUDGET / STRATEGY_MAIN_LOOP_LATE_RESERVE regression pattern: an
+// Mirrors the PRUNE_MC_NEIGHBOR_BUDGET / STRATEGY_MAIN_SEARCH_LATE_RESERVE regression pattern: an
 // entirely omitted `ablation` option (cfg=null, exactly what every production caller and any CLI
 // invocation without --enable-flags passes) must activate the rule, not silently leave it inert —
 // the wiring gap both of those promotions shipped with and had to fix separately.
-test('STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET shrinks the biased tier by default when ordinary-tier bestBadness is poor', async () => {
+test('STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET shrinks the biased tier by default when ordinary-tier bestBadness is poor', async () => {
     const biasedNodeBudgets: number[] = [];
     const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
         const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
@@ -417,7 +417,7 @@ test('STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET shrinks the biased tier by de
     assert.ok(expectedScaled < EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET, 'sanity: the scale actually shrank the budget');
 });
 
-test('STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET leaves the biased tier at full budget when ordinary-tier bestBadness already looks promising', async () => {
+test('STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET leaves the biased tier at full budget when ordinary-tier bestBadness already looks promising', async () => {
     const biasedNodeBudgets: number[] = [];
     const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
         const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
@@ -440,7 +440,7 @@ test('STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET leaves the biased tier at ful
     assert.equal(biasedNodeBudgets[0], EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET, 'scale 1: no-op when live evidence already looks promising');
 });
 
-test('STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: false keeps the biased tier at full budget even with poor evidence', async () => {
+test('STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET: false keeps the biased tier at full budget even with poor evidence', async () => {
     const biasedNodeBudgets: number[] = [];
     const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
         const [config, , , prep, , budgetMs, , , nodeBudget, out] = args;
@@ -459,8 +459,8 @@ test('STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: false keeps the biased tier 
         // normalizeAblationConfig's Proxy falls back every OTHER unset key to its normal
         // registry-derived default (!OPT_IN_FEATURES.has(key)), so a sparse object naming only
         // this flag is enough to isolate its disablement without also touching
-        // STRATEGY_REPAIR_PROBE / STRATEGY_REPAIR_PROBE_MULTI_SEED (both non-opt-in, default true).
-        ablation: { STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: false },
+        // STRATEGY_EARLY_REPAIR_SEARCH / STRATEGY_EARLY_REPAIR_SEARCH_MULTI_SEED (both non-opt-in, default true).
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET: false },
         attemptSearchForTesting: dispatch,
     });
     assert.equal(result.ok, false);
@@ -728,14 +728,14 @@ test('goal-attraction-disabled-retry pass reruns the main ladder once more after
     assert.equal(diversityAttempts.length, mainSearchAttempts.length);
 });
 
-test('STRATEGY_ATTRACTION_DIVERSITY: false suppresses the pass', async () => {
+test('STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY: false suppresses the pass', async () => {
     // This infeasible level is pruned by distance/parity regardless of search strategy, so the
     // side effect of every OTHER unset STRATEGY_* flag also reading false here (see SolveOpts's
     // repairBudgetFractionOverride field comment) doesn't change the (still-unsolved) result.
     const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
-        ablation: { STRATEGY_ATTRACTION_DIVERSITY: false },
+        ablation: { STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY: false },
     });
     assert.equal(result.ok, false);
     assert.equal(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'), false);
@@ -944,7 +944,7 @@ test('opt-in main-search reserve preserves order and gives a late suffix nonzero
         workBudget: 1_000_000,
         nodeBudget: 100,
         disableExtraBudgetPasses: true,
-        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        ablation: { STRATEGY_MAIN_SEARCH_LATE_RESERVE: true },
         mainSearchLateReserveFractionOverride: 0.2,
         mainSearchLateReserveConfigCountOverride: 2,
         attemptSearchForTesting: dispatch,
@@ -980,7 +980,7 @@ test('interleaved main-search reserve gives every late config/gate pair its own 
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 100,
         disableExtraBudgetPasses: true,
-        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        ablation: { STRATEGY_MAIN_SEARCH_LATE_RESERVE: true },
         mainSearchLateReserveFractionOverride: 0.2,
         mainSearchLateReserveConfigCountOverride: 2,
         attemptSearchForTesting: dispatch,
@@ -1031,7 +1031,7 @@ test('main-search reserve protects late configs from WORK (not just node) starva
         nodeBudget: 1_000_000, // generous -- must not be what stops the loop
         workBudget: 100_000,
         disableExtraBudgetPasses: true,
-        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        ablation: { STRATEGY_MAIN_SEARCH_LATE_RESERVE: true },
         mainSearchLateReserveFractionOverride: 0.5,
         mainSearchLateReserveConfigCountOverride: 1,
         attemptSearchForTesting: dispatch,
@@ -1074,7 +1074,7 @@ test('interleaved main-search reserve protects late config/gate pairs from WORK 
         nodeBudget: 1_000_000,
         workBudget: 2_000_000,
         disableExtraBudgetPasses: true,
-        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        ablation: { STRATEGY_MAIN_SEARCH_LATE_RESERVE: true },
         mainSearchLateReserveFractionOverride: 0.5,
         mainSearchLateReserveConfigCountOverride: 1,
         attemptSearchForTesting: dispatch,
@@ -1096,7 +1096,7 @@ test('main-search reserve activates by default with an omitted ablation config a
     // `ablation` option (cfg=null, exactly what every production caller and any CLI invocation
     // without --enable-flags passes) must activate the rule, not silently leave it inert — the
     // wiring gap the neighbor-budget promotion shipped with and had to fix separately. This test
-    // deliberately omits `ablation` entirely rather than passing `{ STRATEGY_MAIN_LOOP_LATE_RESERVE: true }`.
+    // deliberately omits `ablation` entirely rather than passing `{ STRATEGY_MAIN_SEARCH_LATE_RESERVE: true }`.
     const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
     const defaulted = await solveLevel(level, {
         timeBudgetMs: 1000,
@@ -1114,14 +1114,14 @@ test('main-search reserve is inert with an explicit disable or an infinite node 
         timeBudgetMs: 1000,
         nodeBudget: 400,
         disableExtraBudgetPasses: true,
-        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: false },
+        ablation: { STRATEGY_MAIN_SEARCH_LATE_RESERVE: false },
         mainSearchLateReserveFractionOverride: 0.9,
         mainSearchLateReserveConfigCountOverride: 1,
     });
     const infinite = await solveLevel(level, {
         timeBudgetMs: 1000,
         disableExtraBudgetPasses: true,
-        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        ablation: { STRATEGY_MAIN_SEARCH_LATE_RESERVE: true },
         mainSearchLateReserveFractionOverride: 0.9,
         mainSearchLateReserveConfigCountOverride: 1,
     });
@@ -1137,7 +1137,7 @@ test('zero fraction or zero suffix count disables the main-search reserve', asyn
     ]) {
         const result = await solveLevel(level, {
             timeBudgetMs: 1000, nodeBudget: 400, disableExtraBudgetPasses: true,
-            ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true }, ...overrides,
+            ablation: { STRATEGY_MAIN_SEARCH_LATE_RESERVE: true }, ...overrides,
         });
         assert.equal(result.attempts.some(a => a.mainSearchLateReserve), false);
     }
@@ -1148,7 +1148,7 @@ test('a reserve fraction that rounds to zero is fully inert', async () => {
         timeBudgetMs: 1000,
         nodeBudget: 1,
         disableExtraBudgetPasses: true,
-        ablation: { STRATEGY_MAIN_LOOP_LATE_RESERVE: true },
+        ablation: { STRATEGY_MAIN_SEARCH_LATE_RESERVE: true },
         mainSearchLateReserveFractionOverride: 0.01,
         mainSearchLateReserveConfigCountOverride: 4,
     });
@@ -1159,7 +1159,7 @@ test('a reserve fraction that rounds to zero is fully inert', async () => {
 // FRACTION's own comment for the two-revision history this test suite is meant to prevent a third
 // instance of). Fixture: makeRepairGatedInfeasibleLevel() has exactly 1 repair config (ordinary,
 // no must-turn-biased tier) and 16 main configs (confirmed by direct inspection); the probe is
-// disabled via STRATEGY_REPAIR_PROBE: false so it contributes zero nodes, isolating the mechanism
+// disabled via STRATEGY_EARLY_REPAIR_SEARCH: false so it contributes zero nodes, isolating the mechanism
 // under test (main loop vs. repair fallback loop) from the probe's own fixed-cost budget entirely.
 // The mock dispatch consumes exactly the nodeBudget it is given for every attempt and never solves,
 // mirroring the main-search-late-reserve tests' own established pattern.
@@ -1174,7 +1174,7 @@ function repairFallbackReserveDispatch(): typeof runAttemptSearch {
 }
 
 test('repair-fallback reserve is inert by default (cfg=null) even with a finite node ceiling', async () => {
-    // Opt-in convention: unlike STRATEGY_MAIN_LOOP_LATE_RESERVE (standard convention, activates by
+    // Opt-in convention: unlike STRATEGY_MAIN_SEARCH_LATE_RESERVE (standard convention, activates by
     // default), an entirely omitted ablation option must leave this flag OFF — the opposite
     // regression direction from the wiring-gap bug documented throughout
     // docs/solver-opt-in-experiment-ledger.md, and exactly the mismatch a first draft of this flag's
@@ -1182,7 +1182,7 @@ test('repair-fallback reserve is inert by default (cfg=null) even with a finite 
     const level = makeRepairGatedInfeasibleLevel();
     const withoutFlag = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
@@ -1195,7 +1195,7 @@ test('repair-fallback reserve is inert by default (cfg=null) even with a finite 
         attemptSearchForTesting: repairFallbackReserveDispatch(),
         repairLateProbeNodeBudgetOverride: 0,
     });
-    // cfg is non-null here (STRATEGY_REPAIR_PROBE: false is set), but this flag is unset within it —
+    // cfg is non-null here (STRATEGY_EARLY_REPAIR_SEARCH: false is set), but this flag is unset within it —
     // the opt-in Proxy must resolve it to false regardless of what else is in the object.
     assert.equal(withoutFlag.attempts.filter(a => a.repair && !a.ok).length, 0, 'no repair-fallback attempts ran: the reserve did not activate');
     assert.equal(withoutFlag.nodesExpanded, 1000, 'the main loop alone consumed the entire earlyTierNodeBudget, exactly the pre-reserve behavior');
@@ -1217,12 +1217,12 @@ test('repair-fallback reserve gives the fallback loop room without touching the 
     };
     const off = await solveLevel(level, {
         ...opts,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: false, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: false, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     const on = await solveLevel(level, {
         ...opts,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     // earlyTierNodeBudget=1000 (no admissible-order-fallback reserve), mainSearchLateReserve=floor(1000*0.3)=300,
@@ -1260,7 +1260,7 @@ function isolateRepairFallbackOpts(overrides: Record<string, unknown> = {}) {
         mainSearchLateReserveFractionOverride: 0.3,
         mainSearchLateReserveConfigCountOverride: 2,
         repairFallbackNodeReserveFractionOverride: 0.5,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
         attemptBudgetTelemetry: true,
         ...overrides,
@@ -1298,13 +1298,13 @@ test('repair-fallback now honors an explicit baseWorkBudget instead of silently 
 test('repair-fallback reserve is a no-op when mainSearchLateReserve is 0 (accepted coupling)', async () => {
     // Documented, accepted limitation (see the read site's own comment): this reserve carves FROM
     // mainSearchLateReserve, so it has nothing to withhold when that reserve is itself zero --
-    // whether because STRATEGY_MAIN_LOOP_LATE_RESERVE is off, or its own fraction/config-count is 0.
+    // whether because STRATEGY_MAIN_SEARCH_LATE_RESERVE is off, or its own fraction/config-count is 0.
     // Confirms this degrades safely (no crash, no stranded nodes) rather than silently doing nothing
     // dangerous.
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_MAIN_LOOP_LATE_RESERVE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_MAIN_SEARCH_LATE_RESERVE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
@@ -1318,19 +1318,19 @@ test('repair-fallback reserve is a no-op when mainSearchLateReserve is 0 (accept
     assert.equal(result.nodesExpanded, 1000, 'the main loop alone spends the entire (undivided) earlyTierNodeBudget, exactly as if the flag were off');
 });
 
-// STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE (opt-in, default OFF — see GOAL_ATTRACTION_DISABLED_RETRY_NODE_
+// STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE (opt-in, default OFF — see GOAL_ATTRACTION_DISABLED_RETRY_NODE_
 // RESERVE_FRACTION's own comment). Reuses repairFallbackReserveDispatch() and
 // makeRepairGatedInfeasibleLevel() above: this reserve nests inside the SAME mainSearchLateReserve
 // pool as the sibling reserve, one layer deeper, so the fixture and mock dispatch are identical.
 
 test('goal-attraction-disabled-retry reserve is inert by default (cfg=null) even with its sibling reserve on', async () => {
     // Same opt-in-convention check as the sibling reserve's own first test: cfg is non-null here
-    // (both STRATEGY_REPAIR_PROBE and STRATEGY_REPAIR_FALLBACK_NODE_RESERVE are set), but THIS flag
+    // (both STRATEGY_EARLY_REPAIR_SEARCH and STRATEGY_REPAIR_FALLBACK_NODE_RESERVE are set), but THIS flag
     // is unset within it — the opt-in Proxy must resolve it to false regardless of what else is set.
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
@@ -1369,12 +1369,12 @@ test('goal-attraction-disabled-retry reserve gives the diversity pass room witho
     };
     const off = await solveLevel(level, {
         ...opts,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: false, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE: false, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     const on = await solveLevel(level, {
         ...opts,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     // earlyTierNodeBudget=1000, mainSearchLateReserve=floor(1000*0.3)=300, mainSearchEarlyNodeBudget=700
@@ -1416,7 +1416,7 @@ test('goal-attraction-disabled-retry reserve is a no-op when repairFallbackNodeR
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         admissibleOrderBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
@@ -1446,12 +1446,12 @@ test('goal-attraction-disabled-retry reserve is a no-op when repairFallbackNodeR
 
 test('admissible-order-fallback profile reserve is inert by default (cfg=null) even with a finite node ceiling', async () => {
     // Same opt-in-convention check as both prior reserves' own first test: cfg is non-null here
-    // (STRATEGY_REPAIR_PROBE is set), but THIS flag is unset within it — the opt-in Proxy must
+    // (STRATEGY_EARLY_REPAIR_SEARCH is set), but THIS flag is unset within it — the opt-in Proxy must
     // resolve it to false regardless of what else is set.
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
-        ablation: { STRATEGY_REPAIR_PROBE: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false },
         repairBudgetFractionOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
@@ -1485,12 +1485,12 @@ test('admissible-order-fallback profile reserve gives non-default profiles room 
     };
     const off = await solveLevel(level, {
         ...opts,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: false, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: false, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     const on = await solveLevel(level, {
         ...opts,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
     // nodeBudget=1000, admissibleOrderNodeReserve=floor(1000*0.4)=400, earlyTierNodeBudget=600 (main
@@ -1520,7 +1520,7 @@ test('admissible-order-fallback profile reserve is a no-op when admissibleOrderN
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
-        ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
         repairBudgetFractionOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
@@ -1764,7 +1764,7 @@ test('the ordinary repair fallback loop gets fresh work room, not a stale cap le
         timeBudgetMs: 5000,
         workBudget: 100_000,
         attemptBudgetTelemetry: true,
-        ablation: { STRATEGY_REPAIR_PROBE: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false },
         attemptSearchForTesting: dispatch,
     });
     assert.equal(result.ok, true, 'the mocked repair config must win');
@@ -1796,7 +1796,7 @@ test('lifecycle telemetry classifies newer retry tiers as their own technique, n
     //
     // Wins only via mcNeighborBudgetRetryCfg's own distinguishing override (PRUNE_MC_NEIGHBOR_BUDGET:
     // false), which nothing else in the ladder ever sets -- so a win here can only have come from
-    // that specific tier. STRATEGY_REPAIR_PROBE disabled so the repair-gated level's genuine
+    // that specific tier. STRATEGY_EARLY_REPAIR_SEARCH disabled so the repair-gated level's genuine
     // needsRepairFallback eligibility doesn't let an earlier repair attempt win first by accident.
     const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
         const [, , , prep] = args;
@@ -1805,7 +1805,7 @@ test('lifecycle telemetry classifies newer retry tiers as their own technique, n
     }) as typeof runAttemptSearch;
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 2000,
-        ablation: { STRATEGY_REPAIR_PROBE: false },
+        ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false },
         repairBudgetFractionOverride: 0,
         lifecycleTelemetry: true,
         attemptSearchForTesting: dispatch,
@@ -1987,7 +1987,7 @@ test('single-feature experiments enable opt-ins without activating unrelated opt
     }
 });
 
-// ── STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY ────────────────────────────────────
+// ── STRATEGY_REPAIR_SHRINK_RECOVERY ────────────────────────────────────
 //
 // Opt-in, default OFF (see REPAIR_SHRINK_RECOVERY_NODE_RESERVE_FRACTION's own comment for the
 // R00408 regression it exists to repair). The shrink itself is what creates the debt, so these
@@ -2025,8 +2025,8 @@ test('shrink recovery is inert by default (cfg=null): no recovery attempt is eve
 
 test('shrink recovery stays off under an explicit { FLAG: false }, and under a sparse unrelated ablation object', async () => {
     for (const ablation of [
-        { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: false },
-        { STRATEGY_REPAIR_PROBE: true },
+        { STRATEGY_REPAIR_SHRINK_RECOVERY: false },
+        { STRATEGY_EARLY_REPAIR_SEARCH: true },
     ]) {
         const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
             timeBudgetMs: 50, nodeBudget: 40_000_000, ablation,
@@ -2043,7 +2043,7 @@ test('shrink recovery re-runs the shrunk biased config at its FULL probe budget'
     // arithmetic rather than the contract. With room to spare the full budget must be restored.
     const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
         timeBudgetMs: 50, nodeBudget: 400_000_000,
-        ablation: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true },
+        ablation: { STRATEGY_REPAIR_SHRINK_RECOVERY: true },
         attemptSearchForTesting: shrinkRecoveryDispatch(biasedBudgets),
     });
     const scale = Math.min(1, Math.max(EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE, EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE / 100));
@@ -2061,7 +2061,7 @@ test('shrink recovery re-runs the shrunk biased config at its FULL probe budget'
 test('shrink recovery can solve a level the shrink otherwise loses', async () => {
     const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
         timeBudgetMs: 50, nodeBudget: 400_000_000,
-        ablation: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true },
+        ablation: { STRATEGY_REPAIR_SHRINK_RECOVERY: true },
         attemptSearchForTesting: shrinkRecoveryDispatch([], true),
     });
     assert.equal(result.ok, true, 'the full-budget re-run wins');
@@ -2080,7 +2080,7 @@ test('shrink recovery does not run when the shrink never fired (promising ordina
     }) as typeof runAttemptSearch;
     const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
         timeBudgetMs: 50, nodeBudget: 40_000_000,
-        ablation: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true },
+        ablation: { STRATEGY_REPAIR_SHRINK_RECOVERY: true },
         attemptSearchForTesting: dispatch,
     });
     assert.equal(result.attempts.some(a => a.stageId === 'repair-shrink-recovery'), false);
@@ -2089,7 +2089,7 @@ test('shrink recovery does not run when the shrink never fired (promising ordina
 test('shrink recovery is inert when the shrink mechanism itself is disabled', async () => {
     const result = await solveLevel(makeRepairGatedMustTurnInfeasibleLevel(), {
         timeBudgetMs: 50, nodeBudget: 40_000_000,
-        ablation: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true, STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: false },
+        ablation: { STRATEGY_REPAIR_SHRINK_RECOVERY: true, STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET: false },
         attemptSearchForTesting: shrinkRecoveryDispatch([]),
     });
     assert.equal(result.attempts.some(a => a.stageId === 'repair-shrink-recovery'), false);

@@ -249,10 +249,10 @@ Solver allocation's target currency is machine-independent work `applyMove + 12 
 
 ## Goal-attraction-disabled retry
 
-`goal-attraction-disabled-retry` runs after `main-search` and `repair-fallback` fail. `solveLevel()` reruns `mainConfigs` with `ATTRACTION_DIVERSITY_CANDIDATE_FLAGS` (currently `SCORE_GOAL_ATTRACTION`) disabled under `ATTRACTION_DIVERSITY_BUDGET_FRACTION = 1.0`.
+`goal-attraction-disabled-retry` runs after `main-search` and `repair-fallback` fail. `solveLevel()` reruns `mainConfigs` with `GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS` (currently `SCORE_GOAL_ATTRACTION`) disabled under `GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION = 1.0`.
 
 - `attractionDiversityBudgetFractionOverride`; interactive UIs set 0 along with repair extra budget.
-- Gate: `STRATEGY_ATTRACTION_DIVERSITY`; zero cost to earlier solves.
+- Gate: `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY`; zero cost to earlier solves.
 - Historical validation: 4/4 predicted rescues, 2/2 controls unchanged, 3/30 gain in `dfs-plain` sample. See [`reports/2026-07-16-phase-d-attraction-diversity-implementation.md`](../reports/2026-07-16-phase-d-attraction-diversity-implementation.md).
 
 ## Admissible-order node reserve

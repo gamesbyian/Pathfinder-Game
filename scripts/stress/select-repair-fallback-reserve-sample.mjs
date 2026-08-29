@@ -7,7 +7,7 @@
  * The flag can only ever change a level's node count/outcome if the level is repair-gated
  * (attempts.ts's needsRepairFallback -- approximated here from raw mechanicCounts, since this is
  * SAMPLE SELECTION, not a solver input; the real solve still uses the exact production predicate).
- * Unlike STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (which additionally requires a must-turn
+ * Unlike STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET (which additionally requires a must-turn
  * cell), this flag has no further requirement -- it withholds a slice from mainLoopLateReserve for
  * ANY repair-gated level, regardless of must-turn. That population is considerably larger (~919/1700
  * on corpus-2 by this approximation, vs. 512/1700 for the must-turn-gated flag), so stratified

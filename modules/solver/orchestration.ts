@@ -238,9 +238,9 @@ export function classifyAttemptTier(attempt: AttemptTierFlags): string {
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
 interface SearchResult { solution: number[] | null; attempts: Attempt[]; earlyNodeBudgetReached?: boolean; earlyWorkBudgetReached?: boolean; shrunkBiased?: ShrunkBiasedTier[]; }
 
-/** One biased early-repair-search tier whose node budget STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET
+/** One biased early-repair-search tier whose node budget STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET
  *  reduced, recorded so a later tier can restore what was withheld — see
- *  STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY. `fullNodeBudget` is the budget the tier would have had
+ *  STRATEGY_REPAIR_SHRINK_RECOVERY. `fullNodeBudget` is the budget the tier would have had
  *  with the mechanism off; `grantedNodeBudget` is what it actually got. */
 interface ShrunkBiasedTier { config: AttemptConfig; fullNodeBudget: number; grantedNodeBudget: number; }
 // Exported so the worker-client adapter (solver-worker-client.ts) can type its own `solve()`
@@ -303,7 +303,7 @@ export interface SolveOpts {
      *  is the only way those default enabled, so passing ANY ablation object, even a sparse one
      *  that only sets an unrelated field, silently disables every OTHER unset strategy flag
      *  (STRATEGY_GATE_INTERLEAVING, STRATEGY_MIN_BUDGET_FLOOR, STRATEGY_ADAPTIVE_GATE_BUDGET,
-     *  STRATEGY_REPAIR_PROBE, and repair-search.ts's stagnation-burst/elite-splice flags). This
+     *  STRATEGY_EARLY_REPAIR_SEARCH, and repair-search.ts's stagnation-burst/elite-splice flags). This
      *  bug shipped once already (this field was originally REPAIR_BUDGET_FRACTION_OVERRIDE inside
      *  `ablation`) and silently broke every solve that used it — caught via a cross-check against
      *  scripts/solver-parallel/race.mjs, not by the original change's own testing, since that
@@ -431,12 +431,12 @@ export interface SolveOpts {
      *  whole main loop). Undefined (production default) preserves the constant exactly.
      *  Opt-in, default OFF (unlike the admissible-order-fallback reserve) — see the constant's own comment. */
     repairFallbackNodeReserveFractionOverride?: number;
-    /** STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY's reserve fraction; defaults to
+    /** STRATEGY_REPAIR_SHRINK_RECOVERY's reserve fraction; defaults to
      *  REPAIR_SHRINK_RECOVERY_NODE_RESERVE_FRACTION. Same override rationale as its siblings. */
     repairShrinkRecoveryNodeReserveFractionOverride?: number;
     /** Override for GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION for this solve only — same shape,
      *  rationale, and opt-in-default-OFF status as repairFallbackNodeReserveFractionOverride above
-     *  (STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE being off already zeroes this reserve through its
+     *  (STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE being off already zeroes this reserve through its
      *  own run condition, so it is likewise not covered by `disableExtraBudgetPasses`). 0 restores
      *  the pre-reserve behavior (the diversity pass shares its ceiling with the repair fallback loop
      *  undivided). Undefined (production default) preserves the constant exactly. */
@@ -458,7 +458,7 @@ export interface SolveOpts {
     mainLoopLateReserveConfigCountOverride?: number;
     /** Override for EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE for this solve only — same
      *  dedicated-override shape as the reserve-fraction overrides above (NOT an ablation flag: the
-     *  gate is read unconditionally inside the STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET branch,
+     *  gate is read unconditionally inside the STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET branch,
      *  so there is no existing opt-in/opt-out plumbing to piggyback on, and a fresh ablation flag
      *  would conflate "use the adaptive mechanism at all" with "which gate value" — two different
      *  questions). Exists so a matched batch-tooling sweep (recalibrating the gate from tagged
@@ -1033,7 +1033,7 @@ import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from './stage-budget.js
  *  2000-level stress corpus — too slow for this kind of per-level direct-replay measurement)
  *  before changing either value. */
 const EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET = 2_000_000;
-// Exported for orchestration.test.ts's STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET regression
+// Exported for orchestration.test.ts's STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET regression
 // tests, which assert the exact scaled node budget a mocked biased-tier attempt is called with.
 export const EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET = 6_000_000;
 
@@ -1071,7 +1071,7 @@ export const EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP = 1_200_000;
  *  "Update" sections for both prior measurements. Needs its own corpus-2 A/B before promotion. */
 const EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE = 0.75;
 
-/** STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (production default-ON as of 2026-08-13, promoted
+/** STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET (production default-ON as of 2026-08-13, promoted
  *  — see the "PROMOTION" paragraph at the end of this comment for the decision and its caveats):
  *  a single-signal, single-recipient instance of "online failure-conditioned allocation"
  *  (docs/solver-interoperability-and-cooperation-plan.md §17, docs/future-work.md item #4).
@@ -1080,7 +1080,7 @@ const EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE = 0.75;
  *  The 2026-08-12 main-search-late-reserve full-corpus sweep (635/1700, down from 694 in a since-
  *  found-confounded A/B arm) was suspected to be explained by runEarlyRepairSearch's wall-clock-fix
  *  (2bfefc660) now letting a contended probe attempt spend its FULL intended node budget instead
- *  of being silently truncated, starving `STRATEGY_MAIN_LOOP_LATE_RESERVE`'s reserved slice —
+ *  of being silently truncated, starving `STRATEGY_MAIN_SEARCH_LATE_RESERVE`'s reserved slice —
  *  see reports/2026-08-12-main-search-late-reserve-population-ab.md's "Follow-up" section. Tracing
  *  the actual code (this file's reserve resolution, above solveLevel's probe call site) shows that
  *  hypothesis is WRONG AS STATED: both the admissible-order-fallback reserve and the main-search late reserve
@@ -1216,7 +1216,7 @@ export const EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE = 0.35;
  *  widening it without specific evidence is a needless risk. Each retry salt gets the SAME node
  *  budget as the first round — strictly additive: only reached when every active gate has already
  *  failed at every earlier salt, so a level whose probe already succeeds on the first (default)
- *  seed is completely unaffected. Ablation: STRATEGY_REPAIR_PROBE_MULTI_SEED (default enabled).
+ *  seed is completely unaffected. Ablation: STRATEGY_EARLY_REPAIR_SEARCH_MULTI_SEED (default enabled).
  *  Re-verify with a full-corpus before/after speed sweep (not just solver:bench --check — see
  *  CLAUDE.md's gotcha on this and docs/testing.md's "Speed, separately from solvability") before
  *  changing this list again. */
@@ -1286,7 +1286,7 @@ async function runEarlyRepairSearch(
         // (see repair-search.ts) — give it the biased probe budget and a single seed salt.
         const isBiased = repairConfig.repairMustTurnBiased || repairConfig.repairTurnBiased;
         let fixedProbeNodeBudget = isBiased ? biasedNodeBudgetForTier(biasedSeen++) : EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET;
-        // STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (production default-ON as of 2026-08-13 —
+        // STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET (production default-ON as of 2026-08-13 —
         // see EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE's own comment for the full derivation):
         // scale the biased tier's node budget down when the ordinary tier's own live bestBadness
         // evidence (already reported by repairSearchFromGate on every failed attempt,
@@ -1294,11 +1294,11 @@ async function runEarlyRepairSearch(
         // ordinary tier hasn't run, reported no finite badness, or already looks promising
         // (badness <= the gate). Standard (!cfg || cfg.FLAG) convention, NOT opt-in (cfg &&
         // cfg.FLAG === true) — matching PRUNE_MC_NEIGHBOR_BUDGET's and
-        // STRATEGY_MAIN_LOOP_LATE_RESERVE's own promotions and the wiring-gap lesson both shipped
+        // STRATEGY_MAIN_SEARCH_LATE_RESERVE's own promotions and the wiring-gap lesson both shipped
         // with (docs/solver-opt-in-experiment-ledger.md): the opt-in convention stays inert
         // whenever cfg is null, which is every production interactive solve and any CLI run
         // without --enable-flags.
-        if (isBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET)) {
+        if (isBiased && (!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET)) {
             const ordinaryBestBadness = attempts.reduce((min, a) => (
                 a.repair && !a.repairMustTurnBiased && !a.repairTurnBiased && Number.isFinite(a.bestBadness)
                     ? Math.min(min, a.bestBadness as number) : min
@@ -1310,7 +1310,7 @@ async function runEarlyRepairSearch(
                 ));
                 const fullNodeBudget = fixedProbeNodeBudget;
                 fixedProbeNodeBudget = Math.floor(fixedProbeNodeBudget * scale);
-                // Record what was withheld so STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY can restore it
+                // Record what was withheld so STRATEGY_REPAIR_SHRINK_RECOVERY can restore it
                 // if every other tier later fails. Recorded even when the flag is off — this is
                 // pure bookkeeping on an already-computed value, it changes no search behavior, and
                 // making it conditional would mean the recovery tier's eligibility depended on two
@@ -1320,7 +1320,7 @@ async function runEarlyRepairSearch(
                 }
             }
         }
-        const seedSalts = (!isBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_MULTI_SEED))
+        const seedSalts = (!isBiased && (!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH_MULTI_SEED))
             ? EARLY_REPAIR_SEARCH_ORDINARY_SEED_SALTS : [0];
         for (const seedSalt of seedSalts) {
             // Cap THIS round's own node budget by whatever's left of the external ceiling, not just
@@ -1406,7 +1406,7 @@ function legacyLatencyPortfolioFeatureGateMatches(level: NormalizedLevel, gate: 
  *
  * Every one of those `(!cfg || cfg.SOME_FLAG)` read sites treats "no ablation config at all" as
  * the ONLY way an unset flag defaults to `true` — so a caller-supplied PARTIAL object (e.g.
- * `{ STRATEGY_REPAIR_PROBE: true }`) makes every OTHER unset flag read as `undefined` (falsy),
+ * `{ STRATEGY_EARLY_REPAIR_SEARCH: true }`) makes every OTHER unset flag read as `undefined` (falsy),
  * silently disabling it. This is exactly the bug SolveOpts's repairBudgetFractionOverride field
  * comment documents shipping to production once already, and the reason this file's own
  * goal-attraction-disabled-retry pass below builds its overlay config through a hand-rolled Proxy instead
@@ -1863,7 +1863,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     }
     const probeAttempts: Attempt[] = primeMissAttempt ? [primeMissAttempt] : [];
     let shrunkBiasedTiers: ShrunkBiasedTier[] = [];
-    if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
+    if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH)) {
         // No `prep._workCap` override here, deliberately: this probe runs BEFORE the main ladder
         // (`runInterleavedAttempts`/`runGateSerialAttempts`, below) ever executes, so — unlike every
         // tier further down this function — there is no earlier attempt that could have left a stale
@@ -1899,7 +1899,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         }
     }
 
-    // Now that the probe has run, size STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY's reserve to the ACTUAL
+    // Now that the probe has run, size STRATEGY_REPAIR_SHRINK_RECOVERY's reserve to the ACTUAL
     // debt it must repay. The recovery re-runs a shrunk config from scratch (repairSearchFromGate
     // has no resume API), so repaying only the withheld difference is not enough — it needs the
     // tier's FULL budget to reach the point the shrink cut off. Reserving `full - granted` was tried
@@ -2009,7 +2009,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // (diversityBudgetFraction itself is resolved earlier, alongside repairBudgetFraction — see that
     // resolution's own comment for why GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION's eligibility check
     // needs it before this point.)
-    if (!result.solution && diversityBudgetFraction > 0 && (!cfg || cfg.STRATEGY_ATTRACTION_DIVERSITY) && prep._metrics.nodesExpanded < earlyTierNodeBudget) {
+    if (!result.solution && diversityBudgetFraction > 0 && (!cfg || cfg.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY) && prep._metrics.nodesExpanded < earlyTierNodeBudget) {
         // SCORE_* flags don't affect getConfiguredAttemptConfigs's config selection (only
         // STRATEGY_*/PROFILE_*/TEMPLATE_* do), so reusing mainConfigs (built under the original
         // cfg) under the executor's overridden prep._cfg selects the exact same attempts the
@@ -2041,7 +2041,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         if (diversityResult.solution) result.solution = diversityResult.solution;
     }
 
-    // STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: restore what the adaptive shrink withheld, but only
+    // STRATEGY_REPAIR_SHRINK_RECOVERY: restore what the adaptive shrink withheld, but only
     // once the main loop, repair fallback and goal-attraction-disabled-retry pass have all already failed —
     // see REPAIR_SHRINK_RECOVERY_NODE_RESERVE_FRACTION's own comment for why the placement
     // (not an immediate retry) is what preserves the shrink's savings, and why the tier needs its

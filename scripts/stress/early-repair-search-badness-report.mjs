@@ -27,7 +27,7 @@
  * computed against the wrong constant on every capability refresh in between).
  *
  * With TWO comma-separated --in files (a matched scaled-vs-unscaled pair -- e.g. one dispatch with
- * enable_flags=STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET, one with disable_flags= the same --
+ * enable_flags=STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET, one with disable_flags= the same --
  * over the IDENTICAL sample/seed), also reports per-level flips (solved in one arm, not the other)
  * restricted to levels where a biased tier actually ran, which is the only population this flag can
  * ever affect.
@@ -58,7 +58,7 @@ function loadRows(file) {
 }
 
 // One row's early-repair-search-only view. Ordinary tier's bestBadness is the signal
-// STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET actually gates on; biased tier's own outcome shows
+// STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET actually gates on; biased tier's own outcome shows
 // what the (possibly scaled) budget achieved.
 function levelBadnessInfo(row) {
     const attempts = Array.isArray(row.attempts) ? row.attempts : [];

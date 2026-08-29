@@ -177,7 +177,7 @@ test('repair-shrink-recovery: no-op when nothing was shrunk, and repays the full
         // Providing ANY cfg object turns off every OTHER unset flag (the documented ablation-config
         // gotcha — see SolveOpts's repairBudgetFractionOverride comment), so every flag this tier's
         // own eligibility reads must be explicitly set true here.
-        cfg: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true, STRATEGY_REPAIR_PROBE: true, STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: true },
+        cfg: { STRATEGY_REPAIR_SHRINK_RECOVERY: true, STRATEGY_EARLY_REPAIR_SEARCH: true, STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET: true },
     });
     const noShrink = computeShrinkRecoveryBudget(plan, []);
     assert.equal(noShrink.shrinkRecoveryDebt, 0);

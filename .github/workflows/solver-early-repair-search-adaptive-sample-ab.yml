@@ -1,4 +1,4 @@
-# Stratified-sample level-blind capability A/B for STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET
+# Stratified-sample level-blind capability A/B for STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET
 # (modules/solver/orchestration.ts; see reports/2026-08-12-repair-probe-early-main-loop-starvation.md
 # and docs/solver-opt-in-experiment-ledger.md).
 #
@@ -23,7 +23,7 @@
 # solver-highbudget-unsolved-sweep.yml). Artifact-only: this workflow never commits to main.
 #
 # Usage: dispatch twice with identical inputs except enable_flags -- once blank (control), once
-# enable_flags=STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (treatment) -- then compare each run's
+# enable_flags=STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET (treatment) -- then compare each run's
 # combined solved count/gains/losses (per-id, from each run's
 # reports/stress/early-repair-search-adaptive-sample-ab.json artifact).
 #
@@ -78,7 +78,7 @@ on:
         required: false
         default: '20'
       enable_flags:
-        description: 'Comma-separated ablation flags to turn ON. Leave blank for the control arm; set to STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET for the treatment arm.'
+        description: 'Comma-separated ablation flags to turn ON. Leave blank for the control arm; set to STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET for the treatment arm.'
         required: false
         default: ''
       disable_flags:

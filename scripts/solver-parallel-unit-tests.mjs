@@ -132,7 +132,7 @@ test('an undefined raced ablation property does not override its production defa
   const result = await solveLevelRaced(parityPreservingInfeasibleLevel(), {
     timeBudgetMs: 500,
     poolSize: 2,
-    ablation: { STRATEGY_ATTRACTION_DIVERSITY: undefined },
+    ablation: { STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY: undefined },
   });
   assert.equal(result.ok, false);
   assert.ok(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'));
