@@ -26,7 +26,7 @@ export function createFalseGoalTriggerScanController({ core, state, ui, levelUti
     let scanToken = 0;              // bump to detach any in-flight scan from state
     let activeScans = 0;
     let queue: Promise<unknown> = Promise.resolve(); // serializes scans through the single worker
-    let lastBudgetMs = 0;           // budget of the scan that produced the current spots
+    let lastBudgetMs = 0;           // budget of the scan that produced the current triggerable-cell set
 
     const getClient = () => {
         if (workerFailed) return null;
@@ -102,7 +102,7 @@ export function createFalseGoalTriggerScanController({ core, state, ui, levelUti
             setEditorTriggerableFalseGoalCells(state, res.triggerableCells);
             const complete = res.status === 'complete';
             setEditorFalseGoalTriggerScanState(state, complete ? 'complete' : 'partial');
-            // A complete sweep resolves every candidate: only confirmed spots remain.
+            // A complete sweep resolves every candidate: only confirmed triggerable cells remain.
             if (complete) setEditorFalseGoalTriggerParityCandidates(state, new Set());
             lastBudgetMs = budgetMs;
             markDirty(state);
@@ -143,7 +143,7 @@ export function createFalseGoalTriggerScanController({ core, state, ui, levelUti
 
     const shouldAutoScan = () => {
         const eng = state.ENGINE;
-        return eng.mode === core.EDITOR                    // spots only render in editor mode
+        return eng.mode === core.EDITOR                    // triggerable-cell highlights only render in editor mode
             && eng.overlayState === core.OVERLAY_NONE      // don't race the modal solver flows
             && !eng.solver.controller
             && activeScans === 0
@@ -163,7 +163,7 @@ export function createFalseGoalTriggerScanController({ core, state, ui, levelUti
             // lingering faint candidate layer already says "incomplete" (full enumeration
             // rarely finishes on open levels, so a toast per rescan would be constant
             // noise). Speak only when an incomplete sweep found NOTHING: a bare grid
-            // would otherwise read as "no valid spots".
+            // would otherwise read as "no valid triggerable cells".
             if (res && res.status !== 'complete' && state.ENGINE.editor.triggerableFalseGoalCells.size === 0) {
                 ui.showMessage('Trap scan incomplete — press Trap Spots for a deeper search.', 'warning');
             }
