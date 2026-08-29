@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 /**
  * False-goal triggerability audit — runs findTriggerableFalseGoalCells against every level using the same
- * budget the UI computes (getFalseGoalTriggerSearchBudgetMs), then re-runs timed-out levels
+ * budget the UI computes (getFalseGoalTriggerSearchBudgetMs), then re-runs partial levels
  * with a generous extended budget to measure how much time they actually need.
  *
  *   npm run solver:audit-false-goal-triggerability --
  *   npm run solver:audit-false-goal-triggerability -- --levels=pos:138,pos:140
  *   npm run solver:audit-false-goal-triggerability -- --extended-budget=120000
  *
- * False-goal viability mode — instead of the timing passes, classify every placed
+ * False-goal triggerability mode — instead of the timing passes, classify every placed
  * false goal as triggerable or not (a false goal can only ever fire if a path can
- * end on its cell). Reports levels whose false goals sit in squares no path can
- * reach. Timeouts are reported as "inconclusive", never as invalid.
+ * end on its cell). Reports levels whose false goals cannot be triggered by any valid path. Partial searches are reported as "inconclusive", never as invalid.
  *
  *   npm run solver:audit-false-goal-triggerability -- --check-false-goals
  *   npm run solver:audit-false-goal-triggerability -- --check-false-goals --fg-budget=120000
@@ -107,7 +106,7 @@ if (argMap.has('--check-false-goals')) {
             console.log(`  L${String(levelNumber).padStart(3)}: INVALID  ${dead.length} dead: ${fmtPts(dead)}${unknown.length ? `  (+${unknown.length} undetermined: ${fmtPts(unknown)})` : ''}  [${levelSummary(raw)}]`);
         } else if (unknown.length > 0) {
             inconclusiveLevels.push({ levelNumber, unknown });
-            console.log(`  L${String(levelNumber).padStart(3)}: inconclusive (timed out)  ${unknown.length} undetermined: ${fmtPts(unknown)}`);
+            console.log(`  L${String(levelNumber).padStart(3)}: inconclusive (partial)  ${unknown.length} undetermined: ${fmtPts(unknown)}`);
         } else {
             console.log(`  L${String(levelNumber).padStart(3)}: ok  all ${raw.falseGoals.length} false-goal${raw.falseGoals.length > 1 ? 's' : ''} triggerable`);
         }
@@ -121,17 +120,17 @@ if (argMap.has('--check-false-goals')) {
             console.log(`  L${levelNumber}: ${fmtPts(dead)}`);
     }
     if (inconclusiveLevels.length > 0) {
-        console.log(`\nInconclusive (timed out — rerun with a larger --fg-budget): ${inconclusiveLevels.length}`);
+        console.log(`\nInconclusive (partial — rerun with a larger --fg-budget): ${inconclusiveLevels.length}`);
         for (const { levelNumber, unknown } of inconclusiveLevels)
             console.log(`  L${levelNumber}: ${fmtPts(unknown)}`);
     }
     process.exit(0);
 }
 
-const timedOutLevels = [];
+const partialLevels = [];
 let runCount = 0;
 let completedCount = 0;
-let timedOutCount = 0;
+let partialCount = 0;
 
 // ── Pass 1: run with default UI budget ───────────────────────────────────────
 
@@ -152,30 +151,30 @@ for (let i = 0; i < rawLevels.length; i++) {
     const res = await Solver.findTriggerableFalseGoalCells(level, { timeLimitMs: budgetMs });
     const elapsed = Date.now() - t0;
 
-    if (res .status !== 'complete') {
-        timedOutCount++;
-        timedOutLevels.push({ levelNumber, budgetMs, elapsed, triggerableCells: res.triggerableCells.size, gatesProcessed: res.gatesProcessed, totalGates: level.gateKeys.length });
-        console.log(`TIMEOUT  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} triggerable cells so far   [${levelSummary(raw)}]`);
+    if (res.status !== 'complete') {
+        partialCount++;
+        partialLevels.push({ levelNumber, budgetMs, elapsed, triggerableCells: res.triggerableCells.size, gatesProcessed: res.gatesProcessed, totalGates: level.gateKeys.length });
+        console.log(`PARTIAL  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} triggerable cells so far   [${levelSummary(raw)}]`);
     } else {
         completedCount++;
         console.log(`ok       ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} triggerable cells`);
     }
 }
 
-console.log(`\nPass 1 result: ${completedCount}/${runCount} completed, ${timedOutCount} timed out.\n`);
+console.log(`\nPass 1 result: ${completedCount}/${runCount} completed, ${partialCount} partial.\n`);
 
-if (timedOutLevels.length === 0) {
-    console.log('No timeouts — all levels complete within their default budget.');
+if (partialLevels.length === 0) {
+    console.log('No partial searches — all levels complete within their default budget.');
     process.exit(0);
 }
 
-// ── Pass 2: extended budget for timed-out levels ──────────────────────────────
+// ── Pass 2: extended budget for partial levels ──────────────────────────────
 
-console.log(`Pass 2 — extended budget (${fmt(extendedBudgetMs)}) for timed-out levels\n`);
+console.log(`Pass 2 — extended budget (${fmt(extendedBudgetMs)}) for partial levels\n`);
 
-const stillTimedOut = [];
+const stillPartial = [];
 
-for (const { levelNumber, budgetMs, triggerableCells: _triggerableCellsAfterTimeout, gatesProcessed: _gatesProcessed } of timedOutLevels) {
+for (const { levelNumber, budgetMs } of partialLevels) {
     const raw = rawLevels[levelNumber - 1];
     const level = SOLVER_TESTING_API.normalizeRawLevel(raw, levelNumber);
 
@@ -185,9 +184,9 @@ for (const { levelNumber, budgetMs, triggerableCells: _triggerableCellsAfterTime
     const res = await Solver.findTriggerableFalseGoalCells(level, { timeLimitMs: extendedBudgetMs });
     const elapsed = Date.now() - t0;
 
-    if (res .status !== 'complete') {
-        stillTimedOut.push({ levelNumber, budgetMs, elapsed });
-        console.log(`STILL TIMEOUT  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} spots`);
+    if (res.status !== 'complete') {
+        stillPartial.push({ levelNumber, budgetMs, elapsed });
+        console.log(`STILL PARTIAL  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} triggerable cells`);
     } else {
         const ratio = (elapsed / budgetMs).toFixed(1);
         console.log(`DONE  ${fmt(elapsed).padEnd(8)} ${res.triggerableCells.size} triggerable cells   needs ${fmt(elapsed)} vs default ${fmt(budgetMs)} (${ratio}x)`);
@@ -199,19 +198,19 @@ for (const { levelNumber, budgetMs, triggerableCells: _triggerableCellsAfterTime
 console.log('\n── Summary ──────────────────────────────────────────────────────\n');
 console.log(`Levels run:       ${runCount}`);
 console.log(`Completed (P1):   ${completedCount}`);
-console.log(`Timed out (P1):   ${timedOutCount}`);
+console.log(`Partial (P1):     ${partialCount}`);
 
-if (timedOutLevels.length > 0) {
-    console.log('\nTimed-out levels:');
-    for (const { levelNumber, budgetMs } of timedOutLevels) {
+if (partialLevels.length > 0) {
+    console.log('\nPartial levels:');
+    for (const { levelNumber, budgetMs } of partialLevels) {
         const raw = rawLevels[levelNumber - 1];
         console.log(`  L${levelNumber}: default budget ${fmt(budgetMs)}   [${levelSummary(raw)}]`);
     }
 }
 
-if (stillTimedOut.length > 0) {
-    console.log(`\nStill timing out even at ${fmt(extendedBudgetMs)}:`);
-    for (const { levelNumber } of stillTimedOut) {
+if (stillPartial.length > 0) {
+    console.log(`\nStill partial even at ${fmt(extendedBudgetMs)}:`);
+    for (const { levelNumber } of stillPartial) {
         const raw = rawLevels[levelNumber - 1];
         console.log(`  L${levelNumber}:  [${levelSummary(raw)}]`);
     }

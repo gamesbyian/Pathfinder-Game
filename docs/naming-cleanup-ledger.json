@@ -2384,8 +2384,48 @@
       "phase": 3,
       "status": "done",
       "notes": "Late phase-3 audit residue: contents already used routing-regime terminology; physical module and test filenames now match the canonical concept."
+    },
+    {
+      "old": "isConnectedForTrap",
+      "new": "isConnectedForFalseGoalTriggerSearch",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 7,
+      "status": "done",
+      "notes": "Phase-7 re-audit found an internal solver helper still using player-facing trap vocabulary; renamed without changing connectivity semantics."
+    },
+    {
+      "old": "trapInvalidSet",
+      "new": "invalidFalseGoalCellSet",
+      "kind": "field",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 7,
+      "status": "done",
+      "notes": "Phase-7 re-audit found an internal prep field still using trap vocabulary; direct internal rename completed."
+    },
+    {
+      "old": "onSpots",
+      "new": "onTriggerableCells",
+      "kind": "symbol",
+      "risk": "low",
+      "persistence": "none",
+      "phase": 7,
+      "status": "done",
+      "notes": "Phase-7 re-audit found a scan-controller callback retaining the old generic spots vocabulary; canonicalized."
+    },
+    {
+      "old": "editor progress spots",
+      "new": "triggerableCells",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 7,
+      "status": "done",
+      "notes": "Live editor progress callback was destructuring a non-existent spots count after the canonical progress migration, producing undefined progress text; corrected to consume the canonical field."
     }
   ],
   "lastCompletedPhase": 7,
-  "lastUpdated": "2026-08-28"
+  "lastUpdated": "2026-08-29"
 }

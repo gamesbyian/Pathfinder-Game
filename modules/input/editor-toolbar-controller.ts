@@ -1,6 +1,6 @@
 import type { RequireDeps } from '../state.js';
 // Editor toolbar controller: grid transforms, palette drag, pencil/eraser,
-// undo/reset/new-level, help modal, metrics copy, trap-spot solver, and
+// undo/reset/new-level, help modal, metrics copy, false-goal triggerability search, and
 // live editor-input bindings.
 import { clearEditorTriggerableFalseGoalCells, markDirty, setEditorModified, setEditorPendingPortal, toggleEditorMirrorHorizontal } from '../state-actions.js';
 import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
@@ -348,11 +348,11 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         else editor.handlePaletteToolPointerDown(el.dataset.type);
     });
 
-    // --- Trap-spot solver ---
+    // --- False-goal triggerability search ---
     // The search itself runs through the false-goal-trigger scan controller (off-thread worker,
-    // spots streamed onto the grid mid-search). This handler owns the explicit-run
+    // triggerable cells streamed onto the grid mid-search). This handler owns the explicit-run
     // UX: the progress overlay, cancel, and result messaging. There is no retry
-    // popup — a timed-out sweep says so in its message, and pressing Trap Spots again
+    // popup — a partial sweep says so in its message, and pressing Trap Spots again
     // re-runs with an escalated budget (computeFalseGoalTriggerRetryBudget doubles it, capped).
 
     (document.getElementById('editTrapSpotsBtn') as any).onclick = async () => {
@@ -373,7 +373,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         }
         // A complete sweep of this exact level state is already on screen — restate it.
         if (state.ENGINE.editor.falseGoalTriggerScanState === 'complete') {
-            const decision = decideFalseGoalTriggerReport({ status: 'complete', timedOut: false }, state.ENGINE.editor.triggerableFalseGoalCells.size);
+            const decision = decideFalseGoalTriggerReport({ status: 'complete' }, state.ENGINE.editor.triggerableFalseGoalCells.size);
             ui.showMessage(decision.message, decision.tone);
             return;
         }
@@ -403,8 +403,8 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                 shouldCancel: () => _cancelled,
                 // Per-gate progress: the search reports which gate it's on so the user can
                 // watch a multi-gate sweep advance rather than staring at a static spinner.
-                onGateProgress: ({ gatesProcessed, totalGates, spots }: any) => {
-                    ui.setSolverDetailText(`Scanned ${gatesProcessed}/${totalGates} gate${totalGates === 1 ? '' : 's'} — ${spots} spot${spots === 1 ? '' : 's'} so far`);
+                onGateProgress: ({ gatesProcessed, totalGates, triggerableCells }: { gatesProcessed: number; totalGates: number; triggerableCells: number }) => {
+                    ui.setSolverDetailText(`Scanned ${gatesProcessed}/${totalGates} gate${totalGates === 1 ? '' : 's'} — ${triggerableCells} spot${triggerableCells === 1 ? '' : 's'} so far`);
                     ui.setSolverProgress(totalGates > 0 ? (gatesProcessed / totalGates) * 100 : 0);
                 },
             });

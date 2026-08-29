@@ -67,10 +67,7 @@ export function computeFalseGoalTriggerRetryBudget(prevTimeLimit: number | undef
 }
 
 export interface FalseGoalTriggerSearchOutcome {
-    /** Canonical status plus historical generated-payload spellings accepted on read. */
-    status?: 'complete' | 'partial' | 'aborted' | 'done' | 'timeout';
-    /** @deprecated Historical payload field; canonical callers use status. */
-    timedOut?: boolean;
+    status?: 'complete' | 'partial' | 'aborted';
     gatesCompleted?: number;
     totalGates?: number;
 }
@@ -84,14 +81,13 @@ export interface FalseGoalTriggerReportDecision {
 }
 
 /**
- * Decide the user-facing outcome of a trap-spot search: message wording and severity.
- * An incomplete sweep is ALWAYS surfaced — even when spots were found — so a partial
+ * Decide the user-facing outcome of a false-goal triggerability search: message wording and severity.
+ * An incomplete sweep is ALWAYS surfaced — even when triggerable cells were found — so a partial
  * result is never shown as if it were complete.
  */
 export function decideFalseGoalTriggerReport(res: FalseGoalTriggerSearchOutcome, foundCount: number): FalseGoalTriggerReportDecision {
     const s = (n: number) => (n === 1 ? '' : 's');
-    const canonicalStatus = res.status === 'done' ? 'complete' : res.status === 'timeout' ? 'partial' : res.status;
-    if (canonicalStatus === 'aborted') {
+    if (res.status === 'aborted') {
         return {
             message: foundCount > 0
                 ? `Search cancelled — ${foundCount} spot${s(foundCount)} found so far (incomplete).`
@@ -100,14 +96,14 @@ export function decideFalseGoalTriggerReport(res: FalseGoalTriggerSearchOutcome,
             offerRetry: false,
         };
     }
-    const incomplete = canonicalStatus === 'partial' || res.timedOut === true;
+    const incomplete = res.status === 'partial';
     if (!incomplete) {
         return foundCount > 0
             ? { message: `Found ${foundCount} spot${s(foundCount)}.`, tone: 'info', offerRetry: false }
             : { message: 'No valid trap spots — no path can end on any empty cell at these settings.', tone: 'warning', offerRetry: false };
     }
     // gatesCompleted counts gates whose DFS ran to exhaustion (fully proven), not gates
-    // attempted — so say "fully swept", or "0/2 gates" next to "Found 36 spots" reads
+    // attempted — so say "fully swept", or "0/2 gates" next to a nonzero result count reads
     // like the search never ran.
     return {
         message: foundCount > 0
