@@ -403,7 +403,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                 shouldCancel: () => _cancelled,
                 // Per-gate progress: the search reports which gate it's on so the user can
                 // watch a multi-gate sweep advance rather than staring at a static spinner.
-                onGateProgress: ({ gatesProcessed, totalGates, triggerableCells }: any) => {
+                onGateProgress: ({ gatesProcessed, totalGates, triggerableCells }: { gatesProcessed: number; totalGates: number; triggerableCells: number }) => {
                     ui.setSolverDetailText(`Scanned ${gatesProcessed}/${totalGates} gate${totalGates === 1 ? '' : 's'} — ${triggerableCells} spot${triggerableCells === 1 ? '' : 's'} so far`);
                     ui.setSolverProgress(totalGates > 0 ? (gatesProcessed / totalGates) * 100 : 0);
                 },
