@@ -6,7 +6,7 @@ import { getDistanceFromArray } from './distance.js';
 import { normalizeRawLevel } from './normalization.js';
 import { SCORING_PROFILES, STRUCTURAL_ORDERING_BIASES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { MAX_POOLED_OBJECTIVES, __buildFreshCurUrgencyContextForTests, buildCurUrgencyContext, computeTemplateBonus, scoreAndSort, scoreMove } from './scoring.js';
+import { MAX_POOLED_OBJECTIVES, __buildFreshCurUrgencyContextForTests, buildCurUrgencyContext, computeOrderingBiasBonus, scoreAndSort, scoreMove } from './scoring.js';
 import { createState, applyMove } from './search-state.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState } from './types.js';
@@ -50,19 +50,19 @@ function makeState(startKey: number, overrides = {}) {
   } as unknown as SolverSearchState;
 }
 
-test('computeTemplateBonus preserves perimeter direction bias', () => {
+test('computeOrderingBiasBonus preserves perimeter direction bias', () => {
   const level = makeLevel();
   const pos = PACK(0, 0);
   const target = PACK(1, 0);
-  assert.equal(computeTemplateBonus(target, pos, level, STRUCTURAL_ORDERING_BIASES.perimeterCW, 0.1), 26);
-  assert.equal(computeTemplateBonus(target, pos, level, STRUCTURAL_ORDERING_BIASES.perimeterCCW, 0.1), 68);
+  assert.equal(computeOrderingBiasBonus(target, pos, level, STRUCTURAL_ORDERING_BIASES.perimeterCW, 0.1), 26);
+  assert.equal(computeOrderingBiasBonus(target, pos, level, STRUCTURAL_ORDERING_BIASES.perimeterCCW, 0.1), 68);
 });
 
-test('computeTemplateBonus rewards early corner harvest targets', () => {
+test('computeOrderingBiasBonus rewards early corner harvest targets', () => {
   const level = makeLevel();
-  assert.equal(computeTemplateBonus(PACK(1, 1), PACK(2, 2), level, STRUCTURAL_ORDERING_BIASES.cornerHarvest, 0.2), 48);
-  assert.equal(computeTemplateBonus(PACK(2, 2), PACK(1, 1), level, STRUCTURAL_ORDERING_BIASES.cornerHarvest, 0.2), -36);
-  assert.equal(computeTemplateBonus(PACK(2, 2), PACK(1, 1), level, STRUCTURAL_ORDERING_BIASES.cornerHarvest, 0.7), 0);
+  assert.equal(computeOrderingBiasBonus(PACK(1, 1), PACK(2, 2), level, STRUCTURAL_ORDERING_BIASES.cornerHarvest, 0.2), 48);
+  assert.equal(computeOrderingBiasBonus(PACK(2, 2), PACK(1, 1), level, STRUCTURAL_ORDERING_BIASES.cornerHarvest, 0.2), -36);
+  assert.equal(computeOrderingBiasBonus(PACK(2, 2), PACK(1, 1), level, STRUCTURAL_ORDERING_BIASES.cornerHarvest, 0.7), 0);
 });
 
 test('scoreMove applies orderingBias bonus without depending on Solver globals', () => {
@@ -71,12 +71,12 @@ test('scoreMove applies orderingBias bonus without depending on Solver globals',
   const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 0) });
   const prep = prepLevel(level);
   const state = makeState(pos);
-  const noTemplate = scoreMove(target, pos, state, level, prep, SCORING_PROFILES.default, 3, null);
-  const withTemplate = scoreMove(target, pos, state, level, prep, SCORING_PROFILES.default, 3, STRUCTURAL_ORDERING_BIASES.perimeterCCW);
-  assert.equal(withTemplate - noTemplate, computeTemplateBonus(target, pos, level, STRUCTURAL_ORDERING_BIASES.perimeterCCW, 0.25));
+  const noOrderingBias = scoreMove(target, pos, state, level, prep, SCORING_PROFILES.default, 3, null);
+  const withOrderingBias = scoreMove(target, pos, state, level, prep, SCORING_PROFILES.default, 3, STRUCTURAL_ORDERING_BIASES.perimeterCCW);
+  assert.equal(withOrderingBias - noOrderingBias, computeOrderingBiasBonus(target, pos, level, STRUCTURAL_ORDERING_BIASES.perimeterCCW, 0.25));
 });
 
-test('ordering research observer compares profiles and templates without changing survivor order', () => {
+test('ordering research observer compares profiles and ordering biases without changing survivor order', () => {
   const pos = PACK(0, 0);
   const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 0), reqLen: 8 });
   const prep = prepLevel(level);
