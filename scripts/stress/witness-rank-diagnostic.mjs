@@ -37,7 +37,7 @@
  *   --solved-only              the contrast group: levels the solver does find. If the rank
  *                              profile here is no better, the metric is not measuring difficulty.
  *   --sources=witness,hints    which known solutions to use (default both)
- *   --profile=<name>           SCORING_PROFILES key (default 'default')
+ *   --scoring-profile=<name>   SCORING_PROFILES key (default 'default'; --profile is a deprecated read alias)
  *   --limit=<n> --seed=<n>     sample n levels deterministically
  *   --out=<path>               per-level JSON
  */
@@ -77,9 +77,9 @@ const corpusName = args.get('--corpus') || 'corpus2';
 const corpus = CORPORA[corpusName];
 if (!corpus) { console.error(`unknown --corpus=${corpusName}`); process.exit(2); }
 
-const profileName = args.get('--profile') || 'default';
-const profile = SCORING_PROFILES[profileName];
-if (!profile) { console.error(`unknown --profile=${profileName}`); process.exit(2); }
+const scoringProfileId = args.get('--scoring-profile') ?? args.get('--profile') ?? 'default';
+const scoringProfile = SCORING_PROFILES[scoringProfileId];
+if (!scoringProfile) { console.error(`unknown --scoring-profile=${scoringProfileId}`); process.exit(2); }
 const sources = new Set((args.get('--sources') || 'witness,hints').split(',').map(s => s.trim()));
 
 const PACK = (x, y) => (((y << 16) | x) >>> 0);
@@ -175,7 +175,7 @@ for (const raw of targets) {
             let neighbors;
             try { neighbors = getNeighbors(pos, state, level, prep); } catch { neighbors = []; }
             const ordered = neighbors.slice();
-            try { scoreAndSort(ordered, pos, state, level, prep, profile, null); } catch { /* keep raw order */ }
+            try { scoreAndSort(ordered, pos, state, level, prep, scoringProfile, null); } catch { /* keep raw order */ }
 
             // Rank of the BEST acceptable continuation, not of an arbitrary one.
             let best = Infinity;
@@ -207,7 +207,7 @@ for (const raw of targets) {
 
 const total = decisionsScored || 1;
 const pct = n => ((n / total) * 100).toFixed(1) + '%';
-console.log(`\nRank of the BEST acceptable continuation — ${corpusName}, profile '${profileName}', sources ${[...sources].join('+')}`);
+console.log(`\nRank of the BEST acceptable continuation — ${corpusName}, scoring profile '${scoringProfileId}', sources ${[...sources].join('+')}`);
 console.log(`levels scored: ${levelsScored} (skipped ${skipped}) | decisions scored: ${decisionsScored.toLocaleString()}`);
 console.log(`  rank 0 (search tries it first) : ${buckets.rank0.toLocaleString()}  ${pct(buckets.rank0)}`);
 console.log(`  rank 1                         : ${buckets.rank1.toLocaleString()}  ${pct(buckets.rank1)}`);
@@ -219,7 +219,7 @@ const outFile = args.get('--out');
 if (outFile) {
     mkdirSync(path.dirname(path.join(root, outFile)), { recursive: true });
     writeFileSync(path.join(root, outFile), JSON.stringify({
-        corpus: corpusName, profile: profileName, sources: [...sources],
+        corpus: corpusName, scoringProfileId, sources: [...sources],
         population: flags.has('--unsolved-only') ? 'unsolved' : flags.has('--solved-only') ? 'solved' : 'all',
         levelsScored, decisionsScored, buckets, levels: perLevel,
     }, null, 2));
