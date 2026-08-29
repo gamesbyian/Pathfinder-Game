@@ -165,7 +165,7 @@ export function createFalseGoalTriggerScanController({ core, state, ui, levelUti
             // noise). Speak only when an incomplete sweep found NOTHING: a bare grid
             // would otherwise read as "no valid spots".
             if (res && res.status !== 'complete' && state.ENGINE.editor.triggerableFalseGoalCells.size === 0) {
-                ui.showMessage('False-goal trigger scan incomplete — press Trap Spots for a deeper search.', 'warning');
+                ui.showMessage('Trap scan incomplete — press Trap Spots for a deeper search.', 'warning');
             }
         });
     }, WATCH_INTERVAL_MS);
