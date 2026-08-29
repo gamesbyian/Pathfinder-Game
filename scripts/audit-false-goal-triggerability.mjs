@@ -10,8 +10,7 @@
  *
  * False-goal viability mode — instead of the timing passes, classify every placed
  * false goal as triggerable or not (a false goal can only ever fire if a path can
- * end on its cell). Reports levels whose false goals sit in squares no path can
- * reach. Partial searches are reported as "inconclusive", never as invalid.
+ * end on its cell). Reports levels whose false goals cannot be triggered by any valid path. Partial searches are reported as "inconclusive", never as invalid.
  *
  *   npm run solver:audit-false-goal-triggerability -- --check-false-goals
  *   npm run solver:audit-false-goal-triggerability -- --check-false-goals --fg-budget=120000
@@ -152,7 +151,7 @@ for (let i = 0; i < rawLevels.length; i++) {
     const res = await Solver.findTriggerableFalseGoalCells(level, { timeLimitMs: budgetMs });
     const elapsed = Date.now() - t0;
 
-    if (res .status !== 'complete') {
+    if (res.status !== 'complete') {
         partialCount++;
         partialLevels.push({ levelNumber, budgetMs, elapsed, triggerableCells: res.triggerableCells.size, gatesProcessed: res.gatesProcessed, totalGates: level.gateKeys.length });
         console.log(`PARTIAL  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} triggerable cells so far   [${levelSummary(raw)}]`);
@@ -175,7 +174,7 @@ console.log(`Pass 2 — extended budget (${fmt(extendedBudgetMs)}) for partial l
 
 const stillPartial = [];
 
-for (const { levelNumber, budgetMs, triggerableCells: _triggerableCellsAfterTimeout, gatesProcessed: _gatesProcessed } of partialLevels) {
+for (const { levelNumber, budgetMs, triggerableCells: _triggerableCellsAfterPartial, gatesProcessed: _gatesProcessed } of partialLevels) {
     const raw = rawLevels[levelNumber - 1];
     const level = SOLVER_TESTING_API.normalizeRawLevel(raw, levelNumber);
 
@@ -185,7 +184,7 @@ for (const { levelNumber, budgetMs, triggerableCells: _triggerableCellsAfterTime
     const res = await Solver.findTriggerableFalseGoalCells(level, { timeLimitMs: extendedBudgetMs });
     const elapsed = Date.now() - t0;
 
-    if (res .status !== 'complete') {
+    if (res.status !== 'complete') {
         stillPartial.push({ levelNumber, budgetMs, elapsed });
         console.log(`STILL PARTIAL  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} triggerable cells`);
     } else {
