@@ -304,12 +304,12 @@ const _LDS_PROBE_MAX_FRACTION = 0.6;
  *  silently handing the win to a different (still-valid) later wave or the unbounded fallback.
  *
  *  Deliberately NOT a flat constant (dfsFromGateLDS runs on nearly every DFS-type attempt
- *  across the whole ladder, unlike the repair-probe's narrow feature gate — a flat cap sized
+ *  across the whole ladder, unlike the early-repair-search's narrow feature gate — a flat cap sized
  *  for a large/dense level would hand every attempt on a small/simple level the same
  *  oversized allowance) and NOT a live self-calibrated nodes/ms rate (only guards a transient
  *  spike inside one probe window, not the sustained ambient contention across separate
  *  fresh-process runs the determinism report actually observed). Scaled the same way
- *  `getTrapSpotBudgetMs` (orchestration.ts) sizes an ms budget from a level's own static
+ *  `getFalseGoalTriggerSearchBudgetMs` (orchestration.ts) sizes an ms budget from a level's own static
  *  structural features. probeCapMs (below, unchanged) remains in force alongside this — never
  *  loosened — so it stays the active protector for a heavily budget-diluted attempt exactly as
  *  before; the node budget only ever makes a well-funded attempt's probe phase stop SOONER
