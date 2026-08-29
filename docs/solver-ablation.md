@@ -10,7 +10,7 @@ Features toggle through `opts.ablation`: production-default features default on,
 
 Exact flags, groups, descriptions, and defaults live in `modules/solver/ablation-config.ts`; exact scoring-profile weights live in `modules/solver/policy.ts`. Do not duplicate changing feature counts here.
 
-`PROFILE_<name>` flags enable/disable scoring weight vectors, not independent algorithms. Ordinary DFS/beam profiles share `scoreMove()` and differ mainly in weights; templates, beam retention, admissible-order, repair, pruning, retry context, and budget depth are separate operational layers. See [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
+`PROFILE_<name>` flags enable/disable scoring weight vectors, not independent algorithms. Ordinary DFS/beam scoring profiles share `scoreMove()` and differ mainly in weights; structural ordering biases, beam retention, admissible-order, repair, pruning, retry context, and budget depth are separate operational layers. See [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
 
 Important distinctions:
 
@@ -32,8 +32,8 @@ History/results belong in dated reports and the current queue/ledger. `ATTEMPT_O
 ```bash
 npm run ablation:baseline -- --budget-ms=15000 --output=logs/ablation/baseline.json
 npm run ablation:single -- --budget-ms=10000 --output=logs/ablation/single.json
-npm run ablation:profiles -- --budget-ms=10000 --output=logs/ablation/profiles.json
-npm run ablation:templates -- --budget-ms=10000 --output=logs/ablation/templates.json
+npm run ablation:scoring-profiles -- --budget-ms=10000 --output=logs/ablation/scoring-profiles.json
+npm run ablation:ordering-biases -- --budget-ms=10000 --output=logs/ablation/ordering-biases.json
 npm run ablation:order -- --budget-ms=10000 --output=logs/ablation/order.json
 npm run ablation:pairs -- --budget-ms=10000 --output=logs/ablation/pairs.json
 npm run ablation:full -- --budget-ms=5000 --output=logs/ablation/lab-full.json
@@ -56,7 +56,7 @@ Reuse a baseline with `--baseline=logs/ablation/baseline.json` only when code/co
 
 | Flag | Default | Description |
 |---|---:|---|
-| `--experiment=<phase>` | `full` | `baseline`, `single-feature`, `profiles`, `templates`, `order`, `pairs`, `full` |
+| `--experiment=<phase>` | `full` | `baseline`, `single-feature`, `scoring-profiles`, `ordering-biases`, `order`, `pairs`, `full` |
 | `--corpus=<path>` | `data/levels.json` | Corpus; stress witness metadata stripped before solving |
 | `--levels=<spec>` | `all` | `pos:`, `id:`, or full ID; bare numbers rejected |
 | `--budget-ms=<n>` | `10000` | Per-level wall budget; host/load-sensitive, not portable allocation currency |
@@ -77,13 +77,13 @@ Reuse a baseline with `--baseline=logs/ablation/baseline.json` only when code/co
   },
   solvedLevels,
   failedLevels,
-  levels: [{ level, status, ok, elapsedMs, nodesExpanded, solvedBy, attempts? }]
+  levels: [{ level, status, ok, elapsedMs, nodesExpanded, solvedByScoringProfileId, attempts? }]
 }
 ```
 
 ## Interpretation
 
-`analyze-ablation.mjs` emits `featureRanking[]`, `tierSummary`, `profileRanking[]`, `templateRanking[]`, `attemptOrderSensitivity[]`, `redundancyAnalysis[]`, and `recommendations[]`. Treat them as descriptive rankings on the measured run, not promotion verdicts.
+`analyze-ablation.mjs` emits `featureRanking[]`, `tierSummary`, `scoringProfileRanking[]`, `orderingBiasRanking[]`, `attemptOrderSensitivity[]`, `redundancyAnalysis[]`, and `recommendations[]`. Treat them as descriptive rankings on the measured run, not promotion verdicts.
 
 - The analyzer score is a convenience heuristic, not a statistical test or solver objective.
 - Broad sweeps create many opportunities for an apparently strong arm by chance or corpus specificity; record the search space when selecting a follow-up.
@@ -127,7 +127,7 @@ Tiers are triage labels only. A `critical` arm may reveal a negative interaction
 ```js
 import { withFeatureDisabled, withFeaturesDisabled, soloConfig } from './modules/solver/ablation-config.ts';
 
-const result = await Solver.solve(level, {
+const result = await Solver.solveLevel(level, {
   timeBudgetMs: 15000,
   ablation: withFeatureDisabled('SCORE_GOAL_ATTRACTION'),
 });
