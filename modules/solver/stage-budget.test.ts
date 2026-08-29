@@ -43,7 +43,7 @@ test('offline finite nodeBudget: admissible-order-fallback reserve is withheld f
     // nodeBudget MINUS the admissible-order-fallback tier's own slice.
     assert.equal(plan.admissibleOrderNodeReserve, Math.floor(nodeBudget * ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION));
     assert.equal(plan.earlyTierNodeBudget, nodeBudget - plan.admissibleOrderNodeReserve);
-    // Additive stack: dedup-retry -> admissible-order-fallback-alternate-tiebreak-retry -> connectivity-retry ->
+    // Additive stack: dedup-retry -> admissible-order-alternate-tiebreak-retry -> connectivity-retry ->
     // repair-elite-prefix-dfs-retry -> must-cross-neighbor-prune-disabled-retry -> late-repair-search, each stacked
     // on the IMMEDIATELY PRECEDING tier's own ceiling, never on plain nodeBudget directly (except
     // dedup-retry, the first additive tier, which stacks on nodeBudget itself).
@@ -136,7 +136,7 @@ test('buildStageBudgetEnvelopes projects the exact same node ceilings the plan c
     assert.equal(envelopeNodeCeiling(envelopes['goal-attraction-disabled-retry']!), plan.earlyTierNodeBudget);
     assert.equal(envelopeNodeCeiling(envelopes['admissible-order-fallback']!), nodeBudget);
     assert.equal(envelopeNodeCeiling(envelopes['coarse-state-near-tie-retention-disabled-retry']!), plan.dedupRetryNodeCeiling);
-    assert.equal(envelopeNodeCeiling(envelopes['admissible-order-fallback-alternate-tiebreak-retry']!), plan.nonDefaultRetryNodeCeiling);
+    assert.equal(envelopeNodeCeiling(envelopes['admissible-order-alternate-tiebreak-retry']!), plan.nonDefaultRetryNodeCeiling);
     assert.equal(envelopeNodeCeiling(envelopes['connectivity-axis-prune-disabled-retry']!), plan.connectivityRetryNodeCeiling);
     assert.equal(envelopeNodeCeiling(envelopes['repair-elite-prefix-dfs-retry']!), plan.repairElitePrefixDfsRetryNodeCeiling);
     assert.equal(envelopeNodeCeiling(envelopes['must-cross-neighbor-prune-disabled-retry']!), plan.mcNeighborBudgetRetryNodeCeiling);
