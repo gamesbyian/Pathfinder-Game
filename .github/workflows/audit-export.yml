@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'data/levels.json'
-      - 'modules/Solver.ts'
+      - 'modules/solver.ts'
       - 'modules/solver/**'
 
 permissions:
