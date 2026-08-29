@@ -7,31 +7,31 @@ test('every policy stage has exactly one canonical spec and label', () => {
     for (const id of SOLVER_STAGE_IDS) assert.equal(solverStageSpec(id).telemetryLabel, id);
     assert.throws(() => solverStageSpec('future-stage' as never), /Unknown solver stage/);
 });
-test('promoted retry metadata does not retain stale pre-promotion opt-in status', () => {
+test('production retry metadata reports current production-default policy status', () => {
     for (const id of [
-        'dedup-near-tie-retry',
-        'admissible-order-non-default-retry',
-        'connectivity-axis-exhausted-retry',
-        'mc-neighbor-budget-retry',
-        'repair-late-probe',
-        'goal-attraction-legacy-distance-retry',
-        'repair-late-probe-multi-seed-retry',
+        'coarse-state-near-tie-retention-disabled-retry',
+        'admissible-order-fallback-alternate-tiebreak-retry',
+        'connectivity-axis-prune-disabled-retry',
+        'must-cross-neighbor-prune-disabled-retry',
+        'late-repair-search',
+        'guidance-goal-distance-retry',
+        'late-repair-multiseed-retry',
     ] as const) {
-        assert.equal(solverStageSpec(id).disposition, 'promoted', `${id} disposition drifted from its production-default promotion state`);
+        assert.equal(solverStageSpec(id).disposition, 'production-default', `${id} policy status drifted from production-default`);
     }
-    assert.equal(solverStageSpec('repair-probe-shrink-recovery').disposition, 'opt-in');
+    assert.equal(solverStageSpec('repair-shrink-recovery').disposition, 'opt-in');
     assert.equal(solverStageSpec('repair-elite-prefix-dfs-retry').disposition, 'opt-in');
 });
 test('legacy markers derive from canonical stages', () => {
-    assert.deepEqual(legacyStageTags('repair-probe-shrink-recovery'), { repairProbe: true, repairProbeShrinkRecovery: true });
-    assert.deepEqual(legacyStageTags('mc-neighbor-budget-retry'), { mcNeighborBudgetRetry: true });
-    assert.deepEqual(legacyStageTags('main-loop'), {});
+    assert.deepEqual(legacyStageTags('repair-shrink-recovery'), { repairProbe: true, repairProbeShrinkRecovery: true });
+    assert.deepEqual(legacyStageTags('must-cross-neighbor-prune-disabled-retry'), { mcNeighborBudgetRetry: true });
+    assert.deepEqual(legacyStageTags('main-search'), {});
 });
 test('budget envelopes preserve currencies, reserve direction, scope, and override origin', () => {
-    const ordinary = createBudgetEnvelope({ stageId: 'main-loop', wallMs: 20_000, workUnits: 67_000_000 });
+    const ordinary = createBudgetEnvelope({ stageId: 'main-search', wallMs: 20_000, workUnits: 67_000_000 });
     assert.deepEqual([ordinary.wall.ceiling, ordinary.work.ceiling, ordinary.nodes.ceiling], [20_000, 67_000_000, null]);
-    const offline = createBudgetEnvelope({ stageId: 'admissible-order', wallMs: 10_000, workUnits: 100_000, nodeCeiling: 8_000_000, explicitOverride: true, strictTotalWork: true, scope: 'whole-solve', headroom: { kind: 'withheld', amount: 2_000_000, sourceStageId: 'main-loop' } });
+    const offline = createBudgetEnvelope({ stageId: 'admissible-order-fallback', wallMs: 10_000, workUnits: 100_000, nodeCeiling: 8_000_000, explicitOverride: true, strictTotalWork: true, scope: 'whole-solve', headroom: { kind: 'withheld', amount: 2_000_000, sourceStageId: 'main-search' } });
     assert.equal(offline.nodes.source, 'explicit-override'); assert.equal(offline.strictTotalWork, true); assert.equal(offline.headroom.kind, 'withheld');
-    const retry = createBudgetEnvelope({ stageId: 'connectivity-axis-exhausted-retry', nodeCeiling: 12_000_000, headroom: { kind: 'additive', amount: 2_000_000, sourceStageId: 'main-loop' } });
+    const retry = createBudgetEnvelope({ stageId: 'connectivity-axis-prune-disabled-retry', nodeCeiling: 12_000_000, headroom: { kind: 'additive', amount: 2_000_000, sourceStageId: 'main-search' } });
     assert.equal(retry.headroom.kind, 'additive'); assert.equal(retry.nodes.ceiling, 12_000_000);
 });

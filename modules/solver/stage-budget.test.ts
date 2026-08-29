@@ -32,19 +32,19 @@ test('production/interactive shape (Infinity nodeBudget) is a strict no-op: ever
         plan.nonDefaultRetryNodeCeiling, plan.connectivityRetryNodeCeiling, plan.repairElitePrefixDfsRetryNodeCeiling,
         plan.mcNeighborBudgetRetryNodeCeiling, plan.repairFallbackNodeCeilingBase, plan.admissibleOrderDefaultProfileCeiling,
     ]) assert.equal(ceiling, Infinity);
-    // repair-late-probe's own flat cap is the one ceiling that stays finite regardless of nodeBudget.
+    // late-repair-search's own flat cap is the one ceiling that stays finite regardless of nodeBudget.
     assert.equal(plan.repairLateProbeNodeCeiling, Infinity);
 });
 
-test('offline finite nodeBudget: admissible-order reserve is withheld from every earlier tier and additive tiers stack on top of nodeBudget, in strict declared order', () => {
+test('offline finite nodeBudget: admissible-order-fallback reserve is withheld from every earlier tier and additive tiers stack on top of nodeBudget, in strict declared order', () => {
     const nodeBudget = 50_000_000;
     const plan = computeStageBudgetPlan({ ...baseInput, nodeBudget });
-    // Withheld reserve: earlier tiers (probe/main loop/repair fallback/attraction-diversity) share
-    // nodeBudget MINUS the admissible-order tier's own slice.
+    // Withheld reserve: earlier tiers (probe/main loop/repair fallback/goal-attraction-disabled-retry) share
+    // nodeBudget MINUS the admissible-order-fallback tier's own slice.
     assert.equal(plan.admissibleOrderNodeReserve, Math.floor(nodeBudget * ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION));
     assert.equal(plan.earlyTierNodeBudget, nodeBudget - plan.admissibleOrderNodeReserve);
-    // Additive stack: dedup-retry -> admissible-order-non-default-retry -> connectivity-retry ->
-    // repair-elite-prefix-dfs-retry -> mc-neighbor-budget-retry -> repair-late-probe, each stacked
+    // Additive stack: dedup-retry -> admissible-order-fallback-alternate-tiebreak-retry -> connectivity-retry ->
+    // repair-elite-prefix-dfs-retry -> must-cross-neighbor-prune-disabled-retry -> late-repair-search, each stacked
     // on the IMMEDIATELY PRECEDING tier's own ceiling, never on plain nodeBudget directly (except
     // dedup-retry, the first additive tier, which stacks on nodeBudget itself).
     assert.equal(plan.dedupRetryNodeReserve, Math.floor(nodeBudget * DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION));
@@ -62,16 +62,16 @@ test('offline finite nodeBudget: admissible-order reserve is withheld from every
     assert.equal(plan.repairElitePrefixDfsRetryTierWillRun, false);
     assert.equal(plan.repairElitePrefixDfsRetryNodeReserve, 0);
     assert.equal(plan.repairElitePrefixDfsRetryNodeCeiling, plan.connectivityRetryNodeCeiling);
-    // mc-neighbor-budget-retry needs initialMustCrossMask !== 0 as well as the flag; base fixture
+    // must-cross-neighbor-prune-disabled-retry needs initialMustCrossMask !== 0 as well as the flag; base fixture
     // has no must-cross mechanics, so it is also a no-op here (see the must-cross-gated test below).
     assert.equal(plan.mcNeighborBudgetRetryTierWillRun, false);
     assert.equal(plan.mcNeighborBudgetRetryNodeCeiling, plan.repairElitePrefixDfsRetryNodeCeiling);
-    // repair-late-probe needs repairConfigsCount === 0; base fixture has repair configs, so no-op.
+    // late-repair-search needs repairConfigsCount === 0; base fixture has repair configs, so no-op.
     assert.equal(plan.repairLateProbeTierWillRun, false);
     assert.equal(plan.repairLateProbeNodeCeiling, plan.mcNeighborBudgetRetryNodeCeiling);
 });
 
-test('mc-neighbor-budget-retry only reserves/stacks when the level has must-cross mechanics, and its budget fraction default matches the exported constant', () => {
+test('must-cross-neighbor-prune-disabled-retry only reserves/stacks when the level has must-cross mechanics, and its budget fraction default matches the exported constant', () => {
     const nodeBudget = 50_000_000;
     const withMustCross = computeStageBudgetPlan({ ...baseInput, nodeBudget, initialMustCrossMask: 0b1 });
     assert.equal(withMustCross.mcNeighborBudgetRetryTierWillRun, true);
@@ -79,7 +79,7 @@ test('mc-neighbor-budget-retry only reserves/stacks when the level has must-cros
     assert.equal(withMustCross.mcNeighborBudgetRetryNodeCeiling, withMustCross.repairElitePrefixDfsRetryNodeCeiling + withMustCross.mcNeighborBudgetRetryNodeReserve);
 });
 
-test('repair-late-probe: no-repair-config levels get the flat REPAIR_LATE_PROBE_NODE_BUDGET reserve stacked on the preceding tier, not a fraction of nodeBudget', () => {
+test('late-repair-search: no-repair-config levels get the flat REPAIR_LATE_PROBE_NODE_BUDGET reserve stacked on the preceding tier, not a fraction of nodeBudget', () => {
     const nodeBudget = 50_000_000;
     const plan = computeStageBudgetPlan({ ...baseInput, nodeBudget, repairConfigsCount: 0 });
     assert.equal(plan.repairLateProbeTierWillRun, true);
@@ -103,7 +103,7 @@ test('disableExtraBudgetPasses zeroes every retry-tier budget fraction unless an
     assert.equal(overridden.repairBudgetFraction, 0);
 });
 
-test('repair-probe-shrink-recovery: no-op when nothing was shrunk, and repays the full withheld budget (not just the difference) when it was', () => {
+test('repair-shrink-recovery: no-op when nothing was shrunk, and repays the full withheld budget (not just the difference) when it was', () => {
     const nodeBudget = 50_000_000;
     const plan = computeStageBudgetPlan({
         ...baseInput, nodeBudget,
@@ -131,22 +131,22 @@ test('buildStageBudgetEnvelopes projects the exact same node ceilings the plan c
     const nodeBudget = 50_000_000;
     const plan = computeStageBudgetPlan({ ...baseInput, nodeBudget, initialMustCrossMask: 0b1 });
     const envelopes = buildStageBudgetEnvelopes(plan, { timeBudgetMs: baseInput.timeBudgetMs, nodeBudget });
-    assert.equal(envelopeNodeCeiling(envelopes['main-loop']!), plan.mainLoopEarlyNodeBudget);
+    assert.equal(envelopeNodeCeiling(envelopes['main-search']!), plan.mainLoopEarlyNodeBudget);
     assert.equal(envelopeNodeCeiling(envelopes['repair-fallback']!), plan.repairFallbackNodeCeilingBase);
-    assert.equal(envelopeNodeCeiling(envelopes['attraction-diversity']!), plan.earlyTierNodeBudget);
-    assert.equal(envelopeNodeCeiling(envelopes['admissible-order']!), nodeBudget);
-    assert.equal(envelopeNodeCeiling(envelopes['dedup-near-tie-retry']!), plan.dedupRetryNodeCeiling);
-    assert.equal(envelopeNodeCeiling(envelopes['admissible-order-non-default-retry']!), plan.nonDefaultRetryNodeCeiling);
-    assert.equal(envelopeNodeCeiling(envelopes['connectivity-axis-exhausted-retry']!), plan.connectivityRetryNodeCeiling);
+    assert.equal(envelopeNodeCeiling(envelopes['goal-attraction-disabled-retry']!), plan.earlyTierNodeBudget);
+    assert.equal(envelopeNodeCeiling(envelopes['admissible-order-fallback']!), nodeBudget);
+    assert.equal(envelopeNodeCeiling(envelopes['coarse-state-near-tie-retention-disabled-retry']!), plan.dedupRetryNodeCeiling);
+    assert.equal(envelopeNodeCeiling(envelopes['admissible-order-fallback-alternate-tiebreak-retry']!), plan.nonDefaultRetryNodeCeiling);
+    assert.equal(envelopeNodeCeiling(envelopes['connectivity-axis-prune-disabled-retry']!), plan.connectivityRetryNodeCeiling);
     assert.equal(envelopeNodeCeiling(envelopes['repair-elite-prefix-dfs-retry']!), plan.repairElitePrefixDfsRetryNodeCeiling);
-    assert.equal(envelopeNodeCeiling(envelopes['mc-neighbor-budget-retry']!), plan.mcNeighborBudgetRetryNodeCeiling);
-    assert.equal(envelopes['dedup-near-tie-retry']!.headroom.kind, 'additive');
-    assert.equal(envelopes['admissible-order']!.headroom.kind, 'withheld');
+    assert.equal(envelopeNodeCeiling(envelopes['must-cross-neighbor-prune-disabled-retry']!), plan.mcNeighborBudgetRetryNodeCeiling);
+    assert.equal(envelopes['coarse-state-near-tie-retention-disabled-retry']!.headroom.kind, 'additive');
+    assert.equal(envelopes['admissible-order-fallback']!.headroom.kind, 'withheld');
     // Every envelope carries its own stable stageId (stage-policy.ts's canonical vocabulary).
     for (const [stageId, envelope] of Object.entries(envelopes)) assert.equal(envelope!.stageId, stageId);
 });
 
-test('main-loop late-suffix reserve fraction/count overrides are honored and clamp to mainConfigsCount', () => {
+test('main-search late-suffix reserve fraction/count overrides are honored and clamp to mainConfigsCount', () => {
     const nodeBudget = 50_000_000;
     const plan = computeStageBudgetPlan({
         ...baseInput, nodeBudget, mainConfigsCount: 3,

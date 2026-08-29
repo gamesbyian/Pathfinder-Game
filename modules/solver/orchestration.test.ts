@@ -183,7 +183,7 @@ test('fault injection is scoped to one solve and cannot contaminate a concurrent
     assert.equal(normal.attempts.some(a => a.outcome === 'error'), false);
 });
 
-test('an admissible-order search that drains its space is marked exhausted, not budget-starved', async () => {
+test('an admissible-order-fallback search that drains its space is marked exhausted, not budget-starved', async () => {
     const level = { ...makeLineLevel(), reqLen: 4 } as NormalizedLevel;
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
@@ -383,7 +383,7 @@ function makeRepairGatedMustTurnInfeasibleLevel() {
     } as unknown as NormalizedLevel;
 }
 
-// Production default-ON as of 2026-08-13 (reports/2026-08-12-repair-probe-early-main-loop-starvation.md).
+// Production default-ON as of 2026-08-13 (reports/2026-08-12-early-repair-search-early-main-search-starvation.md).
 // Mirrors the PRUNE_MC_NEIGHBOR_BUDGET / STRATEGY_MAIN_LOOP_LATE_RESERVE regression pattern: an
 // entirely omitted `ablation` option (cfg=null, exactly what every production caller and any CLI
 // invocation without --enable-flags passes) must activate the rule, not silently leave it inert —
@@ -551,10 +551,10 @@ test('repairProbeAdaptiveBiasedBadnessGateOverride/MinScaleOverride undefined pr
     assert.equal(biasedNodeBudgets[0], expectedScaled);
 });
 
-// BUG FIXED 2026-08-12 (reports/2026-08-12-worker-count-sensitivity-repair-probe-wallclock.md):
+// BUG FIXED 2026-08-12 (reports/2026-08-12-worker-count-sensitivity-early-repair-search-wallclock.md):
 // runRepairProbe's per-attempt wall-clock cap was a flat 30 seconds, justified as "well above any
 // observed real-world cost ... contention-independent". Measured 4-way CPU contention on a 4-core
-// host (--workers=4, not even oversubscribed) reproducibly dropped one repair-probe attempt's real
+// host (--workers=4, not even oversubscribed) reproducibly dropped one early-repair-search attempt's real
 // throughput to ~37,000-43,000 nodes/sec — well under the old cap's implicit >=66,667 nodes/sec
 // floor (2,000,000 nodes / 30s) — silently truncating the attempt below its intended node budget
 // and changing solve outcomes purely as a function of host contention. This test encodes the fix's
@@ -575,7 +575,7 @@ test('REPAIR_PROBE_ATTEMPT_MS_CAP survives real contention, not just an idle hos
     assert.ok(REPAIR_PROBE_ATTEMPT_MS_CAP > 30_000);
 });
 
-// BUG FIXED 2026-07-17 (reports/2026-07-17-attraction-diversity-dose-response.md's flagged
+// BUG FIXED 2026-07-17 (reports/2026-07-17-goal-attraction-disabled-retry-dose-response.md's flagged
 // "unexplained observation" + the follow-up budget-accounting audit): the probe's cost used to be
 // completely unaffected by repairBudgetFractionOverride, even at 0 — a caller explicitly asking
 // for zero repair-related cost (both interactive UI call sites; any solver-testing sweep following
@@ -603,7 +603,7 @@ test('repairBudgetFractionOverride: undefined (production default) still runs th
     assert.equal(result.attempts.some(a => a.repair), true);
 });
 
-// BUG FIXED 2026-07-17 (see reports/2026-07-17-repair-probe-node-budget-starvation.md): the probe
+// BUG FIXED 2026-07-17 (see reports/2026-07-17-early-repair-search-node-budget-starvation.md): the probe
 // never checked the caller's external `nodeBudget` at all, so it always ran its full internal
 // worst case (here, 2 seeds x 2,000,000 = up to 4,000,000 nodes) regardless of how small an
 // external ceiling the caller asked for — confirmed at scale on the real corpus-2 batch workflow,
@@ -622,7 +622,7 @@ deepTest('the repair probe caps itself to a small external nodeBudget instead of
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 50,
         nodeBudget: 250_000, // far below one 2,000,000-node internal seed round
-        // Isolates repair-probe capping from the unrelated main-loop late-suffix reserve (production
+        // Isolates early-repair-search capping from the unrelated main-search late-suffix reserve (production
         // default-ON as of 2026-08-12), which would otherwise also shape node accounting here.
         mainLoopLateReserveFractionOverride: 0,
     });
@@ -639,8 +639,8 @@ deepTest('the repair probe caps itself to a small external nodeBudget instead of
 // infeasible (reqLen: 2 vs. a gate/goal Manhattan distance of 6 — same PARITY as the true distance,
 // so STRATEGY_PARITY_GATE_FILTER doesn't drop the gate entirely and every config actually gets to
 // run, unlike an odd reqLen here which empties activeGates before any attempt starts), so every
-// main-loop attempt is pruned near-instantly by the distance-bound check regardless of search
-// strategy — a fast, reliable way to reach the 2026-07-16 attraction-diversity last-resort pass
+// main-search attempt is pruned near-instantly by the distance-bound check regardless of search
+// strategy — a fast, reliable way to reach the 2026-07-16 goal-attraction-disabled-retry last-resort pass
 // (orchestration.ts's solveLevel, after the main loop AND the empty repair loop both "fail")
 // without depending on any specific level's scoring actually being rescued.
 function makeAttractionDiversityGatedInfeasibleLevel() {
@@ -663,19 +663,19 @@ function makeAttractionDiversityGatedInfeasibleLevel() {
     } as unknown as NormalizedLevel;
 }
 
-test('attraction-diversity pass reruns the main ladder once more after both prior stages fail', async () => {
+test('goal-attraction-disabled-retry pass reruns the main ladder once more after both prior stages fail', async () => {
     // admissibleOrderBudgetFractionOverride: 0 isolates the pass under test from the newer
-    // admissible-order-search last-resort tier (orchestration.ts), which also runs by default after
+    // admissible-order-fallback-search last-resort tier (orchestration.ts), which also runs by default after
     // this pass and would otherwise inflate "mainLoopAttempts" below (its attempts carry neither
     // marker, since it's a distinct search primitive, not a rerun of mainConfigs).
     // repairLateProbeNodeBudgetOverride: 0 similarly isolates this pass from the default-on
-    // repair-late-probe tier, which targets the same repair-ineligible fixture and would otherwise
+    // late-repair-search tier, which targets the same repair-ineligible fixture and would otherwise
     // spend its own flat 2,000,000-node reserve on top of the tiny budget this test measures.
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, dedupNearTieRetryBudgetFractionOverride: 0, admissibleOrderNonDefaultRetryBudgetFractionOverride: 0, connectivityAxisExhaustedRetryBudgetFractionOverride: 0, mcNeighborBudgetRetryBudgetFractionOverride: 0, repairLateProbeNodeBudgetOverride: 0, ablation: { STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false } });
     assert.equal(result.ok, false);
     const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
     const mainLoopAttempts = result.attempts.filter(a => a.attractionDiversity !== true);
-    assert.ok(diversityAttempts.length > 0, 'expected at least one attraction-diversity attempt');
+    assert.ok(diversityAttempts.length > 0, 'expected at least one goal-attraction-disabled-retry attempt');
     // The pass reruns the exact same mainConfigs ladder, so (this level being pruned near-instantly
     // regardless of budget, meaning neither run gets cut off partway through) it should run through
     // exactly as many configs as the main loop itself did.
@@ -708,7 +708,7 @@ test('attractionDiversityBudgetFractionOverride: 0 suppresses the pass independe
     assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
 });
 
-test('disableExtraBudgetPasses: true suppresses the attraction-diversity pass on its own', async () => {
+test('disableExtraBudgetPasses: true suppresses the goal-attraction-disabled-retry pass on its own', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         disableExtraBudgetPasses: true,
@@ -740,7 +740,7 @@ test('an explicit attractionDiversityBudgetFractionOverride still wins over disa
     assert.equal(result.attempts.some(a => a.attractionDiversity === true), true);
 });
 
-// opts.nodeBudget composition with the attraction-diversity pass: gated on
+// opts.nodeBudget composition with the goal-attraction-disabled-retry pass: gated on
 // `prep._metrics.nodesExpanded < nodeBudget` (orchestration.ts) BEFORE the pass starts, then passed
 // into the ladder rerun (runInterleavedAttempts/runGateSerialAttempts). Both known measured on
 // makeAttractionDiversityGatedInfeasibleLevel() at a generous timeBudgetMs (so only nodeBudget,
@@ -781,7 +781,7 @@ test('a nodeBudget with room left after the main loop lets the diversity pass st
     //
     // The exact total moved 402 -> 315 with ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION (0.25): the early
     // tiers now share a reduced ceiling of 400 - floor(400*0.25) = 300 rather than the full 400, so
-    // the main loop + diversity pass stop at ~300 instead of ~400, and the admissible-order tier
+    // the main loop + diversity pass stop at ~300 instead of ~400, and the admissible-order-fallback tier
     // then spends its reserve on this (instantly-pruned) level without exhausting it. Both numbers
     // are the same "stop within a couple of nodes of the ceiling" behaviour, measured against
     // different ceilings.
@@ -808,15 +808,15 @@ test('a nodeBudget with room left after the main loop lets the diversity pass st
 
 // The node reserve itself (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION). The bug it fixes: `nodeBudget`
 // is ONE cumulative ceiling every tier checks against the same running counter, so the earlier tiers
-// consumed all of it and the admissible-order tier -- last in line -- hit its own
+// consumed all of it and the admissible-order-fallback tier -- last in line -- hit its own
 // `nodesExpanded >= nodeBudget` guard and ran nothing. Measured on the 2026-07-30T114427Z corpus-2
-// baseline: all 141 unsolved levels carrying a validated admissible-order hint terminated at the
+// baseline: all 141 unsolved levels carrying a validated admissible-order-fallback hint terminated at the
 // 20M cap, and the tier was recorded on 1 of them.
 test('the node reserve is a strict no-op when no external nodeBudget is set', async () => {
     // The reserve is a share of an EXTERNAL ceiling; with none there is nothing to withhold, so
     // every production path (which passes no nodeBudget) is unaffected. Same level/budget as the
     // first diversity test above, whose attempt counts are therefore reproduced exactly.
-    // repairLateProbeNodeBudgetOverride: 0 suppresses the default-on repair-late-probe tier, which
+    // repairLateProbeNodeBudgetOverride: 0 suppresses the default-on late-repair-search tier, which
     // also targets this repair-ineligible fixture and would otherwise inject its own randomized
     // repair-restart variance into what this test needs to be an exact-repro comparison.
     const withDefault = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, repairLateProbeNodeBudgetOverride: 0 });
@@ -834,7 +834,7 @@ test('disableExtraBudgetPasses leaves the full nodeBudget to the earlier tiers',
     // Reserving for a tier that will not run would strand the nodes and shrink the effective budget
     // of every interactive/batch caller that suppresses the extra passes -- so the reserve is gated
     // on the tier's REAL run condition, not just on the fraction. 288 (main loop) < 400 and no
-    // diversity/admissible-order pass runs, so the whole ceiling stays available to the main loop
+    // diversity/admissible-order-fallback pass runs, so the whole ceiling stays available to the main loop
     // and the level is NOT reported as node-budget-limited.
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
@@ -847,7 +847,7 @@ test('disableExtraBudgetPasses leaves the full nodeBudget to the earlier tiers',
     assert.equal(result.status, 'failed');
 });
 
-test('the reserve withholds nodes from the early tiers and leaves them for the admissible-order tier', async () => {
+test('the reserve withholds nodes from the early tiers and leaves them for the admissible-order-fallback tier', async () => {
     // The mechanism, stated as a comparison: same level, same ceiling, reserve off vs on. With the
     // reserve OFF the early tiers spend right up to the full 400 (402, the pre-reserve behaviour);
     // with it ON they are held to 400 - floor(400*0.25) = 300. The difference is the slice the tier
@@ -880,7 +880,7 @@ test('the reserve withholds nodes from the early tiers and leaves them for the a
     assert.equal(on.nodeBudgetReached, true);
 });
 
-test('opt-in main-loop reserve preserves order and gives a late suffix nonzero nodes', async () => {
+test('opt-in main-search reserve preserves order and gives a late suffix nonzero nodes', async () => {
     const seenConfigs: string[] = [];
     const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
         const [config, , , prep, , , , , nodeBudget, out] = args;
@@ -919,7 +919,7 @@ test('opt-in main-loop reserve preserves order and gives a late suffix nonzero n
     assert.equal(result.attempts[2].nodesExpanded, 10);
 });
 
-test('interleaved main-loop reserve gives every late config/gate pair its own slice', async () => {
+test('interleaved main-search reserve gives every late config/gate pair its own slice', async () => {
     const level = { ...makeAttractionDiversityGatedInfeasibleLevel(), gateKeys: [PACK(0, 0), PACK(0, 2)] };
     const attemptsSeen: Array<{ config: string; gate: number; budget: number }> = [];
     const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
@@ -952,7 +952,7 @@ test('interleaved main-loop reserve gives every late config/gate pair its own sl
 });
 
 // Regression for the confirm-residual-001 gap (2026-08-26, fixed the same day): every existing
-// main-loop-reserve test above starves the loop via `nodeBudget` alone, with `workBudget` set
+// main-search-reserve test above starves the loop via `nodeBudget` alone, with `workBudget` set
 // generously large (1,000,000) so it never binds. Production solves are actually capped on BOTH
 // resources simultaneously, and before the fix, runGateSerialAttempts/runInterleavedAttempts' WORK
 // stop condition had no `ci >= lateConfigStart` carve-out the way the NODE-side check did -- an
@@ -964,7 +964,7 @@ test('interleaved main-loop reserve gives every late config/gate pair its own sl
 // This exercises the FIXED behavior directly: once an early config's own consumption crosses the
 // reserve's early work ceiling, FURTHER early configs are skipped rather than allowed to keep
 // draining the slice reserved for the trailing configs.
-test('main-loop reserve protects late configs from WORK (not just node) starvation by early configs', async () => {
+test('main-search reserve protects late configs from WORK (not just node) starvation by early configs', async () => {
     const seenConfigs: string[] = [];
     const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
         const [config, , , prep, , , , , , out] = args;
@@ -1005,9 +1005,9 @@ test('main-loop reserve protects late configs from WORK (not just node) starvati
 
 // Interleaved-variant sibling of the gate-serial test above: same WORK-dimension gap
 // (runInterleavedAttempts' work check had no `ci >= lateConfigStart` carve-out either), exercised
-// through the multi-gate path instead. Mirrors 'interleaved main-loop reserve gives every late
+// through the multi-gate path instead. Mirrors 'interleaved main-search reserve gives every late
 // config/gate pair its own slice' above, but starves via `workBudget` instead of `nodeBudget`.
-test('interleaved main-loop reserve protects late config/gate pairs from WORK starvation by early configs', async () => {
+test('interleaved main-search reserve protects late config/gate pairs from WORK starvation by early configs', async () => {
     const level = { ...makeAttractionDiversityGatedInfeasibleLevel(), gateKeys: [PACK(0, 0), PACK(0, 2)] };
     const attemptsSeen: Array<{ config: string; gate: number }> = [];
     const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
@@ -1044,8 +1044,8 @@ test('interleaved main-loop reserve protects late config/gate pairs from WORK st
         'the reserve must still get a genuine chance to run once its own slice, not zero, when work is scarce');
 });
 
-test('main-loop reserve activates by default with an omitted ablation config and a finite node ceiling', async () => {
-    // Production default-ON as of 2026-08-12 (reports/2026-08-12-main-loop-late-reserve-population-ab.md).
+test('main-search reserve activates by default with an omitted ablation config and a finite node ceiling', async () => {
+    // Production default-ON as of 2026-08-12 (reports/2026-08-12-main-search-late-reserve-population-ab.md).
     // Mirrors lower-bounds.test.ts's PRUNE_MC_NEIGHBOR_BUDGET regression: an entirely omitted
     // `ablation` option (cfg=null, exactly what every production caller and any CLI invocation
     // without --enable-flags passes) must activate the rule, not silently leave it inert — the
@@ -1062,7 +1062,7 @@ test('main-loop reserve activates by default with an omitted ablation config and
     assert.equal(defaulted.attempts.some(a => a.mainLoopLateReserve), true);
 });
 
-test('main-loop reserve is inert with an explicit disable or an infinite node ceiling', async () => {
+test('main-search reserve is inert with an explicit disable or an infinite node ceiling', async () => {
     const level = makeAttractionDiversityGatedInfeasibleLevel();
     const explicitlyOff = await solveLevel(level, {
         timeBudgetMs: 1000,
@@ -1083,7 +1083,7 @@ test('main-loop reserve is inert with an explicit disable or an infinite node ce
     assert.equal(infinite.attempts.some(a => a.mainLoopLateReserve), false);
 });
 
-test('zero fraction or zero suffix count disables the main-loop reserve', async () => {
+test('zero fraction or zero suffix count disables the main-search reserve', async () => {
     const level = makeAttractionDiversityGatedInfeasibleLevel();
     for (const overrides of [
         { mainLoopLateReserveFractionOverride: 0, mainLoopLateReserveConfigCountOverride: 2 },
@@ -1116,7 +1116,7 @@ test('a reserve fraction that rounds to zero is fully inert', async () => {
 // disabled via STRATEGY_REPAIR_PROBE: false so it contributes zero nodes, isolating the mechanism
 // under test (main loop vs. repair fallback loop) from the probe's own fixed-cost budget entirely.
 // The mock dispatch consumes exactly the nodeBudget it is given for every attempt and never solves,
-// mirroring the main-loop-late-reserve tests' own established pattern.
+// mirroring the main-search-late-reserve tests' own established pattern.
 function repairFallbackReserveDispatch(): typeof runAttemptSearch {
     return (async (...args: Parameters<typeof runAttemptSearch>) => {
         const [, , , prep, , , , , nodeBudget, out] = args;
@@ -1179,7 +1179,7 @@ test('repair-fallback reserve gives the fallback loop room without touching the 
         ablation: { STRATEGY_REPAIR_PROBE: false, STRATEGY_REPAIR_FALLBACK_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
-    // earlyTierNodeBudget=1000 (no admissible-order reserve), mainLoopLateReserve=floor(1000*0.3)=300,
+    // earlyTierNodeBudget=1000 (no admissible-order-fallback reserve), mainLoopLateReserve=floor(1000*0.3)=300,
     // mainLoopEarlyNodeBudget=700 (identical in both arms — this is the invariant the two prior
     // revisions violated). repairFallbackNodeReserve=floor(300*0.5)=150 only when ON, so
     // mainLoopNodeBudget=1000 (off) vs 850 (on).
@@ -1199,7 +1199,7 @@ test('repair-fallback reserve gives the fallback loop room without touching the 
 // 2026-08-28: repair-fallback was the second tier migrated off queue #2 step 3's ms-derived
 // work-dose debt (docs/solver-budget-determinism.md's "Remaining ms-shaped allocation debt";
 // scaledStageWorkBudget in budget-units.ts) -- same pattern and same two tests as
-// dedup-near-tie-retry's own pair above. STRATEGY_REPAIR_FALLBACK_NODE_RESERVE / the reserve
+// coarse-state-near-tie-retention-disabled-retry's own pair above. STRATEGY_REPAIR_FALLBACK_NODE_RESERVE / the reserve
 // override are needed (see the two tests just above) so the fallback loop actually gets a turn
 // instead of being starved by the main loop's own share of the shared node budget.
 function isolateRepairFallbackOpts(overrides: Record<string, unknown> = {}) {
@@ -1277,7 +1277,7 @@ test('repair-fallback reserve is a no-op when mainLoopLateReserve is 0 (accepted
 // makeRepairGatedInfeasibleLevel() above: this reserve nests inside the SAME mainLoopLateReserve
 // pool as the sibling reserve, one layer deeper, so the fixture and mock dispatch are identical.
 
-test('attraction-diversity reserve is inert by default (cfg=null) even with its sibling reserve on', async () => {
+test('goal-attraction-disabled-retry reserve is inert by default (cfg=null) even with its sibling reserve on', async () => {
     // Same opt-in-convention check as the sibling reserve's own first test: cfg is non-null here
     // (both STRATEGY_REPAIR_PROBE and STRATEGY_REPAIR_FALLBACK_NODE_RESERVE are set), but THIS flag
     // is unset within it — the opt-in Proxy must resolve it to false regardless of what else is set.
@@ -1307,7 +1307,7 @@ test('attraction-diversity reserve is inert by default (cfg=null) even with its 
     assert.equal(result.nodesExpanded, 1000, 'byte-identical total to the sibling reserve running alone (this flag contributes nothing when unset)');
 });
 
-test('attraction-diversity reserve gives the diversity pass room without touching the probe/main-loop/repair-fallback-reserve slice', async () => {
+test('goal-attraction-disabled-retry reserve gives the diversity pass room without touching the probe/main-search/repair-fallback-reserve slice', async () => {
     const level = makeRepairGatedInfeasibleLevel();
     const opts = {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
@@ -1362,7 +1362,7 @@ test('attraction-diversity reserve gives the diversity pass room without touchin
     assert.equal(on.nodesExpanded, 1000, 'same total spend either way -- this reserve only changes WHO gets the nodes, never how many exist');
 });
 
-test('attraction-diversity reserve is a no-op when repairFallbackNodeReserve already exhausts mainLoopLateReserve', async () => {
+test('goal-attraction-disabled-retry reserve is a no-op when repairFallbackNodeReserve already exhausts mainLoopLateReserve', async () => {
     // Documented, accepted limitation mirroring the sibling reserve's own equivalent test: this
     // reserve carves from the REMAINDER of mainLoopLateReserve after repairFallbackNodeReserve's own
     // cut, so it has nothing left to withhold when that remainder is zero (fraction=1.0 here takes
@@ -1395,10 +1395,10 @@ test('attraction-diversity reserve is a no-op when repairFallbackNodeReserve alr
 // ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION's own comment and the read site's, which documents
 // the R03148 precedent this targets and the asymmetric-risk caution specific to this mechanism).
 // Reuses repairFallbackReserveDispatch() and makeRepairGatedInfeasibleLevel() above: the mock's
-// "consume exactly what nodeBudget it is given" behavior works identically for admissible-order
-// attempts as it does for main-loop/repair-fallback ones, since it patches the shared dispatch seam.
+// "consume exactly what nodeBudget it is given" behavior works identically for admissible-order-fallback
+// attempts as it does for main-search/repair-fallback ones, since it patches the shared dispatch seam.
 
-test('admissible-order profile reserve is inert by default (cfg=null) even with a finite node ceiling', async () => {
+test('admissible-order-fallback profile reserve is inert by default (cfg=null) even with a finite node ceiling', async () => {
     // Same opt-in-convention check as both prior reserves' own first test: cfg is non-null here
     // (STRATEGY_REPAIR_PROBE is set), but THIS flag is unset within it — the opt-in Proxy must
     // resolve it to false regardless of what else is set.
@@ -1420,10 +1420,10 @@ test('admissible-order profile reserve is inert by default (cfg=null) even with 
     // numeric test below for the full derivation); with this flag off, 'default' gets the whole
     // remaining 400 and every other profile is starved, exactly the pre-mechanism/R03148 shape.
     assert.equal(admissibleOrderAttempts.filter(a => a.profile !== 'default').every(a => (a.nodesExpanded ?? 0) === 0), true, 'no room was withheld for the non-default profiles: the reserve did not activate');
-    assert.equal(admissibleOrderAttempts.find(a => a.profile === 'default')?.nodesExpanded, 400, '\'default\' alone spends the whole undivided admissible-order reserve, exactly the pre-reserve/R03148 behavior');
+    assert.equal(admissibleOrderAttempts.find(a => a.profile === 'default')?.nodesExpanded, 400, '\'default\' alone spends the whole undivided admissible-order-fallback reserve, exactly the pre-reserve/R03148 behavior');
 });
 
-test('admissible-order profile reserve gives non-default profiles room without shrinking default\'s guaranteed floor', async () => {
+test('admissible-order-fallback profile reserve gives non-default profiles room without shrinking default\'s guaranteed floor', async () => {
     const level = makeRepairGatedInfeasibleLevel();
     const opts = {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
@@ -1449,14 +1449,14 @@ test('admissible-order profile reserve gives non-default profiles room without s
     });
     // nodeBudget=1000, admissibleOrderNodeReserve=floor(1000*0.4)=400, earlyTierNodeBudget=600 (main
     // loop's single early-prefix attempt consumes exactly this in both arms — mainLoopLateReserve is
-    // explicitly 0 here to keep the main-loop side of the arithmetic out of this test entirely).
+    // explicitly 0 here to keep the main-search side of the arithmetic out of this test entirely).
     // admissibleOrderProfileNodeReserve=floor(400*0.5)=200 only when ON, so admissibleOrderDefault
     // ProfileCeiling=1000 (off) vs 800 (on); every OTHER profile's own ceiling stays the full 1000
     // nodeBudget in both arms.
     const mainLoopNodes = (result: typeof off) => result.attempts.filter(a => !a.repair && !a.attractionDiversity && !a.admissibleOrder).reduce((n, a) => n + (a.nodesExpanded ?? 0), 0);
     const byProfile = (result: typeof off, profile: string) => result.attempts.find(a => a.admissibleOrder === true && a.profile === profile);
     assert.equal(mainLoopNodes(off), 600, 'main loop spends the untouched earlyTierNodeBudget identically in both arms');
-    assert.equal(mainLoopNodes(on), 600, 'byte-identical to the off arm: nothing before the admissible-order tier depends on this flag');
+    assert.equal(mainLoopNodes(on), 600, 'byte-identical to the off arm: nothing before the admissible-order-fallback tier depends on this flag');
     assert.equal(byProfile(off, 'default')?.nodesExpanded, 400, 'off: \'default\' alone spends the whole undivided reserve (600 early + 400 default = 1000)');
     assert.equal(byProfile(on, 'default')?.nodesExpanded, 200, 'on: \'default\'\'s ceiling is reduced by exactly admissibleOrderProfileNodeReserve (400 -> 200) -- the asymmetric risk, made concrete and measurable');
     assert.equal(byProfile(off, 'none'), undefined, 'off: \'default\' exhausted nodeBudget before \'none\' was ever reached -- the R03148 starvation shape reproduced');
@@ -1466,7 +1466,7 @@ test('admissible-order profile reserve gives non-default profiles room without s
     assert.equal(on.nodesExpanded, 1000, 'same total spend either way -- this reserve only changes WHO gets the nodes, never how many exist');
 });
 
-test('admissible-order profile reserve is a no-op when admissibleOrderNodeReserve is 0', async () => {
+test('admissible-order-fallback profile reserve is a no-op when admissibleOrderNodeReserve is 0', async () => {
     // Documented, accepted limitation mirroring both prior reserves' own equivalent test: this
     // reserve carves FROM admissibleOrderNodeReserve, so it has nothing to withhold when that
     // reserve is itself zero -- whether because ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION's own
@@ -1664,15 +1664,15 @@ test('strictTotalWorkBudget installs one remaining-work cap across every additiv
             `${name} must see the immutable whole-solve cap`);
         assert.ok(attempt.allocatedNodeCeiling != null, `${name} must record its node allowance`);
     }
-    const lifecycle = strict.techniqueLifecycle as Record<string, any>;
-    for (const name of ['repair-probe', 'repair-fallback', 'attraction-diversity', 'admissible-order']) {
+    const lifecycle = strict.stageLifecycle as Record<string, any>;
+    for (const name of ['early-repair-search', 'repair-fallback', 'goal-attraction-disabled-retry', 'admissible-order-fallback']) {
         assert.equal(lifecycle[name].mechanicallyEligible, true);
         assert.equal(lifecycle[name].reached, true);
         assert.ok(lifecycle[name].attempts > 0);
         assert.ok(Array.isArray(lifecycle[name].allocatedWorkCeilings));
         assert.equal(lifecycle[name].actualWork, 0, 'controlled zero-work dispatch must meter exactly');
     }
-    assert.equal(legacy.techniqueLifecycle, undefined, 'omitting lifecycle telemetry preserves the result shape');
+    assert.equal(legacy.stageLifecycle, undefined, 'omitting lifecycle telemetry preserves the result shape');
 });
 
 test('the ordinary repair fallback loop gets fresh work room, not a stale cap left by the main loop (regression, fixed 2026-08-20)', async () => {
@@ -1703,13 +1703,13 @@ test('the ordinary repair fallback loop gets fresh work room, not a stale cap le
     assert.ok(repairAllocatedWorkCeiling !== undefined, 'the repair fallback attempt must have run');
     // Before the 2026-08-20 fix this was whatever the main loop's last per-attempt slice happened to
     // be (bounded by the external workBudget=100,000). After that fix, and before the 2026-08-28
-    // queue #2 step-3 migration (reports/2026-08-28-dedup-near-tie-retry-work-dose-migration.md),
+    // queue #2 step-3 migration (reports/2026-08-28-coarse-state-near-tie-retention-disabled-retry-work-dose-migration.md),
     // it was REPAIR_EXTRA_BUDGET_FRACTION (6.0) * timeBudgetMs * DEFAULT_WORK_PER_MS, ~100.5M —
     // ignoring the caller's own explicit workBudget entirely, exactly the bug that migration closed.
     // After the migration it is REPAIR_EXTRA_BUDGET_FRACTION (6.0) * the solve's own resolved
     // workBudget (100,000 here, explicit) = 600,000 exactly — three orders of magnitude smaller than
     // the old ms-derived number, but still three orders of magnitude larger than any single
-    // main-loop per-attempt slice of workBudget=100,000 (bounded by workBudget itself, so at most
+    // main-search per-attempt slice of workBudget=100,000 (bounded by workBudget itself, so at most
     // 100,000, typically far less once divided across many configs), so this pin still distinguishes
     // "fresh" from "stale/inherited" — it just now also reflects the caller's real workBudget instead
     // of silently re-deriving a different one from timeBudgetMs.
@@ -1717,12 +1717,12 @@ test('the ordinary repair fallback loop gets fresh work room, not a stale cap le
         `repair fallback must see a fresh work cap sized off workBudget, got ${repairAllocatedWorkCeiling}`);
 });
 
-test('lifecycle telemetry classifies newer retry tiers as their own technique, not main-ladder/repair-fallback/admissible-order (regression, fixed 2026-08-20)', async () => {
-    // Before the fix, `classify()` only knew 5 categories (repair-probe/repair-fallback/attraction-
-    // diversity/admissible-order/main-ladder) -- every retry tier added since (dedup-near-tie,
-    // connectivity-axis-exhausted, repair-elite-prefix-dfs, mc-neighbor-budget, repair-late-probe,
-    // admissible-order-non-default) silently fell into whichever of those 5 buckets its OWN base
-    // config type happened to match (mc-neighbor-budget-retry reruns mainConfigs -> 'main-ladder';
+test('lifecycle telemetry classifies newer retry tiers as their own technique, not main-ladder/repair-fallback/admissible-order-fallback (regression, fixed 2026-08-20)', async () => {
+    // Before the fix, `classify()` only knew 5 categories (early-repair-search/repair-fallback/attraction-
+    // diversity/admissible-order-fallback/main-ladder) -- every retry tier added since (dedup-near-tie,
+    // connectivity-axis-exhausted, repair-elite-prefix-dfs, mc-neighbor-budget, late-repair-search,
+    // admissible-order-fallback-non-default) silently fell into whichever of those 5 buckets its OWN base
+    // config type happened to match (must-cross-neighbor-prune-disabled-retry reruns mainConfigs -> 'main-ladder';
     // repair-elite-prefix-dfs-retry reruns repairConfigs -> 'repair-fallback'), misreporting which
     // stage of the ladder actually ran or found a solution.
     //
@@ -1742,14 +1742,14 @@ test('lifecycle telemetry classifies newer retry tiers as their own technique, n
         lifecycleTelemetry: true,
         attemptSearchForTesting: dispatch,
     });
-    assert.equal(result.ok, true, 'the mc-neighbor-budget-retry-only mock must win');
+    assert.equal(result.ok, true, 'the must-cross-neighbor-prune-disabled-retry-only mock must win');
     const winningAttempts = result.attempts.filter(a => a.ok);
     assert.equal(winningAttempts.length, 1);
     assert.equal(winningAttempts[0].mcNeighborBudgetRetry, true, 'the winning attempt must be tagged by its real tier');
-    const lifecycle = result.techniqueLifecycle as Record<string, any>;
-    assert.ok(lifecycle['mc-neighbor-budget-retry'], 'the new category must exist in the lifecycle map');
-    assert.equal(lifecycle['mc-neighbor-budget-retry'].reached, true);
-    assert.ok(lifecycle['mc-neighbor-budget-retry'].attempts > 0);
+    const lifecycle = result.stageLifecycle as Record<string, any>;
+    assert.ok(lifecycle['must-cross-neighbor-prune-disabled-retry'], 'the new category must exist in the lifecycle map');
+    assert.equal(lifecycle['must-cross-neighbor-prune-disabled-retry'].reached, true);
+    assert.ok(lifecycle['must-cross-neighbor-prune-disabled-retry'].attempts > 0);
     // The winning attempt must NOT also be double-counted into main-ladder, which is what every
     // mcNeighborBudgetRetry attempt used to collapse into (it reruns mainConfigs, so attempt.repair
     // and attempt.admissibleOrder are both unset -- exactly what the old classify()'s final
@@ -1768,8 +1768,8 @@ test('lifecycle telemetry separates mechanical eligibility from disabled routing
         disableExtraBudgetPasses: true,
         lifecycleTelemetry: true,
     });
-    const lifecycle = result.techniqueLifecycle as Record<string, any>;
-    for (const name of ['repair-probe', 'repair-fallback', 'attraction-diversity', 'admissible-order']) {
+    const lifecycle = result.stageLifecycle as Record<string, any>;
+    for (const name of ['early-repair-search', 'repair-fallback', 'goal-attraction-disabled-retry', 'admissible-order-fallback']) {
         assert.equal(lifecycle[name].mechanicallyEligible, true, `${name} has a mechanics-selected config`);
         assert.equal(lifecycle[name].skippedByRoutingOrConfiguration, true, `${name} was explicitly disabled`);
         assert.equal(lifecycle[name].reached, false);
@@ -1783,7 +1783,7 @@ test('attempt work telemetry sums exactly to whole-level canonical work', async 
         lifecycleTelemetry: true,
     });
     const attemptWork = result.attempts.reduce((sum, attempt) => sum + Number(attempt.workSpent), 0);
-    const lifecycleWork = Object.values(result.techniqueLifecycle as Record<string, any>)
+    const lifecycleWork = Object.values(result.stageLifecycle as Record<string, any>)
         .reduce((sum: number, lifecycle: any) => sum + Number(lifecycle.actualWork ?? 0), 0);
     assert.equal(attemptWork, result.workSpent);
     assert.equal(lifecycleWork, result.workSpent);
@@ -2013,12 +2013,12 @@ test('shrink recovery is inert when the shrink mechanism itself is disabled', as
 //
 // PROMOTED to default-ON (2026-08-15, same day as built — see DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's
 // own comment in orchestration.ts for the full-corpus A/B population-validation history behind the
-// promotion). Reuses the same infeasible-level pattern attraction-diversity's own tests already
+// promotion). Reuses the same infeasible-level pattern goal-attraction-disabled-retry's own tests already
 // establish: this level's every attempt is pruned near-instantly by distance/parity regardless of
 // search strategy or STRATEGY_DEDUP_NEAR_TIE_RETENTION, so the inertness/suppression tests below
 // don't depend on the mechanism's own real rescue behavior.
 
-test('dedup-near-tie-retry pass reruns the main ladder once more after main loop and repair fallback fail', async () => {
+test('coarse-state-near-tie-retention-disabled-retry pass reruns the main ladder once more after main loop and repair fallback fail', async () => {
     // attractionDiversityBudgetFractionOverride/admissibleOrderBudgetFractionOverride: 0 isolate the
     // pass under test from its sibling last-resort tiers, which also run by default and would
     // otherwise inflate "mainLoopAttempts" below (their attempts carry none of these three markers).
@@ -2035,14 +2035,14 @@ test('dedup-near-tie-retry pass reruns the main ladder once more after main loop
     assert.equal(result.ok, false);
     const retryAttempts = result.attempts.filter(a => a.dedupNearTieRetry === true);
     const mainLoopAttempts = result.attempts.filter(a => a.dedupNearTieRetry !== true);
-    assert.ok(retryAttempts.length > 0, 'expected at least one dedup-near-tie-retry attempt');
+    assert.ok(retryAttempts.length > 0, 'expected at least one coarse-state-near-tie-retention-disabled-retry attempt');
     // The pass reruns the exact same mainConfigs ladder, so (this level being pruned near-instantly
     // regardless of budget, meaning neither run gets cut off partway through) it should run through
     // exactly as many configs as the main loop itself did.
     assert.equal(retryAttempts.length, mainLoopAttempts.length);
 });
 
-test('dedup-near-tie-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
+test('coarse-state-near-tie-retention-disabled-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
@@ -2061,7 +2061,7 @@ test('disableExtraBudgetPasses: true suppresses the promoted default-ON pass eve
     assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false);
 });
 
-test('dedup-near-tie-retry pass stays off under an explicit { STRATEGY_DEDUP_NEAR_TIE_RETRY: false }', async () => {
+test('coarse-state-near-tie-retention-disabled-retry pass stays off under an explicit { STRATEGY_DEDUP_NEAR_TIE_RETRY: false }', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
@@ -2117,7 +2117,7 @@ test('disableExtraBudgetPasses: true suppresses the pass even with the flag on, 
     assert.ok(overridden.attempts.some(a => a.dedupNearTieRetry === true));
 });
 
-test('dedup-near-tie-retry pass can solve a level the main loop misses, and disables retention while it runs', async () => {
+test('coarse-state-near-tie-retention-disabled-retry pass can solve a level the main loop misses, and disables retention while it runs', async () => {
     // Simulates the real mechanism's shape without depending on search.ts's actual beam internals:
     // succeeds only once prep._cfg reflects STRATEGY_DEDUP_NEAR_TIE_RETENTION explicitly disabled —
     // exactly what the retry pass's own Proxy override produces, and exactly what the ordinary main
@@ -2138,7 +2138,7 @@ test('dedup-near-tie-retry pass can solve a level the main loop misses, and disa
     assert.equal(result.attempts.at(-1)?.dedupNearTieRetry, true);
 });
 
-// 2026-08-28: dedup-near-tie-retry was the first tier migrated off queue #2 step 3's ms-derived
+// 2026-08-28: coarse-state-near-tie-retention-disabled-retry was the first tier migrated off queue #2 step 3's ms-derived
 // work-dose debt (docs/solver-budget-determinism.md's "Remaining ms-shaped allocation debt";
 // scaledStageWorkBudget in budget-units.ts). These two tests are this tier's own version of the
 // main-ladder invariant already pinned above ('a non-binding deadline cannot resize an
@@ -2159,7 +2159,7 @@ function isolateDedupNearTieRetryOpts(overrides = {}) {
     };
 }
 
-test('dedup-near-tie-retry work dose no longer resizes with a non-binding deadline change', async () => {
+test('coarse-state-near-tie-retention-disabled-retry work dose no longer resizes with a non-binding deadline change', async () => {
     const run = (timeBudgetMs: number) => solveLevel(makeAttractionDiversityGatedInfeasibleLevel(),
         isolateDedupNearTieRetryOpts({ timeBudgetMs, workBudget: 200_000 }));
     const shortDeadline = await run(1000);
@@ -2168,12 +2168,12 @@ test('dedup-near-tie-retry work dose no longer resizes with a non-binding deadli
         .filter(a => a.dedupNearTieRetry === true)
         .map(a => a.allocatedWorkCeiling);
     const shortDose = dose(shortDeadline);
-    assert.ok(shortDose.length > 0, 'expected at least one dedup-near-tie-retry attempt');
+    assert.ok(shortDose.length > 0, 'expected at least one coarse-state-near-tie-retention-disabled-retry attempt');
     assert.deepEqual(dose(longDeadline), shortDose,
         'this tier\'s own work pool must depend on workBudget, not on the (non-binding) deadline');
 });
 
-test('dedup-near-tie-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
+test('coarse-state-near-tie-retention-disabled-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
     const solveWith = (baseWorkBudget: number) => solveLevel(makeAttractionDiversityGatedInfeasibleLevel(),
         isolateDedupNearTieRetryOpts({ timeBudgetMs: 1000, baseWorkBudget }));
     const small = await solveWith(200_000);
@@ -2182,7 +2182,7 @@ test('dedup-near-tie-retry now honors an explicit baseWorkBudget instead of sile
         result.attempts.find(a => a.dedupNearTieRetry === true)?.allocatedWorkCeiling ?? null;
     const smallCeiling = ceiling(small);
     const largeCeiling = ceiling(large);
-    assert.ok(smallCeiling != null && largeCeiling != null, 'expected a dedup-near-tie-retry attempt in both runs');
+    assert.ok(smallCeiling != null && largeCeiling != null, 'expected a coarse-state-near-tie-retention-disabled-retry attempt in both runs');
     assert.ok((largeCeiling as number) > (smallCeiling as number),
         'an explicit baseWorkBudget must now size this tier\'s own dose');
 });
@@ -2192,12 +2192,12 @@ test('dedup-near-tie-retry now honors an explicit baseWorkBudget instead of sile
 // Opt-in, default OFF (see ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION's own comment in
 // orchestration.ts for the full local-validation history: recovers R03148 referee-valid at the
 // shipped 0.5 reserve fraction, confirmed zero effect on R02644 at both a solving and a
-// non-solving budget). Reuses the same infeasible-level pattern the dedup-near-tie-retry suite
+// non-solving budget). Reuses the same infeasible-level pattern the coarse-state-near-tie-retention-disabled-retry suite
 // above already establishes.
 
-test('admissible-order-non-default-retry pass can solve a level the admissible-order tier\'s own pass misses, and never retries \'default\'', async () => {
-    // Mock: only a non-'default' admissible-order profile ever solves. admissibleOrderBudgetFractionOverride: 0
-    // suppresses the admissible-order tier's OWN pass entirely (so 'default'/'none' never get tried
+test('admissible-order-fallback-alternate-tiebreak-retry pass can solve a level the admissible-order-fallback tier\'s own pass misses, and never retries \'default\'', async () => {
+    // Mock: only a non-'default' admissible-order-fallback profile ever solves. admissibleOrderBudgetFractionOverride: 0
+    // suppresses the admissible-order-fallback tier's OWN pass entirely (so 'default'/'none' never get tried
     // there), isolating this tier's own contribution — same isolation shape as the dedup-retry suite's
     // own "can solve a level the main loop misses" test.
     const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
@@ -2217,7 +2217,7 @@ test('admissible-order-non-default-retry pass can solve a level the admissible-o
     assert.equal(result.attempts.filter(a => a.admissibleOrderNonDefaultRetry === true && a.profile === 'default').length, 0, "'default' is never retried by this tier");
 });
 
-test('admissible-order-non-default-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
+test('admissible-order-fallback-alternate-tiebreak-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
@@ -2228,7 +2228,7 @@ test('admissible-order-non-default-retry pass is ACTIVE by default (cfg=null) si
     assert.ok(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), 'expected the promoted default-ON tier to run with cfg=null');
 });
 
-test('disableExtraBudgetPasses: true suppresses the promoted default-ON admissible-order-non-default-retry pass even with cfg=null (the two interactive solve UIs\' real production combination)', async () => {
+test('disableExtraBudgetPasses: true suppresses the promoted default-ON admissible-order-fallback-alternate-tiebreak-retry pass even with cfg=null (the two interactive solve UIs\' real production combination)', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         disableExtraBudgetPasses: true,
@@ -2236,7 +2236,7 @@ test('disableExtraBudgetPasses: true suppresses the promoted default-ON admissib
     assert.equal(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
 });
 
-test('admissible-order-non-default-retry pass stays off under an explicit { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: false }', async () => {
+test('admissible-order-fallback-alternate-tiebreak-retry pass stays off under an explicit { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: false }', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
@@ -2246,10 +2246,10 @@ test('admissible-order-non-default-retry pass stays off under an explicit { STRA
     assert.equal(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
 });
 
-test('a sparse unrelated ablation object leaves the promoted default-ON admissible-order-non-default-retry pass active', async () => {
+test('a sparse unrelated ablation object leaves the promoted default-ON admissible-order-fallback-alternate-tiebreak-retry pass active', async () => {
     // Since promotion, this flag is unset-means-true (the standard `!cfg || cfg.FLAG` convention),
     // so a sparse config that only touches a DIFFERENT flag must still leave THIS one active — same
-    // check as the dedup-near-tie-retry suite's own equivalent test.
+    // check as the coarse-state-near-tie-retention-disabled-retry suite's own equivalent test.
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
@@ -2271,7 +2271,7 @@ test('admissibleOrderNonDefaultRetryBudgetFractionOverride: 0 suppresses the pas
     assert.equal(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
 });
 
-test('disableExtraBudgetPasses: true suppresses the admissible-order-non-default-retry pass even with the flag on, but an explicit override still wins', async () => {
+test('disableExtraBudgetPasses: true suppresses the admissible-order-fallback-alternate-tiebreak-retry pass even with the flag on, but an explicit override still wins', async () => {
     const suppressed = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: true },
@@ -2295,10 +2295,10 @@ test('disableExtraBudgetPasses: true suppresses the admissible-order-non-default
     assert.ok(overridden.attempts.some(a => a.admissibleOrderNonDefaultRetry === true));
 });
 
-// 2026-08-28: admissible-order-non-default-retry was the third tier migrated off queue #2 step 3's
+// 2026-08-28: admissible-order-fallback-alternate-tiebreak-retry was the third tier migrated off queue #2 step 3's
 // ms-derived work-dose debt (docs/solver-budget-determinism.md's "Remaining ms-shaped allocation
 // debt"; scaledStageWorkBudget in budget-units.ts) -- same pattern and same two tests as
-// dedup-near-tie-retry's/repair-fallback's own pairs above.
+// coarse-state-near-tie-retention-disabled-retry's/repair-fallback's own pairs above.
 function isolateAdmissibleOrderNonDefaultRetryOpts(overrides: Record<string, unknown> = {}) {
     return {
         attemptBudgetTelemetry: true,
@@ -2311,7 +2311,7 @@ function isolateAdmissibleOrderNonDefaultRetryOpts(overrides: Record<string, unk
     };
 }
 
-test('admissible-order-non-default-retry work dose no longer resizes with a non-binding deadline change', async () => {
+test('admissible-order-fallback-alternate-tiebreak-retry work dose no longer resizes with a non-binding deadline change', async () => {
     const level = makeAttractionDiversityGatedInfeasibleLevel();
     const run = (timeBudgetMs: number) => solveLevel(level, isolateAdmissibleOrderNonDefaultRetryOpts({ timeBudgetMs, workBudget: 200_000 }));
     const shortDeadline = await run(1000);
@@ -2320,12 +2320,12 @@ test('admissible-order-non-default-retry work dose no longer resizes with a non-
         .filter(a => a.admissibleOrderNonDefaultRetry === true)
         .map(a => a.allocatedWorkCeiling);
     const shortDose = dose(shortDeadline);
-    assert.ok(shortDose.length > 0, 'expected at least one admissible-order-non-default-retry attempt');
+    assert.ok(shortDose.length > 0, 'expected at least one admissible-order-fallback-alternate-tiebreak-retry attempt');
     assert.deepEqual(dose(longDeadline), shortDose,
         'this tier\'s own work pool must depend on workBudget, not on the (non-binding) deadline');
 });
 
-test('admissible-order-non-default-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
+test('admissible-order-fallback-alternate-tiebreak-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
     const level = makeAttractionDiversityGatedInfeasibleLevel();
     const solveWith = (baseWorkBudget: number) => solveLevel(level, isolateAdmissibleOrderNonDefaultRetryOpts({ timeBudgetMs: 1000, baseWorkBudget }));
     const small = await solveWith(200_000);
@@ -2334,7 +2334,7 @@ test('admissible-order-non-default-retry now honors an explicit baseWorkBudget i
         result.attempts.find(a => a.admissibleOrderNonDefaultRetry === true)?.allocatedWorkCeiling ?? null;
     const smallCeiling = ceiling(small);
     const largeCeiling = ceiling(large);
-    assert.ok(smallCeiling != null && largeCeiling != null, 'expected an admissible-order-non-default-retry attempt in both runs');
+    assert.ok(smallCeiling != null && largeCeiling != null, 'expected an admissible-order-fallback-alternate-tiebreak-retry attempt in both runs');
     assert.ok((largeCeiling as number) > (smallCeiling as number),
         'an explicit baseWorkBudget must now size this tier\'s own dose');
 });
@@ -2349,7 +2349,7 @@ test('admissible-order-non-default-retry now honors an explicit baseWorkBudget i
 // population-validated 2026-08-16 on run 31918095910 — corpus1 95/95 unchanged, corpus2 +10/-0).
 // Reuses the same infeasible-level pattern the sibling retry-tier suites above already establish.
 
-test('connectivity-axis-exhausted-retry pass reruns the main ladder once more after everything else fails', async () => {
+test('connectivity-axis-prune-disabled-retry pass reruns the main ladder once more after everything else fails', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false },
@@ -2362,14 +2362,14 @@ test('connectivity-axis-exhausted-retry pass reruns the main ladder once more af
     assert.equal(result.ok, false);
     const retryAttempts = result.attempts.filter(a => a.connectivityAxisExhaustedRetry === true);
     const mainLoopAttempts = result.attempts.filter(a => a.connectivityAxisExhaustedRetry !== true);
-    assert.ok(retryAttempts.length > 0, 'expected at least one connectivity-axis-exhausted-retry attempt');
+    assert.ok(retryAttempts.length > 0, 'expected at least one connectivity-axis-prune-disabled-retry attempt');
     // The pass reruns the exact same mainConfigs ladder, so (this level being pruned near-instantly
     // regardless of budget, meaning neither run gets cut off partway through) it should run through
     // exactly as many configs as the main loop itself did.
     assert.equal(retryAttempts.length, mainLoopAttempts.length);
 });
 
-test('connectivity-axis-exhausted-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
+test('connectivity-axis-prune-disabled-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
@@ -2382,7 +2382,7 @@ test('connectivity-axis-exhausted-retry pass is ACTIVE by default (cfg=null) sin
     assert.ok(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), 'expected the promoted default-ON tier to run with cfg=null');
 });
 
-test('disableExtraBudgetPasses: true suppresses the promoted default-ON connectivity-axis-exhausted-retry pass even with cfg=null (the two interactive solve UIs\' real production combination)', async () => {
+test('disableExtraBudgetPasses: true suppresses the promoted default-ON connectivity-axis-prune-disabled-retry pass even with cfg=null (the two interactive solve UIs\' real production combination)', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         disableExtraBudgetPasses: true,
@@ -2390,7 +2390,7 @@ test('disableExtraBudgetPasses: true suppresses the promoted default-ON connecti
     assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
 });
 
-test('connectivity-axis-exhausted-retry pass stays off under an explicit { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false }', async () => {
+test('connectivity-axis-prune-disabled-retry pass stays off under an explicit { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false }', async () => {
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
@@ -2400,11 +2400,11 @@ test('connectivity-axis-exhausted-retry pass stays off under an explicit { STRAT
     assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
 });
 
-test('a sparse unrelated ablation object leaves the promoted default-ON connectivity-axis-exhausted-retry pass active', async () => {
+test('a sparse unrelated ablation object leaves the promoted default-ON connectivity-axis-prune-disabled-retry pass active', async () => {
     // Since promotion, this flag is unset-means-true (the standard `!cfg || cfg.FLAG` convention),
     // so a sparse config that only touches a DIFFERENT flag (PRUNE_CONNECTIVITY_AXIS_EXHAUSTED here,
     // the mechanism this tier disables INTERNALLY once it starts, not the tier's own on/off switch)
-    // must still leave THIS one active — same check as the dedup-near-tie-retry/admissible-order-
+    // must still leave THIS one active — same check as the coarse-state-near-tie-retention-disabled-retry/admissible-order-fallback-
     // non-default-retry suites' own equivalent tests.
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
@@ -2430,7 +2430,7 @@ test('connectivityAxisExhaustedRetryBudgetFractionOverride: 0 suppresses the pas
     assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
 });
 
-test('disableExtraBudgetPasses: true suppresses the connectivity-axis-exhausted-retry pass even with the flag on, but an explicit override still wins', async () => {
+test('disableExtraBudgetPasses: true suppresses the connectivity-axis-prune-disabled-retry pass even with the flag on, but an explicit override still wins', async () => {
     const suppressed = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true },
@@ -2447,7 +2447,7 @@ test('disableExtraBudgetPasses: true suppresses the connectivity-axis-exhausted-
     assert.ok(overridden.attempts.some(a => a.connectivityAxisExhaustedRetry === true));
 });
 
-test('connectivity-axis-exhausted-retry pass can solve a level the main loop misses, and disables the connectivity-axis-exhausted prune while it runs', async () => {
+test('connectivity-axis-prune-disabled-retry pass can solve a level the main loop misses, and disables the connectivity-axis-exhausted prune while it runs', async () => {
     // Simulates the real mechanism's shape without depending on topology.ts's actual flood-fill
     // internals: succeeds only once prep._cfg reflects PRUNE_CONNECTIVITY_AXIS_EXHAUSTED explicitly
     // disabled — exactly what the retry pass's own Proxy override produces, and exactly what the
@@ -2567,7 +2567,7 @@ test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit t
     assert.ok(lateProbeOverridden.attempts.some(a => a.repairLateProbe === true));
 });
 
-test('repair-late-probe does not fire when repairConfigs is empty only because STRATEGY_REPAIR_FALLBACK was ablated off (regression, fixed 2026-08-20)', async () => {
+test('late-repair-search does not fire when repairConfigs is empty only because STRATEGY_REPAIR_FALLBACK was ablated off (regression, fixed 2026-08-20)', async () => {
     // makeRepairGatedInfeasibleLevel() genuinely needs repair fallback (needsRepairFallback(f) is
     // true for it), unlike makeAttractionDiversityGatedInfeasibleLevel() above, which the late
     // probe's own eligibility gate targets. `repairConfigs.length === 0` here comes ONLY from the
