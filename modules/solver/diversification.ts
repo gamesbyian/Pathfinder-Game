@@ -22,7 +22,7 @@ import { prepLevel } from './prep.js';
 import { createState, getNeighbors } from './search-state.js';
 import { deriveSolveAttemptInfo } from './hint-provenance.js';
 import {
-    TEMPLATE_CONFIG_KEY, PROFILE_CONFIG_KEY, FEATURE_GROUPS,
+    ORDERING_BIAS_FEATURE_KEYS, SCORING_PROFILE_FEATURE_KEYS, FEATURE_GROUPS,
     withFeaturesDisabled, withFeatureDisabled,
 } from './ablation-config.js';
 
@@ -154,7 +154,7 @@ async function* cascadeSteps(solverApi: any, target: any, solveOptsBase: any, la
             randomSeed: attemptInfo.randomSeed,
             seedSalt: attemptInfo.seedSalt,
         };
-        const disableKey = winner?.orderingBiasId ? TEMPLATE_CONFIG_KEY[winner.orderingBiasId] : PROFILE_CONFIG_KEY[winner?.scoringProfileId];
+        const disableKey = winner?.orderingBiasId ? ORDERING_BIAS_FEATURE_KEYS[winner.orderingBiasId] : SCORING_PROFILE_FEATURE_KEYS[winner?.scoringProfileId];
         if (!disableKey || disabled.has(disableKey)) return; // safety: can't make further progress
         disabled.add(disableKey);
     }

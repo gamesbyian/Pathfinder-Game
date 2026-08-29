@@ -63,13 +63,13 @@ export const FEATURES: Record<string, string> = {
 
     // ── Search strategy ───────────────────────────────────────────────────────
     STRATEGY_LDS:               'Limited Discrepancy Search probe waves before full DFS',
-    STRATEGY_DIVERSE_BEAM:      'Diverse beam selection bucketed by (flipperUsedMask, mustCrossMask)',
-    STRATEGY_STATE_DEDUP:       'Beam state deduplication: merge same (position + constraint-state)',
-    STRATEGY_DEDUP_NEAR_TIE_RETENTION: 'Production default-ON: beam dedup retains a near-tied runner-up as well as the collision winner (DEDUP_NEAR_TIE_MARGIN in search.ts). Its paired last-resort recovery is STRATEGY_DEDUP_NEAR_TIE_RETRY.',
+    STRATEGY_MECHANIC_BUCKET_RETENTION:      'Mechanic-bucket beam retention keyed by (flipperUsedMask, mustCrossMask)',
+    STRATEGY_COARSE_STATE_MERGE:       'Coarse state merge by (position + selected constraint-state); not exact equivalence deduplication',
+    STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION: 'Production default-ON: coarse state merge retains a near-tied runner-up as well as the collision winner (COARSE_STATE_NEAR_TIE_RETENTION_MARGIN in search.ts). Its paired last-resort recovery is STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY.',
     STRATEGY_REPAIR_ELITE_PREFIX_DFS: 'Production default-OFF; closed retained opt-in: bounded deterministic completion DFS from repair elite prefixes. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_REPAIR_BEAM_SEED: "Production default-OFF; closed retained opt-in: seed repair's initial elite pool from a bounded beam frontier. Current disposition: docs/solver-opt-in-experiment-ledger.md.",
     STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: 'Production default-OFF; retained opt-in: rerun an early-repair-search config at its full budget after adaptive biased-budget shrink withheld nodes. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
-    STRATEGY_DEDUP_NEAR_TIE_RETRY: 'Production default-ON: dead-last, additive-budget whole-ladder retry with near-tie retention disabled. Runs only after earlier tiers fail; see orchestration.ts and the opt-in ledger for current policy/evidence.',
+    STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: 'Production default-ON: dead-last, additive-budget whole-ladder retry with near-tie retention disabled. Runs only after earlier tiers fail; see orchestration.ts and the opt-in ledger for current policy/evidence.',
     STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: 'Production default-ON: dead-last additive retry of non-default admissible-order profiles, without shrinking the normal default-profile pass. See orchestration.ts and the opt-in ledger.',
     STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: 'Production default-ON: dead-last additive whole-ladder retry with PRUNE_CONNECTIVITY_AXIS_EXHAUSTED disabled. Runs only after the ordinary flag-on ladder fails.',
     STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: 'Production default-OFF; closed retained opt-in: dead-last additive repair retry with elite-prefix DFS enabled. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
@@ -108,7 +108,7 @@ export const FEATURES: Record<string, string> = {
     STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE: 'Production default-OFF; CLOSED NEGATIVE 2026-08-28 append-last form. Selected replay was +1/-0, but the prespecified 120-level mechanics-eligible strict-67M development A/B was control 56/120 vs treatment 55/120: 0 gains, 1 loss (R02965), treatment participation 68/120, no deadline/error censoring, and +29.0M aggregate work. Mechanism: appending the new beam changed MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT=5 suffix membership and starved a previously protected beam:objectiveFirst@beam5000 winner. Do not repeat this append-last form. Separate reserve-preserving descendant has a materially new placement premise.',
     STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE: 'Production default-OFF development descendant: exposes the same beam:intersectionHarvest@beam2000 action as STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE, but inserts it immediately before each affected rule\'s previously protected five-config late-reserve suffix instead of appending it after that suffix. Motivated by the parent treatment\'s R02965 development regression: append-last changed suffix membership and starved the existing beam:objectiveFirst@beam5000 winner. This descendant preserves the pre-treatment protected suffix membership without widening the reserve or changing total-work policy.',
 
-    // ── Templates ──────────────────────────────────────────────────────────────
+    // ── Structural ordering biases ──────────────────────────────────────────────────────────────
     TEMPLATE_CORNER_HARVEST:    'cornerHarvest — pulls toward grid corners during harvest phase',
     TEMPLATE_PERIMETER_CW:      'perimeterCW — clockwise perimeter traversal bias',
     TEMPLATE_PERIMETER_CCW:     'perimeterCCW — counter-clockwise perimeter traversal bias',
@@ -162,6 +162,10 @@ export const OPT_IN_FEATURES = new Set([
 /** Historical externally persisted flag spellings accepted on input only. */
 export const LEGACY_FEATURE_ALIASES: Readonly<Record<string, string>> = Object.freeze({
     STRATEGY_ARCHETYPE_ROUTING: 'STRATEGY_ROUTING_REGIME_SELECTION',
+    STRATEGY_DIVERSE_BEAM: 'STRATEGY_MECHANIC_BUCKET_RETENTION',
+    STRATEGY_STATE_DEDUP: 'STRATEGY_COARSE_STATE_MERGE',
+    STRATEGY_DEDUP_NEAR_TIE_RETENTION: 'STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION',
+    STRATEGY_DEDUP_NEAR_TIE_RETRY: 'STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY',
 });
 
 /** Normalize one historical feature name to the canonical registry key. */
@@ -178,7 +182,7 @@ export function isKnownAblationFeatureName(featureName: string): boolean {
 // ─── Template → config key mapping ────────────────────────────────────────────
 
 /** @type {Record<string, string>} */
-export const TEMPLATE_CONFIG_KEY: Record<string, string> = {
+export const ORDERING_BIAS_FEATURE_KEYS: Record<string, string> = {
     cornerHarvest:  'TEMPLATE_CORNER_HARVEST',
     perimeterCW:    'TEMPLATE_PERIMETER_CW',
     perimeterCCW:   'TEMPLATE_PERIMETER_CCW',
@@ -192,7 +196,7 @@ export const TEMPLATE_CONFIG_KEY: Record<string, string> = {
 // ─── Profile → config key mapping ────────────────────────────────────────────
 
 /** @type {Record<string, string>} */
-export const PROFILE_CONFIG_KEY: Record<string, string> = {
+export const SCORING_PROFILE_FEATURE_KEYS: Record<string, string> = {
     default:             'PROFILE_default',
     perimeterSweep:      'PROFILE_perimeterSweep',
     harvestThenFinish:   'PROFILE_harvestThenFinish',
@@ -212,8 +216,8 @@ export const FEATURE_GROUPS = {
     scoring:   Object.keys(FEATURES).filter(k => k.startsWith('SCORE_')),
     pruning:   Object.keys(FEATURES).filter(k => k.startsWith('PRUNE_')),
     strategy:  Object.keys(FEATURES).filter(k => k.startsWith('STRATEGY_')),
-    templates: Object.keys(FEATURES).filter(k => k.startsWith('TEMPLATE_')),
-    profiles:  Object.keys(FEATURES).filter(k => k.startsWith('PROFILE_')),
+    orderingBiases: Object.keys(FEATURES).filter(k => k.startsWith('TEMPLATE_')),
+    scoringProfiles: Object.keys(FEATURES).filter(k => k.startsWith('PROFILE_')),
 };
 
 export type AblationConfig = Record<string, boolean | string | number>;
@@ -269,6 +273,8 @@ export function soloConfig(featureNames: string[]): AblationConfig {
 
 /** @param {string} [phase] @returns {any[]} */
 export function buildExperimentList(phase = 'full'): any[] {
+    const canonicalPhase = phase === 'templates' ? 'ordering-biases'
+        : phase === 'profiles' ? 'scoring-profiles' : phase;
     const experiments: any[] = [];
 
     // ── Baseline ──────────────────────────────────────────────────────────────
@@ -279,10 +285,10 @@ export function buildExperimentList(phase = 'full'): any[] {
         tags: ['baseline'],
     });
 
-    if (phase === 'baseline') return experiments;
+    if (canonicalPhase === 'baseline') return experiments;
 
     // ── Single-feature ablations ──────────────────────────────────────────────
-    if (phase === 'single-feature' || phase === 'full') {
+    if (canonicalPhase === 'single-feature' || canonicalPhase === 'full') {
         for (const [key, desc] of Object.entries(FEATURES)) {
             const optIn = OPT_IN_FEATURES.has(key);
             experiments.push({
@@ -295,7 +301,7 @@ export function buildExperimentList(phase = 'full'): any[] {
     }
 
     // ── Attempt order analysis ─────────────────────────────────────────────────
-    if (phase === 'order' || phase === 'full') {
+    if (canonicalPhase === 'order' || canonicalPhase === 'full') {
         for (const order of ['reverse', 'random', 'profile-grouped']) {
             const cfg = defaultConfig();
             cfg.ATTEMPT_ORDER = order;
@@ -321,54 +327,54 @@ export function buildExperimentList(phase = 'full'): any[] {
         }
     }
 
-    // ── Profile-only ablations ────────────────────────────────────────────────
-    if (phase === 'profiles' || phase === 'full') {
-        for (const profileName of Object.keys(PROFILE_CONFIG_KEY)) {
-            const key = PROFILE_CONFIG_KEY[profileName];
+    // ── Scoring-profile-only ablations ────────────────────────────────────────────────
+    if (canonicalPhase === 'profiles' || canonicalPhase === 'full') {
+        for (const scoringProfileId of Object.keys(SCORING_PROFILE_FEATURE_KEYS)) {
+            const key = SCORING_PROFILE_FEATURE_KEYS[scoringProfileId];
             experiments.push({
-                name: `profile-off:${profileName}`,
-                label: `Profile removed: ${profileName}`,
+                name: `scoring-profile-off:${scoringProfileId}`,
+                label: `Scoring profile removed: ${scoringProfileId}`,
                 config: withFeatureDisabled(key),
-                tags: ['profile', 'single-feature'],
+                tags: ['scoring-profile', 'single-feature'],
             });
         }
         // Solo: only one profile enabled
-        for (const profileName of Object.keys(PROFILE_CONFIG_KEY)) {
-            const key = PROFILE_CONFIG_KEY[profileName];
+        for (const scoringProfileId of Object.keys(SCORING_PROFILE_FEATURE_KEYS)) {
+            const key = SCORING_PROFILE_FEATURE_KEYS[scoringProfileId];
             const cfg = defaultConfig();
             // Disable all profiles except this one
-            for (const pk of Object.values(PROFILE_CONFIG_KEY)) cfg[pk] = false;
+            for (const pk of Object.values(SCORING_PROFILE_FEATURE_KEYS)) cfg[pk] = false;
             cfg[key] = true;
             experiments.push({
-                name: `profile-solo:${profileName}`,
-                label: `Solo profile: ${profileName} only`,
+                name: `scoring-profile-solo:${scoringProfileId}`,
+                label: `Solo scoring profile: ${scoringProfileId} only`,
                 config: cfg,
-                tags: ['profile', 'solo'],
+                tags: ['scoring-profile', 'solo'],
             });
         }
     }
 
-    // ── Template-only ablations ────────────────────────────────────────────────
-    if (phase === 'templates' || phase === 'full') {
-        for (const [templateName, key] of Object.entries(TEMPLATE_CONFIG_KEY)) {
+    // ── Structural-ordering-bias-only ablations ────────────────────────────────────────────────
+    if (canonicalPhase === 'ordering-biases' || canonicalPhase === 'full') {
+        for (const [orderingBiasId, key] of Object.entries(ORDERING_BIAS_FEATURE_KEYS)) {
             experiments.push({
-                name: `template-off:${templateName}`,
-                label: `Template removed: ${templateName}`,
+                name: `ordering-bias-off:${orderingBiasId}`,
+                label: `Structural ordering bias removed: ${orderingBiasId}`,
                 config: withFeatureDisabled(key),
-                tags: ['template', 'single-feature'],
+                tags: ['ordering-bias', 'single-feature'],
             });
         }
-        // All templates disabled
+        // All structural ordering biases disabled
         experiments.push({
-            name: 'templates-all-off',
-            label: 'All templates disabled',
-            config: withFeaturesDisabled(Object.values(TEMPLATE_CONFIG_KEY)),
-            tags: ['template', 'combination'],
+            name: 'ordering-biases-all-off',
+            label: 'All structural ordering biases disabled',
+            config: withFeaturesDisabled(Object.values(ORDERING_BIAS_FEATURE_KEYS)),
+            tags: ['ordering-bias', 'combination'],
         });
     }
 
     // ── Combination testing ───────────────────────────────────────────────────
-    if (phase === 'pairs' || phase === 'full') {
+    if (canonicalPhase === 'pairs' || canonicalPhase === 'full') {
         // Predefined interesting pairs: mechanisms that might be redundant
         const interestingPairs = [
             // Both distance-guidance mechanisms
@@ -386,7 +392,7 @@ export function buildExperimentList(phase = 'full'): any[] {
             // Gate scheduling + parity filtering
             ['STRATEGY_GATE_INTERLEAVING', 'STRATEGY_PARITY_GATE_FILTER'],
             // Both beam optimisations
-            ['STRATEGY_DIVERSE_BEAM', 'STRATEGY_STATE_DEDUP'],
+            ['STRATEGY_MECHANIC_BUCKET_RETENTION', 'STRATEGY_COARSE_STATE_MERGE'],
             // Approach guidance pair
             ['SCORE_MC_APPROACH_GUIDANCE', 'SCORE_FLIPPER_URGENCY'],
             // Phase scaling + finish commitment (both end-game mechanics)
@@ -404,7 +410,7 @@ export function buildExperimentList(phase = 'full'): any[] {
         }
         // Group ablations: disable entire categories
         for (const [group, keys] of Object.entries(FEATURE_GROUPS)) {
-            if (group === 'profiles' || group === 'templates') continue; // too disruptive
+            if (group === 'scoringProfiles' || group === 'orderingBiases') continue; // too disruptive
             experiments.push({
                 name: `group-off:${group}`,
                 label: `Entire ${group} group disabled`,
@@ -422,8 +428,8 @@ function _groupOf(key: string): string {
     if (key.startsWith('SCORE_'))    return 'scoring';
     if (key.startsWith('PRUNE_'))    return 'pruning';
     if (key.startsWith('STRATEGY_')) return 'strategy';
-    if (key.startsWith('TEMPLATE_')) return 'template';
-    if (key.startsWith('PROFILE_'))  return 'profile';
+    if (key.startsWith('TEMPLATE_')) return 'ordering-bias';
+    if (key.startsWith('PROFILE_'))  return 'scoring-profile';
     return 'other';
 }
 

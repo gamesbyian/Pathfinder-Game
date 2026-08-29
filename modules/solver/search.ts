@@ -14,7 +14,7 @@ interface DfsFrame { key: number; children: number[]; childIdx: number; undoInfo
 /** A beam parent-pointer frontier node. */
 /** Two independent orderings, both assigned when the node is generated (see the phase loop):
  *  `insOrd` reproduces the index this candidate WOULD have had if the frontier were still walked in
- *  score order — `cands` is sorted back into that order before culling, so dedup's first-wins-on-ties
+ *  score order — `cands` is sorted back into that order before culling, so coarse state merge's first-wins-on-ties
  *  and the stable score sort see byte-identical input regardless of walk order. `treeOrd` groups
  *  siblings under their parent, giving a depth-first walk of the beam's parent-pointer tree, which
  *  is what makes repositioning the shared working state cheap. Keeping them separate is the point:
@@ -22,19 +22,19 @@ interface DfsFrame { key: number; children: number[]; childIdx: number; undoInfo
 interface BeamPathNode { key: number; prev: BeamPathNode | null; depth: number }
 /** Raw constraint-state fields a candidate carried right after its move (snapshotted from `ws`
  *  at candidate-generation time, since `ws` is shared/mutable and gets undone before the next
- *  candidate). Stored as scalars rather than the joined delimited string dedup/diversity actually
- *  key on: `beamNumericDedupKey`/the diverse-select key (built inline in `beamSearchFromGate`/
- *  `_diverseSelect`) read these fields directly, or `beamStateKey` below builds the equivalent
+ *  candidate). Stored as scalars rather than the joined delimited string coarse-state-merge/mechanic-bucket-retention actually
+ *  key on: `beamNumericCoarseStateKey`/the diverse-select key (built inline in `beamSearchFromGate`/
+ *  `_mechanicBucketSelect`) read these fields directly, or `beamStateKey` below builds the equivalent
  *  delimited string as a fallback for the rare level where the numeric key would not fit — either
- *  way only for candidates that reach the dedup branch (`cands.length > beamWidth`); most phases
+ *  way only for candidates that reach the coarse-state-merge branch (`cands.length > beamWidth`); most phases
  *  in most solves stay under beamWidth, where nothing beyond this scalar snapshot is ever built.
- *  See beamNumericDedupKey's own comment for the field list and safety argument. */
+ *  See beamNumericCoarseStateKey's own comment for the field list and safety argument. */
 interface BeamNode extends BeamPathNode {
     prev: BeamNode | null; score: number; insOrd: number; treeOrd: number;
     ints: number; mpVisitedMask: number; mustCrossMask: number; flipperUsedMask: number;
     surroundMask: number; mustTurnMask: number; adjTurnMask: number;
 }
-// String fallback for beamNumericDedupKey (see its comment): used only on the rare level where
+// String fallback for beamNumericCoarseStateKey (see its comment): used only on the rare level where
 // the numeric encoding would not fit under Number.MAX_SAFE_INTEGER. Delimited, not a bit-packed
 // integer — a fixed-width packing silently overflowed on any level with more than 4 must-pass/
 // must-cross/flipper cells (stress-corpus-2's generator raises those caps to 8); see
@@ -376,11 +376,11 @@ const _DFS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_DFS_DEBUG === '1');
 // progress, or vice versa. This is NOT a narrow, targeted fix; it perturbs beam search broadly on
 // any level whose winning technique is in that family — a coin-flip-shaped reshuffling, not a
 // monotonic improvement. Kept default-ON regardless (net loss accepted for now — see
-// orchestration.ts's STRATEGY_DEDUP_NEAR_TIE_RETRY for the recovery mechanism this motivated,
+// orchestration.ts's STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY for the recovery mechanism this motivated,
 // implemented and locally validated the same day, not yet validated at population scale) rather
 // than reverted, since a blanket revert would give back R02248 and the 26 other gains for no net
 // improvement on the loss side either.
-const DEDUP_NEAR_TIE_MARGIN = 0.01;
+const COARSE_STATE_NEAR_TIE_RETENTION_MARGIN = 0.01;
 // out (optional, last param): mirrors dfsFromGate's own out contract for external tooling (the
 // stress benchmark's per-attempt telemetry) — set to whether the OVERALL call's null return was
 // because levelBudgetMs ran out (true) vs. the search genuinely exhausted every avenue it tried
@@ -445,7 +445,7 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
 // `sorted` must already be sorted descending by score; bucketed by a numeric stateKey
 // (`mustCrossMask * flipperBase + flipperUsedMask`, `flipperBase` the caller's precomputed
 // `1 << flipperCount` — always strictly larger than any real `flipperUsedMask`, so this is an
-// exact, always-collision-free positional encoding, same reasoning as beamNumericDedupKey's own
+// exact, always-collision-free positional encoding, same reasoning as beamNumericCoarseStateKey's own
 // comment). Used to be `(flipperUsedMask << 4) | (mustCrossMask & 0xF)` — a narrower defect than
 // the dedup key's old bug (mustCrossMask's `&0xF` mask sits below flipperUsedMask's shifted
 // range, so it can't corrupt flipperUsedMask's bits the way the old dedup key's fields corrupted
@@ -458,7 +458,7 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
 // reports/2026-08-06-beam-state-dedup-sound-signature-audit.md. `flipperBase` is always small
 // (well under 2^16 even at stress-corpus-2's raised 8-cell caps), so unlike the dedup key this
 // needs no per-level overflow fallback.
-function _diverseSelect(sorted: BeamNode[], beamWidth: number, flipperBase: number): BeamNode[] {
+function _mechanicBucketSelect(sorted: BeamNode[], beamWidth: number, flipperBase: number): BeamNode[] {
     const buckets = new Map<number, BeamNode[]>();
     for (const c of sorted) {
         const key = c.mustCrossMask * flipperBase + c.flipperUsedMask;
@@ -491,7 +491,7 @@ function _diverseSelect(sorted: BeamNode[], beamWidth: number, flipperBase: numb
 // search state `ws` is not reset to the gate between nodes — it is diffed against each
 // node's reconstructed path and moved there incrementally (see `_liveUndo` below), since a
 // full reset+replay per frontier node per phase is O(beamWidth × depth²) over a search.
-// mechanicBucketRetention: if true, use _diverseSelect to maintain candidate diversity across
+// mechanicBucketRetention: if true, use _mechanicBucketSelect to maintain candidate diversity across
 // flipper and must-cross constraint states (prevents beam collapse to one structural mode).
 // out (optional, last param): timedOut=true for the two budget-check returns, false for the
 // (functionally identical) maxPhases-reached / frontier-collapsed returns — external tooling
@@ -509,17 +509,17 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         research.observe({ stage, depth: nodes[0]?.depth ?? phasesCompleted, work: nodesExpandedTotal + frontierIndex,
             paths: nodes.map(node => [..._reconstructBeamPath(node, [])]), ...(details ? { details } : {}) });
     };
-    // State dedup: safe when there are no portals (portals aren't captured in sc).
-    // Ablation: STRATEGY_STATE_DEDUP can disable this optimisation independently.
-    const useStateDedup = level.portalMap.size === 0 && (!cfg || cfg.STRATEGY_STATE_DEDUP);
-    // Ablation: STRATEGY_DIVERSE_BEAM can disable diverse selection even when the config requests it.
-    const effectiveMechanicBucketRetention = mechanicBucketRetention && (!cfg || cfg.STRATEGY_DIVERSE_BEAM);
-    // Fast numeric dedup/diversity keys, computed once per call (not per candidate/phase) from
+    // Coarse state merge: safe when there are no portals (portals aren't captured in sc).
+    // Ablation: STRATEGY_COARSE_STATE_MERGE can disable this optimisation independently.
+    const useCoarseStateMerge = level.portalMap.size === 0 && (!cfg || cfg.STRATEGY_COARSE_STATE_MERGE);
+    // Ablation: STRATEGY_MECHANIC_BUCKET_RETENTION can disable diverse selection even when the config requests it.
+    const effectiveMechanicBucketRetention = mechanicBucketRetention && (!cfg || cfg.STRATEGY_MECHANIC_BUCKET_RETENTION);
+    // Fast numeric coarse-state-merge/mechanic-bucket-retention keys, computed once per call (not per candidate/phase) from
     // this level's OWN mechanic cardinalities — never a fixed-width assumption, which is exactly
     // what made the old bit-packed signature silently unsound (see beamStateKey's comment). Each
     // field's multiplier is its true maximum possible VALUE COUNT for this specific level, so the
     // mixed-radix encoding below is a provably exact bijection with the (key, 7-field) tuple, not
-    // a heuristic. `_numericDedupSafe` gates it: whenever the full product would not fit under
+    // a heuristic. `_numericCoarseStateKeySafe` gates it: whenever the full product would not fit under
     // Number.MAX_SAFE_INTEGER (needs several landmark mechanic types simultaneously present, each
     // near its per-level maximum, plus a long reqInt — measured never to occur on the published or
     // stress-corpus-2 corpora, but not provably impossible), every site below falls back to the
@@ -532,15 +532,15 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     const _turnBase = (prep.initialMustTurnMask ?? 0) + 1;
     const _adjBase = (prep.initialAdjTurnMask ?? 0) + 1;
     const _intsBase = level.reqInt + 1;
-    const _dedupKeyProduct = KEY_SPACE * _intsBase * _mpBase * _mcBase * _flipperBase * _surroundBase * _turnBase * _adjBase;
-    const _numericDedupSafe = Number.isSafeInteger(_dedupKeyProduct) && !prep._forceBeamDedupStringKeyForTests;
+    const _coarseStateKeyProduct = KEY_SPACE * _intsBase * _mpBase * _mcBase * _flipperBase * _surroundBase * _turnBase * _adjBase;
+    const _numericCoarseStateKeySafe = Number.isSafeInteger(_coarseStateKeyProduct) && !prep._forceBeamCoarseStateStringKeyForTests;
     // Numeric dedup key: strict positional (mixed-radix) encoding — every field is strictly
     // smaller than its own base by construction (masks are `< 2^bitCount`; `ints` is bounded by
     // `evaluatePrunedMove`'s own `state.ints > level.reqInt` reject, so always `<= reqInt`;
     // packed cell keys are always `< KEY_SPACE` for a `<=15x15` grid), so distinct tuples can never
     // collide to the same number. Order of composition is arbitrary but must stay internally
     // consistent (it is: this is the only place either key is built).
-    const beamNumericDedupKey = (c: BeamNode): number =>
+    const beamNumericCoarseStateKey = (c: BeamNode): number =>
         (((((((c.adjTurnMask) * _turnBase + c.mustTurnMask) * _surroundBase + c.surroundMask)
             * _flipperBase + c.flipperUsedMask) * _mcBase + c.mustCrossMask)
             * _mpBase + c.mpVisitedMask) * _intsBase + c.ints) * KEY_SPACE + c.key;
@@ -571,7 +571,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
 
     // _BEAM_DEBUG-only cost breakdown accumulators (ns). All reads/writes are gated behind
     // `if (_BEAM_DEBUG)` so there is no cost on the production path.
-    let _dbgReplayNs = 0n, _dbgCandGenNs = 0n, _dbgSortNs = 0n, _dbgDedupNs = 0n, _dbgConnNs = 0n;
+    let _dbgReplayNs = 0n, _dbgCandGenNs = 0n, _dbgSortNs = 0n, _dbgCoarseMergeNs = 0n, _dbgConnNs = 0n;
     let _dbgReplaySteps = 0, _dbgCandCount = 0, _dbgFrontierNodes = 0, _dbgPhases = 0, _dbgConnCalls = 0;
     // Returns 0n when _BEAM_DEBUG is off (call sites are still gated by `if (_BEAM_DEBUG)`
     // for the accumulation itself; this just keeps the `bigint` type consistent unconditionally).
@@ -579,7 +579,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     const _dbgFlush = (outcome: string) => {
         if (!_BEAM_DEBUG) return;
         const ms = (n: bigint) => (Number(n) / 1e6).toFixed(1);
-        console.error(`  [beam] gate=${startKey} bw=${beamWidth} outcome=${outcome} phases=${_dbgPhases} frontierNodes=${_dbgFrontierNodes} replaySteps=${_dbgReplaySteps} cands=${_dbgCandCount} connCalls=${_dbgConnCalls} | replay=${ms(_dbgReplayNs)}ms candGen=${ms(_dbgCandGenNs)}ms conn=${ms(_dbgConnNs)}ms dedup=${ms(_dbgDedupNs)}ms sort=${ms(_dbgSortNs)}ms`);
+        console.error(`  [beam] gate=${startKey} bw=${beamWidth} outcome=${outcome} phases=${_dbgPhases} frontierNodes=${_dbgFrontierNodes} replaySteps=${_dbgReplaySteps} cands=${_dbgCandCount} connCalls=${_dbgConnCalls} | replay=${ms(_dbgReplayNs)}ms candGen=${ms(_dbgCandGenNs)}ms conn=${ms(_dbgConnNs)}ms coarseMerge=${ms(_dbgCoarseMergeNs)}ms sort=${ms(_dbgSortNs)}ms`);
     };
 
     const yieldIfNeeded = async () => {
@@ -629,7 +629,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         // worst case, and 441.7ms of ~1349ms of instrumented beam time. Tree order makes it ~2 per
         // node amortised (2.08M steps, 124.6ms).
         //
-        // Walk order must NOT leak into which nodes survive: dedup keeps the first node on a score
+        // Walk order must NOT leak into which nodes survive: coarse state merge keeps the first node on a score
         // tie and the score sort is stable, so generation order otherwise propagates into the next
         // frontier. Reordering without the `insOrd` restoration below was measured and cost 3 of 47
         // solved corpus-2 levels in a paired sample; with it, that sample is exactly neutral.
@@ -741,9 +741,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 if (ok) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template, curCtx);
                     // Constraint-state fields snapshotted from ws right after this candidate's move —
-                    // used by beamStateKey (dedup) and beamDiverseKey (_diverseSelect) below. Stored as
+                    // used by beamStateKey (dedup) and beamDiverseKey (_mechanicBucketSelect) below. Stored as
                     // scalars, not the joined delimited string, because most phases never reach the
-                    // dedup branch (cands.length <= beamWidth) and building that string per candidate
+                    // coarse-state-merge branch (cands.length <= beamWidth) and building that string per candidate
                     // regardless was pure waste on those phases — see BeamNode's own doc comment.
                     // Delimited-string, not bit-packed-integer, is a correctness requirement, not a
                     // style choice: a prior fixed-width packing silently overflowed and corrupted
@@ -758,7 +758,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     // This is intentionally NOT a fully sound future-state signature either (it
                     // omits visited-cell identity and per-cell edge-usage) — that was measured
                     // separately (same report) to have a duplicate ceiling of ~0.019% of candidates,
-                    // and turning dedup off entirely was measured to cost real solves on a harder
+                    // and turning coarse state merging off entirely was measured to cost real solves on a harder
                     // stress-corpus-2 sample (19/75 divergent, non-portal, matched node budget) —
                     // its practical value comes from culling many candidates that converge on the
                     // same (cell, mask-tuple) down to the single best-scoring one, freeing beam
@@ -790,20 +790,20 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         if (cands.length === 0) break;
         await yieldIfNeeded();
         if (cands.length > beamWidth) {
-            // State-based deduplication: candidates sharing (position, constraint-state) are merged —
+            // Coarse state merge: candidates sharing (position, constraint-state) are merged —
             // only the highest-scoring path to each (cell, flipper+MC+MP+ints) combo survives.
             // String key (see sc's own comment for why NOT a bit-packed integer): `${key}|${sc}`
             // is collision-free regardless of any mechanic's cardinality.
             // Disabled for portal levels — portal usage isn't captured in sc, so merging would be
             // incorrect (two paths at the same cell may have used different portals).
             // Undo the walk reordering: restore the exact order a score-order walk would have
-            // produced, so dedup and the stable sort below are bit-identical to before.
+            // produced, so coarse state merge and the stable sort below are bit-identical to before.
             cands.sort((a, b) => a.insOrd - b.insOrd);
             let pool = cands;
             const _t2 = _hrtNow();
-            if (useStateDedup) {
+            if (useCoarseStateMerge) {
                 // dm2 holds the runner-up ONLY for a key currently on a near-tie (see
-                // DEDUP_NEAR_TIE_MARGIN) — undefined for the overwhelming majority of keys, so this
+                // COARSE_STATE_NEAR_TIE_RETENTION_MARGIN) — undefined for the overwhelming majority of keys, so this
                 // second map stays empty and costs nothing when no near-ties occur. Kept fully
                 // separate from `dm` (rather than a union-typed single map) specifically so `dm`
                 // itself is monomorphic — a prior version that stored `BeamNode | BeamNode[]` in one
@@ -812,33 +812,33 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // reports/2026-08-15-connectivity-axis-exhausted-regression.md. For the same
                 // monomorphism reason, the numeric-key and string-key forms below are two fully
                 // separate code paths (never one map holding a `string | number` union key) — see
-                // beamNumericDedupKey's own comment for why the numeric form is usually available
+                // beamNumericCoarseStateKey's own comment for why the numeric form is usually available
                 // and reports/2026-08-23-beam-dedup-numeric-key-arena.md for the measured win.
-                const nearTieRetentionEnabled = DEDUP_NEAR_TIE_MARGIN > 0 && (!cfg || cfg.STRATEGY_DEDUP_NEAR_TIE_RETENTION);
-                const dedupRemoved: BeamNode[] | null = research ? [] : null;
-                const dedupContexts: Record<string, unknown>[] | null = research ? [] : null;
-                if (_numericDedupSafe) {
+                const nearTieRetentionEnabled = COARSE_STATE_NEAR_TIE_RETENTION_MARGIN > 0 && (!cfg || cfg.STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION);
+                const coarseMergeRemoved: BeamNode[] | null = research ? [] : null;
+                const coarseMergeContexts: Record<string, unknown>[] | null = research ? [] : null;
+                if (_numericCoarseStateKeySafe) {
                     const dm = new Map<number, BeamNode>();
                     const dm2: Map<number, BeamNode> | null = nearTieRetentionEnabled ? new Map() : null;
                     for (const c of cands) {
-                        const dk = beamNumericDedupKey(c);
+                        const dk = beamNumericCoarseStateKey(c);
                         const p = dm.get(dk);
                         if (!p || c.score > p.score) {
                             if (p) {
-                                if (research) { dedupRemoved!.push(p); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(p, [])], competitorPath: [..._reconstructBeamPath(c, [])], removedScore: p.score, keptScore: c.score, key: dk }); }
-                                if (dm2 && p.score >= c.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(c.score)) dm2.set(dk, p);
+                                if (research) { coarseMergeRemoved!.push(p); coarseMergeContexts!.push({ removedPath: [..._reconstructBeamPath(p, [])], competitorPath: [..._reconstructBeamPath(c, [])], removedScore: p.score, keptScore: c.score, key: dk }); }
+                                if (dm2 && p.score >= c.score - COARSE_STATE_NEAR_TIE_RETENTION_MARGIN * Math.abs(c.score)) dm2.set(dk, p);
                                 else if (dm2) dm2.delete(dk);
                             }
                             dm.set(dk, c);
                         } else {
-                            if (research) { dedupRemoved!.push(c); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(c, [])], competitorPath: [..._reconstructBeamPath(p, [])], removedScore: c.score, keptScore: p.score, key: dk }); }
-                            if (dm2 && c.score >= p.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(p.score)) {
+                            if (research) { coarseMergeRemoved!.push(c); coarseMergeContexts!.push({ removedPath: [..._reconstructBeamPath(c, [])], competitorPath: [..._reconstructBeamPath(p, [])], removedScore: c.score, keptScore: p.score, key: dk }); }
+                            if (dm2 && c.score >= p.score - COARSE_STATE_NEAR_TIE_RETENTION_MARGIN * Math.abs(p.score)) {
                                 const runnerUp = dm2.get(dk);
                                 if (!runnerUp || c.score > runnerUp.score) dm2.set(dk, c);
                             }
                         }
                     }
-                    if (dedupRemoved) emit('dedup-removed', dedupRemoved, { removals: dedupContexts });
+                    if (coarseMergeRemoved) emit('coarse-state-merge-removed', coarseMergeRemoved, { removals: coarseMergeContexts });
                     if (dm2 && dm2.size > 0) {
                         pool = [...dm.values()];
                         for (const [dk, runnerUp] of dm2) if (dm.get(dk) !== runnerUp) pool.push(runnerUp);
@@ -851,35 +851,35 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                         const p = dm.get(dk);
                         if (!p || c.score > p.score) {
                             if (p) {
-                                if (research) { dedupRemoved!.push(p); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(p, [])], competitorPath: [..._reconstructBeamPath(c, [])], removedScore: p.score, keptScore: c.score, key: dk }); }
-                                if (dm2 && p.score >= c.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(c.score)) dm2.set(dk, p);
+                                if (research) { coarseMergeRemoved!.push(p); coarseMergeContexts!.push({ removedPath: [..._reconstructBeamPath(p, [])], competitorPath: [..._reconstructBeamPath(c, [])], removedScore: p.score, keptScore: c.score, key: dk }); }
+                                if (dm2 && p.score >= c.score - COARSE_STATE_NEAR_TIE_RETENTION_MARGIN * Math.abs(c.score)) dm2.set(dk, p);
                                 else if (dm2) dm2.delete(dk);
                             }
                             dm.set(dk, c);
                         } else {
-                            if (research) { dedupRemoved!.push(c); dedupContexts!.push({ removedPath: [..._reconstructBeamPath(c, [])], competitorPath: [..._reconstructBeamPath(p, [])], removedScore: c.score, keptScore: p.score, key: dk }); }
-                            if (dm2 && c.score >= p.score - DEDUP_NEAR_TIE_MARGIN * Math.abs(p.score)) {
+                            if (research) { coarseMergeRemoved!.push(c); coarseMergeContexts!.push({ removedPath: [..._reconstructBeamPath(c, [])], competitorPath: [..._reconstructBeamPath(p, [])], removedScore: c.score, keptScore: p.score, key: dk }); }
+                            if (dm2 && c.score >= p.score - COARSE_STATE_NEAR_TIE_RETENTION_MARGIN * Math.abs(p.score)) {
                                 const runnerUp = dm2.get(dk);
                                 if (!runnerUp || c.score > runnerUp.score) dm2.set(dk, c);
                             }
                         }
                     }
-                    if (dedupRemoved) emit('dedup-removed', dedupRemoved, { removals: dedupContexts });
+                    if (coarseMergeRemoved) emit('coarse-state-merge-removed', coarseMergeRemoved, { removals: coarseMergeContexts });
                     if (dm2 && dm2.size > 0) {
                         pool = [...dm.values()];
                         for (const [dk, runnerUp] of dm2) if (dm.get(dk) !== runnerUp) pool.push(runnerUp);
                     } else if (dm.size < cands.length) pool = [...dm.values()];
                 }
             }
-            if (research) emit('post-production-dedup', pool);
-            if (_BEAM_DEBUG) { _dbgDedupNs += _hrtNow() - _t2; }
+            if (research) emit('post-production-coarse-state-merge', pool);
+            if (_BEAM_DEBUG) { _dbgCoarseMergeNs += _hrtNow() - _t2; }
             const _t3 = _hrtNow();
             pool.sort((a, b) => b.score - a.score);
             if (_BEAM_DEBUG) { _dbgSortNs += _hrtNow() - _t3; }
             await yieldIfNeeded();
             const widthSelected = pool.slice(0, beamWidth);
-            frontier = effectiveMechanicBucketRetention ? _diverseSelect(pool, beamWidth, _flipperBase) : widthSelected;
-            // Diverse selection is the production retention decision, not a score-width cull
+            frontier = effectiveMechanicBucketRetention ? _mechanicBucketSelect(pool, beamWidth, _flipperBase) : widthSelected;
+            // Mechanic-bucket selection is the production retention decision, not a score-width cull
             // followed by a second chance. Report only candidates absent from the actual result;
             // otherwise support would falsely disappear at the provisional slice and reappear.
             const retained = research && effectiveMechanicBucketRetention ? new Set(frontier) : null;
@@ -901,7 +901,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         } else {
             frontier = cands;
             if (research) {
-                emit('post-production-dedup', frontier);
+                emit('post-production-coarse-state-merge', frontier);
                 emit('post-score-width-cull', frontier);
             }
         }
