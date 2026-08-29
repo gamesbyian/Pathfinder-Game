@@ -11,7 +11,7 @@ export interface DistMapOpts {
      *  It exists only because scoring.ts's move-ordering guidance is not safety-monotonic the way
      *  pruning is: the technically-wrong pre-fix distances empirically routed several budget-
      *  limited searches toward their winning branch by coincidence (see
-     *  docs/solver-optimization-current-queue.md's "Distance-guidance/pruning split" entry and
+     *  docs/solver-optimization-workstreams.md's "Distance-guidance/pruning split" entry and
      *  reports/2026-08-22-corpus2-node-budget-losses.md). Use only for a dedicated guidance-only
      *  distance map, never to replace the corrected default. */
     legacyGuidanceRouting?: boolean;

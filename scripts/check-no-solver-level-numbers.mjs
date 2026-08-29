@@ -2,16 +2,17 @@
 /**
  * Guard: the solver must never be tuned to specific level *identities*.
  *
- * The solver's archetype detection and attempt-config selection (modules/solver/) branch on level
- * *features* — reqInt, navDensity, must-pass/must-cross counts, portal/flipper counts, gates, reqLen
- * — never on which numbered level is being solved. Historically the comments cited specific levels
- * ("L130 wins via perimeterCW", "saves ~11s on L130") as the motivation for thresholds, which made
- * the policy read as overfit to the 156-level corpus and invited identity-keyed special-casing.
+ * The solver's routing regime classification and attempt-config selection (modules/solver/) branch
+ * on level *features* — reqInt, requiredPathCoverageRatio, must-pass/must-cross counts,
+ * portal/flipper counts, gates, reqLen — never on which numbered level is being solved. Historically
+ * the comments cited specific levels ("L130 wins via perimeterCW", "saves ~11s on L130") as the
+ * motivation for thresholds, which made the policy read as overfit to the 156-level corpus and
+ * invited identity-keyed special-casing.
  *
  * This check fails if solver source reintroduces a level-identity reference — either in a comment
  * (e.g. `L130`, `level 130`) or, worse, in control flow (`level.id === …`, `level.level === …`).
  * Rationale belongs in feature terms; if you need to cite evidence, describe the feature regime
- * ("≥3 must-pass", "navDensity ≥ 0.82"), not the level number.
+ * ("≥3 must-pass", "requiredPathCoverageRatio ≥ 0.82"), not the level number.
  *
  * See docs/archive/codebase-quality-followup-plan.md §1.
  */
@@ -62,7 +63,7 @@ for (const file of DOC_FILES) {
 if (violations.length > 0) {
     console.error('Solver must select strategy by level features, not level identity:');
     for (const v of violations) console.error(`  - ${v.file}:${v.line}: ${v.reason}\n      ${v.text}`);
-    console.error('\nDescribe the feature regime (e.g. "≥3 must-pass", "navDensity ≥ 0.82"), not the level number.');
+    console.error('\nDescribe the feature regime (e.g. "≥3 must-pass", "requiredPathCoverageRatio ≥ 0.82"), not the level number.');
     process.exit(1);
 }
 

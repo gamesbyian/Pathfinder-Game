@@ -171,7 +171,7 @@ answers the question. Family/variant research has its own canonical resource:
   from the same generator can confirm a selected candidate; a cross-distribution claim needs a
   materially different source such as topology composition or independent human/editor material.
 - Do not quote solve totals from this README. Counts change quickly and belong in frozen run reports,
-  baselines, and [`../../docs/solver-optimization-current-queue.md`](../../docs/solver-optimization-current-queue.md).
+  baselines, and [`../../docs/solver-optimization-workstreams.md`](../../docs/solver-optimization-workstreams.md).
 
 ## Historical solver-work chronology
 

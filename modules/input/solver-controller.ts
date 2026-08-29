@@ -173,7 +173,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
     // dominates — so only "Find all" (both variants) uses the pool; targeted tiers keep using
     // `session.run({mode:'targeted', ...})` on the main thread, unchanged.
     //
-    // Lazy construction + permanent-failure fallback mirrors trap-scan-controller.ts's getClient():
+    // Lazy construction + permanent-failure fallback mirrors false-goal-trigger-scan-controller.ts's getClient():
     // if the pool can't be built or a run throws, fall back to the main-thread session for the rest
     // of the session (browser tab lifetime), never retried.
     let enumerationPool: any = null;

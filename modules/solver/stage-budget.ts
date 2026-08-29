@@ -13,7 +13,7 @@
  * Every reserve here stacks in a fixed order (documented at each field), same as before this
  * module existed — this file is a behavior-preserving relocation of that cascade out of
  * orchestration.ts, not a redesign. See each constant's own comment for the calibration
- * evidence/report pointer; docs/solver-optimization-current-queue.md tracks current promotion
+ * evidence/report pointer; docs/solver-optimization-workstreams.md tracks current promotion
  * status.
  */
 import { createBudgetEnvelope } from './stage-policy.js';
@@ -173,7 +173,7 @@ export const ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION = 0.15;
  *  behavior. 0.15 is the frozen level-blind population A/B's winning arm — see
  *  docs/main-search-late-reserve-experiment.md and reports/2026-08-12-main-search-late-reserve-population-ab.md.
  *
- *  CONFIG_COUNT raised 4->5 (2026-08-22, docs/solver-optimization-current-queue.md Priority 7 /
+ *  CONFIG_COUNT raised 4->5 (2026-08-22, docs/solver-optimization-workstreams.md Priority 7 /
  *  solver-future-work.md's "must-cross-heavy diverse-beam gaps blocked on reserve-slot budget"):
  *  two must-cross-heavy sub-rules' 4-slot trailing reserve was already fully occupied by an
  *  already-validated perimeter-direction fix, leaving no room to add a missing diverse-WIDE-beam
@@ -508,7 +508,7 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *
  *  Applies the same "run dead last, additive-only budget" pattern to a THIRD known double-edged
  *  mechanism, and this one is the root flag this whole investigation started from:
- *  `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` (topology.ts's `isConnected`/`isConnectedForTrap`, read via
+ *  `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` (topology.ts's `isConnected`/`isConnectedForFalseGoalTriggerSearch`, read via
  *  `prep._cfg` at the connectivity-flood-fill call site shared by DFS, beam, repair, and
  *  admissible-order-fallback search through `prune-gauntlet.ts`'s move-pruning gauntlet). Default-ON, it
  *  treats both-axes-spent cells as walls in the flood-fill reachability check — a legitimate,
@@ -778,7 +778,7 @@ export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  fraction of `timeBudgetMs`/`nodeBudget` like the five whole-ladder-rerun tiers above — this
  *  tier's entire premise is being cheap and tightly bounded, not thorough (mirroring
  *  EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET's own flat-constant shape, not the fractional-reserve shape).
- *  Population-scale quantification (docs/solver-optimization-current-queue.md, same section): at a
+ *  Population-scale quantification (docs/solver-optimization-workstreams.md, same section): at a
  *  2,000,000-node cap, 26 of the 314 currently-unsolved Corpus-2 levels this tier can reach solve
  *  within budget (8.3%) — a real but modest recovery rate, with the large majority of newly-probed
  *  levels paying the full capped cost for nothing. Because of the dead-last placement, that cost
@@ -797,7 +797,7 @@ export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  disable it. Disable via `STRATEGY_REPAIR_LATE_PROBE: false` to get the pre-promotion shape
  *  back for an A/B.
  *
- *  CAP RAISED 2,000,000 -> 5,000,000 (2026-08-22, docs/solver-optimization-current-queue.md
+ *  CAP RAISED 2,000,000 -> 5,000,000 (2026-08-22, docs/solver-optimization-workstreams.md
  *  Priority 7's "REPAIR_LATE_PROBE_NODE_BUDGET" lead): a local 13-level hand-picked sample of
  *  confirmed-still-unsolved `hi:medium-high-catchall` Corpus-2 levels found 1/13 newly solved at
  *  2.5x the shipped cap, consistent with but not sufficient evidence beyond this tier's own
@@ -823,7 +823,7 @@ export const REPAIR_LATE_PROBE_NODE_BUDGET = 5_000_000;
  *  additive whole-ladder retry (same `runWholeLadderRetryTier` shape as
  *  STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY) forcing SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE on
  *  for its own rerun of `mainConfigs`, positioned AFTER `late-repair-search`, the current true end
- *  of the ladder. See docs/solver-optimization-current-queue.md Priority 7 and ablation-config.ts's
+ *  of the ladder. See docs/solver-optimization-workstreams.md Priority 7 and ablation-config.ts's
  *  own comment on the flag for the full rationale: the plain global form of that flag measured net
  *  -5 (73-level loss population +9/-3; 90-level gain population 0/-11; published corpus unchanged)
  *  because it forces the legacy distance map even on levels the corrected map already solves early

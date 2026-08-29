@@ -8,7 +8,7 @@
 // A portal jump is a free (zero-length) teleport; if its two terminals have DIFFERENT parity
 // (a "twist" portal -- already identified per-level in prep.ts's parityPortalDistMaps, used only
 // for soft scoring/guidance today, never for pruning), using it once flips the path's achievable
-// end parity. trap-search.ts's isParityReachableEndpoint already uses this exact reasoning
+// end parity. false-goal-trigger-search.ts's isParityCompatibleEndpoint already uses this exact reasoning
 // STATICALLY (any twist portal anywhere on the level makes both parities reachable, full stop --
 // no budget/reachability check needed because it's a level-wide question, not a specific search
 // state). The candidate DYNAMIC extension: at a specific search state with `rSteps` remaining

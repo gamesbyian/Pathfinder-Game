@@ -241,7 +241,7 @@ test('provenanceFromSolveResult maps the current single-written goal-attraction 
 });
 
 // Regression coverage for the Priority 0 retry-tier attribution gap
-// (docs/solver-optimization-current-queue.md): before retryTier, a find from any of these
+// (docs/solver-optimization-workstreams.md): before retryTier, a find from any of these
 // force-enabled last-resort passes carried the exact same provenance shape as an ordinary
 // main-ladder/repair-fallback win, with no way to tell them apart from the stored hint alone.
 test('deriveSolveAttemptInfo records which force-enabled retry tier won, distinct from an ordinary win', () => {

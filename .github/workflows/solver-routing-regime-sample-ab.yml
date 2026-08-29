@@ -1,6 +1,6 @@
 # Stratified-sample level-blind capability A/B for a routing-regime-gated ATTEMPT_POLICY routing
-# change (modules/solver/attempts.ts) -- the general form of solver-repair-probe-adaptive-sample-
-# ab.yml's eligibility-sample pattern, generalized from one hardcoded mechanic predicate to any set
+# change (modules/solver/attempts.ts) -- the general form of solver-early-repair-search-adaptive-
+# sample-ab.yml's eligibility-sample pattern, generalized from one hardcoded mechanic predicate to any set
 # of classifyRoutingRegime() routing regimes via scripts/stress/select-routing-regime-sample.mjs.
 #
 # Deliberately NOT a full-corpus refresh, and NOT solver-stress-refresh.yml's canonical full-1700

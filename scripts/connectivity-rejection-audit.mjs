@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Learned-failure Stage A: rejection-population audit (docs/solver-optimization-current-queue.md
+ * Learned-failure Stage A: rejection-population audit (docs/solver-optimization-workstreams.md
  * item #0, reports/2026-08-24-learned-failure-certificate-audit.md).
  *
  * Runs the real production solver ladder (Solver.solveLevel, unmodified budgets/policy) over a level

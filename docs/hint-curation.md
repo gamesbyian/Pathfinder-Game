@@ -48,7 +48,7 @@ Coverage overrides the distance floor and may exceed the display cap if mandator
 |---|---:|---|
 | `DEFAULT_FLOOR` | 0.65 | Minimum distance for an optional additional hint. |
 | `DEFAULT_CAP` | 15 | Normal display ceiling; mandatory coverage may exceed it. |
-| `NEAR_HAMILTONIAN_DENSITY` | 0.82 | Enables crossing-location distance. |
+| `NEAR_HAMILTONIAN_COVERAGE_THRESHOLD` | 0.82 | Enables crossing-location distance. |
 | `MUSTCROSS_ORDER_MIN` | 0.66 | Minimum distance for differing must-cross order. |
 
 `requiredPathCoverageRatio = reqLen / nonGateWinningPathCellCount`, where `nonGateWinningPathCellCount = w*h - blocks - geese - falseGoals - gates`.

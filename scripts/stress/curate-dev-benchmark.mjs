@@ -344,7 +344,7 @@ const mdLines = [
     '',
     '## Strata coverage',
     '',
-    '| Archetype / stability | Selected | Quota | Pool |',
+    '| Routing regime / stability | Selected | Quota | Pool |',
     '|---|---|---|---|',
     ...strataReport.map(s => `| ${s.key} | ${s.selected} | ${s.quota} | ${s.poolSize} |`),
     '',

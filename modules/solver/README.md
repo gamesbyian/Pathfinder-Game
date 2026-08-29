@@ -1,6 +1,6 @@
 # Solver code map
 
-Terse implementation map for `modules/solver/`. Read [`../../docs/solver-architecture.md`](../../docs/solver-architecture.md) for durable architecture, [`../../docs/solver-technique-operational-taxonomy.md`](../../docs/solver-technique-operational-taxonomy.md) before treating named configs as independent techniques, [`../../docs/solver-level-blindness.md`](../../docs/solver-level-blindness.md) for production-policy constraints, and [`../../docs/solver-optimization-current-queue.md`](../../docs/solver-optimization-current-queue.md) for research rank.
+Terse implementation map for `modules/solver/`. Read [`../../docs/solver-architecture.md`](../../docs/solver-architecture.md) for durable architecture, [`../../docs/solver-technique-operational-taxonomy.md`](../../docs/solver-technique-operational-taxonomy.md) before treating named configs as independent techniques, [`../../docs/solver-level-blindness.md`](../../docs/solver-level-blindness.md) for production-policy constraints, and [`../../docs/solver-optimization-workstreams.md`](../../docs/solver-optimization-workstreams.md) for research rank.
 
 ## Start by change type
 
@@ -11,7 +11,7 @@ Terse implementation map for `modules/solver/`. Read [`../../docs/solver-archite
 | Stage budget constants, reserves, budget-plan cascade | `stage-budget.ts` |
 | Shared stage execution | `stage-executors.ts` |
 | Attempt ladder, gates, retries, result assembly | `orchestration.ts`, then `attempts.ts` / `attempt-dispatch.ts` |
-| Defaults, ablation flags, portfolio experiment tiers | `ablation-config.ts`, `portfolio-experiment.ts` |
+| Defaults, ablation flags, portfolio experiment tiers | `ablation-config.ts`, `legacy-latency-portfolio-experiment.ts` |
 | Profiles/templates/search-family behavior | technique taxonomy, then `policy.ts`, `scoring.ts`, `search.ts`, `admissible-order-search.ts`, `repair-search.ts` |
 | Beam/DFS traversal or candidate expansion | `search.ts`, `search-state.ts`, `prep.ts` |
 | Candidate ranking / badness / ordering | `scoring.ts`, `diversification.ts` |

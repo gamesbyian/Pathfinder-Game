@@ -202,7 +202,7 @@ const repairTurnBiasedAttempt = (): AttemptConfig => ({ scoringProfileId: 'repai
  *  selects the TIE-BREAK profile (admissible slack is always the primary ordering — see that file's
  *  own doc), not a DFS/beam scoring profile in the usual sense; 'none' is a sentinel meaning "no
  *  tie-break at all" (admissibleOrderAttempt below sets admissibleOrderNoTieBreak for it instead of
- *  doing a real POLICY_PROFILES lookup).
+ *  doing a real SCORING_PROFILES lookup).
  *
  *  Order matters: the call site stops at the first entry that solves, so this list is ordered by
  *  validated yield, most first (reports/2026-07-24-admissible-order-search-corpus2-validation.md):

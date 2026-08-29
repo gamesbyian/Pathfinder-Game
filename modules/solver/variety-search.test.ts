@@ -162,5 +162,5 @@ test('newlySavedMeta.scoringProfileId reflects the tie-break setting under admis
 
     const withTieBreak = createVarietySearch(level, prep, [], { rng, orderBy: 'admissible-slack', tieBreakProfile: {} });
     const r2 = await withTieBreak.run({ mode: 'complete' });
-    assert.ok(r2.newlySavedMeta.every(m => m.scoringProfileId === 'flat'), 'a real (if flatly-weighted) tie-break profile was applied -> profile "flat", not a POLICY_PROFILES name');
+    assert.ok(r2.newlySavedMeta.every(m => m.scoringProfileId === 'flat'), 'a real (if flatly-weighted) tie-break profile was applied -> profile "flat", not a SCORING_PROFILES name');
 });

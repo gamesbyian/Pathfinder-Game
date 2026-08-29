@@ -10,7 +10,7 @@ Browser grid-path puzzle game with a Vite/TypeScript app, solver/research toolch
 | Application architecture | [`docs/architecture.md`](docs/architecture.md) |
 | Full developer/game-rule reference | [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md) |
 | Solver implementation | [`docs/solver-architecture.md`](docs/solver-architecture.md) |
-| Current solver priorities | [`docs/solver-optimization-current-queue.md`](docs/solver-optimization-current-queue.md) |
+| Current solver priorities | [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md) |
 | Variant/family research trove | [`docs/variant-level-research.md`](docs/variant-level-research.md) |
 | CLI/research tooling | [`docs/tooling-catalog.md`](docs/tooling-catalog.md) |
 | Tests/merge gates | [`docs/testing.md`](docs/testing.md) |

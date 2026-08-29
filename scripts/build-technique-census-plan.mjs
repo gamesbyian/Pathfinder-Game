@@ -211,7 +211,7 @@ function techniqueEligible(key, raw) {
 // Relevant only when --t1-sample-size is a smaller test-drive number, not 'all' (the default) --
 // 'all' already includes every level unconditionally, priority or not. Every Corpus-2 level
 // individually named as still-open evidence in docs/future-work.md,
-// docs/solver-optimization-current-queue.md, or docs/solver-heuristic-capability-gap-analysis.md,
+// docs/solver-optimization-workstreams.md, or docs/solver-heuristic-capability-gap-analysis.md,
 // as of 2026-08-19 -- cross-checked against the frozen baseline so only genuinely still-unsolved
 // ones are listed (most of this session's own named levels, e.g. R02248/R00156/R02960/R02114/
 // R00592/R03148, have SINCE been solved by the STRATEGY_*_RETRY tiers promoted earlier this
@@ -220,7 +220,7 @@ function techniqueEligible(key, raw) {
 // the open research threads are already asking about, so a full isolated-technique reading on them
 // is close to the highest-value data this census can produce, and should not depend on a coin flip.
 //   R02119, R02422 -- PRUNE_MC_NEIGHBOR_BUDGET's own two remaining unrecovered losses
-//     (docs/solver-optimization-current-queue.md Priority 0 lineage; this session's own
+//     (docs/solver-optimization-workstreams.md Priority 0 lineage; this session's own
 //     STRATEGY_MC_NEIGHBOR_BUDGET_RETRY work). Already tested in isolation earlier this session
 //     (confirmed recoverable/partially-recoverable) -- full T1 coverage (all 34 techniques, not just
 //     the 2 already tried) is the natural completion of that investigation.
@@ -301,8 +301,8 @@ const T1_PROMOTED_VARIANTS = [
     { label: 'dfs|score=mustCrossFirst|bias=none+mc-neighbor-budget-off', techniqueKey: 'dfs|score=mustCrossFirst|bias=none', ablation: { enable: [], disable: ['PRUNE_MC_NEIGHBOR_BUDGET'] }, eligible: raw => (raw.mustCross?.length ?? 0) > 0 },
     { label: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain+connectivity-axis-exhausted-off', techniqueKey: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain', ablation: { enable: [], disable: ['PRUNE_CONNECTIVITY_AXIS_EXHAUSTED'] }, eligible: () => true },
     { label: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain+connectivity-axis-exhausted-off', techniqueKey: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain', ablation: { enable: [], disable: ['PRUNE_CONNECTIVITY_AXIS_EXHAUSTED'] }, eligible: () => true },
-    { label: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain+dedup-near-tie-retention-off', techniqueKey: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain', ablation: { enable: [], disable: ['STRATEGY_DEDUP_NEAR_TIE_RETENTION'] }, eligible: () => true },
-    { label: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain+dedup-near-tie-retention-off', techniqueKey: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain', ablation: { enable: [], disable: ['STRATEGY_DEDUP_NEAR_TIE_RETENTION'] }, eligible: () => true },
+    { label: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain+coarse-state-near-tie-retention-off', techniqueKey: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain', ablation: { enable: [], disable: ['STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION'] }, eligible: () => true },
+    { label: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain+coarse-state-near-tie-retention-off', techniqueKey: 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain', ablation: { enable: [], disable: ['STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION'] }, eligible: () => true },
     // repair|score=repair|guidance=turn-biased does not exist without its own flag -- there is no default-arm
     // baseline to promote FROM; it's included here anyway (rather than left at T4's smaller sample)
     // because it's a genuine, cheap, distinct algorithmic variant per point 1's own framing, not

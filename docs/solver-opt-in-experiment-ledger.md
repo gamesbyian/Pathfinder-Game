@@ -39,7 +39,7 @@ Listed only so old experiment names are not mistaken for dangling opt-in tasks. 
 | Mechanism | Current disposition |
 |---|---|
 | `PRUNE_MC_NEIGHBOR_BUDGET` | Default-ON after level-blind population gain; retry-tier evidence shows it can still alter search order in both directions. |
-| `STRATEGY_DEDUP_NEAR_TIE_RETRY` | Default-ON additive dead-last retry; safe placement does not make its work free. |
+| `STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY` | Default-ON additive dead-last retry; safe placement does not make its work free. |
 | `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` | Default-ON after population gain; retain as baseline but reprice residual value. |
 | `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` | Default-ON after population gain; retain as baseline but reprice residual value. |
 | `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` | Default-ON after +9 / 0-loss Corpus-2 evidence; material cost makes it a scheduler tail-audit candidate. |

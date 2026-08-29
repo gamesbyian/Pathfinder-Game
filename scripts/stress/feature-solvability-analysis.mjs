@@ -7,7 +7,7 @@
  *
  * Why this exists, and what it is NOT:
  *
- *   `cluster-unsolved-failures.mjs` reports `byArchetype` COUNTS over the unsolved population.
+ *   `cluster-unsolved-failures.mjs` reports `byRoutingRegime` COUNTS over the unsolved population.
  *   Counts alone cannot distinguish "this routingRegime is hard" from "this routingRegime is most of the
  *   corpus" — and for stress-corpus-2 the difference is decisive: `high-intersection-burden` is
  *   the majority routingRegime corpus-wide, so it dominates every failure bucket while carrying almost
@@ -102,8 +102,8 @@ const pct = (v) => `${(v * 100).toFixed(1)}%`;
 
 console.log(`${path.basename(BASELINE_FILE)}: ${rows.length} levels | solved ${solved.length} | unsolved ${unsolved.length}\n`);
 
-// ─── Archetype solve rates + enrichment (the base-rate correction) ───────────
-console.log('ARCHETYPE — solve rate and enrichment in the unsolved population');
+// ─── Routing-regime solve rates + enrichment (the base-rate correction) ─────
+console.log('ROUTING REGIME — solve rate and enrichment in the unsolved population');
 console.log('  enrichment = share of unsolved / share of corpus.  1.0 = carries no difficulty signal.');
 const routingRegimes = [...new Set(rows.map(r => r.routingRegime))];
 const routingRegimeReport = routingRegimes.map(a => {

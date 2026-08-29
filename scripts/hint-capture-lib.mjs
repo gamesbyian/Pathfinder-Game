@@ -37,7 +37,7 @@ import { provenanceEventIdentity } from './hint-provenance-identity.mjs';
  *  modules/domain/hint-types.ts's HintContextProvenance.isolatedTechnique for why this must be
  *  set correctly: an isolated technique can solve a level the real ladder cannot, so persisting
  *  its find without this flag would misrepresent it as ordinary production-solver capability
- *  evidence (docs/solver-optimization-current-queue.md's Priority 0). Defaults false — every
+ *  evidence (docs/solver-optimization-workstreams.md's Priority 0). Defaults false — every
  *  existing caller (portfolio-solve-sweep.mjs) already runs the real ladder. */
 export async function createHintCapture({ solverVersion, budgetMs, enabled = true, isolatedTechnique = false }) {
     if (!enabled) {
