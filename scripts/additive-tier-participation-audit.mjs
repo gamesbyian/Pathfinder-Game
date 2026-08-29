@@ -54,15 +54,15 @@ const TIME_BUDGET_MS = Number(args.get('--time-budget-ms') || 86_400_000);
 const OUT_FILE = args.get('--out') || 'reports/stress/additive-tier-participation-audit.json';
 const SUMMARY_OUT_FILE = args.get('--summary-out') || OUT_FILE.replace(/\.json$/u, '-summary.md');
 
-// The 12 non-primary stages (excludes prime/repair-probe/main-loop, which are not additive-fallback
+// The 12 non-primary stages (excludes explicit-prime/early-repair-search/main-search, which are not additive-fallback
 // tiers, and portfolio-pass/portfolio-fallback, which belong to the separate, already-quarantined
 // legacy wall-clock portfolio scheduler -- see stage-policy.ts's SOLVER_STAGE_IDS for the full list
 // this is filtered from).
 const ADDITIVE_TIER_STAGE_IDS = [
-    'repair-fallback', 'attraction-diversity', 'repair-probe-shrink-recovery', 'admissible-order',
-    'dedup-near-tie-retry', 'admissible-order-non-default-retry', 'connectivity-axis-exhausted-retry',
-    'repair-elite-prefix-dfs-retry', 'mc-neighbor-budget-retry', 'repair-late-probe',
-    'goal-attraction-legacy-distance-retry', 'repair-late-probe-multi-seed-retry',
+    'repair-fallback', 'goal-attraction-disabled-retry', 'repair-shrink-recovery', 'admissible-order-fallback',
+    'coarse-state-near-tie-retention-disabled-retry', 'admissible-order-alternate-tiebreak-retry', 'connectivity-axis-prune-disabled-retry',
+    'repair-elite-prefix-dfs-retry', 'must-cross-neighbor-prune-disabled-retry', 'late-repair-search',
+    'guidance-goal-distance-retry', 'late-repair-multiseed-retry',
 ];
 
 function selectLevelsBySpec(levels, spec) {
