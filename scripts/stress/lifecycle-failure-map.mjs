@@ -14,7 +14,7 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { normalizeSolverStageId } from '../../modules/solver/stage-policy.js';
+import { normalizeSolverStageId } from '../../modules/solver/stage-id-normalization.mjs';
 
 /**
  * Canonical per-row lifecycle, dual-reading historical techniqueLifecycle artifacts and
