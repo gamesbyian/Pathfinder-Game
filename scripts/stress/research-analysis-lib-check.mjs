@@ -27,7 +27,7 @@ const api = {
         surroundMask: 0, adjTurnMask: 0, flipperUsedMask: 0, lastWasPortalJump: false }),
     getNeighbors: pos => pos === 1 ? [2] : [3, 4],
     applyMove: (child, state) => { state.path.push(child); state.ints += child === 4 ? 1 : 0; },
-    scoreAndSort: children => children.sort((a, b) => b - a), POLICY_PROFILES: { default: {} },
+    scoreAndSort: children => children.sort((a, b) => b - a), SCORING_PROFILES: { default: {} },
 };
 const atlas = enumerateKnownPrefixBranches({ api, level: { portalMap: new Map(), reqLen: 3, reqInt: 1 }, prep: {}, depths: [1],
     knownSolutions: [{ id: 'a', path: [1, 2, 3], provenance: 'x' }, { id: 'b', path: [1, 2, 3], provenance: 'y' }] });
