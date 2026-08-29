@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { test, vi } from 'vitest';
 import { PACK } from './encoding.js';
-import { POLICY_PROFILES } from './policy.js';
+import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import { __pruneFirstStepNeighborsForTests, __reconstructBeamPathForTests, beamSearchFromGate, dfsFromGateLDS, getLdsProbeNodeBudget } from './search.js';
@@ -126,7 +126,7 @@ test('dfsFromGateLDS solves a simple line level through the extracted search mod
   const prep = prepLevel(level);
   prep._cfg = null;
   prep._metrics = { nodesExpanded: 0 };
-  const path = await dfsFromGateLDS(PACK(0, 0), level, prep, POLICY_PROFILES.default, 1000, Date.now(), null, null);
+  const path = await dfsFromGateLDS(PACK(0, 0), level, prep, SCORING_PROFILES.default, 1000, Date.now(), null, null);
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
 });
 
@@ -152,18 +152,18 @@ test('beamSearchFromGate solves a simple line level through the extracted search
   const prep = prepLevel(level);
   prep._cfg = null;
   prep._metrics = { nodesExpanded: 0 };
-  const path = await beamSearchFromGate(PACK(0, 0), level, prep, POLICY_PROFILES.default, 1000, Date.now(), null, 8, null, false);
+  const path = await beamSearchFromGate(PACK(0, 0), level, prep, SCORING_PROFILES.default, 1000, Date.now(), null, 8, null, false);
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
 });
 
 test('beam research observation is behaviorally inert and sees real boundaries', async () => {
   const level = makeLevel();
   const off = prepLevel(level); off._cfg = null; off._metrics = { nodesExpanded: 0 };
-  const offPath = await beamSearchFromGate(PACK(0, 0), level, off, POLICY_PROFILES.default, 1000, Date.now(), null, 8, null, false);
+  const offPath = await beamSearchFromGate(PACK(0, 0), level, off, SCORING_PROFILES.default, 1000, Date.now(), null, 8, null, false);
   const records: Array<{ stage: string; paths: number[][] }> = [];
   const on = prepLevel(level); on._cfg = null; on._metrics = { nodesExpanded: 0 };
   on._beamResearchObserver = { observe: record => records.push({ stage: record.stage, paths: record.paths }) };
-  const onPath = await beamSearchFromGate(PACK(0, 0), level, on, POLICY_PROFILES.default, 1000, Date.now(), null, 8, null, false);
+  const onPath = await beamSearchFromGate(PACK(0, 0), level, on, SCORING_PROFILES.default, 1000, Date.now(), null, 8, null, false);
   assert.deepEqual(onPath, offPath);
   assert.equal(on._metrics.nodesExpanded, off._metrics.nodesExpanded);
   assert.ok(records.some(record => record.stage === 'incoming-frontier'));
@@ -195,7 +195,7 @@ test('beam reconstruction scratch handles long, tiny, shifted, then long paths l
     const level = line(length, reversed);
     const prep = prepLevel(level); prep._cfg = null;
     const start = level.gateKeys[0];
-    const path = await beamSearchFromGate(start, level, prep, POLICY_PROFILES.default, 2000, Date.now(), null, 8, null, false);
+    const path = await beamSearchFromGate(start, level, prep, SCORING_PROFILES.default, 2000, Date.now(), null, 8, null, false);
     assert.ok(path, `${length}-cell beam must solve`);
     assert.equal(path.length, length, 'reconstruction length must not retain a prior longer tail');
     assert.equal(path[0], start); assert.equal(path.at(-1), level.goalKey);
@@ -225,7 +225,7 @@ test('beamSearchFromGate credits nodesExpanded even when it times out mid-search
     // First outer budget check passes at t=0. One beam phase then completes; the next
     // outer check sees the 10ms deadline exactly and must take the timeout return path.
     clock.mockReturnValueOnce(0).mockReturnValue(10);
-    const path = await beamSearchFromGate(PACK(0, 0), level, prep, POLICY_PROFILES.default, 10, 0, null, 40, null, false, out);
+    const path = await beamSearchFromGate(PACK(0, 0), level, prep, SCORING_PROFILES.default, 10, 0, null, 40, null, false, out);
     assert.equal(path, null);
     assert.equal(out.timedOut, true);
     assert.ok(prep._metrics.nodesExpanded > 0,
@@ -254,7 +254,7 @@ test('beamSearchFromGate credits all phases nodesExpanded on a multi-phase succe
   prep._cfg = null;
   prep._metrics = { nodesExpanded: 0 };
   const beamWidth = 16;
-  const path = await beamSearchFromGate(PACK(0, 0), level, prep, POLICY_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
+  const path = await beamSearchFromGate(PACK(0, 0), level, prep, SCORING_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
   assert.ok(path, 'expected the beam to solve within the generous budget');
   assert.equal(path!.length, level.reqLen + 1);
   // A 41-node solution required >=40 completed phases; pre-fix credited only the final phase
@@ -279,7 +279,7 @@ test('dfsFromGateLDS (STRATEGY_LDS bypassed) credits nodesExpanded even when it 
   const out: { timedOut?: boolean; finalBadness?: number } = {};
   const clock = vi.spyOn(Date, 'now').mockReturnValue(11);
   try {
-    const path = await dfsFromGateLDS(PACK(0, 0), level, prep, POLICY_PROFILES.default, 10, 0, null, null, out);
+    const path = await dfsFromGateLDS(PACK(0, 0), level, prep, SCORING_PROFILES.default, 10, 0, null, null, out);
     assert.equal(path, null);
     assert.equal(out.timedOut, true);
     assert.ok(prep._metrics.nodesExpanded >= 256,
@@ -299,21 +299,21 @@ test('dfsFromGateLDS (STRATEGY_LDS bypassed) credits nodesExpanded even when it 
 test('beamSearchFromGate honors a finite nodeBudget (caps below solve cost stop it; caps above are inert)', async () => {
   const level = makeLevel({ grid: { w: 9, h: 9 }, reqLen: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
   const base = prepLevel(level); base._cfg = null; base._metrics = { nodesExpanded: 0 };
-  const basePath = await beamSearchFromGate(PACK(0, 0), level, base, POLICY_PROFILES.default, 5000, Date.now(), null, 40, null, false, {}, Infinity);
+  const basePath = await beamSearchFromGate(PACK(0, 0), level, base, SCORING_PROFILES.default, 5000, Date.now(), null, 40, null, false, {}, Infinity);
   assert.ok(basePath, 'unbudgeted baseline should solve');
   const solveNodes = base._metrics!.nodesExpanded;
 
   const capped = prepLevel(level); capped._cfg = null; capped._metrics = { nodesExpanded: 0 };
   const cap = Math.floor(solveNodes / 2);
   const out: { timedOut?: boolean } = {};
-  const cappedPath = await beamSearchFromGate(PACK(0, 0), level, capped, POLICY_PROFILES.default, 5000, Date.now(), null, 40, null, false, out, cap);
+  const cappedPath = await beamSearchFromGate(PACK(0, 0), level, capped, SCORING_PROFILES.default, 5000, Date.now(), null, 40, null, false, out, cap);
   assert.equal(cappedPath, null, 'a cap below the solve cost must prevent the solve');
   assert.equal(out.timedOut, true, 'a node-budget exit reports timedOut, matching dfsFromGate');
   assert.ok(capped._metrics!.nodesExpanded >= cap && capped._metrics!.nodesExpanded < cap + 512,
     `capped run should stop just past the cap (${cap}), got ${capped._metrics!.nodesExpanded}`);
 
   const slack = prepLevel(level); slack._cfg = null; slack._metrics = { nodesExpanded: 0 };
-  const slackPath = await beamSearchFromGate(PACK(0, 0), level, slack, POLICY_PROFILES.default, 5000, Date.now(), null, 40, null, false, {}, solveNodes * 4);
+  const slackPath = await beamSearchFromGate(PACK(0, 0), level, slack, SCORING_PROFILES.default, 5000, Date.now(), null, 40, null, false, {}, solveNodes * 4);
   assert.ok(slackPath, 'a cap above the solve cost must still solve');
   assert.equal(slack._metrics!.nodesExpanded, solveNodes, 'a slack cap must not change the node count (production stays byte-identical)');
 });
@@ -336,11 +336,11 @@ test('beamSearchFromGate numeric dedup key reproduces the string-key fallback ex
   const beamWidth = 16;
 
   const numeric = prepLevel(level); numeric._cfg = null; numeric._metrics = { nodesExpanded: 0 };
-  const numericPath = await beamSearchFromGate(PACK(0, 0), level, numeric, POLICY_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
+  const numericPath = await beamSearchFromGate(PACK(0, 0), level, numeric, SCORING_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
 
   const stringKey = prepLevel(level); stringKey._cfg = null; stringKey._metrics = { nodesExpanded: 0 };
   stringKey._forceBeamDedupStringKeyForTests = true;
-  const stringPath = await beamSearchFromGate(PACK(0, 0), level, stringKey, POLICY_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
+  const stringPath = await beamSearchFromGate(PACK(0, 0), level, stringKey, SCORING_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
 
   assert.ok(numericPath, 'expected the beam to solve within the generous budget');
   assert.deepEqual(numericPath, stringPath, 'numeric and string dedup keys must reach an identical solution path');
@@ -359,11 +359,11 @@ test('beamSearchFromGate numeric dedup key reproduces the string-key fallback ex
   const beamWidth = 16;
 
   const numeric = prepLevel(level); numeric._cfg = null; numeric._metrics = { nodesExpanded: 0 };
-  const numericPath = await beamSearchFromGate(PACK(0, 0), level, numeric, POLICY_PROFILES.default, 5000, Date.now(), null, beamWidth, null, true);
+  const numericPath = await beamSearchFromGate(PACK(0, 0), level, numeric, SCORING_PROFILES.default, 5000, Date.now(), null, beamWidth, null, true);
 
   const stringKey = prepLevel(level); stringKey._cfg = null; stringKey._metrics = { nodesExpanded: 0 };
   stringKey._forceBeamDedupStringKeyForTests = true;
-  const stringPath = await beamSearchFromGate(PACK(0, 0), level, stringKey, POLICY_PROFILES.default, 5000, Date.now(), null, beamWidth, null, true);
+  const stringPath = await beamSearchFromGate(PACK(0, 0), level, stringKey, SCORING_PROFILES.default, 5000, Date.now(), null, beamWidth, null, true);
 
   assert.ok(numericPath, 'expected the beam to solve within the generous budget');
   assert.deepEqual(numericPath, stringPath, 'numeric and string dedup keys must reach an identical solution path with diverseBeam on');
@@ -390,7 +390,7 @@ test('dfsFromGateLDS honors a finite nodeBudget (it bounds the otherwise-unbound
   const cap = 20000;
   const capped = prepLevel(level); capped._cfg = null; capped._metrics = { nodesExpanded: 0 };
   const out: { timedOut?: boolean } = {};
-  const cappedPath = await dfsFromGateLDS(PACK(0, 0), level, capped, POLICY_PROFILES.default, 120000, Date.now(), null, null, out, cap);
+  const cappedPath = await dfsFromGateLDS(PACK(0, 0), level, capped, SCORING_PROFILES.default, 120000, Date.now(), null, null, out, cap);
   assert.equal(cappedPath, null, 'a 20k-node cap must interrupt this solvable fixture before DFS finds its solution');
   assert.equal(out.timedOut, true);
   assert.ok(capped._metrics!.nodesExpanded >= cap && capped._metrics!.nodesExpanded < cap + 4096,
