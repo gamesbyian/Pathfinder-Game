@@ -3,8 +3,8 @@
  * Solve-only batch sweep for stress/research levels.
  *
  * Modes:
- * - `--scheduler-mode=legacy`: normal solver batch runs and feature/heuristic probes.
- * - `--scheduler-mode=portfolio-experiment`: historical portfolio-tier experiment with fallback.
+ * - `--scheduler-mode=production`: normal solver batch runs and feature/heuristic probes.
+ * - `--scheduler-mode=production-latency-portfolio-experiment`: historical portfolio-tier experiment with fallback.
  *
  * Prefer `--work-budget` for cross-technique comparisons. Runtime validation below reports unsupported
  * option combinations (notably race-pool/node/admissible-order interactions), and deprecated
@@ -20,7 +20,7 @@
  * Example:
  *   node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- \
  *     --corpus=data/stress/stress-levels-random.json --levels=pos:1-1700 \
- *     --scheduler-mode=legacy --work-budget=1000000 --workers=8 --resume \
+ *     --scheduler-mode=production --work-budget=1000000 --workers=8 --resume \
  *     --out=reports/portfolio/corpus2-sweep.json
  */
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -30,7 +30,7 @@ import os from 'node:os';
 import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { PORTFOLIO_EXPERIMENT } from '../modules/solver/portfolio-experiment.js';
+import { LEGACY_LATENCY_PORTFOLIO_EXPERIMENT } from '../modules/solver/legacy-latency-portfolio-experiment.js';
 import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 import { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } from './level-data-io.mjs';
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
@@ -52,7 +52,10 @@ const outFile = argMap.get('--out') || 'reports/portfolio/solve-sweep.json';
 const summaryOutFile = argMap.get('--summary-out') || outFile.replace(/\.json$/u, '-summary.md');
 const corpusPath = argMap.get('--corpus') || path.join(root, 'data', 'levels.json');
 const saveHints = flags.has('--save-hints');
-const schedulerMode = argMap.get('--scheduler-mode') === 'legacy' ? 'legacy' : 'portfolio-experiment';
+const rawSchedulerMode = argMap.get('--scheduler-mode');
+const schedulerMode = rawSchedulerMode === 'legacy' || rawSchedulerMode === 'production'
+    ? 'production'
+    : 'legacy-latency-portfolio-experiment';
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
 const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined;
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;
@@ -129,8 +132,8 @@ const ablation = (enableFlags.length > 0 || disableFlags.length > 0)
     ? Object.fromEntries([...enableFlags.map(f => [f, true]), ...disableFlags.map(f => [f, false])])
     : null;
 let racePoolSize = argMap.has('--race-pool-size') ? Math.max(1, Number(argMap.get('--race-pool-size')) || 1) : 0;
-if (racePoolSize > 0 && schedulerMode !== 'legacy') {
-    console.error('--race-pool-size requires --scheduler-mode=legacy (scripts/solver-parallel/race.mjs has no portfolio-experiment equivalent — its pool races the plain attempt ladder). Ignoring --race-pool-size.');
+if (racePoolSize > 0 && schedulerMode !== 'production') {
+    console.error('--race-pool-size requires --scheduler-mode=production (scripts/solver-parallel/race.mjs has no legacy-latency-portfolio-experiment equivalent — its pool races the plain attempt ladder). Ignoring --race-pool-size.');
     racePoolSize = 0;
 }
 if (racePoolSize > 0 && Number.isFinite(nodeBudget)) {
@@ -165,12 +168,12 @@ function csvSet(value, fallback) {
 
 function experimentFromArgs() {
     return {
-        pass1Ms: Number(argMap.get('--pass1-ms') || PORTFOLIO_EXPERIMENT.pass1Ms),
-        pass2Ms: Number(argMap.get('--pass2-ms') || PORTFOLIO_EXPERIMENT.pass2Ms),
-        pass3Ms: Number(argMap.get('--pass3-ms') || PORTFOLIO_EXPERIMENT.pass3Ms),
-        pass2Configs: csvSet(argMap.get('--pass2-configs'), PORTFOLIO_EXPERIMENT.pass2Configs),
-        pass3Configs: csvSet(argMap.get('--pass3-configs'), PORTFOLIO_EXPERIMENT.pass3Configs),
-        conditionalPasses: PORTFOLIO_EXPERIMENT.conditionalPasses,
+        pass1Ms: Number(argMap.get('--pass1-ms') || LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass1Ms),
+        pass2Ms: Number(argMap.get('--pass2-ms') || LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass2Ms),
+        pass3Ms: Number(argMap.get('--pass3-ms') || LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass3Ms),
+        pass2Configs: csvSet(argMap.get('--pass2-configs'), LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass2Configs),
+        pass3Configs: csvSet(argMap.get('--pass3-configs'), LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.pass3Configs),
+        conditionalPasses: LEGACY_LATENCY_PORTFOLIO_EXPERIMENT.conditionalPasses,
     };
 }
 
@@ -280,10 +283,10 @@ const checkpointSignature = JSON.stringify({
     corpusDigest: createHash('sha256').update(readFileSync(corpusPath)).digest('hex'),
     args: args.filter(arg => arg !== '--resume' && arg !== '--').sort(),
 });
-const portfolioExperiment = experimentFromArgs();
+const legacyLatencyPortfolioExperiment = experimentFromArgs();
 
 const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
-if (schedulerMode === 'portfolio-experiment') solveOpts.portfolioExperiment = portfolioExperiment;
+if (schedulerMode === 'legacy-latency-portfolio-experiment') solveOpts.legacyLatencyPortfolioExperiment = legacyLatencyPortfolioExperiment;
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
 if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
 if (Number.isFinite(repairBudgetFraction)) solveOpts.repairBudgetFractionOverride = repairBudgetFraction;
@@ -601,13 +604,13 @@ function writeReport() {
         priority: priorityField ? { field: priorityField, order: priorityOrder } : null,
         attemptCache: attemptCachePath,
         attemptCacheSkipped: cachedSkipRows.length,
-        portfolioExperiment: schedulerMode === 'portfolio-experiment' ? {
-            pass1Ms: portfolioExperiment.pass1Ms,
-            pass2Ms: portfolioExperiment.pass2Ms,
-            pass3Ms: portfolioExperiment.pass3Ms,
-            pass2Configs: [...portfolioExperiment.pass2Configs],
-            pass3Configs: [...portfolioExperiment.pass3Configs],
-            conditionalPasses: (portfolioExperiment.conditionalPasses ?? []).map(pass2 => ({
+        legacyLatencyPortfolioExperiment: schedulerMode === 'legacy-latency-portfolio-experiment' ? {
+            pass1Ms: legacyLatencyPortfolioExperiment.pass1Ms,
+            pass2Ms: legacyLatencyPortfolioExperiment.pass2Ms,
+            pass3Ms: legacyLatencyPortfolioExperiment.pass3Ms,
+            pass2Configs: [...legacyLatencyPortfolioExperiment.pass2Configs],
+            pass3Configs: [...legacyLatencyPortfolioExperiment.pass3Configs],
+            conditionalPasses: (legacyLatencyPortfolioExperiment.conditionalPasses ?? []).map(pass2 => ({
                 passNumber: pass2.passNumber, capMs: pass2.capMs, configs: [...pass2.configs], when: pass2.when,
             })),
         } : null,
@@ -710,8 +713,8 @@ if (workerCount <= 1) {
     if (racePool) await racePool.shutdown();
 } else {
     const workerScript = path.join(root, 'scripts', 'portfolio-solve-sweep-worker.mjs');
-    const workerSolveOpts = solveOpts.portfolioExperiment
-        ? { ...solveOpts, portfolioExperiment: serializePortfolioExperiment(solveOpts.portfolioExperiment) }
+    const workerSolveOpts = solveOpts.legacyLatencyPortfolioExperiment
+        ? { ...solveOpts, legacyLatencyPortfolioExperiment: serializePortfolioExperiment(solveOpts.legacyLatencyPortfolioExperiment) }
         : solveOpts;
     // racePoolSize travels with each task: portfolio-solve-sweep-worker.mjs lazily creates ONE
     // persistent race pool per forked worker process (not per task) and reuses it across every
