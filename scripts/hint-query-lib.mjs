@@ -1,8 +1,17 @@
 import { hintProvenanceClasses, summarizeProvenanceClasses } from './stress/provenance-classes.mjs';
 import { classifyProvenanceSource, sourcesForHint } from './stress/solution-profile-lib.mjs';
+import { normalizeSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
 
 const sortedCounts = values => Object.fromEntries([...values.entries()]
     .sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0]))));
+
+// No legacy retryTier value is currently persisted in data/hints/, but route it through the
+// central normalizer anyway (defense-in-depth) so a historical hint record carrying a legacy
+// stage id is still grouped/matched under its canonical form rather than as a separate value.
+function normalizeRetryTier(value) {
+    if (value === null || value === undefined || value === '') return value;
+    try { return normalizeSolverStageId(value); } catch { return value; }
+}
 
 function addCount(map, value) {
     if (value === null || value === undefined || value === '') return;
@@ -34,7 +43,7 @@ export function summarizeHintRecords(hints, { standard = 'strict' } = {}) {
             addCount(entrySources, classifyProvenanceSource(entry));
             addCount(solverIds, entry?.solver?.id);
             addCount(techniques, entry?.solver?.technique);
-            addCount(retryTiers, entry?.solver?.forcing?.retryTier);
+            addCount(retryTiers, normalizeRetryTier(entry?.solver?.forcing?.retryTier));
             workSpent.push(entry?.search?.workSpent);
             nodesExpanded.push(entry?.search?.nodesExpanded);
             elapsedMs.push(entry?.search?.elapsedMs);
@@ -66,7 +75,7 @@ export function compactHintRecord(hint, index, { standard = 'strict' } = {}) {
     for (const entry of entries) {
         if (entry?.solver?.id) solverIds.add(entry.solver.id);
         if (entry?.solver?.technique) techniques.add(entry.solver.technique);
-        if (entry?.solver?.forcing?.retryTier) retryTiers.add(entry.solver.forcing.retryTier);
+        if (entry?.solver?.forcing?.retryTier) retryTiers.add(normalizeRetryTier(entry.solver.forcing.retryTier));
         if (Number.isFinite(entry?.search?.workSpent)) workSpent.push(entry.search.workSpent);
     }
     return {
@@ -92,7 +101,7 @@ export function queryHintRecords(hints, options = {}) {
         if (source && !compact.sources.includes(source)) return;
         if (solverId && !compact.solverIds.includes(solverId)) return;
         if (technique && !compact.techniques.some(value => value === technique || value.includes(technique))) return;
-        if (retryTier && !compact.retryTiers.includes(retryTier)) return;
+        if (retryTier && !compact.retryTiers.includes(normalizeRetryTier(retryTier))) return;
         if (needle && !JSON.stringify(compact).toLowerCase().includes(needle)) return;
         out.push({ compact, hint });
     });

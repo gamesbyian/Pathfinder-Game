@@ -153,7 +153,10 @@ mkdirSync(toolDir, { recursive: true });
 const solveCorpusPath = path.join(toolDir, `level-blind-corpus-${process.pid}.json`);
 writeFileSync(solveCorpusPath, JSON.stringify(mechanicsOnlyCorpus));
 
-const solveOpts = { timeBudgetMs: budgetMs };
+// This tool always runs the production scheduler (it has no --scheduler-mode flag); set it
+// explicitly rather than relying on solveLevel()'s implicit default so the reported label below
+// matches the actually-resolved mode.
+const solveOpts = { timeBudgetMs: budgetMs, schedulerMode: 'production' };
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
 if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
 if (strictTotalWorkBudget) solveOpts.strictTotalWorkBudget = true;
@@ -181,7 +184,7 @@ function writeReport() {
     const summary = {
         generatedAt: new Date().toISOString(), commit,
         corpus: path.relative(root, corpusPath), corpusSha256, sampleSha256,
-        schedulerMode: 'legacy', levelBlind: true,
+        schedulerMode: 'production', levelBlind: true,
         solverInputFields: PUZZLE_FIELDS, historicalInputs: [], budgetMs,
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
         workBudget: Number.isFinite(workBudget) ? workBudget : null,
@@ -229,7 +232,7 @@ try {
             const levelNumber = targets[index];
             const original = rawLevels[levelNumber - 1];
             const result = workerResult.result;
-            const row = buildRow(levelNumber, original?.id ?? null, result, 'legacy');
+            const row = buildRow(levelNumber, original?.id ?? null, result, 'production');
             if (saveHints) {
                 row.hintAppended = hintCapture.record(hintLevels[levelNumber - 1], result);
                 if (row.hintAppended) {

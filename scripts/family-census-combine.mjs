@@ -26,7 +26,7 @@ import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { parseShardLog } from './family-census-parse-shard-logs.mjs';
-import { normalizeRoutingRegime } from '../modules/solver/routing-regime.ts';
+import { normalizeRoutingRegime } from '../modules/solver/routing-regime-normalization.mjs';
 
 // The manifest may carry either the legacy archetype/navDensity fields or the canonical
 // routingRegime/requiredPathCoverageRatio fields -- dual-read both, canonical-write only the

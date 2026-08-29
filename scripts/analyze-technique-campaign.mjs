@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-import { normalizeSolverStageId } from '../modules/solver/stage-policy.js';
+import { normalizeSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
 
 const directory = process.argv[2] ?? 'reports/experiments/2026-08-13-technique-tuning';
 const output = process.argv[3] ?? path.join(directory, 'aggregate.json');

@@ -5,8 +5,12 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 const hash = ids => createHash('sha256').update(ids.join('\n')).digest('hex');
+// Runs the analyzer directly under plain `node` (no run-bundled.mjs/tsx step): its only
+// modules/solver/ import (normalizeSolverStageId) resolves a plain-JS sibling, so this is its
+// real, documented invocation contract (docs/tooling-catalog.md, docs/testing.md) and must stay
+// runnable that way, including under the repo's supported Node 20 baseline.
 const runAnalyzer = (directory, output) => spawnSync(process.execPath,
-    ['scripts/run-bundled.mjs', 'scripts/analyze-technique-campaign.mjs', directory, output], { encoding:'utf8' });
+    ['scripts/analyze-technique-campaign.mjs', directory, output], { encoding:'utf8' });
 const dir = mkdtempSync(path.join(tmpdir(), 'technique-campaign-'));
 const summary = { levelBlind:true, levelsRequested:2, levelsRun:2, corpus:'fixture.json', commit:'a'.repeat(40), nodeBudget:10, workBudget:20, workers:1 };
 const levels = [
@@ -54,7 +58,7 @@ run=runAnalyzer(dir,out); assert.notEqual(run.status,0); assert.match(run.stderr
     writeFileSync(path.join(legacyDir,'manifest.json'),JSON.stringify({experiments:[{id:'T-2',class:'targeted-diagnostic',question:'q',artifacts:['only.json']}]}));
     const legacyOut = path.join(legacyDir,'aggregate.json');
     const legacyRun = spawnSync(process.execPath,
-        ['scripts/run-bundled.mjs', 'scripts/analyze-technique-campaign.mjs', legacyDir, legacyOut], { encoding:'utf8' });
+        ['scripts/analyze-technique-campaign.mjs', legacyDir, legacyOut], { encoding:'utf8' });
     assert.equal(legacyRun.status, 0, legacyRun.stderr);
     const legacyResult = JSON.parse(readFileSync(legacyOut));
     const arm = legacyResult.arms.find(a => a.file === 'only.json');

@@ -1,35 +1,10 @@
-/** Stable policy-level identities shared by orchestration, telemetry, and alternate schedulers. */
-export const SOLVER_STAGE_IDS = [
-    'explicit-prime', 'early-repair-search', 'main-search', 'repair-fallback', 'goal-attraction-disabled-retry',
-    'repair-shrink-recovery', 'admissible-order-fallback', 'coarse-state-near-tie-retention-disabled-retry',
-    'admissible-order-alternate-tiebreak-retry', 'connectivity-axis-prune-disabled-retry',
-    'repair-elite-prefix-dfs-retry', 'must-cross-neighbor-prune-disabled-retry', 'late-repair-search',
-    'guidance-goal-distance-retry', 'late-repair-multiseed-retry',
-    'legacy-latency-portfolio-pass', 'legacy-latency-portfolio-fallback',
-] as const;
+/** Stable policy-level identities shared by orchestration, telemetry, and alternate schedulers.
+ * The ID list and the legacy-to-canonical normalizer live in ./stage-id-normalization.mjs (plain
+ * JS) so plain-`node`-invoked research tooling can import the single source of truth without a
+ * TypeScript resolution step; re-exported here for every TypeScript consumer. */
+import { SOLVER_STAGE_IDS, normalizeSolverStageId } from './stage-id-normalization.mjs';
+export { SOLVER_STAGE_IDS, normalizeSolverStageId };
 export type SolverStageId = typeof SOLVER_STAGE_IDS[number];
-const LEGACY_SOLVER_STAGE_ID_MAP: Readonly<Record<string, SolverStageId>> = Object.freeze({
-    'prime': 'explicit-prime',
-    'repair-probe': 'early-repair-search',
-    'main-loop': 'main-search',
-    'attraction-diversity': 'goal-attraction-disabled-retry',
-    'repair-probe-shrink-recovery': 'repair-shrink-recovery',
-    'admissible-order': 'admissible-order-fallback',
-    'dedup-near-tie-retry': 'coarse-state-near-tie-retention-disabled-retry',
-    'admissible-order-non-default-retry': 'admissible-order-alternate-tiebreak-retry',
-    'connectivity-axis-exhausted-retry': 'connectivity-axis-prune-disabled-retry',
-    'mc-neighbor-budget-retry': 'must-cross-neighbor-prune-disabled-retry',
-    'repair-late-probe': 'late-repair-search',
-    'goal-attraction-legacy-distance-retry': 'guidance-goal-distance-retry',
-    'repair-late-probe-multi-seed-retry': 'late-repair-multiseed-retry',
-    'portfolio-pass': 'legacy-latency-portfolio-pass',
-    'portfolio-fallback': 'legacy-latency-portfolio-fallback',
-});
-export function normalizeSolverStageId(id: string): SolverStageId {
-    const normalized = LEGACY_SOLVER_STAGE_ID_MAP[id] ?? id;
-    if ((SOLVER_STAGE_IDS as readonly string[]).includes(normalized)) return normalized as SolverStageId;
-    throw new Error(`Unknown solver stage: ${String(id)}`);
-}
 export type SolverStagePolicyStatus = 'production-default' | 'opt-in' | 'experiment-only';
 export type SolverSchedulerPhase = 'prime' | 'probe' | 'main' | 'fallback' | 'retry' | 'legacy-latency-portfolio';
 export type StageBudgetPolicyId = 'caller-main' | 'fixed-probe' | 'additive-wall-multiplier' | 'withheld-node-reserve' | 'additive-node-headroom' | 'fixed-node-cap' | 'portfolio-pass';

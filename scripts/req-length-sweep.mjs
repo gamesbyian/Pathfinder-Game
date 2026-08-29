@@ -14,6 +14,7 @@ import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { parseLevelPositions, readLevelsWithHints } from './level-data-io.mjs';
 import { validateRawLevel } from '../modules/domain/level-schema.js';
 import { buildReqLengths, classifyFeasibility, classifyRuns, parseInteger, portalFreeParityReason, summarizePoints, summarizeRuns } from './req-length-sweep-lib.mjs';
+import { normalizeSchedulerMode } from '../modules/solver/scheduler-mode-normalization.mjs';
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--')).map(arg => {
     const [key, ...parts] = arg.split('=');
@@ -35,14 +36,10 @@ if (repairBudgetFraction !== null && (!Number.isFinite(repairBudgetFraction) || 
 }
 // Accept both the canonical scheduler-mode names and their legacy aliases (live workflows still
 // pass `legacy`); normalize to the canonical spelling so the solver call and this tool's own
-// output metadata single-write only the current vocabulary.
-const SCHEDULER_MODE_ALIASES = Object.freeze({ legacy: 'production', 'portfolio-experiment': 'legacy-latency-portfolio-experiment' });
-const CANONICAL_SCHEDULER_MODES = ['production', 'legacy-latency-portfolio-experiment'];
+// output metadata single-write only the current vocabulary. Unlike portfolio-solve-sweep.mjs,
+// this tool defaults an omitted --scheduler-mode to the legacy alias rather than throwing.
 const rawSchedulerMode = args.get('--scheduler-mode') || 'legacy';
-if (!Object.keys(SCHEDULER_MODE_ALIASES).includes(rawSchedulerMode) && !CANONICAL_SCHEDULER_MODES.includes(rawSchedulerMode)) {
-    throw new Error('--scheduler-mode must be one of: production, legacy-latency-portfolio-experiment (legacy aliases: legacy, portfolio-experiment)');
-}
-const schedulerMode = SCHEDULER_MODE_ALIASES[rawSchedulerMode] ?? rawSchedulerMode;
+const schedulerMode = normalizeSchedulerMode(rawSchedulerMode);
 const levelFilter = parseLevelPositions(args.get('--levels') || 'pos:1');
 
 installBrowserStubs();

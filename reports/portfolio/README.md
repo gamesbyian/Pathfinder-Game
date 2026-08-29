@@ -42,7 +42,7 @@ explicitly reopens the scheduler experiment, the historical corpus-1 command can
 checkpoint with `--resume` and `--workers`; do not run it merely to complete a stale table:
 
 ```
-node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=data/stress/stress-levels.json --levels=37,39,44,45,49,57,65,66,71,73,75,82,87,93,95,96,98 --budget-ms=15000 --workers=4 --resume --checkpoint=reports/portfolio/corpus1-unsolved-17-15000.checkpoint.jsonl --save-hints --out=reports/portfolio/corpus1-unsolved-17-15000.json --summary-out=reports/portfolio/corpus1-unsolved-17-15000-summary.md
+node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --scheduler-mode=legacy-latency-portfolio-experiment --corpus=data/stress/stress-levels.json --levels=37,39,44,45,49,57,65,66,71,73,75,82,87,93,95,96,98 --budget-ms=15000 --workers=4 --resume --checkpoint=reports/portfolio/corpus1-unsolved-17-15000.checkpoint.jsonl --save-hints --out=reports/portfolio/corpus1-unsolved-17-15000.json --summary-out=reports/portfolio/corpus1-unsolved-17-15000-summary.md
 ```
 
 ## Published corpus comparison

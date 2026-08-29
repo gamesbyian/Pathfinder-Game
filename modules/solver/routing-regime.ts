@@ -3,33 +3,14 @@
 // policy layer can evolve independently from raw level metrics.
 
 import type { NormalizedLevel } from '../domain/types.js';
+// The canonical value list and the legacy-to-canonical normalizer live in
+// ./routing-regime-normalization.mjs (plain JS) so plain-`node`-invoked research tooling can
+// import the single source of truth without a TypeScript resolution step; re-exported here for
+// every TypeScript consumer.
+import { ROUTING_REGIMES, normalizeRoutingRegime } from './routing-regime-normalization.mjs';
+export { normalizeRoutingRegime };
 
-export type RoutingRegime =
-    | 'general'
-    | 'sparse-low-intersection'
-    | 'intersection-heavy'
-    | 'must-cross-heavy'
-    | 'multi-portal';
-
-const LEGACY_ROUTING_REGIME_ALIASES: Readonly<Record<string, RoutingRegime>> = Object.freeze({
-    default: 'general',
-    'near-closure': 'sparse-low-intersection',
-    'high-intersection-burden': 'intersection-heavy',
-    'must-cross-heavy': 'must-cross-heavy',
-    'portal-heavy': 'multi-portal',
-});
-
-const ROUTING_REGIMES = new Set<RoutingRegime>([
-    'general', 'sparse-low-intersection', 'intersection-heavy', 'must-cross-heavy', 'multi-portal',
-]);
-
-/** Accept historical persisted routing labels and normalize them to the canonical vocabulary. */
-export function normalizeRoutingRegime(value: string): RoutingRegime {
-    const normalized = LEGACY_ROUTING_REGIME_ALIASES[value] ?? value;
-    if (!ROUTING_REGIMES.has(normalized as RoutingRegime))
-        throw new Error(`Unknown solver routing regime: ${value}`);
-    return normalized as RoutingRegime;
-}
+export type RoutingRegime = typeof ROUTING_REGIMES[number];
 
 /**
  * Count cells that can contribute to the path body under this routing metric.
