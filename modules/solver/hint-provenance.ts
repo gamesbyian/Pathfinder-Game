@@ -6,7 +6,8 @@ import type { Hint, HintProvenanceEntry } from '../domain/hint-types.js';
 import type { Attempt } from './orchestration.js';
 
 /** Partial attempts remain typed from orchestration's canonical Attempt contract. */
-type AttemptLike = Partial<Attempt> & {
+type AttemptLike = Omit<Partial<Attempt>, 'stageId'> & {
+    stageId?: Attempt['stageId'] | string;
     ok?: boolean;
     /** Historical persisted attempt fields accepted on read only. */
     profile?: string;
