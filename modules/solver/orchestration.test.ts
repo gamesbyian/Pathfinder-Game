@@ -6,7 +6,7 @@ import { test } from 'vitest';
 // modules/solver/lower-bounds.test.ts's identical gate for the full rationale).
 const deepTest = process.env.SOLVER_DEEP_TESTS === '0' ? test.skip : test;
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
+import { getFalseGoalTriggerSearchBudgetMs, solveLevel, runAttempt, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION, DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION, normalizeAblationConfig, REPAIR_PROBE_ATTEMPT_MS_CAP, REPAIR_PROBE_BIASED_NODE_BUDGET, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE, REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE } from './orchestration.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
@@ -273,8 +273,8 @@ test('solveLevel fails when forcedPortalExitKey points away from the goal', asyn
     assert.equal(result.ok, false);
 });
 
-test('getTrapSpotBudgetMs scales with area and special mechanics within bounds', () => {
-    const small = getTrapSpotBudgetMs(makeLineLevel());
+test('getFalseGoalTriggerSearchBudgetMs scales with area and special mechanics within bounds', () => {
+    const small = getFalseGoalTriggerSearchBudgetMs(makeLineLevel());
     assert.equal(small, 10000);
 
     const large = makeLineLevel();
@@ -282,18 +282,18 @@ test('getTrapSpotBudgetMs scales with area and special mechanics within bounds',
     large.reqLen = 5000;
     large.mustPassKeys = [PACK(1, 0), PACK(2, 0)];
     large.portalMap = new Map([[PACK(0, 0), { dest: PACK(1, 0) }]]);
-    const capped = getTrapSpotBudgetMs(large);
+    const capped = getFalseGoalTriggerSearchBudgetMs(large);
     assert.equal(capped, 120000);
 });
 
-test('getTrapSpotBudgetMs scales the search-dependent cost with gate count', () => {
+test('getFalseGoalTriggerSearchBudgetMs scales the search-dependent cost with gate count', () => {
     // The search runs a DFS per gate and splits the budget, so more gates => more
     // budget (until the cap), preventing later gates from being starved.
     const base = makeLineLevel();
     base.grid = { w: 10, h: 10 };
     base.reqLen = 30;
-    const oneGate = getTrapSpotBudgetMs({ ...base, gateKeys: [PACK(0, 0)] });
-    const threeGates = getTrapSpotBudgetMs({ ...base, gateKeys: [PACK(0, 0), PACK(9, 0), PACK(0, 9)] });
+    const oneGate = getFalseGoalTriggerSearchBudgetMs({ ...base, gateKeys: [PACK(0, 0)] });
+    const threeGates = getFalseGoalTriggerSearchBudgetMs({ ...base, gateKeys: [PACK(0, 0), PACK(9, 0), PACK(0, 9)] });
     assert.ok(threeGates > oneGate, `expected ${threeGates} > ${oneGate}`);
 });
 
