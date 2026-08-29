@@ -200,10 +200,10 @@ let levels = sampleDeterministic(filterByMechanic(selectLevelsBySpec(corpusLevel
 
 // Current console/summary output uses the same canonical config identity as persisted reports.
 const attemptLabel = a => formatAttemptIdentityKey({
-    profileName: a.profile ?? 'unknown',
-    templateId: a.template ?? null,
+    scoringProfileId: a.scoringProfileId ?? a.profile ?? 'unknown',
+    orderingBiasId: a.orderingBiasId ?? a.template ?? null,
     beamWidth: a.beamWidth,
-    diverseBeam: a.diverseBeam,
+    mechanicBucketRetention: a.mechanicBucketRetention ?? a.diverseBeam,
     repair: a.repair,
     repairMustTurnBiased: a.repairMustTurnBiased,
     repairTurnBiased: a.repairTurnBiased,
@@ -287,7 +287,7 @@ async function solveEntry(entry, solve) {
         failedStrategies: attempts.filter(a => !a.ok).map(attemptLabel),
         attempts,
     };
-    const line = `  ${id} [${batch}] ${ok ? '✓' : '✗'} ${elapsedMs}ms ${ok ? (winner ? winner.profile : '?') : result.status}` +
+    const line = `  ${id} [${batch}] ${ok ? '✓' : '✗'} ${elapsedMs}ms ${ok ? (winner ? winner.scoringProfileId : '?') : result.status}` +
         (refereeValid === false ? '  !! solver path fails PLAY referee' : '');
     return { record, line };
 }
