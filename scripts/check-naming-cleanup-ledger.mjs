@@ -18,6 +18,11 @@ const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8'));
 const failures = [];
 const allowedEntryStatuses = new Set(['pending', 'in-progress', 'done']);
 const allowedVerification = new Set(['pending', 'done', 'not-applicable']);
+const allowedMigrationClasses = new Set([
+  'direct-current-surface-rename',
+  'compatibility-boundary-migration',
+  'current-surface-rename-preserve-frozen-history',
+]);
 const verificationKeys = [
   'surfaceInventory',
   'implementation',
@@ -52,6 +57,10 @@ for (const [index, entry] of (ledger.entries ?? []).entries()) {
     continue;
   }
   if (entry.phase < 8) continue;
+
+  if (!allowedMigrationClasses.has(entry.migrationClass)) {
+    failures.push(`${label}: Phase-8+ row is missing/has invalid migrationClass ${JSON.stringify(entry.migrationClass)}`);
+  }
 
   const verification = entry.verification;
   if (!verification || typeof verification !== 'object' || Array.isArray(verification)) {
@@ -93,4 +102,4 @@ if (failures.length) {
 }
 
 const future = (ledger.entries ?? []).filter(entry => entry.phase >= 8);
-console.log(`Naming-cleanup ledger contract valid: Phase-8 gate=${gate.status}; ${future.length} Phase-8+ rows have explicit verification state.`);
+console.log(`Naming-cleanup ledger contract valid: Phase-8 gate=${gate.status}; ${future.length} Phase-8+ rows have migration classes and explicit verification state.`);
