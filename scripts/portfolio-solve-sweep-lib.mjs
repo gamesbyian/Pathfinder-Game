@@ -5,8 +5,9 @@ import { formatAttemptActionKey, formatAttemptIdentityKey, normalizeAttemptIdent
 /** Reconstruct canonical config identity from a persisted Attempt shape. */
 export function attemptConfigKey(attempt) {
     return formatAttemptIdentityKey({
-        profileName: attempt?.profile ?? 'unknown', templateId: attempt?.template ?? null,
-        beamWidth: attempt?.beamWidth, diverseBeam: attempt?.diverseBeam, repair: attempt?.repair,
+        scoringProfileId: attempt?.scoringProfileId ?? attempt?.profile ?? 'unknown',
+        orderingBiasId: attempt?.orderingBiasId ?? attempt?.template ?? null,
+        beamWidth: attempt?.beamWidth, mechanicBucketRetention: attempt?.mechanicBucketRetention ?? attempt?.diverseBeam, repair: attempt?.repair,
         repairMustTurnBiased: attempt?.repairMustTurnBiased, repairTurnBiased: attempt?.repairTurnBiased,
         admissibleOrder: attempt?.admissibleOrder, admissibleOrderNoTieBreak: attempt?.admissibleOrderNoTieBreak,
         admissibleOrderLds: attempt?.admissibleOrderLds,
@@ -29,8 +30,9 @@ export function attemptActionKey(attempt) {
     if (!attempt?.stageId) return null;
     return formatAttemptActionKey({
         stageId: attempt.stageId,
-        profileName: attempt?.profile ?? 'unknown', templateId: attempt?.template ?? null,
-        beamWidth: attempt?.beamWidth, diverseBeam: attempt?.diverseBeam, repair: attempt?.repair,
+        scoringProfileId: attempt?.scoringProfileId ?? attempt?.profile ?? 'unknown',
+        orderingBiasId: attempt?.orderingBiasId ?? attempt?.template ?? null,
+        beamWidth: attempt?.beamWidth, mechanicBucketRetention: attempt?.mechanicBucketRetention ?? attempt?.diverseBeam, repair: attempt?.repair,
         repairMustTurnBiased: attempt?.repairMustTurnBiased, repairTurnBiased: attempt?.repairTurnBiased,
         admissibleOrder: attempt?.admissibleOrder, admissibleOrderNoTieBreak: attempt?.admissibleOrderNoTieBreak,
         admissibleOrderLds: attempt?.admissibleOrderLds,
@@ -84,7 +86,10 @@ export function attemptRecord(a) {
     return {
         ...(a.stageId !== undefined ? { stageId: a.stageId } : {}),
         ...(actionKey !== null ? { actionKey } : {}),
-        gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
+        gateKey: a.gateKey,
+        scoringProfileId: a.scoringProfileId ?? a.profile,
+        orderingBiasId: a.orderingBiasId ?? a.template ?? null,
+        beamWidth: a.beamWidth,
         ok: a.ok, elapsedMs: a.elapsedMs,
         ...(a.outcome !== undefined ? { outcome: a.outcome } : {}),
         // Whitelist error fields; never persist arbitrary thrown objects/stacks.
@@ -98,7 +103,7 @@ export function attemptRecord(a) {
         ...(a.timedOut !== undefined ? { timedOut: a.timedOut } : {}),
         ...(a.bestBadness !== undefined ? { bestBadness: a.bestBadness } : {}),
         ...(a.finalBadness !== undefined ? { finalBadness: a.finalBadness } : {}),
-        ...(a.diverseBeam ? { diverseBeam: true } : {}),
+        ...(a.mechanicBucketRetention || a.diverseBeam ? { mechanicBucketRetention: true } : {}),
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
         ...(a.repairTurnBiased ? { repairTurnBiased: true } : {}),
