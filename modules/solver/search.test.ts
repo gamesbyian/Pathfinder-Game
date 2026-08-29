@@ -242,7 +242,7 @@ test('beamSearchFromGate credits nodesExpanded even when it times out mid-search
 // The fix accumulates every completed phase into nodesExpandedTotal. A wandering solve (reqLen far
 // above the Manhattan distance) needs ~reqLen phases, each processing >=1 frontier node, so the
 // credited count must far exceed any single phase's frontier (bounded here by beamWidth). Beam is
-// deterministic (no RNG without diverseBeam), so this is a stable lower bound, not a timing guess.
+// deterministic (no RNG without mechanicBucketRetention), so this is a stable lower bound, not a timing guess.
 test('beamSearchFromGate credits all phases nodesExpanded on a multi-phase success (not just the last)', async () => {
   const level = makeLevel({
     grid: { w: 9, h: 9 },
@@ -295,7 +295,7 @@ test('dfsFromGateLDS (STRATEGY_LDS bypassed) credits nodesExpanded even when it 
 // primitive: (1) a cap below the solve cost stops the search near the cap without solving, and
 // (2) a cap comfortably above the solve cost is inert (identical solve, identical node count) --
 // which is why production (nodeBudget defaults to Infinity) is byte-for-byte unchanged. Both
-// searches are deterministic here (no diverseBeam / no RNG), so the node counts are stable bounds.
+// searches are deterministic here (no mechanicBucketRetention / no RNG), so the node counts are stable bounds.
 test('beamSearchFromGate honors a finite nodeBudget (caps below solve cost stop it; caps above are inert)', async () => {
   const level = makeLevel({ grid: { w: 9, h: 9 }, reqLen: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
   const base = prepLevel(level); base._cfg = null; base._metrics = { nodesExpanded: 0 };
@@ -318,16 +318,16 @@ test('beamSearchFromGate honors a finite nodeBudget (caps below solve cost stop 
   assert.equal(slack._metrics!.nodesExpanded, solveNodes, 'a slack cap must not change the node count (production stays byte-identical)');
 });
 
-// Differential test for the fast numeric dedup/diversity key (search.ts's beamNumericDedupKey):
-// exercises must-pass/must-cross/flipper mechanics together (all 7 dedup fields nonzero at some
+// Differential test for the fast numeric coarse-state-merge/diversity key (search.ts's beamNumericDedupKey):
+// exercises must-pass/must-cross/flipper mechanics together (all 7 coarse-state fields nonzero at some
 // point) on an open grid wide enough to blow past a small beamWidth every phase, forcing the
-// dedup/near-tie-retention/diverse-select machinery to run repeatedly. Runs the identical search
+// coarse-state-merge/near-tie-retention/mechanic-bucket-selection machinery to run repeatedly. Runs the identical search
 // twice -- once through the default numeric path, once forced onto the delimited-string fallback
 // via prep._forceBeamCoarseStateStringKeyForTests -- and asserts byte-identical nodesExpanded and an
-// identical solved path, proving the numeric encoding reproduces the string encoding's dedup/
-// diversity decisions exactly, not just "solves the same level." See beamNumericDedupKey's own
+// identical solved path, proving the numeric encoding reproduces the string encoding's coarse-state-merge/
+// mechanic-bucket retention decisions exactly, not just "solves the same level." See beamNumericDedupKey's own
 // comment in search.ts and reports/2026-08-23-beam-dedup-numeric-key-arena.md.
-test('beamSearchFromGate numeric dedup key reproduces the string-key fallback exactly (diverseBeam off)', async () => {
+test('beamSearchFromGate numeric coarse-state key reproduces the string-key fallback exactly (mechanicBucketRetention off)', async () => {
   const level = makeLevel({
     grid: { w: 9, h: 9 }, reqLen: 40, reqInt: 0, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)],
     mustPassKeys: [PACK(2, 2), PACK(4, 4), PACK(6, 6)],
@@ -343,14 +343,14 @@ test('beamSearchFromGate numeric dedup key reproduces the string-key fallback ex
   const stringPath = await beamSearchFromGate(PACK(0, 0), level, stringKey, SCORING_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
 
   assert.ok(numericPath, 'expected the beam to solve within the generous budget');
-  assert.deepEqual(numericPath, stringPath, 'numeric and string dedup keys must reach an identical solution path');
+  assert.deepEqual(numericPath, stringPath, 'numeric and string coarse-state keys must reach an identical solution path');
   assert.equal(numeric._metrics!.nodesExpanded, stringKey._metrics!.nodesExpanded,
-    'numeric and string dedup keys must expand an identical number of nodes (proves identical merge decisions, not just identical final answer)');
+    'numeric and string coarse-state keys must expand an identical number of nodes (proves identical merge decisions, not just identical final answer)');
 });
 
-// Same differential, with diverseBeam on: exercises _diverseSelect's numeric (flipperUsedMask,
-// mustCrossMask) bucketing key together with the dedup key in the same run.
-test('beamSearchFromGate numeric dedup key reproduces the string-key fallback exactly (diverseBeam on)', async () => {
+// Same differential, with mechanicBucketRetention on: exercises _mechanicBucketSelect's numeric (flipperUsedMask,
+// mustCrossMask) bucketing key together with the coarse-state key in the same run.
+test('beamSearchFromGate numeric coarse-state key reproduces the string-key fallback exactly (mechanicBucketRetention on)', async () => {
   const level = makeLevel({
     grid: { w: 9, h: 9 }, reqLen: 40, reqInt: 0, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)],
     mustPassKeys: [PACK(2, 2), PACK(4, 4), PACK(6, 6)],
@@ -366,9 +366,9 @@ test('beamSearchFromGate numeric dedup key reproduces the string-key fallback ex
   const stringPath = await beamSearchFromGate(PACK(0, 0), level, stringKey, SCORING_PROFILES.default, 5000, Date.now(), null, beamWidth, null, true);
 
   assert.ok(numericPath, 'expected the beam to solve within the generous budget');
-  assert.deepEqual(numericPath, stringPath, 'numeric and string dedup keys must reach an identical solution path with diverseBeam on');
+  assert.deepEqual(numericPath, stringPath, 'numeric and string coarse-state keys must reach an identical solution path with mechanicBucketRetention on');
   assert.equal(numeric._metrics!.nodesExpanded, stringKey._metrics!.nodesExpanded,
-    'numeric and string dedup keys must expand an identical number of nodes with diverseBeam on');
+    'numeric and string coarse-state keys must expand an identical number of nodes with mechanicBucketRetention on');
 });
 
 test('dfsFromGateLDS honors a finite nodeBudget (it bounds the otherwise-unbounded final DFS wave)', async () => {

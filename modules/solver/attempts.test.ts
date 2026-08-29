@@ -281,17 +281,17 @@ test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps t
     const candidates = on.filter(c => c.scoringProfileId === 'intersectionHarvest' && c.beamWidth === 2000 && !c.mechanicBucketRetention);
     assert.equal(candidates.length, 1, 'descendant exposes exactly one STANDARD intersection-harvest beam');
 
-    // The reserve applies to ordinary main-loop configs only; getAttemptConfigs() appends
+    // The reserve applies to ordinary main-search configs only; getAttemptConfigs() appends
     // repair/admissible-order configs afterward, so compare the same scope stage-budget prices.
     const offMain = off.filter(c => !c.repair && !c.admissibleOrder);
     const onMain = on.filter(c => !c.repair && !c.admissibleOrder);
     assert.deepEqual(onMain.slice(-5).map(sig), offMain.slice(-5).map(sig),
-      'all five main-loop configs protected before treatment remain the final five main-loop configs after treatment');
+      'all five main-search configs protected before treatment remain the final five main-search configs after treatment');
     const candidateIndex = onMain.findIndex(c => c.scoringProfileId === 'intersectionHarvest' && c.beamWidth === 2000 && !c.mechanicBucketRetention);
     assert.equal(candidateIndex, Math.max(0, offMain.length - 5),
-      'candidate is inserted immediately before the old protected main-loop suffix');
+      'candidate is inserted immediately before the old protected main-search suffix');
     assert.deepEqual(onMain.filter((_, index) => index !== candidateIndex).map(sig), offMain.map(sig),
-      'removing the inserted action reproduces the production main-loop config order exactly');
+      'removing the inserted action reproduces the production main-search config order exactly');
   };
 
   assertPreservesSuffix(makeLevel({ reqLen: 60, reqInt: 8 }));
@@ -349,7 +349,7 @@ test('STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE is default-ON (promoted 2026
   const off = getAttemptConfigs(level, { ...defaultConfig(), STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE: false });
   assert.equal(off.some(c => c.beamWidth === 5000 && !c.mechanicBucketRetention), false,
     'explicitly disabling restores the pre-promotion ladder');
-  // The two configs are inserted right after the routing-regime rule's own main-loop configs, before
+  // The two configs are inserted right after the routing-regime rule's own main-search configs, before
   // repair-fallback/admissible-order are appended (getAttemptConfigs's own ordering) — so removing
   // them from `on` must reproduce `off` exactly: purely additive, nothing else moved.
   const withoutPlainWide = on.filter(c => !(c.beamWidth === 5000 && !c.mechanicBucketRetention && !c.repair));
@@ -420,21 +420,21 @@ test('SOLVER_TESTING_API exposes the extracted attempt-order helper', () => {
   assert.deepEqual(SOLVER_TESTING_API.getAttemptConfigs(level), getAttemptConfigs(level));
 });
 
-test('must-cross-threaded medium-high-int levels get floored diverse wide beams', () => {
+test('must-cross-threaded medium-high-int levels get floored mechanic-bucket-retention wide beams', () => {
   // reqInt 5 at density ~0.55 → intersection-heavy, below the very-high-reqInt and
   // near-Hamiltonian branches. With ≥2 must-cross cells the plain 2000-wide beams collapse
-  // to one structural mode and DFS never recovers (stress-corpus finding: the diverse
-  // bucketed WIDE beam solves these in seconds while the shipped ladder times out).
+  // to one structural mode and DFS never recovers (stress-corpus finding: the mechanic-bucket-retained
+  // WIDE beam solves these in seconds while the shipped ladder times out).
   const level = makeLevel({ reqLen: 55, reqInt: 5, mustCrossKeys: [PACK(4, 4), PACK(6, 6)] });
   const attempts = getAttemptConfigs(level);
-  const diverse = attempts.filter(c => c.mechanicBucketRetention);
-  assert.equal(diverse.length >= 2, true, 'expected diverse beam attempts');
+  const retained = attempts.filter(c => c.mechanicBucketRetention);
+  assert.equal(retained.length >= 2, true, 'expected mechanic-bucket-retention beam attempts');
   assert.equal(retained.some(c => c.scoringProfileId === 'intersectionHarvest' && (c.minBudgetFraction ?? 0) > 0), true,
-    'diverse intersectionHarvest beam needs a budget floor to survive ladder fragmentation');
+    'mechanic-bucket-retention intersectionHarvest beam needs a budget floor to survive ladder fragmentation');
   const perimeterIdx = attempts.findIndex(c => c.beamWidth && c.orderingBias?.id === 'perimeterCW');
-  const diverseIdx = attempts.findIndex(c => c.mechanicBucketRetention);
-  assert.equal(perimeterIdx >= 0 && perimeterIdx < diverseIdx, true,
-    'proven perimeter beam winners still lead; diverse beams follow');
+  const retainedIdx = attempts.findIndex(c => c.mechanicBucketRetention);
+  assert.equal(perimeterIdx >= 0 && perimeterIdx < retainedIdx, true,
+    'proven perimeter beam winners still lead; mechanic-bucket-retention beams follow');
 });
 
 test('medium-high-int levels without must-cross keep the plain beam ladder', () => {
@@ -443,7 +443,7 @@ test('medium-high-int levels without must-cross keep the plain beam ladder', () 
   assert.equal(attempts.some(c => c.mechanicBucketRetention), false);
 });
 
-test('very-high-reqInt levels with must-cross threading also get the diverse beams', () => {
+test('very-high-reqInt levels with must-cross threading also get mechanic-bucket-retention beams', () => {
   const level = makeLevel({ reqLen: 60, reqInt: 8, mustCrossKeys: [PACK(4, 4), PACK(6, 6)] });
   const attempts = getAttemptConfigs(level);
   assert.equal(attempts.some(c => c.mechanicBucketRetention && c.scoringProfileId === 'intersectionHarvest'), true);
