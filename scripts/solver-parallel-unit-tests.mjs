@@ -36,7 +36,7 @@ test('racedAttemptRecord preserves every dispatch-identity flag in every race ph
     },
   };
   assert.deepEqual(racedAttemptRecord(job, { ok: false, outcome: 'exhausted', elapsedMs: 12 }, { stageId: 'goal-attraction-disabled-retry' }), {
-    gateKey: 7, scoringProfileId: 'none', orderingBias: null, beamWidth: null,
+    gateKey: 7, scoringProfileId: 'none', orderingBiasId: null, beamWidth: null,
     repair: true, repairTurnBiased: true,
     admissibleOrder: true, admissibleOrderNoTieBreak: true, admissibleOrderLds: true,
     attractionDiversity: true, stageId: 'goal-attraction-disabled-retry',
@@ -54,7 +54,7 @@ test('racedAttemptRecord expands bounded worker errors with attempt identity', (
   assert.equal(record.allocatedBudgetMs, 50);
   assert.deepEqual(record.error, {
     name: 'TypeError', message: 'dispatch failed', gateKey: 7,
-    configKey: 'beam|score=default|bias=portal|width=500|retention=plain', scoringProfileId: 'default', orderingBias: 'portal',
+    configKey: 'beam|score=default|bias=portal|width=500|retention=plain', scoringProfileId: 'default', orderingBiasId: 'portal',
   });
 });
 
