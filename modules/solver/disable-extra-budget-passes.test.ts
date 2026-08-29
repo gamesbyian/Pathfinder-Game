@@ -39,7 +39,7 @@ test('disableExtraBudgetPasses suppresses late repair probe when no explicit ove
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
     });
-    assert.ok(enabled.attempts.some(attempt => attempt.repairLateProbe === true),
+    assert.ok(enabled.attempts.some(attempt => attempt.stageId === 'late-repair-search'),
         'fixture must actually reach the late repair probe when explicitly enabled');
 
     const suppressed = await solveLevel(level, {
@@ -47,6 +47,6 @@ test('disableExtraBudgetPasses suppresses late repair probe when no explicit ove
         ablation: { STRATEGY_REPAIR_LATE_PROBE: true },
         disableExtraBudgetPasses: true,
     });
-    assert.equal(suppressed.attempts.some(attempt => attempt.repairLateProbe === true), false,
+    assert.equal(suppressed.attempts.some(attempt => attempt.stageId === 'late-repair-search'), false,
         'global extra-budget suppression must prevent the late repair probe unless explicitly overridden');
 });
