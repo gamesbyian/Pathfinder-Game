@@ -25,6 +25,8 @@ assert.ok(inventory.summary.ciRoots.includes('check:nonlint'));
 assert.equal(inventory.summary.workflowPathStructuralCheckInCi, true);
 assert.ok(inventory.summary.moduleFiles > 0);
 assert.ok(inventory.summary.reportSurfaces > 0);
+assert.ok(inventory.reportSurfaces.some(row => row.producers.length > 0));
+assert.ok(inventory.reportSurfaces.some(row => row.consumers.length > 0));
 
 const hintValidator = inventory.scripts.find(row => row.file === 'scripts/hint-path-oracle.mjs');
 assert.ok(hintValidator, 'Phase-8 inventory should map hint-path-oracle.mjs');
