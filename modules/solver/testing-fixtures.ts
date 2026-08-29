@@ -42,7 +42,7 @@ export const MAXIMALLY_POPULATED_SOLVER_ATTEMPT = Object.freeze({
   bestBadness: 4,
   finalBadness: 6,
   attractionDiversity: true,
-  dedupNearTieRetry: true,
+  coarseStateNearTieRetentionRetry: true,
   admissibleOrderNonDefaultRetry: true,
   connectivityAxisExhaustedRetry: true,
   repairElitePrefixDfsRetry: true,
