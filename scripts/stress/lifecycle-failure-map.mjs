@@ -2,7 +2,7 @@
 /**
  * Mass-weighted failure map for a level-blind capability sweep run with `--lifecycle-telemetry`.
  *
- * The stage vocabulary is intentionally derived from each artifact's `techniqueLifecycle` object.
+ * The stage vocabulary is intentionally derived from each artifact's canonical `stageLifecycle` object (with `techniqueLifecycle` accepted only for historical artifacts).
  * Do not add a second hard-coded ladder-stage registry here: production orchestration already emits
  * the canonical ordered lifecycle map, and a stale local list once misattributed later retry wins to
  * older stages (see reports/2026-08-22-technique-census-reverse-oracle-diagnosis.md).
@@ -15,20 +15,28 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-/** Canonical per-row stage order, as emitted by orchestration's lifecycle telemetry. */
-export function techniqueNames(lifecycle) {
+/** Canonical per-row lifecycle, dual-reading historical techniqueLifecycle artifacts. */
+export function stageLifecycleOf(row) {
+    return row?.stageLifecycle ?? row?.techniqueLifecycle ?? null;
+}
+
+/** Canonical per-row stage names, as emitted by orchestration's lifecycle telemetry. */
+export function stageNames(lifecycle) {
     return Object.keys(lifecycle ?? {});
 }
+
+/** @deprecated Compatibility export for older callers. */
+export const techniqueNames = stageNames;
 
 /**
  * Stable union of stage names across rows. The first artifact that contains a stage fixes its
  * position; later artifacts can add newly introduced stages without older artifacts hiding them.
  */
-export function lifecycleTechniqueOrder(rows) {
+export function lifecycleStageOrder(rows) {
     const seen = new Set();
     const order = [];
     for (const row of rows) {
-        for (const name of techniqueNames(row.techniqueLifecycle)) {
+        for (const name of stageNames(stageLifecycleOf(row))) {
             if (seen.has(name)) continue;
             seen.add(name);
             order.push(name);
@@ -36,6 +44,9 @@ export function lifecycleTechniqueOrder(rows) {
     }
     return order;
 }
+
+/** @deprecated Compatibility export for older callers. */
+export const lifecycleTechniqueOrder = lifecycleStageOrder;
 
 /**
  * The lowest badness any technique reported on this level, with the technique that reached it.
@@ -45,7 +56,7 @@ export function lifecycleTechniqueOrder(rows) {
 export function bestProgressOf(lifecycle) {
     let best = null;
     let technique = null;
-    for (const name of techniqueNames(lifecycle)) {
+    for (const name of stageNames(lifecycle)) {
         for (const point of lifecycle[name]?.bestProgress ?? []) {
             for (const value of [point.bestBadness, point.finalBadness]) {
                 if (value == null || !Number.isFinite(Number(value))) continue;
@@ -66,7 +77,7 @@ export function bestProgressOf(lifecycle) {
  */
 export function lastReachedBeforeSolve(lifecycle) {
     let last = null;
-    for (const name of techniqueNames(lifecycle)) {
+    for (const name of stageNames(lifecycle)) {
         if (lifecycle[name]?.reached === true) last = name;
     }
     return last;
@@ -74,9 +85,9 @@ export function lastReachedBeforeSolve(lifecycle) {
 
 /** One row's terminal classification. */
 export function classifyRow(row) {
-    const lifecycle = row.techniqueLifecycle;
+    const lifecycle = stageLifecycleOf(row);
     if (!lifecycle) {
-        throw new Error(`level ${row.id ?? row.level}: missing techniqueLifecycle (run the sweep with --lifecycle-telemetry)`);
+        throw new Error(`level ${row.id ?? row.level}: missing stageLifecycle (legacy techniqueLifecycle also accepted; run the sweep with --lifecycle-telemetry)`);
     }
     const names = techniqueNames(lifecycle);
     const progress = bestProgressOf(lifecycle);
@@ -135,7 +146,7 @@ function emptyTechniqueBucket() {
 
 /** Aggregate map over already-classified rows. */
 export function buildMap(rows, { nodeBudget = null } = {}) {
-    const techniqueOrder = lifecycleTechniqueOrder(rows);
+    const techniqueOrder = lifecycleStageOrder(rows);
     const classified = rows.map(classifyRow);
     const unsolved = classified.filter(row => row.bucket !== 'solved');
     const solved = classified.filter(row => row.bucket === 'solved');
@@ -164,7 +175,7 @@ export function buildMap(rows, { nodeBudget = null } = {}) {
     for (const row of rows) {
         if (row.ok === true) continue;
         for (const name of techniqueOrder) {
-            const lifecycle = row.techniqueLifecycle?.[name];
+            const lifecycle = stageLifecycleOf(row)?.[name];
             if (!lifecycle) continue;
             const bucket = techniques[name];
             if (lifecycle.instantiated) bucket.instantiated += 1;
