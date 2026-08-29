@@ -1868,6 +1868,24 @@ test('normalizeAblationConfig rejects conflicting legacy/canonical routing flag 
     );
 });
 
+
+test('normalizeAblationConfig dual-reads the legacy near-tie retry flag and single-writes the canonical name', () => {
+    const cfg = normalizeAblationConfig({ STRATEGY_DEDUP_NEAR_TIE_RETRY: false })!;
+    assert.equal(cfg.STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY, false);
+    assert.equal(Object.hasOwn(cfg, 'STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY'), true);
+    assert.equal(Object.hasOwn(cfg, 'STRATEGY_DEDUP_NEAR_TIE_RETRY'), false);
+});
+
+test('normalizeAblationConfig rejects conflicting legacy/canonical near-tie retry values', () => {
+    assert.throws(
+        () => normalizeAblationConfig({
+            STRATEGY_DEDUP_NEAR_TIE_RETRY: false,
+            STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: true,
+        }),
+        /Conflicting ablation values for canonical feature STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY/,
+    );
+});
+
 test('ablation defaults emit only the canonical routing flag name', () => {
     const defaults = defaultConfig();
     assert.equal(defaults.STRATEGY_ROUTING_REGIME_SELECTION, true);
@@ -2093,6 +2111,18 @@ test('coarse-state-near-tie-retention-disabled-retry pass stays off under an exp
     assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false);
 });
 
+
+test('coarse-state-near-tie-retention-disabled-retry pass also stays off under the canonical false spelling', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
+        ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: false },
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.dedupNearTieRetry === true), false,
+        'legacy and canonical spellings must normalize to identical runtime behavior');
+});
+
 test('a sparse unrelated ablation object leaves the promoted default-ON pass active (the normalizeAblationConfig sparse-default fix this promotion now depends on)', async () => {
     // Since promotion, this flag is unset-means-true (the standard `!cfg || cfg.FLAG` convention),
     // so a sparse config that only touches a DIFFERENT flag (STRATEGY_DEDUP_NEAR_TIE_RETENTION here)
@@ -2141,12 +2171,12 @@ test('disableExtraBudgetPasses: true suppresses the pass even with the flag on, 
 
 test('coarse-state-near-tie-retention-disabled-retry pass can solve a level the main loop misses, and disables retention while it runs', async () => {
     // Simulates the real mechanism's shape without depending on search.ts's actual beam internals:
-    // succeeds only once prep._cfg reflects STRATEGY_DEDUP_NEAR_TIE_RETENTION explicitly disabled —
+    // succeeds only once prep._cfg reflects STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION explicitly disabled —
     // exactly what the retry pass's own Proxy override produces, and exactly what the ordinary main
     // loop's cfg (retention left at its normalized-default true) never does.
     const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
         const [, , , prep] = args;
-        if (prep._cfg && prep._cfg.STRATEGY_DEDUP_NEAR_TIE_RETENTION === false) return [0, 1];
+        if (prep._cfg && prep._cfg.STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION === false) return [0, 1];
         return null;
     }) as typeof runAttemptSearch;
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {

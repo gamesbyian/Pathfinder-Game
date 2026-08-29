@@ -2219,7 +2219,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // remains non-binding relative to the (now correctly bounded) allocation on a slow host.
         const dedupRetryTotalBudget = Math.floor(timeBudgetMs * dedupRetryBudgetFraction);
         const dedupRetryResult = await runWholeLadderRetryTier({
-            stageId: 'coarse-state-near-tie-retention-disabled-retry', proxyOverrides: { STRATEGY_DEDUP_NEAR_TIE_RETENTION: false },
+            stageId: 'coarse-state-near-tie-retention-disabled-retry', proxyOverrides: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION: false },
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
             totalBudgetMs: dedupRetryTotalBudget, nodeCeiling: dedupRetryNodeCeiling,
