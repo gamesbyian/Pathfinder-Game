@@ -68,7 +68,7 @@
     "test:unit:watch": "vitest",
     "test:coverage": "vitest run --coverage --reporter=default --reporter=json --outputFile=tmp/vitest-timings.json && node scripts/vitest-slow-test-report.mjs",
     "test:unit:fast": "SOLVER_DEEP_TESTS=0 vitest run",
-    "test:node": "node scripts/run-scripts-parallel.mjs test:startup-smoke test:naming-cleanup-surface-inventory test:ablation-toolchain test:current-level-facts test:loader test:hint-workbench test:hint-diversification test:hint-corpus-expand test:hint-complete-sharded test:portfolio-solve-sweep-lib test:portfolio-solve-sweep-worker test:level-blind-capability-sweep-cli test:elite-prefix-dfs-ab test:early-repair-search-badness-report test:restart-continuation-population-pilot-cli test:hint-query-lib test:race-stage-parity test:portfolio-sweep-reports-to-benchmark test:plan-ab-corpus-shards test:req-length-sweep-lib test:hint-cost-drift-lib test:probe-corpus-loader test:corpus-query test:stress-topology-generator test:lifecycle-failure-map test:family-generate test:family-index test:research-index test:family-analyze test:family-boundary test:family-boundary-cli test:family-census-combine test:family-source-selection test:family-parent-hint-replay test:divergence-lib test:research-analysis-lib test:experiment-manifest test:family-run-manifest-producer test:technique-campaign-analysis test:technique-census-result-lib test:technique-census-second-order test:technique-census-cell test:operational-similarity-lib test:winning-attempt-family test:data-asset-runtime-smoke test:firestore-rules",
+    "test:node": "node scripts/run-scripts-parallel.mjs test:startup-smoke test:naming-cleanup-surface-inventory test:ablation-toolchain test:current-level-facts test:loader test:hint-workbench test:hint-diversification test:hint-corpus-expand test:hint-complete-sharded test:portfolio-solve-sweep-lib test:portfolio-solve-sweep-worker test:level-blind-capability-sweep-cli test:elite-prefix-dfs-ab test:early-repair-search-badness-report test:restart-continuation-population-pilot-cli test:hint-query-lib test:race-stage-parity test:portfolio-sweep-reports-to-benchmark test:plan-ab-corpus-shards test:req-length-sweep-lib test:hint-cost-drift-lib test:probe-corpus-loader test:corpus-query test:stress-topology-generator test:lifecycle-failure-map test:family-generate test:family-index test:family-trove-doctor test:research-index test:family-analyze test:family-boundary test:family-boundary-cli test:family-census-combine test:family-source-selection test:family-parent-hint-replay test:divergence-lib test:research-analysis-lib test:experiment-manifest test:family-run-manifest-producer test:technique-campaign-analysis test:technique-census-result-lib test:technique-census-second-order test:technique-census-cell test:operational-similarity-lib test:winning-attempt-family test:data-asset-runtime-smoke test:firestore-rules",
     "stress:generate": "node scripts/run-bundled.mjs scripts/stress/generate.mjs",
     "stress:generate-random": "node scripts/run-bundled.mjs scripts/stress/generate-random.mjs",
     "stress:generate-topology": "node scripts/run-bundled.mjs scripts/stress/generate-topology.mjs",
@@ -180,7 +180,8 @@
     "gha:result": "node scripts/gha-result.mjs",
     "check:naming-cleanup-ledger": "node scripts/check-naming-cleanup-ledger.mjs",
     "naming:surface-inventory": "node scripts/naming-cleanup-surface-inventory.mjs",
-    "test:naming-cleanup-surface-inventory": "node scripts/naming-cleanup-surface-inventory-node-test.mjs"
+    "test:naming-cleanup-surface-inventory": "node scripts/naming-cleanup-surface-inventory-node-test.mjs",
+    "test:family-trove-doctor": "node scripts/family-trove-doctor-node-test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
