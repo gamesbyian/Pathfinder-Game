@@ -4,14 +4,28 @@
 
 For any rename that crosses a module boundary, transport, persisted identity, workflow, generated artifact, CLI, application state boundary, or current documentation authority, treat the work as a **contract migration**, not a textual substitution.
 
-For the repository-wide naming cleanup, also read [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md). Phase 8 onward uses the stronger completion model defined there.
+For the repository-wide naming cleanup, also read [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md) and [`naming-cleanup-history-and-lessons.md`](naming-cleanup-history-and-lessons.md). Phase 8 onward uses the stronger completion model defined there and records its evidence in a checked-in batch record created from [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md).
+
+### 0. Establish branch/batch authority before editing
+
+For Phase-8+ naming-cleanup work:
+
+1. start from current `main` and record the full SHA;
+2. search open naming-cleanup PRs and similarly named branches;
+3. compare plausible predecessor/sibling branches against current `main` rather than inferring work from branch names;
+4. recover unique relevant commits or explicitly record the old branch as superseded;
+5. create the batch execution record and claim the one active batch in the ledger;
+6. do not stack the next implementation batch on an unmerged predecessor.
+
+Before merge, compare the branch head with current `main`. If the intended patch is empty or already present, close/supersede rather than merge a duplicate/no-op PR.
 
 ### 1. Build the impact map before editing
 
 1. read [`naming-and-vocabulary.md`](naming-and-vocabulary.md), the owning plan, and active row(s) in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json);
 2. search the old spelling, canonical spelling, abbreviations, case variants, human-readable labels, physical paths, and persisted values across source, tests, package scripts, workflows, current docs, schemas, telemetry/provenance, environment variables, artifact/concurrency/cache identifiers, and spawned/imported paths;
 3. identify producers, canonical readers/normalizers, transports, writers/projections, historical fixtures, grouping/classification consumers, CLI/workflow surfaces, and application/UI consumers before changing a persisted or cross-boundary value;
-4. identify which concrete test/check actually executes or structurally validates each live consumer. A green aggregate suite is not evidence for a surface it never runs.
+4. identify which concrete test/check actually executes or structurally validates each live consumer. Record whether the real boundary is native Node, bundled/tsx, worker, browser, parser, or workflow-structural validation; those classes are not interchangeable. A green aggregate suite is not evidence for a surface it never runs;
+5. for medium/high-risk behavior-preserving migrations, capture the smallest useful before-change observable that can be compared after implementation.
 
 For surfaced tooling, run `node scripts/tooling-census.mjs --compact --query=<term>` for both legacy and canonical terms when applicable. For physical file/workflow renames, separately audit exact-case paths and spawned/imported targets.
 
@@ -68,6 +82,8 @@ For TypeScript/plain-Node boundaries:
 
 ### 5. Validate the migrated contract, not just the definition
 
+For Phase-8+ naming-cleanup work, write the exact validation command/fixture and what it proves into the checked-in batch record. Ledger verification fields summarize this evidence; they do not replace it.
+
 Use the cheapest test that proves the boundary:
 
 - module-load/runtime smoke;
@@ -79,11 +95,11 @@ Use the cheapest test that proves the boundary:
 - exact output-schema assertion;
 - UI/controller/render assertion where application state is involved.
 
-For behavior-preserving solver renames, compare representative attempt/stage order, node/work accounting, and solved outcomes before/after. For application/state renames, verify the relevant visible/rendered behavior. For generated/research data, verify row inclusion/grouping and provenance, not only command exit status.
+For behavior-preserving solver renames, compare representative attempt/stage order, node/work accounting, and solved outcomes before/after. For application/state renames, verify the relevant visible/rendered behavior. For generated/research data, verify row inclusion/grouping and provenance, not only command exit status. Use the same observable captured before editing whenever practical; an unexplained parity change blocks completion.
 
 ### 6. Close from consumers inward
 
-Before marking a cross-boundary migration complete, perform a distinct closeout pass that starts from live consumers rather than the implementation diff:
+Before marking a cross-boundary migration complete, perform a distinct closeout pass that starts from live consumers rather than the implementation diff. Prefer a fresh agent/session when available; if the implementation agent performs the closeout, record that fact and still start from the consumer/surface inventory:
 
 - package commands and surfaced CLI tools;
 - workers/raced execution;
@@ -93,7 +109,18 @@ Before marking a cross-boundary migration complete, perform a distinct closeout 
 - application/UI/editor consumers when applicable;
 - historical compatibility paths.
 
-Update current authority links and semantic dependants, then run `npm run check:documentation-links`. Mark a ledger row `done` only after all applicable verification dimensions required by its owning plan are complete.
+Update current authority links and semantic dependants, then run `npm run check:documentation-links`. Mark a ledger row `done` only after all applicable verification dimensions required by its owning plan are complete and the row points at the checked-in evidence record that proves those dimensions.
+
+### 7. Clear the merge barrier before handing off
+
+For Phase-8+ naming-cleanup batches:
+
+1. reconcile/update from current `main` as required;
+2. compare head vs current `main` and confirm the intended diff is unique and non-empty;
+3. confirm no next-batch implementation is stacked into the PR;
+4. confirm the batch record, ledger state, targeted tests, and required aggregate CI agree;
+5. merge the batch before creating the next implementation branch;
+6. run the phase-wide final closeout on merged `main` before advancing `lastCompletedPhase` for a multi-batch phase.
 
 Use this recipe when a change is conceptually small but crosses representations or execution boundaries. The point is to prevent plausible 80%-complete patches, not to make ordinary local renames ceremonial.
 
