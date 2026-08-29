@@ -450,7 +450,9 @@ const result = {
 };
 
 if (JSON_MODE) {
-  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  // Large Phase 8-14 inventories can exceed stdout's synchronous write window. Await the pipe
+  // callback before exiting or Node can truncate otherwise-valid JSON mid-string.
+  await new Promise(resolve => process.stdout.write(`${JSON.stringify(result, null, 2)}\n`, resolve));
   process.exit(0);
 }
 
