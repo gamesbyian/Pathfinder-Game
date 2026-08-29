@@ -14,10 +14,29 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { normalizeSolverStageId } from '../../modules/solver/stage-policy.js';
 
-/** Canonical per-row lifecycle, dual-reading historical techniqueLifecycle artifacts. */
+/**
+ * Canonical per-row lifecycle, dual-reading historical techniqueLifecycle artifacts and
+ * normalizing every stage-id key through normalizeSolverStageId(). Artifacts combined from
+ * different eras can carry the same stage under its historical id (e.g. `main-loop`) and its
+ * current id (`main-search`); normalizing keys here, once, keeps every downstream consumer
+ * (which indexes this object by the names stageNames() returns) working against one canonical
+ * key instead of splitting the same stage into separate failure-map rows. A key
+ * normalizeSolverStageId doesn't recognize (a stage introduced by orchestration after this
+ * analyzer's registry) passes through unchanged rather than throwing — this analyzer's whole
+ * point is deriving stage vocabulary from telemetry, not gating on a registry that can fall behind.
+ */
 export function stageLifecycleOf(row) {
-    return row?.stageLifecycle ?? row?.techniqueLifecycle ?? null;
+    const raw = row?.stageLifecycle ?? row?.techniqueLifecycle ?? null;
+    if (!raw) return null;
+    const canonical = {};
+    for (const [key, value] of Object.entries(raw)) {
+        let normalized = key;
+        try { normalized = normalizeSolverStageId(key); } catch { /* unrecognized: keep raw key */ }
+        canonical[normalized] = value;
+    }
+    return canonical;
 }
 
 /** Canonical per-row stage names, as emitted by orchestration's lifecycle telemetry. */

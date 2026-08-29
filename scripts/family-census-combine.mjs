@@ -2,7 +2,7 @@
 /**
  * Aggregates the family-fragile-robust-census.yml workflow's per-level solve results into a
  * fragile/robust classification table, joined against
- * data/families/fragile-robust-census-manifest.json for group/archetype/turnLoad. A level is
+ * data/families/fragile-robust-census-manifest.json for group/routing regime/turnLoad. A level is
  * "fragile" if >=1 of its (local-mutant + symmetry) variants solved; "robust" if 0/N solved. See
  * docs/solver-development-roadmap.md's fragile/robust split and
  * reports/families/2026-07-29-turn-load-fragile-robust-split.md for the methodology this extends
@@ -26,6 +26,15 @@ import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { parseShardLog } from './family-census-parse-shard-logs.mjs';
+import { normalizeRoutingRegime } from '../modules/solver/routing-regime.ts';
+
+// The manifest may carry either the legacy archetype/navDensity fields or the canonical
+// routingRegime/requiredPathCoverageRatio fields -- dual-read both, canonical-write only the
+// new names into this script's own report/JSON output (single-write).
+function safeNormalizeRoutingRegime(value) {
+    if (value == null) return null;
+    try { return normalizeRoutingRegime(value); } catch { return value; }
+}
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [k, ...v] = a.split('=');
@@ -72,7 +81,11 @@ for (const entry of manifest) {
     if (lmTotal == null && symTotal == null) continue; // not yet processed by any shard (partial run)
     const solved = (lmSolved || 0) + (symSolved || 0);
     const total = (lmTotal || 0) + (symTotal || 0);
-    rows.push({ ...entry, lmSolved, lmTotal, symSolved, symTotal,
+    const { archetype: legacyArchetype, navDensity: legacyNavDensity, routingRegime: rawRoutingRegime,
+        requiredPathCoverageRatio: rawCoverageRatio, ...rest } = entry;
+    const routingRegime = safeNormalizeRoutingRegime(rawRoutingRegime ?? legacyArchetype ?? null);
+    const requiredPathCoverageRatio = rawCoverageRatio ?? legacyNavDensity ?? null;
+    rows.push({ ...rest, routingRegime, requiredPathCoverageRatio, lmSolved, lmTotal, symSolved, symTotal,
         solved, total, fragile: total > 0 ? solved > 0 : null,
         rate: total > 0 ? solved / total : null });
 }
@@ -86,12 +99,12 @@ function summarize(rowsSubset, label) {
 }
 
 const byGroup = {};
-const byArch = {};
-const byGroupArch = {};
+const byRoutingRegime = {};
+const byGroupRoutingRegime = {};
 for (const r of rows) {
     (byGroup[r.group] ??= []).push(r);
-    (byArch[r.archetype] ??= []).push(r);
-    (byGroupArch[`${r.group} / ${r.archetype}`] ??= []).push(r);
+    (byRoutingRegime[r.routingRegime] ??= []).push(r);
+    (byGroupRoutingRegime[`${r.group} / ${r.routingRegime}`] ??= []).push(r);
 }
 
 const lines = [];
@@ -108,24 +121,24 @@ lines.push('| Group | Levels | Fragile | Fragile rate | Variant solve rate |');
 lines.push('|---|---|---|---|---|');
 for (const [g, rs] of Object.entries(byGroup)) lines.push(summarize(rs, g));
 lines.push('');
-lines.push('## By archetype');
+lines.push('## By routing regime');
 lines.push('');
-lines.push('| Archetype | Levels | Fragile | Fragile rate | Variant solve rate |');
+lines.push('| Routing regime | Levels | Fragile | Fragile rate | Variant solve rate |');
 lines.push('|---|---|---|---|---|');
-for (const [a, rs] of Object.entries(byArch)) lines.push(summarize(rs, a));
+for (const [a, rs] of Object.entries(byRoutingRegime)) lines.push(summarize(rs, a));
 lines.push('');
-lines.push('## By group x archetype');
+lines.push('## By group x routing regime');
 lines.push('');
-lines.push('| Group / Archetype | Levels | Fragile | Fragile rate | Variant solve rate |');
+lines.push('| Group / Routing regime | Levels | Fragile | Fragile rate | Variant solve rate |');
 lines.push('|---|---|---|---|---|');
-for (const [k, rs] of Object.entries(byGroupArch)) lines.push(summarize(rs, k));
+for (const [k, rs] of Object.entries(byGroupRoutingRegime)) lines.push(summarize(rs, k));
 lines.push('');
 lines.push('## Fragile levels (>=1 variant solved) — candidates for scoring/attempt-policy work');
 lines.push('');
-lines.push('| id | group | archetype | turnLoad | navDensity | badness | solved/total |');
+lines.push('| id | group | routingRegime | turnLoad | requiredPathCoverageRatio | badness | solved/total |');
 lines.push('|---|---|---|---|---|---|---|');
 for (const r of rows.filter(r => r.fragile)) {
-    lines.push(`| ${r.id} | ${r.group} | ${r.archetype} | ${r.turnLoad} | ${r.navDensity} | ${r.badness} | ${r.solved}/${r.total} |`);
+    lines.push(`| ${r.id} | ${r.group} | ${r.routingRegime} | ${r.turnLoad} | ${r.requiredPathCoverageRatio} | ${r.badness} | ${r.solved}/${r.total} |`);
 }
 
 writeFileSync(path.resolve(process.cwd(), OUT), lines.join('\n') + '\n');

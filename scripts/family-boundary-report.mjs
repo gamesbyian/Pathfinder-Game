@@ -2,6 +2,16 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { buildBoundaryReport, coalesceAttemptRecords, renderBoundaryMarkdown } from './family-boundary-lib.mjs';
+import { normalizeRoutingRegime } from '../modules/solver/routing-regime.ts';
+
+// Corpora on disk carry a mix of legacy stressMeta.archetype/navDensity and canonical
+// stressMeta.routingRegime/requiredPathCoverageRatio -- dual-read both directions.
+// normalizeRoutingRegime() throws on an unrecognized value; fall back to the raw string rather
+// than crashing this read-only report over arbitrary/historical corpora.
+function safeNormalizeRoutingRegime(value) {
+    if (value == null) return null;
+    try { return normalizeRoutingRegime(value); } catch { return value; }
+}
 
 const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--')).map(arg => {
     const [key, ...value] = arg.split('=');
@@ -39,9 +49,9 @@ manifests = manifests.map(manifest => {
         ...manifest,
         parentFeatures: {
             reqInt: level.reqInt ?? manifest.selectedWitnessIntersectionCount ?? null,
-            navDensity: level.stressMeta?.navDensity ?? manifest.parentNavDensity ?? null,
+            navDensity: level.stressMeta?.requiredPathCoverageRatio ?? level.stressMeta?.navDensity ?? manifest.parentNavDensity ?? null,
             turnLoad: level.stressMeta?.turnLoad ?? null,
-            archetype: level.stressMeta?.archetype ?? null,
+            archetype: safeNormalizeRoutingRegime(level.stressMeta?.routingRegime ?? level.stressMeta?.archetype ?? null),
             portalCount: Array.isArray(level.portals) ? level.portals.length : 0,
             mechanicCounts: level.stressMeta?.mechanicCounts ?? null,
         },
@@ -70,7 +80,10 @@ for (const [flag, field, accept] of numericFilters) {
         return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)) && accept(Number(value), threshold);
     });
 }
-if (args.get('--archetype')) manifests = manifests.filter(manifest => manifest.parentFeatures?.archetype === args.get('--archetype'));
+if (args.get('--archetype')) {
+    const wanted = safeNormalizeRoutingRegime(args.get('--archetype'));
+    manifests = manifests.filter(manifest => manifest.parentFeatures?.archetype === wanted);
+}
 if (args.get('--mechanic')) {
     const [name, minimumRaw] = args.get('--mechanic').split(':');
     const minimum = minimumRaw === undefined ? 1 : Number(minimumRaw);

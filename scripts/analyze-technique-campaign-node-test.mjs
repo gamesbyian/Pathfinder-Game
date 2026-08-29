@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 const hash = ids => createHash('sha256').update(ids.join('\n')).digest('hex');
 const runAnalyzer = (directory, output) => spawnSync(process.execPath,
-    ['scripts/analyze-technique-campaign.mjs', directory, output], { encoding:'utf8' });
+    ['scripts/run-bundled.mjs', 'scripts/analyze-technique-campaign.mjs', directory, output], { encoding:'utf8' });
 const dir = mkdtempSync(path.join(tmpdir(), 'technique-campaign-'));
 const summary = { levelBlind:true, levelsRequested:2, levelsRun:2, corpus:'fixture.json', commit:'a'.repeat(40), nodeBudget:10, workBudget:20, workers:1 };
 const levels = [
@@ -37,6 +37,31 @@ writeFileSync(path.join(dir,'manifest.json'),JSON.stringify(fixtureManifest));
 // A pair with reordered IDs is invalid, not silently aggregated as comparable.
 const bad=JSON.parse(readFileSync(path.join(dir,'right.json'))); bad.levels.reverse(); writeFileSync(path.join(dir,'right.json'),JSON.stringify(bad));
 run=runAnalyzer(dir,out); assert.notEqual(run.status,0); assert.match(run.stderr,/paired level IDs\/order differ/);
+
+// A mixed legacy/canonical stage-ID population (one attempt tagged with the historical
+// `main-loop` stageId, one with the current `main-search`) must collapse onto one canonical
+// technique row, not appear as two separate rows in the same arm summary.
+{
+    const legacyDir = mkdtempSync(path.join(tmpdir(), 'technique-campaign-legacy-'));
+    const legacySummary = { levelBlind:true, levelsRequested:1, levelsRun:1, corpus:'fixture.json', commit:'a'.repeat(40), nodeBudget:10, workBudget:20, workers:1 };
+    const legacyLevels = [
+        { id:'A', ok:true, nodesExpanded:8, workSpent:12, totalMs:3, attempts:[
+            { stageId:'main-loop', ok:false, nodesExpanded:3, elapsedMs:1 },
+            { stageId:'main-search', ok:true, nodesExpanded:5, elapsedMs:2 },
+        ] },
+    ];
+    writeFileSync(path.join(legacyDir,'only.json'),JSON.stringify({summary:legacySummary,levels:legacyLevels}));
+    writeFileSync(path.join(legacyDir,'manifest.json'),JSON.stringify({experiments:[{id:'T-2',class:'targeted-diagnostic',question:'q',artifacts:['only.json']}]}));
+    const legacyOut = path.join(legacyDir,'aggregate.json');
+    const legacyRun = spawnSync(process.execPath,
+        ['scripts/run-bundled.mjs', 'scripts/analyze-technique-campaign.mjs', legacyDir, legacyOut], { encoding:'utf8' });
+    assert.equal(legacyRun.status, 0, legacyRun.stderr);
+    const legacyResult = JSON.parse(readFileSync(legacyOut));
+    const arm = legacyResult.arms.find(a => a.file === 'only.json');
+    assert.equal(arm.techniques['main-search'].attempts, 2, 'legacy main-loop and canonical main-search attempts must count under one technique row');
+    assert.equal(arm.techniques['main-search'].wins, 1);
+    assert.equal('main-loop' in arm.techniques, false, 'the historical stage id must not appear as a separate technique row');
+}
 
 // Historical campaign reports are immutable research evidence, not compatibility fixtures for the
 // current analyzer. Requiring today's code to reproduce one dated campaign forever couples software

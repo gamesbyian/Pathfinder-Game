@@ -18,4 +18,18 @@ const summary = summarizeDescriptors(items);
 assert.equal(summary.levels, 3);
 assert.equal(summary.mechanics.gates, 3);
 assert.equal(summary.mechanics.mustCross, 2);
+
+// Corpora written before the routing-regime rename carry stressMeta.archetype/navDensity;
+// current generate.mjs output carries stressMeta.routingRegime/requiredPathCoverageRatio.
+// describeLevel() must dual-read both directions and normalize a recognized legacy regime value.
+const legacyItem = describeLevel({ id: 'L', grid: { w: 4, h: 4 }, reqLen: 4, reqInt: 0, gates: [], portals: [], mustCross: [],
+    stressMeta: { archetype: 'near-closure', navDensity: 0.5 } });
+assert.equal(legacyItem.routingRegime, 'sparse-low-intersection', 'a legacy archetype value must normalize to its canonical routing regime');
+assert.equal(legacyItem.requiredPathCoverageRatio, 0.5);
+
+const canonicalItem = describeLevel({ id: 'M', grid: { w: 4, h: 4 }, reqLen: 4, reqInt: 0, gates: [], portals: [], mustCross: [],
+    stressMeta: { routingRegime: 'multi-portal', requiredPathCoverageRatio: 0.75 } });
+assert.equal(canonicalItem.routingRegime, 'multi-portal');
+assert.equal(canonicalItem.requiredPathCoverageRatio, 0.75);
+
 console.log('corpus query check passed');

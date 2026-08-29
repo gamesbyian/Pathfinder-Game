@@ -52,10 +52,15 @@ const outFile = argMap.get('--out') || 'reports/portfolio/solve-sweep.json';
 const summaryOutFile = argMap.get('--summary-out') || outFile.replace(/\.json$/u, '-summary.md');
 const corpusPath = argMap.get('--corpus') || path.join(root, 'data', 'levels.json');
 const saveHints = flags.has('--save-hints');
+// No silent default: this is the historical experiment scheduler's opt-in flag, and defaulting an
+// unrecognized/omitted value into that path is the wrong failure mode for a behavior-preserving
+// migration. Every live workflow already passes --scheduler-mode explicitly (currently `legacy`).
 const rawSchedulerMode = argMap.get('--scheduler-mode');
 const schedulerMode = rawSchedulerMode === 'legacy' || rawSchedulerMode === 'production'
     ? 'production'
-    : 'legacy-latency-portfolio-experiment';
+    : rawSchedulerMode === 'legacy-latency-portfolio-experiment' || rawSchedulerMode === 'portfolio-experiment'
+        ? 'legacy-latency-portfolio-experiment'
+        : (() => { throw new Error(`--scheduler-mode must be one of: production, legacy-latency-portfolio-experiment (legacy aliases: legacy, portfolio-experiment); got ${JSON.stringify(rawSchedulerMode)}`); })();
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
 const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined;
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;

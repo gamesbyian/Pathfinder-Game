@@ -3,12 +3,17 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import { normalizeSolverStageId } from '../modules/solver/stage-policy.js';
 
 const directory = process.argv[2] ?? 'reports/experiments/2026-08-13-technique-tuning';
 const output = process.argv[3] ?? path.join(directory, 'aggregate.json');
 const root = process.cwd();
 const sha256 = value => createHash('sha256').update(value).digest('hex');
-const technique = attempt => attempt.stageId
+// Normalizes a persisted stageId through the canonical stage-id map; artifacts that predate
+// stageId (or record a name normalizeSolverStageId doesn't recognize) fall through to the raw
+// value rather than throwing, since this is read-only cross-artifact analysis, not a writer.
+const normalizedStageId = id => { try { return normalizeSolverStageId(id); } catch { return id; } };
+const technique = attempt => (attempt.stageId ? normalizedStageId(attempt.stageId) : null)
     ?? (attempt.admissibleOrder ? 'admissible-order-fallback'
         : attempt.repairProbe ? 'early-repair-search'
             : attempt.repair ? 'repair-fallback'
@@ -66,7 +71,8 @@ for (const file of files) {
         for (const level of document.levels) {
             const stageLifecycle = level.stageLifecycle ?? level.techniqueLifecycle;
             if (!stageLifecycle) issue(`${file}:${level.id ?? level.level}: lifecycle telemetry missing`);
-            for (const [name, lifecycle] of Object.entries(stageLifecycle ?? {})) {
+            for (const [rawName, lifecycle] of Object.entries(stageLifecycle ?? {})) {
+                const name = normalizedStageId(rawName);
                 for (const field of ['mechanicallyEligible','instantiated','reached','skippedBecauseSolvedEarlier',
                     'starvedByNodeBudget','starvedByWorkBudget','skippedByRoutingOrConfiguration',
                     'exhaustedSearchSpace','stoppedByDeadline','allocatedNodeCeilings','allocatedWorkCeilings',

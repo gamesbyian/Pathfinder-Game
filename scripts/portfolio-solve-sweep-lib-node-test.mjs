@@ -112,6 +112,12 @@ test('action identity separates stage and repair seed while config identity rema
     assert.equal(row.attempts[1].actionKey, 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=1');
 });
 
+test('attemptActionKey normalizes a legacy stage id to its canonical form', () => {
+    const legacyStage = { stageId: 'repair-probe', gateKey: 10, profile: 'repair', template: null, beamWidth: null, repair: true, ok: true, elapsedMs: 1, seedSalt: 0 };
+    assert.equal(attemptActionKey(legacyStage), 'early-repair-search|repair|score=repair|guidance=standard|seedSalt=0',
+        'a persisted attempt carrying the historical repair-probe stage id must collapse onto the canonical early-repair-search action key');
+});
+
 test('historical attempts without stageId do not get a fabricated action identity', () => {
     const legacy = { gateKey: 1, profile: 'repair', repair: true, ok: false, elapsedMs: 1, seedSalt: 2 };
     assert.equal(attemptActionKey(legacy), null);

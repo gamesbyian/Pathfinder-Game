@@ -120,6 +120,25 @@ describe('stage discovery', () => {
         assert.equal(map.techniques['brand-new-retry-stage'].reached, 1);
         assert.equal(map.techniques['brand-new-retry-stage'].nodes, 10);
     });
+
+    test('collapses a mixed legacy/canonical stage-ID population onto one canonical set', () => {
+        // One row uses the historical stage IDs (as an older artifact would); the other uses
+        // the current canonical IDs. Both name the same two real stages.
+        const legacyRow = row({ id: 'legacy', stageLifecycle: {
+            'main-loop': { reached: true, actualNodes: 5, actualWork: 5 },
+            'repair-probe': { reached: false, actualNodes: 0, actualWork: 0 },
+        } });
+        const canonicalRow = row({ id: 'canonical', stageLifecycle: {
+            'main-search': { reached: true, actualNodes: 7, actualWork: 7 },
+            'early-repair-search': { reached: false, actualNodes: 0, actualWork: 0 },
+        } });
+        assert.deepEqual(lifecycleStageOrder([legacyRow, canonicalRow]).sort(), ['early-repair-search', 'main-search']);
+        const map = buildMap([legacyRow, canonicalRow]);
+        assert.equal(map.techniques['main-search'].reached, 2, 'the legacy-tagged row must count under the canonical stage name');
+        assert.equal(map.techniques['main-search'].nodes, 12);
+        assert.equal(map.techniques['main-loop'], undefined, 'the historical stage id must not appear as a separate row');
+        assert.equal(map.techniques['repair-probe'], undefined, 'the historical stage id must not appear as a separate row');
+    });
 });
 
 describe('bestProgressOf', () => {
