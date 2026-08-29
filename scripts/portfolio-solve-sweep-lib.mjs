@@ -116,7 +116,7 @@ export function attemptRecord(a) {
         ...(a.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
         ...(a.mainLoopLateReserve ? { mainLoopLateReserve: true } : {}),
         ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
-        ...(a.dedupNearTieRetry ? { dedupNearTieRetry: true } : {}),
+        ...((a.coarseStateNearTieRetentionRetry ?? a.dedupNearTieRetry) ? { coarseStateNearTieRetentionRetry: true } : {}),
         ...(a.admissibleOrderNonDefaultRetry ? { admissibleOrderNonDefaultRetry: true } : {}),
         ...(a.connectivityAxisExhaustedRetry ? { connectivityAxisExhaustedRetry: true } : {}),
         ...(a.repairElitePrefixDfsRetry ? { repairElitePrefixDfsRetry: true } : {}),
