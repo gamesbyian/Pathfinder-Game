@@ -36,14 +36,12 @@ for (const source of sources) {
   }
 }
 
-const IMPORT_PATTERNS = [
-  /\b(?:import|export)\s+(?:[^'";]*?\s+from\s+)?['"]([^'"]+)['"]/gu,
-  /\bimport\(\s*['"]([^'"]+)['"]\s*\)/gu,
-];
+const STATIC_IMPORT_PATTERN = /\b(?:import|export)\s+(?:[^'";]*?\s+from\s+)?['"]([^'"]+)['"]/gu;
+const DYNAMIC_IMPORT_PATTERN = /\bimport\(\s*['"]([^'"]+)['"]\s*\)/gu;
 
-function localSpecifiers(source) {
+function localSpecifiers(source, { includeDynamic }) {
   const found = new Set();
-  for (const pattern of IMPORT_PATTERNS) {
+  for (const pattern of includeDynamic ? [STATIC_IMPORT_PATTERN, DYNAMIC_IMPORT_PATTERN] : [STATIC_IMPORT_PATTERN]) {
     pattern.lastIndex = 0;
     for (const match of source.matchAll(pattern)) {
       if (match[1].startsWith('.') || match[1].startsWith('/')) found.add(match[1]);
@@ -96,7 +94,10 @@ while (queue.length) {
   if (!existsSync(absolute)) continue;
   const source = readFileSync(absolute, 'utf8');
 
-  for (const specifier of localSpecifiers(source)) {
+  // Dynamic imports in a plain-Node root are part of that root's runtime contract. For nested
+  // helpers, follow static module loading only: a helper can expose a pure function to a native
+  // Node unit test while reserving a dynamic TypeScript import for its separately bundled CLI path.
+  for (const specifier of localSpecifiers(source, { includeDynamic: plainNodeRoots.has(importer) })) {
     const result = resolveNativeNodeImport(importer, specifier);
     if (result.failure) {
       failures.push(`${importer} -> ${specifier}: ${result.failure} (${result.target})`);
