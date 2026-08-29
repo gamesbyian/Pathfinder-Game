@@ -439,7 +439,7 @@ export const COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION = 0.25;
  *  fresh, additive `prep._workCap` override (see the tier's own call-site comment for why this is
  *  necessary even though the admissible-order-fallback tier's own per-profile loop calls `runAttempt`
  *  directly rather than through the shared-pool `runInterleavedAttempts`/`runGateSerialAttempts`
- *  machinery dedup-retry's own work-starvation bug came from — `prep._workCap` is itself a single
+ *  machinery coarse-state near-tie retry's own work-starvation bug came from — `prep._workCap` is itself a single
  *  mutable field on `prep`, last set by whichever of those two functions most recently dispatched an
  *  attempt, so it is NOT reliably fresh for a `runAttempt`-direct caller positioned this late in the
  *  ladder either). `'default'` is never rerun here at all — it already got its full, unreduced shot
@@ -449,7 +449,7 @@ export const COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION = 0.25;
  *  Positioned dead last, AFTER STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY (same reasoning as that tier's own
  *  REVISION 3: nothing may run after this one that still checks an unextended `nodeBudget`/
  *  `earlyTierNodeBudget`-derived ceiling, or its own extension would starve that later tier exactly
- *  the way an earlier draft of the dedup-retry tier starved the admissible-order-fallback tier itself).
+ *  the way an earlier draft of the coarse-state near-tie retry tier starved the admissible-order-fallback tier itself).
  *
  *  VALIDATED then PROMOTED (2026-08-15, same day): local spot-check confirmed `R03148` recovers
  *  (1,914,111 nodes for `'none'`, referee-valid) and `R02644` is unaffected at both a solving budget
@@ -492,7 +492,7 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION = 1.0;
  *
  *  0.5 (doubled from the 0.25 first cut): still NOT derived from a proper A/B — a single successful
  *  data point (R03148 needed roughly 14.4M of additional room past a 50M ceiling to reach `'none'`'s
- *  turn and solve, once dedup-retry's own extension is accounted for) informs the direction (bigger
+ *  turn and solve, once coarse-state near-tie retry's own extension is accounted for) informs the direction (bigger
  *  than 0.25) but not a rigorous size. Population-scale validation is what determines whether 0.5 is
  *  enough, too little, or (following COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION's own precedent of a
  *  12.5M reserve missing exactly one 34.8M outlier) simply insufficient for some other level's own
@@ -538,7 +538,7 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  the ladder — for the identical reason both prior tiers were placed there: nothing may run after
  *  this one that still checks an unextended `nodeBudget`/`earlyTierNodeBudget`-derived ceiling, or
  *  this tier's own additive extension would starve it exactly the way an earlier draft of the
- *  dedup-retry tier starved the admissible-order-fallback tier itself.
+ *  coarse-state near-tie retry tier starved the admissible-order-fallback tier itself.
  *
  *  POPULATION-VALIDATED AND PROMOTED (2026-08-16, GHA run 31918095910, solver ref
  *  `fc3040cb3959e499a9a8df56348e43cb4300b077`, vs the 31910836458 baseline): corpus1 95/95 — exactly
